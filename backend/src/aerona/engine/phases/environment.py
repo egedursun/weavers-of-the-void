@@ -14,6 +14,7 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.happenings import RegionGeomorphRow
+from aerona.db.tables.industry import RegionPollutionRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held as frozen
 from aerona.db.write_guard import unheld
@@ -62,6 +63,7 @@ from aerona.engine.environment.profile import (
 from aerona.engine.environment.seasons import season_drafts, tidal_strength, world_calendar
 from aerona.engine.environment.works import backfill_typed_works, works_by_region
 from aerona.engine.environment.years import SampledYear, world_years
+from aerona.engine.industry.pollution import disease_extra, fertility_factor
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.calendar_rites import backfill_holy_days, hallow_holy_days
 from aerona.engine.phase import Phase
@@ -564,6 +566,7 @@ async def sanitation_by_region(ctx: TickContext, book: EnvironmentBook, communit
     "table.place_environment",
     "table.region_environment",
     "table.region_geomorphology",
+    "table.region_pollution",
     "table.settlement_infrastructure",
     "table.settlement_profiles",
     "table.sky_events",
@@ -581,6 +584,7 @@ async def environment_derive(ctx: TickContext) -> None:
     loads = capacity.build_loads(communities)
     sanitation = await sanitation_by_region(ctx, book, communities)
     shapes = await shapes_by_region(ctx.session)
+    fouled = {row.region_node_id: row for row in await ctx.session.scalars(select(RegionPollutionRow))}
     derived = 0
     for region in regions:
         env = book.regions.get(region.id)
@@ -607,12 +611,15 @@ async def environment_derive(ctx: TickContext) -> None:
                 sanitation_pct=sanitation.get(region.id, 0),
                 scars=env.scars,
             )
+            env.disease_load = clamp_int(env.disease_load + disease_extra(rules, fouled.get(region.id)), 0, PERCENT)
         current = base_stat(region, "fertility")
         if "soil_fertility" not in env.locked:
             env.soil_fertility = fold_external(env.derived_fertility, current, env.soil_fertility)
         recover_soil(rules, env)
         if current is not None or not region.is_water:
-            set_base_stats(region, fertility=fertility_from(env.soil_fertility, factor_of(rules, env, context.works)))
+            set_base_stats(
+                region, fertility=fertility_from(env.soil_fertility, factor_of(rules, env, context.works) * fertility_factor(rules, fouled.get(region.id)))
+            )
             env.derived_fertility = base_stat(region, "fertility")
             derived += 1
     for place_env in book.places.values():
@@ -622,7 +629,8 @@ async def environment_derive(ctx: TickContext) -> None:
         if place is None or env is None or context is None or stat(place, "fertility") is None:
             continue
         place_env.soil_fertility = fold_external(place_env.derived_fertility, base_stat(place, "fertility"), place_env.soil_fertility)
-        set_base_stats(place, fertility=fertility_from(place_env.soil_fertility, factor_of(rules, env, context.works)))
+        soiled = fertility_factor(rules, fouled.get(place_env.region_entity_id or -1))
+        set_base_stats(place, fertility=fertility_from(place_env.soil_fertility, factor_of(rules, env, context.works) * soiled))
         place_env.derived_fertility = base_stat(place, "fertility")
     await ctx.session.flush()
     ctx.count("regions_derived", derived)

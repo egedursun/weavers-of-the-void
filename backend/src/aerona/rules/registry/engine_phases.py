@@ -152,6 +152,10 @@ class EnginePhasesRules:
     relations_circles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: circles gathering around shared tastes and beliefs")
     relations_passions: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: passions kindled by bonds, oaths, memories and upbringing")
     relations_pecking: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: pecking orders in households, courts, circles, warbands and crews")
+    industry_methods: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: energy of each place and the production methods it chooses")
+    industry_aftermath: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: preserving, spoilage, tool wear, fuel burned, pollution and its harm, and what nobles want"
+    )
     renown_hearsay: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: deeds heard of in rumours, fading reputations, renown and infamy")
     renown_claims: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: shared and false claims of deeds, tested and exposed")
     ruler_currencies: int = rule(

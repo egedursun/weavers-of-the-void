@@ -9,6 +9,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.environment import WeatherEffect
+from aerona.domain.enums.industry import QualityTier
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.demography.basket import staples_of
@@ -19,6 +20,7 @@ from aerona.engine.economy.stocks import epoch_need, goods_of, holding, lots_of
 from aerona.engine.environment.years import world_years
 from aerona.engine.factions.book import monopoly_factor
 from aerona.engine.faith.book import forbidden_foods
+from aerona.engine.industry.quality import at_least, premium
 from aerona.engine.lore.traditions import resent_taboo, taboos
 from aerona.engine.mind.preferences import demand_factor, market_fit, material_factor
 from aerona.engine.notes import note
@@ -87,11 +89,22 @@ async def material_premium(ctx: TickContext, book: EconomyBook, market: EntityRo
         sum(
             price_premium(ctx.rules, book.materials.props(market.world_id, row.material, row.world_material_id))
             * material_factor(ctx.rules, tastes, row.material)
+            * premium(ctx.rules, row.quality)
             * row.quantity
             for row in lots
         )
         / weight
     )
+
+
+async def noble_demand(ctx: TickContext, book: EconomyBook, market: EntityRow) -> float:
+    society = book.societies.get(market.id)
+    if society is None:
+        return 1.0
+    lots = [row for row in await lots_of(ctx.session, market.id, CommodityKind.LUXURIES) if row.quantity > 0]
+    if not any(at_least(ctx.rules, row.quality, QualityTier.FINE) for row in lots):
+        return 1.0
+    return 1 + society.share(SocialClass.NOBLE) / PERCENT * ctx.rules.quality.noble_fine_pct / PERCENT
 
 
 async def price_holds(ctx: TickContext, market_id: int) -> dict[CommodityKind, MarketPriceHoldRow]:
@@ -143,6 +156,7 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
             demand = round_half_up(demand * ctx.rules.doctrine.dietary_demand_pct / PERCENT)
         if commodity is CommodityKind.LUXURIES:
             demand = round_half_up(demand * await luxury_factor(ctx.session, ctx.rules, market.id, book.societies.get(market.id)))
+            demand = round_half_up(demand * await noble_demand(ctx, book, market))
         demand = round_half_up(demand * demand_factor(ctx.rules, tastes, commodity.value))
         monopoly = await monopoly_factor(ctx.session, market.id, commodity, ctx.rules.factions.monopoly_price_pct)
         premium = await material_premium(ctx, book, market, commodity)

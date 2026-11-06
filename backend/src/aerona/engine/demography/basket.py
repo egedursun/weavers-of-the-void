@@ -24,6 +24,7 @@ from aerona.engine.demography.biology import edible
 from aerona.engine.demography.cohorts import cohorts_of, row_for
 from aerona.engine.economy.household import Meal, Wear
 from aerona.engine.economy.stocks import goods_of, holding
+from aerona.engine.industry.cold import frostbite
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -282,6 +283,8 @@ def land_factor(rules: Rules, band: TemperatureBand | None) -> float:
 
 async def freeze(ctx: TickContext, community: EntityRow, short: int, band: TemperatureBand | None) -> int:
     population = stat(community, "population") or 0
+    if band in COLD_BANDS and short >= ctx.rules.energy.shortfall_note_pct:
+        await frostbite(ctx, community)
     dead = round_half_up(population * ctx.rules.consumption.cold_death_pct / PERCENT * short / PERCENT * land_factor(ctx.rules, band))
     dead = min(dead, max(0, population - 1))
     if dead <= 0:

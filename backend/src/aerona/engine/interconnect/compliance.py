@@ -62,6 +62,7 @@ from aerona.db.tables.faith import (
     SpiritProfileRow,
 )
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
+from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.military import (
     ArmyMovementRow,
@@ -1444,6 +1445,17 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (),
         ("claim.",),
         ("b2d4f6a8c0e1",),
+    ),
+    ComplianceRow(
+        "F24",
+        (CommunityMethodRow.__tablename__, CommunityIndustryRow.__tablename__, RegionPollutionRow.__tablename__),
+        ("industry_methods", "industry_aftermath"),
+        ("method:set", "method:remove", "industry:set", "industry:remove", "pollution:set", "pollution:purify", "pollution:remove", "stock:set"),
+        ("WorksSection", "section-works"),
+        ("mortal_context",),
+        ("choose_method", "tend_land"),
+        ("industry.",),
+        ("7e3748499664",),
     ),
     ComplianceRow(
         "F30",

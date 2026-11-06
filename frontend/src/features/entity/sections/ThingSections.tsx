@@ -7,6 +7,7 @@ import { MindSplitSection } from './MindSplitSection'
 import { RecordRowsSection } from './RecordRowsSection'
 import { RenownSection } from './RenownSection'
 import { TastesSection } from './TastesSection'
+import { WorksSection } from './WorksSection'
 
 export function ThingSections({
   nodeId,
@@ -31,6 +32,7 @@ export function ThingSections({
       <AspirationsSection nodeId={nodeId} />
       <BondsSection nodeId={nodeId} />
       <RenownSection nodeId={nodeId} />
+      <WorksSection nodeId={nodeId} />
       <RecordRowsSection nodeId={nodeId} />
     </>
   )

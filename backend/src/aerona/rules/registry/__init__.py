@@ -96,6 +96,7 @@ from aerona.rules.registry.harshness import HarshnessRules
 from aerona.rules.registry.heroes import HeroesRules
 from aerona.rules.registry.image_gen import ImageGenRules
 from aerona.rules.registry.incitement import IncitementRules
+from aerona.rules.registry.industry import EnergyRules, MethodRules, PollutionRules, QualityRules, StoreRules, SubstitutionRules
 from aerona.rules.registry.intervention_costs import InterventionCostsRules
 from aerona.rules.registry.intervention_effects import InterventionEffectsRules
 from aerona.rules.registry.items import EnchantmentsRules, ItemPowersRules
@@ -312,6 +313,12 @@ class Rules:
     persuasion: PersuasionRules = field(default_factory=PersuasionRules)
     pecking: PeckingRules = field(default_factory=PeckingRules)
     contests: ContestRules = field(default_factory=ContestRules)
+    methods: MethodRules = field(default_factory=MethodRules)
+    energy: EnergyRules = field(default_factory=EnergyRules)
+    pollution: PollutionRules = field(default_factory=PollutionRules)
+    stores: StoreRules = field(default_factory=StoreRules)
+    quality: QualityRules = field(default_factory=QualityRules)
+    substitution: SubstitutionRules = field(default_factory=SubstitutionRules)
     local_renown: LocalRenownRules = field(default_factory=LocalRenownRules)
     currencies: CurrencyRules = field(default_factory=CurrencyRules)
     lore_trade: LoreTradeRules = field(default_factory=LoreTradeRules)

@@ -1,4 +1,6 @@
 import {
+  Factory,
+  Leaf,
   UserCog,
   FileX,
   Scroll,
@@ -144,6 +146,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   plant_idea: Lightbulb,
   stir_hearts: HeartHandshake,
   spread_word: Megaphone,
+  tend_land: Leaf,
   forge_item: Hammer,
   commission_artwork: Palette,
   design_rite: Wand2,
@@ -153,6 +156,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   challenge_to_contest: Trophy,
   persuade: Megaphone,
   trade_lore: ScrollText,
+  choose_method: Factory,
   produce_item: Package,
   build_structure: Castle,
   create_language: Languages,

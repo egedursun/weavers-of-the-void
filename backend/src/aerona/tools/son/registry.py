@@ -40,6 +40,7 @@ from aerona.tools.son import (
     treaties,
     urban,
     war,
+    works,
 )
 from aerona.tools.son.availability import SonWorldState, condition_holds, star_lines
 from aerona.tools.son.creation import creation_specs, example_cost
@@ -75,6 +76,7 @@ FAMILIES: tuple[Callable[[], list[SonSpec]], ...] = (
     places.specs,
     land.specs,
     regions.specs,
+    works.specs,
 )
 PORT_TAGS: dict[str, Callable[[ToolPorts], bool]] = {
     "views": lambda ports: ports.views is not None,

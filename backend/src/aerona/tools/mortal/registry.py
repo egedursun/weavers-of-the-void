@@ -37,6 +37,7 @@ from aerona.tools.mortal import (
     trade,
     treaties,
     war,
+    works,
 )
 from aerona.tools.mortal.support import civilization_tier, rules_a_realm, worships_dead_son
 
@@ -58,6 +59,7 @@ ACTOR_TYPES: dict[MortalToolId, frozenset[EntityType]] = {
     T.CHALLENGE_TO_CONTEST: NAMED,
     T.PERSUADE: NAMED,
     T.TRADE_LORE: COMMUNITIES_AND_NAMED,
+    T.CHOOSE_METHOD: COMMUNITIES_AND_NAMED,
     T.DESIGN_RITE: NAMED,
     T.COMMISSION_ARTWORK: frozenset({*COMMUNITY_TYPES, EntityType.POLITY, EntityType.MORTAL}),
     T.GO_ON_ADVENTURE: NAMED,
@@ -161,6 +163,7 @@ FAMILIES: tuple[Callable[[], list[MortalSpec]], ...] = (
     treaties.specs,
     oaths.specs,
     social.specs,
+    works.specs,
 )
 
 

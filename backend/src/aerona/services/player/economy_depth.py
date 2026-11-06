@@ -57,6 +57,7 @@ class SetStock(Command):
     world_material_id: int | None = None
     quantity: int = Field(ge=0)
     quality: int = Field(default=50, ge=0, le=100)
+    preserved: int | None = Field(default=None, ge=0)
     hold: bool | None = None
 
 
@@ -264,6 +265,7 @@ async def set_stock(scope: PlayerScope, command: SetStock) -> Effect:
         quantity=command.quantity,
         quality=command.quality,
         hold=command.hold,
+        preserved=command.preserved,
     )
     held = ", held" if row.held else ""
     return Effect(f"{row.quantity} {commodity_label(command.commodity).lower()} in the stores{held}.", command.community_id, values={"lot_id": row.id})

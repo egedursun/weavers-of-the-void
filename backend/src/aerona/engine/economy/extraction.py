@@ -24,6 +24,9 @@ from aerona.engine.ecology.domestication import draught
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of, lots_of
 from aerona.engine.environment.years import world_years
+from aerona.engine.industry.energy import scale_by_energy
+from aerona.engine.industry.methods import method_for, process_of_kind
+from aerona.engine.industry.pollution import fish_factor
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -178,6 +181,20 @@ def craft_factor(ctx: TickContext, book: EconomyBook, community_id: int, resourc
     return 1 + lift
 
 
+def region_key(book: EconomyBook, entity_id: int) -> int:
+    region = book.ground.region_of(entity_id)
+    return region.entity_id if region is not None else -1
+
+
+def method_factor(ctx: TickContext, book: EconomyBook, community_id: int, kind: ExtractionKind, workers: int) -> float:
+    process = process_of_kind(kind)
+    if process is None:
+        return 1.0
+    spec = method_for(book, community_id, process)
+    need = spec.energy_need * round_half_up(workers * ctx.rules.energy.extraction_per_100_workers / PERCENT)
+    return spec.output_pct / PERCENT * scale_by_energy(book, community_id, spec.energy, need)
+
+
 def knowledge_gate(rules: Rules, book: EconomyBook, profile: ResourceProfileRow, community_id: int) -> float:
     if profile.required_branch is None or profile.required_level <= 0:
         return 1.0
@@ -203,7 +220,9 @@ async def output_of(ctx: TickContext, book: EconomyBook, resource: EntityRow, pr
     site = book.workshop(community.id, spec.workshop) if spec.workshop is not None else None
     works = (1 + (site.level if site is not None else 0) * table.workshop_pct_per_level / PERCENT) * await workshop_output(ctx.session, ctx.rules, site)
     raw = base * skill * knowledge * season * difficulty * works * await tools_factor(ctx, community.id, workers) * await labour_factor(ctx, community)
-    raw *= craft_factor(ctx, book, community.id, resource.id, kind) * gate
+    raw *= craft_factor(ctx, book, community.id, resource.id, kind) * gate * method_factor(ctx, book, community.id, kind, workers)
+    if kind is ExtractionKind.FISHING:
+        raw *= fish_factor(ctx.rules, book.pollution.get(region_key(book, resource.id)))
     if kind is ExtractionKind.FARMING:
         raw *= await draught(ctx, community.id)
     return max(0, min(profile.reserve, round_half_up(raw)))
@@ -397,6 +416,7 @@ async def extract(ctx: TickContext, book: EconomyBook, resource: EntityRow, prof
                 quality=profile.quality,
                 inputs={},
                 workers=workers,
+                method=method_for(book, community.id, process).kind if (process := process_of_kind(kind)) is not None else None,
             )
         )
         produced += output

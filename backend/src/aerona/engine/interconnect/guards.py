@@ -8,6 +8,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.profile_guard import restore_held
+from aerona.db.repositories.chronicle import LAST_INCIDENT
 from aerona.db.tables.interconnect import ModifierRow
 from aerona.db.write_guard import HELD_SCOPE, WRITE_GUARD, HeldScope
 from aerona.domain.enums.modifier import ModifierSource
@@ -124,6 +125,7 @@ def guarded(state: GuardState) -> Iterator[None]:
 
 
 async def run_guarded(phase: Phase, ctx: TickContext, *, only: int | None = None) -> None:
+    LAST_INCIDENT.set(None)
     state = GuardState(await GuardIndex.load(ctx.session, ctx.epoch), mechanic_keys_for_phase(phase.name), phase.name, ctx.environment.stats.flows, only)
     index = await ModifierIndex.load(ctx.session, ctx.epoch)
     with guarded(state), live_modifiers(index, ctx.epoch, ctx.rules):

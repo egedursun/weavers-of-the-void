@@ -17,6 +17,8 @@ from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.materials import alloy_inputs, workable
 from aerona.engine.economy.stocks import epoch_need, goods_of, holding, lots_of
 from aerona.engine.economy.workshop_designs import capacity_scale, output_scale, quality_bonus
+from aerona.engine.industry.energy import scale_by_energy
+from aerona.engine.industry.methods import method_for, process_of_step
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount
@@ -192,6 +194,10 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
     short = [commodity for commodity, per_batch in step.inputs if held.get(commodity, 0) < per_batch]
     hands = artisans // table.workers_per_batch
     batches = min(room, hands, -(-wanted // step.output_qty), *(held.get(commodity, 0) // per_batch for commodity, per_batch in step.inputs))
+    process = process_of_step(step.key)
+    method = method_for(book, community.id, process) if process is not None else None
+    if method is not None and batches > 0:
+        batches = int(batches * scale_by_energy(book, community.id, method.energy, method.energy_need * batches))
     if short and step.workshop is not None and workshop is not None:
         await note_bottleneck(ctx, community, step, short[0], tally)
         ctx.session.add(
@@ -215,11 +221,15 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
     used, input_quality = await consume_inputs(ctx, community, step, batches, material=material, world_material=world_material)
     skill = book.skill(community.id, step.skill)
     quality = clamp_int(
-        round_half_up(input_quality * table.material_quality_pct / PERCENT) + skill * table.skill_quality_per_level + step.quality_gain + quality_bonus(design),
+        round_half_up(input_quality * table.material_quality_pct / PERCENT)
+        + skill * table.skill_quality_per_level
+        + step.quality_gain
+        + quality_bonus(design)
+        + (method.quality_bonus if method is not None else 0),
         0,
         PERCENT,
     )
-    made = round_half_up(batches * step.output_qty * output_scale(design))
+    made = round_half_up(batches * step.output_qty * output_scale(design) * (method.output_pct / PERCENT if method is not None else 1.0))
     out_material = material if step.keeps_material is not None else step.material
     await goods_of(ctx.session, ctx.epoch).add(
         community.id, step.output, made, GoodsFlow.PRODUCTION, material=out_material, world_material_id=world_material, quality=quality
@@ -236,6 +246,7 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
             quality=quality,
             inputs=used,
             workers=batches * table.workers_per_batch,
+            method=method.kind if method is not None else None,
         )
     )
     if workshop is not None and not workshop.held:

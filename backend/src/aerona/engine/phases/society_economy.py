@@ -47,6 +47,7 @@ from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.household import Meal, eat, enforce_storage, gather_commons, harvest_goods, wear
 from aerona.engine.economy.materials import MaterialBook, armour_protection, curse_bonus, enchantment_cap, set_node_material, weapon_damage
 from aerona.engine.economy.stocks import aggregate_need, goods_of, holding, lots_of, sync_aggregates
+from aerona.engine.industry.energy import taste_meal
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.items import craft
 from aerona.engine.notes import note
@@ -497,6 +498,7 @@ async def raise_class_uprising(ctx: TickContext, entity: EntityRow, society: Soc
 async def consume(ctx: TickContext, entity: EntityRow, society: Society, world: EconomyWorld) -> tuple[Meal, Basket]:
     staples = await staples_of(ctx.session, entity)
     meal = await eat(ctx, entity, staples)
+    taste_meal(ctx, world.economy, entity, meal.quality)
     worn = await wear(ctx, entity)
     standing = await standing_of(ctx.session, entity.id)
     found = await needs_of(ctx.session, entity.id)
@@ -571,6 +573,18 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
 
 @reads(
     "law.justice",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.creativity",
+    "mortal.endurance",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.perception",
+    "mortal.strength",
+    "mortal.willpower",
+    "mortal.wisdom",
     "people.craft",
     "people.martiality",
     "people.piety",
@@ -584,15 +598,22 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "settlement.prosperity",
     "table.applied_fixups",
     "table.army_profiles",
+    "table.bodies",
+    "table.body_customs",
     "table.bonds",
     "table.calendars",
     "table.class_standing",
     "table.community_cohorts",
+    "table.community_industry",
     "table.community_labour",
+    "table.community_methods",
     "table.community_needs",
     "table.community_societies",
     "table.community_stocks",
+    "table.conditions",
     "table.corvee_levies",
+    "table.cult_tenets",
+    "table.culture_values",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.forced_weather",
@@ -601,15 +622,24 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.holder_techniques",
     "table.incident_participants",
     "table.incidents",
+    "table.incubating_ideas",
+    "table.injuries",
+    "table.item_profiles",
     "table.maimed_cohorts",
     "table.market_prices",
+    "table.mind_attributes",
     "table.mobility_events",
+    "table.mortal_equipment",
+    "table.mortal_profiles",
     "table.name_registry",
     "table.nodes",
     "table.people_biology",
     "table.people_culture",
     "table.place_environment",
+    "table.preferences",
+    "table.prostheses",
     "table.region_environment",
+    "table.region_pollution",
     "table.resource_commodities",
     "table.resource_profiles",
     "table.resource_workers",
@@ -626,6 +656,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.world_seasons",
 )
 @writes(
+    "mortal.hp",
     "people.martiality",
     "people.piety",
     "people.population",
@@ -635,11 +666,14 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "settlement.population",
     "settlement.prosperity",
     "table.applied_fixups",
+    "table.bodies",
+    "table.body_customs",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
     "table.class_standing",
     "table.community_cohorts",
+    "table.community_industry",
     "table.community_needs",
     "table.community_societies",
     "table.community_stocks",
@@ -648,8 +682,11 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
+    "table.injuries",
     "table.mobility_events",
+    "table.mortal_profiles",
     "table.name_registry",
+    "table.production_runs",
 )
 async def society_economy(ctx: TickContext) -> None:
     session = ctx.session

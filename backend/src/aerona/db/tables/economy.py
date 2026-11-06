@@ -16,6 +16,7 @@ from aerona.domain.enums.economy import (
     TradeRouteStatus,
     WorkshopKind,
 )
+from aerona.domain.enums.industry import MethodKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
@@ -118,6 +119,7 @@ class CommunityStockRow(Base):
     world_material_id: Mapped[int | None] = mapped_column(ForeignKey("world_materials.id", ondelete="CASCADE"))
     quantity: Mapped[int] = mapped_column(default=0)
     quality: Mapped[int] = mapped_column(default=50)
+    preserved: Mapped[int] = mapped_column(default=0, server_default="0")
     held: Mapped[bool] = mapped_column(default=False)
 
 
@@ -232,6 +234,7 @@ class ProductionRunRow(Base):
     inputs: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
     workers: Mapped[int] = mapped_column(default=0)
     bottleneck: Mapped[CommodityKind | None] = mapped_column(enum_type(CommodityKind, "bottleneck"))
+    method: Mapped[MethodKind | None] = mapped_column(enum_type(MethodKind, "method"))
 
 
 class MarketPriceRow(Base):

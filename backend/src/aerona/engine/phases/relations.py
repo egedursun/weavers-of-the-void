@@ -31,35 +31,68 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
 
 
 @reads(
+    "mortal.age",
     "mortal.agility",
     "mortal.charisma",
     "mortal.creativity",
     "mortal.endurance",
+    "mortal.hp",
     "mortal.intellect",
+    "mortal.lifespan",
     "mortal.perception",
     "mortal.strength",
     "mortal.willpower",
     "mortal.wisdom",
     "table.army_officers",
+    "table.bodies",
+    "table.body_customs",
     "table.bonds",
+    "table.conditions",
+    "table.cult_tenets",
+    "table.culture_values",
+    "table.deed_claims",
+    "table.deeds",
     "table.entity_flags",
     "table.faction_memberships",
     "table.griefs",
+    "table.holder_levels",
     "table.incubating_ideas",
+    "table.injuries",
+    "table.item_profiles",
     "table.memories",
     "table.mind_attributes",
     "table.mind_facets",
     "table.minds",
+    "table.mortal_equipment",
     "table.mortal_profiles",
     "table.needs",
+    "table.nodes",
     "table.personality_values",
+    "table.prostheses",
     "table.relationships",
+    "table.reputations",
     "table.skills",
     "table.thoughts",
+    "table.tradition_profiles",
     "table.traits",
     "table.wants",
 )
-@writes("table.memories", "table.mortal_profiles", "table.relationships", "table.skills", "table.thoughts")
+@writes(
+    "mortal.hp",
+    "table.bodies",
+    "table.body_customs",
+    "table.bonds",
+    "table.deed_claims",
+    "table.deeds",
+    "table.entities",
+    "table.injuries",
+    "table.memories",
+    "table.mortal_profiles",
+    "table.relationships",
+    "table.reputations",
+    "table.skills",
+    "table.thoughts",
+)
 async def relations_social(ctx: TickContext) -> None:
     mortals = await social_mortals(ctx)
     places = await living_mortals_by_place(ctx, mortals)
@@ -145,24 +178,68 @@ async def relations_passions(ctx: TickContext) -> None:
     "table.bonds",
     "table.faction_memberships",
     "table.faction_profiles",
+    "table.griefs",
     "table.group_ranks",
     "table.house_members",
     "table.mind_facets",
     "table.minds",
     "table.mortal_profiles",
+    "table.needs",
     "table.offices",
+    "table.personality_values",
     "table.relationships",
     "table.skills",
+    "table.thoughts",
     "table.traits",
+    "table.wants",
 )
-@writes("table.faction_profiles", "table.group_ranks", "table.relationships")
+@writes("table.faction_profiles", "table.group_ranks", "table.relationships", "table.thoughts")
 async def relations_pecking(ctx: TickContext) -> None:
     tally = PeckingTally()
     await tend_pecking(ctx, tally)
     count(ctx, "pecking", tally)
 
 
-@reads("table.bonds", "table.captives", "table.entity_flags", "table.group_ranks", "table.nodes", "table.relationships")
+@reads(
+    "table.bonds",
+    "table.captives",
+    "table.deed_claims",
+    "table.deeds",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.group_ranks",
+    "table.incubating_ideas",
+    "table.mind_attributes",
+    "table.mind_facets",
+    "table.minds",
+    "table.mortal_profiles",
+    "table.name_registry",
+    "table.nodes",
+    "table.passions",
+    "table.relationships",
+    "table.reputations",
+    "table.skills",
+    "table.thoughts",
+)
+@writes(
+    "table.artwork_profiles",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.contests",
+    "table.deed_claims",
+    "table.deeds",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.group_ranks",
+    "table.incident_participants",
+    "table.incidents",
+    "table.mortal_profiles",
+    "table.name_registry",
+    "table.relationships",
+    "table.reputations",
+    "table.thoughts",
+)
 async def relations_contests(ctx: TickContext) -> None:
     tally = ContestTally()
     await tend_contests(ctx, await living_mortals_by_place(ctx, await social_mortals(ctx)), tally)

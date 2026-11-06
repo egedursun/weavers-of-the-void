@@ -100,6 +100,7 @@ class StoresLine(ContextItem):
     currency: str = ""
     debts: list[str] = Field(default_factory=list)
     loans: list[str] = Field(default_factory=list)
+    works: list[str] = Field(default_factory=list)
     job: str = ""
 
 

@@ -1,0 +1,82 @@
+from enum import StrEnum
+
+
+class EnergyKind(StrEnum):
+    MUSCLE = "muscle"
+    WATER = "water"
+    WIND = "wind"
+    HEAT = "heat"
+    MAGIC = "magic"
+    DIVINE = "divine"
+
+
+class Pollutant(StrEnum):
+    AIR = "air"
+    WATER = "water"
+    SOIL = "soil"
+
+
+class QualityTier(StrEnum):
+    POOR = "poor"
+    COMMON = "common"
+    FINE = "fine"
+    SUPERIOR = "superior"
+    EXCEPTIONAL = "exceptional"
+    MASTERWORK = "masterwork"
+    ARTIFACT = "artifact"
+
+
+class ProcessKind(StrEnum):
+    FARMING = "farming"
+    FISHING = "fishing"
+    LOGGING = "logging"
+    MINING = "mining"
+    MILLING = "milling"
+    WEAVING = "weaving"
+    SMELTING = "smelting"
+    TANNING = "tanning"
+    BREWING = "brewing"
+    DISTILLING = "distilling"
+    MASONRY = "masonry"
+    CHARCOAL = "charcoal"
+    PRESERVING = "preserving"
+
+
+class MethodKind(StrEnum):
+    HAND_SICKLE = "hand_sickle"
+    OX_PLOUGH = "ox_plough"
+    IRRIGATED_TERRACES = "irrigated_terraces"
+    CROP_ROTATION = "crop_rotation"
+    DIVINE_HARVEST = "divine_harvest"
+    LINE_AND_NET = "line_and_net"
+    FISH_WEIRS = "fish_weirs"
+    DEEP_SEA_FLEETS = "deep_sea_fleets"
+    AXE_FELLING = "axe_felling"
+    WATER_SAWMILL = "water_sawmill"
+    PICK_AND_SHOVEL = "pick_and_shovel"
+    FIRE_SETTING = "fire_setting"
+    PUMPED_SHAFTS = "pumped_shafts"
+    EARTH_SHAPING = "earth_shaping"
+    HAND_QUERN = "hand_quern"
+    WATERMILL = "watermill"
+    WINDMILL = "windmill"
+    HAND_LOOM = "hand_loom"
+    WATER_FRAME = "water_frame"
+    BLOOMERY = "bloomery"
+    BLAST_FURNACE = "blast_furnace"
+    DIVINE_FORGE = "divine_forge"
+    PIT_TANNING = "pit_tanning"
+    OIL_CURING = "oil_curing"
+    OPEN_VAT = "open_vat"
+    CELLAR_BREWING = "cellar_brewing"
+    HERBAL_STILL = "herbal_still"
+    ARCANE_ALEMBIC = "arcane_alembic"
+    HAND_CHISEL = "hand_chisel"
+    WATER_SAW = "water_saw"
+    CLAMP_KILN = "clamp_kiln"
+    RETORT_KILN = "retort_kiln"
+    SALTING = "salting"
+    SMOKING = "smoking"
+    DRYING = "drying"
+    ICING = "icing"
+    MAGIC_KEEPING = "magic_keeping"

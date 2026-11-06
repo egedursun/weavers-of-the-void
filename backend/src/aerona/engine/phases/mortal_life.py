@@ -154,6 +154,7 @@ async def mortal_survey(ctx: TickContext) -> None:
     "table.prostheses",
     "table.skills",
     "table.thoughts",
+    "table.tradition_profiles",
     "table.traits",
 )
 @writes(

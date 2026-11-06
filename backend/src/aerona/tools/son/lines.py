@@ -5,6 +5,7 @@ POWER_AWOKE = Line("tools.son.power_awoke", "A new power awoke within {son}: {po
 ANCHOR = Line("tools.son.anchor", "{son} bound their existence to {entity}: {reason}")
 BIND_MORTALS = Line("tools.son.bind_mortals", "{son} bound {first} and {second} ({binding}): {reason}")
 PLANT_IDEA = Line("tools.son.plant_idea", "{son} planted {idea} in the mind of {mortal}: {reason}")
+TEND_LAND = Line("tools.son.tend_land", "{son} {verb} the land of {region}: {reason}")
 SPREAD_WORD = Line("tools.son.spread_word", "{son} spread word of {subject} in {community}: {reason}")
 STIR_HEARTS = Line("tools.son.stir_hearts", "{son} stirred {stir} in {first} toward {second}: {reason}")
 TOUCH_MORTAL = Line("tools.son.touch_mortal", "The touch of {son} fell on {mortal} ({touch}): {reason}")

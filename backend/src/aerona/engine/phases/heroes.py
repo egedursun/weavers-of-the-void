@@ -11,7 +11,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import HeroQuestRow
-from aerona.db.write_guard import held
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
@@ -543,7 +543,7 @@ async def hero_births(ctx: TickContext) -> None:
     at_war = {bond.source_node_id for bond in hostility} | {bond.target_node_id for bond in hostility}
     rng = ctx.rng("hero_births")
     born = 0
-    for community in communities:
+    for community in unheld(communities):
         if born >= settings.birth_cap:
             break
         if stat_or(community, "population", 0) < threshold(community):

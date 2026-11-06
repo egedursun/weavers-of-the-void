@@ -2,15 +2,20 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES
+from aerona.catalog.methods import ENERGY_LABELS, METHODS, PROCESS_LABELS, TIER_LABELS
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.economy import ResourceProfileRow, TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
 from aerona.domain.enums.entity import SOCIETY_TYPES
+from aerona.domain.enums.industry import EnergyKind
 from aerona.domain.enums.society import Commodity
 from aerona.engine.demography.labour import jobs_for
 from aerona.engine.economy.routes import LIVE_STATUSES
 from aerona.engine.economy.stocks import aggregate_index
 from aerona.engine.gods.queries import community_of
+from aerona.engine.industry.quality import tier_of
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.prompts.contexts.mortal import StoresLine
 from aerona.rules.registry import Rules
 from aerona.tools.framework.economy_lines import Names, commodity_lines, currency_line, debt_lines, loan_lines, route_line
@@ -72,8 +77,32 @@ async def stores_for(session: AsyncSession, rules: Rules, me: EntityRow) -> Stor
         currency=f"{coin.name} of {coin.metal}, purity {coin.purity}, trust {coin.trust}" if coin is not None else "",
         debts=debts,
         loans=loans,
+        works=await works_lines(session, rules, home),
         job=await job_of(session, rules, me, home) if me.id != home.id else "",
     )
+
+
+async def works_lines(session: AsyncSession, rules: Rules, home: EntityRow) -> list[str]:
+    methods = list(
+        await session.scalars(select(CommunityMethodRow).where(CommunityMethodRow.community_node_id == home.id).order_by(CommunityMethodRow.process))
+    )
+    lines = [f"{PROCESS_LABELS[row.process].lower()} by {METHODS[row.method].label.lower()}" for row in methods]
+    row = await session.get(CommunityIndustryRow, home.id)
+    if row is not None:
+        power = [f"{ENERGY_LABELS[kind].lower()} {getattr(row, kind.value)}" for kind in EnergyKind if getattr(row, kind.value)]
+        if power:
+            lines.append("power: " + ", ".join(power))
+        short = [ENERGY_LABELS[EnergyKind(key)].lower() for key, value in sorted(row.short.items()) if value > 0]
+        if short:
+            lines.append("short of " + ", ".join(short) + " power")
+        lines.append(
+            f"meals {TIER_LABELS[tier_of(rules, row.meal_quality)].lower()}; spoiled {row.spoiled}, preserved {row.preserved}, tools worn {row.tools_worn}"
+        )
+    top = (await RegionAtlas.load(session)).top_region(home.id)
+    fouled = await session.get(RegionPollutionRow, top) if top is not None else None
+    if fouled is not None and max(fouled.air, fouled.water, fouled.soil) > 0:
+        lines.append(f"the land is fouled: air {fouled.air}, water {fouled.water}, soil {fouled.soil}")
+    return lines
 
 
 async def resource_yield(session: AsyncSession, resource_id: int) -> str:

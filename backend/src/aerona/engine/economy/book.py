@@ -10,6 +10,7 @@ from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.economy import ResourceProfileRow, ResourceWorkerRow, WorkshopDesignRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
 from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import TreatyClauseRow, TreatyPartyRow, TreatyProfileRow
@@ -19,6 +20,7 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.industry import ProcessKind
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.polity import ClauseKind, TreatyStatus
 from aerona.domain.enums.society import KnowledgeBranch
@@ -53,6 +55,9 @@ class EconomyBook:
     designs: dict[int, WorkshopDesignRow] = field(default_factory=dict)
     merchant_danger: dict[int, int] = field(default_factory=dict)
     robbers: frozenset[int] = frozenset()
+    methods: dict[int, dict[ProcessKind, CommunityMethodRow]] = field(default_factory=dict)
+    industry: dict[int, CommunityIndustryRow] = field(default_factory=dict)
+    pollution: dict[int, RegionPollutionRow] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, ctx: TickContext) -> "EconomyBook":
@@ -108,8 +113,15 @@ class EconomyBook:
         for known in await session.scalars(select(HolderTechniqueRow)):
             book.techniques.setdefault(known.holder_entity_id, set()).add(known.technique)
         book.designs = {row.id: row for row in await session.scalars(select(WorkshopDesignRow).order_by(WorkshopDesignRow.id))}
+        await book.load_industry(ctx)
         book.blockaded = set(await session.scalars(select(ArmyProfileRow.blockade_entity_id).where(ArmyProfileRow.blockade_entity_id.is_not(None))))
         return book
+
+    async def load_industry(self, ctx: TickContext) -> None:
+        for method in await ctx.session.scalars(select(CommunityMethodRow).order_by(CommunityMethodRow.id)):
+            self.methods.setdefault(method.community_node_id, {})[method.process] = method
+        self.industry = {row.community_node_id: row for row in await ctx.session.scalars(select(CommunityIndustryRow))}
+        self.pollution = {row.region_node_id: row for row in await ctx.session.scalars(select(RegionPollutionRow))}
 
     def home_of(self, entity: EntityRow, homes: dict[int, int]) -> int | None:
         if entity.entity_type in SOCIETY_TYPES:

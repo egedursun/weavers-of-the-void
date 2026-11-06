@@ -7,18 +7,21 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.body import ConditionRow, InjuryRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.industry import CommunityIndustryRow
 from aerona.db.tables.mind import MemoryRow, NeedRow, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.body import OPEN_INJURY_STATES
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.industry import QualityTier
 from aerona.domain.enums.mind import NeedKind, PressureKind, SkillFamily, SkillKind, TraitKind, ValueAxis
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.society_depth import ShortfallEffect
 from aerona.engine.context import TickContext
 from aerona.engine.demography.basket import effect_shortfalls, poverty_of
 from aerona.engine.gods.queries import community_of
+from aerona.engine.industry.quality import at_least
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.mind.book import Values, best_skill, is_locked, mind_of, needs_of, pressures_of, write_needs, write_pressures
 from aerona.engine.mind.memories import strength_of
@@ -148,11 +151,16 @@ async def update_pressures(ctx: TickContext, community: EntityRow, culture: Valu
     return True
 
 
+async def fine_fare(session: AsyncSession, rules: Rules, community: EntityRow | None) -> int:
+    row = await session.get(CommunityIndustryRow, community.id) if community is not None else None
+    return rules.quality.fine_meal_sustenance if row is not None and at_least(rules, row.meal_quality, QualityTier.FINE) else 0
+
+
 async def mortal_needs(session: AsyncSession, rules: Rules, mortal: EntityRow, *, values: Values, traits: set[TraitKind], epoch: int) -> dict[NeedKind, int]:
     table = rules.needs
     community = await community_of(session, mortal)
     pressures = await pressures_of(session, community.id) if community is not None else {}
-    sustenance = FULL - pressures.get(PressureKind.HUNGER, table.unknown_pressure)
+    sustenance = FULL - pressures.get(PressureKind.HUNGER, table.unknown_pressure) + await fine_fare(session, rules, community)
     open_wounds = len(
         list(await session.scalars(select(InjuryRow.id).where(InjuryRow.bearer_node_id == mortal.id, InjuryRow.state.in_(tuple(OPEN_INJURY_STATES)))))
     )

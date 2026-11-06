@@ -255,6 +255,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
 @writes(
     "mortal.death_year",
     "mortal.hp",
+    "mortal.lifespan",
     "table.bodies",
     "table.body_customs",
     "table.bonds",

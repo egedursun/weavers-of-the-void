@@ -105,6 +105,7 @@ from aerona.db.tables.faith import (
 )
 from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow, GodConflictRow, OuterBargainRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
+from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.job import JobRow
 from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
@@ -256,6 +257,8 @@ __all__ = [
     "ClimateOrderRow",
     "CohortRow",
     "CommanderTraitRow",
+    "CommunityIndustryRow",
+    "CommunityMethodRow",
     "CommunityNeedRow",
     "CommunityRelationRow",
     "CommunitySocietyRow",
@@ -410,6 +413,7 @@ __all__ = [
     "RegionGeomorphRow",
     "RegionHazardRow",
     "RegionMemoryRow",
+    "RegionPollutionRow",
     "ReincarnationRow",
     "RelationshipRow",
     "RelicRow",

@@ -5,24 +5,32 @@ from sqlalchemy import func, select
 from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import MaimedCohortRow
+from aerona.db.tables.economy import ProductionRunRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow
+from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.environment import CoastKind
+from aerona.domain.enums.industry import ProcessKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.extraction import tools_factor
-from aerona.engine.economy.stocks import aggregate_need, epoch_need, goods_of, holdings, nourishment_need
+from aerona.engine.economy.stocks import DEFAULT_QUALITY, aggregate_need, epoch_need, goods_of, holdings, nourishment_need
 from aerona.engine.environment.profile import CropMix, crop_mix
+from aerona.engine.industry.energy import scale_by_energy
+from aerona.engine.industry.methods import method_for
+from aerona.engine.industry.pollution import fish_factor, region_id_of
+from aerona.engine.mind.preferences import demand_factor, market_fit
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import headcount
 from aerona.engine.settlement.storage import capacity_of, storage_room, store_kind
 from aerona.rules.registry import Rules
 
 THOUSAND = 1000
+HARVEST_STEP = "harvest"
 EATING_ORDER = (CommodityKind.BREAD, CommodityKind.LIVESTOCK, CommodityKind.FISH, CommodityKind.GRAIN)
 
 
@@ -32,6 +40,7 @@ class Meal:
     eaten: dict[CommodityKind, int] = field(default_factory=dict)
     short: dict[CommodityKind, int] = field(default_factory=dict)
     wanted: dict[CommodityKind, int] = field(default_factory=dict)
+    quality: int = DEFAULT_QUALITY
 
 
 @dataclass(frozen=True)
@@ -58,15 +67,36 @@ async def harvest_goods(ctx: TickContext, book: EconomyBook, community: EntityRo
     tools = await tools_factor(ctx, community.id, farmers)
     units = farmers * table.farm_units_per_1000_farmers / THOUSAND * rate * tools
     mix = mix_of(ctx, book, community)
-    fodder = round_half_up(units * mix.pasture * table.fodder_share_pct / PERCENT)
+    farming = method_for(book, community.id, ProcessKind.FARMING)
+    fishing = method_for(book, community.id, ProcessKind.FISHING)
+    crews = round_half_up(farmers * ctx.rules.energy.extraction_per_100_workers / PERCENT)
+    land = units * farming.output_pct / PERCENT * scale_by_energy(book, community.id, farming.energy, farming.energy_need * crews)
+    sea = units * fishing.output_pct / PERCENT * fish_factor(ctx.rules, book.pollution.get(region_id_of(book, community.id) or -1))
+    if mix.fish > 0:
+        sea *= scale_by_energy(book, community.id, fishing.energy, round_half_up(fishing.energy_need * crews * mix.fish))
+    fodder = round_half_up(land * mix.pasture * table.fodder_share_pct / PERCENT)
     split = {
-        CommodityKind.GRAIN: round_half_up(units * mix.grain),
-        CommodityKind.LIVESTOCK: round_half_up(units * mix.pasture) - fodder,
+        CommodityKind.GRAIN: round_half_up(land * mix.grain),
+        CommodityKind.LIVESTOCK: round_half_up(land * mix.pasture) - fodder,
         CommodityKind.FODDER: fodder,
-        CommodityKind.FISH: round_half_up(units * mix.fish),
+        CommodityKind.FISH: round_half_up(sea * mix.fish),
     }
     for kind, amount in split.items():
-        await goods_of(ctx.session, ctx.epoch).add(community.id, kind, max(0, amount), GoodsFlow.HARVEST)
+        bonus = fishing.quality_bonus if kind is CommodityKind.FISH else farming.quality_bonus
+        await goods_of(ctx.session, ctx.epoch).add(community.id, kind, max(0, amount), GoodsFlow.HARVEST, quality=DEFAULT_QUALITY + bonus)
+    ctx.session.add(
+        ProductionRunRow(
+            epoch=ctx.epoch,
+            community_entity_id=community.id,
+            step=HARVEST_STEP,
+            output=CommodityKind.GRAIN,
+            quantity=max(0, split[CommodityKind.GRAIN] + split[CommodityKind.LIVESTOCK]),
+            quality=DEFAULT_QUALITY + farming.quality_bonus,
+            inputs={},
+            workers=farmers,
+            method=farming.kind,
+        )
+    )
     return split
 
 
@@ -85,6 +115,21 @@ def diet_demand(rules: Rules, population: int, staples: tuple[CommodityKind, ...
     return {kind: round_half_up(weight[kind] * scale) for kind in base}
 
 
+async def substitute_order(ctx: TickContext, community: EntityRow, order: tuple[CommodityKind, ...]) -> tuple[CommodityKind, ...]:
+    table = ctx.rules.substitution
+    society = await ctx.session.get(CommunitySocietyRow, community.id)
+    tastes = await market_fit(ctx.session, community.id)
+
+    def cost(kind: CommodityKind) -> float:
+        spec = COMMODITIES[kind]
+        price = spec.base_price * (society.price(spec.aggregate) / PERCENT if society is not None else 1.0)
+        per_meal = price / max(1, spec.nourishment) * table.price_pct / PERCENT
+        liking = float(demand_factor(ctx.rules, tastes, kind.value) ** (table.liking_pct / PERCENT))
+        return per_meal / max(0.1, liking)
+
+    return tuple(sorted(order, key=lambda kind: (cost(kind), order.index(kind))))
+
+
 async def eat(ctx: TickContext, community: EntityRow, staples: tuple[CommodityKind, ...] = ()) -> Meal:
     population = headcount(community)
     need = nourishment_need(ctx.rules, population)
@@ -94,25 +139,32 @@ async def eat(ctx: TickContext, community: EntityRow, staples: tuple[CommodityKi
     order = eating_order(staples)
     wanted = diet_demand(ctx.rules, population, staples)
     eaten: dict[CommodityKind, int] = {}
+    tasted: list[tuple[int, int]] = []
     left = need
     for kind in order:
-        taken = sum(lot.quantity for lot in await ledger.take(community.id, kind, wanted.get(kind, 0), GoodsFlow.CONSUMPTION, best_first=False))
+        lots = await ledger.take(community.id, kind, wanted.get(kind, 0), GoodsFlow.CONSUMPTION, best_first=False)
+        taken = sum(lot.quantity for lot in lots)
+        tasted.extend((lot.quality, lot.quantity) for lot in lots)
         eaten[kind] = taken
         left = max(0, left - taken * COMMODITIES[kind].nourishment)
     held = await holdings(ctx.session, community.id)
-    for kind in order:
+    for kind in await substitute_order(ctx, community, order):
         if left <= 0:
             break
         value = COMMODITIES[kind].nourishment
         units = min(held.get(kind, 0), -(-left // value))
         if units <= 0:
             continue
-        taken = sum(lot.quantity for lot in await ledger.take(community.id, kind, units, GoodsFlow.CONSUMPTION, best_first=False))
+        lots = await ledger.take(community.id, kind, units, GoodsFlow.CONSUMPTION, best_first=False)
+        taken = sum(lot.quantity for lot in lots)
+        tasted.extend((lot.quality, lot.quantity) for lot in lots)
         eaten[kind] = eaten.get(kind, 0) + taken
         left = max(0, left - taken * value)
     fed = round_half_up((need - left) * PERCENT / need)
     short = {kind: amount - min(amount, eaten.get(kind, 0)) for kind, amount in wanted.items() if amount > eaten.get(kind, 0)}
-    return Meal(fed, eaten, short, wanted)
+    portions = sum(quantity for _, quantity in tasted)
+    quality = round_half_up(sum(value * quantity for value, quantity in tasted) / portions) if portions else DEFAULT_QUALITY
+    return Meal(fed, eaten, short, wanted, quality)
 
 
 async def gather_commons(ctx: TickContext, book: EconomyBook, community: EntityRow, farmer_share: float) -> dict[CommodityKind, int]:

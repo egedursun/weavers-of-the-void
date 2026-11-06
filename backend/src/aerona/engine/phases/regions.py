@@ -114,6 +114,7 @@ async def danger_harm(ctx: TickContext) -> None:
 
 
 @reads(
+    "army.morale",
     "army.size",
     "item.protection",
     "mortal.age",

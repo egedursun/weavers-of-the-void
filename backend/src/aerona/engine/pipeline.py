@@ -53,6 +53,7 @@ from aerona.engine.phases import (
     heroes,
     heroism,
     horror,
+    industry,
     institutions,
     interconnect,
     knowledge_levels,
@@ -133,6 +134,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + mind.PHASES
     + relations.PHASES
     + renown.PHASES
+    + industry.PHASES
     + casualties.PHASES
     + ecology.PHASES
     + environment.PHASES
@@ -282,6 +284,7 @@ ECONOMY_STAGE = stage(
     "world_materials",
     "species_yields",
     "deposit_finding",
+    "industry_methods",
     "resource_economy",
     "prosperity_reversion",
     "barter_and_rivalry",
@@ -330,6 +333,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "refining",
     "markets",
     "trade_flow",
+    "industry_aftermath",
     "banking",
     "society_mobility",
     "structure_upkeep",

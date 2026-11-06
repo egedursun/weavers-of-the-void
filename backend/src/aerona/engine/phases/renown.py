@@ -62,7 +62,7 @@ async def renown_hearsay(ctx: TickContext) -> None:
     count(ctx, "deed", tally)
 
 
-@reads("table.deed_claims", "table.deeds")
+@reads("table.deed_claims", "table.deeds", "table.incident_participants")
 async def renown_claims(ctx: TickContext) -> None:
     tally = DeedTally()
     await tend_claims(ctx, tally)

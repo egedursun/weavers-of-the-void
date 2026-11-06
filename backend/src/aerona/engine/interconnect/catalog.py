@@ -32,6 +32,7 @@ from aerona.engine.interconnect.catalog_economy import ECONOMY_DEPTH_MECHANICS
 from aerona.engine.interconnect.catalog_faith import BEHAVIOURS as FAITH_BEHAVIOURS
 from aerona.engine.interconnect.catalog_faith import FAITH_MECHANICS
 from aerona.engine.interconnect.catalog_foundations import FOUNDATION_MECHANICS
+from aerona.engine.interconnect.catalog_industry import INDUSTRY_MECHANICS
 from aerona.engine.interconnect.catalog_lore import BEHAVIOURS as LORE_BEHAVIOURS
 from aerona.engine.interconnect.catalog_lore import LORE_MECHANICS
 from aerona.engine.interconnect.catalog_made import BEHAVIOURS as MADE_BEHAVIOURS
@@ -956,6 +957,7 @@ BUILT_IN = (
     *ECONOMY_DEPTH_MECHANICS,
     *STRUCTURE_MECHANICS,
     *MORTAL_MECHANICS,
+    *INDUSTRY_MECHANICS,
     *FOUNDATION_MECHANICS,
     *PLACE_MECHANICS,
     *PLACE_BEHAVIOURS,

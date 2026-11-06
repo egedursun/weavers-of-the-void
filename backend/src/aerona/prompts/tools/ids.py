@@ -101,6 +101,7 @@ class SonToolId(StrEnum):
     PLANT_IDEA = "plant_idea"
     STIR_HEARTS = "stir_hearts"
     SPREAD_WORD = "spread_word"
+    TEND_LAND = "tend_land"
     REVEAL_TENET = "reveal_tenet"
     OPEN_REBIRTH_GATE = "open_rebirth_gate"
 
@@ -173,6 +174,7 @@ class MortalToolId(StrEnum):
     CHALLENGE_TO_CONTEST = "challenge_to_contest"
     PERSUADE = "persuade"
     TRADE_LORE = "trade_lore"
+    CHOOSE_METHOD = "choose_method"
 
 
 ToolId = SonToolId | MortalToolId

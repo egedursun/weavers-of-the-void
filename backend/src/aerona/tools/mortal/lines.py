@@ -150,3 +150,4 @@ SPIES_CAUGHT = Line("tools.mortal.spies_caught", "The spies of {me} were caught 
 SPIES_CAUGHT_EVENT = "caught spies"
 
 LAW_LAID = Line("tools.mortal.law_laid", "{me} laid down {law} for {realm}.")
+METHOD_CHOSEN = Line("tools.mortal.method_chosen", "{me} took up {method} for {process}.")

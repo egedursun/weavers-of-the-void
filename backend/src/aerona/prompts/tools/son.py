@@ -281,6 +281,16 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "reason": "Why you plant it",
         },
     ),
+    T.TEND_LAND: ToolText(
+        "You cleanse a land of the waste its works and crowds leave in its air, water and soil, or you foul it. "
+        "Fouled land breeds sickness, yields less and thins the catch; cleansed land recovers. "
+        "Costs {{ rules.costs.influence }} essence and one action.",
+        {
+            "region_id": "The land you tend",
+            "cleanse": "True to cleanse it, false to foul it",
+            "reason": "Why you tend it",
+        },
+    ),
     T.SPREAD_WORD: ToolText(
         "You spread word of someone in a community: their name grows or darkens there for one kind of reputation "
         "(heroism, honour, cruelty, piety, generosity, wisdom, trickery, renown for a skill, troublemaking). "

@@ -234,6 +234,7 @@ async def set_stock(
     quantity: int,
     quality: int,
     hold: bool | None,
+    preserved: int | None = None,
 ) -> CommunityStockRow:
     entity = await community(ctx, community_id)
     if world_material_id is not None:
@@ -250,6 +251,7 @@ async def set_stock(
     await ledger.record(entity.id, commodity, GoodsFlow.PLAYER, quantity - row.quantity)
     row.quantity = quantity
     row.quality = percent("quality", quality)
+    row.preserved = min(quantity, preserved if preserved is not None else row.preserved)
     if hold is not None:
         row.held = hold
     await ctx.session.flush()

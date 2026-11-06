@@ -56,6 +56,12 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "for a stake. The winner gains renown; a famous contest may be remembered in art. 1 action.",
         {"target_id": "The mortal you challenge", "kind": "The contest", "stake": "What is at stake"},
     ),
+    T.CHOOSE_METHOD: ToolText(
+        "You choose how your community does one kind of work: how it farms, fishes, fells, mines, mills, weaves, smelts, tans, brews, distils, "
+        "dresses stone, burns charcoal or keeps food from spoiling. A method needs its techniques, knowledge and energy; it changes output, "
+        "quality, tool wear and pollution, and a method that needs fewer hands puts some out of work. 1 action.",
+        {"method": "The method to take up"},
+    ),
     T.TRADE_LORE: ToolText(
         "You trade a piece of lore you hold (a technique, a hidden site, knowledge of a land or a prophecy) to a neighbour who lacks it. "
         "Rarer lore is worth more, and each telling makes it less rare. You are paid in wealth or in renown for wisdom. 1 action.",

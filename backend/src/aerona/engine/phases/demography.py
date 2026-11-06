@@ -137,10 +137,13 @@ async def labour_allocation(ctx: TickContext) -> None:
 
 
 @reads(
+    "army.experience",
+    "army.morale",
     "army.size",
     "people.population",
     "settlement.population",
     "table.armies",
+    "table.army_units",
     "table.battles",
     "table.bonds",
     "table.captive_cohorts",
@@ -149,6 +152,7 @@ async def labour_allocation(ctx: TickContext) -> None:
     "table.community_societies",
     "table.cult_tenets",
     "table.entities",
+    "table.epoch_year_cursors",
     "table.house_members",
     "table.house_profiles",
     "table.loans",
@@ -160,6 +164,7 @@ async def labour_allocation(ctx: TickContext) -> None:
     "army.size",
     "people.population",
     "settlement.population",
+    "table.army_units",
     "table.bonds",
     "table.captives",
     "table.chronicle",
