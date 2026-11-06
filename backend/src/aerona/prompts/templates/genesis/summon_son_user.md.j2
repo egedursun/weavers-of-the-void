@@ -2,7 +2,7 @@
 {% if target_world_line %}
 
 This son's world: {{ target_world_line }}
-His nature must fit this world's type, its sky and its tensions.
+His nature must fit this world's type, its sky and its present state.
 {% endif %}
 
 Current pantheon: {% if pantheon %}{% for son in pantheon %}{{ son.name }}{% if son.title %} ({{ son.title }}){% endif %}: {{ son.domain_1 }}/{{ son.domain_2 }}{% if not loop.last %}; {% endif %}{% endfor %}{% else %}empty{% endif %}
@@ -18,9 +18,9 @@ Recent events:
 {{ parent.name }} ({{ parent.domain_1 }}/{{ parent.domain_2 }}){% if co_parent %} and {{ co_parent.name }} ({{ co_parent.domain_1 }}/{{ co_parent.domain_2 }}){% endif %} {{ "are" if co_parent else "is" }} giving birth to a child. Inspiration: {{ inspiration if inspiration else "none given" }}
 The child must take something from its parent but must not resemble it.
 {% else %}
-The god {{ god_name }} is summoning a new son. Choose a domain left empty in the pantheon and a personality that touches the world's current tensions and open stories.
+The god {{ god_name }} is summoning a new son. Choose a domain left empty in the pantheon and a personality of his own that answers the world's present state and open stories in his own way; his temper may lean towards loyalty, rivalry, care or indifference as his nature calls for.
 {% endif %}
-Rarity: {{ rarity_label }} ({% if rarity == "common" %}small, young, limited{% elif rarity in ["legendary", "mythic"] %}ancient, terrible, cosmic{% else %}of middling might{% endif %}). Produce the son's profile, his three powers and his existence.
+Rarity: {{ rarity_label }} ({% if rarity == "common" %}small, young, limited{% elif rarity in ["legendary", "mythic"] %}ancient, vast, cosmic in reach{% else %}of middling might{% endif %}). Produce the son's profile, his three powers and his existence.
 NAME: clearly different in sound from the names of the existing sons, foreign gods and records (a difference of one or two letters is forbidden; mortals would confuse them).
 {% if pantheon_roots %}
 ROOTS PILED UP IN THE PANTHEON (in the titles and obsessions of most siblings; do NOT use them in this son's name, title, obsession or secret): {% for root in pantheon_roots %}{{ root.stem }}- ({{ root.form }}){% if not loop.last %}, {% endif %}{% endfor %}.

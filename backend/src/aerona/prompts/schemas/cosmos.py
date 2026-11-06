@@ -108,9 +108,9 @@ class NewWorldOutput(OutputModel):
     )
     name: str = Field(description="The world's name; in the new dialect, repeating no existing name")
     language: BirthLanguageOutput = Field(description="This world's native language: matching the dialect exactly")
-    description: str = Field(description="3 to 5 sentences: what makes this world strange and concrete")
+    description: str = Field(description="3 to 5 sentences: what makes this world distinctive and concrete")
     cosmology: str = Field(
-        description="This world's OWN view of creation and death, 2 to 4 sentences; do not repeat the main cosmology, extend it with this world's strangeness"
+        description="This world's OWN view of creation and death, 2 to 4 sentences; do not repeat the main cosmology, extend it with what is particular to this world"
     )
     gravity: Gravity
     atmosphere: Atmosphere
@@ -127,7 +127,7 @@ class NewWorldOutput(OutputModel):
     regions: list[BirthRegionOutput]
     sky: SkyBodyOutput = Field(description="The most prominent body in this world's sky (moon, ring, wound, second sun…)")
     unique_resource: UniqueResourceOutput = Field(
-        description="A strange resource found only on this world; it should have an odd rule (it decays, it is addictive, it can only be gathered in one season…)"
+        description="A resource found only on this world; it should have a rule of its own (it decays, it is addictive, it can only be gathered in one season…)"
     )
     cosmic_resource: CosmicResourceOutput | None = Field(
         default=None,

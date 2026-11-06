@@ -134,7 +134,7 @@ export function CreateWorldForm({ index, rules }: CreateWorldFormProps) {
               id={id}
               value={inspiration}
               maxLength={maxLength}
-              placeholder='A world where hours melt into sand; each grain holds a memory…'
+              placeholder='What is this world like: its land, its sky, the rule that makes it its own…'
               onChange={(event) => setInspiration(event.target.value)}
             />
             {maxLength !== undefined && (

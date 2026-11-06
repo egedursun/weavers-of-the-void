@@ -97,7 +97,7 @@ export function RevelationDialog({
               <Textarea
                 id={id}
                 value={content}
-                placeholder='In the north of the sky, a pale star that only the dying can see...'
+                placeholder='Describe what you reveal: a being, a place, a law of nature, an event, a people…'
                 onChange={(event) => setContent(event.target.value)}
               />
             )}

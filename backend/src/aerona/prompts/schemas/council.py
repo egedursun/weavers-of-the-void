@@ -48,7 +48,7 @@ class CouncilOutput(OutputModel):
         description="A 3 to 5 sentence epic summary of the council, as a mortal seer saw it in a dream; {{ attendance }} sons attended the council (write no other number)"
     )
     agenda: str = Field(
-        description='One-sentence, third-person summary of the agenda for the chronicle (do not repeat the god\'s question verbatim in the first person: e.g. "the fate of Haevaron")'
+        description="One-sentence, third-person summary of the agenda for the chronicle (do not repeat the god's question verbatim in the first person: e.g. \"the fate of <the subject's name>\")"
     )
 
 

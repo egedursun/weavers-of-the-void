@@ -239,7 +239,7 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
           <Textarea
             aria-label='The dream'
             maxLength={DREAM_MAX_LENGTH}
-            placeholder='A salt door opens in the north, and nobody returns the same…'
+            placeholder='Describe what happens, where, and what it changes…'
             value={dream}
             onChange={(event) => setDream(event.target.value)}
           />

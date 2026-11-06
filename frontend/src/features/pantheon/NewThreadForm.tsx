@@ -52,7 +52,7 @@ export function NewThreadForm() {
             <Textarea
               id={id}
               value={text}
-              placeholder='The exiled heir will return to claim the drowned throne.'
+              placeholder='The story that has begun and the question it leaves open…'
               onChange={(event) => setText(event.target.value)}
             />
           )}

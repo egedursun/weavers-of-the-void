@@ -27,7 +27,7 @@ CREATION_DESCRIPTION = (
 CREATION_FIELDS: dict[str, str] = {
     "name": "Original proper name; fitting the world's naming language. Generic names (River, Dark Forest, Dragon) are forbidden.",
     "subtype": "What it is, e.g.: {{ entity.examples | join(', ') }}",
-    "description": "3 to 7 sentences. Concrete, sensory, strange details; how it was born, what it is connected with, how mortals know it.",
+    "description": "3 to 7 sentences. Concrete, sensory details of its own; how it was born, what it is connected with, how mortals know it.",
     "domain": "If empty, your first domain. The domain used in this creation; one of: {{ domains | join(', ') }}. Your own domains are cheap.",
     "power_level": "Between 1 and 10{% if context.power_ceiling %}; your ceiling is {{ context.power_ceiling }}{% endif %}. Increases the cost.",
     "stats": "Optional stats; leave out any you do not want to set",
@@ -156,11 +156,11 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
     EntityType.RESOURCE: {
         "commodity": COMMODITY_FIELD,
         "material": MATERIAL_FIELD,
-        "mechanics": "The resource's strange rules, at most {{ rules.mechanics.resource_max }} (if left empty they are read from its name and text; sacred makes it yours): {{ resource_mechanics }}",
+        "mechanics": "The resource's particular rules, at most {{ rules.mechanics.resource_max }} (if left empty they are read from its name and text; sacred makes it yours): {{ resource_mechanics }}",
     },
     EntityType.LANGUAGE: {**WORD_FIELDS, "words": "The language's first words (at most {{ rules.son_tools.coin_word_max_words }}); matching the naming rule"},
     EntityType.MORTAL: {
-        "title": 'Their nickname or title ("Salt Seer", "Ash Mouth"); do not bury it in the name, write it here',
+        "title": "Their nickname or title, drawn from their own deeds or nature; do not bury it in the name, write it here",
         "sex": "female, male or other",
         "traits": "Up to five typed traits of temper, such as brave, cruel, scholarly or zealous",
     },

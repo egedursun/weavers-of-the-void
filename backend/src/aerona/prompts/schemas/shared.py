@@ -12,11 +12,11 @@ MOTIFS_MIN = 1
 MOTIFS_MAX = 5
 
 IMAGE_PROMPT = "An English, photorealistic image-generation prompt: subject, material, light, setting, camera and lens. {{ image_prompt_rules }}"
-MOTIFS = "2 to 5 motif keys for the core images of this record: short lowercase English keys (e.g. salt, bone_bell), reused whenever the same image returns, whatever the lore language."
+MOTIFS = "2 to 5 motif keys for the core images of this record: short lowercase English keys, each naming one concrete image taken from this record itself (an object, material, creature, colour, sound or phenomenon; one word, or two joined by an underscore), reused whenever the same image returns, whatever the lore language."
 
 
 class PowerOutput(OutputModel):
-    name: str = Field(description="The power's own name, e.g. \"The Salt's Memory\"")
+    name: str = Field(description="The power's own name, drawn from what it does and from this god's own domains and idiom")
     description: str = Field(description="Mythic description of the power, 1 to 2 sentences")
     effect: PowerEffect = Field(description="{{ power_effects }}")
     param: str = Field(
@@ -41,7 +41,9 @@ class PassionsOutput(OutputModel):
 
 class SonProfileOutput(OutputModel):
     name: str = Field(description="Proper name, fitting the naming language")
-    title: str = Field(description='Epithet or title, e.g. "Who Makes the Salt Weep", "Warden of the Seven Oaths"')
+    title: str = Field(
+        description="Epithet or title in this world's idiom, drawn from this god's own domains, deeds or nature; vary its grammatical shape from god to god (a noun phrase, a deed, a place, a bond) and never reuse the shape of a sibling's title"
+    )
     domain_1: Domain
     domain_2: Domain
     appearance: str = Field(description="Detailed physical appearance: body, face, material, clothing, marks (3 to 4 sentences)")

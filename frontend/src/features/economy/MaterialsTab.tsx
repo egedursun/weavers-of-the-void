@@ -547,7 +547,7 @@ export function MaterialForge({
         <TextField
           label='Name'
           value={name}
-          placeholder='Moonsilver, ashwood, drowned glass…'
+          placeholder='The material’s name, in this world’s own words'
           onChange={setName}
         />
         <ChoiceSelect

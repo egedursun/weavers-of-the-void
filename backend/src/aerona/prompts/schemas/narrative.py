@@ -54,7 +54,7 @@ class DeepenOutput(OutputModel):
     sayings: list[SayingOutput] = Field(default_factory=list, description="Mortals' sayings about it; may contain words from the naming language")
     details: list[str] = Field(
         default_factory=list,
-        description="Strange, concrete details; each of a different kind (a habit, a material, a non-numeric measure, a ban, a sound, a texture, a colour…) and specific to this entity; never use the same sense twice",
+        description="Concrete details of its own; each of a different kind (a habit, a material, a non-numeric measure, a ban, a sound, a texture, a colour…) and specific to this entity; never use the same sense twice",
     )
     hidden_truth: str = Field(default="", description="A truth nobody knows, connected to the entity's own history or to the laws of the world")
     special: dict[str, str] | None = None

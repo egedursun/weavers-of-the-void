@@ -191,13 +191,15 @@ describe('creation screen', () => {
     await expect.element(screen.getByText('World seed')).not.toBeInTheDocument()
   })
 
-  it('returns to the overview when genesis finishes', async () => {
-    const { router, emit } = await renderScreen(
+  it('welcomes the newborn world and carries the god into it when genesis finishes', async () => {
+    const { router, emit, screen } = await renderScreen(
       <GenesisScreen />,
-      { ...idle, 'GET /api/state': worldState({ world: null }) },
+      { ...idle, 'GET /api/state': worldState() },
       '/genesis'
     )
     emit('genesis.finished', {})
+    await expect.element(screen.getByText(/is born\./)).toBeInTheDocument()
+    await screen.getByRole('button', { name: /Enter your world/ }).click()
     await expect.poll(() => router.state.location.pathname).toBe('/')
   })
 })

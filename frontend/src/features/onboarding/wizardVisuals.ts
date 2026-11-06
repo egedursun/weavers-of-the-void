@@ -123,14 +123,18 @@ export const LORE_LANGUAGE_ICON: Record<LoreLanguage, LucideIcon> = {
 }
 
 export const TONE_SUGGESTIONS = [
-  'melancholic',
-  'folkloric',
   'mythic',
-  'cosmic horror',
-  'whimsical',
-  'grim',
   'hopeful',
-  'strange',
+  'epic',
+  'whimsical',
+  'pastoral',
+  'adventurous',
+  'romantic',
+  'satirical',
+  'folkloric',
+  'melancholic',
+  'grim',
+  'cosmic horror',
 ] as const
 
 const MAGIC_LEVELS = ['Faint', 'Rare', 'Present', 'Strong', 'Overwhelming']

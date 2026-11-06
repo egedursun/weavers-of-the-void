@@ -294,7 +294,7 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
               required
               rows={5}
               maxLength={SEED_MAX}
-              placeholder='A world made of salt; the seas are fresh and the land is salty. The dead crystallize and keep their last thoughts inside them.'
+              placeholder='Your idea for the world, in a sentence or a page: its premise, its land and sky, what makes it its own.'
               value={draft.seed}
               onChange={(event) => update({ seed: event.target.value })}
             />
@@ -311,7 +311,7 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
             <Input
               id={id}
               maxLength={TONE_MAX}
-              placeholder='melancholic and strange, folkloric, cosmic horror'
+              placeholder='Any tone you like: hopeful, epic, whimsical, grim, pastoral, mythic…'
               value={draft.tone}
               onChange={(event) => update({ tone: event.target.value })}
             />

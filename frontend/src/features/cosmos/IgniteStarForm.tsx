@@ -109,7 +109,7 @@ export function IgniteStarForm({
             id={id}
             value={description}
             maxLength={DESCRIPTION_MAX}
-            placeholder='What kind of light? A pale eye only the dead can see…'
+            placeholder='What kind of light it gives, and what it means to those beneath it…'
             onChange={(event) => setDescription(event.target.value)}
           />
         )}

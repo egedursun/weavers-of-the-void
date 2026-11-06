@@ -125,7 +125,7 @@ async def son_system_context(scope: Scope, son: SonRow, points: int, catalogue: 
         tools=catalogue.names,
         reputation_line=reputation_line(son, [CREATOR_PASSIONS[item].label for item in scope.creator.passions]),
         rebel=son.rebel,
-        rebel_prone=not son.rebel and son.will > rules.god_actions.defiant_will,
+        rebel_prone=not son.rebel and son.will > rules.god_actions.defiant_will and son.loyalty < rules.son_tools.rebel_loyalty,
         creator_wishes=await creator_wishes(scope),
         sanity=son.sanity,
         clouded=son.sanity is not None and son.sanity < horror.son_clouding_threshold,

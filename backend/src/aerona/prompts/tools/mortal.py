@@ -9,7 +9,7 @@ T = MortalToolId
 M = "rules.mortal_tools"
 
 NAME_FIELD = "A name from your own language"
-DESCRIPTION_FIELD = "What it is, how it came to be, what makes it strange and concrete"
+DESCRIPTION_FIELD = "What it is, how it came to be, what makes it distinctive and concrete"
 
 MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     T.COMMISSION_ARTWORK: ToolText(
@@ -85,7 +85,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {
             "name": NAME_FIELD,
             "category": "weapon, armour, shield, tool, jewellery, sacred relic, instrument or book",
-            "subtype": "e.g. bone spear, salt armour",
+            "subtype": "What kind of item it is, in your people's own terms",
             "description": DESCRIPTION_FIELD,
             "resource_ids": "The resources it is made from (at most {{ " + M + ".craft_max_resources }})",
             "material": "What it is made of: {{ materials | join(', ') }}; it must come from one of those resources or your people's stores, and your people must be able to work it",
@@ -141,7 +141,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "image_prompt": IMAGE_PROMPT_FIELD,
             "commodity": "What your people draw from it: {{ commodities | join(', ') }}; ore feeds forges and weapons; empty if none",
             "material": "If it is a seam or a grove, its material: {{ materials | join(', ') }}",
-            "mechanics": "The resource's strange rules, at most {{ rules.mechanics.resource_max }} (empty: read from its name and text): {{ resource_mechanics }}",
+            "mechanics": "The resource's particular rules, at most {{ rules.mechanics.resource_max }} (empty: read from its name and text): {{ resource_mechanics }}",
         },
     ),
     T.CLAIM_RESOURCE: ToolText(
@@ -412,7 +412,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {
             "debtor_id": "The borrower",
             "amount": "The debt amount (at most {{ " + M + ".debt_max_amount }})",
-            "what": "What is lent: grain, silver, salt, ship hire…",
+            "what": "What is lent: a good, coin, labour or a service",
             "term_ages": "In how many ages it will be repaid (at most {{ " + M + ".debt_max_term }}); if empty, {{ " + M + ".debt_default_term }}",
         },
     ),

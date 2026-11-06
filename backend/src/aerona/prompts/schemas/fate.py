@@ -88,7 +88,9 @@ class FateJudgmentOutput(OutputModel):
     advanced_threads: list[AdvancedThreadOutput] = Field(
         description="If an event or record of this age concretely advanced an open thread even though nobody gave thread_id"
     )
-    new_threads: list[NewThreadOutput] = Field(description="New open stories: unresolved tensions born this age, unfinished business, expected conflicts")
+    new_threads: list[NewThreadOutput] = Field(
+        description="New open stories born this age: unresolved questions, unfinished business, quests, rivalries, bonds or changes still unfolding"
+    )
     rewards: list[RewardOutput] = Field(description="Fame for sons who advanced open stories or visibly enriched the world")
     facts: list[FactOutput] = Field(
         description="MANDATORY. From every creation you accepted or fixed and every record you named, 1 to 3 short, definite facts: propositions that must not be violated in the future (what it is made of, what it forbids, whom it belongs to, when it opens…). Do not repeat recorded bonds like location, creator, language and patron; the engine writes those already"
@@ -104,7 +106,7 @@ class ExtraJudgmentOutput(OutputModel):
 
 class ChroniclerIdentityOutput(OutputModel):
     name: str
-    who: str = Field(description="Who they are: their people, their trade, their link to the previous one (e.g. 'Ehmel the Scribe, apprentice of Lemir')")
+    who: str = Field(description="Who they are: their name, their people, their trade and their link to the previous voice")
 
 
 SUMMARY = "One but full sentence (at least {{ rules.fate.summary_min_chars }} characters): who, what, where, and what it cost, with a concrete loss or consequence and without using the word 'price'"
@@ -150,7 +152,9 @@ class ChronicleCoverageOutput(OutputModel):
 
 
 class ChronicleOutput(OutputModel):
-    age_name: str = Field(description='The mythic name to give this age, e.g. "Age of the Salt Rains"; do NOT REPEAT the names of previous ages')
+    age_name: str = Field(
+        description="The mythic name to give this age, drawn from what most defined this age in this world; do NOT REPEAT the names or the shape of the names of previous ages"
+    )
     narrative: str = Field(
         description="This age's epic narrative of 3 to 5 paragraphs; from the mouth of a mortal chronicler, binding events together by cause and effect"
     )

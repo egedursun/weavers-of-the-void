@@ -198,7 +198,7 @@ export function PlaceForeignGodForm() {
               id={id}
               maxLength={IMAGE_PROMPT_MAX}
               value={imagePrompt}
-              placeholder='A veiled goddess of ash, gold leaf on black stone'
+              placeholder='How this god looks: form, materials, colours, light'
               onChange={(event) => setImagePrompt(event.target.value)}
             />
           )}
