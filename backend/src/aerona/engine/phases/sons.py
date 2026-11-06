@@ -202,13 +202,13 @@ async def rebel_theft(ctx: TickContext) -> None:
         amount = transition.rebel_steal_base + son.level * transition.rebel_steal_per_level
         son.essence += amount
         stolen += amount
-        await note(ctx, f"Rebel {son.name} stole {amount} from their father's essence.", key="sons.rebel_theft", son_id=son.id, kind=ChronicleKind.REBELLION)
+        await note(ctx, f"Rebel {son.name} stole {amount} from the Creator's essence.", key="sons.rebel_theft", son_id=son.id, kind=ChronicleKind.REBELLION)
     record(ctx, LedgerKey.STOLEN_ESSENCE, stolen)
 
 
 async def set_son_relation(ctx: TickContext, first_id: int, second_id: int, value: int) -> int:
     if first_id == second_id:
-        raise ValidationFailedError("A son has no relation with himself.")
+        raise ValidationFailedError("A son has no relation with themselves.")
     if not RELATION_MIN <= value <= RELATION_MAX:
         raise ValidationFailedError(f"A relation lies between {RELATION_MIN} and {RELATION_MAX}.")
     repository = SonRepository(ctx.session)

@@ -7,7 +7,7 @@ GOD'S TEMPERAMENT: {{ god_temperament }}
 THE GOD'S OWN WORD (canon): {{ god_note }}
 {% endif %}
 {% if not short and mood %}
-CREATOR'S MOOD (sensed from the sky; not a number, an intuition): contentment {{ mood.contentment | mood_level }}, anger {{ mood.anger | mood_level }}, attention {{ mood.attention | mood_level }}, loneliness {{ mood.loneliness | mood_level }}. If his anger overflows, punishment falls on godless and cursed lands; if he is content, favour falls on his worshippers; if he is silent, his sons feel abandoned.
+CREATOR'S MOOD (sensed from the sky; not a number, an intuition): contentment {{ mood.contentment | mood_level }}, anger {{ mood.anger | mood_level }}, attention {{ mood.attention | mood_level }}, loneliness {{ mood.loneliness | mood_level }}. If the creator's anger overflows, punishment falls on godless and cursed lands; if the creator is content, favour falls on the creator's worshippers; if the creator is silent, each child reads that silence in their own way.
 {% endif %}
 {% if not short and epic %}
 THE GOD'S EPIC: "{{ epic.title }}" — its best-known line: {{ epic.line }}
@@ -16,7 +16,7 @@ THE GOD'S EPIC: "{{ epic.title }}" — its best-known line: {{ epic.line }}
 THE GOD'S PROHIBITIONS: {{ prohibitions | join(" · ") }}
 {% endif %}
 {% if not short and desire %}
-THE GOD'S DESIRE (his sons sense it): {{ desire }}
+THE GOD'S DESIRE (the god's children sense it): {{ desire }}
 {% endif %}
 COSMOLOGY: {{ cosmology | cut_at_word(rules.context.short_cosmology_chars) if short else cosmology }}
 TONE: {{ tone }}

@@ -2,9 +2,9 @@
 {% if kind == "doomsday" %}
 Doomsday clock {{ doom }}/{{ doom_threshold }}: how will the end of the world be prevented, and who will pay the price?
 {% elif kind == "rebel" %}
-{{ subject }}'s rebellion against the father: does the council stand with the rebel or against him?
+{{ subject }}'s rebellion against the Creator: does the council stand with the rebel or against them?
 {% elif kind == "dead_brother" %}
-The dead brother {{ subject }}: shall he be resurrected, or his bones divided?
+The dead sibling {{ subject }}: shall they be resurrected, or their bones divided?
 {% elif kind == "war" %}
 {{ subject }}: will the gods take sides in the mortals' war?
 {% elif kind == "open_thread" %}
@@ -16,5 +16,5 @@ Unresolved story: {{ (head[:boundary] if boundary > 0 else head) }}…
 Unresolved story: {{ subject }}
 {% endif %}
 {% else %}
-The course of the world: which brother has grown too great, which must be reined in?
+The course of the world: what should the gods do next, and who should lead it?
 {% endif %}

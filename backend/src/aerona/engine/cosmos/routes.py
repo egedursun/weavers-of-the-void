@@ -725,7 +725,7 @@ async def stitch_route(ctx: TickContext, route_id: int, by: str) -> str:
     if route.method is TravelMethod.DIVINE_BRIDGE and route.builder_son_id is not None:
         builder = await session.get(SonRow, route.builder_son_id)
         if builder is None or builder.status is not SonStatus.ACTIVE:
-            raise ValidationFailedError("The bridge's builder fell; the bridge collapsed with him, nothing remains to stitch.")
+            raise ValidationFailedError("The bridge's builder fell; the bridge collapsed with them, nothing remains to stitch.")
     severed = route.temp_closed_until_epoch is not None or route.closure in (RouteClosure.SEVERED, RouteClosure.SNAPPED)
     route.active = True
     route.closure = None

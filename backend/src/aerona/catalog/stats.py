@@ -26,7 +26,7 @@ class LabelledKey[K]:
 STATS: dict[Stat, StatSpec] = {
     spec.stat: spec
     for spec in (
-        StatSpec(Stat.STRENGTH, "Strength", "STR", StatGroup.BODY, lambda rules: "Weight in strength duels; strengthens the armies that worship him."),
+        StatSpec(Stat.STRENGTH, "Strength", "STR", StatGroup.BODY, lambda rules: "Weight in strength duels; strengthens the armies that worship this god."),
         StatSpec(
             Stat.ENDURANCE,
             "Endurance",
@@ -63,7 +63,7 @@ STAT_GROUP_LABELS: dict[StatGroup, str] = {StatGroup.BODY: "Body", StatGroup.MIN
 PASSIONS: dict[Passion, LabelledKey[Passion]] = {
     item.key: item
     for item in (
-        LabelledKey(Passion.LOYALTY, "Loyalty", "Tendency to obey the father's orders."),
+        LabelledKey(Passion.LOYALTY, "Loyalty", "Tendency to obey the Creator's orders."),
         LabelledKey(Passion.AMBITION, "Ambition", "Pursuit of power and faith; a high value challenges siblings."),
         LabelledKey(Passion.WRATH, "Wrath", "Tendency toward destructive creations and hostility."),
         LabelledKey(Passion.MERCY, "Mercy", "Compassion toward mortals and siblings."),

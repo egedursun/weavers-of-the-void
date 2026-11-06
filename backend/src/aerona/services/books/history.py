@@ -65,7 +65,7 @@ async def son_fate(session: AsyncSession, son: SonRow, names: dict[int, str]) ->
         cause = f" ({son.death_cause.value.replace('_', ' ')})" if son.death_cause is not None else ""
         lines.append(f"Died in Epoch {son.death_epoch}{cause}")
     if son.rebel:
-        lines.append("In rebellion against the father")
+        lines.append("In rebellion against the Creator")
     if son.chained:
         lines.append("Chained")
     if son.standing_order:

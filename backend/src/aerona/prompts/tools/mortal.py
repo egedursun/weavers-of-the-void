@@ -110,7 +110,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.CREATE_CULTURE: ToolText(
         "You give birth to a tradition of your community (festival, taboo, funeral rite), a legend, a work of art (song, statue, fresco, book, play; by honouring your god "
-        "it strengthens him) or a law (statute, penalty, custom; a just law reduces rebellion). 1 action.",
+        "it strengthens that god) or a law (statute, penalty, custom; a just law reduces rebellion). 1 action.",
         {
             "kind": "tradition (rite, festival, taboo), legend (a tale), artwork (song, statue, fresco, book, play) or law (statute, penalty, custom)",
             "name": NAME_FIELD,
@@ -170,14 +170,14 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"target_id": "The community or creature", "reason": "Why you go to war"},
     ),
     T.WORSHIP: ToolText(
-        "You worship a god (a son) or change your god; if you give son_id 0 you worship the creator god directly, the father of all the sons. Your old god does not forget "
+        "You worship a god (a son) or change your god; if you give son_id 0 you worship the creator god directly, maker of all the sons. Your old god does not forget "
         "this. Free, {{ " + M + ".worship_per_epoch }} per age.",
         {"son_id": "The son's id, or 0 for the creator", "offering": "Your offering and vow"},
     ),
     T.PRAY_TO_CREATOR: ToolText(
-        "You pray directly to the creator god above the sons, the father of all worlds. Your prayer reaches him; if he answers you will see it in your dream and his grace "
+        "You pray directly to the creator god above the sons, the maker of all worlds. Your prayer reaches the creator; if answered, you will see it in your dream and the creator's grace "
         "will descend. Free, {{ " + M + ".pray_creator_per_epoch }} per age.",
-        {"prayer": "Your prayer", "request": "What you ask of him"},
+        {"prayer": "Your prayer", "request": "What you ask of the creator"},
     ),
     T.DEVELOP_KNOWLEDGE: ToolText(
         "Your community develops a new piece of knowledge (a technology, craft, school or method). Branch: {{ knowledge_branches }}. If it is built on knowledge you already "
@@ -288,12 +288,12 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"target_id": "The community or mortal", "sermon": "Your sermon"},
     ),
     T.CHALLENGE_GOD: ToolText(
-        "You stand up to a god (a son): your strength, agility, wits and weapons against his might. If you win the god is wounded, his fame shaken and you become a legend; "
+        "You stand up to a god (a son): your strength, agility, wits and weapons against the god's might. If you win the god is wounded, their fame shaken and you become a legend; "
         "if you lose you die or are cursed. 1 action.",
-        {"son_id": "The god's id", "reason": "Why you defy him"},
+        {"son_id": "The god's id", "reason": "Why you defy this god"},
     ),
     T.DENY_GOD: ToolText(
-        "You deny your god: you stop worshipping him and become godless. Your god's existence weakens, and the father of the gods cannot draw strength from godless "
+        "You deny your god: you stop worshipping that god and become godless. Your god's existence weakens, and the creator of the gods cannot draw strength from godless "
         "communities. 1 action.",
         {"reason": "Why you turn away"},
     ),

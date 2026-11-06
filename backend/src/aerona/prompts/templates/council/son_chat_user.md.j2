@@ -4,10 +4,10 @@ YOUR MEMORY:
 EARLIER IN THE CONVERSATION:
 {% if history %}
 {% for line in history %}
-{{ "YOUR FATHER" if line.from_father else "YOU" }}: {{ line.text }}
+{{ "THE CREATOR" if line.from_father else "YOU" }}: {{ line.text }}
 {% endfor %}
 {% else %}
 (you are speaking for the first time)
 {% endif %}
 
-YOUR FATHER NOW SAYS: "{{ text[:rules.council.chat_max_chars] }}"
+THE CREATOR NOW SAYS: "{{ text[:rules.council.chat_max_chars] }}"

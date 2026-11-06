@@ -3,7 +3,7 @@
 {% set trim = c.budget_trim_min_chars %}
 {% set words_body %}
 {% for word in words %}
-[Age {{ word.age }}] {% if word.from_father %}YOUR FATHER {{ word.sender }}{% else %}{{ word.sender }}{% endif %}{% if word.intent_label %} ({{ word.intent_label }}){% endif %}: "{{ word.text }}"
+[Age {{ word.age }}] {% if word.from_father %}THE CREATOR {{ word.sender }}{% else %}{{ word.sender }}{% endif %}{% if word.intent_label %} ({{ word.intent_label }}){% endif %}: "{{ word.text }}"
 {% endfor %}
 {% endset %}
 {% set creations_body %}

@@ -71,8 +71,8 @@ async def test_reputation_line_renders_stance_numbers_and_passions(session: Asyn
     son.reputation_label = ReputationLabel.FEARED
     son.reputation_love, son.reputation_fear, son.reputation_forgotten, son.reputation_unanswered = 10, 70, 5, 2
     text = reputation_line(son, ["order", "war"])
-    assert "HOW YOU SEE YOUR FATHER: feared (love 10, fear 70, oblivion 5, you have 2 unanswered prayers)" in text
-    assert "You fear your father." in text and "order, war" in text
+    assert "HOW YOU SEE THE CREATOR: feared (love 10, fear 70, oblivion 5, you have 2 unanswered prayers)" in text
+    assert "You fear the Creator." in text and "order, war" in text
 
 
 def test_world_state_gates_son_tools(rules: Rules) -> None:

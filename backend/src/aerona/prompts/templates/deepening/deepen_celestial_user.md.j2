@@ -27,13 +27,13 @@ Deepen this {{ "world" if kind == "world" else "star" }}. The output consists of
 - rumours: array; each item one rumour its peoples or travellers tell about the world
 - sayings: array; each item { kind, text } spoken about the world, its sky or its seasons
 - details: array; each item one concrete detail of its land, sky, sea, seasons or light
-- hidden_truth: a single paragraph about what the world hides beneath its known face
+- hidden_truth: a single paragraph about what the world hides beneath its known face, only if it hides something; otherwise leave it empty
 {% else %}
 - history: how this star was kindled and what it has seen (2 to 4 paragraphs of prose; NO headings inside it)
 - rumours: array; each item one rumour told about the star under its light
 - sayings: array; each item { kind, text } spoken about the star, its light or its omens
 - details: array; each item one concrete detail of its colour, light, motion or the way it is seen
-- hidden_truth: a single paragraph about what the star truly is or hides
+- hidden_truth: a single paragraph about what the star truly is or hides, only if it hides something; otherwise leave it empty
 {% endif %}
 
 Do not open the history with "In Age N" and do not count age numbers; tell time through an event, a season, a generation. Do not describe the world's sound rules. Do not write record numbers (like #12), stat names and values, or percentages in the text; say everything in the language of the narrative.

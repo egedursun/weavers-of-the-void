@@ -179,7 +179,7 @@ async def manifest(scope: PlayerScope, command: Manifest) -> Effect:
     if not words:
         raise ValidationFailedError("The manifestation needs words.")
     worshipped = await god_power.manifest(scope.session, scope.rules, target.id, words)
-    tail = " and turned to worship him" if worshipped else ""
+    tail = " and turned to worship the creator" if worshipped else ""
     return Effect(f"{target.name} saw the Creator{tail}.", target.id, values={"worships": worshipped})
 
 

@@ -1,4 +1,5 @@
 from aerona.catalog.entity_types import ENTITY_TYPES
+from aerona.catalog.laws import law_terms_guide
 from aerona.domain.enums.culture import ArtMedium, CalendarSlot, ItemClass, LegendArchetype, ProphecyConsequence, ProphecyPredicate, TraditionKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import ActKind
@@ -151,7 +152,7 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
     },
     EntityType.LAW: {
         "law_kind": "What the law rules: succession_rule, inheritance_split, land_tenure, slavery, serfdom, tax_rate, tithe, tolls, debt_law, penal_code, levy_law, conscription, standing_army, veteran_pension, ransom_custom, marriage_law, sumptuary, guild_charter, foreigner_rights, religious_tolerance, worship_ban, blood_feud, quarantine, burial_law, sanitation, magic_ban, licensed_magic, rite_restrictions or custom",
-        "law_params": "The law's terms by name, only those its kind has (e.g. rate, share, duration, theft, murder, treason, status, level, rite, split, tenure, labour_days)",
+        "law_params": "The law's terms by name, only those its kind has; leave out a term to keep its default. Terms of each kind: " + law_terms_guide(),
     },
     EntityType.RESOURCE: {
         "commodity": COMMODITY_FIELD,
@@ -303,12 +304,12 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"son_id": "The sibling's id", "stat": "The stat of the trial: strength, wisdom, cunning, charisma or will", "reason": "Why you challenge"},
     ),
     T.REBEL: ToolText(
-        "You rebel against your father, the creator god: you no longer recognize his commands and every age you steal from his essence. Your loyal siblings become your "
-        "enemies; your father may try to crush the rebellion. Only if your loyalty is below {{ rules.son_tools.rebel_loyalty }}. Does not spend an action.",
+        "You rebel against the Creator: you no longer recognize the Creator's commands and every age you steal from the Creator's essence. Your loyal siblings become your "
+        "enemies; the Creator may try to crush the rebellion. Only if your loyalty is below {{ rules.son_tools.rebel_loyalty }}. Does not spend an action.",
         {"proclamation": "The word of the rebellion: why and for what"},
     ),
     T.PRAY_TO_FATHER: ToolText(
-        "You pray to your father, the creator god. You may have a request; the answer appears among words in coming ages. Does not spend an action, "
+        "You pray to the Creator who made you. You may have a request; the answer appears among words in coming ages. Does not spend an action, "
         "{{ rules.son_tools.prayer_per_epoch }} per age.",
         {"message": "Your prayer", "request": "essence, blessing, permission, vengeance, forgiveness or none"},
     ),
@@ -660,7 +661,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.BARGAIN_WITH_OUTSIDER: ToolText(
         "FORBIDDEN: you bargain with the nameless thing that came from outside the cosmos. You gain great essence; but leakage rises, your siblings are disgusted by you, "
-        "your loyalty to your father unravels and one day the price is demanded. Does not spend an action, {{ rules.son_tools.outer_bargain_per_epoch }} per age.",
+        "your loyalty to the Creator unravels and one day the price is demanded. Does not spend an action, {{ rules.son_tools.outer_bargain_per_epoch }} per age.",
         {"outsider_id": "The outer being's id", "request": "What you ask of it"},
     ),
     T.REVEAL_TENET: ToolText(

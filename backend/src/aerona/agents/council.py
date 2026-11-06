@@ -198,7 +198,7 @@ async def apply_decision(scope: Scope, members: list[SonRow], decision: CouncilD
     elif decision is CouncilDecision.JOINT_BLESSING:
         for son in members:
             son.existence = max(0, min(PERCENT, son.existence + council.blessing_existence))
-        notes.append("all brothers' existence grew stronger")
+        notes.append("every son's existence grew stronger")
     elif decision is CouncilDecision.CONDEMN_REBEL:
         for son in [member for member in members if member.rebel]:
             son.fame = max(0, son.fame - council.censure_renown_cost)

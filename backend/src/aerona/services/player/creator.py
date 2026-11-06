@@ -136,7 +136,7 @@ async def set_creator_note(scope: PlayerScope, command: CreatorNote) -> Effect:
 async def set_passions(scope: PlayerScope, command: SetPassions) -> Effect:
     view = await reputation.set_passions(scope.session, scope.rules, list(command.passions), command.automatic)
     creator = await scope.creator()
-    label = ", ".join(passion.value for passion in view.passions) or "read from his deeds"
+    label = ", ".join(passion.value for passion in view.passions) or "read from the creator's deeds"
     mode = "automatic" if view.automatic else "chosen"
     return Effect(f"{creator.name}'s passions ({mode}): {label}.", creator.id)
 

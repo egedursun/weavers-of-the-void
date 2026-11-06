@@ -3,7 +3,7 @@
 {% set distortions = [
   "ties a detail to the wrong person or place (confuses who did it)",
   "reverses the order of an event",
-  "never mentions the god's price or wound, only his gift",
+  "never mentions the god's price or wound, only the gift",
   "says a ban or rite was set by its own ancestors, not by the god",
   "magnifies a small event, shrinks a great loss",
   "confuses the god with another god, a hero or an animal",
@@ -42,11 +42,11 @@ Previous historian: {{ entry.previous_historian if entry.previous_historian else
 
 {% endif %}
 {% if beliefs %}
-BELIEFS (how each people tells of this god by the name it gave him; each belief's distortion is written in the form given to it, no two beliefs use the same sentence construction):
+BELIEFS (how each people tells of this god by the name it gave the god; each belief's distortion is written in the form given to it, no two beliefs use the same sentence construction):
 {% for pair in beliefs %}
-people_id {{ pair.people_id }} {{ pair.people_name }} → son_id {{ pair.son_id }}, in truth {{ pair.son_name }}, {{ pair.son_title }} ({{ pair.domain_1 }}/{{ pair.domain_2 }}); {% if pair.known_name %}this people calls him "{{ pair.known_name }}"{% else %}this people has not yet given him a name: give one with the sounds of the {{ pair.people_name }} people's language{% endif %}. Form of distortion: {{ distortions[(pair.people_id + pair.son_id + loop.index0) % (distortions | length)] }}.{% if pair.son_id == 0 %} He is the father of all the gods, the creator; they know him as distant, old and incomprehensible.{% elif pair.worshipped %} They worship him.{% else %} They do not worship him; they know him with hostility or fear.{% endif %}
+people_id {{ pair.people_id }} {{ pair.people_name }} → son_id {{ pair.son_id }}, in truth {{ pair.son_name }}, {{ pair.son_title }} ({{ pair.domain_1 }}/{{ pair.domain_2 }}); {% if pair.known_name %}this people calls the god "{{ pair.known_name }}"{% else %}this people has not yet given the god a name: give one with the sounds of the {{ pair.people_name }} people's language{% endif %}. Form of distortion: {{ distortions[(pair.people_id + pair.son_id + loop.index0) % (distortions | length)] }}.{% if pair.son_id == 0 %} This is the creator of all the gods; how they know the creator follows their own beliefs and what the creator has done among them.{% elif pair.worshipped %} They worship this god.{% else %} They do not worship this god; they regard them with their own mix of awe, curiosity, indifference, suspicion or hostility.{% endif %}
 
 {% endfor %}
 
 {% endif %}
-Historians should use their own peoples' names and lexicon. Beliefs should name the god by the name the people gave him; they must not know the whole truth.
+Historians should use their own peoples' names and lexicon. Beliefs should name the god by the name the people gave; they must not know the whole truth.

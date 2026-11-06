@@ -69,7 +69,7 @@ class SonProfileOutput(OutputModel):
 class CreatorGodOutput(OutputModel):
     title: str
     appearance: str = Field(description="The god's appearance or manifestation, 3 to 4 sentences")
-    temperament: str = Field(description="His attitude towards his sons and his creation, 2 sentences")
+    temperament: str = Field(description="The god's attitude towards their children and their creation, 2 sentences")
     image_prompt: str = Field(
         description="English, photorealistic, epic-scale god portrait prompt: scale, material, light, atmosphere, camera. {{ image_prompt_rules }}"
     )

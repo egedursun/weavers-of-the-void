@@ -57,7 +57,7 @@ ACHIEVEMENTS: dict[AchievementKey, AchievementSpec] = {
             lambda rules: rules.goals.ach_resurrection_points,
         ),
         AchievementSpec(
-            AchievementKey.FATHERS_HAND, _fixed("The father's hand"), _fixed("A rebellion was suppressed."), lambda rules: rules.goals.ach_revolt_points
+            AchievementKey.FATHERS_HAND, _fixed("The Creator's hand"), _fixed("A rebellion was suppressed."), lambda rules: rules.goals.ach_revolt_points
         ),
         AchievementSpec(
             AchievementKey.BABEL,

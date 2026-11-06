@@ -241,9 +241,10 @@ async def manifest(ctx: TickContext, creator: CreatorRow, target: EntityRow, wor
     await EntityRepository(ctx.session).add_flag(target.id, EntityFlag.SAW_THE_CREATOR, ctx.epoch)
     worshipped = ctx.rng("manifest").chance(rules.manifest_worship_chance) and await worship_creator(ctx.session, target, ctx.epoch, god_lines.MANIFEST_VOW)
     line = god_lines.MANIFEST
+    devotion = f" From that day {target.name} worships only {creator.name}." if worshipped else ""
     await ctx.chronicle(
         ChronicleKind.CREATOR_HAND,
-        line.render(creator=creator.name, entity=target.name, words=text, worship=f" From that day {target.name} worships only him." if worshipped else ""),
+        line.render(creator=creator.name, entity=target.name, words=text, worship=devotion),
         template_key=line.key,
         entity_ids=[target.id],
     )

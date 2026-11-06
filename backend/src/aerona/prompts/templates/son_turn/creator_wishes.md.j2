@@ -1,7 +1,7 @@
 {% if passions %}
-- FATHER'S PASSIONS (deeds that feed them please him): {% for passion in passions %}{{ passion.label }} ({{ passion.hint }}){% if not loop.last %}; {% endif %}{% endfor %}
+- THE CREATOR'S PASSIONS (deeds that feed them please the Creator): {% for passion in passions %}{{ passion.label }} ({{ passion.hint }}){% if not loop.last %}; {% endif %}{% endfor %}
 
 {% endif %}
 {% if scenarios %}
-- FATHER'S GREAT PURPOSE (ongoing scenario): {% for scenario in scenarios %}{{ scenario.name }}: {{ scenario.description }}{% if not loop.last %} · {% endif %}{% endfor %}
+- THE CREATOR'S GREAT PURPOSE (ongoing scenario): {% for scenario in scenarios %}{{ scenario.name }}: {{ scenario.description }}{% if not loop.last %} · {% endif %}{% endfor %}
 {% endif %}

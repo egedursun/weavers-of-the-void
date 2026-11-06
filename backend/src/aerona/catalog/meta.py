@@ -34,7 +34,7 @@ ACHIEVEMENTS: dict[AchievementKey, GoalSpec[AchievementKey]] = {
         GoalSpec(A.CONSTELLATION, "Constellation", "A cosmos of many stars."),
         GoalSpec(A.PROPHECY_FULFILLED, "The word came true", "A prophecy was fulfilled."),
         GoalSpec(A.RETURN_FROM_DEATH, "Return from death", "A dead son was resurrected."),
-        GoalSpec(A.FATHERS_HAND, "The father's hand", "A rebellion was suppressed."),
+        GoalSpec(A.FATHERS_HAND, "The Creator's hand", "A rebellion was suppressed."),
         GoalSpec(A.BABEL, "Babel", "Many languages are spoken."),
         GoalSpec(A.CROWDED_WORLD, "Crowded world", "The peoples have grown beyond counting."),
         GoalSpec(A.FIRST_PRAYER, "Someone called you", "A mortal prayed directly to you."),

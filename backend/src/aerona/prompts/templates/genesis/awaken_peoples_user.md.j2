@@ -3,7 +3,7 @@
 MAP:
 {{ map if map else "(no map yet)" }}
 
-{{ count }} new mortal peoples are awakening in the world. For each one: which region it lives in (fitting the terrain; a water region only for a sea people), the people itself, its own language (derived from the naming rule but with a distinctive sound structure, {{ rules.awakening.words_min }} to {{ [rules.awakening.words_min, rules.awakening.words_max] | max }} words, each with an origin note), its first settlement, a resource it owns, its first knowledge, one tradition and the son it worships. The names of the peoples and settlements must derive from their own languages. There must be a seed of tension between the peoples.
+{{ count }} new mortal peoples are awakening in the world. For each one: which region it lives in (fitting the terrain; a water region only for a sea people), the people itself, its own language (derived from the naming rule but with a distinctive sound structure, {{ rules.awakening.words_min }} to {{ [rules.awakening.words_min, rules.awakening.words_max] | max }} words, each with an origin note), its first settlement, a resource it owns, its first knowledge, one tradition and the son it worships. The names of the peoples and settlements must derive from their own languages.
 {% if earlier %}
 
 Earlier in this awakening these peoples awoke: {{ earlier | join(", ") }}. The new ones must differ from them; give them relations of their own to one another (kinship, trade, rivalry, awe or indifference) that grow from where and how they live.

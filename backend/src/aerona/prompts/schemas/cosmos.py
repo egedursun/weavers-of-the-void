@@ -131,7 +131,7 @@ class NewWorldOutput(OutputModel):
     )
     cosmic_resource: CosmicResourceOutput | None = Field(
         default=None,
-        description="Fill ONLY if the cosmos has no travel resource yet: the single substance, unique to the cosmos, that makes travel between worlds (space folding) possible; long use causes addiction and a side effect. It has a deposit on this world.",
+        description="Fill ONLY if the cosmos has no travel resource yet: the single substance, unique to the cosmos, that makes travel between worlds (space folding) possible; long use carries a price of the world's own logic (an addiction, a change in the body or mind, a debt, a decay or another cost). It has a deposit on this world.",
     )
     old_god: OldGodOutput | None = Field(
         default=None,

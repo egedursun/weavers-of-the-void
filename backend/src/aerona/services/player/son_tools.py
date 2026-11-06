@@ -35,7 +35,7 @@ async def set_turn_rank(scope: PlayerScope, command: TurnRank) -> Effect:
     son.turn_rank = command.rank
     await scope.session.flush()
     if command.rank is None:
-        return Effect(f"{son.name} again waits for his initiative in the gods' turn.", son.id, values={"rank": None})
+        return Effect(f"{son.name} again waits for their initiative in the gods' turn.", son.id, values={"rank": None})
     return Effect(
         f"{son.name} is set to act at place {command.rank} in the gods' turn, before initiative decides the rest.", son.id, values={"rank": command.rank}
     )

@@ -1,6 +1,6 @@
 {{ world_header }}
 
-His sons: {% if sons %}{% for son in sons %}{{ son.name }} ({{ son.domain_1 }}/{{ son.domain_2 }}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}none yet{% endif %}
+The god's children (the sons): {% if sons %}{% for son in sons %}{{ son.name }} ({{ son.domain_1 }}/{{ son.domain_2 }}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}none yet{% endif %}
 
 
 Write the title, appearance, temperament and portrait prompt of the creator god {{ god_name }}. It must match the cosmology exactly.

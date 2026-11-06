@@ -11,7 +11,7 @@ class HistorianViewOutput(OutputModel):
     people_id: int
     historian: str = Field(description="The historian's name and title, in the people's language")
     text: str = Field(
-        description="1 to 2 paragraphs; through this people's eyes, partisan, magnifying its own heroes, belittling its enemies, never mentioning some things"
+        description="1 to 2 paragraphs; through this people's own eyes and interests: partial where its pride, grief or fear is at stake, silent on what it would rather forget"
     )
 
 
@@ -19,9 +19,9 @@ class FolkBeliefOutput(OutputModel):
     people_id: int
     son_id: int = Field(description="0 for the creator god")
     name: str = Field(
-        description="The name this people gave him: if given in the prompt, EXACTLY that; if not, a new name with the sounds of the people's own language (NOT the god's name or title)"
+        description="The name this people gave the god: if given in the prompt, EXACTLY that; if not, a new name with the sounds of the people's own language (NOT the god's name or title)"
     )
-    story: str = Field(description="2 to 3 sentences: how this people tells of that god, by the name they gave him")
+    story: str = Field(description="2 to 3 sentences: how this people tells of that god, by the name they gave the god")
     wrong: str = Field(
         description="One sentence: where their account really deviates, in the form of distortion given for that belief in the prompt. Do NOT USE these patterns: {{ banned_patterns }}"
     )
@@ -82,14 +82,14 @@ class GodNameOutput(OutputModel):
 class CreatorDepthOutput(OutputModel):
     history: str = Field(description="How the god changed through the ages, 2 to 3 paragraphs")
     names: list[GodNameOutput]
-    secrets: list[str] = Field(default_factory=list, description="Secrets even his sons do not know")
+    secrets: list[str] = Field(default_factory=list, description="Secrets even the god's own children do not know")
     fears: list[str] = Field(default_factory=list)
-    prohibitions: list[str] = Field(description="Prohibitions he set on creation and what happens when they are broken")
-    gifts: list[str] = Field(default_factory=list, description="Gifts he gave to mortals and his sons")
-    desire: str = Field(description="What he really wants from all of creation")
+    prohibitions: list[str] = Field(description="Prohibitions the god set on creation and what happens when they are broken")
+    gifts: list[str] = Field(default_factory=list, description="Gifts the god gave to mortals and to the god's children")
+    desire: str = Field(description="What the god really wants from all of creation")
     sayings: list[SayingOutput] = Field(default_factory=list)
     rumours: list[str] = Field(default_factory=list)
-    hidden_truth: str = Field(default="", description="The truth about the god himself that lies at the foundation of the cosmos")
+    hidden_truth: str = Field(default="", description="The truth about the god that lies at the foundation of the cosmos")
 
 
 class ForeignPersonalityOutput(OutputModel):

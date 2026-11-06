@@ -1072,7 +1072,7 @@ TYPED: tuple[Raw, ...] = (
     (
         "animal_gods",
         "S3.2",
-        "A son of the Hunt wears the head of his worshippers' totem, and the kind is holy where he is prayed to",
+        "A son of the Hunt wears the head of their worshippers' totem, and the kind is holy where they are prayed to",
         ("husbandry", "ecology"),
         ECOLOGY,
         (SP, "son", "people"),

@@ -24,7 +24,7 @@ Deepen this entity. The output consists of SEPARATE KEYS; never write one inside
 - rumours: array; each item one rumour sentence
 - sayings: array; each item { kind, text }
 - details: array; each item one concrete detail
-- hidden_truth: a single paragraph
+- hidden_truth: a single paragraph only if this entity truly hides something; leave it empty if it does not
 {% if special %}
 - special: object; fields {% for field in special.fields %}{{ field.key }}{% if not loop.last %}, {% endif %}{% endfor %}
 

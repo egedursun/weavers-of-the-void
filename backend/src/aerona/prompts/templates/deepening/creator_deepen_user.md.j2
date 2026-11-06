@@ -7,13 +7,13 @@ THE GOD {{ god_name }}:
 COSMOLOGY: {{ cosmology }}
 
 {% if epic_line %}
-THE ESSENCE OF HIS EPIC: {{ epic_line }}
+THE ESSENCE OF THE GOD'S EPIC: {{ epic_line }}
 
 {% endif %}
-HIS SONS: {% if sons %}{% for son in sons %}{{ son.name }} ({{ son.domain_1 }}/{{ son.domain_2 }}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}
+THE GOD'S CHILDREN (the sons): {% if sons %}{% for son in sons %}{{ son.name }} ({{ son.domain_1 }}/{{ son.domain_2 }}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}
 
 
-HIS TRACES IN THE RECORDS:
+THE GOD'S TRACES IN THE RECORDS:
 {{ traces_block(traces) | trim }}
 
 Deepen the creator god.

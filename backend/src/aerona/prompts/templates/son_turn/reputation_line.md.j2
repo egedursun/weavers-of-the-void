@@ -1,10 +1,10 @@
 {% set behaviour = {
-  "forgotten": "Your father has forgotten you. His orders do not come, your prayers go unanswered; you are free to go your own way, perhaps do something great that catches his attention.",
-  "hated": "You hate your father: you fear him but do not love him. You obey his orders outwardly and resist in secret.",
-  "respected": "You both respect and are wary of your father; serving his passions raises you.",
-  "feared": "You fear your father. You obey his orders; you avoid deeds that would anger him.",
-  "loved": "You love your father. Serving his passions makes you happy; do something that will please him.",
-  "distant": "Your father is distant; he hardly mentions you. You are torn between winning his attention and learning to live without him.",
-  "acknowledged": "There is an ordinary bond between you and your father."
+  "forgotten": "The Creator has forgotten you. No orders come, your prayers go unanswered; you are free to go your own way, perhaps do something great that wins the Creator's attention.",
+  "hated": "You hate the Creator: you fear them but do not love them. You obey their orders outwardly and resist in secret.",
+  "respected": "You both respect and are wary of the Creator; serving the Creator's passions raises you.",
+  "feared": "You fear the Creator. You obey their orders; you avoid deeds that would anger them.",
+  "loved": "You love the Creator. Serving the Creator's passions makes you glad; you may do something that will please them.",
+  "distant": "The Creator is distant and hardly mentions you. You are torn between winning their attention and learning to live without them.",
+  "acknowledged": "There is an ordinary bond between you and the Creator."
 } %}
-- HOW YOU SEE YOUR FATHER: {{ stance }} (love {{ love }}, fear {{ fear }}, oblivion {{ oblivion }}{% if unanswered_prayers > 0 %}, you have {{ unanswered_prayers }} unanswered prayers{% endif %}). {{ behaviour[stance] }}{% if passions %} Your father's passions: {{ passions | join(", ") }}.{% endif %}
+- HOW YOU SEE THE CREATOR: {{ stance }} (love {{ love }}, fear {{ fear }}, oblivion {{ oblivion }}{% if unanswered_prayers > 0 %}, you have {{ unanswered_prayers }} unanswered prayers{% endif %}). {{ behaviour[stance] }}{% if passions %} The Creator's passions: {{ passions | join(", ") }}.{% endif %}

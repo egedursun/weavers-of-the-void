@@ -1,5 +1,5 @@
 {% from "opportunities/_macros.md.j2" import choices %}
 {% set steal = offered(available_tools, [("send_dream", "send_dream"), ("curse", "curse"), ("send_disaster", "send_disaster")]) %}
 {% if steal %}
-Your rivals' worshippers (steal with {{ choices(steal) }}): {% for item in line.communities[:rules.opportunities.list_max] %}#{{ item.id }} {{ item.name }} ({{ item.patron }}){% if not loop.last %}, {% endif %}{% endfor %}
+Your rivals' worshippers (win them over, or take them with {{ choices(steal) }}): {% for item in line.communities[:rules.opportunities.list_max] %}#{{ item.id }} {{ item.name }} ({{ item.patron }}){% if not loop.last %}, {% endif %}{% endfor %}
 {% endif %}

@@ -74,8 +74,8 @@ COSMOS_DIRECTION: dict[CosmosSubjectKind, str] = {
     CosmosSubjectKind.WORLD: "the whole world seen from orbit or high above its sky, its unique physics visible (rings, seas, ice, glow), then a hint of its surface",
     CosmosSubjectKind.STAR: "the star itself in deep space with its planets as small discs nearby, astrophotography, its color and character exaggerated just enough",
     CosmosSubjectKind.FOREIGN_GOD: "a foreign god as its worshippers imagine it: a monumental idol or vision in its home world, never a cartoon",
-    CosmosSubjectKind.SON: "a son of the creator, a young god in full figure as his worshippers see him, his two domains shaping his body, garb and the light around him, never a cartoon",
-    CosmosSubjectKind.CREATOR: "the creator himself, a primordial god at the scale of the cosmos he shaped, a full-figure vision among stars and newborn worlds, never a cartoon",
+    CosmosSubjectKind.SON: "a divine child of the creator, a god in full figure as their worshippers see them, their two domains shaping their body, garb and the light around them, of the age, form and gender their description gives, never a cartoon",
+    CosmosSubjectKind.CREATOR: "the creator, a primordial god at the scale of the cosmos they shaped, a full-figure vision among stars and newborn worlds, in the form their description gives, never a cartoon",
 }
 
 

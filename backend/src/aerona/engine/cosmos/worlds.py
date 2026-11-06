@@ -99,7 +99,7 @@ async def declare_holy_world(ctx: TickContext, son: SonRow, world: WorldRow, *, 
     world.patron_son_id = son.id
     world.patron_automatic = automatic
     suffix = f"; trampling {previous.name}'s claim" if trampled and previous is not None else ""
-    text = f"{son.name} declared {world.name} his holy world{suffix}."
+    text = f"{son.name} declared {world.name} their holy world{suffix}."
     await ctx.chronicle(ChronicleKind.COSMIC, text, template_key="cosmos.holy_world", son_id=son.id, world_id=world.id, feed_category=FeedCategory.WORLD)
     await ctx.session.flush()
     return text

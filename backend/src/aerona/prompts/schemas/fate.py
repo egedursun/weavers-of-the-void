@@ -41,7 +41,7 @@ class ResolvedThreadOutput(OutputModel):
 
 class ClosedThreadOutput(OutputModel):
     id: int
-    how: str = Field(description="How the story ended: 2 to 3 sentences, a concrete outcome and price")
+    how: str = Field(description="How the story ended: 2 to 3 sentences, a concrete outcome and its cost, if any")
 
 
 class AdvancedThreadOutput(OutputModel):
@@ -156,7 +156,7 @@ class ChronicleOutput(OutputModel):
         description="The mythic name to give this age, drawn from what most defined this age in this world; do NOT REPEAT the names or the shape of the names of previous ages"
     )
     narrative: str = Field(
-        description="This age's epic narrative of 3 to 5 paragraphs; from the mouth of a mortal chronicler, binding events together by cause and effect"
+        description="This age's narrative of 3 to 5 paragraphs in this world's own tone; from the mouth of a mortal chronicler, binding events together by cause and effect"
     )
     summary: str = Field(description=SUMMARY)
     chronicler: ChroniclerIdentityOutput = Field(description="The mortal chronicler who writes this age")

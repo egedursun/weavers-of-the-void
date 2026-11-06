@@ -237,7 +237,7 @@ async def write_genesis(session: AsyncSession, rules: Rules, request: GenesisReq
             await repository.change_relation(sons[relation.i].id, sons[relation.j].id, relation.value, relation.note)
     names = ", ".join(region.name for region in regions)
     title = f", {creator.title}" if creator.title else ""
-    text = f"{creator.name}{title}, named the void {world.name}, separated with his own hand the lands and waters of {names} and hung {star.name} in the sky."
+    text = f"{creator.name}{title}, named the void {world.name}, separated by their own hand the lands and waters of {names} and hung {star.name} in the sky."
     await write_line(
         session, rules, FIRST_EPOCH, ChronicleKind.CREATOR_HAND, text, key="genesis.world", entity_ids=[*(region.id for region in regions), star.id]
     )

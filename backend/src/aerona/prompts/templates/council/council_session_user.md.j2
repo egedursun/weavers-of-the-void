@@ -1,7 +1,7 @@
 {% from "council/_persona.md.j2" import persona %}
 {{ world_header }}
 
-AGENDA{% if god_asked %} (in their father's own words; do not quote it verbatim in the minutes or the agenda field, summarize in the third person){% endif %}: {{ topic }}
+AGENDA{% if god_asked %} (in the Creator's own words; do not quote it verbatim in the minutes or the agenda field, summarize in the third person){% endif %}: {{ topic }}
 
 ATTENDANCE: {{ members | length | count_word }} sons in the council{% if absent %}; absent: {{ absent | join(", ") }}{% endif %}.
 

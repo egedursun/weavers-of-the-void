@@ -1,6 +1,6 @@
 {% if siblings %}
 {% for son in siblings %}
-son#{{ son.id }} {{ son.name }}, {{ son.title }} — {{ son.rarity_label }} {{ son.stars | stars }}, existence {{ son.existence_label | lower }}, domains {{ son.domain_1 }}/{{ son.domain_2 }}{% if son.world %}, in {{ son.world }} world{% if son.other_world %} (another world){% endif %}{% endif %}, Lv{{ son.level }}, Life {{ son.hp }}/{{ son.max_hp }}, Faith {{ son.faith }}, Fame {{ son.fame }}{% if son.status_label %} [{{ son.status_label }}{% if son.sleep_left %} {{ son.sleep_left }} ages{% endif %}]{% endif %}{% if son.relation %} · towards you: {{ son.relation.label }} ({{ son.relation.value }}){% endif %}{% if son.covenant %} · YOU HAVE A COVENANT{% endif %}{% if son.rebel %} · REBEL AGAINST HIS FATHER{% endif %}
+son#{{ son.id }} {{ son.name }}, {{ son.title }} — {{ son.rarity_label }} {{ son.stars | stars }}, existence {{ son.existence_label | lower }}, domains {{ son.domain_1 }}/{{ son.domain_2 }}{% if son.world %}, in {{ son.world }} world{% if son.other_world %} (another world){% endif %}{% endif %}, Lv{{ son.level }}, Life {{ son.hp }}/{{ son.max_hp }}, Faith {{ son.faith }}, Fame {{ son.fame }}{% if son.status_label %} [{{ son.status_label }}{% if son.sleep_left %} {{ son.sleep_left }} ages{% endif %}]{% endif %}{% if son.relation %} · towards you: {{ son.relation.label }} ({{ son.relation.value }}){% endif %}{% if son.covenant %} · YOU HAVE A COVENANT{% endif %}{% if son.rebel %} · IN REBELLION AGAINST THE CREATOR{% endif %}
 
 {% endfor %}
 {% else %}

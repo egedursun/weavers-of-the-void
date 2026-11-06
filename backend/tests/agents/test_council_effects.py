@@ -42,7 +42,7 @@ def _vote(son_id: int, vote: CouncilVote) -> VoteOutput:
 
 async def test_agenda_follows_the_priority_order(session: AsyncSession, gods: GodsWorld, rules: Rules) -> None:
     scope = await load_scope(session, rules)
-    assert "which brother has grown too great" in await agenda(scope)
+    assert "what should the gods do next" in await agenda(scope)
     thread = ThreadRow(epoch=1, text="The drowned bell still rings")
     session.add(thread)
     await session.flush()
@@ -55,11 +55,11 @@ async def test_agenda_follows_the_priority_order(session: AsyncSession, gods: Go
     assert "will the gods take sides in the mortals' war" in await agenda(scope)
     dead = await make_son(session, "Velkar", gods.world.id)
     await god_death(make_context(session, rules, 2), dead, "fell", SonDeathCause.OTHER)
-    assert "The dead brother Velkar" in await agenda(scope)
+    assert "The dead sibling Velkar" in await agenda(scope)
     rebel = await make_son(session, "Iolen", gods.world.id)
     rebel.rebel = True
     await session.flush()
-    assert "Iolen's rebellion against the father" in await agenda(scope)
+    assert "Iolen's rebellion against the Creator" in await agenda(scope)
     gods.cosmos.doom_clock = rules.balance.apocalypse_threshold
     assert f"Doomsday clock {rules.balance.apocalypse_threshold}/" in await agenda(scope)
 
@@ -69,7 +69,7 @@ async def test_a_stale_death_does_not_set_the_agenda(session: AsyncSession, gods
     await god_death(make_context(session, rules, 1), dead, "fell", SonDeathCause.OTHER)
     gods.cosmos.epoch = 5
     scope = await load_scope(session, rules)
-    assert "The dead brother" not in await agenda(scope)
+    assert "The dead sibling" not in await agenda(scope)
 
 
 async def test_same_votes_bring_sons_closer_and_opposite_votes_push_apart(session: AsyncSession, gods: GodsWorld, rules: Rules) -> None:

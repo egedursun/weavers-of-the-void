@@ -206,7 +206,7 @@ async def balance_sons(ctx: TickContext) -> int:
         son = min(ranked, key=lambda item: (item[0], item[1]))[2]
         son.current_world_id = receiver_world.id
         await ctx.session.flush()
-        text = f"{son.name} left {donor_world.name}, crowded with his brothers, for {receiver_world.name}, whose people need gods."
+        text = f"{son.name} left {donor_world.name}, crowded with their siblings, for {receiver_world.name}, whose people need gods."
         await ctx.chronicle(ChronicleKind.COSMIC, text, template_key="world_balance.son_moved", son_id=son.id, world_id=receiver_world.id)
         moved += 1
     return moved

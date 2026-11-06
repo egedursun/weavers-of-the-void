@@ -58,16 +58,18 @@ class SonRelationOutput(OutputModel):
 
 class GenesisOutput(OutputModel):
     world_name: str
-    cosmology: str = Field(description="4 to 6 sentences: the shape of the universe, what it rests on, sky and underworld, the flow of time, what death is")
+    cosmology: str = Field(
+        description="4 to 6 sentences: the shape of the universe, what it rests on, what lies above, below or beyond it, the flow of time, what death is"
+    )
     naming: NamingRuleOutput = Field(description="The world's naming language as structured sound rules")
     tone: str = Field(description="The tone of the narrative, 2 sentences")
     god: CreatorGodOutput
     regions: list[GenesisRegionOutput] = Field(
-        description="The first regions the god founded with his own hand: at least one sea or ocean and the rest land regions; neighbouring, rubbing against each other"
+        description="The first regions the god founded by their own hand: at least one sea or ocean and the rest land regions, neighbouring one another"
     )
     first_celestial: FirstCelestialOutput = Field(description="The first celestial body the god hung in the sky")
     cosmic_resource: GenesisCosmicResourceOutput = Field(
-        description="The single substance, unique to the cosmos, that makes travel between worlds (space folding) possible; long use causes addiction and a side effect. It has one deposit in the region at region_index."
+        description="The single substance, unique to the cosmos, that makes travel between worlds (space folding) possible; long use carries a price of the world's own logic (an addiction, a change in the body or mind, a debt, a decay or another cost). It has one deposit in the region at region_index."
     )
     sons: list[SonProfileOutput] = Field(min_length=1, max_length=FIRST_SONS_CEILING)
     relations: list[SonRelationOutput] = Field(description="Initial relations between the first sons; i and j are indices into the sons list, starting at 0")

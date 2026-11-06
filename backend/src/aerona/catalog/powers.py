@@ -63,8 +63,8 @@ POWERS: dict[PowerEffect, PowerSpec] = {
             "Untouchable",
             None,
             lambda rules: (
-                f"Duels against him -{rules.son_tools.challenge_untouchable}; "
-                f"curses against his worshippers resist by {rules.son_tools.curse_untouchable_resist}."
+                f"Duels against this son -{rules.son_tools.challenge_untouchable}; "
+                f"curses against their worshippers resist by {rules.son_tools.curse_untouchable_resist}."
             ),
         ),
         PowerSpec(
@@ -77,7 +77,7 @@ POWERS: dict[PowerEffect, PowerSpec] = {
             PowerEffect.WAR_FATHER,
             "War Father",
             None,
-            lambda rules: f"Contribution to the war strength of armies that worship him x{rules.world_war_strength.war_father_mult}.",
+            lambda rules: f"Contribution to the war strength of armies that worship this son x{rules.world_war_strength.war_father_mult}.",
         ),
         PowerSpec(
             PowerEffect.HARVESTER,
@@ -95,13 +95,13 @@ POWERS: dict[PowerEffect, PowerSpec] = {
             PowerEffect.REVIVING,
             "Reviving",
             None,
-            lambda rules: f"When his HP runs out he sleeps only {rules.son_tools.reviving_sleep_epochs} epoch(s).",
+            lambda rules: f"When their HP runs out they sleep only {rules.son_tools.reviving_sleep_epochs} epoch(s).",
         ),
         PowerSpec(
             PowerEffect.BOUNTY_GIVER,
             "Bounty-giver",
             None,
-            lambda rules: f"Peoples and settlements that worship him grow x{rules.world_epoch_transition.bounty_power_growth_mult} as fast.",
+            lambda rules: f"Peoples and settlements that worship this son grow x{rules.world_epoch_transition.bounty_power_growth_mult} as fast.",
         ),
         PowerSpec(
             PowerEffect.CURSER,

@@ -32,9 +32,9 @@ Choose the placement by looking at the stars above: if the light the world wants
 {% endif %}
 
 {% if creator_son %}
-The son {{ creator_son.name }} ({{ creator_son.title }}; {{ creator_son.domain_1 }}/{{ creator_son.domain_2 }}) is giving birth to this world; the world should reflect his domains and temperament.
+The son {{ creator_son.name }} ({{ creator_son.title }}; {{ creator_son.domain_1 }}/{{ creator_son.domain_2 }}) is giving birth to this world; the world should reflect their domains and temperament.
 {% else %}
-The creator god {{ god_name }} is creating this world with his own hand.
+The creator god {{ god_name }} is creating this world by the creator's own hand.
 {% endif %}
 {% if world_type_label %}
 World type: {{ world_type_label }} ({{ world_type_key }}).
@@ -45,7 +45,7 @@ Choose the world type that would most enrich the cosmos.
 INSPIRATION: {{ inspiration }}
 {% endif %}
 
-RULES: This world is another world; another language, another sky, another logic. First build a new dialect (not the same sounds as the main world), then derive ALL names from that dialect. Do NOT USE these names or their roots: {{ banned_names | join(", ") if banned_names else "none" }}.
+RULES: This world has its own language, sky and logic; kinship with other worlds is allowed where the story calls for it, copying is not. First build a new dialect (not the same sounds as the main world), then derive ALL names from that dialect. Do NOT USE these names or their roots: {{ banned_names | join(", ") if banned_names else "none" }}.
 {% if cosmic_resource %}
 The cosmos's travel resource already exists ({{ cosmic_resource }}); leave the cosmic_resource field empty.
 {% else %}

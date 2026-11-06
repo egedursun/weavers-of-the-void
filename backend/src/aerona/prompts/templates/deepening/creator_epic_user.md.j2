@@ -6,7 +6,7 @@ THE GOD {{ god_name }}:
 
 COSMOLOGY: {{ cosmology }}
 
-HIS SONS:
+THE GOD'S CHILDREN (the sons):
 {% if sons %}
 {% for son in sons %}
 {{ son.name }}, {{ son.title }} ({{ son.rarity_label }}, {{ son.domain_1 }}/{{ son.domain_2 }}{% if son.status_label %}, {{ son.status_label }}{% endif %}{% if son.rebel %}, REBEL{% endif %}; loyalty {{ son.loyalty }})
@@ -15,7 +15,7 @@ HIS SONS:
 (none)
 {% endif %}
 
-HIS WORLDS: {% if worlds %}{% for world in worlds %}{{ world.name }} ({{ world.type_label }}, Age {{ world.age }}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}
+THE GOD'S WORLDS: {% if worlds %}{% for world in worlds %}{{ world.name }} ({{ world.type_label }}, Age {{ world.age }}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %}
 
 
 AGES:
@@ -27,13 +27,13 @@ Age {{ item.age }}: {{ item.name }} — {{ item.summary }}
 (no age has closed yet)
 {% endif %}
 
-HIS TRACES IN THE RECORDS:
+THE GOD'S TRACES IN THE RECORDS:
 {{ traces_block(traces) | trim }}
 
 {% if beliefs %}
-HOW THE PEOPLES TELL OF HIM:
+HOW THE PEOPLES TELL OF THE GOD:
 {% for belief in beliefs %}
-{{ belief.people }} calls him "{{ belief.name }}": {{ belief.story }}
+{{ belief.people }} calls the god "{{ belief.name }}": {{ belief.story }}
 {% endfor %}
 
 {% endif %}

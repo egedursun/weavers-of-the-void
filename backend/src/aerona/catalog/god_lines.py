@@ -30,7 +30,7 @@ GRACE_SIGNS = _lines(
 )
 SILENCE_SIGNS = _lines(
     "gods.mood.silence",
-    "{creator} fell silent. For an entire epoch the sky gave no answer; his sons whisper, 'our father has forgotten us.'",
+    "{creator} fell silent. For an entire epoch the sky gave no answer, and each who prayed read that silence in their own way.",
     "Prayers rose to the sky and never came back: {creator} did not speak at all this epoch.",
     "{creator}'s voice has not been heard for an epoch; in the temples the lamps go out by themselves.",
 )
@@ -40,29 +40,29 @@ LONELINESS_SIGNS = _lines(
     "One night {mortal} heard their own name being called; they did not know the voice, but it was {creator}'s loneliness.",
     "{creator} searched for someone and found {mortal}: in a dream the sky told them its name.",
 )
-LONELY_DREAM = Line("gods.mood.lonely_dream", "The creator is lonely. No one in the heavens speaks his name; he is calling you.")
+LONELY_DREAM = Line("gods.mood.lonely_dream", "The creator is lonely. No one in the heavens speaks the creator's name; the creator is calling you.")
 ESTRANGED_TURN = Line("gods.mood.estranged_turn", "{entity} turned its face from its sons and began worshipping the creator {creator} directly.")
 ESTRANGED_VOW = "turned from the sons to the creator"
 
 DRAIN_SON = _lines(
     "gods.power.drain",
     "{creator}, {anger}{again}drained {son}'s essence: {drawn} essence was drawn, {gained} of it passed to the creator. {son} withered{witness}.",
-    "{creator} {anger}laid a hand on {son} and {again}drained his essence ({drawn} essence; {gained} passed to the creator). "
+    "{creator} {anger}laid a hand on {son} and {again}drained their essence ({drawn} essence; {gained} passed to the creator). "
     "{son}'s light went out for a moment{witness}.",
-    "{creator} {anger}{again}drained {son}'s essence in one breath: {drawn} essence lost, {gained} returned to the father.{witness}",
-    "{creator}, {anger}{again}drained {son}'s essence and took {gained} into his own ({drawn} essence drawn). {son} was shaken{witness}.",
+    "{creator} {anger}{again}drained {son}'s essence in one breath: {drawn} essence lost, {gained} returned to the creator.{witness}",
+    "{creator}, {anger}{again}drained {son}'s essence and took {gained} into the creator's own ({drawn} essence drawn). {son} was shaken{witness}.",
 )
 DRAIN_WITNESSES = (
-    "; his brothers watched in fear",
+    "; the other sons watched in fear",
     "; the other sons fell silent",
-    " His brothers understood their turn might come too.",
+    " The other sons understood their turn might come too.",
     "; no one in the pantheon raised a voice",
 )
-DRAIN_ANGER = "his anger overflowing, "
+DRAIN_ANGER = "anger overflowing, "
 DRAIN_AGAIN = "again "
 DRAIN_REPEAT_SUFFIX = " (the {count} time this epoch)."
-DEVOUR_SON = Line("gods.power.devour", "{creator} devoured his son {son}; all his essence and might returned to the creator ({gained} essence).")
-DEVOUR_CAUSE = "{creator} devoured him"
+DEVOUR_SON = Line("gods.power.devour", "{creator} devoured the son {son}; all their essence and might returned to the creator ({gained} essence).")
+DEVOUR_CAUSE = "devoured by {creator}"
 DRAIN_MORTAL = Line("gods.power.drain_mortal", "{creator} drew {drawn} of {mortal}'s life; {mortal} lives but is hollow inside ({gained} essence).")
 DEVOUR_MORTAL = Line("gods.power.devour_mortal", "{creator} devoured {mortal}'s life and soul ({gained} essence).")
 DEVOUR_MORTAL_HOW = "life and soul devoured by the creator"
@@ -78,8 +78,8 @@ RESURRECT_MORTAL_NOTE = " Epoch {epoch}: {creator} called them back from death."
 DEMOTE = Line("gods.power.demote", "{creator} demoted {son} from {old} class to {new} class. Their might narrowed; a grudge remained inside.")
 STRIP_POWER = Line("gods.power.strip", '{creator} tore away {son}\'s power "{power}" ({gained} essence returned to the creator).')
 ABSOLUTE_COMMAND = Line("gods.power.absolute_command", '{creator} gave {son} an irrefusable command: "{command}"')
-PROPHET = Line("gods.power.prophet", "{creator}{content} chose {mortal} as his prophet{community}.")
-PROPHET_VOW = "became his prophet"
+PROPHET = Line("gods.power.prophet", "{creator}{content} chose {mortal} as the creator's prophet{community}.")
+PROPHET_VOW = "became the creator's prophet"
 PROPHET_CONTENT = ", contentment overflowing,"
 MANIFEST = Line("gods.power.manifest", '{creator} appeared to {entity} while awake and spoke: "{words}"{worship}')
 MANIFEST_VOW = "saw the creator with their own eyes"
@@ -91,28 +91,26 @@ BLOODLINE_LIFT = Line("gods.power.bloodline_lift", "{creator} lifted the curse f
 BLOODLINE_NEWBORNS = Line("gods.power.bloodline_newborns", "The bloodline curse passed to {count} newborns: {names}.")
 PROPHET_COMMUNITY = Line("gods.power.prophet_community", "{community} began worshipping the creator {creator} by the word of the prophet {prophet}.")
 PROPHET_COMMUNITY_VOW = "by the word of the prophet {prophet}"
-CONVERT = Line("gods.power.convert", "{creator} turned {entity} to himself{old}. It now worships the creator directly.")
-CONVERT_VOW = "{creator} turned them to himself"
-WRATH = Line("gods.power.wrath", "{creator} destroyed {entity} with his wrath{reason}{deaths}.")
+CONVERT = Line("gods.power.convert", "{creator} turned {entity} to the creator{old}. It now worships the creator directly.")
+CONVERT_VOW = "{creator} turned them to the creator"
+WRATH = Line("gods.power.wrath", "{creator} destroyed {entity} in wrath{reason}{deaths}.")
 WRATH_NOTE = "Epoch {epoch}: destroyed by {creator}'s wrath{reason}."
 WRATH_HOW = "together with {entity}"
 WORLD_WRATH = Line("gods.power.world_wrath", "{creator} sent {disaster} upon all of {world}: all {count} regions were shaken.")
-REBELLION = Line("gods.power.rebellion_declared", "{son} rebelled against his father {creator}: {manifesto}")
-REBELLION_SPONTANEOUS_MANIFESTO = (
-    "his loyalty exhausted and his anger overflowing; no one heard a declaration, only his father's name was erased from his altars."
-)
+REBELLION = Line("gods.power.rebellion_declared", "{son} rebelled against the creator {creator}: {manifesto}")
+REBELLION_SPONTANEOUS_MANIFESTO = "loyalty exhausted and anger overflowing; no one heard a declaration, only the creator's name was erased from the altars."
 REBELLION_ENDED = Line(
-    "gods.power.rebellion_ended", "{son}'s rebellion died out: his loyalty returned and he again recognized his father {creator}'s commands."
+    "gods.power.rebellion_ended", "{son}'s rebellion died out: their loyalty returned and they again recognized the commands of the creator {creator}."
 )
 CURSE_REASON_BLOODY_HAND = "{victim}'s blood did not stay on the ground"
 CURSE_REASON_TEMPLE = "{creator} did not forget the hand that tore down {place}"
 CURSE_REASON_CURSED = "anger overflowing, he cursed the blood of the cursed too"
-CURSE_REASON_KILLER = "the hand that took {count} lives became the target of his anger"
+CURSE_REASON_KILLER = "the hand that took {count} lives became the target of the creator's anger"
 
-REPUTATION_CHANGE = Line("gods.reputation.change", "{son} now sees his father as a {label} god.")
-PASSIONS_REVEALED = Line("gods.reputation.passions", "{creator} revealed himself: his passions are {passions}.")
+REPUTATION_CHANGE = Line("gods.reputation.change", "{son} now sees the creator as a {label} god.")
+PASSIONS_REVEALED = Line("gods.reputation.passions", "{creator} was revealed: the creator's passions are {passions}.")
 
-GOAL_SET = Line("gods.goals.set", "{creator} set himself a goal: {name}.")
+GOAL_SET = Line("gods.goals.set", "{creator} set a goal: {name}.")
 GOAL_ACHIEVED = Line("gods.goals.achieved", "Goal achieved: {name}.")
 GOAL_LOST = Line("gods.goals.lost", "Goal lost: {name}. {detail}")
 ACHIEVEMENT_TITLE = "Achievement: {name}"
@@ -163,7 +161,7 @@ LEGEND_NAME = "{victim}'s Return from Death"
 LEGEND_SUBTYPE = "return from death"
 LEGEND_DESCRIPTION = "{story}."
 STORY_CREATOR = "When {killer} reached for {victim}'s life, {creator}'s hand descended from above the sky; no son could take a life devoted to the creator"
-STORY_PATRON = "{patron} stepped in front of {victim}; {killer}'s death command struck a brother's shield and scattered"
+STORY_PATRON = "{patron} stepped in front of {victim}; {killer}'s death command struck a sibling's shield and scattered"
 STORY_ITEM = "The {item} that {victim} carried drew death's breath onto itself and cracked; its owner survived"
 STORY_CHOSEN = "{victim} was one of the chosen; the threads of fate have not let go of them yet"
 STORY_PROTECTED = "{victim} was protected; death's hand slid off them"
@@ -250,7 +248,7 @@ PIRATES_SUBTYPE = "void pirates"
 PIRATES_DESCRIPTION = "As the routes between worlds grew crowded, pirates appeared to ambush ships."
 ECONOMY_PIRATES_BORN = Line("gods.economy.pirates_born", "Void pirates appeared in {region}, preying on the crowded routes between worlds.")
 PRAYER_ANSWERED = Line("gods.mood.prayer_answered", "{creator} heard {entity}'s prayer{grace}.")
-PRAYER_GRACE = " and sent down his grace"
+PRAYER_GRACE = " and sent down grace"
 PRAYER_ANSWERED_VOW = "their prayer was answered"
 PROPHET_LISTENS = "; {community} began to listen to their words"
 PASSION_JOIN = ", "

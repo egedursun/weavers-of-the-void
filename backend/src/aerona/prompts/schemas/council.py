@@ -9,7 +9,7 @@ from aerona.prompts.schemas.base import OutputModel
 
 class SpeechOutput(OutputModel):
     son_id: int
-    words: str = Field(description="1 to 3 sentences in his own manner of speech; they may answer one another")
+    words: str = Field(description="1 to 3 sentences in their own manner of speech; they may answer one another")
 
 
 class VoteOutput(OutputModel):
@@ -45,7 +45,7 @@ class CouncilOutput(OutputModel):
     alliances: list[AllianceOutput]
     decision: CouncilDecision = Field(description="The effect on the world if the motion passes")
     minutes: str = Field(
-        description="A 3 to 5 sentence epic summary of the council, as a mortal seer saw it in a dream; {{ attendance }} sons attended the council (write no other number)"
+        description="A 3 to 5 sentence summary of the council as the mortals of this world came to know it (a vision, a rumour, a song or another telling that suits this world); {{ attendance }} sons attended the council (write no other number)"
     )
     agenda: str = Field(
         description="One-sentence, third-person summary of the agenda for the chronicle (do not repeat the god's question verbatim in the first person: e.g. \"the fate of <the subject's name>\")"
@@ -62,9 +62,9 @@ class ChatAttitude(StrEnum):
 
 
 class SonChatOutput(OutputModel):
-    reply: str = Field(description="1 to 4 sentences, fully in character, in his own manner of speech")
+    reply: str = Field(description="1 to 4 sentences, fully in character, in their own manner of speech")
     attitude: ChatAttitude
-    loyalty_change: int = Field(description="How the father's words affected his loyalty")
+    loyalty_change: int = Field(description="How the Creator's words affected their loyalty")
 
 
 class WordGlossOutput(OutputModel):

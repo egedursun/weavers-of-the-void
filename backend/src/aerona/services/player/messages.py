@@ -96,7 +96,7 @@ async def _answer_son(scope: PlayerScope, prayer: MessageRow, son: SonRow, comma
     prayer.answer_essence = gift
     if text:
         scope.session.add(MessageRow(epoch=ctx.epoch, sender_node_id=creator.id, recipient_node_id=son.id, intent=MessageIntent.ANSWER, text=text))
-    detail = f" and gave him {gift} essence" if gift else ""
+    detail = f" and gave them {gift} essence" if gift else ""
     message = await tell(ctx, SON_PRAYER_ANSWERED, son_id=son.id, kind=ChronicleKind.PRAYER, creator=creator.name, son=son.name, gift=detail)
     return Effect(message, son.id, essence_spent=gift)
 
@@ -126,7 +126,7 @@ async def address_sibling(scope: PlayerScope, command: AddressSibling) -> Effect
     son = await guards.son(scope.session, command.son_id)
     sibling = await guards.son(scope.session, command.sibling_id)
     if son.id == sibling.id:
-        raise ValidationFailedError("A son cannot address himself.")
+        raise ValidationFailedError("A son cannot address themselves.")
     if not son.alive or not sibling.alive:
         raise ValidationFailedError("Only living sons can speak to each other.")
     text = command.text.strip()
