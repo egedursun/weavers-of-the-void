@@ -73,7 +73,7 @@ error, never retried).
 ### 1.1 Single process, single DB connection
 - One Node process per world DB, enforced by a **process lock file** `<db dir>/aerona.lock` containing the PID
   (`kilitAl`): create with `wx`; if it exists and the PID is alive (`kill(pid,0)` succeeds or EPERM) → print
-  "This world is already open in another Aerona process (pid N)…" and exit(1); stale → overwrite. Released on
+  "This world is already open in another Weavers of the Void process (pid N)…" and exit(1); stale → overwrite. Released on
   `exit`/SIGINT/SIGTERM/SIGHUP (after a WAL checkpoint).
 - All DB writes go through one synchronous `node:sqlite` connection; JavaScript is single-threaded so DB writes are
   naturally serialized. "Parallel" in this document means *concurrent awaiting of LLM calls*; tool handlers and DB

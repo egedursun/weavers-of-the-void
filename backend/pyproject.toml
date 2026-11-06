@@ -1,7 +1,7 @@
 [project]
 name = "aerona"
 version = "0.1.0"
-description = "Aerona backend: a self-generating pantheon and lore engine"
+description = "Weavers of the Void backend: a self-generating pantheon and lore engine"
 authors = [
     { name = "Ege Dogan Dursun" }
 ]

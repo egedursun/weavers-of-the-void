@@ -1987,7 +1987,7 @@ Templates (`SABLONLAR`) — preset seed/tone/sliders:
 | sky_islands | Sky islands | airy, adventurous, hopeful | 70 | 30 | ronesans | akici | 3 | kucuk | A cosmos of shattered worlds whose fragments drift on rivers of wind; peoples sail between the islands on kite-ships, and falling past the edge is the oldest fear. |
 | age_of_engines | Age of engines | curious, inventive, bright with possibility | 30 | 30 | buhar | karisik | 4 | tek | A world where the first engines have just learned to breathe; tinkers rival priests, railways cut through sacred forests, and every invention wakes an old spirit. |
 
-The last seven templates are new in Aerona and have no legacy key; their key is the stored `GenesisTemplate` value.
+The last seven templates are new in Weavers of the Void and have no legacy key; their key is the stored `GenesisTemplate` value.
 
 Validation (`sihirbazTemizle`): numbers rounded and clamped (magic/darkness 0–100, peoples 1–`SIHIRBAZ.halk_en_cok`);
 choices accepted only if an own key of the table (prototype keys like `__proto__` rejected) — defaults

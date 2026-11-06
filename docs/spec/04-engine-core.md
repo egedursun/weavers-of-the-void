@@ -1,6 +1,6 @@
 # 04 — Engine core: world tick, mortals, interventions, map, language
 
-Status: specification of the OLD Aerona implementation (`/Users/egedogan_dursun/aerona`), written for the rewrite. English names are used throughout; the Turkish original is given in parentheses the first time (e.g. "epoch (çağ)") so every rule can be traced back to the old code.
+Status: specification of the OLD legacy implementation (`/Users/egedogan_dursun/aerona`), written for the rewrite. English names are used throughout; the Turkish original is given in parentheses the first time (e.g. "epoch (çağ)") so every rule can be traced back to the old code.
 
 Source files covered:
 

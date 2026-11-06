@@ -1,10 +1,10 @@
 <a id="top"></a>
 
 <p align="center">
-  <img src="frontend/public/brand/logo-512.png" alt="Aerona" width="240">
+  <img src="frontend/public/brand/logo-512.png" alt="Weavers of the Void" width="240">
 </p>
 
-<h1 align="center">Aerona</h1>
+<h1 align="center">Weavers of the Void</h1>
 
 <p align="center">
   <b>The self-writing world.</b><br>
@@ -63,7 +63,7 @@
 <summary><b>Contents</b></summary>
 
 - [The pitch](#the-pitch)
-- [Why Aerona](#why-aerona)
+- [Why Weavers of the Void](#why-weavers-of-the-void)
 - [Meet the cast](#meet-the-cast)
 - [How an age unfolds](#how-an-age-unfolds)
   - [A taste of an age](#a-taste-of-an-age)
@@ -96,7 +96,7 @@
 
 ## The pitch
 
-**Aerona is a self-generating lore engine.** You do not write the story. You set it in motion.
+**Weavers of the Void is a self-generating lore engine.** You do not write the story. You set it in motion.
 
 You play the Creator, a god at the dawn of a cosmos. Your sons are **god cards**, drawn in six rarities from *Common* to *Mythic*, and each one is a living Claude agent with its own passions, grudges, domains and a toolbox of more than a hundred divine powers. Once per epoch every son wakes, reads the world, and acts: he raises mountains, founds cults, whispers to prophets, breeds monsters, curses bloodlines and schemes against his brothers.
 
@@ -108,7 +108,7 @@ Nothing is scripted. Nothing is lost. Every number has a reason you can read, an
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
-## Why Aerona
+## Why Weavers of the Void
 
 - **A story nobody wrote.** No script, no event deck, no quest list. Every legend in your chronicle grows out of causes you can trace.
 - **Gods with minds of their own.** Your sons are agents, not dice rolls. They plan, they hold grudges, they lie to the council and they rebel.
@@ -465,7 +465,7 @@ Twenty-nine agent roles, every one on Claude Haiku, every prompt in one typed ca
 
 <p align="center"><sub><b>The Collector's Edition</b> · the base experience and all 85 expansions in one box</sub></p>
 
-Aerona ships as the complete edition. **The Loom** and all **85 expansions** across eleven chapters are fully integrated into the engine, the agents and the interface. There is nothing to unlock, nothing to install and nothing to wait for: every mechanic below runs in every world from the first epoch, and every one of them can be tuned, triggered and inspected from the app.
+Weavers of the Void ships as the complete edition. **The Loom** and all **85 expansions** across eleven chapters are fully integrated into the engine, the agents and the interface. There is nothing to unlock, nothing to install and nothing to wait for: every mechanic below runs in every world from the first epoch, and every one of them can be tuned, triggered and inspected from the app.
 
 ### The Loom
 
@@ -2659,7 +2659,7 @@ Every setting is an environment variable. `.env` is ignored by git; `.env.exampl
 
 ### Claude token
 
-Aerona runs on your Claude subscription through the Agent SDK, never an API key. Create a long-lived token once:
+Weavers of the Void runs on your Claude subscription through the Agent SDK, never an API key. Create a long-lived token once:
 
 ```sh
 claude setup-token
@@ -2751,7 +2751,7 @@ The default image is the community build `pgsty/minio`. Set `AERONA_MINIO_IMAGE`
 
 ## Image worker
 
-Every record in Aerona gets a painting. The image worker is a separate service behind a small HTTP contract; the backend owns the queue, so manual requests always go ahead of bulk ones, and images are only ever added, never replaced.
+Every record in Weavers of the Void gets a painting. The image worker is a separate service behind a small HTTP contract; the backend owns the queue, so manual requests always go ahead of bulk ones, and images are only ever added, never replaced.
 
 ### On macOS
 
@@ -2889,7 +2889,7 @@ aerona/
 
 ## Engineering principles
 
-Aerona holds itself to a short list of rules, enforced by tooling rather than goodwill:
+Weavers of the Void holds itself to a short list of rules, enforced by tooling rather than goodwill:
 
 1. **Self-describing code.** Names and structure carry the meaning; `scripts/check_source_rules.py` enforces the source rules in CI and in the test suite.
 2. **English everywhere** in code, identifiers, UI copy, prompts and file names. The lore itself speaks the language you choose.
@@ -2903,7 +2903,7 @@ Aerona holds itself to a short list of rules, enforced by tooling rather than go
 
 ## Bringing a legacy world
 
-A world from the legacy Node app (`~/aerona/data`) can be carried into Aerona in one step. The plan and its limits are in [docs/migration-plan.md](docs/migration-plan.md).
+A world from the legacy Node app (`~/aerona/data`) can be carried into Weavers of the Void in one step. The plan and its limits are in [docs/migration-plan.md](docs/migration-plan.md).
 
 ```sh
 make migrate-legacy LEGACY=~/aerona/data TARGET=data/aerona.db MIGRATE_FLAGS=--dry-run
@@ -2941,7 +2941,7 @@ The legacy vocabulary lives only in `backend/src/aerona/migration/legacy/schema_
 ## FAQ
 
 **Do I need an Anthropic API key?**
-No. Aerona runs on your Claude subscription through the Claude Agent SDK, and every call uses Claude Haiku.
+No. Weavers of the Void runs on your Claude subscription through the Claude Agent SDK, and every call uses Claude Haiku.
 
 **Does my world leave my machine?**
 Your database, backups and images stay on your disk. Only the agents' prompts and replies travel to Claude.
@@ -2969,7 +2969,7 @@ It is seeded. The same world with the same seed produces the same history, which
 |---|---|
 | [Architecture](docs/architecture.md) | Stack, layers, async model, design system and deployment |
 | [Decisions](docs/decisions.md) | Every architectural decision and why it was made |
-| [Migration plan](docs/migration-plan.md) | Carrying a legacy world into Aerona |
+| [Migration plan](docs/migration-plan.md) | Carrying a legacy world into Weavers of the Void |
 | [Data model](docs/spec/01-data-model.md) | Every table and field |
 | [World core](docs/spec/02-world-core.md) | The world, entities, bonds and the chronicle |
 | [Rules registry](docs/spec/03-rules-registry.md) · [JSON](docs/spec/rules-registry.json) | All 3,300+ tunable rules |
@@ -2987,5 +2987,5 @@ It is seeded. The same world with the same seed produces the same history, which
 
 <p align="center">
   <img src="frontend/public/brand/logo-64.png" alt="" width="40"><br>
-  <sub><b>Aerona</b> · You are the Creator. The rest writes itself.</sub>
+  <sub><b>Weavers of the Void</b> · You are the Creator. The rest writes itself.</sub>
 </p>

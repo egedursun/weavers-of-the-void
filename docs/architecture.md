@@ -1,6 +1,6 @@
-# Aerona — Architecture
+# Weavers of the Void — Architecture
 
-Aerona is a self-generating lore engine. The player is the Creator. The Creator's sons are god cards of a given rarity. Each son acts as an LLM agent with tools once per epoch. A deterministic, LLM-free world engine simulates mortals, peoples, settlements, wars, economy, faith, languages and the cosmos between those turns. Fate judges each epoch's creations and writes the chronicle.
+Weavers of the Void is a self-generating lore engine. The player is the Creator. The Creator's sons are god cards of a given rarity. Each son acts as an LLM agent with tools once per epoch. A deterministic, LLM-free world engine simulates mortals, peoples, settlements, wars, economy, faith, languages and the cosmos between those turns. Fate judges each epoch's creations and writes the chronicle.
 
 This document describes the clean rewrite. The business logic is specified in `docs/spec/`, which was extracted from the legacy codebase and translated to English.
 
@@ -165,9 +165,9 @@ aerona/
 
 ## Design system
 
-The user wants no visual drift: every select is exactly as tall as every input and button, every body text has the same size, and nothing overlaps. Instead of hand-rolling a design system, Aerona adopts the **shadcn-admin** template (MIT) as its foundation and enforces these rules on top of it:
+The user wants no visual drift: every select is exactly as tall as every input and button, every body text has the same size, and nothing overlaps. Instead of hand-rolling a design system, Weavers of the Void adopts the **shadcn-admin** template (MIT) as its foundation and enforces these rules on top of it:
 
-- **One theme file.** `frontend/src/styles/theme.css` holds every color, radius and font as CSS variables, with light and dark themes. Dark is the default. The Aerona brand palette is a deep celestial indigo with gold primary, plus six rarity colors (`--rarity-*`). Fonts: Cinzel for display headings, Inter for UI, tabular numbers for stats.
+- **One theme file.** `frontend/src/styles/theme.css` holds every color, radius and font as CSS variables, with light and dark themes. Dark is the default. The Weavers of the Void brand palette is a deep celestial indigo with gold primary, plus six rarity colors (`--rarity-*`). Fonts: Cinzel for display headings, Inter for UI, tabular numbers for stats.
 - **Only `components/ui` sets sizes.** Control height, padding, font size and radius are defined once in the shadcn components (`Button`, `Input`, `SelectTrigger`, `Textarea`, `Badge`, `Tabs` and so on) through their `size` variants, which share the same height scale. Feature code picks a `size` variant and never passes height, padding or font-size classes.
 - **Typography components.** `PageTitle`, `SectionTitle`, `Text`, `Muted` and `Stat` are the only way to render text with a size, so each kind of text has exactly one size in the whole app.
 - **Layout through gap.** Feature layouts use flex or grid with `gap-*` from the spacing scale. No margins on components, no arbitrary values (`[13px]`), no inline `style` except computed geometry for canvas, map and graph.

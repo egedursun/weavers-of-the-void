@@ -1093,7 +1093,7 @@ Used = image file names referenced by the live DB ∪ every backup DB (opened re
 ### 22.4 Listing and validation
 
 - `yedekler()` (list backups): `[{dosya, boyut, tarih}]` (file, size, mtime ISO), newest first.
-- `yedegiDogrula(path)` (validate backup): open read-only ("Could not open the backup file."), `PRAGMA quick_check == 'ok'` ("The backup file is corrupt."), and tables dunya, ogullar, varliklar, kronik all present ("This file is not an Aerona world.").
+- `yedegiDogrula(path)` (validate backup): open read-only ("Could not open the backup file."), `PRAGMA quick_check == 'ok'` ("The backup file is corrupt."), and tables dunya, ogullar, varliklar, kronik all present ("This file is not an Weavers of the Void world.").
 
 ### 22.5 Restore (`yedektenDon(file)`) — `/api/yedek/geri` requires the confirmation text "GERİ YÜKLE" (RESTORE) and no running jobs
 
@@ -1151,7 +1151,7 @@ The legacy file name is `<world name with non-letter/digit runs → '-', ≤40>-
 
 The file name is `<world name with non-letter/digit runs → '-', ≤40>-epoch<epoch>.aerona`.
 
-Reading streams the archive once and never holds it in memory. The manifest must come first, carry `format` = `aerona-world` and a `version` no newer than 2 ("This file was made with a newer Aerona version."). Each media member must be listed in the manifest, stay under 30 MB and match its declared `sha256` and size; unlisted, oversized or mismatching members are rejected. The total decompressed size is capped at 500 MB (compression-bomb guard) and the upload at 400 MB. An imported object whose digest is already in the store reuses the stored object; otherwise it is written under its own key, or under a fresh `imported-<token>-` key when different bytes already use that key. The imported database rows are then relinked to the stored keys, rows whose object never arrived are dropped, and covers are re-promoted. If the import fails, every object it wrote is deleted again. Version 1 packages are not read: the rewrite does not import legacy worlds through the package path (decision 2: the migrator handles legacy data).
+Reading streams the archive once and never holds it in memory. The manifest must come first, carry `format` = `aerona-world` and a `version` no newer than 2 ("This file was made with a newer Weavers of the Void version."). Each media member must be listed in the manifest, stay under 30 MB and match its declared `sha256` and size; unlisted, oversized or mismatching members are rejected. The total decompressed size is capped at 500 MB (compression-bomb guard) and the upload at 400 MB. An imported object whose digest is already in the store reuses the stored object; otherwise it is written under its own key, or under a fresh `imported-<token>-` key when different bytes already use that key. The imported database rows are then relinked to the stored keys, rows whose object never arrived are dropped, and covers are re-promoted. If the import fails, every object it wrote is deleted again. Version 1 packages are not read: the rewrite does not import legacy worlds through the package path (decision 2: the migrator handles legacy data).
 
 ### 23.2 Export
 
@@ -1162,9 +1162,9 @@ Reading streams the archive once and never holds it in memory. The manifest must
 
 Preconditions: not in discovery mode ("You are in discovery mode; return to your own world first."), buffer not empty ("The file is empty."), size ≤ 400 MB ("The file is too large."), no jobs running; `mod=degistir` (replace) requires `onay=DEĞİŞTİR` (REPLACE).
 
-1. Async gunzip with `maxOutputLength` = 500 MB. Overflow → "When opened, the file is too large (it may be a compression bomb)." Other failure → "This is not an Aerona world file (could not be opened)."
-2. `paketAc` (open package): JSON parse. `bicim` must equal `aerona-dunya` ("This is not an Aerona world file."); `surum` ≤ 1 ("This file was made with a newer Aerona version."); `db` must be a non-empty string.
-3. Write the DB to `data/kesif/ice-<ts>-<rand>.db`. Open it with FKs off and `trusted_schema=OFF`: `quick_check` ok; the 4 core tables exist; the world row exists; **no virtual tables**; drop all triggers and views; delete `gorseller` rows with unsafe names. Any failure → delete the file, "The database in the file is corrupt or not an Aerona world."
+1. Async gunzip with `maxOutputLength` = 500 MB. Overflow → "When opened, the file is too large (it may be a compression bomb)." Other failure → "This is not an Weavers of the Void world file (could not be opened)."
+2. `paketAc` (open package): JSON parse. `bicim` must equal `aerona-dunya` ("This is not an Weavers of the Void world file."); `surum` ≤ 1 ("This file was made with a newer Weavers of the Void version."); `db` must be a non-empty string.
+3. Write the DB to `data/kesif/ice-<ts>-<rand>.db`. Open it with FKs off and `trusted_schema=OFF`: `quick_check` ok; the 4 core tables exist; the world row exists; **no virtual tables**; drop all triggers and views; delete `gorseller` rows with unsafe names. Any failure → delete the file, "The database in the file is corrupt or not an Weavers of the Void world."
 4. Write the images: for each safe name with a string value, write it to the image dir only if it does not exist (flag `wx`). Track the written ones; if this fails, delete the written ones and the DB file and rethrow.
 5. Mode `kesif` (discovery):
    - `VACUUM INTO data/kesif/kendi-<ts>.db` (own world copy).
@@ -1214,7 +1214,7 @@ Templates (`SABLONLAR`), translated in full:
 | sky_islands | Sky islands | airy, adventurous, hopeful | 70 | 30 | renaissance | flowing | 3 | small | A cosmos of shattered worlds whose fragments drift on rivers of wind; peoples sail between the islands on kite-ships, and falling past the edge is the oldest fear. |
 | age_of_engines | Age of engines | curious, inventive, bright with possibility | 30 | 30 | steam | free | 4 | single | A world where the first engines have just learned to breathe; tinkers rival priests, railways cut through sacred forests, and every invention wakes an old spirit. |
 
-The last seven templates are new in Aerona and have no legacy key; their key is the stored `GenesisTemplate` value.
+The last seven templates are new in Weavers of the Void and have no legacy key; their key is the stored `GenesisTemplate` value.
 
 `sihirbazTemizle(b)` (sanitize wizard input):
 - `sablon` (template) only if it is an own key of `SABLONLAR` (prototype keys such as "toString" are rejected).

@@ -19,7 +19,7 @@ How to read this document:
 
 ### 1.1 Product shape
 
-Aerona is a single-user, local, single-page web app that shows **one world at a time** (a world = a whole cosmos with one or more planets). The player is the **Creator** (Yaratıcı / Tanrı). Everything the player does is either (a) reading the living encyclopaedia the simulation writes, or (b) spending **divine essence** (Tanrısal öz) on interventions. Time advances only when the player presses **Complete epoch** (Çağı tamamla); an epoch is a long background job (minutes) whose progress streams into the **Live feed**.
+Weavers of the Void is a single-user, local, single-page web app that shows **one world at a time** (a world = a whole cosmos with one or more planets). The player is the **Creator** (Yaratıcı / Tanrı). Everything the player does is either (a) reading the living encyclopaedia the simulation writes, or (b) spending **divine essence** (Tanrısal öz) on interventions. Time advances only when the player presses **Complete epoch** (Çağı tamamla); an epoch is a long background job (minutes) whose progress streams into the **Live feed**.
 
 There is no routing library: the active tab is stored in `location.hash` (`#panteon`, `#kozmos`, …) and `localStorage['aerona.tab']`; drawers are an in-memory history stack. No URL deep link opens a drawer (a smell — the new app should have routes for every record: `/sons/:id`, `/entities/:id`, `/foreign-gods/:id`, `/creator`, `/worlds/:id/guide`).
 
@@ -27,7 +27,7 @@ There is no routing library: the active tab is stored in `location.hash` (`#pant
 
 ```
 ┌──────────────────────────── header.bar ─────────────────────────────────────────────┐
-│ [logo] Aerona / <World name> / <Epoch line>   [9 tabs]   Essence | World filter |   │
+│ [logo] Weavers of the Void / <World name> / <Epoch line>   [9 tabs]   Essence | World filter |   │
 │ Mood chip | Search | Book | Bell(n) | Records | Settings | Revelation | Summon son | │
 │ Complete epoch | Stop                                                                │
 │ ───────────── thin epoch progress bar (only while busy) ──────────────               │
@@ -163,7 +163,7 @@ Grid areas: `"brand god" / "tabs tabs"`; an optional progress strip spans the fu
 
 #### 2.2.1 Brand block (`.brand`)
 - `#brandLogo`: inline SVG logo (`LOGO_SVG(38)` from `marka.js`), re-injected on every header render.
-- `.marka-ad`: static text "Aerona".
+- `.marka-ad`: static text "Weavers of the Void".
 - `#worldName`: `G.S.dunya.ad` (world name). Also sets `document.title` to the world name.
 - `#epochLine` (single line, `white-space: nowrap; text-overflow: ellipsis`), spans in this order:
   1. "Epoch **N**" (`Çağ`) — `dunya.cag`.
@@ -227,7 +227,7 @@ Visible only while the live feed's progress block is visible (a job is running).
 
 ### 2.3 Footer (`footer.altbilgi`)
 Height 30 px, left to right:
-1. Brand: 14 px logo + "AERONA" (mono, spaced caps).
+1. Brand: 14 px logo + "WEAVERS OF THE VOID" (mono, spaced caps).
 2. Exploration banner `#kesifBant` (only in exploration mode): eye icon "**Exploration mode:** <guest world name> read-only" + primary button "Return to my world" (`Kendi dünyama dön`, `[data-kesif-bitir]`) → `POST /api/kesif/bitir`, toast "You returned to your own world", full page reload after 700 ms.
 3. `#abDunya` stats (ellipsized): single world "<world name> · Epoch N · year Y · S sons · E entities"; multi-world "Cosmos · W worlds · Epoch N · …". E = sum of `G.S.sayim` (counts per entity type).
 4. Shortcut hints (`.ab-kisa`, right-aligned, hidden on narrow screens): button "? help" (`[data-yardim]` → Help drawer) · "1–9 tabs" · "⌘K search" · "Alt+←→ back/forward" · "Esc close" · link "The world's book" (/kitap, new tab) · link "Codex (Markdown)" (`/api/kodeks.md`, download) · link "Style guide" (/stil.html, new tab).
@@ -339,7 +339,7 @@ Templates (`SABLONLAR`), fully translated:
 | sky_islands | Sky islands (Gök adaları) | airy, adventurous, hopeful | 70 | 30 | renaissance | flowing | 3 | small | A cosmos of shattered worlds whose fragments drift on rivers of wind; peoples sail between the islands on kite-ships, and falling past the edge is the oldest fear. |
 | age_of_engines | Age of engines (Makineler çağı) | curious, inventive, bright with possibility | 30 | 30 | steam | free | 4 | single | A world where the first engines have just learned to breathe; tinkers rival priests, railways cut through sacred forests, and every invention wakes an old spirit. |
 
-The last seven templates are new in Aerona and have no legacy key; their key is the stored `GenesisTemplate` value.
+The last seven templates are new in Weavers of the Void and have no legacy key; their key is the stored `GenesisTemplate` value.
 
 #### 2.5.2 Submit
 `POST /api/genesis` body `{tanri_adi, tohum, ton, sihirbaz: {buyu, karanlik, teknoloji, dil, kozmos, halk, sablon?}}`. On submit: button disabled, note becomes "The world is being thought… (about a minute)". Server: sanitizes wizard values (`sihirbazTemizle`: clamps numbers, whitelists option keys, fills blanks from the template, tone ≤300 chars, seed ≤2000 chars); 400 "God name and world seed are required."; 409 "A world already exists." / "Creation is already running."; runs creation in the background emitting SSE `mesgul {tur:'genesis'}`, then `genesis_bitti` (client does a full refresh which hides the screen) and a system line "The first mortal peoples are awakening…". On SSE `hata` before a world exists: button re-enabled, note "Try again." On a page reload mid-creation (`G.S.mesgul.tur === 'genesis'`) the button stays disabled with the "being thought" note.
@@ -1882,7 +1882,7 @@ Used when the user picks 2D, or when WebGL / three.js is unavailable. The SVG `s
 - It first tries the page importmap (`three`, `three/addons/`), then falls back to the jsDelivr `+esm` bundles so that a single THREE instance is shared.
 - Addons: OrbitControls, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, CSS2DRenderer.
 - The promise is memoised and reset on failure.
-- `three-webgpu-yok.js` is mapped as `three/webgpu` in index.html's importmap. It is a stub class that throws "Aerona does not use the WebGPU renderer". It exists so that nothing pulls the WebGPU build.
+- `three-webgpu-yok.js` is mapped as `three/webgpu` in index.html's importmap. It is a stub class that throws "Weavers of the Void does not use the WebGPU renderer". It exists so that nothing pulls the WebGPU build.
 
 **Fallbacks / error states:**
 - Each of these renders the `.k3d-hata` panel and returns `{hata:true}` (the caller then switches to 2D):
@@ -3046,13 +3046,13 @@ This part is the input for the new design system. "Current branding" captures wh
 Sources read in full: `public/style.css` (2297 lines, about 1820 rules), `public/stil.html` (style guide, served at `/stil.html` and linked from the footer as "Style guide (Stil rehberi)"), `public/icons.js`, `public/marka.js`, `public/etiket.js`, `public/favicon.svg`, `public/index.html` (head and shell), `README.md`. I also searched `DENETIM.md` and the git log for UI work. Line numbers below refer to `public/style.css` unless another file is named.
 
 #### Product name and wordmark
-- **Name:** "Aerona". `<title>Aerona</title>`, `lang="tr"`. The style guide's title is "Aerona Stil Rehberi". The world name is shown separately and changes per save, for example "Dazbuş" or "Orvael".
-- **Header wordmark (`.marka-ad`, line 195):** the text "AERONA" in JetBrains Mono 700 at `--fs-2xs` (10.5px), uppercase, letter-spacing `.32em`, colour `--r-efsanevi` (legendary gold #e8ad48), 3px bottom margin. It sits above the **world name** (`.world-name`, line 196): Cormorant Garamond 700, `--fs-2xl` (26px), letter-spacing `.02em`, one line with ellipsis. Under that is the **epoch line** (`.epoch`, line 197; redefined at line 1925). It shows the epoch, climate, star of the epoch and doomsday clock in muted `--fs-sm`, and wraps onto two lines.
-- **Footer wordmark (`.ab-marka`, line 217):** logo plus "AERONA" in mono, uppercase, letter-spacing `.2em`, colour `--fg-2`.
+- **Name:** "Weavers of the Void". `<title>Weavers of the Void</title>`, `lang="tr"`. The style guide's title is "Weavers of the Void Stil Rehberi". The world name is shown separately and changes per save, for example "Dazbuş" or "Orvael".
+- **Header wordmark (`.marka-ad`, line 195):** the text "WEAVERS OF THE VOID" in JetBrains Mono 700 at `--fs-2xs` (10.5px), uppercase, letter-spacing `.32em`, colour `--r-efsanevi` (legendary gold #e8ad48), 3px bottom margin. It sits above the **world name** (`.world-name`, line 196): Cormorant Garamond 700, `--fs-2xl` (26px), letter-spacing `.02em`, one line with ellipsis. Under that is the **epoch line** (`.epoch`, line 197; redefined at line 1925). It shows the epoch, climate, star of the epoch and doomsday clock in muted `--fs-sm`, and wraps onto two lines.
+- **Footer wordmark (`.ab-marka`, line 217):** logo plus "WEAVERS OF THE VOID" in mono, uppercase, letter-spacing `.2em`, colour `--fg-2`.
 - **Brand line (stil.html "Principles (İlkeler)"):** "Night-ink ground, bone-coloured text, copper-verdigris accent. Rarity colours carry the same meaning everywhere: card frame, seal, star, entity class. Status colours (good, warning, danger) are separate from the accent and are always paired with an icon or text. Headings Cormorant Garamond, body Alegreya Sans, numbers and code JetBrains Mono."
 
 #### Logo construction (`marka.js` `LOGO_SVG(size = 34)`)
-- 64×64 viewBox with `class="logo"`, `role="img"` and `aria-label="Aerona"`.
+- 64×64 viewBox with `class="logo"`, `role="img"` and `aria-label="Weavers of the Void"`.
 - **Gradient `lg-aerona`:** linear, top-left to bottom-right (x1 0, y1 0 → x2 1, y2 1), from **#e8ad48** (legendary gold) to **#7dbba8** (verdigris accent). The logo is literally a blend of the two brand colours.
 - **Layers, back to front:**
   1. An outer ring: circle r=29, gradient stroke, width 2, no fill.
@@ -3881,7 +3881,7 @@ Shell / refresh
 - `views/genesis.js:111` and `views/akis.js:179` epoch phase count "/5" hard-coded in two places.
 - `views/genesis.js:103` unread pill caps at "99+" (hard-coded).
 - `index.html:43` / `views/akis.js:498` Stop button relies on the generic `data-onay` two-click with a 4 s timeout, while Ledger undo (`views/defter.js:45`), Reset-all rules (`views/ayarlar.js:173`), batch deepening (`views/toplu.js:45`) and image generation have their own two-click variants with no timeout and no revert — four different confirm patterns.
-- `index.html:31` `.marka-ad` "Aerona" and `#worldName` default "Aerona" duplicate the brand while loading.
+- `index.html:31` `.marka-ad` "Weavers of the Void" and `#worldName` default "Weavers of the Void" duplicate the brand while loading.
 - `style.css:197` epoch line is a single `nowrap` ellipsized line holding up to 8 chips; chips silently disappear on narrower widths.
 - z-index ladder is ad hoc: live panel (mobile) 40, drawer 50, genesis 60, mobile tab bar 60, live reopen 61, map tool sheet 70/80, reveal 85, lightbox 90, palette 92, toast 95, breakdown popover 120 (`style.css:562-1769`). The popover can sit above the palette/lightbox; genesis and the mobile tab bar share 60.
 - Escape handling is split (`views/palet.js:90,103`); Esc does not close the breakdown popover; reveal overlay has no focus management.

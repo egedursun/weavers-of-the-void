@@ -56,7 +56,7 @@ Domain mechanics behind each action (costs, formulas, probabilities) are specifi
 
 - Error messages are scrubbed of absolute filesystem paths (`/Users/...`, `/home/...`, the repo root and DB dir are replaced with `…`).
 - Domain errors are deliberately explanatory and name the tunable rule key that caused a refusal (e.g. "Star ★3 needs level 5 (now 4; World rule KURAL.yildiz_seviye = …)"). Keep this: in the new app return `{error, code, rule_key?, rule_value?}` so the UI can link to the World Rules editor.
-- The client maps statuses without a message: 400 "Invalid request.", 404 "Not found.", 409 "Can't do that right now: a job is running.", 413 "File too large.", 423 "This world is read-only.", 500 "Server error.", 502 "Server unreachable.", 503 "Server busy."; network failure → "Couldn't reach the server. Is Aerona running?".
+- The client maps statuses without a message: 400 "Invalid request.", 404 "Not found.", 409 "Can't do that right now: a job is running.", 413 "File too large.", 423 "This world is read-only.", 500 "Server error.", 502 "Server unreachable.", 503 "Server busy."; network failure → "Couldn't reach the server. Is Weavers of the Void running?".
 
 ### 1.4 Background jobs ("arkaPlan" pattern)
 

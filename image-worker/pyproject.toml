@@ -1,7 +1,7 @@
 [project]
 name = "aerona-image-worker"
 version = "0.1.0"
-description = "Aerona image worker: a single-GPU text-to-image queue behind a small HTTP contract"
+description = "Weavers of the Void image worker: a single-GPU text-to-image queue behind a small HTTP contract"
 authors = [
     { name = "Ege Dogan Dursun" }
 ]

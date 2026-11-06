@@ -170,7 +170,7 @@ Every gap found is resolved inside this document: in a new foundation (F13–F30
 
 ### 1R.2 Counting rules
 
-- **Counted:** mechanics that the reference has and Aerona's current code lacks. Mechanics Aerona has and the reference lacks (cosmology, gods, Fate, inter-world travel) are not counted.
+- **Counted:** mechanics that the reference has and Weavers of the Void's current code lacks. Mechanics Weavers of the Void has and the reference lacks (cosmology, gods, Fate, inter-world travel) are not counted.
 - **Status columns:**
   - **Code**: — missing, ◐ partial.
   - **13 (first pass)**: — missing, ◐ partial, ● covered.
@@ -183,7 +183,7 @@ Every gap found is resolved inside this document: in a new foundation (F13–F30
   - **R5** tech and knowledge games: Civilization, Stellaris, Europa Universalis IV, Alpha Centauri, Crusader Kings III cultures.
   - **R6** politics, diplomacy and communication games: Crusader Kings III, Victoria 3, Europa Universalis IV, the board game Diplomacy, Democracy.
   - **R7** life simulators: The Sims, RimWorld.
-- The comparison is drawn from the design of those games as publicly documented. Aerona reproduces none of their content: only mechanic *classes* are compared.
+- The comparison is drawn from the design of those games as publicly documented. Weavers of the Void reproduces none of their content: only mechanic *classes* are compared.
 
 ### 1R.3 R1 — Dwarf Fortress
 
@@ -458,7 +458,7 @@ Every gap found is resolved inside this document: in a new foundation (F13–F30
 
 ### 1R.10 Total
 
-| Reference set | Gaps (reference has, Aerona lacks) | Missing from the first pass | Partial in the first pass | Covered by the first pass |
+| Reference set | Gaps (reference has, Weavers of the Void lacks) | Missing from the first pass | Partial in the first pass | Covered by the first pass |
 |---|---|---|---|---|
 | R1 Dwarf Fortress | 45 | 17 | 28 | 0 |
 | R2 Cosmic | 27 | 17 | 10 | 0 |
@@ -478,7 +478,7 @@ Partial gaps count fully: a first-pass mechanic that only touched the concept is
 1. widens the set of lanes from 7 to 25;
 2. names the leading works per lane, games and canonical lore alike;
 3. counts what the leaders have that this spec (after the first two passes) still lacks;
-4. adds **beyond-the-leader** mechanics: depth the leaders do not have. These usually come from coupling the lane with Aerona's unique layers (gods, Fate, cosmos, afterlife, belief) or with another lane.
+4. adds **beyond-the-leader** mechanics: depth the leaders do not have. These usually come from coupling the lane with Weavers of the Void's unique layers (gods, Fate, cosmos, afterlife, belief) or with another lane.
 
 Gaps already resolved by the first two passes are not counted again. The resolution column points to third-pass sections ("RP3" marks a "Reference pass 3" block at the end of a section, and F31–F35 are new foundations).
 
@@ -1474,7 +1474,7 @@ Mechanic families were checked at these scales:
 - age of the world
 - cosmic cycle
 
-One gap: **deep time before play**. Dwarf Fortress generates centuries of history before the player arrives. Aerona's genesis writes a cosmology by LLM but does not *simulate* prehistory, so new worlds start without organically grown language families, ruins, extinct species, dynasties and grudges. → **F48**.
+One gap: **deep time before play**. Dwarf Fortress generates centuries of history before the player arrives. Weavers of the Void's genesis writes a cosmology by LLM but does not *simulate* prehistory, so new worlds start without organically grown language families, ruins, extinct species, dynasties and grudges. → **F48**.
 
 ### 1R.38 Eighth-pass totals
 
