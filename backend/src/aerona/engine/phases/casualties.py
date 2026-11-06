@@ -471,6 +471,7 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
+    "mortal.hp",
     "mortal.intellect",
     "mortal.lifespan",
     "mortal.strength",
@@ -486,6 +487,7 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     "table.epoch_year_cursors",
     "table.holder_levels",
     "table.house_members",
+    "table.incident_participants",
     "table.language_profiles",
     "table.lexemes",
     "table.marriages",
@@ -494,6 +496,7 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     "table.mortal_profiles",
     "table.name_registry",
     "table.nodes",
+    "table.passions",
     "table.routes",
     "table.tradition_profiles",
     "table.traits",
@@ -501,6 +504,7 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
 )
 @writes(
     "mortal.death_year",
+    "table.bodies",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",

@@ -145,6 +145,11 @@ export const ACTS: Record<ActKind, LoreNamed> = {
     tone: 'warning',
   },
   slavery: { label: 'Keeping slaves', icon: Link, tone: 'danger' },
+  adultery: {
+    label: 'Love outside a marriage',
+    icon: HeartCrack,
+    tone: 'warning',
+  },
 }
 
 export function effectLabel(effect: TraditionEffect): string {

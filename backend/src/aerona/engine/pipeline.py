@@ -80,6 +80,7 @@ from aerona.engine.phases import (
     realms,
     refugees,
     regions,
+    relations,
     religion_spread,
     remembrance,
     reputation,
@@ -129,6 +130,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + births.PHASES
     + body.PHASES
     + mind.PHASES
+    + relations.PHASES
     + casualties.PHASES
     + ecology.PHASES
     + environment.PHASES
@@ -381,6 +383,11 @@ MIND_STAGE = stage(
     "mind_preferences",
     "mind_ethics",
     "mind_aspirations",
+    "relations_social",
+    "relations_circles",
+    "relations_passions",
+    "relations_pecking",
+    "relations_contests",
     "mortal_kin",
     "mortal_standing",
     "mortal_minds",

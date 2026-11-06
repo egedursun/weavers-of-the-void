@@ -43,7 +43,9 @@ from aerona.engine.mind.book import effect_of, scaled_by, values_for
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat
+from aerona.engine.relations.passions import invoke
 
 EDGE_FLOOR, EDGE_CEILING = 0.5, 2.0
 INSPIRING_CHARISMA = 70
@@ -124,6 +126,13 @@ async def learned_of(ctx: TickContext, holders: list[int]) -> dict[Tactic, int]:
     return found
 
 
+async def passion_morale(ctx: TickContext, commander_id: int | None, objects: list[int]) -> int:
+    leader = await living_entity(ctx.session, commander_id) if commander_id is not None else None
+    if leader is None or leader.entity_type is not EntityType.MORTAL:
+        return 0
+    return ctx.rules.passions.morale_bonus if await invoke(ctx, leader, objects) > 1 else 0
+
+
 async def sub_commander_bonus(ctx: TickContext, army_ids: list[int]) -> float:
     rows = await ctx.session.scalars(
         select(ArmyOfficerRow).where(
@@ -173,6 +182,7 @@ async def side_of(
         "babel": -await babel(ctx, community),
         "beast_dread": -await beast_dread(ctx, enemy.id),
         "warned": table.morale.warned_morale if await warned(ctx, community.id, enemy.id) else 0,
+        "passion": await passion_morale(ctx, commander, [community.id, enemy.id]),
     }
     medicine = knowledge.level(community.id, KnowledgeBranch.MEDICINE) * PERCENT // max(1, table.morale.medicine_levels)
     medicine += await surgeon_skill(ctx, [item.id for item, _ in armies]) * table.battle_magic.surgeon_pct // PERCENT

@@ -45,6 +45,7 @@ from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, close, connect, living_entity
+from aerona.engine.relations.passions import invoke
 from aerona.engine.services.war import ongoing_wars
 
 GRATEFUL = (MemoryKind.SAVED_ME, MemoryKind.GIFTED_ME, MemoryKind.TAUGHT_ME, MemoryKind.FREED_US)
@@ -292,6 +293,9 @@ async def stress_break(ctx: TickContext, mortal: EntityRow, profile: MortalProfi
     strain = profile.stress + max(0, -profile.mood_score) * ctx.rules.thoughts.mood_break_pct / PERCENT
     strain -= profile.conviction * ctx.rules.aspirations.conviction_break_pct / PERCENT
     if strain < table.break_threshold:
+        return None
+    if await invoke(ctx, mortal, None) > 1:
+        profile.stress = clamp_int(profile.stress - table.break_release, 0, FULL)
         return None
     traits = await traits_of(ctx.session, mortal.id)
     weights = break_weights(table.flight_chance_pct, traits, profile, await facets_of(ctx.session, mortal.id), ctx.rules.mind_split.break_facet_pct)

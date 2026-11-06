@@ -33,6 +33,7 @@ from aerona.tools.mortal import (
     read,
     religion,
     ruler,
+    social,
     trade,
     treaties,
     war,
@@ -53,6 +54,9 @@ ACTOR_TYPES: dict[MortalToolId, frozenset[EntityType]] = {
     T.DENY_GOD: frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.FACTION, EntityType.CULT}),
     T.PROPHESY: frozenset({EntityType.MORTAL, EntityType.CULT}),
     T.FOUND_SCHOOL: NAMED,
+    T.SOCIALISE: NAMED,
+    T.CHALLENGE_TO_CONTEST: NAMED,
+    T.PERSUADE: NAMED,
     T.DESIGN_RITE: NAMED,
     T.COMMISSION_ARTWORK: frozenset({*COMMUNITY_TYPES, EntityType.POLITY, EntityType.MORTAL}),
     T.GO_ON_ADVENTURE: NAMED,
@@ -155,6 +159,7 @@ FAMILIES: tuple[Callable[[], list[MortalSpec]], ...] = (
     ruler.specs,
     treaties.specs,
     oaths.specs,
+    social.specs,
 )
 
 

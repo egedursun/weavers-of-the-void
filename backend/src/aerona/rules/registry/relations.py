@@ -1,0 +1,126 @@
+from dataclasses import dataclass
+
+from aerona.rules.groups import RuleGroup
+from aerona.rules.model import rule
+
+G = RuleGroup.MIND
+
+
+@dataclass(frozen=True)
+class SocialRules:
+    interactions_per_epoch: int = rule(6, 0, 30, G, "Interactions sampled each epoch for every pair of mortals who share a place and know each other")
+    partners_per_mortal: int = rule(4, 0, 20, G, "Known mortals each mortal spends time with in an epoch")
+    new_acquaintances: int = rule(1, 0, 10, G, "Strangers in the same place each mortal meets in an epoch")
+    pairs_per_place: int = rule(60, 0, 1000, G, "Most pairs of mortals in one place that interact in an epoch")
+    facet_weight_pct: int = rule(100, 0, 400, G, "How strongly facets choose an interaction (%)")
+    mood_weight_pct: int = rule(100, 0, 400, G, "How strongly mood steers interaction choices (%)")
+    warmth_weight_pct: int = rule(100, 0, 400, G, "How strongly friendship or hostility steers interaction choices (%)")
+    belief_weight_pct: int = rule(100, 0, 400, G, "How strongly shared or clashing beliefs steer interaction choices (%)")
+    want_weight_pct: int = rule(200, 0, 800, G, "How much a matching want raises the weight of an interaction (%)")
+    event_weight_pct: int = rule(100, 0, 400, G, "How strongly war at home and hunger steer interaction choices (%)")
+    foreign_tongue_pct: int = rule(50, 0, 100, G, "Weight of talk between mortals without a shared language (%)")
+    success_base: int = rule(60, 0, 100, G, "Base chance an interaction lands as meant (%)")
+    skill_success_pct: int = rule(40, 0, 200, G, "How much the actor's skill moves the chance an interaction lands (%)")
+    delta_pct: int = rule(100, 0, 400, G, "Scale of every friendship, romance, familiarity and rivalry change (%)")
+    familiarity_fade: int = rule(2, 0, 20, G, "Familiarity lost each epoch by pairs who did not meet")
+    friendship_fade: int = rule(1, 0, 20, G, "Friendship and hostility that fade toward zero each epoch for pairs who did not meet")
+    acquaintance_at: int = rule(10, 0, 100, G, "Familiarity at which mortals count as acquainted")
+    friend_at: int = rule(30, 0, 100, G, "Friendship at which mortals become friends")
+    close_at: int = rule(55, 0, 100, G, "Friendship at which friends become close")
+    best_at: int = rule(80, 0, 100, G, "Friendship at which the closest friend becomes the best friend")
+    confidant_at: int = rule(80, 0, 100, G, "Familiarity at which a close friend becomes a confidant")
+    enemy_at: int = rule(-50, -100, 0, G, "Friendship at or below which mortals become enemies")
+    rival_at: int = rule(40, 0, 100, G, "Rivalry at which mortals become rivals")
+    nemesis_at: int = rule(75, 0, 100, G, "Rivalry at which a rival who is also an enemy becomes a nemesis")
+    crush_at: int = rule(40, 0, 100, G, "Romance at which an unreturned attraction becomes a crush")
+    lover_at: int = rule(60, 0, 100, G, "Romance on both sides at which mortals become lovers")
+    hysteresis: int = rule(10, 0, 50, G, "How far a value must fall back below a threshold before a type is lost")
+    mentor_gap: int = rule(25, 0, 100, G, "Skill gap at which a friendly teacher becomes a mentor")
+    patron_gap: int = rule(30, 0, 100, G, "Wealth gap at which a friendly richer mortal becomes a patron")
+    gift_wealth: int = rule(2, 0, 20, G, "Wealth a gift passes from giver to receiver")
+    favour_wealth: int = rule(2, 0, 20, G, "Wealth a granted favour passes to the asker")
+    comfort_stress: int = rule(6, 0, 50, G, "Stress a comforting word lifts")
+    threat_stress: int = rule(5, 0, 50, G, "Stress a threat lays on")
+    brawl_hp: int = rule(6, 0, 50, G, "Light harm a brawl deals to the one who loses it")
+    gossip_spread: int = rule(3, 0, 30, G, "Friendship a listener loses toward someone the gossip speaks ill of")
+    proposal_accept_pct: int = rule(70, 0, 100, G, "Chance a proposal between lovers is accepted (%)")
+    relation_opinion_pct: int = rule(50, 0, 200, G, "How much friendship and rivalry feed opinion (%)")
+    affair_discovery_pct: int = rule(20, 0, 100, G, "Chance each epoch a spouse sharing a place discovers an affair (%)")
+    affair_divorce_pct: int = rule(50, 0, 100, G, "Chance a discovered affair ends the marriage where the law allows divorce (%)")
+    affair_duel_pct: int = rule(50, 0, 100, G, "Chance a discovered affair ends in a duel in an honour culture (%)")
+    affair_feud_pct: int = rule(30, 0, 100, G, "Chance a discovered affair between two houses starts a feud (%)")
+    affair_memory: int = rule(-60, -100, 0, G, "Memory a betrayed spouse keeps of the cheat")
+
+
+@dataclass(frozen=True)
+class CircleRules:
+    min_members: int = rule(3, 2, 50, G, "Mortals sharing a strong taste or belief needed to found a circle")
+    taste_at: int = rule(60, 0, 100, G, "Strength of a taste that draws mortals into a circle")
+    belief_at: int = rule(60, 0, 100, G, "Strength of a belief that draws mortals into a circle")
+    friendship: int = rule(2, 0, 20, G, "Friendship circle members gain toward one another each epoch")
+    spread: int = rule(3, 0, 30, G, "Adherence a circle adds each epoch to the creed its members share")
+    belief_pull: int = rule(2, 0, 20, G, "How far a circle pulls each member's belief toward its own each epoch")
+    recruit_pct: int = rule(100, 0, 400, G, "How much more readily factions recruit circle members whose belief they share (%)")
+    per_place: int = rule(4, 0, 20, G, "Most circles one place holds")
+
+
+@dataclass(frozen=True)
+class PassionRules:
+    relation_at: int = rule(70, 0, 100, G, "Romance, friendship or hostility at which a bond becomes a passion")
+    oath_strength: int = rule(70, 0, 100, G, "Strength of the loyalty an oath of fealty or protection kindles")
+    memory_at: int = rule(60, 0, 100, G, "Strength of a formative memory of killed kin that kindles hatred")
+    upbringing_at: int = rule(50, 0, 100, G, "Belief at which an adult takes up a loyalty or devotion from their upbringing")
+    fade: int = rule(2, 0, 20, G, "Strength a passion loses each epoch once its source is gone")
+    invoke_at: int = rule(80, 0, 100, G, "Strength at which a passion can be invoked in a battle, duel, oath or crisis")
+    bonus_pct: int = rule(40, 0, 200, G, "How much a passion invoked with success strengthens the one who calls on it (%)")
+    morale_bonus: int = rule(15, 0, 100, G, "Morale an army gains when its commander's passion carries them")
+    break_stress: int = rule(15, 0, 100, G, "Stress a failed invocation lays on")
+    break_madness_pct: int = rule(40, 0, 100, G, "Chance a failed invocation becomes madness rather than despair (%)")
+    grief_strength: int = rule(100, 0, 100, G, "Strength of the grief the death of a passion's object brings")
+    vengeance_pct: int = rule(60, 0, 100, G, "Chance a mortal whose loved one was slain takes up a dream of vengeance (%)")
+
+
+@dataclass(frozen=True)
+class PersuasionRules:
+    threshold: int = rule(50, 0, 200, G, "Score an argument must reach to sway its listener")
+    oratory_pct: int = rule(60, 0, 200, G, "Weight of the speaker's oratory (%)")
+    fit_pct: int = rule(100, 0, 400, G, "Weight of how well the appeal fits the listener's beliefs and temperament (%)")
+    stubborn_pct: int = rule(50, 0, 200, G, "Weight of the listener's assertiveness and conviction against the argument (%)")
+    passion_pct: int = rule(50, 0, 200, G, "Weight of the listener's passions for or against the speaker (%)")
+    jitter: int = rule(25, 0, 100, G, "Random spread of an argument's score")
+    belief_shift: int = rule(8, 0, 50, G, "How far a successful argument moves a belief")
+    sermon_pct: int = rule(30, 0, 200, G, "How much a persuasive sermon raises the chance of a conversion (%)")
+    council_pct: int = rule(30, 0, 200, G, "How much persuasive councillors raise the chance a law is enacted (%)")
+    envoy_pct: int = rule(30, 0, 200, G, "How much a persuasive envoy raises the chance a treaty is accepted (%)")
+    argue_pct: int = rule(30, 0, 100, G, "Chance an argument between mortals turns into an attempt to persuade (%)")
+
+
+@dataclass(frozen=True)
+class PeckingRules:
+    strength_pct: int = rule(30, 0, 200, G, "Weight of bodily strength in standing (%)")
+    office_pct: int = rule(30, 0, 200, G, "Weight of office in standing (%)")
+    renown_pct: int = rule(25, 0, 200, G, "Weight of renown in standing (%)")
+    assertive_pct: int = rule(25, 0, 200, G, "Weight of assertiveness in standing (%)")
+    challenge_margin: int = rule(10, 0, 100, G, "How far a member's standing must pass the one above before they challenge them")
+    challenge_pct: int = rule(40, 0, 100, G, "Chance each epoch a member who passes the one above challenges them (%)")
+    wealth_share: int = rule(1, 0, 20, G, "Wealth that passes each epoch from the lowest to the highest of a household")
+    min_members: int = rule(3, 2, 50, G, "Members a group needs to hold a pecking order")
+
+
+@dataclass(frozen=True)
+class ContestRules:
+    rival_pct: int = rule(15, 0, 100, G, "Chance each epoch two rivals sharing a place meet in a contest of wit (%)")
+    suitor_pct: int = rule(30, 0, 100, G, "Chance each epoch two suitors of one mortal meet in a contest for their hand (%)")
+    captive_pct: int = rule(20, 0, 100, G, "Chance each epoch a learned captive wins a riddle game for their freedom (%)")
+    court_pct: int = rule(15, 0, 100, G, "Chance each epoch two courtiers of near standing contest for a place (%)")
+    faith_pct: int = rule(10, 0, 100, G, "Chance each epoch priests of two gods in one place contest for a god's favour (%)")
+    rounds: int = rule(3, 1, 9, G, "Rounds in a contest of wit")
+    jitter: int = rule(20, 0, 100, G, "Random spread of a round's score")
+    judge_pct: int = rule(20, 0, 100, G, "How much a judge's liking and shared beliefs tilt a round (%)")
+    passion_pct: int = rule(20, 0, 100, G, "How much a passion against the opponent lifts a contestant (%)")
+    renown: int = rule(6, 0, 50, G, "Renown a contest's winner gains")
+    infamy: int = rule(2, 0, 50, G, "Infamy a contest's loser gains")
+    famous_margin: int = rule(2, 1, 9, G, "Round margin that makes a contest between notables famous")
+    bride_romance: int = rule(15, 0, 100, G, "Romance the contested mortal feels for the winner")
+    wager_wealth: int = rule(5, 0, 50, G, "Wealth a wager passes from loser to winner")
+    favour_followers_pct: int = rule(5, 0, 100, G, "Followers a god's cult gains when its priest wins a contest for favour (%)")

@@ -146,6 +146,15 @@ class EnginePhasesRules:
     mind_preferences: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: likes and dislikes, taboos of disgust and totems of love")
     mind_ethics: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: ethics following beliefs, honour and shame, schisms")
     mind_aspirations: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: life's dreams, wants, fears, focus, perks and inspiration")
+    relations_social: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: mortals meeting, talking, courting, quarrelling, and affairs found out"
+    )
+    relations_circles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: circles gathering around shared tastes and beliefs")
+    relations_passions: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: passions kindled by bonds, oaths, memories and upbringing")
+    relations_pecking: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: pecking orders in households, courts, circles, warbands and crews")
+    relations_contests: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: contests of wit between rivals, suitors, captives, courtiers and priests"
+    )
     mind_needs: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: needs of mortals and pressures on communities")
     incident_threads: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: long chains of causes open story threads")
     famine_aid: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: well-stocked neighbours feed the starving")

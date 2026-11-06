@@ -112,7 +112,7 @@ function DreamCard({
             tone={dream.state === 'failed' ? 'destructive' : 'success'}
             aria-label='Progress toward the dream'
           />
-          <div className='grid min-w-0 grid-cols-1 gap-2 @md/asp:grid-cols-3'>
+          <div className='grid min-w-0 grid-cols-1 gap-2 @md/mind:grid-cols-3'>
             {dream.milestones.map((item) => (
               <div
                 key={item.at}
@@ -422,7 +422,7 @@ function FocusCard({
         <Muted variant='caption'>{`Skill toward perks: ${view.focus_level}${view.focus_held ? ' · held' : ''}`}</Muted>
       </div>
       {view.perks.length > 0 && (
-        <div className='grid min-w-0 grid-cols-1 gap-2 @md/asp:grid-cols-2 @3xl/asp:grid-cols-3'>
+        <div className='grid min-w-0 grid-cols-1 gap-2 @md/mind:grid-cols-2 @3xl/mind:grid-cols-3'>
           {view.perks.map((perk) => (
             <div
               key={perk.perk}
@@ -731,8 +731,8 @@ export function AspirationsSection({ nodeId }: { nodeId: number }) {
       description="Only living mortals aim at a life's dream, want, fear and take up a focus. Acting in character builds the conviction to see it through."
       icon={ASPIRATION_ICON}
     >
-      <div className='@container/asp flex min-w-0 flex-col gap-4'>
-        <div className='grid min-w-0 grid-cols-1 gap-3 @md/asp:grid-cols-2 @3xl/asp:grid-cols-4'>
+      <div className='@container/mind flex min-w-0 flex-col gap-4'>
+        <div className='grid min-w-0 grid-cols-1 gap-3 @md/mind:grid-cols-2 @3xl/mind:grid-cols-4'>
           <KpiTile
             label="Dream's progress"
             value={view.dream ? `${view.dream.progress}%` : 'None'}
@@ -768,7 +768,7 @@ export function AspirationsSection({ nodeId }: { nodeId: number }) {
             }}
           />
         </div>
-        <div className='grid min-w-0 grid-cols-1 gap-3 @xl/asp:grid-cols-2'>
+        <div className='grid min-w-0 grid-cols-1 gap-3 @xl/mind:grid-cols-2'>
           <DreamCard view={view} blocked={blocked} />
           <WantsAndFears view={view} blocked={blocked} />
           <FocusCard view={view} blocked={blocked} />

@@ -46,6 +46,21 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "vessel_id": "Ignored: you work it yourself",
         },
     ),
+    T.SOCIALISE: ToolText(
+        "You spend time with another mortal where you are: talk, joke, comfort, flirt, court, argue, gift, ask a favour, confide, threaten and more. "
+        "It moves how each of you feels about the other. 1 action.",
+        {"target_id": "The mortal", "interaction": "What you do with them"},
+    ),
+    T.CHALLENGE_TO_CONTEST: ToolText(
+        "You challenge another mortal where you are to a contest of wit (riddles, flyting, debate, a game of skill, a trial of wisdom, song or storytelling) "
+        "for a stake. The winner gains renown; a famous contest may be remembered in art. 1 action.",
+        {"target_id": "The mortal you challenge", "kind": "The contest", "stake": "What is at stake"},
+    ),
+    T.PERSUADE: ToolText(
+        "You try to bring another mortal where you are round to your view of a belief, appealing to belief, self-interest, authority, evidence or fear. "
+        "Your oratory, how well the appeal fits them, their stubbornness and their passions decide it. 1 action.",
+        {"target_id": "The mortal", "appeal": "How you argue", "axis": "The belief at stake", "toward": "How far toward it (-100 to 100)"},
+    ),
     T.FOUND_SCHOOL: ToolText(
         "You found a school of thought, a creed that spreads along roads, through scholars, books and schools, and can move a realm. 1 action.",
         {

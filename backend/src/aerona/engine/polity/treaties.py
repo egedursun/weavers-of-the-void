@@ -46,6 +46,7 @@ from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.society import move_stock
 from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.primitives.strength import MilitaryStrength
+from aerona.engine.relations.persuasion import envoy_sways
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import declare_war
 
@@ -597,7 +598,7 @@ async def answer_proposals(ctx: TickContext) -> dict[str, int]:
         others = [party for party in parties if party != profile.proposed_by_node_id]
         proposer = profile.proposed_by_node_id
         warm = proposer is not None and all([await relation(ctx.session, ctx.rules, proposer, other) >= table.accept_relation for other in others])
-        if warm:
+        if warm or (proposer is not None and others and await envoy_sways(ctx, proposer, others, profile.treaty_entity_id)):
             await accept(ctx, profile)
             counts["accepted"] += 1
         elif ctx.epoch - profile.signed_epoch >= table.proposal_epochs:

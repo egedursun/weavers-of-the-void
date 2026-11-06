@@ -17,7 +17,8 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.limits import RELATION_MIN
-from aerona.domain.enums.mind import SkillKind
+from aerona.domain.enums.mind import SkillKind, ValueAxis
+from aerona.domain.enums.relations import AppealKind, PersuasionAim
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.book import factor
@@ -26,6 +27,7 @@ from aerona.engine.gods.devotion import RiteKind as EngineRite
 from aerona.engine.lore import prophecy as prophecy_engine
 from aerona.engine.primitives.faith import clear_seeking, foreign_patron, living_patron, patron_son, worship_creator
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.relations.persuasion import lift, persuade
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
 from aerona.tools.framework.call import MortalCall
@@ -135,6 +137,8 @@ async def preach(call: MortalCall, args: PreachInput) -> str:
     influence = (stat(call.me, "influence") or tools.preach_default_influence) * await factor(call.session, call.me.id, Capacity.PRESENCE)
     piety = stat(target, "piety") or tools.preach_default_piety
     chance = tools.preach_base_pct + influence / 2 + god.charisma / tools.preach_god_charisma_divisor - rival - piety / tools.preach_piety_divisor
+    sermon = await persuade(call.tick, call.me.id, target.id, AppealKind.BELIEF, PersuasionAim.FAITH, axis=ValueAxis.PIETY, toward=PERCENT, subject_id=god.id)
+    chance *= lift(call.rules.persuasion.sermon_pct, sermon)
     call.target(target.id)
     if call.die(PERCENT, "sermon") > chance:
         await call.chronicle(ChronicleKind.WORSHIP, lines.PREACH_FAILED, entity_ids=[call.me.id, target.id], me=call.me.name, target=target.name)

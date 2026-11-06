@@ -603,6 +603,7 @@ ACT_READINGS: MappingProxyType[ActKind, MappingProxyType[ValueAxis, int]] = Mapp
             A.NECROMANCY: {V.DEATH: -40, V.PIETY: -30, V.SUPERSTITION: 30},
             A.HOARDING_IN_FAMINE: {V.MERCY: -45, V.WEALTH: 30, V.KINSHIP: -20},
             A.SLAVERY: {V.HIERARCHY: 40, V.MERCY: -40, V.WEALTH: 15},
+            A.ADULTERY: {V.FAMILY: -40, V.LAW: -20, V.LOYALTY: -30},
         }.items()
     }
 )

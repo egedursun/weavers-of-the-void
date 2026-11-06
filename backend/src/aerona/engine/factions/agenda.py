@@ -6,6 +6,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionGoalRow, FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.polity import ClaimRow, PolityMemberRow
+from aerona.db.tables.relations import SocialCircleRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held as frozen
@@ -72,6 +73,7 @@ GOAL_PLANS: dict[FactionKind, tuple[FactionGoalKind, ...]] = {
     FactionKind.BANDITS: (G.LOOT,),
     FactionKind.PIRATES: (G.LOOT,),
     FactionKind.VOID_PIRATES: (G.LOOT,),
+    FactionKind.SOCIAL_CIRCLE: (),
     FactionKind.ASSASSINS: (G.INSTALL_CLAIMANT, G.LOOT),
     FactionKind.SCHOLARS_ACADEMY: (G.ENACT_LAW, G.PROTECT_CRAFT),
     FactionKind.SECRET_SOCIETY: (G.INSTALL_CLAIMANT, G.CONVERT_REALM),
@@ -525,6 +527,13 @@ async def fund_war(move: Move) -> bool:
     return given > 0
 
 
+async def circle_folk(ctx: TickContext, home_id: int | None) -> set[int]:
+    if home_id is None:
+        return set()
+    circles = select(SocialCircleRow.faction_entity_id).where(SocialCircleRow.meeting_place_id == home_id)
+    return set(await ctx.session.scalars(select(FactionMembershipRow.mortal_entity_id).where(FactionMembershipRow.faction_entity_id.in_(circles))))
+
+
 async def recruit(move: Move) -> bool:
     ctx, factions, profile, goal = move.ctx, move.factions, move.profile, move.goal
     table = ctx.rules.factions
@@ -536,8 +545,12 @@ async def recruit(move: Move) -> bool:
     if social is not None:
         statement = statement.where(EntityRow.social_class == social)
     joined = 0
-    for mortal in await ctx.session.scalars(statement.order_by(EntityRow.id)):
-        if joined >= table.recruit_members or mortal.id in held:
+    circled = await circle_folk(ctx, profile.home_entity_id) if profile.kind is not FactionKind.SOCIAL_CIRCLE else set()
+    cap = table.recruit_members + round(table.recruit_members * ctx.rules.circles.recruit_pct / PERCENT) if circled else table.recruit_members
+    candidates = sorted(await ctx.session.scalars(statement), key=lambda mortal: (mortal.id not in circled, mortal.id))
+    for mortal in candidates:
+        limit = cap if mortal.id in circled else table.recruit_members
+        if joined >= limit or mortal.id in held:
             continue
         row = FactionMembershipRow(
             faction_entity_id=profile.faction_entity_id, mortal_entity_id=mortal.id, rank=FactionRank.NOVICE, joined_epoch=ctx.epoch, locked=[]

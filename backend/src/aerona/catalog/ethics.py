@@ -70,6 +70,7 @@ ACT_LABELS: MappingProxyType[ActKind, str] = MappingProxyType(
         A.NECROMANCY: "Necromancy",
         A.HOARDING_IN_FAMINE: "Hoarding in famine",
         A.SLAVERY: "Keeping slaves",
+        A.ADULTERY: "Love outside a marriage",
     }
 )
 

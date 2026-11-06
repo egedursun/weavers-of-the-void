@@ -281,6 +281,16 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "reason": "Why you plant it",
         },
     ),
+    T.STIR_HEARTS: ToolText(
+        "You stir what one living mortal feels toward another: warm them into friendship, kindle romance, set them at odds as rivals, "
+        "or plant a passion of love, loyalty, hatred or devotion for the other. Costs {{ rules.costs.influence }} essence and one action.",
+        {
+            "first_id": "The mortal whose heart you stir",
+            "second_id": "The one they come to feel for",
+            "stir": "What to stir: friendship, romance, rivalry, love, loyalty, hatred or devotion",
+            "reason": "Why you stir it",
+        },
+    ),
     T.COIN_WORDS: ToolText(
         "You add words to a language's dictionary: meaning, word class and origin (from which event, from which words it was born). Languages grow this way and new names "
         "are derived from these words. Free, {{ rules.son_tools.coin_word_per_epoch }} times per age, at most {{ rules.son_tools.coin_word_max_words }} words each time.",

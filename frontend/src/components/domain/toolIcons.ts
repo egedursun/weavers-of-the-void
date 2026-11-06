@@ -99,6 +99,7 @@ import {
   Wrench,
   Zap,
   Shovel,
+  Trophy,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 
@@ -141,11 +142,15 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   bind_mortals: HeartHandshake,
   touch_mortal: HandHeart,
   plant_idea: Lightbulb,
+  stir_hearts: HeartHandshake,
   forge_item: Hammer,
   commission_artwork: Palette,
   design_rite: Wand2,
   cast_rite: Sparkles,
   found_school: GraduationCap,
+  socialise: Users,
+  challenge_to_contest: Trophy,
+  persuade: Megaphone,
   produce_item: Package,
   build_structure: Castle,
   create_language: Languages,

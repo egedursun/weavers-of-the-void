@@ -1,6 +1,6 @@
 from collections.abc import Mapping
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.aspirations import FEARS, GOALS, INSPIRATION_LABELS, WANTS
@@ -8,16 +8,19 @@ from aerona.catalog.ethics import ACT_LABELS, HONOUR_MODELS, STANCE_LABELS, STAN
 from aerona.catalog.mind import MEMORIES, NEED_LABELS, PRESSURE_LABELS, SKILLS, TRAITS, VALUE_LABELS
 from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS
 from aerona.catalog.preferences import target_label
+from aerona.catalog.relations import CONTESTS, PASSION_LABELS, RELATION_LABELS
 from aerona.catalog.thoughts import DREAM_LABELS, EMOTIONS, READING_LABELS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import CultureHonourRow, DreamRow, FearRow, GriefRow, InspirationRow, LifeDreamRow, WantRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.relations import ContestRow, GroupRankRow, PassionRow, RelationshipRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.mind import DreamReading, Emotion, EthicalStance, GriefStage, IdeaState, InspirationState, PressureKind, ValueAxis, ValueHolder
+from aerona.domain.enums.relations import ContestEnd, RelationType
 from aerona.engine.mind.book import Holder, holder_kind, needs_of, pressures_of, skills_of, traits_of, values_of
 from aerona.engine.mind.ethics import culture_of, ethics_of
 from aerona.engine.mind.ideas import ideas_of
@@ -182,6 +185,42 @@ async def aspiration_lines(session: AsyncSession, node_id: int) -> list[str]:
     return lines
 
 
+async def bond_lines(session: AsyncSession, rules: Rules, node_id: int) -> list[str]:
+    table = rules.context
+    lines: list[str] = []
+    rows = [row for row in await session.scalars(select(RelationshipRow).where(RelationshipRow.holder_node_id == node_id)) if row.kinds]
+    rows.sort(key=lambda row: (-(abs(row.friendship) + row.romance + row.rivalry), row.id))
+    shown = []
+    for row in rows[: table.mind_bonds_shown]:
+        kinds = ", ".join(RELATION_LABELS[RelationType(kind)].lower() for kind in row.kinds)
+        hidden = "; a secret love" if row.affair and not row.affair_known else ""
+        shown.append(f"{await name_of(session, row.subject_node_id)} ({kinds}{hidden})")
+    if shown:
+        lines.append("Your bonds: " + "; ".join(shown))
+    passions = list(await session.scalars(select(PassionRow).where(PassionRow.holder_node_id == node_id).order_by(PassionRow.strength.desc(), PassionRow.id)))
+    if passions:
+        told = [
+            f"{PASSION_LABELS[row.kind].lower()} for {await name_of(session, row.object_node_id)} ({row.strength})"
+            for row in passions[: table.mind_passions_shown]
+        ]
+        lines.append("Passions that move you: " + ", ".join(told))
+    ranks = list(await session.scalars(select(GroupRankRow).where(GroupRankRow.member_node_id == node_id).order_by(GroupRankRow.group_node_id)))
+    if ranks:
+        lines.append("Your standing: " + ", ".join([f"rank {row.rank} in {await name_of(session, row.group_node_id)}" for row in ranks]))
+    contest = await session.scalar(
+        select(ContestRow)
+        .where(or_(ContestRow.challenger_node_id == node_id, ContestRow.defender_node_id == node_id))
+        .order_by(ContestRow.epoch.desc(), ContestRow.id.desc())
+        .limit(1)
+    )
+    if contest is not None:
+        won = (contest.outcome is ContestEnd.CHALLENGER) == (contest.challenger_node_id == node_id) and contest.outcome is not ContestEnd.DRAWN
+        other = contest.defender_node_id if contest.challenger_node_id == node_id else contest.challenger_node_id
+        result = "drew" if contest.outcome is ContestEnd.DRAWN else "won" if won else "lost"
+        lines.append(f"Last contest of wit: {CONTESTS[contest.kind].label.lower()} with {await name_of(session, other)}, which you {result}")
+    return lines
+
+
 async def feeling_lines(session: AsyncSession, rules: Rules, node_id: int, epoch: int) -> list[str]:
     lines: list[str] = []
     profile = await session.get(MortalProfileRow, node_id)
@@ -224,6 +263,7 @@ async def mind_lines(session: AsyncSession, rules: Rules, node: Holder, epoch: i
     lines.extend(await idea_lines(session, node.id))
     lines.extend(await feeling_lines(session, rules, node.id, epoch))
     lines.extend(await aspiration_lines(session, node.id))
+    lines.extend(await bond_lines(session, rules, node.id))
     skills = sorted((await skills_of(session, node.id)).values(), key=lambda row: (-row.level, row.skill))[: table.mind_skills_shown]
     if skills:
         lines.append("Best skills: " + ", ".join(f"{SKILLS[row.skill].label.lower()} {row.level}" for row in skills))

@@ -13,6 +13,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import IdeaKind, IdeaSource, ThoughtKind
 from aerona.domain.enums.mortal import Ability, MarriageKind
+from aerona.domain.enums.relations import PassionKind, PassionSource
 from aerona.engine.body.healing import mend
 from aerona.engine.mind.book import ensure_mind_row
 from aerona.engine.mind.ideas import Encounter, take_up
@@ -22,6 +23,8 @@ from aerona.engine.mortal.standing import add_infamy, add_renown, add_stress
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.relations.book import ensure_relation, shift
+from aerona.engine.relations.passions import kindle
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
 from aerona.tools.framework.call import SonCall
@@ -48,6 +51,26 @@ class Touch(StrEnum):
     SHAME = "shame"
     HEAL_BODY = "heal_body"
     STRENGTHEN = "strengthen"
+
+
+class Stir(StrEnum):
+    FRIENDSHIP = "friendship"
+    ROMANCE = "romance"
+    RIVALRY = "rivalry"
+    LOVE = "love"
+    LOYALTY = "loyalty"
+    HATRED = "hatred"
+    DEVOTION = "devotion"
+
+
+STIR_PASSIONS = {Stir.LOVE: PassionKind.LOVE, Stir.LOYALTY: PassionKind.LOYALTY, Stir.HATRED: PassionKind.HATRED, Stir.DEVOTION: PassionKind.DEVOTION}
+
+
+class StirInput(ToolInput):
+    first_id: int
+    second_id: int
+    stir: Stir
+    reason: Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 
 
 class PlantIdeaInput(ToolInput):
@@ -159,6 +182,38 @@ async def plant_idea(call: SonCall, args: PlantIdeaInput) -> str:
     return result(SonResult.IDEA_PLANTED, name=mortal.name, idea=label)
 
 
+async def stir_hearts(call: SonCall, args: StirInput) -> str:
+    if args.first_id == args.second_id:
+        fail(SonResult.SAME_MORTAL)
+    first = await living_mortal(call, args.first_id)
+    second = await living_mortal(call, args.second_id)
+    cost = call.rules.costs.influence
+    require_essence(call, cost)
+    amount = call.rules.son_tools.touch_amount
+    passion = STIR_PASSIONS.get(args.stir)
+    if passion is not None:
+        await kindle(call.session, first.id, passion, second.id, strength=FULL - amount, source=PassionSource.DIVINE, epoch=call.epoch)
+    else:
+        row = await ensure_relation(call.session, first.id, second.id, call.epoch)
+        if row is None:
+            fail(SonResult.HEART_HELD, name=first.name)
+        shift(call.rules, row, call.epoch, **{args.stir.value: amount, "familiarity": amount})
+    call.spend_essence(cost)
+    call.target(first.id)
+    stir = args.stir.value
+    await call.chronicle(
+        ChronicleKind.INTRIGUE,
+        lines.STIR_HEARTS,
+        entity_ids=[first.id, second.id],
+        son=call.son.name,
+        first=first.name,
+        second=second.name,
+        stir=stir,
+        reason=args.reason,
+    )
+    return result(SonResult.HEARTS_STIRRED, first=first.name, second=second.name, stir=stir)
+
+
 def specs() -> list[ToolSpec[SonCall, Any]]:
     son = AgentKind.SON
     return [
@@ -182,5 +237,12 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
             PlantIdeaInput,
             ToolMeta(ActionKind.INFLUENCE, son_standard_action, essence_cost=lambda rules: rules.costs.influence),
             plant_idea,
+        ),
+        ToolSpec(
+            SonToolId.STIR_HEARTS,
+            son,
+            StirInput,
+            ToolMeta(ActionKind.INFLUENCE, son_standard_action, essence_cost=lambda rules: rules.costs.influence),
+            stir_hearts,
         ),
     ]

@@ -24,6 +24,7 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.standing import add_honour
 from aerona.engine.notes import note
 from aerona.engine.primitives.queries import add_flag, living_entity
+from aerona.engine.relations.passions import invoke
 from aerona.engine.services.community_relations import change_relation
 
 TIMED = frozenset({OathKind.VENGEANCE, OathKind.PILGRIMAGE})
@@ -169,6 +170,9 @@ async def lapse(ctx: TickContext) -> tuple[int, int]:
         if oath.kind is OathKind.PILGRIMAGE and await journeyed(ctx, oath, swearer):
             await keep(ctx, oath, fulfilled=True)
             kept += 1
+            continue
+        if oath.deadline_epoch is not None and ctx.epoch > oath.deadline_epoch and await invoke(ctx, swearer, [oath.recipient_node_id or swearer.id]) > 1:
+            oath.deadline_epoch = ctx.epoch + 1
             continue
         if oath.deadline_epoch is not None and ctx.epoch > oath.deadline_epoch:
             await break_oath(ctx, oath, "the blood went unavenged" if oath.kind is OathKind.VENGEANCE else "the road was never walked")

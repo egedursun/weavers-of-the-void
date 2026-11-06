@@ -426,6 +426,7 @@ async def run_networks(ctx: TickContext) -> None:
     "table.personality_values",
     "table.polity_members",
     "table.polity_profiles",
+    "table.relationships",
     "table.routes",
     "table.settlement_infrastructure",
     "table.settlement_profiles",

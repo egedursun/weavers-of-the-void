@@ -356,6 +356,7 @@ class ActKind(StrEnum):
     NECROMANCY = "necromancy"
     HOARDING_IN_FAMINE = "hoarding_in_famine"
     SLAVERY = "slavery"
+    ADULTERY = "adultery"
 
 
 class NeedKind(StrEnum):
@@ -531,6 +532,26 @@ class ThoughtKind(StrEnum):
     INSPIRED = "inspired"
     INSPIRATION_LOST = "inspiration_lost"
     DISILLUSIONED = "disillusioned"
+    MADE_A_FRIEND = "made_a_friend"
+    LOST_A_FRIEND = "lost_a_friend"
+    LAUGHED_TOGETHER = "laughed_together"
+    WAS_COMFORTED = "was_comforted"
+    WAS_FLATTERED = "was_flattered"
+    QUARRELLED = "quarrelled"
+    RECONCILED = "reconciled"
+    FELL_IN_LOVE = "fell_in_love"
+    HEARTBROKEN = "heartbroken"
+    JEALOUS = "jealous"
+    BRAWLED = "brawled"
+    WAS_THREATENED = "was_threatened"
+    CONFIDED_IN = "confided_in"
+    WON_CONTEST = "won_contest"
+    LOST_CONTEST = "lost_contest"
+    WAS_PERSUADED = "was_persuaded"
+    ROSE_IN_STANDING = "rose_in_standing"
+    LOST_STANDING = "lost_standing"
+    PASSION_STIRRED = "passion_stirred"
+    PASSION_BROKE = "passion_broke"
 
 
 class LifeGoal(StrEnum):

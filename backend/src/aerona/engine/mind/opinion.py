@@ -11,6 +11,7 @@ from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow, TraitRow
+from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -40,6 +41,8 @@ class PairFacts:
     feud: bool = False
     kin: bool = False
     common_enemies: int = 0
+    friendship: int = 0
+    rivalry: int = 0
 
 
 @dataclass(frozen=True)
@@ -80,6 +83,8 @@ def shared_terms(rules: Rules, facts: PairFacts) -> list[OpinionTerm]:
         OpinionTerm("blood_feud", -table.blood_feud) if facts.feud else None,
         OpinionTerm("kin", table.kin) if facts.kin else None,
         OpinionTerm("common_enemies", min(table.common_enemy_cap, facts.common_enemies * table.common_enemy)) if facts.common_enemies else None,
+        OpinionTerm("friendship", round(facts.friendship * rules.social.relation_opinion_pct / PERCENT)) if facts.friendship else None,
+        OpinionTerm("rivalry", -round(facts.rivalry * rules.social.relation_opinion_pct / PERCENT / 2)) if facts.rivalry else None,
     ]
     return [term for term in terms if term is not None]
 
@@ -157,6 +162,7 @@ async def pair_facts(session: AsyncSession, first: int, second: int) -> PairFact
     relation = await session.get(CommunityRelationRow, (min(first, second), max(first, second)))
     kin = any([await bonds.exists_between(first, second, kind) for kind in KIN_BONDS])
     common = (await _enemies(session, first) & await _enemies(session, second)) - {first, second}
+    bond = await session.scalar(select(RelationshipRow).where(RelationshipRow.holder_node_id == first, RelationshipRow.subject_node_id == second))
     return PairFacts(
         same_god=first_god is not None and first_god == second_god,
         other_god=first_god is not None and second_god is not None and first_god != second_god,
@@ -168,6 +174,8 @@ async def pair_facts(session: AsyncSession, first: int, second: int) -> PairFact
         feud=relation is not None and relation.blood_feud_since_epoch is not None,
         kin=kin,
         common_enemies=len(common),
+        friendship=bond.friendship if bond is not None else 0,
+        rivalry=bond.rivalry if bond is not None else 0,
     )
 
 

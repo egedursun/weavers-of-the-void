@@ -18,6 +18,7 @@ class FactionKind(StrEnum):
     INTERWORLD_FEDERATION = "interworld_federation"
     WANDERING_MARKET = "wandering_market"
     VOID_PIRATES = "void_pirates"
+    SOCIAL_CIRCLE = "social_circle"
 
 
 class FactionScale(StrEnum):

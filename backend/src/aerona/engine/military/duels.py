@@ -20,6 +20,7 @@ from aerona.engine.mortal.profile import is_held
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import stat
 from aerona.engine.primitives.strength import equipment, weapon_power
+from aerona.engine.relations.passions import invoke
 from aerona.rules.registry import Rules
 
 ARMOUR_CAP = 0.8
@@ -85,6 +86,7 @@ async def fighter(ctx: TickContext, hero: EntityRow, foe: EntityRow | None = Non
     magic = await war_magic(ctx.session, ctx.rules, blade)
     holy = await holy_strike(ctx.session, ctx.rules, hero.id, foe)
     holy *= await heroic_effort(ctx, hero)
+    holy *= await invoke(ctx, hero, [foe.id] if foe is not None else None)
     return Fighter(
         entity=hero,
         power=base * (grip(blade) if blade is not None else 1.0) * magic * await mounted_power(ctx, hero.id) * holy,

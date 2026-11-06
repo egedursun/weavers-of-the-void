@@ -98,8 +98,9 @@ from aerona.rules.registry import Rules
 router = APIRouter(tags=["mind"])
 NO_MIND = "No mind lives there."
 COMMUNITY_LOCKS = frozenset({"values", "memories", "needs"})
+SECTION_LOCKS = frozenset({"thoughts", "griefs", "dreams", "attributes", "facets", "ideas", "preferences", "ethics", "aspirations", "relations", "passions"})
 LOCKS_BY_HOLDER = {
-    ValueHolder.PERSONAL: frozenset(MIND_LOCKS) - {"thoughts", "griefs", "dreams", "attributes", "facets", "ideas", "preferences", "ethics", "aspirations"},
+    ValueHolder.PERSONAL: frozenset(MIND_LOCKS) - SECTION_LOCKS,
     ValueHolder.DIVINE: frozenset({"values", "traits", "memories", "attributes", "facets"}),
     ValueHolder.CULTURE: COMMUNITY_LOCKS,
     ValueHolder.COMMUNITY: frozenset({"memories", "needs"}),

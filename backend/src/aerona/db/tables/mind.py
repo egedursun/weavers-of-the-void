@@ -62,6 +62,8 @@ MIND_LOCKS = (
     "preferences",
     "ethics",
     "aspirations",
+    "relations",
+    "passions",
 )
 
 

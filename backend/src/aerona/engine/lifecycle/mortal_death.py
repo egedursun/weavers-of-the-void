@@ -45,6 +45,7 @@ from aerona.engine.primitives.numbers import clamp_int, scaled_cap
 from aerona.engine.primitives.queries import active_bonds, close, connect, count_communities, living_entity, living_sons
 from aerona.engine.primitives.records import RecordSpec, append_sentence, open_record, sweep_dead_bonds
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.relations.passions import bereaved
 
 LIVING_DEATH_STATUSES = frozenset({EntityStatus.CANON, EntityStatus.FULFILLED})
 RESTLESS_SPIRIT_SUBTYPE = "restless spirit"
@@ -106,6 +107,7 @@ async def die(
     await record_end(ctx, mortal, manner or (DeathCause.OLD_AGE if natural else DeathCause.UNKNOWN))
     ctx.count("memories_inherited", await mourn(session, ctx.rules, mortal, killer_id, ctx.epoch))
     ctx.count("griefs", await bereave(ctx, mortal, killer_id))
+    ctx.count("passions_bereaved", await bereaved(ctx, mortal, killer_id))
     act = await killing_act(session, mortal, killer_id, manner)
     if act is not None:
         await judged(ctx, killer_id or mortal.id, mortal.id, act)

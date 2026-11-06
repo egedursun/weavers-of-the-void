@@ -17,7 +17,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import MemoryKind, OpinionComponent, SkillKind, SkillSource, ValueHolder, WantKind
 from aerona.domain.enums.mortal import Ability, DeathCause, LifeStage, MarriageEnd, MarriageKind
-from aerona.domain.enums.polity import OathKind
+from aerona.domain.enums.polity import LawKind, OathKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.customs import people_of
@@ -36,6 +36,7 @@ from aerona.engine.mortal.life import ability, adult, assign_sex, refresh_life, 
 from aerona.engine.mortal.profile import ensure_profile, is_held
 from aerona.engine.mortal.standing import add_renown
 from aerona.engine.notes import note
+from aerona.engine.polity.laws import law_param
 from aerona.engine.polity.oaths import swear
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
@@ -330,15 +331,21 @@ async def match(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) 
         await marry(ctx.session, mortal, lover, ctx.epoch, kind=MarriageKind.PLURAL if married else MarriageKind.MONOGAMOUS, description="for love")
         await note(ctx, f"{mortal.name} and {lover.name} were wed.", key="kin.marriage", ids=[mortal.id, lover.id])
         return "married"
+    custom = await divorce_custom(ctx, mortal)
     for row in await marriages_of(ctx.session, mortal.id, ended=False):
         spouse_id = row.second_id if row.first_id == mortal.id else row.first_id
         view = await opinion(ctx.session, ctx.rules, ctx.epoch, mortal.id, spouse_id)
-        if view.value < table.divorce_opinion_below and rng.chance(table.divorce_chance):
+        if custom != "forbidden" and view.value < table.divorce_opinion_below and rng.chance(table.divorce_chance * (2 if custom == "free" else 1)):
             await end_marriage(ctx.session, row, ctx.epoch, MarriageEnd.DIVORCE)
             spouse = await ctx.session.get(EntityRow, spouse_id)
             await note(ctx, f"{mortal.name} and {spouse.name if spouse else 'their spouse'} parted.", key="kin.divorce", ids=[mortal.id, spouse_id])
             return "divorced"
     return None
+
+
+async def divorce_custom(ctx: TickContext, mortal: EntityRow) -> str:
+    found = await law_param(ctx.session, mortal.location_id, LawKind.MARRIAGE_LAW, "divorce") if mortal.location_id is not None else None
+    return str(found) if found is not None else "for_cause"
 
 
 async def plural_custom(ctx: TickContext, mortal: EntityRow) -> bool:

@@ -48,6 +48,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.relations.persuasion import council_lift
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import declare_war
 from aerona.engine.settlement.book import town_of
@@ -225,7 +226,8 @@ async def agenda(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawBook)
     for kind, params in wants:
         if len(taken) >= ctx.rules.government.decision_cap:
             break
-        if kind not in {LawKind.SUCCESSION_RULE, LawKind.SLAVERY, LawKind.RELIGIOUS_TOLERANCE} and not rng.chance(table.enact_chance * 3):
+        swayed = await council_lift(ctx, realm.ruler_id, polity.id) if realm.ruler_id and realm.profile.decision_rule is not DecisionRule.AUTOCRATIC else 1.0
+        if kind not in {LawKind.SUCCESSION_RULE, LawKind.SLAVERY, LawKind.RELIGIOUS_TOLERANCE} and not rng.chance(table.enact_chance * 3 * swayed):
             continue
         basis = (
             LegitimacyBasis.DIVINE

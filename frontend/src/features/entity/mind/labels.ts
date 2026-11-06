@@ -367,6 +367,8 @@ export const OPINION_TERMS: Record<string, string> = {
   kin: 'Kinship',
   common_enemies: 'Common enemies',
   temperament: 'Temperament',
+  friendship: 'Friendship',
+  rivalry: 'Rivalry',
 }
 
 export const NEED_ICONS: Record<string, Named> = {

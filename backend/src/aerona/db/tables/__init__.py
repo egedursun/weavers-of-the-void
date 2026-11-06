@@ -182,6 +182,7 @@ from aerona.db.tables.polity import (
     VassalageRow,
 )
 from aerona.db.tables.region import PolityMapKnowledgeRow, RegionDangerRow, RegionHazardRow, RegionMemoryRow
+from aerona.db.tables.relations import ContestRow, GroupRankRow, PassionRow, PersuasionRow, RelationshipRow, SocialCircleRow
 from aerona.db.tables.routes import HorizonIntuitionRow, JourneyRow, RouteRow
 from aerona.db.tables.rule_override import RuleOverrideRow
 from aerona.db.tables.settlement import (
@@ -260,6 +261,7 @@ __all__ = [
     "CommunityStockRow",
     "ConditionRow",
     "ConstructionRow",
+    "ContestRow",
     "CorveeRow",
     "CosmosRow",
     "CouncilRow",
@@ -310,6 +312,7 @@ __all__ = [
     "ForeignGodRow",
     "GodConflictRow",
     "GoodsFlowRow",
+    "GroupRankRow",
     "HeirloomRow",
     "HerdRow",
     "HeresyRow",
@@ -377,10 +380,12 @@ __all__ = [
     "OfficeRow",
     "OutbreakRow",
     "OuterBargainRow",
+    "PassionRow",
     "PeaceTermRow",
     "PeopleBiologyRow",
     "PeopleCultureRow",
     "PersonalityValueRow",
+    "PersuasionRow",
     "PlaceEnvironmentRow",
     "PlaceProfileRow",
     "PlaceSecretRow",
@@ -402,6 +407,7 @@ __all__ = [
     "RegionHazardRow",
     "RegionMemoryRow",
     "ReincarnationRow",
+    "RelationshipRow",
     "RelicRow",
     "ResourceMechanicRow",
     "ResourceProfileRow",
@@ -423,6 +429,7 @@ __all__ = [
     "SiegeRow",
     "SkillRow",
     "SkyEventRow",
+    "SocialCircleRow",
     "SonPowerRow",
     "SonRelationRow",
     "SonRow",

@@ -99,6 +99,7 @@ class SonToolId(StrEnum):
     BIND_MORTALS = "bind_mortals"
     TOUCH_MORTAL = "touch_mortal"
     PLANT_IDEA = "plant_idea"
+    STIR_HEARTS = "stir_hearts"
     REVEAL_TENET = "reveal_tenet"
     OPEN_REBIRTH_GATE = "open_rebirth_gate"
 
@@ -167,6 +168,9 @@ class MortalToolId(StrEnum):
     DESIGN_RITE = "design_rite"
     CAST_RITE = "cast_rite"
     FOUND_SCHOOL = "found_school"
+    SOCIALISE = "socialise"
+    CHALLENGE_TO_CONTEST = "challenge_to_contest"
+    PERSUADE = "persuade"
 
 
 ToolId = SonToolId | MortalToolId

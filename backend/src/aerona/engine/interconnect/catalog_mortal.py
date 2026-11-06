@@ -16,6 +16,7 @@ from aerona.db.tables.mind import (
     WantRow,
 )
 from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
+from aerona.db.tables.relations import ContestRow, GroupRankRow, PassionRow, PersuasionRow, RelationshipRow, SocialCircleRow
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
 
 Behaviour = tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tuple[str, ...], Subsystem, str | None, str]
@@ -31,6 +32,7 @@ FEELINGS = "section-feelings"
 TASTES = "section-tastes"
 ETHICS = "section-ethics"
 ASPIRATIONS = "section-aspirations"
+BONDS = "section-bonds"
 S = Subsystem
 PROFILES = (MortalProfileRow.__tablename__,)
 
@@ -126,6 +128,121 @@ BODY_GAP_MECHANICS: tuple[Mechanic, ...] = (
     ),
 )
 MIND_GAP_MECHANICS: tuple[Mechanic, ...] = (
+    Mechanic(
+        key="relationships",
+        spec_item="F18",
+        title="Mortals who share a place meet, talk, court, quarrel, teach, gift and brawl; friendship, romance, familiarity and rivalry grow into bonds",
+        subsystem=S.SOCIAL,
+        phases=("relations_social", "mortal_kin", "mind_opinion"),
+        surface=Surface(drawer=BONDS),
+        backfill="none: bonds grow from the next epoch",
+        templates=("affair.discovered",),
+        fields=("friendship", "romance", "familiarity", "rivalry", "kinds", "affair", "affair_known"),
+        tables=(RelationshipRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("stir_hearts", "socialise"),
+        targets=("mortal",),
+        couplings=(
+            Coupling(S.MIND, "facets, mood, beliefs and wants choose each interaction; interactions leave thoughts, and friendship and rivalry feed opinion"),
+            Coupling(
+                S.HOUSEHOLD, "lovers wed through the match, proposals betroth, and a discovered affair brings jealousy, divorce by the marriage law or a feud"
+            ),
+            Coupling(S.BODY, "a brawl leaves light wounds; comfort eases stress and threats raise it"),
+            Coupling(S.LAW, "love outside a marriage is an act witnesses judge by their ethics; insults feed honour duels"),
+        ),
+    ),
+    Mechanic(
+        key="circles",
+        spec_item="F18",
+        title="Mortals who share a strong taste or belief gather into circles that bond their members, feed faction recruiting and spread a creed",
+        subsystem=S.SOCIAL,
+        phases=("relations_circles", "factions"),
+        surface=Surface(drawer=BONDS),
+        backfill="none: circles gather from the next epoch",
+        templates=("circle.founded",),
+        fields=("kind", "taste_key", "axis", "meeting_place_id", "ideology_entity_id"),
+        tables=(SocialCircleRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal", "faction", "settlement"),
+        couplings=(
+            Coupling(S.POLITY, "factions recruit circle members more readily"),
+            Coupling(S.KNOWLEDGE, "a circle strengthens the creed of its place and pulls its members' beliefs"),
+        ),
+    ),
+    Mechanic(
+        key="passions",
+        spec_item="F18/RP3",
+        title="Passions of love, loyalty, hatred and devotion are invoked in battles, duels, oaths and crises; losing their objects brings full grief",
+        subsystem=S.MIND,
+        phases=("relations_passions", "campaigns", "mortal_minds", "treaty_cycles"),
+        surface=Surface(drawer=BONDS),
+        backfill="none: passions kindle from the next epoch",
+        templates=(),
+        fields=("kind", "strength", "source", "invoked_epoch"),
+        tables=(PassionRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("stir_hearts",),
+        targets=("mortal",),
+        couplings=(
+            Coupling(S.WAR, "a commander's passion lifts morale; a duellist's passion strengthens them or breaks them"),
+            Coupling(S.MIND, "a failed invocation brings madness or despair; a loved one's death brings full grief and may begin a dream of vengeance"),
+            Coupling(S.POLITY, "a strong loyalty carries an oath past its deadline"),
+        ),
+    ),
+    Mechanic(
+        key="persuasion",
+        spec_item="F18/RP3",
+        title="Typed arguments sway beliefs, sermons, council votes and envoy talks by oratory, the appeal's fit, stubbornness and passions",
+        subsystem=S.COMMUNICATION,
+        phases=("relations_social", "treaty_cycles", "polity_cycles"),
+        surface=Surface(drawer=BONDS),
+        backfill="none: arguments are recorded as they happen",
+        templates=(),
+        fields=("appeal", "aim", "axis", "score", "success"),
+        tables=(PersuasionRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("persuade",),
+        targets=("mortal",),
+        couplings=(
+            Coupling(S.FAITH, "a persuasive sermon raises the chance of a conversion"),
+            Coupling(S.POLITY, "persuasive councillors carry laws and persuasive envoys win treaties"),
+        ),
+    ),
+    Mechanic(
+        key="pecking_orders",
+        spec_item="F18/RP3",
+        title="Households, courts, circles, warbands and crews hold pecking orders by strength, office, renown and assertiveness, challenged from below",
+        subsystem=S.SOCIAL,
+        phases=("relations_pecking",),
+        surface=Surface(drawer=BONDS),
+        backfill="none: pecking orders form from the next epoch",
+        templates=(),
+        fields=("rank", "dominance", "group_kind"),
+        tables=(GroupRankRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal", "house", "polity", "faction", "vessel"),
+        couplings=(Coupling(S.HOUSEHOLD, "the head of a household takes a share of the lowest one's wealth; the first of a circle or warband leads it"),),
+    ),
+    Mechanic(
+        key="contests",
+        spec_item="F18/RP6",
+        title="Rivals, suitors, captives, courtiers and priests meet in riddle games, flytings, debates, games, trials, songs and tales for a stake",
+        subsystem=S.CULTURE,
+        phases=("relations_contests",),
+        surface=Surface(drawer=BONDS),
+        backfill="none: contests are held from the next epoch",
+        templates=("contest.famous", "contest.won"),
+        fields=("kind", "stake", "outcome", "rounds", "famous"),
+        tables=(ContestRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("challenge_to_contest",),
+        targets=("mortal",),
+        couplings=(
+            Coupling(S.CULTURE, "a famous contest between notables is remembered as a work of art"),
+            Coupling(S.WAR, "a learned captive may win their freedom in a riddle game"),
+            Coupling(S.FAITH, "a priest who wins a song contest swells their god's cult"),
+        ),
+    ),
     Mechanic(
         key="aspirations",
         spec_item="F17",

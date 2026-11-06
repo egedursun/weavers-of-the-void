@@ -204,6 +204,7 @@ from aerona.rules.registry.rarities import RaritiesRules
 from aerona.rules.registry.rarity_gates import RarityGatesRules
 from aerona.rules.registry.record_schema import RecordSchemaRules
 from aerona.rules.registry.region import HazardsRules, RegionalDangerRules, TerrainRules
+from aerona.rules.registry.relations import CircleRules, ContestRules, PassionRules, PeckingRules, PersuasionRules, SocialRules
 from aerona.rules.registry.religion import ReligionRules
 from aerona.rules.registry.remembrance import RemembranceRules
 from aerona.rules.registry.reputation import ReputationRules
@@ -304,6 +305,12 @@ class Rules:
     preferences: PreferencesRules = field(default_factory=PreferencesRules)
     ethics: EthicsRules = field(default_factory=EthicsRules)
     aspirations: AspirationsRules = field(default_factory=AspirationsRules)
+    social: SocialRules = field(default_factory=SocialRules)
+    circles: CircleRules = field(default_factory=CircleRules)
+    passions: PassionRules = field(default_factory=PassionRules)
+    persuasion: PersuasionRules = field(default_factory=PersuasionRules)
+    pecking: PeckingRules = field(default_factory=PeckingRules)
+    contests: ContestRules = field(default_factory=ContestRules)
     careers: CareersRules = field(default_factory=CareersRules)
     memory: MemoryRules = field(default_factory=MemoryRules)
     opinion: OpinionRules = field(default_factory=OpinionRules)

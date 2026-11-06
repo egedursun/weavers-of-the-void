@@ -66,6 +66,7 @@ BLUEPRINTS = (
     FactionBlueprint(K.INTERWORLD_FEDERATION, "interworld federation", "Federation", "envoys"),
     FactionBlueprint(K.WANDERING_MARKET, "wandering market", "Caravan", "traders"),
     FactionBlueprint(K.VOID_PIRATES, "void pirates", "Void Raiders", "void-robbers"),
+    FactionBlueprint(K.SOCIAL_CIRCLE, "social circle", "Circle", "companions"),
 )
 
 
@@ -77,7 +78,7 @@ def base_stats(rules: Rules, kind: FactionKind) -> tuple[int, int, int]:
     factions = rules.factions
     if kind in {K.MERCHANT_GUILD, K.CRAFT_GUILD, K.WANDERING_MARKET}:
         return factions.guild_strength, factions.guild_wealth, factions.guild_sway
-    if kind in {K.PRIESTHOOD, K.SCHOLARS_ACADEMY, K.SECRET_SOCIETY, K.NOBLE_COUNCIL}:
+    if kind in {K.PRIESTHOOD, K.SCHOLARS_ACADEMY, K.SECRET_SOCIETY, K.NOBLE_COUNCIL, K.SOCIAL_CIRCLE}:
         return factions.council_strength, factions.council_wealth, factions.council_sway
     return factions.brotherhood_strength, factions.brotherhood_wealth, factions.brotherhood_sway
 

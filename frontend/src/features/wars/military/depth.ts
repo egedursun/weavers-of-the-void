@@ -244,6 +244,7 @@ export const MORALE_PART: Record<string, Named> = {
   terror_taken: { label: 'Terror', icon: Ghost, tone: 'danger' },
   willpower: { label: 'Willpower', icon: Brain, tone: 'success' },
   flaring_items: { label: 'Flaring relics', icon: Flame, tone: 'warning' },
+  passion: { label: "A commander's passion", icon: HandHeart, tone: 'gold' },
 }
 
 export const MAGIC_PART: Record<string, Named> = {

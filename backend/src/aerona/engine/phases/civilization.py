@@ -640,6 +640,7 @@ async def spontaneous_treaty(ctx: TickContext) -> None:
     "table.nodes",
     "table.personality_values",
     "table.region_environment",
+    "table.relationships",
     "table.resource_profiles",
     "table.routes",
     "table.skills",

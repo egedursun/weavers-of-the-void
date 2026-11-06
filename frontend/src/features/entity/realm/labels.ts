@@ -191,6 +191,7 @@ export const LAW_PARAMS: Record<string, string> = {
   price: 'Price',
   custom: 'Custom',
   endogamy: 'Marry within',
+  divorce: 'Divorce',
   noble_luxury: 'Noble luxury',
   merchant_luxury: 'Merchant luxury',
   guild_id: 'Guild',
