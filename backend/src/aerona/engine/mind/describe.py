@@ -9,6 +9,7 @@ from aerona.catalog.mind import MEMORIES, NEED_LABELS, PRESSURE_LABELS, SKILLS, 
 from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS
 from aerona.catalog.preferences import target_label
 from aerona.catalog.relations import CONTESTS, PASSION_LABELS, RELATION_LABELS
+from aerona.catalog.renown import AXIS_LABELS
 from aerona.catalog.thoughts import DREAM_LABELS, EMOTIONS, READING_LABELS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
@@ -16,11 +17,13 @@ from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import CultureHonourRow, DreamRow, FearRow, GriefRow, InspirationRow, LifeDreamRow, WantRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.relations import ContestRow, GroupRankRow, PassionRow, RelationshipRow
+from aerona.db.tables.renown import DeedClaimRow, ReputationRow, RulerCurrencyRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.mind import DreamReading, Emotion, EthicalStance, GriefStage, IdeaState, InspirationState, PressureKind, ValueAxis, ValueHolder
 from aerona.domain.enums.relations import ContestEnd, RelationType
+from aerona.domain.enums.renown import ClaimKind, ClaimStatus
 from aerona.engine.mind.book import Holder, holder_kind, needs_of, pressures_of, skills_of, traits_of, values_of
 from aerona.engine.mind.ethics import culture_of, ethics_of
 from aerona.engine.mind.ideas import ideas_of
@@ -221,6 +224,27 @@ async def bond_lines(session: AsyncSession, rules: Rules, node_id: int) -> list[
     return lines
 
 
+async def renown_lines(session: AsyncSession, rules: Rules, node_id: int) -> list[str]:
+    lines: list[str] = []
+    rows = list(
+        await session.scalars(select(ReputationRow).where(ReputationRow.subject_node_id == node_id).order_by(ReputationRow.value.desc(), ReputationRow.id))
+    )
+    told = [f"{AXIS_LABELS[row.axis].lower()} {row.value} in {await name_of(session, row.community_node_id)}" for row in rows[: rules.context.renown_shown]]
+    if told:
+        lines.append("Known for: " + "; ".join(told))
+    purse = await session.get(RulerCurrencyRow, node_id)
+    if purse is not None:
+        lines.append(f"As a ruler: prestige {purse.prestige}, piety {purse.piety}, dread {purse.dread}, tyranny {purse.tyranny}")
+    false = await session.scalar(
+        select(DeedClaimRow)
+        .where(DeedClaimRow.claimant_node_id == node_id, DeedClaimRow.kind == ClaimKind.FALSE, DeedClaimRow.status == ClaimStatus.STANDING)
+        .limit(1)
+    )
+    if false is not None:
+        lines.append("Believed to have done a deed that was another's")
+    return lines
+
+
 async def feeling_lines(session: AsyncSession, rules: Rules, node_id: int, epoch: int) -> list[str]:
     lines: list[str] = []
     profile = await session.get(MortalProfileRow, node_id)
@@ -264,6 +288,7 @@ async def mind_lines(session: AsyncSession, rules: Rules, node: Holder, epoch: i
     lines.extend(await feeling_lines(session, rules, node.id, epoch))
     lines.extend(await aspiration_lines(session, node.id))
     lines.extend(await bond_lines(session, rules, node.id))
+    lines.extend(await renown_lines(session, rules, node.id))
     skills = sorted((await skills_of(session, node.id)).values(), key=lambda row: (-row.level, row.skill))[: table.mind_skills_shown]
     if skills:
         lines.append("Best skills: " + ", ".join(f"{SKILLS[row.skill].label.lower()} {row.level}" for row in skills))

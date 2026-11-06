@@ -17,6 +17,7 @@ from aerona.db.tables.mind import (
 )
 from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.db.tables.relations import ContestRow, GroupRankRow, PassionRow, PersuasionRow, RelationshipRow, SocialCircleRow
+from aerona.db.tables.renown import DeedClaimRow, DeedRow, LoreTradeRow, ReputationRow, RulerCurrencyRow
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
 
 Behaviour = tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tuple[str, ...], Subsystem, str | None, str]
@@ -33,6 +34,7 @@ TASTES = "section-tastes"
 ETHICS = "section-ethics"
 ASPIRATIONS = "section-aspirations"
 BONDS = "section-bonds"
+RENOWN = "section-renown"
 S = Subsystem
 PROFILES = (MortalProfileRow.__tablename__,)
 
@@ -128,6 +130,81 @@ BODY_GAP_MECHANICS: tuple[Mechanic, ...] = (
     ),
 )
 MIND_GAP_MECHANICS: tuple[Mechanic, ...] = (
+    Mechanic(
+        key="local_reputation",
+        spec_item="F19",
+        title="Every community holds its own reputation of each subject on nine axes, set by deeds seen or heard of and read through its ethics",
+        subsystem=S.SOCIAL,
+        phases=("renown_hearsay", "relations_contests", "campaigns", "mind_aspirations", "relations_social"),
+        surface=Surface(drawer=RENOWN),
+        backfill="none: reputations grow from deeds from the next epoch",
+        templates=(),
+        fields=("axis", "skill", "value", "heard_epoch"),
+        tables=(ReputationRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("spread_word",),
+        targets=("mortal", "house", "polity", "settlement", "people"),
+        couplings=(
+            Coupling(S.LAW, "an act witnesses judge becomes a deed: cruelty where it is condemned, heroism or honour where it is praised"),
+            Coupling(S.COMMUNICATION, "rumours carry deeds to other communities with their fidelity"),
+            Coupling(S.MIND, "glory and infamy feed a community's opinion and raise global renown and infamy"),
+        ),
+    ),
+    Mechanic(
+        key="ruler_currencies",
+        spec_item="F19",
+        title="Rulers hold prestige and piety from their standing at home, dread from executions and victories, and tyranny from unjust acts",
+        subsystem=S.POLITY,
+        phases=("ruler_currencies", "factions", "polity_cycles", "campaigns"),
+        surface=Surface(drawer=RENOWN),
+        backfill="none: standing grows from the next epoch",
+        templates=("ruler.silenced",),
+        fields=("prestige", "piety", "dread", "tyranny", "silenced_until"),
+        tables=(RulerCurrencyRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal",),
+        couplings=(
+            Coupling(S.POLITY, "prestige buys acceptance of laws, piety the clergy's loyalty, dread silences factions; tyranny raises their pressure"),
+            Coupling(S.MIND, "dread and tyranny lower the opinion of the ruled"),
+        ),
+    ),
+    Mechanic(
+        key="lore_currency",
+        spec_item="F19/RP3",
+        title="Factions, cults, scholars and beasts value techniques, hidden sites, maps and prophecies; lore is traded for wealth, favours and renown",
+        subsystem=S.KNOWLEDGE,
+        phases=("lore_market", "relations_social"),
+        surface=Surface(drawer=RENOWN),
+        backfill="none: lore is traded from the next epoch",
+        templates=(),
+        fields=("kind", "key", "value", "price"),
+        tables=(LoreTradeRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("trade_lore",),
+        targets=("faction", "cult", "settlement", "people", "polity", "mortal"),
+        couplings=(
+            Coupling(S.ECONOMY, "a seeker pays from its treasury, or the giver wins renown for wisdom"),
+            Coupling(S.SOCIAL, "a confidence between mortals can pass on a technique their place keeps secret, for a favour"),
+        ),
+    ),
+    Mechanic(
+        key="claims_of_deeds",
+        spec_item="F19/RP6",
+        title="Deeds are credited by claims; comrades share them, the vain claim them falsely, and witnesses, tokens and contests expose impostors",
+        subsystem=S.SOCIAL,
+        phases=("renown_claims",),
+        surface=Surface(drawer=RENOWN),
+        backfill="none: deeds are recorded from the next epoch",
+        templates=("claim.exposed",),
+        fields=("kind", "status", "credited", "magnitude", "token", "witnesses"),
+        tables=(DeedRow.__tablename__, DeedClaimRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal",),
+        couplings=(
+            Coupling(S.CULTURE, "a contest of wisdom between doer and claimant decides who is believed"),
+            Coupling(S.LAW, "an exposed impostor loses the stolen glory, earns trickery and a grudge that may end in a duel"),
+        ),
+    ),
     Mechanic(
         key="relationships",
         spec_item="F18",

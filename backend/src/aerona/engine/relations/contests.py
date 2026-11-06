@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.relations import CONTESTS, STAKE_LABELS
+from aerona.catalog.renown import CONTEST_RENOWN
 from aerona.constants.units import PERCENT
 from aerona.core.errors import AeronaError
 from aerona.db.repositories.entities import EntityRepository
@@ -37,6 +38,7 @@ from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.relations.book import ensure_relation, relation, shift
 from aerona.engine.relations.interactions import alignment
 from aerona.engine.relations.passions import strongest_against
+from aerona.engine.renown.deeds import acclaim_deed
 from aerona.engine.services.war import release_captive
 
 LEARNED_AT = 40
@@ -236,6 +238,8 @@ async def settle(ctx: TickContext, bout: Bout, row: ContestRow, winner: EntityRo
     if sore is not None:
         shift(ctx.rules, sore, ctx.epoch, rivalry=table.renown, familiarity=3)
     await STAKES[bout.stake](ctx, bout, winner, loser)
+    axis, skill = CONTEST_RENOWN[bout.kind]
+    await acclaim_deed(ctx, winner.id, axis, ctx.rules.local_renown.contest_magnitude, place_id=bout.place_id or winner.location_id, skill=skill)
     row.work_node_id = await famed(ctx, bout, winner, loser, margin)
     row.famous = row.work_node_id is not None
     label = CONTESTS[bout.kind].label.lower()

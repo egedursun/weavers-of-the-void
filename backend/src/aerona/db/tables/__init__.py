@@ -183,6 +183,7 @@ from aerona.db.tables.polity import (
 )
 from aerona.db.tables.region import PolityMapKnowledgeRow, RegionDangerRow, RegionHazardRow, RegionMemoryRow
 from aerona.db.tables.relations import ContestRow, GroupRankRow, PassionRow, PersuasionRow, RelationshipRow, SocialCircleRow
+from aerona.db.tables.renown import DeedClaimRow, DeedRow, LoreTradeRow, ReputationRow, RulerCurrencyRow
 from aerona.db.tables.routes import HorizonIntuitionRow, JourneyRow, RouteRow
 from aerona.db.tables.rule_override import RuleOverrideRow
 from aerona.db.tables.settlement import (
@@ -276,6 +277,8 @@ __all__ = [
     "CultTenetRow",
     "CultureValueRow",
     "CurrencyRow",
+    "DeedClaimRow",
+    "DeedRow",
     "DeferredStepRow",
     "DesignatedHeirRow",
     "DiseaseCureRow",
@@ -352,6 +355,7 @@ __all__ = [
     "LexemeRow",
     "LeyLineRow",
     "LoanRow",
+    "LoreTradeRow",
     "MaimedCohortRow",
     "MapNoteRow",
     "MapSnapshotRow",
@@ -409,6 +413,7 @@ __all__ = [
     "ReincarnationRow",
     "RelationshipRow",
     "RelicRow",
+    "ReputationRow",
     "ResourceMechanicRow",
     "ResourceProfileRow",
     "ResourceWorkerRow",
@@ -419,6 +424,7 @@ __all__ = [
     "RiverShiftRow",
     "RouteRow",
     "RuleOverrideRow",
+    "RulerCurrencyRow",
     "ScenarioRow",
     "ScoreRow",
     "SentenceRow",

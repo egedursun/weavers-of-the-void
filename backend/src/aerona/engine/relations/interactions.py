@@ -17,6 +17,7 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind, Facet, GriefStage, MemoryKind, NeedKind, SkillKind, ThoughtKind, ValueHolder, WantKind
 from aerona.domain.enums.relations import AppealKind, InteractionKind, PersuasionAim, RelationType
+from aerona.domain.enums.renown import ReputationAxis
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -35,6 +36,8 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.relations.book import RELATIONS_KEY, ensure_relation, mood_of, relation, shift
 from aerona.engine.relations.persuasion import persuade
+from aerona.engine.renown.deeds import acclaim_deed
+from aerona.engine.renown.lore import confide
 
 K = InteractionKind
 FACET_SPAN = 50
@@ -314,6 +317,8 @@ async def brawl(scene: Scene, actor: int, target: int) -> None:
     rng = ctx.rng(seed_of("brawl", actor, target, ctx.epoch))
     loser = second if rng.chance(PERCENT // 2) else first
     winner = first if loser is second else second
+    for side in (first, second):
+        await acclaim_deed(ctx, side.id, ReputationAxis.TROUBLEMAKER, ctx.rules.local_renown.brawl_magnitude, place_id=scene.place_id)
     if not write_blocked(loser.id, RELATIONS_KEY):
         await apply_hits(ctx, loser, Harm(ctx.rules.social.brawl_hp, HarmCause.ACCIDENT, "hurt in a brawl", severity=1), lethal=False)
         await remember(ctx.session, ctx.rules, holder_id=loser.id, subject_id=winner.id, kind=MemoryKind.HARMED_ME, magnitude=-8, epoch=ctx.epoch)
@@ -329,6 +334,11 @@ async def argue(scene: Scene, actor: int, target: int) -> None:
         await persuade(ctx, actor, target, AppealKind.BELIEF, PersuasionAim.BELIEF, axis=axes[0], toward=mine[axes[0]])
 
 
+async def confide_lore(scene: Scene, actor: int, target: int) -> None:
+    if await confide(scene.ctx, scene.mortals[actor], scene.mortals[target]):
+        scene.ctx.count("lore_confided")
+
+
 EFFECTS: dict[InteractionKind, Callable[[Scene, int, int], Awaitable[None]]] = {
     K.GOSSIP: gossip,
     K.COMFORT: comfort,
@@ -341,6 +351,7 @@ EFFECTS: dict[InteractionKind, Callable[[Scene, int, int], Awaitable[None]]] = {
     K.INSULT: insult,
     K.BRAWL: brawl,
     K.ARGUE: argue,
+    K.CONFIDE_SECRET: confide_lore,
 }
 
 

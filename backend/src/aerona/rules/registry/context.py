@@ -13,6 +13,7 @@ class ContextRules:
     mind_preferences_shown: int = rule(4, 0, 60, RuleGroup.CONTEXT_BUDGETS, "Strongest likes and dislikes shown in an agent's mind block")
     mind_ethics_shown: int = rule(4, 0, 45, RuleGroup.CONTEXT_BUDGETS, "Most strongly held ethics shown in an agent's mind block")
     mind_bonds_shown: int = rule(5, 0, 50, RuleGroup.CONTEXT_BUDGETS, "Closest and most hostile bonds shown in an agent's mind block")
+    renown_shown: int = rule(4, 0, 50, RuleGroup.CONTEXT_BUDGETS, "Strongest local reputations shown in an agent's mind block")
     mind_passions_shown: int = rule(3, 0, 20, RuleGroup.CONTEXT_BUDGETS, "Strongest passions shown in an agent's mind block")
     mind_skills_shown: int = rule(3, 0, 60, RuleGroup.CONTEXT_BUDGETS, "Best skills shown in an agent's mind block")
     mechanic_window_epochs: int = rule(3, 0, 100, RuleGroup.CONTEXT_BUDGETS, "Ages back an agent still hears what a mechanic last did to a record")

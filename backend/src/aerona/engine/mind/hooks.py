@@ -20,6 +20,8 @@ from aerona.engine.mind.memories import kin_of, remember
 from aerona.engine.mind.skills import practise, practise_any
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mind.traits import gain_trait
+from aerona.engine.renown.currencies import on_act
+from aerona.engine.renown.deeds import deed_seen
 
 LOSS_KINDS = frozenset({InjuryKind.SEVERED, InjuryKind.GOUGED})
 FIGHTING_ROLES = frozenset({*HERO_ROLES, MortalRole.CAPTAIN, MortalRole.BANDIT})
@@ -184,6 +186,8 @@ async def witnessed(
         return 0
     kind = MemoryKind.GOODWILL if size > 0 else ACT_MEMORIES.get(act, MemoryKind.ILL_WILL)
     await remember(ctx.session, ctx.rules, holder_id=holder_id, subject_id=subject_id, kind=kind, magnitude=size, epoch=ctx.epoch, note=note)
+    await deed_seen(ctx, holder_id, subject_id, act, reading)
+    await on_act(ctx, subject_id, act, reading, holder_id)
     return size
 
 

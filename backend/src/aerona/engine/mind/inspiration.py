@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.mind import SKILLS
+from aerona.catalog.mind import CRAFT_SKILLS, SKILLS
 from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import InspirationRow, SkillRow
@@ -11,6 +11,7 @@ from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import InspirationKind, InspirationState, MoodState, PreferenceKind, SkillFamily, ThoughtKind
+from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.context import TickContext
@@ -22,6 +23,7 @@ from aerona.engine.mind.thoughts import think
 from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.renown.deeds import acclaim_deed, best_craft
 
 FIGHTERS = frozenset({MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.HERO, MortalRole.CAPTAIN, MortalRole.HUNTER})
 FEVER_MATERIALS = (MaterialKind.GOLD, MaterialKind.SILVER, MaterialKind.IRON, MaterialKind.BRONZE, MaterialKind.STONE, MaterialKind.WOOD, MaterialKind.GLASS)
@@ -97,6 +99,8 @@ async def make_masterwork(ctx: TickContext, mortal: EntityRow, row: InspirationR
     row.state = InspirationState.FULFILLED
     await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.MADE_MASTERWORK, ctx.epoch, subject_id=item.id)
     await note(ctx, f"In a fever of inspiration, {mortal.name} made {item.name}.", key="inspiration.masterwork", ids=[mortal.id, item.id])
+    craft = await best_craft(ctx, mortal.id, CRAFT_SKILLS)
+    await acclaim_deed(ctx, mortal.id, ReputationAxis.SKILL_RENOWN, ctx.rules.local_renown.masterwork_magnitude, place_id=community.id, skill=craft)
     return True
 
 

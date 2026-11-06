@@ -56,6 +56,16 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "for a stake. The winner gains renown; a famous contest may be remembered in art. 1 action.",
         {"target_id": "The mortal you challenge", "kind": "The contest", "stake": "What is at stake"},
     ),
+    T.TRADE_LORE: ToolText(
+        "You trade a piece of lore you hold (a technique, a hidden site, knowledge of a land or a prophecy) to a neighbour who lacks it. "
+        "Rarer lore is worth more, and each telling makes it less rare. You are paid in wealth or in renown for wisdom. 1 action.",
+        {
+            "buyer_id": "Who receives the lore",
+            "kind": "The kind of lore",
+            "key": "Which piece: the technique key, or site, region or prophecy",
+            "subject_id": "The site, land or prophecy, if any",
+        },
+    ),
     T.PERSUADE: ToolText(
         "You try to bring another mortal where you are round to your view of a belief, appealing to belief, self-interest, authority, evidence or fear. "
         "Your oratory, how well the appeal fits them, their stubbornness and their passions decide it. 1 action.",

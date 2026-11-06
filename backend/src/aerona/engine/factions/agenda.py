@@ -42,6 +42,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.renown.currencies import restraint
 from aerona.engine.services.war import ongoing_wars
 
 G = FactionGoalKind
@@ -58,6 +59,7 @@ class Move:
 
 
 A = FactionActionKind
+DEFIANT = frozenset({A.STRIKE, A.RIOT, A.COUP, A.ASSASSINATE})
 ROBBER_STRENGTH = 30
 THIN_PURSE = 50
 HALF = 50
@@ -246,13 +248,17 @@ async def pursue(ctx: TickContext, factions: FactionBook, realms: RealmBook, law
         if frozen(faction_id):
             continue
         goals = sorted(factions.goals[faction_id], key=lambda goal: (-goal.priority, goal.id))
-        if not goals or not ctx.rng(f"faction_act.{faction_id}.{ctx.epoch}").chance(table.act_chance):
+        realm = await realm_for(realms, profile)
+        suppress, press = await restraint(ctx, realm.entity.id if realm is not None else None)
+        if not goals or not ctx.rng(f"faction_act.{faction_id}.{ctx.epoch}").chance(table.act_chance * press):
             if goals and "cohesion" not in profile.locked:
                 profile.cohesion = clamp_int(profile.cohesion - table.cohesion_drift, 0, PERCENT)
             continue
         goal = goals[0]
         faction = factions.entities[faction_id]
         action = choose(profile, goal, faction)
+        if action in DEFIANT and not ctx.rng(f"faction_dare.{faction_id}.{ctx.epoch}").chance(PERCENT * suppress):
+            continue
         success = await act(Move(ctx, factions, realms, laws, profile, goal), action)
         if success and "progress" not in goal.locked:
             goal.progress = clamp_int(goal.progress + table.progress_step, 0, PERCENT)

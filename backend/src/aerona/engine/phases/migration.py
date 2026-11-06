@@ -186,6 +186,8 @@ async def migrate(ctx: TickContext, atlas: RegionAtlas, source: EntityRow, targe
     "table.pressures",
     "table.region_environment",
     "table.relationships",
+    "table.reputations",
+    "table.ruler_currencies",
     "table.settlement_profiles",
     "table.sky_events",
     "table.traits",

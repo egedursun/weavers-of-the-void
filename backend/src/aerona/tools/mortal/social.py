@@ -1,16 +1,19 @@
 from typing import Any
 
 from aerona.catalog.relations import CONTESTS, INTERACTIONS, STAKE_LABELS
+from aerona.catalog.renown import LORE_LABELS, PRICE_LABELS
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.relations import AppealKind, ContestEnd, ContestKind, ContestStake, InteractionKind, PersuasionAim
+from aerona.domain.enums.renown import LoreKind
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.relations.contests import Bout, ContestTally, hold_contest
 from aerona.engine.relations.interactions import SocialTally, interact, load_scene
 from aerona.engine.relations.persuasion import persuade
+from aerona.engine.renown.lore import holdings, trade, value_of
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
 from aerona.tools.framework.call import MortalCall
@@ -79,6 +82,25 @@ async def argue(call: MortalCall, args: PersuadeInput) -> str:
     return result(MortalResult.PERSUADED if argument.success else MortalResult.NOT_PERSUADED, name=other.name, score=argument.score)
 
 
+class LoreInput(ToolInput):
+    buyer_id: int
+    kind: LoreKind
+    key: str
+    subject_id: int | None = None
+
+
+async def sell_lore(call: MortalCall, args: LoreInput) -> str:
+    buyer = await require_target(call, args.buyer_id)
+    item = (args.kind, args.key, args.subject_id)
+    if (args.key, args.subject_id) not in await holdings(call.session, call.me.id, args.kind):
+        fail(MortalResult.LORE_REFUSED, name=buyer.name)
+    row = await trade(call.tick, call.me, buyer, item, value=await value_of(call.tick, item))
+    if row is None:
+        fail(MortalResult.LORE_REFUSED, name=buyer.name)
+    call.target(buyer.id)
+    return result(MortalResult.LORE_TRADED, name=buyer.name, lore=LORE_LABELS[args.kind].lower(), price=PRICE_LABELS[row.price].lower())
+
+
 def specs() -> list[ToolSpec[MortalCall, Any]]:
     mortal = AgentKind.MORTAL
     standard = mortal_standard_action
@@ -86,4 +108,5 @@ def specs() -> list[ToolSpec[MortalCall, Any]]:
         ToolSpec(MortalToolId.SOCIALISE, mortal, SocialiseInput, ToolMeta(ActionKind.INFLUENCE, standard), socialise),
         ToolSpec(MortalToolId.CHALLENGE_TO_CONTEST, mortal, ContestInput, ToolMeta(ActionKind.INFLUENCE, standard), challenge),
         ToolSpec(MortalToolId.PERSUADE, mortal, PersuadeInput, ToolMeta(ActionKind.INFLUENCE, standard), argue),
+        ToolSpec(MortalToolId.TRADE_LORE, mortal, LoreInput, ToolMeta(ActionKind.INFLUENCE, standard), sell_lore),
     ]

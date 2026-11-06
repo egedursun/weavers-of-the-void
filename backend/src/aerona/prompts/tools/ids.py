@@ -100,6 +100,7 @@ class SonToolId(StrEnum):
     TOUCH_MORTAL = "touch_mortal"
     PLANT_IDEA = "plant_idea"
     STIR_HEARTS = "stir_hearts"
+    SPREAD_WORD = "spread_word"
     REVEAL_TENET = "reveal_tenet"
     OPEN_REBIRTH_GATE = "open_rebirth_gate"
 
@@ -171,6 +172,7 @@ class MortalToolId(StrEnum):
     SOCIALISE = "socialise"
     CHALLENGE_TO_CONTEST = "challenge_to_contest"
     PERSUADE = "persuade"
+    TRADE_LORE = "trade_lore"
 
 
 ToolId = SonToolId | MortalToolId

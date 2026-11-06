@@ -209,6 +209,8 @@ async def mortal_life_course(ctx: TickContext) -> None:
     "table.personality_values",
     "table.polity_members",
     "table.relationships",
+    "table.reputations",
+    "table.ruler_currencies",
     "table.traits",
     "table.wants",
 )
@@ -331,6 +333,8 @@ async def mortal_standing(ctx: TickContext) -> None:
     "table.polity_members",
     "table.prostheses",
     "table.relationships",
+    "table.reputations",
+    "table.ruler_currencies",
     "table.skills",
     "table.tradition_profiles",
     "table.traits",

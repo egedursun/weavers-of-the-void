@@ -793,6 +793,8 @@ async def mind_ideas(ctx: TickContext) -> None:
     "table.community_stocks",
     "table.culture_ethics",
     "table.culture_values",
+    "table.deed_claims",
+    "table.deeds",
     "table.entities",
     "table.entity_flags",
     "table.forced_weather",
@@ -805,10 +807,12 @@ async def mind_ideas(ctx: TickContext) -> None:
     "table.mortal_profiles",
     "table.needs",
     "table.nodes",
+    "table.offices",
     "table.personality_values",
     "table.place_environment",
     "table.preferences",
     "table.region_environment",
+    "table.reputations",
     "table.sky_events",
     "table.thoughts",
     "table.tradition_profiles",
@@ -816,7 +820,16 @@ async def mind_ideas(ctx: TickContext) -> None:
     "table.world_maps",
     "table.world_seasons",
 )
-@writes("table.memories", "table.mind_facets", "table.mortal_profiles", "table.personality_values", "table.thoughts")
+@writes(
+    "table.deed_claims",
+    "table.deeds",
+    "table.memories",
+    "table.mind_facets",
+    "table.mortal_profiles",
+    "table.personality_values",
+    "table.reputations",
+    "table.thoughts",
+)
 async def mind_thoughts(ctx: TickContext) -> None:
     sleeping = await dormant_ids(ctx)
     felt = relived = forgotten = 0
@@ -1109,6 +1122,8 @@ SURVEY_PHASES = (Phase("mind_survey", mind_survey),)
     "table.personality_values",
     "table.pressures",
     "table.relationships",
+    "table.reputations",
+    "table.ruler_currencies",
     "table.speaker_cohorts",
     "table.tradition_profiles",
     "table.traits",

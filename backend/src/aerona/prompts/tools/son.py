@@ -281,6 +281,18 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "reason": "Why you plant it",
         },
     ),
+    T.SPREAD_WORD: ToolText(
+        "You spread word of someone in a community: their name grows or darkens there for one kind of reputation "
+        "(heroism, honour, cruelty, piety, generosity, wisdom, trickery, renown for a skill, troublemaking). "
+        "Costs {{ rules.costs.influence }} essence and one action.",
+        {
+            "subject_id": "Whose name you spread",
+            "community_id": "Where the word is heard",
+            "axis": "The kind of reputation",
+            "raise": "True to raise it, false to lower it",
+            "reason": "Why you spread it",
+        },
+    ),
     T.STIR_HEARTS: ToolText(
         "You stir what one living mortal feels toward another: warm them into friendship, kindle romance, set them at odds as rivals, "
         "or plant a passion of love, loyalty, hatred or devotion for the other. Costs {{ rules.costs.influence }} essence and one action.",

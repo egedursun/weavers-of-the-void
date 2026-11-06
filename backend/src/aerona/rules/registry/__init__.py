@@ -207,6 +207,7 @@ from aerona.rules.registry.region import HazardsRules, RegionalDangerRules, Terr
 from aerona.rules.registry.relations import CircleRules, ContestRules, PassionRules, PeckingRules, PersuasionRules, SocialRules
 from aerona.rules.registry.religion import ReligionRules
 from aerona.rules.registry.remembrance import RemembranceRules
+from aerona.rules.registry.renown import ClaimRules, CurrencyRules, LocalRenownRules, LoreTradeRules
 from aerona.rules.registry.reputation import ReputationRules
 from aerona.rules.registry.routes import ChokepointsRules, RouteDangersRules, RouteSeasonsRules, SentientPactsRules, SonRoutesRules
 from aerona.rules.registry.rumours import RumoursRules
@@ -311,6 +312,10 @@ class Rules:
     persuasion: PersuasionRules = field(default_factory=PersuasionRules)
     pecking: PeckingRules = field(default_factory=PeckingRules)
     contests: ContestRules = field(default_factory=ContestRules)
+    local_renown: LocalRenownRules = field(default_factory=LocalRenownRules)
+    currencies: CurrencyRules = field(default_factory=CurrencyRules)
+    lore_trade: LoreTradeRules = field(default_factory=LoreTradeRules)
+    claims: ClaimRules = field(default_factory=ClaimRules)
     careers: CareersRules = field(default_factory=CareersRules)
     memory: MemoryRules = field(default_factory=MemoryRules)
     opinion: OpinionRules = field(default_factory=OpinionRules)

@@ -4,6 +4,7 @@ from typing import Annotated, Any
 from pydantic import Field
 
 from aerona.catalog.mind_split import IDEAS
+from aerona.catalog.renown import AXIS_LABELS
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
@@ -14,6 +15,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import IdeaKind, IdeaSource, ThoughtKind
 from aerona.domain.enums.mortal import Ability, MarriageKind
 from aerona.domain.enums.relations import PassionKind, PassionSource
+from aerona.domain.enums.renown import ReputationAxis
 from aerona.engine.body.healing import mend
 from aerona.engine.mind.book import ensure_mind_row
 from aerona.engine.mind.ideas import Encounter, take_up
@@ -25,6 +27,7 @@ from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.relations.book import ensure_relation, shift
 from aerona.engine.relations.passions import kindle
+from aerona.engine.renown.book import acclaim
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
 from aerona.tools.framework.call import SonCall
@@ -70,6 +73,14 @@ class StirInput(ToolInput):
     first_id: int
     second_id: int
     stir: Stir
+    reason: Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
+
+
+class SpreadInput(ToolInput):
+    subject_id: int
+    community_id: int
+    axis: ReputationAxis
+    raise_it: bool = Field(default=True, alias="raise")
     reason: Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 
 
@@ -182,6 +193,29 @@ async def plant_idea(call: SonCall, args: PlantIdeaInput) -> str:
     return result(SonResult.IDEA_PLANTED, name=mortal.name, idea=label)
 
 
+async def spread_word(call: SonCall, args: SpreadInput) -> str:
+    subject = await require_canon(call.session, args.subject_id)
+    community = await require_canon(call.session, args.community_id)
+    cost = call.rules.costs.influence
+    require_essence(call, cost)
+    amount = call.rules.son_tools.touch_amount * (1 if args.raise_it else -1)
+    row = await acclaim(call.session, subject.id, community.id, args.axis, amount=amount, epoch=call.epoch)
+    if row is None:
+        fail(SonResult.WORD_HELD, name=subject.name, community=community.name)
+    call.spend_essence(cost)
+    call.target(subject.id)
+    await call.chronicle(
+        ChronicleKind.INTRIGUE,
+        lines.SPREAD_WORD,
+        entity_ids=[subject.id, community.id],
+        son=call.son.name,
+        subject=subject.name,
+        community=community.name,
+        reason=args.reason,
+    )
+    return result(SonResult.WORD_SPREAD, name=subject.name, community=community.name, axis=AXIS_LABELS[args.axis].lower(), value=row.value)
+
+
 async def stir_hearts(call: SonCall, args: StirInput) -> str:
     if args.first_id == args.second_id:
         fail(SonResult.SAME_MORTAL)
@@ -237,6 +271,13 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
             PlantIdeaInput,
             ToolMeta(ActionKind.INFLUENCE, son_standard_action, essence_cost=lambda rules: rules.costs.influence),
             plant_idea,
+        ),
+        ToolSpec(
+            SonToolId.SPREAD_WORD,
+            son,
+            SpreadInput,
+            ToolMeta(ActionKind.INFLUENCE, son_standard_action, essence_cost=lambda rules: rules.costs.influence),
+            spread_word,
         ),
         ToolSpec(
             SonToolId.STIR_HEARTS,

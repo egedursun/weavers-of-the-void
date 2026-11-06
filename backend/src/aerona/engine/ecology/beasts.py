@@ -18,6 +18,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind, TreatyStatus
+from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.models.entity_stats import BeastStats, ItemStats, LegendStats, PlaceStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
@@ -38,6 +39,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon, close, connect, has_flag, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat
+from aerona.engine.renown.deeds import acclaim_deed
 from aerona.rules.registry import Rules
 
 ACTIVE = frozenset({BeastTemper.HUNGRY, BeastTemper.TERRITORIAL, BeastTemper.ENRAGED})
@@ -547,6 +549,7 @@ async def fall(ctx: TickContext, beast: EntityRow, row: BeastProfileRow) -> str:
     if slayer is not None:
         await corpse(ctx, beast, row, slayer)
         await loot(ctx, row, slayer)
+        await acclaim_deed(ctx, slayer.id, ReputationAxis.HEROISM, ctx.rules.local_renown.act_magnitude * 2, place_id=slayer.location_id, token=True)
     treasures = await owned_items(ctx, [beast.id])
     if any(value > 0 for value in row.hoard.values()) or treasures:
         place = await create_record(

@@ -31,6 +31,7 @@ from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.military import CasualtyFate, DuelContext, DuelEnd, OutcomeClass, SackChoice, Stance, StarvationStage
 from aerona.domain.enums.mind import ActKind, MemoryKind, ThoughtKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.enums.society import Commodity, NaturalLaw
 from aerona.domain.enums.war import BattleOutcome, SiegeStatus, WarCause, WarEnding, WarStatus
 from aerona.domain.models.calendar import epoch_start_year
@@ -109,6 +110,8 @@ from aerona.engine.primitives.society import shift_stock
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat
 from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.records import death_path
+from aerona.engine.renown.currencies import on_victory
+from aerona.engine.renown.deeds import acclaim_deed
 from aerona.engine.services.community_relations import change_relation, start_blood_feud
 from aerona.engine.services.sides import SideIndex
 from aerona.engine.services.war import (
@@ -1053,6 +1056,12 @@ async def _ground_toll(
     ctx.count("exotic_shaken", await exotic_toll(ctx, field.terrain, ground.region, leaders))
 
 
+async def hail_victor(ctx: TickContext, winner: EntityRow, commander_id: int | None) -> None:
+    await on_victory(ctx, winner.id)
+    if commander_id is not None:
+        await acclaim_deed(ctx, commander_id, ReputationAxis.HEROISM, ctx.rules.local_renown.act_magnitude, place_id=winner.id)
+
+
 async def fight_battle(
     ctx: TickContext, theatre: Theatre, item: OngoingWar, armies: dict[int, tuple[EntityRow, ArmyRow]], ground: BattleGround | None = None
 ) -> BattleReport | None:
@@ -1086,6 +1095,7 @@ async def fight_battle(
         outcome = _battle_score(war, ctx.rules, result, attacker_id=attacker.id, gap=gap)
         summary = f"{winner.name} prevailed over {loser.name} ({result.outcome.value}; {result.winner.tactic.value.replace('_', ' ')})"
     await _toll(ctx, result, field, armies[winner.id][1].commander_entity_id)
+    await hail_victor(ctx, winner, armies[winner.id][1].commander_entity_id)
     _community_losses(ctx, winner, loser, result.loser.lost / max(1, result.loser.start))
     await change_relation(ctx, attacker.id, defender.id, -campaigns.battle_relation, MemoryKind.FOUGHT_US, note="battle")
     son_id = await _patron_effects(ctx, theatre, winner, loser)
@@ -1473,6 +1483,8 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.culture_ethics",
     "table.culture_values",
     "table.currencies",
+    "table.deed_claims",
+    "table.deeds",
     "table.designated_heirs",
     "table.disease_profiles",
     "table.districts",
@@ -1533,7 +1545,9 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.region_dangers",
     "table.region_environment",
     "table.relationships",
+    "table.reputations",
     "table.routes",
+    "table.ruler_currencies",
     "table.settlement_infrastructure",
     "table.settlement_profiles",
     "table.sieges",
@@ -1602,6 +1616,8 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.community_societies",
     "table.community_stocks",
     "table.currencies",
+    "table.deed_claims",
+    "table.deeds",
     "table.districts",
     "table.entities",
     "table.entity_flags",
@@ -1630,6 +1646,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.polity_profiles",
     "table.polity_territories",
     "table.region_environment",
+    "table.reputations",
     "table.settlement_infrastructure",
     "table.settlement_profiles",
     "table.sieges",

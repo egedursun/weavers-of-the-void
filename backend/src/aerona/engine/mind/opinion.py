@@ -12,6 +12,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow, TraitRow
 from aerona.db.tables.relations import RelationshipRow
+from aerona.db.tables.renown import RulerCurrencyRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -22,6 +23,7 @@ from aerona.engine.mind.memories import memories_about, strength_of
 from aerona.engine.mind.space import NEUTRAL_DISTANCE, memory_weight, value_alignment
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import BondIndex, active_bonds, spoken_language
+from aerona.engine.renown.book import standing_with
 from aerona.rules.registry import Rules
 
 PAIR_BONDS = (BondKind.ENEMY, BondKind.ALLY, BondKind.TRADES_WITH, BondKind.PAYS_TRIBUTE)
@@ -43,6 +45,10 @@ class PairFacts:
     common_enemies: int = 0
     friendship: int = 0
     rivalry: int = 0
+    glory: int = 0
+    infamy: int = 0
+    dread: int = 0
+    tyranny: int = 0
 
 
 @dataclass(frozen=True)
@@ -85,6 +91,10 @@ def shared_terms(rules: Rules, facts: PairFacts) -> list[OpinionTerm]:
         OpinionTerm("common_enemies", min(table.common_enemy_cap, facts.common_enemies * table.common_enemy)) if facts.common_enemies else None,
         OpinionTerm("friendship", round(facts.friendship * rules.social.relation_opinion_pct / PERCENT)) if facts.friendship else None,
         OpinionTerm("rivalry", -round(facts.rivalry * rules.social.relation_opinion_pct / PERCENT / 2)) if facts.rivalry else None,
+        OpinionTerm("glory", round(facts.glory * rules.local_renown.opinion_pct / PERCENT)) if facts.glory else None,
+        OpinionTerm("infamy", -round(facts.infamy * rules.local_renown.opinion_pct / PERCENT)) if facts.infamy else None,
+        OpinionTerm("dread", -round(facts.dread * rules.currencies.opinion_pct / PERCENT)) if facts.dread else None,
+        OpinionTerm("tyranny", -round(facts.tyranny * rules.currencies.opinion_pct / PERCENT)) if facts.tyranny else None,
     ]
     return [term for term in terms if term is not None]
 
@@ -163,6 +173,8 @@ async def pair_facts(session: AsyncSession, first: int, second: int) -> PairFact
     kin = any([await bonds.exists_between(first, second, kind) for kind in KIN_BONDS])
     common = (await _enemies(session, first) & await _enemies(session, second)) - {first, second}
     bond = await session.scalar(select(RelationshipRow).where(RelationshipRow.holder_node_id == first, RelationshipRow.subject_node_id == second))
+    glory, infamy = await standing_with(session, second, first)
+    purse = await session.get(RulerCurrencyRow, second)
     return PairFacts(
         same_god=first_god is not None and first_god == second_god,
         other_god=first_god is not None and second_god is not None and first_god != second_god,
@@ -176,6 +188,10 @@ async def pair_facts(session: AsyncSession, first: int, second: int) -> PairFact
         common_enemies=len(common),
         friendship=bond.friendship if bond is not None else 0,
         rivalry=bond.rivalry if bond is not None else 0,
+        glory=glory,
+        infamy=infamy,
+        dread=purse.dread if purse is not None else 0,
+        tyranny=purse.tyranny if purse is not None else 0,
     )
 
 
