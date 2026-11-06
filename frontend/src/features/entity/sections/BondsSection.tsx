@@ -212,8 +212,8 @@ export function BondsSection({ nodeId }: { nodeId: number }) {
   if (query.isError)
     return (
       <Section
-        id='section-bonds'
-        title='Bonds, passions and standing'
+        id='section-ties'
+        title='Relationships, passions and standing'
         icon={BONDS_ICON}
       >
         <EmptyState
@@ -226,8 +226,8 @@ export function BondsSection({ nodeId }: { nodeId: number }) {
   if (!view || !view.applies) return null
   return (
     <Section
-      id='section-bonds'
-      title='Bonds, passions and standing'
+      id='section-ties'
+      title='Relationships, passions and standing'
       description='Friendships, loves and rivalries; passions that lift or break; circles, pecking orders, contests of wit and arguments.'
       icon={BONDS_ICON}
     >
