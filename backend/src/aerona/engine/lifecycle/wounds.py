@@ -11,6 +11,7 @@ from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import BodyFunction, DamageType, HarmCause, InjuryKind, InjuryState
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mortal import HarshnessScale
 from aerona.engine.body.book import Bearer, anatomy_for, ensure_body, function_level
@@ -18,6 +19,7 @@ from aerona.engine.body.hits import MARK_KINDS, Armour, Harm, Hit, hits_for, los
 from aerona.engine.body.state import refresh
 from aerona.engine.context import TickContext
 from aerona.engine.economy.equipment import weapon_of
+from aerona.engine.economy.materials import draw_strength, sharpness
 from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_immortal, is_notable
 from aerona.engine.lifecycle.mortal_death import die
@@ -79,6 +81,7 @@ async def _deadly(ctx: TickContext, bearer: Bearer, body: BodyRow, hit: Hit, rng
 
 
 INJURY_KEY = "injuries"
+DRAWN = frozenset({ItemClass.BOW, ItemClass.CROSSBOW})
 
 
 async def _record(ctx: TickContext, bearer: Bearer, body: BodyRow, harm: Harm, hits: list[Hit], *, world_id: int | None) -> list[InjuryRow]:
@@ -195,14 +198,15 @@ async def armed(ctx: TickContext, harm: Harm) -> Harm:
     if harm.edge is None and harm.damage_type is None:
         blade = await weapon_of(ctx.session, wielder)
         if blade is not None:
-            harm = replace(harm, edge=blade.edge, heft=blade.weight)
+            harm = replace(harm, edge=sharpness(blade), heft=blade.weight)
         held = await wielded(ctx.session, wielder, ctx.rules.item_wear.broken)
         if held is not None:
             _, riding = await mount_pct(ctx.session, ctx.rules, wielder) if wielder is not None else (1.0, 1.0)
             second = await off_hand_pct(ctx.session, ctx.rules, wielder) if wielder is not None else 1.0
+            draw = 1 + draw_strength(blade) * ctx.rules.materials.bow_draw_pct / PERCENT if blade is not None and held.item_class in DRAWN else 1.0
             harm = replace(
                 harm,
-                damage=harm.damage * grip(held) * riding * second,
+                damage=harm.damage * grip(held) * riding * second * draw,
                 damage_type=DamageType(held.damage_type) if held.damage_type in DAMAGE_TYPES else None,
                 heft=(harm.heft or 0) + held.weight,
             )

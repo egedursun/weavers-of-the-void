@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,6 +33,11 @@ from aerona.engine.economy.extraction import knowledge_gate
 from aerona.engine.economy.loot import loot_temples
 from aerona.engine.economy.markets import quote_market
 from aerona.engine.economy.materials import (
+    draw_strength,
+    forge_heat,
+    forgeable,
+    sharpness,
+    weapon_damage,
     MaterialBook,
     MaterialProps,
     battle_wear,
@@ -382,3 +389,21 @@ async def test_resource_words_are_read_once_and_never_after(session: AsyncSessio
     await profile_resources(ctx, await EconomyBook.load(ctx))
     second = await session.get(ResourceProfileRow, late.id)
     assert second is not None and second.commodity is CommodityKind.ORE
+
+
+def test_material_physics_gate_forging_cap_edges_and_draw_bows() -> None:
+    rules = Rules()
+    novice = {KnowledgeBranch.METALLURGY: 1}
+    master = {KnowledgeBranch.METALLURGY: 3}
+    assert forge_heat(rules, master) > forge_heat(rules, novice)
+    assert forgeable(rules, props(M.COPPER), novice)
+    assert not forgeable(rules, props(M.IRON), novice)
+    assert forgeable(rules, props(M.IRON), master)
+    assert forgeable(rules, props(M.WOOD), {})
+    blunt = replace(props(M.STEEL), max_edge=10)
+    assert sharpness(blunt) == 10 < sharpness(props(M.STEEL))
+    assert weapon_damage(rules, blunt, 50) < weapon_damage(rules, props(M.STEEL), 50)
+    assert draw_strength(props(M.WOOD)) > draw_strength(props(M.STONE)) == 0
+    for kind in M:
+        spec = MATERIALS[kind]
+        assert spec.boiling_point >= spec.melting_point or spec.melting_point == 100

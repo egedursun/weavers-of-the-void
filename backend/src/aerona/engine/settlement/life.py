@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.materials import BUILD_MATERIALS, MATERIALS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleCultureRow
 from aerona.db.tables.disease import QuarantineRow
@@ -559,12 +560,37 @@ def fire_years(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | None
     return found
 
 
+def flammability(material: BuildMaterial) -> float:
+    return max(0, PERCENT - MATERIALS[BUILD_MATERIALS[material]].ignition_point) / PERCENT
+
+
+def flammable_share(town: Town) -> float:
+    total = sum(district.level for district in town.districts)
+    timber = flammability(BuildMaterial.TIMBER) or 1.0
+    if total <= 0:
+        return 1.0
+    return sum(district.level * flammability(district.material) for district in town.districts) / total / timber
+
+
+def ambient_heat(rules: Rules, ground: RegionEnvironmentRow | None) -> int:
+    if ground is None:
+        return 0
+    return round_half_up(max(0, ground.temperature - rules.fire.ambient_floor) * rules.fire.ambient_heat_pct / PERCENT)
+
+
+def self_igniting(rules: Rules, town: Town, ground: RegionEnvironmentRow | None) -> bool:
+    heat = ambient_heat(rules, ground)
+    return heat > 0 and any(heat >= MATERIALS[BUILD_MATERIALS[district.material]].ignition_point for district in town.districts)
+
+
 async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | None, knowledge: KnowledgeMap, book: EnvironmentBook | None = None) -> int:
     table = ctx.rules.fire
     people = stat(town.entity, "population") or 0
     crowd = min(1.0, people / max(1, housing_of(ctx.rules, town)))
-    town.profile.fire_risk = clamp_int(town.timber_share() * table.timber_risk + crowd * table.crowding_risk, 0, PERCENT)
-    dry = 1.0 if ground is None or ground.rainfall < table.dry_rainfall else DRY_OFF_PCT / PERCENT
+    town.profile.fire_risk = clamp_int(flammable_share(town) * table.timber_risk + crowd * table.crowding_risk, 0, PERCENT)
+    igniting = self_igniting(ctx.rules, town, ground)
+    dry = 1.0 if igniting or ground is None or ground.rainfall < table.dry_rainfall else DRY_OFF_PCT / PERCENT
+    dry *= 1 + table.ambient_ignition_pct / PERCENT if igniting else 1.0
     rng = ctx.rng(f"fire.{town.entity.id}")
     burned = 0
     for year in fire_years(ctx, town, ground, book):

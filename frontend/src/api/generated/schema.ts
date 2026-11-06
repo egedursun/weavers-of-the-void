@@ -20289,6 +20289,18 @@ export interface components {
             rarity: number;
             base_value: number;
             decay: number;
+            melting_point: number;
+            ignition_point: number;
+            boiling_point: number;
+            density: number;
+            impact_yield: number;
+            impact_fracture: number;
+            shear_yield: number;
+            shear_fracture: number;
+            elasticity: number;
+            thermal_conductivity: number;
+            solid_density: number;
+            max_edge: number;
             branch: components["schemas"]["KnowledgeBranch"] | null;
             level: number;
             gate: components["schemas"]["KnowledgeBranch"] | null;

@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.materials import MATERIALS
 from aerona.constants.units import PERCENT
-from aerona.db.tables.economy import PROPERTY_COLUMNS, ResourceProfileRow, WorldMaterialRow
+from aerona.db.tables.cosmos import AppliedFixupRow
+from aerona.db.tables.economy import PHYSICS_COLUMNS, PROPERTY_COLUMNS, ResourceProfileRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, MaterialFamily, MaterialOrigin
@@ -30,6 +32,35 @@ ORIGIN_BASE: dict[MaterialOrigin, MaterialKind] = {
     MaterialOrigin.LEAK_CRYSTAL: MaterialKind.VOID_GLASS,
     MaterialOrigin.RESEARCH: MaterialKind.STEEL,
 }
+
+
+FAMILY_BASE: dict[MaterialFamily, MaterialKind] = {
+    MaterialFamily.ORGANIC: MaterialKind.WOOD,
+    MaterialFamily.STONE: MaterialKind.STONE,
+    MaterialFamily.METAL: MaterialKind.IRON,
+    MaterialFamily.PRECIOUS: MaterialKind.SILVER,
+    MaterialFamily.EXOTIC: MaterialKind.STAR_METAL,
+}
+PHYSICS_FIXUP = "materials.physics"
+
+
+def physics_base(row: WorldMaterialRow) -> MaterialKind:
+    if row.base_kind is not None:
+        return row.base_kind
+    return ORIGIN_BASE.get(row.origin, FAMILY_BASE[row.family])
+
+
+async def backfill_physics(session: AsyncSession) -> int:
+    if await session.get(AppliedFixupRow, PHYSICS_FIXUP) is not None:
+        return 0
+    rows = list(await session.scalars(select(WorldMaterialRow)))
+    for row in rows:
+        spec = MATERIALS[physics_base(row)]
+        for column in PHYSICS_COLUMNS:
+            setattr(row, column, getattr(spec, column))
+    session.add(AppliedFixupRow(key=PHYSICS_FIXUP, result={"materials": len(rows)}))
+    await session.flush()
+    return len(rows)
 
 
 @dataclass(frozen=True)

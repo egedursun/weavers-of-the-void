@@ -37,6 +37,18 @@ class MaterialView(ApiModel):
     rarity: int
     base_value: int
     decay: int
+    melting_point: int
+    ignition_point: int
+    boiling_point: int
+    density: int
+    impact_yield: int
+    impact_fracture: int
+    shear_yield: int
+    shear_fracture: int
+    elasticity: int
+    thermal_conductivity: int
+    solid_density: int
+    max_edge: int
     branch: KnowledgeBranch | None
     level: int
     gate: KnowledgeBranch | None

@@ -21,7 +21,21 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
 
 ROUTE_DANGER_COLUMNS = ("danger_bandits", "danger_beasts", "danger_weather", "danger_sea")
-PROPERTY_COLUMNS = ("hardness", "toughness", "weight", "edge", "conductivity", "sanctity", "corruption", "rarity", "base_value", "decay")
+PHYSICS_COLUMNS = (
+    "melting_point",
+    "ignition_point",
+    "boiling_point",
+    "density",
+    "impact_yield",
+    "impact_fracture",
+    "shear_yield",
+    "shear_fracture",
+    "elasticity",
+    "thermal_conductivity",
+    "solid_density",
+    "max_edge",
+)
+PROPERTY_COLUMNS = ("hardness", "toughness", "weight", "edge", "conductivity", "sanctity", "corruption", "rarity", "base_value", "decay", *PHYSICS_COLUMNS)
 
 
 class WorldMaterialRow(Base):
@@ -50,6 +64,18 @@ class WorldMaterialRow(Base):
     rarity: Mapped[int]
     base_value: Mapped[int]
     decay: Mapped[int]
+    melting_point: Mapped[int] = mapped_column(default=100, server_default="100")
+    ignition_point: Mapped[int] = mapped_column(default=100, server_default="100")
+    boiling_point: Mapped[int] = mapped_column(default=100, server_default="100")
+    density: Mapped[int] = mapped_column(default=50, server_default="50")
+    impact_yield: Mapped[int] = mapped_column(default=50, server_default="50")
+    impact_fracture: Mapped[int] = mapped_column(default=50, server_default="50")
+    shear_yield: Mapped[int] = mapped_column(default=50, server_default="50")
+    shear_fracture: Mapped[int] = mapped_column(default=50, server_default="50")
+    elasticity: Mapped[int] = mapped_column(default=0, server_default="0")
+    thermal_conductivity: Mapped[int] = mapped_column(default=50, server_default="50")
+    solid_density: Mapped[int] = mapped_column(default=50, server_default="50")
+    max_edge: Mapped[int] = mapped_column(default=0, server_default="0")
     branch: Mapped[KnowledgeBranch | None] = mapped_column(enum_type(KnowledgeBranch, "branch"))
     level: Mapped[int] = mapped_column(default=0)
     source_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))

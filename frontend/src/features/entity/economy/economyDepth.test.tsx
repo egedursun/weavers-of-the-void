@@ -46,6 +46,18 @@ function material(kind: string, label: string, family: string) {
     base_kind: null,
     price_premium_pct: 100,
     worth_pct: 100,
+    melting_point: 68,
+    ignition_point: 100,
+    boiling_point: 90,
+    density: 72,
+    impact_yield: 60,
+    impact_fracture: 70,
+    shear_yield: 58,
+    shear_fracture: 68,
+    elasticity: 30,
+    thermal_conductivity: 60,
+    solid_density: 75,
+    max_edge: 65,
   }
 }
 

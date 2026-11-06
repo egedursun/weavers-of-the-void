@@ -32,12 +32,6 @@ class Town:
     def tier_index(self) -> int:
         return TIER_ORDER.index(self.profile.size_tier)
 
-    def timber_share(self) -> float:
-        total = sum(district.level for district in self.districts)
-        if total <= 0:
-            return 1.0
-        return sum(district.level for district in self.districts if district.material is BuildMaterial.TIMBER) / total
-
 
 def tier_for(rules: Rules, population: int, infrastructure: SettlementInfrastructureRow, granary: int) -> SizeTier:
     table = rules.urban

@@ -107,6 +107,9 @@ class FireRules:
     stone_level: int = rule(2, 0, 20, G, "Architecture level that rebuilds a burned district in stone")
     wind_spread_pct: int = rule(150, 0, 1000, G, "Extra burning and deaths a gale-force wind brings to a great fire (%)")
     wet_damp_pct: int = rule(80, 0, 100, G, "Fire chance a fully wet sampled year puts out (%)")
+    ambient_floor: int = rule(70, 0, 100, G, "Temperature above which the air itself adds heat toward igniting buildings")
+    ambient_heat_pct: int = rule(150, 0, 1000, G, "Heat each degree of temperature above the floor adds, on the scale of ignition points (%)")
+    ambient_ignition_pct: int = rule(300, 0, 2000, G, "Extra fire chance where the ambient heat reaches a building material's ignition point (%)")
 
 
 @dataclass(frozen=True)

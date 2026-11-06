@@ -4,12 +4,12 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.materials import ALLOYS, MATERIALS, MaterialSpec
+from aerona.catalog.materials import ALLOYS, MATERIALS, METAL_FAMILIES, MaterialSpec
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.culture import ItemProfileRow
-from aerona.db.tables.economy import PROPERTY_COLUMNS, NodeMaterialRow, WorldMaterialRow
+from aerona.db.tables.economy import PHYSICS_COLUMNS, PROPERTY_COLUMNS, NodeMaterialRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.economy import FoeNature, MaterialFamily, MaterialOrigin, MaterialSlot
 from aerona.domain.enums.material import MaterialKind
@@ -37,6 +37,18 @@ class MaterialProps:
     gate: KnowledgeBranch | None = None
     kind: MaterialKind | None = None
     world_material_id: int | None = None
+    melting_point: int = 100
+    ignition_point: int = 100
+    boiling_point: int = 100
+    density: int = 50
+    impact_yield: int = 50
+    impact_fracture: int = 50
+    shear_yield: int = 50
+    shear_fracture: int = 50
+    elasticity: int = 0
+    thermal_conductivity: int = 50
+    solid_density: int = 50
+    max_edge: int = 0
 
 
 def from_spec(item: MaterialSpec) -> MaterialProps:
@@ -57,6 +69,7 @@ def from_spec(item: MaterialSpec) -> MaterialProps:
         item.level,
         item.gate,
         item.kind,
+        **{column: getattr(item, column) for column in PHYSICS_COLUMNS},
     )
 
 
@@ -102,8 +115,28 @@ class MaterialBook:
         return [row for row in self.procedural.values() if row.world_id == world_id]
 
 
+def forge_heat(rules: Rules, levels: Mapping[KnowledgeBranch, int]) -> int:
+    return rules.materials.forge_heat_base + levels.get(KnowledgeBranch.METALLURGY, 0) * rules.materials.forge_heat_per_level
+
+
+def forgeable(rules: Rules, props: MaterialProps, levels: Mapping[KnowledgeBranch, int]) -> bool:
+    if props.family not in METAL_FAMILIES or props.melting_point >= PERCENT:
+        return True
+    return forge_heat(rules, levels) >= props.melting_point
+
+
+def sharpness(props: MaterialProps) -> int:
+    return min(props.edge, props.max_edge)
+
+
+def draw_strength(props: MaterialProps) -> float:
+    return props.elasticity / PERCENT
+
+
 def workable(rules: Rules, props: MaterialProps, levels: Mapping[KnowledgeBranch, int], magic_density: int = 0) -> bool:
     if props.branch is not None and levels.get(props.branch, 0) < max(1, props.level):
+        return False
+    if not forgeable(rules, props, levels):
         return False
     if props.gate is KnowledgeBranch.MAGIC:
         return magic_density >= rules.materials.skysteel_magic_density and levels.get(KnowledgeBranch.MAGIC, 0) >= 1
@@ -118,7 +151,7 @@ def alloy_inputs(material: MaterialKind) -> tuple[MaterialKind, ...]:
 
 def weapon_damage(rules: Rules, props: MaterialProps, quality: int) -> int:
     table = rules.materials
-    raw = props.hardness * table.damage_hardness_pct + props.edge * table.damage_edge_pct + quality * table.damage_quality_pct
+    raw = props.hardness * table.damage_hardness_pct + sharpness(props) * table.damage_edge_pct + quality * table.damage_quality_pct
     return clamp_int(round_half_up(raw / PERCENT), 0, PERCENT)
 
 

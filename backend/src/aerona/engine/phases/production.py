@@ -20,7 +20,7 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, SkyEventKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
-from aerona.engine.economy.deposits import Deposit, has_substance, new_substance, open_deposit
+from aerona.engine.economy.deposits import Deposit, backfill_physics, has_substance, new_substance, open_deposit
 from aerona.engine.economy.materials import corruption_lure, curse_bonus, decay_loss, enchantment_cap, sanctity_splendour, sanctity_ward
 from aerona.engine.economy.provenance import sweep_materials
 from aerona.engine.economy.refining import RefiningTally, refine_community
@@ -582,6 +582,7 @@ async def economy_survey(ctx: TickContext) -> None:
     for key, value in (await depth_backfill(ctx)).items():
         ctx.count(f"depth_{key}", value)
     ctx.count("materials_assigned", await sweep_materials(ctx.session, ctx.rules))
+    ctx.count("material_physics_backfilled", await backfill_physics(ctx.session))
 
 
 PHASES = (

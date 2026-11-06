@@ -4,6 +4,7 @@ from types import MappingProxyType
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.economy import CommodityKind, MaterialFamily
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.settlement import BuildMaterial
 from aerona.domain.enums.society import KnowledgeBranch
 
 M = MaterialKind
@@ -29,6 +30,18 @@ class MaterialSpec:
     branch: KnowledgeBranch | None = None
     level: int = 0
     gate: KnowledgeBranch | None = None
+    melting_point: int = 100
+    ignition_point: int = 100
+    boiling_point: int = 100
+    density: int = 50
+    impact_yield: int = 50
+    impact_fracture: int = 50
+    shear_yield: int = 50
+    shear_fracture: int = 50
+    elasticity: int = 0
+    thermal_conductivity: int = 50
+    solid_density: int = 50
+    max_edge: int = 0
 
 
 def spec(
@@ -45,9 +58,64 @@ def worked(material: MaterialSpec, branch: KnowledgeBranch, level: int, gate: Kn
     return MaterialSpec(**{**material.__dict__, "branch": branch, "level": level, "gate": gate})
 
 
+PHYSICS_FIELDS = (
+    "melting_point",
+    "ignition_point",
+    "boiling_point",
+    "density",
+    "impact_yield",
+    "impact_fracture",
+    "shear_yield",
+    "shear_fracture",
+    "elasticity",
+    "thermal_conductivity",
+    "solid_density",
+    "max_edge",
+)
+PHYSICS: MappingProxyType[MaterialKind, tuple[int, ...]] = MappingProxyType(
+    {
+        M.WOOD: (100, 25, 100, 30, 20, 35, 15, 30, 55, 10, 30, 15),
+        M.BONE: (100, 45, 100, 40, 30, 45, 25, 40, 20, 15, 40, 30),
+        M.HIDE: (100, 35, 100, 20, 15, 45, 8, 35, 40, 8, 20, 0),
+        M.LEATHER: (100, 35, 100, 20, 22, 55, 15, 45, 35, 8, 20, 0),
+        M.CLOTH: (100, 20, 100, 8, 5, 25, 3, 20, 30, 6, 8, 0),
+        M.STONE: (85, 100, 100, 80, 55, 50, 50, 45, 0, 35, 82, 15),
+        M.FLINT: (80, 100, 100, 55, 60, 30, 65, 40, 0, 30, 58, 70),
+        M.OBSIDIAN: (60, 100, 100, 50, 55, 15, 62, 25, 0, 25, 52, 95),
+        M.CLAY: (70, 100, 100, 55, 20, 20, 18, 20, 5, 25, 60, 0),
+        M.SALT: (40, 100, 75, 40, 10, 10, 10, 10, 0, 40, 42, 0),
+        M.SULFUR: (15, 20, 30, 35, 8, 10, 8, 10, 0, 10, 38, 0),
+        M.COPPER: (55, 100, 85, 65, 35, 55, 30, 50, 25, 90, 68, 35),
+        M.TIN: (30, 100, 80, 58, 18, 40, 15, 35, 20, 60, 60, 15),
+        M.BRONZE: (52, 100, 85, 68, 50, 65, 48, 62, 30, 70, 70, 55),
+        M.IRON: (68, 100, 90, 72, 60, 70, 58, 68, 30, 60, 75, 65),
+        M.STEEL: (70, 100, 90, 72, 78, 85, 76, 85, 60, 55, 75, 90),
+        M.LEAD: (25, 100, 70, 95, 12, 35, 10, 30, 5, 45, 98, 5),
+        M.SILVER: (52, 100, 82, 75, 28, 50, 26, 45, 25, 95, 78, 30),
+        M.GOLD: (55, 100, 88, 98, 20, 50, 18, 45, 20, 85, 99, 15),
+        M.GLASS: (60, 100, 95, 45, 45, 8, 50, 15, 0, 15, 48, 85),
+        M.CRYSTAL: (75, 100, 100, 45, 65, 20, 68, 30, 0, 30, 46, 70),
+        M.GEMS: (90, 100, 100, 50, 80, 30, 85, 40, 0, 50, 52, 50),
+        M.AMBER: (20, 30, 40, 18, 15, 15, 15, 15, 5, 8, 20, 5),
+        M.IVORY: (100, 50, 100, 35, 35, 40, 32, 38, 15, 15, 36, 35),
+        M.CHITIN: (100, 45, 100, 25, 45, 50, 45, 50, 35, 12, 26, 50),
+        M.DRAGONBONE: (100, 95, 100, 40, 80, 90, 78, 88, 40, 20, 42, 75),
+        M.LIVING_WOOD: (100, 70, 100, 28, 40, 75, 35, 70, 80, 12, 28, 30),
+        M.STAR_METAL: (95, 100, 100, 65, 92, 95, 92, 95, 50, 70, 68, 95),
+        M.SKYSTEEL: (92, 100, 100, 32, 90, 92, 90, 92, 70, 50, 35, 95),
+        M.VOID_GLASS: (100, 100, 100, 25, 75, 30, 80, 40, 0, 0, 25, 100),
+        M.GODFLESH: (100, 98, 100, 45, 60, 98, 55, 95, 90, 20, 46, 40),
+    }
+)
+
+
+def with_physics(material: MaterialSpec) -> MaterialSpec:
+    return MaterialSpec(**{**material.__dict__, **dict(zip(PHYSICS_FIELDS, PHYSICS[material.kind], strict=True))})
+
+
 MATERIALS: MappingProxyType[MaterialKind, MaterialSpec] = MappingProxyType(
     {
-        item.kind: item
+        item.kind: with_physics(item)
         for item in (
             spec((M.WOOD, "Wood", F.ORGANIC), (15, 40, 30, 10), (20, 10, 0), (5, 5, 35)),
             spec((M.BONE, "Bone", F.ORGANIC), (25, 20, 25, 20), (25, 5, 10), (10, 5, 20)),
@@ -84,6 +152,7 @@ MATERIALS: MappingProxyType[MaterialKind, MaterialSpec] = MappingProxyType(
     }
 )
 
+BUILD_MATERIALS: MappingProxyType[BuildMaterial, MaterialKind] = MappingProxyType({BuildMaterial.TIMBER: M.WOOD, BuildMaterial.STONE: M.STONE})
 METAL_FAMILIES = frozenset({MaterialFamily.METAL, MaterialFamily.PRECIOUS, MaterialFamily.EXOTIC})
 WEAPON_MATERIALS = (M.STAR_METAL, M.SKYSTEEL, M.DRAGONBONE, M.STEEL, M.IRON, M.BRONZE, M.COPPER, M.OBSIDIAN, M.FLINT, M.BONE, M.WOOD)
 ARMOUR_MATERIALS = (M.STAR_METAL, M.SKYSTEEL, M.DRAGONBONE, M.STEEL, M.IRON, M.BRONZE, M.CHITIN, M.LEATHER, M.HIDE, M.CLOTH)

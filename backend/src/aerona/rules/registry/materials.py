@@ -9,6 +9,9 @@ G = RuleGroup.MATERIALS
 @dataclass(frozen=True)
 class MaterialsRules:
     damage_hardness_pct: int = rule(45, 0, 100, G, "Share of a weapon's hardness that becomes damage (%)")
+    forge_heat_base: int = rule(45, 0, 100, G, "Heat a forge reaches with no metallurgy, on the scale of melting points")
+    forge_heat_per_level: int = rule(10, 0, 50, G, "Heat each level of metallurgy adds to a forge, on the scale of melting points")
+    bow_draw_pct: int = rule(60, 0, 300, G, "Extra harm a bow or crossbow does at full elasticity of its material (%)")
     damage_edge_pct: int = rule(40, 0, 100, G, "Share of a weapon's edge that becomes damage (%)")
     damage_quality_pct: int = rule(15, 0, 100, G, "Share of a weapon's quality that becomes damage (%)")
     protection_hardness_pct: int = rule(40, 0, 100, G, "Share of an armour's hardness that becomes protection (%)")

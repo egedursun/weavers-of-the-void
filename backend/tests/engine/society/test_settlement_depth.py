@@ -30,7 +30,7 @@ from aerona.engine.settlement.districts import (
     parameters_of,
     wound_district,
 )
-from aerona.engine.settlement.life import capacities, endure_siege, invest, logistics_waste
+from aerona.engine.settlement.life import ambient_heat, capacities, endure_siege, flammable_share, invest, logistics_waste, self_igniting
 from aerona.engine.settlement.storage import settlement_store, storage_index, storage_room
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, chronicle_keys, context, people, settlement
@@ -323,3 +323,20 @@ async def test_a_starving_merciless_town_abandons_its_old_and_a_merciful_one_doe
     await endure_siege(ctx, built, {ValueAxis.MERCY: -80})
     assert town.stats.population == 5000 - 600 * RULES.urban.abandon_pct // 100
     assert "settlement.abandoned" in await chronicle_keys(session)
+
+
+async def test_fire_reads_ignition_points_and_a_lava_worlds_heat_lights_timber(realm: Realm) -> None:
+    session = realm.session
+    town = await settlement(realm, "Cinderhold", population=3000)
+    ctx = context(session)
+    built = await town_of(ctx, town, await KnowledgeMap.load(session))
+    built.districts = [district(DistrictKind.FARMLAND, 2), district(DistrictKind.MARKET, 2, material=BuildMaterial.STONE)]
+    assert flammable_share(built) == 0.5
+    mild = SimpleNamespace(temperature=RULES.environment.temperature_ordinary)
+    lava = SimpleNamespace(temperature=RULES.environment.temperature_lava)
+    assert ambient_heat(RULES, cast(Any, mild)) == 0
+    assert ambient_heat(RULES, cast(Any, lava)) > 0
+    assert not self_igniting(RULES, built, cast(Any, mild))
+    assert self_igniting(RULES, built, cast(Any, lava))
+    built.districts = [district(DistrictKind.MARKET, 2, material=BuildMaterial.STONE)]
+    assert not self_igniting(RULES, built, cast(Any, lava))
