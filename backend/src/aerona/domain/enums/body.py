@@ -266,6 +266,12 @@ class NerveDamage(StrEnum):
     SENSORY = "sensory"
 
 
+class Handedness(StrEnum):
+    RIGHT = "right"
+    LEFT = "left"
+    BOTH = "both"
+
+
 class Consciousness(StrEnum):
     AWAKE = "awake"
     NAUSEOUS = "nauseous"

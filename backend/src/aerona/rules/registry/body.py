@@ -27,6 +27,8 @@ class AnatomyRules:
     organ_reach_severity: int = rule(3, 1, 5, G, "Severity at which a deep blow can reach an inner organ")
     organ_reach_chance: int = rule(35, 0, 100, G, "Chance a deep blow reaches an inner organ (%)")
     fingers_per_severity: int = rule(2, 1, 10, G, "Fingers lost per severity step when fingers are severed")
+    left_handed_pct: int = rule(10, 0, 100, G, "Share of the newly embodied who lead with the left hand (%)")
+    two_handed_pct: int = rule(1, 0, 100, G, "Share of the newly embodied who are equally deft with both hands (%)")
     trample_danger: int = rule(70, 0, 100, G, "Danger of a beast at which it tramples rather than strikes")
 
 

@@ -12,6 +12,7 @@ from aerona.domain.enums.body import (
     ConditionKind,
     Consciousness,
     DamageType,
+    Handedness,
     HarmCause,
     HeightClass,
     InjuryKind,
@@ -58,6 +59,8 @@ class BodyRow(Base):
     blood: Mapped[int] = mapped_column(default=PERCENT, server_default="100")
     exertion: Mapped[int] = mapped_column(default=0, server_default="0")
     consciousness: Mapped[Consciousness] = mapped_column(enum_type(Consciousness, "consciousness"), default=Consciousness.AWAKE, server_default="awake")
+    lost_digits: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+    handedness: Mapped[Handedness] = mapped_column(enum_type(Handedness, "handedness"), default=Handedness.RIGHT, server_default="right")
     pain: Mapped[int] = mapped_column(default=0)
     hp_max: Mapped[int] = mapped_column(default=0)
     melee: Mapped[int] = mapped_column(default=PERCENT)
@@ -121,6 +124,7 @@ class InjuryRow(CreatedAtMixin, Base):
     nerve: Mapped[NerveDamage] = mapped_column(enum_type(NerveDamage, "nerve"), default=NerveDamage.NONE, server_default="none")
     treatments: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
     misdiagnosed: Mapped[bool] = mapped_column(default=False, server_default="0")
+    digits: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
 
 
 class ConditionRow(CreatedAtMixin, Base):

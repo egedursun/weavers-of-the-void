@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from aerona.catalog.anatomy import FINGERS, Anatomy
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import InjuryRow
-from aerona.domain.enums.body import BodyFunction, InjuryKind, NerveDamage
+from aerona.domain.enums.body import BodyFunction, Handedness, InjuryKind, NerveDamage
 from aerona.rules.registry.body import CapacityRules
 
 LEFT = "left_"
@@ -85,7 +85,15 @@ def function_levels(
     return levels
 
 
-def weapon_grasp(rules: CapacityRules, anatomy: Anatomy, wounds: Iterable[Wound], counts: Mapping[str, int]) -> float:
+def weapon_grasp(
+    rules: CapacityRules,
+    anatomy: Anatomy,
+    wounds: Iterable[Wound],
+    counts: Mapping[str, int],
+    *,
+    hands: Mapping[str, float] | None = None,
+    handedness: Handedness = Handedness.RIGHT,
+) -> float:
     losses, _ = part_losses(anatomy, wounds, venom_paralysis_at=PERCENT)
     grasping = anatomy.with_function(BodyFunction.GRASP)
     sides: dict[str, float] = {}
@@ -95,9 +103,12 @@ def weapon_grasp(rules: CapacityRules, anatomy: Anatomy, wounds: Iterable[Wound]
             value = 1.0
             for part in parts:
                 value *= 1 - losses.get(part.key, 0.0)
-            sides[prefix] = value
+            share = (hands or {}).get(prefix.removesuffix("_"), 1.0)
+            sides[prefix] = value * (rules.fingerless_grip_pct / PERCENT + (1 - rules.fingerless_grip_pct / PERCENT) * share)
     if not sides:
         return max((1 - losses.get(part.key, 0.0) for part in grasping), default=0.0)
-    best = max(sides.get(RIGHT, 0.0), sides.get(LEFT, 0.0) * rules.off_hand_pct / PERCENT)
+    main, off = (LEFT, RIGHT) if handedness is Handedness.LEFT else (RIGHT, LEFT)
+    off_pct = PERCENT if handedness is Handedness.BOTH else rules.off_hand_pct
+    best = max(sides.get(main, 0.0), sides.get(off, 0.0) * off_pct / PERCENT)
     has_fingers = anatomy.part(FINGERS) is not None
     return best * (rules.fingerless_grip_pct / PERCENT if has_fingers and counts.get(FINGERS, 1) <= 0 else 1.0)

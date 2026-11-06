@@ -2,7 +2,7 @@ from dataclasses import dataclass, field, replace
 from enum import StrEnum
 
 from aerona.catalog.mind import MELEE_SKILLS
-from aerona.catalog.tissues import COUNTED_PARTS
+from aerona.catalog.tissues import COUNTED_PARTS, DIGIT_LIMBS, digits_phrase
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.chronicle import incident_for
 from aerona.db.repositories.entities import EntityRepository
@@ -17,6 +17,7 @@ from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mortal import HarshnessScale
 from aerona.engine.body.book import Bearer, anatomy_for, ensure_body, function_level, metallurgy_of
+from aerona.engine.body.digits import lose
 from aerona.engine.body.hits import MARK_KINDS, Armour, Harm, Hit, hits_for, loss_for
 from aerona.engine.body.state import refresh
 from aerona.engine.body.strike import Layer, Wielding, generic_layers, worn_layers
@@ -139,8 +140,13 @@ async def _record(ctx: TickContext, bearer: Bearer, body: BodyRow, harm: Harm, h
         elif _lethal(hit):
             state = InjuryState.FRESH
         counted = COUNTED_PARTS.get(hit.part.key)
+        taken: list[str] = []
         if counted is not None and hit.kind is InjuryKind.SEVERED:
-            setattr(body, counted, max(0, getattr(body, counted) - hit.severity * ctx.rules.anatomy.fingers_per_severity))
+            if hit.part.key in DIGIT_LIMBS:
+                rng = ctx.rng(f"digits.{bearer.id}.{ctx.epoch}.{index}.{harm.cause.value}")
+                taken = lose(body, hit.part.key, hit.severity * ctx.rules.anatomy.fingers_per_severity, rng)
+            else:
+                setattr(body, counted, max(0, getattr(body, counted) - hit.severity * ctx.rules.anatomy.fingers_per_severity))
         row = InjuryRow(
             bearer_node_id=bearer.id,
             world_id=world_id,
@@ -162,6 +168,7 @@ async def _record(ctx: TickContext, bearer: Bearer, body: BodyRow, harm: Harm, h
             year=ctx.environment.window.start if ctx.environment.window is not None else None,
             visible=hit.part.visible,
             incident_id=incident_for(bearer.id, ctx.epoch),
+            digits=taken,
         )
         ctx.session.add(row)
         rows.append(row)
@@ -184,7 +191,7 @@ async def _announce(ctx: TickContext, bearer: Bearer, rows: list[InjuryRow]) -> 
     anatomy = anatomy_for(body) if body is not None else None
     for row in grave:
         part = anatomy.part(row.part) if anatomy is not None else None
-        label = (part.label if part is not None else row.part).lower()
+        label = digits_phrase(row.digits) if row.digits else (part.label if part is not None else row.part).lower()
         await note(ctx, f"{wound_sentence(bearer.name, row.kind, label)}.", key=f"injury.{row.kind.value}", ids=[bearer.id])
     for row in grave:
         row.incident_id = incident_for(bearer.id, ctx.epoch) or row.incident_id

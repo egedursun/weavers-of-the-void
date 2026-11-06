@@ -1074,6 +1074,8 @@ MIND_ACTIONS = (
     _sync(Meta("body:injury_hold", "Hold a wound as it is or let it heal again", G.ENTITIES), body.hold_injuries, body.HoldInjuries, free, ("F4.4",)),
     _sync(Meta("body:treat", "Give a wound a treatment step", G.ENTITIES), body.treat_injury, body.TreatInjury, free, ("F23",)),
     _sync(Meta("body:consciousness", "Set or hold how awake a bearer is", G.ENTITIES), body.set_consciousness, body.SetConsciousness, free, ("F23",)),
+    _sync(Meta("body:digit", "Take or give back a finger or toe", G.ENTITIES), body.set_digit, body.SetDigit, free, ("F23",)),
+    _sync(Meta("body:handedness", "Set which hand a bearer leads with", G.ENTITIES), body.set_handedness, body.SetHandedness, free, ("F23",)),
     _sync(Meta("affliction:give", "Lay a venom, curse, blessing or trauma", G.ENTITIES), afflictions.give, afflictions.GiveAffliction, free, ("F30",)),
     _sync(Meta("affliction:edit", "Move an affliction's stage, source or onset", G.ENTITIES), afflictions.edit, afflictions.EditAffliction, free, ("F30",)),
     _sync(Meta("affliction:hold", "Hold an affliction at its stage or let it run", G.ENTITIES), afflictions.hold, afflictions.HoldAffliction, free, ("F30",)),

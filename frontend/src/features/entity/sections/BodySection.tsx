@@ -2,6 +2,9 @@ import { type ReactNode, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Activity,
+  Check,
+  Hand,
+  X,
   Eye,
   EyeOff,
   HeartPulse,
@@ -87,6 +90,8 @@ import { useWorldMaterials } from '../economy/api'
 type Body = components['schemas']['BodyView']
 type Injury = components['schemas']['InjuryView']
 type Condition = components['schemas']['ConditionView']
+type Digit = components['schemas']['DigitView']
+type Handedness = components['schemas']['Handedness']
 type BodyPlan = components['schemas']['BodyPlan']
 type InjuryKind = components['schemas']['InjuryKind']
 type DamageType = components['schemas']['DamageType']
@@ -101,8 +106,6 @@ type TreatmentStep = components['schemas']['TreatmentStep']
 
 const PERCENT = 100
 const FACTOR_MAX = 200
-const FINGER_MAX = 10
-const TOE_MAX = 10
 const TEETH_MAX = 32
 const CONSCIOUSNESS_HOLD = 'consciousness'
 const SEVERITIES = ['1', '2', '3', '4', '5']
@@ -366,6 +369,118 @@ function Functions({ body }: { body: Body }) {
           )
         }}
       </Paged>
+    </Card>
+  )
+}
+
+const LIMBS: { part: string; side: string; label: string }[] = [
+  { part: 'fingers', side: 'left', label: 'Left hand' },
+  { part: 'fingers', side: 'right', label: 'Right hand' },
+  { part: 'toes', side: 'left', label: 'Left foot' },
+  { part: 'toes', side: 'right', label: 'Right foot' },
+]
+
+function DigitButton({
+  digit,
+  bearerId,
+  blocked,
+}: {
+  digit: Digit
+  bearerId: number
+  blocked: string | null
+}) {
+  const toggle = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/body:digit', {
+          body: { bearer_id: bearerId, digit: digit.key, lost: !digit.lost },
+        })
+      ),
+  })
+  const reason = blocked ?? (toggle.isPending ? WORKING : null)
+  const name = digit.name.replace(/^./, (first) => first.toUpperCase())
+  return (
+    <Button
+      size='sm'
+      variant={digit.lost ? 'ghost' : 'outline'}
+      aria-label={
+        digit.lost ? `Give back the ${digit.label}` : `Take the ${digit.label}`
+      }
+      aria-pressed={digit.lost}
+      disabled={reason !== null}
+      disabledReason={
+        reason ??
+        `${digit.lost ? 'Give back' : 'Take'} the ${digit.label} · weighs ${digit.weight} of its limb`
+      }
+      onClick={() => toggle.mutate()}
+    >
+      {digit.lost ? (
+        <X className='text-destructive' />
+      ) : (
+        <Check className='text-success' />
+      )}
+      <Text as='span' tone={digit.lost ? 'muted' : undefined}>
+        {name}
+      </Text>
+    </Button>
+  )
+}
+
+function Digits({ body, blocked }: { body: Body; blocked: string | null }) {
+  const parts = new Set(body.parts.map((part) => part.key))
+  const limbs = LIMBS.filter((limb) => parts.has(limb.part))
+  if (limbs.length === 0) return null
+  const lost = body.digits.filter((digit) => digit.lost).length
+  return (
+    <Card title='Hands and feet' icon={Hand} wide>
+      <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+        <Badge size='sm' variant='info'>
+          {body.handedness === 'both'
+            ? 'Deft with both hands'
+            : `Leads with the ${body.handedness} hand`}
+        </Badge>
+        <Badge size='sm' variant={lost > 0 ? 'destructive' : 'success'}>
+          {lost > 0 ? `${lost} digits lost` : 'Every digit whole'}
+        </Badge>
+        <Badge size='sm' variant='secondary'>
+          {`${body.teeth} of 32 teeth`}
+        </Badge>
+      </div>
+      <div className='grid min-w-0 grid-cols-1 gap-3 @md/body:grid-cols-2'>
+        {limbs.map((limb) => {
+          const digits = body.digits.filter(
+            (digit) => digit.part === limb.part && digit.side === limb.side
+          )
+          const leading =
+            limb.part === 'fingers' &&
+            (body.handedness === 'both' || body.handedness === limb.side)
+          return (
+            <div
+              key={`${limb.part}-${limb.side}`}
+              className='flex min-w-0 flex-col gap-2 rounded-md border bg-muted/30 p-2'
+            >
+              <div className='flex min-w-0 items-center gap-2'>
+                <Label variant='overline'>{limb.label}</Label>
+                {leading && (
+                  <Badge size='sm' variant='default'>
+                    Leading
+                  </Badge>
+                )}
+              </div>
+              <div className='flex min-w-0 flex-wrap gap-1.5'>
+                {digits.map((digit) => (
+                  <DigitButton
+                    key={digit.key}
+                    digit={digit}
+                    bearerId={body.node_id}
+                    blocked={blocked}
+                  />
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </Card>
   )
 }
@@ -1045,20 +1160,6 @@ function bodyGroups(body: Body): AdjustGroup[] {
       title: 'The body',
       fields: [
         {
-          key: 'fingers',
-          label: bodyValueLabel('fingers'),
-          value: body.fingers,
-          min: 0,
-          max: FINGER_MAX,
-        },
-        {
-          key: 'toes',
-          label: bodyValueLabel('toes'),
-          value: body.toes,
-          min: 0,
-          max: TOE_MAX,
-        },
-        {
           key: 'teeth',
           label: bodyValueLabel('teeth'),
           value: body.teeth,
@@ -1413,6 +1514,14 @@ function BodyControls({ body }: { body: Body }) {
         })
       ),
   })
+  const lead = useGodAction({
+    run: (value: string) =>
+      unwrap(
+        api.POST('/api/actions/body:handedness', {
+          body: { bearer_id: body.node_id, handedness: value as Handedness },
+        })
+      ),
+  })
   const woundsHeld = body.locked.includes(INJURY_HOLD)
   const busy =
     reason() ??
@@ -1500,6 +1609,13 @@ function BodyControls({ body }: { body: Body }) {
           table={BUILDS}
           blocked={busy}
           onPick={(value) => frame.mutate({ build: value })}
+        />
+        <Picker
+          label='Leading hand'
+          value={body.handedness}
+          table={{ right: 'Right hand', left: 'Left hand', both: 'Both alike' }}
+          blocked={busy}
+          onPick={(value) => lead.mutate(value)}
         />
         <Picker
           label='Consciousness'
@@ -1590,6 +1706,7 @@ export function BodySection({ nodeId }: { nodeId: number }) {
               <>
                 <Functions body={body} />
                 <Armour body={body} />
+                <Digits body={body} blocked={reason()} />
                 <Conditions body={body} blocked={reason()} />
                 {body.patients_healed + body.patients_lost > 0 && (
                   <Card title='As a healer' icon={HEALER_ICON}>

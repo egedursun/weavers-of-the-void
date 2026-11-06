@@ -3,7 +3,8 @@ from dataclasses import dataclass
 
 from aerona.catalog.anatomy import Anatomy
 from aerona.constants.units import PERCENT
-from aerona.domain.enums.body import BodyFunction, Capacity, ConditionKind, Consciousness, NerveDamage
+from aerona.domain.enums.body import BodyFunction, Capacity, ConditionKind, Consciousness, Handedness, NerveDamage
+from aerona.engine.body.digits import hand_shares
 from aerona.engine.body.functions import Wound, function_levels, weapon_grasp
 from aerona.rules.registry import Rules
 from aerona.rules.registry.body import CapacityRules
@@ -36,6 +37,8 @@ class BodyState:
     consciousness: Consciousness = Consciousness.AWAKE
     exertion: int = 0
     aid: float = 0.0
+    lost_digits: tuple[str, ...] = ()
+    handedness: Handedness = Handedness.RIGHT
 
 
 def blend(level: float, weight: int) -> float:
@@ -83,7 +86,7 @@ def age_curve(rules: CapacityRules, age: int | None, lifespan: int | None) -> fl
 def capacities(rules: Rules, stats: BearerStats, state: BodyState) -> dict[Capacity, int]:
     table = rules.capacities
     levels = function_levels(table, state.anatomy, state.wounds, state.counts, rules.injury.venom_paralysis_at, afflicted=state.afflicted)
-    grip = weapon_grasp(table, state.anatomy, state.wounds, state.counts)
+    grip = weapon_grasp(table, state.anatomy, state.wounds, state.counts, hands=hand_shares(state.lost_digits), handedness=state.handedness)
     pain = pain_of(table, state.open_severity) / PERCENT
     hurt = 1 - pain * table.pain_weight_pct / PERCENT
     if any(wound.nerve is NerveDamage.SENSORY for wound in state.wounds):

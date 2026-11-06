@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.anatomy import FINGER_COUNT, Anatomy, anatomy_of
 from aerona.catalog.body_plans import BUILD_RANK, HEIGHT_RANK, PLANS, WHOLE_PLANS
 from aerona.catalog.mind import SKILLS, TRAITS
-from aerona.catalog.tissues import COUNTED_PARTS, FULL_COUNTS
+from aerona.catalog.tissues import FULL_COUNTS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.entities import EntityRepository
@@ -37,6 +37,7 @@ from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.modifier import ModifierSource
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.engine.body.capacities import FUNCTION_LEVELS, BearerStats, BodyState, capacities, function_percents, perception_factor
+from aerona.engine.body.digits import effective_counts, handedness_for
 from aerona.engine.body.functions import Wound
 from aerona.engine.body.hits import Armour
 from aerona.engine.lore.arms import guard_of, held_profiles
@@ -193,6 +194,7 @@ async def ensure_body(session: AsyncSession, rules: Rules, bearer: Bearer, epoch
         plan=plan,
         traits=traits,
         fingers=FINGER_COUNT,
+        handedness=handedness_for(rules, bearer.id),
         hp_max=max(hp or 0, floor),
         updated_epoch=epoch,
         locked=[],
@@ -296,7 +298,7 @@ def consciousness_of(rules: Rules, bearer: Bearer, pain: int, blood: int) -> Con
 
 
 def counts_of(body: BodyRow) -> dict[str, int]:
-    return {key: getattr(body, column) for key, column in COUNTED_PARTS.items()}
+    return effective_counts(body)
 
 
 async def armour_of(session: AsyncSession, rules: Rules, bearer: Bearer, community_id: int | None) -> Armour:
@@ -364,6 +366,8 @@ def factors_of(
         body.consciousness,
         body.exertion,
         aid_of(rules, anatomy, injuries),
+        tuple(body.lost_digits),
+        body.handedness,
     )
     actual = capacities(rules, stats, state)
     whole = capacities(rules, replace(stats, age=None), BodyState(anatomy, (), FULL_COUNTS, 0))

@@ -14815,6 +14815,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/body:digit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_body_digit_api_actions_body_digit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/body:handedness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_body_handedness_api_actions_body_handedness_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/affliction:give": {
         parameters: {
             query?: never;
@@ -15925,12 +15957,21 @@ export interface components {
             locked: string[];
             maimed_rulers: number;
         };
+        BodyDigitInput: {
+            bearer_id: number;
+            digit: string;
+            lost: boolean;
+        };
         BodyFrameInput: {
             bearer_id: number;
             height_class: components["schemas"]["HeightClass"];
             build: components["schemas"]["BodyBuild"];
         };
         BodyFunction: "grasp" | "fine_manipulation" | "locomotion" | "sight" | "hearing" | "speech" | "breath" | "vital" | "cognition" | "reproduction" | "flight" | "venom" | "horn" | "tail" | "presence";
+        BodyHandednessInput: {
+            bearer_id: number;
+            handedness: components["schemas"]["Handedness"];
+        };
         BodyHealInput: {
             bearer_id: number;
             injury_id?: number | null;
@@ -16026,6 +16067,8 @@ export interface components {
             blood: number;
             exertion: number;
             consciousness: components["schemas"]["Consciousness"];
+            handedness: components["schemas"]["Handedness"];
+            digits: components["schemas"]["DigitView"][];
             covering: components["schemas"]["TissueKind"];
             covering_label: string;
             armour: components["schemas"]["ArmourView"];
@@ -17273,6 +17316,15 @@ export interface components {
             locked: string[];
         };
         Diet: "herbivore" | "carnivore" | "omnivore" | "scavenger" | "filter" | "photosynthetic" | "mineral" | "soul" | "void";
+        DigitView: {
+            key: string;
+            label: string;
+            part: string;
+            side: string;
+            name: string;
+            weight: number;
+            lost: boolean;
+        };
         Disaster: "earthquake" | "flood" | "plague" | "drought" | "storm" | "eruption" | "volcanic_quake";
         Discovery: "known" | "legend" | "unknown" | "forgotten";
         DiscoveryEnded: {
@@ -18856,6 +18908,7 @@ export interface components {
             phase: number;
             started: boolean;
         };
+        Handedness: "right" | "left" | "both";
         HappeningsHereView: {
             location_id: number;
             world_id: number | null;
@@ -54693,6 +54746,68 @@ export interface operations {
             };
         };
     };
+    action_body_digit_api_actions_body_digit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BodyDigitInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_body_handedness_api_actions_body_handedness_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BodyHandednessInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_affliction_give_api_actions_affliction_give_post: {
         parameters: {
             query?: never;
@@ -55620,6 +55735,7 @@ export const genesisFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired
 export const genesisTemplateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisTemplate"]> = ["dark_fantasy", "mythic_age", "cosmic_horror", "fairy_tale", "star_myth", "sand_and_ash", "primordial_dawn", "crowns_and_knives", "drowned_world", "long_winter", "after_the_fall", "sky_islands", "age_of_engines"];
 export const governmentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GovernmentKind"]> = ["chiefdom", "monarchy", "theocracy", "oligarchy", "republic", "tribal_confederation", "empire", "hive_council", "god_kingdom", "occupation"];
 export const gravityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Gravity"]> = ["low", "normal", "high"];
+export const handednessValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Handedness"]> = ["right", "left", "both"];
 export const harmCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HarmCause"]> = ["battle", "duel", "punishment", "torture", "accident", "monster", "disaster", "curse", "magic_backlash", "god", "poison", "quest", "escape", "sacrifice", "age", "player", "exposure", "ritual"];
 export const heightClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HeightClass"]> = ["short", "average", "tall", "giant"];
 export const heroQuestKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HeroQuestKind"]> = ["hunt", "thread", "relic", "knowledge", "vengeance"];

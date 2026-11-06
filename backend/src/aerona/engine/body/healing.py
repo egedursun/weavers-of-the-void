@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import SIGHT_PARTS, Part
 from aerona.catalog.mind import HEALING_SKILLS
-from aerona.catalog.tissues import COUNTED_PARTS, FULL_COUNTS
+from aerona.catalog.tissues import COUNTED_PARTS, DIGIT_LIMBS, FULL_COUNTS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow, InjuryRow, ProsthesisRow
@@ -39,6 +39,7 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.body.book import Bearer, anatomy_for, bearer_stats, ensure_body, injuries_of, prostheses_of
 from aerona.engine.body.conditions import end_condition, gain_condition
+from aerona.engine.body.digits import lose_all, restore
 from aerona.engine.body.hits import MARK_KINDS, PERMANENT_KINDS, TOTAL_LOSS_KINDS
 from aerona.engine.body.state import refresh
 from aerona.engine.body.treatment import bleed, regain_blood, treat
@@ -311,7 +312,9 @@ async def _fester(ctx: TickContext, bearer: Bearer, body: BodyRow, row: InjuryRo
         row.kind, row.function_loss, row.state, row.infected_epochs = InjuryKind.SEVERED, PERCENT, InjuryState.HEALING, 0
         row.treatments = [*row.treatments, TreatmentStep.AMPUTATE.value]
         counted = COUNTED_PARTS.get(row.part)
-        if counted is not None:
+        if row.part in DIGIT_LIMBS:
+            row.digits = sorted({*row.digits, *lose_all(body, row.part)})
+        elif counted is not None:
             setattr(body, counted, 0)
         await _treated(ctx, bearer, row, care.healer)
         if care.healer is not None:
@@ -475,7 +478,9 @@ async def _restore(ctx: TickContext, bearer: EntityRow, body: BodyRow, care: Car
             row.kind, row.state = InjuryKind.DEEP_CUT, InjuryState.HEALED_SCAR
             row.function_loss = table.reattachment_residual_pct
             counted = COUNTED_PARTS.get(row.part)
-            if counted is not None:
+            if row.part in DIGIT_LIMBS:
+                restore(body, row.part, row.digits)
+            elif counted is not None:
                 setattr(body, counted, FULL_COUNTS[row.part])
             await _treated(ctx, bearer, row, care.healer)
             await note(
@@ -673,7 +678,10 @@ async def mend(ctx: TickContext, bearer: Bearer, *, lasting: bool = False, heale
         if not opened and not restorable:
             continue
         if row.part in COUNTED_PARTS and row.kind is InjuryKind.SEVERED and lasting:
-            setattr(body, COUNTED_PARTS[row.part], FULL_COUNTS[row.part])
+            if row.part in DIGIT_LIMBS:
+                restore(body, row.part, row.digits)
+            else:
+                setattr(body, COUNTED_PARTS[row.part], FULL_COUNTS[row.part])
         if restorable and row.kind in TOTAL_LOSS_KINDS:
             row.kind = InjuryKind.DEEP_CUT
         row.state = InjuryState.HEALED_SCAR

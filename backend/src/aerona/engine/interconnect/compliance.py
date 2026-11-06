@@ -1229,6 +1229,8 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
             "body:set",
             "body:unlock",
             "body:consciousness",
+            "body:digit",
+            "body:handedness",
             "body:treat",
             "body:injury",
             "material:edit",

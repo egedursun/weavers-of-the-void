@@ -90,3 +90,62 @@ def covering_of(plan: BodyPlan) -> TissueKind:
 
 def stack_of(plan: BodyPlan, part_key: str, region: BodyRegion) -> tuple[TissueKind, ...]:
     return (covering_of(plan), *PART_STACKS.get(part_key, REGION_STACKS.get(region, LIMB_STACK)))
+
+
+SIDES = ("left", "right")
+HAND_DIGITS: MappingProxyType[str, int] = MappingProxyType({"thumb": 35, "index": 25, "middle": 18, "ring": 12, "little": 10})
+FOOT_DIGITS: MappingProxyType[str, int] = MappingProxyType({"big": 40, "second": 15, "third": 15, "fourth": 15, "little": 15})
+DIGIT_LIMBS: MappingProxyType[str, tuple[str, MappingProxyType[str, int]]] = MappingProxyType({"fingers": ("hand", HAND_DIGITS), "toes": ("foot", FOOT_DIGITS)})
+DIGIT_NOUNS = MappingProxyType({"hand": ("finger", "fingers", "thumb"), "foot": ("toe", "toes", "big")})
+
+
+def digit_keys(part: str, side: str | None = None) -> tuple[str, ...]:
+    limb, names = DIGIT_LIMBS[part]
+    return tuple(f"{each}_{limb}.{name}" for each in SIDES if side in (None, each) for name in names)
+
+
+def digit_part(key: str) -> str | None:
+    limb = key.split(".", 1)[0].split("_", 1)[-1]
+    return next((part for part, (found, _) in DIGIT_LIMBS.items() if found == limb), None)
+
+
+def digit_weight(key: str) -> int:
+    part = digit_part(key)
+    if part is None:
+        return 0
+    return DIGIT_LIMBS[part][1].get(key.split(".", 1)[-1], 0)
+
+
+def intact_share(part: str, lost: list[str] | tuple[str, ...], side: str | None = None) -> float:
+    keys = digit_keys(part, side)
+    total = sum(digit_weight(key) for key in keys)
+    missing = sum(digit_weight(key) for key in keys if key in lost)
+    return (total - missing) / total if total else 1.0
+
+
+def digit_label(key: str) -> str:
+    place, name = key.split(".", 1)
+    side, limb = place.split("_", 1)
+    single, _, whole = DIGIT_NOUNS[limb]
+    noun = name if name == whole and limb == "hand" else f"{name} {single}" if name != whole else f"big {single}"
+    return f"{noun} of the {side} {limb}"
+
+
+def digits_phrase(keys: list[str] | tuple[str, ...]) -> str:
+    groups: dict[str, list[str]] = {}
+    for key in keys:
+        place, name = key.split(".", 1)
+        groups.setdefault(place, []).append(name)
+    phrases: list[str] = []
+    for place, names in groups.items():
+        side, limb = place.split("_", 1)
+        single, plural, special = DIGIT_NOUNS[limb]
+        lead = [special if limb == "hand" else f"big {single}"] if special in names else []
+        rest = [name for name in names if name != special]
+        tail = f"{_joined(rest)} {plural if len(rest) > 1 else single}" if rest else ""
+        phrases.append(f"{_joined([*lead, tail] if tail else lead)} of the {side} {limb}")
+    return _joined(phrases)
+
+
+def _joined(items: list[str]) -> str:
+    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + f" and {items[-1]}"

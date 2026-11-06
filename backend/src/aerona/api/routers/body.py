@@ -12,6 +12,7 @@ from aerona.api.schemas.body import (
     CapacityView,
     CohortView,
     ConditionView,
+    DigitView,
     FunctionView,
     InjuryView,
     MaimedView,
@@ -20,7 +21,7 @@ from aerona.api.schemas.body import (
 )
 from aerona.catalog.body_plans import PLANS
 from aerona.catalog.stats import max_hp
-from aerona.catalog.tissues import FULL_COUNTS, TISSUES, covering_of
+from aerona.catalog.tissues import DIGIT_LIMBS, FULL_COUNTS, TISSUES, covering_of, digit_keys, digit_label, digit_weight
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, MaimedCohortRow, ProsthesisRow
@@ -209,6 +210,20 @@ async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyVie
             blood=body.blood,
             exertion=body.exertion,
             consciousness=body.consciousness,
+            handedness=body.handedness,
+            digits=[
+                DigitView(
+                    key=key,
+                    label=digit_label(key),
+                    part=part,
+                    side=key.split("_", 1)[0],
+                    name=key.split(".", 1)[-1],
+                    weight=digit_weight(key),
+                    lost=key in body.lost_digits,
+                )
+                for part in DIGIT_LIMBS
+                for key in digit_keys(part)
+            ],
             covering=covering_of(body.plan),
             covering_label=TISSUES[covering_of(body.plan)].label,
             armour=ArmourView(head=body.armour_head, torso=body.armour_torso, limbs=body.armour_limbs),

@@ -26,6 +26,7 @@ from aerona.engine.body.book import ensure_species_body, injuries_of, recorded_p
 from aerona.engine.body.cohorts import tend_cohorts
 from aerona.engine.body.conditions import CONDITION_KEY, condition_of, end_condition, gain_condition
 from aerona.engine.body.customs import SUFFERING_DOMAINS, customs_of, ensure_customs, maimed_for_rule, people_of
+from aerona.engine.body.digits import backfill_digits
 from aerona.engine.body.healing import heal_wounds
 from aerona.engine.body.hits import Harm, weighted
 from aerona.engine.body.state import has_reader, refresh
@@ -94,6 +95,7 @@ async def at_war(ctx: TickContext, mortal: EntityRow) -> bool:
 @writes("table.applied_fixups", "table.bodies", "table.body_customs", "table.injuries")
 async def body_survey(ctx: TickContext) -> None:
     rules = ctx.rules
+    ctx.count("digits_named", await backfill_digits(ctx.session, rules))
     known = set(await ctx.session.scalars(select(BodyRow.node_id)))
     for species in await canon(ctx.session, [EntityType.SPECIES]):
         if species.id not in known:

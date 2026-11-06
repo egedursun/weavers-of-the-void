@@ -1,8 +1,7 @@
 from pydantic import Field
 from sqlalchemy import select
 
-from aerona.catalog.anatomy import FINGER_COUNT, FINGERS
-from aerona.catalog.tissues import FULL_COUNTS
+from aerona.catalog.tissues import DIGIT_LIMBS, FULL_COUNTS, digit_keys, digit_label
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.body import (
@@ -31,6 +30,7 @@ from aerona.domain.enums.body import (
     ConditionKind,
     Consciousness,
     DamageType,
+    Handedness,
     HarmCause,
     HeightClass,
     InjuryKind,
@@ -46,6 +46,7 @@ from aerona.domain.enums.mind import KindFamily
 from aerona.engine.body.book import Bearer, anatomy_for, ensure_body
 from aerona.engine.body.conditions import end_condition, gain_condition
 from aerona.engine.body.customs import CUSTOM_FIELDS, ensure_customs
+from aerona.engine.body.digits import restore, sync
 from aerona.engine.body.healing import INJURY_HOLD, fit_prosthesis, material_workability, mend
 from aerona.engine.body.hits import TOTAL_LOSS_KINDS, Harm
 from aerona.engine.body.state import PAIN, refresh
@@ -54,7 +55,8 @@ from aerona.engine.lifecycle.wounds import apply_hits, wound_sentence
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 PART_PATTERN = r"^[a-z][a-z_]*$"
-COUNTS = tuple(FULL_COUNTS)
+COUNTS = tuple(part for part in FULL_COUNTS if part not in DIGIT_LIMBS)
+DIGITS = frozenset(key for part in DIGIT_LIMBS for key in digit_keys(part))
 VITALS = ("blood", "exertion")
 EDITABLE = (*CAPACITY_COLUMNS, *ARMOUR_COLUMNS, PAIN, *VITALS, *COUNTS, "hp_max")
 CONSCIOUSNESS = "consciousness"
@@ -114,6 +116,17 @@ class EditInjury(Command):
 class TreatInjury(Command):
     injury_id: int
     step: TreatmentStep
+
+
+class SetDigit(Command):
+    bearer_id: int
+    digit: str = Field(pattern=r"^(left|right)_(hand|foot)\.[a-z]+$")
+    lost: bool
+
+
+class SetHandedness(Command):
+    bearer_id: int
+    handedness: Handedness
 
 
 class SetConsciousness(Command):
@@ -238,8 +251,8 @@ async def heal_body(scope: PlayerScope, command: HealBody) -> Effect:
         raise ValidationFailedError("That injury belongs to someone else.")
     if command.lasting and row.kind in TOTAL_LOSS_KINDS:
         row.kind = InjuryKind.DEEP_CUT
-        if row.part == FINGERS:
-            (await ensure_body(scope.session, scope.rules, bearer, ctx.epoch)).fingers = FINGER_COUNT
+        if row.part in DIGIT_LIMBS:
+            restore(await ensure_body(scope.session, scope.rules, bearer, ctx.epoch), row.part, row.digits)
     row.state = InjuryState.HEALED_SCAR
     row.function_loss = 0 if command.lasting else row.function_loss * ctx.rules.healing.scar_residual_pct // PERCENT
     row.infected_epochs = 0
@@ -303,6 +316,34 @@ async def treat_injury(scope: PlayerScope, command: TreatInjury) -> Effect:
         row.misdiagnosed = False
     await refresh(scope.session, scope.rules, bearer, await scope.epoch())
     return Effect(f"The wound to {bearer.name}'s {_label(row.part)} was given {_label(command.step.value)}.", target_node_id=bearer.id)
+
+
+@player_action("body:digit", ActionKind.OTHER)
+async def set_digit(scope: PlayerScope, command: SetDigit) -> Effect:
+    if command.digit not in DIGITS:
+        raise ValidationFailedError("There is no such finger or toe.")
+    bearer = await bearer_of(scope, command.bearer_id)
+    epoch = await scope.epoch()
+    body = await ensure_body(scope.session, scope.rules, bearer, epoch)
+    lost = command.digit in body.lost_digits
+    if lost == command.lost:
+        raise ValidationFailedError(f"{bearer.name}'s {digit_label(command.digit)} is already {'lost' if lost else 'whole'}.")
+    body.lost_digits = sorted({*body.lost_digits, command.digit}) if command.lost else [key for key in body.lost_digits if key != command.digit]
+    sync(body)
+    await refresh(scope.session, scope.rules, bearer, epoch)
+    verb = "lost" if command.lost else "has back"
+    return Effect(f"{bearer.name} {verb} the {digit_label(command.digit)}.", target_node_id=bearer.id)
+
+
+@player_action("body:handedness", ActionKind.OTHER)
+async def set_handedness(scope: PlayerScope, command: SetHandedness) -> Effect:
+    bearer = await bearer_of(scope, command.bearer_id)
+    epoch = await scope.epoch()
+    body = await ensure_body(scope.session, scope.rules, bearer, epoch)
+    body.handedness = command.handedness
+    await refresh(scope.session, scope.rules, bearer, epoch)
+    lead = "both hands alike" if command.handedness is Handedness.BOTH else f"the {command.handedness.value} hand"
+    return Effect(f"{bearer.name} now leads with {lead}.", target_node_id=bearer.id)
 
 
 @player_action("body:consciousness", ActionKind.OTHER)

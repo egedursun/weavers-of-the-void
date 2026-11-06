@@ -9,6 +9,7 @@ from aerona.domain.enums.body import (
     ConditionKind,
     Consciousness,
     DamageType,
+    Handedness,
     HarmCause,
     HeightClass,
     InjuryKind,
@@ -116,6 +117,16 @@ class ArmourView(ApiModel):
     limbs: int
 
 
+class DigitView(ApiModel):
+    key: str
+    label: str
+    part: str
+    side: str
+    name: str
+    weight: int
+    lost: bool
+
+
 class BodyView(ApiModel):
     node_id: int
     world_id: int | None = None
@@ -136,6 +147,8 @@ class BodyView(ApiModel):
     blood: int
     exertion: int
     consciousness: Consciousness
+    handedness: Handedness
+    digits: list[DigitView]
     covering: TissueKind
     covering_label: str
     armour: ArmourView
