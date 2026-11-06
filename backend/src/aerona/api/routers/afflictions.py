@@ -30,6 +30,8 @@ def package_view(spec: PackageSpec) -> PackageView:
                 stats=dict(stage.stats),
                 values=dict(stage.values),
                 needs=sorted(stage.needs),
+                quenches=sorted(stage.quenches),
+                grants=sorted(stage.grants),
                 sanity_loss=stage.sanity_loss,
                 ageless=stage.ageless,
                 sunlight_harm=stage.sunlight_harm,

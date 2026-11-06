@@ -46,7 +46,7 @@ import {
   TRANSMISSIONS,
   VISIBILITY,
 } from '../body/afflictionLabels'
-import { CONDITIONS, named, plain } from '../body/labels'
+import { CONDITIONS, FUNCTIONS, named, plain } from '../body/labels'
 
 type Affliction = components['schemas']['BearerAfflictionView']
 type Package = components['schemas']['PackageView']
@@ -114,6 +114,16 @@ function StageEffects({ spec, stage }: { spec: Package; stage: number }) {
       {current.needs.map((need) => (
         <Badge key={need} size='sm' variant='outline'>
           {`Needs ${need.replaceAll('_', ' ')}`}
+        </Badge>
+      ))}
+      {current.quenches.map((need) => (
+        <Badge key={`quench-${need}`} size='sm' variant='outline'>
+          {`No longer needs ${need.replaceAll('_', ' ')}`}
+        </Badge>
+      ))}
+      {current.grants.map((trait) => (
+        <Badge key={`grant-${trait}`} size='sm' variant='success'>
+          {`Gains ${named(FUNCTIONS, trait).label.toLowerCase()}`}
         </Badge>
       ))}
       {marks.map((mark) => (

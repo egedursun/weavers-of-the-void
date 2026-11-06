@@ -5,7 +5,7 @@ from aerona.catalog.effect_packages import PACKAGES, PackageSpec, StageSpec
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.afflictions import AfflictionRow
-from aerona.db.tables.body import InjuryRow
+from aerona.db.tables.body import BodyRow, InjuryRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import HolderTechniqueRow
@@ -24,6 +24,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, Mor
 from aerona.domain.enums.mind import MemoryKind, ValueHolder
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import HeroQuestStatus
+from aerona.engine.body.book import ensure_body
 from aerona.engine.body.conditions import end_condition, gain_condition
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -75,9 +76,18 @@ def bearable(bearer: EntityRow | None) -> bool:
     return bearer is not None and bearer.entity_type in BEARER_TYPES and bearer.status is EntityStatus.CANON
 
 
+TRAIT_PREFIX = "trait."
+
+
 async def revert(ctx: TickContext, bearer: EntityRow, row: AfflictionRow) -> None:
-    if row.applied:
-        set_stats(bearer, **{key: max(0, min(PERCENT, (stat(bearer, key) or 0) - delta)) for key, delta in row.applied.items()})
+    deltas = {key: delta for key, delta in row.applied.items() if not key.startswith(TRAIT_PREFIX)}
+    if deltas:
+        set_stats(bearer, **{key: max(0, min(PERCENT, (stat(bearer, key) or 0) - delta)) for key, delta in deltas.items()})
+    granted = {key.removeprefix(TRAIT_PREFIX) for key in row.applied if key.startswith(TRAIT_PREFIX)}
+    if granted:
+        body = await ctx.session.get(BodyRow, bearer.id)
+        if body is not None:
+            body.traits = [trait for trait in body.traits if trait not in granted]
     row.applied = {}
     stage = stage_of(row)
     if stage is not None and stage.condition is not None:
@@ -96,6 +106,11 @@ async def enter_stage(ctx: TickContext, bearer: EntityRow, row: AfflictionRow, n
     applied = {key: delta for key, delta in stage.stats.items() if stat(bearer, key) is not None}
     if applied:
         set_stats(bearer, **{key: max(0, min(PERCENT, (stat(bearer, key) or 0) + delta)) for key, delta in applied.items()})
+    if stage.grants:
+        body = await ensure_body(ctx.session, ctx.rules, bearer, ctx.epoch)
+        fresh = sorted(trait.value for trait in stage.grants if trait.value not in body.traits)
+        body.traits = sorted({*body.traits, *fresh})
+        applied |= {f"{TRAIT_PREFIX}{trait}": 1 for trait in fresh}
     row.applied = applied
     if stage.values:
         values = dict(await stored_values(ctx.session, ValueHolder.PERSONAL, bearer.id))
@@ -275,10 +290,12 @@ async def stage_effects(ctx: TickContext, bearer: EntityRow, row: AfflictionRow,
     table = ctx.rules.effect_packages
     if stage.sanity_loss and bearer.sanity is not None:
         bearer.sanity = max(0, bearer.sanity - stage.sanity_loss)
-    if stage.needs:
+    if stage.needs or stage.quenches:
         needs = dict(await needs_of(ctx.session, bearer.id))
         for need in stage.needs:
             needs[need] = max(0, needs.get(need, PERCENT) - table.need_pressure)
+        for need in stage.quenches:
+            needs[need] = PERCENT
         await write_needs(ctx.session, bearer.id, needs)
     if stage.sunlight_harm and await sunlit(ctx, bearer.world_id):
         await apply_hits(ctx, bearer, Harm(table.sunlight_harm, HarmCause.CURSE, "burned away by the sun"), lethal=True)

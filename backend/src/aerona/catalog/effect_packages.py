@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission, Visibility
-from aerona.domain.enums.body import ConditionKind
+from aerona.domain.enums.body import BodyFunction, ConditionKind
 from aerona.domain.enums.mind import NeedKind, ValueAxis
 
 P = PackageKind
@@ -19,6 +19,8 @@ class StageSpec:
     stats: MappingProxyType[str, int] = field(default_factory=lambda: MappingProxyType({}))
     values: MappingProxyType[ValueAxis, int] = field(default_factory=lambda: MappingProxyType({}))
     needs: frozenset[NeedKind] = frozenset()
+    quenches: frozenset[NeedKind] = frozenset()
+    grants: frozenset[BodyFunction] = frozenset()
     sanity_loss: int = 0
     ageless: bool = False
     sunlight_harm: bool = False
@@ -95,7 +97,7 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
             "Under the full face of the world's first moon the bearer becomes a thinking beast; a bite passes the curse on.",
             frozenset({T.BITE, T.CURSE}),
             1,
-            (StageSpec("Moon-changed", None, stats=stats(strength=15, charisma=-10), transforms=True),),
+            (StageSpec("Moon-changed", None, stats=stats(strength=15, charisma=-10), grants=frozenset({BodyFunction.VENOM}), transforms=True),),
             frozenset({C.RITE, C.QUEST}),
             Visibility.HIDDEN,
             contagion=frozenset({T.BITE}),
@@ -107,7 +109,19 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
             "The bearer stops ageing, hungers for blood and burns under the sun; a feeding can pass it on.",
             frozenset({T.BLOOD, T.CURSE, T.RITE}),
             1,
-            (StageSpec("Blood-cursed", None, ConditionKind.ENDLESS_HUNGER, 2, stats(strength=10), ageless=True, sunlight_harm=True),),
+            (
+                StageSpec(
+                    "Blood-cursed",
+                    None,
+                    ConditionKind.ENDLESS_HUNGER,
+                    2,
+                    stats(strength=10),
+                    quenches=frozenset({NeedKind.SUSTENANCE}),
+                    grants=frozenset({BodyFunction.VENOM}),
+                    ageless=True,
+                    sunlight_harm=True,
+                ),
+            ),
             frozenset({C.RITE, C.QUEST}),
             Visibility.HIDDEN,
             contagion=frozenset({T.BLOOD}),
@@ -119,7 +133,7 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
             "A god's favour: strength beyond the mortal measure, and a fear of the giver.",
             frozenset({T.RITE, T.BIRTH}),
             0,
-            (StageSpec("Blessed", None, ConditionKind.CHOSEN_MARK, 1, stats(strength=10), fears_source=True),),
+            (StageSpec("Blessed", None, ConditionKind.CHOSEN_MARK, 1, stats(strength=10), grants=frozenset({BodyFunction.PRESENCE}), fears_source=True),),
             frozenset({C.RITE}),
             Visibility.NOTICEABLE,
             hereditary=True,
@@ -133,7 +147,7 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
             (
                 StageSpec("Tainted", 2, ConditionKind.VOID_TAINT, 2, sanity_loss=5),
                 StageSpec("Maddened", 2, ConditionKind.VISIONS, 3, sanity_loss=10),
-                StageSpec("Claimed", None, ConditionKind.VOID_TAINT, 5, sanity_loss=5, recruits=True),
+                StageSpec("Claimed", None, ConditionKind.VOID_TAINT, 5, sanity_loss=5, quenches=frozenset({NeedKind.BELONGING}), recruits=True),
             ),
             frozenset({C.RITE, C.QUEST}),
             Visibility.NOTICEABLE,

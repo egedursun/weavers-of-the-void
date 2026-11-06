@@ -2,12 +2,13 @@ from sqlalchemy import select
 
 from aerona.catalog.effect_packages import PACKAGES
 from aerona.db.tables.afflictions import AfflictionRow
-from aerona.db.tables.body import ConditionRow, InjuryRow
+from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission, Visibility
-from aerona.domain.enums.body import ConditionKind, DamageType, HarmCause, InjuryKind, InjuryState
-from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.body import BodyFunction, ConditionKind, DamageType, HarmCause, InjuryKind, InjuryState
+from aerona.domain.enums.mind import MemoryKind, NeedKind
 from aerona.engine.body.afflictions import active, afflict, ageless, cure, inherit, progress, spread_by_bite, traumatise, visible
+from aerona.engine.mind.book import needs_of
 from aerona.engine.mind.memories import remember
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.rules.registry import Rules
@@ -110,3 +111,16 @@ async def test_a_heavy_memory_on_a_weak_will_leaves_a_trauma(realm: Realm) -> No
     assert [row.package for row in await active(realm.session, weak.id)] == [PackageKind.TRAUMA]
     assert await active(realm.session, strong.id) == []
     assert (await realm.session.scalars(select(AfflictionRow))).first() is not None
+
+
+async def test_a_stage_grants_body_traits_and_quenches_needs_until_cured(realm: Realm) -> None:
+    ctx = context(realm.session)
+    bearer = await mortal(realm, "Iska")
+    row = await afflict(ctx, bearer, PackageKind.VAMPIRISM, Transmission.CURSE)
+    assert row is not None
+    await progress(context(realm.session, epoch=ctx.epoch + 1))
+    body = await realm.session.get(BodyRow, bearer.id)
+    assert body is not None and BodyFunction.VENOM.value in body.traits
+    assert (await needs_of(realm.session, bearer.id)).get(NeedKind.SUSTENANCE) == 100
+    await cure(ctx, bearer, row, CureKind.RITE)
+    assert BodyFunction.VENOM.value not in body.traits

@@ -24926,6 +24926,8 @@ export interface components {
                 [key: string]: number;
             };
             needs: components["schemas"]["NeedKind"][];
+            quenches: components["schemas"]["NeedKind"][];
+            grants: components["schemas"]["BodyFunction"][];
             sanity_loss: number;
             ageless: boolean;
             sunlight_harm: boolean;

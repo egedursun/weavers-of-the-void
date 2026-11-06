@@ -1,6 +1,6 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission, Visibility
-from aerona.domain.enums.body import ConditionKind
+from aerona.domain.enums.body import BodyFunction, ConditionKind
 from aerona.domain.enums.mind import NeedKind, ValueAxis
 
 
@@ -13,6 +13,8 @@ class StageView(ApiModel):
     stats: dict[str, int]
     values: dict[ValueAxis, int]
     needs: list[NeedKind]
+    quenches: list[NeedKind]
+    grants: list[BodyFunction]
     sanity_loss: int
     ageless: bool
     sunlight_harm: bool
