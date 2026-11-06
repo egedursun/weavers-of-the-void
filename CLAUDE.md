@@ -11,3 +11,23 @@
    - No hardcoded visual medium: image style is applied at render time.
 
    When you touch such text, read all of it, not by keyword, and rewrite anything that pushes a theme, tone, conflict, gender or look the seed did not ask for. A new feature must reduce constraints, not add them.
+
+3. **Every dynamic is fully wired.** Anything created (a table, enum value, type, mechanic, rule, tool, phase, profile field, bond kind, event, setting) must connect end to end:
+   - engine effects and the epoch phases that read it
+   - agent tools and their schemas
+   - prompts and context
+   - API, frontend views and god (son) tools to create, edit, hold and delete it
+   - the Codex and the lore book with labelled values
+   - integrity checks, legacy mapping and the spec
+
+   Nothing may be label-only, orphaned or silently deferred. Trace each new thing through every consumer before calling it done.
+
+4. **No comments or docstrings, ever.** Never write comments, docstrings, commented-out code or explanatory headers of any kind in any language. That covers Python, TS/TSX, CSS, Jinja and SQL/migrations, including `#`, `//`, `/* */`, `"""…"""`, JSDoc and TODOs. Code must explain itself through names and structure. `scripts/check_source_rules.py` must report 0 violations.
+
+5. **Frontend is production grade and gamified.**
+   - Build every screen from the design system: `components/ui`, `components/domain`, typography, tones, icons and tokens. Follow the eslint class policy: no arbitrary values, no margins on controls, no raw `<button>`.
+   - Every view must be polished and consistent. Cover loading, empty, error and disabled states, with a reason for each disabled state.
+   - No overflow: long lists are paged with show-more. Layouts must be responsive down to phone width. Light and dark themes must both work, and accessibility roles and labels must be present.
+   - Every value must be readable and editable.
+   - Make it feel like a game: rewarding feedback, clear progress, tasteful motion, visual hierarchy, icons and medallions, and a strong sense of the player's power as a god.
+   - Never ship a rough or placeholder UI.
