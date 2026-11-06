@@ -21,17 +21,50 @@ PY_TEST_FILE = re.compile(
 )
 JS_TEST_FILE = re.compile(r"\.(test|spec)\.(ts|tsx|js|jsx)$")
 PARALLEL = re.compile(r"^(-n\S*|--numprocesses(=\S+)?|--last-failed|--lf)$")
+REDIRECT = re.compile(r"^(\d*|&)(>>?|<)(&?\d*)?$")
+INLINE_REDIRECT = re.compile(r"^(\d*|&)(>>?|<)&?\S+$")
+RUNNERS = frozenset({"npx", "pnpm", "yarn", "bunx", "exec", "dlx", "uv", "run", "python", "python3", "-m", "poetry", "env", "time", "nice"})
+ENV_ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 
 
 def words(segment: str) -> list[str]:
     try:
-        return shlex.split(segment)
+        parts = shlex.split(segment)
     except ValueError:
-        return segment.split()
+        parts = segment.split()
+    kept: list[str] = []
+    skip = False
+    for part in parts:
+        if skip:
+            skip = False
+            continue
+        if REDIRECT.match(part):
+            skip = not part.endswith(("&1", "&2"))
+            continue
+        if INLINE_REDIRECT.match(part):
+            continue
+        kept.append(part)
+    return kept
 
 
-def pytest_problem(parts: list[str]) -> str | None:
-    start = next(index for index, part in enumerate(parts) if part.endswith("pytest"))
+def runner_index(parts: list[str], tool: str) -> int | None:
+    for index, part in enumerate(parts):
+        if part.endswith(tool) and (part == tool or part.endswith(f"/{tool}")):
+            head = parts[:index]
+            return index if all(item in RUNNERS or ENV_ASSIGNMENT.match(item) or item.endswith(("/python", "/python3")) for item in head) else None
+    return None
+
+
+def flag_values(args: list[str]) -> set[int]:
+    values: set[int] = set()
+    for index, arg in enumerate(args[:-1]):
+        following = args[index + 1]
+        if arg.startswith("-") and "=" not in arg and not following.startswith("-") and not JS_TEST_FILE.search(following) and not PY_TEST_FILE.search(following):
+            values.add(index + 1)
+    return values
+
+
+def pytest_problem(parts: list[str], start: int) -> str | None:
     args = parts[start + 1 :]
     if any(PARALLEL.match(arg) for arg in args):
         return "pytest with -n or a re-run flag is a broad sweep"
@@ -51,10 +84,10 @@ def pytest_problem(parts: list[str]) -> str | None:
     return None
 
 
-def vitest_problem(parts: list[str]) -> str | None:
-    start = next(index for index, part in enumerate(parts) if part.endswith("vitest"))
+def vitest_problem(parts: list[str], start: int) -> str | None:
     args = [arg for arg in parts[start + 1 :] if arg not in {"run", "--run"}]
-    targets = [arg for arg in args if not arg.startswith("-")]
+    values = flag_values(args)
+    targets = [arg for index, arg in enumerate(args) if not arg.startswith("-") and index not in values]
     files = [arg for arg in targets if JS_TEST_FILE.search(arg)]
     if not files or len(files) != len(targets):
         return "vitest must name individual test files, never a directory or the whole suite"
@@ -65,19 +98,21 @@ def vitest_problem(parts: list[str]) -> str | None:
 
 def problem(command: str) -> str | None:
     for segment in SEGMENT_SPLIT.split(command):
-        text = segment.strip()
+        text = segment.strip().strip("()").strip()
         if not text:
             continue
         for pattern in ALWAYS_BROAD:
             if pattern.search(text):
                 return f"'{pattern.pattern}' runs a broad test suite"
         parts = words(text)
-        if PYTEST.search(text) and any(part.endswith("pytest") for part in parts):
-            found = pytest_problem(parts)
+        pytest_at = runner_index(parts, "pytest") if PYTEST.search(text) else None
+        if pytest_at is not None:
+            found = pytest_problem(parts, pytest_at)
             if found:
                 return found
-        if VITEST.search(text) and any(part.endswith("vitest") for part in parts):
-            found = vitest_problem(parts)
+        vitest_at = runner_index(parts, "vitest") if VITEST.search(text) else None
+        if vitest_at is not None:
+            found = vitest_problem(parts, vitest_at)
             if found:
                 return found
     return None
