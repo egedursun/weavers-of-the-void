@@ -11,7 +11,8 @@ from aerona.db.tables.faith import AfterlifeStratumRow, CultDoctrineRow, Possess
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.body import ConditionKind, HarmCause
+from aerona.domain.enums.affliction import PackageKind, Transmission
+from aerona.domain.enums.body import ConditionKind
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import RiteEffectKind
 from aerona.domain.enums.domain import DEATH_DOMAINS
@@ -28,7 +29,8 @@ from aerona.domain.enums.faith import (
 )
 from aerona.domain.enums.mind import TraitKind, TraitSource, ValueAxis, ValueHolder
 from aerona.domain.enums.society import CreatureTrait, NaturalLaw
-from aerona.engine.body.conditions import condition_of, end_condition, gain_condition
+from aerona.engine.body.afflictions import afflict
+from aerona.engine.body.conditions import condition_of, end_condition
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of as creature_traits
 from aerona.engine.cosmos.sanity import shift_sanity
@@ -269,7 +271,7 @@ async def take_host(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityR
     if "binding" not in profile.locked:
         profile.binding, profile.bound_entity_id = BindingKind.PERSON, host.id
     if await condition_of(ctx, host.id, ConditionKind.POSSESSION) is None:
-        await gain_condition(ctx, host, ConditionKind.POSSESSION, HarmCause.CURSE, source_node_id=spirit.id)
+        await afflict(ctx, host, PackageKind.POSSESSION, Transmission.CURSE, source_node_id=spirit.id)
     await ctx.session.flush()
     return row
 

@@ -521,6 +521,7 @@ MEMORIES: MappingProxyType[MemoryKind, MemorySpec] = MappingProxyType(
         M.HELD_CAPTIVE: _memory({OC.GRIEVANCE: 50, OC.FEAR: 35, OC.TRUST: 15}, 6, {V.HONOUR: 20, V.KINSHIP: 20}, "Held our own captive", A.TAKING_CAPTIVES),
         M.LAMENTED: _memory({OC.GRIEVANCE: 60, OC.AFFECTION: 20, OC.RESPECT: 20}, 5, {V.DEATH: 30, V.KINSHIP: 20}, "Is mourned in our laments"),
         M.DIVINE_WILL: _memory({OC.TRUST: 34, OC.AFFECTION: 33, OC.RESPECT: 33}, 0, {}, "The gods willed it", inherited=False),
+        M.DREADS: _memory({OC.FEAR: 70, OC.RESPECT: 30}, 0, {}, "Dreads the power that touched them", inherited=False),
         M.GOODWILL: _memory({OC.AFFECTION: 45, OC.TRUST: 35, OC.RESPECT: 20}, 12, {V.XENOPHILIA: 15, V.KINSHIP: 10}, "Showed us goodwill"),
         M.LONG_HISTORY: _memory({OC.TRUST: 40, OC.AFFECTION: 30, OC.GRIEVANCE: 30}, 2, {}, "Long shared history", inherited=False),
         M.ILL_WILL: _memory({OC.GRIEVANCE: 50, OC.TRUST: 35, OC.FEAR: 15}, 12, {V.XENOPHILIA: -15, V.HONOUR: 10}, "Showed us ill will"),

@@ -10,6 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
+from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType, MortalRole
@@ -17,6 +18,7 @@ from aerona.domain.enums.mind import MemoryKind, NeedKind, OpinionComponent, Tra
 from aerona.domain.enums.mortal import Ability, CareerPath, CrimeKind, DeathCause, LifeStage, StressBreak
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
+from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.book import perception_of
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.hits import Harm
@@ -246,7 +248,7 @@ async def zeal(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, r
 
 
 async def vice(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> str:
-    await gain_condition(ctx, mortal, ConditionKind.ADDICTION, HarmCause.ACCIDENT, severity=2)
+    await afflict(ctx, mortal, PackageKind.DRINK_DEPENDENCE, Transmission.INGESTION)
     return f"{mortal.name} broke under the strain and fell into vice."
 
 

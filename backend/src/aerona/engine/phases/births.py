@@ -10,7 +10,7 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.body import ConditionKind, HarmCause
+from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.demography import MarriageCustom
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityType, MortalRole
@@ -18,8 +18,8 @@ from aerona.domain.enums.mind import MemoryKind, PressureKind, TraitEffect, Valu
 from aerona.domain.enums.mortal import DeathCause, HarshnessScale, LifeStage, MortalSex
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import MortalStats, PeopleStats, SettlementStats
+from aerona.engine.body.afflictions import afflict, inherit
 from aerona.engine.body.cohorts import healer_demand
-from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.body.healing import HealingWorld, tier_index
 from aerona.engine.body.hits import weighted
@@ -811,7 +811,8 @@ async def bloodline_marks(ctx: TickContext, child: EntityRow, parents: tuple[Ent
         if EntityFlag.BLOODLINE_CURSE in flags:
             await add_flag(ctx.session, child.id, EntityFlag.BLOODLINE_CURSE, ctx.epoch)
         if EntityFlag.CHOSEN in flags or parent.creator_son_id is not None:
-            await gain_condition(ctx, child, ConditionKind.CHOSEN_MARK, HarmCause.GOD, severity=1, source_node_id=parent.creator_son_id)
+            await afflict(ctx, child, PackageKind.DIVINE_BLESSING, Transmission.BIRTH, source_node_id=parent.creator_son_id)
+    await inherit(ctx, child, [parent.id for parent in parents])
 
 
 def bond_rate(rules: Rules, kind: BondKind) -> int:

@@ -284,7 +284,7 @@ def consciousness_of(rules: Rules, bearer: Bearer, pain: int, blood: int) -> Con
     table = rules.tissues
     if blood <= table.blood_faint_at:
         return Consciousness.UNCONSCIOUS
-    will = (stat(bearer, "will") if isinstance(bearer, EntityRow) else None) or PERCENT // 2
+    will = (stat(bearer, "willpower") if isinstance(bearer, EntityRow) else None) or PERCENT // 2
     felt = pain * (1 - will / PERCENT * table.pain_will_pct / PERCENT)
     if felt >= table.unconscious_at:
         return Consciousness.UNCONSCIOUS

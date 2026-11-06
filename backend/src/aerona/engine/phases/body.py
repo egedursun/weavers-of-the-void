@@ -13,6 +13,7 @@ from aerona.db.tables.faith import CultTenetRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.society import AddictionRow
 from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission
 from aerona.domain.enums.body import MADNESS_CONDITIONS, ConditionKind, DamageType, HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -20,6 +21,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.node import NodeKind
+from aerona.engine.body.afflictions import active, afflict, cure, progress
 from aerona.engine.body.book import ensure_species_body, injuries_of, recorded_plan, species_of, species_traits
 from aerona.engine.body.cohorts import tend_cohorts
 from aerona.engine.body.conditions import CONDITION_KEY, condition_of, end_condition, gain_condition
@@ -320,33 +322,36 @@ async def _addiction(ctx: TickContext, mortal: EntityRow, addicted: dict[int, Ad
     community = await community_of(ctx.session, mortal)
     row = addicted.get(community.id) if community is not None else None
     held = await condition_of(ctx, mortal.id, ConditionKind.ADDICTION)
+    dependence = next((item for item in await active(ctx.session, mortal.id) if item.package is PackageKind.DRUG_DEPENDENCE), None)
     if row is None or row.addicted_since_epoch is None:
-        if held is not None and ctx.rng(seed_of("clean", mortal.id)).chance(table.addiction_recover_chance):
+        if dependence is not None and ctx.rng(seed_of("clean", mortal.id)).chance(table.addiction_recover_chance):
+            await cure(ctx, mortal, dependence, CureKind.TIME)
+        elif held is not None and dependence is None and ctx.rng(seed_of("clean", mortal.id)).chance(table.addiction_recover_chance):
             await end_condition(ctx, mortal, ConditionKind.ADDICTION)
         return
-    if held is not None:
-        if row.withdrawal_since_epoch is not None and table.withdrawal_severity:
+    if dependence is not None or held is not None:
+        if held is not None and row.withdrawal_since_epoch is not None and table.withdrawal_severity:
             await gain_condition(ctx, mortal, ConditionKind.ADDICTION, HarmCause.POISON, severity=held.severity + table.withdrawal_severity, announce=False)
         return
-    await gain_condition(ctx, mortal, ConditionKind.ADDICTION, HarmCause.POISON, chance=table.addiction_chance, source_node_id=row.resource_entity_id)
+    if ctx.rng(seed_of("condition", mortal.id, ConditionKind.ADDICTION.value)).chance(table.addiction_chance):
+        await afflict(ctx, mortal, PackageKind.DRUG_DEPENDENCE, Transmission.INGESTION, source_node_id=row.resource_entity_id)
 
 
 async def _marks(ctx: TickContext, mortal: EntityRow, flags: set[EntityFlag]) -> None:
     table = ctx.rules.conditions
-    chosen = await condition_of(ctx, mortal.id, ConditionKind.CHOSEN_MARK)
-    if EntityFlag.CHOSEN in flags and chosen is None:
+    carried = {item.package: item for item in await active(ctx.session, mortal.id)}
+    blessing = carried.get(PackageKind.DIVINE_BLESSING)
+    if EntityFlag.CHOSEN in flags and blessing is None:
         patron = await living_patron(ctx.session, mortal)
-        await gain_condition(
-            ctx, mortal, ConditionKind.CHOSEN_MARK, HarmCause.GOD, severity=table.wither_condition_severity, source_node_id=patron.id if patron else None
-        )
-    elif EntityFlag.CHOSEN not in flags and chosen is not None:
-        await end_condition(ctx, mortal, ConditionKind.CHOSEN_MARK, announce=False)
-    if EntityFlag.BLOODLINE_CURSE in flags:
-        await gain_condition(ctx, mortal, ConditionKind.ENDLESS_HUNGER, HarmCause.CURSE, chance=table.hunger_curse_chance)
+        await afflict(ctx, mortal, PackageKind.DIVINE_BLESSING, Transmission.RITE, source_node_id=patron.id if patron else None)
+    elif EntityFlag.CHOSEN not in flags and blessing is not None and blessing.transmission is Transmission.RITE:
+        await cure(ctx, mortal, blessing, None)
+    if EntityFlag.BLOODLINE_CURSE in flags and ctx.rng(seed_of("condition", mortal.id, ConditionKind.ENDLESS_HUNGER.value)).chance(table.hunger_curse_chance):
+        await afflict(ctx, mortal, PackageKind.HUNGER_CURSE, Transmission.CURSE)
     injuries = await injuries_of(ctx.session, mortal.id)
     touched = [row for row in injuries if row.kind is InjuryKind.VOID_TOUCH]
     if touched and sanity_of(ctx.rules, mortal) <= table.void_taint_sanity:
-        await gain_condition(ctx, mortal, ConditionKind.VOID_TAINT, HarmCause.CURSE, severity=max(row.severity for row in touched))
+        await afflict(ctx, mortal, PackageKind.VOID_TAINT, Transmission.CONTACT, source_node_id=touched[-1].cause_node_id)
     brands = [row for row in injuries if row.kind is InjuryKind.DIVINE_BRAND]
     if brands and await condition_of(ctx, mortal.id, ConditionKind.DIVINE_BRAND) is None:
         await gain_condition(
@@ -529,9 +534,45 @@ async def body_society(ctx: TickContext) -> None:
     ctx.count("bodies_known", body_count)
 
 
+@reads(
+    "mortal.sanity",
+    "table.afflictions",
+    "table.bodies",
+    "table.conditions",
+    "table.entities",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.hero_quests",
+    "table.holder_levels",
+    "table.holder_techniques",
+    "table.injuries",
+    "table.needs",
+    "table.nodes",
+    "table.personality_values",
+    "table.worlds",
+)
+@writes(
+    "mortal.sanity",
+    "table.afflictions",
+    "table.bodies",
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.conditions",
+    "table.injuries",
+    "table.memories",
+    "table.needs",
+    "table.personality_values",
+)
+async def body_afflictions(ctx: TickContext) -> None:
+    for key, value in (await progress(ctx)).items():
+        ctx.count(f"afflictions_{key}", value)
+
+
 PHASES = (
     Phase("body_survey", body_survey),
     Phase("body_healing", body_healing),
     Phase("body_conditions", body_conditions),
+    Phase("body_afflictions", body_afflictions),
     Phase("body_society", body_society),
 )

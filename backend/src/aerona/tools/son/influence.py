@@ -16,6 +16,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityType
 from aerona.domain.enums.son import PowerEffect
+from aerona.engine.body.afflictions import blood_curse
 from aerona.engine.body.hits import Harm
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.phases.society_support.knowledge import teach
@@ -215,6 +216,7 @@ async def curse(call: SonCall, args: CurseInput) -> str:
         if moved is not None:
             notes.append(lines.EFFECT_NOTE.format(label=field.label, old=moved[0], new=moved[1]))
     await entities.add_flag(entity.id, EntityFlag.CURSED, call.epoch)
+    await blood_curse(call.tick, call.son, entity)
     await bonds.connect(BondDraft(call.son.id, entity.id, BondKind.CURSED, call.epoch, args.curse))
     creator_id = foreign_creator(call, entity)
     if creator_id is not None:

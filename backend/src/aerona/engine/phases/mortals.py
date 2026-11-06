@@ -12,6 +12,7 @@ from aerona.domain.enums.body import OPEN_INJURY_STATES, HarmCause, InjuryState
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.society import NaturalLaw
+from aerona.engine.body.afflictions import ageless
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
@@ -100,7 +101,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     laws, physics = world.laws, world.physics
     rules = ctx.rules
     effects = rules.world_effects
-    if laws.has(NaturalLaw.IMMORTALITY, mortal.world_id) or immortal(await mortal_flags(ctx.session, mortal)):
+    if laws.has(NaturalLaw.IMMORTALITY, mortal.world_id) or immortal(await mortal_flags(ctx.session, mortal)) or await ageless(ctx.session, mortal.id):
         return
     rng = ctx.rng(seed_of("aging", mortal.id))
     first = mortal.birth_epoch == ctx.epoch

@@ -59,6 +59,7 @@ from aerona.rules.registry.doctrine import (
 )
 from aerona.rules.registry.ecology import EcologyRules
 from aerona.rules.registry.economy import EconomyRules
+from aerona.rules.registry.effect_packages import EffectPackageRules
 from aerona.rules.registry.empty_world import EmptyWorldRules
 from aerona.rules.registry.engine_phases import EnginePhasesRules
 from aerona.rules.registry.environment import (
@@ -277,6 +278,7 @@ class Rules:
     armour: ArmourRules = field(default_factory=ArmourRules)
     strike: StrikeRules = field(default_factory=StrikeRules)
     tissues: TissueRules = field(default_factory=TissueRules)
+    effect_packages: EffectPackageRules = field(default_factory=EffectPackageRules)
     body_customs: BodyCustomsRules = field(default_factory=BodyCustomsRules)
     conditions: ConditionRules = field(default_factory=ConditionRules)
     prosthetics: ProstheticsRules = field(default_factory=ProstheticsRules)

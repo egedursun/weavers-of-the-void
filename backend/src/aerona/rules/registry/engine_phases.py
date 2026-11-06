@@ -129,6 +129,9 @@ class EnginePhasesRules:
     environment_modifiers: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: environment modifiers")
     body_survey: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: body survey")
     body_healing: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: healing of wounds")
+    body_afflictions: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: venoms, curses, blessings, dependences and traumas running their stages"
+    )
     body_conditions: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: lasting conditions")
     body_society: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the maimed among the living")
     mind_survey: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: minds for every mortal, people and god")

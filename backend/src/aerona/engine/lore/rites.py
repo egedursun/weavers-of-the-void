@@ -23,6 +23,7 @@ from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import BattleRow, WarSideRow
+from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import DamageType, HarmCause, InjuryState
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import (
@@ -49,6 +50,7 @@ from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.world import SkyEventKind
 from aerona.domain.models.entity_stats import RiteStats, SpiritStats
+from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import shift_sanity
@@ -789,6 +791,8 @@ async def backlash(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> 
     kind = row.backlash
     if row.power >= table.phenomenon_power:
         kind = BacklashKind.PHENOMENON
+    if row.school is MagicSchool.BLOOD and ctx.rng(f"blood_backlash.{caster.id}.{ctx.epoch}").chance(ctx.rules.effect_packages.backlash_blood_pct):
+        await afflict(ctx, caster, PackageKind.VAMPIRISM, Transmission.RITE)
     if kind is BacklashKind.INJURY:
         await apply_hits(ctx, caster, Harm(damage=table.injury_hp, cause=HarmCause.MAGIC_BACKLASH, death_cause="consumed by a rite gone wrong"))
     elif kind is BacklashKind.MADNESS:

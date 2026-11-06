@@ -365,7 +365,9 @@ SOCIETY_ENGINE_STAGE = stage(
     "artwork_cycles",
     "rumour_cycles",
 )
-AGING_STAGE = stage("body_healing", "mortal_wounds", "body_conditions", "body_society", "mortal_life_course", "mortal_aging", "dead_bonds_closing")
+AGING_STAGE = stage(
+    "body_healing", "mortal_wounds", "body_afflictions", "body_conditions", "body_society", "mortal_life_course", "mortal_aging", "dead_bonds_closing"
+)
 MIND_STAGE = stage(
     "mind_values",
     "mind_skills",

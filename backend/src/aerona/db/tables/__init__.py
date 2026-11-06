@@ -1,3 +1,4 @@
+from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.agency import ActionRecordRow, AgentTurnRow, CreationRewardRow, EpochAgentRow, TurnCounterRow
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.bonds import BondRow
@@ -219,6 +220,7 @@ __all__ = [
     "ActionRecordRow",
     "AddictionImmunityRow",
     "AddictionRow",
+    "AfflictionRow",
     "AfterlifeStratumRow",
     "AgentTurnRow",
     "AppliedFixupRow",

@@ -187,6 +187,7 @@ class MemoryKind(StrEnum):
     GOODWILL = "goodwill"
     ILL_WILL = "ill_will"
     LONG_HISTORY = "long_history"
+    DREADS = "dreads"
 
 
 class OpinionComponent(StrEnum):

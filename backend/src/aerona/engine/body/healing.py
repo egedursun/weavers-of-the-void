@@ -305,24 +305,26 @@ async def _fester(ctx: TickContext, bearer: Bearer, body: BodyRow, row: InjuryRo
     deadly = (table.lethal_infected_vital if vital else table.lethal_infected_limb) * max(0, PERCENT - index * table.lethal_medicine_cut_pct) / PERCENT
     deadly *= 1 - care.hospital * ctx.rules.structure_functions.hospital_death_cut_pct / PERCENT
     deadly *= harshness(ctx.rules, HarshnessScale.INFECTION)
-    if row.infected_epochs >= table.lethal_after_epochs or rng.chance(deadly):
-        if index >= tier_index(MedicineTier.SURGERY) and care.amputation and _limb(part) and rng.chance(table.amputation_chance):
-            row.kind, row.function_loss, row.state, row.infected_epochs = InjuryKind.SEVERED, PERCENT, InjuryState.HEALING, 0
-            row.treatments = [*row.treatments, TreatmentStep.AMPUTATE.value]
-            counted = COUNTED_PARTS.get(row.part)
-            if counted is not None:
-                setattr(body, counted, 0)
-            await _treated(ctx, bearer, row, care.healer)
-            if care.healer is not None:
-                await healed(ctx, care.healer.mortal.id, bearer.id, saved=True)
-            if isinstance(bearer, EntityRow):
-                await note(
-                    ctx,
-                    f"{bearer.name} lost a festering {part.label.lower() if part else row.part} to the surgeon's saw and lived.",
-                    key="healing.amputated",
-                    ids=[bearer.id],
-                )
-            return Tending(changed=True)
+    lethal = row.infected_epochs >= table.lethal_after_epochs or rng.chance(deadly)
+    saw = index >= tier_index(MedicineTier.SURGERY) and care.amputation and _limb(part)
+    if saw and (row.infected_epochs >= ctx.rules.tissues.amputate_at or (lethal and rng.chance(table.amputation_chance))):
+        row.kind, row.function_loss, row.state, row.infected_epochs = InjuryKind.SEVERED, PERCENT, InjuryState.HEALING, 0
+        row.treatments = [*row.treatments, TreatmentStep.AMPUTATE.value]
+        counted = COUNTED_PARTS.get(row.part)
+        if counted is not None:
+            setattr(body, counted, 0)
+        await _treated(ctx, bearer, row, care.healer)
+        if care.healer is not None:
+            await healed(ctx, care.healer.mortal.id, bearer.id, saved=True)
+        if isinstance(bearer, EntityRow):
+            await note(
+                ctx,
+                f"{bearer.name} lost a festering {part.label.lower() if part else row.part} to the surgeon's saw and lived.",
+                key="healing.amputated",
+                ids=[bearer.id],
+            )
+        return Tending(changed=True)
+    if lethal:
         row.state = InjuryState.LETHAL
         await _renown(ctx, care.healer, healed=False)
         if care.healer is not None and isinstance(bearer, EntityRow):
