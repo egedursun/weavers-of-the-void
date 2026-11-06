@@ -70,7 +70,6 @@ import { EntityEditForm } from './sections/EntityEditForm'
 import { EntityEnvironment } from './sections/EntityEnvironment'
 import { EntityHero } from './sections/EntityHero'
 import { EntityImages } from './sections/EntityImages'
-import { EntityMechanics } from './sections/EntityMechanics'
 import { EntityNote } from './sections/EntityNote'
 import { EntityOpportunities } from './sections/EntityOpportunities'
 import { EntityRecords } from './sections/EntityRecords'
@@ -84,10 +83,10 @@ import { MemoriesSection } from './sections/MemoriesSection'
 import { MindSection } from './sections/MindSection'
 import { PathFinder } from './sections/PathFinder'
 import { PeopleBeliefs } from './sections/PeopleBeliefs'
-import { RecordRowsSection } from './sections/RecordRowsSection'
 import { SkillsSection } from './sections/SkillsSection'
 import { SocietyEconomy } from './sections/SocietyEconomy'
 import { TagEditor } from './sections/TagEditor'
+import { ThingSections } from './sections/ThingSections'
 import {
   CultureDriftSection,
   LoyaltySection,
@@ -582,7 +581,6 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         )}
         {embodied && <BodySection nodeId={entity.id} />}
         {afflictable && <AfflictionsSection nodeId={entity.id} />}
-        <RecordRowsSection nodeId={entity.id} />
         {entity.entity_type === 'people' && (
           <PeopleBodyCustoms peopleId={entity.id} />
         )}
@@ -602,7 +600,7 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         )}
         {minded && <MemoriesSection nodeId={entity.id} />}
         <BiographySection nodeId={entity.id} readOnlyReason={readOnly} />
-        <EntityMechanics
+        <ThingSections
           nodeId={entity.id}
           statKeys={Object.keys(entity.stats).filter((key) => key !== 'kind')}
           readOnlyReason={readOnly}

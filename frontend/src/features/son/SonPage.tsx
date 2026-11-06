@@ -6,7 +6,7 @@ import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
 import { BodySection } from '@/features/entity/sections/BodySection'
 import { MemoriesSection } from '@/features/entity/sections/MemoriesSection'
 import { MindSection } from '@/features/entity/sections/MindSection'
-import { RecordRowsSection } from '@/features/entity/sections/RecordRowsSection'
+import { ThingSections } from '@/features/entity/sections/ThingSections'
 import { AnchorageSection } from '@/features/foundations/AnchorageSection'
 import {
   useOpportunities,
@@ -120,7 +120,7 @@ export function SonPage({ id }: DrawerPageProps) {
       <BodySection nodeId={son.id} />
       <MindSection nodeId={son.id} />
       <MemoriesSection nodeId={son.id} />
-      <RecordRowsSection nodeId={son.id} />
+      <ThingSections nodeId={son.id} />
       <SonImages son={son} images={data.images} />
       <SonSiblings sonId={son.id} siblings={data.siblings} alive={!dead} />
       {!dead && <SonBirthChild son={son} siblings={data.siblings} />}

@@ -36,7 +36,8 @@
    - Every table, typed thing and mechanic the engine creates or changes needs god actions to create, edit, hold (lock against the engine) and delete it, with every value editable.
    - Those actions must be registered in the action catalog and reachable from a polished control panel in the app: the entity drawer, the atlas or the mechanic panels, in the same style as the existing control panels.
    - A backend mechanic without its frontend control surface is unfinished work, never a later task. This applies to everything already built and to everything integrated from now on, in the same change that adds it.
-   - The only tables exempt are the bookkeeping ones listed in `BOOKKEEPING_TABLES` in `scripts/check_wiring.py` (fixups, cursors, counters, notifications, the player's action ledger, score and achievements, and the per-epoch goods-flow log). Only the user may add to that list.
+   - **Every kind of thing, always.** A feature for things reaches every kind of node at once: the Creator, sons, foreign gods, worlds (planets and moons), stars and every entity type. Never pick some of them. Sections that apply to every thing go only into `frontend/src/features/entity/sections/ThingSections.tsx`, which every node drawer page renders. `scripts/check_wiring.py` fails when a node drawer page does not render it. A section for some kinds only must say why the others cannot have it.
+   - The only tables exempt are the bookkeeping ones listed in `BOOKKEEPING_TABLES` in `backend/src/aerona/constants/control.py` (fixups, cursors, counters, notifications, the player's action ledger, score and achievements, and the per-epoch goods-flow log). Only the user may add to that list.
 
 ## Enforcement
 

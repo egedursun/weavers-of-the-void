@@ -5,6 +5,7 @@ from sqlalchemy import JSON
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Mapper
 
+from aerona.constants.control import BOOKKEEPING_TABLES
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.profile_guard import LOCK_COLUMN, NODE_TABLES, held_columns, owned_shape, profile_key, profile_mapper
 from aerona.domain.enums.action import ActionKind
@@ -32,7 +33,7 @@ class CreateRow(Command):
 
 def controllable(table: str) -> Mapper[Any]:
     mapper = profile_mapper(table)
-    if mapper is None or table in NODE_TABLES or owned_shape(mapper) is None:
+    if mapper is None or table in NODE_TABLES or table in BOOKKEEPING_TABLES or owned_shape(mapper) is None:
         raise NotFoundError(f"{table.replace('_', ' ')} is not a record the god can shape row by row.")
     return mapper
 

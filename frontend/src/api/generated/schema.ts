@@ -25343,6 +25343,10 @@ export interface components {
             required: boolean;
             editable: boolean;
         };
+        ThingRecordNodeView: {
+            name: string;
+            link: string;
+        };
         ThingRecordRowView: {
             key: {
                 [key: string]: unknown;
@@ -25362,6 +25366,9 @@ export interface components {
             node_id: number;
             tables: components["schemas"]["ThingRecordTableView"][];
             creatable: components["schemas"]["ThingRecordTableView"][];
+            names: {
+                [key: string]: components["schemas"]["ThingRecordNodeView"];
+            };
         };
         ThreadAdvanceInput: {
             thread_id: number;

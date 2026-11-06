@@ -5,7 +5,9 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Mapper
 
 from aerona.api.dependencies import ServicesDep, reader
-from aerona.api.schemas.record_rows import ThingRecordColumnView, ThingRecordRowView, ThingRecordsView, ThingRecordTableView
+from aerona.api.routers.body import nodes_of
+from aerona.api.schemas.record_rows import ThingRecordColumnView, ThingRecordNodeView, ThingRecordRowView, ThingRecordsView, ThingRecordTableView
+from aerona.constants.control import BOOKKEEPING_TABLES
 from aerona.db.base import Base
 from aerona.db.profile_guard import LOCK_COLUMN, NODE_TABLES, held_columns, owned_shape, table_name
 from aerona.services.player.profiles import column_kind, scalar
@@ -16,7 +18,11 @@ router = APIRouter(tags=["record-rows"])
 
 def shaped() -> list[Mapper[Any]]:
     return sorted(
-        (mapper for mapper in Base.registry.mappers if table_name(mapper) not in NODE_TABLES and owned_shape(mapper) is not None),
+        (
+            mapper
+            for mapper in Base.registry.mappers
+            if table_name(mapper) not in NODE_TABLES and table_name(mapper) not in BOOKKEEPING_TABLES and owned_shape(mapper) is not None
+        ),
         key=table_name,
     )
 
@@ -80,4 +86,9 @@ async def record_rows(services: ServicesDep, node_id: int = Path(ge=1)) -> Thing
             ]
             if found:
                 tables.append(ThingRecordTableView(table=table_name(mapper), label=label, columns=columns, rows=found))
-    return ThingRecordsView(node_id=node_id, tables=tables, creatable=creatable)
+        referenced = {
+            value for table in tables for column in table.columns if column.owner for row in table.rows if isinstance(value := row.values.get(column.name), int)
+        }
+        known = await nodes_of(session, referenced)
+    labels = {str(node): ThingRecordNodeView(name=name, link=link) for node, (name, link) in known.items()}
+    return ThingRecordsView(node_id=node_id, tables=tables, creatable=creatable, names=labels)

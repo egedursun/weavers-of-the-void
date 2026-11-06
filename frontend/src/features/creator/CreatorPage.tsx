@@ -3,6 +3,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ThingSections } from '@/features/entity/sections/ThingSections'
 import { useWorldState } from '@/features/pantheon/api'
 import { CreatorBeliefs } from './CreatorBeliefs'
 import { CreatorCult } from './CreatorCult'
@@ -99,6 +100,7 @@ export function CreatorPage() {
         prompt={creator.image_prompt}
         onSavePrompt={savePrompt}
       />
+      <ThingSections nodeId={creator.id} />
     </div>
   )
 }

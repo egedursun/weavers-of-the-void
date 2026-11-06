@@ -13,7 +13,7 @@ PACKAGE = SRC / "aerona"
 FRONTEND = ROOT / "frontend/src"
 CATALOG = "aerona.services.player.catalog"
 SKIPPED = frozenset({"__pycache__", "alembic", "migration"})
-NODE_TABLES = frozenset({"nodes", "entities", "sons", "worlds", "stars", "foreign_gods"})
+NODE_TABLES = frozenset({"nodes", "entities", "sons", "worlds", "stars", "foreign_gods", "creator"})
 FIXED_COLUMNS = frozenset({"id", "locked", "created_at", "updated_at"})
 SOFT_DELETE = frozenset(
     {"status", "ended_epoch", "end_epoch", "dissolved_epoch", "retired_epoch", "cured_epoch", "abandoned_epoch", "closed_epoch", "completed_epoch", "active"}

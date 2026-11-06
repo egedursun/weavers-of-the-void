@@ -10,20 +10,8 @@ TABLES = BACKEND / "db/tables"
 CATALOG = BACKEND / "services/player/catalog.py"
 COMPLIANCE = BACKEND / "engine/interconnect/compliance.py"
 ENGINE = BACKEND / "engine"
-BOOKKEEPING_TABLES = frozenset(
-    {
-        "applied_fixups",
-        "epoch_stats",
-        "epoch_year_cursors",
-        "name_registry",
-        "notifications",
-        "chronicle_entities",
-        "action_records",
-        "scores",
-        "achievements",
-        "goods_flows",
-    }
-)
+CONTROL_CONSTANTS = BACKEND / "constants/control.py"
+BOOKKEEPING_TABLES = frozenset(re.findall(r'"([a-z_]+)"', CONTROL_CONSTANTS.read_text(encoding="utf-8")))
 FRONTEND = ROOT / "frontend/src"
 SKIPPED_PARTS = frozenset({"__pycache__", "alembic"})
 ENUM_BASES = frozenset({"StrEnum", "IntEnum", "Enum"})
@@ -137,6 +125,64 @@ def uncontrolled_tables(texts: dict[Path, str]) -> list[str]:
     ]
 
 
+NODE_ENUM = BACKEND / "domain/enums/node.py"
+DRAWER_PAGES = FRONTEND / "config/drawerPages.ts"
+SHARED_SECTIONS = "<ThingSections"
+
+
+def node_kinds() -> set[str]:
+    text = NODE_ENUM.read_text(encoding="utf-8")
+    body = text.split("class NodeKind", 1)[1].split("\nclass ", 1)[0]
+    return set(re.findall(r'=\s*"([a-z_]+)"', body))
+
+
+def module_file(spec: str, origin: Path) -> Path | None:
+    base = FRONTEND / spec.removeprefix("@/") if spec.startswith("@/") else (origin.parent / spec).resolve() if spec.startswith(".") else None
+    if base is None:
+        return None
+    return next((path for path in (base.with_suffix(".tsx"), base.with_suffix(".ts"), base / "index.ts") if path.is_file()), None)
+
+
+def component_body(text: str, name: str) -> str:
+    match = re.search(rf"^(?:export )?function {name}\(", text, re.MULTILINE)
+    if match is None:
+        return ""
+    end = re.search(r"^(?:export )?function \w+\(", text[match.end() :], re.MULTILINE)
+    return text[match.start() : match.end() + end.start() if end else len(text)]
+
+
+def component_renders_shared(text: str, name: str, depth: int = 4) -> bool:
+    body = component_body(text, name)
+    if SHARED_SECTIONS in body:
+        return True
+    inner = {found for found in re.findall(r"<([A-Z]\w*)", body) if found != name and component_body(text, found)}
+    return depth > 0 and any(component_renders_shared(text, found, depth - 1) for found in inner)
+
+
+def renders_shared(page: Path) -> bool:
+    text = page.read_text(encoding="utf-8")
+    if SHARED_SECTIONS in text:
+        return True
+    for names, spec in re.findall(r"import \{([^}]+)\} from '([^']+)'", text):
+        path = module_file(spec, page)
+        rendered = [name.strip() for name in names.split(",") if f"<{name.strip()}" in text]
+        if path is not None and any(component_renders_shared(path.read_text(encoding="utf-8"), name) for name in rendered):
+            return True
+    return False
+
+
+def pages_without_shared_sections() -> list[str]:
+    kinds = node_kinds()
+    found: list[str] = []
+    for kind, spec in re.findall(r"['\"]?([a-z-]+)['\"]?:\s*lazy\(\(\)\s*=>\s*import\('([^']+)'\)", DRAWER_PAGES.read_text(encoding="utf-8")):
+        if kind.replace("-", "_") not in kinds:
+            continue
+        page = module_file(spec, DRAWER_PAGES)
+        if page is None or not renders_shared(page):
+            found.append(f"the {kind} drawer page does not render ThingSections, so features shared by every thing are missing there")
+    return found
+
+
 def main() -> int:
     texts = backend_texts()
     errors = [
@@ -145,6 +191,7 @@ def main() -> int:
         *unregistered_actions(texts),
         *actions_without_ui(texts, frontend_text()),
         *uncontrolled_tables(texts),
+        *pages_without_shared_sections(),
     ]
     for line in errors:
         print(f"ERROR {line}")

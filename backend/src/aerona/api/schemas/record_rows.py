@@ -27,7 +27,13 @@ class ThingRecordTableView(ApiModel):
     rows: list[ThingRecordRowView]
 
 
+class ThingRecordNodeView(ApiModel):
+    name: str
+    link: str
+
+
 class ThingRecordsView(ApiModel):
     node_id: int
     tables: list[ThingRecordTableView]
     creatable: list[ThingRecordTableView]
+    names: dict[str, ThingRecordNodeView]

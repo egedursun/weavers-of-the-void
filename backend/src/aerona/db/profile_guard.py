@@ -10,7 +10,7 @@ from aerona.db.base import Base
 from aerona.db.write_guard import WRITE_GUARD, write_blocked
 
 ENTITY_TABLE = "entities"
-NODE_TABLES = frozenset({"nodes", ENTITY_TABLE, "sons", "worlds", "stars", "foreign_gods"})
+NODE_TABLES = frozenset({"nodes", ENTITY_TABLE, "sons", "worlds", "stars", "foreign_gods", "creator"})
 LOCK_COLUMN = "locked"
 KEY_SEPARATOR = "."
 EXPLICIT_NODE_COLUMNS: dict[str, str] = {}

@@ -28,6 +28,7 @@ import {
   DEAD_STAR_TYPES,
   SKY_EVENT_LABEL,
 } from '@/features/cosmos/model/labels'
+import { ThingSections } from '@/features/entity/sections/ThingSections'
 import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverlay'
 import { RecordGallery } from '@/features/pantheon/RecordGallery'
 import { mediaUrl } from '@/features/pantheon/media'
@@ -233,6 +234,7 @@ export function StarWikiView({ starId }: { starId: number }) {
           )
         }
       />
+      <ThingSections nodeId={data.star.id} />
     </div>
   )
 }

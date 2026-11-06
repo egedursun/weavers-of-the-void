@@ -1,24 +1,38 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
-  ChevronDown,
+  BookOpen,
+  CalendarDays,
+  Brain,
+  Check,
+  Coins,
   Database,
+  Globe2,
+  ImageIcon,
+  Tag,
+  HeartPulse,
+  Landmark,
+  Link2,
   Lock,
+  MessageCircle,
+  Orbit,
   Pencil,
   Plus,
+  Search,
+  Sparkles,
+  Swords,
   Trash2,
   TriangleAlert,
+  X,
+  Zap,
+  type LucideIcon,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
 import {
   Dialog,
   DialogContent,
@@ -28,6 +42,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
   SelectContent,
@@ -35,17 +50,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import {
   ConfirmDialog,
   EmptyState,
+  EntityLink,
   FormRow,
+  KpiTile,
   Medallion,
   Paged,
   Section,
 } from '@/components/domain'
+import { type KpiTone } from '@/components/domain/KpiTile'
+import { RecordCombobox } from '@/components/domain/RecordCombobox'
+import { ShowMore } from '@/components/domain/ShowMore'
+import { useShowMore } from '@/components/domain/useShowMore'
+import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
 import { Label, Muted, Text } from '@/components/typography'
+import { useNames } from '@/features/entity/api/queries'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { loreKeys } from '../api/keys'
@@ -53,35 +84,223 @@ import { loreKeys } from '../api/keys'
 type TableView = components['schemas']['ThingRecordTableView']
 type ColumnView = components['schemas']['ThingRecordColumnView']
 type RowView = components['schemas']['ThingRecordRowView']
+type Names = Record<string, components['schemas']['ThingRecordNodeView']>
 type Value =
   string | number | boolean | null | unknown[] | Record<string, unknown>
 type Draft = Record<string, Value>
+type RowKey = Record<string, string | number | null>
+type Look = { icon: LucideIcon; tone: KpiTone; family: string }
 
 const WORKING = 'Working on it.'
+const ROWS_SHOWN = 25
 const NONE = '__none__'
+const LOOKS: { words: string[]; look: Look }[] = [
+  {
+    words: ['bod', 'injur', 'condition', 'prosthes', 'afflict', 'maimed'],
+    look: { icon: HeartPulse, tone: 'danger', family: 'Body' },
+  },
+  {
+    words: ['mind', 'memor', 'skill', 'trait', 'need', 'personality', 'value'],
+    look: { icon: Brain, tone: 'verdigris', family: 'Mind' },
+  },
+  {
+    words: ['bond', 'relation', 'marriage', 'member', 'oath', 'house', 'kin'],
+    look: { icon: Link2, tone: 'info', family: 'Ties' },
+  },
+  {
+    words: ['war', 'army', 'battle', 'siege', 'captive', 'feud', 'campaign'],
+    look: { icon: Swords, tone: 'danger', family: 'War' },
+  },
+  {
+    words: [
+      'stock',
+      'market',
+      'trade',
+      'goods',
+      'loan',
+      'treasur',
+      'labour',
+      'workshop',
+      'resource',
+      'production',
+    ],
+    look: { icon: Coins, tone: 'gold', family: 'Economy' },
+  },
+  {
+    words: [
+      'cult',
+      'faith',
+      'soul',
+      'rite',
+      'reverence',
+      'relic',
+      'heres',
+      'spirit',
+    ],
+    look: { icon: Sparkles, tone: 'verdigris', family: 'Faith' },
+  },
+  {
+    words: [
+      'chronicle',
+      'incident',
+      'legend',
+      'rumour',
+      'language',
+      'lexeme',
+      'tradition',
+      'book',
+      'thread',
+    ],
+    look: { icon: BookOpen, tone: 'info', family: 'Lore' },
+  },
+  {
+    words: ['polity', 'law', 'office', 'treaty', 'vassal', 'claim', 'realm'],
+    look: { icon: Landmark, tone: 'gold', family: 'Rule' },
+  },
+  {
+    words: [
+      'region',
+      'place',
+      'environment',
+      'world',
+      'star',
+      'route',
+      'ley',
+      'species',
+      'herd',
+    ],
+    look: { icon: Globe2, tone: 'success', family: 'Land' },
+  },
+]
+LOOKS.push(
+  {
+    words: ['calendar', 'season', 'epoch', 'year', 'sky'],
+    look: { icon: CalendarDays, tone: 'info', family: 'Time' },
+  },
+  {
+    words: ['cosmos', 'creator', 'son', 'god'],
+    look: { icon: Orbit, tone: 'gold', family: 'Cosmos' },
+  },
+  {
+    words: ['event', 'happening', 'disaster', 'footprint'],
+    look: { icon: Zap, tone: 'warning', family: 'Events' },
+  },
+  {
+    words: ['message', 'belief', 'prayer', 'voice', 'command'],
+    look: { icon: MessageCircle, tone: 'verdigris', family: 'Voices' },
+  },
+  {
+    words: ['flag', 'tag'],
+    look: { icon: Tag, tone: 'gold', family: 'Marks' },
+  },
+  {
+    words: ['image', 'motif', 'portrait'],
+    look: { icon: ImageIcon, tone: 'verdigris', family: 'Images and motifs' },
+  }
+)
+const PLAIN_LOOK: Look = { icon: Database, tone: 'muted', family: 'Other' }
 
-function words(name: string) {
-  return name.replaceAll('_', ' ')
+function lookOf(table: string): Look {
+  return (
+    LOOKS.find((item) => item.words.some((word) => table.includes(word)))
+      ?.look ?? PLAIN_LOOK
+  )
 }
 
-function shown(value: unknown): string {
-  if (value === null || value === undefined) return '—'
-  if (typeof value === 'boolean') return value ? 'yes' : 'no'
-  if (typeof value === 'object') return JSON.stringify(value)
-  return words(String(value))
+function title(name: string) {
+  const plain = name.replace(/_(node|entity)_id$/, '').replace(/_id$/, '')
+  return plain
+    .replaceAll('_', ' ')
+    .replace(/^./, (first) => first.toUpperCase())
+}
+
+function plural(count: number, noun: string) {
+  return `${formatInteger(count)} ${noun}${count === 1 ? '' : 's'}`
+}
+
+function heldCount(table: TableView) {
+  return table.rows.reduce((total, row) => total + row.held.length, 0)
+}
+
+function visibleColumns(table: TableView, nodeId: number) {
+  return table.columns.filter(
+    (column) =>
+      !(
+        column.owner &&
+        table.rows.every((row) => row.values[column.name] === nodeId)
+      )
+  )
+}
+
+const LINKS = new Set([
+  'entity',
+  'son',
+  'foreign-god',
+  'creator',
+  'world',
+  'star',
+])
+
+function NodeCell({ value, names }: { value: unknown; names: Names }) {
+  const known = typeof value === 'number' ? names[String(value)] : undefined
+  if (typeof value !== 'number' || !known) return <Cell value={value} />
+  return LINKS.has(known.link) ? (
+    <EntityLink kind={known.link as DrawerKind} id={String(value)} showIcon>
+      {known.name}
+    </EntityLink>
+  ) : (
+    <Text as='span' truncate>
+      {known.name}
+    </Text>
+  )
+}
+
+function empty(value: unknown) {
+  return (
+    value === null ||
+    value === undefined ||
+    value === '' ||
+    (Array.isArray(value) && value.length === 0)
+  )
+}
+
+function Cell({ value }: { value: unknown }) {
+  if (value === null || value === undefined) return <Muted as='span'>—</Muted>
+  if (typeof value === 'boolean')
+    return value ? (
+      <Check aria-label='yes' className='size-icon-sm text-success' />
+    ) : (
+      <X aria-label='no' className='size-icon-sm text-muted-foreground' />
+    )
+  if (typeof value === 'number')
+    return (
+      <Text as='span' className='tabular-nums'>
+        {Number.isInteger(value) ? formatInteger(value) : value.toFixed(2)}
+      </Text>
+    )
+  if (Array.isArray(value))
+    return (
+      <Badge size='sm' variant='outline'>
+        {value.length === 0 ? 'Empty' : plural(value.length, 'item')}
+      </Badge>
+    )
+  if (typeof value === 'object')
+    return (
+      <Badge size='sm' variant='outline'>
+        {plural(Object.keys(value).length, 'field')}
+      </Badge>
+    )
+  return (
+    <Text as='span' truncate>
+      {title(String(value))}
+    </Text>
+  )
 }
 
 function jsonText(value: Value) {
-  return value === null ? '' : JSON.stringify(value, null, 2)
-}
-
-function parsed(column: ColumnView, raw: string): Value | undefined {
-  if (raw.trim() === '') return column.nullable ? null : undefined
-  try {
-    return JSON.parse(raw) as Value
-  } catch {
-    return undefined
-  }
+  return value === null || value === undefined
+    ? ''
+    : JSON.stringify(value, null, 2)
 }
 
 function RowField({
@@ -96,9 +315,16 @@ function RowField({
   disabled: boolean
 }) {
   const [raw, setRaw] = useState(jsonText(value))
+  const label = title(column.name)
+  const known = useNames(column.owner)
+  const people = (known.data ?? []).map((entry) => ({
+    value: String(entry.id),
+    label: entry.name,
+    hint: title(entry.type),
+  }))
   return (
     <FormRow
-      label={words(column.name)}
+      label={label}
       description={column.required ? 'Required' : undefined}
     >
       {(id) => {
@@ -109,7 +335,7 @@ function RowField({
               checked={value === true}
               disabled={disabled}
               onCheckedChange={onChange}
-              aria-label={words(column.name)}
+              aria-label={label}
             />
           )
         if (column.kind === 'choice')
@@ -121,18 +347,42 @@ function RowField({
               disabled={disabled}
               onValueChange={(next) => onChange(next === NONE ? null : next)}
             >
-              <SelectTrigger id={id} aria-label={words(column.name)}>
+              <SelectTrigger id={id} aria-label={label} className='w-full'>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {column.nullable && <SelectItem value={NONE}>None</SelectItem>}
                 {column.options.map((option) => (
                   <SelectItem key={option} value={option}>
-                    {words(option)}
+                    {title(option)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+          )
+        if (column.owner && column.kind === 'integer')
+          return (
+            <RecordCombobox
+              id={id}
+              options={people}
+              value={
+                value === null || value === undefined ? null : String(value)
+              }
+              onChange={(next) =>
+                onChange(
+                  next === null
+                    ? column.nullable
+                      ? null
+                      : undefined
+                    : Number(next)
+                )
+              }
+              placeholder='Choose a record'
+              searchPlaceholder='Find by name'
+              disabled={disabled}
+              clearable={column.nullable}
+              aria-label={label}
+            />
           )
         if (column.kind === 'json')
           return (
@@ -141,9 +391,19 @@ function RowField({
               value={raw}
               disabled={disabled}
               rows={3}
+              aria-label={label}
               onChange={(event) => {
                 setRaw(event.target.value)
-                onChange(parsed(column, event.target.value))
+                const text = event.target.value.trim()
+                if (text === '') {
+                  onChange(column.nullable ? null : undefined)
+                  return
+                }
+                try {
+                  onChange(JSON.parse(text) as Value)
+                } catch {
+                  onChange(undefined)
+                }
               }}
             />
           )
@@ -155,6 +415,7 @@ function RowField({
             step={column.kind === 'integer' ? 1 : 'any'}
             value={value === null || value === undefined ? '' : String(value)}
             disabled={disabled}
+            aria-label={label}
             onChange={(event) => {
               const text = event.target.value
               if (text === '') onChange(column.nullable ? null : undefined)
@@ -167,139 +428,177 @@ function RowField({
   )
 }
 
+function changedValues(draft: Draft, row: RowView) {
+  return Object.fromEntries(
+    Object.entries(draft).filter(
+      ([name, value]) =>
+        JSON.stringify(value) !== JSON.stringify(row.values[name] ?? null)
+    )
+  )
+}
+
 function RowEditor({
   table,
   row,
   nodeId,
-  open,
-  onOpenChange,
+  onClose,
   blocked,
 }: {
   table: TableView
   row: RowView | null
   nodeId: number
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  onClose: () => void
   blocked: string | null
 }) {
-  const editing = row !== null
-  const fields = table.columns.filter((column) =>
-    editing
-      ? column.editable
-      : column.kind !== '' &&
-        !(column.primary && !column.required && !column.owner)
+  const look = lookOf(table.table)
+  const keys = table.columns.filter(
+    (column) => column.primary && !column.editable
+  )
+  const fields = table.columns.filter(
+    (column) => column.editable || (row === null && column.required)
   )
   const owner = table.columns.find((column) => column.owner)
-  const start: Draft = editing
-    ? Object.fromEntries(
-        fields.map((column) => [
-          column.name,
-          (row.values[column.name] ?? null) as Value,
-        ])
-      )
-    : Object.fromEntries(
-        fields.map((column) => [
-          column.name,
-          column.name === owner?.name ? nodeId : null,
-        ])
-      )
-  const [draft, setDraft] = useState<Draft>(start)
+  const [draft, setDraft] = useState<Draft>(() =>
+    Object.fromEntries(
+      fields.map((column) => [
+        column.name,
+        row !== null
+          ? ((row.values[column.name] ?? null) as Value)
+          : column.name === owner?.name
+            ? nodeId
+            : null,
+      ])
+    )
+  )
   const [invalid, setInvalid] = useState<string[]>([])
   const [hold, setHold] = useState(false)
   const save = useGodAction({
-    run: () => {
-      const changed = editing
-        ? Object.fromEntries(
-            Object.entries(draft).filter(
-              ([name, value]) =>
-                JSON.stringify(value) !==
-                JSON.stringify(row.values[name] ?? null)
-            )
-          )
-        : Object.fromEntries(
-            Object.entries(draft).filter(([, value]) => value !== null)
-          )
-      return editing
+    run: () =>
+      row !== null
         ? unwrap(
             api.POST('/api/actions/record_row:edit', {
               body: {
                 table: table.table,
-                key: row.key as Record<string, string | number | null>,
-                values: changed,
+                key: row.key as RowKey,
+                values: changedValues(draft, row),
                 hold,
               },
             })
           )
         : unwrap(
             api.POST('/api/actions/record_row:create', {
-              body: { table: table.table, values: changed },
+              body: {
+                table: table.table,
+                values: Object.fromEntries(
+                  Object.entries(draft).filter(([, value]) => value !== null)
+                ),
+              },
             })
-          )
-    },
-    onDone: () => onOpenChange(false),
+          ),
+    onDone: onClose,
   })
-  const missing = fields.find(
-    (column) =>
-      column.required &&
-      !editing &&
-      (draft[column.name] === null || draft[column.name] === undefined)
-  )
+  const missing =
+    row === null
+      ? fields.find(
+          (column) =>
+            column.required &&
+            (draft[column.name] === null || draft[column.name] === undefined)
+        )
+      : undefined
+  const unchanged =
+    row !== null && Object.keys(changedValues(draft, row)).length === 0
   const reason =
     blocked ??
     (save.isPending ? WORKING : null) ??
-    (invalid.length > 0 ? `Fix ${invalid.map(words).join(', ')}.` : null) ??
-    (missing ? `Fill in ${words(missing.name)}.` : null)
+    (invalid.length > 0
+      ? `Fix ${invalid.map((name) => title(name).toLowerCase()).join(', ')}.`
+      : null) ??
+    (missing ? `Fill in ${title(missing.name).toLowerCase()}.` : null) ??
+    (unchanged ? 'Change a value first.' : null)
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className='max-h-dvh overflow-y-auto sm:max-w-2xl'>
         <DialogHeader>
-          <DialogTitle>
-            {editing
-              ? `Reshape a row of ${table.label.toLowerCase()}`
-              : `Make a row of ${table.label.toLowerCase()}`}
-          </DialogTitle>
-          <DialogDescription>
-            Every change goes into the ledger and can be undone.
-          </DialogDescription>
+          <div className='flex min-w-0 items-center gap-3'>
+            <Medallion icon={look.icon} tone={look.tone} />
+            <div className='flex min-w-0 flex-col gap-0.5'>
+              <DialogTitle>
+                {row !== null
+                  ? `Reshape ${table.label.toLowerCase()}`
+                  : `Make ${table.label.toLowerCase()}`}
+              </DialogTitle>
+              <DialogDescription>
+                Every change goes into the ledger and can be undone.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
-        <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2'>
-          {fields.map((column) => (
-            <RowField
-              key={column.name}
-              column={column}
-              value={draft[column.name] ?? null}
-              disabled={save.isPending}
-              onChange={(value) => {
-                setInvalid((items) =>
-                  value === undefined
-                    ? [...new Set([...items, column.name])]
-                    : items.filter((item) => item !== column.name)
-                )
-                if (value !== undefined)
-                  setDraft({ ...draft, [column.name]: value })
-              }}
-            />
-          ))}
-        </div>
-        {editing && (
-          <label className='flex items-center gap-2'>
+        {row !== null && keys.length > 0 && (
+          <div className='flex min-w-0 flex-wrap items-center gap-1.5 rounded-md border bg-muted/30 p-2'>
+            <Label variant='overline'>Row</Label>
+            {keys.map((column) => (
+              <Badge key={column.name} size='sm' variant='outline'>
+                {`${title(column.name)} ${String(row.key[column.name] ?? '')}`}
+              </Badge>
+            ))}
+          </div>
+        )}
+        {fields.length === 0 ? (
+          <Muted>This record has nothing to reshape by hand.</Muted>
+        ) : (
+          <div className='grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2'>
+            {fields.map((column) => (
+              <RowField
+                key={column.name}
+                column={column}
+                value={draft[column.name] ?? null}
+                disabled={save.isPending}
+                onChange={(value) => {
+                  setInvalid((items) =>
+                    value === undefined
+                      ? [...new Set([...items, column.name])]
+                      : items.filter((item) => item !== column.name)
+                  )
+                  if (value !== undefined)
+                    setDraft((current) => ({
+                      ...current,
+                      [column.name]: value,
+                    }))
+                }}
+              />
+            ))}
+          </div>
+        )}
+        {row !== null && fields.length > 0 && (
+          <label className='flex min-w-0 items-start gap-3 rounded-md border p-3'>
             <Switch
               checked={hold}
               onCheckedChange={setHold}
               aria-label='Hold what I set'
             />
-            <Text as='span'>Hold what I set against the world</Text>
+            <div className='flex min-w-0 flex-col gap-0.5'>
+              <Text as='span' weight='medium'>
+                Hold what I set
+              </Text>
+              <Muted variant='caption'>
+                The world can no longer change these values until you release
+                them.
+              </Muted>
+            </div>
           </label>
         )}
         <DialogFooter>
+          <Button size='sm' variant='ghost' onClick={onClose}>
+            Cancel
+          </Button>
           <Button
             size='sm'
             disabled={reason !== null}
             disabledReason={reason ?? undefined}
             onClick={() => save.mutate()}
           >
-            {editing ? <Pencil /> : <Plus />}
-            {editing ? 'Reshape it' : 'Make it'}
+            {row !== null ? <Pencil /> : <Plus />}
+            {row !== null ? 'Reshape it' : 'Make it'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -307,87 +606,54 @@ function RowEditor({
   )
 }
 
-function RowCard({
+function RowActions({
   table,
   row,
-  nodeId,
+  onEdit,
   blocked,
 }: {
   table: TableView
   row: RowView
-  nodeId: number
+  onEdit: () => void
   blocked: string | null
 }) {
-  const [editing, setEditing] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const remove = useGodAction({
     run: () =>
       unwrap(
         api.POST('/api/actions/record_row:delete', {
-          body: {
-            table: table.table,
-            key: row.key as Record<string, string | number | null>,
-          },
+          body: { table: table.table, key: row.key as RowKey },
         })
       ),
   })
   const reason = blocked ?? (remove.isPending ? WORKING : null)
-  const values = table.columns.filter(
-    (column) =>
-      !column.owner ||
-      column.name !== table.columns.find((item) => item.owner)?.name
-  )
   return (
-    <li className='flex min-w-0 flex-col gap-2 rounded-md border bg-background p-2'>
-      <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-        {values.map((column) => (
-          <Badge
-            key={column.name}
-            size='sm'
-            variant={row.held.includes(column.name) ? 'warning' : 'secondary'}
-          >
-            {row.held.includes(column.name) && <Lock />}
-            {`${words(column.name)}: ${shown(row.values[column.name])}`}
-          </Badge>
-        ))}
-      </div>
-      <div className='flex min-w-0 justify-end gap-1'>
-        <Button
-          size='icon-sm'
-          variant='ghost'
-          aria-label={`Reshape this row of ${table.label.toLowerCase()}`}
-          disabled={reason !== null}
-          disabledReason={reason ?? undefined}
-          onClick={() => setEditing(true)}
-        >
-          <Pencil />
-        </Button>
-        <Button
-          size='icon-sm'
-          variant='ghost'
-          aria-label={`Unmake this row of ${table.label.toLowerCase()}`}
-          disabled={reason !== null}
-          disabledReason={reason ?? undefined}
-          onClick={() => setConfirming(true)}
-        >
-          <Trash2 />
-        </Button>
-      </div>
-      {editing && (
-        <RowEditor
-          table={table}
-          row={row}
-          nodeId={nodeId}
-          open={editing}
-          onOpenChange={setEditing}
-          blocked={blocked}
-        />
-      )}
+    <div className='flex items-center justify-end gap-1'>
+      <Button
+        size='icon-sm'
+        variant='ghost'
+        aria-label='Reshape this row'
+        disabled={reason !== null}
+        disabledReason={reason ?? undefined}
+        onClick={onEdit}
+      >
+        <Pencil />
+      </Button>
+      <Button
+        size='icon-sm'
+        variant='ghost'
+        aria-label='Unmake this row'
+        disabled={reason !== null}
+        disabledReason={reason ?? undefined}
+        onClick={() => setConfirming(true)}
+      >
+        <Trash2 />
+      </Button>
       <ConfirmDialog
         open={confirming}
         onOpenChange={setConfirming}
-        title={`Unmake this row of ${table.label.toLowerCase()}?`}
-        desc='It is removed from the world; the ledger can bring it back.'
+        title='Unmake this row?'
+        desc={`It leaves the ${table.label.toLowerCase()} of this thing; the ledger can bring it back.`}
         destructive
         confirmText='Unmake it'
         isLoading={remove.isPending}
@@ -396,75 +662,228 @@ function RowCard({
           remove.mutate()
         }}
       />
+    </div>
+  )
+}
+
+function RowCard({
+  table,
+  row,
+  index,
+  columns,
+  nodeId,
+  names,
+  onEdit,
+  blocked,
+}: {
+  table: TableView
+  row: RowView
+  index: number
+  columns: ColumnView[]
+  nodeId: number
+  names: Names
+  onEdit: () => void
+  blocked: string | null
+}) {
+  const look = lookOf(table.table)
+  const keys = table.columns.filter(
+    (column) =>
+      column.primary &&
+      !column.editable &&
+      !(column.owner && row.key[column.name] === nodeId)
+  )
+  const shown = columns.filter(
+    (column) => !(column.primary && !column.editable)
+  )
+  const filled = shown.filter(
+    (column) =>
+      !empty(row.values[column.name]) || row.held.includes(column.name)
+  )
+  const blank = shown.length - filled.length
+  return (
+    <li className='flex min-w-0 flex-col gap-3 rounded-lg border bg-card p-3 shadow-xs'>
+      <div className='flex min-w-0 items-center gap-2'>
+        <Medallion icon={look.icon} tone={look.tone} size='sm' />
+        <Text as='span' weight='semibold'>{`Row ${index + 1}`}</Text>
+        {keys.map((column) => (
+          <Badge key={column.name} size='sm' variant='outline'>
+            {`${title(column.name)} ${String(row.key[column.name] ?? '')}`}
+          </Badge>
+        ))}
+        {row.held.length > 0 && (
+          <Badge size='sm' variant='warning'>
+            <Lock />
+            {`${formatInteger(row.held.length)} held`}
+          </Badge>
+        )}
+        <div className='ml-auto'>
+          <RowActions
+            table={table}
+            row={row}
+            onEdit={onEdit}
+            blocked={blocked}
+          />
+        </div>
+      </div>
+      <dl className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4'>
+        {filled.map((column) => {
+          const held = row.held.includes(column.name)
+          return (
+            <div
+              key={column.name}
+              className={
+                held
+                  ? 'flex min-w-0 flex-col gap-1 rounded-md border border-warning/50 bg-warning/10 px-2.5 py-2'
+                  : 'flex min-w-0 flex-col gap-1 rounded-md border bg-muted/30 px-2.5 py-2'
+              }
+            >
+              <Label as='dt' variant='overline' truncate>
+                {title(column.name)}
+              </Label>
+              <dd className='flex min-w-0 items-center gap-1.5'>
+                {held && (
+                  <Lock
+                    aria-label='held'
+                    className='size-icon-xs shrink-0 text-warning'
+                  />
+                )}
+                {column.owner ? (
+                  <NodeCell value={row.values[column.name]} names={names} />
+                ) : (
+                  <Cell value={row.values[column.name]} />
+                )}
+              </dd>
+            </div>
+          )
+        })}
+      </dl>
+      {blank > 0 && (
+        <Muted variant='caption'>
+          {`${plural(blank, 'empty field')}; reshape the row to fill ${blank === 1 ? 'it' : 'them'}.`}
+        </Muted>
+      )}
     </li>
   )
 }
 
-function TableGroup({
+function RecordSheet({
   table,
   nodeId,
+  names,
+  onClose,
   blocked,
 }: {
   table: TableView
   nodeId: number
+  names: Names
+  onClose: () => void
   blocked: string | null
 }) {
-  const [making, setMaking] = useState(false)
+  const look = lookOf(table.table)
+  const columns = visibleColumns(table, nodeId)
+  const [editing, setEditing] = useState<RowView | 'new' | null>(null)
+  const page = useShowMore(table.rows, ROWS_SHOWN)
   return (
-    <Collapsible className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/20 p-2'>
-      <div className='flex min-w-0 items-center justify-between gap-2'>
-        <CollapsibleTrigger asChild>
-          <Button size='sm' variant='ghost' className='min-w-0 justify-start'>
-            <ChevronDown />
-            <Text as='span' weight='medium' truncate>
-              {table.label}
-            </Text>
-            <Badge size='sm' variant='outline'>
-              {table.rows.length}
-            </Badge>
+    <Sheet open onOpenChange={(open) => !open && onClose()}>
+      <SheetContent
+        side='right'
+        className='flex w-full flex-col gap-4 sm:max-w-3xl'
+      >
+        <SheetHeader>
+          <div className='flex min-w-0 items-center gap-3'>
+            <Medallion icon={look.icon} tone={look.tone} />
+            <div className='flex min-w-0 flex-col gap-0.5'>
+              <SheetTitle>{table.label}</SheetTitle>
+              <SheetDescription>
+                {`${look.family} · ${plural(table.rows.length, 'row')} · ${formatInteger(heldCount(table))} held`}
+              </SheetDescription>
+            </div>
+          </div>
+        </SheetHeader>
+        <div className='flex min-w-0 justify-end px-4'>
+          <Button
+            size='sm'
+            disabled={blocked !== null}
+            disabledReason={blocked ?? undefined}
+            onClick={() => setEditing('new')}
+          >
+            <Plus />
+            Make a row
           </Button>
-        </CollapsibleTrigger>
-        <Button
-          size='icon-sm'
-          variant='ghost'
-          aria-label={`Make a row of ${table.label.toLowerCase()}`}
-          disabled={blocked !== null}
-          disabledReason={blocked ?? undefined}
-          onClick={() => setMaking(true)}
-        >
-          <Plus />
-        </Button>
-      </div>
-      <CollapsibleContent>
-        <ul className='flex min-w-0 flex-col gap-2'>
-          <Paged items={table.rows} as='li'>
-            {(row) => (
+        </div>
+        <ScrollArea className='min-h-0 flex-1 px-4'>
+          <ul className='flex min-w-0 flex-col gap-3 pb-4'>
+            {page.visible.map((row, index) => (
               <RowCard
                 key={JSON.stringify(row.key)}
                 table={table}
                 row={row}
+                index={index}
+                columns={columns}
                 nodeId={nodeId}
+                names={names}
+                onEdit={() => setEditing(row)}
                 blocked={blocked}
               />
-            )}
-          </Paged>
-        </ul>
-      </CollapsibleContent>
-      {making && (
-        <RowEditor
-          table={table}
-          row={null}
-          nodeId={nodeId}
-          open={making}
-          onOpenChange={setMaking}
-          blocked={blocked}
-        />
-      )}
-    </Collapsible>
+            ))}
+          </ul>
+          {page.total > page.initial && (
+            <div className='flex min-w-0 justify-center pb-4'>
+              <ShowMore state={page} noun={['row', 'rows']} />
+            </div>
+          )}
+        </ScrollArea>
+        {editing !== null && (
+          <RowEditor
+            table={table}
+            row={editing === 'new' ? null : editing}
+            nodeId={nodeId}
+            onClose={() => setEditing(null)}
+            blocked={blocked}
+          />
+        )}
+      </SheetContent>
+    </Sheet>
   )
 }
 
-function MakeAnyRow({
+function KindCard({ table, onOpen }: { table: TableView; onOpen: () => void }) {
+  const look = lookOf(table.table)
+  const held = heldCount(table)
+  return (
+    <li className='min-w-0'>
+      <Button
+        variant='outline'
+        size='tile'
+        aria-label={`Open ${table.label.toLowerCase()}`}
+        onClick={onOpen}
+      >
+        <Medallion icon={look.icon} tone={look.tone} size='sm' />
+        <div className='flex min-w-0 flex-1 flex-col gap-1'>
+          <Text as='span' weight='medium' truncate>
+            {table.label}
+          </Text>
+          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+            <Badge size='sm' variant='secondary'>
+              {plural(table.rows.length, 'row')}
+            </Badge>
+            {held > 0 && (
+              <Badge size='sm' variant='warning'>
+                <Lock />
+                {`${formatInteger(held)} held`}
+              </Badge>
+            )}
+            <Muted as='span' variant='caption'>
+              {look.family}
+            </Muted>
+          </div>
+        </div>
+      </Button>
+    </li>
+  )
+}
+
+function MakeRecord({
   tables,
   nodeId,
   blocked,
@@ -477,48 +896,52 @@ function MakeAnyRow({
   const [open, setOpen] = useState(false)
   const table = tables.find((item) => item.table === picked)
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-lg border border-dashed p-3'>
-      <Label variant='overline'>
-        Make a record this thing does not have yet
-      </Label>
-      <div className='flex min-w-0 flex-wrap items-end gap-2'>
-        <div className='flex min-w-0 flex-1 basis-60 flex-col gap-1'>
-          <Select
-            value={picked}
-            onValueChange={setPicked}
-            disabled={blocked !== null}
-          >
-            <SelectTrigger aria-label='Kind of record'>
-              <SelectValue placeholder='Choose a kind of record' />
-            </SelectTrigger>
-            <SelectContent>
-              {tables.map((item) => (
-                <SelectItem key={item.table} value={item.table}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <Button
-          size='sm'
-          disabled={blocked !== null || !table}
-          disabledReason={
-            blocked ?? (table ? undefined : 'Choose a kind of record first.')
-          }
-          onClick={() => setOpen(true)}
+    <div className='flex min-w-0 flex-wrap items-end gap-3 rounded-lg border border-dashed p-3'>
+      <Medallion icon={Plus} tone='gold' size='sm' />
+      <div className='flex min-w-0 flex-1 basis-60 flex-col gap-1.5'>
+        <Text as='span' weight='medium'>
+          Give this thing a record it does not have
+        </Text>
+        <Select
+          value={picked}
+          onValueChange={setPicked}
+          disabled={blocked !== null || tables.length === 0}
         >
-          <Plus />
-          Make it
-        </Button>
+          <SelectTrigger aria-label='Kind of record'>
+            <SelectValue
+              placeholder={
+                tables.length === 0
+                  ? 'It already has every kind'
+                  : 'Choose a kind of record'
+              }
+            />
+          </SelectTrigger>
+          <SelectContent>
+            {tables.map((item) => (
+              <SelectItem key={item.table} value={item.table}>
+                {`${item.label} · ${lookOf(item.table).family}`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
+      <Button
+        size='sm'
+        disabled={blocked !== null || !table}
+        disabledReason={
+          blocked ?? (table ? undefined : 'Choose a kind of record first.')
+        }
+        onClick={() => setOpen(true)}
+      >
+        <Plus />
+        Make it
+      </Button>
       {table && open && (
         <RowEditor
           table={table}
           row={null}
           nodeId={nodeId}
-          open={open}
-          onOpenChange={setOpen}
+          onClose={() => setOpen(false)}
           blocked={blocked}
         />
       )}
@@ -528,6 +951,8 @@ function MakeAnyRow({
 
 export function RecordRowsSection({ nodeId }: { nodeId: number }) {
   const { reason } = useGodGate()
+  const [query, setQuery] = useState('')
+  const [opened, setOpened] = useState<string | null>(null)
   const view = useQuery({
     queryKey: [...loreKeys.entity(nodeId), 'record-rows'],
     queryFn: () =>
@@ -538,17 +963,30 @@ export function RecordRowsSection({ nodeId }: { nodeId: number }) {
       ),
     retry: false,
   })
-  const data = view.data
-  const present = new Set((data?.tables ?? []).map((table) => table.table))
-  const rows = (data?.tables ?? []).reduce(
-    (total, table) => total + table.rows.length,
-    0
-  )
+  const tables = useMemo(() => view.data?.tables ?? [], [view.data])
+  const found = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    if (!needle) return tables
+    return tables.filter(
+      (table) =>
+        table.label.toLowerCase().includes(needle) ||
+        lookOf(table.table).family.toLowerCase().includes(needle) ||
+        table.rows.some((row) =>
+          Object.values(row.values).some((value) =>
+            String(value).toLowerCase().includes(needle)
+          )
+        )
+    )
+  }, [tables, query])
+  const rows = tables.reduce((total, table) => total + table.rows.length, 0)
+  const held = tables.reduce((total, table) => total + heldCount(table), 0)
+  const open = tables.find((table) => table.table === opened) ?? null
+  const present = new Set(tables.map((table) => table.table))
   return (
     <Section
       id='section-records'
       title='Every record'
-      description='Every typed record that belongs to this thing, straight from the world. Change or hold any value, unmake a row or make a new one.'
+      description='Every typed record the world keeps about this thing. Open a kind to reshape or hold any value, unmake a row or make a new one.'
       icon={Database}
       tone='info'
     >
@@ -558,37 +996,78 @@ export function RecordRowsSection({ nodeId }: { nodeId: number }) {
           title='The records could not be read'
           description={view.error.message}
         />
-      ) : !data ? (
-        <Muted>Reading the records.</Muted>
+      ) : !view.data ? (
+        <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3'>
+          <Skeleton className='h-control-lg w-full' />
+          <Skeleton className='h-control-lg w-full' />
+          <Skeleton className='h-control-lg w-full' />
+        </div>
       ) : (
-        <div className='flex min-w-0 flex-col gap-3'>
-          <div className='flex min-w-0 items-center gap-2'>
-            <Medallion icon={Database} tone='info' size='sm' />
-            <Muted variant='caption'>{`${rows} rows in ${data.tables.length} kinds of record`}</Muted>
+        <div className='@container/records flex min-w-0 flex-col gap-4'>
+          <div className='grid min-w-0 grid-cols-1 gap-3 @md/records:grid-cols-3'>
+            <KpiTile
+              label='Kinds of record'
+              value={tables.length}
+              icon={Database}
+              tone='info'
+            />
+            <KpiTile label='Rows' value={rows} icon={BookOpen} tone='gold' />
+            <KpiTile
+              label='Held values'
+              value={held}
+              icon={Lock}
+              tone={held > 0 ? 'warning' : 'muted'}
+            />
           </div>
-          {data.tables.length === 0 ? (
+          {tables.length === 0 ? (
             <EmptyState
               icon={Database}
               title='No records yet'
               description='The world has written nothing about this thing yet.'
             />
           ) : (
-            <Paged items={data.tables}>
-              {(table) => (
-                <TableGroup
-                  key={table.table}
-                  table={table}
-                  nodeId={nodeId}
-                  blocked={reason()}
-                />
+            <>
+              <Input
+                type='search'
+                leadingIcon={Search}
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder='Find a kind of record or a value'
+                aria-label='Find a kind of record or a value'
+              />
+              {found.length === 0 ? (
+                <Muted>Nothing matches that search.</Muted>
+              ) : (
+                <ul className='grid min-w-0 grid-cols-1 gap-2 @md/records:grid-cols-2 @3xl/records:grid-cols-3'>
+                  <Paged items={found} as='li'>
+                    {(table) => (
+                      <KindCard
+                        key={table.table}
+                        table={table}
+                        onOpen={() => setOpened(table.table)}
+                      />
+                    )}
+                  </Paged>
+                </ul>
               )}
-            </Paged>
+            </>
           )}
-          <MakeAnyRow
-            tables={data.creatable.filter((table) => !present.has(table.table))}
+          <MakeRecord
+            tables={view.data.creatable.filter(
+              (table) => !present.has(table.table)
+            )}
             nodeId={nodeId}
             blocked={reason()}
           />
+          {open && (
+            <RecordSheet
+              table={open}
+              nodeId={nodeId}
+              names={view.data.names}
+              onClose={() => setOpened(null)}
+              blocked={reason()}
+            />
+          )}
         </div>
       )}
     </Section>
