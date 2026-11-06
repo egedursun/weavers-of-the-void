@@ -77,7 +77,7 @@ export function SonPage({ id }: DrawerPageProps) {
       <EmptyState
         icon={Crown}
         title='No such son'
-        description='He may have been removed from the pantheon.'
+        description='They may have been removed from the pantheon.'
       />
     )
   const data = detail.data

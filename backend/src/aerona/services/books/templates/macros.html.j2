@@ -137,7 +137,7 @@
 {% if article.son.plan %}<div class="box"><span class="label">Plan</span>{{ article.son.plan }}</div>{% endif %}
 {% if article.son.standing_order %}<div class="box"><span class="label">Standing order{% if article.son.order_absolute %}, absolute{% endif %}</span>{{ article.son.standing_order }}</div>{% endif %}
 {{ epic(article.son.epic) }}
-{% if article.relations %}<p class="sublabel">Brothers and sisters</p>{{ stats(article.relations) }}{% endif %}
+{% if article.relations %}<p class="sublabel">Siblings</p>{{ stats(article.relations) }}{% endif %}
 {% if article.bonds or article.past_bonds %}<p class="sublabel">Ties</p><ul class="bonds">{% for bond in article.bonds %}<li>{{ bond }}</li>{% endfor %}{% for bond in article.past_bonds %}<li class="muted"><span class="relation">once</span>{{ bond }}</li>{% endfor %}</ul>{% endif %}
 {% if article.fate %}<p class="sublabel">Fate</p><ul class="timeline">{% for line in article.fate %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
 {% if article.creations %}<p class="sublabel">Creations · {{ article.creations | length }}</p><p class="small">{% for id, name in article.creations %}{{ link("entity", id, name, single) }}{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}

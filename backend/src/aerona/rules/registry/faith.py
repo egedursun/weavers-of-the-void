@@ -29,5 +29,5 @@ class FaithRules:
         50, 1, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Faith: exponent of a cult's contribution beyond saturation (%; 100 linear, 50 square root)"
     )
     essence_income_cap_pct: int = rule(
-        25, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "A son's essence income from faith is at most this share of his essence cap per epoch (0: unlimited)"
+        25, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "A son's essence income from faith is at most this share of their essence cap per epoch (0: unlimited)"
     )

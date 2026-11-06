@@ -480,7 +480,7 @@ async def _son_claims(ctx: TickContext, state: BirthState) -> int | None:
         return None
     previous = son.current_world_id
     son.current_world_id = state.world.id
-    await BondRepository(ctx.session).connect(BondDraft(son.id, state.regions[0].id, BondKind.PROTECTS, ctx.epoch, "the world he birthed"))
+    await BondRepository(ctx.session).connect(BondDraft(son.id, state.regions[0].id, BondKind.PROTECTS, ctx.epoch, "the world they birthed"))
     return previous
 
 

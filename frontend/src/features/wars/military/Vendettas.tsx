@@ -231,7 +231,7 @@ function StartFeud({
           icon={ScrollText}
           value={cause}
           onChange={setCause}
-          placeholder='a brother slain at the ford'
+          placeholder='a kinsman slain at the ford'
         />
       </FieldGrid>
       <Button

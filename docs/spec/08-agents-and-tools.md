@@ -1074,7 +1074,7 @@ Tool summary:
 | 11 | armagan_ver | give_gift | always | 0 (essence gift) / 1 (worshipper transfer) | gift amount | armagan_tur |
 | 12 | meydan_oku | challenge | always | 1 | 0 | – |
 | 13 | isyan_et | rebel | always | 0 | 0 | once (while not rebel) |
-| 14 | babaya_dua | pray_to_father | always | 0 | 0 | dua_tur |
+| 14 | babaya_dua | pray_to_creator | always | 0 | 0 | dua_tur |
 | 15 | bag_kur | make_bond | always | 0 | bag_bedel | bag_tavan |
 | 16 | kaynak_sag | harvest_resource | always | 0 | (gains) | once per resource |
 | 17–39 | `<type>` creation tools (23) | create_* etc. | per type tier | 1 (some free) | computed | – |
@@ -1230,7 +1230,7 @@ Tool summary:
 - Validation: already `asi` → "You are already in rebellion."; loyalty (`tutku.sadakat ?? sadakat_varsayilan`) ≥ `isyan_sadakat` → "Your loyalty ({n}) does not permit rebellion."
 - Effect: `tanriguc.js isyanIlan(son, epoch, text)` (same path as the engine's spontaneous rebellion): `asi=1`; loyalty −= `isyan_sadakat_kayip`; ambition += `isyan_hirs` (clamped 0–100); for every other son with loyalty ≥ `isyan_sadik_esik`: relation −= `isyan_kardes_iliski`; chronicle 'isyan': "{son} rebelled against their father {creator}: \"{proclamation}\"". Result: "Rebellion declared. You are no longer bound to your father's commands; every epoch you will steal from his essence."
 
-**14. `babaya_dua` → `pray_to_father`** (free; Limit `dua_tur`)
+**14. `babaya_dua` → `pray_to_creator`** (free; Limit `dua_tur`)
 - Description: "You pray to your father, the creator god. You may have a request; the answer appears among words in coming epochs. Does not spend an action, once per epoch."
 - Input: `mesaj` string 5–600; `istek` (request) enum `oz` essence | `kutsama` blessing | `izin` permission | `intikam` revenge | `af` forgiveness | `hicbiri` none.
 - Validation: `ctx.duaEdildi >= dua_tur` → "You already prayed this epoch (World rule OGUL_ARAC.dua_tur = {n})."

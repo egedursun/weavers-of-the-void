@@ -15,7 +15,7 @@ class SonToolId(StrEnum):
     GIVE_GIFT = "give_gift"
     CHALLENGE = "challenge"
     REBEL = "rebel"
-    PRAY_TO_FATHER = "pray_to_father"
+    PRAY_TO_CREATOR = "pray_to_creator"
     MAKE_BOND = "make_bond"
     HARVEST_RESOURCE = "harvest_resource"
     CREATE_REGION = "create_region"

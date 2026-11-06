@@ -35,11 +35,11 @@ const SCHEMES: readonly { kind: SchemeKind; label: string; rule: string }[] = [
 ]
 
 const SCHEME_TEXT: Record<SchemeKind, string> = {
-  rite: 'A sure rite that adds devotion to his return.',
+  rite: 'A sure rite that adds devotion to their return.',
   descent:
-    'He goes down to the dead: much devotion if it works, a long sleep if it fails.',
+    'They go down to the dead: much devotion if it works, a long sleep if it fails.',
   bargain:
-    'He trades with an awake foreign god for devotion; one of the faithful pays.',
+    'They trade with an awake foreign god for devotion; one of the faithful pays.',
 }
 
 export function SiblingSchemes({ son }: { son: SonRecord }) {
@@ -81,12 +81,12 @@ export function SiblingSchemes({ son }: { son: SonRecord }) {
   const blocked = reason() ?? (sibling ? null : 'Choose a sibling first.')
   return (
     <div className='flex min-w-0 flex-col gap-3'>
-      <Label variant='overline'>His siblings</Label>
+      <Label variant='overline'>Their siblings</Label>
       {awake.length === 0 ? (
-        <Muted>No sibling is awake to scheme for him or against him.</Muted>
+        <Muted>No sibling is awake to scheme for them or against them.</Muted>
       ) : (
         <>
-          <FormRow label='Sibling' description='Pays from his own essence.'>
+          <FormRow label='Sibling' description='Pays from their own essence.'>
             {(id) => (
               <Select
                 value={siblingId === null ? '' : String(siblingId)}
@@ -124,21 +124,21 @@ export function SiblingSchemes({ son }: { son: SonRecord }) {
           </FormRow>
           <div className='flex min-w-0 flex-wrap items-center gap-2'>
             <ActionButton
-              label='Scheme for his return'
+              label='Scheme for their return'
               icon={HandHeart}
               blocked={blocked ?? short(schemeCost)}
               pending={plot.isPending}
               onRun={() => plot.mutate()}
             />
             <ActionButton
-              label='Scatter his bones'
+              label='Scatter their bones'
               icon={Bone}
               variant='destructive'
               blocked={blocked ?? short(scatterCost)}
               pending={scatter.isPending}
               confirm={{
                 title: `Scatter the bones of ${son.name}?`,
-                description: `${sibling?.name ?? 'The sibling'} pays ${scatterCost ?? 'its'} essence; every resurrection cult loses ${scatterLoss ?? 'some'} devotion and becomes his enemy.`,
+                description: `${sibling?.name ?? 'The sibling'} pays ${scatterCost ?? 'its'} essence; every resurrection cult loses ${scatterLoss ?? 'some'} devotion and becomes their enemy.`,
                 confirmLabel: 'Scatter them',
               }}
               onRun={() => scatter.mutate()}

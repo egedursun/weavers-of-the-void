@@ -11,7 +11,7 @@ class EmptyWorldRules:
         0,
         1000,
         RuleGroup.COSMOS_AND_TRAVEL,
-        "When an empty but habitable world stays empty this many epochs, a son turns to it on his own (0 = immediately)",
+        "When an empty but habitable world stays empty this many epochs, a son turns to it unprompted (0 = immediately)",
     )
     first_people_essence: int = rule(
         30, 0, 10000, RuleGroup.COSMOS_AND_TRAVEL, "Essence reward for the son who creates the first people, settlement or named mortal of an empty world"

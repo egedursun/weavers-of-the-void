@@ -24,7 +24,7 @@ export function CreatorCult({
       title='Cult'
       description={
         cult.length > 0
-          ? `${plural(cult.length, 'community', 'communities')} worship him directly · total faith ${formatDecimal(faith, 1)}`
+          ? `${plural(cult.length, 'community', 'communities')} worship the Creator directly · total faith ${formatDecimal(faith, 1)}`
           : undefined
       }
       level={3}

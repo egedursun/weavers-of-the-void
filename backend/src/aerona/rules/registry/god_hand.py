@@ -17,7 +17,11 @@ class GodHandRules:
     rekindle_brightness: int = rule(75, 0, 100, RuleGroup.INTERVENTION, "Brightness of a rekindled star")
     rekindle_leak_drain: int = rule(20, 0, 100, RuleGroup.INTERVENTION, "Leak drawn from the worlds of a rekindled star")
     dispatch_donor_min_sons: int = rule(
-        2, 1, 100, RuleGroup.INTERVENTION, "In automatic distribution, minimum active sons (including himself) that must remain on his world for a son to leave"
+        2,
+        1,
+        100,
+        RuleGroup.INTERVENTION,
+        "In automatic distribution, minimum active sons (including the leaving one) that must remain on its world for a son to leave",
     )
     assignment_protection_epochs: int = rule(
         3, 0, 1000, RuleGroup.INTERVENTION, "Epochs during which automatic distribution does not touch a son the god manually sent to a world"

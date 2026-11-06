@@ -117,6 +117,7 @@ export type RecordActionSpec = {
   pickers?: Record<string, PickerSpec>
   defaults?: (ctx: EntityContext) => Record<string, FieldValue>
   hidden?: readonly string[]
+  omit?: (ctx: EntityContext) => readonly string[]
   labels?: Record<string, string>
   multiline?: readonly string[]
   destructive?: boolean
@@ -199,6 +200,74 @@ export const RECORD_ACTIONS: readonly RecordActionSpec[] = [
     destructive: true,
     confirm: will('will be swallowed by the earth.'),
     world: true,
+  },
+  {
+    id: 'creed:found',
+    route: catalogueRoute('/api/actions/creed:found'),
+    section: 'society',
+    self: 'founder_id',
+    icon: Megaphone,
+    applies: (ctx) => livingMortal(ctx) && !ctx.dead,
+    confirm: will('will found a creed and begin to teach it.'),
+  },
+  {
+    id: 'rite:devise',
+    route: catalogueRoute('/api/actions/rite:devise'),
+    section: 'beyond',
+    self: 'inventor_id',
+    icon: Wand,
+    applies: (ctx) => livingMortal(ctx) && !ctx.dead,
+    labels: { school: 'School of magic' },
+  },
+  {
+    id: 'war:ordeal',
+    route: catalogueRoute('/api/actions/war:ordeal'),
+    section: 'war',
+    self: 'first_id',
+    icon: Swords,
+    applies: (ctx) => livingMortal(ctx) && !ctx.dead,
+    pickers: {
+      second_id: { source: 'entity', types: ['mortal'], statuses: ['canon'] },
+    },
+    labels: { second_id: 'Against', context: 'Kind of ordeal' },
+  },
+  {
+    id: 'army:command',
+    route: catalogueRoute('/api/actions/army:command'),
+    section: 'war',
+    self: 'army_id',
+    icon: Flag,
+    applies: canonOf(is('army')),
+    pickers: { target_region_id: { source: 'entity', types: ['region'] } },
+    labels: { target_region_id: 'March on', forced_march: 'Forced march' },
+  },
+  {
+    id: 'war:impose_peace',
+    route: catalogueRoute('/api/actions/war:impose_peace'),
+    section: 'war',
+    self: 'victor_id',
+    icon: Handshake,
+    applies: (ctx) => community(ctx) && ctx.wars.length > 0,
+    labels: { war_id: 'War', terms: 'Terms the victor imposes' },
+    confirm: will('will dictate the peace.'),
+  },
+  {
+    id: 'creation:reward',
+    route: catalogueRoute('/api/actions/creation:reward'),
+    section: 'power',
+    self: 'entity_id',
+    icon: Scale,
+    applies: (ctx) => Boolean(ctx.detail.insight.reward),
+    defaults: (ctx) => ({
+      taken_back_pct: ctx.detail.insight.reward?.taken_back_pct ?? 0,
+      thread_reverted: ctx.detail.insight.reward?.thread_reverted ?? false,
+    }),
+    omit: (ctx) =>
+      ctx.detail.insight.reward?.has_thread ? [] : ['thread_reverted'],
+    labels: {
+      taken_back_pct: 'Reward taken back (%)',
+      thread_reverted: 'Revert the fate thread it moved',
+    },
   },
   {
     id: 'mortal:fate',

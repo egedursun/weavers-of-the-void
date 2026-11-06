@@ -17,7 +17,7 @@ def _lines(prefix: str, *texts: str) -> tuple[Line, ...]:
 WRATH_SIGNS = _lines(
     "gods.mood.wrath",
     "{creator}'s anger overflowed: {disaster} fell upon {place}. The sky darkened before anyone could pray.",
-    "The people of {place} had forgotten to look to the sky; {creator} reminded them. His anger fell as {disaster}.",
+    "The people of {place} had forgotten to look to the sky; {creator} reminded them. The Creator's anger fell as {disaster}.",
     "The sky split above {place}: {creator}'s patience ran out, and {disaster} followed.",
     "{creator} turned to {place} in an angry silence; {disaster} broke that silence.",
 )
@@ -104,7 +104,7 @@ REBELLION_ENDED = Line(
 )
 CURSE_REASON_BLOODY_HAND = "{victim}'s blood did not stay on the ground"
 CURSE_REASON_TEMPLE = "{creator} did not forget the hand that tore down {place}"
-CURSE_REASON_CURSED = "anger overflowing, he cursed the blood of the cursed too"
+CURSE_REASON_CURSED = "anger overflowing, the curse fell on the blood of the cursed too"
 CURSE_REASON_KILLER = "the hand that took {count} lives became the target of the creator's anger"
 
 REPUTATION_CHANGE = Line("gods.reputation.change", "{son} now sees the creator as a {label} god.")

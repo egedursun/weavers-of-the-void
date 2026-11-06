@@ -106,7 +106,12 @@ class RewardInsight(ApiModel):
     fade_pct: int
     repeats: int
     taken_back_pct: int
+    has_thread: bool
     thread_reverted: bool
+    partner: NodeRef | None
+    partner_xp: int
+    partner_renown: int
+    reason: str | None
 
 
 class EntityInsight(ApiModel):

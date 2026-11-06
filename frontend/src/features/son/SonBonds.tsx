@@ -120,7 +120,7 @@ export function BondList({
         icon={Link2}
         size='compact'
         title='No trace in the world yet'
-        description='Bonds appear as he creates, blesses, curses and loves.'
+        description='Bonds appear as they create, bless, curse and love.'
       />
     )
   return (
@@ -287,7 +287,7 @@ export function SonBonds({
     (bond) => !(bond.kind === 'worships' && !bond.outgoing)
   )
   return (
-    <Section title='His hand in the world' level={3}>
+    <Section title='Their hand in the world' level={3}>
       <BondList bonds={shown} total={total} editable />
       <CreateBondForm sourceId={sonId} />
     </Section>

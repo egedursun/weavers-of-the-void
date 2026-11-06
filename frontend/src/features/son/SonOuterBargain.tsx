@@ -6,7 +6,7 @@ export function SonOuterBargain({ son }: { son: SonRecord }) {
   return (
     <Section
       title='Bargains with the outside'
-      description={`Make ${son.name} strike a bargain with a thing beyond the stars, or forbid him to.`}
+      description={`Make ${son.name} strike a bargain with a thing beyond the stars, or forbid them to.`}
       level={3}
     >
       <OuterBargainForm sons={[son]} fixedSonId={son.id} />

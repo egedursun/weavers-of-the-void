@@ -39,7 +39,7 @@ STATS: dict[Stat, StatSpec] = {
         StatSpec(Stat.AGILITY, "Agility", "AGI", StatGroup.BODY, lambda rules: "Initiative: who acts first in the epoch."),
         StatSpec(Stat.WISDOM, "Wisdom", "WIS", StatGroup.MIND, lambda rules: "Wisdom duels; sees the world more widely; harvests resources more efficiently."),
         StatSpec(Stat.CUNNING, "Cunning", "CUN", StatGroup.MIND, lambda rules: "Cunning duels, initiative and inciting war."),
-        StatSpec(Stat.WILL, "Will", "WIL", StatGroup.MIND, lambda rules: "Resists punishments and curses; with low loyalty he disobeys orders."),
+        StatSpec(Stat.WILL, "Will", "WIL", StatGroup.MIND, lambda rules: "Resists punishments and curses; with low loyalty they disobey orders."),
         StatSpec(
             Stat.CREATIVITY,
             "Creativity",

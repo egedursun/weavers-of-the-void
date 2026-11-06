@@ -29,7 +29,7 @@ NAMING LANGUAGES (each world has its own sound system; a record is named and jud
 {% macro society_lines(society) -%}
 {% set lines = [] %}
 {% if society.tier_label %}{% set _ = lines.append("Civilization tier: " ~ society.tier_label) %}{% endif %}
-{% if society.sanity is not none %}{% set _ = lines.append("Sanity: " ~ society.sanity ~ "/100" ~ (" — THEIR MINDS ARE CLOUDED: strange rites, voices, misread signs" if society.clouded else "")) %}{% endif %}
+{% if society.sanity is not none %}{% set _ = lines.append("Sanity: " ~ society.sanity ~ "/100" ~ (" — THEIR MINDS ARE CLOUDED: erratic rites, voices, misread signs" if society.clouded else "")) %}{% endif %}
 {% if society.classes %}{% set _ = lines.append("Society: " ~ society_classes(society.classes)) %}{% endif %}
 {% if society.relations %}{% set _ = lines.append("Relations with communities: " ~ community_relations(society.relations)) %}{% endif %}
 {% if society.wars %}{% set _ = lines.append("Ongoing wars: " ~ war_lines(society.wars)) %}{% endif %}

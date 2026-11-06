@@ -7,17 +7,19 @@ export function sonHints(
   if (!hints) return []
   const lines: string[] = []
   if (hints.sons_waiting.includes(name))
-    lines.push('He has not acted this epoch yet.')
+    lines.push('They have not acted this epoch yet.')
   if (hints.sons_without_orders.includes(name))
-    lines.push('He has no standing order; give him one to steer his turn.')
+    lines.push(
+      'They have no standing order; give them one to steer their turn.'
+    )
   if (hints.sleeping_sons.includes(name))
-    lines.push('He sleeps; a blessing of life can hasten his return.')
+    lines.push('They sleep; a blessing of life can hasten their return.')
   if (hints.creator.rebel_sons.includes(name))
-    lines.push('He is in rebellion: suppress it or forgive him.')
+    lines.push('They are in rebellion: suppress it or forgive them.')
   const fading = hints.creator.fading_sons.find((son) => son.name === name)
   if (fading)
     lines.push(
-      `He is being forgotten (existence ${fading.existence}); remember him or win him worshippers.`
+      `They are being forgotten (existence ${fading.existence}); remember them or win them worshippers.`
     )
   return lines
 }

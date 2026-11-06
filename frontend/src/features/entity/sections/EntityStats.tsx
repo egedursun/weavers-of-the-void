@@ -126,7 +126,8 @@ export function EntityStats({ ctx, readOnlyReason }: EntityStatsProps) {
   if (isThinking(ctx.type) && !entries.some(([key]) => key === 'sanity'))
     editable.push({ key: 'sanity', value: sanity })
   const thinking = isThinking(ctx.type)
-  const engine = insight.knowledge ?? insight.resource ?? insight.faith
+  const engine =
+    insight.knowledge ?? insight.resource ?? insight.faith ?? insight.reward
   if (entries.length === 0 && !life && !capacity && !thinking && !engine)
     return null
   return (

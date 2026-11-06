@@ -39,4 +39,4 @@ class EssenceRules:
         RuleGroup.CREATOR_AND_ESSENCE,
         "Share of the overflowing essence that flows to the poorest sons who are not rebels (%; the rest blesses the land)",
     )
-    overflow_sons_fill_pct: int = rule(50, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Overflowing essence fills a son at most to this share of his essence cap")
+    overflow_sons_fill_pct: int = rule(50, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Overflowing essence fills a son at most to this share of their essence cap")

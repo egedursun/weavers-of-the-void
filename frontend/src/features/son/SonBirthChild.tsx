@@ -57,7 +57,7 @@ export function SonBirthChild({
   return (
     <Section
       title='Bear a child'
-      description='Fate rolls the child below his own class; the lowest class bears at the floor.'
+      description='Fate rolls the child below their own class; the lowest class bears at the floor.'
       level={3}
     >
       <FormRow label='Other parent' description='Optional; another living son'>
@@ -103,7 +103,7 @@ export function SonBirthChild({
           confirm={{
             title: `Let ${son.name} bear a child?`,
             description:
-              'A new son joins the pantheon. The language model writes him; watch the progress here.',
+              'A new son joins the pantheon. The language model writes them; watch the progress here.',
           }}
           onRun={() => birth.mutate()}
         />

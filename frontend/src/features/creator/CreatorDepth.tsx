@@ -52,7 +52,7 @@ export function CreatorDepth({ creator }: { creator: CreatorRecord }) {
           icon={Layers}
           size='compact'
           title='The Creator is not deepened yet'
-          description='His names, secrets, fears and prohibitions are not written.'
+          description="The Creator's names, secrets, fears and prohibitions are not written."
         />
       )}
     </Section>

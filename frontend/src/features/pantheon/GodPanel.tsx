@@ -164,7 +164,7 @@ export function GodPanel({ state }: { state: WorldState }) {
           <div className='flex min-w-0 flex-1 flex-col gap-2'>
             <Label variant='overline'>Creator · immortal</Label>
             <PageTitle truncate={2}>{creator.name}</PageTitle>
-            <Muted>{creator.title ?? 'His likeness is not yet drawn.'}</Muted>
+            <Muted>{creator.title ?? 'No likeness is drawn yet.'}</Muted>
             <div className='flex min-w-0 flex-wrap items-center gap-2'>
               {mood && (
                 <Badge variant={MOOD_BADGE[mood.label]}>

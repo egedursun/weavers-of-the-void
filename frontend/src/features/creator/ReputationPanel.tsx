@@ -88,7 +88,7 @@ export function ReputationPanel({
           icon={HeartCrack}
           size='compact'
           title='No son has an opinion yet'
-          description='Sons form a view of their father as epochs pass.'
+          description='Sons form a view of their Creator as epochs pass.'
         />
       ) : (
         <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>

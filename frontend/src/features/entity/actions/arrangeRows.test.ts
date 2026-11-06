@@ -20,6 +20,7 @@ function detail(type: string, flags: string[] = []): EntityDetail {
     tags: [],
     bonds: [],
     bond_total: 0,
+    insight: {},
   } as unknown as EntityDetail
 }
 

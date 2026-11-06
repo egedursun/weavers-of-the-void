@@ -22,7 +22,7 @@ export function SonOpportunities({
   return (
     <Section
       title='Opportunities'
-      description='What this son sees when his turn begins, exactly as the server phrases it. The tools named are the ones he may use now.'
+      description='What this son sees when their turn begins, exactly as the server phrases it. The tools named are the ones they may use now.'
       level={3}
     >
       {statusLines.length > 0 && (
@@ -41,7 +41,7 @@ export function SonOpportunities({
       ) : (
         <ServerLineList
           lines={lines}
-          emptyText='Nothing stands out for him right now.'
+          emptyText='Nothing stands out for them right now.'
           onTool={revealTool}
         />
       )}

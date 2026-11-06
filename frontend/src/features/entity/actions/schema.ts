@@ -1,4 +1,4 @@
-export type FieldValue = string | number | boolean | null | FieldMap
+export type FieldValue = string | number | boolean | null | FieldMap | string[]
 
 export type FieldMap = { [key: string]: number }
 
@@ -27,6 +27,7 @@ export type FieldModel =
       maxLength?: number
     }
   | { key: string; kind: 'map'; required: boolean; keys: string[] }
+  | { key: string; kind: 'multi'; required: boolean; options: string[] }
   | { key: string; kind: 'unsupported'; required: boolean }
 
 type JsonSchema = {
@@ -38,6 +39,7 @@ type JsonSchema = {
   minimum?: number
   maximum?: number
   maxLength?: number
+  items?: JsonSchema
   propertyNames?: JsonSchema
   properties?: Record<string, JsonSchema>
   required?: string[]
@@ -98,6 +100,10 @@ function fieldOf(
       fallback: typeof fallback === 'string' ? fallback : '',
       maxLength: node.maxLength,
     }
+  if (node.type === 'array' && node.items) {
+    const item = concrete(node.items, defs)
+    if (item.enum) return { key, kind: 'multi', required, options: item.enum }
+  }
   if (node.type === 'object' && node.propertyNames) {
     const names = concrete(node.propertyNames, defs)
     if (names.enum) return { key, kind: 'map', required, keys: names.enum }
@@ -129,6 +135,8 @@ export function initialValue(field: FieldModel): FieldValue {
       return field.fallback
     case 'map':
       return {}
+    case 'multi':
+      return []
     default:
       return null
   }
@@ -155,6 +163,7 @@ export function missingRequired(
     if (value === null || value === undefined || value === '') return field
     if (field.kind === 'map' && Object.keys(value as FieldMap).length === 0)
       return field
+    if (field.kind === 'multi' && (value as string[]).length === 0) return field
   }
   return null
 }
@@ -175,6 +184,7 @@ export function bodyOf(
     }
     if (field.kind === 'map' && Object.keys(value as FieldMap).length === 0)
       continue
+    if (field.kind === 'multi' && (value as string[]).length === 0) continue
     body[field.key] = value
   }
   return body

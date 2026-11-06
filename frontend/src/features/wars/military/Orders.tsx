@@ -585,7 +585,7 @@ export function DeclareWar({
           icon={ScrollText}
           value={reason}
           onChange={setReason}
-          placeholder='for the honour of our fathers'
+          placeholder='for the honour of our ancestors'
         />
       </FieldGrid>
       <Muted variant='caption'>Aims</Muted>

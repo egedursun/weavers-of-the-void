@@ -82,8 +82,9 @@ export function ActionCard({ spec, item, ctx, data }: ActionCardProps) {
       new Set<string>([
         ...(spec.self === null ? [] : [spec.self]),
         ...(spec.hidden ?? []),
+        ...(spec.omit?.(ctx) ?? []),
       ]),
-    [spec.self, spec.hidden]
+    [spec, ctx]
   )
   const shown = fields.filter(
     (field) => !skip.has(field.key) && field.kind !== 'unsupported'

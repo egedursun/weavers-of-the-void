@@ -74,7 +74,7 @@ describe('live feed panel', () => {
     const { screen } = await renderScreen(<LiveFeedPanel />)
     await screen.getByRole('radio', { name: 'Gods' }).click()
     await expect
-      .element(screen.getByText('Ithren takes his turn'))
+      .element(screen.getByText('Ithren takes their turn'))
       .toBeInTheDocument()
     await expect
       .element(screen.getByText('System speaks'))

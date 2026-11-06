@@ -161,7 +161,7 @@ export function SonPromptView({ initialSon }: SonPromptViewProps) {
     <div className='flex min-w-0 flex-col gap-6'>
       <FormRow
         label='Son'
-        description='The exact prompt this son would receive if his turn began now.'
+        description='The exact prompt this son would receive if their turn began now.'
       >
         {(id) => (
           <div className='min-w-0 flex-1 basis-60'>
@@ -181,7 +181,7 @@ export function SonPromptView({ initialSon }: SonPromptViewProps) {
         <EmptyState
           icon={Crown}
           title='Pick a son'
-          description='His system prompt, turn prompt, tools and budget appear here.'
+          description='Their system prompt, turn prompt, tools and budget appear here.'
         />
       )}
       {sonId !== null && preview.isPending && (
@@ -196,7 +196,7 @@ export function SonPromptView({ initialSon }: SonPromptViewProps) {
           <Section
             title='Tools'
             icon={Hammer}
-            description='What he may call this turn. Paid tools spend action points or essence.'
+            description='What they may call this turn. Paid tools spend action points or essence.'
             surface='card'
             level={3}
           >

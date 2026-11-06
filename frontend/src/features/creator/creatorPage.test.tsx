@@ -72,7 +72,7 @@ describe('creator page', () => {
       )
       .toBeVisible()
     await screen
-      .getByRole('button', { name: /Redraw his likeness/ })
+      .getByRole('button', { name: /Redraw the likeness/ })
       .first()
       .click()
     await expect
@@ -223,7 +223,7 @@ describe('creator page', () => {
     await expect
       .element(screen.getByText("No bard has written the Creator's epic"))
       .toBeVisible()
-    await screen.getByRole('button', { name: /Write his epic/ }).click()
+    await screen.getByRole('button', { name: /Write the epic/ }).click()
     await expect
       .poll(() => server.callsTo('POST /api/creator/epic').length)
       .toBe(1)
@@ -253,7 +253,9 @@ describe('creator page', () => {
     const { screen, server } = await openCreator()
     await expect
       .element(
-        screen.getByText(/1 community worship him directly · total faith 12\.6/)
+        screen.getByText(
+          /1 community worship the Creator directly · total faith 12\.6/
+        )
       )
       .toBeVisible()
     await expect

@@ -1,4 +1,16 @@
-import { BookOpen, Church, Cog, PackageX } from 'lucide-react'
+import {
+  BookOpen,
+  Church,
+  Cog,
+  Crown,
+  Gem,
+  Hourglass,
+  PackageX,
+  Repeat,
+  Sparkles,
+  Undo2,
+} from 'lucide-react'
+import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { EntityLink, MiniStat } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
@@ -6,8 +18,8 @@ import { type EntityContext } from '../actions/context'
 import { humanize } from '../actions/schema'
 
 export function EngineInsight({ ctx }: { ctx: EntityContext }) {
-  const { knowledge, resource, faith } = ctx.detail.insight
-  if (!knowledge && !resource && !faith) return null
+  const { knowledge, resource, faith, reward } = ctx.detail.insight
+  if (!knowledge && !resource && !faith && !reward) return null
   return (
     <div className='flex min-w-0 flex-col gap-3'>
       {knowledge && (
@@ -80,6 +92,87 @@ export function EngineInsight({ ctx }: { ctx: EntityContext }) {
                 </EntityLink>
               </Badge>
             ))}
+          </div>
+        </div>
+      )}
+      {reward && (
+        <div className='flex min-w-0 flex-col gap-2'>
+          <Label variant='overline'>Creation reward</Label>
+          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+            {reward.son && (
+              <Badge size='sm' variant='outline'>
+                <Sparkles />
+                <EntityLink kind='son' id={String(reward.son.id)}>
+                  {reward.son.name}
+                </EntityLink>
+              </Badge>
+            )}
+            {reward.partner && (
+              <Badge size='sm' variant='outline'>
+                <Sparkles />
+                <EntityLink kind='son' id={String(reward.partner.id)}>
+                  {reward.partner.name}
+                </EntityLink>
+                {` · ${formatInteger(reward.partner_xp)} XP · ${formatInteger(reward.partner_renown)} renown`}
+              </Badge>
+            )}
+            {reward.land && (
+              <Badge size='sm' variant='info'>
+                Land
+              </Badge>
+            )}
+            {reward.has_thread && (
+              <Badge
+                size='sm'
+                variant={reward.thread_reverted ? 'warning' : 'outline'}
+              >
+                <Undo2 />
+                {reward.thread_reverted
+                  ? 'Fate thread reverted'
+                  : 'Moved a fate thread'}
+              </Badge>
+            )}
+          </div>
+          <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3'>
+            <MiniStat
+              icon={Crown}
+              tone='gold'
+              label='XP'
+              value={formatInteger(reward.xp)}
+            />
+            <MiniStat
+              icon={Sparkles}
+              tone='info'
+              label='Renown'
+              value={formatInteger(reward.renown)}
+            />
+            <MiniStat
+              icon={Gem}
+              tone='verdigris'
+              label='Essence'
+              value={formatInteger(reward.essence)}
+              hint={`Cost ${formatInteger(reward.cost)} essence`}
+            />
+            <MiniStat
+              icon={Hourglass}
+              tone='muted'
+              label='Reward kept'
+              value={`${reward.fade_pct}%`}
+              hint='Repeated creations of the same kind earn less'
+            />
+            <MiniStat
+              icon={Repeat}
+              tone='muted'
+              label='Repeats'
+              value={formatInteger(reward.repeats)}
+            />
+            <MiniStat
+              icon={Undo2}
+              tone={reward.taken_back_pct > 0 ? 'warning' : 'success'}
+              label='Taken back'
+              value={`${reward.taken_back_pct}%`}
+              hint={reward.reason ?? undefined}
+            />
           </div>
         </div>
       )}

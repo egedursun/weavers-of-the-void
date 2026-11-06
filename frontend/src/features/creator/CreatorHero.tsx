@@ -17,7 +17,7 @@ export function RedrawLikenessButton() {
   return (
     <div className='flex min-w-0 flex-col items-start gap-2'>
       <ActionButton
-        label='Redraw his likeness'
+        label='Redraw the likeness'
         icon={Brush}
         blocked={
           reason({ llm: true }) ??
@@ -55,7 +55,7 @@ export function CreatorHero({ detail }: { detail: CreatorDetail }) {
           immortal, indestructible
         </Label>
         <PageTitle truncate={2}>{creator.name}</PageTitle>
-        <Muted>{creator.title ?? 'His likeness is not yet drawn.'}</Muted>
+        <Muted>{creator.title ?? 'No likeness is drawn yet.'}</Muted>
         <div className='flex min-w-0 flex-wrap gap-1.5'>
           <Badge size='sm' variant={MOOD_BADGE[detail.mood.label]}>
             {MOOD_LABEL[detail.mood.label]}

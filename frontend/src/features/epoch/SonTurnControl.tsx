@@ -37,7 +37,7 @@ export function SonTurnControl({ state }: SonTurnControlProps) {
   return (
     <Section
       title='A single son turn'
-      description='Let one son act now, outside the epoch. His turn counts as his action for this epoch.'
+      description='Let one son act now, outside the epoch. That turn counts as their action for this epoch.'
       surface='card'
     >
       {sons.length === 0 ? (
@@ -45,7 +45,7 @@ export function SonTurnControl({ state }: SonTurnControlProps) {
           size='compact'
           icon={Crown}
           title='No son can act'
-          description='Summon a son, or wake a sleeping one, to let him take a turn.'
+          description='Summon a son, or wake a sleeping one, to let them take a turn.'
         />
       ) : (
         <>
@@ -96,17 +96,17 @@ export function SonTurnControl({ state }: SonTurnControlProps) {
               }
               onClick={() =>
                 turn.mutate(Number(selected), {
-                  onSuccess: () => toast.success('The son takes his turn'),
+                  onSuccess: () => toast.success('The son takes their turn'),
                   onError: (error) => toast.error(error.message),
                 })
               }
             >
               <Play />
-              Run his turn
+              Run their turn
             </Button>
             {selected && (
               <EntityLink kind='son' id={selected} showIcon>
-                Open his page
+                Open their page
               </EntityLink>
             )}
           </div>

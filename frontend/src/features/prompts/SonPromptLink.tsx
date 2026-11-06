@@ -13,13 +13,13 @@ export function SonPromptLink({ sonId, name }: SonPromptLinkProps) {
     <Section
       id='section-prompt'
       title='Prompt'
-      description={`The exact system and turn prompt ${name} would read now, with his tools and budget.`}
+      description={`The exact system and turn prompt ${name} would read now, with their tools and budget.`}
       level={3}
       actions={
         <Button variant='outline' size='sm' asChild>
           <Link to='/settings/prompts' search={{ son: sonId, view: 'son' }}>
             <ScrollText />
-            Open his prompt
+            Open their prompt
           </Link>
         </Button>
       }

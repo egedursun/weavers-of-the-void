@@ -4,6 +4,7 @@ import {
   Heart,
   Link2,
   Lock,
+  PenLine,
   Plus,
   Trash2,
   Unlock,
@@ -26,6 +27,7 @@ import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { type ActionResponse } from '@/features/pantheon/api'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { RowAction } from '../actions/RowAction'
 import { MindPicker } from '../mind/parts'
 import { named, plain } from '../realm/labels'
 import {
@@ -681,7 +683,7 @@ function KinControls({
       </div>
       {profile.marriages.some((item) => item.end_epoch === null) && (
         <div className='flex min-w-0 flex-col gap-2'>
-          <Label variant='overline'>End a marriage</Label>
+          <Label variant='overline'>Change or end a marriage</Label>
           {profile.marriages
             .filter((item) => item.end_epoch === null)
             .map((item) => (
@@ -690,6 +692,25 @@ function KinControls({
                 className='flex min-w-0 flex-wrap items-center gap-2'
               >
                 <Text truncate>{item.spouse?.name ?? 'A spouse'}</Text>
+                <RowAction
+                  path='/api/actions/kin:edit_marriage'
+                  icon={PenLine}
+                  label='Change it'
+                  fixed={{ marriage_id: item.id }}
+                  defaults={{
+                    kind: item.kind,
+                    treaty_id: item.treaty?.id ?? null,
+                    start_epoch: item.start_epoch,
+                  }}
+                  labels={{
+                    kind: 'Kind of marriage',
+                    treaty_id: 'Sealing treaty',
+                    start_epoch: 'Wed in epoch',
+                  }}
+                  pickers={{
+                    treaty_id: { source: 'entity', types: ['treaty'] },
+                  }}
+                />
                 {(['divorce', 'annulment'] as const).map((cause) => (
                   <Button
                     key={cause}

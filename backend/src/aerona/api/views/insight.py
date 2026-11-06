@@ -134,7 +134,12 @@ async def reward_insight(session: AsyncSession, entity: EntityRow) -> RewardInsi
         fade_pct=row.fade_pct,
         repeats=row.repeats,
         taken_back_pct=row.taken_back_pct,
+        has_thread=row.thread_id is not None,
         thread_reverted=row.thread_reverted,
+        partner=await node_ref(session, row.partner_son_id) if row.partner_son_id is not None else None,
+        partner_xp=row.partner_xp,
+        partner_renown=row.partner_renown,
+        reason=row.reason,
     )
 
 

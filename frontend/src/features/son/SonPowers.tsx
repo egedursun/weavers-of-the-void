@@ -22,7 +22,7 @@ export function SonPowers({ view }: { view: SonPublic }) {
             className='size-icon-sm text-muted-foreground'
           />
           <Muted>
-            No power has awakened yet; powers awaken as he rises in level.
+            No power has awakened yet; powers awaken as they rise in level.
           </Muted>
         </div>
       ) : (

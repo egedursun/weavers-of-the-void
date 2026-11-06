@@ -69,7 +69,7 @@ AGE_LIMITS: dict[SonToolId, tuple[TurnCounter, Callable[[Rules], int]]] = {
     SonToolId.GIVE_GIFT: (C.GIFTS, lambda rules: rules.son_tools.gift_per_epoch),
     SonToolId.COIN_WORDS: (C.WORDS_COINED, lambda rules: rules.son_tools.coin_word_per_epoch),
     SonToolId.CHOOSE_ANCHOR: (C.ANCHOR_CHOSEN, lambda rules: rules.son_tools.anchor_per_epoch),
-    SonToolId.PRAY_TO_FATHER: (C.PRAYERS, lambda rules: rules.son_tools.prayer_per_epoch),
+    SonToolId.PRAY_TO_CREATOR: (C.PRAYERS, lambda rules: rules.son_tools.prayer_per_epoch),
 }
 
 
@@ -83,7 +83,7 @@ CONDITIONS: dict[SonToolId, Condition] = {
     T.COIN_WORDS: lambda rules, _state: rules.son_tools.coin_word_per_epoch > 0,
     T.CALL_SIBLING: lambda rules, _state: rules.son_tools.sibling_message_per_epoch > 0,
     T.GIVE_GIFT: lambda rules, _state: rules.son_tools.gift_per_epoch > 0,
-    T.PRAY_TO_FATHER: lambda rules, _state: rules.son_tools.prayer_per_epoch > 0,
+    T.PRAY_TO_CREATOR: lambda rules, _state: rules.son_tools.prayer_per_epoch > 0,
     T.MAKE_BOND: lambda rules, _state: rules.son_tools.link_per_epoch > 0,
     T.TAKE_LIFE: lambda rules, _state: rules.death.take_life_per_epoch > 0,
     T.RESURRECT_SIBLING: lambda rules, state: rules.death.sibling_intrigues_per_epoch > 0 and state.dead_sibling,

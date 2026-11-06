@@ -46,7 +46,7 @@ export function SonReputation({
       unwrap(
         api.POST('/api/actions/reputation:drift', { body: { son_id: son.id } })
       ),
-    success: 'His view of you was recomputed',
+    success: 'Their view of you was recomputed',
   })
   if (!reputation || son.status === 'dead') return null
   const atCap = (value: number) =>
@@ -55,7 +55,7 @@ export function SonReputation({
       : null
   const pushes = [son.manual_love, son.manual_fear, son.manual_forgotten]
   return (
-    <Section title='How he sees his father' surface='card' level={3}>
+    <Section title='How they see the Creator' surface='card' level={3}>
       <div className='flex min-w-0 flex-wrap gap-1.5'>
         <Badge variant={REPUTATION_BADGE[reputation.label]}>
           {REPUTATION_LABEL[reputation.label]}
@@ -77,7 +77,7 @@ export function SonReputation({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <ActionButton
-          label='Win his heart'
+          label='Win their heart'
           icon={Heart}
           blocked={
             reason() ??
@@ -103,7 +103,7 @@ export function SonReputation({
           }
         />
         <ActionButton
-          label='Remind him of you'
+          label='Remind them of you'
           icon={Eye}
           blocked={
             reason() ??
@@ -127,7 +127,7 @@ export function SonReputation({
       <Muted variant='caption'>
         {pushes.some((value) => value !== 0)
           ? `Your nudges: love ${son.manual_love}, fear ${son.manual_fear}, forgottenness ${son.manual_forgotten}${keep !== undefined ? `; ${keep}% of each remains every epoch` : ''}.`
-          : 'Nudges fade each epoch; his view also changes with your deeds.'}
+          : 'Nudges fade each epoch; their view also changes with your deeds.'}
       </Muted>
     </Section>
   )

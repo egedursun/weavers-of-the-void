@@ -104,7 +104,7 @@ export function PrayerAnswerForm({ messageId, mortal }: PrayerAnswerFormProps) {
         <Muted variant='caption'>
           {mortal
             ? 'Your gift raises their prosperity, fertility, defence and health, and binds them to a cult of you.'
-            : 'The essence joins his own; what overflows is lost. Gifts also raise his loyalty.'}
+            : 'The essence joins their own; what overflows is lost. Gifts also raise their loyalty.'}
         </Muted>
       </div>
     </div>

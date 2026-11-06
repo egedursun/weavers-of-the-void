@@ -173,7 +173,7 @@ export function CouncilBlock({ showAll = false }: { showAll?: boolean }) {
         </div>
         <Muted id='council-topic-hint' variant='caption'>
           {topic.trim()
-            ? 'The brothers will debate this agenda.'
+            ? 'The pantheon will debate this agenda.'
             : 'Leave it empty and the agent will choose the topic.'}
         </Muted>
       </form>
@@ -191,7 +191,7 @@ export function CouncilBlock({ showAll = false }: { showAll?: boolean }) {
           icon={UsersRound}
           size='compact'
           title='The council has never convened'
-          description='Call the brothers together, with an agenda or without one.'
+          description='Call the pantheon together, with an agenda or without one.'
         />
       ) : (
         <div className='flex min-w-0 flex-col gap-3'>

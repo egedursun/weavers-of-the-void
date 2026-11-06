@@ -133,11 +133,6 @@ class LoanStatus(StrEnum):
     FORGIVEN = "forgiven"
 
 
-class ResourceAccess(StrEnum):
-    REVEALED = "revealed"
-    HIDDEN = "hidden"
-
-
 class GoodsFlow(StrEnum):
     EXTRACTION = "extraction"
     HARVEST = "harvest"

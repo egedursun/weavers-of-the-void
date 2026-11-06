@@ -321,7 +321,7 @@ export function BeyondForm({ index, worldId }: BeyondFormProps) {
       </OrderBlock>
       <OrderBlock
         title='Bargains with the outside'
-        description='Make a son strike a bargain with a thing beyond the stars, or forbid him to bargain at all.'
+        description='Make a son strike a bargain with a thing beyond the stars, or forbid them to bargain at all.'
       >
         <OuterBargainForm sons={(state?.sons ?? []).map((item) => item.son)} />
       </OrderBlock>

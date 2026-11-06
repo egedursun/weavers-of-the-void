@@ -153,8 +153,8 @@ export function AddressSibling({
   if (options.length === 0) return null
   return (
     <FormRow
-      label='Order him to speak'
-      description='The intent moves their relation; his charisma decides how far.'
+      label='Order them to speak'
+      description='The intent moves their relation; their charisma decides how far.'
     >
       {(id) => (
         <div className='flex min-w-0 flex-col gap-2'>
@@ -192,8 +192,8 @@ export function AddressSibling({
             </Select>
           </div>
           <Textarea
-            aria-label='The words he must say'
-            placeholder='The words he must say'
+            aria-label='The words they must say'
+            placeholder='The words they must say'
             maxLength={SPEECH_MAX}
             value={text}
             onChange={(event) => setText(event.target.value)}
@@ -206,7 +206,7 @@ export function AddressSibling({
                 reason() ??
                 (alive ? null : 'A dead son cannot speak.') ??
                 (!other ? 'Pick a sibling.' : null) ??
-                (text.trim() === '' ? 'Write the words he must say.' : null)
+                (text.trim() === '' ? 'Write the words they must say.' : null)
               }
               pending={speak.isPending}
               onRun={() => speak.mutate()}

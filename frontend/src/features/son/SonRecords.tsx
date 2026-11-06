@@ -31,7 +31,7 @@ export function SonRecords({ detail }: { detail: SonDetail }) {
             icon={HandHeart}
             size='compact'
             title='Nobody yet'
-            description='Communities that worship him appear here.'
+            description='Communities that worship them appear here.'
           />
         ) : (
           <div className='flex min-w-0 flex-col gap-3'>
@@ -60,7 +60,7 @@ export function SonRecords({ detail }: { detail: SonDetail }) {
             icon={Hammer}
             size='compact'
             title='Nothing created yet'
-            description='What he creates on his turns gathers here.'
+            description='What they create on their turns gathers here.'
           />
         ) : (
           <div className='flex min-w-0 flex-col gap-3'>

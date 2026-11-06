@@ -44,7 +44,7 @@ export function SonTools({ sonId, name }: { sonId: number; name: string }) {
     <Section
       id='section-tools'
       title='Tools'
-      description={`The tools ${name} can use right now, by his rarity and the state of the world, with their live costs and wording.`}
+      description={`The tools ${name} can use right now, by their rarity and the state of the world, with their live costs and wording.`}
       level={3}
     >
       {query.isPending ? (
@@ -80,7 +80,7 @@ export function SonTools({ sonId, name }: { sonId: number; name: string }) {
               )}
               <div className='flex min-w-0 flex-wrap items-center gap-2'>
                 <ActionButton
-                  label='Reset his counters'
+                  label='Reset their counters'
                   icon={RotateCcw}
                   blocked={
                     reason() ??
@@ -88,7 +88,7 @@ export function SonTools({ sonId, name }: { sonId: number; name: string }) {
                   }
                   pending={reset.isPending}
                   confirm={{
-                    title: 'Reset his counters?',
+                    title: 'Reset their counters?',
                     description: `${name} may use limited tools again this epoch.`,
                   }}
                   onRun={() => reset.mutate()}

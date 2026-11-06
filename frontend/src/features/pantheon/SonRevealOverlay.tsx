@@ -56,7 +56,7 @@ const KIND_LABEL: Record<RevealKind, string> = {
 
 const SEALED_TEXT: Record<RevealKind, string> = {
   new: 'Something stirs in the void',
-  ascended: 'His light is changing',
+  ascended: 'Their light is changing',
   genesis: 'Your first sons wake',
   preview: 'Something stirs in the void',
 }
@@ -258,7 +258,7 @@ function RevealSequence({
             {onOpenPage && (
               <Button variant='outline' onClick={onOpenPage}>
                 <Crown />
-                Open his page
+                Open their page
               </Button>
             )}
             {remaining > 0 ? (

@@ -1,0 +1,20 @@
+#!/bin/sh
+set -e
+ROOT=$(git rev-parse --show-toplevel)
+cd "$ROOT"
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$STAGED" ] && exit 0
+PYTHON="$ROOT/backend/.venv/bin/python"
+echo "pre-commit: source rules, prompt bias, wiring"
+"$PYTHON" scripts/check_source_rules.py
+"$PYTHON" scripts/check_prompt_bias.py
+"$PYTHON" scripts/check_wiring.py
+if echo "$STAGED" | grep -qE '^(backend/|scripts/).*\.py$'; then
+  echo "pre-commit: ruff, mypy, import layers"
+  (cd backend && .venv/bin/ruff check src && .venv/bin/ruff format --check src && .venv/bin/mypy src/aerona && .venv/bin/lint-imports)
+fi
+FRONT=$(echo "$STAGED" | grep -E '^frontend/.*\.(ts|tsx)$' | grep -v '^frontend/src/api/generated/' | sed 's#^frontend/##' || true)
+if [ -n "$FRONT" ]; then
+  echo "pre-commit: tsc, eslint, prettier"
+  (cd frontend && npx tsc -b && echo "$FRONT" | xargs npx eslint --no-warn-ignored && echo "$FRONT" | xargs npx prettier --check)
+fi

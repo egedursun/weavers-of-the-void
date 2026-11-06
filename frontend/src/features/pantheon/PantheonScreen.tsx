@@ -57,7 +57,7 @@ function SonGrid({ state }: { state: WorldState }) {
         <EmptyState
           icon={Crown}
           title='No sons yet'
-          description='Summon your first son; he arrives with a rarity, domains and powers of his own.'
+          description='Summon your first son; they arrive with a rarity, domains and powers of their own.'
         />
       ) : (
         <div className='grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3'>

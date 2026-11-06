@@ -167,7 +167,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           body: { reason: text },
         })
       ),
-    success: 'Devoured; his essence passed to you',
+    success: 'Devoured; their essence passed to you',
   })
   const kill = useGodAction({
     run: (text: string) =>
@@ -206,11 +206,11 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           body: { world_id: value },
         })
       ),
-    success: `${son.name} was sent to his new world`,
+    success: `${son.name} was sent to a new world`,
   })
   const unprotect = useGodAction({
     run: () => unwrap(api.DELETE('/api/sons/{son_id}/protection', path)),
-    success: 'Automatic distribution may move him again',
+    success: 'Automatic distribution may move them again',
   })
   const duel = useGodAction({
     run: () =>
@@ -288,13 +288,13 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
     >
       <div className='flex min-w-0 flex-col gap-2'>
         <FieldLabel htmlFor={`order-${sonId}`}>
-          Order for his next action
+          Order for their next action
         </FieldLabel>
         <Textarea
           id={`order-${sonId}`}
           value={order}
           disabled={dead}
-          placeholder="Send a plague to your brother's city."
+          placeholder="Send a plague to your sibling's city."
           onChange={(event) => setOrder(event.target.value)}
         />
         {son.order_absolute && (
@@ -307,7 +307,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
       </div>
       <Row
         title='Orders'
-        note='An absolute command is done first on his next turn and costs a little loyalty.'
+        note='An absolute command is done first on their next turn and costs a little loyalty.'
       >
         <ActionButton
           label={orderText ? 'Announce order' : 'Clear standing order'}
@@ -330,7 +330,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           pending={absolute.isPending}
           confirm={{
             title: 'Give an irrefusable command?',
-            description: `${son.name} cannot refuse it. It is done first on his next turn.`,
+            description: `${son.name} cannot refuse it. It is done first on their next turn.`,
           }}
           onRun={() => absolute.mutate(orderText)}
         />
@@ -341,7 +341,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           blocked={
             reason({ world: true, llm: true }) ??
             (dead ? 'A dead son cannot act.' : notReady) ??
-            (running ? 'His turn is already running.' : null)
+            (running ? 'Their turn is already running.' : null)
           }
           pending={act.isPending}
           onRun={() => act.mutate()}
@@ -383,7 +383,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           onRun={() => bless.mutate({ kind: 'hp' })}
         />
         <ActionButton
-          label='Remember him'
+          label='Remember them'
           icon={Sparkles}
           cost={essenceCost}
           rule='costs.bless_essence'
@@ -391,7 +391,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
             reason({ cost: essenceCost }) ??
             deadReason ??
             (son.existence >= STAT_SCALE
-              ? 'His existence is already whole.'
+              ? 'Their existence is already whole.'
               : null)
           }
           pending={bless.isPending}
@@ -440,7 +440,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
       <Separator />
       <Row
         title='Punish'
-        note='Above a strong will, punishment lowers loyalty and grows anger; below it, he bows in fear.'
+        note='Above a strong will, punishment lowers loyalty and grows anger; below it, they bow in fear.'
       >
         <ActionButton
           label='Lightning'
@@ -470,8 +470,8 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           }
           pending={punish.isPending}
           confirm={{
-            title: 'Chain him this epoch?',
-            description: 'He cannot act until the epoch ends.',
+            title: 'Chain them this epoch?',
+            description: 'They cannot act until the epoch ends.',
           }}
           onRun={() => punish.mutate('chain')}
         />
@@ -491,8 +491,8 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
             blocked={reason() ?? deadReason}
             pending={punish.isPending}
             confirm={{
-              title: 'Exile him?',
-              description: `${son.name} is cast out until you pardon him.`,
+              title: 'Exile them?',
+              description: `${son.name} is cast out until you pardon them.`,
             }}
             onRun={() => punish.mutate('exile')}
           />
@@ -501,9 +501,9 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
       {son.rebel && (
         <Row
           title='Rebellion'
-          note='Your power is tested against his will; if you fail, the cost still falls.'
+          note='Your power is tested against their will; if you fail, the cost still falls.'
         >
-          <Badge variant='destructive'>In rebellion against his father</Badge>
+          <Badge variant='destructive'>In rebellion against the Creator</Badge>
           <ActionButton
             label='Suppress the rebellion'
             icon={Shield}
@@ -543,7 +543,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           </div>
           <Row title='Essence and death'>
             <ActionButton
-              label='Drain his essence'
+              label='Drain their essence'
               icon={Droplet}
               variant='destructive'
               gain={drainGain}
@@ -552,9 +552,9 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
               }
               pending={drain.isPending}
               confirm={{
-                title: 'Drain his essence?',
+                title: 'Drain their essence?',
                 description:
-                  'He loses loyalty and grows angry; his siblings are bound by fear.',
+                  'They lose loyalty and grow angry; their siblings are bound by fear.',
               }}
               onRun={() => drain.mutate()}
             />
@@ -567,7 +567,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
               pending={devour.isPending}
               confirm={{
                 title: `Devour ${son.name}?`,
-                description: `${son.name} will be devoured and his essence will pass to you.`,
+                description: `${son.name} will be devoured and their essence will pass to you.`,
               }}
               onRun={() => devour.mutate(reasonText.trim())}
             />
@@ -581,7 +581,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
               confirm={{
                 title: `Kill ${son.name}?`,
                 description:
-                  'His body becomes a corpse and his loyal worshippers a resurrection cult. The others are bound by fear; his friends are angered.',
+                  'Their body becomes a corpse and their loyal worshippers a resurrection cult. The others are bound by fear; their friends are angered.',
               }}
               onRun={() => kill.mutate(reasonText.trim())}
             />
@@ -601,7 +601,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
                 reason({ cost: nextStar.essence }) ??
                 deadReason ??
                 (son.level < nextStar.level || son.fame < nextStar.fame
-                  ? 'He does not meet the requirements yet.'
+                  ? 'They do not meet the requirements yet.'
                   : null)
               }
               pending={star.isPending}
@@ -627,7 +627,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
                 reason({ cost: ascension.essence }) ??
                 deadReason ??
                 (son.level < ascension.level || son.fame < ascension.fame
-                  ? 'He does not meet the requirements yet.'
+                  ? 'They do not meet the requirements yet.'
                   : null)
               }
               pending={ascend.isPending}
@@ -644,7 +644,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           </>
         ) : (
           <Text variant='caption'>
-            He has reached the highest class and star.
+            They have reached the highest class and star.
           </Text>
         )}
       </Row>
@@ -668,7 +668,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
             pending={demote.isPending}
             confirm={{
               title: `Demote ${son.name}?`,
-              description: 'He loses loyalty and grows angry.',
+              description: 'They lose loyalty and grow angry.',
             }}
             onRun={() => demote.mutate()}
           />
@@ -698,13 +698,13 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
                 pending={strip.isPending}
                 confirm={{
                   title: 'Rip out this power?',
-                  description: 'He grows angry.',
+                  description: 'They grow angry.',
                 }}
                 onRun={() => strip.mutate(Number(slot))}
               />
             </>
           ) : (
-            <Text variant='caption'>He has no power to rip out.</Text>
+            <Text variant='caption'>They have no power to rip out.</Text>
           )}
         </Row>
       )}
@@ -725,7 +725,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
             }
             onValueChange={setWorldId}
           >
-            <SelectTrigger aria-label='World to send him to' className='w-56'>
+            <SelectTrigger aria-label='World to send them to' className='w-56'>
               <SelectValue placeholder='Pick a world' />
             </SelectTrigger>
             <SelectContent>
@@ -832,9 +832,9 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
                 blocked={reason() ?? (godId ? null : 'Pick a foreign god.')}
                 pending={godWar.isPending}
                 confirm={{
-                  title: 'Send him to war?',
+                  title: 'Send them to war?',
                   description:
-                    'He fights the foreign god with his strength and will.',
+                    'They fight the foreign god with their strength and will.',
                 }}
                 onRun={() => godWar.mutate()}
               />
@@ -842,7 +842,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           )}
           <Row
             title='Sanity'
-            note='Cosmic horror erodes it; low sanity clouds his mind.'
+            note='Cosmic horror erodes it; low sanity clouds their mind.'
           >
             <Input
               aria-label='Sanity'

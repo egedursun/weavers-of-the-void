@@ -63,7 +63,7 @@ export function WritingJobsPanel() {
         <JobRunRow
           id='son-powers'
           title="Write a son's powers"
-          description='Writes or rewrites the powers of one son from his rarity, domains and deeds.'
+          description='Writes or rewrites the powers of one son from their rarity, domains and deeds.'
           note={
             missing.data && missing.data.son_powers.length > 0
               ? `${missing.data.son_powers.length} son${missing.data.son_powers.length === 1 ? ' has' : 's have'} no powers yet.`

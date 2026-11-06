@@ -75,7 +75,7 @@ POWERS: dict[PowerEffect, PowerSpec] = {
         ),
         PowerSpec(
             PowerEffect.WAR_FATHER,
-            "War Father",
+            "Warbringer",
             None,
             lambda rules: f"Contribution to the war strength of armies that worship this son x{rules.world_war_strength.war_father_mult}.",
         ),

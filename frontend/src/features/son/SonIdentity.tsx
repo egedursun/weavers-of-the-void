@@ -40,10 +40,10 @@ export function SonIdentity({ son }: { son: SonRecord }) {
             />
           </>
         ) : (
-          <Muted>His existence is not written yet.</Muted>
+          <Muted>Their existence is not written yet.</Muted>
         )}
       </Section>
-      <Section title='Who he is' level={3}>
+      <Section title='Who they are' level={3}>
         <KeyValueList
           items={[
             { label: 'Appearance', value: personality.appearance || '—' },
@@ -53,7 +53,7 @@ export function SonIdentity({ son }: { son: SonRecord }) {
             { label: 'Speech', value: personality.speech_style || '—' },
           ]}
         />
-        <Secret title='His secret' text={personality.secret} />
+        <Secret title='Their secret' text={personality.secret} />
       </Section>
     </>
   )

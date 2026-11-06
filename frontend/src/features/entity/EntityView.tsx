@@ -16,6 +16,7 @@ import { MilitarySection } from '@/features/wars/military/MilitarySection'
 import { VesselSection } from '@/features/wars/military/VesselCard'
 import { RecordActions } from './actions/RecordActions'
 import { buildContext, isCommunity } from './actions/context'
+import { EntityCtx } from './actions/entityContext'
 import { READ_ONLY_REASON } from './actions/gate'
 import { agentTypeOf } from './agentTypes'
 import {
@@ -305,293 +306,314 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
     present.delete('section-wars')
   }
   return (
-    <article
-      data-entity-page={entity.id}
-      className='flex min-w-0 flex-col gap-8'
-    >
-      <EntityHero
-        detail={detail}
-        onOpenImages={() => setLightbox(0)}
-        readOnlyReason={readOnly}
-      />
-      <SectionNav present={present} />
-      <EntityTimeline
-        lines={detail.chronicle}
-        birthEpoch={entity.birth_epoch}
-        currentEpoch={state.data?.world?.epoch ?? entity.birth_epoch}
-        onPick={pick}
-      />
-      {entity.fate_note && (
-        <blockquote className='flex min-w-0 flex-col gap-1 border-s-2 border-primary ps-4'>
-          <Text weight='semibold'>Fate</Text>
-          <Text italic>{entity.fate_note}</Text>
-        </blockquote>
-      )}
-      {entity.description && (
-        <Text variant='prose'>
-          <MentionText
-            text={entity.description}
-            targets={targets}
-            selfId={entity.id}
-          />
-        </Text>
-      )}
-      <CanonFacts ctx={ctx} readOnlyReason={readOnly} />
-      <EntityStats ctx={ctx} readOnlyReason={readOnly} />
-      <SocietyEconomy detail={detail} />
-      {isCommunity(ctx.type) && <CommunityAddictions entityId={entity.id} />}
-      <EntityRelations ctx={ctx} />
-      {isCommunity(ctx.type) && entity.status === 'canon' && (
-        <CommunityRelations ctx={ctx} readOnlyReason={readOnly} />
-      )}
-      {isCommunity(ctx.type) && <CommunityWars entityId={entity.id} />}
-      <EntityDepth entity={entity} targets={targets} />
-      <KnowledgeLawPanel ctx={ctx} readOnlyReason={readOnly} />
-      <PeopleBeliefs ctx={ctx} readOnlyReason={readOnly} />
-      {acts && <EntityOpportunities entityId={entity.id} />}
-      <HandOfGodPanel ctx={ctx} />
-      <Section
-        id='section-commands'
-        title="God's commands"
-        description='Everything you can order for this record. Each command shows its live cost.'
+    <EntityCtx.Provider value={ctx}>
+      <article
+        data-entity-page={entity.id}
+        className='flex min-w-0 flex-col gap-8'
       >
-        <ArrangeExtras ctx={ctx} readOnlyReason={readOnly} />
-        <TagEditor ctx={ctx} readOnlyReason={readOnly} />
-        <RecordActions ctx={ctx} />
-      </Section>
-      {acts && <EntityAgentContext entityId={entity.id} name={entity.name} />}
-      <EntityDreams entityId={entity.id} />
-      <EntityRecords ctx={ctx} />
-      <EntityBonds ctx={ctx} readOnlyReason={readOnly} />
-      <EntityRelated similar={detail.similar} />
-      <PathFinder fromId={entity.id} fromName={entity.name} />
-      <EntityNote
-        key={entity.id}
-        entityId={entity.id}
-        note={entity.private_note}
-        readOnlyReason={readOnly}
-      />
-      <EntityImages
-        detail={detail}
-        onOpen={setLightbox}
-        readOnlyReason={readOnly}
-      />
-      <EntityChronicle
-        entityId={entity.id}
-        total={detail.chronicle_total}
-        highlightEpoch={highlight}
-      />
-      <EntityEnvironment entityId={entity.id} entityType={entity.entity_type} />
-      {entity.entity_type === 'place' && <PlaceSection placeId={entity.id} />}
-      {entity.entity_type === 'region' && <CreatePlace regionId={entity.id} />}
-      {entity.entity_type === 'region' && (
-        <LandShapeSection regionId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'event' && (
-        <EventSection eventId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {eventful && (
-        <EventsHereSection locationId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {trading && (
-        <DemographySection communityId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {trading && <LabourSection communityId={entity.id} />}
-      {entity.entity_type === 'people' && (
-        <PeopleProfileSection peopleId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {trading && (
-        <NeedsSection communityId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {trading && (
-        <ClassWealthSection communityId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'people' && (
-        <CultureDriftSection
-          communityId={entity.id}
+        <EntityHero
+          detail={detail}
+          onOpenImages={() => setLightbox(0)}
           readOnlyReason={readOnly}
         />
-      )}
-      {trading && (
-        <LoyaltySection communityId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {(trading || entity.entity_type === 'mortal') && (
-        <MobilitySection
+        <SectionNav present={present} />
+        <EntityTimeline
+          lines={detail.chronicle}
+          birthEpoch={entity.birth_epoch}
+          currentEpoch={state.data?.world?.epoch ?? entity.birth_epoch}
+          onPick={pick}
+        />
+        {entity.fate_note && (
+          <blockquote className='flex min-w-0 flex-col gap-1 border-s-2 border-primary ps-4'>
+            <Text weight='semibold'>Fate</Text>
+            <Text italic>{entity.fate_note}</Text>
+          </blockquote>
+        )}
+        {entity.description && (
+          <Text variant='prose'>
+            <MentionText
+              text={entity.description}
+              targets={targets}
+              selfId={entity.id}
+            />
+          </Text>
+        )}
+        <CanonFacts ctx={ctx} readOnlyReason={readOnly} />
+        <EntityStats ctx={ctx} readOnlyReason={readOnly} />
+        <SocietyEconomy detail={detail} />
+        {isCommunity(ctx.type) && <CommunityAddictions entityId={entity.id} />}
+        <EntityRelations ctx={ctx} />
+        {isCommunity(ctx.type) && entity.status === 'canon' && (
+          <CommunityRelations ctx={ctx} readOnlyReason={readOnly} />
+        )}
+        {isCommunity(ctx.type) && <CommunityWars entityId={entity.id} />}
+        <EntityDepth entity={entity} targets={targets} />
+        <KnowledgeLawPanel ctx={ctx} readOnlyReason={readOnly} />
+        <PeopleBeliefs ctx={ctx} readOnlyReason={readOnly} />
+        {acts && <EntityOpportunities entityId={entity.id} />}
+        <HandOfGodPanel ctx={ctx} />
+        <Section
+          id='section-commands'
+          title="God's commands"
+          description='Everything you can order for this record. Each command shows its live cost.'
+        >
+          <ArrangeExtras ctx={ctx} readOnlyReason={readOnly} />
+          <TagEditor ctx={ctx} readOnlyReason={readOnly} />
+          <RecordActions ctx={ctx} />
+        </Section>
+        {acts && <EntityAgentContext entityId={entity.id} name={entity.name} />}
+        <EntityDreams entityId={entity.id} />
+        <EntityRecords ctx={ctx} />
+        <EntityBonds ctx={ctx} readOnlyReason={readOnly} />
+        <EntityRelated similar={detail.similar} />
+        <PathFinder fromId={entity.id} fromName={entity.name} />
+        <EntityNote
+          key={entity.id}
           entityId={entity.id}
-          mortal={entity.entity_type === 'mortal'}
+          note={entity.private_note}
           readOnlyReason={readOnly}
         />
-      )}
-      {entity.entity_type === 'settlement' && (
-        <SettlementPlanSection
-          settlementId={entity.id}
+        <EntityImages
+          detail={detail}
+          onOpen={setLightbox}
           readOnlyReason={readOnly}
         />
-      )}
-      {entity.entity_type === 'settlement' && (
-        <TreasurySection settlementId={entity.id} />
-      )}
-      {entity.entity_type === 'structure' && (
-        <StructureSection structureId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'people' && (
-        <PeopleStructuresSection
-          peopleId={entity.id}
-          readOnlyReason={readOnly}
-        />
-      )}
-      {entity.entity_type === 'disease' && (
-        <DiseaseSection diseaseId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {(trading ||
-        entity.entity_type === 'polity' ||
-        entity.entity_type === 'mortal') && (
-        <RealmSection entityId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'house' && (
-        <HouseSection houseId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'treaty' && (
-        <TreatySection treatyId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'faction' && (
-        <FactionSection factionId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'mortal' && (
-        <OathsSection entityId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'structure' && (
-        <DedicationSection structureId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'cult' && (
-        <DoctrineSection cultId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {isLoreKind(entity.entity_type) && (
-        <LoreSection
+        <EntityChronicle
           entityId={entity.id}
-          kind={entity.entity_type}
-          readOnlyReason={readOnly}
+          total={detail.chronicle_total}
+          highlightEpoch={highlight}
         />
-      )}
-      {isCommunity(ctx.type) && (
-        <LearningSection holderId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {(isCommunity(ctx.type) || entity.entity_type === 'polity') && (
-        <RumoursSection communityId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'species' && (
-        <SpeciesSection speciesId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'beast' && (
-        <BeastSection beastId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {isCommunity(ctx.type) && (
-        <HerdsSection communityId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'region' && (
-        <FoodWebSection regionId={entity.id} />
-      )}
-      {entity.entity_type === 'region' && !readOnly && (
-        <WildsCreateBar regionId={entity.id} />
-      )}
-      {entity.entity_type === 'people' && (
-        <TotemSection peopleId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'spirit' && (
-        <SoulSection spiritId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'region' && (
-        <AfterlifeSection regionId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'vessel' && (
-        <VesselSection vesselId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {(entity.entity_type === 'army' ||
-        entity.entity_type === 'mortal' ||
-        entity.entity_type === 'faction' ||
-        isCommunity(ctx.type)) && (
-        <MilitarySection
+        <EntityEnvironment
           entityId={entity.id}
-          kind={entity.entity_type}
+          entityType={entity.entity_type}
+        />
+        {entity.entity_type === 'place' && <PlaceSection placeId={entity.id} />}
+        {entity.entity_type === 'region' && (
+          <CreatePlace regionId={entity.id} />
+        )}
+        {entity.entity_type === 'region' && (
+          <LandShapeSection regionId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'event' && (
+          <EventSection eventId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {eventful && (
+          <EventsHereSection locationId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {trading && (
+          <DemographySection
+            communityId={entity.id}
+            readOnlyReason={readOnly}
+          />
+        )}
+        {trading && <LabourSection communityId={entity.id} />}
+        {entity.entity_type === 'people' && (
+          <PeopleProfileSection
+            peopleId={entity.id}
+            readOnlyReason={readOnly}
+          />
+        )}
+        {trading && (
+          <NeedsSection communityId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {trading && (
+          <ClassWealthSection
+            communityId={entity.id}
+            readOnlyReason={readOnly}
+          />
+        )}
+        {entity.entity_type === 'people' && (
+          <CultureDriftSection
+            communityId={entity.id}
+            readOnlyReason={readOnly}
+          />
+        )}
+        {trading && (
+          <LoyaltySection communityId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {(trading || entity.entity_type === 'mortal') && (
+          <MobilitySection
+            entityId={entity.id}
+            mortal={entity.entity_type === 'mortal'}
+            readOnlyReason={readOnly}
+          />
+        )}
+        {entity.entity_type === 'settlement' && (
+          <SettlementPlanSection
+            settlementId={entity.id}
+            readOnlyReason={readOnly}
+          />
+        )}
+        {entity.entity_type === 'settlement' && (
+          <TreasurySection settlementId={entity.id} />
+        )}
+        {entity.entity_type === 'structure' && (
+          <StructureSection structureId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'people' && (
+          <PeopleStructuresSection
+            peopleId={entity.id}
+            readOnlyReason={readOnly}
+          />
+        )}
+        {entity.entity_type === 'disease' && (
+          <DiseaseSection diseaseId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {(trading ||
+          entity.entity_type === 'polity' ||
+          entity.entity_type === 'mortal') && (
+          <RealmSection entityId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'house' && (
+          <HouseSection houseId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'treaty' && (
+          <TreatySection treatyId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'faction' && (
+          <FactionSection factionId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'mortal' && (
+          <OathsSection entityId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'structure' && (
+          <DedicationSection
+            structureId={entity.id}
+            readOnlyReason={readOnly}
+          />
+        )}
+        {entity.entity_type === 'cult' && (
+          <DoctrineSection cultId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {isLoreKind(entity.entity_type) && (
+          <LoreSection
+            entityId={entity.id}
+            kind={entity.entity_type}
+            readOnlyReason={readOnly}
+          />
+        )}
+        {isCommunity(ctx.type) && (
+          <LearningSection holderId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {(isCommunity(ctx.type) || entity.entity_type === 'polity') && (
+          <RumoursSection communityId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'species' && (
+          <SpeciesSection speciesId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'beast' && (
+          <BeastSection beastId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {isCommunity(ctx.type) && (
+          <HerdsSection communityId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'region' && (
+          <FoodWebSection regionId={entity.id} />
+        )}
+        {entity.entity_type === 'region' && !readOnly && (
+          <WildsCreateBar regionId={entity.id} />
+        )}
+        {entity.entity_type === 'people' && (
+          <TotemSection peopleId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'spirit' && (
+          <SoulSection spiritId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'region' && (
+          <AfterlifeSection regionId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'vessel' && (
+          <VesselSection vesselId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {(entity.entity_type === 'army' ||
+          entity.entity_type === 'mortal' ||
+          entity.entity_type === 'faction' ||
+          isCommunity(ctx.type)) && (
+          <MilitarySection
+            entityId={entity.id}
+            kind={entity.entity_type}
+            readOnlyReason={readOnly}
+          />
+        )}
+        {(entity.entity_type === 'people' ||
+          entity.entity_type === 'settlement') && (
+          <EntityEconomy
+            communityId={entity.id}
+            worldId={entity.world_id}
+            readOnlyReason={readOnly}
+          />
+        )}
+        {(entity.entity_type === 'people' ||
+          entity.entity_type === 'settlement') && (
+          <PriceBoard marketId={entity.id} />
+        )}
+        {(entity.entity_type === 'people' ||
+          entity.entity_type === 'settlement') && (
+          <CommunityRoutes communityId={entity.id} />
+        )}
+        {(entity.entity_type === 'item' ||
+          entity.entity_type === 'structure' ||
+          entity.entity_type === 'vessel' ||
+          entity.entity_type === 'army') && (
+          <NodeMaterials nodeId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'resource' && (
+          <ResourceProfile
+            resourceId={entity.id}
+            worldId={entity.world_id}
+            readOnlyReason={readOnly}
+          />
+        )}
+        {entity.entity_type === 'resource' && (
+          <SentientPacts resourceId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'polity' && (
+          <PolityProduction polityId={entity.id} />
+        )}
+        {entity.entity_type === 'trade_route' && (
+          <TradeRouteSection routeId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {embodied && <BodySection nodeId={entity.id} />}
+        {entity.entity_type === 'people' && (
+          <PeopleBodyCustoms peopleId={entity.id} />
+        )}
+        {maimedHome && <CommunityMaimed communityId={entity.id} />}
+        {entity.entity_type === 'mortal' && (
+          <LifeSection mortalId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'mortal' && (
+          <KinSection mortalId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'mortal' && (
+          <EquipmentSection mortalId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {minded && <MindSection nodeId={entity.id} />}
+        {entity.entity_type === 'mortal' && (
+          <SkillsSection nodeId={entity.id} />
+        )}
+        {minded && <MemoriesSection nodeId={entity.id} />}
+        <BiographySection nodeId={entity.id} readOnlyReason={readOnly} />
+        <EntityMechanics
+          nodeId={entity.id}
+          statKeys={Object.keys(entity.stats).filter((key) => key !== 'kind')}
           readOnlyReason={readOnly}
         />
-      )}
-      {(entity.entity_type === 'people' ||
-        entity.entity_type === 'settlement') && (
-        <EntityEconomy
-          communityId={entity.id}
-          worldId={entity.world_id}
+        <EntityEditForm
+          key={`${entity.id}-${entity.name}-${entity.description.length}`}
+          entity={entity}
           readOnlyReason={readOnly}
         />
-      )}
-      {(entity.entity_type === 'people' ||
-        entity.entity_type === 'settlement') && (
-        <PriceBoard marketId={entity.id} />
-      )}
-      {(entity.entity_type === 'people' ||
-        entity.entity_type === 'settlement') && (
-        <CommunityRoutes communityId={entity.id} />
-      )}
-      {(entity.entity_type === 'item' ||
-        entity.entity_type === 'structure' ||
-        entity.entity_type === 'vessel' ||
-        entity.entity_type === 'army') && (
-        <NodeMaterials nodeId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'resource' && (
-        <ResourceProfile
-          resourceId={entity.id}
-          worldId={entity.world_id}
+        <DangerZone ctx={ctx} readOnlyReason={readOnly} />
+        <Lightbox
+          images={detail.images}
+          index={lightbox}
+          onIndexChange={setLightbox}
+          title={entity.name}
+          veiled={entity.entity_type === 'outer_being'}
           readOnlyReason={readOnly}
         />
-      )}
-      {entity.entity_type === 'resource' && (
-        <SentientPacts resourceId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'polity' && (
-        <PolityProduction polityId={entity.id} />
-      )}
-      {entity.entity_type === 'trade_route' && (
-        <TradeRouteSection routeId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {embodied && <BodySection nodeId={entity.id} />}
-      {entity.entity_type === 'people' && (
-        <PeopleBodyCustoms peopleId={entity.id} />
-      )}
-      {maimedHome && <CommunityMaimed communityId={entity.id} />}
-      {entity.entity_type === 'mortal' && (
-        <LifeSection mortalId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'mortal' && (
-        <KinSection mortalId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {entity.entity_type === 'mortal' && (
-        <EquipmentSection mortalId={entity.id} readOnlyReason={readOnly} />
-      )}
-      {minded && <MindSection nodeId={entity.id} />}
-      {entity.entity_type === 'mortal' && <SkillsSection nodeId={entity.id} />}
-      {minded && <MemoriesSection nodeId={entity.id} />}
-      <BiographySection nodeId={entity.id} readOnlyReason={readOnly} />
-      <EntityMechanics
-        nodeId={entity.id}
-        statKeys={Object.keys(entity.stats).filter((key) => key !== 'kind')}
-        readOnlyReason={readOnly}
-      />
-      <EntityEditForm
-        key={`${entity.id}-${entity.name}-${entity.description.length}`}
-        entity={entity}
-        readOnlyReason={readOnly}
-      />
-      <DangerZone ctx={ctx} readOnlyReason={readOnly} />
-      <Lightbox
-        images={detail.images}
-        index={lightbox}
-        onIndexChange={setLightbox}
-        title={entity.name}
-        veiled={entity.entity_type === 'outer_being'}
-        readOnlyReason={readOnly}
-      />
-    </article>
+      </article>
+    </EntityCtx.Provider>
   )
 }
 

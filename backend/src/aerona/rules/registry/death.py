@@ -43,12 +43,12 @@ class DeathRules:
     foreign_god_smite_chance: int = rule(
         4, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "An awake foreign god strikes a named mortal on its own world who does not worship it (% per epoch)"
     )
-    creator_take_life_cost: int = rule(15, 0, 10000, RuleGroup.DEATH_AND_RESURRECTION, "Cost for Aeron (the Creator) to take a mortal's life (divine essence)")
-    creator_kill_son_cost: int = rule(100, 0, 100000, RuleGroup.DEATH_AND_RESURRECTION, "Cost for Aeron to kill a son (divine essence)")
-    kill_son_loyalty_gain: int = rule(10, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "Loyalty the other sons gain out of fear when Aeron kills a son")
-    kill_son_friend_wrath: int = rule(15, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "Wrath of the dead son's friendly siblings when Aeron kills a son")
+    creator_take_life_cost: int = rule(15, 0, 10000, RuleGroup.DEATH_AND_RESURRECTION, "Cost for the Creator to take a mortal's life (divine essence)")
+    creator_kill_son_cost: int = rule(100, 0, 100000, RuleGroup.DEATH_AND_RESURRECTION, "Cost for the Creator to kill a son (divine essence)")
+    kill_son_loyalty_gain: int = rule(10, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "Loyalty the other sons gain out of fear when the Creator kills a son")
+    kill_son_friend_wrath: int = rule(15, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "Wrath of the dead son's friendly siblings when the Creator kills a son")
     resurrection_min_epochs: int = rule(
-        3, 0, 1000, RuleGroup.DEATH_AND_RESURRECTION, "A dead son can resurrect on his own at the earliest after this many epochs (except by Aeron's hand)"
+        3, 0, 1000, RuleGroup.DEATH_AND_RESURRECTION, "A dead son can resurrect unaided at the earliest after this many epochs (except by the Creator's hand)"
     )
     rite_chance: int = rule(
         20, 0, 100, RuleGroup.DEATH_AND_RESURRECTION, "A community loyal to its dead god holds a resurrection rite on its own (% per epoch)"

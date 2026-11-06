@@ -7,12 +7,12 @@ import {
   Plus,
   Sparkles,
   Trash2,
+  Unlock,
   type LucideIcon,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { EmptyState, Medallion, Paged } from '@/components/domain'
@@ -100,8 +100,18 @@ function VariantRow({
       ),
     invalidate: [VARIANTS_KEY],
   })
+  const release = useGodAction({
+    run: (field: string) =>
+      unwrap(
+        api.POST('/api/actions/variant:release', {
+          body: { variant_id: variant.id, field },
+        })
+      ),
+    invalidate: [VARIANTS_KEY],
+  })
   const reason =
-    blocked ?? (save.isPending || unmake.isPending ? WORKING : null)
+    blocked ??
+    (save.isPending || unmake.isPending || release.isPending ? WORKING : null)
   return (
     <li className='flex min-w-0 flex-wrap items-end gap-2 rounded-md border bg-background p-2'>
       <Medallion icon={spec.icon} size='sm' />
@@ -141,11 +151,20 @@ function VariantRow({
           />
         </div>
       )}
-      {variant.held.length > 0 && (
-        <Badge size='sm' variant='outline'>
-          Held
-        </Badge>
-      )}
+      {variant.held.map((field) => (
+        <Button
+          key={field}
+          size='sm'
+          variant='outline'
+          aria-label={`Release ${field.replaceAll('_', ' ')} of ${variant.name}`}
+          disabled={reason !== null}
+          disabledReason={reason ?? undefined}
+          onClick={() => release.mutate(field)}
+        >
+          <Unlock />
+          {`Release ${field.replaceAll('_', ' ')}`}
+        </Button>
+      ))}
       <Button
         size='sm'
         variant='outline'

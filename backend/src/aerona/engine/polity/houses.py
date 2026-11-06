@@ -158,7 +158,7 @@ MOTTOS: dict[ValueAxis, str] = {
     ValueAxis.PIETY: "The gods before all",
     ValueAxis.WEALTH: "What we gather, we keep",
     ValueAxis.KINSHIP: "Blood answers blood",
-    ValueAxis.TRADITION: "As our fathers did",
+    ValueAxis.TRADITION: "As our ancestors did",
     ValueAxis.KNOWLEDGE: "We remember",
     ValueAxis.MERCY: "Mercy is strength",
     ValueAxis.HIERARCHY: "Born to rule",

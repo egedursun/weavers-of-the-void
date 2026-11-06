@@ -12,7 +12,7 @@ export const GLOSSARY: GlossaryTerm[] = [
   {
     term: 'Divine essence',
     meaning:
-      'The price of your commands. It refills every epoch with a base amount plus a share of your sons’ faith. A son’s essence is his own.',
+      'The price of your commands. It refills every epoch with a base amount plus a share of your sons’ faith. A son’s essence is their own.',
   },
   {
     term: 'Revelation',

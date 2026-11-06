@@ -52,7 +52,7 @@ class WorldEpochTransitionRules:
         RuleGroup.CREATOR_AND_ESSENCE,
         "Domain rivalry lowers the relation at most to minus this value (deeper hostility comes from conflict and slowly reverts)",
     )
-    rebel_steal_base: int = rule(6, 0, 1000, RuleGroup.CREATOR_AND_ESSENCE, "Essence a rebel son steals from his father: base")
+    rebel_steal_base: int = rule(6, 0, 1000, RuleGroup.CREATOR_AND_ESSENCE, "Essence a rebel son steals from the Creator: base")
     rebel_steal_per_level: int = rule(2, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Extra essence a rebel son steals per level")
     temples_per_apocalypse_push: int = rule(2, 1, 100, RuleGroup.APOCALYPSE, "Number of temples that push the apocalypse back by 1")
     apocalypse_disaster_severity: int = rule(90, 0, 100, RuleGroup.APOCALYPSE, "Severity of the apocalypse's disasters destroying regions (%)")

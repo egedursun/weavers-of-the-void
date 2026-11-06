@@ -131,7 +131,7 @@ export function SonTurns({
     <>
       <Section
         title='Turns'
-        description='What he did each epoch, from the action ledger.'
+        description='What they did each epoch, from the action ledger.'
         level={3}
       >
         {ledger.isPending ? (
@@ -143,7 +143,7 @@ export function SonTurns({
             icon={History}
             size='compact'
             title='No turn in the ledger'
-            description='His actions are recorded here once he takes a turn.'
+            description='Their actions are recorded here once they take a turn.'
           />
         ) : (
           <TurnEpochs epochs={epochs} byEpoch={byEpoch} />
@@ -153,7 +153,7 @@ export function SonTurns({
         title='Trace in the chronicle'
         lines={chronicle}
         emptyTitle='None yet'
-        emptyText='Chronicle lines about him appear here.'
+        emptyText='Chronicle lines about them appear here.'
       />
     </>
   )

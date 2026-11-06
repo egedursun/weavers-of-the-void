@@ -21,8 +21,10 @@ import {
   Swords,
   TriangleAlert,
   Trophy,
+  Unlock,
   User,
   Users,
+  Pencil,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -47,6 +49,7 @@ import {
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { RowAction } from '../actions/RowAction'
 import { HouseEditor, TreatyBuilder } from './Covenants'
 import { useHouse, useOaths, useTreaty } from './api'
 import {
@@ -773,6 +776,27 @@ export function TreatySection({
                           ? `Kept in epoch ${clause.last_kept_epoch}`
                           : 'Not yet called'}
                       </Badge>
+                      <RowAction
+                        path='/api/actions/treaty:clause_edit'
+                        icon={Pencil}
+                        label={`Rewrite ${spec.label.toLowerCase()}`}
+                        iconOnly
+                        fixed={{ clause_id: clause.id }}
+                        defaults={{
+                          obligor_id: clause.obligor_id,
+                          beneficiary_id: clause.beneficiary_id,
+                        }}
+                        labels={{
+                          obligor_id: 'Owed by',
+                          beneficiary_id: 'Owed to',
+                        }}
+                        pickers={{
+                          obligor_id: { source: 'entity' },
+                          beneficiary_id: { source: 'entity' },
+                        }}
+                        params={clause.params}
+                        held={clause.locked}
+                      />
                     </li>
                   )
                 }}
@@ -916,16 +940,50 @@ function OathCard({
             <span />
           )}
           {oath.status === 'sworn' && (
-            <Button
-              size='sm'
-              variant='ghost'
-              disabled={blocked !== null}
-              disabledReason={blocked ?? undefined}
-              onClick={onBreak}
-            >
-              <HeartCrack />
-              Break it
-            </Button>
+            <div className='flex min-w-0 flex-wrap items-center gap-2'>
+              <RowAction
+                path='/api/actions/oath:edit'
+                icon={Pencil}
+                label='Edit oath'
+                fixed={{ oath_id: oath.id }}
+                defaults={{
+                  deadline_epoch: oath.deadline_epoch,
+                  note: oath.note ?? '',
+                  recipient_id: oath.recipient_id,
+                  witness_son_id: oath.witness_son_id,
+                  clear_deadline: false,
+                }}
+                labels={{
+                  deadline_epoch: 'Due by epoch',
+                  clear_deadline: 'No deadline',
+                  note: 'Words of the oath',
+                  recipient_id: 'Sworn to',
+                  witness_son_id: 'Witnessing god',
+                }}
+                pickers={{
+                  recipient_id: { source: 'entity' },
+                  witness_son_id: { source: 'son', status: 'living' },
+                }}
+                multiline={['note']}
+              />
+              <RowAction
+                path='/api/actions/oath:release'
+                icon={Unlock}
+                label='Release with honour'
+                fixed={{ oath_id: oath.id }}
+                confirm={`${oath.swearer} will be released from the oath with honour intact.`}
+              />
+              <Button
+                size='sm'
+                variant='ghost'
+                disabled={blocked !== null}
+                disabledReason={blocked ?? undefined}
+                onClick={onBreak}
+              >
+                <HeartCrack />
+                Break it
+              </Button>
+            </div>
           )}
         </div>
       )}

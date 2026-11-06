@@ -93,10 +93,10 @@ class GodPowerRules:
     auto_drain_loyalty: int = rule(
         20, 0, 100, RuleGroup.THE_GODS_POWER, "If there are no rebel sons, the wrathful Creator may drain the most defiant son with loyalty below this"
     )
-    auto_rebel_loyalty: int = rule(15, 0, 100, RuleGroup.THE_GODS_POWER, "A son whose loyalty fell below this may rebel on his own")
+    auto_rebel_loyalty: int = rule(15, 0, 100, RuleGroup.THE_GODS_POWER, "A son whose loyalty fell below this may rebel unprompted")
     auto_rebel_wrath: int = rule(60, 0, 100, RuleGroup.THE_GODS_POWER, "Minimum wrath of a son for spontaneous rebellion")
-    auto_rebel_chance: int = rule(20, 0, 100, RuleGroup.THE_GODS_POWER, "Chance in one epoch that a son meeting the conditions rebels on his own (%)")
-    auto_return_loyalty: int = rule(50, 0, 100, RuleGroup.THE_GODS_POWER, "A rebel son whose loyalty rises back to this may return to his father on his own")
+    auto_rebel_chance: int = rule(20, 0, 100, RuleGroup.THE_GODS_POWER, "Chance in one epoch that a son meeting the conditions rebels unprompted (%)")
+    auto_return_loyalty: int = rule(50, 0, 100, RuleGroup.THE_GODS_POWER, "A rebel son whose loyalty rises back to this may return to the Creator unprompted")
     auto_return_chance: int = rule(
         25, 0, 100, RuleGroup.THE_GODS_POWER, "Chance in one epoch that a rebel son with restored loyalty abandons the rebellion (%)"
     )

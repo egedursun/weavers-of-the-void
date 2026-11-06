@@ -10,6 +10,7 @@ import {
   PersonStanding,
   Plus,
   RotateCcw,
+  Shapes,
   Sparkles,
   Swords,
   Unlock,
@@ -51,6 +52,7 @@ import {
   useVariants,
   variantChoices,
 } from '@/features/world-rules/VariantForge'
+import { RowAction } from '../actions/RowAction'
 import { loreKeys } from '../api/keys'
 import { BodyDiagram } from '../body/BodyDiagram'
 import {
@@ -357,6 +359,7 @@ function Armour({ body }: { body: Body }) {
 }
 
 function Conditions({ body, blocked }: { body: Body; blocked: string | null }) {
+  const variants = useVariants()
   const end = useGodAction({
     run: (id: number) =>
       unwrap(
@@ -389,6 +392,14 @@ function Conditions({ body, blocked }: { body: Body; blocked: string | null }) {
           {(row: Condition) => {
             const spec = named(CONDITIONS, row.kind)
             const source = linkKind(row.source_link)
+            const kinds = (variants.data ?? [])
+              .filter(
+                (item) => item.family === 'condition' && item.base === row.kind
+              )
+              .map((item) => ({ value: String(item.id), label: item.name }))
+            const madeKind = (variants.data ?? []).find(
+              (item) => item.id === row.variant_id
+            )
             return (
               <li
                 key={row.id}
@@ -415,6 +426,12 @@ function Conditions({ body, blocked }: { body: Body; blocked: string | null }) {
                     {!row.visible && (
                       <Badge size='sm' variant='outline'>
                         Hidden from others
+                      </Badge>
+                    )}
+                    {madeKind && (
+                      <Badge size='sm' variant='info'>
+                        <Shapes />
+                        {madeKind.name}
                       </Badge>
                     )}
                   </div>
@@ -460,6 +477,18 @@ function Conditions({ body, blocked }: { body: Body; blocked: string | null }) {
                       <Plus />
                     </Button>
                   </div>
+                )}
+                {row.ended_epoch === null && kinds.length > 0 && (
+                  <RowAction
+                    path='/api/actions/variant:assign'
+                    icon={Shapes}
+                    label={`Give ${spec.label.toLowerCase()} a made kind`}
+                    iconOnly
+                    fixed={{ family: 'condition', row_id: row.id }}
+                    defaults={{ variant_id: row.variant_id ?? null }}
+                    labels={{ variant_id: 'Made kind' }}
+                    choices={{ variant_id: kinds }}
+                  />
                 )}
                 {row.ended_epoch === null && (
                   <Button

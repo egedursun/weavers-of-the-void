@@ -46,7 +46,7 @@ const NO_PICKS: Picks = {
 
 function missingPick(info: ContextBlockInfo, picks: Picks): string | null {
   if (info.needs_son && picks.sonId === null)
-    return 'This block is written for one son. Pick him.'
+    return 'This block is written for one son. Pick one.'
   if (info.needs_entity && picks.entityId === null)
     return 'This block describes one record. Pick it.'
   return null
@@ -112,7 +112,7 @@ function BlockControls({
           label={info.needs_son ? 'Son' : 'Seen by a son'}
           description={
             info.needs_son
-              ? 'Required: the block is his own.'
+              ? 'Required: the block is their own.'
               : 'Optional: render it as this son would see it.'
           }
         >

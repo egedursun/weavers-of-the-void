@@ -216,7 +216,7 @@ export function DomainSpecimens() {
             timestamp='Epoch 12'
             tone='primary'
           >
-            <Muted>The brothers watched in silence.</Muted>
+            <Muted>The pantheon watched in silence.</Muted>
           </TimelineItem>
           <TimelineItem
             icon={CloudLightning}

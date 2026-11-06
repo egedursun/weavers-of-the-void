@@ -196,7 +196,7 @@ describe('hand of god on the son page', () => {
   it('suppresses a rebellion after confirming or forgives it, and pardons the chained', async () => {
     const { screen, server } = await openSon(9)
     await expect
-      .element(screen.getByText('In rebellion against his father'))
+      .element(screen.getByText('In rebellion against the Creator'))
       .toBeVisible()
     await screen
       .getByRole('button', { name: /^Suppress the rebellion/ })
@@ -248,7 +248,9 @@ describe('hand of god on the son page', () => {
     await expect
       .element(send)
       .toHaveAttribute('aria-description', 'Pick another world.')
-    await screen.getByRole('combobox', { name: 'World to send him to' }).click()
+    await screen
+      .getByRole('combobox', { name: 'World to send them to' })
+      .click()
     await screen.getByRole('option', { name: /^The Glass Wastes/ }).click()
     await send.click()
     await expect
@@ -275,7 +277,9 @@ describe('son sections', () => {
   it('shows how he sees his father and nudges love within the manual cap', async () => {
     const { screen, server } = await openSon(7)
     await expect
-      .element(screen.getByRole('heading', { name: 'How he sees his father' }))
+      .element(
+        screen.getByRole('heading', { name: 'How they see the Creator' })
+      )
       .toBeVisible()
     await expect
       .element(screen.getByText('Last contact: Epoch 11'))
@@ -287,14 +291,14 @@ describe('son sections', () => {
         )
       )
       .toBeVisible()
-    await screen.getByRole('button', { name: 'Win his heart' }).click()
+    await screen.getByRole('button', { name: 'Win their heart' }).click()
     await expect
       .poll(() => server.callsTo('POST /api/sons/7/reputation-nudge').length)
       .toBe(1)
     expect(server.callsTo('POST /api/sons/7/reputation-nudge')[0].body).toEqual(
       { love: 10, fear: 0, forgotten: 0 }
     )
-    await screen.getByRole('button', { name: 'Remind him of you' }).click()
+    await screen.getByRole('button', { name: 'Remind them of you' }).click()
     await expect
       .poll(() => server.callsTo('POST /api/sons/7/reputation-nudge').length)
       .toBe(2)
@@ -438,7 +442,7 @@ describe('son sections', () => {
       .element(screen.getByText('Sanity', { exact: true }).first())
       .toBeVisible()
     await expect
-      .element(screen.getByText(/anchor living feed existence/))
+      .element(screen.getByText(/a living anchor feed existence/))
       .toBeVisible()
   })
 
@@ -463,7 +467,7 @@ describe('son sections', () => {
   it('breaks a bond after confirming and creates a new one', async () => {
     const { screen, server } = await openSon(7)
     await expect
-      .element(screen.getByRole('heading', { name: 'His hand in the world' }))
+      .element(screen.getByRole('heading', { name: 'Their hand in the world' }))
       .toBeVisible()
     await expect
       .element(screen.getByText('He shelters the drowned city.'))

@@ -38,7 +38,7 @@ CREATED = "created"
 INSIDE = "inside"
 IN_WORLD = "in world"
 ROUTE = "route"
-FATHER = "father"
+CREATOR_OF = "creator of"
 SON_BASE_SIZE = 4
 SON_SIZE_STEP = 2
 ENTITY_BASE_SIZE = 2
@@ -380,12 +380,12 @@ async def _son_neighbours(session: AsyncSession, node_id: int) -> list[Neighbour
         found.append((son.current_world_id, PathStep(node_id, son.current_world_id, IN_WORLD, True, None)))
     creator = await session.scalar(select(CreatorRow.id))
     if creator is not None:
-        found.append((creator, PathStep(node_id, creator, FATHER, False, None)))
+        found.append((creator, PathStep(node_id, creator, CREATOR_OF, False, None)))
     return found
 
 
 async def _creator_neighbours(session: AsyncSession, node_id: int) -> list[Neighbour]:
-    return [(son_id, PathStep(node_id, son_id, FATHER, True, None)) for son_id in await session.scalars(select(SonRow.id))]
+    return [(son_id, PathStep(node_id, son_id, CREATOR_OF, True, None)) for son_id in await session.scalars(select(SonRow.id))]
 
 
 async def _foreign_god_neighbours(session: AsyncSession, node_id: int) -> list[Neighbour]:

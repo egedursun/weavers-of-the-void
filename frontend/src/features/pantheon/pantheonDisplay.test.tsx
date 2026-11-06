@@ -68,7 +68,9 @@ describe('son card', () => {
       <SonCard view={THALASSIR} ready={false} />,
       godRoutes()
     )
-    await expect.element(screen.getByText('Sees father: Loved')).toBeVisible()
+    await expect
+      .element(screen.getByText('Sees the Creator: Loved'))
+      .toBeVisible()
     await expect
       .element(
         screen.getByText('The sea keeps every promise it is made to keep.')
@@ -151,7 +153,7 @@ describe('son reveal overlay', () => {
       .toBeVisible()
     await expect.element(dialog.getByText('Tide Ledger')).toBeVisible()
     const openCard = dialog
-      .getByRole('button', { name: 'Open his page' })
+      .getByRole('button', { name: 'Open their page' })
       .element() as HTMLElement
     openCard.click()
     await expect.element(screen.getByRole('dialog')).not.toBeInTheDocument()
@@ -285,7 +287,7 @@ describe('compare sons', () => {
     await expect.element(table.getByText('Stats')).toBeVisible()
     await expect.element(table.getByText('Passions')).toBeVisible()
     await expect
-      .element(table.getByText('How he sees his father'))
+      .element(table.getByText('How they see the Creator'))
       .toBeVisible()
     await screen.getByRole('button', { name: 'Compare Mirel' }).click()
     await expect.element(screen.getByText('At most 3 sons.')).toBeVisible()
@@ -370,7 +372,7 @@ describe('creator panel on the pantheon', () => {
     expect(server.callsTo('PATCH /api/creator')[0].body).toEqual({
       image_prompt: 'A dawn over drowned bells',
     })
-    await screen.getByRole('button', { name: /Redraw his likeness/ }).click()
+    await screen.getByRole('button', { name: /Redraw the likeness/ }).click()
     await expect
       .poll(() => server.callsTo('POST /api/creator/portrait').length)
       .toBe(1)

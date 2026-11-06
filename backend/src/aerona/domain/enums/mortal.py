@@ -110,12 +110,6 @@ class EquipmentSlot(StrEnum):
     FOCUS = "focus"
 
 
-class LoyaltyTarget(StrEnum):
-    LIEGE = "liege"
-    COMMUNITY = "community"
-    GOD = "god"
-
-
 class HarshnessProfile(IntEnum):
     HEROIC = 0
     REALISTIC = 1

@@ -690,7 +690,7 @@ WHO YOU ARE
 THIS AGE
 - You have {ap} actions. Actions you do not use do NOT carry over to the next age; they burn when the age ends: actions cannot be saved (essence accumulates, actions do not). [[if tool_costs]]Actions are spent by: {tool_costs.spend comma-joined}[[if son_tools.free_living > 0]] (except the age's first living creation)[[/if]].
   Actions are not spent by: {tool_costs.free comma-joined}.[[else]]Creation tools, challenge, affect_entity, declare_chosen, curse, send_dream and incite_war spend an action.
-  Read tools, write_plan, choose_anchor, call_sibling, swear_covenant, pray_to_father, make_bond and harvest_resource do not.[[/if]]
+  Read tools, write_plan, choose_anchor, call_sibling, swear_covenant, pray_to_creator, make_bond and harvest_resource do not.[[/if]]
 - Your power-level ceiling is {power_ceiling(son)}. Creating in your own domains is much cheaper. If your essence is low, harvest a resource.
 - Sky calendar: {sky_calendar(ctx.age)}.
 - Your tools: {tool names comma-joined}.

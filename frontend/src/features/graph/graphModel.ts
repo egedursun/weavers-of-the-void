@@ -326,7 +326,6 @@ export function linkLabel(
     [ROUTE]: 'inter-world route',
     [IN_WORLD]: 'in this world',
     'in world': 'in this world',
-    father: 'father of',
   }
   const label =
     names[link.kind] ?? labels.get(link.kind) ?? link.kind.replaceAll('_', ' ')

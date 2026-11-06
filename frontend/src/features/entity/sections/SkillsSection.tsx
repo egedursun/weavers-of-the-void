@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Hourglass, Plus, X } from 'lucide-react'
+import { Hourglass, Pencil, Plus, Shapes, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +10,8 @@ import { Label, Muted } from '@/components/typography'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { useVariants } from '@/features/world-rules/VariantForge'
+import { RowAction } from '../actions/RowAction'
 import { type Mind, type MindSkill, type SkillKind, useMind } from '../mind/api'
 import {
   SKILLS_ICON,
@@ -91,6 +93,13 @@ function SkillRow({
   blocked: string | null
   onForget: () => void
 }) {
+  const variants = useVariants()
+  const kinds = (variants.data ?? [])
+    .filter((item) => item.family === 'skill' && item.base === skill.skill)
+    .map((item) => ({ value: String(item.id), label: item.name }))
+  const madeKind = (variants.data ?? []).find(
+    (item) => item.id === skill.variant_id
+  )
   const spec = named(SKILL_ICONS, skill.skill)
   const hampered = skill.effective < skill.level
   return (
@@ -111,6 +120,39 @@ function SkillRow({
             }
           />
         </div>
+        <RowAction
+          path='/api/actions/mind:skill_edit'
+          icon={Pencil}
+          label={`Edit ${skill.label}`}
+          iconOnly
+          fixed={{ skill_id: skill.id }}
+          defaults={{
+            level: skill.level,
+            xp: skill.xp,
+            peak: skill.peak,
+            subject_id: skill.subject?.id ?? null,
+            clear_subject: false,
+          }}
+          labels={{
+            xp: 'Practice toward the next level',
+            peak: 'Best level ever reached',
+            subject_id: 'What the skill is about',
+            clear_subject: 'About nothing in particular',
+          }}
+          pickers={{ subject_id: { source: 'entity' } }}
+        />
+        {kinds.length > 0 && (
+          <RowAction
+            path='/api/actions/variant:assign'
+            icon={Shapes}
+            label={`Give ${skill.label} a made kind`}
+            iconOnly
+            fixed={{ family: 'skill', row_id: skill.id }}
+            defaults={{ variant_id: skill.variant_id ?? null }}
+            labels={{ variant_id: 'Made kind' }}
+            choices={{ variant_id: kinds }}
+          />
+        )}
         <Button
           size='icon-sm'
           variant='ghost'
@@ -124,6 +166,18 @@ function SkillRow({
       </div>
       <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
         <Muted variant='caption'>{`${skill.xp}/${skill.next_level_xp} toward the next level · best ${skill.peak} · ${plain(SKILL_SOURCES, skill.source)}`}</Muted>
+        {skill.subject && (
+          <Badge
+            size='sm'
+            variant='outline'
+          >{`About ${skill.subject.name}`}</Badge>
+        )}
+        {madeKind && (
+          <Badge size='sm' variant='info'>
+            <Shapes />
+            {madeKind.name}
+          </Badge>
+        )}
         {hampered && (
           <Badge
             size='sm'

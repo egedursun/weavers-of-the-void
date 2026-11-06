@@ -80,12 +80,6 @@ class SonRelationLabel(StrEnum):
     HATRED = "hatred"
 
 
-class ReputationAxis(StrEnum):
-    LOVE = "love"
-    FEAR = "fear"
-    FORGOTTEN = "forgotten"
-
-
 class ReputationLabel(StrEnum):
     FORGOTTEN = "forgotten"
     HATED = "hated"
@@ -104,9 +98,3 @@ class SonDeathCause(StrEnum):
     FOREIGN_GOD = "foreign_god"
     COSMIC_HORROR = "cosmic_horror"
     OTHER = "other"
-
-
-class ResurrectionPath(StrEnum):
-    CREATOR = "creator"
-    RITE = "rite"
-    THREAD = "thread"

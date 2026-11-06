@@ -51,7 +51,7 @@ describe('layer palette', () => {
     ])
     expect(palette.categories[0].token).toBe(SERIES_TOKENS[0])
     expect(palette.categories[1].token).toBe('brand-gold')
-    expect(palette.categories[1].label).toContain('the god himself')
+    expect(palette.categories[1].label).toContain('the Creator in person')
     expect(palette.colorOf('son:7')).toBe(`token-${SERIES_TOKENS[0]}`)
   })
 

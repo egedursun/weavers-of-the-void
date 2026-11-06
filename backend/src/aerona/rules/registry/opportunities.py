@@ -9,7 +9,7 @@ class OpportunitiesRules:
     list_max: int = rule(5, 1, 50, RuleGroup.OPPORTUNITIES, "Maximum records listed in one opportunity line")
     stale_epochs: int = rule(4, 1, 100, RuleGroup.OPPORTUNITIES, 'A story untouched for this many epochs counts as "about to be forgotten"')
     long_thread_steps: int = rule(8, 1, 200, RuleGroup.OPPORTUNITIES, 'After this many advances a story counts as "should be concluded"')
-    silence_epochs: int = rule(3, 1, 100, RuleGroup.OPPORTUNITIES, "Reminder to a son who hasn't talked with his siblings for this many epochs")
+    silence_epochs: int = rule(3, 1, 100, RuleGroup.OPPORTUNITIES, "Reminder to a son who hasn't talked with their siblings for this many epochs")
     rich_essence: int = rule(150, 0, 100000, RuleGroup.OPPORTUNITIES, 'Essence for a "great deed" reminder to the Creator')
     list_short: int = rule(4, 1, 50, RuleGroup.OPPORTUNITIES, "Maximum records in short opportunity lists")
     list_narrow: int = rule(3, 1, 50, RuleGroup.OPPORTUNITIES, "Maximum records in the narrowest opportunity lists")

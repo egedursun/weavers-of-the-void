@@ -407,7 +407,7 @@ export function buildLayerPalette(
     const label = labelFor(view, key, names, regionNames)
     return {
       key,
-      label: key === CREATOR_KEY ? `${label} (the god himself)` : label,
+      label: key === CREATOR_KEY ? `${label} (the Creator in person)` : label,
       mapLabel: label,
       count,
       token,

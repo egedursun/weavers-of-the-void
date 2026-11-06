@@ -91,7 +91,7 @@ function PatronRow({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={CREATOR}>The Creator himself</SelectItem>
+              <SelectItem value={CREATOR}>The Creator</SelectItem>
               {sons.length > 0 && (
                 <SelectGroup>
                   <SelectLabel>Sons</SelectLabel>

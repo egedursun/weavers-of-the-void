@@ -87,8 +87,8 @@ export function OuterBargainForm({ sons, fixedSonId }: OuterBargainFormProps) {
           </Badge>
           <Muted as='span' variant='caption'>
             {perEpoch === undefined
-              ? 'He may bargain on his own when a thing outside stirs.'
-              : `On his own he may bargain ${perEpoch} ${perEpoch === 1 ? 'time' : 'times'} an epoch when a thing outside stirs.`}
+              ? 'They may bargain on their own when a thing outside stirs.'
+              : `On their own they may bargain ${perEpoch} ${perEpoch === 1 ? 'time' : 'times'} an epoch when a thing outside stirs.`}
           </Muted>
         </div>
       )}
@@ -103,7 +103,7 @@ export function OuterBargainForm({ sons, fixedSonId }: OuterBargainFormProps) {
           />
         )}
       </FormRow>
-      <FormRow label='What he asks for' description='Optional'>
+      <FormRow label='What they ask for' description='Optional'>
         {(id) => (
           <Input
             id={id}
@@ -126,9 +126,9 @@ export function OuterBargainForm({ sons, fixedSonId }: OuterBargainFormProps) {
           }
           pending={order.isPending && order.variables === 'force'}
           confirm={{
-            title: `Make ${son?.name ?? 'him'} bargain with the outside?`,
+            title: `Make ${son?.name ?? 'them'} bargain with the outside?`,
             description:
-              'He gains essence and ambition, loses loyalty, his siblings sour on him and the world leaks. The price is asked one day.',
+              'They gain essence and ambition, lose loyalty, their siblings sour on them and the world leaks. The price is asked one day.',
             confirmLabel: 'Force it',
           }}
           onRun={() => order.mutate('force')}

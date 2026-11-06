@@ -46,7 +46,7 @@ class CoreRulesRules:
     relation_cold: int = rule(10, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "God relation at or below minus this is cold")
     relation_friend: int = rule(15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "God relation at or above this is friend")
     relation_close_friend: int = rule(45, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "God relation at or above this is close friend")
-    relation_sibling: int = rule(75, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "God relation at or above this is sibling (brother)")
+    relation_sibling: int = rule(75, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "God relation at or above this is sibling")
     tireless_extra_action: int = rule(1, 0, 10, RuleGroup.RARITY_TIERS, 'Extra action granted by the "Tireless" power')
     max_star_extra_action: int = rule(1, 0, 10, RuleGroup.RARITY_TIERS, "Extra action of a son who reaches the highest star (\u26055)")
     faded_action_loss: int = rule(1, 0, 10, RuleGroup.RARITY_TIERS, "Actions lost by a son whose existence falls below the Solid threshold")

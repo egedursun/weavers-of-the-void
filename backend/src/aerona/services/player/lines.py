@@ -1,7 +1,7 @@
 from aerona.catalog.god_lines import Line
 
 HAND = Line("player.hand", "{creator}'s hand: {text}")
-CREATOR_EDITED = Line("player.creator.edited", "{creator} reshaped how he is seen: {fields}.")
+CREATOR_EDITED = Line("player.creator.edited", "{creator} reshaped how the Creator is seen: {fields}.")
 NOTE_STORED = Line("player.creator.note", "{creator} wrote a standing note for the sons.")
 MOOD_SET = Line("player.creator.mood", "{creator}'s mood was set by hand.")
 REPUTATION_PUSHED = Line("player.creator.reputation", "{creator} changed how {son} sees the creator.")
@@ -21,7 +21,7 @@ COMMANDED = Line("player.son.commanded", '{creator} commanded {son}: "{text}"')
 COMMAND_CLEARED = Line("player.son.command_cleared", "{creator} withdrew the command to {son}.")
 BLESSED = Line("player.son.blessed", "{creator} blessed {son}: {gift}.")
 LIGHTNING = Line("player.son.lightning", "{creator} struck {son} with lightning.")
-CHAINED = Line("player.son.chained", "{creator} chained {son}; he cannot act this epoch.")
+CHAINED = Line("player.son.chained", "{creator} chained {son}; {son} cannot act this epoch.")
 EXILED = Line("player.son.exiled", "{creator} exiled {son}.")
 DEFIANT = Line("player.son.defiant", "{son} did not bow; a grudge grew inside.")
 SUPPRESSED = Line("player.son.suppressed", "{creator} crushed {son}'s rebellion ({god} - {son_roll}); the rebel knelt.")

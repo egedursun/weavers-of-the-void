@@ -13,3 +13,6 @@ image-worker/.venv/
 data-fresh*/
 frontend/.vitest-attachments/
 *.tmp.mjs
+.claude/worktrees/
+.claude/scheduled_tasks.lock
+.claude/allow-broad-tests

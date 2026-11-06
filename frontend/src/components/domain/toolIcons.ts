@@ -125,7 +125,6 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   challenge: Swords,
   challenge_god: Swords,
   rebel: Flag,
-  pray_to_father: HandHeart,
   pray_to_creator: HandHeart,
   make_bond: Link,
   harvest_resource: Wheat,

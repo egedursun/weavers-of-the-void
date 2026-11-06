@@ -210,7 +210,7 @@ export function CreatorStep({ draft, update, options }: StepProps) {
               required
               size='lg'
               maxLength={CREATOR_NAME_MAX}
-              placeholder='Aeron'
+              placeholder='A name for the Creator'
               value={draft.creatorName}
               onChange={(event) => update({ creatorName: event.target.value })}
             />

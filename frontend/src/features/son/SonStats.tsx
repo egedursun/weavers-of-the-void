@@ -178,7 +178,7 @@ export function SonStats({ view, faith }: { view: SonPublic; faith: number }) {
       </Section>
       <Section
         title='Passions'
-        description='They shape his actions and his obedience.'
+        description='They shape their actions and their obedience.'
         level={3}
       >
         <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2'>
@@ -246,7 +246,7 @@ export function SonStats({ view, faith }: { view: SonPublic; faith: number }) {
             tone={BAND_TONE[view.band]}
           />
           <Muted variant='caption'>
-            Being worshipped, remembered and his anchor living feed existence.
+            Being worshipped, remembered and a living anchor feed existence.
           </Muted>
         </div>
       </Section>

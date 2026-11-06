@@ -222,7 +222,7 @@ NOTABLE_ROLES: dict[SocialClass, tuple[NotableRole, ...]] = {
         NotableRole("beggar", "Beggar", "beggar", MortalRole.COMMONER, {"charisma": lambda r: r.deep_life.role_outcast_charisma}),
         NotableRole("outlaw", "Outlaw", "outlaw", MortalRole.BANDIT, {"agility": lambda r: r.deep_life.role_outcast_outlaw_agility}),
     ),
-    SocialClass.MONASTIC: (NotableRole("monk", "Brother", "monk", MortalRole.SAGE, {"intellect": lambda r: r.deep_life.role_monastic_intellect}),),
+    SocialClass.MONASTIC: (NotableRole("monk", "Monastic", "monk", MortalRole.SAGE, {"intellect": lambda r: r.deep_life.role_monastic_intellect}),),
 }
 
 RULER_TITLES: dict[EntityType, tuple[str, str]] = {

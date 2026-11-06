@@ -41,7 +41,7 @@ export function opportunitiesOf(
     items.push({
       key: 'rebels',
       title: 'Rebellion',
-      body: `${names(creator.rebel_sons)} ${verbFor(creator.rebel_sons, 'defies', 'defy')} you: suppress or forgive ${verbFor(creator.rebel_sons, 'him', 'them')}.`,
+      body: `${names(creator.rebel_sons)} ${verbFor(creator.rebel_sons, 'defies', 'defy')} you: suppress or forgive ${'them'}.`,
     })
   if (creator.fading_sons.length > 0)
     items.push({
@@ -51,11 +51,7 @@ export function opportunitiesOf(
         creator.fading_sons.map((son) => son.name),
         'is',
         'are'
-      )} being forgotten; remember ${verbFor(
-        creator.fading_sons.map((son) => son.name),
-        'him',
-        'them'
-      )}.`,
+      )} being forgotten; remember them.`,
     })
   if (creator.stale_threads > 0)
     items.push({
@@ -79,7 +75,7 @@ export function opportunitiesOf(
     items.push({
       key: 'dead',
       title: 'The dead',
-      body: `${names(hints.dead_sons)} ${verbFor(hints.dead_sons, 'lies', 'lie')} dead; loyal cults gather devotion, or you can raise ${verbFor(hints.dead_sons, 'him', 'them')}.`,
+      body: `${names(hints.dead_sons)} ${verbFor(hints.dead_sons, 'lies', 'lie')} dead; loyal cults gather devotion, or you can raise them.`,
     })
   if (hints.sons_without_image > 0)
     items.push({

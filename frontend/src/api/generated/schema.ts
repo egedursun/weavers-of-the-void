@@ -9567,6 +9567,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/creation:reward": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_creation_reward_api_actions_creation_reward_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/chronicle:audit": {
         parameters: {
             query?: never;
@@ -16453,6 +16469,11 @@ export interface components {
             son_b_id: number;
             description: string | null;
         };
+        CreationRewardInput: {
+            entity_id: number;
+            taken_back_pct: number;
+            thread_reverted?: boolean | null;
+        };
         CreatorDetail: {
             creator: components["schemas"]["CreatorRecord"];
             cover: string | null;
@@ -23005,7 +23026,12 @@ export interface components {
             fade_pct: number;
             repeats: number;
             taken_back_pct: number;
+            has_thread: boolean;
             thread_reverted: boolean;
+            partner: components["schemas"]["NodeRef"] | null;
+            partner_xp: number;
+            partner_renown: number;
+            reason: string | null;
         };
         RiteCard: {
             school: components["schemas"]["MagicSchool"];
@@ -23625,6 +23651,7 @@ export interface components {
         SkillKind: "blade" | "spear" | "axe" | "blunt" | "bow" | "sling" | "throwing" | "shield" | "unarmed" | "riding" | "mounted_combat" | "siegecraft" | "naval_combat" | "beast_handling" | "tactics" | "strategy" | "logistics" | "leadership" | "intimidation" | "oratory" | "negotiation" | "intrigue" | "etiquette" | "deception" | "teaching" | "smithing" | "carpentry" | "masonry" | "weaving" | "pottery" | "jewelling" | "shipwright" | "engineering" | "alchemy" | "lore" | "medicine" | "surgery" | "astronomy" | "law" | "theology" | "languages" | "writing" | "accounting" | "hunting" | "tracking" | "foraging" | "sailing" | "navigation" | "mountaineering" | "swimming" | "ritual" | "prophecy" | "spellcraft" | "spirit_speaking";
         SkillSource: "backfill" | "birth" | "practice" | "teaching" | "player";
         SkillView: {
+            id: number;
             skill: components["schemas"]["SkillKind"];
             label: string;
             family: components["schemas"]["SkillFamily"];
@@ -23637,6 +23664,8 @@ export interface components {
             last_used_epoch: number;
             rusting: boolean;
             source: components["schemas"]["SkillSource"];
+            subject?: components["schemas"]["NodeRef"] | null;
+            variant_id?: number | null;
         };
         SkyEventKind: "eclipse" | "comet" | "alignment" | "supernova" | "black_sun" | "void_storm" | "flare";
         SkyEventRecord: {
@@ -23994,7 +24023,7 @@ export interface components {
             value: number;
         };
         SonStatus: "active" | "asleep" | "exiled" | "dead";
-        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_father" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "raise_beast" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "shape_folk" | "sever_ley" | "loose_disease" | "forge_material" | "hide_secret" | "sanctify_place" | "raise_nexus" | "reshape_land" | "sanctify_region" | "curse_region" | "redirect_river" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "seal_treaty" | "bless_bloodline" | "void_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world" | "raise_district" | "design_district" | "open_trade_route" | "close_trade_route" | "commission_structure" | "commission_artwork" | "design_rite" | "cast_rite" | "found_school" | "bind_mortals" | "touch_mortal" | "reveal_tenet" | "open_rebirth_gate" | "wage_war" | "raise_host" | "disband_host" | "lay_siege" | "offer_peace" | "commission_vessel" | "design_unit" | "plant_spies";
+        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_creator" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "raise_beast" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "shape_folk" | "sever_ley" | "loose_disease" | "forge_material" | "hide_secret" | "sanctify_place" | "raise_nexus" | "reshape_land" | "sanctify_region" | "curse_region" | "redirect_river" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "seal_treaty" | "bless_bloodline" | "void_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world" | "raise_district" | "design_district" | "open_trade_route" | "close_trade_route" | "commission_structure" | "commission_artwork" | "design_rite" | "cast_rite" | "found_school" | "bind_mortals" | "touch_mortal" | "reveal_tenet" | "open_rebirth_gate" | "wage_war" | "raise_host" | "disband_host" | "lay_siege" | "offer_peace" | "commission_vessel" | "design_unit" | "plant_spies";
         SonToolsView: {
             son_id: number;
             rarity: components["schemas"]["Rarity"];
@@ -43991,6 +44020,37 @@ export interface operations {
             };
         };
     };
+    action_creation_reward_api_actions_creation_reward_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreationRewardInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_chronicle_audit_api_actions_chronicle_audit_post: {
         parameters: {
             query?: never;
@@ -54636,7 +54696,7 @@ export const sonDistributedEventKindValues: ReadonlyArray<FlattenedDeepRequired<
 export const sonDistributionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonDistribution"]> = ["auto", "manual"];
 export const sonNewEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonNewEvent"]["kind"]> = ["son.new"];
 export const sonStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonStatus"]> = ["active", "asleep", "exiled", "dead"];
-export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_father", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "raise_beast", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "shape_folk", "sever_ley", "loose_disease", "forge_material", "hide_secret", "sanctify_place", "raise_nexus", "reshape_land", "sanctify_region", "curse_region", "redirect_river", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "seal_treaty", "bless_bloodline", "void_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world", "raise_district", "design_district", "open_trade_route", "close_trade_route", "commission_structure", "commission_artwork", "design_rite", "cast_rite", "found_school", "bind_mortals", "touch_mortal", "reveal_tenet", "open_rebirth_gate", "wage_war", "raise_host", "disband_host", "lay_siege", "offer_peace", "commission_vessel", "design_unit", "plant_spies"];
+export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_creator", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "raise_beast", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "shape_folk", "sever_ley", "loose_disease", "forge_material", "hide_secret", "sanctify_place", "raise_nexus", "reshape_land", "sanctify_region", "curse_region", "redirect_river", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "seal_treaty", "bless_bloodline", "void_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world", "raise_district", "design_district", "open_trade_route", "close_trade_route", "commission_structure", "commission_artwork", "design_rite", "cast_rite", "found_school", "bind_mortals", "touch_mortal", "reveal_tenet", "open_rebirth_gate", "wage_war", "raise_host", "disband_host", "lay_siege", "offer_peace", "commission_vessel", "design_unit", "plant_spies"];
 export const sonTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnFinishedEvent"]["kind"]> = ["son.turn_finished"];
 export const sonTurnQueuedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnQueuedEvent"]["kind"]> = ["son.turn_queued"];
 export const sonTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnStartedEvent"]["kind"]> = ["son.turn_started"];

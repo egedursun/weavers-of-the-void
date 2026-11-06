@@ -29,7 +29,7 @@ export function CreatorEpic({ creator }: { creator: CreatorRecord }) {
       level={3}
       actions={
         <ActionButton
-          label={creator.epic ? 'Rewrite his epic' : 'Write his epic'}
+          label={creator.epic ? 'Rewrite the epic' : 'Write the epic'}
           icon={Feather}
           blocked={
             reason({ llm: true }) ??
@@ -48,7 +48,7 @@ export function CreatorEpic({ creator }: { creator: CreatorRecord }) {
           icon={BookOpen}
           size='compact'
           title="No bard has written the Creator's epic"
-          description="It is born from his traces, his sons and the peoples' tales."
+          description="It is born from the Creator's traces, the sons and the peoples' tales."
         />
       )}
     </Section>

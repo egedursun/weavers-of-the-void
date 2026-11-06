@@ -43,12 +43,14 @@ describe('sibling schemes for a dead son', () => {
       }
     )
     await expect
-      .element(screen.getByRole('button', { name: 'Scheme for his return' }))
+      .element(screen.getByRole('button', { name: 'Scheme for their return' }))
       .toHaveAttribute('aria-description', 'Choose a sibling first.')
     await screen.getByRole('combobox', { name: 'Sibling' }).click()
     await screen.getByRole('option', { name: /Ithren/ }).click()
     await screen.getByRole('radio', { name: 'Descent below' }).click()
-    await screen.getByRole('button', { name: 'Scheme for his return' }).click()
+    await screen
+      .getByRole('button', { name: 'Scheme for their return' })
+      .click()
     await expect
       .poll(() => server.callsTo('POST /api/sons/{son_id}/scheme').length)
       .toBe(1)
@@ -70,7 +72,7 @@ describe('sibling schemes for a dead son', () => {
     )
     await screen.getByRole('combobox', { name: 'Sibling' }).click()
     await screen.getByRole('option', { name: /Ithren/ }).click()
-    await screen.getByRole('button', { name: 'Scatter his bones' }).click()
+    await screen.getByRole('button', { name: 'Scatter their bones' }).click()
     expect(
       server.callsTo('POST /api/sons/{son_id}/scatter-bones')
     ).toHaveLength(0)

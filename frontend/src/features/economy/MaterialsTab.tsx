@@ -3,6 +3,7 @@ import {
   Coins,
   Gem,
   Hammer,
+  Lock,
   Pickaxe,
   Plus,
   RotateCcw,
@@ -278,11 +279,16 @@ function MaterialCard({
     run: () =>
       unwrap(api.POST('/api/actions/material:delete', { body: target })),
   })
+  const keep = useGodAction({
+    invalidate: ECONOMY_REFRESH,
+    run: () => unwrap(api.POST('/api/actions/material:hold', { body: target })),
+  })
   const busy = useBusy(
     null,
     edit.isPending,
     release.isPending,
-    remove.isPending
+    remove.isPending,
+    keep.isPending
   )
   const look = MATERIAL_FAMILY[material.family]
   const origin = MATERIAL_ORIGIN[material.origin]
@@ -379,6 +385,18 @@ function MaterialCard({
             busy={busy}
             onRelease={() => release.mutate(undefined)}
           />
+          {!material.held && (
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => keep.mutate(undefined)}
+            >
+              <Lock />
+              Hold as it is
+            </Button>
+          )}
           {!substance && material.edited && (
             <Button
               size='sm'

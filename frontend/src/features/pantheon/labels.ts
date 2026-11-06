@@ -85,7 +85,7 @@ export const STATS: StatInfo[] = [
     abbr: 'WIL',
     group: 'Mind',
     icon: Mountain,
-    effect: "Resists punishment and the father's commands.",
+    effect: "Resists punishment and the Creator's commands.",
   },
   {
     key: 'creativity',
@@ -209,7 +209,7 @@ export const POWER_EFFECT_LABEL: Record<PowerEffect, string> = {
   tireless: 'Tireless',
   untouchable: 'Untouchable',
   dream_whisper: 'Dream whisper',
-  war_father: 'Father of war',
+  war_father: 'Warbringer',
   harvester: 'Harvester',
   seer: 'Seer',
   reviving: 'Reviving',

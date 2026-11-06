@@ -17,7 +17,7 @@ class DoctrineRules:
     holy_peace_zeal: int = rule(8, 0, 100, R, "Zeal lost when a holy war cult makes peace with unbelievers")
     pacifist_warrior_pct: int = rule(50, 0, 100, R, "Share of the warrior class a pacifist faith keeps (%)")
     pacifist_drift_pct: int = rule(10, 0, 100, R, "Share of a pacifist people's surplus warriors who take up farming each epoch (%)")
-    pacifist_legitimacy: int = rule(6, 0, 100, R, "Legitimacy a devout pacifist ruler loses for each war he wages")
+    pacifist_legitimacy: int = rule(6, 0, 100, R, "Legitimacy a devout pacifist ruler loses for each war they wage")
     sacrifice_essence: int = rule(2, 0, 100, R, "Essence a death or blood god gains for each sacrificing cult in an epoch")
     sacrifice_infamy: int = rule(5, 0, 100, R, "Ill will other cultures hold for human sacrifice")
     animal_sacrifice_livestock: int = rule(3, 0, 1000, R, "Livestock an animal-sacrificing cult offers in an epoch")

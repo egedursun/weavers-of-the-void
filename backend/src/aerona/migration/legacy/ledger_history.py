@@ -26,7 +26,7 @@ TOOLS: MappingProxyType[str, tuple[str, ActionKind]] = MappingProxyType(
         "ag_onar": ("stitch_leak", ActionKind.CLEANSE_LEAK),
         "ahit_et": ("swear_covenant", ActionKind.COVENANT),
         "armagan_ver": ("give_gift", ActionKind.INFLUENCE),
-        "babaya_dua": ("pray_to_father", ActionKind.CHAT),
+        "babaya_dua": ("pray_to_creator", ActionKind.CHAT),
         "bag_kur": ("make_bond", ActionKind.INFLUENCE),
         "bilgi_gelistir": ("develop_knowledge", ActionKind.ADVANCE_KNOWLEDGE),
         "bilgi_ver": ("teach_knowledge", ActionKind.TEACH_KNOWLEDGE),

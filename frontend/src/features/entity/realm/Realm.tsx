@@ -27,6 +27,8 @@ import {
   UserPlus,
   Users,
   Castle,
+  Pencil,
+  Ban,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -55,6 +57,7 @@ import {
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { RowAction } from '../actions/RowAction'
 import { MindPicker } from '../mind/parts'
 import { LawProtection, Statecraft } from './Statecraft'
 import { useRealm, useRealmLink } from './api'
@@ -615,6 +618,32 @@ function Succession({ realm }: { realm: Realm }) {
                       max={PERCENT}
                       tone={claim.pressed ? 'destructive' : 'default'}
                     />
+                    <div className='flex min-w-0 flex-wrap items-center gap-2'>
+                      <RowAction
+                        path='/api/actions/claim:edit'
+                        icon={Pencil}
+                        label='Edit claim'
+                        fixed={{ claim_id: claim.id }}
+                        defaults={{
+                          strength: claim.strength,
+                          basis: claim.basis,
+                          pressed: claim.pressed,
+                          office: claim.office,
+                          backer_id: claim.backer_id,
+                        }}
+                        labels={{ backer_id: 'Backer' }}
+                        pickers={{ backer_id: { source: 'entity' } }}
+                        held={claim.locked}
+                      />
+                      <RowAction
+                        path='/api/actions/claim:revoke'
+                        icon={Ban}
+                        label='Void claim'
+                        fixed={{ claim_id: claim.id }}
+                        destructive
+                        confirm={`${claim.claimant}'s claim on the throne will be voided.`}
+                      />
+                    </div>
                   </li>
                 )}
               </Paged>
@@ -646,14 +675,42 @@ function Dominion({ realm }: { realm: Realm }) {
             <Muted>The realm holds no land.</Muted>
           )}
           {lands.visible.map((item) => (
-            <StatBar
+            <div
               key={item.region_id}
-              label={item.name}
-              value={item.control}
-              max={PERCENT}
-              icon={MapIcon}
-              tone={toneOf(item.control)}
-            />
+              className='flex min-w-0 items-center gap-2'
+            >
+              <div className='min-w-0 flex-1'>
+                <StatBar
+                  label={
+                    item.province
+                      ? `${item.name} · ${item.province}`
+                      : item.name
+                  }
+                  value={item.control}
+                  max={PERCENT}
+                  icon={MapIcon}
+                  tone={toneOf(item.control)}
+                />
+              </div>
+              {item.locked.length > 0 && (
+                <Lock
+                  aria-label='Held by you'
+                  className='size-icon-sm shrink-0 text-muted-foreground'
+                />
+              )}
+              <RowAction
+                path='/api/actions/polity:territory'
+                icon={Pencil}
+                label={`Edit ${item.name}`}
+                iconOnly
+                fixed={{ polity_id: realm.id, region_id: item.region_id }}
+                defaults={{
+                  control: item.control,
+                  province: item.province ?? '',
+                }}
+                held={item.locked}
+              />
+            </div>
           ))}
           <ShowMore state={lands} noun={['land', 'lands']} />
         </div>
@@ -694,6 +751,15 @@ function Dominion({ realm }: { realm: Realm }) {
                     ? `Autonomy ${member.autonomy}`
                     : 'Loyal'}
                 </Badge>
+                <RowAction
+                  path='/api/actions/polity:member'
+                  icon={Pencil}
+                  label={`Edit ${member.name}`}
+                  iconOnly
+                  fixed={{ polity_id: realm.id, member_id: member.id }}
+                  defaults={{ autonomy: member.autonomy }}
+                  held={member.locked}
+                />
               </li>
             )
           })}

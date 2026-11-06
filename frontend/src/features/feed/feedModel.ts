@@ -292,8 +292,8 @@ function describe(event: ServerEvent): Draft | null {
         'gods',
         'son',
         event.payload.resumed
-          ? `${event.payload.son_name} resumes his turn`
-          : `${event.payload.son_name} takes his turn`,
+          ? `${event.payload.son_name} resumes their turn`
+          : `${event.payload.son_name} takes their turn`,
         {
           actorKey: `son:${event.payload.son_id}`,
           tone: 'primary',
@@ -302,7 +302,7 @@ function describe(event: ServerEvent): Draft | null {
         }
       )
     case 'son.turn_finished':
-      return draft('gods', 'son', `${event.payload.son_name} ends his turn`, {
+      return draft('gods', 'son', `${event.payload.son_name} ends their turn`, {
         actorKey: `son:${event.payload.son_id}`,
         tone: event.payload.status === TURN_SUCCESS ? 'success' : 'warning',
         detail: event.payload.word ?? null,

@@ -31,3 +31,22 @@
    - Every value must be readable and editable.
    - Make it feel like a game: rewarding feedback, clear progress, tasteful motion, visual hierarchy, icons and medallions, and a strong sense of the player's power as a god.
    - Never ship a rough or placeholder UI.
+
+## Enforcement
+
+These rules are enforced mechanically, and they bind Claude as much as anyone.
+
+- **Claude Code hook** (`.claude/settings.json` → `.claude/hooks/guard_tests.py`). It blocks:
+  - pytest runs that don't name individual test files, and pytest with `-n`
+  - vitest runs on a directory
+  - any run of more than 6 test files at once
+  - every npm test script, Playwright, and the Makefile test and check targets
+
+  Only the user may lift it, by creating `.claude/allow-broad-tests`; Claude never creates that file.
+- **Git pre-commit** (`.githooks/pre-commit`, enabled with `git config core.hooksPath .githooks`). It runs on every commit:
+  - `scripts/check_source_rules.py`: no comments or docstrings (rule 4).
+  - `scripts/check_prompt_bias.py`: gendered defaults, conflict quotas, forced strangeness, steering examples and hardcoded image media in LLM-facing and UI text (rule 2).
+  - `scripts/check_wiring.py`: enum types never used, tables never read, player actions missing from the catalog, catalog actions with no frontend caller (rule 3).
+  - ruff, mypy and import layers for backend changes.
+  - tsc, eslint and prettier for frontend changes (rule 5).
+- **Never bypass a check.** No `--no-verify`, no allowlists, and no downgrading an error to a warning. A failing check means the work is not done: fix what it found, in the same task.

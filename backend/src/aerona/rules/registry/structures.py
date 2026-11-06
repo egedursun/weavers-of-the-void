@@ -28,7 +28,7 @@ class ConstructionRules:
     wonder_stall_epochs: int = rule(15, 1, 1000, G, "Epochs without progress before a wonder is abandoned")
     generation_epochs: int = rule(25, 1, 1000, G, "Epochs that make a generation of builders")
     legend_scale: int = rule(1, 0, 3, G, "Smallest scale whose abandoned shell leaves a legend (0 minor, 1 major, 2 grand, 3 wonder)")
-    commission_essence: int = rule(15, 0, 100000, G, "Essence a son spends to set mortals building a work in his name")
+    commission_essence: int = rule(15, 0, 100000, G, "Essence a son spends to set mortals building a work in their name")
     finish_cost: int = rule(30, 0, 100000, G, "Essence the Creator spends to finish a work at once")
     splendor_value_pct: int = rule(20, 0, 500, G, "Splendour from the worth of its material (%)")
     splendor_architect_per_level: int = rule(3, 0, 50, G, "Splendour per level of the architect's engineering")

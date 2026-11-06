@@ -86,7 +86,7 @@ describe('hand of god panel', () => {
       .element(screen.getByRole('button', { name: 'Clear standing order' }))
       .toBeInTheDocument()
     await screen
-      .getByLabelText('Order for his next action')
+      .getByLabelText('Order for their next action')
       .fill('Guard the salt road')
     await screen.getByRole('button', { name: 'Announce order' }).click()
     await expect
@@ -114,7 +114,7 @@ describe('hand of god panel', () => {
         'aria-description',
         'Write the command in the order box first.'
       )
-    await screen.getByLabelText('Order for his next action').fill('March')
+    await screen.getByLabelText('Order for their next action').fill('March')
     await expect
       .element(screen.getByLabelText('costs 50 essence'))
       .toBeInTheDocument()
@@ -167,8 +167,8 @@ describe('hand of god panel', () => {
       .element(screen.getByRole('button', { name: /^Fill life/ }))
       .toHaveAttribute('aria-description', 'Life is already full.')
     await expect
-      .element(screen.getByRole('button', { name: /^Remember him/ }))
-      .toHaveAttribute('aria-description', 'His existence is already whole.')
+      .element(screen.getByRole('button', { name: /^Remember them/ }))
+      .toHaveAttribute('aria-description', 'Their existence is already whole.')
   })
 
   it('refuses a blessing the creator cannot afford', async () => {

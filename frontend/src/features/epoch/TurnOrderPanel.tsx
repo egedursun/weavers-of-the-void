@@ -106,7 +106,7 @@ export function TurnOrderPanel({ state }: { state: WorldState }) {
   return (
     <Section
       title="The gods' turn order"
-      description='Initiative (agility, half his cunning and a doubled die) orders the sons. Pin a son to fix his place; the rest follow by initiative.'
+      description='Initiative (agility, half their cunning and a doubled die) orders the sons. Pin a son to fix their place; the rest follow by initiative.'
       surface='card'
     >
       {sons.length === 0 ? (
@@ -114,7 +114,7 @@ export function TurnOrderPanel({ state }: { state: WorldState }) {
           size='compact'
           icon={ListOrdered}
           title='No son to order'
-          description='Summon a son and his place in the turn appears here.'
+          description='Summon a son and their place in the turn appears here.'
         />
       ) : (
         <ol className='flex min-w-0 flex-col gap-2'>

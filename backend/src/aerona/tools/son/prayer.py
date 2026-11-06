@@ -49,7 +49,7 @@ async def rebel(call: SonCall, args: RebelInput) -> str:
     return result(SonResult.REBELLION_DECLARED)
 
 
-async def pray_to_father(call: SonCall, args: PrayInput) -> str:
+async def pray_to_creator(call: SonCall, args: PrayInput) -> str:
     cap = call.rules.son_tools.prayer_per_epoch
     await call.within_limit(TurnCounter.PRAYERS, cap, "son_tools.prayer_per_epoch", SonResult.PRAYER_LIMIT)
     creator = await CosmosRepository(call.session).require_creator()
@@ -74,5 +74,5 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
     son = AgentKind.SON
     return [
         ToolSpec(SonToolId.REBEL, son, RebelInput, ToolMeta(ActionKind.REBEL, no_cost), rebel),
-        ToolSpec(SonToolId.PRAY_TO_FATHER, son, PrayInput, ToolMeta(ActionKind.PRAY_TO_CREATOR, no_cost), pray_to_father),
+        ToolSpec(SonToolId.PRAY_TO_CREATOR, son, PrayInput, ToolMeta(ActionKind.PRAY_TO_CREATOR, no_cost), pray_to_creator),
     ]

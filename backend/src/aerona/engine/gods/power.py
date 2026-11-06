@@ -55,7 +55,7 @@ async def drained_recently(ctx: TickContext, son_id: int, spacing: int) -> bool:
     return await ctx.session.scalar(statement.limit(1)) is not None
 
 
-async def drain_text(ctx: TickContext, creator: CreatorRow, son: SonRow, drawn: int, gained: int, *, spontaneous: bool, brothers: bool) -> tuple[str, str]:
+async def drain_text(ctx: TickContext, creator: CreatorRow, son: SonRow, drawn: int, gained: int, *, spontaneous: bool, siblings: bool) -> tuple[str, str]:
     sequence, times = await _drain_counts(ctx, son.id)
     index = sequence % len(god_lines.DRAIN_SON)
     line = god_lines.DRAIN_SON[index]
@@ -66,7 +66,7 @@ async def drain_text(ctx: TickContext, creator: CreatorRow, son: SonRow, drawn: 
         son=son.name,
         drawn=drawn,
         gained=gained,
-        witness=god_lines.DRAIN_WITNESSES[index] if brothers else "",
+        witness=god_lines.DRAIN_WITNESSES[index] if siblings else "",
     )
     if times > 1:
         text = text.rstrip(".") + god_lines.DRAIN_REPEAT_SUFFIX.format(count=ordinal(times + 1))
@@ -89,7 +89,7 @@ async def drain_son(ctx: TickContext, creator: CreatorRow, son: SonRow, spontane
     for other in others:
         other.loyalty = clamp_percent(other.loyalty + rules.drain_witness_loyalty)
     gained = gain(creator, drawn * rules.drain_son_efficiency_pct / PERCENT)
-    key, text = await drain_text(ctx, creator, son, drawn, gained, spontaneous=spontaneous, brothers=bool(others))
+    key, text = await drain_text(ctx, creator, son, drawn, gained, spontaneous=spontaneous, siblings=bool(others))
     await ctx.chronicle(ChronicleKind.CREATOR_HAND, text, template_key=key, son_id=son.id)
     await leave_trace(ctx.session, ctx.rules, TraceKind.DRAIN, son.id, ctx.epoch)
     ctx.count("drains")

@@ -25,7 +25,7 @@ type StepCopy = {
 const STEP_COPY: Record<OnboardingStep, StepCopy> = {
   son: {
     title: 'Open the card of a son',
-    detail: 'Each son is an agent with his own powers, mood and plans.',
+    detail: 'Each son is an agent with their own powers, mood and plans.',
     to: '/pantheon',
   },
   map: {

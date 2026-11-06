@@ -308,7 +308,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "enemies; the Creator may try to crush the rebellion. Only if your loyalty is below {{ rules.son_tools.rebel_loyalty }}. Does not spend an action.",
         {"proclamation": "The word of the rebellion: why and for what"},
     ),
-    T.PRAY_TO_FATHER: ToolText(
+    T.PRAY_TO_CREATOR: ToolText(
         "You pray to the Creator who made you. You may have a request; the answer appears among words in coming ages. Does not spend an action, "
         "{{ rules.son_tools.prayer_per_epoch }} per age.",
         {"message": "Your prayer", "request": "essence, blessing, permission, vengeance, forgiveness or none"},
@@ -539,7 +539,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.SANCTIFY_REGION: ToolText(
-        "You sanctify a region: its ground becomes holy, drawing pilgrims who bring wealth and piety, warding off hauntings and strange phenomena. "
+        "You sanctify a region: its ground becomes holy, drawing pilgrims who bring wealth and piety, warding off hauntings and uncanny phenomena. "
         "{{ rules.terrain.sanctify_essence }} essence, 1 action.",
         {"region_id": "The region's id", "sacredness": "How holy, 0-100 (leave out for the usual sanctification)", "reason": "Why you hallow it"},
     ),
@@ -803,7 +803,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {
             "owner_id": "The community or mortal that owns the ship",
             "name": "The ship's proper name",
-            "hull": "raft, boat, galley, longship, cog, carrack, warship, light_sailer and the stranger hulls",
+            "hull": "raft, boat, galley, longship, cog, carrack, warship, light_sailer and the more unusual hulls",
             "armament": "What it carries to fight: rams, missiles, siege_engines, rites",
             "captain_id": "A living mortal to captain it, if any",
         },

@@ -140,7 +140,7 @@ export function SonChat({
     send.mutate(draft.trim())
   }
   return (
-    <Section title='Talk with him' surface='card' level={3}>
+    <Section title='Talk with them' surface='card' level={3}>
       {chat.isPending ? (
         <Skeleton className='h-textarea w-full' />
       ) : chat.isError ? (

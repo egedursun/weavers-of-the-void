@@ -291,7 +291,7 @@ export function CompareSons() {
                   sons={chosen}
                 />
               ))}
-              <GroupRow label='How he sees his father' span={span} />
+              <GroupRow label='How they see the Creator' span={span} />
               <Row
                 label='Reputation'
                 cells={chosen.map((view) => {

@@ -67,7 +67,7 @@ export function statusChips(
       key: 'rebel',
       label: 'Rebel',
       variant: 'destructive',
-      hint: 'Rebelled against his father: ignores orders and steals essence each epoch.',
+      hint: 'Rebelled against the Creator: ignores orders and steals essence each epoch.',
     })
   const left = fadingLeft(son, fadingEpochs)
   if (left !== null)
@@ -75,7 +75,7 @@ export function statusChips(
       key: 'fading',
       label: `Being forgotten · fades in ${left} epochs`,
       variant: 'destructive',
-      hint: `Existence ${son.existence}. Worship, fame and a living anchor keep him remembered.`,
+      hint: `Existence ${son.existence}. Worship, fame and a living anchor keep them remembered.`,
     })
   return chips
 }

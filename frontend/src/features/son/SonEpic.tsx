@@ -53,7 +53,7 @@ export function SonEpic({ son }: { son: SonRecord }) {
           icon={BookOpen}
           size='compact'
           title="No bard has written this son's epic yet"
-          description='The bard writes from his deeds, his worshippers and the chronicle.'
+          description='The bard writes from their deeds, their worshippers and the chronicle.'
         />
       )}
     </Section>

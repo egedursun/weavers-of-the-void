@@ -56,9 +56,9 @@ describe('a son speaks to a sibling', () => {
     await screen.getByRole('option', { name: 'Threat' }).click()
     await expect
       .element(speak)
-      .toHaveAttribute('aria-description', 'Write the words he must say.')
+      .toHaveAttribute('aria-description', 'Write the words they must say.')
     await screen
-      .getByRole('textbox', { name: 'The words he must say' })
+      .getByRole('textbox', { name: 'The words they must say' })
       .fill('  Leave the salt road to me.  ')
     await speak.click()
     await expect

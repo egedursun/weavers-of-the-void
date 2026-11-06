@@ -43,7 +43,7 @@ class PantheonRules:
     bargain_ambition: int = rule(10, 0, 100, RuleGroup.COSMIC_HORROR, "Ambition gain of the bargaining son")
     bargain_loyalty_loss: int = rule(15, 0, 100, RuleGroup.COSMIC_HORROR, "Loyalty loss of the bargaining son")
     bargain_leak: int = rule(20, 0, 100, RuleGroup.COSMIC_HORROR, "Leak the bargain adds to the world")
-    bargain_sibling_relation_loss: int = rule(10, 0, 100, RuleGroup.COSMIC_HORROR, "Relation loss of the bargaining son with his siblings")
+    bargain_sibling_relation_loss: int = rule(10, 0, 100, RuleGroup.COSMIC_HORROR, "Relation loss of the bargaining son with their siblings")
     son_war_chance: int = rule(10, 0, 100, RuleGroup.CIVILIZATION, "A son spontaneously goes to war with a hostile foreign god (% per epoch)")
     son_war_max_attitude: int = rule(30, 0, 100, RuleGroup.CIVILIZATION, "Maximum attitude (negative) of a foreign god a son spontaneously goes to war with")
     sleep_wake_threshold: int = rule(
@@ -112,7 +112,7 @@ class PantheonRules:
         0,
         1000,
         RuleGroup.CIVILIZATION,
-        "On a world without a protector, the son with the most worshippers declares it his holy world on his own if he has this many worshippers (0: off)",
+        "On a world without a protector, the son with the most worshippers declares it their holy world unprompted with this many worshippers (0: off)",
     )
     foreign_wake_epochs: int = rule(8, 1, 1000, RuleGroup.CIVILIZATION, "Number of epochs after which a defeated foreign god wakes on its own (after defeat)")
     foreign_wake_faith: int = rule(15, 0, 100000, RuleGroup.CIVILIZATION, "Worshipper faith that immediately wakes a defeated foreign god")

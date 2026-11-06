@@ -26,7 +26,7 @@ export function SonRebellion({ sonId, name }: { sonId: number; name: string }) {
   return (
     <Section
       title='Force a rebellion'
-      description={`Make ${name} rise against you: his loyalty falls, his ambition grows and loyal siblings sour on him. It also happens on its own when his will outgrows his loyalty.`}
+      description={`Make ${name} rise against you: their loyalty falls, their ambition grows and loyal siblings sour on them. It also happens on its own when their will outgrows their loyalty.`}
       level={3}
     >
       <FormRow
@@ -54,7 +54,7 @@ export function SonRebellion({ sonId, name }: { sonId: number; name: string }) {
           pending={force.isPending}
           confirm={{
             title: 'Force this rebellion?',
-            description: `${name} becomes a rebel until you suppress or forgive him.`,
+            description: `${name} becomes a rebel until you suppress or forgive them.`,
           }}
           onRun={() => force.mutate()}
         />

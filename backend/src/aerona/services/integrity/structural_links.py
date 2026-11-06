@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.constants.bond_texts import BARGAINED, CHOSEN_HEIR, CRAVES, HARVESTED, HIS_REMAINS, SACRED_TO
+from aerona.constants.bond_texts import BARGAINED, CHOSEN_HEIR, CRAVES, GOD_REMAINS, HARVESTED, SACRED_TO
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
@@ -42,7 +42,7 @@ READ_IN_ARCHIVE = "read it in the archive"
 TRAVELLED_ABOARD = "travelled aboard"
 FOUNDED_ON_VOYAGE = "founded on the voyage"
 ON_A_QUEST = "on a quest"
-FATHER = "their creator"
+CREATOR_LINK = "their creator"
 HIS_ANCHOR = "their anchor"
 FOUGHT_GOD = "fought it"
 
@@ -181,10 +181,10 @@ class StructuralLinks:
 
     async def gods(self) -> None:
         for son in await self.session.scalars(select(SonRow)):
-            await self.link(son.id, son.parent_son_id, BondKind.DESCENDS_FROM, FATHER)
-            await self.link(son.id, son.co_parent_son_id, BondKind.DESCENDS_FROM, FATHER)
+            await self.link(son.id, son.parent_son_id, BondKind.DESCENDS_FROM, CREATOR_LINK)
+            await self.link(son.id, son.co_parent_son_id, BondKind.DESCENDS_FROM, CREATOR_LINK)
             await self.link(son.id, son.anchor_entity_id, BondKind.LIVES_IN, HIS_ANCHOR)
-            await self.link(son.corpse_entity_id, son.id, BondKind.RELATED, HIS_REMAINS)
+            await self.link(son.corpse_entity_id, son.id, BondKind.RELATED, GOD_REMAINS)
         for bargain in await self.session.scalars(select(OuterBargainRow)):
             await self.link(bargain.son_id, bargain.outer_entity_id, BondKind.RELATED, BARGAINED, epoch=bargain.epoch)
         for conflict in await self.session.scalars(select(GodConflictRow)):

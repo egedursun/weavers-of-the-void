@@ -8,8 +8,12 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { FormRow } from '@/components/domain'
-import { RecordCombobox } from '@/components/domain/RecordCombobox'
+import {
+  type ComboboxOption,
+  RecordCombobox,
+} from '@/components/domain/RecordCombobox'
 import { Label } from '@/components/typography'
 import { type EntityContext } from './context'
 import { type PickerData, type PickerSpec, optionsFor } from './pickers'
@@ -28,9 +32,10 @@ type ActionFieldProps = {
   value: FieldValue
   onChange: (value: FieldValue) => void
   picker?: PickerSpec
+  options?: ComboboxOption[]
   multiline?: boolean
-  ctx: EntityContext
-  data: PickerData
+  ctx?: EntityContext
+  data?: PickerData
   disabled?: boolean
 }
 
@@ -84,6 +89,7 @@ export function ActionField({
   value,
   onChange,
   picker,
+  options: given,
   multiline = false,
   ctx,
   data,
@@ -95,8 +101,10 @@ export function ActionField({
   return (
     <FormRow label={title} description={description}>
       {(id) => {
-        if (picker) {
-          const options = optionsFor(picker, ctx, data)
+        const options =
+          given ??
+          (picker && ctx && data ? optionsFor(picker, ctx, data) : null)
+        if (options) {
           return (
             <RecordCombobox
               id={id}
@@ -179,6 +187,26 @@ export function ActionField({
                 value={typeof value === 'string' ? value : ''}
                 onChange={(event) => onChange(event.target.value)}
               />
+            )
+          case 'multi':
+            return (
+              <ToggleGroup
+                id={id}
+                type='multiple'
+                variant='outline'
+                size='sm'
+                className='flex-wrap justify-start'
+                disabled={disabled}
+                value={Array.isArray(value) ? value : []}
+                onValueChange={(next) => onChange(next)}
+                aria-label={title}
+              >
+                {field.options.map((option) => (
+                  <ToggleGroupItem key={option} value={option}>
+                    {humanize(option)}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
             )
           case 'map':
             return (

@@ -71,7 +71,7 @@ function BeliefCard({ view, sonId }: { view: FolkView; sonId: number | null }) {
         <EntityLink kind='entity' id={String(view.people_id)}>
           {view.people_name}
         </EntityLink>
-        <Label>{`remembers him so · Epoch ${view.epoch}`}</Label>
+        <Label>{`remembers this god so · Epoch ${view.epoch}`}</Label>
       </div>
       {view.local_name && (
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
@@ -190,7 +190,7 @@ export function BeliefSection({ views, sonId, godName }: BeliefSectionProps) {
                   </Select>
                 )}
               </FormRow>
-              <FormRow label='Name they gave him'>
+              <FormRow label='Name they gave this god'>
                 {(id) => (
                   <Input
                     id={id}

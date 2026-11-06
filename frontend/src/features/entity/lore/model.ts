@@ -196,7 +196,7 @@ export const ARCHETYPES: Record<Schemas['LegendArchetype'], LoreNamed> = {
     label: 'Cursed line',
     icon: Unlink,
     tone: 'danger',
-    hint: 'A house carries a doom from father to son; it costs that house prestige.',
+    hint: 'A house carries a doom from one generation to the next; it costs that house prestige.',
   },
   return_of_the_king: {
     label: 'Return of the king',

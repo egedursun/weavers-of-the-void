@@ -133,7 +133,7 @@ STRATUM_NAMES = MappingProxyType(
         StratumKind.TORMENT: "the Pits",
         StratumKind.OBLIVION: "the Forgetting",
         StratumKind.WARRIOR_HALL: "the Hall of the Fallen",
-        StratumKind.ANCESTOR_HALL: "the House of the Fathers",
+        StratumKind.ANCESTOR_HALL: "the House of the Ancestors",
     }
 )
 

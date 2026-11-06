@@ -140,7 +140,7 @@ describe('hints and opportunities', () => {
   it('builds structured opportunities with correct grammar', () => {
     const items = opportunitiesOf(HINTS)
     const byKey = Object.fromEntries(items.map((item) => [item.key, item.body]))
-    expect(byKey.rebels).toBe('Kharun defies you: suppress or forgive him.')
+    expect(byKey.rebels).toBe('Kharun defies you: suppress or forgive them.')
     expect(byKey.godless).toContain('Glass has no patron')
     expect(byKey.orders).toBe('Thalassir, Mirel have no standing order.')
     expect(byKey.stale).toBe(

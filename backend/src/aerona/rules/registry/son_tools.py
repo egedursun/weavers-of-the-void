@@ -6,10 +6,10 @@ from aerona.rules.model import rule
 
 @dataclass(frozen=True)
 class SonToolsRules:
-    anchor_per_epoch: int = rule(1, 0, 20, RuleGroup.SON_TOOLS, "Maximum times a son can change his anchor in one epoch")
+    anchor_per_epoch: int = rule(1, 0, 20, RuleGroup.SON_TOOLS, "Maximum times a son can change their anchor in one epoch")
     touch_amount: int = rule(15, 0, 100, RuleGroup.SON_TOOLS, "How far a son's touch moves a mortal's stress, renown, infamy or ability")
     gift_per_epoch: int = rule(1, 0, 20, RuleGroup.SON_TOOLS, "Maximum gifts a son can give in one epoch")
-    prayer_per_epoch: int = rule(1, 0, 20, RuleGroup.SON_TOOLS, "Maximum prayers a son can make to his father in one epoch")
+    prayer_per_epoch: int = rule(1, 0, 20, RuleGroup.SON_TOOLS, "Maximum prayers a son can make to the Creator in one epoch")
     holy_world_per_epoch: int = rule(1, 0, 20, RuleGroup.SON_TOOLS, "Maximum holy-world declarations a son can make in one epoch")
     stitch_per_epoch: int = rule(1, 0, 20, RuleGroup.SON_TOOLS, "Maximum rifts a son can stitch in one epoch")
     free_living_creation: int = rule(1, 0, 1, RuleGroup.SON_TOOLS, "The epoch's first living creation costs no action (1 on, 0 off)")
@@ -108,7 +108,7 @@ class SonToolsRules:
     gift_relation_essence_divisor: int = rule(5, 1, 1000, RuleGroup.SON_TOOLS, "Relation contribution of a gift: + essence given / this number")
     gift_worshipper_relation: int = rule(10, 0, 100, RuleGroup.SON_TOOLS, "Extra relation contribution of an accepted worshipper transfer")
     challenge_die: int = rule(20, 1, 200, RuleGroup.SON_TOOLS, "Challenge die faces (double the result is added)")
-    challenge_power_bonus: int = rule(15, 0, 100, RuleGroup.SON_TOOLS, "Challenge bonus for a son with the duel power in his own field")
+    challenge_power_bonus: int = rule(15, 0, 100, RuleGroup.SON_TOOLS, "Challenge bonus for a son with the duel power in their own field")
     challenge_untouchable: int = rule(15, 0, 100, RuleGroup.SON_TOOLS, "Subtracted from the challenging rival by the Untouchable power")
     challenge_loser_renown_loss: int = rule(2, 0, 100, RuleGroup.SON_TOOLS, "Renown loss of the challenge loser")
     challenge_sleep_epochs: int = rule(2, 1, 20, RuleGroup.SON_TOOLS, "Sleep duration of a son whose HP runs out in a challenge (epochs)")

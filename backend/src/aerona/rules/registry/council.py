@@ -30,7 +30,7 @@ class CouncilRules:
     chat_memory_chars: int = rule(3500, 200, 100000, RuleGroup.CONTEXT_BUDGETS, "Chat: son's memory (characters)")
     chat_history_messages: int = rule(10, 0, 200, RuleGroup.CONTEXT_BUDGETS, "Chat: number of previous messages in the prompt")
     chat_list_messages: int = rule(40, 1, 1000, RuleGroup.INTERFACE, "Messages shown in chat history")
-    chat_max_chars: int = rule(800, 10, 20000, RuleGroup.COUNCIL, "Longest word the god can say to his son (characters)")
+    chat_max_chars: int = rule(800, 10, 20000, RuleGroup.COUNCIL, "Longest message the Creator can send to a son (characters)")
     chat_loyalty_max_change: int = rule(6, 0, 100, RuleGroup.COUNCIL, "Maximum amount a chat changes the son's loyalty (\u00b1)")
     chat_timeout: int = rule(120, 10, 3600, RuleGroup.AGENTS_AND_MODEL, "Chat timeout (s)")
     dream_max_chars: int = rule(600, 10, 20000, RuleGroup.COUNCIL, "Longest text of a dream sent to a mortal (characters)")

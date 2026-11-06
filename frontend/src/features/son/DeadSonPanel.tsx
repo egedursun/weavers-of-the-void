@@ -69,7 +69,7 @@ export function DeadSonPanel({ son }: { son: SonRecord }) {
       </div>
       {corpse && (
         <Text>
-          His body lies as bones:{' '}
+          Their body lies as bones:{' '}
           <EntityLink kind='entity' id={String(corpse.id)}>
             {corpse.name}
           </EntityLink>
@@ -128,7 +128,7 @@ export function DeadSonPanel({ son }: { son: SonRecord }) {
         </div>
       )}
       <Muted>
-        {`Loyal followers form a resurrection cult that gathers devotion${devotion !== undefined ? `; at ${devotion} devotion` : '; when it is full'} the rite can bring him back. Rites${riteChance !== undefined ? ` (${riteChance}% per epoch)` : ''} and blood sacrifices${sacrificeChance !== undefined ? ` (${sacrificeChance}%)` : ''} also happen on their own, stronger at his bones; siblings may scheme for his return, and enemies may scatter the bones.`}
+        {`Loyal followers form a resurrection cult that gathers devotion${devotion !== undefined ? `; at ${devotion} devotion` : '; when it is full'} the rite can bring them back. Rites${riteChance !== undefined ? ` (${riteChance}% per epoch)` : ''} and blood sacrifices${sacrificeChance !== undefined ? ` (${sacrificeChance}%)` : ''} also happen on their own, stronger at their bones; siblings may scheme for their return, and enemies may scatter the bones.`}
       </Muted>
       <SiblingSchemes son={son} />
       <div>

@@ -199,7 +199,7 @@ export const NAV_GROUPS: NavGroup[] = [
         title: 'Council',
         to: '/council',
         icon: UsersRound,
-        description: 'Councils of the brothers and their verdicts.',
+        description: 'Councils of the pantheon and their verdicts.',
       },
       {
         id: 'goals',

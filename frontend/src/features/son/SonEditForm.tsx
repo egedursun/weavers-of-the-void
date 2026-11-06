@@ -274,13 +274,13 @@ export function SonEditForm({ view }: { view: SonPublic }) {
             ))}
           </div>
           <Muted variant='caption'>
-            Changes are canon; he knows himself this way on his next turn.
+            Changes are canon; they know themselves this way on their next turn.
           </Muted>
           <div>
             <ActionButton
               label='Save'
               variant='default'
-              blocked={reason() ?? (name.trim() ? null : 'He needs a name.')}
+              blocked={reason() ?? (name.trim() ? null : 'A name is needed.')}
               pending={save.isPending}
               onRun={submit}
             />

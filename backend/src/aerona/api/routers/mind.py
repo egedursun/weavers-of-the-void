@@ -106,11 +106,13 @@ async def trait_views(session: AsyncSession, node_id: int) -> list[TraitView]:
 
 async def skill_views(session: AsyncSession, rules: Rules, node_id: int, epoch: int) -> list[SkillView]:
     rows = sorted((await skills_of(session, node_id)).values(), key=lambda row: (-row.level, row.skill))
+    subjects = await node_refs(session, [row.subject_node_id for row in rows if row.subject_node_id is not None])
     views: list[SkillView] = []
     for row in rows:
         spec = SKILLS[row.skill]
         views.append(
             SkillView(
+                id=row.id,
                 skill=row.skill,
                 label=spec.label,
                 family=spec.family,
@@ -123,6 +125,8 @@ async def skill_views(session: AsyncSession, rules: Rules, node_id: int, epoch: 
                 last_used_epoch=row.last_used_epoch,
                 rusting=epoch - row.last_used_epoch >= rules.skills.rust_epochs,
                 source=row.source,
+                subject=subjects.get(row.subject_node_id) if row.subject_node_id is not None else None,
+                variant_id=row.variant_id,
             )
         )
     return views

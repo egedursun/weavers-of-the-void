@@ -25,7 +25,7 @@ class NativeKind(StrEnum):
 
 class NewStarOutput(OutputModel):
     name: str
-    type: StarType = Field(description="The kind of sun; its kind sets how hot, bright, stable and strange its worlds are: {{ star_types }}")
+    type: StarType = Field(description="The kind of sun; its kind sets how hot, bright, stable and unusual its worlds are: {{ star_types }}")
     description: str
 
 

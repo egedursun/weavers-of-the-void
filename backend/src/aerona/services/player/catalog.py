@@ -68,6 +68,7 @@ from aerona.services.player import (
     realms,
     regions,
     relations,
+    rewards,
     routes,
     rumours,
     settings,
@@ -930,6 +931,7 @@ FATE_ACTIONS = (
         lambda rules: essence(rules.costs.override_verdict),
         ("LLM-061",),
     ),
+    _sync(Meta("creation:reward", "Take back or restore a creation's reward", G.FATE), rewards.set_reward, rewards.RewardShare, free, ()),
     _job(
         Meta("chronicle:audit", "Audit an age's chronicle against the facts again", G.FATE),
         fate_controls.audit_chronicle,

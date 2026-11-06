@@ -118,7 +118,7 @@ async def test_kin_tools(database: Database) -> None:
 async def test_prayer_and_rebellion(database: Database) -> None:
     realm = await seed_realm(database)
     toolkit = await son_toolkit(database, realm.son_id)
-    await ok(toolkit, "pray_to_father", {"message": "Father, grant me salt", "request": "essence"})
+    await ok(toolkit, "pray_to_creator", {"message": "Creator, grant me strength", "request": "essence"})
     await ok(toolkit, "rebel", {"proclamation": "Your silence is a chain; I break it today."})
     assert (await son(database, realm.son_id)).rebel
     assert "already in rebellion" in await rejected(toolkit, "rebel", {"proclamation": "Your silence is a chain; I break it again."})

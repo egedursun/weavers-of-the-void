@@ -229,7 +229,7 @@ export function SonCard({
           {reputation && !dead && (
             <Chip
               variant='outline'
-              label={`Sees father: ${reputation}`}
+              label={`Sees the Creator: ${reputation}`}
               hint={
                 son.reputation_love !== null
                   ? `Love ${son.reputation_love} · fear ${son.reputation_fear ?? 0} · forgotten ${son.reputation_forgotten ?? 0}`

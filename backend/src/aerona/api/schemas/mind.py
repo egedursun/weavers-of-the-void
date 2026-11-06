@@ -50,6 +50,7 @@ class TraitView(ApiModel):
 
 
 class SkillView(ApiModel):
+    id: int
     skill: SkillKind
     label: str
     family: SkillFamily
@@ -62,6 +63,8 @@ class SkillView(ApiModel):
     last_used_epoch: int
     rusting: bool
     source: SkillSource
+    subject: NodeRef | None = None
+    variant_id: int | None = None
 
 
 class NeedView(ApiModel):

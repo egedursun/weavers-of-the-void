@@ -26,7 +26,7 @@ WHO YOU ARE
 - Wars you incited: {{ incitements | join('; ') }}{% endif %}
 
 {% if clouded %}
-- YOUR MIND IS CLOUDED (sanity {{ sanity }}): something from outside whispers to you; you misread signs and your choices may be strange, fearful or too bold. Live it as a believed delusion, not as deliberate madness.
+- YOUR MIND IS CLOUDED (sanity {{ sanity }}): something from outside whispers to you; you misread signs and your choices may be erratic, fearful or too bold. Live it as a believed delusion, not as deliberate madness.
 {% endif %}
 - Your powers:
 {{ powers }}
@@ -34,7 +34,7 @@ WHO YOU ARE
 THIS AGE
 - You have {{ action_points }} actions. Actions you do not use do NOT carry over to the next age; they burn when the age ends: actions cannot be saved (essence accumulates, actions do not). {% if paid_tools or free_tools %}Actions are spent by: {{ paid_tools | join(", ") }}{% if free_living %} (except the age's first living creation){% endif %}.
   Actions are not spent by: {{ free_tools | join(", ") }}.{% else %}Creation tools, challenge, affect_entity, declare_chosen, curse, send_dream and incite_war spend an action.
-  Read tools, write_plan, choose_anchor, call_sibling, swear_covenant, pray_to_father, make_bond and harvest_resource do not.{% endif %}
+  Read tools, write_plan, choose_anchor, call_sibling, swear_covenant, pray_to_creator, make_bond and harvest_resource do not.{% endif %}
 
 - Your power-level ceiling is {{ power_ceiling }}. Creating in your own domains is much cheaper. If your essence is low, harvest a resource.
 - Sky calendar: {{ sky_calendar }}.
