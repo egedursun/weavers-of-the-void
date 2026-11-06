@@ -139,7 +139,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "location_id": "Your own region or a place in your region",
             "domain": "One of: {{ domains | join(', ') }}",
             "image_prompt": IMAGE_PROMPT_FIELD,
-            "commodity": "What your people draw from it: {{ commodities | join(', ') }}; ore feeds forges and weapons; empty if none",
+            "commodity": "What your people draw from it: {{ commodities | join(', ') }}; ore feeds forges and weapons",
             "material": "If it is a seam or a grove, its material: {{ materials | join(', ') }}",
             "mechanics": "The resource's particular rules, at most {{ rules.mechanics.resource_max }} (empty: read from its name and text): {{ resource_mechanics }}",
         },

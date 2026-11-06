@@ -326,9 +326,8 @@ async def finish_extras(call: SonCall, args: CreationInput, created: EntityRow) 
     place_kind = args.option("place_kind")
     if created.entity_type is EntityType.PLACE and place_kind is not None:
         await write_kind(call.session, call.rules, created.id, place_kind)
-    commodity = args.option("commodity")
-    if created.entity_type is EntityType.RESOURCE and commodity is not None:
-        await set_resource_yield(call.session, call.rules, created.id, commodity, args.option("material"))
+    if created.entity_type is EntityType.RESOURCE:
+        await set_resource_yield(call.session, call.rules, created.id, args.option("commodity"), args.option("material"))
     if created.entity_type in MECHANIC_TYPES:
         await assign_mechanics(call.session, call.rules, created, resource_choice=args.option("mechanics") or (), law_choice=args.option("mechanic"))
     if created.entity_type is EntityType.CULT:

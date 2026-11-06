@@ -195,6 +195,7 @@ async def write_genesis(session: AsyncSession, rules: Rules, request: GenesisReq
         birth = rules.world_birth
         deposit = await create_cosmic_deposit(
             session,
+            rules,
             FIRST_EPOCH,
             travel,
             DepositSpec(

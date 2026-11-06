@@ -25,7 +25,7 @@ from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import has_flag
 from aerona.engine.primitives.stats import stat
 from aerona.engine.settlement.book import town_of
-from aerona.engine.structures.backfill import BACKFILL_FIXUP, backfill_structures, type_from_record
+from aerona.engine.structures.backfill import BACKFILL_FIXUP, FALLBACK, backfill_structures, type_from_record
 from aerona.engine.structures.construction import Commission, abandon, advance, begin, finish
 from aerona.engine.structures.control import commission, create_design
 from aerona.engine.structures.functions import run_functions
@@ -242,12 +242,21 @@ async def test_the_backfill_types_old_structures_once_and_links_their_workshop(s
     session.add(WorkshopRow(community_entity_id=town.id, kind=WorkshopKind.GRANARY, level=1, built_epoch=1))
     await bond(session, town.id, temple.id, BondKind.BUILT)
     await session.flush()
-    assert type_from_record(temple) is StructureKind.TEMPLE
+    assert type_from_record(temple, legacy=True) is StructureKind.TEMPLE
     ctx = await manual_context(session, "structure_survey", tuned_rules())
     result = await backfill_structures(ctx)
     assert result["typed"] == 3 and result["workshops"] == 1
     kinds = {row.structure_entity_id: row.kind for row in await session.scalars(select(StructureProfileRow))}
     assert kinds == {temple.id: StructureKind.TEMPLE, granary.id: StructureKind.GRANARY, library.id: StructureKind.LIBRARY}
+    shrine = await entity(
+        session, "Temple of Bells", EntityType.STRUCTURE, StructureStats(splendor=10, durability=60, function=50), world_id=world.world.id, location_id=town.id
+    )
+    shrine.subtype = "temple"
+    await session.flush()
+    assert type_from_record(shrine, legacy=False) is FALLBACK
+    await backfill_structures(ctx)
+    late = await session.get(StructureProfileRow, shrine.id)
+    assert late is not None and late.kind is FALLBACK
     assert await session.get(AppliedFixupRow, BACKFILL_FIXUP) is not None
     assert await backfill_structures(ctx) == {}
     profile = await session.get(StructureProfileRow, temple.id)

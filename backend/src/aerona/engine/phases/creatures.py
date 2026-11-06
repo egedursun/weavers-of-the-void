@@ -13,6 +13,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, ResourceMechanic
 from aerona.domain.enums.war import WarCause
@@ -32,6 +33,7 @@ from aerona.engine.cosmos.sanity import sanity_of, shift_sanity
 from aerona.engine.ecology.foodweb import derive_links
 from aerona.engine.ecology.profiles import assign_traits
 from aerona.engine.ecology.ranges import adapt_subspecies
+from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -318,6 +320,7 @@ async def megafauna_trail(ctx: TickContext, beast: EntityRow) -> EntityRow | Non
         ),
     )
     await set_mechanics(ctx.session, trail, [ResourceMechanic.ADDICTIVE] if cosmic else [ResourceMechanic.DECAYING])
+    await set_resource_yield(ctx.session, ctx.rules, trail.id, CommodityKind.MAGICAL_REAGENTS)
     await note(ctx, f"Where {beast.name} passed, a strange trail remained: {trail.name}.", key="creatures.megafauna_trail", ids=[beast.id, trail.id])
     return trail
 

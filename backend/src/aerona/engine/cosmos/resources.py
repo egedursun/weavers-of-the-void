@@ -12,10 +12,12 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmic_state import ResourceMechanicRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.society import ResourceMechanic
 from aerona.domain.models.entity_stats import ResourceStats
 from aerona.domain.models.profiles import TravelResource
+from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.stats import stat_or
@@ -92,7 +94,7 @@ class DepositSpec:
     creator_son_id: int | None = None
 
 
-async def create_cosmic_deposit(session: AsyncSession, epoch: int, resource: TravelResource, spec: DepositSpec) -> EntityRow:
+async def create_cosmic_deposit(session: AsyncSession, rules: Rules, epoch: int, resource: TravelResource, spec: DepositSpec) -> EntityRow:
     region = spec.region
     deposit = await open_record(
         session,
@@ -113,6 +115,7 @@ async def create_cosmic_deposit(session: AsyncSession, epoch: int, resource: Tra
         ),
     )
     await set_mechanics(session, deposit, COSMIC_DEPOSIT_MECHANICS)
+    await set_resource_yield(session, rules, deposit.id, CommodityKind.MAGICAL_REAGENTS)
     return deposit
 
 

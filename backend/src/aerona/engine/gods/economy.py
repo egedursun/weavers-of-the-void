@@ -28,6 +28,7 @@ from aerona.domain.enums.world import Discovery
 from aerona.domain.models.entity_stats import FactionStats, ResourceStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.extraction import reconcile, write_reserve
+from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.gods.pacts import Terms, bargained, keep_pact, pact_for, strike_pact, terms_of
 from aerona.engine.gods.queries import cosmos_row, owners_of, world_count
@@ -440,6 +441,7 @@ async def create_deposit(ctx: TickContext, region: EntityRow) -> EntityRow | Non
         )
     )
     ctx.session.add(ResourceMechanicRow(entity_id=deposit.id, mechanic=ResourceMechanic.FIXED))
+    await set_resource_yield(ctx.session, ctx.rules, deposit.id, CommodityKind.MAGICAL_REAGENTS)
     line = god_lines.ECONOMY_DEPOSIT_BORN
     await ctx.chronicle(
         ChronicleKind.RESOURCE,

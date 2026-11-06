@@ -168,7 +168,7 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
             "rebirth_path": (RebirthPath | None, None),
         },
         EntityType.RESOURCE: {
-            "commodity": (CommodityKind | None, None),
+            "commodity": (CommodityKind, ...),
             "material": (MaterialKind | None, None),
             "mechanics": (list[ResourceMechanic] | None, None),
         },

@@ -3,6 +3,7 @@ from dataclasses import replace
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.foreign_god import ForeignGodPowerEffect
 from aerona.domain.enums.son import Stat
+from aerona.domain.enums.travel import VehicleKind
 from aerona.prompts.catalog import render
 from aerona.prompts.contexts import opportunities as o
 from aerona.prompts.contexts.common import NamedRecord
@@ -16,9 +17,10 @@ RULES = Rules()
 
 
 def test_image_direction_by_kind() -> None:
-    assert image_direction(ImageSubjectTraits(EntityType.VESSEL, "Bone Gate", None, False)).startswith("a gate or portal")
-    assert image_direction(ImageSubjectTraits(EntityType.SPECIES, "Wyrm", None, True)) == MEGAFAUNA_DIRECTION
-    assert image_direction(ImageSubjectTraits(EntityType.ARMY, "Host", None, False)).startswith("the army")
+    assert image_direction(ImageSubjectTraits(EntityType.VESSEL, False, VehicleKind.GATE)).startswith("a gate or portal")
+    assert image_direction(ImageSubjectTraits(EntityType.VESSEL, False, VehicleKind.SHIP)).startswith("a ship between worlds")
+    assert image_direction(ImageSubjectTraits(EntityType.SPECIES, True)) == MEGAFAUNA_DIRECTION
+    assert image_direction(ImageSubjectTraits(EntityType.ARMY, False)).startswith("the army")
 
 
 def test_fix_image_prompt_adds_tails_and_respects_length() -> None:

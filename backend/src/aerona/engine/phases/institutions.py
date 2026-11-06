@@ -1,5 +1,4 @@
 import math
-import re
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import StrEnum
@@ -11,6 +10,7 @@ from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import ArtworkProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import LawProfileRow
@@ -43,7 +43,6 @@ from aerona.rules.registry import Rules
 
 CARRIER_TYPES = frozenset({*COMMUNITY_TYPES, EntityType.MORTAL})
 CARRIER_BONDS = (BondKind.PRODUCED, BondKind.CELEBRATES, BondKind.TELLS_OF, BondKind.OWNS, BondKind.RELATED, BondKind.BUILT)
-WRITTEN_WORK = re.compile(r"book|inscription|epic|fresco|tablet|stele|statue|monument", re.IGNORECASE)
 SWALLOWING_KINDS = frozenset({EngineKind.EARTHQUAKE, EngineKind.FLOOD})
 OWNING_BONDS = (BondKind.OWNS, BondKind.HOLDS_CAPTIVE)
 SCHISM_REASON = "schism"
@@ -414,16 +413,13 @@ async def carriers(ctx: TickContext, work: EntityRow) -> int:
     return len(sources) + gods + (1 if home is not None and home.entity_type in COMMUNITY_TYPES else 0)
 
 
-def is_written(work: EntityRow) -> bool:
-    return bool(WRITTEN_WORK.search(f"{work.subtype or ''} {work.name}"))
-
-
 async def works(ctx: TickContext) -> int:
     cycles = ctx.rules.life_cycles
     forgotten = 0
+    lasting = {row.artwork_entity_id: not row.performed for row in await ctx.session.scalars(select(ArtworkProfileRow))}
     for work in await canon(ctx.session, [EntityType.ARTWORK]):
         count = await carriers(ctx, work)
-        written = is_written(work)
+        written = lasting.get(work.id, False)
         gain = min(cycles.work_carrier_cap, count) * cycles.work_renown_gain
         fading = (cycles.work_fade + (0 if count else cycles.work_orphan_fade)) * (1 - cycles.written_resistance_pct / 100 if written else 1)
         fade = chance_round(ctx, fading, f"work_fade.{work.id}")

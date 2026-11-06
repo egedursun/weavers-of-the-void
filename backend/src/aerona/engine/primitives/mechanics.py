@@ -2,7 +2,6 @@ from collections.abc import Sequence
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.mechanic_hints import LAW_HINTS, RESOURCE_HINTS, SUBTYPE_LEANINGS
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
@@ -25,10 +24,6 @@ MECHANIC_WEIGHTS = {
 WORKING_LAWS = tuple(law for law in NaturalLaw if law is not NaturalLaw.NONE)
 
 
-def text_of(entity: EntityRow) -> str:
-    return f"{entity.name} {entity.subtype or ''} {entity.description}".casefold()
-
-
 async def sacred_god(session: AsyncSession, resource: EntityRow) -> int | None:
     if resource.creator_son_id is not None and await living_son(session, resource.creator_son_id) is not None:
         return resource.creator_son_id
@@ -41,24 +36,12 @@ async def sacred_god(session: AsyncSession, resource: EntityRow) -> int | None:
     return None
 
 
-def _hinted(rules: Rules, resource: EntityRow, sacred: int | None) -> list[ResourceMechanic]:
-    if stable_roll(resource.id, "hint") * 100 >= rules.mechanics.hint_chance:
-        return []
-    text = text_of(resource)
-    found = [mechanic for mechanic, pattern in RESOURCE_HINTS if pattern.search(text) and (mechanic is not ResourceMechanic.SACRED or sacred is not None)]
-    return found[: rules.mechanics.resource_max]
-
-
 def _rolled(rules: Rules, resource: EntityRow, sacred: int | None) -> list[ResourceMechanic]:
     table = rules.mechanics
     if stable_roll(resource.id, "die") * 100 >= table.resource_die_chance:
         return []
-    subtype = (resource.subtype or "").casefold()
-    leaning = next((mechanic for pattern, mechanic in SUBTYPE_LEANINGS if pattern.search(subtype)), None)
     weighted = [
-        (mechanic, getattr(table, field) * (table.subtype_leaning_mult if mechanic is leaning else 1))
-        for mechanic, field in MECHANIC_WEIGHTS.items()
-        if mechanic is not ResourceMechanic.SACRED or sacred is not None
+        (mechanic, getattr(table, field)) for mechanic, field in MECHANIC_WEIGHTS.items() if mechanic is not ResourceMechanic.SACRED or sacred is not None
     ]
     weighted = [(mechanic, weight) for mechanic, weight in weighted if weight > 0]
     total = sum(weight for _, weight in weighted)
@@ -79,18 +62,13 @@ async def choose_resource_mechanics(
     picked = [mechanic for mechanic in dict.fromkeys(chosen) if mechanic is not ResourceMechanic.SACRED or sacred is not None]
     if picked:
         return picked[: rules.mechanics.resource_max]
-    return _hinted(rules, resource, sacred) or _rolled(rules, resource, sacred)
+    return _rolled(rules, resource, sacred)
 
 
 def choose_law(rules: Rules, law: EntityRow, chosen: NaturalLaw | None = None) -> NaturalLaw:
     if chosen is not None:
         return chosen
-    key = law.id if law.id is not None else text_of(law)
-    if stable_roll(key, "hint") * 100 < rules.mechanics.hint_chance:
-        text = text_of(law)
-        hinted = next((item for item, pattern in LAW_HINTS if pattern.search(text)), None)
-        if hinted is not None:
-            return hinted
+    key = law.id if law.id is not None else law.name
     if stable_roll(key, "die") * 100 >= rules.mechanics.law_die_chance:
         return NaturalLaw.NONE
     return WORKING_LAWS[min(len(WORKING_LAWS) - 1, int(stable_roll(key, "choice") * len(WORKING_LAWS)))]

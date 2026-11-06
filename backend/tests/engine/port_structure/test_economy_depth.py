@@ -7,25 +7,26 @@ from aerona.db.tables.body import BodyRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import CohortRow
-from aerona.db.tables.economy import CommunityStockRow, LoanRow, NodeMaterialRow, ResourceProfileRow, WorkshopRow
+from aerona.db.tables.economy import CommunityStockRow, LoanRow, NodeMaterialRow, ResourceProfileRow, WorkshopRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import CaptiveRow
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
-from aerona.domain.enums.economy import CommodityKind, FoeNature, GoodsFlow, LoanStatus, MaterialFamily, MaterialSlot, WorkshopKind
+from aerona.domain.enums.economy import CommodityKind, FoeNature, GoodsFlow, LoanStatus, MaterialFamily, MaterialOrigin, MaterialSlot, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.polity import DebtRemedy, LawKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.travel import VehicleKind
 from aerona.domain.enums.war import CaptiveStatus, DebtStatus
-from aerona.domain.models.entity_stats import EntityStats, FactionStats, ItemStats, SpeciesStats, StructureStats, VesselStats
+from aerona.domain.models.entity_stats import EntityStats, FactionStats, ItemStats, ResourceStats, SpeciesStats, StructureStats, VesselStats
 from aerona.engine.cosmos.vessels import set_vessel_kind
 from aerona.engine.economy import control_depth
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.control_depth import Substance
+from aerona.engine.economy.deposits import ORIGIN_BASE, has_substance, new_substance
 from aerona.engine.economy.extraction import knowledge_gate
 from aerona.engine.economy.loot import loot_temples
 from aerona.engine.economy.markets import quote_market
@@ -49,7 +50,7 @@ from aerona.engine.economy.provenance import ensure_materials, sweep_materials
 from aerona.engine.economy.realm_credit import collect_from_realms, lend_to_realms
 from aerona.engine.economy.sanctity import holy_strike, natures_of
 from aerona.engine.economy.stocks import goods_of, holding
-from aerona.engine.economy.survey import DEPTH_FIXUP, depth_backfill
+from aerona.engine.economy.survey import DEPTH_FIXUP, PROFILE_FIXUP, depth_backfill, profile_resources
 from aerona.engine.economy.workshop_designs import NewDesign, capacity_scale, create_design, output_scale, workshop_store_units
 from aerona.engine.phases.market import market
 from aerona.engine.phases.production import species_yields
@@ -347,3 +348,37 @@ async def test_workshop_designs_scale_capacity_output_and_storage(session: Async
     assert workshop_store_units(workshop, None, 10) == 20
     assert capacity_scale(design) == 0.5 and output_scale(design) == 2.0
     assert workshop_store_units(None, design, 10) == 0
+
+
+async def test_world_specific_substances_come_from_events_as_pending_named_deposits(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "substance", Rules())
+    place = world.regions[0]
+    origins = [MaterialOrigin.GOD_REMAINS, MaterialOrigin.DEAD_STAR, MaterialOrigin.BEAST, MaterialOrigin.LEAK_CRYSTAL, MaterialOrigin.RESEARCH]
+    for origin in origins:
+        source = (await settlement(session, f"Source {origin.value}", world, place)).id
+        row = await new_substance(ctx, origin, place, source_node_id=source)
+        assert row.origin is origin and row.family is MaterialFamily.EXOTIC and row.world_id == place.world_id
+        base = MATERIALS[ORIGIN_BASE[origin]]
+        assert all(0 <= getattr(row, column) <= 100 for column in ("hardness", "toughness", "sanctity", "rarity"))
+        assert row.description
+        assert await has_substance(ctx, source)
+        deposit = await session.get(EntityRow, row.deposit_entity_id)
+        assert deposit is not None and deposit.entity_type is EntityType.RESOURCE and deposit.pending_name
+        profile = await session.get(ResourceProfileRow, deposit.id)
+        assert profile is not None and profile.world_material_id == row.id and profile.commodity is CommodityKind.ORE
+        assert base.branch == row.branch
+    stored = list(await session.scalars(select(WorldMaterialRow).where(WorldMaterialRow.world_id == place.world_id)))
+    assert {item.origin for item in stored} >= set(origins)
+
+
+async def test_resource_words_are_read_once_and_never_after(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "profiles", Rules())
+    old = await made(session, world, "Wheat Field", EntityType.RESOURCE, ResourceStats(abundance=50, value=30, might=10), at=world.regions[0].id)
+    await profile_resources(ctx, await EconomyBook.load(ctx))
+    first = await session.get(ResourceProfileRow, old.id)
+    assert first is not None and first.commodity is CommodityKind.GRAIN
+    assert await session.get(AppliedFixupRow, PROFILE_FIXUP) is not None
+    late = await made(session, world, "Golden Wheat", EntityType.RESOURCE, ResourceStats(abundance=50, value=30, might=10), at=world.regions[0].id)
+    await profile_resources(ctx, await EconomyBook.load(ctx))
+    second = await session.get(ResourceProfileRow, late.id)
+    assert second is not None and second.commodity is CommodityKind.ORE

@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.travel import VehicleKind
 from aerona.prompts.contexts.base import ContextItem, RulesContext
 from aerona.prompts.data.images import AMBIENCE_BIOME_COUNT, COSMOS_DIRECTION, CosmosSubjectKind, ImageSubjectTraits, image_direction
 
@@ -22,11 +23,12 @@ class ImageSubject(ContextItem):
     name: str
     description: str
     megafauna: bool = False
+    vehicle: VehicleKind | None = None
     ambience: WorldAmbience | None = None
 
     @property
     def direction(self) -> str:
-        return image_direction(ImageSubjectTraits(self.entity_type, self.name, self.subtype, self.megafauna))
+        return image_direction(ImageSubjectTraits(self.entity_type, self.megafauna, self.vehicle))
 
 
 class EntityImagePromptsContext(RulesContext):

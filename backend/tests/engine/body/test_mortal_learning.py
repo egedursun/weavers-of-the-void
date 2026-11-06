@@ -8,18 +8,18 @@ from aerona.db.tables.mortal import KindVariantRow, MortalProfileRow
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import LegendArchetype
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.mind import KindFamily, MemoryKind, Profession, SkillKind, SkillSource, TraitEffect, TraitKind, TraitSource
 from aerona.domain.enums.mortal import MortalSex
 from aerona.domain.enums.society import KnowledgeBranch
-from aerona.domain.models.entity_stats import ItemStats, KnowledgeStats, LanguageStats, LegendStats, MortalStats
+from aerona.domain.models.entity_stats import ItemStats, KnowledgeStats, LanguageStats, LegendStats, MortalStats, StructureStats
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.state import refresh
 from aerona.engine.lore.legends import LEGEND_NOTE, remember_legend
 from aerona.engine.mind.book import effect_of, set_skill
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.course import seed_mortal
-from aerona.engine.mortal.learning import best_profession, read_books, speak_tongues, tongue_level, watch_masters
+from aerona.engine.mortal.learning import attend_lectures, best_profession, read_books, speak_tongues, tongue_level, watch_masters
 from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.phases.births import child_sex
 from aerona.engine.primitives.queries import connect
@@ -50,6 +50,30 @@ async def test_a_profession_is_the_best_bundle_and_masters_teach_by_example(real
     profile, _ = await ensure_profile(realm.session, learner.id, ctx.epoch)
     profile.profession = Profession.SMITH
     assert await watch_masters(ctx, learner, profile) > 0
+
+
+async def test_a_teaching_master_lectures_at_a_school_and_nowhere_else(realm: Realm) -> None:
+    town = await settlement(realm, "Lettermere")
+    scholar = await mortal(realm, "Orsa", location_id=town.id)
+    student = await mortal(realm, "Pell", location_id=town.id)
+    await set_skill(realm.session, scholar.id, SkillKind.MEDICINE, 80, epoch=1, source=SkillSource.PLAYER)
+    await set_skill(realm.session, scholar.id, SkillKind.TEACHING, 40, epoch=1, source=SkillSource.PLAYER)
+    await set_skill(realm.session, student.id, SkillKind.MEDICINE, 20, epoch=1, source=SkillSource.PLAYER)
+    ctx = context(realm.session, tuned(skills={"lecture_xp": 500}))
+    profile, _ = await ensure_profile(realm.session, student.id, ctx.epoch)
+    profile.profession = Profession.HEALER
+    assert await attend_lectures(ctx, student, profile) == 0
+    hall = await make(
+        realm.session,
+        "House of Letters",
+        EntityType.STRUCTURE,
+        StructureStats(splendor=10, durability=60, function=50),
+        world_id=realm.world.id,
+        location_id=town.id,
+    )
+    hall.engine_kind = EngineKind.SCHOOL
+    await realm.session.flush()
+    assert await attend_lectures(ctx, student, profile) > 0
 
 
 async def test_a_book_teaches_its_branch(realm: Realm) -> None:

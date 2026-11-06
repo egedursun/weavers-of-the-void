@@ -6,11 +6,9 @@ from aerona.rules.model import rule
 
 @dataclass(frozen=True)
 class MechanicsRules:
-    hint_chance: int = rule(100, 0, 100, RuleGroup.ECONOMY, "Chance a resource or law whose text plainly names a mechanic takes that mechanic (%)")
-    resource_die_chance: int = rule(30, 0, 100, RuleGroup.ECONOMY, "Chance a resource whose text names no mechanic still carries a strange rule (%)")
-    resource_max: int = rule(2, 1, 6, RuleGroup.ECONOMY, "Most strange rules one resource can carry")
-    law_die_chance: int = rule(70, 0, 100, RuleGroup.ECONOMY, "Chance a natural law whose text names no mechanic still gets a mechanical working (%)")
-    subtype_leaning_mult: int = rule(2, 1, 20, RuleGroup.ECONOMY, "Die weight multiplier for the mechanic the resource's subtype suggests")
+    resource_die_chance: int = rule(30, 0, 100, RuleGroup.ECONOMY, "Chance a resource whose maker chose no mechanic still carries a special rule (%)")
+    resource_max: int = rule(2, 1, 6, RuleGroup.ECONOMY, "Most special rules one resource can carry")
+    law_die_chance: int = rule(70, 0, 100, RuleGroup.ECONOMY, "Chance a natural law whose maker chose no working still gets a mechanical working (%)")
     weight_decaying: int = rule(30, 0, 1000, RuleGroup.ECONOMY, "Die weight of the decaying rule")
     weight_addictive: int = rule(20, 0, 1000, RuleGroup.ECONOMY, "Die weight of the addictive rule")
     weight_sentient: int = rule(10, 0, 1000, RuleGroup.ECONOMY, "Die weight of the sentient rule")

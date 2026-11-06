@@ -3,8 +3,11 @@ from pydantic import Field
 from aerona.constants.genesis import FIRST_SONS_CEILING
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
+from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, ResourceMechanic
+from aerona.domain.enums.structure import StructureKind
 from aerona.prompts.schemas.base import OutputModel
 from aerona.prompts.schemas.shared import (
     IMAGE_PROMPT,
@@ -107,6 +110,8 @@ class AwakenedSettlement(AwakenedRecord):
 
 class AwakenedResource(AwakenedRecord):
     domain: Domain
+    commodity: CommodityKind = Field(description="What the resource yields when worked")
+    material: MaterialKind | None = Field(default=None, description="The material it yields, for ore, stone or timber; null otherwise")
 
 
 class AwakenedKnowledge(AwakenedRecord):
@@ -148,3 +153,7 @@ class RevelationOutput(OutputModel):
     image_prompt: str = Field(description=IMAGE_PROMPT)
     tags: list[str] = Field(default_factory=list)
     mechanic: NaturalLaw | None = Field(default=None, description="ONLY if the type is natural_law: how the law works in the world. {{ natural_laws }}")
+    commodity: CommodityKind | None = Field(default=None, description="ONLY if the type is resource: what it yields when worked")
+    material: MaterialKind | None = Field(default=None, description="ONLY if the type is resource yielding ore, stone or timber: the material")
+    resource_mechanics: list[ResourceMechanic] = Field(default_factory=list, description="ONLY if the type is resource: its special rules, if any")
+    structure_kind: StructureKind | None = Field(default=None, description="ONLY if the type is structure: what kind of work it is")

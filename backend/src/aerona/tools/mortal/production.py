@@ -7,7 +7,6 @@ from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
@@ -16,7 +15,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.economy import CommodityKind, MaterialSlot
+from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, SkillKind
 from aerona.domain.enums.polity import LawKind
@@ -24,7 +23,7 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarCause
 from aerona.engine.economy.materials import armour_protection, curse_bonus, decay_loss, enchantment_cap, sanctity_splendour, set_node_material, weapon_damage
-from aerona.engine.economy.resources import ensure_profile, set_resource_yield
+from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.environment.ley_works import ley_row
 from aerona.engine.lore import legends, traditions
 from aerona.engine.polity.laws import attach_profile, validate
@@ -331,14 +330,7 @@ async def discover_resource(call: MortalCall, args: DiscoverInput) -> str:
         ),
     )
     resource.domain = match_domain(args.domain or "") or Domain.EARTH
-    if args.commodity is not None:
-        await set_resource_yield(call.session, call.rules, resource.id, args.commodity, args.material)
-    else:
-        region_id = (await call.atlas()).top_region(location.id)
-        region = await call.session.get(RegionEnvironmentRow, region_id) if region_id is not None else None
-        await ensure_profile(
-            call.session, call.rules, resource, region, commodity=CommodityKind.ORE if args.material is not None else None, material=args.material
-        )
+    await set_resource_yield(call.session, call.rules, resource.id, args.commodity, args.material)
     await BondRepository(call.session).connect(BondDraft(call.me.id, resource.id, BondKind.OWNS, call.epoch, lines.DISCOVERED_BOND))
     await assign_mechanics(call.session, call.rules, resource, resource_choice=args.mechanics or ())
     await call.bump(TurnCounter.DISCOVERIES)

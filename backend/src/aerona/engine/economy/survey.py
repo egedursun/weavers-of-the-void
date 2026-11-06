@@ -33,6 +33,7 @@ from aerona.engine.primitives.queries import active_bonds
 
 BACKFILL_FIXUP = "economy.w4_backfill"
 DEPTH_FIXUP = "economy.depth_backfill"
+PROFILE_FIXUP = "economy.resource_profiles"
 C = CommodityKind
 HIDDEN_SEAM_FLOOR = 70
 
@@ -58,18 +59,22 @@ def guess_material(resource: EntityRow) -> MaterialKind | None:
 
 
 async def profile_resources(ctx: TickContext, book: EconomyBook) -> int:
+    legacy = await ctx.session.get(AppliedFixupRow, PROFILE_FIXUP) is None
     made = 0
     for resource in book.resources():
         region = book.ground.region_of(resource.id)
         profile = book.profiles.get(resource.id)
         if profile is None:
-            commodity = guess_commodity(resource) or C.ORE
-            material = guess_material(resource) if commodity is C.ORE else None
+            commodity = (guess_commodity(resource) if legacy else None) or C.ORE
+            material = guess_material(resource) if legacy and commodity is C.ORE else None
             profile = await ensure_profile(ctx.session, ctx.rules, resource, region, commodity=commodity, material=material)
             book.profiles[resource.id] = profile
             made += 1
         elif profile.material is None and profile.world_material_id is None and profile.commodity in (C.ORE, C.STONE, C.TIMBER):
-            profile.material = guess_material(resource) or default_material(profile.commodity, region)
+            profile.material = (guess_material(resource) if legacy else None) or default_material(profile.commodity, region)
+    if legacy:
+        ctx.session.add(AppliedFixupRow(key=PROFILE_FIXUP, result={"resources": made}))
+        await ctx.session.flush()
     return made
 
 

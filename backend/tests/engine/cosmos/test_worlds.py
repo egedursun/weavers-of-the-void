@@ -7,17 +7,19 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.celestial import StarRow
+from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.routes import RouteRow
 from aerona.domain.enums.chronicle import PartOfSpeech
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityType
 from aerona.domain.enums.society import ResourceMechanic
 from aerona.domain.enums.world import Atmosphere, Discovery, Gravity, StarType, WorldType
 from aerona.domain.models.entity_stats import RegionStats
 from aerona.engine.context import TickContext
-from aerona.engine.cosmos.birth import BirthRequest, fits, narrative_star_type, process_world_birth
+from aerona.engine.cosmos.birth import BirthRequest, fits, process_world_birth
 from aerona.engine.cosmos.discovery import mark_world_discovered
 from aerona.engine.cosmos.worlds import (
     align_moons,
@@ -81,6 +83,7 @@ def birth_output(**changes: object) -> NewWorldOutput:
             description="It hums.",
             rule="Only in silence.",
             mechanics=[ResourceMechanic.DECAYING, ResourceMechanic.SACRED],
+            commodity=CommodityKind.LUXURIES,
             region_index=1,
             image_prompt="salt",
         ),
@@ -138,11 +141,21 @@ async def test_world_birth_forced_type_mechanics_and_new_star(ctx: TickContext, 
     assert world.star_id != cosmos.star.id
 
 
-def test_narrative_star_and_phoneme_fit() -> None:
-    output = birth_output(description="A world under a red giant.", day="", cosmology="")
-    assert narrative_star_type(output) is StarType.RED_GIANT
+def test_phoneme_fit() -> None:
     assert fits("Kalo", frozenset("kalo"))
     assert not fits("Zed", frozenset("kalo"))
+
+
+async def test_prose_never_picks_a_star_only_typed_fields_do(ctx: TickContext, cosmos: Cosmos) -> None:
+    output = birth_output(
+        description="A world under a red giant.", day="A red giant fills the sky.", cosmology="", placement=PlacementChoice.NEW_STAR, star=None
+    )
+    world = await process_world_birth(ctx, output, BirthRequest())
+    assert world.star_id == cosmos.star.id
+    originals = await EntityRepository(ctx.session).with_flag(EntityFlag.ORIGINAL_RESOURCE)
+    resource = originals[-1]
+    profile = await ctx.session.get(ResourceProfileRow, resource.id)
+    assert profile is not None and profile.commodity is CommodityKind.LUXURIES
 
 
 async def test_world_physics_includes_world_type(rules: Rules, session: AsyncSession, cosmos: Cosmos) -> None:

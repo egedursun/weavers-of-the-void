@@ -4,7 +4,6 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.cartography.terrain import default_terrain
-from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.cosmos import (
     MOON_ORBIT_BASE,
@@ -44,6 +43,7 @@ from aerona.engine.cosmos.routes import connect_world
 from aerona.engine.cosmos.stars import StarSpec, create_star
 from aerona.engine.cosmos.world_types import mechanics_of
 from aerona.engine.cosmos.worlds import assign_mirror_twin
+from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.primitives.naming import Namer
 from aerona.engine.primitives.numbers import clamp_float, clamp_percent
 from aerona.engine.primitives.records import RecordSpec, open_record
@@ -91,12 +91,6 @@ def fits(name: str, phonemes: frozenset[str] | None) -> bool:
     return phonemes is None or all(letter in phonemes for letter in first_word(name).lower() if letter.isalpha())
 
 
-def narrative_star_type(output: NewWorldOutput) -> StarType | None:
-    text = f"{output.description} {output.day} {output.cosmology}".lower()
-    matches = [(len(label), star_type) for star_type, label in STAR_TYPE_LABELS.items() if label.lower() in text]
-    return max(matches, key=lambda item: item[0])[1] if matches else None
-
-
 def phonology_from(dialect: NamingRuleOutput, rules: Rules) -> Phonology | None:
     vowels = tuple(dict.fromkeys(letter for letter in dialect.vowels.lower() if letter.isalpha()))
     consonants = tuple(dict.fromkeys(letter for letter in dialect.consonants.lower() if letter.isalpha()))
@@ -130,13 +124,10 @@ async def _orbit(session: AsyncSession, rng: SeededRandom, star_id: int | None, 
     return PLANET_ORBIT_BASE + planets * PLANET_ORBIT_STEP + rng.random() * PLANET_ORBIT_JITTER
 
 
-def _needs_new_star(output: NewWorldOutput, stars: list[StarRow]) -> bool:
+def _needs_new_star(output: NewWorldOutput) -> bool:
     if output.placement is not PlacementChoice.NEW_STAR:
         return False
-    if output.star is not None and output.star.name.strip():
-        return True
-    wanted = narrative_star_type(output)
-    return wanted is not None and all(star.star_type is not wanted for star in stars)
+    return output.star is not None and bool(output.star.name.strip())
 
 
 async def _requested_placement(session: AsyncSession, output: NewWorldOutput, request: BirthRequest) -> tuple[int | None, int | None] | None:
@@ -156,18 +147,16 @@ async def _placement(session: AsyncSession, rng: SeededRandom, output: NewWorldO
     if requested is not None:
         return requested
     stars = list(await session.scalars(select(StarRow).order_by(StarRow.id)))
-    if not stars or _needs_new_star(output, stars):
+    if not stars or _needs_new_star(output):
         return None, None
     if output.star_id is not None and any(star.id == output.star_id for star in stars):
         return output.star_id, None
-    wanted = narrative_star_type(output)
-    matching = [star for star in stars if star.star_type is wanted]
-    return (matching[0] if matching else rng.pick(stars)).id, None
+    return rng.pick(stars).id, None
 
 
 async def _new_star(ctx: TickContext, output: NewWorldOutput, world_name: str, requested: StarType | None) -> StarRow:
     birth = ctx.rules.world_birth
-    fallback_type = requested or narrative_star_type(output) or StarType.YELLOW_DWARF
+    fallback_type = requested or StarType.YELLOW_DWARF
     name = output.star.name.strip() if output.star is not None and output.star.name.strip() else f"{world_name} Sun"
     if normalize_name(name) == normalize_name(world_name):
         name = f"{world_name} Sun"
@@ -316,6 +305,7 @@ async def _sky_and_resource(ctx: TickContext, state: BirthState, output: NewWorl
         image_prompt=unique.image_prompt,
     )
     resource = await _add(ctx, state, replace(base, location_id=region.id, flags=(EntityFlag.ORIGINAL_RESOURCE,)))
+    await set_resource_yield(ctx.session, ctx.rules, resource.id, unique.commodity, unique.material)
     mechanics = list(dict.fromkeys(unique.mechanics))[: birth.resource_mechanics_max]
     sacred_son = state.son.id if state.son is not None and ResourceMechanic.SACRED in mechanics else None
     if mechanics:
@@ -336,6 +326,7 @@ async def _cosmic_resource(ctx: TickContext, state: BirthState, output: NewWorld
     rng = ctx.rng("birth_cosmic")
     deposit = await create_cosmic_deposit(
         ctx.session,
+        ctx.rules,
         ctx.epoch,
         resource,
         DepositSpec(

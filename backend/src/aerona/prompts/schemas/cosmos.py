@@ -4,6 +4,8 @@ from pydantic import Field
 
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import PartOfSpeech
+from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import ResourceMechanic
 from aerona.domain.enums.world import Atmosphere, Gravity, StarType, WorldType
 from aerona.prompts.schemas.base import OutputModel
@@ -53,6 +55,8 @@ class UniqueResourceOutput(OutputModel):
     description: str
     rule: str
     mechanics: list[ResourceMechanic] = Field(description="The rule's counterpart in the engine: {{ resource_mechanics }}")
+    commodity: CommodityKind = Field(description="What its people draw from it when worked")
+    material: MaterialKind | None = Field(default=None, description="The material it yields, for ore, stone or timber; null otherwise")
     region_index: int = Field(ge=0)
     image_prompt: str = Field(description="{{ image_prompt_rules }}")
 

@@ -5,19 +5,22 @@ import pytest
 from sqlalchemy import select
 
 from aerona.core.errors import ValidationFailedError
-from aerona.db.tables.economy import WorkshopRow
+from aerona.db.tables.demography import CohortRow
+from aerona.db.tables.economy import TradeFlowRow, WorkshopRow
 from aerona.db.tables.settlement import DistrictDesignRow, DistrictRow, SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.warfare import SiegeRow
-from aerona.domain.enums.economy import WorkshopKind
+from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
+from aerona.domain.enums.economy import CommodityKind, WorkshopKind
+from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.settlement import BuildMaterial, DistrictHarm, DistrictKind, SizeTier
-from aerona.domain.enums.society import Commodity
+from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.engine.military.siege import gate_factor, wall_defence
 from aerona.engine.phases.settlement_life import settlement_life
 from aerona.engine.polity.offices import wanted_offices
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.settlement import control
-from aerona.engine.settlement.book import town_of
+from aerona.engine.settlement.book import TIER_ORDER, town_of
 from aerona.engine.settlement.districts import (
     admin_parts,
     damage_districts,
@@ -27,6 +30,7 @@ from aerona.engine.settlement.districts import (
     parameters_of,
     wound_district,
 )
+from aerona.engine.settlement.life import capacities, endure_siege, invest, logistics_waste
 from aerona.engine.settlement.storage import settlement_store, storage_index, storage_room
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, chronicle_keys, context, people, settlement
@@ -258,3 +262,64 @@ async def test_foreigners_can_be_set_and_held(realm: Realm) -> None:
     assert "foreigners" in found.profile.locked
     with pytest.raises(ValidationFailedError):
         await control.set_foreigners(ctx, town.id, {town.id: 10})
+
+
+async def test_owners_profits_fill_the_investment_pool_and_a_hold_keeps_it(realm: Realm) -> None:
+    session = realm.session
+    town = await settlement(realm, "Coinmoor", population=3000)
+    partner = await settlement(realm, "Saltreach", population=2000)
+    ctx = context(session)
+    built = await town_of(ctx, town, await KnowledgeMap.load(session))
+    session.add(
+        TradeFlowRow(
+            route_entity_id=town.id, epoch=ctx.epoch, commodity=CommodityKind.GRAIN, from_entity_id=town.id, to_entity_id=partner.id, volume=10, value=500
+        )
+    )
+    await session.flush()
+    before = built.profile.investment_pool
+    profit = await invest(ctx, built)
+    assert profit >= 500 * RULES.urban.investment_pct // 100
+    assert built.profile.investment_pool == before + profit
+    built.profile.locked = ["investment_pool"]
+    held = built.profile.investment_pool
+    await invest(ctx, built)
+    assert built.profile.investment_pool == held
+
+
+async def test_roads_raise_hauling_and_hauling_short_of_the_people_wastes_production(realm: Realm) -> None:
+    session = realm.session
+    town = await settlement(realm, "Sprawl", population=20000)
+    ctx = context(session)
+    knowledge = await KnowledgeMap.load(session)
+    built = await town_of(ctx, town, knowledge)
+    built.infrastructure.roads = 0
+    await capacities(ctx, built, knowledge)
+    unpaved = built.profile.hauling_capacity
+    built.infrastructure.roads = 5
+    await capacities(ctx, built, knowledge)
+    assert built.profile.hauling_capacity >= unpaved
+    built.profile.size_tier = TIER_ORDER[-1]
+    built.profile.hauling_capacity = 0
+    starved = logistics_waste(RULES, built)
+    assert starved == RULES.urban.waste_pct / 100
+    built.profile.hauling_capacity = 20000
+    assert logistics_waste(RULES, built) == 0 < starved
+
+
+async def test_a_starving_merciless_town_abandons_its_old_and_a_merciful_one_does_not(realm: Realm) -> None:
+    session = realm.session
+    town = await settlement(realm, "Frostgate", population=5000)
+    session.add(
+        CohortRow(
+            community_entity_id=town.id, age_band=AgeBand.ELDER, sex=Sex.FEMALE, social_class=SocialClass.FARMER, condition=CohortCondition.NONE, count=600
+        )
+    )
+    await session.flush()
+    ctx = context(session)
+    built = await town_of(ctx, town, await KnowledgeMap.load(session))
+    await endure_siege(ctx, built, {ValueAxis.MERCY: 60})
+    assert built.profile.rationing
+    assert town.stats.population == 5000
+    await endure_siege(ctx, built, {ValueAxis.MERCY: -80})
+    assert town.stats.population == 5000 - 600 * RULES.urban.abandon_pct // 100
+    assert "settlement.abandoned" in await chronicle_keys(session)

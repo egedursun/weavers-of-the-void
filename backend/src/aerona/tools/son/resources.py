@@ -112,7 +112,7 @@ async def open_cosmic_bed(call: SonCall, args: CosmicBedInput) -> str:
         origin=EntityOrigin.SON,
         creator_son_id=call.son.id,
     )
-    bed = await create_cosmic_deposit(call.session, call.epoch, resource, spec)
+    bed = await create_cosmic_deposit(call.session, call.rules, call.epoch, resource, spec)
     call.spend_essence(tools.open_deposit_cost)
     call.remember_creation(bed.id)
     call.target(bed.id)

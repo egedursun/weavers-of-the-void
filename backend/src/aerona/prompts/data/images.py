@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.travel import VehicleKind
 
 DEFAULT_DIRECTION = "the subject in its setting"
 AMBIENCE_BIOME_COUNT = 5
@@ -36,21 +37,12 @@ IMAGE_DIRECTION: dict[EntityType, str] = {
     EntityType.LAW: "the law being proclaimed or carved: a stele, scroll or assembly, the people who live under it watching",
 }
 
-VESSEL_DIRECTIONS: tuple[tuple[re.Pattern[str], str], ...] = (
-    (
-        re.compile(r"\b(gate|portal|passage)", re.IGNORECASE),
-        "a gate or portal between worlds: the frame, the impossible view through it, travelers dwarfed before it",
-    ),
-    (
-        re.compile(r"\b(ship|vessel|boat|raft)", re.IGNORECASE),
-        "a ship between worlds: hull, sails or engines, crew on deck, the void or alien sky around it",
-    ),
-    (
-        re.compile(r"\b(mount|wing|dragon|horse)", re.IGNORECASE),
-        "a mount carrying its rider across the sky or between worlds, motion and scale",
-    ),
-    (re.compile(r"\bbridge", re.IGNORECASE), "a bridge spanning the gap between worlds, travelers crossing, vertiginous depth"),
-)
+VESSEL_DIRECTIONS: dict[VehicleKind, str] = {
+    VehicleKind.GATE: "a gate or portal between worlds: the frame, the impossible view through it, travelers dwarfed before it",
+    VehicleKind.SHIP: "a ship between worlds: hull, sails or engines, crew on deck, the void or alien sky around it",
+    VehicleKind.MOUNT: "a mount carrying its rider across the sky or between worlds, motion and scale",
+    VehicleKind.BRIDGE: "a bridge spanning the gap between worlds, travelers crossing, vertiginous depth",
+}
 
 MEGAFAUNA_DIRECTION = "a colossal megafauna in its habitat with tiny human figures for scale, seen from a distance"
 
@@ -82,17 +74,13 @@ COSMOS_DIRECTION: dict[CosmosSubjectKind, str] = {
 @dataclass(frozen=True)
 class ImageSubjectTraits:
     entity_type: EntityType
-    name: str
-    subtype: str | None
     megafauna: bool
+    vehicle: VehicleKind | None = None
 
 
 def image_direction(traits: ImageSubjectTraits) -> str:
-    if traits.entity_type is EntityType.VESSEL:
-        probe = f"{traits.subtype or ''} {traits.name}"
-        for pattern, direction in VESSEL_DIRECTIONS:
-            if pattern.search(probe):
-                return direction
+    if traits.entity_type is EntityType.VESSEL and traits.vehicle is not None:
+        return VESSEL_DIRECTIONS[traits.vehicle]
     if traits.entity_type is EntityType.SPECIES and traits.megafauna:
         return MEGAFAUNA_DIRECTION
     return IMAGE_DIRECTION.get(traits.entity_type, DEFAULT_DIRECTION)

@@ -128,7 +128,7 @@ class DiscoverInput(ToolInput):
     location_id: int
     domain: str | None = None
     image_prompt: ImagePrompt | None = None
-    commodity: CommodityKind | None = None
+    commodity: CommodityKind
     material: MaterialKind | None = None
     mechanics: list[ResourceMechanic] | None = None
 

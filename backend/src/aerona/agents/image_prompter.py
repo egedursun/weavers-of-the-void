@@ -12,6 +12,7 @@ from aerona.catalog.worlds import WORLD_TYPES
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -43,6 +44,8 @@ async def entity_subjects(scope: Scope, limit: int, ids: Sequence[int] | None) -
     statement = statement.where(EntityRow.id.in_(list(ids))) if ids else statement.where(EntityRow.image_prompt.is_(None))
     rows = list(await scope.session.scalars(statement.order_by(EntityRow.pending_name, EntityRow.id).limit(limit)))
     repository = EntityRepository(scope.session)
+    kinds = select(VesselProfileRow.entity_id, VesselProfileRow.kind).where(VesselProfileRow.entity_id.in_([row.id for row in rows]))
+    vehicles = {entity_id: kind for entity_id, kind in await scope.session.execute(kinds)}
     return [
         (
             row,
@@ -54,6 +57,7 @@ async def entity_subjects(scope: Scope, limit: int, ids: Sequence[int] | None) -
                 name=row.name,
                 description=row.description[: content.image_prompt_description_chars],
                 megafauna=await repository.has_flag(row.id, EntityFlag.MEGAFAUNA),
+                vehicle=vehicles.get(row.id),
                 ambience=ambience(scope.worlds.get(row.world_id)),
             ),
         )

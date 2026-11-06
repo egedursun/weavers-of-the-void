@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.ask import ask
 from aerona.agents.chronicle import write_line
@@ -18,14 +19,19 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.society import NaturalLaw
+from aerona.engine.economy.resources import set_resource_yield
 from aerona.engine.primitives.mechanics import assign_mechanics
+from aerona.engine.structures.backfill import FALLBACK
+from aerona.engine.structures.profiles import ensure_profile as ensure_structure_profile
 from aerona.events.kinds import EventKind
 from aerona.prompts import PromptId
 from aerona.prompts.contexts.common import WorldItem
 from aerona.prompts.contexts.genesis import RevelationContext, RevelationType
 from aerona.prompts.schemas.genesis import RevelationOutput
+from aerona.rules.registry import Rules
 
 REVELATION_TAG = "revelation"
 LAW_TAG_PREFIX = "law:"
@@ -79,6 +85,13 @@ async def link_revelation(scope: Scope, entity: EntityRow, output: RevelationOut
         if target_id is None or (link.kind is BondKind.INSIDE and target_id == entity.location_id):
             continue
         await bonds.connect(BondDraft(entity.id, target_id, link.kind, scope.epoch, sanitize(link.description) or None))
+
+
+async def type_revealed(session: AsyncSession, rules: Rules, epoch: int, entity: EntityRow, output: RevelationOutput) -> None:
+    if entity.entity_type is EntityType.RESOURCE:
+        await set_resource_yield(session, rules, entity.id, output.commodity or CommodityKind.ORE, output.material)
+    elif entity.entity_type is EntityType.STRUCTURE:
+        await ensure_structure_profile(session, rules, epoch, entity, output.structure_kind or FALLBACK, material=output.material)
 
 
 def revelation_tags(output: RevelationOutput, entity_type: EntityType, mechanic: NaturalLaw | None) -> list[str]:
@@ -147,7 +160,8 @@ async def reveal(
             )
         )
         await link_revelation(scope, entity, output)
-        await assign_mechanics(session, rules, entity)
+        await type_revealed(session, rules, scope.epoch, entity, output)
+        await assign_mechanics(session, rules, entity, resource_choice=output.resource_mechanics)
         text_line = f"{scope.creator.name} revealed, and {entity.name} appeared in the world ({ENTITY_TYPES[chosen].label})."
         await write_line(session, rules, scope.epoch, ChronicleKind.CREATOR_HAND, text_line, key="creator.revelation", entity_ids=[entity.id])
         entity_id = entity.id

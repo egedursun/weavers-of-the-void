@@ -25,6 +25,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.engine.economy.resources import set_resource_yield
 from aerona.prompts import PromptId
 from aerona.prompts.contexts.genesis import AwakenPeoplesContext
 from aerona.prompts.data.images import fix_image_prompt
@@ -136,6 +137,7 @@ async def awaken_one(
         located=True,
         domain=item.resource.domain,
     )
+    await set_resource_yield(session, rules, resource.id, item.resource.commodity, item.resource.material)
     knowledge = await add_record(
         session,
         rules,

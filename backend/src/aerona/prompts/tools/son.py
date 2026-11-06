@@ -56,7 +56,7 @@ CONSEQUENCES = ", ".join(item.value for item in ProphecyConsequence)
 SKY_KINDS = ", ".join(item.value for item in SkyEventKind)
 TABOO_ACTS = ", ".join(item.value for item in ActKind)
 LEGEND_CATEGORY_FIELD = "What the legend would become if belief ever made it walk the world: {{ legend_categories | join(', ') }}; creature for a beast or monster, spirit for a ghost or soul, resource for a sacred spring or vein, relic for a weapon or treasure"
-COMMODITY_FIELD = "What its people draw from it: {{ commodities | join(', ') }}; ore feeds forges and coin, grain, livestock and fish feed mouths, timber feeds fuel and ships; empty if none"
+COMMODITY_FIELD = "What its people draw from it: {{ commodities | join(', ') }}; ore feeds forges and coin, grain, livestock and fish feed mouths, timber feeds fuel and ships"
 MATERIAL_FIELD = "What it is made of or yields, if a material: {{ materials | join(', ') }}; it sets hardness, edge, weight, holiness and taint"
 
 CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {

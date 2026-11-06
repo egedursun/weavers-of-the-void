@@ -1,4 +1,3 @@
-import re
 from typing import Any
 
 from sqlalchemy import select
@@ -34,7 +33,6 @@ PERCENT = 100
 SKILL_CHAIN = ("craft", "intellect")
 BINDABLE = frozenset({EntityType.ITEM, EntityType.VESSEL, EntityType.STRUCTURE})
 RUIN_FLAGS = (EntityFlag.RUIN, EntityFlag.REMNANT, EntityFlag.EMPTY_TOMB)
-RUIN_WORDS = re.compile(r"ruin|remnant|wreck|tomb|corpse", re.IGNORECASE)
 GONE = frozenset({EntityStatus.REJECTED, EntityStatus.DESTROYED})
 TRAIT_SEPARATOR = ", "
 NO_TRAITS = "none"
@@ -138,7 +136,7 @@ async def _is_ruin(call: MortalCall, target: EntityRow) -> bool:
     if target.status in GONE:
         return False
     flags = await EntityRepository(call.session).flags(target.id)
-    return bool(flags.intersection(RUIN_FLAGS)) or target.engine_kind is EngineKind.GOD_CORPSE or bool(RUIN_WORDS.search(target.subtype or ""))
+    return bool(flags.intersection(RUIN_FLAGS)) or target.engine_kind is EngineKind.GOD_CORPSE
 
 
 async def _lost_knowledge(call: MortalCall, world_id: int) -> list[EntityRow]:

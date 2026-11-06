@@ -34,9 +34,11 @@ def matches(word: str, text: str, tokens: list[str]) -> bool:
     return any(token == word or (len(word) >= PREFIX_MIN and token.startswith(word)) for token in tokens)
 
 
-def type_from_record(structure: EntityRow) -> StructureKind:
+def type_from_record(structure: EntityRow, *, legacy: bool) -> StructureKind:
     if structure.engine_kind is not None and structure.engine_kind in ENGINE_KIND_STRUCTURES:
         return ENGINE_KIND_STRUCTURES[structure.engine_kind]
+    if not legacy:
+        return FALLBACK
     text = f"{structure.subtype or ''} {structure.name}".casefold()
     tokens = tokens_of(text)
     for kind, words in STRUCTURE_WORDS.items():
@@ -60,8 +62,8 @@ async def dedicated_of(ctx: TickContext, structure: EntityRow) -> int | None:
     return None
 
 
-async def type_structure(ctx: TickContext, structure: EntityRow, ruined: bool) -> StructureProfileRow:
-    kind = type_from_record(structure)
+async def type_structure(ctx: TickContext, structure: EntityRow, ruined: bool, *, legacy: bool) -> StructureProfileRow:
+    kind = type_from_record(structure, legacy=legacy)
     profile = await ensure_profile(
         ctx.session,
         ctx.rules,
@@ -107,7 +109,7 @@ async def backfill_structures(ctx: TickContext) -> dict[str, int]:
     if not pending and applied is not None:
         return {}
     ruins = await flags_by_entity(ctx.session, EntityFlag.RUIN)
-    profiles = [await type_structure(ctx, structure, structure.id in ruins) for structure in pending]
+    profiles = [await type_structure(ctx, structure, structure.id in ruins, legacy=applied is None) for structure in pending]
     result = {"typed": len(profiles), "workshops": await link_workshops(ctx, profiles)}
     if applied is None:
         ctx.session.add(AppliedFixupRow(key=BACKFILL_FIXUP, result=result))
