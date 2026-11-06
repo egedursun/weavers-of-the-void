@@ -2,12 +2,26 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.body_plans import PLANS
+from aerona.catalog.effect_packages import PACKAGES
 from aerona.constants.units import PERCENT
+from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.body import LASTING_INJURY_STATES, OPEN_INJURY_STATES, BodyReading, Capacity, ConditionKind, InjuryKind, InjuryState, MaimedKind
+from aerona.domain.enums.affliction import Visibility
+from aerona.domain.enums.body import (
+    LASTING_INJURY_STATES,
+    OPEN_INJURY_STATES,
+    BodyReading,
+    Capacity,
+    ConditionKind,
+    Consciousness,
+    InjuryKind,
+    InjuryState,
+    MaimedKind,
+    NerveDamage,
+)
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.body.book import anatomy_for
 from aerona.engine.body.cohorts import maimed_share
@@ -30,6 +44,14 @@ CONDITION_TEXT: dict[ConditionKind, str] = {
     ConditionKind.VOID_TAINT: "the taint of the void",
     ConditionKind.CHOSEN_MARK: "the mark of the chosen",
     ConditionKind.DIVINE_BRAND: "a god's brand",
+}
+
+NERVE_TEXT: dict[NerveDamage, str] = {NerveDamage.MOTOR: "limp", NerveDamage.SENSORY: "numb"}
+
+CONSCIOUSNESS_TEXT: dict[Consciousness, str] = {
+    Consciousness.NAUSEOUS: "nauseous with pain",
+    Consciousness.DIZZY: "dizzy",
+    Consciousness.UNCONSCIOUS: "unconscious",
 }
 
 LOST: dict[InjuryKind, str] = {InjuryKind.SEVERED: "lost", InjuryKind.GOUGED: "gouged out", InjuryKind.DESTROYED: "ruined"}
@@ -75,6 +97,35 @@ def frame_line(body: BodyRow) -> str:
     return f"Body: {body.plan.value.replace('_', ' ')} ({spec.label}), {body.height_class.value} and {body.build.value} of build"
 
 
+def wound_notes(row: InjuryRow) -> str:
+    notes = ["festering"] if row.state is InjuryState.INFECTED else []
+    notes += ["bleeding"] if row.bleeding > 0 else []
+    notes += [NERVE_TEXT[row.nerve]] if row.nerve in NERVE_TEXT else []
+    return f" ({', '.join(notes)})" if notes else ""
+
+
+def vitals(body: BodyRow, *, private: bool) -> list[str]:
+    found = [CONSCIOUSNESS_TEXT[body.consciousness]] if body.consciousness in CONSCIOUSNESS_TEXT else []
+    if private and body.blood < PERCENT:
+        found.append(f"blood {body.blood}%")
+    if private and body.exertion > 0:
+        found.append(f"worn {body.exertion}%")
+    return found
+
+
+async def afflictions_text(session: AsyncSession, bearer_id: int, *, private: bool) -> list[str]:
+    live = (AfflictionRow.bearer_node_id == bearer_id, AfflictionRow.cured_epoch.is_(None), AfflictionRow.stage > 0)
+    rows = await session.scalars(select(AfflictionRow).where(*live))
+    found: list[str] = []
+    for row in rows:
+        spec = PACKAGES[row.package]
+        if spec.visibility is Visibility.HIDDEN and not private:
+            continue
+        stage = spec.stages[row.stage - 1] if row.stage <= len(spec.stages) else None
+        found.append(f"{spec.label.lower()} ({stage.label.lower()})" if stage is not None else spec.label.lower())
+    return found
+
+
 async def _bearer_lines(session: AsyncSession, rules: Rules, body: BodyRow, bearer_id: int, *, private: bool) -> list[str]:
     anatomy = anatomy_for(body)
     injuries = list(await session.scalars(select(InjuryRow).where(InjuryRow.bearer_node_id == bearer_id, InjuryRow.state != InjuryState.LETHAL)))
@@ -93,13 +144,15 @@ async def _bearer_lines(session: AsyncSession, rules: Rules, body: BodyRow, bear
         "Scars": [
             f"{row.kind.value.replace('_', ' ')} on the {label(row.part)}" for row in shown if row.state in LASTING_INJURY_STATES and row.kind not in LOST
         ],
-        "Open wounds": [
-            f"{row.kind.value.replace('_', ' ')} on the {label(row.part)}" + (" (festering)" if row.state is InjuryState.INFECTED else "")
-            for row in shown
-            if row.state in OPEN_INJURY_STATES
-        ],
+        "Open wounds": [f"{row.kind.value.replace('_', ' ')} on the {label(row.part)}" + wound_notes(row) for row in shown if row.state in OPEN_INJURY_STATES],
     }
     lines = [f"{title}: " + "; ".join(items) for title, items in groups.items() if items]
+    state = vitals(body, private=private)
+    if state:
+        lines.append("State: " + "; ".join(state))
+    borne = await afflictions_text(session, bearer_id, private=private)
+    if borne:
+        lines.append("Bears: " + "; ".join(borne))
     conditions = list(await session.scalars(select(ConditionRow).where(ConditionRow.bearer_node_id == bearer_id, ConditionRow.ended_epoch.is_(None))))
     known = [CONDITION_TEXT[row.kind] for row in conditions if row.visible or private]
     if known:

@@ -2191,6 +2191,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/addiction-immunities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["addiction_immunities_api_addiction_immunities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/doom": {
         parameters: {
             query?: never;
@@ -4263,6 +4279,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["maimed_api_communities__community_id__maimed_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/effect-packages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["effect_packages_api_effect_packages_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bodies/{node_id}/afflictions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["afflictions_of_api_bodies__node_id__afflictions_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7087,6 +7135,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/son:power": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_son_power_api_actions_son_power_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/chronicle:edit": {
         parameters: {
             query?: never;
@@ -9135,6 +9199,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/addiction:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_addiction_set_api_actions_addiction_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/addiction:immunity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_addiction_immunity_api_actions_addiction_immunity_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/essence:pour": {
         parameters: {
             query?: never;
@@ -9417,6 +9513,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["action_faith_syncretize_api_actions_faith_syncretize_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/faith:unsyncretize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_faith_unsyncretize_api_actions_faith_unsyncretize_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -11721,6 +11833,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["action_resource_edit_api_actions_resource_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resource:mechanic": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resource_mechanic_api_actions_resource_mechanic_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -14639,6 +14767,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/body:treat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_body_treat_api_actions_body_treat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/body:consciousness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_body_consciousness_api_actions_body_consciousness_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/affliction:give": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_affliction_give_api_actions_affliction_give_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/affliction:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_affliction_edit_api_actions_affliction_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/affliction:hold": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_affliction_hold_api_actions_affliction_hold_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/affliction:cure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_affliction_cure_api_actions_affliction_cure_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/affliction:delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_affliction_delete_api_actions_affliction_delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/mortal:set": {
         parameters: {
             query?: never;
@@ -14964,12 +15204,28 @@ export interface components {
             entity_id: number;
             resource_id: number;
         };
+        AddictionImmunityInput: {
+            entity_id: number;
+            resource_id: number;
+            immune: boolean;
+            recovered_epoch?: number | null;
+        };
+        AddictionSetInput: {
+            entity_id: number;
+            resource_id: number;
+            addicted_since_epoch?: number | null;
+            withdrawal_since_epoch?: number | null;
+            owned_epochs?: number | null;
+            hold?: boolean | null;
+            remove: boolean;
+        };
         AddictionView: {
             community: components["schemas"]["NodeRef"];
             resource: components["schemas"]["NodeRef"];
             owned_epochs: number;
             addicted_since_epoch: number | null;
             withdrawal_since_epoch: number | null;
+            held: boolean;
         };
         AdherentView: {
             community: components["schemas"]["NodeRef"] | null;
@@ -14986,6 +15242,33 @@ export interface components {
             total: number;
         };
         Aesthetic: "austere" | "ornate" | "geometric" | "natural" | "macabre" | "celestial";
+        AfflictionCureInput: {
+            affliction_id: number;
+            how?: components["schemas"]["CureKind"] | null;
+        };
+        AfflictionDeleteInput: {
+            affliction_id: number;
+        };
+        AfflictionEditInput: {
+            affliction_id: number;
+            stage?: number | null;
+            transmission?: components["schemas"]["Transmission"] | null;
+            source_id?: number | null;
+            clear_source: boolean;
+            since_epoch?: number | null;
+            stage_since_epoch?: number | null;
+        };
+        AfflictionGiveInput: {
+            bearer_id: number;
+            package: components["schemas"]["PackageKind"];
+            transmission: components["schemas"]["Transmission"];
+            source_id?: number | null;
+            stage?: number | null;
+        };
+        AfflictionHoldInput: {
+            affliction_id: number;
+            hold: boolean;
+        };
         AfflictionView: {
             disease_id: number;
             disease: string;
@@ -14994,6 +15277,13 @@ export interface components {
             severity: number;
             status: components["schemas"]["OutbreakStatus"];
             outbreak_id: number;
+        };
+        AfflictionsView: {
+            node_id: number;
+            name: string;
+            bearable: boolean;
+            epoch: number;
+            afflictions: components["schemas"]["BearerAfflictionView"][];
         };
         AfterlifeState: "wandering" | "judged" | "in_realm" | "reborn" | "consumed" | "released";
         AfterlifeStratumInput: {
@@ -15356,6 +15646,27 @@ export interface components {
             gap: number;
             siege_id: number | null;
         };
+        BearerAfflictionView: {
+            id: number;
+            package: components["schemas"]["PackageKind"];
+            label: string;
+            stage: number;
+            stage_label: string | null;
+            stage_count: number;
+            since_epoch: number;
+            stage_since_epoch: number;
+            next_stage_epoch: number | null;
+            transmission: components["schemas"]["Transmission"];
+            source_node_id: number | null;
+            source_name: string | null;
+            source_link: string | null;
+            visibility: components["schemas"]["Visibility"];
+            cured_epoch: number | null;
+            applied: {
+                [key: string]: number;
+            };
+            held: boolean;
+        };
         BeastBindInput: {
             beast_id: number;
             node_id?: number | null;
@@ -15522,6 +15833,11 @@ export interface components {
             severity: number;
             part?: string | null;
         };
+        BodyConsciousnessInput: {
+            bearer_id: number;
+            consciousness: components["schemas"]["Consciousness"];
+            lock: boolean;
+        };
         BodyCustomsInput: {
             people_id: number;
             field: string;
@@ -15571,6 +15887,11 @@ export interface components {
             damage_type?: components["schemas"]["DamageType"] | null;
             cause?: components["schemas"]["HarmCause"] | null;
             infected_epochs?: number | null;
+            tissue?: components["schemas"]["TissueKind"] | null;
+            bleeding?: number | null;
+            nerve?: components["schemas"]["NerveDamage"] | null;
+            treatments?: components["schemas"]["TreatmentStep"][] | null;
+            misdiagnosed?: boolean | null;
         };
         BodyMaimInput: {
             bearer_id: number;
@@ -15581,7 +15902,7 @@ export interface components {
             cause: components["schemas"]["HarmCause"];
             lethal: boolean;
         };
-        BodyPart: "aura" | "core" | "eye" | "face" | "fingers" | "gills" | "groin" | "gut" | "head" | "heart" | "horn" | "jaw" | "left_antenna" | "left_arm" | "left_branch" | "left_ear" | "left_eye" | "left_fin" | "left_foot" | "left_foreleg" | "left_hand" | "left_hindleg" | "left_leg" | "left_midleg" | "left_wing" | "lungs" | "neck" | "nose" | "pseudopods" | "right_antenna" | "right_arm" | "right_branch" | "right_ear" | "right_eye" | "right_fin" | "right_foot" | "right_foreleg" | "right_hand" | "right_hindleg" | "right_leg" | "right_midleg" | "right_wing" | "roots" | "tail" | "tongue" | "torso" | "venom_gland" | "wings";
+        BodyPart: "aura" | "core" | "eye" | "face" | "fingers" | "gills" | "groin" | "gut" | "head" | "heart" | "horn" | "jaw" | "left_antenna" | "left_arm" | "left_branch" | "left_ear" | "left_eye" | "left_fin" | "left_foot" | "left_foreleg" | "left_hand" | "left_hindleg" | "left_leg" | "left_midleg" | "left_wing" | "lungs" | "neck" | "nose" | "pseudopods" | "right_antenna" | "right_arm" | "right_branch" | "right_ear" | "right_eye" | "right_fin" | "right_foot" | "right_foreleg" | "right_hand" | "right_hindleg" | "right_leg" | "right_midleg" | "right_wing" | "roots" | "tail" | "teeth" | "toes" | "tongue" | "torso" | "venom_gland" | "wings";
         BodyPlan: "humanoid" | "quadruped" | "avian" | "serpentine" | "insectoid" | "aquatic" | "amorphous" | "arboreal" | "incorporeal" | "colossal" | "construct" | "divine_manifest";
         BodyPlanInput: {
             bearer_id: number;
@@ -15613,6 +15934,10 @@ export interface components {
             value: number;
             lock: boolean;
         };
+        BodyTreatInput: {
+            injury_id: number;
+            step: components["schemas"]["TreatmentStep"];
+        };
         BodyUnlockInput: {
             bearer_id: number;
             field: string;
@@ -15632,6 +15957,13 @@ export interface components {
             hp_max: number | null;
             pain: number;
             fingers: number;
+            toes: number;
+            teeth: number;
+            blood: number;
+            exertion: number;
+            consciousness: components["schemas"]["Consciousness"];
+            covering: components["schemas"]["TissueKind"];
+            covering_label: string;
             armour: components["schemas"]["ArmourView"];
             capacities: components["schemas"]["CapacityView"][];
             functions: components["schemas"]["FunctionView"][];
@@ -16318,6 +16650,7 @@ export interface components {
             variant_id?: number | null;
             visible: boolean;
         };
+        Consciousness: "awake" | "nauseous" | "dizzy" | "unconscious";
         ConstructionState: "planned" | "building" | "complete" | "damaged" | "ruined";
         ConstructionStatus: "active" | "finished" | "abandoned";
         ConstructionView: {
@@ -16468,6 +16801,11 @@ export interface components {
             son_a_id: number;
             son_b_id: number;
             description: string | null;
+        };
+        CravingImmunityView: {
+            community: components["schemas"]["NodeRef"];
+            resource: components["schemas"]["NodeRef"];
+            recovered_epoch: number;
         };
         CreationRewardInput: {
             entity_id: number;
@@ -16668,6 +17006,7 @@ export interface components {
             martial_net: number;
             locked: string[];
         };
+        CureKind: "rite" | "technique" | "medicine" | "time" | "quest";
         CureSource: "knowledge" | "granted";
         CureView: {
             community_id: number;
@@ -18018,6 +18357,10 @@ export interface components {
             entity_id: number;
             god_id: number;
         };
+        FaithUnsyncretizeInput: {
+            entity_id: number;
+            god_id: number;
+        };
         FamilyTreeView: {
             root: number;
             people: components["schemas"]["TreePerson"][];
@@ -18971,6 +19314,13 @@ export interface components {
             infected_epochs: number;
             healed_epoch: number | null;
             prosthesis: components["schemas"]["ProsthesisView"] | null;
+            tissue: components["schemas"]["TissueKind"] | null;
+            tissue_label: string | null;
+            bleeding: number;
+            nerve: components["schemas"]["NerveDamage"];
+            treatments: components["schemas"]["TreatmentStep"][];
+            wanted: components["schemas"]["TreatmentStep"][];
+            misdiagnosed: boolean;
         };
         IntegrityResult: {
             task: components["schemas"]["IntegrityTask"];
@@ -20374,7 +20724,7 @@ export interface components {
             target_id: number;
             form: components["schemas"]["MemorialForm"];
         };
-        MemoryKind: "harmed_me" | "killed_kin" | "saved_me" | "betrayed_me" | "kept_oath" | "broke_oath" | "maimed_me" | "humiliated_me" | "gifted_me" | "converted_me" | "conquered_us" | "freed_us" | "famine_aid" | "desecrated_holy" | "married_into" | "fought_us" | "traded_with" | "allied_with" | "made_peace" | "demanded_tribute" | "cheated_us" | "spied_on_us" | "envied" | "failed_to_heal" | "taught_me" | "held_captive" | "lamented" | "divine_will" | "goodwill" | "ill_will" | "long_history";
+        MemoryKind: "harmed_me" | "killed_kin" | "saved_me" | "betrayed_me" | "kept_oath" | "broke_oath" | "maimed_me" | "humiliated_me" | "gifted_me" | "converted_me" | "conquered_us" | "freed_us" | "famine_aid" | "desecrated_holy" | "married_into" | "fought_us" | "traded_with" | "allied_with" | "made_peace" | "demanded_tribute" | "cheated_us" | "spied_on_us" | "envied" | "failed_to_heal" | "taught_me" | "held_captive" | "lamented" | "divine_will" | "goodwill" | "ill_will" | "long_history" | "dreads";
         MemoryOrigin: "derived" | "player";
         MemoryView: {
             id: number;
@@ -20956,6 +21306,7 @@ export interface components {
             id: number;
             name: string;
         };
+        NerveDamage: "none" | "motor" | "sensory";
         NetworkHealth: {
             nodes: number;
             edges: number;
@@ -21297,11 +21648,25 @@ export interface components {
             interest?: number | null;
             influence?: number | null;
         };
+        PackageKind: "snake_venom" | "drink_dependence" | "drug_dependence" | "lycanthropy" | "vampirism" | "divine_blessing" | "void_taint" | "possession" | "trauma" | "hunger_curse";
         PackageMeta: {
             name: string;
             epoch: number | null;
             creator: string | null;
             date: string;
+        };
+        PackageView: {
+            kind: components["schemas"]["PackageKind"];
+            label: string;
+            description: string;
+            transmissions: components["schemas"]["Transmission"][];
+            onset: number;
+            stages: components["schemas"]["StageView"][];
+            cures: components["schemas"]["CureKind"][];
+            visibility: components["schemas"]["Visibility"];
+            contagion: components["schemas"]["Transmission"][];
+            cure_level: number;
+            hereditary: boolean;
         };
         PactView: {
             treaty_id: number;
@@ -22925,6 +23290,12 @@ export interface components {
             original: boolean;
         };
         ResourceMechanic: "decaying" | "addictive" | "sentient" | "depletion_price" | "fixed" | "sacred";
+        ResourceMechanicInput: {
+            resource_id: number;
+            mechanic: components["schemas"]["ResourceMechanic"];
+            magnitude?: number | null;
+            epochs?: number | null;
+        };
         ResourceOwnerInput: {
             resource_id: number;
             owner_id?: number | null;
@@ -23895,6 +24266,16 @@ export interface components {
             param_entity_type: components["schemas"]["EntityType"] | null;
             param_stat: components["schemas"]["Stat"] | null;
         };
+        SonPowerInput: {
+            son_id: number;
+            slot: number;
+            name?: string | null;
+            description?: string | null;
+            effect?: components["schemas"]["PowerEffect"] | null;
+            param_entity_type?: components["schemas"]["EntityType"] | null;
+            param_stat?: components["schemas"]["Stat"] | null;
+            remove: boolean;
+        };
         SonPromptPreview: {
             son_id: number;
             son_name: string;
@@ -23929,6 +24310,7 @@ export interface components {
             band_effect: string;
             band_action_loss: number;
             unlocked_powers: number;
+            power_slots: number;
             next_star: components["schemas"]["Requirement"] | null;
             ascension: components["schemas"]["Ascension"] | null;
             cover: string | null;
@@ -24441,6 +24823,26 @@ export interface components {
             condition: number;
         };
         StaffScale: "none" | "few" | "some" | "many";
+        StageView: {
+            number: number;
+            label: string;
+            epochs: number | null;
+            condition: components["schemas"]["ConditionKind"] | null;
+            severity: number;
+            stats: {
+                [key: string]: number;
+            };
+            values: {
+                [key: string]: number;
+            };
+            needs: components["schemas"]["NeedKind"][];
+            sanity_loss: number;
+            ageless: boolean;
+            sunlight_harm: boolean;
+            transforms: boolean;
+            recruits: boolean;
+            fears_source: boolean;
+        };
         Stance: "march" | "forage" | "entrench" | "besiege" | "garrison" | "raid" | "retreat";
         StarDepthInput: {
             history?: string | null;
@@ -24867,6 +25269,7 @@ export interface components {
             percent: number;
             pinned: boolean;
         };
+        TissueKind: "skin" | "scale" | "chitin" | "bark" | "fat" | "muscle" | "tendon" | "bone" | "artery" | "motor_nerve" | "sensory_nerve" | "organ";
         TollView: {
             region_id: number;
             region_name: string;
@@ -25138,6 +25541,7 @@ export interface components {
             new_words: components["schemas"]["NewWordOutput"][];
             note: string;
         };
+        Transmission: "contact" | "bite" | "ingestion" | "inhalation" | "blood" | "curse" | "birth" | "rite" | "gaze" | "experience";
         TravelMethod: "ancient_gate" | "space_fold" | "light_sail" | "cosmic_mount" | "dream_journey" | "river_of_dead" | "divine_bridge" | "slingshot_orbit" | "swallowed" | "wormhole";
         TravelResource: {
             name: string;
@@ -25178,6 +25582,7 @@ export interface components {
             balance: number;
             note: string | null;
         };
+        TreatmentStep: "diagnose" | "clean" | "suture" | "set_bone" | "splint" | "dress" | "amputate" | "cauterise" | "crutch" | "traction";
         TreatyBreakInput: {
             treaty_id: number;
             breaker_id: number;
@@ -25491,6 +25896,7 @@ export interface components {
             voyages: number;
             locked: string[];
         };
+        Visibility: "obvious" | "noticeable" | "hidden";
         VoicesDeleteViewInput: {
             view_id: number;
         };
@@ -30427,6 +30833,35 @@ export interface operations {
             };
         };
     };
+    addiction_immunities_api_addiction_immunities_get: {
+        parameters: {
+            query?: {
+                community_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CravingImmunityView"][];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     read_doom_api_doom_get: {
         parameters: {
             query?: never;
@@ -34234,6 +34669,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MaimedView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    effect_packages_api_effect_packages_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PackageView"][];
+                };
+            };
+        };
+    };
+    afflictions_of_api_bodies__node_id__afflictions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AfflictionsView"];
                 };
             };
             422: {
@@ -39407,6 +39890,37 @@ export interface operations {
             };
         };
     };
+    action_son_power_api_actions_son_power_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SonPowerInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_chronicle_edit_api_actions_chronicle_edit_post: {
         parameters: {
             query?: never;
@@ -43327,6 +43841,68 @@ export interface operations {
             };
         };
     };
+    action_addiction_set_api_actions_addiction_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddictionSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_addiction_immunity_api_actions_addiction_immunity_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddictionImmunityInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_essence_pour_api_actions_essence_pour_post: {
         parameters: {
             query?: never;
@@ -43804,6 +44380,37 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["FaithSyncretizeInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_faith_unsyncretize_api_actions_faith_unsyncretize_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FaithUnsyncretizeInput"];
             };
         };
         responses: {
@@ -48172,6 +48779,37 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ResourceEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resource_mechanic_api_actions_resource_mechanic_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResourceMechanicInput"];
             };
         };
         responses: {
@@ -53835,6 +54473,223 @@ export interface operations {
             };
         };
     };
+    action_body_treat_api_actions_body_treat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BodyTreatInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_body_consciousness_api_actions_body_consciousness_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BodyConsciousnessInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_affliction_give_api_actions_affliction_give_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AfflictionGiveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_affliction_edit_api_actions_affliction_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AfflictionEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_affliction_hold_api_actions_affliction_hold_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AfflictionHoldInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_affliction_cure_api_actions_affliction_cure_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AfflictionCureInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_affliction_delete_api_actions_affliction_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AfflictionDeleteInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_mortal_set_api_actions_mortal_set_post: {
         parameters: {
             query?: never;
@@ -54377,7 +55232,7 @@ export const biomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schem
 export const blessingKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BlessingKind"]> = ["essence", "hp", "stat", "existence"];
 export const bodyBuildValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyBuild"]> = ["slight", "average", "heavy", "giant"];
 export const bodyFunctionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyFunction"]> = ["grasp", "fine_manipulation", "locomotion", "sight", "hearing", "speech", "breath", "vital", "cognition", "reproduction", "flight", "venom", "horn", "tail", "presence"];
-export const bodyPartValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyPart"]> = ["aura", "core", "eye", "face", "fingers", "gills", "groin", "gut", "head", "heart", "horn", "jaw", "left_antenna", "left_arm", "left_branch", "left_ear", "left_eye", "left_fin", "left_foot", "left_foreleg", "left_hand", "left_hindleg", "left_leg", "left_midleg", "left_wing", "lungs", "neck", "nose", "pseudopods", "right_antenna", "right_arm", "right_branch", "right_ear", "right_eye", "right_fin", "right_foot", "right_foreleg", "right_hand", "right_hindleg", "right_leg", "right_midleg", "right_wing", "roots", "tail", "tongue", "torso", "venom_gland", "wings"];
+export const bodyPartValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyPart"]> = ["aura", "core", "eye", "face", "fingers", "gills", "groin", "gut", "head", "heart", "horn", "jaw", "left_antenna", "left_arm", "left_branch", "left_ear", "left_eye", "left_fin", "left_foot", "left_foreleg", "left_hand", "left_hindleg", "left_leg", "left_midleg", "left_wing", "lungs", "neck", "nose", "pseudopods", "right_antenna", "right_arm", "right_branch", "right_ear", "right_eye", "right_fin", "right_foot", "right_foreleg", "right_hand", "right_hindleg", "right_leg", "right_midleg", "right_wing", "roots", "tail", "teeth", "toes", "tongue", "torso", "venom_gland", "wings"];
 export const bodyPlanValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyPlan"]> = ["humanoid", "quadruped", "avian", "serpentine", "insectoid", "aquatic", "amorphous", "arboreal", "incorporeal", "colossal", "construct", "divine_manifest"];
 export const bodyReadingValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyReading"]> = ["neutral", "martial_honour", "purity", "sanctified_suffering"];
 export const bodyRegionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyRegion"]> = ["head", "torso", "arms", "legs", "wings", "tail"];
@@ -54414,6 +55269,7 @@ export const commodityFamilyValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const commodityKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommodityKind"]> = ["grain", "livestock", "fish", "fodder", "timber", "fuel", "bread", "ore", "stone", "cloth", "tools", "weapons", "armour", "mounts", "siege_materiel", "medicine", "luxuries", "incense", "sacred_goods", "magical_reagents"];
 export const communityRelationLabelValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommunityRelationLabel"]> = ["blood_enemy", "enemy", "cold", "neutral", "friend", "close_friend", "sibling"];
 export const conditionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ConditionKind"]> = ["chronic_illness", "paranoia", "visions", "rage", "melancholy", "addiction", "age_blindness", "age_deafness", "withered_limb", "endless_hunger", "possession", "void_taint", "chosen_mark", "divine_brand"];
+export const consciousnessValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Consciousness"]> = ["awake", "nauseous", "dizzy", "unconscious"];
 export const constructionStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ConstructionState"]> = ["planned", "building", "complete", "damaged", "ruined"];
 export const constructionStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ConstructionStatus"]> = ["active", "finished", "abandoned"];
 export const contextBlockKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ContextBlockKind"]> = ["world-header", "dialect", "world-line", "cosmos", "pantheon", "threads", "world-summary", "fate-summary", "geography", "map", "languages", "entity-line", "entity-detail", "bond-lines", "son-memory", "tired-images", "recent-events", "powers", "sky-calendar", "mortal", "chronicler"];
@@ -54429,6 +55285,7 @@ export const creatorSignKindValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const creatureTraitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatureTrait"]> = ["flying", "venomous", "soul_eater", "radiant", "fissiparous", "hive_mind", "stoneskin", "time_rewinder", "shapeshifter", "mind_reader", "armoured", "burrowing", "aquatic", "amphibious", "pack_hunter", "ambush_predator", "regenerating", "poisonous_flesh", "fire_breathing", "cold_breathing", "echolocation", "camouflage", "swarm_breeder", "long_lived", "mimic", "spirit_sight", "iron_eating", "crop_pest", "plague_bearer", "sacred_animal", "horned", "tailed"];
 export const crimeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CrimeKind"]> = ["theft", "blasphemy", "treason", "murder", "desertion"];
 export const cultStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CultStats"]["kind"]> = ["cult"];
+export const cureKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CureKind"]> = ["rite", "technique", "medicine", "time", "quest"];
 export const cureSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CureSource"]> = ["knowledge", "granted"];
 export const curseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CurseKind"]> = ["none", "bloodthirst", "misfortune", "wasting", "madness", "betrayal"];
 export const customCatalogValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CustomCatalog"]> = ["technique", "tenet", "tradition_kind", "archetype", "item_class", "rite_effect"];
@@ -54600,7 +55457,7 @@ export const materialOriginValues: ReadonlyArray<FlattenedDeepRequired<component
 export const materialSlotValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaterialSlot"]> = ["body", "weapons", "armour", "hull", "fabric"];
 export const medicineTierValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MedicineTier"]> = ["none", "herbs", "surgery", "prosthetics", "reattachment"];
 export const memorialFormValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemorialForm"]> = ["monument", "epic", "lament", "tradition", "tale"];
-export const memoryKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemoryKind"]> = ["harmed_me", "killed_kin", "saved_me", "betrayed_me", "kept_oath", "broke_oath", "maimed_me", "humiliated_me", "gifted_me", "converted_me", "conquered_us", "freed_us", "famine_aid", "desecrated_holy", "married_into", "fought_us", "traded_with", "allied_with", "made_peace", "demanded_tribute", "cheated_us", "spied_on_us", "envied", "failed_to_heal", "taught_me", "held_captive", "lamented", "divine_will", "goodwill", "ill_will", "long_history"];
+export const memoryKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemoryKind"]> = ["harmed_me", "killed_kin", "saved_me", "betrayed_me", "kept_oath", "broke_oath", "maimed_me", "humiliated_me", "gifted_me", "converted_me", "conquered_us", "freed_us", "famine_aid", "desecrated_holy", "married_into", "fought_us", "traded_with", "allied_with", "made_peace", "demanded_tribute", "cheated_us", "spied_on_us", "envied", "failed_to_heal", "taught_me", "held_captive", "lamented", "divine_will", "goodwill", "ill_will", "long_history", "dreads"];
 export const memoryOriginValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemoryOrigin"]> = ["derived", "player"];
 export const messageIntentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MessageIntent"]> = ["friendship", "alliance", "love", "threat", "mockery", "warning", "bargain", "prayer", "answer", "chat", "dream", "command"];
 export const miracleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Miracle"]> = ["healing", "bounty", "peace", "protection"];
@@ -54620,6 +55477,7 @@ export const naturalLawValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const naturalLawStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalLawStats"]["kind"]> = ["natural_law"];
 export const naturalTraitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalTrait"]> = ["dark_sight", "cold_blooded", "winged", "amphibious", "thick_hide", "keen_senses", "venomous", "regenerating", "burrowing", "hive_minded"];
 export const needKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NeedKind"]> = ["sustenance", "safety", "belonging", "status", "purpose", "faith", "pleasure"];
+export const nerveDamageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NerveDamage"]> = ["none", "motor", "sensory"];
 export const networkRepairedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NetworkRepairedEvent"]["kind"]> = ["network.repaired"];
 export const nodeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NodeKind"]> = ["entity", "son", "creator", "foreign_god", "world", "star"];
 export const notableYearKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotableYearKind"]> = ["hunger", "plenty", "weather", "pestilence"];
@@ -54633,6 +55491,7 @@ export const outbreakStatusValues: ReadonlyArray<FlattenedDeepRequired<component
 export const outcomeClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OutcomeClass"]> = ["decisive", "victory", "pyrrhic", "stalemate", "rout", "massacre", "refused"];
 export const outerBargainModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OuterBargainMode"]> = ["force", "forbid", "allow"];
 export const outerBeingStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["OuterBeingStats"]["kind"]> = ["outer_being"];
+export const packageKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PackageKind"]> = ["snake_venom", "drink_dependence", "drug_dependence", "lycanthropy", "vampirism", "divine_blessing", "void_taint", "possession", "trauma", "hunger_curse"];
 export const partOfSpeechValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PartOfSpeech"]> = ["noun", "verb", "adjective", "affix", "title", "place_name", "proper_name", "number", "interjection"];
 export const partyRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PartyRole"]> = ["signatory", "overlord", "vassal", "guarantor"];
 export const passionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Passion"]> = ["loyalty", "ambition", "wrath", "mercy"];
@@ -54746,6 +55605,7 @@ export const tenetKindValues: ReadonlyArray<FlattenedDeepRequired<components>["s
 export const terrainHazardValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TerrainHazard"]> = ["avalanche", "spring_flood", "wildfire", "whiteout"];
 export const terrainKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TerrainKind"]> = ["plain", "steppe", "forest", "jungle", "marsh", "hills", "mountains", "high_pass", "desert", "tundra", "ice_sheet", "volcanic", "coast", "island", "river_valley", "canyon", "underground", "crystal_field", "flesh", "void_shore", "ruin_field", "urban", "sea"];
 export const threadStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ThreadStatus"]> = ["open", "closed"];
+export const tissueKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TissueKind"]> = ["skin", "scale", "chitin", "bark", "fat", "muscle", "tendon", "bone", "artery", "motor_nerve", "sensory_nerve", "organ"];
 export const toolBlockValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ToolBlock"]> = ["rarity", "actor_type", "civilization_tier", "world_state", "unwired"];
 export const tradeLossValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TradeLoss"]> = ["bandits", "sea", "beasts", "weather"];
 export const tradeModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TradeMode"]> = ["road", "river", "sea", "caravan", "sky"];
@@ -54757,8 +55617,10 @@ export const traditionStatsKindValues: ReadonlyArray<FlattenedDeepRequired<compo
 export const traitEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraitEffect"]> = ["war_appetite", "betrayal", "cruelty", "trust", "memory_decay", "zeal", "agent_weight", "learning", "drift", "exploration", "fertility", "justice", "deceit", "greed", "courage"];
 export const traitKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraitKind"]> = ["brave", "craven", "wrathful", "patient", "cruel", "kind", "ambitious", "content", "greedy", "generous", "honest", "deceitful", "zealous", "cynical", "paranoid", "trusting", "lustful", "chaste", "gluttonous", "ascetic", "scholarly", "illiterate_proud", "gregarious", "reclusive", "vengeful", "forgiving", "stubborn", "fickle", "just", "arbitrary", "humble", "proud", "curious", "incurious", "melancholic", "sanguine", "iron_willed", "impressionable", "cunning_tactician", "reckless"];
 export const traitSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraitSource"]> = ["birth", "inherited", "experience", "condition", "education", "divine", "player"];
+export const transmissionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Transmission"]> = ["contact", "bite", "ingestion", "inhalation", "blood", "curse", "birth", "rite", "gaze", "experience"];
 export const travelMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TravelMethod"]> = ["ancient_gate", "space_fold", "light_sail", "cosmic_mount", "dream_journey", "river_of_dead", "divine_bridge", "slingshot_orbit", "swallowed", "wormhole"];
 export const treasuryEntryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TreasuryEntry"]> = ["tax", "tolls", "investment", "garrison", "walls", "building", "festival", "alms", "fire", "plunder", "grant", "loan", "upkeep"];
+export const treatmentStepValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TreatmentStep"]> = ["diagnose", "clean", "suture", "set_bone", "splint", "dress", "amputate", "cauterise", "crutch", "traction"];
 export const treatyKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TreatyKind"]> = ["peace", "truce", "alliance_defensive", "alliance_offensive", "non_aggression", "vassalage", "tribute", "marriage_pact", "trade_pact", "condotta", "guarantee", "interworld"];
 export const treatyStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TreatyStats"]["kind"]> = ["treaty"];
 export const treatyStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TreatyStatus"]> = ["in_force", "fulfilled", "broken", "expired", "proposed", "rejected"];
@@ -54772,6 +55634,7 @@ export const verdictChoiceValues: ReadonlyArray<FlattenedDeepRequired<components
 export const vesselArmamentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VesselArmament"]> = ["rams", "missiles", "siege_engines", "rites"];
 export const vesselStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VesselStats"]["kind"]> = ["vessel"];
 export const vesselStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VesselStatus"]> = ["docked", "afloat", "damaged", "wrecked", "ghost"];
+export const visibilityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Visibility"]> = ["obvious", "noticeable", "hidden"];
 export const warAimKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarAimKind"]> = ["conquer_region", "seize_settlement", "press_claim", "convert", "tribute", "vassalise", "liberate", "destroy_cult", "seize_resource", "seize_nexus", "humiliate", "revenge", "loot", "change_government", "seize_route"];
 export const warCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarCause"]> = ["hostility", "uprising", "tribute_revolt", "incited", "declared", "betrayal", "conquest_journey", "foreign_god", "independence", "vendetta", "grudge", "divine_grudge", "rivalry", "debt", "espionage", "sabotage", "envy", "schism", "beast", "resource", "ideology", "trade_route", "claim", "holy_war", "succession", "raid", "liberation", "punitive"];
 export const warEndingValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WarEnding"]> = ["victory", "conquest", "tribute", "exhaustion", "peace", "white_peace", "betrayal", "same_front", "no_side_left", "miracle"];

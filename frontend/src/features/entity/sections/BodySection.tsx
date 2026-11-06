@@ -7,6 +7,7 @@ import {
   HeartPulse,
   Lock,
   Minus,
+  Pencil,
   PersonStanding,
   Plus,
   RotateCcw,
@@ -57,20 +58,26 @@ import { loreKeys } from '../api/keys'
 import { BodyDiagram } from '../body/BodyDiagram'
 import {
   ARMOUR_ICON,
+  BLOOD_ICON,
   BUILDS,
   CAPACITIES,
+  CONSCIOUSNESS,
   CAUSES,
   CONDITIONS,
   DAMAGE,
+  EXERTION_ICON,
   FUNCTIONS,
   HEALER_ICON,
   HEIGHTS,
   INJURIES,
   MATERIALS,
   MEDICINE,
+  NERVES,
   PLANS,
   READINGS,
   STATES,
+  TISSUES,
+  TREATMENTS,
   bodyValueLabel,
   named,
   plain,
@@ -89,10 +96,15 @@ type MaterialKind = components['schemas']['MaterialKind']
 type BodyFunction = components['schemas']['BodyFunction']
 type HeightClass = components['schemas']['HeightClass']
 type BodyBuild = components['schemas']['BodyBuild']
+type Consciousness = components['schemas']['Consciousness']
+type TreatmentStep = components['schemas']['TreatmentStep']
 
 const PERCENT = 100
 const FACTOR_MAX = 200
 const FINGER_MAX = 10
+const TOE_MAX = 10
+const TEETH_MAX = 32
+const CONSCIOUSNESS_HOLD = 'consciousness'
 const SEVERITIES = ['1', '2', '3', '4', '5']
 const BY_BLOW = 'auto'
 const DEFAULT_QUALITY = 60
@@ -275,6 +287,35 @@ function Vitals({ body }: { body: Body }) {
           }}
         />
       )}
+      <KpiTile
+        label={body.locked.includes('blood') ? 'Blood (held)' : 'Blood'}
+        value={`${body.blood}%`}
+        icon={BLOOD_ICON}
+        tone={body.blood < PERCENT / 2 ? 'danger' : 'info'}
+        hint='Lost while wounds bleed unbound; regained each epoch once they close. Too little and they faint or bleed out.'
+        meter={{ value: body.blood, max: PERCENT, label: 'Blood' }}
+      />
+      <KpiTile
+        label={
+          body.locked.includes('exertion') ? 'Exertion (held)' : 'Exertion'
+        }
+        value={`${body.exertion}%`}
+        icon={EXERTION_ICON}
+        tone={body.exertion > PERCENT / 2 ? 'warning' : 'success'}
+        hint='Builds with every fight, faster in heavy armour; rest wears it off and a worn body fights weaker.'
+        meter={{ value: body.exertion, max: PERCENT, label: 'Exertion' }}
+      />
+      <KpiTile
+        label={
+          body.locked.includes(CONSCIOUSNESS_HOLD)
+            ? 'Consciousness (held)'
+            : 'Consciousness'
+        }
+        value={named(CONSCIOUSNESS, body.consciousness).label}
+        icon={named(CONSCIOUSNESS, body.consciousness).icon}
+        tone={named(CONSCIOUSNESS, body.consciousness).tone ?? 'gold'}
+        hint={CONSCIOUSNESS[body.consciousness]?.hint ?? ''}
+      />
       <Paged items={body.capacities}>
         {(capacity) => {
           const spec = named(CAPACITIES, capacity.key)
@@ -646,12 +687,27 @@ function WoundItem({
       ),
     success: row.visible ? 'The mark is hidden' : 'The mark shows again',
   })
+  const treat = useGodAction({
+    run: (step: TreatmentStep) =>
+      unwrap(
+        api.POST('/api/actions/body:treat', {
+          body: { injury_id: row.id, step },
+        })
+      ),
+    success: (_result, step: TreatmentStep) =>
+      `${named(TREATMENTS, step).label}: done`,
+  })
   const kind = named(INJURIES, row.kind)
   const state = STATES[row.state]
   const cause = linkKind(row.cause_link)
   const reason =
     blocked ??
-    (heal.isPending || visibility.isPending || unfit.isPending ? WORKING : null)
+    (heal.isPending ||
+    visibility.isPending ||
+    unfit.isPending ||
+    treat.isPending
+      ? WORKING
+      : null)
   return (
     <TimelineItem
       icon={kind.icon}
@@ -687,6 +743,27 @@ function WoundItem({
               Unseen
             </Badge>
           )}
+          {row.tissue && (
+            <Badge size='sm' variant='secondary'>
+              {`Reached the ${(row.tissue_label ?? named(TISSUES, row.tissue).label).toLowerCase()}`}
+            </Badge>
+          )}
+          {row.nerve !== 'none' && (
+            <Badge size='sm' variant='destructive'>
+              {named(NERVES, row.nerve).label}
+            </Badge>
+          )}
+          {row.bleeding > 0 && (
+            <Badge size='sm' variant='destructive'>
+              <BLOOD_ICON />
+              {`Bleeding ${row.bleeding} a epoch`}
+            </Badge>
+          )}
+          {row.misdiagnosed && (
+            <Badge size='sm' variant='warning'>
+              Misread by the healer
+            </Badge>
+          )}
           {row.prosthesis && (
             <Badge size='sm' variant='default'>
               {`${plain(MATERIALS, row.prosthesis.material)} replacement · restores ${row.prosthesis.restored_pct}%`}
@@ -700,6 +777,35 @@ function WoundItem({
             max={PERCENT}
             tone='destructive'
           />
+        )}
+        {(row.treatments.length > 0 || row.wanted.length > 0) && (
+          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+            {row.treatments.map((step) => {
+              const look = named(TREATMENTS, step)
+              return (
+                <Badge key={step} size='sm' variant='success'>
+                  <look.icon />
+                  {look.label}
+                </Badge>
+              )
+            })}
+            {row.wanted.map((step) => {
+              const look = named(TREATMENTS, step)
+              return (
+                <Button
+                  key={step}
+                  size='sm'
+                  variant='ghost'
+                  disabled={reason !== null}
+                  disabledReason={reason ?? undefined}
+                  onClick={() => treat.mutate(step)}
+                >
+                  <look.icon />
+                  {look.label}
+                </Button>
+              )
+            })}
+          </div>
         )}
         <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
           {cause && row.cause_node_id !== null && row.cause_name && (
@@ -771,6 +877,52 @@ function WoundItem({
               {row.visible ? <EyeOff /> : <Eye />}
               {row.visible ? 'Hide the mark' : 'Show the mark'}
             </Button>
+            <RowAction
+              path='/api/actions/body:injury'
+              icon={Pencil}
+              label='Reshape the wound'
+              iconOnly
+              fixed={{ injury_id: row.id }}
+              defaults={{
+                state: row.state,
+                severity: row.severity,
+                function_loss: row.function_loss,
+                visible: row.visible,
+                kind: row.kind,
+                damage_type: row.damage_type,
+                cause: row.cause_kind,
+                infected_epochs: row.infected_epochs,
+                tissue: row.tissue,
+                bleeding: row.bleeding,
+                nerve: row.nerve,
+                treatments: row.treatments,
+                misdiagnosed: row.misdiagnosed,
+              }}
+              hide={['part']}
+              labels={{
+                function_loss: 'Use lost (%)',
+                infected_epochs: 'Epochs festering',
+                tissue: 'Deepest tissue reached',
+                bleeding: 'Bleeding each epoch',
+                nerve: 'Nerve damage',
+                treatments: 'Treatments given',
+                misdiagnosed: 'Misread by the healer',
+              }}
+              choices={{
+                tissue: Object.entries(TISSUES).map(([value, item]) => ({
+                  value,
+                  label: item.label,
+                })),
+                nerve: Object.entries(NERVES).map(([value, item]) => ({
+                  value,
+                  label: item.label,
+                })),
+                treatments: Object.entries(TREATMENTS).map(([value, item]) => ({
+                  value,
+                  label: item.label,
+                })),
+              }}
+            />
             {row.prosthesis && (
               <Button
                 size='sm'
@@ -871,6 +1023,25 @@ function bodyGroups(body: Body): AdjustGroup[] {
       ],
     },
     {
+      title: 'Blood and breath',
+      fields: [
+        {
+          key: 'blood',
+          label: bodyValueLabel('blood'),
+          value: body.blood,
+          min: 0,
+          max: PERCENT,
+        },
+        {
+          key: 'exertion',
+          label: bodyValueLabel('exertion'),
+          value: body.exertion,
+          min: 0,
+          max: PERCENT,
+        },
+      ],
+    },
+    {
       title: 'The body',
       fields: [
         {
@@ -879,6 +1050,20 @@ function bodyGroups(body: Body): AdjustGroup[] {
           value: body.fingers,
           min: 0,
           max: FINGER_MAX,
+        },
+        {
+          key: 'toes',
+          label: bodyValueLabel('toes'),
+          value: body.toes,
+          min: 0,
+          max: TOE_MAX,
+        },
+        {
+          key: 'teeth',
+          label: bodyValueLabel('teeth'),
+          value: body.teeth,
+          min: 0,
+          max: TEETH_MAX,
         },
         ...(body.hp_max !== null
           ? [
@@ -1216,10 +1401,26 @@ function BodyControls({ body }: { body: Body }) {
         })
       ),
   })
+  const wake = useGodAction({
+    run: (value: string) =>
+      unwrap(
+        api.POST('/api/actions/body:consciousness', {
+          body: {
+            bearer_id: body.node_id,
+            consciousness: value as Consciousness,
+            lock: hold,
+          },
+        })
+      ),
+  })
   const woundsHeld = body.locked.includes(INJURY_HOLD)
   const busy =
     reason() ??
-    (release.isPending || plan.isPending || heal.isPending || frame.isPending
+    (release.isPending ||
+    plan.isPending ||
+    heal.isPending ||
+    frame.isPending ||
+    wake.isPending
       ? WORKING
       : null)
   const wounded = body.injuries.some((row) => OPEN_STATES.has(row.state))
@@ -1299,6 +1500,13 @@ function BodyControls({ body }: { body: Body }) {
           table={BUILDS}
           blocked={busy}
           onPick={(value) => frame.mutate({ build: value })}
+        />
+        <Picker
+          label='Consciousness'
+          value={body.consciousness}
+          table={labels(CONSCIOUSNESS)}
+          blocked={busy}
+          onPick={(value) => wake.mutate(value)}
         />
         <div className='flex min-w-0 flex-col justify-end gap-2 @3xl/body:col-span-2'>
           <div className='flex min-w-0 flex-wrap gap-2'>

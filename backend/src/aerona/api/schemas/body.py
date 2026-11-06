@@ -7,6 +7,7 @@ from aerona.domain.enums.body import (
     BodyRegion,
     Capacity,
     ConditionKind,
+    Consciousness,
     DamageType,
     HarmCause,
     HeightClass,
@@ -14,6 +15,9 @@ from aerona.domain.enums.body import (
     InjuryState,
     MaimedKind,
     MedicineTier,
+    NerveDamage,
+    TissueKind,
+    TreatmentStep,
 )
 from aerona.domain.enums.material import MaterialKind
 
@@ -56,6 +60,13 @@ class InjuryView(ApiModel):
     infected_epochs: int
     healed_epoch: int | None
     prosthesis: ProsthesisView | None
+    tissue: TissueKind | None
+    tissue_label: str | None
+    bleeding: int
+    nerve: NerveDamage
+    treatments: list[TreatmentStep]
+    wanted: list[TreatmentStep]
+    misdiagnosed: bool
 
 
 class ConditionView(ApiModel):
@@ -120,6 +131,13 @@ class BodyView(ApiModel):
     hp_max: int | None
     pain: int
     fingers: int
+    toes: int
+    teeth: int
+    blood: int
+    exertion: int
+    consciousness: Consciousness
+    covering: TissueKind
+    covering_label: str
     armour: ArmourView
     capacities: list[CapacityView]
     functions: list[FunctionView]

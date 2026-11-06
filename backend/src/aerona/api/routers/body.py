@@ -20,7 +20,7 @@ from aerona.api.schemas.body import (
 )
 from aerona.catalog.body_plans import PLANS
 from aerona.catalog.stats import max_hp
-from aerona.catalog.tissues import FULL_COUNTS
+from aerona.catalog.tissues import FULL_COUNTS, TISSUES, covering_of
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, MaimedCohortRow, ProsthesisRow
@@ -28,7 +28,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.body import OPEN_INJURY_STATES, BodyFunction, BodyReading, Capacity, InjuryState
+from aerona.domain.enums.body import OPEN_INJURY_STATES, BodyFunction, BodyReading, Capacity, InjuryState, TreatmentStep
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.node import NodeKind
@@ -39,6 +39,7 @@ from aerona.engine.body.customs import derived_reading, maimed_for_rule, people_
 from aerona.engine.body.functions import function_levels
 from aerona.engine.body.healing import HealingWorld
 from aerona.engine.body.state import reading_of
+from aerona.engine.body.treatment import wanted_steps
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
@@ -46,6 +47,7 @@ from aerona.rules.registry import Rules
 router = APIRouter(tags=["body"])
 
 DEAD = "dead"
+TREATMENT_VALUES = frozenset(step.value for step in TreatmentStep)
 
 STATE_RANK = {
     state: index
@@ -163,6 +165,7 @@ async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyVie
         people = await people_of(session, bearer) if isinstance(bearer, EntityRow) else None
         custom = await session.get(BodyCustomRow, people.id) if people is not None else None
         hp, hp_max = hp_of(rules, bearer, body)
+        walking = {part.key for part in anatomy.with_function(BodyFunction.LOCOMOTION)}
         parts = []
         for part in anatomy.parts:
             on_part = [row for row in injuries if row.part == part.key]
@@ -201,6 +204,13 @@ async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyVie
             hp_max=hp_max,
             pain=body.pain,
             fingers=body.fingers,
+            toes=body.toes,
+            teeth=body.teeth,
+            blood=body.blood,
+            exertion=body.exertion,
+            consciousness=body.consciousness,
+            covering=covering_of(body.plan),
+            covering_label=TISSUES[covering_of(body.plan)].label,
             armour=ArmourView(head=body.armour_head, torso=body.armour_torso, limbs=body.armour_limbs),
             capacities=[
                 CapacityView(
@@ -238,6 +248,13 @@ async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyVie
                     infected_epochs=row.infected_epochs,
                     healed_epoch=row.healed_epoch,
                     prosthesis=prosthesis_view(fitted[row.id], names) if row.id in fitted else None,
+                    tissue=row.tissue,
+                    tissue_label=TISSUES[row.tissue].label if row.tissue is not None else None,
+                    bleeding=row.bleeding,
+                    nerve=row.nerve,
+                    treatments=[TreatmentStep(step) for step in row.treatments if step in TREATMENT_VALUES],
+                    wanted=wanted_steps(row, walking=row.part in walking) if row.state in OPEN_INJURY_STATES else [],
+                    misdiagnosed=row.misdiagnosed,
                 )
                 for row in sorted(injuries, key=lambda row: (row.state not in OPEN_INJURY_STATES, -row.epoch, -row.id))
             ],

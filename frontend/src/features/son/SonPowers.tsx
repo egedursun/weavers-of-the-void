@@ -1,8 +1,9 @@
-import { Lock, Sparkles } from 'lucide-react'
+import { Hammer, Lock, Pencil, Sparkles, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Medallion, Section, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { RowAction } from '@/features/entity/actions/RowAction'
 import { type SonPublic } from '@/features/pantheon/api'
 import {
   POWER_EFFECT_LABEL,
@@ -11,10 +12,40 @@ import {
   useLabels,
 } from '@/features/pantheon/labels'
 
+const POWER_LABELS = {
+  name: 'Name',
+  description: 'What it does',
+  effect: 'Effect',
+  param_entity_type: 'Bends a kind of thing',
+  param_stat: 'Bends a stat',
+}
+
+function ForgePower({ view }: { view: SonPublic }) {
+  const taken = new Set(view.powers.map((power) => power.slot))
+  const slots = Array.from(
+    { length: view.power_slots },
+    (_, slot) => slot
+  ).filter((slot) => !taken.has(slot))
+  const free = slots[0]
+  if (free === undefined) return null
+  return (
+    <RowAction
+      path='/api/actions/son:power'
+      icon={Hammer}
+      label='Forge a power'
+      fixed={{ son_id: view.son.id, slot: free }}
+      hide={['remove']}
+      labels={POWER_LABELS}
+      multiline={['description']}
+      note={`It takes slot ${free + 1}; a power past their unlocked count stays sealed until they rise.`}
+    />
+  )
+}
+
 export function SonPowers({ view }: { view: SonPublic }) {
   const { entityType } = useLabels()
   return (
-    <Section title='Powers' level={3}>
+    <Section title='Powers' level={3} actions={<ForgePower view={view} />}>
       {view.powers.length === 0 ? (
         <div className='flex min-w-0 items-center gap-2 rounded-lg border border-dashed p-3'>
           <Lock
@@ -71,6 +102,45 @@ export function SonPowers({ view }: { view: SonPublic }) {
                     )}
                   </div>
                   <Muted variant='caption'>{power.description}</Muted>
+                  <div className='flex min-w-0 flex-wrap justify-end gap-1'>
+                    <RowAction
+                      path='/api/actions/son:power'
+                      icon={Pencil}
+                      label={`Reshape ${power.name}`}
+                      iconOnly
+                      fixed={{ son_id: view.son.id, slot: power.slot }}
+                      hide={['remove']}
+                      defaults={{
+                        name: power.name,
+                        description: power.description,
+                        effect: power.effect,
+                        param_entity_type: power.param_entity_type ?? null,
+                        param_stat: power.param_stat ?? null,
+                      }}
+                      labels={POWER_LABELS}
+                      multiline={['description']}
+                    />
+                    <RowAction
+                      path='/api/actions/son:power'
+                      icon={Trash2}
+                      label={`Unmake ${power.name}`}
+                      iconOnly
+                      destructive
+                      fixed={{
+                        son_id: view.son.id,
+                        slot: power.slot,
+                        remove: true,
+                      }}
+                      hide={[
+                        'name',
+                        'description',
+                        'effect',
+                        'param_entity_type',
+                        'param_stat',
+                      ]}
+                      confirm={`Unmake ${power.name}? Nothing returns to you; tearing it away by the hand of god gives essence back instead.`}
+                    />
+                  </div>
                 </li>
               )
             }}

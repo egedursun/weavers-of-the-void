@@ -54,6 +54,7 @@ import { PlaceSection } from './place/PlaceSection'
 import { HouseSection, OathsSection, TreatySection } from './realm/HouseTreaty'
 import { RealmSection } from './realm/Realm'
 import { scrollToSection } from './scrollToSection'
+import { AfflictionsSection } from './sections/AfflictionsSection'
 import { ArrangeExtras } from './sections/ArrangeExtras'
 import { BiographySection } from './sections/BiographySection'
 import { BodySection } from './sections/BodySection'
@@ -161,6 +162,7 @@ const SECTION_LINKS = [
   { id: 'section-event', label: 'Event' },
   { id: 'section-events-here', label: 'Events here' },
   { id: 'section-body', label: 'Body' },
+  { id: 'section-afflictions', label: 'Afflictions' },
   { id: 'section-body-customs', label: 'Wounds and bodies' },
   { id: 'section-maimed', label: 'The maimed' },
   { id: 'section-life', label: 'Life' },
@@ -286,6 +288,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
   const embodied =
     entity.entity_type === 'mortal' || entity.entity_type === 'species'
   if (!embodied) present.delete('section-body')
+  const afflictable =
+    entity.entity_type === 'mortal' || entity.entity_type === 'beast'
+  if (!afflictable) present.delete('section-afflictions')
   if (entity.entity_type !== 'people') present.delete('section-body-customs')
   const maimedHome =
     entity.entity_type === 'settlement' || entity.entity_type === 'people'
@@ -574,6 +579,7 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
           <TradeRouteSection routeId={entity.id} readOnlyReason={readOnly} />
         )}
         {embodied && <BodySection nodeId={entity.id} />}
+        {afflictable && <AfflictionsSection nodeId={entity.id} />}
         {entity.entity_type === 'people' && (
           <PeopleBodyCustoms peopleId={entity.id} />
         )}

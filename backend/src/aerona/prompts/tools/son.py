@@ -349,7 +349,11 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.CURSE: ToolText(
         "You curse an entity: its stats fall and it rots a little more every age until the curse is lifted. Its creator is angered. "
         "{{ rules.costs.curse }}+{{ rules.son_tools.curse_cost_per_power }} x power essence, 1 action.",
-        {"entity_id": "The entity's id", "curse": "The words and form of the curse"},
+        {
+            "entity_id": "The entity's id",
+            "curse": "The words and form of the curse",
+            "affliction": "Optional, for a mortal or beast: a staged affliction the curse lays on them until it is cured: {{ curse_packages }}",
+        },
     ),
     T.TAKE_LIFE: ToolText(
         "You take the life of a named mortal. It is very expensive, and the more important the victim the costlier and harder: cost {{ rules.death.take_life_base_cost }} + "

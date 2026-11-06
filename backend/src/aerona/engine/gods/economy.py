@@ -91,6 +91,13 @@ async def _immune(ctx: TickContext, owner_id: int, resource_id: int) -> bool:
     return row is not None and ctx.epoch - row.recovered_epoch < ctx.rules.economy.addiction_immunity_epochs
 
 
+ADDICTION_HOLD = "addiction"
+
+
+def held(row: AddictionRow | None) -> bool:
+    return row is not None and ADDICTION_HOLD in row.locked
+
+
 async def _addictive(ctx: TickContext, resource: EntityRow, owners: list[EntityRow], hook_epochs: int) -> None:
     economy = ctx.rules.economy
     if trait_or(resource, Trait.ABUNDANCE, 0) < economy.withdrawal_min_abundance:
@@ -100,8 +107,10 @@ async def _addictive(ctx: TickContext, resource: EntityRow, owners: list[EntityR
             continue
         since = await _oldest_ownership(ctx.session, owner.id, resource.id)
         row = await ctx.session.get(AddictionRow, (owner.id, resource.id))
+        if held(row):
+            continue
         if row is None:
-            row = AddictionRow(community_entity_id=owner.id, resource_entity_id=resource.id, owned_epochs=0)
+            row = AddictionRow(community_entity_id=owner.id, resource_entity_id=resource.id, owned_epochs=0, locked=[])
             ctx.session.add(row)
         row.owned_epochs = max(0, ctx.epoch - since) if since is not None else 0
         if since is not None and ctx.epoch - since >= hook_epochs and row.addicted_since_epoch is None:
@@ -262,6 +271,8 @@ async def withdrawal(ctx: TickContext) -> None:
     rng = ctx.rng("withdrawal")
     rows = list(await ctx.session.scalars(select(AddictionRow).where(AddictionRow.addicted_since_epoch.is_not(None))))
     for row in rows:
+        if held(row):
+            continue
         entity = await ctx.session.get(EntityRow, row.community_entity_id)
         resource = await ctx.session.get(EntityRow, row.resource_entity_id)
         if entity is None or resource is None or entity.status is not EntityStatus.CANON or await _has_access(ctx, entity, resource):
@@ -371,8 +382,10 @@ async def spend_cosmic_resource(ctx: TickContext, traveller: EntityRow, amount: 
         if traveller.fold_count >= economy.fold_addiction_count:
             row = await ctx.session.get(AddictionRow, (traveller.id, deposit.id))
             if row is None:
-                ctx.session.add(AddictionRow(community_entity_id=traveller.id, resource_entity_id=deposit.id, owned_epochs=0, addicted_since_epoch=ctx.epoch))
-            elif row.addicted_since_epoch is None:
+                ctx.session.add(
+                    AddictionRow(community_entity_id=traveller.id, resource_entity_id=deposit.id, owned_epochs=0, addicted_since_epoch=ctx.epoch, locked=[])
+                )
+            elif row.addicted_since_epoch is None and not held(row):
                 row.addicted_since_epoch = ctx.epoch
         await ctx.session.flush()
         return deposit

@@ -10,6 +10,7 @@ from aerona.api.schemas.cosmos import (
     AddictionView,
     CosmosView,
     CosmosWorld,
+    CravingImmunityView,
     DiscoverySummary,
     DiscoveryWorld,
     SensedWorld,
@@ -27,12 +28,14 @@ from aerona.catalog.worlds import WORLD_TYPES
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
+from aerona.db.tables.cosmic_state import AddictionImmunityRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.routes import HorizonIntuitionRow, JourneyRow, RouteRow
 from aerona.db.tables.society import AddictionRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.son import SonStatus
+from aerona.engine.gods.economy import ADDICTION_HOLD
 from aerona.engine.phases.doom import doom_forecast
 from aerona.engine.phases.world_balance import son_shares, world_pulse
 from aerona.services.codex import traveller_guide
@@ -99,7 +102,23 @@ async def addictions(services: ServicesDep, community_id: Annotated[int | None, 
                 owned_epochs=row.owned_epochs,
                 addicted_since_epoch=row.addicted_since_epoch,
                 withdrawal_since_epoch=row.withdrawal_since_epoch,
+                held=ADDICTION_HOLD in row.locked,
             )
+            for row in rows
+            if row.community_entity_id in refs and row.resource_entity_id in refs
+        ]
+
+
+@router.get("/addiction-immunities", response_model=list[CravingImmunityView])
+async def addiction_immunities(services: ServicesDep, community_id: Annotated[int | None, Query(ge=1)] = None) -> list[CravingImmunityView]:
+    async with reader(services) as session:
+        statement = select(AddictionImmunityRow)
+        if community_id is not None:
+            statement = statement.where(AddictionImmunityRow.community_entity_id == community_id)
+        rows = list(await session.scalars(statement.order_by(AddictionImmunityRow.recovered_epoch.desc(), AddictionImmunityRow.community_entity_id)))
+        refs = await node_refs(session, [node for row in rows for node in (row.community_entity_id, row.resource_entity_id)])
+        return [
+            CravingImmunityView(community=refs[row.community_entity_id], resource=refs[row.resource_entity_id], recovered_epoch=row.recovered_epoch)
             for row in rows
             if row.community_entity_id in refs and row.resource_entity_id in refs
         ]

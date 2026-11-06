@@ -2,10 +2,14 @@ from pydantic import Field
 
 from aerona.catalog.commodities import commodity_label
 from aerona.catalog.production import WORKSHOP_LABELS
+from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.tables.cosmic_state import ResourceMechanicRow
+from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.economy import CommodityKind, LoanStatus, MaterialFamily, MaterialSlot, WorkshopKind
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.society import KnowledgeBranch, ResourceMechanic
 from aerona.engine.economy import control, control_depth, workshop_designs
 from aerona.engine.economy.control_depth import NewCoin, NewDeposit, NewLoan, Substance
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
@@ -473,3 +477,25 @@ async def release_loan(scope: PlayerScope, command: LoanTarget) -> Effect:
 async def delete_loan(scope: PlayerScope, command: LoanTarget) -> Effect:
     loan = await control_depth.delete_loan(await scope.context("loan_delete"), command.loan_id)
     return Effect("The loan was struck from the ledgers as if it never was.", loan.borrower_entity_id)
+
+
+class ResourceWorking(Command):
+    resource_id: int
+    mechanic: ResourceMechanic
+    magnitude: int | None = Field(default=None, ge=0)
+    epochs: int | None = Field(default=None, ge=0)
+
+
+@player_action("resource:mechanic", ActionKind.EDIT_RECORD)
+async def set_resource_mechanic(scope: PlayerScope, command: ResourceWorking) -> Effect:
+    resource = await scope.session.get(EntityRow, command.resource_id)
+    if resource is None or resource.entity_type is not EntityType.RESOURCE:
+        raise NotFoundError("No such resource.")
+    row = await scope.session.get(ResourceMechanicRow, (resource.id, command.mechanic))
+    if row is None and resource.resource_mechanic is not command.mechanic:
+        raise ValidationFailedError(f"{resource.name} does not work as {command.mechanic.value.replace('_', ' ')}; give it that working first.")
+    if row is None:
+        row = ResourceMechanicRow(entity_id=resource.id, mechanic=command.mechanic)
+        scope.session.add(row)
+    row.magnitude, row.epochs = command.magnitude, command.epochs
+    return Effect(f"{resource.name}'s {command.mechanic.value.replace('_', ' ')} working is retuned.", resource.id)

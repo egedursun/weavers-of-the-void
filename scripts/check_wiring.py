@@ -8,6 +8,22 @@ BACKEND = ROOT / "backend/src/aerona"
 ENUMS = BACKEND / "domain/enums"
 TABLES = BACKEND / "db/tables"
 CATALOG = BACKEND / "services/player/catalog.py"
+COMPLIANCE = BACKEND / "engine/interconnect/compliance.py"
+ENGINE = BACKEND / "engine"
+BOOKKEEPING_TABLES = frozenset(
+    {
+        "applied_fixups",
+        "epoch_stats",
+        "epoch_year_cursors",
+        "name_registry",
+        "notifications",
+        "chronicle_entities",
+        "action_records",
+        "scores",
+        "achievements",
+        "goods_flows",
+    }
+)
 FRONTEND = ROOT / "frontend/src"
 SKIPPED_PARTS = frozenset({"__pycache__", "alembic"})
 ENUM_BASES = frozenset({"StrEnum", "IntEnum", "Enum"})
@@ -73,9 +89,63 @@ def actions_without_ui(texts: dict[Path, str], frontend: str) -> list[str]:
     return found
 
 
+def table_names(texts: dict[Path, str]) -> dict[str, str]:
+    names: dict[str, str] = {}
+    for path, text in texts.items():
+        if path.is_relative_to(TABLES):
+            for node in ast.parse(text).body:
+                if isinstance(node, ast.ClassDef):
+                    for item in node.body:
+                        if isinstance(item, ast.Assign) and any(getattr(target, "id", "") == "__tablename__" for target in item.targets):
+                            if isinstance(item.value, ast.Constant):
+                                names[node.name] = str(item.value.value)
+    return names
+
+
+def strings_of(node: ast.expr, names: dict[str, str]) -> list[str]:
+    if not isinstance(node, ast.Tuple):
+        return []
+    found: list[str] = []
+    for item in node.elts:
+        if isinstance(item, ast.Constant) and isinstance(item.value, str):
+            found.append(item.value)
+        elif isinstance(item, ast.Attribute) and item.attr == "__tablename__" and isinstance(item.value, ast.Name) and item.value.id in names:
+            found.append(names[item.value.id])
+    return found
+
+
+def controlled_tables(texts: dict[Path, str], names: dict[str, str]) -> set[str]:
+    registered = set(re.findall(r'Meta\(\s*"([^"]+)"', texts[CATALOG]))
+    controlled: set[str] = set()
+    for node in ast.walk(ast.parse(texts[COMPLIANCE])):
+        if isinstance(node, ast.Call) and getattr(node.func, "id", "") == "ComplianceRow" and len(node.args) >= 4:
+            levers = [lever for lever in strings_of(node.args[3], names) if lever in registered]
+            if levers:
+                controlled.update(strings_of(node.args[1], names))
+    return controlled
+
+
+def uncontrolled_tables(texts: dict[Path, str]) -> list[str]:
+    names = table_names(texts)
+    known = set(names.values())
+    written = {name for path, text in texts.items() if path.is_relative_to(ENGINE) for name in re.findall(r'"table\.([a-z_]+)"', text)}
+    controlled = controlled_tables(texts, names)
+    return [
+        f"table {name} is written by the engine but no compliance row gives the god a registered lever to create, edit, hold or delete it"
+        for name in sorted(written & known)
+        if name not in controlled and name not in BOOKKEEPING_TABLES
+    ]
+
+
 def main() -> int:
     texts = backend_texts()
-    errors = [*orphan_enums(texts), *orphan_tables(texts), *unregistered_actions(texts), *actions_without_ui(texts, frontend_text())]
+    errors = [
+        *orphan_enums(texts),
+        *orphan_tables(texts),
+        *unregistered_actions(texts),
+        *actions_without_ui(texts, frontend_text()),
+        *uncontrolled_tables(texts),
+    ]
     for line in errors:
         print(f"ERROR {line}")
     print(f"wiring: {len(errors)} error(s)")

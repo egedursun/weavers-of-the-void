@@ -49,6 +49,7 @@ export type ForeignGodStatus = Schemas['ForeignGodStatus']
 export type HorizonStatus = Schemas['HorizonStatus']
 export type WorldLaw = Schemas['WorldLaw']
 export type AddictionView = Schemas['AddictionView']
+export type ImmunityView = Schemas['CravingImmunityView']
 export type NaturalLaw = Schemas['NaturalLaw']
 
 export const cosmosKeys = {
@@ -63,6 +64,8 @@ export const cosmosKeys = {
     [...queryKeys.world.all, 'cosmos', 'laws', worldId] as const,
   addictions: (communityId: number | null) =>
     [...queryKeys.world.all, 'addictions', communityId] as const,
+  immunities: (communityId: number | null) =>
+    [...queryKeys.world.all, 'addiction-immunities', communityId] as const,
   geography: (worldId: number) =>
     [...queryKeys.world.all, 'cosmos', 'geography', worldId] as const,
 }
@@ -154,6 +157,18 @@ export function useWorldGeography(worldId: number, enabled: boolean) {
         })
       ),
     enabled,
+  })
+}
+
+export function useImmunities(communityId: number | null = null) {
+  return useQuery({
+    queryKey: cosmosKeys.immunities(communityId),
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/addiction-immunities', {
+          params: { query: { community_id: communityId ?? undefined } },
+        })
+      ),
   })
 }
 

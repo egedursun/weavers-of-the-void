@@ -2,6 +2,7 @@ from pydantic import Field
 from sqlalchemy import select
 
 from aerona.catalog.anatomy import FINGER_COUNT, FINGERS
+from aerona.catalog.tissues import FULL_COUNTS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.body import (
@@ -28,12 +29,16 @@ from aerona.domain.enums.body import (
     BodyPlan,
     BodyReading,
     ConditionKind,
+    Consciousness,
     DamageType,
     HarmCause,
     HeightClass,
     InjuryKind,
     InjuryState,
     MaimedKind,
+    NerveDamage,
+    TissueKind,
+    TreatmentStep,
 )
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.material import MaterialKind
@@ -44,11 +49,29 @@ from aerona.engine.body.customs import CUSTOM_FIELDS, ensure_customs
 from aerona.engine.body.healing import INJURY_HOLD, fit_prosthesis, material_workability, mend
 from aerona.engine.body.hits import TOTAL_LOSS_KINDS, Harm
 from aerona.engine.body.state import PAIN, refresh
+from aerona.engine.body.treatment import stanch
 from aerona.engine.lifecycle.wounds import apply_hits, wound_sentence
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 PART_PATTERN = r"^[a-z][a-z_]*$"
-EDITABLE = (*CAPACITY_COLUMNS, *ARMOUR_COLUMNS, PAIN, "fingers", "hp_max")
+COUNTS = tuple(FULL_COUNTS)
+VITALS = ("blood", "exertion")
+EDITABLE = (*CAPACITY_COLUMNS, *ARMOUR_COLUMNS, PAIN, *VITALS, *COUNTS, "hp_max")
+CONSCIOUSNESS = "consciousness"
+INJURY_FIELDS = (
+    "state",
+    "severity",
+    "function_loss",
+    "visible",
+    "part",
+    "kind",
+    "damage_type",
+    "infected_epochs",
+    "tissue",
+    "bleeding",
+    "nerve",
+    "misdiagnosed",
+)
 FLAG_CUSTOMS = ("wholeness_required", "seer_eye", "scar_festivals", "pension")
 
 
@@ -81,6 +104,22 @@ class EditInjury(Command):
     damage_type: DamageType | None = None
     cause: HarmCause | None = None
     infected_epochs: int | None = Field(default=None, ge=0)
+    tissue: TissueKind | None = None
+    bleeding: int | None = Field(default=None, ge=0, le=PERCENT)
+    nerve: NerveDamage | None = None
+    treatments: list[TreatmentStep] | None = None
+    misdiagnosed: bool | None = None
+
+
+class TreatInjury(Command):
+    injury_id: int
+    step: TreatmentStep
+
+
+class SetConsciousness(Command):
+    bearer_id: int
+    consciousness: Consciousness
+    lock: bool = True
 
 
 class EditCondition(Command):
@@ -241,14 +280,45 @@ async def maim(scope: PlayerScope, command: Maim) -> Effect:
 async def edit_injury(scope: PlayerScope, command: EditInjury) -> Effect:
     row = await _injury(scope, command.injury_id)
     bearer = await bearer_of(scope, row.bearer_node_id)
-    for name in ("state", "severity", "function_loss", "visible", "part", "kind", "damage_type", "infected_epochs"):
+    for name in INJURY_FIELDS:
         value = getattr(command, name)
         if value is not None:
             setattr(row, name, value)
     if command.cause is not None:
         row.cause_kind = command.cause
+    if command.treatments is not None:
+        row.treatments = [step.value for step in dict.fromkeys(command.treatments)]
     await refresh(scope.session, scope.rules, bearer, await scope.epoch())
     return Effect(f"The wound to {bearer.name}'s {_label(row.part)} was changed.", target_node_id=bearer.id)
+
+
+@player_action("body:treat", ActionKind.OTHER)
+async def treat_injury(scope: PlayerScope, command: TreatInjury) -> Effect:
+    row = await _injury(scope, command.injury_id)
+    bearer = await bearer_of(scope, row.bearer_node_id)
+    if command.step.value in row.treatments:
+        raise ValidationFailedError(f"The wound is already treated with {_label(command.step.value)}.")
+    stanch(row, command.step)
+    if command.step is TreatmentStep.DIAGNOSE:
+        row.misdiagnosed = False
+    await refresh(scope.session, scope.rules, bearer, await scope.epoch())
+    return Effect(f"The wound to {bearer.name}'s {_label(row.part)} was given {_label(command.step.value)}.", target_node_id=bearer.id)
+
+
+@player_action("body:consciousness", ActionKind.OTHER)
+async def set_consciousness(scope: PlayerScope, command: SetConsciousness) -> Effect:
+    bearer = await bearer_of(scope, command.bearer_id)
+    epoch = await scope.epoch()
+    body = await ensure_body(scope.session, scope.rules, bearer, epoch)
+    body.consciousness = command.consciousness
+    locked = set(body.locked)
+    if command.lock:
+        locked.add(CONSCIOUSNESS)
+    else:
+        locked.discard(CONSCIOUSNESS)
+    body.locked = sorted(locked)
+    held = " and held there" if command.lock else ""
+    return Effect(f"{bearer.name} is now {_label(command.consciousness.value)}{held}.", target_node_id=bearer.id)
 
 
 async def world_material(scope: PlayerScope, material_id: int | None) -> WorldMaterialRow | None:
@@ -400,11 +470,11 @@ async def set_body_value(scope: PlayerScope, command: SetBodyValue) -> Effect:
     bearer = await bearer_of(scope, command.bearer_id)
     epoch = await scope.epoch()
     body = await ensure_body(scope.session, scope.rules, bearer, epoch)
-    ceiling = FINGER_COUNT if command.field == "fingers" else (PERCENT if command.field in (*ARMOUR_COLUMNS, PAIN) else None)
+    ceiling = FULL_COUNTS[command.field] if command.field in COUNTS else (PERCENT if command.field in (*ARMOUR_COLUMNS, PAIN, *VITALS) else None)
     value = min(command.value, ceiling) if ceiling is not None else command.value
     setattr(body, command.field, value)
     locked = set(body.locked)
-    if command.lock and command.field not in ("fingers", "hp_max"):
+    if command.lock and command.field not in (*COUNTS, "hp_max"):
         locked.add(command.field)
     body.locked = sorted(locked)
     held = " and held there" if command.field in locked else ""

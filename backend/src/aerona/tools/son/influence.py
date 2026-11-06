@@ -2,6 +2,7 @@ from typing import Annotated, Any
 
 from pydantic import Field
 
+from aerona.catalog.effect_packages import PACKAGES
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.catalog.gates import Gate
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN, SAYING_MAX, SAYING_MIN
@@ -10,13 +11,14 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityType
 from aerona.domain.enums.son import PowerEffect
-from aerona.engine.body.afflictions import blood_curse
+from aerona.engine.body.afflictions import afflict, blood_curse
 from aerona.engine.body.hits import Harm
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.phases.society_support.knowledge import teach
@@ -70,6 +72,7 @@ class ChosenInput(ToolInput):
 class CurseInput(ToolInput):
     entity_id: int
     curse: Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
+    affliction: PackageKind | None = None
 
 
 class DreamInput(ToolInput):
@@ -200,6 +203,9 @@ async def curse(call: SonCall, args: CurseInput) -> str:
     entities = EntityRepository(call.session)
     if await entities.has_flag(entity.id, EntityFlag.CURSED):
         fail(SonResult.ALREADY_CURSED, name=entity.name)
+    if args.affliction is not None and Transmission.CURSE not in PACKAGES[args.affliction].transmissions:
+        allowed = NOTE_SEPARATOR.join(kind.value for kind, spec in PACKAGES.items() if Transmission.CURSE in spec.transmissions)
+        fail(SonResult.AFFLICTION_NOT_CURSED, label=PACKAGES[args.affliction].label, allowed=allowed)
     curser = await call.has_power(PowerEffect.CURSER)
     cost = round((call.rules.costs.curse + entity.power_level * tools.curse_cost_per_power) * (tools.curser_cost_pct / PERCENT if curser else 1))
     require_essence(call, cost)
@@ -216,7 +222,11 @@ async def curse(call: SonCall, args: CurseInput) -> str:
         if moved is not None:
             notes.append(lines.EFFECT_NOTE.format(label=field.label, old=moved[0], new=moved[1]))
     await entities.add_flag(entity.id, EntityFlag.CURSED, call.epoch)
-    await blood_curse(call.tick, call.son, entity)
+    laid = (
+        await afflict(call.tick, entity, args.affliction, Transmission.CURSE, source_node_id=call.son.id)
+        if args.affliction is not None
+        else await blood_curse(call.tick, call.son, entity)
+    )
     await bonds.connect(BondDraft(call.son.id, entity.id, BondKind.CURSED, call.epoch, args.curse))
     creator_id = foreign_creator(call, entity)
     if creator_id is not None:
@@ -227,7 +237,8 @@ async def curse(call: SonCall, args: CurseInput) -> str:
     call.target(entity.id)
     joined = NOTE_SEPARATOR.join(notes)
     await call.chronicle(ChronicleKind.CURSE, lines.CURSE, entity_ids=[entity.id], son=call.son.name, entity=entity.name, curse=args.curse, notes=joined)
-    return result(SonResult.CURSED, severity=severity, notes=joined)
+    borne = PACKAGES[laid.package].label.lower() if laid is not None else ""
+    return result(SonResult.CURSED, severity=severity, notes=joined, name=entity.name, affliction=borne)
 
 
 async def send_dream(call: SonCall, args: DreamInput) -> str:

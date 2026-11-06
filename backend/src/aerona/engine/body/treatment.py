@@ -109,7 +109,8 @@ async def bleed(ctx: TickContext, bearer: EntityRow, body: BodyRow, rows: list[I
             row.bleeding = 0
             continue
         lost += row.bleeding
-    body.blood = max(0, body.blood - lost)
+    if "blood" not in body.locked:
+        body.blood = max(0, body.blood - lost)
     return lost
 
 
@@ -125,6 +126,7 @@ async def exert(ctx: TickContext, bearer: EntityRow) -> int:
 
 
 def regain_blood(rules: Rules, body: BodyRow, bleeding: bool) -> None:
-    if not bleeding:
+    if not bleeding and "blood" not in body.locked:
         body.blood = min(PERCENT, body.blood + rules.tissues.blood_regen)
-    body.exertion = max(0, body.exertion - rules.tissues.exertion_recovery)
+    if "exertion" not in body.locked:
+        body.exertion = max(0, body.exertion - rules.tissues.exertion_recovery)

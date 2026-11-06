@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends
 from aerona.api.dependencies import guard_writes
 from aerona.api.routers import (
     actions,
+    afflictions,
     backups,
     body,
     books,
@@ -125,6 +126,7 @@ ROUTERS: tuple[ModuleType, ...] = (
     environment,
     regions,
     body,
+    afflictions,
     calendar,
     mind,
     mortals,

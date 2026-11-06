@@ -42,6 +42,13 @@ class AddictionView(ApiModel):
     owned_epochs: int
     addicted_since_epoch: int | None
     withdrawal_since_epoch: int | None
+    held: bool
+
+
+class CravingImmunityView(ApiModel):
+    community: NodeRef
+    resource: NodeRef
+    recovered_epoch: int
 
 
 class SkyEventRecord(ApiModel):

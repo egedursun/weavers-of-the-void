@@ -1,5 +1,8 @@
+from aerona.core.errors import NotFoundError
+from aerona.db.tables.society import ReverenceRow
 from aerona.domain.enums.action import ActionKind
 from aerona.engine.phases.native_faith import run_native_faith, syncretize
+from aerona.services.player import guards
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 
@@ -21,3 +24,14 @@ async def weave(scope: PlayerScope, command: Syncretism) -> Effect:
 async def run_now(scope: PlayerScope, command: Empty) -> Effect:
     await run_native_faith(scope.session, scope.rules)
     return Effect("The old gods stirred among the natives of their worlds.")
+
+
+@player_action("faith:unsyncretize", ActionKind.OTHER)
+async def unweave(scope: PlayerScope, command: Syncretism) -> Effect:
+    row = await scope.session.get(ReverenceRow, (command.entity_id, command.god_id))
+    entity = await guards.entity(scope.session, command.entity_id)
+    if row is None:
+        raise NotFoundError(f"{entity.name} does not revere that god.")
+    await scope.session.delete(row)
+    await scope.session.flush()
+    return Effect(f"{entity.name} no longer reveres that old god beside its own.", entity.id)

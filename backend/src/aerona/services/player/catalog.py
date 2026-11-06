@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from aerona.core.errors import NotFoundError
 from aerona.rules.registry import Rules
 from aerona.services.player import (
+    afflictions,
     assignments,
     beyond,
     body,
@@ -315,6 +316,7 @@ GOD_POWER_ACTIONS = (
         lambda rules: essence(rules.god_power.strip_power_cost),
         ("ACT-076", "ACT-100"),
     ),
+    _sync(Meta("son:power", "Create, reshape or unmake a son's power", G.GOD_POWER), god_power.set_son_power, god_power.SonPower, free, ()),
     _sync(
         Meta("absolute_command", "Absolute command", G.GOD_POWER),
         god_power.absolute_command,
@@ -819,6 +821,20 @@ COSMIC_ORDER_ACTIONS = (
         free,
         ("ECO-003", "ECO-007"),
     ),
+    _sync(
+        Meta("addiction:set", "Set, hold or unmake a community's craving", G.COSMOS),
+        cosmic_orders.set_addiction,
+        cosmic_orders.AddictionSet,
+        free,
+        ("ECO-003", "ECO-007"),
+    ),
+    _sync(
+        Meta("addiction:immunity", "Grant or take away immunity to a craving", G.COSMOS),
+        cosmic_orders.set_immunity,
+        cosmic_orders.ImmunitySet,
+        free,
+        ("ECO-003",),
+    ),
 )
 
 DIVINE_ACTIONS = (
@@ -879,6 +895,7 @@ WORLD_LAYER_ACTIONS = (
     _sync(Meta("market:write_off", "Write off a debt", G.SOCIETY), market.write_off, market.DebtTarget, free, ()),
     _sync(Meta("market:run", "Open the markets now", G.SOCIETY), market.run_now, market.Empty, free, ()),
     _sync(Meta("faith:syncretize", "Weave a community's faith with an old god", G.FOREIGN_GODS), native_faith.weave, native_faith.Syncretism, free, ()),
+    _sync(Meta("faith:unsyncretize", "Let a people stop revering an old god", G.FOREIGN_GODS), native_faith.unweave, native_faith.Syncretism, free, ()),
     _sync(Meta("faith:native_run", "Let the old gods stir among the natives now", G.FOREIGN_GODS), native_faith.run_now, native_faith.Empty, free, ()),
     _sync(
         Meta("language:creole", "Fuse a community's two tongues into a creole", G.LANGUAGES),
@@ -1054,6 +1071,13 @@ MIND_ACTIONS = (
     _sync(Meta("body:condition_edit", "Change how heavy a condition lies", G.ENTITIES), body.edit_condition, body.EditCondition, free, ("F4.5",)),
     _sync(Meta("body:prosthesis_edit", "Change a prosthesis's make and quality", G.ENTITIES), body.edit_prosthesis, body.EditProsthesis, free, ("F4.5",)),
     _sync(Meta("body:injury_hold", "Hold a wound as it is or let it heal again", G.ENTITIES), body.hold_injuries, body.HoldInjuries, free, ("F4.4",)),
+    _sync(Meta("body:treat", "Give a wound a treatment step", G.ENTITIES), body.treat_injury, body.TreatInjury, free, ("F23",)),
+    _sync(Meta("body:consciousness", "Set or hold how awake a bearer is", G.ENTITIES), body.set_consciousness, body.SetConsciousness, free, ("F23",)),
+    _sync(Meta("affliction:give", "Lay a venom, curse, blessing or trauma", G.ENTITIES), afflictions.give, afflictions.GiveAffliction, free, ("F30",)),
+    _sync(Meta("affliction:edit", "Move an affliction's stage, source or onset", G.ENTITIES), afflictions.edit, afflictions.EditAffliction, free, ("F30",)),
+    _sync(Meta("affliction:hold", "Hold an affliction at its stage or let it run", G.ENTITIES), afflictions.hold, afflictions.HoldAffliction, free, ("F30",)),
+    _sync(Meta("affliction:cure", "Cure an affliction", G.ENTITIES), afflictions.cure_action, afflictions.CureAffliction, free, ("F30",)),
+    _sync(Meta("affliction:delete", "Unmake an affliction as if it never was", G.ENTITIES), afflictions.delete, afflictions.AfflictionTarget, free, ("F30",)),
     _sync(Meta("mortal:set", "Set and hold a mortal's life, standing or loyalty", G.ENTITIES), mortals.set_mortal, mortals.SetMortal, free, ("S3.1",)),
     _sync(
         Meta("mortal:release", "Let a held mortal value follow their life again", G.ENTITIES), mortals.release_mortal, mortals.ReleaseMortal, free, ("S3.1",)
@@ -1158,6 +1182,7 @@ ECONOMY_ACTIONS = (
         free,
         ("S6.3",),
     ),
+    _sync(Meta("resource:mechanic", "Tune a resource's working", G.SOCIETY), economy_depth.set_resource_mechanic, economy_depth.ResourceWorking, free, ()),
     _sync(Meta("resource:release", "Release a held resource", G.SOCIETY), economy_depth.release_resource, economy_depth.ResourceTarget, free, ("S6.3",)),
     _sync(Meta("resource:delete", "Unmake a resource", G.SOCIETY), economy_depth.delete_resource, economy_depth.ResourceTarget, free, ("S6.3",)),
     _sync(Meta("resource:workers", "Set and hold the workers of a resource", G.SOCIETY), economy_depth.set_workers, economy_depth.SetWorkers, free, ("S6.3",)),

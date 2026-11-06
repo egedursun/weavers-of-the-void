@@ -7,6 +7,7 @@ import {
   Gem,
   Lock,
   Pickaxe,
+  SlidersHorizontal,
   Recycle,
   Save,
   Sparkles,
@@ -40,6 +41,7 @@ import { Label, Muted, Text } from '@/components/typography'
 import { useNames } from '@/features/entity/api/queries'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { RowAction } from '../actions/RowAction'
 import { MindPicker } from '../mind/parts'
 import {
   AdjustPanel,
@@ -817,6 +819,61 @@ function Summary({
   )
 }
 
+function Workings({
+  resourceId,
+  params,
+}: {
+  resourceId: number
+  params: components['schemas']['MechanicParamView'][]
+}) {
+  if (params.length === 0) return null
+  return (
+    <div className='flex min-w-0 flex-col gap-2'>
+      <Label variant='overline'>Workings</Label>
+      <ul className='flex min-w-0 flex-col gap-2'>
+        {params.map((param) => (
+          <li
+            key={param.mechanic}
+            className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border bg-muted/30 p-2'
+          >
+            <SlidersHorizontal
+              aria-hidden='true'
+              className='size-icon-xs text-muted-foreground'
+            />
+            <Text as='span' weight='medium'>
+              {param.mechanic
+                .replaceAll('_', ' ')
+                .replace(/^./, (first) => first.toUpperCase())}
+            </Text>
+            <Badge size='sm' variant='secondary'>
+              {param.magnitude === null
+                ? 'Default strength'
+                : `Strength ${param.magnitude}`}
+            </Badge>
+            <Badge size='sm' variant='outline'>
+              {param.epochs === null
+                ? 'Default pace'
+                : `Every ${param.epochs} epochs`}
+            </Badge>
+            <RowAction
+              path='/api/actions/resource:mechanic'
+              icon={SlidersHorizontal}
+              label='Tune this working'
+              iconOnly
+              fixed={{ resource_id: resourceId, mechanic: param.mechanic }}
+              defaults={{ magnitude: param.magnitude, epochs: param.epochs }}
+              labels={{
+                magnitude: 'Strength (empty for the rule default)',
+                epochs: 'Epochs between effects (empty for the rule default)',
+              }}
+            />
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 export function ResourceProfile({
   resourceId,
   worldId = null,
@@ -848,6 +905,7 @@ export function ResourceProfile({
           className='@container/res flex min-w-0 flex-col gap-5'
         >
           <Summary profile={view.data} readOnlyReason={readOnlyReason} />
+          <Workings resourceId={resourceId} params={view.data.params} />
           {view.data.runs.length > 1 ? (
             <LineChart
               title='Taken out per epoch'

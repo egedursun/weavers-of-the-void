@@ -8,10 +8,48 @@ KIN = "section-kin"
 GEAR = "section-gear"
 MIND = "section-mind"
 BODY = "section-body"
+AFFLICTIONS = "section-afflictions"
 S = Subsystem
 PROFILES = (MortalProfileRow.__tablename__,)
 
 BODY_GAP_MECHANICS: tuple[Mechanic, ...] = (
+    Mechanic(
+        key="tissue_layers",
+        spec_item="F23",
+        title="Material physics and tissue layers: blows cut through armour and tissue; bleeding, numbness, pain and exertion take consciousness until treated",
+        subsystem=S.BODY,
+        phases=("body_survey", "body_healing", "war_casualties", "economy_survey"),
+        surface=Surface(drawer=BODY),
+        backfill="body_survey: every body starts with full blood, no exertion and its counted parts whole",
+        templates=("healing.amputated",),
+        fields=("blood", "exertion", "consciousness", "toes", "teeth", "tissue", "bleeding", "nerve", "treatments", "misdiagnosed"),
+        tables=("bodies", "injuries"),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal", "son", "foreign_god"),
+        couplings=(
+            Coupling(S.WAR, "armour weight and exertion weaken fighters; the unconscious are captured"),
+            Coupling(S.ECONOMY, "medicine, cloth and timber are spent on treatment; forging needs a material's melting heat"),
+        ),
+    ),
+    Mechanic(
+        key="effect_packages",
+        spec_item="F30",
+        title="Staged afflictions and blessings hold conditions, stats, values and needs on their bearers until cured",
+        subsystem=S.BODY,
+        phases=("body_afflictions",),
+        surface=Surface(drawer=AFFLICTIONS),
+        backfill="none: afflictions arise from bites, curses, rites, births, vices and heavy memories from the next epoch",
+        templates=("affliction.cured",),
+        fields=("package", "stage", "transmission", "source"),
+        tables=("afflictions",),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal",),
+        couplings=(
+            Coupling(S.FAITH, "a god's blessing, curse or a desecrated shrine lays a package; possession and void taint follow spirits"),
+            Coupling(S.DEMOGRAPHY, "blessings and blood curses pass to children"),
+            Coupling(S.MIND, "trauma follows heavy memories on weak wills; a bearer comes to dread its source"),
+        ),
+    ),
     Mechanic(
         key="harshness_dial",
         spec_item="G11",

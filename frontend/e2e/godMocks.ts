@@ -131,6 +131,7 @@ function view(record: Schemas['SonRecord'], extra: Partial<Schemas['SonPublic']>
     band_effect: 'No strain on his body or will.',
     band_action_loss: 0,
     unlocked_powers: 2,
+    power_slots: 3,
     next_star: { stars: record.stars + 1, level: 7, fame: 60, essence: 45 },
     ascension: null,
     cover: null,

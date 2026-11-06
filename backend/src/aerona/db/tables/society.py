@@ -1,4 +1,4 @@
-from sqlalchemy import CheckConstraint, Float, ForeignKey
+from sqlalchemy import JSON, CheckConstraint, Float, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.db.base import Base, CreatedAtMixin
@@ -84,6 +84,7 @@ class AddictionRow(Base):
     owned_epochs: Mapped[int] = mapped_column(default=0)
     addicted_since_epoch: Mapped[int | None]
     withdrawal_since_epoch: Mapped[int | None]
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
 
 
 class ReverenceRow(CreatedAtMixin, Base):

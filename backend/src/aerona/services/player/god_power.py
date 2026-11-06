@@ -1,6 +1,13 @@
-from aerona.core.errors import ValidationFailedError
+from pydantic import Field
+
+from aerona.constants.schema import NAME_MAX_LENGTH
+from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.tables.sons import SonPowerRow
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.limits import POWER_SLOTS
+from aerona.domain.enums.son import PowerEffect, Stat
 from aerona.engine.gods.deification import deify
 from aerona.events.kinds import EventKind
 from aerona.services.gods import god_power
@@ -34,6 +41,17 @@ class KillForeignGod(Command):
     god_id: int
     reason: str = ""
     devour: bool = False
+
+
+class SonPower(Command):
+    son_id: int
+    slot: int = Field(ge=0, lt=POWER_SLOTS)
+    name: str | None = Field(default=None, min_length=1, max_length=NAME_MAX_LENGTH)
+    description: str | None = None
+    effect: PowerEffect | None = None
+    param_entity_type: EntityType | None = None
+    param_stat: Stat | None = None
+    remove: bool = False
 
 
 class StripPower(Command):
@@ -219,3 +237,31 @@ async def world_wrath(scope: PlayerScope, command: WorldWrath) -> Effect:
 async def force_rebellion(scope: PlayerScope, command: ForceRebellion) -> Effect:
     son = await god_power.force_rebellion(scope.session, scope.rules, command.son_id, _clip(scope, command.manifesto))
     return Effect(f"{son.name} rose in rebellion.", son.id)
+
+
+@player_action("son:power", ActionKind.OTHER)
+async def set_son_power(scope: PlayerScope, command: SonPower) -> Effect:
+    son = await guards.son(scope.session, command.son_id)
+    row = await scope.session.get(SonPowerRow, (son.id, command.slot))
+    if command.remove:
+        if row is None:
+            raise NotFoundError(f"{son.name} holds no power in that slot.")
+        await scope.session.delete(row)
+        await scope.session.flush()
+        return Effect(f"{son.name}'s power {row.name} was unmade.", son.id)
+    if command.param_entity_type is not None and command.param_stat is not None:
+        raise ValidationFailedError("A power bends either a kind of thing or a stat, not both.")
+    if row is None:
+        if command.name is None or command.effect is None:
+            raise ValidationFailedError("A new power needs a name and an effect.")
+        row = SonPowerRow(son_id=son.id, slot=command.slot, name=command.name.strip(), description=(command.description or "").strip(), effect=command.effect)
+        scope.session.add(row)
+    if command.name is not None:
+        row.name = command.name.strip()
+    if command.description is not None:
+        row.description = command.description.strip()
+    if command.effect is not None:
+        row.effect = command.effect
+    row.param_entity_type = command.param_entity_type
+    row.param_stat = command.param_stat
+    return Effect(f"{son.name} now wields {row.name}.", son.id)

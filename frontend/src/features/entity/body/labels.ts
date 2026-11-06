@@ -1,5 +1,12 @@
 import {
   Accessibility,
+  BatteryLow,
+  CircleDot,
+  Droplet,
+  Gauge,
+  Layers,
+  ScanSearch,
+  Unplug,
   Activity,
   Angry,
   Axe,
@@ -363,6 +370,11 @@ export const BODY_VALUES: Record<string, string> = {
   armour_limbs: 'Limb armour',
   pain: 'Pain',
   fingers: 'Fingers',
+  toes: 'Toes',
+  teeth: 'Teeth',
+  blood: 'Blood',
+  exertion: 'Exertion',
+  consciousness: 'Consciousness',
   hp_max: 'Health ceiling',
 }
 
@@ -388,3 +400,68 @@ export const BUILDS: Record<string, string> = {
   heavy: 'Heavy',
   giant: 'Giant',
 }
+
+export const TISSUES: Record<string, Named> = {
+  skin: { label: 'Skin', icon: Layers, tone: 'muted' },
+  scale: { label: 'Scales', icon: Shell, tone: 'verdigris' },
+  chitin: { label: 'Chitin', icon: Bug, tone: 'verdigris' },
+  bark: { label: 'Bark', icon: TreeDeciduous, tone: 'success' },
+  fat: { label: 'Fat', icon: Layers, tone: 'muted' },
+  muscle: { label: 'Muscle', icon: Activity, tone: 'warning' },
+  tendon: { label: 'Tendons and ligaments', icon: Unplug, tone: 'warning' },
+  bone: { label: 'Bone', icon: Bone, tone: 'warning' },
+  artery: { label: 'Artery', icon: Droplet, tone: 'danger' },
+  motor_nerve: { label: 'Motor nerve', icon: Zap, tone: 'danger' },
+  sensory_nerve: { label: 'Sensory nerve', icon: Zap, tone: 'info' },
+  organ: { label: 'Organ', icon: HeartPulse, tone: 'danger' },
+}
+
+export const NERVES: Record<string, Named> = {
+  none: { label: 'Nerves whole', icon: Zap, tone: 'success' },
+  motor: { label: 'Limp: motor nerve cut', icon: Zap, tone: 'danger' },
+  sensory: { label: 'Numb: sensory nerve cut', icon: Zap, tone: 'info' },
+}
+
+export const CONSCIOUSNESS: Record<string, Named & { hint: string }> = {
+  awake: {
+    label: 'Awake',
+    icon: Eye,
+    tone: 'success',
+    hint: 'Clear-headed and able to act.',
+  },
+  nauseous: {
+    label: 'Nauseous',
+    icon: Frown,
+    tone: 'warning',
+    hint: 'Pain churns the stomach; fine work and command suffer.',
+  },
+  dizzy: {
+    label: 'Dizzy',
+    icon: CircleDot,
+    tone: 'warning',
+    hint: 'The world spins; every capacity falls away.',
+  },
+  unconscious: {
+    label: 'Unconscious',
+    icon: EyeOff,
+    tone: 'danger',
+    hint: 'Senseless: cannot act and is captured if foes find them.',
+  },
+}
+
+export const TREATMENTS: Record<string, Named> = {
+  diagnose: { label: 'Diagnose', icon: ScanSearch, tone: 'info' },
+  clean: { label: 'Clean', icon: Droplet, tone: 'info' },
+  suture: { label: 'Suture', icon: Scissors, tone: 'warning' },
+  set_bone: { label: 'Set the bone', icon: Bone, tone: 'warning' },
+  splint: { label: 'Splint', icon: Hammer, tone: 'warning' },
+  dress: { label: 'Dress', icon: Bandage, tone: 'info' },
+  amputate: { label: 'Amputate', icon: Axe, tone: 'danger' },
+  cauterise: { label: 'Cauterise', icon: Flame, tone: 'danger' },
+  crutch: { label: 'Crutch', icon: Accessibility, tone: 'muted' },
+  traction: { label: 'Traction', icon: Footprints, tone: 'muted' },
+}
+
+export const BLOOD_ICON = Droplet
+export const EXERTION_ICON = BatteryLow
+export const STAMINA_ICON = Gauge

@@ -1,7 +1,12 @@
-from aerona.core.errors import ValidationFailedError
+from pydantic import Field
+
+from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.tables.cosmic_state import AddictionImmunityRow
+from aerona.db.tables.society import AddictionRow
 from aerona.domain.enums.action import ActionKind
 from aerona.engine.cosmos.maps import regenerate_world_map
 from aerona.engine.cosmos.stars import set_epoch_star
+from aerona.engine.gods.economy import ADDICTION_HOLD
 from aerona.engine.phases.exploration import order_foreign_god_land
 from aerona.engine.phases.travel import teach_route_knowledge
 from aerona.services.gods import cosmic_economy
@@ -48,6 +53,19 @@ class Empty(Command):
 class AddictionCure(Command):
     entity_id: int
     resource_id: int
+
+
+class AddictionSet(AddictionCure):
+    addicted_since_epoch: int | None = Field(default=None, ge=0)
+    withdrawal_since_epoch: int | None = Field(default=None, ge=0)
+    owned_epochs: int | None = Field(default=None, ge=0)
+    hold: bool | None = None
+    remove: bool = False
+
+
+class ImmunitySet(AddictionCure):
+    immune: bool = True
+    recovered_epoch: int | None = Field(default=None, ge=0)
 
 
 class RouteDanger(Command):
@@ -144,3 +162,53 @@ async def snapshot_now(scope: PlayerScope, command: Empty) -> Effect:
     epoch = await scope.epoch()
     worlds = await take_snapshot(scope.session, scope.rules, epoch)
     return Effect(f"The maps of {worlds} worlds were recorded for epoch {epoch}.", values={"worlds": worlds, "epoch": epoch})
+
+
+@player_action("addiction:set", ActionKind.OTHER)
+async def set_addiction(scope: PlayerScope, command: AddictionSet) -> Effect:
+    community = await guards.entity(scope.session, command.entity_id)
+    resource = await guards.entity(scope.session, command.resource_id)
+    row = await scope.session.get(AddictionRow, (community.id, resource.id))
+    if command.remove:
+        if row is None:
+            raise NotFoundError(f"{community.name} has no bond to {resource.name}.")
+        await scope.session.delete(row)
+        await scope.session.flush()
+        return Effect(f"{community.name}'s bond to {resource.name} is unmade.", community.id)
+    epoch = await scope.epoch()
+    if row is None:
+        row = AddictionRow(community_entity_id=community.id, resource_entity_id=resource.id, owned_epochs=0, locked=[])
+        scope.session.add(row)
+    row.addicted_since_epoch = command.addicted_since_epoch if command.addicted_since_epoch is not None else (row.addicted_since_epoch or epoch)
+    row.withdrawal_since_epoch = command.withdrawal_since_epoch
+    if command.owned_epochs is not None:
+        row.owned_epochs = command.owned_epochs
+    if command.hold is not None:
+        locked = set(row.locked)
+        if command.hold:
+            locked.add(ADDICTION_HOLD)
+        else:
+            locked.discard(ADDICTION_HOLD)
+        row.locked = sorted(locked)
+    state = "in withdrawal from" if row.withdrawal_since_epoch is not None else "craves"
+    held = ", held so" if ADDICTION_HOLD in row.locked else ""
+    return Effect(f"{community.name} now {state} {resource.name}{held}.", community.id)
+
+
+@player_action("addiction:immunity", ActionKind.OTHER)
+async def set_immunity(scope: PlayerScope, command: ImmunitySet) -> Effect:
+    community = await guards.entity(scope.session, command.entity_id)
+    resource = await guards.entity(scope.session, command.resource_id)
+    row = await scope.session.get(AddictionImmunityRow, (community.id, resource.id))
+    if not command.immune:
+        if row is None:
+            raise ValidationFailedError(f"{community.name} is not immune to {resource.name}.")
+        await scope.session.delete(row)
+        await scope.session.flush()
+        return Effect(f"{community.name} can be hooked by {resource.name} again.", community.id)
+    recovered = command.recovered_epoch if command.recovered_epoch is not None else await scope.epoch()
+    if row is None:
+        scope.session.add(AddictionImmunityRow(community_entity_id=community.id, resource_entity_id=resource.id, recovered_epoch=recovered))
+    else:
+        row.recovered_epoch = recovered
+    return Effect(f"{community.name} can no longer be hooked by {resource.name}.", community.id)

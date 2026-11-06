@@ -10,6 +10,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, NotificationCategory, T
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import ArchiveOverride, EntityOrigin, EntityStatus, EntityType, LegendCategory, MortalRole
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.limits import POWER_SLOTS
 from aerona.domain.enums.meta import ImageMime, ImageOrigin
 from aerona.domain.enums.node import ActorKind, NodeKind
 from aerona.domain.enums.rarity import Rarity
@@ -153,6 +154,7 @@ class SonPublic(ApiModel):
     band_effect: str
     band_action_loss: int
     unlocked_powers: int
+    power_slots: int = POWER_SLOTS
     next_star: Requirement | None
     ascension: Ascension | None
     cover: str | None

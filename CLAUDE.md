@@ -32,6 +32,12 @@
    - Make it feel like a game: rewarding feedback, clear progress, tasteful motion, visual hierarchy, icons and medallions, and a strong sense of the player's power as a god.
    - Never ship a rough or placeholder UI.
 
+6. **The god controls everything the engine does, from the frontend.** No god-simulator or lore-engine function may exist in the backend without a control in the frontend:
+   - Every table, typed thing and mechanic the engine creates or changes needs god actions to create, edit, hold (lock against the engine) and delete it, with every value editable.
+   - Those actions must be registered in the action catalog and reachable from a polished control panel in the app: the entity drawer, the atlas or the mechanic panels, in the same style as the existing control panels.
+   - A backend mechanic without its frontend control surface is unfinished work, never a later task. This applies to everything already built and to everything integrated from now on, in the same change that adds it.
+   - The only tables exempt are the bookkeeping ones listed in `BOOKKEEPING_TABLES` in `scripts/check_wiring.py` (fixups, cursors, counters, notifications, the player's action ledger, score and achievements, and the per-epoch goods-flow log). Only the user may add to that list.
+
 ## Enforcement
 
 These rules are enforced mechanically, and they bind Claude as much as anyone.
@@ -46,7 +52,7 @@ These rules are enforced mechanically, and they bind Claude as much as anyone.
 - **Git pre-commit** (`.githooks/pre-commit`, enabled with `git config core.hooksPath .githooks`). It runs on every commit:
   - `scripts/check_source_rules.py`: no comments or docstrings (rule 4).
   - `scripts/check_prompt_bias.py`: gendered defaults, conflict quotas, forced strangeness, steering examples and hardcoded image media in LLM-facing and UI text (rule 2).
-  - `scripts/check_wiring.py`: enum types never used, tables never read, player actions missing from the catalog, catalog actions with no frontend caller (rule 3).
+  - `scripts/check_wiring.py`: enum types never used, tables never read, player actions missing from the catalog, catalog actions with no frontend caller (rule 3). It also flags any table an engine phase writes that has no compliance-catalogue row with registered god levers (rule 6).
   - ruff, mypy and import layers for backend changes.
   - tsc, eslint and prettier for frontend changes (rule 5).
 - **Never bypass a check.** No `--no-verify`, no allowlists, and no downgrading an error to a warning. A failing check means the work is not done: fix what it found, in the same task.
