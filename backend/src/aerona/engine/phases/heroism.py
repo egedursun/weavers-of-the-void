@@ -10,6 +10,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -430,6 +431,7 @@ async def glory_hunts(ctx: TickContext) -> None:
             for monster in monsters
             if monster.status is EntityStatus.CANON
             and monster.id not in beaten
+            and not frozen(hero.id, monster.id)
             and atlas.distance(hero.id, monster.id) <= ctx.rules.world_effects.hunt_distance
         ]
         chosen = await EntityRepository(ctx.session).has_flag(hero.id, EntityFlag.CHOSEN)

@@ -12,6 +12,7 @@ from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.region import RegionMemoryRow
 from aerona.db.tables.warfare import BattleRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.military import OutcomeClass
@@ -209,7 +210,7 @@ async def remember(session: AsyncSession, rules: Rules, atlas: RegionAtlas, sinc
     known = {(region, key) for region, key in await session.execute(select(RegionMemoryRow.region_entity_id, RegionMemoryRow.source_key))}
     made = 0
     for memory in await gather(session, rules, atlas, since_epoch):
-        if (memory.region_id, memory.source_key) in known:
+        if (memory.region_id, memory.source_key) in known or held(memory.region_id):
             continue
         session.add(
             RegionMemoryRow(

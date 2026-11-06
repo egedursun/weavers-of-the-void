@@ -13,6 +13,10 @@ if echo "$STAGED" | grep -qE '^(backend/|scripts/).*\.py$'; then
   echo "pre-commit: ruff, mypy, import layers"
   (cd backend && .venv/bin/ruff check src && .venv/bin/ruff format --check src && .venv/bin/mypy src/aerona && .venv/bin/lint-imports)
 fi
+if echo "$STAGED" | grep -qE '^backend/src/aerona/(engine|db)/.*\.py$|^backend/tests/engine/core/test_god_control\.py$'; then
+  echo "pre-commit: every engine step obeys holds and runs when forced (rule 6)"
+  (cd backend && .venv/bin/pytest -q -p no:cacheprovider tests/engine/core/test_god_control.py)
+fi
 FRONT=$(echo "$STAGED" | grep -E '^frontend/.*\.(ts|tsx)$' | grep -v '^frontend/src/api/generated/' | sed 's#^frontend/##' || true)
 if [ -n "$FRONT" ]; then
   echo "pre-commit: tsc, eslint, prettier"

@@ -14,6 +14,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.society_depth import CorveeRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialSlot
@@ -656,7 +657,7 @@ async def society_economy(ctx: TickContext) -> None:
     counters = EconomyCounters()
     for key, value in (await society_depth_backfill(ctx, list(await canon(session, SOCIETY_TYPES)))).items():
         ctx.count(f"backfill.{key}", value)
-    for entity in await canon(session, SOCIETY_TYPES):
+    for entity in unheld(await canon(session, SOCIETY_TYPES)):
         if entity.status is not EntityStatus.CANON:
             continue
         await run_community(ctx, entity, await gather_inputs(ctx, entity, world), world, counters)

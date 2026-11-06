@@ -7,6 +7,7 @@ from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedErr
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
@@ -485,11 +486,11 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
 async def diplomacy(ctx: TickContext) -> None:
     ctx.count("alliances_lapsed", await alliance_lifetimes(ctx))
     counters = DiplomacyCounters()
-    candidates = ctx.rng("candidates").shuffled(await hostile_pairs(ctx.session))
+    candidates = [pair for pair in ctx.rng("candidates").shuffled(await hostile_pairs(ctx.session)) if not held(pair[0], pair[1])]
     faded = await _fade_grudges(ctx, candidates)
     ctx.count("mortal_grudges_forgotten", await forget_mortal_grudges(ctx))
     await _exhaustion_peaces(ctx, candidates, faded, counters)
-    communities = await canon(ctx.session, COMMUNITY_TYPES)
+    communities = unheld(await canon(ctx.session, COMMUNITY_TYPES))
     neighbourhood = await Neighbourhood.load(ctx.session, ctx.rules)
     sides = await SideIndex.load(ctx.session, neighbourhood)
     book = await RealmBook.load(ctx.session)

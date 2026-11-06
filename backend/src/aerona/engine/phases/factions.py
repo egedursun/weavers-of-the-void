@@ -10,6 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
@@ -193,7 +194,7 @@ async def found_factions(ctx: TickContext) -> int:
     rules = ctx.rules.factions
     rng = ctx.rng("founding")
     founded = 0
-    for community in await canon(ctx.session, SOCIETY_TYPES):
+    for community in unheld(await canon(ctx.session, SOCIETY_TYPES)):
         if founded >= rules.faction_cap:
             break
         if (stat(community, "population") or 0) < rules.faction_min_population:

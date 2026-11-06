@@ -17,6 +17,7 @@ from aerona.db.tables.foreign_gods import OuterBargainRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.domain import Domain
@@ -129,6 +130,8 @@ async def update_leaks(ctx: TickContext, knowledge: KnowledgeMap) -> None:
     share = await doom_share(ctx.session, ctx.rules)
     horror = ctx.rules.cosmic_horror
     for world in await WorldRepository(ctx.session).all_worlds():
+        if held(world.id):
+            continue
         change = await leak_delta(ctx.session, ctx.rules, world, ctx.epoch, share, knowledge=knowledge)
         record_breakdown(ctx.session, ctx.epoch, world.id, change)
         before = world.leakage

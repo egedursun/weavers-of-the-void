@@ -8,6 +8,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.body import OPEN_INJURY_STATES, HarmCause, InjuryState
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.mortal import DeathCause
@@ -200,7 +201,7 @@ async def mortal_aging(ctx: TickContext) -> None:
         medicine=await medicine_regions(ctx.session, atlas),
         start_year=await world_year(ctx.session),
     )
-    for mortal in await canon(ctx.session, [EntityType.MORTAL]):
+    for mortal in unheld(await canon(ctx.session, [EntityType.MORTAL])):
         if mortal.status is EntityStatus.CANON:
             await age_one(ctx, mortal, world)
 

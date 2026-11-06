@@ -12,6 +12,7 @@ from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, NotableYearRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
@@ -232,7 +233,7 @@ async def found_sleep_customs(ctx: TickContext, atlas: RegionAtlas) -> int:
     communities = await ctx.session.scalars(
         select(EntityRow).where(EntityRow.entity_type.in_(list(COMMUNITY_TYPES)), EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
     )
-    for community in list(communities):
+    for community in unheld(communities):
         world = worlds.get(community.world_id or 0)
         if not long_days(table.long_day_hours, world) or await sleep_custom_kept(ctx.session, community.id):
             continue

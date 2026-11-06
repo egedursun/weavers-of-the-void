@@ -18,6 +18,7 @@ from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.military import SpyNetworkRow
 from aerona.db.tables.routes import JourneyRow
 from aerona.db.tables.warfare import WarSideRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import RumourChannel
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
@@ -130,7 +131,7 @@ async def seed(ctx: TickContext, atlas: RegionAtlas, since: int | None = None) -
     for incident in incidents:
         age = max(0, ctx.epoch - incident.epoch)
         for carrier in await witnesses(ctx, incident, atlas):
-            if (incident.id, carrier) in known or await is_carrier(ctx.session, carrier) is None:
+            if (incident.id, carrier) in known or held(carrier) or await is_carrier(ctx.session, carrier) is None:
                 continue
             ctx.session.add(
                 RumourRow(
@@ -257,7 +258,7 @@ async def spread(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
         for community_id in await pilgrims_of(ctx, carrier, faithful):
             found.pilgrims[carrier.id].add(community_id)
         for target, channel in found.of(carrier.id):
-            if passed >= table.cap or (rumour.incident_id, target) in known or await is_carrier(ctx.session, target) is None:
+            if passed >= table.cap or (rumour.incident_id, target) in known or held(carrier.id, target) or await is_carrier(ctx.session, target) is None:
                 continue
             if not ctx.rng(f"rumour.{rumour.incident_id}.{carrier.id}.{target}.{ctx.epoch}").chance(int(getattr(table, CHANCES[channel]))):
                 continue
@@ -374,7 +375,7 @@ async def react(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
     for rumour in heard:
         rumour.acted = True
         incident = await ctx.session.get(IncidentRow, rumour.incident_id)
-        if incident is None or await is_carrier(ctx.session, rumour.carrier_entity_id) is None:
+        if incident is None or held(rumour.carrier_entity_id) or await is_carrier(ctx.session, rumour.carrier_entity_id) is None:
             continue
         counts["atrocities"] += int(await atrocity_heard(ctx, rumour, incident))
         enemy = await alarm(ctx, atlas, rumour, incident)

@@ -5,6 +5,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.engine.body.customs import people_of
@@ -245,7 +246,7 @@ async def mortal_standing(ctx: TickContext) -> None:
 )
 async def mortal_minds(ctx: TickContext) -> None:
     counts: dict[str, int] = defaultdict(int)
-    for mortal in await living_mortals(ctx):
+    for mortal in unheld(await living_mortals(ctx)):
         profile, _ = await ensure_profile(ctx.session, mortal.id, ctx.epoch)
         await update_loyalty(ctx, mortal, profile)
         await accumulate_stress(ctx, mortal, profile)

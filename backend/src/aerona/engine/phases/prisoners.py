@@ -4,6 +4,7 @@ from aerona.core.errors import ConflictError, NotFoundError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import CaptiveRow
+from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -288,7 +289,7 @@ async def prisoners(ctx: TickContext) -> None:
             text = f"{captive.name} was freed from captivity when the captors scattered."
             await _note(ctx, ChronicleKind.RESCUE, text, "prisoner.freed", (row.captor_entity_id, captive.id))
             continue
-        if row.taken_epoch == ctx.epoch:
+        if row.taken_epoch == ctx.epoch or frozen(captive.id, captor.id):
             continue
         await _fate(ctx, row, captive, captor)
     ctx.count("prisoners_held", len(rows))

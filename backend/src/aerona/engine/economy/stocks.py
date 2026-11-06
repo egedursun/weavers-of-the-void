@@ -10,6 +10,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import CommunityStockRow, GoodsFlowRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import Commodity
@@ -99,7 +100,7 @@ class GoodsLedger:
     epoch: int
 
     async def record(self, community_id: int, commodity: CommodityKind, flow: GoodsFlow, quantity: int) -> None:
-        if quantity == 0:
+        if quantity == 0 or held(community_id):
             return
         row = await self.session.get(GoodsFlowRow, (self.epoch, community_id, commodity, flow))
         if row is None:
@@ -125,7 +126,7 @@ class GoodsLedger:
         quality: int = DEFAULT_QUALITY,
         force: bool = False,
     ) -> int:
-        if quantity <= 0:
+        if quantity <= 0 or (held(community_id) and not force):
             return 0
         row = await self._lot(community_id, commodity, material, world_material_id)
         if row is not None and row.held and not force:
@@ -154,7 +155,7 @@ class GoodsLedger:
         best_first: bool = True,
         force: bool = False,
     ) -> list[Lot]:
-        if quantity <= 0:
+        if quantity <= 0 or (held(community_id) and not force):
             return []
         rows = [
             row

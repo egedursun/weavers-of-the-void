@@ -9,6 +9,7 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LexemeRow
+from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
@@ -151,7 +152,7 @@ async def knowledge_diffusion(ctx: TickContext) -> None:
     pairs += [(link.first, link.second, link_weight(ctx, link)) for link in await trade_links(ctx)]
     for first_id, second_id, weight in pairs:
         first, second = entities.get(first_id), entities.get(second_id)
-        if first is None or second is None:
+        if first is None or second is None or frozen(first_id, second_id):
             continue
         linked = weight * await tongue_link(session, ctx.rules, first_id, second_id)
         await _diffuse_direction(ctx, first, second, holdings, spread, cap=cap, weight=linked)

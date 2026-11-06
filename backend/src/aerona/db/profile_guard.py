@@ -10,6 +10,7 @@ from aerona.db.base import Base
 from aerona.db.write_guard import WRITE_GUARD, write_blocked
 
 ENTITY_TABLE = "entities"
+NODE_TABLES = frozenset({"nodes", ENTITY_TABLE, "sons", "worlds", "stars", "foreign_gods"})
 LOCK_COLUMN = "locked"
 KEY_SEPARATOR = "."
 EXPLICIT_NODE_COLUMNS: dict[str, str] = {}
@@ -25,6 +26,16 @@ class ProfileShape:
 
 
 SHAPES: dict[str, ProfileShape | None] = {}
+
+
+@dataclass(frozen=True)
+class OwnedShape:
+    table: str
+    owners: tuple[str, ...]
+    columns: tuple[str, ...]
+
+
+OWNED: dict[str, OwnedShape | None] = {}
 
 
 def profile_key(table: str, column: str) -> str:
@@ -85,6 +96,37 @@ def profile_mapper(table: str) -> Mapper[Any] | None:
     return next((mapper for mapper in Base.registry.mappers if table_name(mapper) == table), None)
 
 
+def owned_shape(mapper: Mapper[Any]) -> OwnedShape | None:
+    table = table_name(mapper)
+    if table in OWNED:
+        return OWNED[table]
+    owners = tuple(
+        mapper.get_property_by_column(column).key
+        for column in mapper.local_table.columns
+        if any(foreign.column.table.name in NODE_TABLES for foreign in column.foreign_keys)
+    )
+    keys = {mapper.get_property_by_column(column).key for column in mapper.primary_key}
+    columns = tuple(attribute.key for attribute in mapper.column_attrs if attribute.key not in keys and attribute.key != LOCK_COLUMN)
+    shape = OwnedShape(table, owners, columns) if owners and table not in UNGUARDED_TABLES else None
+    OWNED[table] = shape
+    return shape
+
+
+def owner_ids(row: object, shape: OwnedShape) -> list[int]:
+    found: list[int] = []
+    for key in shape.owners:
+        history = get_history(row, key)
+        value = history.deleted[0] if history.deleted else getattr(row, key)
+        if isinstance(value, int):
+            found.append(value)
+    return found
+
+
+def owner_blocked(row: object) -> bool:
+    shape = owned_shape(object_mapper(row))
+    return shape is not None and any(write_blocked(node_id, profile_key(shape.table, "*")) for node_id in owner_ids(row, shape))
+
+
 def held_columns(row: object) -> frozenset[str]:
     value = getattr(row, LOCK_COLUMN, None)
     return frozenset(item for item in value if isinstance(item, str)) if isinstance(value, list | tuple | set | frozenset) else frozenset()
@@ -99,11 +141,29 @@ def profile_held(row: object, column: str) -> bool:
     return write_blocked(int(getattr(row, shape.node_column)), profile_key(shape.table, column))
 
 
+def restore_owned(row: object) -> list[str]:
+    state = instance_state(row)
+    shape = owned_shape(state.mapper)
+    if shape is None or state.pending:
+        return []
+    owners = owner_ids(row, shape)
+    held = held_columns(row)
+    restored: list[str] = []
+    for column in shape.columns:
+        history = get_history(row, column)
+        if not history.deleted or not history.has_changes():
+            continue
+        if column in held or any(write_blocked(node_id, profile_key(shape.table, column)) for node_id in owners):
+            set_committed_value(row, column, history.deleted[0])
+            restored.append(column)
+    return restored
+
+
 def restore_held(row: object) -> list[str]:
     state = instance_state(row)
     shape = _shape(state.mapper)
     if shape is None or state.pending:
-        return []
+        return restore_owned(row)
     node_id = getattr(row, shape.node_column)
     if node_id is None:
         return []

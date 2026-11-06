@@ -6,6 +6,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OathRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
@@ -210,6 +211,8 @@ async def vows(ctx: TickContext) -> int:
     for mortal in await ctx.session.scalars(
         select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id.is_not(None))
     ):
+        if held(mortal.id):
+            continue
         tenets = await faith_tenets(ctx.session, mortal.location_id or 0)
         chaste = mortal.mortal_role in CLERGY and TenetKind.CELIBATE_CLERGY in tenets
         if chaste and ctx.rng(f"celibacy.{mortal.id}.{ctx.epoch}").chance(table.celibacy_chance) and not await oaths_of(ctx, mortal.id, OathKind.CELIBACY):
@@ -252,7 +255,7 @@ async def pledges(ctx: TickContext, rulers: dict[int, int]) -> int:
         select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.mortal_role.in_(list(HERO_ROLES)))
     )
     companions: dict[int, list[EntityRow]] = {}
-    for mortal in mortals:
+    for mortal in unheld(mortals):
         lord = rulers.get(mortal.location_id or -1)
         sworn = mortal.mortal_role is MortalRole.KNIGHT and lord is not None and lord != mortal.id
         if sworn and ctx.rng(f"protection.{mortal.id}.{ctx.epoch}").chance(table.protection_chance):

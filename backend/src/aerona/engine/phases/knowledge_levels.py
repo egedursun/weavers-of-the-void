@@ -14,6 +14,7 @@ from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
@@ -273,7 +274,7 @@ async def discovery_round(ctx: TickContext, scene: KnowledgeScene) -> int:
         able = sorted(
             (item for item in scene.communities if shares.get(item.id, 0.0) >= table.discovery_min_scribe_pct), key=lambda item: (-shares[item.id], item.id)
         )
-        candidates = able[: table.discovery_candidates]
+        candidates = [item for item in able if not frozen(item.id)][: table.discovery_candidates]
         if not candidates:
             continue
         discoverer = rng.pick(candidates)

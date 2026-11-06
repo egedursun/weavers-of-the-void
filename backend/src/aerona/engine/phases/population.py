@@ -4,6 +4,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import PowerEffect
@@ -173,6 +174,8 @@ async def population_growth(ctx: TickContext) -> None:
     grown = 0
     to_cults = 0
     for community in growing:
+        if held(community.id):
+            continue
         load = loads[model.region_key(community)]
         multiplier = await bounty_multiplier(ctx, community)
         if community.entity_type is EntityType.CULT:

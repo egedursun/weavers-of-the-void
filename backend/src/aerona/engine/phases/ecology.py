@@ -9,6 +9,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityFlag, EntityType
 from aerona.domain.enums.society import CreatureTrait
@@ -233,7 +234,7 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
 )
 async def ecology(ctx: TickContext) -> None:
     settings = ctx.rules.ecology
-    species = await canon(ctx.session, [EntityType.SPECIES])
+    species = unheld(await canon(ctx.session, [EntityType.SPECIES]))
     if not species:
         return
     flags = [

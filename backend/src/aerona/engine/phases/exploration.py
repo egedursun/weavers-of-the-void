@@ -20,6 +20,7 @@ from aerona.db.tables.epochs import DeferredStepRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.routes import HorizonIntuitionRow, RouteRow
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
@@ -609,7 +610,7 @@ async def _explore_world(ctx: TickContext, scene: ExplorationScene, world: World
     for measured, entity in pressures:
         if len(found) >= settings.per_epoch_cap:
             break
-        if entity.entity_type is EntityType.MORTAL and entity.id in scene.away:
+        if (entity.entity_type is EntityType.MORTAL and entity.id in scene.away) or held(entity.id):
             continue
         stale = measured.explorer is not None and measured.explorer.id in scene.away
         pressure = await exploration_pressure(ctx, scene, entity, communities) if stale else measured
@@ -643,7 +644,7 @@ async def cosmic_exploration(ctx: TickContext) -> int:
         and await route_method(ctx, entity, knowledge) is not None
     ]
     searched = 0
-    for seeker in rng.shuffled(seekers):
+    for seeker in unheld(rng.shuffled(seekers)):
         if searched >= settings.route_search_cap:
             break
         if not rng.chance(settings.route_search_chance):

@@ -3,6 +3,7 @@ from enum import StrEnum
 from aerona.catalog.peoples import FUNERAL_DEEDS
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
@@ -79,7 +80,7 @@ async def region_of(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) 
 async def cohort_upkeep(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     seeded = 0
-    for community in await canon(ctx.session, LAND_COMMUNITY_TYPES):
+    for community in unheld(await canon(ctx.session, LAND_COMMUNITY_TYPES)):
         if (stat(community, "population") or 0) <= 0:
             continue
         if community.entity_type is EntityType.PEOPLE:
@@ -129,7 +130,7 @@ async def cohort_upkeep(ctx: TickContext) -> None:
 async def labour_allocation(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     kept = 0
-    for community in await canon(ctx.session, LAND_COMMUNITY_TYPES):
+    for community in unheld(await canon(ctx.session, LAND_COMMUNITY_TYPES)):
         if (stat(community, "population") or 0) <= 0:
             continue
         ground = await region_of(ctx, atlas, community)
@@ -274,7 +275,7 @@ async def people_cycles(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     ctx.count("profiles_backfilled", await backfill_records(ctx.session))
     tally = await BattleTally.load(ctx.session, await earliest_tally(ctx.session), ctx.epoch)
-    for people in await canon(ctx.session, [EntityType.PEOPLE]):
+    for people in unheld(await canon(ctx.session, [EntityType.PEOPLE])):
         await refresh_people(ctx, atlas, tally, people)
     await ctx.session.flush()
     moved = 0

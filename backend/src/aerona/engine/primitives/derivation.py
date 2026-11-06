@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.modifier_effects import StatEffect
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import ModifierRow
+from aerona.db.write_guard import free_rows
+from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 from aerona.engine.primitives.modifiers import NEUTRAL_MULTIPLIER, UNMODIFIABLE_KEYS, VIRTUAL_KEYS, ModifierDraft, add_modifiers, forget_live
 from aerona.engine.primitives.stats import has_stat
@@ -47,14 +49,14 @@ async def replace_derived(
     session: AsyncSession, sources: Iterable[ModifierSource], drafts: Sequence[ModifierDraft], targets: Sequence[int] | None = None
 ) -> int:
     wanted = sorted(set(sources))
-    statement = delete(ModifierRow).where(ModifierRow.source_kind.in_(wanted), ModifierRow.held.is_(False))
-    kept_statement = select(ModifierRow).where(ModifierRow.source_kind.in_(wanted), ModifierRow.held.is_(True))
+    statement = delete(ModifierRow).where(ModifierRow.source_kind.in_(wanted), ModifierRow.held.is_(False), free_rows(ModifierRow.target_node_id))
+    kept_statement = select(ModifierRow).where(ModifierRow.source_kind.in_(wanted))
     if targets is not None:
         statement = statement.where(ModifierRow.target_node_id.in_(list(targets)))
         kept_statement = kept_statement.where(ModifierRow.target_node_id.in_(list(targets)))
         forget_live(targets, wanted)
     await session.execute(statement)
     held = {identity_of(row) for row in await session.scalars(kept_statement)}
-    fresh = [draft for draft in drafts if identity_of(draft) not in held]
+    fresh = [draft for draft in drafts if identity_of(draft) not in held and not frozen(draft.target_node_id)]
     await add_modifiers(session, fresh)
     return len(fresh)

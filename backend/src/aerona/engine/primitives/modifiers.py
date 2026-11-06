@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.interconnect import ModifierRow
+from aerona.db.write_guard import free_rows
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 from aerona.rules.registry import Rules
 
@@ -244,7 +245,7 @@ async def add_modifier(session: AsyncSession, draft: ModifierDraft, *, held: boo
 async def remove_modifiers(
     session: AsyncSession, *, source_kind: ModifierSource | None = None, source_node_id: int | None = None, target_node_id: int | None = None
 ) -> int:
-    statement = delete(ModifierRow)
+    statement = delete(ModifierRow).where(free_rows(ModifierRow.target_node_id))
     if source_kind is not None:
         statement = statement.where(ModifierRow.source_kind == source_kind)
     if source_node_id is not None:

@@ -9,6 +9,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.region import RegionHazardRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -201,6 +202,8 @@ async def roll_hazards(ctx: TickContext) -> HazardTally:
     book = await EnvironmentBook.load(ctx.session, rules, ctx.epoch)
     atlas = book.atlas
     for region_id in sorted(book.regions):
+        if held(region_id):
+            continue
         ground = book.regions[region_id]
         hazards = [hazard for hazard, spec in HAZARDS.items() if exposed(rules, hazard, spec, ground)]
         if not hazards or (not atlas.communities_in(region_id) and not await _armies_in(ctx, region_id)):

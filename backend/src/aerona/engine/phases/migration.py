@@ -2,6 +2,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import MovementMode
@@ -210,7 +211,7 @@ async def famine_migration(ctx: TickContext) -> None:
         if moved >= effects.famine_migration_cap:
             return
         population = stat(community, "population") or 0
-        if community.status is not EntityStatus.CANON or population <= effects.famine_migration_min_population:
+        if community.status is not EntityStatus.CANON or population <= effects.famine_migration_min_population or held(community.id):
             continue
         level = await hunger(ctx.session, community.id) if await pressures_of(ctx.session, community.id) else None
         starving = level >= rules.needs.migration_hunger if level is not None else await is_hungry(ctx, community)

@@ -9,6 +9,7 @@ from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import WritingSystem
 from aerona.domain.enums.culture import LanguageRegister, SpeakerKind
@@ -230,6 +231,8 @@ async def standardisation_of(session: AsyncSession, language_id: int | None) -> 
 
 async def learn_second(ctx: TickContext, community_id: int, language_id: int, gain: int) -> int:
     row = await ctx.session.get(SpeakerCohortRow, (community_id, language_id, SpeakerKind.SECOND))
+    if held(community_id, language_id):
+        return row.share if row is not None else 0
     if row is None:
         row = SpeakerCohortRow(
             community_entity_id=community_id, language_entity_id=language_id, kind=SpeakerKind.SECOND, share=0, since_epoch=ctx.epoch, locked=[]
@@ -254,7 +257,7 @@ async def remeasure(ctx: TickContext) -> int:
 
 
 async def hold_register(ctx: TickContext, holder_id: int, register: LanguageRegister, language_id: int | None) -> bool:
-    if language_id is None:
+    if language_id is None or held(holder_id, language_id):
         return False
     row = await ctx.session.get(LanguageRegisterRow, (holder_id, register))
     if row is None:

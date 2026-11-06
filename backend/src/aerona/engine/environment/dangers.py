@@ -12,6 +12,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.polity import PolityTerritoryRow
 from aerona.db.tables.region import RegionDangerRow, RegionMemoryRow
+from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.ecology import BeastTemper, DomesticationStage
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
@@ -300,7 +301,7 @@ async def write_dangers(session: AsyncSession, rules: Rules, scene: DangerScene,
     written = 0
     for region_id in sorted(scene.grounds):
         region = scene.regions.get(region_id)
-        if region is None:
+        if region is None or frozen(region_id):
             continue
         rows = {row.source: row for row in existing.get(region_id, [])}
         derived = scene.derived.get(region_id, {})

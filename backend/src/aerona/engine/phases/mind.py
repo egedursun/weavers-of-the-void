@@ -10,6 +10,7 @@ from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import MemoryRow, MindRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import GoodsFlow
@@ -206,15 +207,15 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
 async def mind_survey(ctx: TickContext) -> None:
     known = set(await ctx.session.scalars(select(MindRow.node_id)))
     created = 0
-    minds = await living_minds(ctx.session)
+    minds = unheld(await living_minds(ctx.session))
     for entity_type in SEED_ORDER:
         for entity in minds:
             if entity.entity_type is entity_type and entity.id not in known and await seed_mind(ctx, entity):
                 created += 1
-    for son in await ctx.session.scalars(select(SonRow).order_by(SonRow.id)):
+    for son in unheld(await ctx.session.scalars(select(SonRow).order_by(SonRow.id))):
         if son.id not in known and await seed_mind(ctx, son):
             created += 1
-    for god in await ctx.session.scalars(select(ForeignGodRow).order_by(ForeignGodRow.id)):
+    for god in unheld(await ctx.session.scalars(select(ForeignGodRow).order_by(ForeignGodRow.id))):
         if god.id not in known and await seed_mind(ctx, god):
             created += 1
     ctx.count("minds", created)
@@ -298,16 +299,16 @@ async def mind_values(ctx: TickContext) -> None:
     index = await ValueIndex.load(ctx.session)
     plagued = await plagued_communities(ctx)
     moved = 0
-    for entity in await living_minds(ctx.session):
+    for entity in unheld(await living_minds(ctx.session)):
         if entity.entity_type is EntityType.PEOPLE:
             moved += 1 if await drift_culture(ctx, entity, index, plagued) else 0
         elif entity.entity_type is EntityType.MORTAL:
             moved += 1 if await drift_person(ctx, entity, index, await traits_of(ctx.session, entity.id)) else 0
         elif entity.entity_type in (EntityType.FACTION, EntityType.CULT):
             moved += 1 if await drift_body(ctx, entity, index) else 0
-    for son in await ctx.session.scalars(select(SonRow).order_by(SonRow.id)):
+    for son in unheld(await ctx.session.scalars(select(SonRow).order_by(SonRow.id))):
         moved += 1 if await drift_divine(ctx, son, index) else 0
-    for god in await ctx.session.scalars(select(ForeignGodRow).order_by(ForeignGodRow.id)):
+    for god in unheld(await ctx.session.scalars(select(ForeignGodRow).order_by(ForeignGodRow.id))):
         moved += 1 if await drift_divine(ctx, god, index) else 0
     ctx.count("values_drifted", moved)
 

@@ -1,5 +1,6 @@
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.engine.context import TickContext
@@ -135,10 +136,10 @@ async def monster_raids(ctx: TickContext) -> None:
     settlements = await canon(ctx.session, [EntityType.SETTLEMENT])
     monsters = await monsters_of(ctx, beasts=False)
     hunger = await appetites(ctx, monsters, adjust=False)
-    for monster in monsters:
+    for monster in unheld(monsters):
         if monster.status is not EntityStatus.CANON:
             continue
-        targets = [settlement for settlement in settlements if atlas.distance(monster.id, settlement.id) <= rules.world_effects.raid_distance]
+        targets = unheld(settlement for settlement in settlements if atlas.distance(monster.id, settlement.id) <= rules.world_effects.raid_distance)
         if not targets or not rng.probability(min(1.0, await raid_chance(ctx, monster, hunger))):
             continue
         target = rng.pick(targets)

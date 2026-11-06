@@ -1,3 +1,4 @@
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.region import DangerHarm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
@@ -69,11 +70,11 @@ from aerona.engine.phase import Phase
 async def markets(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     tally = MarketTally()
-    for community in book.communities:
+    for community in unheld(book.communities):
         await raise_district(ctx, book, community, tally)
         quotes = await quote_market(ctx, book, community)
         await apply_aggregate_prices(book, community, quotes)
-    for market in market_nodes(book):
+    for market in unheld(market_nodes(book)):
         await store_quotes(ctx, market, await quote_market(ctx, book, market))
         tally.priced += 1
     ctx.count("districts", tally.districts)

@@ -1,9 +1,10 @@
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.chronicle import QUIET_ROLES
 from aerona.db.tables.body import ConditionRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
+from aerona.db.write_guard import free_rows, held
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 from aerona.engine.context import TickContext
@@ -14,7 +15,7 @@ from aerona.engine.interconnect.incidents import chains_in
 from aerona.engine.interconnect.sources import CONDITION_EFFECTS, DERIVED_SOURCES
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.derivation import identity_of
-from aerona.engine.primitives.modifiers import NEUTRAL_MULTIPLIER, ModifierDraft, add_modifier, decayed
+from aerona.engine.primitives.modifiers import GUARD_SOURCES, NEUTRAL_MULTIPLIER, ModifierDraft, add_modifier, decayed
 from aerona.engine.primitives.queries import flags_by_entity, living_entity
 from aerona.engine.primitives.stats import has_stat
 from aerona.engine.primitives.threads import open_story
@@ -52,12 +53,18 @@ WONDER_GROUP = "wonder"
 @writes("table.modifiers")
 async def modifier_upkeep(ctx: TickContext) -> None:
     rules = ctx.rules.modifiers
-    expired = await ctx.session.execute(delete(ModifierRow).where(ModifierRow.end_epoch.is_not(None), ModifierRow.end_epoch < ctx.epoch))
+    expired = await ctx.session.execute(
+        delete(ModifierRow).where(
+            ModifierRow.end_epoch.is_not(None),
+            ModifierRow.end_epoch < ctx.epoch,
+            or_(ModifierRow.source_kind.in_(list(GUARD_SOURCES)), free_rows(ModifierRow.target_node_id)),
+        )
+    )
     ctx.count("modifiers_expired", int(getattr(expired, "rowcount", 0) or 0))
     faded = 0
     fading = select(ModifierRow).where(ModifierRow.decay_pct.is_not(None), ModifierRow.decay_pct > 0, ModifierRow.held.is_(False))
     for row in list(await ctx.session.scalars(fading)):
-        if row.start_epoch >= ctx.epoch:
+        if row.start_epoch >= ctx.epoch or held(row.target_node_id):
             continue
         row.magnitude = decayed(row)
         spent = (
@@ -93,11 +100,10 @@ async def environment_modifiers(ctx: TickContext) -> None:
 
 async def derive_modifiers(ctx: TickContext) -> int:
     rules = ctx.rules
-    held = {
-        identity_of(row)
-        for row in await ctx.session.scalars(select(ModifierRow).where(ModifierRow.source_kind.in_(list(DERIVED_SOURCES)), ModifierRow.held.is_(True)))
-    }
-    await ctx.session.execute(delete(ModifierRow).where(ModifierRow.source_kind.in_(list(DERIVED_SOURCES)), ModifierRow.held.is_(False)))
+    await ctx.session.execute(
+        delete(ModifierRow).where(ModifierRow.source_kind.in_(list(DERIVED_SOURCES)), ModifierRow.held.is_(False), free_rows(ModifierRow.target_node_id))
+    )
+    kept = {identity_of(row) for row in await ctx.session.scalars(select(ModifierRow).where(ModifierRow.source_kind.in_(list(DERIVED_SOURCES))))}
     made = 0
     for wonder_id in sorted(await flags_by_entity(ctx.session, EntityFlag.WONDER)):
         wonder = await living_entity(ctx.session, wonder_id)
@@ -109,7 +115,7 @@ async def derive_modifiers(ctx: TickContext) -> int:
                 draft = ModifierDraft(
                     holder.id, key, ModifierOp.ADD, size, ModifierSource.WONDER, WONDER_REASON, ctx.epoch, source_node_id=wonder.id, stacking_group=WONDER_GROUP
                 )
-                if identity_of(draft) not in held:
+                if identity_of(draft) not in kept and not held(draft.target_node_id):
                     await add_modifier(ctx.session, draft)
                     made += 1
     for condition in await ctx.session.scalars(select(ConditionRow).order_by(ConditionRow.id)):
@@ -122,7 +128,7 @@ async def derive_modifiers(ctx: TickContext) -> int:
             reason = f"modifier.condition.{condition.kind.value}"
             group = f"condition.{condition.kind.value}"
             draft = ModifierDraft(bearer.id, effect.key, effect.op, effect.magnitude(rules), ModifierSource.CONDITION, reason, ctx.epoch, stacking_group=group)
-            if identity_of(draft) not in held:
+            if identity_of(draft) not in kept and not held(draft.target_node_id):
                 await add_modifier(ctx.session, draft)
                 made += 1
     await ctx.session.flush()

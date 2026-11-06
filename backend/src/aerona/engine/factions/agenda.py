@@ -8,6 +8,7 @@ from aerona.db.tables.factions import FactionGoalRow, FactionMembershipRow, Fact
 from aerona.db.tables.polity import ClaimRow, PolityMemberRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind
@@ -105,7 +106,7 @@ async def plan_goals(ctx: TickContext, factions: FactionBook, realms: RealmBook)
     table = ctx.rules.factions
     made = 0
     for faction_id, profile in factions.profiles.items():
-        if "goals" in profile.locked or len(factions.goals[faction_id]) >= table.goal_cap:
+        if frozen(faction_id) or "goals" in profile.locked or len(factions.goals[faction_id]) >= table.goal_cap:
             continue
         held = {goal.kind for goal in factions.goals[faction_id]}
         for kind in GOAL_PLANS.get(profile.kind, ()):
@@ -240,6 +241,8 @@ async def pursue(ctx: TickContext, factions: FactionBook, realms: RealmBook, law
     for faction_id, profile in sorted(factions.profiles.items()):
         if acts >= table.act_cap:
             break
+        if frozen(faction_id):
+            continue
         goals = sorted(factions.goals[faction_id], key=lambda goal: (-goal.priority, goal.id))
         if not goals or not ctx.rng(f"faction_act.{faction_id}.{ctx.epoch}").chance(table.act_chance):
             if goals and "cohesion" not in profile.locked:

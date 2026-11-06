@@ -1,4 +1,5 @@
 from aerona.constants.units import PERCENT
+from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
@@ -218,6 +219,8 @@ async def faith_cycles(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     knowledge = await KnowledgeMap.load(ctx.session)
     for church in book.churches.values():
+        if held(church.cult.id):
+            continue
         for line in await church_year(ctx, church, book, laws=laws, atlas=atlas, knowledge=knowledge):
             await note(ctx, line.text, key=line.key, ids=list(line.ids), kind=ChronicleKind.WORSHIP)
 

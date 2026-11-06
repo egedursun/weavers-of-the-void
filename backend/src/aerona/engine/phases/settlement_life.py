@@ -1,5 +1,6 @@
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import ValueAxis
@@ -142,7 +143,7 @@ async def settlement_life(ctx: TickContext) -> None:
     community = await CommunityBook.load(ctx.session)
     statutes = await LawBook.load(ctx.session)
     weather = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch, atlas)
-    for settlement in await canon(ctx.session, [EntityType.SETTLEMENT]):
+    for settlement in unheld(await canon(ctx.session, [EntityType.SETTLEMENT])):
         town = await town_of(ctx, settlement, knowledge)
         region = atlas.top_region(settlement.id)
         ground = await ctx.session.get(RegionEnvironmentRow, region) if region is not None else None

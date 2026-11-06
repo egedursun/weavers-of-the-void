@@ -7,6 +7,8 @@ from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.write_guard import held as frozen
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import WritingSystem
 from aerona.domain.enums.culture import IdeologyTenet, ProphecyState, SpeakerKind, TraditionKind
@@ -145,6 +147,8 @@ async def cohorts(ctx: TickContext) -> int:
         select(BondRow.source_node_id, BondRow.target_node_id).where(BondRow.kind == BondKind.SPEAKS, BondRow.state == BondState.ACTIVE)
     )
     for community_id, language_id in speech.all():
+        if frozen(community_id, language_id):
+            continue
         seconds = await ctx.session.scalars(
             select(SpeakerCohortRow.share).where(SpeakerCohortRow.community_entity_id == community_id, SpeakerCohortRow.kind == SpeakerKind.SECOND)
         )
@@ -439,10 +443,10 @@ async def tradition_cycles(ctx: TickContext) -> None:
     laws = await LawBook.load(ctx.session)
     rites = await RiteCalendar.load(ctx.session)
     held = 0
-    for tradition in await canon(ctx.session, [EntityType.TRADITION]):
+    for tradition in unheld(await canon(ctx.session, [EntityType.TRADITION])):
         profile = await traditions.profile_of(ctx, tradition)
         kind = profile.kind
-        for community in await traditions.celebrants(ctx, tradition.id):
+        for community in unheld(await traditions.celebrants(ctx, tradition.id)):
             rites.bind(profile, tradition, community)
             if held >= table.cap:
                 await traditions.participate(ctx, tradition, community)

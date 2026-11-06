@@ -1,3 +1,4 @@
+from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
@@ -230,6 +231,8 @@ async def polity_cycles(ctx: TickContext) -> None:
     laws = await LawBook.load(ctx.session)
     ctx.count("cult_laws", await cult_laws(ctx, laws))
     for realm in list(book.realms.values()):
+        if frozen(realm.entity.id):
+            continue
         newcomers = [member for member in realm.members if before.get(member) not in {None, realm.entity.id}]
         ctx.count("legal_conflicts", await conquest_conflict(ctx, book, realm, laws, newcomers))
         realm.profile.tier = await realm_tier(ctx, book, realm, knowledge)

@@ -15,6 +15,8 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.happenings import RegionGeomorphRow
 from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.db.write_guard import held as frozen
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
@@ -384,7 +386,7 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
 async def survey_places(ctx: TickContext, book: EnvironmentBook, contexts: dict[int, RegionContext]) -> int:
     kinds = await ensure_profiles(ctx, book)
     placed = 0
-    for place in await canon(ctx.session, [EntityType.PLACE]):
+    for place in unheld(await canon(ctx.session, [EntityType.PLACE])):
         if place.id in book.places:
             continue
         region_id = book.atlas.top_region(place.id)
@@ -453,7 +455,7 @@ async def environment_survey(ctx: TickContext) -> None:
         calendars += int(await ensure_world_calendar(ctx, world, moons[world.id]))
     records = {record.id: record for world_records in (await stored_regions(ctx.session)).values() for record in world_records}
     book = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch)
-    regions = await canon(ctx.session, [EntityType.REGION])
+    regions = unheld(await canon(ctx.session, [EntityType.REGION]))
     contexts = await region_contexts(ctx, book, regions)
     shapes = await shapes_by_region(ctx.session)
     created = synced = 0
@@ -977,7 +979,9 @@ async def harvest(ctx: TickContext) -> None:
     planned = await calendar_regions(ctx, book)
     notable = 0
     for world in book.worlds.values():
-        regions = [env for env in book.regions.values() if env.world_id == world.id and ("region", env.entity_id) in loads]
+        if frozen(world.id):
+            continue
+        regions = [env for env in book.regions.values() if env.world_id == world.id and ("region", env.entity_id) in loads and not frozen(env.entity_id)]
         if not regions:
             continue
         years = world_years(ctx.environment, world.id, "harvest")

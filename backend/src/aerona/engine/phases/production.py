@@ -10,6 +10,7 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.ecology import HerdRow
 from aerona.db.tables.economy import CommunityStockRow, NodeMaterialRow, ResourceProfileRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, MaterialOrigin
@@ -82,7 +83,7 @@ CORRUPT_FROM = PERCENT // 2
 async def refining(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     tally = RefiningTally()
-    for community in book.communities:
+    for community in unheld(book.communities):
         await refine_community(ctx, book, community, tally)
         await sync_aggregates(ctx.session, ctx.rules, community)
     ctx.count("batches", tally.batches)

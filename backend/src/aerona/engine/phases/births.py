@@ -10,6 +10,7 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.demography import MarriageCustom
@@ -292,7 +293,7 @@ async def has_ruler(ctx: TickContext, target_id: int, except_id: int | None = No
 
 async def single_rule(ctx: TickContext) -> int:
     closed = 0
-    for community in await canon(ctx.session, COMMUNITY_TYPES):
+    for community in unheld(await canon(ctx.session, COMMUNITY_TYPES)):
         bonds = []
         for bond in await active_bonds(ctx.session, [BondKind.RULES], targets=[community.id]):
             if await living_entity(ctx.session, bond.source_node_id) is not None:
@@ -374,7 +375,7 @@ async def notables(ctx: TickContext, namer: Namer) -> None:
     communities = await canon(ctx.session, SOCIETY_TYPES)
     cap = clamp_int(math.ceil(len(communities) * life.notable_cap_share_pct / PERCENT), life.notable_cap_min, rules.deep_world.notable_cap)
     born = 0
-    for community in rng.shuffled(communities):
+    for community in unheld(rng.shuffled(communities)):
         if born >= cap:
             return
         population = stat(community, "population") or 0
@@ -417,7 +418,7 @@ async def rulers(ctx: TickContext, namer: Namer) -> None:
     world_rules = ctx.rules.deep_world
     rng = ctx.rng("rulers")
     crowned = 0
-    for community in await canon(ctx.session, COMMUNITY_TYPES):
+    for community in unheld(await canon(ctx.session, COMMUNITY_TYPES)):
         if crowned >= world_rules.ruler_cap:
             return
         if community.entity_type is not EntityType.FACTION and headcount(community) < world_rules.ruler_min_population:
@@ -513,7 +514,7 @@ async def villages(ctx: TickContext, atlas: RegionAtlas, namer: Namer) -> None:
     life = rules.deep_life
     rng = ctx.rng("villages")
     founded = 0
-    for people in await canon(ctx.session, [EntityType.PEOPLE]):
+    for people in unheld(await canon(ctx.session, [EntityType.PEOPLE])):
         if founded >= life.village_cap:
             return
         population = stat(people, "population") or 0
@@ -599,7 +600,7 @@ async def ethnogeneses(ctx: TickContext, atlas: RegionAtlas, namer: Namer) -> in
     world_rules = ctx.rules.deep_world
     rng = ctx.rng("ethnogenesis")
     born = 0
-    for settlement in await canon(ctx.session, [EntityType.SETTLEMENT]):
+    for settlement in unheld(await canon(ctx.session, [EntityType.SETTLEMENT])):
         if born >= ctx.rules.deep_life.new_people_cap:
             break
         if (
@@ -672,7 +673,7 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
     life = ctx.rules.deep_life
     rng = ctx.rng("sapience")
     born = already
-    for species in await canon(ctx.session, [EntityType.SPECIES]):
+    for species in unheld(await canon(ctx.session, [EntityType.SPECIES])):
         if born >= life.new_people_cap:
             return
         if (stat(species, "intelligence") or 0) < life.sapience_min_intelligence or await has_flag(ctx.session, species.id, EntityFlag.SPECIES_BECAME_PEOPLE):

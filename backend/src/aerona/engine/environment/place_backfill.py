@@ -6,6 +6,7 @@ from aerona.catalog.place_terrain import height_of, kind_spec
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.environment import PlaceEnvironmentRow
 from aerona.db.tables.place import PlaceProfileRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import PlaceCover, TerrainKind, WaterSource
 from aerona.domain.enums.place import PlaceHeight, PlaceKind
@@ -154,7 +155,7 @@ async def ensure_profiles(ctx: TickContext, book: EnvironmentBook) -> dict[int, 
     made: dict[int, PlaceKind] = {}
     reshaped = 0
     for place in await canon(ctx.session, [EntityType.PLACE]):
-        if place.id in known:
+        if place.id in known or held(place.id):
             continue
         ground = book.places.get(place.id)
         region_id = book.atlas.top_region(place.id)

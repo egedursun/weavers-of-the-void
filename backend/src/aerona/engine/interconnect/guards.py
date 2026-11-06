@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.profile_guard import restore_held
 from aerona.db.tables.interconnect import ModifierRow
-from aerona.db.write_guard import WRITE_GUARD
+from aerona.db.write_guard import HELD_SCOPE, WRITE_GUARD, HeldScope
 from aerona.domain.enums.modifier import ModifierSource
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.flows import current_category
@@ -113,9 +113,12 @@ def absorb_flow(node_id: int, delta: int) -> None:
 def guarded(state: GuardState) -> Iterator[None]:
     token = ACTIVE_GUARD.set(state)
     write_token = WRITE_GUARD.set(state.blocks)
+    suppressed = frozenset(node_id for node_id, key in state.index.suppressions if any(key == suppression_key(writer) for writer in state.writers))
+    held_token = HELD_SCOPE.set(HeldScope(state.only, suppressed))
     try:
         yield
     finally:
+        HELD_SCOPE.reset(held_token)
         WRITE_GUARD.reset(write_token)
         ACTIVE_GUARD.reset(token)
 

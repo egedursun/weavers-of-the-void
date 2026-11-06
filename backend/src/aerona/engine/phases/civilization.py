@@ -16,6 +16,7 @@ from aerona.db.tables.cosmic_state import CivilizationTierLockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import ThreadLinkRow, ThreadRow
 from aerona.db.tables.warfare import CaptiveRow
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, ThreadLinkRole, ThreadStatus
 from aerona.domain.enums.civilization import TierCapability
@@ -93,7 +94,7 @@ async def update_tiers(ctx: TickContext) -> int:
     candidates = await canon(ctx.session, TIER_TYPES)
     targets, forced = planned_tiers(scene, candidates)
     changed = 0
-    for entity in candidates:
+    for entity in unheld(candidates):
         locked = await tier_lock(ctx.session, entity.id)
         new = locked if locked is not None else targets[entity.id]
         if await apply_tier(ctx, entity, new, forced=locked is None and entity.id in forced):
@@ -347,7 +348,7 @@ async def repayments(ctx: TickContext) -> int:
     paid = 0
     for bond in await active_bonds(ctx.session, [BondKind.OWES]):
         parties = await _debt_parties(ctx, bond)
-        if parties is None:
+        if parties is None or held(*(party.id for party in parties)):
             continue
         have = wealth_of(parties[0])
         if have is not None and have - (bond.debt_amount or 0) < civ.loan_repay_reserve:

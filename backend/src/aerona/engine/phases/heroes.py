@@ -11,6 +11,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import HeroQuestRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
@@ -223,7 +224,7 @@ async def _quest_round(ctx: TickContext, world: HeroWorld, counters: HeroCounter
     settings = ctx.rules.heroes
     rng = ctx.rng("quests")
     for hero in world.heroes:
-        if hero.status is not EntityStatus.CANON:
+        if hero.status is not EntityStatus.CANON or held(hero.id):
             continue
         quest = await active_quest(ctx.session, hero.id)
         if quest is not None and quest.started_epoch < ctx.epoch and counters.resolved < settings.quest_resolution_cap:
@@ -240,7 +241,7 @@ async def _quest_round(ctx: TickContext, world: HeroWorld, counters: HeroCounter
 
 async def _companion_round(ctx: TickContext, world: HeroWorld, counters: HeroCounters) -> None:
     settings = ctx.rules.heroes
-    living = [hero for hero in world.heroes if hero.status is EntityStatus.CANON]
+    living = [hero for hero in world.heroes if hero.status is EntityStatus.CANON and not held(hero.id)]
     bonds = world.quests.bonds
     rng = ctx.rng("companions")
     for index, first in enumerate(living):
@@ -352,7 +353,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     for hero in world.heroes:
         if counters.apprentices >= settings.apprentice_new_cap:
             return
-        if hero.status is not EntityStatus.CANON or not ready_to_teach(ctx.rules, hero):
+        if hero.status is not EntityStatus.CANON or held(hero.id) or not ready_to_teach(ctx.rules, hero):
             continue
         if world.quests.bonds.incoming(hero.id, BondKind.APPRENTICE_OF) or not rng.chance(settings.apprentice_chance):
             continue

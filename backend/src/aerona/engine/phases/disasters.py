@@ -17,6 +17,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.happenings import RegionGeomorphRow
 from aerona.db.tables.structures import StructureProfileRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
@@ -491,7 +492,7 @@ async def _region_disasters(ctx: TickContext, world: DisasterWorld) -> None:
         home = atlas.top_region(community.id)
         if home is not None:
             regional_population[home] = regional_population.get(home, 0) + stat_or(community, "population", 0)
-    for region in await canon(ctx.session, [EntityType.REGION]):
+    for region in unheld(await canon(ctx.session, [EntityType.REGION])):
         if world.struck >= ctx.rules.disasters.cap:
             return
         if atlas.is_water(region.id) or region.is_water:

@@ -2,6 +2,7 @@ from sqlalchemy import func, select
 
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow
+from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import TraditionKind
@@ -190,7 +191,7 @@ async def honour_duels(ctx: TickContext) -> int:
         holder, subject = await living_entity(ctx.session, holder_id), await living_entity(ctx.session, subject_id)
         if holder is None or subject is None or holder.entity_type is not EntityType.MORTAL or subject.entity_type is not EntityType.MORTAL:
             continue
-        if holder.status is not EntityStatus.CANON:
+        if holder.status is not EntityStatus.CANON or frozen(holder_id, subject_id):
             continue
         customary = holder.location_id is not None and await keeps(ctx, holder.location_id, TraditionKind.DUEL_CUSTOM)
         wrathful = TraitKind.WRATHFUL in await traits_of(ctx.session, holder.id)

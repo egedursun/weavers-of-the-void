@@ -9,6 +9,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityOrigin, EntityStatus, EntityType
@@ -383,7 +384,7 @@ async def revive(ctx: TickContext, world: WorldRow, *, forced: bool = False) -> 
         created.extend([cult.id] if cult is not None else [])
     current = await world_pulse(ctx.session, ctx.rules, world.id, ctx.epoch)
     gap = min(settings.revival_cap, max(1 if forced else 0, settings.record_quota - current.this_epoch))
-    communities = await canon(ctx.session, SOCIETY_TYPES, world.id)
+    communities = unheld(await canon(ctx.session, SOCIETY_TYPES, world.id))
     for index in range(gap):
         if not communities:
             break
@@ -426,7 +427,7 @@ async def world_balance(ctx: TickContext) -> None:
     if len(worlds) < 2:
         return
     revived = 0
-    for world in worlds:
+    for world in unheld(worlds):
         if await revive(ctx, world):
             revived += 1
     ctx.count("revived", revived)

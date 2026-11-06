@@ -12,6 +12,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CosmosRow, CreatorRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag
 from aerona.domain.enums.son import SonStatus
@@ -158,7 +159,7 @@ async def advance_epoch(ctx: TickContext) -> None:
             epoch=cosmos.epoch,
             kind=ChronicleKind.SYSTEM,
             text=f"Epoch {cosmos.epoch} began (world year {cosmos.epoch_start_year}).{star_text}",
-            entity_ids=[star.id] if star is not None else [],
+            entity_ids=[star.id] if star is not None and not held(star.id) else [],
             template_key="transition.epoch_began",
         )
     )

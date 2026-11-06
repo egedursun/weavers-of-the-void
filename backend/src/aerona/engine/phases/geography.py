@@ -8,6 +8,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.world import WorldType
@@ -197,7 +198,7 @@ async def geography(ctx: TickContext) -> None:
     empty.sort(key=lambda region: (region.id not in inhabited, region.id))
     rng = ctx.rng("seed")
     seeded = 0
-    for region in empty:
+    for region in unheld(empty):
         if seeded >= settings.seed_cap:
             break
         if not rng.chance(min(100, settings.seed_chance * (2 if region.id in inhabited else 1))):

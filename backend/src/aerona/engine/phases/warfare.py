@@ -20,6 +20,7 @@ from aerona.db.tables.mind import VALUE_MAX
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, SiegeRow, WarRow, WarSideRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import Capacity, Consciousness, HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
@@ -1664,7 +1665,7 @@ async def campaigns(ctx: TickContext) -> None:
         if battles >= rules.campaigns.battle_cap and new_wars >= rules.campaigns.new_war_cap:
             break
         first, second = await living_entity(ctx.session, first_id), await living_entity(ctx.session, second_id)
-        if first is None or second is None:
+        if first is None or second is None or held(first_id, second_id):
             continue
         item = by_pair.get(unordered(first_id, second_id))
         if (battles >= rules.campaigns.battle_cap) if item is not None else (new_wars >= rules.campaigns.new_war_cap):

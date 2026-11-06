@@ -11,6 +11,7 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.names import NameRepository, clean_display, normalize_name
 from aerona.db.tables.entities import CreationVerdictRow, EntityFlagRow, EntityRow, EntityTagRow, EntityTraitRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.agent import Verdict
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType, LegendCategory, MortalRole
@@ -201,13 +202,15 @@ class EntityRepository(Repository):
         return await self.session.get(EntityFlagRow, (entity_id, flag)) is not None
 
     async def add_flag(self, entity_id: int, flag: EntityFlag, epoch: int | None = None) -> bool:
-        if await self.has_flag(entity_id, flag):
+        if held(entity_id) or await self.has_flag(entity_id, flag):
             return False
         self.session.add(EntityFlagRow(entity_id=entity_id, flag=flag, epoch=epoch))
         await self.flush()
         return True
 
     async def remove_flag(self, entity_id: int, flag: EntityFlag) -> bool:
+        if held(entity_id):
+            return False
         result = await self.session.execute(delete(EntityFlagRow).where(EntityFlagRow.entity_id == entity_id, EntityFlagRow.flag == flag))
         return bool(getattr(result, "rowcount", 0))
 

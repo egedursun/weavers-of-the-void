@@ -6,6 +6,7 @@ from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.structures import ConstructionRow, StructureProfileRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityType
 from aerona.domain.enums.mind import ActKind
@@ -196,6 +197,8 @@ async def engine_works(ctx: TickContext) -> None:
         site = builder if builder.entity_type is EntityType.SETTLEMENT else await living_entity(ctx.session, builder.location_id)
         if site is None or site.entity_type not in COMMUNITY_TYPES:
             site = builder
+        if held(builder.id, site.id):
+            continue
         if await plan_work(ctx, site, knowledge, atlas) is not None:
             begun += 1
             ctx.count("built")

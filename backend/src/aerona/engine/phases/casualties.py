@@ -10,6 +10,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import CommanderTraitRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, WarRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.chronicle import FeedCategory
@@ -329,7 +330,7 @@ async def army_experience(ctx: TickContext, clashes: list[Clash]) -> int:
     rows = list(await ctx.session.scalars(select(ArmyRow).where(ArmyRow.disbanded_epoch.is_(None)).order_by(ArmyRow.entity_id)))
     for row in rows:
         army = await living_entity(ctx.session, row.entity_id)
-        if army is None:
+        if army is None or held(army.id):
             continue
         before = stat(army, "experience") or 0
         after = before

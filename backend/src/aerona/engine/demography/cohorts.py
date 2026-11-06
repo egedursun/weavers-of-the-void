@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
 from aerona.domain.enums.entity import SOCIETY_TYPES
 from aerona.domain.enums.society import SocialClass
@@ -195,7 +196,7 @@ async def settle_moved(ctx: TickContext, moved: Counter[tuple[int, str]]) -> Non
         if not delta:
             continue
         community = await ctx.session.get(EntityRow, node_id)
-        if community is None or community.entity_type not in SOCIETY_TYPES:
+        if community is None or community.entity_type not in SOCIETY_TYPES or held(node_id):
             continue
         await apply_flow(ctx.session, ctx.rules, community, delta, category=FlowCategory(category), epoch=ctx.epoch)
     moved.clear()

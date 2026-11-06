@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import CaptiveCohortRow, SpyNetworkRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.military import CaptiveFate, SpyCover
@@ -102,6 +103,8 @@ async def cohort_fates(ctx: TickContext) -> dict[CaptiveFate, int]:
         select(CaptiveCohortRow).where(CaptiveCohortRow.fate == CaptiveFate.HELD, CaptiveCohortRow.since_epoch < ctx.epoch).order_by(CaptiveCohortRow.id)
     )
     for row in list(rows):
+        if held(row.captor_entity_id):
+            continue
         fate = await decide(ctx, row)
         found[fate] = found.get(fate, 0) + row.count
         if fate is not CaptiveFate.HELD:
