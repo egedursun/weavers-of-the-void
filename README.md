@@ -867,7 +867,7 @@ A poacher kills a stag in the Hunt god's grove. Nothing happens until the first 
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/12-the-inner-life.jpg" width="220" alt="The Inner Life cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/12-the-inner-life.jpg"><img src="common/assets/images/dlc-covers/12-the-inner-life.jpg" width="220" alt="The Inner Life box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/12-the-inner-life.jpg"><img src="common/assets/images/dlc-backs/12-the-inner-life.jpg" width="220" alt="The Inner Life box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 12. The Inner Life
@@ -889,7 +889,7 @@ The old general has every reason to end the siege. The walls hold, fever is in h
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/13-cradle-to-pyre.jpg" width="220" alt="Cradle to Pyre cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/13-cradle-to-pyre.jpg"><img src="common/assets/images/dlc-covers/13-cradle-to-pyre.jpg" width="220" alt="Cradle to Pyre box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/13-cradle-to-pyre.jpg"><img src="common/assets/images/dlc-backs/13-cradle-to-pyre.jpg" width="220" alt="Cradle to Pyre box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 13. Cradle to Pyre
@@ -911,7 +911,7 @@ A girl grows up in a household that cannot quite feed her. She learns her letter
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/14-hearts-and-hands.jpg" width="220" alt="Hearts and Hands cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/14-hearts-and-hands.jpg"><img src="common/assets/images/dlc-covers/14-hearts-and-hands.jpg" width="220" alt="Hearts and Hands box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/14-hearts-and-hands.jpg"><img src="common/assets/images/dlc-backs/14-hearts-and-hands.jpg" width="220" alt="Hearts and Hands box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 14. Hearts and Hands
@@ -933,7 +933,7 @@ Two squires share a tent on campaign and come home comrades in arms. Years later
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/15-hearth-and-home.jpg" width="220" alt="Hearth and Home cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/15-hearth-and-home.jpg"><img src="common/assets/images/dlc-covers/15-hearth-and-home.jpg" width="220" alt="Hearth and Home box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/15-hearth-and-home.jpg"><img src="common/assets/images/dlc-backs/15-hearth-and-home.jpg" width="220" alt="Hearth and Home box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 15. Hearth and Home
@@ -955,7 +955,7 @@ The veteran comes home from the war with one leg. In a poor household he is anot
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/16-strange-flesh.jpg" width="220" alt="Strange Flesh cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/16-strange-flesh.jpg"><img src="common/assets/images/dlc-covers/16-strange-flesh.jpg" width="220" alt="Strange Flesh box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/16-strange-flesh.jpg"><img src="common/assets/images/dlc-backs/16-strange-flesh.jpg" width="220" alt="Strange Flesh box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 16. Strange Flesh
@@ -988,7 +988,7 @@ Your scouts report an enemy that does not bleed. Blades pass through it. Salt an
 
 <table>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/17-codes-of-honour.jpg" width="220" alt="Codes of Honour cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/17-codes-of-honour.jpg"><img src="common/assets/images/dlc-covers/17-codes-of-honour.jpg" width="220" alt="Codes of Honour box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/17-codes-of-honour.jpg"><img src="common/assets/images/dlc-backs/17-codes-of-honour.jpg" width="220" alt="Codes of Honour box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 17. Codes of Honour
@@ -1010,7 +1010,7 @@ A guest is killed at a feast. In one hall it is the unthinkable crime, and the h
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/18-ties-of-blood.jpg" width="220" alt="Ties of Blood cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/18-ties-of-blood.jpg"><img src="common/assets/images/dlc-covers/18-ties-of-blood.jpg" width="220" alt="Ties of Blood box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/18-ties-of-blood.jpg"><img src="common/assets/images/dlc-backs/18-ties-of-blood.jpg" width="220" alt="Ties of Blood box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 18. Ties of Blood
@@ -1032,7 +1032,7 @@ Generations of cousin marriage have kept the crown in the family. They have also
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/19-the-teeming-millions.jpg" width="220" alt="The Teeming Millions cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/19-the-teeming-millions.jpg"><img src="common/assets/images/dlc-covers/19-the-teeming-millions.jpg" width="220" alt="The Teeming Millions box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/19-the-teeming-millions.jpg"><img src="common/assets/images/dlc-backs/19-the-teeming-millions.jpg" width="220" alt="The Teeming Millions box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 19. The Teeming Millions
@@ -1054,7 +1054,7 @@ The war is over, and the valley counts its dead. Not as one number: as a missing
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/20-many-banners.jpg" width="220" alt="Many Banners cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/20-many-banners.jpg"><img src="common/assets/images/dlc-covers/20-many-banners.jpg" width="220" alt="Many Banners box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/20-many-banners.jpg"><img src="common/assets/images/dlc-backs/20-many-banners.jpg" width="220" alt="Many Banners box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 20. Many Banners
@@ -1076,7 +1076,7 @@ A weaver is a woman of the river people, a follower of the Moon, a guild member,
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/21-fire-in-the-streets.jpg" width="220" alt="Fire in the Streets cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/21-fire-in-the-streets.jpg"><img src="common/assets/images/dlc-covers/21-fire-in-the-streets.jpg" width="220" alt="Fire in the Streets box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/21-fire-in-the-streets.jpg"><img src="common/assets/images/dlc-backs/21-fire-in-the-streets.jpg" width="220" alt="Fire in the Streets box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 21. Fire in the Streets
@@ -1097,7 +1097,7 @@ Bread doubles in price. A few apprentices throw stones, and nobody stops them. T
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/22-feast-and-funeral.jpg" width="220" alt="Feast and Funeral cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/22-feast-and-funeral.jpg"><img src="common/assets/images/dlc-covers/22-feast-and-funeral.jpg" width="220" alt="Feast and Funeral box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/22-feast-and-funeral.jpg"><img src="common/assets/images/dlc-backs/22-feast-and-funeral.jpg" width="220" alt="Feast and Funeral box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 22. Feast and Funeral
@@ -1119,7 +1119,7 @@ Three houses sit at one wedding table. The bride's brother will leave the tourna
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/23-the-gift.jpg" width="220" alt="The Gift cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/23-the-gift.jpg"><img src="common/assets/images/dlc-covers/23-the-gift.jpg" width="220" alt="The Gift box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/23-the-gift.jpg"><img src="common/assets/images/dlc-backs/23-the-gift.jpg" width="220" alt="The Gift box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 23. The Gift
@@ -1140,7 +1140,7 @@ The chief of the eastern islands arrives with canoes heaped with dried fish and 
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/24-muse-and-market.jpg" width="220" alt="Muse and Market cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/24-muse-and-market.jpg"><img src="common/assets/images/dlc-covers/24-muse-and-market.jpg" width="220" alt="Muse and Market box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/24-muse-and-market.jpg"><img src="common/assets/images/dlc-backs/24-muse-and-market.jpg" width="220" alt="Muse and Market box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 24. Muse and Market
@@ -1162,7 +1162,7 @@ A poet's lament for the fallen is sung in every hall, and a generation later the
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/25-blues-and-greens.jpg" width="220" alt="Blues and Greens cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/25-blues-and-greens.jpg"><img src="common/assets/images/dlc-covers/25-blues-and-greens.jpg" width="220" alt="Blues and Greens box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/25-blues-and-greens.jpg"><img src="common/assets/images/dlc-backs/25-blues-and-greens.jpg" width="220" alt="Blues and Greens box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 25. Blues and Greens
@@ -1182,7 +1182,7 @@ Half the capital wears blue and half wears green, and it stopped being about cha
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/26-tongues-of-ages.jpg" width="220" alt="Tongues of Ages cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/26-tongues-of-ages.jpg"><img src="common/assets/images/dlc-covers/26-tongues-of-ages.jpg" width="220" alt="Tongues of Ages box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/26-tongues-of-ages.jpg"><img src="common/assets/images/dlc-backs/26-tongues-of-ages.jpg" width="220" alt="Tongues of Ages box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 26. Tongues of Ages
@@ -1204,7 +1204,7 @@ A scholar kneels before a stone carved in two scripts: one dead for ages, one st
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/27-the-rewritten-past.jpg" width="220" alt="The Rewritten Past cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/27-the-rewritten-past.jpg"><img src="common/assets/images/dlc-covers/27-the-rewritten-past.jpg" width="220" alt="The Rewritten Past box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/27-the-rewritten-past.jpg"><img src="common/assets/images/dlc-backs/27-the-rewritten-past.jpg" width="220" alt="The Rewritten Past box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 27. The Rewritten Past
@@ -1236,7 +1236,7 @@ The new dynasty's chronicle says its founder was born of a god. The folk songs o
 
 <table>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/28-forge-and-furnace.jpg" width="220" alt="Forge and Furnace cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/28-forge-and-furnace.jpg"><img src="common/assets/images/dlc-covers/28-forge-and-furnace.jpg" width="220" alt="Forge and Furnace box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/28-forge-and-furnace.jpg"><img src="common/assets/images/dlc-backs/28-forge-and-furnace.jpg" width="220" alt="Forge and Furnace box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 28. Forge and Furnace
@@ -1258,7 +1258,7 @@ You watch a war being lost in a forest. The woodcutters clear the last hills, th
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/29-coin-of-the-realm.jpg" width="220" alt="Coin of the Realm cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/29-coin-of-the-realm.jpg"><img src="common/assets/images/dlc-covers/29-coin-of-the-realm.jpg" width="220" alt="Coin of the Realm box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/29-coin-of-the-realm.jpg"><img src="common/assets/images/dlc-backs/29-coin-of-the-realm.jpg" width="220" alt="Coin of the Realm box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 29. Coin of the Realm
@@ -1280,7 +1280,7 @@ A dragon's hoard comes home in triumph, and soon the luxury markets are drowning
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/30-the-salt-road.jpg" width="220" alt="The Salt Road cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/30-the-salt-road.jpg"><img src="common/assets/images/dlc-covers/30-the-salt-road.jpg" width="220" alt="The Salt Road box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/30-the-salt-road.jpg"><img src="common/assets/images/dlc-backs/30-the-salt-road.jpg" width="220" alt="The Salt Road box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 30. The Salt Road
@@ -1302,7 +1302,7 @@ Two markets trade long enough and a road is born, with a name, a toll and a repu
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/31-yoke-and-wage.jpg" width="220" alt="Yoke and Wage cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/31-yoke-and-wage.jpg"><img src="common/assets/images/dlc-covers/31-yoke-and-wage.jpg" width="220" alt="Yoke and Wage box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/31-yoke-and-wage.jpg"><img src="common/assets/images/dlc-backs/31-yoke-and-wage.jpg" width="220" alt="Yoke and Wage box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 31. Yoke and Wage
@@ -1324,7 +1324,7 @@ A water-frame mill opens on the river, and a street of hand-loom weavers is out 
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/32-walls-and-wards.jpg" width="220" alt="Walls and Wards cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/32-walls-and-wards.jpg"><img src="common/assets/images/dlc-covers/32-walls-and-wards.jpg" width="220" alt="Walls and Wards box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/32-walls-and-wards.jpg"><img src="common/assets/images/dlc-backs/32-walls-and-wards.jpg" width="220" alt="Walls and Wards box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 32. Walls and Wards
@@ -1346,7 +1346,7 @@ On a dry, windy night a spark lands in a timber quarter with no fire brigade. By
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/33-wonders-rising.jpg" width="220" alt="Wonders Rising cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/33-wonders-rising.jpg"><img src="common/assets/images/dlc-covers/33-wonders-rising.jpg" width="220" alt="Wonders Rising box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/33-wonders-rising.jpg"><img src="common/assets/images/dlc-backs/33-wonders-rising.jpg" width="220" alt="Wonders Rising box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 33. Wonders Rising
@@ -1368,7 +1368,7 @@ The great dome was begun under a grandfather and is still open to the sky under 
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/34-heirlooms-and-relics.jpg" width="220" alt="Heirlooms and Relics cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/34-heirlooms-and-relics.jpg"><img src="common/assets/images/dlc-covers/34-heirlooms-and-relics.jpg" width="220" alt="Heirlooms and Relics box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/34-heirlooms-and-relics.jpg"><img src="common/assets/images/dlc-backs/34-heirlooms-and-relics.jpg" width="220" alt="Heirlooms and Relics box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 34. Heirlooms and Relics
@@ -1390,7 +1390,7 @@ Pick up any named sword in your world and read its life: who forged it, which ho
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/35-underworld.jpg" width="220" alt="Underworld cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/35-underworld.jpg"><img src="common/assets/images/dlc-covers/35-underworld.jpg" width="220" alt="Underworld box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/35-underworld.jpg"><img src="common/assets/images/dlc-backs/35-underworld.jpg" width="220" alt="Underworld box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 35. Underworld
@@ -1423,7 +1423,7 @@ The watch captain drinks free at the tavern by the docks, and everyone knows why
 
 <table>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/36-throne-and-council.jpg" width="220" alt="Throne and Council cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/36-throne-and-council.jpg"><img src="common/assets/images/dlc-covers/36-throne-and-council.jpg" width="220" alt="Throne and Council box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/36-throne-and-council.jpg"><img src="common/assets/images/dlc-backs/36-throne-and-council.jpg" width="220" alt="Throne and Council box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 36. Throne and Council
@@ -1445,7 +1445,7 @@ The old king dies in the night and the succession law names his nine-year-old gr
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/37-patrons-and-puppets.jpg" width="220" alt="Patrons and Puppets cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/37-patrons-and-puppets.jpg"><img src="common/assets/images/dlc-covers/37-patrons-and-puppets.jpg" width="220" alt="Patrons and Puppets box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/37-patrons-and-puppets.jpg"><img src="common/assets/images/dlc-backs/37-patrons-and-puppets.jpg" width="220" alt="Patrons and Puppets box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 37. Patrons and Puppets
@@ -1467,7 +1467,7 @@ Ask who really chose the emperor. Not the people: the guard captains, the great 
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/38-crowns-unclaimed.jpg" width="220" alt="Crowns Unclaimed cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/38-crowns-unclaimed.jpg"><img src="common/assets/images/dlc-covers/38-crowns-unclaimed.jpg" width="220" alt="Crowns Unclaimed box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/38-crowns-unclaimed.jpg"><img src="common/assets/images/dlc-backs/38-crowns-unclaimed.jpg" width="220" alt="Crowns Unclaimed box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 38. Crowns Unclaimed
@@ -1489,7 +1489,7 @@ The old kingdom has had no king for three hundred years, but its title survives,
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/39-iron-code.jpg" width="220" alt="The Iron Code cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/39-iron-code.jpg"><img src="common/assets/images/dlc-covers/39-iron-code.jpg" width="220" alt="The Iron Code box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/39-iron-code.jpg"><img src="common/assets/images/dlc-backs/39-iron-code.jpg" width="220" alt="The Iron Code box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 39. The Iron Code
@@ -1511,7 +1511,7 @@ A merchant lies dead in a fogbound alley. The sheriff has a frightened witness w
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/40-guilds-and-estates.jpg" width="220" alt="Guilds and Estates cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/40-guilds-and-estates.jpg"><img src="common/assets/images/dlc-covers/40-guilds-and-estates.jpg" width="220" alt="Guilds and Estates box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/40-guilds-and-estates.jpg"><img src="common/assets/images/dlc-backs/40-guilds-and-estates.jpg" width="220" alt="Guilds and Estates box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 40. Guilds and Estates
@@ -1533,7 +1533,7 @@ The weavers' guild wants the new mills banned. The nobles want their tax exempti
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/41-pacts-and-perfidy.jpg" width="220" alt="Pacts and Perfidy cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/41-pacts-and-perfidy.jpg"><img src="common/assets/images/dlc-covers/41-pacts-and-perfidy.jpg" width="220" alt="Pacts and Perfidy box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/41-pacts-and-perfidy.jpg"><img src="common/assets/images/dlc-backs/41-pacts-and-perfidy.jpg" width="220" alt="Pacts and Perfidy box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 41. Pacts and Perfidy
@@ -1555,7 +1555,7 @@ Your envoy demands a border province, and a crisis opens. Two realms back you fo
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/42-rise-and-ruin.jpg" width="220" alt="Rise and Ruin cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/42-rise-and-ruin.jpg"><img src="common/assets/images/dlc-covers/42-rise-and-ruin.jpg" width="220" alt="Rise and Ruin box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/42-rise-and-ruin.jpg"><img src="common/assets/images/dlc-backs/42-rise-and-ruin.jpg" width="220" alt="Rise and Ruin box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 42. Rise and Ruin
@@ -1577,7 +1577,7 @@ Nothing in your world is scripted to fall. Yet watch a great empire across three
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/43-couriers-and-ciphers.jpg" width="220" alt="Couriers and Ciphers cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/43-couriers-and-ciphers.jpg"><img src="common/assets/images/dlc-covers/43-couriers-and-ciphers.jpg" width="220" alt="Couriers and Ciphers box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/43-couriers-and-ciphers.jpg"><img src="common/assets/images/dlc-backs/43-couriers-and-ciphers.jpg" width="220" alt="Couriers and Ciphers box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 43. Couriers and Ciphers
@@ -1599,7 +1599,7 @@ Your herald rides for the enemy camp with an offer of peace. The pass is closed 
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/44-tongues-of-rumour.jpg" width="220" alt="Tongues of Rumour cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/44-tongues-of-rumour.jpg"><img src="common/assets/images/dlc-covers/44-tongues-of-rumour.jpg" width="220" alt="Tongues of Rumour box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/44-tongues-of-rumour.jpg"><img src="common/assets/images/dlc-backs/44-tongues-of-rumour.jpg" width="220" alt="Tongues of Rumour box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 44. Tongues of Rumour
@@ -1620,7 +1620,7 @@ You sack a rebel town. In your capital you are the hero who crushed treason. In 
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/45-velvet-daggers.jpg" width="220" alt="Velvet Daggers cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/45-velvet-daggers.jpg"><img src="common/assets/images/dlc-covers/45-velvet-daggers.jpg" width="220" alt="Velvet Daggers box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/45-velvet-daggers.jpg"><img src="common/assets/images/dlc-backs/45-velvet-daggers.jpg" width="220" alt="Velvet Daggers box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 45. Velvet Daggers
@@ -1642,7 +1642,7 @@ The chancellor's son is not the chancellor's son. His wife's maid knows it, a ri
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/46-shadow-networks.jpg" width="220" alt="Shadow Networks cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/46-shadow-networks.jpg"><img src="common/assets/images/dlc-covers/46-shadow-networks.jpg" width="220" alt="Shadow Networks box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/46-shadow-networks.jpg"><img src="common/assets/images/dlc-backs/46-shadow-networks.jpg" width="220" alt="Shadow Networks box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 46. Shadow Networks
@@ -1664,7 +1664,7 @@ Your spymaster swears there is a traitor on the council. He is right, but he nam
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/47-fog-of-belief.jpg" width="220" alt="Fog of Belief cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/47-fog-of-belief.jpg"><img src="common/assets/images/dlc-covers/47-fog-of-belief.jpg" width="220" alt="Fog of Belief box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/47-fog-of-belief.jpg"><img src="common/assets/images/dlc-backs/47-fog-of-belief.jpg" width="220" alt="Fog of Belief box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 47. Fog of Belief
@@ -1696,7 +1696,7 @@ A general force-marches his army to break the siege of a city that was relieved 
 
 <table>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/48-steel-and-banner.jpg" width="220" alt="Steel and Banner cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/48-steel-and-banner.jpg"><img src="common/assets/images/dlc-covers/48-steel-and-banner.jpg" width="220" alt="Steel and Banner box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/48-steel-and-banner.jpg"><img src="common/assets/images/dlc-backs/48-steel-and-banner.jpg" width="220" alt="Steel and Banner box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 48. Steel and Banner
@@ -1718,7 +1718,7 @@ You do not conjure soldiers. You take them. Young farmers leave the levy class, 
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/49-field-of-glory.jpg" width="220" alt="Field of Glory cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/49-field-of-glory.jpg"><img src="common/assets/images/dlc-covers/49-field-of-glory.jpg" width="220" alt="Field of Glory box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/49-field-of-glory.jpg"><img src="common/assets/images/dlc-backs/49-field-of-glory.jpg" width="220" alt="Field of Glory box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 49. Field of Glory
@@ -1740,7 +1740,7 @@ Dawn fog lies on the ford. Your archers cannot see, the enemy's hidden horse wai
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/50-walls-will-fall.jpg" width="220" alt="Walls Will Fall cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/50-walls-will-fall.jpg"><img src="common/assets/images/dlc-covers/50-walls-will-fall.jpg" width="220" alt="Walls Will Fall box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/50-walls-will-fall.jpg"><img src="common/assets/images/dlc-backs/50-walls-will-fall.jpg" width="220" alt="Walls Will Fall box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 50. Walls Will Fall
@@ -1762,7 +1762,7 @@ The engines have pounded the north wall since spring. Under your feet, sappers r
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/51-theatre-of-war.jpg" width="220" alt="Theatre of War cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/51-theatre-of-war.jpg"><img src="common/assets/images/dlc-covers/51-theatre-of-war.jpg" width="220" alt="Theatre of War box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/51-theatre-of-war.jpg"><img src="common/assets/images/dlc-backs/51-theatre-of-war.jpg" width="220" alt="Theatre of War box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 51. Theatre of War
@@ -1784,7 +1784,7 @@ Your offensive has taken three cities and is still advancing. Behind it the barg
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/52-admiralty.jpg" width="220" alt="Admiralty cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/52-admiralty.jpg"><img src="common/assets/images/dlc-covers/52-admiralty.jpg" width="220" alt="Admiralty box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/52-admiralty.jpg"><img src="common/assets/images/dlc-backs/52-admiralty.jpg" width="220" alt="Admiralty box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 52. Admiralty
@@ -1806,7 +1806,7 @@ The wind backs west and your squadron holds the gauge. You close on a reach, rak
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/53-blade-and-honour.jpg" width="220" alt="Blade and Honour cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/53-blade-and-honour.jpg"><img src="common/assets/images/dlc-covers/53-blade-and-honour.jpg" width="220" alt="Blade and Honour box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/53-blade-and-honour.jpg"><img src="common/assets/images/dlc-backs/53-blade-and-honour.jpg" width="220" alt="Blade and Honour box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 53. Blade and Honour
@@ -1828,7 +1828,7 @@ The spear reaches first. Your champion turns it on his shield, steps inside, and
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/54-blood-feud.jpg" width="220" alt="Blood Feud cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/54-blood-feud.jpg"><img src="common/assets/images/dlc-covers/54-blood-feud.jpg" width="220" alt="Blood Feud box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/54-blood-feud.jpg"><img src="common/assets/images/dlc-backs/54-blood-feud.jpg" width="220" alt="Blood Feud box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 54. Blood Feud
@@ -1861,7 +1861,7 @@ Your house remembers the name of every kinsman they killed. Each epoch the griev
 
 <table>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/55-tenets-of-flame.jpg" width="220" alt="Tenets of Flame cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/55-tenets-of-flame.jpg"><img src="common/assets/images/dlc-covers/55-tenets-of-flame.jpg" width="220" alt="Tenets of Flame box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/55-tenets-of-flame.jpg"><img src="common/assets/images/dlc-backs/55-tenets-of-flame.jpg" width="220" alt="Tenets of Flame box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 55. Tenets of Flame
@@ -1883,7 +1883,7 @@ Your god's faith is no longer a count of followers. It has a doctrine, a clergy,
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/56-prophets-of-the-end.jpg" width="220" alt="Prophets of the End cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/56-prophets-of-the-end.jpg"><img src="common/assets/images/dlc-covers/56-prophets-of-the-end.jpg" width="220" alt="Prophets of the End box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/56-prophets-of-the-end.jpg"><img src="common/assets/images/dlc-backs/56-prophets-of-the-end.jpg" width="220" alt="Prophets of the End box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 56. Prophets of the End
@@ -1904,7 +1904,7 @@ A comet hangs over the third hungry year. On the hill a prophet names the day th
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/57-beyond-the-veil.jpg" width="220" alt="Beyond the Veil cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/57-beyond-the-veil.jpg"><img src="common/assets/images/dlc-covers/57-beyond-the-veil.jpg" width="220" alt="Beyond the Veil box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/57-beyond-the-veil.jpg"><img src="common/assets/images/dlc-backs/57-beyond-the-veil.jpg" width="220" alt="Beyond the Veil box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 57. Beyond the Veil
@@ -1926,7 +1926,7 @@ A warlord dies certain of the warrior's hall. The judges weigh his renown, his f
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/58-spirits-of-hearth-and-river.jpg" width="220" alt="Spirits of Hearth and River cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/58-spirits-of-hearth-and-river.jpg"><img src="common/assets/images/dlc-covers/58-spirits-of-hearth-and-river.jpg" width="220" alt="Spirits of Hearth and River box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/58-spirits-of-hearth-and-river.jpg"><img src="common/assets/images/dlc-backs/58-spirits-of-hearth-and-river.jpg" width="220" alt="Spirits of Hearth and River box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 58. Spirits of Hearth and River
@@ -1947,7 +1947,7 @@ Every crossroads has its spirit, every hearth its luck and every river a temper.
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/59-hex-and-hunt.jpg" width="220" alt="Hex and Hunt cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/59-hex-and-hunt.jpg"><img src="common/assets/images/dlc-covers/59-hex-and-hunt.jpg" width="220" alt="Hex and Hunt box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/59-hex-and-hunt.jpg"><img src="common/assets/images/dlc-backs/59-hex-and-hunt.jpg" width="220" alt="Hex and Hunt box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 59. Hex and Hunt
@@ -1968,7 +1968,7 @@ The cattle die in a wet spring and nobody knows why. Your village knows exactly 
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/60-omens-and-oracles.jpg" width="220" alt="Omens and Oracles cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/60-omens-and-oracles.jpg"><img src="common/assets/images/dlc-covers/60-omens-and-oracles.jpg" width="220" alt="Omens and Oracles box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/60-omens-and-oracles.jpg"><img src="common/assets/images/dlc-backs/60-omens-and-oracles.jpg" width="220" alt="Omens and Oracles box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 60. Omens and Oracles
@@ -2000,7 +2000,7 @@ A seer speaks, and from that day the world is listening. Prophecies here have co
 
 <table>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/61-the-arcanum.jpg" width="220" alt="The Arcanum cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/61-the-arcanum.jpg"><img src="common/assets/images/dlc-covers/61-the-arcanum.jpg" width="220" alt="The Arcanum box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/61-the-arcanum.jpg"><img src="common/assets/images/dlc-backs/61-the-arcanum.jpg" width="220" alt="The Arcanum box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 61. The Arcanum
@@ -2022,7 +2022,7 @@ Your mage does not pick a spell from a list. She writes one: a technique and a f
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/62-forbidden-arts.jpg" width="220" alt="Forbidden Arts cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/62-forbidden-arts.jpg"><img src="common/assets/images/dlc-covers/62-forbidden-arts.jpg" width="220" alt="Forbidden Arts box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/62-forbidden-arts.jpg"><img src="common/assets/images/dlc-backs/62-forbidden-arts.jpg" width="220" alt="Forbidden Arts box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 62. Forbidden Arts
@@ -2044,7 +2044,7 @@ When the city is falling and mercy runs low, someone always reaches for the forb
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/63-walkers-of-myth.jpg" width="220" alt="Walkers of Myth cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/63-walkers-of-myth.jpg"><img src="common/assets/images/dlc-covers/63-walkers-of-myth.jpg" width="220" alt="Walkers of Myth box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/63-walkers-of-myth.jpg"><img src="common/assets/images/dlc-backs/63-walkers-of-myth.jpg" width="220" alt="Walkers of Myth box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 63. Walkers of Myth
@@ -2066,7 +2066,7 @@ The elders tell how the god crossed the river of night. Your hero walks into tha
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/64-clockwork-souls.jpg" width="220" alt="Clockwork Souls cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/64-clockwork-souls.jpg"><img src="common/assets/images/dlc-covers/64-clockwork-souls.jpg" width="220" alt="Clockwork Souls box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/64-clockwork-souls.jpg"><img src="common/assets/images/dlc-backs/64-clockwork-souls.jpg" width="220" alt="Clockwork Souls box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 64. Clockwork Souls
@@ -2098,7 +2098,7 @@ In the ruins of a city dead for three centuries, a bronze guardian still walks i
 
 <table>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/65-forty-domains.jpg" width="220" alt="Forty Domains cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/65-forty-domains.jpg"><img src="common/assets/images/dlc-covers/65-forty-domains.jpg" width="220" alt="Forty Domains box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/65-forty-domains.jpg"><img src="common/assets/images/dlc-backs/65-forty-domains.jpg" width="220" alt="Forty Domains box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 65. Forty Domains
@@ -2120,7 +2120,7 @@ Your son of the Sea does more than watch the waves. His worshippers fight harder
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/66-dominion.jpg" width="220" alt="Dominion cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/66-dominion.jpg"><img src="common/assets/images/dlc-covers/66-dominion.jpg" width="220" alt="Dominion box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/66-dominion.jpg"><img src="common/assets/images/dlc-backs/66-dominion.jpg" width="220" alt="Dominion box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 66. Dominion
@@ -2142,7 +2142,7 @@ Look at the map and you see it: your son's presence pooling around his temples, 
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/67-made-in-their-image.jpg" width="220" alt="Made in Their Image cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/67-made-in-their-image.jpg"><img src="common/assets/images/dlc-covers/67-made-in-their-image.jpg" width="220" alt="Made in Their Image box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/67-made-in-their-image.jpg"><img src="common/assets/images/dlc-backs/67-made-in-their-image.jpg" width="220" alt="Made in Their Image box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 67. Made in Their Image
@@ -2163,7 +2163,7 @@ You summoned a son of War. His frightened worshippers remember him as lion-heade
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/68-avatars.jpg" width="220" alt="Avatars cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/68-avatars.jpg"><img src="common/assets/images/dlc-covers/68-avatars.jpg" width="220" alt="Avatars box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/68-avatars.jpg"><img src="common/assets/images/dlc-backs/68-avatars.jpg" width="220" alt="Avatars box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 68. Avatars
@@ -2183,7 +2183,7 @@ Your son puts on flesh and walks into a mortal city. He can act, fight and be ki
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/69-court-of-heaven.jpg" width="220" alt="Court of Heaven cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/69-court-of-heaven.jpg"><img src="common/assets/images/dlc-covers/69-court-of-heaven.jpg" width="220" alt="Court of Heaven box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/69-court-of-heaven.jpg"><img src="common/assets/images/dlc-backs/69-court-of-heaven.jpg" width="220" alt="Court of Heaven box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 69. Court of Heaven
@@ -2205,7 +2205,7 @@ The pantheon gathers and the motion is war on a foreign god. Votes weigh old fri
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/70-apotheosis.jpg" width="220" alt="Apotheosis cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/70-apotheosis.jpg"><img src="common/assets/images/dlc-covers/70-apotheosis.jpg" width="220" alt="Apotheosis box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/70-apotheosis.jpg"><img src="common/assets/images/dlc-backs/70-apotheosis.jpg" width="220" alt="Apotheosis box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 70. Apotheosis
@@ -2227,7 +2227,7 @@ A mortal champion copies your son's defining deeds, gathers a cult of her own an
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/71-laws-of-creation.jpg" width="220" alt="Laws of Creation cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/71-laws-of-creation.jpg"><img src="common/assets/images/dlc-covers/71-laws-of-creation.jpg" width="220" alt="Laws of Creation box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/71-laws-of-creation.jpg"><img src="common/assets/images/dlc-backs/71-laws-of-creation.jpg" width="220" alt="Laws of Creation box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 71. Laws of Creation
@@ -2249,7 +2249,7 @@ Your son decrees that oaths bind, and from that epoch every oath-breaker in his 
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/72-the-hungering-dark.jpg" width="220" alt="The Hungering Dark cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/72-the-hungering-dark.jpg"><img src="common/assets/images/dlc-covers/72-the-hungering-dark.jpg" width="220" alt="The Hungering Dark box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/72-the-hungering-dark.jpg"><img src="common/assets/images/dlc-backs/72-the-hungering-dark.jpg" width="220" alt="The Hungering Dark box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 72. The Hungering Dark
@@ -2282,7 +2282,7 @@ Somewhere beyond the edge of creation something is hungry, and its hunger has a 
 
 <table>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/73-clockwork-heavens.jpg" width="220" alt="Clockwork Heavens cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/73-clockwork-heavens.jpg"><img src="common/assets/images/dlc-covers/73-clockwork-heavens.jpg" width="220" alt="Clockwork Heavens box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/73-clockwork-heavens.jpg"><img src="common/assets/images/dlc-backs/73-clockwork-heavens.jpg" width="220" alt="Clockwork Heavens box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 73. Clockwork Heavens
@@ -2304,7 +2304,7 @@ Every world you make now obeys its sky. Its year is set by its orbit, its day by
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/74-starfall.jpg" width="220" alt="Starfall cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/74-starfall.jpg"><img src="common/assets/images/dlc-covers/74-starfall.jpg" width="220" alt="Starfall box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/74-starfall.jpg"><img src="common/assets/images/dlc-backs/74-starfall.jpg" width="220" alt="Starfall box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 74. Starfall
@@ -2326,7 +2326,7 @@ Look up. Thirty-two kinds of star burn over your worlds, and none of them is for
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/75-worldforge.jpg" width="220" alt="Worldforge cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/75-worldforge.jpg"><img src="common/assets/images/dlc-covers/75-worldforge.jpg" width="220" alt="Worldforge box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/75-worldforge.jpg"><img src="common/assets/images/dlc-backs/75-worldforge.jpg" width="220" alt="Worldforge box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 75. Worldforge
@@ -2347,7 +2347,7 @@ Your son raises a ridge across the plain and the river turns. A valley drowns be
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/76-thirty-four-worlds.jpg" width="220" alt="Thirty-Four Worlds cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/76-thirty-four-worlds.jpg"><img src="common/assets/images/dlc-covers/76-thirty-four-worlds.jpg" width="220" alt="Thirty-Four Worlds box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/76-thirty-four-worlds.jpg"><img src="common/assets/images/dlc-backs/76-thirty-four-worlds.jpg" width="220" alt="Thirty-Four Worlds box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 76. Thirty-Four Worlds
@@ -2369,7 +2369,7 @@ On a gas giant there is no ground and falling is death, so cities float and ever
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/77-rifts-and-wonders.jpg" width="220" alt="Rifts and Wonders cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/77-rifts-and-wonders.jpg"><img src="common/assets/images/dlc-covers/77-rifts-and-wonders.jpg" width="220" alt="Rifts and Wonders box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/77-rifts-and-wonders.jpg"><img src="common/assets/images/dlc-backs/77-rifts-and-wonders.jpg" width="220" alt="Rifts and Wonders box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 77. Rifts and Wonders
@@ -2391,7 +2391,7 @@ A god dies and its corpse leaves an aura over the land. A battlefield with too m
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/78-between-the-stars.jpg" width="220" alt="Between the Stars cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/78-between-the-stars.jpg"><img src="common/assets/images/dlc-covers/78-between-the-stars.jpg" width="220" alt="Between the Stars box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/78-between-the-stars.jpg"><img src="common/assets/images/dlc-backs/78-between-the-stars.jpg" width="220" alt="Between the Stars box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 78. Between the Stars
@@ -2413,7 +2413,7 @@ The worlds move, and the voyage moves with them. Sail when the orbits align and 
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/79-deep-time.jpg" width="220" alt="Deep Time cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/79-deep-time.jpg"><img src="common/assets/images/dlc-covers/79-deep-time.jpg" width="220" alt="Deep Time box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/79-deep-time.jpg"><img src="common/assets/images/dlc-backs/79-deep-time.jpg" width="220" alt="Deep Time box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 79. Deep Time
@@ -2435,7 +2435,7 @@ Choose a prehistory in the genesis wizard and the world runs ahead without you: 
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/80-the-turning-wheel.jpg" width="220" alt="The Turning Wheel cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/80-the-turning-wheel.jpg"><img src="common/assets/images/dlc-covers/80-the-turning-wheel.jpg" width="220" alt="The Turning Wheel box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/80-the-turning-wheel.jpg"><img src="common/assets/images/dlc-backs/80-the-turning-wheel.jpg" width="220" alt="The Turning Wheel box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 80. The Turning Wheel
@@ -2467,7 +2467,7 @@ In a cyclic cosmos the doom clock does not end the world. It turns it. The age c
 
 <table>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/81-sparks-of-genius.jpg" width="220" alt="Sparks of Genius cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/81-sparks-of-genius.jpg"><img src="common/assets/images/dlc-covers/81-sparks-of-genius.jpg" width="220" alt="Sparks of Genius box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/81-sparks-of-genius.jpg"><img src="common/assets/images/dlc-backs/81-sparks-of-genius.jpg" width="220" alt="Sparks of Genius box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 81. Sparks of Genius
@@ -2489,7 +2489,7 @@ A city survives a siege, and its builders master fortification. A plague kills t
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/82-the-scholars-lamp.jpg" width="220" alt="The Scholar's Lamp cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/82-the-scholars-lamp.jpg"><img src="common/assets/images/dlc-covers/82-the-scholars-lamp.jpg" width="220" alt="The Scholar's Lamp box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/82-the-scholars-lamp.jpg"><img src="common/assets/images/dlc-backs/82-the-scholars-lamp.jpg" width="220" alt="The Scholar's Lamp box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 82. The Scholar's Lamp
@@ -2511,7 +2511,7 @@ Your physicians are certain that bleeding cures fever. They are wrong, and the p
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/83-steam-and-lightning.jpg" width="220" alt="Steam and Lightning cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/83-steam-and-lightning.jpg"><img src="common/assets/images/dlc-covers/83-steam-and-lightning.jpg" width="220" alt="Steam and Lightning box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/83-steam-and-lightning.jpg"><img src="common/assets/images/dlc-backs/83-steam-and-lightning.jpg" width="220" alt="Steam and Lightning box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 83. Steam and Lightning
@@ -2533,7 +2533,7 @@ The river town that once wove by hand now runs water-frame mills, and the weaver
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/84-fateweaver.jpg" width="220" alt="Fateweaver cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/84-fateweaver.jpg"><img src="common/assets/images/dlc-covers/84-fateweaver.jpg" width="220" alt="Fateweaver box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/84-fateweaver.jpg"><img src="common/assets/images/dlc-backs/84-fateweaver.jpg" width="220" alt="Fateweaver box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 84. Fateweaver
@@ -2555,7 +2555,7 @@ Your world goes quiet for a century, and the storyteller notices. Raids grow lik
 </td>
 </tr>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/85-into-the-dark.jpg" width="220" alt="Into the Dark cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/85-into-the-dark.jpg"><img src="common/assets/images/dlc-covers/85-into-the-dark.jpg" width="220" alt="Into the Dark box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/85-into-the-dark.jpg"><img src="common/assets/images/dlc-backs/85-into-the-dark.jpg" width="220" alt="Into the Dark box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 #### 85. Into the Dark
