@@ -32,7 +32,9 @@ from aerona.engine.interconnect.causes import killing_incident
 from aerona.engine.lifecycle.aging import immortal, raise_lifespan_to_death_age
 from aerona.engine.lifecycle.succession import dynasty_root, pass_rule
 from aerona.engine.lore.history import record
+from aerona.engine.mind.ethics import killing_act
 from aerona.engine.mind.grief import bereave
+from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import inherit_memories, mourn
 from aerona.engine.mortal.death import record_end
 from aerona.engine.mortal.kin import children_of
@@ -104,6 +106,9 @@ async def die(
     await record_end(ctx, mortal, manner or (DeathCause.OLD_AGE if natural else DeathCause.UNKNOWN))
     ctx.count("memories_inherited", await mourn(session, ctx.rules, mortal, killer_id, ctx.epoch))
     ctx.count("griefs", await bereave(ctx, mortal, killer_id))
+    act = await killing_act(session, mortal, killer_id, manner)
+    if act is not None:
+        await judged(ctx, killer_id or mortal.id, mortal.id, act)
     heir = await pass_rule(ctx, mortal)
     if heir is not None:
         await inherit_memories(session, ctx.rules, mortal, [heir.id], ctx.epoch)

@@ -383,6 +383,8 @@ class ArtworkProfileRow(Base):
     message: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
     quality: Mapped[int] = mapped_column(default=50)
     copies: Mapped[int] = mapped_column(default=1)
+    colour: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    shape: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
     language_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     translations: Mapped[list[int]] = mapped_column(JSON, default=list)
     propaganda: Mapped[bool] = mapped_column(default=False)

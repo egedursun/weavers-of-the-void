@@ -91,3 +91,28 @@ export function useFeelings(nodeId: number) {
     retry: false,
   })
 }
+
+export type CultureMind = components['schemas']['CultureMindView']
+export type Preference = components['schemas']['PreferenceView']
+export type PreferenceKind = components['schemas']['PreferenceKind']
+export type Ethic = components['schemas']['EthicView']
+export type ActKind = components['schemas']['ActKind']
+export type EthicalStance = components['schemas']['EthicalStance']
+export type HonourModel = components['schemas']['HonourModel']
+
+export function cultureMindKey(nodeId: number) {
+  return [...loreKeys.entity(nodeId), 'culture-mind'] as const
+}
+
+export function useCultureMind(nodeId: number) {
+  return useQuery({
+    queryKey: cultureMindKey(nodeId),
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/minds/{node_id}/culture', {
+          params: { path: { node_id: nodeId } },
+        })
+      ),
+    retry: false,
+  })
+}

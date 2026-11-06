@@ -2,6 +2,7 @@ from collections import defaultdict
 
 from sqlalchemy import select
 
+from aerona.catalog.ethics import ACT_LABELS
 from aerona.catalog.mind import MELEE_SKILLS, MEMORIES, TRAITS
 from aerona.catalog.mind_split import IDEAS, derived_axes
 from aerona.constants.units import PERCENT
@@ -33,6 +34,7 @@ from aerona.domain.enums.mind import (
 from aerona.domain.enums.polity import OathKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import HeroQuestKind
+from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.demography.promotion import dormant_ids
@@ -54,13 +56,15 @@ from aerona.engine.mind.book import (
 )
 from aerona.engine.mind.depth import backfill_depth
 from aerona.engine.mind.dreams import dream, visitations
+from aerona.engine.mind.ethics import SCHISM_FACTION, drift_ethics, restore, schism, seed_ethics, seed_honour, spread_shame
 from aerona.engine.mind.feelings import feel
 from aerona.engine.mind.grief import GriefTally, advance
-from aerona.engine.mind.hooks import FIGHTING_ROLES
+from aerona.engine.mind.hooks import FIGHTING_ROLES, judged
 from aerona.engine.mind.ideas import ideas_of, turn_over
 from aerona.engine.mind.memories import forget_faded, kin_of, remember, strength_of
 from aerona.engine.mind.needs import role_status, update_needs, update_pressures
 from aerona.engine.mind.opinion import OpinionContext
+from aerona.engine.mind.preferences import adopt_totem, grow, make_taboos, pull_culture, seed_culture, seed_mortal
 from aerona.engine.mind.skills import choose_career, left_to_beg, practise_any, seed_skills, teach_apprentices, weather_skills
 from aerona.engine.mind.space import value_reading
 from aerona.engine.mind.split import (
@@ -77,6 +81,7 @@ from aerona.engine.mind.traits import seed_traits
 from aerona.engine.mind.values import drift_body, drift_culture, drift_divine, drift_person, seed_values
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
+from aerona.engine.phases.factions import found_faction
 from aerona.engine.phases.heroes import active_quest, start_quest
 from aerona.engine.phases.remembrance import disaster_toll
 from aerona.engine.phases.society_support.quests import QuestOption
@@ -233,13 +238,16 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
     "table.needs",
     "table.nodes",
     "table.personality_values",
+    "table.preferences",
     "table.pressures",
     "table.settlement_profiles",
     "table.skills",
     "table.sons",
+    "table.species_ranges",
     "table.traits",
     "table.war_sides",
     "table.wars",
+    "table.world_maps",
 )
 @writes(
     "beast.agility",
@@ -451,8 +459,10 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     "mortal.willpower",
     "mortal.wisdom",
     "table.bodies",
+    "table.body_customs",
     "table.bonds",
     "table.conditions",
+    "table.cult_tenets",
     "table.culture_values",
     "table.entity_flags",
     "table.epoch_year_cursors",
@@ -462,6 +472,7 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     "table.item_profiles",
     "table.memories",
     "table.mind_attributes",
+    "table.mind_facets",
     "table.minds",
     "table.mortal_equipment",
     "table.mortal_profiles",
@@ -469,6 +480,7 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     "table.personality_values",
     "table.prostheses",
     "table.skills",
+    "table.thoughts",
     "table.traits",
     "table.war_sides",
     "table.wars",
@@ -476,6 +488,7 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
 @writes(
     "mortal.hp",
     "table.bodies",
+    "table.body_customs",
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
@@ -486,6 +499,7 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     "table.memories",
     "table.mortal_profiles",
     "table.skills",
+    "table.thoughts",
     "table.traits",
 )
 async def mind_skills(ctx: TickContext) -> None:
@@ -596,12 +610,15 @@ async def mind_memories(ctx: TickContext) -> None:
     "table.mortal_profiles",
     "table.needs",
     "table.personality_values",
+    "table.preferences",
     "table.pressures",
     "table.settlement_profiles",
     "table.skills",
+    "table.species_ranges",
     "table.traits",
     "table.war_sides",
     "table.wars",
+    "table.world_maps",
 )
 @writes(
     "table.chronicle",
@@ -767,8 +784,12 @@ async def mind_ideas(ctx: TickContext) -> None:
     "table.applied_fixups",
     "table.artwork_profiles",
     "table.bonds",
+    "table.calendars",
+    "table.community_stocks",
+    "table.culture_ethics",
     "table.entities",
     "table.entity_flags",
+    "table.forced_weather",
     "table.item_profiles",
     "table.marriages",
     "table.memories",
@@ -779,9 +800,15 @@ async def mind_ideas(ctx: TickContext) -> None:
     "table.needs",
     "table.nodes",
     "table.personality_values",
+    "table.place_environment",
+    "table.preferences",
+    "table.region_environment",
+    "table.sky_events",
     "table.thoughts",
     "table.tradition_profiles",
     "table.traits",
+    "table.world_maps",
+    "table.world_seasons",
 )
 @writes("table.memories", "table.mind_facets", "table.mortal_profiles", "table.personality_values", "table.thoughts")
 async def mind_thoughts(ctx: TickContext) -> None:
@@ -896,6 +923,106 @@ async def mind_dreams(ctx: TickContext) -> None:
     ctx.count("dreams", dreamt)
 
 
+async def peoples_and_members(ctx: TickContext) -> tuple[list[EntityRow], dict[int, list[EntityRow]], list[EntityRow]]:
+    minds = await living_minds(ctx.session)
+    peoples = unheld(entity for entity in minds if entity.entity_type is EntityType.PEOPLE)
+    sleeping = await dormant_ids(ctx)
+    mortals = unheld(entity for entity in minds if entity.entity_type is EntityType.MORTAL and entity.id not in sleeping)
+    members: dict[int, list[EntityRow]] = defaultdict(list)
+    for mortal in mortals:
+        people = await people_of(ctx.session, mortal)
+        if people is not None:
+            members[people.id].append(mortal)
+    return peoples, members, mortals
+
+
+@reads(
+    "table.bonds",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.minds",
+    "table.name_registry",
+    "table.nodes",
+    "table.people_culture",
+    "table.preferences",
+    "table.region_environment",
+    "table.skills",
+    "table.tradition_profiles",
+    "table.world_maps",
+)
+@writes("table.bonds", "table.entities", "table.name_registry", "table.preferences", "table.tradition_profiles")
+async def mind_preferences(ctx: TickContext) -> None:
+    peoples, members, mortals = await peoples_and_members(ctx)
+    seeded = grown = taboos = totems = pulled = 0
+    for people in peoples:
+        seeded += await seed_culture(ctx, people)
+        taboos += await make_taboos(ctx, people)
+        totems += 1 if await adopt_totem(ctx, people) else 0
+        pulled += await pull_culture(ctx, people, members.get(people.id, []))
+    for mortal in mortals:
+        seeded += await seed_mortal(ctx, mortal)
+        grown += await grow(ctx, mortal)
+    ctx.count("preferences_seeded", seeded)
+    ctx.count("preferences_grown", grown)
+    ctx.count("preference_taboos", taboos)
+    ctx.count("preference_totems", totems)
+    ctx.count("preferences_pulled", pulled)
+
+
+@reads(
+    "mortal.charisma",
+    "table.bonds",
+    "table.culture_ethics",
+    "table.culture_honour",
+    "table.culture_values",
+    "table.entity_flags",
+    "table.memories",
+    "table.mind_facets",
+    "table.minds",
+    "table.mortal_profiles",
+    "table.thoughts",
+    "table.traits",
+)
+@writes("table.culture_ethics", "table.culture_honour", "table.memories", "table.mortal_profiles", "table.thoughts")
+async def mind_ethics(ctx: TickContext) -> None:
+    peoples, _, mortals = await peoples_and_members(ctx)
+    cults = unheld(await canon(ctx.session, [EntityType.CULT]))
+    seeded = moved = schisms = spread = restored = 0
+    for culture in [*peoples, *cults]:
+        seeded += await seed_ethics(ctx, culture)
+        await seed_honour(ctx, culture)
+        moved += await drift_ethics(ctx, culture)
+    for people in peoples:
+        call = await schism(ctx, people)
+        if call is None or await split_already(ctx, people):
+            continue
+        faction = await found_faction(ctx, people, SCHISM_FACTION)
+        await note(
+            ctx,
+            f"{faction.name} broke from the {people.name} over {ACT_LABELS[call.act].lower()}.",
+            key="ethics.schism",
+            ids=[faction.id, people.id],
+        )
+        schisms += 1
+    for mortal in mortals:
+        spread += await spread_shame(ctx, mortal)
+        restored += await restore(ctx, mortal)
+    ctx.count("ethics_seeded", seeded)
+    ctx.count("ethics_drifted", moved)
+    ctx.count("ethics_schisms", schisms)
+    ctx.count("shame_spread", spread)
+    ctx.count("shame_restored", restored)
+
+
+async def split_already(ctx: TickContext, people: EntityRow) -> bool:
+    found = await ctx.session.scalar(
+        select(EntityRow.id)
+        .where(EntityRow.entity_type == EntityType.FACTION, EntityRow.status == EntityStatus.CANON, EntityRow.affiliated_entity_id == people.id)
+        .limit(1)
+    )
+    return found is not None
+
+
 SURVEY_PHASES = (Phase("mind_survey", mind_survey),)
 
 
@@ -907,6 +1034,7 @@ SURVEY_PHASES = (Phase("mind_survey", mind_survey),)
     "table.community_societies",
     "table.community_stocks",
     "table.cosmos",
+    "table.culture_ethics",
     "table.culture_values",
     "table.epoch_year_cursors",
     "table.goods_flows",
@@ -948,6 +1076,7 @@ async def famine_aid(ctx: TickContext) -> None:
             continue
         kindness = max(0.0, 1 + value_reading(await values_for(ctx.session, donor.id), ActKind.HOSPITALITY) / PERCENT)
         if not rng.chance(table.famine_aid_chance * kindness):
+            await judged(ctx, donor.id, community.id, ActKind.HOARDING_IN_FAMINE)
             continue
         store = await stock(ctx.session, ctx.rules, donor.id, Commodity.FOOD)
         sent = round_half_up(store * table.famine_aid_share_pct / PERCENT)
@@ -992,6 +1121,8 @@ MIND_PHASES = (
     Phase("mind_thoughts", mind_thoughts),
     Phase("mind_grief", mind_grief),
     Phase("mind_dreams", mind_dreams),
+    Phase("mind_preferences", mind_preferences),
+    Phase("mind_ethics", mind_ethics),
     Phase("famine_aid", famine_aid),
     Phase("mind_opinion", mind_opinion),
 )

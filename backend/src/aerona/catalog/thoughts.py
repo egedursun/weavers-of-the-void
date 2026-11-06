@@ -175,6 +175,14 @@ THOUGHTS: MappingProxyType[ThoughtKind, ThoughtSpec] = MappingProxyType(
         T.DREAMED_OF_LONGING: th(E.LONGING, 40, "Dreamed of what they long for"),
         T.RECEIVED_VISITATION: th(E.AWE, 70, "Was visited in a dream", {"piety": 6, "superstition": 4}),
         T.SENT_BY_THE_CREATOR: th(E.AWE, 50, "Felt something the Creator sent"),
+        T.LIKED_SURROUNDINGS: th(E.CONTENTMENT, 20, "Liked what was around them"),
+        T.DISLIKED_SURROUNDINGS: th(E.DISGUST, 20, "Disliked what was around them"),
+        T.ENJOYED_FAVOURITE: th(E.JOY, 20, "Enjoyed a favourite"),
+        T.ENDURED_A_DISLIKE: th(E.DISGUST, 20, "Endured something they dislike"),
+        T.ACTED_ON_CONSCIENCE: th(E.PRIDE, 35, "Did what their people hold right"),
+        T.ACTED_AGAINST_CONSCIENCE: th(E.GUILT, 50, "Did what their people hold wrong", {}, {"self_consciousness": 3}),
+        T.KIN_SHAMED: th(E.SHAME, 45, "Kin were shamed"),
+        T.SHAME_RESTORED: th(E.RELIEF, 40, "A shame was set right"),
     }
 )
 

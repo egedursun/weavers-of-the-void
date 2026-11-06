@@ -2,6 +2,8 @@ from collections import defaultdict
 
 from sqlalchemy import func, select
 
+from aerona.catalog.ethics import ACT_CRIMES, HONOUR_MODELS
+from aerona.catalog.laws import PENALTY_CRUELTY
 from aerona.catalog.lore import IDEOLOGY_VALUES
 from aerona.catalog.mind import DOMAIN_VALUES
 from aerona.constants.units import PERCENT
@@ -24,7 +26,7 @@ from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
-from aerona.domain.enums.mind import MemoryKind, TraitKind, ValueAxis
+from aerona.domain.enums.mind import EthicalStance, MemoryKind, TraitKind, ValueAxis
 from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind, OfficePower, SuccessionRule
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, TreasuryEntry
 from aerona.domain.enums.society import SocialClass
@@ -35,6 +37,7 @@ from aerona.engine.demography.kinship import INHERITANCE_RULES
 from aerona.engine.factions.balance import faction_pull
 from aerona.engine.lore.research import lacks
 from aerona.engine.mind.book import traits_of
+from aerona.engine.mind.ethics import ethics_of, honour_of
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.law_effects import jubilee, levy_terms, standing_soldiers, tenure_and_serfdom
@@ -149,6 +152,24 @@ async def plagued(ctx: TickContext, realm: Realm) -> bool:
     return found is not None
 
 
+async def outraged_laws(ctx: TickContext, realm: Realm, laws: LawBook, values: dict[ValueAxis, int]) -> list[tuple[LawKind, dict[str, int | str | bool]]]:
+    code = laws.in_force(realm.entity.id, LawKind.PENAL_CODE)
+    core = realm.profile.core_entity_id
+    if code is None or core is None:
+        return []
+    table = ctx.rules.ethics
+    severe = {EthicalStance.UNTHINKABLE} | ({EthicalStance.SHAMEFUL} if HONOUR_MODELS[await honour_of(ctx.session, core)].law_pct > PERCENT else set())
+    harsher = dict(code.params)
+    for act, row in (await ethics_of(ctx.session, core)).items():
+        crime = ACT_CRIMES.get(act)
+        if crime is None or row.stance not in severe or PENALTY_CRUELTY.get(str(harsher.get(crime)), 0) >= table.law_cruelty:
+            continue
+        harsher[crime] = "death" if values.get(ValueAxis.MERCY, 0) < 0 else "exile"
+    if harsher == code.params or not ctx.rng(f"outrage.{realm.entity.id}.{ctx.epoch}").chance(table.law_chance):
+        return []
+    return [(LawKind.PENAL_CODE, harsher)]
+
+
 async def wanted_laws(
     ctx: TickContext, realm: Realm, laws: LawBook, values: dict[ValueAxis, int], *, lost: bool, fighting: bool
 ) -> list[tuple[LawKind, dict[str, int | str | bool]]]:
@@ -171,6 +192,7 @@ async def wanted_laws(
     if laws.in_force(polity.id, LawKind.PENAL_CODE) is None and realm.profile.tier >= 1:
         harsh = values.get(ValueAxis.MERCY, 0) <= -LEAN
         wants.append((LawKind.PENAL_CODE, {"theft": "hand" if harsh else "fine", "murder": "death" if harsh else "wergild"}))
+    wants.extend(await outraged_laws(ctx, realm, laws, values))
     if laws.in_force(polity.id, LawKind.SLAVERY) is None:
         lawful = values.get(ValueAxis.HIERARCHY, 0) >= LEAN and values.get(ValueAxis.MERCY, 0) <= -LEAN
         wants.append((LawKind.SLAVERY, {"status": "allowed" if lawful else "banned"}))

@@ -8,9 +8,11 @@ from aerona.api.schemas.mind import (
     AttributeView,
     BeliefShiftView,
     CareerView,
+    CultureMindView,
     DreamLogView,
     EmotionKindView,
     EmotionTotalView,
+    EthicView,
     FacetShiftView,
     FacetView,
     FeelingsView,
@@ -27,6 +29,8 @@ from aerona.api.schemas.mind import (
     OpinionMemoryView,
     OpinionTermView,
     OpinionView,
+    PreferenceKindView,
+    PreferenceView,
     PressureView,
     SkillView,
     SummaryView,
@@ -38,23 +42,30 @@ from aerona.api.schemas.mind import (
     ValueView,
 )
 from aerona.api.views.common import node_ref, node_refs
+from aerona.catalog.ethics import ACT_LABELS, HONOUR_MODELS, STANCE_LABELS, STANCE_ORDER, STANCE_READINGS
 from aerona.catalog.mind import FIXED_ROLES, MEMORIES, NEED_LABELS, PRESSURE_LABELS, SKILLS, TRAITS, VALUE_LABELS
 from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS, SKILL_ATTRIBUTES
+from aerona.catalog.preferences import PREFERENCE_LABELS, SPECIES_KINDS, STATIC_TARGETS, target_label
 from aerona.catalog.thoughts import DREAM_LABELS, EMOTIONS, NEEDS, READING_LABELS, THOUGHTS
 from aerona.core.errors import NotFoundError
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
-from aerona.db.tables.mind import MIND_LOCKS, DreamRow, GriefRow, MemoryRow, TraitRow
+from aerona.db.tables.mind import MIND_LOCKS, CultureHonourRow, DreamRow, GriefRow, MemoryRow, TraitRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.mind import Emotion, IdeaKind, MemoryKind, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import Emotion, IdeaKind, MemoryKind, PreferenceKind, ValueAxis, ValueHolder
 from aerona.engine.body.book import factor
 from aerona.engine.body.customs import people_of
 from aerona.engine.mind.book import Holder, holder_kind, load_holder, mind_of, needs_of, pressures_of, skills_of, stored_values, values_of
+from aerona.engine.mind.ethics import culture_of, ethics_of
 from aerona.engine.mind.ideas import fit, ideas_of
 from aerona.engine.mind.memories import memories_of, strength_of
 from aerona.engine.mind.opinion import Opinion, opinion
+from aerona.engine.mind.preferences import rows_of
 from aerona.engine.mind.skills import level_cost
 from aerona.engine.mind.split import Bodied, attributes_of, culture_mean, derived_summaries, effective_attributes, facets_of, has_attributes, has_facets
 from aerona.engine.mind.thoughts import need_importance, thoughts_of
@@ -67,7 +78,7 @@ router = APIRouter(tags=["mind"])
 NO_MIND = "No mind lives there."
 COMMUNITY_LOCKS = frozenset({"values", "memories", "needs"})
 LOCKS_BY_HOLDER = {
-    ValueHolder.PERSONAL: frozenset(MIND_LOCKS) - {"thoughts", "griefs", "dreams", "attributes", "facets", "ideas"},
+    ValueHolder.PERSONAL: frozenset(MIND_LOCKS) - {"thoughts", "griefs", "dreams", "attributes", "facets", "ideas", "preferences", "ethics"},
     ValueHolder.DIVINE: frozenset({"values", "traits", "memories", "attributes", "facets"}),
     ValueHolder.CULTURE: COMMUNITY_LOCKS,
     ValueHolder.COMMUNITY: frozenset({"memories", "needs"}),
@@ -466,3 +477,72 @@ async def feelings_view(services: ServicesDep, node_id: int = Path(ge=1)) -> Fee
             readings=[LabelView(key=reading.value, label=label) for reading, label in READING_LABELS.items()] if applies else [],
             long_term_threshold=rules.thoughts.long_term_threshold,
         )
+
+
+@router.get("/minds/{node_id}/culture", response_model=CultureMindView)
+async def culture_mind_view(services: ServicesDep, node_id: int = Path(ge=1)) -> CultureMindView:
+    async with reader(services) as session:
+        ref = await node_ref(session, node_id)
+        if ref is None:
+            raise NotFoundError(NO_MIND)
+        entity = await session.get(EntityRow, node_id)
+        kind = entity.entity_type if entity is not None else None
+        has_preferences = kind in {EntityType.MORTAL, EntityType.PEOPLE}
+        culture = await culture_of(session, node_id) if entity is not None else None
+        has_ethics = culture is not None
+        rows = await rows_of(session, node_id) if has_preferences else []
+        targets = await node_refs(session, [row.target_node_id for row in rows if row.target_node_id is not None])
+        ethics = await ethics_of(session, culture.id) if culture is not None else {}
+        honour = await session.get(CultureHonourRow, culture.id) if culture is not None and culture.entity_type is EntityType.PEOPLE else None
+        totem = await totem_species(session, node_id) if kind is EntityType.PEOPLE else None
+        return CultureMindView(
+            node_id=node_id,
+            name=ref.name,
+            has_preferences=has_preferences,
+            has_ethics=has_ethics,
+            ethics_holder=await node_ref(session, culture.id) if culture is not None else None,
+            ethics_own=culture is not None and culture.id == node_id,
+            preferences=[
+                PreferenceView(
+                    id=row.id,
+                    kind=row.kind,
+                    kind_label=PREFERENCE_LABELS[row.kind],
+                    target=row.target,
+                    target_label=targets[row.target_node_id].name if row.target_node_id in targets else target_label(row.kind, row.target),
+                    target_node=targets.get(row.target_node_id) if row.target_node_id is not None else None,
+                    strength=row.strength,
+                    held="strength" in (row.locked or []),
+                )
+                for row in sorted(rows, key=lambda item: (list(PreferenceKind).index(item.kind), -item.strength))
+            ],
+            totem=await node_ref(session, totem) if totem is not None else None,
+            ethics=[
+                EthicView(
+                    act=act,
+                    label=ACT_LABELS[act],
+                    stance=row.stance,
+                    stance_label=STANCE_LABELS[row.stance],
+                    reading=STANCE_READINGS[row.stance],
+                    since_epoch=row.since_epoch,
+                    held="stance" in (row.locked or []),
+                )
+                for act, row in sorted(ethics.items(), key=lambda item: (STANCE_ORDER.index(item[1].stance), item[0].value))
+            ],
+            honour_model=honour.model if honour is not None else None,
+            honour_label=HONOUR_MODELS[honour.model].label if honour is not None else None,
+            honour_held=honour is not None and "model" in (honour.locked or []),
+            preference_kinds=[
+                PreferenceKindView(kind=pref, label=PREFERENCE_LABELS[pref], targets=list(STATIC_TARGETS.get(pref, ())), from_records=pref in SPECIES_KINDS)
+                for pref in PreferenceKind
+            ]
+            if has_preferences
+            else [],
+            stances=[LabelView(key=stance.value, label=STANCE_LABELS[stance]) for stance in STANCE_ORDER],
+            honour_models=[LabelView(key=model.value, label=spec.label) for model, spec in HONOUR_MODELS.items()],
+        )
+
+
+async def totem_species(session: AsyncSession, people_id: int) -> int | None:
+    kept = select(BondRow.target_node_id).where(BondRow.source_node_id == people_id, BondRow.kind == BondKind.CELEBRATES, BondRow.state == BondState.ACTIVE)
+    origins = select(TraditionProfileRow.origin_entity_id).where(TraditionProfileRow.tradition_entity_id.in_(kept))
+    return await session.scalar(select(EntityRow.id).where(EntityRow.id.in_(origins), EntityRow.entity_type == EntityType.SPECIES).limit(1))

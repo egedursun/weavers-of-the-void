@@ -21,7 +21,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
-from aerona.domain.enums.mind import MemoryKind, ValueHolder
+from aerona.domain.enums.mind import ActKind, MemoryKind, ValueHolder
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import HeroQuestStatus
 from aerona.engine.body.book import ensure_body
@@ -31,6 +31,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import clamp_value, needs_of, stored_values, write_needs, write_values
+from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.queries import flags_by_entity, living_entity
@@ -282,6 +283,7 @@ async def feed(ctx: TickContext, bearer: EntityRow, row: AfflictionRow) -> None:
     victim = rng.pick(victims)
     harm = Harm(table.feed_harm, HarmCause.MONSTER, "drained of blood", source_node_id=bearer.id, killer_id=bearer.id, kind=InjuryKind.BITE)
     await apply_hits(ctx, victim, harm)
+    await judged(ctx, bearer.id, victim.id, ActKind.EATING_SAPIENTS)
     if rng.chance(table.blood_pct):
         await afflict(ctx, victim, PackageKind.VAMPIRISM, Transmission.BLOOD, source_node_id=bearer.id)
 

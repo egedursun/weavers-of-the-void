@@ -85,6 +85,8 @@ async def decide(ctx: TickContext, row: CaptiveCohortRow) -> CaptiveFate:
         return CaptiveFate.RANSOMED
     if values.get(ValueAxis.MERCY, 0) >= table.release_mercy or await release_by_opinion(ctx, captor, home):
         settle_into(ctx, home, row.count)
+        if home is not None:
+            await judged(ctx, captor.id, home.id, ActKind.MERCY_TO_ENEMY)
         return CaptiveFate.RELEASED
     sacrificial = values.get(ValueAxis.DEATH, 0) >= table.sacrifice_death or TenetKind.HUMAN_SACRIFICE in await faith_tenets(ctx.session, captor.id)
     if sacrificial and rng.chance(table.sacrifice_chance) and not await forbidden(ctx, captor.id, ActKind.HUMAN_SACRIFICE):
@@ -93,7 +95,10 @@ async def decide(ctx: TickContext, row: CaptiveCohortRow) -> CaptiveFate:
     if rng.chance(table.labour_pct) or ctx.epoch - row.since_epoch >= ctx.rules.campaigns.captive_defection_epochs:
         settle_into(ctx, captor, row.count)
         await carry_language(ctx, row, captor)
-        return CaptiveFate.ENSLAVED if await slavery_lawful(ctx, captor) else CaptiveFate.LABOUR
+        enslaved = await slavery_lawful(ctx, captor)
+        if enslaved and home is not None:
+            await judged(ctx, captor.id, home.id, ActKind.SLAVERY)
+        return CaptiveFate.ENSLAVED if enslaved else CaptiveFate.LABOUR
     return CaptiveFate.HELD
 
 
@@ -144,6 +149,7 @@ async def wring_intel(ctx: TickContext, captor: EntityRow, home: EntityRow) -> N
         ctx.session.add(found)
     found.intel = clamp_int(found.intel + ctx.rules.captivity.torture_intel, 0, PERCENT)
     found.last_operation, found.last_epoch = "torture", ctx.epoch
+    await judged(ctx, captor.id, home.id, ActKind.TORTURE)
 
 
 async def announce(ctx: TickContext, fates: dict[CaptiveFate, int]) -> None:

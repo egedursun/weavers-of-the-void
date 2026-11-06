@@ -12,12 +12,13 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import HERO_ROLES, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
-from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.polity import OathKind, OathStatus
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.gods.progress import cap_gained_essence
+from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.standing import add_honour
 from aerona.engine.notes import note
@@ -120,6 +121,7 @@ async def break_oath(ctx: TickContext, oath: OathRow, reason: str) -> None:
     if swearer is None:
         return
     swearer.importance = max(0, (swearer.importance or 0) - table.honour_loss)
+    await judged(ctx, swearer.id, oath.recipient_node_id or swearer.id, ActKind.OATHBREAKING)
     if swearer.entity_type is EntityType.MORTAL:
         await add_honour(ctx.session, swearer.id, -ctx.rules.standing.honour_broken_oath, ctx.epoch)
     await add_flag(ctx.session, swearer.id, EntityFlag.OATHBREAKER, ctx.epoch)

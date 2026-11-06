@@ -1,5 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.ethics import CRIME_ACTS, HONOUR_MODELS
+from aerona.catalog.thoughts import THOUGHTS
+from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import BodyPart, DamageType, HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind
@@ -11,6 +14,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.mind.ethics import culture_of, honour_of
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.standing import add_infamy, add_wealth
@@ -18,8 +22,10 @@ from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.queries import active_bonds, add_flag, living_entity
 
+JUDGED_CRIMES = frozenset({CrimeKind.THEFT, CrimeKind.BLASPHEMY, CrimeKind.TREASON})
 CODE_PUNISHMENTS: dict[str, PunishmentKind] = {
     "fine": PunishmentKind.FINE,
+    "pillory": PunishmentKind.PUBLIC_SHAMING,
     "wergild": PunishmentKind.FINE,
     "flogging": PunishmentKind.FLOGGING,
     "hand": PunishmentKind.HAND,
@@ -80,10 +86,22 @@ async def code_punishment(ctx: TickContext, community_id: int | None, crime: Cri
     return chosen
 
 
+async def shame_publicly(ctx: TickContext, culprit: EntityRow, judge: EntityRow | None) -> None:
+    culture = await culture_of(ctx.session, culprit.id)
+    spec = HONOUR_MODELS[await honour_of(ctx.session, culture.id if culture is not None else None)]
+    await add_infamy(ctx.session, culprit.id, ctx.rules.ethics.pillory_infamy * spec.public_shame_pct / PERCENT, ctx.epoch)
+    size = THOUGHTS[ThoughtKind.WAS_SHAMED].intensity * spec.public_shame_pct / PERCENT
+    await think(ctx.session, ctx.rules, culprit.id, ThoughtKind.WAS_SHAMED, ctx.epoch, subject_id=judge.id if judge is not None else None, intensity=size)
+
+
 async def sentence(ctx: TickContext, culprit: EntityRow, crime: CrimeKind, punishment: PunishmentKind, *, judge: EntityRow | None = None) -> bool:
     table = ctx.rules.punishment
     reason = f"punished for {CRIME_TEXT[crime]}"
     await think(ctx.session, ctx.rules, culprit.id, ThoughtKind.WAS_PUNISHED, ctx.epoch, subject_id=judge.id if judge is not None else None)
+    if crime in JUDGED_CRIMES:
+        await judged(ctx, culprit.id, culprit.id, CRIME_ACTS[crime])
+    if punishment is PunishmentKind.PUBLIC_SHAMING:
+        await shame_publicly(ctx, culprit, judge)
     if punishment is PunishmentKind.FINE:
         await add_wealth(ctx.session, culprit.id, -table.fine_wealth, ctx.epoch)
     elif punishment is PunishmentKind.FLOGGING:

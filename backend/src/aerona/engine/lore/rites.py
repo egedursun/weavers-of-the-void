@@ -840,6 +840,9 @@ async def dampening(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) ->
     return max(0.0, 1 - wet / PERCENT * ctx.rules.rites.fire_wet_pct / PERCENT)
 
 
+SCHOOL_ACTS = {MagicSchool.BLOOD: ActKind.BLOOD_MAGIC, MagicSchool.VOID: ActKind.VOID_MAGIC, MagicSchool.DEATH: ActKind.NECROMANCY}
+
+
 async def cast(
     ctx: TickContext,
     caster: EntityRow,
@@ -877,6 +880,7 @@ async def cast(
             done.append("the wet weather smothered its fire")
         casting.effect = "; ".join(text for text in done if text)[:480] or "the rite was worked to no end"
         await infamy(ctx, caster, row, target)
+    await judged(ctx, caster.id, target.id if target is not None else caster.id, SCHOOL_ACTS.get(row.school, ActKind.MAGIC_USE))
     set_stats(rite, castings=(stat(rite, "castings") or 0) + 1)
     ctx.session.add(casting)
     await ctx.session.flush()

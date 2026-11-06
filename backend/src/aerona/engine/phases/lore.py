@@ -240,6 +240,7 @@ async def language_cycles(ctx: TickContext) -> None:
     "table.culture_values",
     "table.custom_kinds",
     "table.entities",
+    "table.epoch_year_cursors",
     "table.house_members",
     "table.house_profiles",
     "table.incident_participants",

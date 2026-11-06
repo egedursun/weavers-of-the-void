@@ -152,6 +152,7 @@ async def _conquer(ctx: TickContext, war: WarRow, victor: EntityRow, loser: Enti
     if wonder is not None:
         notes.append(f"The wonder {wonder.name} is now in the hands of {victor.name}.")
     notes.extend(await burn_books(ctx, victor, loser))
+    await judged(ctx, victor.id, loser.id, ActKind.CONQUEST)
     return notes
 
 

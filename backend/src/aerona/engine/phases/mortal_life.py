@@ -283,6 +283,7 @@ async def mortal_standing(ctx: TickContext) -> None:
 
 
 @reads(
+    "item.protection",
     "mortal.age",
     "mortal.agility",
     "mortal.beauty",
@@ -304,17 +305,21 @@ async def mortal_standing(ctx: TickContext) -> None:
     "table.cult_tenets",
     "table.culture_values",
     "table.entity_flags",
+    "table.entity_tags",
     "table.epoch_year_cursors",
     "table.holder_levels",
+    "table.incubating_ideas",
     "table.injuries",
     "table.item_profiles",
     "table.law_jurisdictions",
     "table.memories",
+    "table.mind_attributes",
     "table.mind_facets",
     "table.minds",
     "table.mortal_equipment",
     "table.mortal_profiles",
     "table.needs",
+    "table.node_materials",
     "table.nodes",
     "table.offices",
     "table.personality_values",
@@ -324,6 +329,7 @@ async def mortal_standing(ctx: TickContext) -> None:
     "table.traits",
     "table.war_sides",
     "table.wars",
+    "table.world_materials",
 )
 @writes(
     "mortal.hp",

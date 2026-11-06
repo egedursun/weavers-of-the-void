@@ -8,7 +8,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.repositories.chronicle import incident_for
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow
-from aerona.db.write_guard import write_blocked
+from aerona.db.write_guard import held, write_blocked
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
@@ -134,7 +134,7 @@ async def strongest(session: AsyncSession, holder_id: int, epoch: int, count: in
 
 async def forget_faded(session: AsyncSession, rules: Rules, epoch: int) -> int:
     floor = rules.memory.forget_below
-    faded = [row.id for row in await session.scalars(select(MemoryRow)) if abs(strength_of(row, epoch)) < floor]
+    faded = [row.id for row in await session.scalars(select(MemoryRow)) if abs(strength_of(row, epoch)) < floor and not held(row.holder_node_id)]
     if faded:
         await session.execute(delete(MemoryRow).where(MemoryRow.id.in_(faded)))
         await session.flush()

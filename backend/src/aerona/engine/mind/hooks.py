@@ -15,9 +15,9 @@ from aerona.engine.body.treatment import exert
 from aerona.engine.context import TickContext
 from aerona.engine.lore.taboos import violated
 from aerona.engine.mind.book import load_holder, values_for
+from aerona.engine.mind.ethics import conscience, ethic_reading
 from aerona.engine.mind.memories import kin_of, remember
 from aerona.engine.mind.skills import practise, practise_any
-from aerona.engine.mind.space import value_reading
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mind.traits import gain_trait
 
@@ -172,10 +172,13 @@ async def practised_any(ctx: TickContext, node_id: int, skills: Iterable[SkillKi
     await practise_any(ctx.session, ctx.rules, node_id, skills, xp_rule, epoch=ctx.epoch)
 
 
-async def witnessed(ctx: TickContext, holder_id: int, subject_id: int, act: ActKind, *, base: int, note: str | None = None) -> int:
+async def witnessed(
+    ctx: TickContext, holder_id: int, subject_id: int, act: ActKind, *, base: int, note: str | None = None, victim_id: int | None = None
+) -> int:
     if holder_id == subject_id:
         return 0
-    reading = value_reading(await values_for(ctx.session, holder_id), act)
+    values = await values_for(ctx.session, holder_id)
+    reading = await ethic_reading(ctx.session, ctx.rules, holder_id, act, values, actor_id=subject_id, victim_id=victim_id)
     size = round(base * reading / PERCENT)
     if not size:
         return 0
@@ -221,9 +224,10 @@ async def judged(ctx: TickContext, actor_id: int, victim_id: int, act: ActKind, 
     moved = 0
     seen = await onlookers(ctx, actor_id, victim_id)
     for holder in seen:
-        moved += abs(await witnessed(ctx, holder, actor_id, act, base=base, note=note))
+        moved += abs(await witnessed(ctx, holder, actor_id, act, base=base, note=note, victim_id=victim_id))
     if act in ATROCITIES:
         moved += len(await horrified(ctx, actor_id, victim_id))
+    await conscience(ctx, actor_id, act, victim_id)
     incident = incident_for(actor_id, ctx.epoch) or incident_for(victim_id, ctx.epoch)
     if incident is not None and seen:
         await ChronicleRepository(ctx.session).witness(incident, seen)

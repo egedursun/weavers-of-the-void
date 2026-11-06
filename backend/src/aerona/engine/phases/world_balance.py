@@ -419,6 +419,7 @@ async def revive(ctx: TickContext, world: WorldRow, *, forced: bool = False) -> 
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.language_profiles",
     "table.name_registry",
 )
 async def world_balance(ctx: TickContext) -> None:

@@ -20,6 +20,7 @@ from aerona.engine.environment.years import world_years
 from aerona.engine.factions.book import monopoly_factor
 from aerona.engine.faith.book import forbidden_foods
 from aerona.engine.lore.traditions import resent_taboo, taboos
+from aerona.engine.mind.preferences import demand_factor, market_fit, material_factor
 from aerona.engine.notes import note
 from aerona.engine.polity.law_effects import luxury_factor
 from aerona.engine.primitives.numbers import round_half_up
@@ -81,7 +82,16 @@ async def material_premium(ctx: TickContext, book: EconomyBook, market: EntityRo
     weight = sum(row.quantity for row in lots)
     if weight <= 0:
         return 1.0
-    return sum(price_premium(ctx.rules, book.materials.props(market.world_id, row.material, row.world_material_id)) * row.quantity for row in lots) / weight
+    tastes = await market_fit(ctx.session, market.id)
+    return (
+        sum(
+            price_premium(ctx.rules, book.materials.props(market.world_id, row.material, row.world_material_id))
+            * material_factor(ctx.rules, tastes, row.material)
+            * row.quantity
+            for row in lots
+        )
+        / weight
+    )
 
 
 async def price_holds(ctx: TickContext, market_id: int) -> dict[CommodityKind, MarketPriceHoldRow]:
@@ -122,6 +132,7 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
     diet = diet_demand(ctx.rules, population, await staples_of(ctx.session, market))
     held = await price_holds(ctx, market.id)
     growth = year_growth(ctx, book, market)
+    tastes = await market_fit(ctx.session, market.id)
     for commodity in COMMODITIES:
         hold = held.get(commodity)
         supply = await holding(ctx.session, market.id, commodity)
@@ -132,6 +143,7 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
             demand = round_half_up(demand * ctx.rules.doctrine.dietary_demand_pct / PERCENT)
         if commodity is CommodityKind.LUXURIES:
             demand = round_half_up(demand * await luxury_factor(ctx.session, ctx.rules, market.id, book.societies.get(market.id)))
+        demand = round_half_up(demand * demand_factor(ctx.rules, tastes, commodity.value))
         monopoly = await monopoly_factor(ctx.session, market.id, commodity, ctx.rules.factions.monopoly_price_pct)
         premium = await material_premium(ctx, book, market, commodity)
         swing = swing_of(ctx, market, commodity, growth)

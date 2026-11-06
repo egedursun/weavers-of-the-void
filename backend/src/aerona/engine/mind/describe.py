@@ -3,21 +3,25 @@ from collections.abc import Mapping
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.ethics import ACT_LABELS, HONOUR_MODELS, STANCE_LABELS, STANCE_READINGS
 from aerona.catalog.mind import MEMORIES, NEED_LABELS, PRESSURE_LABELS, SKILLS, TRAITS, VALUE_LABELS
 from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS
+from aerona.catalog.preferences import target_label
 from aerona.catalog.thoughts import DREAM_LABELS, EMOTIONS, READING_LABELS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
-from aerona.db.tables.mind import DreamRow, GriefRow
+from aerona.db.tables.mind import CultureHonourRow, DreamRow, GriefRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.mind import DreamReading, Emotion, GriefStage, IdeaState, PressureKind, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import DreamReading, Emotion, EthicalStance, GriefStage, IdeaState, PressureKind, ValueAxis, ValueHolder
 from aerona.engine.mind.book import Holder, holder_kind, needs_of, pressures_of, skills_of, traits_of, values_of
+from aerona.engine.mind.ethics import culture_of, ethics_of
 from aerona.engine.mind.ideas import ideas_of
 from aerona.engine.mind.memories import strongest
+from aerona.engine.mind.preferences import rows_of
 from aerona.engine.mind.space import top_values
 from aerona.engine.mind.split import attributes_of, facets_of
 from aerona.engine.mind.thoughts import strength_of as thought_strength
@@ -125,6 +129,34 @@ async def idea_lines(session: AsyncSession, node_id: int) -> list[str]:
     return lines
 
 
+async def taste_lines(session: AsyncSession, rules: Rules, node_id: int) -> list[str]:
+    table = rules.context
+    lines: list[str] = []
+    rows = sorted(await rows_of(session, node_id), key=lambda row: (-abs(row.strength), row.id))
+    loves = [row for row in rows if row.strength >= rules.preferences.noted_above][: table.mind_preferences_shown]
+    hates = [row for row in rows if row.strength <= -rules.preferences.noted_above][: table.mind_preferences_shown]
+    names = await node_names(session, [row.target_node_id for row in loves + hates if row.target_node_id is not None])
+    if loves or hates:
+        loved = ", ".join(names.get(row.target_node_id or 0) or target_label(row.kind, row.target) for row in loves) or "nothing in particular"
+        hated = ", ".join(names.get(row.target_node_id or 0) or target_label(row.kind, row.target) for row in hates) or "nothing in particular"
+        lines.append(f"Loves: {loved}; dislikes: {hated}")
+    culture = await culture_of(session, node_id)
+    if culture is None:
+        return lines
+    ethics = sorted((await ethics_of(session, culture.id)).values(), key=lambda row: (-abs(STANCE_READINGS[row.stance]), row.act.value))
+    marked = [row for row in ethics if row.stance is not EthicalStance.ACCEPTABLE][: table.mind_ethics_shown]
+    if marked:
+        lines.append("Held right and wrong: " + "; ".join(f"{ACT_LABELS[row.act].lower()} is {STANCE_LABELS[row.stance].lower()}" for row in marked))
+    honour = await session.get(CultureHonourRow, culture.id)
+    if honour is not None:
+        lines.append(f"Honour model: {HONOUR_MODELS[honour.model].label}")
+    return lines
+
+
+async def node_names(session: AsyncSession, node_ids: list[int]) -> dict[int, str]:
+    return {node_id: await name_of(session, node_id) for node_id in node_ids}
+
+
 async def feeling_lines(session: AsyncSession, rules: Rules, node_id: int, epoch: int) -> list[str]:
     lines: list[str] = []
     profile = await session.get(MortalProfileRow, node_id)
@@ -159,6 +191,7 @@ async def mind_lines(session: AsyncSession, rules: Rules, node: Holder, epoch: i
     if values:
         lines.append(f"{HOLDER_WORDS[kind]} prizes most: {value_phrase(values, table.mind_values_shown)}")
     lines.extend(await split_lines(session, rules, node))
+    lines.extend(await taste_lines(session, rules, node.id))
     if isinstance(node, EntityRow) and node.entity_type is EntityType.MORTAL:
         lines.extend(await life_lines(session, rules, node, private=private))
     if not private:

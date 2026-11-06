@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import or_, select
 
+from aerona.catalog.preferences import FOODS
 from aerona.catalog.thoughts import EMOTIONS, MEMORY_THOUGHTS, NEEDS, THOUGHTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
@@ -14,13 +15,18 @@ from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ArtMedium, TraditionKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.mind import Emotion, MemoryKind, ThoughtKind, ValueHolder
+from aerona.domain.enums.mind import ActKind, Emotion, MemoryKind, PreferenceKind, ThoughtKind, ValueHolder
 from aerona.domain.models.entity_stats import ArtworkStats
 from aerona.engine.context import TickContext
+from aerona.engine.economy.stocks import holding
+from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.gods.queries import community_of
 from aerona.engine.mind.book import needs_of, stored_values
+from aerona.engine.mind.hooks import judged
+from aerona.engine.mind.preferences import fit, home_region, home_terrain, prefs_of
 from aerona.engine.mind.split import facets_of
 from aerona.engine.mind.thoughts import need_importance, think
+from aerona.engine.mortal.kin import close_kin_of, spouses_of
 from aerona.engine.primitives.naming import seed_of
 
 FEASTS = frozenset({TraditionKind.FESTIVAL, TraditionKind.ANCESTOR_FEAST, TraditionKind.HARVEST_RITE})
@@ -57,7 +63,13 @@ async def life_events(ctx: TickContext, mortal: EntityRow) -> int:
     )
     for wedding in list(weddings):
         other = wedding.second_id if wedding.first_id == mortal.id else wedding.first_id
-        made += 1 if await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.MARRIED, wedding.start_epoch, subject_id=other) else 0
+        if await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.MARRIED, wedding.start_epoch, subject_id=other) is None:
+            continue
+        made += 1
+        if wedding.first_id == mortal.id and other in await close_kin_of(ctx.session, mortal.id):
+            await judged(ctx, mortal.id, other, ActKind.INCEST)
+        if wedding.first_id == mortal.id and len(await spouses_of(ctx.session, mortal.id)) > 1:
+            await judged(ctx, mortal.id, other, ActKind.POLYGAMY)
     births = await ctx.session.scalars(
         select(BondRow).where(BondRow.source_node_id == mortal.id, BondRow.kind == BondKind.PARENT_OF, BondRow.epoch >= ctx.epoch - 1)
     )
@@ -94,10 +106,16 @@ async def ambient(ctx: TickContext, mortal: EntityRow) -> int:
     made = 0
     kept = select(BondRow.target_node_id).where(BondRow.source_node_id == community.id, BondRow.kind == BondKind.CELEBRATES, BondRow.state == BondState.ACTIVE)
     feast = await ctx.session.scalar(
-        select(TraditionProfileRow.tradition_entity_id).where(TraditionProfileRow.tradition_entity_id.in_(kept), TraditionProfileRow.kind.in_(FEASTS)).limit(1)
+        select(TraditionProfileRow).where(TraditionProfileRow.tradition_entity_id.in_(kept), TraditionProfileRow.kind.in_(FEASTS)).limit(1)
     )
     if feast is not None and ctx.rng(seed_of("feast", mortal.id, ctx.epoch)).chance(table.feast_pct):
-        made += 1 if await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.ATTENDED_FEAST, ctx.epoch, subject_id=feast) else 0
+        season = fit(await prefs_of(ctx.session, mortal.id), PreferenceKind.SEASON, feast.calendar_slot.value if feast.calendar_slot is not None else None)
+        size = THOUGHTS[ThoughtKind.ATTENDED_FEAST].intensity * (1 + season / PERCENT)
+        made += (
+            1
+            if await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.ATTENDED_FEAST, ctx.epoch, subject_id=feast.tradition_entity_id, intensity=size)
+            else 0
+        )
     home = [community.id, *([community.location_id] if community.location_id is not None else [])]
     works = list(
         await ctx.session.scalars(
@@ -125,6 +143,43 @@ async def ambient(ctx: TickContext, mortal: EntityRow) -> int:
         made += 1 if await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.ADMIRED_GREAT_WORK, ctx.epoch, subject_id=rng.pick(renowned)) else 0
     if songs and rng.chance(table.music_pct):
         made += 1 if await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.HEARD_GREAT_MUSIC, ctx.epoch, subject_id=rng.pick(songs)) else 0
+    return made
+
+
+async def surroundings(ctx: TickContext, mortal: EntityRow) -> int:
+    table = ctx.rules.preferences
+    rng = ctx.rng(seed_of("surroundings", mortal.id, ctx.epoch))
+    if not rng.chance(table.surroundings_pct):
+        return 0
+    prefs = await prefs_of(ctx.session, mortal.id)
+    if not prefs:
+        return 0
+    seen: list[tuple[PreferenceKind, str]] = []
+    terrain = await home_terrain(ctx.session, mortal)
+    if terrain is not None:
+        seen.append((PreferenceKind.TERRAIN, terrain))
+    region = await home_region(ctx.session, mortal)
+    if region is not None:
+        book = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch)
+        weather = book.weather(ctx.environment.world_seed, ctx.epoch, region, book.growing_season(region.world_id), f"mood.{mortal.id}")
+        seen.append((PreferenceKind.WEATHER, weather.kind.value))
+    community = await community_of(ctx.session, mortal)
+    if community is not None:
+        for good in FOODS:
+            if await holding(ctx.session, community.id, good) > 0:
+                seen.append((PreferenceKind.FOOD, good.value))
+    made = 0
+    for kind, target in seen:
+        value = fit(prefs, kind, target)
+        if abs(value) < table.noted_above:
+            continue
+        food = kind is PreferenceKind.FOOD
+        thought = (
+            (ThoughtKind.ENJOYED_FAVOURITE if food else ThoughtKind.LIKED_SURROUNDINGS)
+            if value > 0
+            else (ThoughtKind.ENDURED_A_DISLIKE if food else ThoughtKind.DISLIKED_SURROUNDINGS)
+        )
+        made += 1 if await think(ctx.session, ctx.rules, mortal.id, thought, ctx.epoch, intensity=THOUGHTS[thought].intensity * abs(value) / PERCENT * 2) else 0
     return made
 
 
@@ -176,5 +231,6 @@ async def feel(ctx: TickContext, mortal: EntityRow) -> FeelingTally:
     tally.thoughts += await need_thoughts(ctx, mortal)
     tally.thoughts += await ambient(ctx, mortal)
     tally.thoughts += await prayers(ctx, mortal)
+    tally.thoughts += await surroundings(ctx, mortal)
     tally.relived += await relive(ctx, mortal)
     return tally

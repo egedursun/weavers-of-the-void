@@ -17,7 +17,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import PERFORMED_MEDIA, VERBAL_MEDIA, ArtMedium, Technique
 from aerona.domain.enums.demography import Aesthetic
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.mind import MemoryKind, SkillKind, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import MemoryKind, PreferenceKind, SkillKind, ValueAxis, ValueHolder
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.models.entity_stats import ArtworkStats
 from aerona.engine.body.customs import people_of
@@ -26,17 +26,26 @@ from aerona.engine.lore.language import speakers
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import stored_values, write_values
 from aerona.engine.mind.memories import remember
+from aerona.engine.mind.preferences import art_fit, favourite, paint
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.rules.registry import Rules
 
 WEAK_CLAIM = 50
 HALF = 2
 PERFORMERS = (SkillKind.ORATORY, SkillKind.LORE)
 IMAGES = frozenset({ArtMedium.STATUE, ArtMedium.FRESCO, ArtMedium.MOSAIC, ArtMedium.CARVING, ArtMedium.TAPESTRY, ArtMedium.ARCHITECTURE_ORNAMENT})
+
+
+async def favourite_form(ctx: TickContext, seat: EntityRow) -> ArtMedium | None:
+    people = await people_of(ctx.session, seat)
+    loved = await favourite(ctx.session, people.id, PreferenceKind.ART_FORM) if people is not None else None
+    if loved is None or loved.strength < ctx.rules.preferences.noted_above:
+        return None
+    return ArtMedium(loved.target)
 
 
 async def taste_of(ctx: TickContext, holder: EntityRow) -> Aesthetic | None:
@@ -260,7 +269,14 @@ async def art_year(ctx: TickContext, artwork: EntityRow) -> dict[str, int]:
     row = await profile_of(ctx, artwork)
     if await forgotten(ctx, artwork, row):
         return {"forgotten": 1}
-    counts = {"pressed": int(await pressure(ctx, artwork, row))}
+    counts = {"pressed": int(await pressure(ctx, artwork, row)), "painted": int(await paint(ctx, artwork, row))}
+    holder = await living_entity(ctx.session, artwork.location_id)
+    if holder is not None:
+        lean = await art_fit(ctx.session, holder, row)
+        step = lean / PERCENT * ctx.rules.preferences.art_renown_step * ctx.rules.preferences.art_fit_pct / PERCENT
+        if round_half_up(step):
+            shift_stat(artwork, "renown", step, PERCENT // HALF)
+            counts["tasted"] = 1
     remembered = await commemorate(ctx, row)
     if remembered:
         counts[f"commemorated_{remembered}"] = 1
@@ -397,6 +413,8 @@ async def commission(ctx: TickContext, realm: PolityProfileRow) -> EntityRow | N
     realm.treasury -= table.cost
     taste = await taste_of(ctx, seat)
     medium = AESTHETIC_IMAGES[taste] if taste is not None else ArtMedium.STATUE
+    loved = await favourite_form(ctx, seat)
+    medium = loved if loved is not None else medium
     message = {ValueAxis.HIERARCHY.value: 5, ValueAxis.HONOUR.value: 2}
     work = await create_record(
         ctx,

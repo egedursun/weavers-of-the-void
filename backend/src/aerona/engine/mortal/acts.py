@@ -15,7 +15,7 @@ from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType, MortalRole
-from aerona.domain.enums.mind import Facet, MemoryKind, NeedKind, OpinionComponent, ThoughtKind, TraitKind, ValueAxis
+from aerona.domain.enums.mind import ActKind, Facet, MemoryKind, NeedKind, OpinionComponent, ThoughtKind, TraitKind, ValueAxis
 from aerona.domain.enums.mortal import Ability, CareerPath, CrimeKind, DeathCause, LifeStage, StressBreak
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
@@ -27,6 +27,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import is_locked, mind_of, needs_of, traits_of, values_for
+from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember, strength_of
 from aerona.engine.mind.opinion import opinion
 from aerona.engine.mind.space import value_alignment
@@ -498,4 +499,5 @@ async def bribe(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) 
     await add_wealth(ctx.session, liege.id, table.bribe_cost, ctx.epoch)
     await remember(ctx.session, ctx.rules, holder_id=liege.id, subject_id=mortal.id, kind=MemoryKind.GIFTED_ME, magnitude=table.bribe_effect, epoch=ctx.epoch)
     await note(ctx, f"{mortal.name} bought the favour of {liege.name} with gold.", key="standing.bribe", ids=[mortal.id, liege.id])
+    await judged(ctx, mortal.id, liege.id, ActKind.BRIBERY)
     return True

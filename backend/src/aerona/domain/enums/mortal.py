@@ -99,6 +99,7 @@ class PunishmentKind(StrEnum):
     TONGUE = "tongue"
     EYES = "eyes"
     DEATH = "death"
+    PUBLIC_SHAMING = "public_shaming"
 
 
 class EquipmentSlot(StrEnum):

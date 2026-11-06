@@ -1,4 +1,15 @@
-from aerona.db.tables.mind import AttributeRow, DreamRow, FacetRow, GriefRow, IdeaRow, NeedRow, ThoughtRow
+from aerona.db.tables.mind import (
+    AttributeRow,
+    CultureEthicRow,
+    CultureHonourRow,
+    DreamRow,
+    FacetRow,
+    GriefRow,
+    IdeaRow,
+    NeedRow,
+    PreferenceRow,
+    ThoughtRow,
+)
 from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
 
@@ -12,6 +23,8 @@ BODY = "section-body"
 AFFLICTIONS = "section-afflictions"
 MIND_SPLIT = "section-mind-split"
 FEELINGS = "section-feelings"
+TASTES = "section-tastes"
+ETHICS = "section-ethics"
 S = Subsystem
 PROFILES = (MortalProfileRow.__tablename__,)
 
@@ -107,6 +120,46 @@ BODY_GAP_MECHANICS: tuple[Mechanic, ...] = (
     ),
 )
 MIND_GAP_MECHANICS: tuple[Mechanic, ...] = (
+    Mechanic(
+        key="preferences",
+        spec_item="F15",
+        title="Mortals and peoples love and hate materials, foods, creatures, colours, art, seasons, weather, lands, pastimes, crafts and more",
+        subsystem=S.MIND,
+        phases=("mind_preferences", "mind_thoughts", "markets", "artwork_cycles", "glory_hunts"),
+        surface=Surface(drawer=TASTES),
+        backfill="mind_preferences: peoples from their land, patron, aesthetic and beliefs; mortals from their people with deviation",
+        fields=("kind", "target", "strength"),
+        tables=(PreferenceRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal", "people"),
+        couplings=(
+            Coupling(S.ECONOMY, "a loved food, drink or material raises its demand and price; a hated one lowers it"),
+            Coupling(
+                S.CULTURE,
+                "shared disgust becomes taboo, a loved creature a totem spared from hunts; works fitting a people's taste gain renown",
+            ),
+            Coupling(S.MIND, "loved and hated land, weather and food colour a mortal's mood; loved creatures and plants nearby feed the need for nature"),
+        ),
+    ),
+    Mechanic(
+        key="ethics",
+        spec_item="F16",
+        title="Peoples and cults judge some forty acts from required to unthinkable; witnesses, renown, guilt, legitimacy and law follow the stance",
+        subsystem=S.MIND,
+        phases=("mind_ethics",),
+        surface=Surface(drawer=ETHICS),
+        backfill="mind_ethics: every people's and cult's stances read from its beliefs; honour models from honour, hierarchy and law",
+        templates=("ethics.schism",),
+        fields=("act", "stance", "model"),
+        tables=(CultureEthicRow.__tablename__, CultureHonourRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("people", "cult", "mortal", "settlement"),
+        couplings=(
+            Coupling(S.SOCIAL, "witnesses judge an act by their culture's stance, softened by war and hardened by famine or kin"),
+            Coupling(S.POLITY, "an unthinkable act with a light punishment moves a realm to harden its code; rulers lose legitimacy for shameful acts"),
+            Coupling(S.MIND, "acting against one's people's ethics brings guilt and stress; honour cultures spread shame to kin and seek restoration"),
+        ),
+    ),
     Mechanic(
         key="thoughts_and_mood",
         spec_item="F14",

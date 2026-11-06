@@ -378,6 +378,8 @@ MIND_STAGE = stage(
     "mind_thoughts",
     "mind_grief",
     "mind_dreams",
+    "mind_preferences",
+    "mind_ethics",
     "mortal_kin",
     "mortal_standing",
     "mortal_minds",

@@ -1,7 +1,9 @@
 import { EntityMechanics } from './EntityMechanics'
+import { EthicsSection } from './EthicsSection'
 import { FeelingsSection } from './FeelingsSection'
 import { MindSplitSection } from './MindSplitSection'
 import { RecordRowsSection } from './RecordRowsSection'
+import { TastesSection } from './TastesSection'
 
 export function ThingSections({
   nodeId,
@@ -21,6 +23,8 @@ export function ThingSections({
       />
       <MindSplitSection nodeId={nodeId} />
       <FeelingsSection nodeId={nodeId} />
+      <TastesSection nodeId={nodeId} />
+      <EthicsSection nodeId={nodeId} />
       <RecordRowsSection nodeId={nodeId} />
     </>
   )

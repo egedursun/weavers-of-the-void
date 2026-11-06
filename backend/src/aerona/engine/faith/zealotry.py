@@ -9,7 +9,7 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.faith import ClergyOffice, FanaticismKind, HoldingKind, TenetKind
-from aerona.domain.enums.mind import SkillKind, ValueAxis
+from aerona.domain.enums.mind import ActKind, SkillKind, ValueAxis
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.hits import Harm
@@ -20,6 +20,7 @@ from aerona.engine.faith.works import credit, spend_devotion
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.art import smash
 from aerona.engine.mind.book import skill_level, values_for
+from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.space import value_distance
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -154,6 +155,7 @@ async def fanaticism(ctx: TickContext, church: Church, book: FaithBook, atlas: R
             else iconoclasm(ctx, church)
         )
         if line is not None:
+            await judged(ctx, church.cult.id, church.cult.id, ActKind.ICONOCLASM if kind is FanaticismKind.ICONOCLASM else ActKind.CONVERSION_BY_FORCE)
             spend_devotion(church, ctx.rules.doctrine.fanaticism_devotion)
             if "fanaticism" not in doctrine.locked:
                 doctrine.fanaticism, doctrine.fanaticism_epoch = kind, ctx.epoch

@@ -6,17 +6,21 @@ from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN, RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.mind import (
+    ActKind,
     Attribute,
     DreamKind,
     DreamReading,
     Emotion,
+    EthicalStance,
     Facet,
     GriefStage,
+    HonourModel,
     IdeaKind,
     IdeaSource,
     IdeaState,
     MemoryKind,
     NeedKind,
+    PreferenceKind,
     PressureKind,
     SkillKind,
     SkillSource,
@@ -35,7 +39,22 @@ ATTRIBUTE_MIN = 0
 ATTRIBUTE_MAX = 100
 FACET_MIN = -50
 FACET_MAX = 50
-MIND_LOCKS = ("values", "traits", "skills", "memories", "needs", "role", "attributes", "facets", "ideas", "thoughts", "griefs", "dreams")
+MIND_LOCKS = (
+    "values",
+    "traits",
+    "skills",
+    "memories",
+    "needs",
+    "role",
+    "attributes",
+    "facets",
+    "ideas",
+    "thoughts",
+    "griefs",
+    "dreams",
+    "preferences",
+    "ethics",
+)
 
 
 class MindRow(Base):
@@ -238,3 +257,39 @@ class DreamRow(Base):
     reader_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     reading_true: Mapped[bool | None]
     recurring: Mapped[bool] = mapped_column(default=False)
+
+
+class PreferenceRow(Base):
+    __tablename__ = "preferences"
+    __table_args__ = (
+        between("strength", RELATION_MIN, RELATION_MAX),
+        UniqueConstraint("holder_node_id", "kind", "target", name="uq_preferences_holder_kind_target"),
+        Index("ix_preferences_holder", "holder_node_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    holder_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
+    kind: Mapped[PreferenceKind] = mapped_column(enum_type(PreferenceKind, "kind"))
+    target: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
+    target_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    strength: Mapped[int]
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class CultureEthicRow(Base):
+    __tablename__ = "culture_ethics"
+    __table_args__ = (at_least("since_epoch", 0),)
+
+    holder_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    act: Mapped[ActKind] = mapped_column(enum_type(ActKind, "act"), primary_key=True)
+    stance: Mapped[EthicalStance] = mapped_column(enum_type(EthicalStance, "stance"))
+    since_epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class CultureHonourRow(Base):
+    __tablename__ = "culture_honour"
+
+    entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    model: Mapped[HonourModel] = mapped_column(enum_type(HonourModel, "model"))
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)

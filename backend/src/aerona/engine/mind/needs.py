@@ -22,6 +22,7 @@ from aerona.engine.gods.queries import community_of
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.mind.book import Values, best_skill, is_locked, mind_of, needs_of, pressures_of, write_needs, write_pressures
 from aerona.engine.mind.memories import strength_of
+from aerona.engine.mind.preferences import nature_bonus
 from aerona.engine.mortal.kin import close_kin_of, partners_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import known_levels
@@ -268,7 +269,7 @@ async def deeper_needs(
             + (table.creating_practised if used & MAKING_SKILLS else 0)
         ),
         NeedKind.BEAUTY: pct(table.beauty_base + works * table.beauty_per_work),
-        NeedKind.NATURE: pct(fertility * table.nature_fertility_pct / PERCENT),
+        NeedKind.NATURE: pct(fertility * table.nature_fertility_pct / PERCENT + await nature_bonus(session, rules, mortal)),
         NeedKind.ADVENTURE: pct(table.adventure_base + (table.adventure_travelled if used & TRAVEL_SKILLS or mortal.mortal_role is MortalRole.EXPLORER else 0)),
         NeedKind.FIGHTING: pct(table.fighting_base + (table.fighting_fought if used & FIGHT_SKILLS else 0)),
         NeedKind.WEALTH: pct(wealth * table.wealth_pct / PERCENT),

@@ -10,6 +10,7 @@ from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow, PolityTerritoryRow
 from aerona.db.tables.region import PolityMapKnowledgeRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
@@ -153,7 +154,7 @@ async def chart(session: AsyncSession, rules: Rules, atlas: RegionAtlas, epoch: 
     changed = 0
     for polity_id, region_id in sorted(pairs):
         row = rows.get((polity_id, region_id))
-        if row is not None and row.held:
+        if (row is not None and row.held) or held(polity_id, region_id):
             continue
         floor = floors.get(polity_id, {}).get(region_id, 0)
         previous = row.level if row is not None else 0

@@ -6,10 +6,11 @@ from aerona.db.tables.military import WarAimRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
 from aerona.domain.enums.military import WarAimKind
-from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.mind import ActKind, ValueAxis
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import values_for
+from aerona.engine.mind.hooks import judged
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat
@@ -73,7 +74,10 @@ async def punitive_war(ctx: TickContext, avenger_id: int, offender_id: int, reas
 
 async def raid_war(ctx: TickContext, raider_id: int, victim_id: int, reason: str) -> WarRow | None:
     params: dict[str, int | str | bool] = {"amount": ctx.rules.siegecraft.sack_loot}
-    return await declared_war(ctx, raider_id, victim_id, WarCause.RAID, reason, aim=WarAimKind.LOOT, params=params, open_now=False)
+    war = await declared_war(ctx, raider_id, victim_id, WarCause.RAID, reason, aim=WarAimKind.LOOT, params=params, open_now=False)
+    if war is not None:
+        await judged(ctx, raider_id, victim_id, ActKind.RAIDING)
+    return war
 
 
 async def raiders(ctx: TickContext) -> int:

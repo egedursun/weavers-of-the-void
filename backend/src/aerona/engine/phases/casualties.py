@@ -479,6 +479,8 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     "table.captives",
     "table.community_societies",
     "table.cosmos",
+    "table.culture_ethics",
+    "table.culture_values",
     "table.designated_heirs",
     "table.entity_flags",
     "table.epoch_year_cursors",
@@ -493,6 +495,7 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     "table.name_registry",
     "table.nodes",
     "table.routes",
+    "table.tradition_profiles",
     "table.traits",
     "table.world_maps",
 )

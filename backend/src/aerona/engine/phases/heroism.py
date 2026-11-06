@@ -23,9 +23,11 @@ from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.body.book import effective, strike_style
+from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.beasts import rob_hoard, wound_harm
+from aerona.engine.ecology.totems import totem_of
 from aerona.engine.economy.money import inject_hoard
 from aerona.engine.economy.sanctity import holy_strike
 from aerona.engine.gods.queries import community_of
@@ -503,6 +505,8 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.community_societies",
     "table.conditions",
     "table.cosmos",
+    "table.culture_ethics",
+    "table.culture_values",
     "table.designated_heirs",
     "table.entities",
     "table.entity_flags",
@@ -571,6 +575,10 @@ async def glory_hunts(ctx: TickContext) -> None:
         ):
             continue
         beaten = {bond.target_node_id for bond in await active_bonds(ctx.session, VICTORY_KINDS, sources=[hero.id])}
+        folk = await people_of(ctx.session, hero)
+        sacred = await totem_of(ctx, folk.id) if folk is not None else None
+        if sacred is not None:
+            beaten.add(sacred)
         prey = [
             monster
             for monster in monsters

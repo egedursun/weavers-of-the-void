@@ -331,6 +331,31 @@ class ActKind(StrEnum):
     WINTER_FIGHTING = "winter_fighting"
     GUEST_KILLING = "guest_killing"
     RITUAL_SCARRING = "ritual_scarring"
+    KILLING_KIN = "killing_kin"
+    KILLING_OUTSIDER = "killing_outsider"
+    KILLING_IN_WAR = "killing_in_war"
+    KILLING_CAPTIVE = "killing_captive"
+    REGICIDE = "regicide"
+    DUEL_TO_DEATH = "duel_to_death"
+    REVENGE_KILLING = "revenge_killing"
+    THEFT = "theft"
+    TREASON = "treason"
+    COWARDICE = "cowardice"
+    DESECRATION = "desecration"
+    BRIBERY = "bribery"
+    SUICIDE = "suicide"
+    TORTURE = "torture"
+    EATING_SAPIENTS = "eating_sapients"
+    ICONOCLASM = "iconoclasm"
+    CONVERSION_BY_FORCE = "conversion_by_force"
+    POLYGAMY = "polygamy"
+    INCEST = "incest"
+    MAGIC_USE = "magic_use"
+    BLOOD_MAGIC = "blood_magic"
+    VOID_MAGIC = "void_magic"
+    NECROMANCY = "necromancy"
+    HOARDING_IN_FAMINE = "hoarding_in_famine"
+    SLAVERY = "slavery"
 
 
 class NeedKind(StrEnum):
@@ -490,6 +515,47 @@ class ThoughtKind(StrEnum):
     DREAMED_OF_LONGING = "dreamed_of_longing"
     RECEIVED_VISITATION = "received_visitation"
     SENT_BY_THE_CREATOR = "sent_by_the_creator"
+    LIKED_SURROUNDINGS = "liked_surroundings"
+    DISLIKED_SURROUNDINGS = "disliked_surroundings"
+    ENJOYED_FAVOURITE = "enjoyed_favourite"
+    ENDURED_A_DISLIKE = "endured_a_dislike"
+    ACTED_ON_CONSCIENCE = "acted_on_conscience"
+    ACTED_AGAINST_CONSCIENCE = "acted_against_conscience"
+    KIN_SHAMED = "kin_shamed"
+    SHAME_RESTORED = "shame_restored"
+
+
+class PreferenceKind(StrEnum):
+    MATERIAL = "material"
+    FOOD = "food"
+    DRINK = "drink"
+    CREATURE = "creature"
+    PLANT = "plant"
+    COLOUR = "colour"
+    SHAPE = "shape"
+    ART_FORM = "art_form"
+    ARTWORK_SUBJECT = "artwork_subject"
+    SEASON = "season"
+    WEATHER = "weather"
+    TERRAIN = "terrain"
+    ACTIVITY = "activity"
+    CRAFT = "craft"
+    DEITY_ASPECT = "deity_aspect"
+
+
+class EthicalStance(StrEnum):
+    REQUIRED = "required"
+    ADMIRABLE = "admirable"
+    ACCEPTABLE = "acceptable"
+    FROWNED_UPON = "frowned_upon"
+    SHAMEFUL = "shameful"
+    UNTHINKABLE = "unthinkable"
+
+
+class HonourModel(StrEnum):
+    DIGNITY = "dignity"
+    HONOUR = "honour"
+    FACE = "face"
 
 
 class MoodState(StrEnum):

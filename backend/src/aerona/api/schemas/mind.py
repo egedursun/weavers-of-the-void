@@ -3,13 +3,16 @@ from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.entity import MortalRole
 from aerona.domain.enums.mind import (
+    ActKind,
     Attribute,
     DreamKind,
     DreamReading,
     Emotion,
+    EthicalStance,
     Facet,
     FacetGroup,
     GriefStage,
+    HonourModel,
     IdeaKind,
     IdeaSource,
     IdeaState,
@@ -18,6 +21,7 @@ from aerona.domain.enums.mind import (
     NeedGroup,
     NeedKind,
     OpinionComponent,
+    PreferenceKind,
     PressureKind,
     SkillFamily,
     SkillKind,
@@ -338,3 +342,49 @@ class FeelingsView(ApiModel):
     dream_kinds: list[LabelView]
     readings: list[LabelView]
     long_term_threshold: int
+
+
+class PreferenceView(ApiModel):
+    id: int
+    kind: PreferenceKind
+    kind_label: str
+    target: str
+    target_label: str
+    target_node: NodeRef | None
+    strength: int
+    held: bool
+
+
+class PreferenceKindView(ApiModel):
+    kind: PreferenceKind
+    label: str
+    targets: list[str]
+    from_records: bool
+
+
+class EthicView(ApiModel):
+    act: ActKind
+    label: str
+    stance: EthicalStance
+    stance_label: str
+    reading: int
+    since_epoch: int
+    held: bool
+
+
+class CultureMindView(ApiModel):
+    node_id: int
+    name: str
+    has_preferences: bool
+    has_ethics: bool
+    ethics_holder: NodeRef | None
+    ethics_own: bool
+    preferences: list[PreferenceView]
+    totem: NodeRef | None
+    ethics: list[EthicView]
+    honour_model: HonourModel | None
+    honour_label: str | None
+    honour_held: bool
+    preference_kinds: list[PreferenceKindView]
+    stances: list[LabelView]
+    honour_models: list[LabelView]

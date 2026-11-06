@@ -156,6 +156,7 @@ from aerona.rules.registry.mind import (
     CareersRules,
     CultureDriftRules,
     DreamRules,
+    EthicsRules,
     GriefRules,
     IdeasRules,
     MemoryRules,
@@ -163,6 +164,7 @@ from aerona.rules.registry.mind import (
     NeedsDepthRules,
     NeedsRules,
     OpinionRules,
+    PreferencesRules,
     SkillsRules,
     ThoughtsRules,
     TraitsRules,
@@ -298,6 +300,8 @@ class Rules:
     thoughts: ThoughtsRules = field(default_factory=ThoughtsRules)
     grief: GriefRules = field(default_factory=GriefRules)
     dreams: DreamRules = field(default_factory=DreamRules)
+    preferences: PreferencesRules = field(default_factory=PreferencesRules)
+    ethics: EthicsRules = field(default_factory=EthicsRules)
     careers: CareersRules = field(default_factory=CareersRules)
     memory: MemoryRules = field(default_factory=MemoryRules)
     opinion: OpinionRules = field(default_factory=OpinionRules)
