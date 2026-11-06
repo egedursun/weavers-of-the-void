@@ -106,6 +106,8 @@ class EquipmentSlot(StrEnum):
     WIELDED_OFF = "wielded_off"
     ARMOUR_BODY = "armour_body"
     ARMOUR_HEAD = "armour_head"
+    ARMOUR_UNDER = "armour_under"
+    ARMOUR_COVER = "armour_cover"
     MOUNT = "mount"
     FOCUS = "focus"
 

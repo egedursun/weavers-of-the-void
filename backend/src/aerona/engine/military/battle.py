@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
+from aerona.catalog.materials import MATERIALS
 from aerona.catalog.units import (
     AMBUSH_TERRAIN,
     ARMOUR_DEFENCE,
@@ -18,8 +19,10 @@ from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
 from aerona.domain.enums.environment import PlaceCover, TerrainKind, WeatherKind
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import ArmourType, BattlePhase, CommanderTrait, OutcomeClass, Tactic, UnitFamily, UnitKind
 from aerona.domain.enums.mortal import HarshnessScale
+from aerona.engine.economy.materials import MaterialProps, from_spec
 from aerona.engine.environment.battleground import cover_missile_pct
 from aerona.engine.military.tables import counters, defender_cell, matchup, terrain_cell, unit_terrain, weather_cell
 from aerona.engine.primitives.harshness import harshness
@@ -38,6 +41,8 @@ RAIN = frozenset({WeatherKind.RAIN, WeatherKind.DOWNPOUR, WeatherKind.STORM})
 SNOW = frozenset({WeatherKind.SNOW, WeatherKind.BLIZZARD})
 WIND = frozenset({WeatherKind.STORM, WeatherKind.DROUGHT_WIND, WeatherKind.SANDSTORM})
 HEAVY = frozenset({ArmourType.MAIL, ArmourType.SCALE, ArmourType.PLATE})
+SOFT_ARMOUR = {ArmourType.HIDE: MaterialKind.HIDE, ArmourType.PADDED: MaterialKind.CLOTH}
+BLUNT_WEAPONS = frozenset({"blunt", "sling", "staff"})
 BOWS = frozenset({UnitKind.ARCHERS, UnitKind.HORSE_ARCHERS})
 CROSSBOWS = frozenset({UnitKind.CROSSBOWMEN})
 FIRE_CASTERS = frozenset({UnitKind.WAR_MAGES})
@@ -314,7 +319,40 @@ def fortune(rules: Rules, streams: Streams, phase: str, stack: Stack) -> float:
     return 1 + streams(f"{phase}.{stack.row.id}").uniform(-spread, spread)
 
 
-def deal(targets: list[Stack], damage: float, rules: Rules, *, piercing: float = 0.0) -> int:
+def stack_material(kind: str | None) -> MaterialProps:
+    found = next((item for item in MaterialKind if item.value == kind), MaterialKind.IRON)
+    return from_spec(MATERIALS[found])
+
+
+def armour_material(stack: Stack) -> MaterialProps | None:
+    if stack.row.armour is ArmourType.NONE:
+        return None
+    if stack.row.armour in SOFT_ARMOUR:
+        return from_spec(MATERIALS[SOFT_ARMOUR[stack.row.armour]])
+    return stack_material(stack.row.material)
+
+
+def penetration(rules: Rules, attackers: list[Stack], target: Stack) -> float:
+    armour = armour_material(target)
+    if armour is None:
+        return 0.0
+    floor = rules.strike.shape_floor_pct / PERCENT
+    total = weighted = 0.0
+    for stack in attackers:
+        if not stack.alive or not stack.row.weapons:
+            continue
+        best = max(stack.row.weapons, key=lambda weapon: WEAPON_EDGE.get(weapon, 0))
+        weapon = stack_material(stack.row.material)
+        edged = best not in BLUNT_WEAPONS
+        attack = weapon.shear_yield if edged else weapon.impact_yield
+        guard = armour.shear_yield if edged else armour.impact_yield
+        match = max(0.0, min(1.0, floor + (attack - guard) / PERCENT))
+        weighted += stack.row.count * WEAPON_EDGE.get(best, 0) / PERCENT * match
+        total += stack.row.count
+    return min(1.0, weighted / total) * rules.battle_magic.weapon_vs_armour_pct / PERCENT if total else 0.0
+
+
+def deal(targets: list[Stack], damage: float, rules: Rules, *, attackers: list[Stack] | None = None) -> int:
     alive = [stack for stack in targets if stack.alive]
     total = sum(stack.row.count for stack in alive)
     if total <= 0 or damage <= 0:
@@ -322,19 +360,13 @@ def deal(targets: list[Stack], damage: float, rules: Rules, *, piercing: float =
     killed = 0
     for stack in alive:
         share = stack.row.count / total
-        armour = stack.armour * (1 - piercing if stack.row.armour in HEAVY else 1)
+        armour = stack.armour * (1 - penetration(rules, attackers, stack) if attackers else 1)
         harsh = harshness(rules, HarshnessScale.BATTLE_LOSS)
         losses = min(stack.row.count, int(damage * share * rules.tactics.loss_scale_pct / PERCENT * NORMAL / max(10, armour) * harsh))
         stack.row.count -= losses
         stack.lost += losses
         killed += losses
     return killed
-
-
-def piercing_of(rules: Rules, stacks: list[Stack]) -> float:
-    total = sum(stack.row.count for stack in stacks if stack.alive) or 1
-    edged = sum(stack.row.count * max((WEAPON_EDGE.get(weapon, 0) for weapon in stack.row.weapons), default=0) for stack in stacks if stack.alive)
-    return min(1.0, edged / total / PERCENT) * rules.battle_magic.weapon_vs_armour_pct / PERCENT
 
 
 def resist(rules: Rules, side: Side, shock: float) -> float:
@@ -376,7 +408,7 @@ def missiles(rules: Rules, streams: Streams, shooter: Side, target: Side, ground
         )
     if target.defending:
         damage *= cover_missile_pct(rules, ground.cover) / PERCENT
-    return deal(target.stacks, damage, rules, piercing=piercing_of(rules, shooter.stacks))
+    return deal(target.stacks, damage, rules, attackers=shooter.stacks)
 
 
 def charge(rules: Rules, streams: Streams, rider: Side, target: Side, ground: Field) -> tuple[int, int]:
@@ -432,8 +464,8 @@ def melee_round(rules: Rules, streams: Streams, first: Side, second: Side, groun
         for stack in second.stacks
         if stack.alive
     )
-    to_second = deal(second.stacks, power_first * reach(rules, first, second), rules, piercing=piercing_of(rules, first.stacks))
-    to_first = deal(first.stacks, power_second * reach(rules, second, first), rules, piercing=piercing_of(rules, second.stacks))
+    to_second = deal(second.stacks, power_first * reach(rules, first, second), rules, attackers=first.stacks)
+    to_first = deal(first.stacks, power_second * reach(rules, second, first), rules, attackers=second.stacks)
     return to_first, to_second
 
 

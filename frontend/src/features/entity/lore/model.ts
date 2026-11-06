@@ -95,6 +95,7 @@ import {
   type LucideIcon,
   Lock,
   LockOpen,
+  Shirt,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -402,6 +403,8 @@ export const ITEM_CLASSES: Record<Schemas['ItemClass'], LoreNamed> = {
   throwing: { label: 'Throwing weapon', icon: Target, tone: 'danger' },
   staff: { label: 'Staff', icon: Wand, tone: 'verdigris' },
   armour: { label: 'Armour', icon: Shield, tone: 'info' },
+  padding: { label: 'Padding', icon: Shirt, tone: 'muted' },
+  cloak: { label: 'Cloak', icon: Shirt, tone: 'verdigris' },
   shield: { label: 'Shield', icon: ShieldCheck, tone: 'info' },
   helmet: { label: 'Helmet', icon: HardHat, tone: 'info' },
   crown: { label: 'Crown', icon: Crown, tone: 'gold' },

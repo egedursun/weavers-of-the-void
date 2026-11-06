@@ -17712,7 +17712,7 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
-        EquipmentSlot: "wielded_main" | "wielded_off" | "armour_body" | "armour_head" | "mount" | "focus";
+        EquipmentSlot: "wielded_main" | "wielded_off" | "armour_body" | "armour_head" | "armour_under" | "armour_cover" | "mount" | "focus";
         ErrorCode: "invalid" | "not_found" | "conflict" | "busy" | "read_only" | "insufficient" | "forbidden" | "too_large" | "unavailable" | "internal";
         ErrorPayload: {
             epoch?: number | null;
@@ -19019,7 +19019,7 @@ export interface components {
             custom_class_id?: number | null;
             book_contents: components["schemas"]["BookPage"][];
         };
-        ItemClass: "blade" | "longblade" | "axe" | "spear" | "polearm" | "mace" | "bow" | "crossbow" | "sling" | "throwing" | "staff" | "armour" | "shield" | "helmet" | "crown" | "sceptre" | "seal" | "ring" | "standard" | "holy_relic" | "idol" | "prayer_book" | "book" | "scroll" | "map" | "astrolabe" | "tool" | "instrument" | "mirror" | "vessel_object" | "prosthesis" | "key" | "jewel" | "currency";
+        ItemClass: "blade" | "longblade" | "axe" | "spear" | "polearm" | "mace" | "bow" | "crossbow" | "sling" | "throwing" | "staff" | "armour" | "padding" | "cloak" | "shield" | "helmet" | "crown" | "sceptre" | "seal" | "ring" | "standard" | "holy_relic" | "idol" | "prayer_book" | "book" | "scroll" | "map" | "astrolabe" | "tool" | "instrument" | "mirror" | "vessel_object" | "prosthesis" | "key" | "jewel" | "currency";
         ItemContentInput: {
             book_id: number;
             knowledge_id: number;
@@ -54476,7 +54476,7 @@ export const epochStepKindValues: ReadonlyArray<FlattenedDeepRequired<components
 export const epochStepStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochStepStatus"]> = ["pending", "running", "done", "failed", "skipped"];
 export const epochStopRequestedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochStopRequestedEvent"]["kind"]> = ["epoch.stop_requested"];
 export const epochStoppedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochStoppedEvent"]["kind"]> = ["epoch.stopped"];
-export const equipmentSlotValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EquipmentSlot"]> = ["wielded_main", "wielded_off", "armour_body", "armour_head", "mount", "focus"];
+export const equipmentSlotValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EquipmentSlot"]> = ["wielded_main", "wielded_off", "armour_body", "armour_head", "armour_under", "armour_cover", "mount", "focus"];
 export const errorCodeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ErrorCode"]> = ["invalid", "not_found", "conflict", "busy", "read_only", "insufficient", "forbidden", "too_large", "unavailable", "internal"];
 export const eventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EventKind"]> = ["job.queued", "job.started", "job.progress", "job.finished", "job.failed", "job.cancelled", "world.changed", "rules.changed", "engine.note", "engine.phase", "system.note", "system.error", "agent.retry", "epoch.started", "epoch.resumed", "epoch.progress", "epoch.stop_requested", "epoch.stopped", "epoch.finished", "epoch.backup", "son.distributed", "son.turn_queued", "son.turn_started", "son.turn_finished", "mortals.started", "mortal.turn_started", "mortal.turn_finished", "engine.started", "engine.finished", "fate.started", "fate.step", "fate.finished", "council.held", "son.chat_replied", "son.new", "son.ascended", "creator.revelation", "world.born", "genesis.finished", "entity.deepened", "foreign_god.deepened", "epic.written", "network.repaired", "language.translated", "notification.created", "world.changes", "world.replaced", "ledger.undone", "backup.taken", "image.queued", "image.progress", "image.done", "image.failed", "image.status", "image.bulk_log", "batch_deepen.log", "stream.hello", "agent.stream", "agent.thought", "agent.tool_preparing", "agent.tool_writing", "agent.tool_called", "agent.tool_result", "agent.writing"];
 export const eventPhaseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EventPhase"]> = ["onset", "peak", "aftermath"];
@@ -54540,7 +54540,7 @@ export const injuryKindValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const injuryStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["InjuryState"]> = ["fresh", "infected", "healing", "healed_scar", "permanent", "lethal"];
 export const integrityTaskValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IntegrityTask"]> = ["dead_bonds", "checkpoint"];
 export const interventionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["InterventionKind"]> = ["miracle", "disaster", "teach_knowledge", "curse"];
-export const itemClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ItemClass"]> = ["blade", "longblade", "axe", "spear", "polearm", "mace", "bow", "crossbow", "sling", "throwing", "staff", "armour", "shield", "helmet", "crown", "sceptre", "seal", "ring", "standard", "holy_relic", "idol", "prayer_book", "book", "scroll", "map", "astrolabe", "tool", "instrument", "mirror", "vessel_object", "prosthesis", "key", "jewel", "currency"];
+export const itemClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ItemClass"]> = ["blade", "longblade", "axe", "spear", "polearm", "mace", "bow", "crossbow", "sling", "throwing", "staff", "armour", "padding", "cloak", "shield", "helmet", "crown", "sceptre", "seal", "ring", "standard", "holy_relic", "idol", "prayer_book", "book", "scroll", "map", "astrolabe", "tool", "instrument", "mirror", "vessel_object", "prosthesis", "key", "jewel", "currency"];
 export const itemDeedValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ItemDeed"]> = ["made", "owned", "kill", "battle", "coronation", "lost", "theft", "burial", "broken", "repaired", "enchanted", "given", "captured"];
 export const itemStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ItemStats"]["kind"]> = ["item"];
 export const jobValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Job"]> = ["farming", "herding", "fishing", "mining", "crafting", "trade", "soldiering", "clergy", "scholarship", "building", "idle"];

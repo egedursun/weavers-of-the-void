@@ -1,11 +1,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.lore import WEAPONS
+from aerona.catalog.materials import MATERIALS, METAL_FAMILIES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.mortal import MortalEquipmentRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass
+from aerona.domain.enums.economy import MaterialFamily
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mortal import EquipmentSlot
 from aerona.engine.lore.arms import best_weapon, grip, held_profiles, whole
 from aerona.engine.mortal.profile import ensure_equipment, is_held
@@ -19,12 +22,29 @@ SLOT_CLASSES: dict[EquipmentSlot, frozenset[ItemClass]] = {
     EquipmentSlot.WIELDED_OFF: frozenset({*WEAPONS, ItemClass.SHIELD}),
     EquipmentSlot.ARMOUR_BODY: frozenset({ItemClass.ARMOUR}),
     EquipmentSlot.ARMOUR_HEAD: frozenset({ItemClass.HELMET, ItemClass.CROWN}),
+    EquipmentSlot.ARMOUR_UNDER: frozenset({ItemClass.PADDING}),
+    EquipmentSlot.ARMOUR_COVER: frozenset({ItemClass.CLOAK}),
     EquipmentSlot.FOCUS: FOCUS_CLASSES,
 }
 
 
-def best_of(rows: list[ItemProfileRow], classes: frozenset[ItemClass], taken: set[int]) -> ItemProfileRow | None:
-    fitting = [row for row in rows if row.item_class in classes and row.item_entity_id not in taken and row.condition >= 1]
+MATERIAL_KINDS = frozenset(kind.value for kind in MaterialKind)
+SOFT_SLOTS = frozenset({EquipmentSlot.ARMOUR_UNDER, EquipmentSlot.ARMOUR_COVER})
+RIGID_FAMILIES = frozenset({*METAL_FAMILIES, MaterialFamily.STONE})
+
+
+def rigid(material: str | None) -> bool:
+    return material in MATERIAL_KINDS and MATERIALS[MaterialKind(material)].family in RIGID_FAMILIES
+
+
+def fits_slot(slot: EquipmentSlot, profile: ItemProfileRow) -> bool:
+    return profile.item_class in SLOT_CLASSES[slot] and not (slot in SOFT_SLOTS and rigid(profile.material))
+
+
+def best_of(rows: list[ItemProfileRow], classes: frozenset[ItemClass], taken: set[int], slot: EquipmentSlot | None = None) -> ItemProfileRow | None:
+    fitting = [
+        row for row in rows if row.item_class in classes and row.item_entity_id not in taken and row.condition >= 1 and (slot is None or fits_slot(slot, row))
+    ]
     return max(fitting, key=lambda row: (row.coverage + row.quality, grip(row), row.item_entity_id), default=None)
 
 
@@ -41,7 +61,15 @@ async def auto_equip(session: AsyncSession, mortal_id: int) -> MortalEquipmentRo
     rows = await held_profiles(session, mortal_id)
     owned = {item.item_entity_id for item in rows}
     taken: set[int] = set()
-    for slot in (EquipmentSlot.WIELDED_MAIN, EquipmentSlot.ARMOUR_BODY, EquipmentSlot.ARMOUR_HEAD, EquipmentSlot.FOCUS, EquipmentSlot.WIELDED_OFF):
+    for slot in (
+        EquipmentSlot.WIELDED_MAIN,
+        EquipmentSlot.ARMOUR_BODY,
+        EquipmentSlot.ARMOUR_UNDER,
+        EquipmentSlot.ARMOUR_COVER,
+        EquipmentSlot.ARMOUR_HEAD,
+        EquipmentSlot.FOCUS,
+        EquipmentSlot.WIELDED_OFF,
+    ):
         column = SLOT_COLUMNS[slot]
         current = getattr(row, column)
         if is_held(row, column):
@@ -54,7 +82,7 @@ async def auto_equip(session: AsyncSession, mortal_id: int) -> MortalEquipmentRo
         chosen = (
             best_weapon([item for item in rows if item.item_entity_id not in taken])
             if slot is EquipmentSlot.WIELDED_MAIN
-            else best_of(rows, SLOT_CLASSES[slot], taken)
+            else best_of(rows, SLOT_CLASSES[slot], taken, slot)
         )
         setattr(row, column, chosen.item_entity_id if chosen is not None else None)
         if chosen is not None:

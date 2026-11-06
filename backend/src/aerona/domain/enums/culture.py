@@ -182,6 +182,8 @@ class ItemClass(StrEnum):
     THROWING = "throwing"
     STAFF = "staff"
     ARMOUR = "armour"
+    PADDING = "padding"
+    CLOAK = "cloak"
     SHIELD = "shield"
     HELMET = "helmet"
     CROWN = "crown"

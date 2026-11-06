@@ -2,10 +2,12 @@ from dataclasses import dataclass, field, replace
 from enum import StrEnum
 
 from aerona.catalog.anatomy import FINGERS
+from aerona.catalog.mind import MELEE_SKILLS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.chronicle import incident_for
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import SEVERITY_MAX, BodyRow, InjuryRow
+from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
@@ -14,16 +16,19 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mortal import HarshnessScale
-from aerona.engine.body.book import Bearer, anatomy_for, ensure_body, function_level
+from aerona.engine.body.book import Bearer, anatomy_for, ensure_body, function_level, metallurgy_of
 from aerona.engine.body.hits import MARK_KINDS, Armour, Harm, Hit, hits_for, loss_for
 from aerona.engine.body.state import refresh
+from aerona.engine.body.strike import Layer, Wielding, generic_layers, worn_layers
 from aerona.engine.context import TickContext
 from aerona.engine.economy.equipment import weapon_of
 from aerona.engine.economy.materials import draw_strength, sharpness
+from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_immortal, is_notable
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lore.arms import grip
+from aerona.engine.mind.book import skills_of
 from aerona.engine.mind.hooks import wound_memories
 from aerona.engine.mortal.death import manner_of
 from aerona.engine.mortal.equipment import mount_pct, off_hand_pct, wielded
@@ -57,6 +62,42 @@ def _spare(hit: Hit) -> Hit:
     if hit.kind is not InjuryKind.DESTROYED or not hit.part.vital:
         return hit
     return replace(hit, kind=NON_LETHAL_KIND.get(hit.damage_type, InjuryKind.CRUSH), severity=SEVERITY_MAX - 1)
+
+
+async def wielding_of(ctx: TickContext, harm: Harm) -> Wielding | None:
+    wielder_id = harm.source_node_id or harm.killer_id
+    if wielder_id is None:
+        return None
+    wielder = await ctx.session.get(EntityRow, wielder_id)
+    if wielder is not None and wielder.entity_type is EntityType.MORTAL:
+        levels = await skills_of(ctx.session, wielder.id)
+        best = max((levels[skill].level for skill in MELEE_SKILLS if skill in levels), default=0)
+        skill = best / PERCENT
+    else:
+        body = await ctx.session.get(BodyRow, wielder_id)
+        skill = (body.melee if body is not None else PERCENT // 2) / PERCENT
+    return Wielding(await weapon_of(ctx.session, wielder_id), min(1.0, skill), harm.heft)
+
+
+async def layers_for(ctx: TickContext, bearer: Bearer, body: BodyRow) -> tuple[Layer, ...]:
+    if isinstance(bearer, EntityRow):
+        worn = await worn_layers(ctx.session, bearer.id)
+        if worn:
+            return worn
+        community = await community_of(ctx.session, bearer)
+        level = await metallurgy_of(ctx.session, bearer.id, community.id if community is not None else None)
+    else:
+        level = ctx.rules.strike.divine_metallurgy
+    return generic_layers(body.armour_head, body.armour_torso, body.armour_limbs, level)
+
+
+async def scorch_items(ctx: TickContext, hits: list[Hit]) -> None:
+    for hit in hits:
+        for burnt in hit.scorched:
+            profile = await ctx.session.get(ItemProfileRow, burnt.item_id)
+            if profile is None:
+                continue
+            profile.condition = 0 if burnt.destroyed else max(0, profile.condition - ctx.rules.strike.melt_wear)
 
 
 def _armour(body: BodyRow) -> Armour:
@@ -224,7 +265,8 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
     anatomy = anatomy_for(body)
     rng = ctx.rng(seed_of("hits", bearer.id, harm.cause.value, round_half_up(harm.damage)))
     harm = await armed(ctx, harm)
-    hits = hits_for(ctx.rules, anatomy, harm, _armour(body), rng)
+    hits = hits_for(ctx.rules, anatomy, harm, _armour(body), rng, wielding=await wielding_of(ctx, harm), layers=await layers_for(ctx, bearer, body))
+    await scorch_items(ctx, hits)
     if not lethal:
         hits = [_spare(hit) for hit in hits]
     rows = await _record(ctx, bearer, body, harm, hits, world_id=world_of(bearer))

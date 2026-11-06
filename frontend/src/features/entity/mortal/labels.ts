@@ -42,6 +42,7 @@ import {
   Wand,
   Wind,
   Zap,
+  Shirt,
 } from 'lucide-react'
 import { type Named } from '../environment/labels'
 
@@ -212,6 +213,8 @@ export const SLOTS: Record<string, Named> = {
   wielded_off: { label: 'Off hand', icon: ShieldHalf, tone: 'warning' },
   armour_body: { label: 'Body armour', icon: Shield, tone: 'info' },
   armour_head: { label: 'Helm', icon: Crown, tone: 'gold' },
+  armour_under: { label: 'Padding under armour', icon: Shirt, tone: 'muted' },
+  armour_cover: { label: 'Cloak over armour', icon: Shirt, tone: 'verdigris' },
   mount: { label: 'Mount', icon: Footprints, tone: 'verdigris' },
   focus: { label: 'Focus', icon: Wand, tone: 'verdigris' },
 }
@@ -221,6 +224,8 @@ export const SLOT_TYPES: Record<string, readonly string[]> = {
   wielded_off: ['item'],
   armour_body: ['item'],
   armour_head: ['item'],
+  armour_under: ['item'],
+  armour_cover: ['item'],
   mount: ['beast', 'species'],
   focus: ['item'],
 }

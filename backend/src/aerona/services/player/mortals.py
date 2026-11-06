@@ -30,7 +30,7 @@ from aerona.domain.enums.mortal import (
 )
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.mind.memories import remember
-from aerona.engine.mortal.equipment import SLOT_CLASSES, SLOT_COLUMNS
+from aerona.engine.mortal.equipment import SLOT_CLASSES, SLOT_COLUMNS, fits_slot
 from aerona.engine.mortal.justice import sentence
 from aerona.engine.mortal.kinship import betroth, end_marriage, marriage_between, marry
 from aerona.engine.mortal.profile import ensure_equipment, ensure_profile
@@ -346,6 +346,8 @@ async def equip(scope: PlayerScope, command: Equip) -> Effect:
             profile = await scope.session.get(ItemProfileRow, target.id)
             if target.entity_type is not EntityType.ITEM or profile is None or profile.item_class not in SLOT_CLASSES[command.slot]:
                 raise ValidationFailedError(f"That cannot be carried as a {label(command.slot.value)}.")
+            if not fits_slot(command.slot, profile):
+                raise ValidationFailedError(f"Only one rigid layer is worn per covering; a {label(command.slot.value)} must be soft.")
     setattr(row, column, command.item_id)
     row.locked = hold(row.locked, column, command.hold)
     action = "now carries something new as" if command.item_id is not None else "has nothing as"

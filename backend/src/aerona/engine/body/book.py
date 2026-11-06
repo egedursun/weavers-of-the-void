@@ -246,14 +246,19 @@ class Reading:
     reader: bool = False
 
 
+async def metallurgy_of(session: AsyncSession, bearer_id: int, community_id: int | None) -> int:
+    level = 0
+    holders = [bearer_id, *([community_id] if community_id is not None else [])]
+    for levels in (await known_levels(session, holders)).values():
+        level = max(level, levels.get(KnowledgeBranch.METALLURGY, 0))
+    return level
+
+
 async def armour_of(session: AsyncSession, rules: Rules, bearer: Bearer, community_id: int | None) -> Armour:
     table = rules.armour
     if not isinstance(bearer, EntityRow):
         return Armour(table.divine_head, table.divine_torso, table.divine_limbs)
-    level = 0
-    holders = [bearer.id, *([community_id] if community_id is not None else [])]
-    for levels in (await known_levels(session, holders)).values():
-        level = max(level, levels.get(KnowledgeBranch.METALLURGY, 0))
+    level = await metallurgy_of(session, bearer.id, community_id)
     head = min(table.coverage_cap, level * table.metallurgy_head_per_level)
     torso = min(table.coverage_cap, level * table.metallurgy_torso_per_level)
     limbs = min(table.coverage_cap, level * table.metallurgy_limbs_per_level)

@@ -7,9 +7,11 @@ from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.body import SEVERITY_MAX, SEVERITY_MIN
 from aerona.domain.enums.body import BodyFunction, BodyRegion, DamageType, HarmCause, InjuryKind, StrikeStyle
+from aerona.engine.body.strike import EDGED, Layer, Scorch, Wielding, heat_of, resolve, strike_of
 from aerona.rules.registry import Rules
 from aerona.rules.registry.body import InjuryRules
 
+PHYSICAL = frozenset({DamageType.CUT, DamageType.PIERCE, DamageType.BLUNT, DamageType.FIRE})
 PERMANENT_KINDS = frozenset({InjuryKind.SEVERED, InjuryKind.GOUGED, InjuryKind.DESTROYED, InjuryKind.VOID_TOUCH, InjuryKind.DIVINE_BRAND})
 MARK_KINDS = frozenset({InjuryKind.VOID_TOUCH, InjuryKind.DIVINE_BRAND})
 TOTAL_LOSS_KINDS = frozenset({InjuryKind.SEVERED, InjuryKind.GOUGED, InjuryKind.DESTROYED})
@@ -31,6 +33,7 @@ class Harm:
     edge: int | None = None
     heft: int | None = None
     venom_pct: int | None = None
+    heat: int | None = None
 
 
 @dataclass(frozen=True)
@@ -55,6 +58,7 @@ class Hit:
     kind: InjuryKind
     hp: float
     absorbed: bool = False
+    scorched: tuple[Scorch, ...] = ()
 
 
 def cause_mix(rules: InjuryRules, cause: HarmCause) -> dict[DamageType, int]:
@@ -250,7 +254,13 @@ def venom_mix(mix: dict[DamageType, int], venom_pct: int | None) -> dict[DamageT
     return {kind: weight for kind, weight in shaped.items() if weight > 0}
 
 
-def hits_for(rules: Rules, anatomy: Anatomy, harm: Harm, armour: Armour, rng: SeededRandom) -> list[Hit]:
+def physical(damage_type: DamageType) -> bool:
+    return damage_type in PHYSICAL
+
+
+def hits_for(
+    rules: Rules, anatomy: Anatomy, harm: Harm, armour: Armour, rng: SeededRandom, *, wielding: Wielding | None = None, layers: tuple[Layer, ...] = ()
+) -> list[Hit]:
     table = rules.injury
     if harm.damage <= 0:
         return []
@@ -268,11 +278,26 @@ def hits_for(rules: Rules, anatomy: Anatomy, harm: Harm, armour: Armour, rng: Se
         if chosen is None:
             region = weighted(rng, region_weights(rules, anatomy, harm.style)) or anatomy.parts[0].region
             chosen = pick_part(rules, anatomy, region, damage_type, severity, rng=rng)
-        if harm.severity is None and rng.chance(armour.coverage(chosen.region)):
+        scorched: tuple[Scorch, ...] = ()
+        if harm.severity is None and wielding is not None and layers and physical(damage_type):
+            strike = strike_of(
+                rules,
+                wielding.weapon,
+                damage_type=damage_type,
+                heft=wielding.heft,
+                skill=wielding.skill,
+                heat=heat_of(rules, harm.cause, damage_type, harm.heat),
+            )
+            outcome = resolve(rules, strike, layers, chosen.region, rng)
+            severity = round(severity * outcome.spent * rules.strike.severity_momentum_pct / PERCENT)
+            damage_type = DamageType.BLUNT if damage_type in EDGED and outcome.damage_type is DamageType.BLUNT else damage_type
+            scorched = outcome.scorched
+        elif harm.severity is None and rng.chance(armour.coverage(chosen.region)):
             severity -= table.armour_severity_cut
         if severity < SEVERITY_MIN:
-            hits.append(Hit(damage_type, chosen, SEVERITY_MIN, InjuryKind.BRUISE, magnitude * table.absorbed_hp_pct / PERCENT, absorbed=True))
+            soaked = magnitude * table.absorbed_hp_pct / PERCENT
+            hits.append(Hit(damage_type, chosen, SEVERITY_MIN, InjuryKind.BRUISE, soaked, absorbed=True, scorched=scorched))
             continue
         kind = harm.kind or kind_for(table, damage_type, chosen, severity, harm.cause)
-        hits.append(Hit(damage_type, chosen, severity, kind, magnitude))
+        hits.append(Hit(damage_type, chosen, severity, kind, magnitude, scorched=scorched))
     return hits
