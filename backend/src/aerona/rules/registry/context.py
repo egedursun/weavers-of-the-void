@@ -9,6 +9,7 @@ class ContextRules:
     mind_values_shown: int = rule(3, 0, 24, RuleGroup.CONTEXT_BUDGETS, "Strongest values shown in an agent's mind block")
     mind_attributes_shown: int = rule(3, 0, 19, RuleGroup.CONTEXT_BUDGETS, "Strongest and weakest attributes shown in an agent's mind block")
     mind_facets_shown: int = rule(4, 0, 34, RuleGroup.CONTEXT_BUDGETS, "Most marked facets of temperament shown in an agent's mind block")
+    mind_feelings_shown: int = rule(3, 0, 24, RuleGroup.CONTEXT_BUDGETS, "Strongest present feelings shown in an agent's mind block")
     mind_skills_shown: int = rule(3, 0, 60, RuleGroup.CONTEXT_BUDGETS, "Best skills shown in an agent's mind block")
     mechanic_window_epochs: int = rule(3, 0, 100, RuleGroup.CONTEXT_BUDGETS, "Ages back an agent still hears what a mechanic last did to a record")
     pressure_shown_above: int = rule(30, 0, 100, RuleGroup.CONTEXT_BUDGETS, "Least pressure on a home or a god's worshippers that an agent is told of")

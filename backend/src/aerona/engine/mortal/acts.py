@@ -15,7 +15,7 @@ from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType, MortalRole
-from aerona.domain.enums.mind import Facet, MemoryKind, NeedKind, OpinionComponent, TraitKind, ValueAxis
+from aerona.domain.enums.mind import Facet, MemoryKind, NeedKind, OpinionComponent, ThoughtKind, TraitKind, ValueAxis
 from aerona.domain.enums.mortal import Ability, CareerPath, CrimeKind, DeathCause, LifeStage, StressBreak
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
@@ -31,6 +31,7 @@ from aerona.engine.mind.memories import remember, strength_of
 from aerona.engine.mind.opinion import opinion
 from aerona.engine.mind.space import value_alignment
 from aerona.engine.mind.split import facet_weight, facets_of
+from aerona.engine.mind.thoughts import need_importance, think
 from aerona.engine.mind.values import liege_of
 from aerona.engine.mortal.justice import code_punishment, community_ruler, sentence
 from aerona.engine.mortal.life import ability
@@ -152,6 +153,9 @@ async def convert(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow
     for bond in await active_bonds(ctx.session, [BondKind.WORSHIPS], sources=[mortal.id]):
         await close(ctx.session, bond, ctx.epoch, "turned to another god")
     await connect(ctx.session, mortal.id, target.id, BondKind.WORSHIPS, ctx.epoch, description="converted")
+    if current is not None:
+        await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.LOST_FAITH, ctx.epoch, subject_id=current.id)
+    await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.FOUND_FAITH, ctx.epoch, subject_id=target.id)
     if not is_held(profile, "loyalty_god"):
         profile.loyalty_god = FULL // 2
     await note(
@@ -168,13 +172,18 @@ async def accumulate_stress(ctx: TickContext, mortal: EntityRow, profile: Mortal
         return
     table = ctx.rules.stress
     needs = await needs_of(ctx.session, mortal.id)
-    gain = sum(table.unmet_need_stress for value in needs.values() if value < table.unmet_need_below)
+    facets = await facets_of(ctx.session, mortal.id)
+    values = await values_for(ctx.session, mortal.id)
+    weights = {need: need_importance(ctx.rules, need, facets, values) for need in needs}
+    pressing = sum(weight for need, weight in weights.items() if needs[need] < table.unmet_need_below)
+    gain = table.unmet_need_stress * ctx.rules.needs_depth.stress_breadth * pressing / max(1, sum(weights.values()))
+    gain += max(0, -profile.mood_score) * ctx.rules.thoughts.mood_stress_pct / PERCENT
     if mortal.location_id is not None and await ongoing_wars(ctx.session, mortal.location_id):
         gain += table.war_stress
     if abs(profile.loyalty_liege - profile.loyalty_community) >= table.duty_gap:
         gain += table.duty_conflict_stress
     relief = 1 - (ability(mortal, Ability.WILLPOWER) - FULL // 2) / PERCENT * table.willpower_relief_pct / PERCENT
-    fragility = 1 + facet_weight(await facets_of(ctx.session, mortal.id), STRESS_FACETS) * ctx.rules.mind_split.stress_facet_pct / PERCENT
+    fragility = 1 + facet_weight(facets, STRESS_FACETS) * ctx.rules.mind_split.stress_facet_pct / PERCENT
     profile.stress = clamp_int(profile.stress + gain * max(0.0, relief) * max(0.0, fragility) - table.decay, 0, FULL)
 
 
@@ -279,7 +288,8 @@ BREAKS: dict[StressBreak, Callable[[TickContext, EntityRow, MortalProfileRow, Se
 
 async def stress_break(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) -> StressBreak | None:
     table = ctx.rules.stress
-    if profile.stress < table.break_threshold:
+    strain = profile.stress + max(0, -profile.mood_score) * ctx.rules.thoughts.mood_break_pct / PERCENT
+    if strain < table.break_threshold:
         return None
     traits = await traits_of(ctx.session, mortal.id)
     weights = break_weights(table.flight_chance_pct, traits, profile, await facets_of(ctx.session, mortal.id), ctx.rules.mind_split.break_facet_pct)

@@ -69,9 +69,9 @@ async def send_pilgrims(ctx: TickContext, atlas: RegionAtlas, place: EntityRow, 
 
 
 @reads(
+    "people.population",
     "place.mystery",
     "settlement.population",
-    "people.population",
     "table.battles",
     "table.entity_flags",
     "table.place_environment",
@@ -174,14 +174,7 @@ async def miner_of(ctx: TickContext, atlas: RegionAtlas, region_id: int | None) 
     return None
 
 
-@reads(
-    "place.mystery",
-    "table.place_profiles",
-    "table.place_secrets",
-    "table.region_environment",
-    "table.skills",
-    "table.world_maps",
-)
+@reads("place.mystery", "table.place_profiles", "table.place_secrets", "table.region_environment", "table.skills", "table.world_maps")
 @writes(
     "place.danger",
     "table.bonds",

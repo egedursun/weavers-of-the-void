@@ -595,20 +595,28 @@ async def plague_faith(ctx: TickContext) -> int:
     "settlement.piety",
     "settlement.population",
     "settlement.prosperity",
+    "structure.durability",
+    "structure.function",
     "table.bonds",
     "table.community_relations",
+    "table.cosmos",
     "table.culture_values",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.event_casualties",
+    "table.item_profiles",
     "table.memories",
     "table.minds",
     "table.name_registry",
+    "table.node_materials",
     "table.nodes",
     "table.personality_values",
+    "table.structure_profiles",
+    "table.structure_staff",
     "table.traits",
     "table.war_sides",
     "table.wars",
+    "table.world_materials",
 )
 @writes(
     "people.piety",
@@ -624,6 +632,8 @@ async def plague_faith(ctx: TickContext) -> int:
     "table.incidents",
     "table.memories",
     "table.name_registry",
+    "table.node_materials",
+    "table.structure_profiles",
 )
 async def remembrance(ctx: TickContext) -> None:
     cap = ctx.rules.remembrance.epoch_cap

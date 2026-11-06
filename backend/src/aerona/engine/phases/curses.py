@@ -39,10 +39,12 @@ async def curser_of(ctx: TickContext, entity: EntityRow) -> int | None:
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
+    "mortal.endurance",
     "mortal.hp",
     "mortal.intellect",
     "mortal.lifespan",
     "mortal.strength",
+    "mortal.willpower",
     "people.population",
     "people.prosperity",
     "people.wealth",
@@ -58,8 +60,13 @@ async def curser_of(ctx: TickContext, entity: EntityRow) -> int | None:
     "table.entity_flags",
     "table.entity_tags",
     "table.holder_levels",
+    "table.incubating_ideas",
     "table.injuries",
     "table.item_profiles",
+    "table.mind_attributes",
+    "table.mortal_equipment",
+    "table.mortal_profiles",
+    "table.nodes",
     "table.prostheses",
 )
 @writes(
@@ -72,6 +79,7 @@ async def curser_of(ctx: TickContext, entity: EntityRow) -> int | None:
     "table.body_customs",
     "table.entities",
     "table.injuries",
+    "table.mortal_profiles",
 )
 async def curse_decay(ctx: TickContext) -> None:
     rules = ctx.rules
@@ -122,18 +130,17 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
 
 
 @reads(
-    "mortal.endurance",
-    "table.mortal_equipment",
-    "table.mortal_profiles",
     "item.curse",
     "item.protection",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
+    "mortal.endurance",
     "mortal.hp",
     "mortal.intellect",
     "mortal.lifespan",
     "mortal.strength",
+    "mortal.willpower",
     "people.prosperity",
     "settlement.defense",
     "settlement.prosperity",
@@ -147,10 +154,14 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
     "table.entity_tags",
     "table.epoch_year_cursors",
     "table.holder_levels",
+    "table.incubating_ideas",
     "table.injuries",
     "table.item_profiles",
     "table.memories",
+    "table.mind_attributes",
     "table.minds",
+    "table.mortal_equipment",
+    "table.mortal_profiles",
     "table.node_materials",
     "table.nodes",
     "table.prostheses",
@@ -158,7 +169,6 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
     "table.world_materials",
 )
 @writes(
-    "table.mortal_profiles",
     "mortal.hp",
     "settlement.defense",
     "settlement.prosperity",
@@ -173,6 +183,7 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
     "table.incidents",
     "table.injuries",
     "table.memories",
+    "table.mortal_profiles",
 )
 async def cursed_items(ctx: TickContext) -> None:
     rules = ctx.rules

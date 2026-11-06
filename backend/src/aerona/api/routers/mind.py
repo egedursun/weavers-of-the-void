@@ -8,10 +8,17 @@ from aerona.api.schemas.mind import (
     AttributeView,
     BeliefShiftView,
     CareerView,
+    DreamLogView,
+    EmotionKindView,
+    EmotionTotalView,
     FacetShiftView,
     FacetView,
+    FeelingsView,
+    FormativeView,
+    GriefView,
     IdeaSpecView,
     IdeaView,
+    LabelView,
     MemoryView,
     MindSplitView,
     MindView,
@@ -23,6 +30,8 @@ from aerona.api.schemas.mind import (
     PressureView,
     SkillView,
     SummaryView,
+    ThoughtKindView,
+    ThoughtView,
     TraitCapacityView,
     TraitEffectView,
     TraitView,
@@ -31,13 +40,15 @@ from aerona.api.schemas.mind import (
 from aerona.api.views.common import node_ref, node_refs
 from aerona.catalog.mind import FIXED_ROLES, MEMORIES, NEED_LABELS, PRESSURE_LABELS, SKILLS, TRAITS, VALUE_LABELS
 from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS, SKILL_ATTRIBUTES
+from aerona.catalog.thoughts import DREAM_LABELS, EMOTIONS, NEEDS, READING_LABELS, THOUGHTS
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
-from aerona.db.tables.mind import MIND_LOCKS, TraitRow
+from aerona.db.tables.mind import MIND_LOCKS, DreamRow, GriefRow, MemoryRow, TraitRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.mind import IdeaKind, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import Emotion, IdeaKind, MemoryKind, ValueAxis, ValueHolder
 from aerona.engine.body.book import factor
 from aerona.engine.body.customs import people_of
 from aerona.engine.mind.book import Holder, holder_kind, load_holder, mind_of, needs_of, pressures_of, skills_of, stored_values, values_of
@@ -46,6 +57,8 @@ from aerona.engine.mind.memories import memories_of, strength_of
 from aerona.engine.mind.opinion import Opinion, opinion
 from aerona.engine.mind.skills import level_cost
 from aerona.engine.mind.split import Bodied, attributes_of, culture_mean, derived_summaries, effective_attributes, facets_of, has_attributes, has_facets
+from aerona.engine.mind.thoughts import need_importance, thoughts_of
+from aerona.engine.mind.thoughts import strength_of as thought_strength
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.services.community_relations import cosmos_epoch
 from aerona.rules.registry import Rules
@@ -54,7 +67,7 @@ router = APIRouter(tags=["mind"])
 NO_MIND = "No mind lives there."
 COMMUNITY_LOCKS = frozenset({"values", "memories", "needs"})
 LOCKS_BY_HOLDER = {
-    ValueHolder.PERSONAL: frozenset(MIND_LOCKS),
+    ValueHolder.PERSONAL: frozenset(MIND_LOCKS) - {"thoughts", "griefs", "dreams", "attributes", "facets", "ideas"},
     ValueHolder.DIVINE: frozenset({"values", "traits", "memories", "attributes", "facets"}),
     ValueHolder.CULTURE: COMMUNITY_LOCKS,
     ValueHolder.COMMUNITY: frozenset({"memories", "needs"}),
@@ -208,7 +221,7 @@ async def mind_view(services: ServicesDep, node_id: int = Path(ge=1)) -> MindVie
             else [],
             traits=await trait_views(session, node_id),
             skills=await skill_views(session, rules, node_id, epoch),
-            needs=[NeedView(need=need, label=NEED_LABELS[need], value=value) for need, value in sorted((await needs_of(session, node_id)).items())],
+            needs=await need_views(session, rules, node, node_id),
             pressures=[
                 PressureView(pressure=kind_, label=PRESSURE_LABELS[kind_], value=value)
                 for kind_, value in sorted((await pressures_of(session, node_id)).items())
@@ -335,4 +348,121 @@ async def mind_split_view(services: ServicesDep, node_id: int = Path(ge=1)) -> M
             catalogue=[idea_spec_view(idea) for idea in IdeaKind] if turns else [],
             trait_threshold=rules.mind_split.trait_threshold,
             idea_slots=rules.ideas.slots,
+        )
+
+
+async def need_views(session: AsyncSession, rules: Rules, node: Holder, node_id: int) -> list[NeedView]:
+    facets = await facets_of(session, node_id)
+    values = await values_of(session, node)
+    return [
+        NeedView(need=need, label=NEED_LABELS[need], value=value, group=NEEDS[need].group, importance=need_importance(rules, need, facets, values))
+        for need, value in sorted((await needs_of(session, node_id)).items(), key=lambda item: (list(NEEDS).index(item[0]), item[0]))
+    ]
+
+
+FEELING_LOCKS = ("thoughts", "griefs", "dreams")
+
+
+@router.get("/minds/{node_id}/feelings", response_model=FeelingsView)
+async def feelings_view(services: ServicesDep, node_id: int = Path(ge=1)) -> FeelingsView:
+    async with reader(services) as session:
+        rules = await world_rules(services, session)
+        ref = await node_ref(session, node_id)
+        if ref is None:
+            raise NotFoundError(NO_MIND)
+        mortal = await session.get(EntityRow, node_id)
+        applies = mortal is not None and mortal.entity_type is EntityType.MORTAL
+        epoch = await cosmos_epoch(session)
+        thoughts = await thoughts_of(session, node_id) if applies else []
+        mind = await mind_of(session, node_id)
+        profile = await session.get(MortalProfileRow, node_id)
+        formative = list(
+            await session.scalars(
+                select(MemoryRow).where(MemoryRow.holder_node_id == node_id, MemoryRow.kind == MemoryKind.FORMATIVE).order_by(MemoryRow.epoch.desc())
+            )
+        )
+        griefs = list(await session.scalars(select(GriefRow).where(GriefRow.mourner_node_id == node_id).order_by(GriefRow.started_epoch.desc())))
+        dreams = list(await session.scalars(select(DreamRow).where(DreamRow.dreamer_node_id == node_id).order_by(DreamRow.epoch.desc(), DreamRow.id.desc())))
+        wanted = [
+            *(row.subject_node_id for row in thoughts),
+            *(row.subject_node_id for row in formative),
+            *(row.deceased_node_id for row in griefs),
+            *(node for row in dreams for node in (*row.content, row.sender_node_id, row.partner_node_id, row.world_id, row.reader_node_id)),
+        ]
+        refs = await node_refs(session, [node for node in wanted if node is not None])
+        totals: dict[Emotion, float] = {}
+        for row in thoughts:
+            totals[row.emotion] = totals.get(row.emotion, 0.0) + thought_strength(row, epoch)
+        return FeelingsView(
+            node_id=node_id,
+            name=ref.name,
+            applies=applies,
+            locked=[field for field in (mind.locked or []) if field in FEELING_LOCKS] if mind is not None else [],
+            lockable=list(FEELING_LOCKS) if applies and mind is not None else [],
+            mood=profile.mood if profile is not None and applies else None,
+            mood_score=profile.mood_score if profile is not None else 0,
+            mood_held=profile is not None and "mood" in (profile.locked or []),
+            thoughts=[
+                ThoughtView(
+                    id=row.id,
+                    kind=row.kind,
+                    label=THOUGHTS[row.kind].label,
+                    emotion=row.emotion,
+                    emotion_label=EMOTIONS[row.emotion].label,
+                    valence=EMOTIONS[row.emotion].valence,
+                    intensity=row.intensity,
+                    strength=round(thought_strength(row, epoch)),
+                    epoch=row.epoch,
+                    decay_pct=row.decay_pct,
+                    subject=refs.get(row.subject_node_id) if row.subject_node_id is not None else None,
+                    formative=row.memory_id is not None,
+                )
+                for row in thoughts
+            ],
+            emotions=[
+                EmotionTotalView(emotion=emotion, label=EMOTIONS[emotion].label, valence=EMOTIONS[emotion].valence, strength=round(total))
+                for emotion, total in sorted(totals.items(), key=lambda item: (-item[1], item[0]))
+            ],
+            formative=[
+                FormativeView(
+                    id=row.id, label=row.note or MEMORIES[row.kind].label, magnitude=row.magnitude, epoch=row.epoch, subject=refs.get(row.subject_node_id)
+                )
+                for row in formative
+            ],
+            griefs=[
+                GriefView(
+                    id=row.id,
+                    deceased=refs.get(row.deceased_node_id),
+                    stage=row.stage,
+                    strength=row.strength,
+                    started_epoch=row.started_epoch,
+                    stage_epoch=row.stage_epoch,
+                    length_epochs=row.length_epochs,
+                )
+                for row in griefs
+            ],
+            dreams=[
+                DreamLogView(
+                    id=row.id,
+                    kind=row.kind,
+                    label=DREAM_LABELS[row.kind],
+                    epoch=row.epoch,
+                    intensity=row.intensity,
+                    content=[refs[node] for node in row.content if node in refs],
+                    sender=refs.get(row.sender_node_id) if row.sender_node_id is not None else None,
+                    partner=refs.get(row.partner_node_id) if row.partner_node_id is not None else None,
+                    world=refs.get(row.world_id) if row.world_id is not None else None,
+                    reading=row.reading,
+                    reading_label=READING_LABELS[row.reading],
+                    reader=refs.get(row.reader_node_id) if row.reader_node_id is not None else None,
+                    reading_true=row.reading_true,
+                    recurring=row.recurring,
+                )
+                for row in dreams
+            ],
+            thought_kinds=[ThoughtKindView(kind=kind, label=spec.label, emotion=spec.emotion) for kind, spec in THOUGHTS.items()] if applies else [],
+            emotion_kinds=[EmotionKindView(emotion=emotion, label=spec.label, valence=spec.valence) for emotion, spec in EMOTIONS.items()] if applies else [],
+            dream_kinds=[LabelView(key=kind.value, label=label) for kind, label in DREAM_LABELS.items()] if applies else [],
+            readings=[LabelView(key=reading.value, label=label) for reading, label in READING_LABELS.items()] if applies else [],
+            long_term_threshold=rules.thoughts.long_term_threshold,
         )

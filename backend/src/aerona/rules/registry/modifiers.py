@@ -22,6 +22,7 @@ class ModifiersRules:
     void_taint_charisma: int = rule(15, 0, 100, RuleGroup.INTERCONNECTION, "Charisma the taint of the void takes away")
     chosen_charisma: int = rule(12, 0, 100, RuleGroup.INTERCONNECTION, "Charisma the mark of the chosen lends")
     brand_charisma: int = rule(6, 0, 100, RuleGroup.INTERCONNECTION, "Charisma a god's brand lends")
+    nightmares_willpower: int = rule(6, 0, 100, RuleGroup.INTERCONNECTION, "Willpower recurring nightmares wear away")
     law_standing_army_defense: int = rule(8, 0, 100, RuleGroup.INTERCONNECTION, "Defence a fully enforced standing-army law lends each community under it")
     law_serfdom_prosperity: int = rule(5, 0, 100, RuleGroup.INTERCONNECTION, "Prosperity a fully enforced serfdom law takes from each community under it")
     law_serfdom_wealth: int = rule(4, 0, 100, RuleGroup.INTERCONNECTION, "Wealth a fully enforced serfdom law gathers for each community under it")

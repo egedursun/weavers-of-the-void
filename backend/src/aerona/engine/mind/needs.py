@@ -1,16 +1,19 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.mind import CAREER_SKILLS, HUMILIATING_MEMORIES, NEED_LABELS, PLEASURE_TRAITS, THREAT_MEMORIES
+from aerona.catalog.mind import CAREER_SKILLS, HUMILIATING_MEMORIES, NEED_LABELS, PLEASURE_TRAITS, SKILLS, THREAT_MEMORIES
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
-from aerona.db.tables.body import InjuryRow
+from aerona.db.tables.afflictions import AfflictionRow
+from aerona.db.tables.body import ConditionRow, InjuryRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.mind import MemoryRow, NeedRow
+from aerona.db.tables.mind import MemoryRow, NeedRow, SkillRow
+from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.body import OPEN_INJURY_STATES
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.entity import EntityType, MortalRole
-from aerona.domain.enums.mind import NeedKind, PressureKind, TraitKind, ValueAxis
+from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.mind import NeedKind, PressureKind, SkillFamily, SkillKind, TraitKind, ValueAxis
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.society_depth import ShortfallEffect
 from aerona.engine.context import TickContext
@@ -19,7 +22,7 @@ from aerona.engine.gods.queries import community_of
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.mind.book import Values, best_skill, is_locked, mind_of, needs_of, pressures_of, write_needs, write_pressures
 from aerona.engine.mind.memories import strength_of
-from aerona.engine.mortal.kin import close_kin_of
+from aerona.engine.mortal.kin import close_kin_of, partners_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.numbers import clamp_int
@@ -34,6 +37,10 @@ FULL = PERCENT
 FERTILITY_KEY = "fertility"
 BELONGING_BONDS = (BondKind.LOVES, BondKind.COMPANION, BondKind.MEMBER_OF, BondKind.LIVES_IN)
 BEGGAR_TAG = "beggar"
+LEARNED_SKILLS = frozenset(skill for skill, spec in SKILLS.items() if spec.family is SkillFamily.KNOWLEDGE)
+MAKING_SKILLS = frozenset(skill for skill, spec in SKILLS.items() if spec.family is SkillFamily.CRAFT)
+FIGHT_SKILLS = frozenset(skill for skill, spec in SKILLS.items() if spec.family is SkillFamily.COMBAT)
+TRAVEL_SKILLS = frozenset({SkillKind.SAILING, SkillKind.NAVIGATION, SkillKind.MOUNTAINEERING, SkillKind.RIDING, SkillKind.TRACKING})
 
 
 def role_status(rules: Rules, role: MortalRole) -> int:
@@ -183,10 +190,94 @@ async def mortal_needs(session: AsyncSession, rules: Rules, mortal: EntityRow, *
         NeedKind.PURPOSE: pct(purpose),
         NeedKind.FAITH: pct(faith),
     }
+    prosperity = stat(community, "prosperity") if community is not None else None
+    needs[NeedKind.PLEASURE] = pct(prosperity if prosperity is not None else table.unknown_prosperity)
     if traits & PLEASURE_TRAITS:
-        prosperity = stat(community, "prosperity") if community is not None else None
-        needs[NeedKind.PLEASURE] = pct(prosperity if prosperity is not None else table.unknown_prosperity)
+        needs[NeedKind.PLEASURE] = pct(needs[NeedKind.PLEASURE] - table.trait_demand)
+    needs.update(await deeper_needs(session, rules, mortal, community, pressures, sustenance=sustenance, wounds=open_wounds, epoch=epoch))
     return needs
+
+
+async def deeper_needs(
+    session: AsyncSession,
+    rules: Rules,
+    mortal: EntityRow,
+    community: EntityRow | None,
+    pressures: dict[PressureKind, int],
+    *,
+    sustenance: float,
+    wounds: int,
+    epoch: int,
+) -> dict[NeedKind, int]:
+    table = rules.needs_depth
+    profile = await session.get(MortalProfileRow, mortal.id)
+    stress = profile.stress if profile is not None else 0
+    wealth = profile.wealth if profile is not None else 0
+    prosperity = (stat(community, "prosperity") if community is not None else None) or rules.needs.unknown_prosperity
+    settlement = await session.get(SettlementProfileRow, community.id) if community is not None else None
+    sanitation = settlement.sanitation if settlement is not None else rules.needs.unknown_prosperity
+    ailing = len(
+        list(await session.scalars(select(ConditionRow.id).where(ConditionRow.bearer_node_id == mortal.id, ConditionRow.ended_epoch.is_(None))))
+    ) + len(list(await session.scalars(select(AfflictionRow.id).where(AfflictionRow.bearer_node_id == mortal.id, AfflictionRow.cured_epoch.is_(None)))))
+    kin = [relative for relative in await close_kin_of(session, mortal.id) if await living_entity(session, relative) is not None]
+    loves = await partners_of(session, mortal.id) + [bond.target_node_id for bond in await active_bonds(session, [BondKind.LOVES], sources=[mortal.id])]
+    companions = len(await active_bonds(session, [BondKind.COMPANION], sources=[mortal.id])) + len(
+        await active_bonds(session, [BondKind.COMPANION], targets=[mortal.id])
+    )
+    warm = len(list(await session.scalars(select(MemoryRow.id).where(MemoryRow.holder_node_id == mortal.id, MemoryRow.magnitude > 0))))
+    population = (stat(community, "population") if community is not None else None) or 0
+    skills = list(await session.scalars(select(SkillRow).where(SkillRow.holder_node_id == mortal.id, SkillRow.subject_node_id.is_(None))))
+    levels = {row.skill: row.level for row in skills}
+    used = {row.skill for row in skills if row.last_used_epoch >= epoch}
+    home = [mortal.id, *([community.id] if community is not None else [])]
+    branches = sum(len(found) for found in (await known_levels(session, home)).values())
+    works = len(
+        list(
+            await session.scalars(
+                select(EntityRow.id).where(EntityRow.location_id.in_(home), EntityRow.entity_type == EntityType.ARTWORK, EntityRow.status == EntityStatus.CANON)
+            )
+        )
+    )
+    place = await session.get(EntityRow, mortal.location_id) if mortal.location_id is not None else None
+    fertility = (stat(place, FERTILITY_KEY) if place is not None else None) or rules.needs.default_fertility
+    if community is not None and community.location_id is not None:
+        land = await session.get(EntityRow, community.location_id)
+        fertility = (stat(land, FERTILITY_KEY) if land is not None else None) or fertility
+    at_war = bool(await ongoing_war_count(session, community.id)) if community is not None else False
+    return {
+        NeedKind.DRINK: pct(sustenance + (FULL - sustenance) * (PERCENT - table.drink_hunger_pct) / PERCENT),
+        NeedKind.REST: pct(FULL - stress * table.rest_stress_pct / PERCENT - wounds * table.rest_wound - (table.rest_war if at_war else 0)),
+        NeedKind.COMFORT: pct(
+            prosperity * table.comfort_prosperity_pct / PERCENT
+            + wealth * table.comfort_wealth_pct / PERCENT
+            + sanitation * table.comfort_sanitation_pct / PERCENT
+        ),
+        NeedKind.HEALTH: pct(FULL - wounds * table.health_wound - ailing * table.health_condition),
+        NeedKind.FAMILY: pct(table.family_base + len(kin) * table.family_per_kin),
+        NeedKind.FRIENDS: pct(table.friends_base + (companions + warm) * table.friends_per_tie),
+        NeedKind.ROMANCE: table.romance_loved if loves else table.romance_alone,
+        NeedKind.SOLITUDE: pct(FULL - population * PERCENT / table.solitude_crowd),
+        NeedKind.LEARNING: pct(
+            table.learning_base
+            + max((levels.get(skill, 0) for skill in LEARNED_SKILLS), default=0) * table.learning_skill_pct / PERCENT
+            + branches * table.learning_branch
+        ),
+        NeedKind.CREATING: pct(
+            table.creating_base
+            + max((levels.get(skill, 0) for skill in MAKING_SKILLS), default=0) * table.creating_skill_pct / PERCENT
+            + (table.creating_practised if used & MAKING_SKILLS else 0)
+        ),
+        NeedKind.BEAUTY: pct(table.beauty_base + works * table.beauty_per_work),
+        NeedKind.NATURE: pct(fertility * table.nature_fertility_pct / PERCENT),
+        NeedKind.ADVENTURE: pct(table.adventure_base + (table.adventure_travelled if used & TRAVEL_SKILLS or mortal.mortal_role is MortalRole.EXPLORER else 0)),
+        NeedKind.FIGHTING: pct(table.fighting_base + (table.fighting_fought if used & FIGHT_SKILLS else 0)),
+        NeedKind.WEALTH: pct(wealth * table.wealth_pct / PERCENT),
+        NeedKind.ORDER: pct(
+            FULL
+            - pressures.get(PressureKind.INSECURITY, 0) * table.order_insecurity_pct / PERCENT
+            - pressures.get(PressureKind.HUMILIATION, 0) * table.order_humiliation_pct / PERCENT
+        ),
+    }
 
 
 async def update_needs(ctx: TickContext, mortal: EntityRow, values: Values, traits: set[TraitKind]) -> bool:

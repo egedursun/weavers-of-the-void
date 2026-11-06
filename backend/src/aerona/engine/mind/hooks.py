@@ -3,13 +3,14 @@ from collections.abc import Iterable
 from sqlalchemy import select
 
 from aerona.catalog.mind import COMMAND_SKILLS, HEALING_SKILLS, MELEE_SKILLS, MEMORIES, MISSILE_SKILLS
+from aerona.catalog.thoughts import ATROCITIES
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.chronicle import ChronicleRepository, incident_for
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import InjuryKind, InjuryState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, HERO_ROLES, EntityStatus, EntityType, MortalRole
-from aerona.domain.enums.mind import ActKind, MemoryKind, SkillKind, TraitKind, TraitSource
+from aerona.domain.enums.mind import ActKind, MemoryKind, SkillKind, ThoughtKind, TraitKind, TraitSource
 from aerona.engine.body.treatment import exert
 from aerona.engine.context import TickContext
 from aerona.engine.lore.taboos import violated
@@ -17,6 +18,7 @@ from aerona.engine.mind.book import load_holder, values_for
 from aerona.engine.mind.memories import kin_of, remember
 from aerona.engine.mind.skills import practise, practise_any
 from aerona.engine.mind.space import value_reading
+from aerona.engine.mind.thoughts import think
 from aerona.engine.mind.traits import gain_trait
 
 LOSS_KINDS = frozenset({InjuryKind.SEVERED, InjuryKind.GOUGED})
@@ -66,9 +68,11 @@ async def wound_memories(ctx: TickContext, bearer: object, source_id: int | None
         )
 
 
-async def fought(ctx: TickContext, fighter: EntityRow, *, commander: bool = False, survived: bool = True) -> None:
+async def fought(ctx: TickContext, fighter: EntityRow, *, commander: bool = False, survived: bool = True, won: bool | None = None) -> None:
     if not is_mortal(fighter):
         return
+    if survived and won is not None:
+        await think(ctx.session, ctx.rules, fighter.id, ThoughtKind.WON_BATTLE if won else ThoughtKind.DEFEATED, ctx.epoch)
     skills = ctx.rules.skills
     await exert(ctx, fighter)
     await practise_any(ctx.session, ctx.rules, fighter.id, (*MELEE_SKILLS, *MISSILE_SKILLS), skills.battle_xp, epoch=ctx.epoch)
@@ -125,6 +129,7 @@ async def freed(ctx: TickContext, captive: EntityRow, captor_id: int | None, res
 
 async def healed(ctx: TickContext, healer_id: int, patient_id: int, *, saved: bool) -> None:
     await practise_any(ctx.session, ctx.rules, healer_id, HEALING_SKILLS, ctx.rules.skills.heal_xp, epoch=ctx.epoch)
+    await think(ctx.session, ctx.rules, patient_id, ThoughtKind.WAS_HEALED, ctx.epoch, subject_id=healer_id)
     if saved:
         await remember(
             ctx.session,
@@ -192,6 +197,22 @@ async def onlookers(ctx: TickContext, actor_id: int, victim_id: int) -> list[int
     return list(await ctx.session.scalars(statement.order_by(EntityRow.id)))
 
 
+async def horrified(ctx: TickContext, actor_id: int, victim_id: int) -> list[int]:
+    victim = await ctx.session.get(EntityRow, victim_id)
+    if victim is None or victim.location_id is None:
+        return []
+    statement = select(EntityRow.id).where(
+        EntityRow.location_id == victim.location_id,
+        EntityRow.status == EntityStatus.CANON,
+        EntityRow.entity_type == EntityType.MORTAL,
+        EntityRow.id.not_in([actor_id, victim_id]),
+    )
+    witnesses = list(await ctx.session.scalars(statement.order_by(EntityRow.id)))
+    for witness in witnesses:
+        await think(ctx.session, ctx.rules, witness, ThoughtKind.WITNESSED_ATROCITY, ctx.epoch, subject_id=actor_id)
+    return witnesses
+
+
 async def judged(ctx: TickContext, actor_id: int, victim_id: int, act: ActKind, *, note: str | None = None) -> int:
     await violated(ctx, actor_id, act)
     base = ctx.rules.memory.witness_magnitude
@@ -201,6 +222,8 @@ async def judged(ctx: TickContext, actor_id: int, victim_id: int, act: ActKind, 
     seen = await onlookers(ctx, actor_id, victim_id)
     for holder in seen:
         moved += abs(await witnessed(ctx, holder, actor_id, act, base=base, note=note))
+    if act in ATROCITIES:
+        moved += len(await horrified(ctx, actor_id, victim_id))
     incident = incident_for(actor_id, ctx.epoch) or incident_for(victim_id, ctx.epoch)
     if incident is not None and seen:
         await ChronicleRepository(ctx.session).witness(incident, seen)

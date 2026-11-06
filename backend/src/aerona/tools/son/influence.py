@@ -17,10 +17,12 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityType
+from aerona.domain.enums.mind import DreamKind
 from aerona.domain.enums.son import PowerEffect
 from aerona.engine.body.afflictions import afflict, blood_curse
 from aerona.engine.body.hits import Harm
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.mind.dreams import DreamDraft, visit
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.prompts import SonToolId
@@ -258,6 +260,8 @@ async def send_dream(call: SonCall, args: DreamInput) -> str:
     chance = max(tools.dream_min_pct, min(tools.dream_max_pct, rounded(raw)))
     call.spend_essence(call.rules.costs.dream)
     call.target(target.id)
+    if target.entity_type is EntityType.MORTAL:
+        await visit(call.tick, target, DreamDraft(DreamKind.VISITATION, PERCENT * 3 // 4, (call.son.id,), sender_id=call.son.id))
     roll = call.die(PERCENT, "dream")
     if roll <= chance:
         await BondRepository(call.session).connect(BondDraft(target.id, call.son.id, BondKind.WORSHIPS, call.epoch, lines.DREAM_BOND))

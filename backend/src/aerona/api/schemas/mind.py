@@ -4,18 +4,25 @@ from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.entity import MortalRole
 from aerona.domain.enums.mind import (
     Attribute,
+    DreamKind,
+    DreamReading,
+    Emotion,
     Facet,
     FacetGroup,
+    GriefStage,
     IdeaKind,
     IdeaSource,
     IdeaState,
     MemoryKind,
+    MoodState,
+    NeedGroup,
     NeedKind,
     OpinionComponent,
     PressureKind,
     SkillFamily,
     SkillKind,
     SkillSource,
+    ThoughtKind,
     TraitEffect,
     TraitKind,
     TraitSource,
@@ -77,6 +84,8 @@ class NeedView(ApiModel):
     need: NeedKind
     label: str
     value: int
+    group: NeedGroup
+    importance: int
 
 
 class PressureView(ApiModel):
@@ -234,3 +243,98 @@ class MindSplitView(ApiModel):
     catalogue: list[IdeaSpecView]
     trait_threshold: int
     idea_slots: int
+
+
+class ThoughtView(ApiModel):
+    id: int
+    kind: ThoughtKind
+    label: str
+    emotion: Emotion
+    emotion_label: str
+    valence: int
+    intensity: int
+    strength: int
+    epoch: int
+    decay_pct: int
+    subject: NodeRef | None
+    formative: bool
+
+
+class EmotionTotalView(ApiModel):
+    emotion: Emotion
+    label: str
+    valence: int
+    strength: int
+
+
+class FormativeView(ApiModel):
+    id: int
+    label: str
+    magnitude: int
+    epoch: int
+    subject: NodeRef | None
+
+
+class GriefView(ApiModel):
+    id: int
+    deceased: NodeRef | None
+    stage: GriefStage
+    strength: int
+    started_epoch: int
+    stage_epoch: int
+    length_epochs: int
+
+
+class DreamLogView(ApiModel):
+    id: int
+    kind: DreamKind
+    label: str
+    epoch: int
+    intensity: int
+    content: list[NodeRef]
+    sender: NodeRef | None
+    partner: NodeRef | None
+    world: NodeRef | None
+    reading: DreamReading
+    reading_label: str
+    reader: NodeRef | None
+    reading_true: bool | None
+    recurring: bool
+
+
+class ThoughtKindView(ApiModel):
+    kind: ThoughtKind
+    label: str
+    emotion: Emotion
+
+
+class EmotionKindView(ApiModel):
+    emotion: Emotion
+    label: str
+    valence: int
+
+
+class LabelView(ApiModel):
+    key: str
+    label: str
+
+
+class FeelingsView(ApiModel):
+    node_id: int
+    name: str
+    applies: bool
+    locked: list[str]
+    lockable: list[str]
+    mood: MoodState | None
+    mood_score: int
+    mood_held: bool
+    thoughts: list[ThoughtView]
+    emotions: list[EmotionTotalView]
+    formative: list[FormativeView]
+    griefs: list[GriefView]
+    dreams: list[DreamLogView]
+    thought_kinds: list[ThoughtKindView]
+    emotion_kinds: list[EmotionKindView]
+    dream_kinds: list[LabelView]
+    readings: list[LabelView]
+    long_term_threshold: int

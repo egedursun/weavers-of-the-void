@@ -197,6 +197,8 @@ class CapacityRules:
     chosen_presence: int = rule(25, -100, 100, G, "Mark of the chosen: presence gained (%)")
     chosen_melee: int = rule(15, -100, 100, G, "Mark of the chosen: melee gained (%)")
     brand_presence: int = rule(0, -100, 100, G, "Divine brand: presence gained before the culture reads it (%)")
+    nightmares_command: int = rule(-8, -100, 100, G, "Recurring nightmares: command lost to sleepless nights (%)")
+    nightmares_craft: int = rule(-6, -100, 100, G, "Recurring nightmares: craft lost to sleepless nights (%)")
 
 
 @dataclass(frozen=True)

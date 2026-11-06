@@ -132,10 +132,7 @@ async def resource_economy(ctx: TickContext) -> None:
     "table.world_materials",
     "table.world_seasons",
 )
-@writes(
-    "resource.abundance",
-    "table.resource_profiles",
-)
+@writes("resource.abundance", "table.entities", "table.resource_profiles")
 async def resource_regeneration(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     regrown = 0

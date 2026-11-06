@@ -1,4 +1,4 @@
-from aerona.db.tables.mind import AttributeRow, FacetRow, IdeaRow
+from aerona.db.tables.mind import AttributeRow, DreamRow, FacetRow, GriefRow, IdeaRow, NeedRow, ThoughtRow
 from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
 
@@ -11,6 +11,7 @@ MIND = "section-mind"
 BODY = "section-body"
 AFFLICTIONS = "section-afflictions"
 MIND_SPLIT = "section-mind-split"
+FEELINGS = "section-feelings"
 S = Subsystem
 PROFILES = (MortalProfileRow.__tablename__,)
 
@@ -106,6 +107,58 @@ BODY_GAP_MECHANICS: tuple[Mechanic, ...] = (
     ),
 )
 MIND_GAP_MECHANICS: tuple[Mechanic, ...] = (
+    Mechanic(
+        key="thoughts_and_mood",
+        spec_item="F14",
+        title="Thoughts carry one of 24 feelings sharpened by facets; their decaying sum is a mood, and the strongest become formative memories",
+        subsystem=S.MIND,
+        phases=("mind_thoughts", "mind_needs"),
+        surface=Surface(drawer=FEELINGS),
+        backfill="none: thoughts arise from the next epoch and every mood starts fine",
+        fields=("kind", "emotion", "intensity", "decay_pct", "mood", "mood_score", "need", "value"),
+        tables=(ThoughtRow.__tablename__, NeedRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal",),
+        couplings=(
+            Coupling(S.MIND, "a bad mood raises stress and brings a breaking point closer; formative memories shift beliefs and facets and may leave a trauma"),
+            Coupling(S.ECONOMY, "a maker's mood raises or lowers the quality of the work"),
+            Coupling(S.GODS, "a strong mood, good or bad, makes a mortal likelier to act as an agent"),
+        ),
+    ),
+    Mechanic(
+        key="grief",
+        spec_item="F14",
+        title="A death leaves kin, spouses and companions in shock, then mourning stretched by mourning rites, then acceptance or a grief that will not heal",
+        subsystem=S.MIND,
+        phases=("mind_grief",),
+        surface=Surface(drawer=FEELINGS),
+        backfill="none: griefs begin with the deaths of the next epoch",
+        fields=("stage", "strength", "length_epochs"),
+        tables=(GriefRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal",),
+        couplings=(Coupling(S.MIND, "complicated grief makes a mortal melancholic and lays a grudge on the killer that can drive vengeance"),),
+    ),
+    Mechanic(
+        key="dreams",
+        spec_item="F14/RP4",
+        title="Named mortals dream: nightmares from fears and wounds, longing from unmet needs, prophecy for seers, shared dreams and visitations",
+        subsystem=S.MIND,
+        phases=("mind_dreams",),
+        surface=Surface(drawer=FEELINGS),
+        backfill="none: dreams begin from the next epoch",
+        templates=("dream.recurring", "dream.reading"),
+        fields=("kind", "intensity", "reading", "reading_true", "recurring"),
+        tables=(DreamRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("send_dream",),
+        targets=("mortal",),
+        couplings=(
+            Coupling(S.BODY, "nightmares that recur become a condition that wears down willpower"),
+            Coupling(S.FAITH, "a god's dream message becomes a visitation that raises the dreamer's renown"),
+            Coupling(S.MIND, "dream readers turn dreams into omens that shift the dreamer's beliefs, right or wrong"),
+        ),
+    ),
     Mechanic(
         key="mind_split",
         spec_item="F13",

@@ -530,6 +530,7 @@ async def swallowed_places(ctx: TickContext) -> int:
     "artwork.renown",
     "event.severity",
     "item.might",
+    "table.artwork_profiles",
     "table.bonds",
     "table.entity_flags",
     "table.epoch_year_cursors",

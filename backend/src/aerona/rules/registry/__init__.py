@@ -155,12 +155,16 @@ from aerona.rules.registry.military import (
 from aerona.rules.registry.mind import (
     CareersRules,
     CultureDriftRules,
+    DreamRules,
+    GriefRules,
     IdeasRules,
     MemoryRules,
     MindSplitRules,
+    NeedsDepthRules,
     NeedsRules,
     OpinionRules,
     SkillsRules,
+    ThoughtsRules,
     TraitsRules,
 )
 from aerona.rules.registry.model import ModelRules
@@ -290,6 +294,10 @@ class Rules:
     skills: SkillsRules = field(default_factory=SkillsRules)
     mind_split: MindSplitRules = field(default_factory=MindSplitRules)
     ideas: IdeasRules = field(default_factory=IdeasRules)
+    needs_depth: NeedsDepthRules = field(default_factory=NeedsDepthRules)
+    thoughts: ThoughtsRules = field(default_factory=ThoughtsRules)
+    grief: GriefRules = field(default_factory=GriefRules)
+    dreams: DreamRules = field(default_factory=DreamRules)
     careers: CareersRules = field(default_factory=CareersRules)
     memory: MemoryRules = field(default_factory=MemoryRules)
     opinion: OpinionRules = field(default_factory=OpinionRules)

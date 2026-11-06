@@ -24,7 +24,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialFamily
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import AfterlifeState, BindingKind, SpiritAlignment
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.mind import MemoryKind, SkillKind
+from aerona.domain.enums.mind import MemoryKind, SkillKind, ThoughtKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.conditions import end_condition
@@ -39,6 +39,7 @@ from aerona.engine.lore.history import record
 from aerona.engine.lore.intel import gain_intel
 from aerona.engine.lore.kinds import ItemClassParams, kind_of, params_of
 from aerona.engine.mind.memories import remember
+from aerona.engine.mind.thoughts import mood_factor, mood_of, think
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -49,7 +50,16 @@ from aerona.engine.primitives.threads import open_story
 HALF = 2
 TEN = 10
 WORLD_PREFIX = WORLD_KEY_PREFIX
-CURABLE = frozenset({ConditionKind.CHRONIC_ILLNESS, ConditionKind.MELANCHOLY, ConditionKind.PARANOIA, ConditionKind.AGE_BLINDNESS, ConditionKind.WITHERED_LIMB})
+CURABLE = frozenset(
+    {
+        ConditionKind.CHRONIC_ILLNESS,
+        ConditionKind.MELANCHOLY,
+        ConditionKind.PARANOIA,
+        ConditionKind.AGE_BLINDNESS,
+        ConditionKind.WITHERED_LIMB,
+        ConditionKind.NIGHTMARES,
+    }
+)
 C = ItemClass
 E = RiteEffectKind
 WAYFINDERS = frozenset({C.MAP, C.ASTROLABE})
@@ -745,6 +755,7 @@ async def craft(ctx: TickContext, item: EntityRow, community_id: int | None, mat
     found = await smith_of(ctx, community_id)
     hands = await ctx.session.get(BodyRow, found[0].id) if found is not None else None
     skill = found[1] * (hands.craft if hands is not None else PERCENT) / PERCENT if found is not None else 0
+    skill *= mood_factor(await mood_of(ctx.session, found[0].id), ctx.rules.thoughts.mood_labour_pct) if found is not None else 1
     book = await MaterialBook.load(ctx.session)
     props = await body_props(ctx, book, item, row)
     workability = (props.toughness if props is not None else PERCENT // HALF) / PERCENT
@@ -770,6 +781,7 @@ async def craft(ctx: TickContext, item: EntityRow, community_id: int | None, mat
     row.renown = clamp_int(row.renown + table.masterwork_renown, 0, PERCENT)
     if found is not None:
         found[0].importance = (found[0].importance or 0) + table.masterwork_renown
+        await think(ctx.session, ctx.rules, found[0].id, ThoughtKind.MADE_MASTERWORK, ctx.epoch, subject_id=item.id)
     record(ctx, item.id, ItemDeed.MADE, found[0].id if found is not None else community_id, "a masterwork")
     await note(ctx, f"{item.name} came from the forge a masterwork.", key="item.masterwork", ids=[item.id, *([found[0].id] if found else [])])
     return True

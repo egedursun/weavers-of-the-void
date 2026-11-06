@@ -122,9 +122,11 @@ async def destroy_leakiest_world(ctx: TickContext) -> None:
 
 @reads(
     "knowledge.spread",
+    "people.martiality",
     "people.piety",
     "people.population",
     "people.prosperity",
+    "settlement.defense",
     "settlement.piety",
     "settlement.population",
     "settlement.prosperity",
@@ -135,13 +137,15 @@ async def destroy_leakiest_world(ctx: TickContext) -> None:
     "table.cosmos",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.modifiers",
     "table.nodes",
     "table.war_sides",
     "table.wars",
 )
-@reads("people.martiality", "settlement.defense", "table.modifiers")
-@writes("people.martiality", "people.prosperity", "settlement.defense")
 @writes(
+    "people.martiality",
+    "people.prosperity",
+    "settlement.defense",
     "settlement.prosperity",
     "table.chronicle",
     "table.chronicle_entities",

@@ -106,14 +106,14 @@ async def cohort_upkeep(ctx: TickContext) -> None:
     "table.community_cohorts",
     "table.community_labour",
     "table.community_societies",
+    "table.community_stocks",
+    "table.corvee_levies",
     "table.disease_profiles",
+    "table.labour_reasons",
+    "table.market_prices",
     "table.outbreaks",
     "table.people_biology",
     "table.people_culture",
-    "table.community_stocks",
-    "table.corvee_levies",
-    "table.labour_reasons",
-    "table.market_prices",
     "table.region_environment",
     "table.resource_profiles",
     "table.resource_workers",
@@ -121,12 +121,7 @@ async def cohort_upkeep(ctx: TickContext) -> None:
     "table.workshops",
     "table.world_maps",
 )
-@writes(
-    "table.community_cohorts",
-    "table.community_labour",
-    "table.labour_reasons",
-    "table.settlement_profiles",
-)
+@writes("table.community_cohorts", "table.community_labour", "table.labour_reasons", "table.settlement_profiles")
 async def labour_allocation(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     kept = 0
@@ -165,6 +160,8 @@ async def labour_allocation(ctx: TickContext) -> None:
     "army.size",
     "people.population",
     "settlement.population",
+    "table.bonds",
+    "table.captives",
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_cohorts",
@@ -179,11 +176,6 @@ async def labour_allocation(ctx: TickContext) -> None:
     "table.mobility_events",
     "table.name_registry",
     "table.nodes",
-    "table.bonds",
-    "table.captives",
-    "table.community_cohorts",
-    "table.community_societies",
-    "table.entities",
     "table.people_culture",
 )
 async def society_mobility(ctx: TickContext) -> None:

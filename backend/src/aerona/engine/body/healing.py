@@ -34,7 +34,7 @@ from aerona.domain.enums.culture import ItemClass, Technique
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.mind import Attribute
+from aerona.domain.enums.mind import Attribute, ThoughtKind
 from aerona.domain.enums.mortal import DeathCause, HarshnessScale
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import ItemStats
@@ -55,6 +55,7 @@ from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lore.research import lacks
 from aerona.engine.mind.hooks import failed_to_heal, healed
 from aerona.engine.mind.split import attribute, lean_factor
+from aerona.engine.mind.thoughts import think
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.harshness import harshness
@@ -372,6 +373,8 @@ async def _close(ctx: TickContext, bearer: Bearer, row: InjuryRow, care: Care, r
     await _renown(ctx, care.healer, healed=True)
     if care.healer is not None:
         await healed(ctx, care.healer.mortal.id, bearer.id, saved=row.severity >= table.saved_severity)
+    if lasting and row.kind in TOTAL_LOSS_KINDS:
+        await think(ctx.session, ctx.rules, bearer.id, ThoughtKind.LOST_LIMB_BUT_LIVED, ctx.epoch, subject_id=row.cause_node_id)
     if lasting and row.kind is InjuryKind.CURSE_WITHER and row.severity >= ctx.rules.conditions.wither_condition_severity:
         await gain_condition(ctx, bearer, ConditionKind.WITHERED_LIMB, row.cause_kind, severity=row.severity, part=row.part, source_node_id=row.cause_node_id)
     if lasting and row.kind is InjuryKind.VENOM:

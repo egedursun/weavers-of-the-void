@@ -420,16 +420,7 @@ async def _open_ground(ctx: TickContext, species: EntityRow, place: EntityRow, g
     resource.maker_entity_id = species.id
 
 
-@reads(
-    "species.abundance",
-    "table.bodies",
-    "table.bonds",
-    "table.entity_flags",
-    "table.herds",
-    "table.name_registry",
-    "table.nodes",
-    "table.resource_profiles",
-)
+@reads("species.abundance", "table.bodies", "table.bonds", "table.entity_flags", "table.herds", "table.name_registry", "table.nodes", "table.resource_profiles")
 @writes("resource.abundance", "table.bonds", "table.entities", "table.name_registry", "table.resource_profiles")
 async def species_yields(ctx: TickContext) -> None:
     extinct = await flags_by_entity(ctx.session, EntityFlag.EXTINCT)
@@ -485,13 +476,7 @@ async def species_yields(ctx: TickContext) -> None:
     "table.world_materials",
     "table.world_seasons",
 )
-@writes(
-    "table.chronicle",
-    "table.chronicle_entities",
-    "table.incident_participants",
-    "table.incidents",
-    "table.resource_profiles",
-)
+@writes("table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents", "table.resource_profiles")
 async def deposit_finding(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     table = ctx.rules.extraction

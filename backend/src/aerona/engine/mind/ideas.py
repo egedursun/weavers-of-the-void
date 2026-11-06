@@ -14,7 +14,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import IdeologyTenet, ItemClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
-from aerona.domain.enums.mind import Facet, IdeaKind, IdeaSource, IdeaState, ValueHolder
+from aerona.domain.enums.mind import Facet, IdeaKind, IdeaSource, IdeaState, ThoughtKind, ValueHolder
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import Holder, Values, clamp_value, is_locked, mind_of, stored_values, write_values
@@ -29,6 +29,7 @@ from aerona.engine.mind.split import (
     store_attributes,
     write_facets,
 )
+from aerona.engine.mind.thoughts import think
 from aerona.engine.mind.values import VALUE_LOCK
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.naming import seed_of
@@ -180,6 +181,7 @@ async def internalise(session: AsyncSession, rules: Rules, node: Holder, row: Id
     spec = IDEAS[row.idea]
     mind = await mind_of(session, node.id)
     row.state, row.progress, row.finished_epoch = IdeaState.INTERNALISED, FULL, epoch
+    await think(session, rules, node.id, ThoughtKind.TOOK_IDEA_TO_HEART, epoch)
     if not is_locked(mind, VALUE_LOCK):
         values = await stored_values(session, ValueHolder.PERSONAL, node.id)
         scale = rules.ideas.belief_scale_pct / PERCENT

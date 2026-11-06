@@ -14,7 +14,7 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType, MortalRole
-from aerona.domain.enums.mind import Attribute, CareerChange, MemoryKind, SkillKind, SkillSource, TraitEffect, ValueAxis
+from aerona.domain.enums.mind import Attribute, CareerChange, MemoryKind, SkillKind, SkillSource, ThoughtKind, TraitEffect, ValueAxis
 from aerona.engine.body.book import factor
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -22,6 +22,7 @@ from aerona.engine.mind.book import SKILLS_KEY, clamp_skill, effect_of, is_locke
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.space import blend
 from aerona.engine.mind.split import effective_attributes, governing, talent
+from aerona.engine.mind.thoughts import think
 from aerona.engine.mind.traits import teach_trait
 from aerona.engine.mortal.variants import learning, variants_by_id
 from aerona.engine.primitives.queries import active_bonds, living_entity
@@ -166,6 +167,7 @@ async def teach_apprentices(ctx: TickContext) -> int:
             pace = 1 + gap * table.teach_gap_pct / PERCENT / PERCENT
             await practise(ctx.session, ctx.rules, student.id, lesson.skill, table.teach_xp * quality * pace, epoch=ctx.epoch, source=SkillSource.TEACHING)
         await practise(ctx.session, ctx.rules, master.id, SkillKind.TEACHING, table.teaching_xp, epoch=ctx.epoch)
+        await think(ctx.session, ctx.rules, master.id, ThoughtKind.TAUGHT_APPRENTICE, ctx.epoch, subject_id=student.id)
         await remember(
             ctx.session, ctx.rules, holder_id=student.id, subject_id=master.id, kind=MemoryKind.TAUGHT_ME, magnitude=table.taught_memory, epoch=ctx.epoch
         )

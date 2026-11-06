@@ -138,6 +138,7 @@ class ConditionKind(StrEnum):
     VOID_TAINT = "void_taint"
     CHOSEN_MARK = "chosen_mark"
     DIVINE_BRAND = "divine_brand"
+    NIGHTMARES = "nightmares"
 
 
 MADNESS_CONDITIONS = (ConditionKind.PARANOIA, ConditionKind.VISIONS, ConditionKind.RAGE, ConditionKind.MELANCHOLY)

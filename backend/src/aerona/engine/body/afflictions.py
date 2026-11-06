@@ -385,7 +385,15 @@ async def blood_curse(ctx: TickContext, god: SonRow, target: EntityRow) -> Affli
 
 
 TRAUMA_KINDS = frozenset(
-    {MemoryKind.HARMED_ME, MemoryKind.KILLED_KIN, MemoryKind.MAIMED_ME, MemoryKind.BETRAYED_ME, MemoryKind.HELD_CAPTIVE, MemoryKind.HUMILIATED_ME}
+    {
+        MemoryKind.HARMED_ME,
+        MemoryKind.KILLED_KIN,
+        MemoryKind.MAIMED_ME,
+        MemoryKind.BETRAYED_ME,
+        MemoryKind.HELD_CAPTIVE,
+        MemoryKind.HUMILIATED_ME,
+        MemoryKind.FORMATIVE,
+    }
 )
 
 
@@ -393,7 +401,7 @@ async def traumatise(ctx: TickContext) -> int:
     table = ctx.rules.effect_packages
     found = 0
     rows = await ctx.session.scalars(
-        select(MemoryRow).where(MemoryRow.epoch == ctx.epoch, MemoryRow.kind.in_(list(TRAUMA_KINDS)), MemoryRow.magnitude >= table.trauma_magnitude)
+        select(MemoryRow).where(MemoryRow.epoch == ctx.epoch, MemoryRow.kind.in_(list(TRAUMA_KINDS)), MemoryRow.magnitude <= -table.trauma_magnitude)
     )
     for memory in rows:
         holder = await living_entity(ctx.session, memory.holder_node_id)

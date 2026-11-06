@@ -241,9 +241,9 @@ async def item_cycles(ctx: TickContext) -> None:
     "table.offices",
     "table.polity_profiles",
     "table.skills",
+    "table.sons",
     "table.speaker_cohorts",
     "table.spirit_profiles",
-    "table.sons",
 )
 @writes(
     "table.applied_fixups",

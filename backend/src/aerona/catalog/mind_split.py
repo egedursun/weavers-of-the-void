@@ -324,6 +324,7 @@ CONDITION_ATTRIBUTES: MappingProxyType[ConditionKind, tuple[Attribute, ...]] = M
         C.VOID_TAINT: (A.EMPATHY, A.MEMORY),
         C.CHOSEN_MARK: (),
         C.DIVINE_BRAND: (),
+        C.NIGHTMARES: (A.FOCUS, A.RECUPERATION, A.PATIENCE),
     }
 )
 

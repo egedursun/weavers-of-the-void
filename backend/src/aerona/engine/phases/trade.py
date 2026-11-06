@@ -94,6 +94,7 @@ def route_income(
     "people.prosperity",
     "people.wealth",
     "settlement.prosperity",
+    "settlement.wealth",
     "table.bonds",
     "table.calendars",
     "table.forced_weather",
@@ -107,8 +108,9 @@ def route_income(
     "table.trade_route_tolls",
     "table.world_maps",
     "table.world_seasons",
+    "trade_route.culture",
 )
-@writes("faction.wealth", "people.prosperity", "people.wealth", "settlement.prosperity")
+@writes("faction.wealth", "people.prosperity", "people.wealth", "settlement.prosperity", "table.entities")
 async def trade_income(ctx: TickContext) -> None:
     settings = ctx.rules.trade
     entities = {entity.id: entity for entity in await canon(ctx.session)}

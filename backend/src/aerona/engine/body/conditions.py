@@ -4,12 +4,14 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import SEVERITY_MAX, SEVERITY_MIN, ConditionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import ConditionKind, HarmCause
+from aerona.domain.enums.mind import ThoughtKind
 from aerona.engine.body.book import Bearer
 from aerona.engine.body.state import refresh
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.guards import blocked
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.mind.book import mind_of
+from aerona.engine.mind.thoughts import think
 from aerona.engine.mind.traits import condition_trait
 from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
@@ -33,6 +35,7 @@ CONDITION_PHRASES: dict[ConditionKind, str] = {
     ConditionKind.VOID_TAINT: "was tainted by the void",
     ConditionKind.CHOSEN_MARK: "bore the mark of the chosen",
     ConditionKind.DIVINE_BRAND: "bore a god's brand",
+    ConditionKind.NIGHTMARES: "began to dream the same nightmare night after night",
 }
 
 END_PHRASES: dict[ConditionKind, str] = {
@@ -44,7 +47,11 @@ END_PHRASES: dict[ConditionKind, str] = {
     ConditionKind.ADDICTION: "broke free of addiction",
     ConditionKind.POSSESSION: "was freed of the spirit that possessed them",
     ConditionKind.ENDLESS_HUNGER: "was freed of the endless hunger",
+    ConditionKind.NIGHTMARES: "slept free of nightmares at last",
 }
+
+
+ILLNESSES = frozenset({ConditionKind.CHRONIC_ILLNESS, ConditionKind.ENDLESS_HUNGER})
 
 
 async def condition_of(ctx: TickContext, bearer_id: int, kind: ConditionKind) -> ConditionRow | None:
@@ -99,6 +106,8 @@ async def gain_condition(
     await refresh(ctx.session, ctx.rules, bearer, ctx.epoch)
     if await mind_of(ctx.session, bearer.id) is not None:
         await condition_trait(ctx, bearer.id, kind)
+    if kind in ILLNESSES:
+        await think(ctx.session, ctx.rules, bearer.id, ThoughtKind.FELL_ILL, ctx.epoch, subject_id=source_node_id)
     if announce:
         await _announce(ctx, bearer, CONDITION_PHRASES[kind], kind, "gained")
     return row

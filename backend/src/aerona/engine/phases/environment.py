@@ -1202,13 +1202,12 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
     "table.place_environment",
     "table.region_environment",
     "table.structure_designs",
-    "table.structure_profiles",
     "table.structure_ley",
+    "table.structure_profiles",
     "table.world_maps",
 )
 @writes(
     "structure.function",
-    "table.structure_profiles",
     "table.applied_fixups",
     "table.chronicle",
     "table.chronicle_entities",
@@ -1220,6 +1219,7 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
     "table.place_environment",
     "table.region_environment",
     "table.structure_ley",
+    "table.structure_profiles",
 )
 async def ley_lines(ctx: TickContext) -> None:
     web = await LeyWeb.load(ctx.session)

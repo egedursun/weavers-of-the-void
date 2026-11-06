@@ -10,7 +10,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
-from aerona.db.tables.mind import CultureValueRow, MemoryRow, MindRow, PersonalityValueRow
+from aerona.db.tables.mind import CultureValueRow, GriefRow, MemoryRow, MindRow, PersonalityValueRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import unheld
@@ -18,7 +18,18 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, MortalRole
-from aerona.domain.enums.mind import ActKind, CareerChange, IdeaState, MemoryKind, PressureKind, TraitEffect, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import (
+    ActKind,
+    CareerChange,
+    GriefStage,
+    IdeaState,
+    MemoryKind,
+    PressureKind,
+    ThoughtKind,
+    TraitEffect,
+    ValueAxis,
+    ValueHolder,
+)
 from aerona.domain.enums.polity import OathKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import HeroQuestKind
@@ -42,16 +53,17 @@ from aerona.engine.mind.book import (
     write_values,
 )
 from aerona.engine.mind.depth import backfill_depth
+from aerona.engine.mind.dreams import dream, visitations
+from aerona.engine.mind.feelings import feel
+from aerona.engine.mind.grief import GriefTally, advance
 from aerona.engine.mind.hooks import FIGHTING_ROLES
 from aerona.engine.mind.ideas import ideas_of, turn_over
 from aerona.engine.mind.memories import forget_faded, kin_of, remember, strength_of
-from aerona.engine.mind.needs import update_needs, update_pressures
+from aerona.engine.mind.needs import role_status, update_needs, update_pressures
 from aerona.engine.mind.opinion import OpinionContext
 from aerona.engine.mind.skills import choose_career, left_to_beg, practise_any, seed_skills, teach_apprentices, weather_skills
 from aerona.engine.mind.space import value_reading
 from aerona.engine.mind.split import (
-    BEAST_SUMMARIES,
-    MORTAL_SUMMARIES,
     Bodied,
     has_attributes,
     has_facets,
@@ -59,6 +71,8 @@ from aerona.engine.mind.split import (
     temper_facets,
     weather_attributes,
 )
+from aerona.engine.mind.thoughts import forget_faded as forget_faded_thoughts
+from aerona.engine.mind.thoughts import settle_mood, think
 from aerona.engine.mind.traits import seed_traits
 from aerona.engine.mind.values import drift_body, drift_culture, drift_divine, drift_person, seed_values
 from aerona.engine.notes import note
@@ -78,8 +92,6 @@ from aerona.engine.services.war import ongoing_wars
 
 HISTORY_FIXUP = "mind.relation_history"
 AXES_FIXUP = "mind.belief_axes"
-SUMMARY_READS = tuple(f"{kind}.{name}" for kind, fields in (("mortal", MORTAL_SUMMARIES), ("beast", BEAST_SUMMARIES)) for name in fields.values())
-SUMMARY_WRITES = SUMMARY_READS
 AID_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.PEOPLE})
 BEGGAR_TAG = "beggar"
 HISTORY_NOTE = "the weight of older history"
@@ -170,13 +182,21 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
 
 
 @reads(
+    "beast.agility",
+    "beast.cunning",
+    "beast.strength",
     "cult.zeal",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
+    "mortal.creativity",
+    "mortal.endurance",
     "mortal.intellect",
     "mortal.lifespan",
+    "mortal.perception",
     "mortal.strength",
+    "mortal.willpower",
+    "mortal.wisdom",
     "people.craft",
     "people.magic",
     "people.martiality",
@@ -189,48 +209,70 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
     "settlement.piety",
     "settlement.population",
     "settlement.prosperity",
+    "table.afflictions",
     "table.applied_fixups",
     "table.bonds",
     "table.class_standing",
     "table.community_needs",
     "table.community_relations",
     "table.community_societies",
+    "table.conditions",
     "table.culture_values",
     "table.entity_flags",
     "table.entity_tags",
+    "table.epoch_year_cursors",
+    "table.foreign_gods",
     "table.holder_levels",
+    "table.incubating_ideas",
     "table.injuries",
     "table.memories",
     "table.mind_attributes",
     "table.mind_facets",
     "table.minds",
+    "table.mortal_profiles",
     "table.needs",
     "table.nodes",
     "table.personality_values",
     "table.pressures",
+    "table.settlement_profiles",
     "table.skills",
+    "table.sons",
     "table.traits",
     "table.war_sides",
     "table.wars",
-    "table.sons",
-    "table.foreign_gods",
-    *SUMMARY_READS,
 )
 @writes(
-    *SUMMARY_WRITES,
+    "beast.agility",
+    "beast.cunning",
+    "beast.strength",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.creativity",
+    "mortal.endurance",
+    "mortal.intellect",
+    "mortal.perception",
+    "mortal.strength",
+    "mortal.willpower",
+    "mortal.wisdom",
     "table.applied_fixups",
+    "table.chronicle",
+    "table.chronicle_entities",
     "table.community_relations",
     "table.culture_values",
+    "table.entities",
+    "table.epoch_year_cursors",
     "table.foreign_gods",
+    "table.incident_participants",
+    "table.incidents",
     "table.memories",
     "table.mind_attributes",
     "table.mind_facets",
     "table.minds",
-    "table.sons",
     "table.needs",
     "table.personality_values",
     "table.pressures",
     "table.skills",
+    "table.sons",
     "table.traits",
 )
 async def mind_survey(ctx: TickContext) -> None:
@@ -342,8 +384,6 @@ async def plagued_communities(ctx: TickContext) -> set[int]:
 
 
 @reads(
-    "table.injuries",
-    "table.war_sides",
     "table.bonds",
     "table.community_relations",
     "table.culture_drift_causes",
@@ -352,6 +392,7 @@ async def plagued_communities(ctx: TickContext) -> set[int]:
     "table.entities",
     "table.ideology_adherents",
     "table.ideology_profiles",
+    "table.injuries",
     "table.memories",
     "table.minds",
     "table.nodes",
@@ -359,13 +400,9 @@ async def plagued_communities(ctx: TickContext) -> set[int]:
     "table.personality_values",
     "table.pressures",
     "table.traits",
+    "table.war_sides",
 )
-@writes(
-    "table.culture_drift_causes",
-    "table.culture_values",
-    "table.drift_impositions",
-    "table.personality_values",
-)
+@writes("table.culture_drift_causes", "table.culture_values", "table.drift_impositions", "table.personality_values")
 async def mind_values(ctx: TickContext) -> None:
     index = await ValueIndex.load(ctx.session)
     plagued = await plagued_communities(ctx)
@@ -401,14 +438,18 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
 
 
 @reads(
-    "table.mortal_profiles",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
+    "mortal.creativity",
+    "mortal.endurance",
     "mortal.hp",
     "mortal.intellect",
     "mortal.lifespan",
+    "mortal.perception",
     "mortal.strength",
+    "mortal.willpower",
+    "mortal.wisdom",
     "table.bodies",
     "table.bonds",
     "table.conditions",
@@ -416,10 +457,14 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.holder_levels",
+    "table.incubating_ideas",
     "table.injuries",
     "table.item_profiles",
     "table.memories",
+    "table.mind_attributes",
     "table.minds",
+    "table.mortal_equipment",
+    "table.mortal_profiles",
     "table.nodes",
     "table.personality_values",
     "table.prostheses",
@@ -439,6 +484,7 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     "table.incidents",
     "table.injuries",
     "table.memories",
+    "table.mortal_profiles",
     "table.skills",
     "table.traits",
 )
@@ -457,6 +503,8 @@ async def mind_skills(ctx: TickContext) -> None:
             continue
         mortal.mortal_role = move.new
         changed += 1
+        rose = role_status(ctx.rules, move.new) >= role_status(ctx.rules, move.old)
+        await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.ROSE_IN_RANK if rose else ThoughtKind.FELL_IN_RANK, ctx.epoch)
         if move.reason is CareerChange.INJURED:
             mind = await ctx.session.get(MindRow, mortal.id)
             if mind is not None:
@@ -531,10 +579,12 @@ async def mind_memories(ctx: TickContext) -> None:
     "settlement.piety",
     "settlement.population",
     "settlement.prosperity",
+    "table.afflictions",
     "table.bonds",
     "table.class_standing",
     "table.community_needs",
     "table.community_societies",
+    "table.conditions",
     "table.culture_values",
     "table.entity_flags",
     "table.entity_tags",
@@ -543,9 +593,11 @@ async def mind_memories(ctx: TickContext) -> None:
     "table.injuries",
     "table.memories",
     "table.minds",
+    "table.mortal_profiles",
     "table.needs",
     "table.personality_values",
     "table.pressures",
+    "table.settlement_profiles",
     "table.skills",
     "table.traits",
     "table.war_sides",
@@ -589,11 +641,23 @@ async def mind_opinion(ctx: TickContext) -> None:
 
 
 @reads(
+    "beast.agility",
+    "beast.cunning",
+    "beast.strength",
     "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.creativity",
+    "mortal.endurance",
+    "mortal.intellect",
     "mortal.lifespan",
-    *SUMMARY_READS,
+    "mortal.perception",
+    "mortal.strength",
+    "mortal.willpower",
+    "mortal.wisdom",
     "table.conditions",
     "table.culture_values",
+    "table.foreign_gods",
     "table.incubating_ideas",
     "table.mind_attributes",
     "table.mind_facets",
@@ -602,13 +666,24 @@ async def mind_opinion(ctx: TickContext) -> None:
     "table.personality_values",
     "table.skills",
     "table.sons",
-    "table.foreign_gods",
     "table.traits",
 )
 @writes(
-    *SUMMARY_WRITES,
+    "beast.agility",
+    "beast.cunning",
+    "beast.strength",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.creativity",
+    "mortal.endurance",
+    "mortal.intellect",
+    "mortal.perception",
+    "mortal.strength",
+    "mortal.willpower",
+    "mortal.wisdom",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.entities",
     "table.foreign_gods",
     "table.mind_attributes",
     "table.mind_facets",
@@ -636,6 +711,7 @@ async def mind_split(ctx: TickContext) -> None:
     "table.cult_tenets",
     "table.entities",
     "table.entity_flags",
+    "table.holder_levels",
     "table.ideology_adherents",
     "table.ideology_profiles",
     "table.incubating_ideas",
@@ -648,7 +724,18 @@ async def mind_split(ctx: TickContext) -> None:
     "table.personality_values",
 )
 @writes(
-    *SUMMARY_WRITES,
+    "beast.agility",
+    "beast.cunning",
+    "beast.strength",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.creativity",
+    "mortal.endurance",
+    "mortal.intellect",
+    "mortal.perception",
+    "mortal.strength",
+    "mortal.willpower",
+    "mortal.wisdom",
     "table.chronicle",
     "table.chronicle_entities",
     "table.incubating_ideas",
@@ -676,10 +763,144 @@ async def mind_ideas(ctx: TickContext) -> None:
     ctx.count("ideas_rejected", rejected)
 
 
+@reads(
+    "table.applied_fixups",
+    "table.artwork_profiles",
+    "table.bonds",
+    "table.entities",
+    "table.entity_flags",
+    "table.item_profiles",
+    "table.marriages",
+    "table.memories",
+    "table.messages",
+    "table.mind_facets",
+    "table.minds",
+    "table.mortal_profiles",
+    "table.needs",
+    "table.nodes",
+    "table.personality_values",
+    "table.thoughts",
+    "table.tradition_profiles",
+    "table.traits",
+)
+@writes("table.memories", "table.mind_facets", "table.mortal_profiles", "table.personality_values", "table.thoughts")
+async def mind_thoughts(ctx: TickContext) -> None:
+    sleeping = await dormant_ids(ctx)
+    felt = relived = forgotten = 0
+    moods: dict[str, int] = defaultdict(int)
+    for mortal in unheld(await living_minds(ctx.session)):
+        if mortal.entity_type is not EntityType.MORTAL or mortal.id in sleeping:
+            continue
+        tally = await feel(ctx, mortal)
+        felt, relived = felt + tally.thoughts, relived + tally.relived
+        forgotten += await forget_faded_thoughts(ctx.session, ctx.rules, mortal.id, ctx.epoch)
+        state = await settle_mood(ctx.session, ctx.rules, mortal, ctx.epoch)
+        if state is not None:
+            moods[state.value] += 1
+    ctx.count("thoughts", felt)
+    ctx.count("memories_relived", relived)
+    ctx.count("thoughts_forgotten", forgotten)
+    for name, count in moods.items():
+        ctx.count(f"mood_{name}", count)
+
+
+@reads(
+    "mortal.willpower",
+    "table.applied_fixups",
+    "table.artwork_profiles",
+    "table.bonds",
+    "table.entities",
+    "table.entity_flags",
+    "table.griefs",
+    "table.item_profiles",
+    "table.marriages",
+    "table.memories",
+    "table.messages",
+    "table.mind_attributes",
+    "table.mind_facets",
+    "table.minds",
+    "table.mortal_profiles",
+    "table.needs",
+    "table.nodes",
+    "table.personality_values",
+    "table.thoughts",
+    "table.tradition_profiles",
+    "table.traits",
+)
+@writes("table.griefs", "table.memories", "table.thoughts", "table.traits")
+async def mind_grief(ctx: TickContext) -> None:
+    tally = GriefTally()
+    mourners = set(await ctx.session.scalars(select(GriefRow.mourner_node_id).where(GriefRow.stage.in_((GriefStage.SHOCK, GriefStage.MOURNING)))))
+    for mourner in unheld(await ctx.session.scalars(select(EntityRow).where(EntityRow.id.in_(mourners)).order_by(EntityRow.id))):
+        if mourner.status is EntityStatus.CANON:
+            await advance(ctx, mourner, tally)
+    ctx.count("mourning", tally.mourning)
+    ctx.count("griefs_accepted", tally.accepted)
+    ctx.count("griefs_complicated", tally.complicated)
+
+
+@reads(
+    "mortal.charisma",
+    "table.applied_fixups",
+    "table.artwork_profiles",
+    "table.bonds",
+    "table.conditions",
+    "table.dreams",
+    "table.entities",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.item_profiles",
+    "table.marriages",
+    "table.memories",
+    "table.messages",
+    "table.mind_facets",
+    "table.minds",
+    "table.mortal_profiles",
+    "table.needs",
+    "table.nodes",
+    "table.personality_values",
+    "table.routes",
+    "table.skills",
+    "table.thoughts",
+    "table.tradition_profiles",
+    "table.traits",
+    "table.war_sides",
+    "table.wars",
+    "table.worlds",
+)
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.conditions",
+    "table.dreams",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+    "table.mind_facets",
+    "table.mortal_profiles",
+    "table.personality_values",
+    "table.thoughts",
+)
+async def mind_dreams(ctx: TickContext) -> None:
+    visited = await visitations(ctx)
+    sleeping = await dormant_ids(ctx)
+    dreamt = 0
+    for mortal in unheld(await living_minds(ctx.session)):
+        if mortal.entity_type is not EntityType.MORTAL or mortal.id in sleeping:
+            continue
+        if not is_notable(ctx.rules, mortal, await EntityRepository(ctx.session).flags(mortal.id)):
+            continue
+        dreamt += 1 if await dream(ctx, mortal) is not None else 0
+    ctx.count("visitations", visited)
+    ctx.count("dreams", dreamt)
+
+
 SURVEY_PHASES = (Phase("mind_survey", mind_survey),)
 
 
 @reads(
+    "people.population",
     "settlement.population",
     "table.bonds",
     "table.community_relations",
@@ -768,6 +989,9 @@ MIND_PHASES = (
     Phase("mind_ideas", mind_ideas),
     Phase("mind_memories", mind_memories),
     Phase("mind_needs", mind_needs),
+    Phase("mind_thoughts", mind_thoughts),
+    Phase("mind_grief", mind_grief),
+    Phase("mind_dreams", mind_dreams),
     Phase("famine_aid", famine_aid),
     Phase("mind_opinion", mind_opinion),
 )

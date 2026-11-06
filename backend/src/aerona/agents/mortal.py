@@ -30,6 +30,7 @@ from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow, EntityTagRow
 from aerona.db.tables.lore import MessageRow
 from aerona.db.tables.mind import NeedRow, PressureRow, TraitRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.domain.enums.agent import AgentKind, MessageIntent
 from aerona.domain.enums.body import Consciousness
 from aerona.domain.enums.bond import BondKind
@@ -63,6 +64,7 @@ class Candidate:
     dreaming: bool
     pressure: int = 0
     temperament: int = 0
+    mood: int = 0
 
 
 @dataclass(frozen=True)
@@ -131,6 +133,11 @@ async def candidates(session_scope: Scope) -> list[Candidate]:
         pressure[entity_id] = max(pressure[entity_id], value)
     for node_id, value in await session_scope.session.execute(select(NeedRow.node_id, NeedRow.value).where(NeedRow.node_id.in_(ids))):
         pressure[node_id] = max(pressure[node_id], PERCENT - value)
+    moods = dict(
+        (
+            await session_scope.session.execute(select(MortalProfileRow.entity_id, MortalProfileRow.mood_score).where(MortalProfileRow.entity_id.in_(ids)))
+        ).tuples()
+    )
     held: dict[int, list[TraitKind]] = defaultdict(list)
     for node_id, trait in await session_scope.session.execute(select(TraitRow.node_id, TraitRow.trait).where(TraitRow.node_id.in_(ids))):
         held[node_id].append(trait)
@@ -142,6 +149,7 @@ async def candidates(session_scope: Scope) -> list[Candidate]:
             row.id in dreamers,
             pressure[row.id],
             trait_effect(held[row.id], TraitEffect.AGENT_WEIGHT, rules.traits.effect_scale_pct),
+            moods.get(row.id, 0),
         )
         for row in eligible
     ]
@@ -157,6 +165,7 @@ def score(rules: Rules, candidate: Candidate, epoch: int, rng: SeededRandom) -> 
     value += rng.die(tools.agent_random_die)
     value += tools.agent_dream_bonus if candidate.dreaming else 0
     value += candidate.pressure * rules.needs.agent_pressure_weight / PERCENT
+    value += abs(candidate.mood) * rules.thoughts.agent_mood_weight / PERCENT
     return value * scaled_by(candidate.temperament)
 
 

@@ -425,6 +425,7 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "people.population",
     "settlement.population",
     "table.armies",
+    "table.army_units",
     "table.body_customs",
     "table.bonds",
     "table.captive_cohorts",
@@ -433,9 +434,13 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.cosmos",
     "table.culture_values",
     "table.epoch_year_cursors",
+    "table.feuds",
+    "table.house_profiles",
+    "table.language_registers",
     "table.maimed_cohorts",
     "table.memories",
     "table.minds",
+    "table.name_registry",
     "table.nodes",
     "table.offices",
     "table.personality_values",
@@ -447,10 +452,12 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.sieges",
     "table.speaker_cohorts",
     "table.trade_route_profiles",
+    "table.tradition_profiles",
     "table.traits",
     "table.treaty_parties",
     "table.treaty_profiles",
     "table.vassalages",
+    "table.war_aims",
     "table.war_sides",
     "table.wars",
     "table.world_maps",
@@ -461,6 +468,7 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "people.population",
     "settlement.population",
     "table.armies",
+    "table.army_units",
     "table.body_customs",
     "table.bonds",
     "table.chronicle",
@@ -474,6 +482,8 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.mortal_profiles",
     "table.name_registry",
     "table.oaths",
+    "table.peace_terms",
+    "table.sons",
     "table.treaty_breaches",
     "table.treaty_clauses",
     "table.treaty_parties",
@@ -481,8 +491,6 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.war_sides",
     "table.wars",
 )
-@reads("table.feuds")
-@writes("table.memories", "table.sons")
 async def diplomacy(ctx: TickContext) -> None:
     ctx.count("alliances_lapsed", await alliance_lifetimes(ctx))
     counters = DiplomacyCounters()

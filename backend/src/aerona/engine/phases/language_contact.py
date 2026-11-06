@@ -383,6 +383,7 @@ async def language_stats(ctx: TickContext) -> int:
     "table.trade_route_profiles",
     "table.trade_route_regions",
     "table.trade_route_tolls",
+    "trade_route.culture",
 )
 @writes(
     "language.complexity",

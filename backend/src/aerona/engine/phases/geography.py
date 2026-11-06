@@ -182,6 +182,7 @@ async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None =
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.language_profiles",
     "table.name_registry",
     "table.place_environment",
     "table.place_profiles",

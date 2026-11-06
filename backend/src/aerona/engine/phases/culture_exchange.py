@@ -126,6 +126,7 @@ async def _spread_language(ctx: TickContext, source: EntityRow, target: EntityRo
     "table.trade_route_profiles",
     "table.trade_route_regions",
     "table.trade_route_tolls",
+    "trade_route.culture",
 )
 @writes(
     "knowledge.spread",
@@ -288,6 +289,7 @@ def _trading_communities(bond_entities: tuple[EntityRow | None, EntityRow | None
     "table.trade_route_profiles",
     "table.trade_route_regions",
     "table.trade_route_tolls",
+    "trade_route.culture",
 )
 @writes(
     "knowledge.spread",

@@ -43,6 +43,7 @@ import {
   HOLDERS,
   LOCKS,
   MIND_ICON,
+  NEED_GROUPS,
   NEED_ICONS,
   PRESSURE_ICONS,
   ROLE_ICONS,
@@ -275,33 +276,61 @@ function Temperament({
   )
 }
 
+function importanceNote(importance: number): string {
+  if (importance >= 150) return 'matters a great deal'
+  if (importance >= 110) return 'matters more than most'
+  if (importance >= 90) return 'matters as much as to anyone'
+  if (importance >= 60) return 'matters less than most'
+  return 'hardly matters to them'
+}
+
 function Needs({ mind }: { mind: Mind }) {
   if (mind.needs.length === 0) return null
   return (
     <MindCard
       title='Needs'
       icon={NEED_ICONS.belonging.icon}
-      hint='How well each need is met; low values press the mortal to act.'
+      hint='How well each need is met, and how much it matters to this one. Low values press the mortal to act and darken their thoughts.'
+      wide
     >
-      {mind.needs.map((item) => {
-        const spec = named(NEED_ICONS, item.need)
-        return (
-          <StatBar
-            key={item.need}
-            label={item.label}
-            value={item.value}
-            max={PERCENT}
-            icon={spec.icon}
-            tone={
-              item.value < PERCENT / 4
-                ? 'destructive'
-                : item.value < PERCENT / 2
-                  ? 'warning'
-                  : 'success'
-            }
-          />
-        )
-      })}
+      <div className='grid min-w-0 grid-cols-1 gap-4 @xl/mind:grid-cols-2'>
+        {Object.entries(NEED_GROUPS).map(([group, spec]) => {
+          const items = mind.needs.filter((item) => item.group === group)
+          return items.length > 0 ? (
+            <div key={group} className='flex min-w-0 flex-col gap-2'>
+              <div className='flex min-w-0 items-center gap-2'>
+                <Medallion icon={spec.icon} size='sm' />
+                <Text weight='semibold'>{spec.label}</Text>
+              </div>
+              <Paged items={items} initial={4} noun={['need', 'needs']}>
+                {(item) => (
+                  <div
+                    key={item.need}
+                    className='flex min-w-0 flex-col gap-0.5'
+                  >
+                    <StatBar
+                      label={item.label}
+                      value={item.value}
+                      max={PERCENT}
+                      icon={named(NEED_ICONS, item.need).icon}
+                      tone={
+                        item.value < PERCENT / 4
+                          ? 'destructive'
+                          : item.value < PERCENT / 2
+                            ? 'warning'
+                            : 'success'
+                      }
+                    />
+                    <Muted variant='caption'>
+                      {`${importanceNote(item.importance)} (${item.importance}%)`}
+                    </Muted>
+                  </div>
+                )}
+              </Paged>
+            </div>
+          ) : null
+        })}
+      </div>
     </MindCard>
   )
 }

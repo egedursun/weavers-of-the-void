@@ -108,9 +108,6 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
 
 
 @reads(
-    "table.skills",
-    "table.minds",
-    "table.mortal_equipment",
     "mortal.intellect",
     "settlement.prosperity",
     "table.bonds",
@@ -121,9 +118,11 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
     "table.forced_weather",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.incubating_ideas",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.ley_lines",
+    "table.mind_attributes",
     "table.minds",
     "table.mortal_equipment",
     "table.mortal_profiles",
@@ -147,9 +146,7 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
     "table.worlds",
 )
 @writes(
-    "table.skills",
     "settlement.prosperity",
-    "table.skills",
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
@@ -157,6 +154,7 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.skills",
 )
 async def wizards(ctx: TickContext) -> None:
     rules = ctx.rules

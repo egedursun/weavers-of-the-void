@@ -1,4 +1,8 @@
 import {
+  Bed,
+  Droplets,
+  HeartPulse,
+  Sofa,
   Amphora,
   Anchor,
   Calculator,
@@ -366,13 +370,36 @@ export const OPINION_TERMS: Record<string, string> = {
 }
 
 export const NEED_ICONS: Record<string, Named> = {
-  sustenance: { label: 'Sustenance', icon: Wheat, tone: 'success' },
+  sustenance: { label: 'Food', icon: Wheat, tone: 'success' },
   safety: { label: 'Safety', icon: Shield, tone: 'info' },
   belonging: { label: 'Belonging', icon: Users, tone: 'verdigris' },
   status: { label: 'Status', icon: Crown, tone: 'gold' },
   purpose: { label: 'Purpose', icon: Lightbulb, tone: 'info' },
   faith: { label: 'Faith', icon: Church, tone: 'gold' },
-  pleasure: { label: 'Pleasure', icon: Heart, tone: 'warning' },
+  pleasure: { label: 'Leisure', icon: Heart, tone: 'warning' },
+  drink: { label: 'Drink', icon: Droplets, tone: 'info' },
+  rest: { label: 'Rest', icon: Bed, tone: 'muted' },
+  comfort: { label: 'Comfort', icon: Sofa, tone: 'warning' },
+  health: { label: 'Health', icon: HeartPulse, tone: 'success' },
+  family: { label: 'Family', icon: House, tone: 'verdigris' },
+  friends: { label: 'Friends', icon: HeartHandshake, tone: 'success' },
+  romance: { label: 'Romance', icon: Heart, tone: 'danger' },
+  solitude: { label: 'Solitude', icon: Mountain, tone: 'muted' },
+  learning: { label: 'Learning', icon: BookOpen, tone: 'info' },
+  creating: { label: 'Creation', icon: Hammer, tone: 'warning' },
+  beauty: { label: 'Beauty', icon: Sparkles, tone: 'gold' },
+  nature: { label: 'Nature', icon: Leaf, tone: 'success' },
+  adventure: { label: 'Adventure', icon: Compass, tone: 'info' },
+  fighting: { label: 'Combat', icon: Swords, tone: 'danger' },
+  wealth: { label: 'Wealth', icon: Coins, tone: 'gold' },
+  order: { label: 'Order', icon: Scale, tone: 'info' },
+}
+
+export const NEED_GROUPS: Record<string, Named> = {
+  body: { label: 'Body', icon: HeartPulse, tone: 'success' },
+  social: { label: 'Social', icon: Users, tone: 'gold' },
+  spirit: { label: 'Spirit', icon: Sparkles, tone: 'verdigris' },
+  action: { label: 'Action', icon: Compass, tone: 'info' },
 }
 
 export const PRESSURE_ICONS: Record<string, Named> = {

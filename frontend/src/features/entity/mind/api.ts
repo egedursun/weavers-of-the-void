@@ -64,3 +64,30 @@ export function useMindSplit(nodeId: number) {
     retry: false,
   })
 }
+
+export type Feelings = components['schemas']['FeelingsView']
+export type FeelingThought = components['schemas']['ThoughtView']
+export type FeelingGrief = components['schemas']['GriefView']
+export type FeelingDream = components['schemas']['DreamLogView']
+export type ThoughtKind = components['schemas']['ThoughtKind']
+export type Emotion = components['schemas']['Emotion']
+export type GriefStage = components['schemas']['GriefStage']
+export type DreamKind = components['schemas']['DreamKind']
+export type DreamReading = components['schemas']['DreamReading']
+
+export function feelingsKey(nodeId: number) {
+  return [...loreKeys.entity(nodeId), 'feelings'] as const
+}
+
+export function useFeelings(nodeId: number) {
+  return useQuery({
+    queryKey: feelingsKey(nodeId),
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/minds/{node_id}/feelings', {
+          params: { path: { node_id: nodeId } },
+        })
+      ),
+    retry: false,
+  })
+}

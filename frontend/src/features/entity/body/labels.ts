@@ -1,4 +1,5 @@
 import {
+  Moon,
   Accessibility,
   BatteryLow,
   CircleDot,
@@ -263,6 +264,7 @@ export const CONDITIONS: Record<string, Named> = {
   void_taint: { label: 'Void taint', icon: Eclipse, tone: 'danger' },
   chosen_mark: { label: 'Mark of the chosen', icon: Star, tone: 'gold' },
   divine_brand: { label: "A god's brand", icon: Sun, tone: 'gold' },
+  nightmares: { label: 'Recurring nightmares', icon: Moon, tone: 'verdigris' },
 }
 
 export const MEDICINE: Record<string, Named & { hint: string }> = {

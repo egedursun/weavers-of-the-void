@@ -150,8 +150,10 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.cult_doctrines",
     "table.entities",
     "table.epoch_year_cursors",
+    "table.heresies",
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
@@ -185,14 +187,7 @@ async def schisms(ctx: TickContext) -> None:
 
 
 @reads("settlement.piety", "table.bonds", "table.entity_flags", "table.nodes", "table.reverences")
-@writes(
-    "table.chronicle",
-    "table.chronicle_entities",
-    "table.entity_flags",
-    "table.epoch_year_cursors",
-    "table.incident_participants",
-    "table.incidents",
-)
+@writes("table.chronicle", "table.chronicle_entities", "table.entity_flags", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
 async def godlessness(ctx: TickContext) -> None:
     settings = ctx.rules.religion
     faith = await FaithIndex.load(ctx.session)
@@ -459,9 +454,12 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.journeys",
+    "table.language_intelligibility",
+    "table.language_profiles",
     "table.language_registers",
     "table.law_jurisdictions",
     "table.law_profiles",
+    "table.lexemes",
     "table.memories",
     "table.minds",
     "table.nodes",
@@ -469,6 +467,7 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.polity_members",
     "table.pressures",
     "table.reverences",
+    "table.skills",
     "table.speaker_cohorts",
     "table.trade_flows",
     "table.trade_route_profiles",
@@ -477,6 +476,7 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.traits",
     "table.treaty_clauses",
     "table.world_maps",
+    "trade_route.culture",
 )
 @writes(
     "table.bonds",
@@ -485,6 +485,7 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.language_intelligibility",
     "table.memories",
     "table.reverences",
 )

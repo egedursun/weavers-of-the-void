@@ -115,11 +115,11 @@ async def spirits_rest(ctx: TickContext) -> None:
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
-    "table.legend_profiles",
-    "table.name_registry",
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.legend_profiles",
+    "table.name_registry",
 )
 async def hauntings(ctx: TickContext) -> None:
     rules = ctx.rules

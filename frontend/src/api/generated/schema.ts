@@ -4399,6 +4399,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/minds/{node_id}/feelings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["feelings_view_api_minds__node_id__feelings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/mortals/{mortal_id}/profile": {
         parameters: {
             query?: never;
@@ -14735,6 +14751,166 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/thought:send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_thought_send_api_actions_thought_send_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/thought:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_thought_edit_api_actions_thought_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/thought:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_thought_remove_api_actions_thought_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/thought:mood": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_thought_mood_api_actions_thought_mood_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/grief:start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_grief_start_api_actions_grief_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/grief:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_grief_edit_api_actions_grief_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/grief:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_grief_remove_api_actions_grief_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/dream:send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_dream_send_api_actions_dream_send_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/dream:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_dream_edit_api_actions_dream_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/dream:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_dream_remove_api_actions_dream_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/variant:create": {
         parameters: {
             query?: never;
@@ -16857,7 +17033,7 @@ export interface components {
             community_id: number;
             kind?: components["schemas"]["EngineKind"] | null;
         };
-        ConditionKind: "chronic_illness" | "paranoia" | "visions" | "rage" | "melancholy" | "addiction" | "age_blindness" | "age_deafness" | "withered_limb" | "endless_hunger" | "possession" | "void_taint" | "chosen_mark" | "divine_brand";
+        ConditionKind: "chronic_illness" | "paranoia" | "visions" | "rage" | "melancholy" | "addiction" | "age_blindness" | "age_deafness" | "withered_limb" | "endless_hunger" | "possession" | "void_taint" | "chosen_mark" | "divine_brand" | "nightmares";
         ConditionView: {
             id: number;
             kind: components["schemas"]["ConditionKind"];
@@ -17699,10 +17875,49 @@ export interface components {
             label: string;
             value: number;
         };
+        DreamEditInput: {
+            dream_id: number;
+            kind?: components["schemas"]["DreamKind"] | null;
+            intensity?: number | null;
+            reading?: components["schemas"]["DreamReading"] | null;
+            reading_true?: boolean | null;
+            recurring?: boolean | null;
+            reader_id?: number | null;
+            clear_reader: boolean;
+        };
         DreamInbox: {
             entity_id: number;
             received: components["schemas"]["DreamView"][];
             sent: components["schemas"]["DreamView"][];
+        };
+        DreamKind: "ordinary" | "nightmare" | "longing" | "prophetic" | "visitation" | "shared";
+        DreamLogView: {
+            id: number;
+            kind: components["schemas"]["DreamKind"];
+            label: string;
+            epoch: number;
+            intensity: number;
+            content: components["schemas"]["NodeRef"][];
+            sender: components["schemas"]["NodeRef"] | null;
+            partner: components["schemas"]["NodeRef"] | null;
+            world: components["schemas"]["NodeRef"] | null;
+            reading: components["schemas"]["DreamReading"];
+            reading_label: string;
+            reader: components["schemas"]["NodeRef"] | null;
+            reading_true: boolean | null;
+            recurring: boolean;
+        };
+        DreamReading: "unread" | "omen_of_war" | "omen_of_plenty" | "omen_of_death" | "omen_of_favour" | "warning" | "call_to_journey" | "call_to_love";
+        DreamRemoveInput: {
+            dream_id: number;
+        };
+        DreamSendInput: {
+            dreamer_id: number;
+            kind: components["schemas"]["DreamKind"];
+            intensity: number;
+            sender_id?: number | null;
+            partner_id?: number | null;
+            reading: components["schemas"]["DreamReading"];
         };
         DreamView: {
             id: number;
@@ -17751,6 +17966,18 @@ export interface components {
             ignored: number[];
         };
         ElevationClass: "mountainous" | "hilly" | "plain" | "water";
+        Emotion: "joy" | "contentment" | "pride" | "love" | "gratitude" | "relief" | "hope" | "awe" | "amusement" | "fear" | "anxiety" | "anger" | "rage" | "grief" | "sadness" | "shame" | "guilt" | "envy" | "jealousy" | "disgust" | "loneliness" | "boredom" | "despair" | "longing";
+        EmotionKindView: {
+            emotion: components["schemas"]["Emotion"];
+            label: string;
+            valence: number;
+        };
+        EmotionTotalView: {
+            emotion: components["schemas"]["Emotion"];
+            label: string;
+            valence: number;
+            strength: number;
+        };
         EmptyPayload: {
             epoch?: number | null;
         } & {
@@ -18668,6 +18895,26 @@ export interface components {
             cover: string | null;
         };
         FeedCategory: "voyage" | "gate" | "leak" | "war" | "disaster" | "sky" | "life" | "civilization" | "world";
+        FeelingsView: {
+            node_id: number;
+            name: string;
+            applies: boolean;
+            locked: string[];
+            lockable: string[];
+            mood: components["schemas"]["MoodState"] | null;
+            mood_score: number;
+            mood_held: boolean;
+            thoughts: components["schemas"]["ThoughtView"][];
+            emotions: components["schemas"]["EmotionTotalView"][];
+            formative: components["schemas"]["FormativeView"][];
+            griefs: components["schemas"]["GriefView"][];
+            dreams: components["schemas"]["DreamLogView"][];
+            thought_kinds: components["schemas"]["ThoughtKindView"][];
+            emotion_kinds: components["schemas"]["EmotionKindView"][];
+            dream_kinds: components["schemas"]["LabelView"][];
+            readings: components["schemas"]["LabelView"][];
+            long_term_threshold: number;
+        };
         FeudParty: "house" | "community";
         FeudStatus: "active" | "mediated" | "faded" | "ended";
         FeudView: {
@@ -18854,6 +19101,13 @@ export interface components {
             name: string;
             share: number;
         };
+        FormativeView: {
+            id: number;
+            label: string;
+            magnitude: number;
+            epoch: number;
+            subject: components["schemas"]["NodeRef"] | null;
+        };
         FoundationHoldInput: {
             kind: components["schemas"]["HoldKind"];
             node_id: number;
@@ -19019,6 +19273,30 @@ export interface components {
             target_star_id: number | null;
             target_route_id: number | null;
             target_entity_id: number | null;
+        };
+        GriefEditInput: {
+            grief_id: number;
+            stage?: components["schemas"]["GriefStage"] | null;
+            strength?: number | null;
+            length_epochs?: number | null;
+        };
+        GriefRemoveInput: {
+            grief_id: number;
+        };
+        GriefStage: "shock" | "mourning" | "acceptance" | "complicated";
+        GriefStartInput: {
+            mourner_id: number;
+            deceased_id: number;
+            strength: number;
+        };
+        GriefView: {
+            id: number;
+            deceased: components["schemas"]["NodeRef"] | null;
+            stage: components["schemas"]["GriefStage"];
+            strength: number;
+            started_epoch: number;
+            stage_epoch: number;
+            length_epochs: number;
         };
         GuardRecord: {
             id: number;
@@ -19953,6 +20231,10 @@ export interface components {
             height: number;
             known_ratio: number;
             known_cells: number;
+        };
+        LabelView: {
+            key: string;
+            label: string;
         };
         Labelled: {
             key: string;
@@ -20996,7 +21278,7 @@ export interface components {
             target_id: number;
             form: components["schemas"]["MemorialForm"];
         };
-        MemoryKind: "harmed_me" | "killed_kin" | "saved_me" | "betrayed_me" | "kept_oath" | "broke_oath" | "maimed_me" | "humiliated_me" | "gifted_me" | "converted_me" | "conquered_us" | "freed_us" | "famine_aid" | "desecrated_holy" | "married_into" | "fought_us" | "traded_with" | "allied_with" | "made_peace" | "demanded_tribute" | "cheated_us" | "spied_on_us" | "envied" | "failed_to_heal" | "taught_me" | "held_captive" | "lamented" | "divine_will" | "goodwill" | "ill_will" | "long_history" | "dreads";
+        MemoryKind: "harmed_me" | "killed_kin" | "saved_me" | "betrayed_me" | "kept_oath" | "broke_oath" | "maimed_me" | "humiliated_me" | "gifted_me" | "converted_me" | "conquered_us" | "freed_us" | "famine_aid" | "desecrated_holy" | "married_into" | "fought_us" | "traded_with" | "allied_with" | "made_peace" | "demanded_tribute" | "cheated_us" | "spied_on_us" | "envied" | "failed_to_heal" | "taught_me" | "held_captive" | "lamented" | "divine_will" | "goodwill" | "ill_will" | "long_history" | "dreads" | "formative";
         MemoryOrigin: "derived" | "player";
         MemoryView: {
             id: number;
@@ -21354,6 +21636,7 @@ export interface components {
             item: string;
             delta: number;
         };
+        MoodState: "elated" | "content" | "fine" | "uneasy" | "unhappy" | "miserable" | "broken";
         MoodSummary: {
             contentment: number;
             anger: number;
@@ -21611,7 +21894,8 @@ export interface components {
             kind: "natural_law";
         };
         NaturalTrait: "dark_sight" | "cold_blooded" | "winged" | "amphibious" | "thick_hide" | "keen_senses" | "venomous" | "regenerating" | "burrowing" | "hive_minded";
-        NeedKind: "sustenance" | "safety" | "belonging" | "status" | "purpose" | "faith" | "pleasure";
+        NeedGroup: "body" | "social" | "spirit" | "action";
+        NeedKind: "sustenance" | "safety" | "belonging" | "status" | "purpose" | "faith" | "pleasure" | "drink" | "rest" | "comfort" | "health" | "family" | "friends" | "romance" | "solitude" | "learning" | "creating" | "beauty" | "nature" | "adventure" | "fighting" | "wealth" | "order";
         NeedsHoldInput: {
             community_id: number;
             social_class: components["schemas"]["SocialClass"];
@@ -25633,6 +25917,49 @@ export interface components {
                 [key: string]: components["schemas"]["ThingRecordNodeView"];
             };
         };
+        ThoughtEditInput: {
+            thought_id: number;
+            intensity?: number | null;
+            decay_pct?: number | null;
+            emotion?: components["schemas"]["Emotion"] | null;
+            subject_id?: number | null;
+            clear_subject: boolean;
+        };
+        ThoughtKind: "married" | "child_born" | "saw_kin_die" | "lost_spouse" | "lost_child" | "betrayed" | "was_insulted" | "was_gifted" | "was_saved" | "was_cheated" | "won_battle" | "defeated" | "won_duel" | "lost_duel" | "was_wounded" | "was_maimed" | "lost_limb_but_lived" | "was_healed" | "fell_ill" | "witnessed_atrocity" | "was_captured" | "was_freed" | "killed_foe" | "rose_in_rank" | "fell_in_rank" | "gained_renown" | "was_shamed" | "was_punished" | "was_conquered" | "prayed_answered" | "prayer_ignored" | "saw_miracle" | "lost_faith" | "found_faith" | "saw_desecration" | "touched_by_a_god" | "admired_great_work" | "heard_great_music" | "attended_feast" | "made_masterwork" | "learned_something" | "taught_apprentice" | "took_idea_to_heart" | "ate_fine_food" | "went_hungry" | "went_thirsty" | "drank_well" | "slept_well" | "exhausted" | "lived_in_comfort" | "lived_in_squalor" | "felt_hale" | "felt_unwell" | "felt_safe" | "felt_unsafe" | "among_kin" | "missed_kin" | "among_friends" | "felt_lonely" | "loved" | "longed_for_love" | "had_peace_and_quiet" | "crowded" | "respected" | "overlooked" | "belonged" | "adrift" | "felt_purpose" | "lacked_purpose" | "prayed_in_peace" | "faith_unmet" | "learned_nothing" | "made_something" | "nothing_made" | "saw_beauty" | "surrounded_by_ugliness" | "walked_in_nature" | "cut_off_from_nature" | "had_adventure" | "restless" | "tested_in_combat" | "blade_rusting" | "prospered" | "wanted_for_money" | "enjoyed_leisure" | "bored" | "lived_in_order" | "lived_in_disorder" | "relived_memory" | "mourned" | "made_peace_with_loss" | "had_nightmare" | "had_good_dream" | "dreamed_of_longing" | "received_visitation" | "sent_by_the_creator";
+        ThoughtKindView: {
+            kind: components["schemas"]["ThoughtKind"];
+            label: string;
+            emotion: components["schemas"]["Emotion"];
+        };
+        ThoughtMoodInput: {
+            node_id: number;
+            score: number;
+            hold: boolean;
+        };
+        ThoughtRemoveInput: {
+            thought_id: number;
+        };
+        ThoughtSendInput: {
+            holder_id: number;
+            kind: components["schemas"]["ThoughtKind"];
+            emotion?: components["schemas"]["Emotion"] | null;
+            intensity: number;
+            subject_id?: number | null;
+        };
+        ThoughtView: {
+            id: number;
+            kind: components["schemas"]["ThoughtKind"];
+            label: string;
+            emotion: components["schemas"]["Emotion"];
+            emotion_label: string;
+            valence: number;
+            intensity: number;
+            strength: number;
+            epoch: number;
+            decay_pct: number;
+            subject: components["schemas"]["NodeRef"] | null;
+            formative: boolean;
+        };
         ThreadAdvanceInput: {
             thread_id: number;
             entity_id: number;
@@ -26919,6 +27246,8 @@ export interface components {
             need: components["schemas"]["NeedKind"];
             label: string;
             value: number;
+            group: components["schemas"]["NeedGroup"];
+            importance: number;
         };
         aerona__api__schemas__mind__PressureView: {
             pressure: components["schemas"]["PressureKind"];
@@ -35252,6 +35581,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MindSplitView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    feelings_view_api_minds__node_id__feelings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeelingsView"];
                 };
             };
             422: {
@@ -54797,6 +55155,316 @@ export interface operations {
             };
         };
     };
+    action_thought_send_api_actions_thought_send_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ThoughtSendInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_thought_edit_api_actions_thought_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ThoughtEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_thought_remove_api_actions_thought_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ThoughtRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_thought_mood_api_actions_thought_mood_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ThoughtMoodInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_grief_start_api_actions_grief_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GriefStartInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_grief_edit_api_actions_grief_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GriefEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_grief_remove_api_actions_grief_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GriefRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_dream_send_api_actions_dream_send_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DreamSendInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_dream_edit_api_actions_dream_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DreamEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_dream_remove_api_actions_dream_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DreamRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_variant_create_api_actions_variant_create_post: {
         parameters: {
             query?: never;
@@ -56027,7 +56695,7 @@ export const commodityValues: ReadonlyArray<FlattenedDeepRequired<components>["s
 export const commodityFamilyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommodityFamily"]> = ["subsistence", "industrial", "strategic", "luxury"];
 export const commodityKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommodityKind"]> = ["grain", "livestock", "fish", "fodder", "timber", "fuel", "bread", "ore", "stone", "cloth", "tools", "weapons", "armour", "mounts", "siege_materiel", "medicine", "luxuries", "incense", "sacred_goods", "magical_reagents"];
 export const communityRelationLabelValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommunityRelationLabel"]> = ["blood_enemy", "enemy", "cold", "neutral", "friend", "close_friend", "sibling"];
-export const conditionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ConditionKind"]> = ["chronic_illness", "paranoia", "visions", "rage", "melancholy", "addiction", "age_blindness", "age_deafness", "withered_limb", "endless_hunger", "possession", "void_taint", "chosen_mark", "divine_brand"];
+export const conditionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ConditionKind"]> = ["chronic_illness", "paranoia", "visions", "rage", "melancholy", "addiction", "age_blindness", "age_deafness", "withered_limb", "endless_hunger", "possession", "void_taint", "chosen_mark", "divine_brand", "nightmares"];
 export const consciousnessValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Consciousness"]> = ["awake", "nauseous", "dizzy", "unconscious"];
 export const constructionStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ConstructionState"]> = ["planned", "building", "complete", "damaged", "ruined"];
 export const constructionStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ConstructionStatus"]> = ["active", "finished", "abandoned"];
@@ -56068,10 +56736,13 @@ export const diseaseVectorValues: ReadonlyArray<FlattenedDeepRequired<components
 export const districtKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DistrictKind"]> = ["farmland", "market", "craft_quarter", "temple_quarter", "harbour", "citadel", "slums", "palace", "foreign_quarter", "necropolis"];
 export const domainValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Domain"]> = ["sea", "fire", "earth", "sky", "storm", "death", "life", "dream", "time", "light", "shadow", "war", "craft", "knowledge", "love", "trickery", "hunt", "plants", "bone", "blood", "sound", "stone", "ice", "madness", "trade", "road", "plague", "harvest", "moon", "sun", "star", "lies", "oath", "memory", "hunger", "glass", "salt", "ash", "border", "sleep"];
 export const domesticationStageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DomesticationStage"]> = ["wild", "tamed", "herded", "domesticated", "breed"];
+export const dreamKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DreamKind"]> = ["ordinary", "nightmare", "longing", "prophetic", "visitation", "shared"];
+export const dreamReadingValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DreamReading"]> = ["unread", "omen_of_war", "omen_of_plenty", "omen_of_death", "omen_of_favour", "warning", "call_to_journey", "call_to_love"];
 export const driftCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DriftCause"]> = ["god", "ruler", "neighbours", "ideology", "war_fought", "war_won", "war_lost", "plague", "famine", "trade", "conquest"];
 export const duelContextValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DuelContext"]> = ["war", "honour", "trial", "champion", "god"];
 export const edgeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EdgeKind"]> = ["modifier", "rule_switch", "flow", "trigger"];
 export const elevationClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ElevationClass"]> = ["mountainous", "hilly", "plain", "water"];
+export const emotionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Emotion"]> = ["joy", "contentment", "pride", "love", "gratitude", "relief", "hope", "awe", "amusement", "fear", "anxiety", "anger", "rage", "grief", "sadness", "shame", "guilt", "envy", "jealousy", "disgust", "loneliness", "boredom", "despair", "longing"];
 export const engineFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EngineFinishedEvent"]["kind"]> = ["engine.finished"];
 export const engineKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EngineKind"]> = ["war", "battle", "siege", "magic_storm", "earthquake", "flood", "plague", "drought", "storm", "famine", "uprising", "migration", "temple", "wall", "library", "school", "observatory", "cosmic_archive", "wonder", "rebels", "merchant_guild", "priests_council", "warrior_band", "interworld_federation", "wandering_market", "void_pirates", "peoples_army", "holy_guard", "mercenary_army", "dialect", "primitive_language", "currency", "eclipse_prophecy", "cosmic_travel_resource", "golem", "domesticated", "chimera", "descended_soul", "mirror_birth", "apprentice", "comet", "ascension_myth", "god_corpse", "god_shade", "resurrection_order", "ghost_ship", "colony", "festival_of_note", "coronation", "wedding", "massacre", "sack", "fire", "eruption", "riot", "schism_council", "eclipse_watch"];
 export const engineNoteEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EngineNoteEvent"]["kind"]> = ["engine.note"];
@@ -56130,6 +56801,7 @@ export const genesisFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired
 export const genesisTemplateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisTemplate"]> = ["dark_fantasy", "mythic_age", "cosmic_horror", "fairy_tale", "star_myth", "sand_and_ash", "primordial_dawn", "crowns_and_knives", "drowned_world", "long_winter", "after_the_fall", "sky_islands", "age_of_engines"];
 export const governmentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GovernmentKind"]> = ["chiefdom", "monarchy", "theocracy", "oligarchy", "republic", "tribal_confederation", "empire", "hive_council", "god_kingdom", "occupation"];
 export const gravityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Gravity"]> = ["low", "normal", "high"];
+export const griefStageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GriefStage"]> = ["shock", "mourning", "acceptance", "complicated"];
 export const handednessValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Handedness"]> = ["right", "left", "both"];
 export const harmCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HarmCause"]> = ["battle", "duel", "punishment", "torture", "accident", "monster", "disaster", "curse", "magic_backlash", "god", "poison", "quest", "escape", "sacrifice", "age", "player", "exposure", "ritual"];
 export const heightClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HeightClass"]> = ["short", "average", "tall", "giant"];
@@ -56222,13 +56894,14 @@ export const materialOriginValues: ReadonlyArray<FlattenedDeepRequired<component
 export const materialSlotValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MaterialSlot"]> = ["body", "weapons", "armour", "hull", "fabric"];
 export const medicineTierValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MedicineTier"]> = ["none", "herbs", "surgery", "prosthetics", "reattachment"];
 export const memorialFormValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemorialForm"]> = ["monument", "epic", "lament", "tradition", "tale"];
-export const memoryKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemoryKind"]> = ["harmed_me", "killed_kin", "saved_me", "betrayed_me", "kept_oath", "broke_oath", "maimed_me", "humiliated_me", "gifted_me", "converted_me", "conquered_us", "freed_us", "famine_aid", "desecrated_holy", "married_into", "fought_us", "traded_with", "allied_with", "made_peace", "demanded_tribute", "cheated_us", "spied_on_us", "envied", "failed_to_heal", "taught_me", "held_captive", "lamented", "divine_will", "goodwill", "ill_will", "long_history", "dreads"];
+export const memoryKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemoryKind"]> = ["harmed_me", "killed_kin", "saved_me", "betrayed_me", "kept_oath", "broke_oath", "maimed_me", "humiliated_me", "gifted_me", "converted_me", "conquered_us", "freed_us", "famine_aid", "desecrated_holy", "married_into", "fought_us", "traded_with", "allied_with", "made_peace", "demanded_tribute", "cheated_us", "spied_on_us", "envied", "failed_to_heal", "taught_me", "held_captive", "lamented", "divine_will", "goodwill", "ill_will", "long_history", "dreads", "formative"];
 export const memoryOriginValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemoryOrigin"]> = ["derived", "player"];
 export const messageIntentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MessageIntent"]> = ["friendship", "alliance", "love", "threat", "mockery", "warning", "bargain", "prayer", "answer", "chat", "dream", "command"];
 export const miracleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Miracle"]> = ["healing", "bounty", "peace", "protection"];
 export const mobilityEventValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MobilityEvent"]> = ["ennobled", "enslaved", "freed", "ruined"];
 export const modifierOpValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ModifierOp"]> = ["add", "multiply"];
 export const modifierSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ModifierSource"]> = ["injury", "condition", "trait", "law", "tradition", "artwork", "doctrine", "treaty", "structure", "wonder", "terrain", "weather", "season", "natural_law", "god_power", "blessing", "curse", "dominion", "phenomenon", "god_death", "player", "suppression", "pin"];
+export const moodStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MoodState"]> = ["elated", "content", "fine", "uneasy", "unhappy", "miserable", "broken"];
 export const mortalRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalRole"]> = ["ruler", "hero", "warrior", "knight", "hunter", "chosen", "seer", "priest", "sage", "healer", "artisan", "merchant", "scribe", "farmer", "explorer", "captain", "bandit", "saint", "apprentice", "commoner"];
 export const mortalSexValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalSex"]> = ["female", "male", "other"];
 export const mortalStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalStats"]["kind"]> = ["mortal"];
@@ -56241,7 +56914,8 @@ export const motifOverrideModeValues: ReadonlyArray<FlattenedDeepRequired<compon
 export const naturalLawValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalLaw"]> = ["none", "immortality", "short_life", "dead_return", "magic_price", "war_ban", "bounty", "drought", "sea_ban", "one_language", "disasters", "souls_reincarnate"];
 export const naturalLawStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalLawStats"]["kind"]> = ["natural_law"];
 export const naturalTraitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalTrait"]> = ["dark_sight", "cold_blooded", "winged", "amphibious", "thick_hide", "keen_senses", "venomous", "regenerating", "burrowing", "hive_minded"];
-export const needKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NeedKind"]> = ["sustenance", "safety", "belonging", "status", "purpose", "faith", "pleasure"];
+export const needGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NeedGroup"]> = ["body", "social", "spirit", "action"];
+export const needKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NeedKind"]> = ["sustenance", "safety", "belonging", "status", "purpose", "faith", "pleasure", "drink", "rest", "comfort", "health", "family", "friends", "romance", "solitude", "learning", "creating", "beauty", "nature", "adventure", "fighting", "wealth", "order"];
 export const nerveDamageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NerveDamage"]> = ["none", "motor", "sensory"];
 export const networkRepairedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NetworkRepairedEvent"]["kind"]> = ["network.repaired"];
 export const nodeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NodeKind"]> = ["entity", "son", "creator", "foreign_god", "world", "star"];
@@ -56369,6 +57043,7 @@ export const temperatureBandValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const tenetKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TenetKind"]> = ["pacifism", "holy_war", "asceticism", "sacred_suffering", "purity_of_body", "ancestor_veneration", "human_sacrifice", "animal_sacrifice", "celibate_clergy", "proselytism", "exclusivity", "syncretic_openness", "monastic_learning", "anti_magic", "sanctified_magic", "judgement_by_deeds", "judgement_by_faith", "reincarnation", "martyrdom_glory", "divine_kingship", "dietary_law", "sacred_species", "pilgrimage_duty", "souls_rest"];
 export const terrainHazardValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TerrainHazard"]> = ["avalanche", "spring_flood", "wildfire", "whiteout"];
 export const terrainKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TerrainKind"]> = ["plain", "steppe", "forest", "jungle", "marsh", "hills", "mountains", "high_pass", "desert", "tundra", "ice_sheet", "volcanic", "coast", "island", "river_valley", "canyon", "underground", "crystal_field", "flesh", "void_shore", "ruin_field", "urban", "sea"];
+export const thoughtKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ThoughtKind"]> = ["married", "child_born", "saw_kin_die", "lost_spouse", "lost_child", "betrayed", "was_insulted", "was_gifted", "was_saved", "was_cheated", "won_battle", "defeated", "won_duel", "lost_duel", "was_wounded", "was_maimed", "lost_limb_but_lived", "was_healed", "fell_ill", "witnessed_atrocity", "was_captured", "was_freed", "killed_foe", "rose_in_rank", "fell_in_rank", "gained_renown", "was_shamed", "was_punished", "was_conquered", "prayed_answered", "prayer_ignored", "saw_miracle", "lost_faith", "found_faith", "saw_desecration", "touched_by_a_god", "admired_great_work", "heard_great_music", "attended_feast", "made_masterwork", "learned_something", "taught_apprentice", "took_idea_to_heart", "ate_fine_food", "went_hungry", "went_thirsty", "drank_well", "slept_well", "exhausted", "lived_in_comfort", "lived_in_squalor", "felt_hale", "felt_unwell", "felt_safe", "felt_unsafe", "among_kin", "missed_kin", "among_friends", "felt_lonely", "loved", "longed_for_love", "had_peace_and_quiet", "crowded", "respected", "overlooked", "belonged", "adrift", "felt_purpose", "lacked_purpose", "prayed_in_peace", "faith_unmet", "learned_nothing", "made_something", "nothing_made", "saw_beauty", "surrounded_by_ugliness", "walked_in_nature", "cut_off_from_nature", "had_adventure", "restless", "tested_in_combat", "blade_rusting", "prospered", "wanted_for_money", "enjoyed_leisure", "bored", "lived_in_order", "lived_in_disorder", "relived_memory", "mourned", "made_peace_with_loss", "had_nightmare", "had_good_dream", "dreamed_of_longing", "received_visitation", "sent_by_the_creator"];
 export const threadStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ThreadStatus"]> = ["open", "closed"];
 export const tissueKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TissueKind"]> = ["skin", "scale", "chitin", "bark", "fat", "muscle", "tendon", "bone", "artery", "motor_nerve", "sensory_nerve", "organ"];
 export const toolBlockValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ToolBlock"]> = ["rarity", "actor_type", "civilization_tier", "world_state", "unwired"];

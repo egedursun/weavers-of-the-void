@@ -106,7 +106,7 @@ async def test_a_heavy_memory_on_a_weak_will_leaves_a_trauma(realm: Realm) -> No
     set_stats(strong, willpower=90)
     foe = await mortal(realm, "Kel")
     for holder in (weak, strong):
-        await remember(realm.session, RULES, holder_id=holder.id, subject_id=foe.id, kind=MemoryKind.KILLED_KIN, magnitude=90, epoch=ctx.epoch)
+        await remember(realm.session, RULES, holder_id=holder.id, subject_id=foe.id, kind=MemoryKind.KILLED_KIN, magnitude=-90, epoch=ctx.epoch)
     assert await traumatise(ctx) == 1
     assert [row.package for row in await active(realm.session, weak.id)] == [PackageKind.TRAUMA]
     assert await active(realm.session, strong.id) == []

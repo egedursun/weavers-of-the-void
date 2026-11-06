@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
+from aerona.catalog.thoughts import NEEDS
 from aerona.domain.enums.body import Capacity, ConditionKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EngineKind, MortalRole
@@ -324,6 +325,7 @@ CONDITION_TRAITS = MappingProxyType(
         ConditionKind.ADDICTION: T.GLUTTONOUS,
         ConditionKind.CHOSEN_MARK: T.PROUD,
         ConditionKind.POSSESSION: T.FICKLE,
+        ConditionKind.NIGHTMARES: T.MELANCHOLIC,
     }
 )
 
@@ -548,6 +550,7 @@ MEMORIES: MappingProxyType[MemoryKind, MemorySpec] = MappingProxyType(
         M.DREADS: _memory({OC.FEAR: 70, OC.RESPECT: 30}, 0, {}, "Dreads the power that touched them", inherited=False),
         M.GOODWILL: _memory({OC.AFFECTION: 45, OC.TRUST: 35, OC.RESPECT: 20}, 12, {V.XENOPHILIA: 15, V.KINSHIP: 10}, "Showed us goodwill"),
         M.LONG_HISTORY: _memory({OC.TRUST: 40, OC.AFFECTION: 30, OC.GRIEVANCE: 30}, 2, {}, "Long shared history", inherited=False),
+        M.FORMATIVE: _memory({}, 1, {}, "A formative experience", inherited=False),
         M.ILL_WILL: _memory({OC.GRIEVANCE: 50, OC.TRUST: 35, OC.FEAR: 15}, 12, {V.XENOPHILIA: -15, V.HONOUR: 10}, "Showed us ill will"),
     }
 )
@@ -579,17 +582,7 @@ ACT_READINGS: MappingProxyType[ActKind, MappingProxyType[ValueAxis, int]] = Mapp
     }
 )
 
-NEED_LABELS = MappingProxyType(
-    {
-        N.SUSTENANCE: "Sustenance",
-        N.SAFETY: "Safety",
-        N.BELONGING: "Belonging",
-        N.STATUS: "Status",
-        N.PURPOSE: "Purpose",
-        N.FAITH: "Faith",
-        N.PLEASURE: "Pleasure",
-    }
-)
+NEED_LABELS = MappingProxyType({kind: spec.label for kind, spec in NEEDS.items()})
 
 PRESSURE_LABELS = MappingProxyType(
     {

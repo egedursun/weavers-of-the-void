@@ -478,15 +478,7 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.people_culture",
     "table.research_progress",
 )
-@writes(
-    "knowledge.spread",
-    "table.bonds",
-    "table.book_contents",
-    "table.entities",
-    "table.holder_levels",
-    "table.holder_techniques",
-    "table.research_progress",
-)
+@writes("knowledge.spread", "table.bonds", "table.book_contents", "table.entities", "table.holder_levels", "table.holder_techniques", "table.research_progress")
 async def research_cycles(ctx: TickContext) -> None:
     ctx.count("holders_seeded", await research.ensure_holders(ctx))
     for key, value in (await research.practise(ctx)).items():
@@ -505,6 +497,7 @@ async def research_cycles(ctx: TickContext) -> None:
     "table.bonds",
     "table.community_societies",
     "table.community_society",
+    "table.cult_tenets",
     "table.culture_values",
     "table.epoch_year_cursors",
     "table.ideology_adherents",

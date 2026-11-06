@@ -20,6 +20,7 @@ register_profile_table("rumours", "carrier_entity_id")
     "table.journeys",
     "table.language_intelligibility",
     "table.language_standing",
+    "table.name_registry",
     "table.nodes",
     "table.people_culture",
     "table.rumours",
@@ -42,6 +43,7 @@ register_profile_table("rumours", "carrier_entity_id")
     "table.language_intelligibility",
     "table.legend_profiles",
     "table.memories",
+    "table.name_registry",
     "table.relations",
     "table.rumours",
 )

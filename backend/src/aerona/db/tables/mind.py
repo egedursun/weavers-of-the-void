@@ -7,7 +7,11 @@ from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN, RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.mind import (
     Attribute,
+    DreamKind,
+    DreamReading,
+    Emotion,
     Facet,
+    GriefStage,
     IdeaKind,
     IdeaSource,
     IdeaState,
@@ -16,6 +20,7 @@ from aerona.domain.enums.mind import (
     PressureKind,
     SkillKind,
     SkillSource,
+    ThoughtKind,
     TraitKind,
     TraitSource,
     ValueAxis,
@@ -30,7 +35,7 @@ ATTRIBUTE_MIN = 0
 ATTRIBUTE_MAX = 100
 FACET_MIN = -50
 FACET_MAX = 50
-MIND_LOCKS = ("values", "traits", "skills", "memories", "needs", "role", "attributes", "facets", "ideas")
+MIND_LOCKS = ("values", "traits", "skills", "memories", "needs", "role", "attributes", "facets", "ideas", "thoughts", "griefs", "dreams")
 
 
 class MindRow(Base):
@@ -173,3 +178,63 @@ class IdeaRow(Base):
     state: Mapped[IdeaState] = mapped_column(enum_type(IdeaState, "state"))
     started_epoch: Mapped[int]
     finished_epoch: Mapped[int | None]
+
+
+class ThoughtRow(Base):
+    __tablename__ = "thoughts"
+    __table_args__ = (
+        between("intensity", PERCENT_MIN, PERCENT_MAX),
+        between("decay_pct", PERCENT_MIN, PERCENT_MAX),
+        at_least("epoch", 0),
+        Index("ix_thoughts_holder", "holder_node_id", "epoch"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    holder_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
+    kind: Mapped[ThoughtKind] = mapped_column(enum_type(ThoughtKind, "kind"))
+    emotion: Mapped[Emotion] = mapped_column(enum_type(Emotion, "emotion"))
+    subject_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    intensity: Mapped[int]
+    epoch: Mapped[int]
+    decay_pct: Mapped[int]
+    memory_id: Mapped[int | None] = mapped_column(ForeignKey("memories.id", ondelete="SET NULL"))
+
+
+class GriefRow(Base):
+    __tablename__ = "griefs"
+    __table_args__ = (
+        between("strength", PERCENT_MIN, PERCENT_MAX),
+        at_least("started_epoch", 0),
+        at_least("length_epochs", 1),
+        UniqueConstraint("mourner_node_id", "deceased_node_id", name="uq_griefs_mourner_deceased"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    mourner_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
+    deceased_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
+    stage: Mapped[GriefStage] = mapped_column(enum_type(GriefStage, "stage"))
+    strength: Mapped[int]
+    started_epoch: Mapped[int]
+    stage_epoch: Mapped[int]
+    length_epochs: Mapped[int]
+
+
+class DreamRow(Base):
+    __tablename__ = "dreams"
+    __table_args__ = (between("intensity", PERCENT_MIN, PERCENT_MAX), at_least("epoch", 0), Index("ix_dreams_dreamer", "dreamer_node_id", "epoch"))
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    dreamer_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
+    kind: Mapped[DreamKind] = mapped_column(enum_type(DreamKind, "kind"))
+    epoch: Mapped[int]
+    intensity: Mapped[int]
+    content: Mapped[list[int]] = mapped_column(JSON, default=list)
+    thought_id: Mapped[int | None] = mapped_column(ForeignKey("thoughts.id", ondelete="SET NULL"))
+    sender_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    partner_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="SET NULL"))
+    message_id: Mapped[int | None] = mapped_column(ForeignKey("messages.id", ondelete="SET NULL"))
+    reading: Mapped[DreamReading] = mapped_column(enum_type(DreamReading, "reading"), default=DreamReading.UNREAD)
+    reader_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    reading_true: Mapped[bool | None]
+    recurring: Mapped[bool] = mapped_column(default=False)

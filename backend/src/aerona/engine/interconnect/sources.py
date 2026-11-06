@@ -67,6 +67,7 @@ REASONS: MappingProxyType[str, str] = MappingProxyType(
         "modifier.condition.void_taint": "the taint of the void unsettles everyone near them",
         "modifier.condition.chosen_mark": "the mark of the chosen awes those who see it",
         "modifier.condition.divine_brand": "a god's brand marks them for all to see",
+        "modifier.condition.nightmares": "nights of the same nightmare wear down their will",
     }
 )
 
@@ -129,6 +130,7 @@ CONDITION_EFFECTS: MappingProxyType[ConditionKind, tuple[DerivedEffect, ...]] = 
         ConditionKind.VOID_TAINT: (DerivedEffect("charisma", ModifierOp.ADD, lambda rules: -rules.modifiers.void_taint_charisma),),
         ConditionKind.CHOSEN_MARK: (DerivedEffect("charisma", ModifierOp.ADD, lambda rules: rules.modifiers.chosen_charisma),),
         ConditionKind.DIVINE_BRAND: (DerivedEffect("charisma", ModifierOp.ADD, lambda rules: rules.modifiers.brand_charisma),),
+        ConditionKind.NIGHTMARES: (DerivedEffect("willpower", ModifierOp.ADD, lambda rules: -rules.modifiers.nightmares_willpower),),
     }
 )
 DERIVED_SOURCES = frozenset({ModifierSource.WONDER, ModifierSource.CONDITION})

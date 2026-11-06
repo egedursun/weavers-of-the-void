@@ -1,21 +1,27 @@
 from collections.abc import Mapping
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import MEMORIES, NEED_LABELS, PRESSURE_LABELS, SKILLS, TRAITS, VALUE_LABELS
 from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS
+from aerona.catalog.thoughts import DREAM_LABELS, EMOTIONS, READING_LABELS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.mind import DreamRow, GriefRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.mind import IdeaState, PressureKind, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import DreamReading, Emotion, GriefStage, IdeaState, PressureKind, ValueAxis, ValueHolder
 from aerona.engine.mind.book import Holder, holder_kind, needs_of, pressures_of, skills_of, traits_of, values_of
 from aerona.engine.mind.ideas import ideas_of
 from aerona.engine.mind.memories import strongest
 from aerona.engine.mind.space import top_values
 from aerona.engine.mind.split import attributes_of, facets_of
+from aerona.engine.mind.thoughts import strength_of as thought_strength
+from aerona.engine.mind.thoughts import thoughts_of
 from aerona.engine.mortal.describe import life_lines
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.rules.registry import Rules
@@ -30,6 +36,7 @@ HOLDER_WORDS = {
 }
 STRONG = 60
 FAINT = 25
+OPEN_GRIEF = (GriefStage.SHOCK, GriefStage.MOURNING)
 HOME_BONDS = (BondKind.LIVES_IN, BondKind.MEMBER_OF, BondKind.PROTECTS, BondKind.DESCENDS_FROM)
 
 
@@ -118,6 +125,27 @@ async def idea_lines(session: AsyncSession, node_id: int) -> list[str]:
     return lines
 
 
+async def feeling_lines(session: AsyncSession, rules: Rules, node_id: int, epoch: int) -> list[str]:
+    lines: list[str] = []
+    profile = await session.get(MortalProfileRow, node_id)
+    if profile is not None:
+        lines.append(f"Mood: {profile.mood.value} ({profile.mood_score:+d})")
+    totals: dict[Emotion, float] = {}
+    for row in await thoughts_of(session, node_id):
+        totals[row.emotion] = totals.get(row.emotion, 0.0) + thought_strength(row, epoch)
+    strongest = sorted(totals.items(), key=lambda item: (-item[1], item[0]))[: rules.context.mind_feelings_shown]
+    if strongest:
+        lines.append("Strongest feelings: " + ", ".join(f"{EMOTIONS[emotion].label.lower()} {round(total)}" for emotion, total in strongest))
+    griefs = list(await session.scalars(select(GriefRow).where(GriefRow.mourner_node_id == node_id, GriefRow.stage.in_(OPEN_GRIEF))))
+    for grief in griefs:
+        lines.append(f"Grieving {await name_of(session, grief.deceased_node_id)}: {grief.stage.value}")
+    dream = await session.scalar(select(DreamRow).where(DreamRow.dreamer_node_id == node_id).order_by(DreamRow.epoch.desc(), DreamRow.id.desc()).limit(1))
+    if dream is not None:
+        reading = f", read as {READING_LABELS[dream.reading].lower()}" if dream.reading is not DreamReading.UNREAD else ""
+        lines.append(f"Your last dream: {DREAM_LABELS[dream.kind].lower()} in epoch {dream.epoch}{reading}")
+    return lines
+
+
 async def mind_lines(session: AsyncSession, rules: Rules, node: Holder, epoch: int, *, private: bool = False) -> list[str]:
     kind = holder_kind(node)
     if kind is None:
@@ -136,6 +164,7 @@ async def mind_lines(session: AsyncSession, rules: Rules, node: Holder, epoch: i
     if not private:
         return lines
     lines.extend(await idea_lines(session, node.id))
+    lines.extend(await feeling_lines(session, rules, node.id, epoch))
     skills = sorted((await skills_of(session, node.id)).values(), key=lambda row: (-row.level, row.skill))[: table.mind_skills_shown]
     if skills:
         lines.append("Best skills: " + ", ".join(f"{SKILLS[row.skill].label.lower()} {row.level}" for row in skills))

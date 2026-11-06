@@ -34,9 +34,7 @@ async def total_population(ctx: TickContext) -> int:
 
 
 @reads("people.population", "settlement.population")
-@writes(
-    "table.epoch_stats",
-)
+@writes("table.epoch_stats")
 async def population_baseline(ctx: TickContext) -> None:
     record(ctx, LedgerKey.POPULATION_START, await total_population(ctx))
 

@@ -4,7 +4,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import BodyPart, DamageType, HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
-from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.mind import ActKind, ThoughtKind
 from aerona.domain.enums.mortal import CrimeKind, DeathCause, PunishmentKind
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.body.hits import Harm
@@ -12,6 +12,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.hooks import judged
+from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.standing import add_infamy, add_wealth
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
@@ -82,6 +83,7 @@ async def code_punishment(ctx: TickContext, community_id: int | None, crime: Cri
 async def sentence(ctx: TickContext, culprit: EntityRow, crime: CrimeKind, punishment: PunishmentKind, *, judge: EntityRow | None = None) -> bool:
     table = ctx.rules.punishment
     reason = f"punished for {CRIME_TEXT[crime]}"
+    await think(ctx.session, ctx.rules, culprit.id, ThoughtKind.WAS_PUNISHED, ctx.epoch, subject_id=judge.id if judge is not None else None)
     if punishment is PunishmentKind.FINE:
         await add_wealth(ctx.session, culprit.id, -table.fine_wealth, ctx.epoch)
     elif punishment is PunishmentKind.FLOGGING:

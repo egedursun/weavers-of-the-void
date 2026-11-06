@@ -41,6 +41,7 @@ async def survey_regions(ctx: TickContext) -> dict[str, int]:
 
 
 @reads(
+    "event.severity",
     "region.danger",
     "species.danger",
     "table.applied_fixups",
@@ -82,6 +83,7 @@ async def region_survey(ctx: TickContext) -> None:
 @reads(
     "people.population",
     "settlement.population",
+    "table.epoch_year_cursors",
     "table.herds",
     "table.maimed_cohorts",
     "table.nodes",
@@ -113,14 +115,19 @@ async def danger_harm(ctx: TickContext) -> None:
 
 @reads(
     "army.size",
+    "item.protection",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
+    "mortal.creativity",
     "mortal.endurance",
     "mortal.hp",
     "mortal.intellect",
     "mortal.lifespan",
+    "mortal.perception",
     "mortal.strength",
+    "mortal.willpower",
+    "mortal.wisdom",
     "people.population",
     "settlement.population",
     "table.army_profiles",
@@ -133,11 +140,14 @@ async def danger_harm(ctx: TickContext) -> None:
     "table.cult_tenets",
     "table.culture_values",
     "table.entity_flags",
+    "table.entity_tags",
     "table.epoch_year_cursors",
     "table.forced_weather",
     "table.holder_levels",
+    "table.incubating_ideas",
     "table.injuries",
     "table.item_profiles",
+    "table.mind_attributes",
     "table.mortal_equipment",
     "table.mortal_profiles",
     "table.nodes",
@@ -145,6 +155,7 @@ async def danger_harm(ctx: TickContext) -> None:
     "table.prostheses",
     "table.region_environment",
     "table.sky_events",
+    "table.tradition_profiles",
     "table.world_maps",
     "table.world_seasons",
 )

@@ -1,6 +1,7 @@
 from typing import Annotated, Any
 
 from pydantic import Field
+from sqlalchemy import select
 
 from aerona.catalog.entity_types import can_contain
 from aerona.catalog.gates import Gate
@@ -29,8 +30,10 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.intervention import Disaster, Miracle
+from aerona.domain.enums.mind import ThoughtKind
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.gods.interventions import MiracleEffect, MiracleOutcome, apply_miracle
+from aerona.engine.mind.thoughts import think
 from aerona.engine.phases.disasters import DISASTER_KINDS, after_strike, apply_disaster, joined_names, record_impact
 from aerona.engine.primitives.renames import rewrite_name
 from aerona.engine.primitives.subtypes import normalized_subtype
@@ -106,6 +109,15 @@ async def apply_son_miracle(call: SonCall, target: EntityRow, miracle: Miracle) 
     return miracle_notes(await apply_miracle(call.tick, target, miracle, lines.PEACE_REASON))
 
 
+async def miracle_witnesses(call: SonCall, target: EntityRow) -> list[int]:
+    if target.entity_type is EntityType.MORTAL:
+        return [target.id]
+    statement = select(EntityRow.id).where(
+        EntityRow.location_id == target.id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
+    )
+    return list(await call.session.scalars(statement.order_by(EntityRow.id)))
+
+
 async def miracle(call: SonCall, args: MiracleInput) -> str:
     tools = call.rules.son_tools
     target = await require_canon(call.session, args.entity_id)
@@ -121,6 +133,8 @@ async def miracle(call: SonCall, args: MiracleInput) -> str:
     call.spend_essence(cost)
     call.target(target.id)
     level = await grant(call, call.son, tools.miracle_xp, tools.miracle_renown)
+    for witness in await miracle_witnesses(call, target):
+        await think(call.session, call.rules, witness, ThoughtKind.SAW_MIRACLE, call.epoch, subject_id=call.son.id)
     joined = NOTE_SEPARATOR.join(notes)
     await call.chronicle(
         ChronicleKind.MIRACLE,
