@@ -380,6 +380,7 @@ MIND_STAGE = stage(
     "mind_dreams",
     "mind_preferences",
     "mind_ethics",
+    "mind_aspirations",
     "mortal_kin",
     "mortal_standing",
     "mortal_minds",

@@ -207,6 +207,7 @@ async def mortal_life_course(ctx: TickContext) -> None:
     "table.people_culture",
     "table.personality_values",
     "table.traits",
+    "table.wants",
 )
 @writes(
     "table.bonds",
@@ -326,9 +327,11 @@ async def mortal_standing(ctx: TickContext) -> None:
     "table.polity_members",
     "table.prostheses",
     "table.skills",
+    "table.tradition_profiles",
     "table.traits",
     "table.war_sides",
     "table.wars",
+    "table.world_maps",
     "table.world_materials",
 )
 @writes(

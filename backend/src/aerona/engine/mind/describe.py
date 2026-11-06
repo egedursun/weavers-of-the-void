@@ -3,6 +3,7 @@ from collections.abc import Mapping
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.aspirations import FEARS, GOALS, INSPIRATION_LABELS, WANTS
 from aerona.catalog.ethics import ACT_LABELS, HONOUR_MODELS, STANCE_LABELS, STANCE_READINGS
 from aerona.catalog.mind import MEMORIES, NEED_LABELS, PRESSURE_LABELS, SKILLS, TRAITS, VALUE_LABELS
 from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS
@@ -11,12 +12,12 @@ from aerona.catalog.thoughts import DREAM_LABELS, EMOTIONS, READING_LABELS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
-from aerona.db.tables.mind import CultureHonourRow, DreamRow, GriefRow
+from aerona.db.tables.mind import CultureHonourRow, DreamRow, FearRow, GriefRow, InspirationRow, LifeDreamRow, WantRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.mind import DreamReading, Emotion, EthicalStance, GriefStage, IdeaState, PressureKind, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import DreamReading, Emotion, EthicalStance, GriefStage, IdeaState, InspirationState, PressureKind, ValueAxis, ValueHolder
 from aerona.engine.mind.book import Holder, holder_kind, needs_of, pressures_of, skills_of, traits_of, values_of
 from aerona.engine.mind.ethics import culture_of, ethics_of
 from aerona.engine.mind.ideas import ideas_of
@@ -157,6 +158,30 @@ async def node_names(session: AsyncSession, node_ids: list[int]) -> dict[int, st
     return {node_id: await name_of(session, node_id) for node_id in node_ids}
 
 
+async def aspiration_lines(session: AsyncSession, node_id: int) -> list[str]:
+    lines: list[str] = []
+    dream = await session.get(LifeDreamRow, node_id)
+    if dream is not None:
+        about = f" ({await name_of(session, dream.target_node_id)})" if dream.target_node_id is not None else ""
+        lines.append(f"Life's dream: {GOALS[dream.goal].label.lower()}{about}, {dream.state.value}, {dream.progress}% of the way")
+    wants = list(await session.scalars(select(WantRow).where(WantRow.holder_node_id == node_id, WantRow.fulfilled_epoch.is_(None))))
+    if wants:
+        lines.append("What you want now: " + ", ".join(WANTS[row.kind].label.lower() for row in wants))
+    fears = list(await session.scalars(select(FearRow).where(FearRow.holder_node_id == node_id)))
+    if fears:
+        lines.append("What you fear: " + ", ".join(f"{FEARS[row.kind].label.lower()} ({row.strength})" for row in fears))
+    profile = await session.get(MortalProfileRow, node_id)
+    if profile is not None:
+        focus = f"; your focus is {profile.focus.value}" if profile.focus is not None else ""
+        lines.append(f"Conviction {profile.conviction}/{PERCENT}{focus}")
+    spark = await session.scalar(
+        select(InspirationRow).where(InspirationRow.holder_node_id == node_id, InspirationRow.state == InspirationState.BURNING).limit(1)
+    )
+    if spark is not None:
+        lines.append(f"Seized by {INSPIRATION_LABELS[spark.kind].lower()} until epoch {spark.deadline_epoch}")
+    return lines
+
+
 async def feeling_lines(session: AsyncSession, rules: Rules, node_id: int, epoch: int) -> list[str]:
     lines: list[str] = []
     profile = await session.get(MortalProfileRow, node_id)
@@ -198,6 +223,7 @@ async def mind_lines(session: AsyncSession, rules: Rules, node: Holder, epoch: i
         return lines
     lines.extend(await idea_lines(session, node.id))
     lines.extend(await feeling_lines(session, rules, node.id, epoch))
+    lines.extend(await aspiration_lines(session, node.id))
     skills = sorted((await skills_of(session, node.id)).values(), key=lambda row: (-row.level, row.skill))[: table.mind_skills_shown]
     if skills:
         lines.append("Best skills: " + ", ".join(f"{SKILLS[row.skill].label.lower()} {row.level}" for row in skills))

@@ -9,6 +9,7 @@ from aerona.core.errors import NotFoundError
 from aerona.rules.registry import Rules
 from aerona.services.player import (
     afflictions,
+    aspirations,
     assignments,
     beyond,
     body,
@@ -1088,6 +1089,28 @@ MIND_ACTIONS = (
     _sync(Meta("preference:remove", "Take a like or dislike away", G.ENTITIES), culture_mind.remove_preference, culture_mind.PreferenceTarget, free, ("F15",)),
     _sync(Meta("ethics:set", "Set and hold how a people or cult judges an act", G.SOCIETY), culture_mind.set_stance, culture_mind.SetStance, free, ("F16",)),
     _sync(Meta("ethics:honour", "Set and hold a people's honour model", G.SOCIETY), culture_mind.set_honour, culture_mind.SetHonour, free, ("F16",)),
+    _sync(Meta("aspiration:dream", "Set and hold a mortal's life's dream", G.ENTITIES), aspirations.set_dream, aspirations.SetDream, free, ("F17",)),
+    _sync(Meta("aspiration:dream_remove", "Take a life's dream away", G.ENTITIES), aspirations.remove_dream, aspirations.MortalTarget, free, ("F17",)),
+    _sync(Meta("aspiration:want", "Give a mortal a want", G.ENTITIES), aspirations.add_want, aspirations.AddWant, free, ("F17",)),
+    _sync(Meta("aspiration:want_edit", "Fulfil, aim or hold a want", G.ENTITIES), aspirations.edit_want, aspirations.EditWant, free, ("F17",)),
+    _sync(Meta("aspiration:want_remove", "Take a want away", G.ENTITIES), aspirations.remove_want, aspirations.WantTarget, free, ("F17",)),
+    _sync(Meta("aspiration:fear", "Set a mortal's fear", G.ENTITIES), aspirations.set_fear, aspirations.SetFear, free, ("F17",)),
+    _sync(Meta("aspiration:fear_remove", "Lift a fear", G.ENTITIES), aspirations.remove_fear, aspirations.FearTarget, free, ("F17",)),
+    _sync(Meta("aspiration:focus", "Set and hold a mortal's lifestyle focus", G.ENTITIES), aspirations.set_focus, aspirations.SetFocus, free, ("F17",)),
+    _sync(Meta("aspiration:perk", "Grant a perk", G.ENTITIES), aspirations.grant_perk, aspirations.PerkTarget, free, ("F17",)),
+    _sync(Meta("aspiration:perk_remove", "Take a perk away", G.ENTITIES), aspirations.remove_perk, aspirations.PerkTarget, free, ("F17",)),
+    _sync(Meta("aspiration:inspire", "Seize a mortal with inspiration", G.ENTITIES), aspirations.inspire, aspirations.Inspire, free, ("F17",)),
+    _sync(Meta("aspiration:inspiration_edit", "Reshape an inspiration", G.ENTITIES), aspirations.edit_inspiration, aspirations.EditInspiration, free, ("F17",)),
+    _sync(
+        Meta("aspiration:inspiration_remove", "Quench an inspiration", G.ENTITIES),
+        aspirations.remove_inspiration,
+        aspirations.InspirationTarget,
+        free,
+        ("F17",),
+    ),
+    _sync(
+        Meta("aspiration:conviction", "Set and hold a mortal's conviction", G.ENTITIES), aspirations.set_conviction, aspirations.SetConviction, free, ("F17",)
+    ),
     _sync(Meta("variant:create", "Forge a new kind of trait, skill or state", G.ENTITIES), variants.create_variant, variants.CreateVariant, free, ("F9",)),
     _sync(Meta("variant:edit", "Reshape and hold a world-made kind", G.ENTITIES), variants.edit_variant, variants.EditVariant, free, ("F9",)),
     _sync(

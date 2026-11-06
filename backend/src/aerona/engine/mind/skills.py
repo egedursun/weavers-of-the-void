@@ -18,6 +18,7 @@ from aerona.domain.enums.mind import Attribute, CareerChange, MemoryKind, SkillK
 from aerona.engine.body.book import factor
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.mind.aspirations import focus_rate, open_wants, steered_values
 from aerona.engine.mind.book import SKILLS_KEY, clamp_skill, effect_of, is_locked, mind_of, scaled_by, set_skill, skills_of, values_for
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.space import blend
@@ -89,6 +90,7 @@ async def practise(
     holder = await session.get(EntityRow, node_id)
     if holder is not None:
         rate *= talent(rules, await effective_attributes(session, rules, holder), skill)
+        rate *= await focus_rate(session, rules, node_id, skill)
     rate *= learning(await variants_by_id(session, [row.variant_id]), row.variant_id)
     schooled = await session.get(MortalProfileRow, node_id)
     if schooled is not None:
@@ -224,6 +226,7 @@ async def choose_career(ctx: TickContext, mortal: EntityRow, values: Mapping[Val
     people = await people_of(ctx.session, mortal)
     culture = await values_for(ctx.session, people.id) if people is not None else {}
     steered = blend(values, culture, ctx.rules.careers.culture_weight_pct) if culture else values
+    steered = steered_values(ctx.rules, steered, await open_wants(ctx.session, mortal.id))
     return career_move(ctx.rules, mortal.mortal_role, await role_levels(ctx.session, mortal.id, rows), steered)
 
 

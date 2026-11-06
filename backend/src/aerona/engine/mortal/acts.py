@@ -290,6 +290,7 @@ BREAKS: dict[StressBreak, Callable[[TickContext, EntityRow, MortalProfileRow, Se
 async def stress_break(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) -> StressBreak | None:
     table = ctx.rules.stress
     strain = profile.stress + max(0, -profile.mood_score) * ctx.rules.thoughts.mood_break_pct / PERCENT
+    strain -= profile.conviction * ctx.rules.aspirations.conviction_break_pct / PERCENT
     if strain < table.break_threshold:
         return None
     traits = await traits_of(ctx.session, mortal.id)

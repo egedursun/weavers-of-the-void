@@ -145,6 +145,7 @@ class EnginePhasesRules:
     mind_dreams: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: dreams, nightmares, visitations and their readings")
     mind_preferences: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: likes and dislikes, taboos of disgust and totems of love")
     mind_ethics: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: ethics following beliefs, honour and shame, schisms")
+    mind_aspirations: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: life's dreams, wants, fears, focus, perks and inspiration")
     mind_needs: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: needs of mortals and pressures on communities")
     incident_threads: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: long chains of causes open story threads")
     famine_aid: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: well-stocked neighbours feed the starving")

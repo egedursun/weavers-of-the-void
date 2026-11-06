@@ -11,6 +11,7 @@ from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import WarSideRow
@@ -450,6 +451,9 @@ async def drift_person(ctx: TickContext, mortal: EntityRow, index: ValueIndex, t
     if not current or not culture:
         return False
     rate = table.mortal_pull_pct * scaled_by(trait_effect(traits, TraitEffect.DRIFT, ctx.rules.traits.effect_scale_pct))
+    profile = await ctx.session.get(MortalProfileRow, mortal.id)
+    if profile is not None:
+        rate *= 1 - profile.conviction / PERCENT * ctx.rules.aspirations.conviction_drift_pct / PERCENT
     target: dict[ValueAxis, float] = {axis: float(culture.get(axis, 0)) for axis in ValueAxis}
     liege = await liege_of(ctx.session, mortal)
     if liege is not None:

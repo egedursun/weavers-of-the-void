@@ -4,6 +4,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.military import DuelContext, DuelEnd
 from aerona.domain.enums.mind import TraitEffect, ValueAxis
@@ -14,6 +15,8 @@ from aerona.engine.ecology.beasts import mounted_power
 from aerona.engine.economy.sanctity import holy_strike
 from aerona.engine.lore.arms import best_weapon, burden_of, grip, guard_of, held_profiles, war_magic, ward_magic
 from aerona.engine.mind.book import effect_of, scaled_by, values_for
+from aerona.engine.mind.inspiration import resolute
+from aerona.engine.mortal.profile import is_held
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import stat
 from aerona.engine.primitives.strength import equipment, weapon_power
@@ -55,6 +58,16 @@ class Bout:
     hits: list[tuple[int, int]] = field(default_factory=list)
 
 
+async def heroic_effort(ctx: TickContext, hero: EntityRow) -> float:
+    table = ctx.rules.aspirations
+    lift = 1 + table.resolve_pct / PERCENT if await resolute(ctx.session, hero.id) else 1.0
+    profile = await ctx.session.get(MortalProfileRow, hero.id)
+    if profile is not None and profile.conviction >= table.conviction_spend and table.conviction_spend and not is_held(profile, "conviction"):
+        profile.conviction -= table.conviction_spend
+        lift *= 1 + table.conviction_spend_pct / PERCENT
+    return lift
+
+
 async def fighter(ctx: TickContext, hero: EntityRow, foe: EntityRow | None = None) -> Fighter:
     campaigns = ctx.rules.campaigns
     nerve = scaled_by(await effect_of(ctx.session, hero.id, TraitEffect.COURAGE, ctx.rules.traits.effect_scale_pct))
@@ -71,6 +84,7 @@ async def fighter(ctx: TickContext, hero: EntityRow, foe: EntityRow | None = Non
     reach = blade.reach if blade is not None else min(REACH_ITEMS, sum(1 for item in items if (stat(item, "damage") or 0) > 0))
     magic = await war_magic(ctx.session, ctx.rules, blade)
     holy = await holy_strike(ctx.session, ctx.rules, hero.id, foe)
+    holy *= await heroic_effort(ctx, hero)
     return Fighter(
         entity=hero,
         power=base * (grip(blade) if blade is not None else 1.0) * magic * await mounted_power(ctx, hero.id) * holy,

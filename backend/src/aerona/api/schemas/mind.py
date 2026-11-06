@@ -7,20 +7,27 @@ from aerona.domain.enums.mind import (
     Attribute,
     DreamKind,
     DreamReading,
+    DreamState,
     Emotion,
     EthicalStance,
     Facet,
     FacetGroup,
+    FearKind,
+    FocusKind,
     GriefStage,
     HonourModel,
     IdeaKind,
     IdeaSource,
     IdeaState,
+    InspirationKind,
+    InspirationState,
+    LifeGoal,
     MemoryKind,
     MoodState,
     NeedGroup,
     NeedKind,
     OpinionComponent,
+    PerkKind,
     PreferenceKind,
     PressureKind,
     SkillFamily,
@@ -32,6 +39,7 @@ from aerona.domain.enums.mind import (
     TraitSource,
     ValueAxis,
     ValueHolder,
+    WantKind,
 )
 
 
@@ -388,3 +396,83 @@ class CultureMindView(ApiModel):
     preference_kinds: list[PreferenceKindView]
     stances: list[LabelView]
     honour_models: list[LabelView]
+
+
+class MilestoneView(ApiModel):
+    label: str
+    at: int
+    reached: bool
+
+
+class LifeDreamView(ApiModel):
+    goal: LifeGoal
+    label: str
+    target: NodeRef | None
+    milestones: list[MilestoneView]
+    progress: int
+    state: DreamState
+    started_epoch: int
+    ended_epoch: int | None
+    held: bool
+
+
+class WantView(ApiModel):
+    id: int
+    kind: WantKind
+    label: str
+    target: NodeRef | None
+    epoch: int
+    fulfilled_epoch: int | None
+    held: bool
+
+
+class FearView(ApiModel):
+    id: int
+    kind: FearKind
+    label: str
+    strength: int
+    target: NodeRef | None
+    since_epoch: int
+
+
+class PerkView(ApiModel):
+    perk: PerkKind
+    label: str
+    focus: FocusKind
+    stat: str
+    amount: int
+    level: int
+    owned: bool
+
+
+class InspirationView(ApiModel):
+    id: int
+    kind: InspirationKind
+    label: str
+    material: str | None
+    started_epoch: int
+    deadline_epoch: int
+    state: InspirationState
+    result: NodeRef | None
+
+
+class AspirationsView(ApiModel):
+    node_id: int
+    name: str
+    applies: bool
+    locked: bool
+    dream: LifeDreamView | None
+    wants: list[WantView]
+    fears: list[FearView]
+    focus: FocusKind | None
+    focus_held: bool
+    focus_level: int
+    perks: list[PerkView]
+    inspirations: list[InspirationView]
+    conviction: int
+    conviction_held: bool
+    goals: list[LabelView]
+    want_kinds: list[LabelView]
+    fear_kinds: list[LabelView]
+    focuses: list[LabelView]
+    inspiration_kinds: list[LabelView]

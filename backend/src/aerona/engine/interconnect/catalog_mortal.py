@@ -4,11 +4,16 @@ from aerona.db.tables.mind import (
     CultureHonourRow,
     DreamRow,
     FacetRow,
+    FearRow,
     GriefRow,
     IdeaRow,
+    InspirationRow,
+    LifeDreamRow,
     NeedRow,
+    PerkRow,
     PreferenceRow,
     ThoughtRow,
+    WantRow,
 )
 from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
@@ -25,6 +30,7 @@ MIND_SPLIT = "section-mind-split"
 FEELINGS = "section-feelings"
 TASTES = "section-tastes"
 ETHICS = "section-ethics"
+ASPIRATIONS = "section-aspirations"
 S = Subsystem
 PROFILES = (MortalProfileRow.__tablename__,)
 
@@ -120,6 +126,42 @@ BODY_GAP_MECHANICS: tuple[Mechanic, ...] = (
     ),
 )
 MIND_GAP_MECHANICS: tuple[Mechanic, ...] = (
+    Mechanic(
+        key="aspirations",
+        spec_item="F17",
+        title="A life's dream with milestones, short wants and fears, a lifestyle focus with perks, and inspiration in elated moods",
+        subsystem=S.MIND,
+        phases=("mind_aspirations", "mind_skills", "mortal_kin", "treaty_cycles"),
+        surface=Surface(drawer=ASPIRATIONS),
+        backfill="none: adults take up dreams, wants and fears from the next epoch",
+        templates=("inspiration.masterwork", "aspiration.journey"),
+        fields=("goal", "progress", "state", "kind", "strength", "focus", "perk", "material", "deadline_epoch"),
+        tables=(LifeDreamRow.__tablename__, WantRow.__tablename__, FearRow.__tablename__, PerkRow.__tablename__, InspirationRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal",),
+        couplings=(
+            Coupling(S.MIND, "milestones and fulfilment bring hope and pride, a shattered dream despair; near fears darken mood"),
+            Coupling(S.HOUSEHOLD, "a want to marry raises the chance of a match; wants steer the calling a mortal chooses"),
+            Coupling(S.ECONOMY, "a masterwork fever spends a material and makes a named work; an insight speeds a people's research"),
+            Coupling(S.FAITH, "a want to visit a shrine swears a pilgrimage, and a pilgrimage walked meets it"),
+            Coupling(S.ENVIRONMENT, "a want to travel sets out for a neighbouring community; a home underground brings a fear of the dark near"),
+        ),
+    ),
+    Mechanic(
+        key="conviction",
+        spec_item="F17/RP3",
+        title="Acting in character builds conviction that steadies the mind, slows changes of belief and is spent for heroic efforts",
+        subsystem=S.MIND,
+        phases=("mind_aspirations", "mortal_minds", "mind_values"),
+        surface=Surface(drawer=ASPIRATIONS),
+        backfill="none: every mortal starts at the middle",
+        templates=("mind.disillusioned",),
+        fields=("conviction",),
+        tables=PROFILES,
+        exposure=Exposure.CONTEXT,
+        targets=("mortal",),
+        couplings=(Coupling(S.WAR, "a duellist spends conviction for a heroic effort; acting against belief at low conviction overturns it"),),
+    ),
     Mechanic(
         key="preferences",
         spec_item="F15",

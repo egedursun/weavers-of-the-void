@@ -153,6 +153,7 @@ from aerona.rules.registry.military import (
     WeatherBattleEffectsRules,
 )
 from aerona.rules.registry.mind import (
+    AspirationsRules,
     CareersRules,
     CultureDriftRules,
     DreamRules,
@@ -302,6 +303,7 @@ class Rules:
     dreams: DreamRules = field(default_factory=DreamRules)
     preferences: PreferencesRules = field(default_factory=PreferencesRules)
     ethics: EthicsRules = field(default_factory=EthicsRules)
+    aspirations: AspirationsRules = field(default_factory=AspirationsRules)
     careers: CareersRules = field(default_factory=CareersRules)
     memory: MemoryRules = field(default_factory=MemoryRules)
     opinion: OpinionRules = field(default_factory=OpinionRules)

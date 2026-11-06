@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.ethics import HONOUR_MODELS, STANCE_ORDER, STANCE_READINGS
+from aerona.catalog.mind import ACT_READINGS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
@@ -21,13 +22,14 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.lore.taboos import guest_of
-from aerona.engine.mind.book import Values, is_locked, mind_of, pressures_of, stored_values
+from aerona.engine.mind.book import Values, is_locked, mind_of, pressures_of, stored_values, write_values
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.space import value_reading
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.mortal.profile import is_held
 from aerona.engine.mortal.standing import add_infamy, add_renown, add_stress, add_wealth
+from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.rules.registry import Rules
@@ -177,6 +179,26 @@ async def ethic_reading(
     return clamp_int(reading, -PERCENT, PERCENT)
 
 
+async def shift_conviction(ctx: TickContext, actor_id: int, amount: int, act: ActKind) -> None:
+    profile = await ctx.session.get(MortalProfileRow, actor_id)
+    if profile is None or is_held(profile, "conviction"):
+        return
+    profile.conviction = clamp_int(profile.conviction + amount, 0, PERCENT)
+    if amount >= 0 or profile.conviction > ctx.rules.aspirations.flip_below:
+        return
+    values = await stored_values(ctx.session, ValueHolder.PERSONAL, actor_id)
+    if not values or is_locked(await mind_of(ctx.session, actor_id), "values"):
+        return
+    shift = ctx.rules.aspirations.flip_shift
+    for axis, weight in ACT_READINGS[act].items():
+        values[axis] = clamp_int(values.get(axis, 0) + shift * (1 if weight > 0 else -1), -PERCENT, PERCENT)
+    await write_values(ctx.session, ValueHolder.PERSONAL, actor_id, values)
+    profile.conviction = PERCENT // 2
+    await think(ctx.session, ctx.rules, actor_id, ThoughtKind.DISILLUSIONED, ctx.epoch)
+    actor = await ctx.session.get(EntityRow, actor_id)
+    await note(ctx, f"{actor.name if actor else 'A mortal'} stopped believing what they once held true.", key="mind.disillusioned", ids=[actor_id])
+
+
 async def conscience(ctx: TickContext, actor_id: int, act: ActKind, victim_id: int | None) -> EthicalStance | None:
     actor = await living_entity(ctx.session, actor_id)
     if actor is None or actor.entity_type is not EntityType.MORTAL:
@@ -187,9 +209,11 @@ async def conscience(ctx: TickContext, actor_id: int, act: ActKind, victim_id: i
         return None
     table = ctx.rules.ethics
     if row.stance in GOOD:
+        await shift_conviction(ctx, actor.id, ctx.rules.aspirations.conviction_gain, act)
         await add_renown(ctx.session, actor.id, table.renown_gain, ctx.epoch)
         await think(ctx.session, ctx.rules, actor.id, ThoughtKind.ACTED_ON_CONSCIENCE, ctx.epoch, subject_id=victim_id)
     elif row.stance in BAD:
+        await shift_conviction(ctx, actor.id, -ctx.rules.aspirations.conviction_loss, act)
         await add_infamy(ctx.session, actor.id, table.infamy_gain, ctx.epoch)
         await add_stress(ctx.session, actor.id, table.guilt_stress * await guilt_scale(ctx.session, culture.id if culture else None) / PERCENT, ctx.epoch)
         await think(ctx.session, ctx.rules, actor.id, ThoughtKind.ACTED_AGAINST_CONSCIENCE, ctx.epoch, subject_id=victim_id)

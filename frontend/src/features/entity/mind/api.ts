@@ -116,3 +116,29 @@ export function useCultureMind(nodeId: number) {
     retry: false,
   })
 }
+
+export type Aspirations = components['schemas']['AspirationsView']
+export type LifeGoal = components['schemas']['LifeGoal']
+export type WantKind = components['schemas']['WantKind']
+export type FearKind = components['schemas']['FearKind']
+export type FocusKind = components['schemas']['FocusKind']
+export type PerkKind = components['schemas']['PerkKind']
+export type InspirationKind = components['schemas']['InspirationKind']
+export type InspirationState = components['schemas']['InspirationState']
+
+export function aspirationsKey(nodeId: number) {
+  return [...loreKeys.entity(nodeId), 'aspirations'] as const
+}
+
+export function useAspirations(nodeId: number) {
+  return useQuery({
+    queryKey: aspirationsKey(nodeId),
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/minds/{node_id}/aspirations', {
+          params: { path: { node_id: nodeId } },
+        })
+      ),
+    retry: false,
+  })
+}

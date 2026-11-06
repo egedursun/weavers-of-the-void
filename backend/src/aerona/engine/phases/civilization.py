@@ -652,6 +652,7 @@ async def spontaneous_treaty(ctx: TickContext) -> None:
 )
 @writes(
     "faction.wealth",
+    "people.wealth",
     "settlement.prosperity",
     "table.bonds",
     "table.chronicle",

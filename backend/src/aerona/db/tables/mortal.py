@@ -5,7 +5,7 @@ from aerona.constants.schema import KEY_MAX_LENGTH, NAME_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type, nullable_between
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
-from aerona.domain.enums.mind import KindFamily, MoodState, Profession
+from aerona.domain.enums.mind import FocusKind, KindFamily, MoodState, Profession
 from aerona.domain.enums.mortal import CareerPath, DeathCause, LifeStage, MarriageEnd, MarriageKind, StressBreak
 
 PROFILE_PERCENTS = (
@@ -31,6 +31,7 @@ class MortalProfileRow(Base):
         *(between(column, PERCENT_MIN, PERCENT_MAX) for column in PROFILE_PERCENTS),
         nullable_between("legitimacy", PERCENT_MIN, PERCENT_MAX),
         between("mood_score", -PERCENT_MAX, PERCENT_MAX),
+        between("conviction", PERCENT_MIN, PERCENT_MAX),
         at_least("updated_epoch", 0),
         Index("ix_mortal_profiles_polity", "polity_id"),
     )
@@ -56,6 +57,8 @@ class MortalProfileRow(Base):
     last_break_epoch: Mapped[int | None]
     mood: Mapped[MoodState] = mapped_column(enum_type(MoodState, "mood"), default=MoodState.FINE, server_default=MoodState.FINE.value)
     mood_score: Mapped[int] = mapped_column(default=0, server_default="0")
+    focus: Mapped[FocusKind | None] = mapped_column(enum_type(FocusKind, "focus"))
+    conviction: Mapped[int] = mapped_column(default=50, server_default="50")
     cause_of_death: Mapped[DeathCause | None] = mapped_column(enum_type(DeathCause, "cause_of_death"))
     death_place_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     updated_epoch: Mapped[int] = mapped_column(default=0)

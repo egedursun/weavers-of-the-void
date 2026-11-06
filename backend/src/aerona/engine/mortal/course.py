@@ -15,13 +15,14 @@ from aerona.db.write_guard import unheld
 from aerona.domain.enums.body import OPEN_INJURY_STATES, ConditionKind, HarmCause, InjuryState
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
-from aerona.domain.enums.mind import MemoryKind, OpinionComponent, SkillKind, SkillSource, ValueHolder
+from aerona.domain.enums.mind import MemoryKind, OpinionComponent, SkillKind, SkillSource, ValueHolder, WantKind
 from aerona.domain.enums.mortal import Ability, DeathCause, LifeStage, MarriageEnd, MarriageKind
 from aerona.domain.enums.polity import OathKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.mind.aspirations import open_wants
 from aerona.engine.mind.book import stored_values, write_values
 from aerona.engine.mind.memories import strength_of
 from aerona.engine.mind.needs import role_status
@@ -294,6 +295,10 @@ async def patronise(ctx: TickContext, mortal: EntityRow, profile: MortalProfileR
     return True
 
 
+async def marriage_wish(ctx: TickContext, mortal: EntityRow) -> float:
+    return 1 + ctx.rules.aspirations.want_match_pct / PERCENT if WantKind.MARRY in await open_wants(ctx.session, mortal.id) else 1.0
+
+
 async def match(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) -> str | None:
     table = ctx.rules.kinship
     if not adult(profile.life_stage) or is_held(profile, "kin"):
@@ -302,7 +307,12 @@ async def match(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) 
     for partner_id in await betrothed_of(ctx.session, mortal.id):
         partner = await living_entity(ctx.session, partner_id)
         partner_profile = await ctx.session.get(MortalProfileRow, partner_id)
-        if partner is not None and partner_profile is not None and adult(partner_profile.life_stage) and rng.chance(table.marriage_chance):
+        if (
+            partner is not None
+            and partner_profile is not None
+            and adult(partner_profile.life_stage)
+            and rng.chance(table.marriage_chance * await marriage_wish(ctx, mortal))
+        ):
             await marry(ctx.session, mortal, partner, ctx.epoch, kind=MarriageKind.POLITICAL, description="as they were promised")
             await note(ctx, f"{mortal.name} and {partner.name} were wed as they had been promised.", key="kin.marriage", ids=[mortal.id, partner.id])
             return "married"
@@ -315,7 +325,7 @@ async def match(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) 
         if await marriage_between(ctx.session, mortal.id, lover.id) is not None:
             continue
         plural = await plural_custom(ctx, mortal)
-        if (married and not plural) or not rng.chance(table.marriage_chance):
+        if (married and not plural) or not rng.chance(table.marriage_chance * await marriage_wish(ctx, mortal)):
             continue
         await marry(ctx.session, mortal, lover, ctx.epoch, kind=MarriageKind.PLURAL if married else MarriageKind.MONOGAMOUS, description="for love")
         await note(ctx, f"{mortal.name} and {lover.name} were wed.", key="kin.marriage", ids=[mortal.id, lover.id])

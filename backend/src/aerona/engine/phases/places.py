@@ -174,7 +174,9 @@ async def miner_of(ctx: TickContext, atlas: RegionAtlas, region_id: int | None) 
     return None
 
 
-@reads("place.mystery", "table.place_profiles", "table.place_secrets", "table.region_environment", "table.skills", "table.world_maps")
+@reads(
+    "place.mystery", "table.epoch_year_cursors", "table.place_profiles", "table.place_secrets", "table.region_environment", "table.skills", "table.world_maps"
+)
 @writes(
     "place.danger",
     "table.bonds",
@@ -182,6 +184,7 @@ async def miner_of(ctx: TickContext, atlas: RegionAtlas, region_id: int | None) 
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
+    "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
     "table.nodes",

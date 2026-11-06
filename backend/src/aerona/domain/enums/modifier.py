@@ -23,6 +23,7 @@ class ModifierSource(StrEnum):
     NATURAL_LAW = "natural_law"
     GOD_POWER = "god_power"
     BLESSING = "blessing"
+    PERK = "perk"
     CURSE = "curse"
     DOMINION = "dominion"
     PHENOMENON = "phenomenon"

@@ -1495,6 +1495,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.incidents",
     "table.incubating_ideas",
     "table.injuries",
+    "table.inspirations",
     "table.item_profiles",
     "table.language_profiles",
     "table.language_registers",

@@ -183,6 +183,14 @@ THOUGHTS: MappingProxyType[ThoughtKind, ThoughtSpec] = MappingProxyType(
         T.ACTED_AGAINST_CONSCIENCE: th(E.GUILT, 50, "Did what their people hold wrong", {}, {"self_consciousness": 3}),
         T.KIN_SHAMED: th(E.SHAME, 45, "Kin were shamed"),
         T.SHAME_RESTORED: th(E.RELIEF, 40, "A shame was set right"),
+        T.DREAM_PROGRESS: th(E.HOPE, 40, "Came closer to a life's dream"),
+        T.DREAM_FULFILLED: th(E.PRIDE, 85, "Fulfilled a life's dream", {}, {"cheerfulness": 4}),
+        T.DREAM_SHATTERED: th(E.DESPAIR, 75, "Saw a life's dream shattered", {}, {"depression": 4}),
+        T.WANT_FULFILLED: th(E.CONTENTMENT, 35, "Got what they wanted"),
+        T.FEAR_NEAR: th(E.FEAR, 40, "Felt a fear come near"),
+        T.INSPIRED: th(E.AWE, 60, "Was seized by inspiration"),
+        T.INSPIRATION_LOST: th(E.DESPAIR, 55, "Lost an inspiration"),
+        T.DISILLUSIONED: th(E.DESPAIR, 70, "Lost faith in what they believed"),
     }
 )
 

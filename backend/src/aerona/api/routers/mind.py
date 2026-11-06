@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.mind import (
+    AspirationsView,
     AttributeShiftView,
     AttributeView,
     BeliefShiftView,
@@ -15,13 +16,17 @@ from aerona.api.schemas.mind import (
     EthicView,
     FacetShiftView,
     FacetView,
+    FearView,
     FeelingsView,
     FormativeView,
     GriefView,
     IdeaSpecView,
     IdeaView,
+    InspirationView,
     LabelView,
+    LifeDreamView,
     MemoryView,
+    MilestoneView,
     MindSplitView,
     MindView,
     NeedView,
@@ -29,6 +34,7 @@ from aerona.api.schemas.mind import (
     OpinionMemoryView,
     OpinionTermView,
     OpinionView,
+    PerkView,
     PreferenceKindView,
     PreferenceView,
     PressureView,
@@ -40,8 +46,10 @@ from aerona.api.schemas.mind import (
     TraitEffectView,
     TraitView,
     ValueView,
+    WantView,
 )
 from aerona.api.views.common import node_ref, node_refs
+from aerona.catalog.aspirations import FEARS, FOCUSES, GOALS, INSPIRATION_LABELS, PERKS, WANTS
 from aerona.catalog.ethics import ACT_LABELS, HONOUR_MODELS, STANCE_LABELS, STANCE_ORDER, STANCE_READINGS
 from aerona.catalog.mind import FIXED_ROLES, MEMORIES, NEED_LABELS, PRESSURE_LABELS, SKILLS, TRAITS, VALUE_LABELS
 from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS, SKILL_ATTRIBUTES
@@ -52,7 +60,19 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
-from aerona.db.tables.mind import MIND_LOCKS, CultureHonourRow, DreamRow, GriefRow, MemoryRow, TraitRow
+from aerona.db.tables.mind import (
+    MIND_LOCKS,
+    CultureHonourRow,
+    DreamRow,
+    FearRow,
+    GriefRow,
+    InspirationRow,
+    LifeDreamRow,
+    MemoryRow,
+    PerkRow,
+    TraitRow,
+    WantRow,
+)
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
@@ -60,6 +80,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import Emotion, IdeaKind, MemoryKind, PreferenceKind, ValueAxis, ValueHolder
 from aerona.engine.body.book import factor
 from aerona.engine.body.customs import people_of
+from aerona.engine.mind.aspirations import focus_level
 from aerona.engine.mind.book import Holder, holder_kind, load_holder, mind_of, needs_of, pressures_of, skills_of, stored_values, values_of
 from aerona.engine.mind.ethics import culture_of, ethics_of
 from aerona.engine.mind.ideas import fit, ideas_of
@@ -78,7 +99,7 @@ router = APIRouter(tags=["mind"])
 NO_MIND = "No mind lives there."
 COMMUNITY_LOCKS = frozenset({"values", "memories", "needs"})
 LOCKS_BY_HOLDER = {
-    ValueHolder.PERSONAL: frozenset(MIND_LOCKS) - {"thoughts", "griefs", "dreams", "attributes", "facets", "ideas", "preferences", "ethics"},
+    ValueHolder.PERSONAL: frozenset(MIND_LOCKS) - {"thoughts", "griefs", "dreams", "attributes", "facets", "ideas", "preferences", "ethics", "aspirations"},
     ValueHolder.DIVINE: frozenset({"values", "traits", "memories", "attributes", "facets"}),
     ValueHolder.CULTURE: COMMUNITY_LOCKS,
     ValueHolder.COMMUNITY: frozenset({"memories", "needs"}),
@@ -546,3 +567,115 @@ async def totem_species(session: AsyncSession, people_id: int) -> int | None:
     kept = select(BondRow.target_node_id).where(BondRow.source_node_id == people_id, BondRow.kind == BondKind.CELEBRATES, BondRow.state == BondState.ACTIVE)
     origins = select(TraditionProfileRow.origin_entity_id).where(TraditionProfileRow.tradition_entity_id.in_(kept))
     return await session.scalar(select(EntityRow.id).where(EntityRow.id.in_(origins), EntityRow.entity_type == EntityType.SPECIES).limit(1))
+
+
+@router.get("/minds/{node_id}/aspirations", response_model=AspirationsView)
+async def aspirations_view(services: ServicesDep, node_id: int = Path(ge=1)) -> AspirationsView:
+    async with reader(services) as session:
+        ref = await node_ref(session, node_id)
+        if ref is None:
+            raise NotFoundError(NO_MIND)
+        mortal = await session.get(EntityRow, node_id)
+        applies = mortal is not None and mortal.entity_type is EntityType.MORTAL
+        dream = await session.get(LifeDreamRow, node_id) if applies else None
+        wants = (
+            list(await session.scalars(select(WantRow).where(WantRow.holder_node_id == node_id).order_by(WantRow.epoch.desc(), WantRow.id))) if applies else []
+        )
+        fears = list(await session.scalars(select(FearRow).where(FearRow.holder_node_id == node_id).order_by(FearRow.strength.desc()))) if applies else []
+        sparks = (
+            list(await session.scalars(select(InspirationRow).where(InspirationRow.holder_node_id == node_id).order_by(InspirationRow.started_epoch.desc())))
+            if applies
+            else []
+        )
+        owned = set(await session.scalars(select(PerkRow.perk).where(PerkRow.holder_node_id == node_id)))
+        profile = await session.get(MortalProfileRow, node_id)
+        mind = await mind_of(session, node_id)
+        focus = profile.focus if profile is not None else None
+        wanted_refs = [
+            *(row.target_node_id for row in wants),
+            *(row.target_node_id for row in fears),
+            *(row.result_node_id for row in sparks),
+            dream.target_node_id if dream else None,
+        ]
+        refs = await node_refs(session, [node for node in wanted_refs if node is not None])
+        shown = [perk for perk, spec in PERKS.items() if spec.focus is focus or perk in owned]
+        return AspirationsView(
+            node_id=node_id,
+            name=ref.name,
+            applies=applies,
+            locked=mind is not None and "aspirations" in (mind.locked or []),
+            dream=LifeDreamView(
+                goal=dream.goal,
+                label=GOALS[dream.goal].label,
+                target=refs.get(dream.target_node_id) if dream.target_node_id is not None else None,
+                milestones=[
+                    MilestoneView(label=label, at=mark, reached=mark in dream.milestones)
+                    for label, mark in zip(GOALS[dream.goal].milestones, (33, 66, 100), strict=True)
+                ],
+                progress=dream.progress,
+                state=dream.state,
+                started_epoch=dream.started_epoch,
+                ended_epoch=dream.ended_epoch,
+                held="progress" in (dream.locked or []),
+            )
+            if dream is not None
+            else None,
+            wants=[
+                WantView(
+                    id=row.id,
+                    kind=row.kind,
+                    label=WANTS[row.kind].label,
+                    target=refs.get(row.target_node_id) if row.target_node_id is not None else None,
+                    epoch=row.epoch,
+                    fulfilled_epoch=row.fulfilled_epoch,
+                    held="kind" in (row.locked or []),
+                )
+                for row in wants
+            ],
+            fears=[
+                FearView(
+                    id=row.id,
+                    kind=row.kind,
+                    label=FEARS[row.kind].label,
+                    strength=row.strength,
+                    target=refs.get(row.target_node_id) if row.target_node_id is not None else None,
+                    since_epoch=row.since_epoch,
+                )
+                for row in fears
+            ],
+            focus=focus,
+            focus_held=profile is not None and "focus" in (profile.locked or []),
+            focus_level=await focus_level(session, node_id, focus) if focus is not None else 0,
+            perks=[
+                PerkView(
+                    perk=perk,
+                    label=PERKS[perk].label,
+                    focus=PERKS[perk].focus,
+                    stat=PERKS[perk].stat,
+                    amount=PERKS[perk].amount,
+                    level=PERKS[perk].level,
+                    owned=perk in owned,
+                )
+                for perk in shown
+            ],
+            inspirations=[
+                InspirationView(
+                    id=row.id,
+                    kind=row.kind,
+                    label=INSPIRATION_LABELS[row.kind],
+                    material=row.material,
+                    started_epoch=row.started_epoch,
+                    deadline_epoch=row.deadline_epoch,
+                    state=row.state,
+                    result=refs.get(row.result_node_id) if row.result_node_id is not None else None,
+                )
+                for row in sparks
+            ],
+            conviction=profile.conviction if profile is not None else 50,
+            conviction_held=profile is not None and "conviction" in (profile.locked or []),
+            goals=[LabelView(key=goal.value, label=spec.label) for goal, spec in GOALS.items()],
+            want_kinds=[LabelView(key=kind.value, label=spec.label) for kind, spec in WANTS.items()],
+            fear_kinds=[LabelView(key=kind.value, label=spec.label) for kind, spec in FEARS.items()],
+            focuses=[LabelView(key=kind.value, label=spec.label) for kind, spec in FOCUSES.items()],
+            inspiration_kinds=[LabelView(key=kind.value, label=label) for kind, label in INSPIRATION_LABELS.items()],
+        )

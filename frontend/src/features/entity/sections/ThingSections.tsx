@@ -1,3 +1,4 @@
+import { AspirationsSection } from './AspirationsSection'
 import { EntityMechanics } from './EntityMechanics'
 import { EthicsSection } from './EthicsSection'
 import { FeelingsSection } from './FeelingsSection'
@@ -25,6 +26,7 @@ export function ThingSections({
       <FeelingsSection nodeId={nodeId} />
       <TastesSection nodeId={nodeId} />
       <EthicsSection nodeId={nodeId} />
+      <AspirationsSection nodeId={nodeId} />
       <RecordRowsSection nodeId={nodeId} />
     </>
   )

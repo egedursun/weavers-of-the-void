@@ -41,6 +41,7 @@ from aerona.engine.demography.promotion import dormant_ids
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.mind.aspirations import AspirationTally, aspire
 from aerona.engine.mind.book import (
     Holder,
     ValueIndex,
@@ -61,6 +62,7 @@ from aerona.engine.mind.feelings import feel
 from aerona.engine.mind.grief import GriefTally, advance
 from aerona.engine.mind.hooks import FIGHTING_ROLES, judged
 from aerona.engine.mind.ideas import ideas_of, turn_over
+from aerona.engine.mind.inspiration import resolute, tend_inspiration
 from aerona.engine.mind.memories import forget_faded, kin_of, remember, strength_of
 from aerona.engine.mind.needs import role_status, update_needs, update_pressures
 from aerona.engine.mind.opinion import OpinionContext
@@ -403,6 +405,7 @@ async def plagued_communities(ctx: TickContext) -> set[int]:
     "table.injuries",
     "table.memories",
     "table.minds",
+    "table.mortal_profiles",
     "table.nodes",
     "table.people_culture",
     "table.personality_values",
@@ -482,6 +485,7 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     "table.skills",
     "table.thoughts",
     "table.traits",
+    "table.wants",
     "table.war_sides",
     "table.wars",
 )
@@ -497,6 +501,7 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     "table.incidents",
     "table.injuries",
     "table.memories",
+    "table.minds",
     "table.mortal_profiles",
     "table.skills",
     "table.thoughts",
@@ -507,7 +512,7 @@ async def mind_skills(ctx: TickContext) -> None:
     index = await ValueIndex.load(ctx.session)
     rusted = changed = sparred = 0
     sleeping = await dormant_ids(ctx)
-    for mortal in await living_minds(ctx.session):
+    for mortal in unheld(await living_minds(ctx.session)):
         if mortal.entity_type is not EntityType.MORTAL or mortal.id in sleeping:
             continue
         rusted += await weather_skills(ctx, mortal)
@@ -631,7 +636,7 @@ async def mind_memories(ctx: TickContext) -> None:
 )
 async def mind_needs(ctx: TickContext) -> None:
     index = await ValueIndex.load(ctx.session)
-    minds = await living_minds(ctx.session)
+    minds = unheld(await living_minds(ctx.session))
     communities = [entity for entity in minds if entity.entity_type in COMMUNITY_MINDS]
     await lend_settlement_values(ctx.session, index, {community.id for community in communities})
     plagued = await plagued_communities(ctx)
@@ -787,6 +792,7 @@ async def mind_ideas(ctx: TickContext) -> None:
     "table.calendars",
     "table.community_stocks",
     "table.culture_ethics",
+    "table.culture_values",
     "table.entities",
     "table.entity_flags",
     "table.forced_weather",
@@ -1023,6 +1029,65 @@ async def split_already(ctx: TickContext, people: EntityRow) -> bool:
     return found is not None
 
 
+@reads(
+    "table.bonds",
+    "table.conditions",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.fears",
+    "table.house_profiles",
+    "table.injuries",
+    "table.inspirations",
+    "table.life_dreams",
+    "table.memories",
+    "table.mind_facets",
+    "table.minds",
+    "table.mortal_perks",
+    "table.mortal_profiles",
+    "table.needs",
+    "table.nodes",
+    "table.offices",
+    "table.outbreaks",
+    "table.personality_values",
+    "table.region_environment",
+    "table.skills",
+    "table.thoughts",
+    "table.traits",
+    "table.wants",
+    "table.world_maps",
+)
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.epoch_year_cursors",
+    "table.fears",
+    "table.incident_participants",
+    "table.incidents",
+    "table.life_dreams",
+    "table.memories",
+    "table.mind_facets",
+    "table.modifiers",
+    "table.mortal_perks",
+    "table.mortal_profiles",
+    "table.thoughts",
+    "table.wants",
+)
+async def mind_aspirations(ctx: TickContext) -> None:
+    _, _, mortals = await peoples_and_members(ctx)
+    tally = AspirationTally()
+    sparks: dict[str, int] = defaultdict(int)
+    for mortal in mortals:
+        await aspire(ctx, mortal, tally, resolved=await resolute(ctx.session, mortal.id))
+        spark = await tend_inspiration(ctx, mortal)
+        if spark is not None:
+            sparks[spark] += 1
+    for key, value in vars(tally).items():
+        ctx.count(f"aspiration_{key}", value)
+    for key, value in sparks.items():
+        ctx.count(f"inspiration_{key}", value)
+
+
 SURVEY_PHASES = (Phase("mind_survey", mind_survey),)
 
 
@@ -1123,6 +1188,7 @@ MIND_PHASES = (
     Phase("mind_dreams", mind_dreams),
     Phase("mind_preferences", mind_preferences),
     Phase("mind_ethics", mind_ethics),
+    Phase("mind_aspirations", mind_aspirations),
     Phase("famine_aid", famine_aid),
     Phase("mind_opinion", mind_opinion),
 )

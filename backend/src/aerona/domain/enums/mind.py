@@ -523,6 +523,130 @@ class ThoughtKind(StrEnum):
     ACTED_AGAINST_CONSCIENCE = "acted_against_conscience"
     KIN_SHAMED = "kin_shamed"
     SHAME_RESTORED = "shame_restored"
+    DREAM_PROGRESS = "dream_progress"
+    DREAM_FULFILLED = "dream_fulfilled"
+    DREAM_SHATTERED = "dream_shattered"
+    WANT_FULFILLED = "want_fulfilled"
+    FEAR_NEAR = "fear_near"
+    INSPIRED = "inspired"
+    INSPIRATION_LOST = "inspiration_lost"
+    DISILLUSIONED = "disillusioned"
+
+
+class LifeGoal(StrEnum):
+    RULE_A_REALM = "rule_a_realm"
+    FOUND_A_HOUSE = "found_a_house"
+    MASTER_A_CRAFT = "master_a_craft"
+    CREATE_A_MASTERWORK = "create_a_masterwork"
+    BECOME_A_LEGEND = "become_a_legend"
+    RAISE_A_FAMILY = "raise_a_family"
+    SEE_THE_WORLD = "see_the_world"
+    ACHIEVE_HOLINESS = "achieve_holiness"
+    GAIN_WEALTH = "gain_wealth"
+    AVENGE_KIN = "avenge_kin"
+    KNOW_A_TRUTH = "know_a_truth"
+    DEFEAT_A_BEAST = "defeat_a_beast"
+    SERVE_A_GOD = "serve_a_god"
+    LIVE_IN_PEACE = "live_in_peace"
+    FIND_LOVE = "find_love"
+
+
+class DreamState(StrEnum):
+    PURSUING = "pursuing"
+    FULFILLED = "fulfilled"
+    FAILED = "failed"
+
+
+class WantKind(StrEnum):
+    MARRY = "marry"
+    GAIN_OFFICE = "gain_office"
+    FINE_WEAPON = "fine_weapon"
+    VISIT_A_SHRINE = "visit_a_shrine"
+    LEARN_A_SKILL = "learn_a_skill"
+    GAIN_WEALTH = "gain_wealth"
+    HAVE_A_CHILD = "have_a_child"
+    TRAVEL = "travel"
+    WIN_GLORY = "win_glory"
+    MAKE_PEACE = "make_peace"
+    AVENGE = "avenge"
+    FIND_A_TEACHER = "find_a_teacher"
+
+
+class FearKind(StrEnum):
+    DEATH = "death"
+    WAR = "war"
+    PLAGUE = "plague"
+    BEASTS = "beasts"
+    LOSING_A_CHILD = "losing_a_child"
+    POVERTY = "poverty"
+    SHAME = "shame"
+    DARK = "dark"
+
+
+class FocusKind(StrEnum):
+    DIPLOMACY = "diplomacy"
+    MARTIAL = "martial"
+    STEWARDSHIP = "stewardship"
+    INTRIGUE = "intrigue"
+    LEARNING = "learning"
+    PIETY = "piety"
+    CRAFT = "craft"
+    LEISURE = "leisure"
+
+
+class PerkKind(StrEnum):
+    SILVER_TONGUE = "silver_tongue"
+    PEACEMAKER = "peacemaker"
+    WELL_CONNECTED = "well_connected"
+    ENVOYS_PATIENCE = "envoys_patience"
+    BELOVED = "beloved"
+    HARDENED = "hardened"
+    SWIFT_BLADE = "swift_blade"
+    IRON_NERVE = "iron_nerve"
+    BATTLE_EYE = "battle_eye"
+    WARLORD = "warlord"
+    LEDGER_MIND = "ledger_mind"
+    STEADY_HAND = "steady_hand"
+    PRUDENT = "prudent"
+    BUILDER = "builder"
+    GRANARY_KEEPER = "granary_keeper"
+    SHADOW_STEP = "shadow_step"
+    KEEN_EAR = "keen_ear"
+    MASK = "mask"
+    WEB_SPINNER = "web_spinner"
+    COLD_EYE = "cold_eye"
+    QUICK_STUDY = "quick_study"
+    DEEP_MEMORY = "deep_memory"
+    LUCID = "lucid"
+    SAGES_INSIGHT = "sages_insight"
+    POLYMATH = "polymath"
+    DEVOUT = "devout"
+    SERENE = "serene"
+    FAITHFUL_VOICE = "faithful_voice"
+    VISIONARY = "visionary"
+    HALLOWED = "hallowed"
+    SURE_HANDS = "sure_hands"
+    INVENTIVE = "inventive"
+    TIRELESS = "tireless"
+    EYE_FOR_BEAUTY = "eye_for_beauty"
+    MASTERS_TOUCH = "masters_touch"
+    GOOD_COMPANY = "good_company"
+    CAREFREE = "carefree"
+    REVELLER = "reveller"
+    CHARMING = "charming"
+    JOYFUL_SPIRIT = "joyful_spirit"
+
+
+class InspirationKind(StrEnum):
+    MASTERWORK_FEVER = "masterwork_fever"
+    RESEARCH_INSIGHT = "research_insight"
+    HEROIC_RESOLVE = "heroic_resolve"
+
+
+class InspirationState(StrEnum):
+    BURNING = "burning"
+    FULFILLED = "fulfilled"
+    FAILED = "failed"
 
 
 class PreferenceKind(StrEnum):

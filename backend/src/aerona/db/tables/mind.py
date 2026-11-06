@@ -10,16 +10,22 @@ from aerona.domain.enums.mind import (
     Attribute,
     DreamKind,
     DreamReading,
+    DreamState,
     Emotion,
     EthicalStance,
     Facet,
+    FearKind,
     GriefStage,
     HonourModel,
     IdeaKind,
     IdeaSource,
     IdeaState,
+    InspirationKind,
+    InspirationState,
+    LifeGoal,
     MemoryKind,
     NeedKind,
+    PerkKind,
     PreferenceKind,
     PressureKind,
     SkillKind,
@@ -29,6 +35,7 @@ from aerona.domain.enums.mind import (
     TraitSource,
     ValueAxis,
     ValueHolder,
+    WantKind,
 )
 
 VALUE_MIN = -100
@@ -54,6 +61,7 @@ MIND_LOCKS = (
     "dreams",
     "preferences",
     "ethics",
+    "aspirations",
 )
 
 
@@ -293,3 +301,71 @@ class CultureHonourRow(Base):
     entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     model: Mapped[HonourModel] = mapped_column(enum_type(HonourModel, "model"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class LifeDreamRow(Base):
+    __tablename__ = "life_dreams"
+    __table_args__ = (between("progress", PERCENT_MIN, PERCENT_MAX), at_least("started_epoch", 0))
+
+    holder_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
+    goal: Mapped[LifeGoal] = mapped_column(enum_type(LifeGoal, "goal"))
+    target_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    milestones: Mapped[list[int]] = mapped_column(JSON, default=list)
+    progress: Mapped[int] = mapped_column(default=0)
+    state: Mapped[DreamState] = mapped_column(enum_type(DreamState, "state"))
+    started_epoch: Mapped[int]
+    ended_epoch: Mapped[int | None]
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class WantRow(Base):
+    __tablename__ = "wants"
+    __table_args__ = (at_least("epoch", 0), Index("ix_wants_holder", "holder_node_id"))
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    holder_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
+    kind: Mapped[WantKind] = mapped_column(enum_type(WantKind, "kind"))
+    target_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    epoch: Mapped[int]
+    fulfilled_epoch: Mapped[int | None]
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class FearRow(Base):
+    __tablename__ = "fears"
+    __table_args__ = (
+        between("strength", PERCENT_MIN, PERCENT_MAX),
+        at_least("since_epoch", 0),
+        UniqueConstraint("holder_node_id", "kind", name="uq_fears_holder_kind"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    holder_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
+    kind: Mapped[FearKind] = mapped_column(enum_type(FearKind, "kind"))
+    target_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    strength: Mapped[int]
+    since_epoch: Mapped[int]
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class PerkRow(Base):
+    __tablename__ = "mortal_perks"
+    __table_args__ = (at_least("epoch", 0),)
+
+    holder_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
+    perk: Mapped[PerkKind] = mapped_column(enum_type(PerkKind, "perk"), primary_key=True)
+    epoch: Mapped[int]
+
+
+class InspirationRow(Base):
+    __tablename__ = "inspirations"
+    __table_args__ = (at_least("started_epoch", 0), Index("ix_inspirations_holder", "holder_node_id"))
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    holder_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
+    kind: Mapped[InspirationKind] = mapped_column(enum_type(InspirationKind, "kind"))
+    material: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
+    started_epoch: Mapped[int]
+    deadline_epoch: Mapped[int]
+    state: Mapped[InspirationState] = mapped_column(enum_type(InspirationState, "state"))
+    result_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))

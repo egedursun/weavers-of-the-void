@@ -12,12 +12,13 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import HERO_ROLES, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
-from aerona.domain.enums.mind import ActKind, MemoryKind
+from aerona.domain.enums.mind import ActKind, MemoryKind, WantKind
 from aerona.domain.enums.polity import OathKind, OathStatus
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.gods.progress import cap_gained_essence
+from aerona.engine.mind.aspirations import open_wants
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.standing import add_honour
@@ -220,7 +221,9 @@ async def vows(ctx: TickContext) -> int:
         if chaste and ctx.rng(f"celibacy.{mortal.id}.{ctx.epoch}").chance(table.celibacy_chance) and not await oaths_of(ctx, mortal.id, OathKind.CELIBACY):
             await swear(ctx, mortal, OathKind.CELIBACY, recipient_id=None, note_text="for the faith")
             sworn += 1
-        pilgrim = TenetKind.PILGRIMAGE_DUTY in tenets and ctx.rng(f"pilgrimage.{mortal.id}.{ctx.epoch}").chance(table.pilgrimage_chance)
+        dutiful = TenetKind.PILGRIMAGE_DUTY in tenets and ctx.rng(f"pilgrimage.{mortal.id}.{ctx.epoch}").chance(table.pilgrimage_chance)
+        longing = WantKind.VISIT_A_SHRINE in await open_wants(ctx.session, mortal.id)
+        pilgrim = dutiful or (longing and ctx.rng(f"shrine_want.{mortal.id}.{ctx.epoch}").chance(ctx.rules.aspirations.want_shrine_pct))
         if pilgrim and not await oaths_of(ctx, mortal.id, OathKind.PILGRIMAGE):
             holy = await holy_site(ctx, mortal)
             await swear(ctx, mortal, OathKind.PILGRIMAGE, recipient_id=holy, note_text=None if holy is not None else str(mortal.location_id))
