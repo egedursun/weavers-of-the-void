@@ -583,11 +583,22 @@ async def body_society(ctx: TickContext) -> None:
 
 
 @reads(
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.endurance",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
     "mortal.sanity",
+    "mortal.strength",
     "mortal.willpower",
     "table.afflictions",
     "table.bodies",
+    "table.body_customs",
+    "table.bonds",
     "table.conditions",
+    "table.cult_tenets",
     "table.culture_values",
     "table.entities",
     "table.entity_flags",
@@ -595,16 +606,23 @@ async def body_society(ctx: TickContext) -> None:
     "table.holder_levels",
     "table.holder_techniques",
     "table.injuries",
+    "table.item_profiles",
     "table.memories",
+    "table.minds",
+    "table.mortal_equipment",
     "table.needs",
     "table.nodes",
     "table.personality_values",
+    "table.prostheses",
+    "table.tradition_profiles",
+    "table.traits",
     "table.worlds",
 )
 @writes(
     "mortal.sanity",
     "table.afflictions",
     "table.bodies",
+    "table.body_customs",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
@@ -613,6 +631,7 @@ async def body_society(ctx: TickContext) -> None:
     "table.memories",
     "table.needs",
     "table.personality_values",
+    "table.traits",
 )
 async def body_afflictions(ctx: TickContext) -> None:
     for key, value in (await progress(ctx)).items():

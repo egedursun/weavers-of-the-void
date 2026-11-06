@@ -11807,6 +11807,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/workshop:owner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_workshop_owner_api_actions_workshop_owner_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/site_profit:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_site_profit_edit_api_actions_site_profit_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/site_profit:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_site_profit_remove_api_actions_site_profit_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/material:create": {
         parameters: {
             query?: never;
@@ -21071,6 +21119,7 @@ export interface components {
             spoiled?: number | null;
             preserved?: number | null;
             meal_quality?: number | null;
+            drink?: number | null;
             hold: boolean;
         };
         InfrastructureView: {
@@ -23111,7 +23160,7 @@ export interface components {
             death_year?: number | null;
             sex?: ("female" | "male" | "other") | null;
         };
-        MortalToolId: "look_at_world" | "inspect_entity" | "search_entities" | "found_language" | "coin_words" | "produce_item" | "build_structure" | "create_culture" | "discover_resource" | "claim_resource" | "found_settlement" | "establish_trade" | "declare_war" | "worship" | "pray_to_creator" | "develop_knowledge" | "learn_knowledge" | "diplomacy" | "go_on_adventure" | "find_route" | "explore_land" | "resurrection_rite" | "build_ship" | "launch_expedition" | "tame_species" | "weave_chimera" | "bind_spirit" | "search_ruins" | "sabotage" | "preach" | "challenge_god" | "deny_god" | "prophesy" | "escape" | "pay_ransom" | "rescue_captive" | "raise_army" | "appoint_commander" | "enact_law" | "appoint_officer" | "set_tax" | "propose_treaty" | "swear_oath" | "accept_treaty" | "break_treaty" | "build_spy_network" | "barter" | "lend" | "repay_debt" | "adopt" | "commission_artwork" | "design_rite" | "cast_rite" | "found_school" | "socialise" | "challenge_to_contest" | "persuade" | "trade_lore" | "choose_method";
+        MortalToolId: "look_at_world" | "inspect_entity" | "search_entities" | "found_language" | "coin_words" | "produce_item" | "build_structure" | "create_culture" | "discover_resource" | "claim_resource" | "found_settlement" | "establish_trade" | "declare_war" | "worship" | "pray_to_creator" | "develop_knowledge" | "learn_knowledge" | "diplomacy" | "go_on_adventure" | "find_route" | "explore_land" | "resurrection_rite" | "build_ship" | "launch_expedition" | "tame_species" | "weave_chimera" | "bind_spirit" | "search_ruins" | "sabotage" | "preach" | "challenge_god" | "deny_god" | "prophesy" | "escape" | "pay_ransom" | "rescue_captive" | "raise_army" | "appoint_commander" | "enact_law" | "appoint_officer" | "set_tax" | "propose_treaty" | "swear_oath" | "accept_treaty" | "break_treaty" | "build_spy_network" | "barter" | "lend" | "repay_debt" | "adopt" | "commission_artwork" | "design_rite" | "cast_rite" | "found_school" | "socialise" | "challenge_to_contest" | "persuade" | "trade_lore" | "choose_method" | "buy_workshop";
         MortalTurnFinishedEvent: {
             id: number;
             kind: "mortal.turn_finished";
@@ -26145,6 +26194,19 @@ export interface components {
             score: number;
             reasons: string[];
         };
+        SiteProfitEditInput: {
+            profit_id: number;
+            revenue?: number | null;
+            inputs?: number | null;
+            wages?: number | null;
+            upkeep?: number | null;
+            taxes?: number | null;
+            invested?: number | null;
+            profit?: number | null;
+        };
+        SiteProfitRemoveInput: {
+            profit_id: number;
+        };
         SizeClass: "tiny" | "small" | "medium" | "large" | "huge" | "colossal";
         SizeTier: "hamlet" | "village" | "town" | "city" | "metropolis";
         SkillFamily: "combat" | "command" | "social" | "craft" | "knowledge" | "survival" | "faith";
@@ -28399,6 +28461,12 @@ export interface components {
             workers: number;
             held: boolean;
         };
+        WorksBottleneckView: {
+            step: string;
+            workshop: string;
+            missing: string;
+            epoch: number;
+        };
         WorksEnergyView: {
             kind: components["schemas"]["EnergyKind"];
             label: string;
@@ -28407,6 +28475,21 @@ export interface components {
             spent: number;
             short: number;
             held: boolean;
+        };
+        WorksLedgerView: {
+            id: number;
+            epoch: number;
+            site: string;
+            community: components["schemas"]["NodeRef"] | null;
+            owner: components["schemas"]["NodeRef"] | null;
+            revenue: number;
+            inputs: number;
+            wages: number;
+            upkeep: number;
+            taxes: number;
+            profit: number;
+            invested: number;
+            held: string[];
         };
         WorksMethodView: {
             process: components["schemas"]["ProcessKind"];
@@ -28448,6 +28531,18 @@ export interface components {
             held: string[];
             polluters: components["schemas"]["WorksPolluterView"][];
         };
+        WorksSiteView: {
+            workshop_id: number | null;
+            kind: components["schemas"]["WorkshopKind"] | null;
+            resource: components["schemas"]["NodeRef"] | null;
+            community: components["schemas"]["NodeRef"] | null;
+            label: string;
+            level: number;
+            owner: components["schemas"]["NodeRef"] | null;
+            owner_class: string;
+            held: boolean;
+            last_profit: number | null;
+        };
         WorksStockView: {
             id: number;
             commodity: components["schemas"]["CommodityKind"];
@@ -28470,6 +28565,7 @@ export interface components {
             meal_quality: number;
             meal_tier: components["schemas"]["QualityTier"];
             meal_tier_label: string;
+            drink: number;
             epoch: number | null;
             held: string[];
         };
@@ -28482,6 +28578,11 @@ export interface components {
             stores: components["schemas"]["WorksStoresView"] | null;
             stocks: components["schemas"]["WorksStockView"][];
             pollution: components["schemas"]["WorksPollutionView"][];
+            sites: components["schemas"]["WorksSiteView"][];
+            holdings: components["schemas"]["WorksSiteView"][];
+            ledger: components["schemas"]["WorksLedgerView"][];
+            bottlenecks: components["schemas"]["WorksBottleneckView"][];
+            workshop_kinds: components["schemas"]["LabelView"][];
             tiers: components["schemas"]["LabelView"][];
             processes: components["schemas"]["LabelView"][];
         };
@@ -28533,6 +28634,12 @@ export interface components {
             hold?: boolean | null;
         };
         WorkshopKind: "market" | "granary" | "warehouse" | "mine" | "lumber_camp" | "fishery" | "charcoal_kiln" | "forge" | "tannery" | "mill" | "brewery" | "weavery" | "stable" | "mason_yard" | "shipyard" | "siege_yard" | "alchemist" | "shrine_workshop" | "mint";
+        WorkshopOwnerInput: {
+            community_id: number;
+            kind: components["schemas"]["WorkshopKind"];
+            owner_id?: number | null;
+            hold: boolean;
+        };
         WorkshopReleaseInput: {
             community_id: number;
             kind: components["schemas"]["WorkshopKind"];
@@ -51078,6 +51185,99 @@ export interface operations {
             };
         };
     };
+    action_workshop_owner_api_actions_workshop_owner_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkshopOwnerInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_site_profit_edit_api_actions_site_profit_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SiteProfitEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_site_profit_remove_api_actions_site_profit_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SiteProfitRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_material_create_api_actions_material_create_post: {
         parameters: {
             query?: never;
@@ -60351,7 +60551,7 @@ export const mortalRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const mortalSexValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalSex"]> = ["female", "male", "other"];
 export const mortalStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalStats"]["kind"]> = ["mortal"];
 export const mortalStatsSexAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalStats"]["sex"]> = ["female", "male", "other"];
-export const mortalToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalToolId"]> = ["look_at_world", "inspect_entity", "search_entities", "found_language", "coin_words", "produce_item", "build_structure", "create_culture", "discover_resource", "claim_resource", "found_settlement", "establish_trade", "declare_war", "worship", "pray_to_creator", "develop_knowledge", "learn_knowledge", "diplomacy", "go_on_adventure", "find_route", "explore_land", "resurrection_rite", "build_ship", "launch_expedition", "tame_species", "weave_chimera", "bind_spirit", "search_ruins", "sabotage", "preach", "challenge_god", "deny_god", "prophesy", "escape", "pay_ransom", "rescue_captive", "raise_army", "appoint_commander", "enact_law", "appoint_officer", "set_tax", "propose_treaty", "swear_oath", "accept_treaty", "break_treaty", "build_spy_network", "barter", "lend", "repay_debt", "adopt", "commission_artwork", "design_rite", "cast_rite", "found_school", "socialise", "challenge_to_contest", "persuade", "trade_lore", "choose_method"];
+export const mortalToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalToolId"]> = ["look_at_world", "inspect_entity", "search_entities", "found_language", "coin_words", "produce_item", "build_structure", "create_culture", "discover_resource", "claim_resource", "found_settlement", "establish_trade", "declare_war", "worship", "pray_to_creator", "develop_knowledge", "learn_knowledge", "diplomacy", "go_on_adventure", "find_route", "explore_land", "resurrection_rite", "build_ship", "launch_expedition", "tame_species", "weave_chimera", "bind_spirit", "search_ruins", "sabotage", "preach", "challenge_god", "deny_god", "prophesy", "escape", "pay_ransom", "rescue_captive", "raise_army", "appoint_commander", "enact_law", "appoint_officer", "set_tax", "propose_treaty", "swear_oath", "accept_treaty", "break_treaty", "build_spy_network", "barter", "lend", "repay_debt", "adopt", "commission_artwork", "design_rite", "cast_rite", "found_school", "socialise", "challenge_to_contest", "persuade", "trade_lore", "choose_method", "buy_workshop"];
 export const mortalTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalTurnFinishedEvent"]["kind"]> = ["mortal.turn_finished"];
 export const mortalTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalTurnStartedEvent"]["kind"]> = ["mortal.turn_started"];
 export const mortalsStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalsStartedEvent"]["kind"]> = ["mortals.started"];

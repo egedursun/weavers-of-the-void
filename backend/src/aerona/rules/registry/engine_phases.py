@@ -156,6 +156,9 @@ class EnginePhasesRules:
     industry_aftermath: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: preserving, spoilage, tool wear, fuel burned, pollution and its harm, and what nobles want"
     )
+    site_profits: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: owners of works and resources, their profits, taxes, investment and lobbying"
+    )
     renown_hearsay: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: deeds heard of in rumours, fading reputations, renown and infamy")
     renown_claims: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: shared and false claims of deeds, tested and exposed")
     ruler_currencies: int = rule(

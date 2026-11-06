@@ -304,6 +304,7 @@ async def mortal_standing(ctx: TickContext) -> None:
     "mortal.strength",
     "mortal.willpower",
     "mortal.wisdom",
+    "table.afflictions",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
@@ -346,6 +347,7 @@ async def mortal_standing(ctx: TickContext) -> None:
 )
 @writes(
     "mortal.hp",
+    "table.afflictions",
     "table.bodies",
     "table.body_customs",
     "table.bonds",

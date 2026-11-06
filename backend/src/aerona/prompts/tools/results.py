@@ -364,6 +364,8 @@ class MortalResult(StrEnum):
     NOT_PERSUADED = "{{ name }} was not swayed ({{ score }})."
     LORE_TRADED = "{{ name }} received {{ lore }} for {{ price }}."
     METHOD_CHOSEN = "{{ name }} now practises {{ method }} for {{ process }}."
+    WORKSHOP_BOUGHT = "You now own the {{ workshop }} of {{ place }}, bought for {{ price }}."
+    WORKSHOP_REFUSED = "You cannot buy the {{ workshop }}: {{ why }}."
     METHOD_REFUSED = "{{ name }} cannot take up {{ method }}: {{ why }}."
     LORE_REFUSED = "{{ name }} already holds that, or you do not."
     SEIZE_REPELLED = "The seizure was repelled ({{ mine }} against {{ theirs }}); {{ name }} is still held by {{ owners }}."

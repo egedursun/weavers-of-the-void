@@ -6,8 +6,9 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.industry.energy import gauge, industry_row, leys_by_region, unmet_pct
 from aerona.engine.industry.methods import MethodTally, choose_methods
+from aerona.engine.industry.owners import ProfitTally, magic_banned, tend_profits
 from aerona.engine.industry.pollution import PollutionTally, tend_pollution
-from aerona.engine.industry.stores import StoreTally, burn_fuel, noble_taste, preserve, spoil, wear_tools
+from aerona.engine.industry.stores import StoreTally, burn_fuel, noble_taste, pour_drink, preserve, spoil, wear_tools
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -34,8 +35,11 @@ NOTE_CAP = 6
     "table.holder_techniques",
     "table.ideology_adherents",
     "table.ideology_tenets",
+    "table.law_jurisdictions",
+    "table.law_profiles",
     "table.ley_lines",
     "table.place_environment",
+    "table.polity_members",
     "table.region_environment",
     "table.region_pollution",
     "table.resource_profiles",
@@ -64,9 +68,10 @@ async def industry_methods(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     leys = await leys_by_region(ctx)
     tally = MethodTally()
+    banned = await magic_banned(ctx.session, book)
     for community in unheld(book.communities):
         await gauge(ctx, book, community, leys)
-        await choose_methods(ctx, book, community, tally)
+        await choose_methods(ctx, book, community, tally, banned=community.id in banned)
     await ctx.session.flush()
     ctx.count("methods_chosen", tally.chosen)
     ctx.count("methods_changed", tally.changed)
@@ -159,6 +164,7 @@ async def industry_aftermath(ctx: TickContext) -> None:
         await wear_tools(ctx, book, community, row, stores)
         await spoil(ctx, book, community, row, stores)
         await noble_taste(ctx, book, community, stores)
+        await pour_drink(ctx, community, row)
     await ctx.session.flush()
     fouled = PollutionTally()
     await tend_pollution(ctx, book, fouled)
@@ -176,7 +182,75 @@ async def industry_aftermath(ctx: TickContext) -> None:
     ctx.count("turned_against_polluters", fouled.turned)
 
 
+@reads(
+    "people.prosperity",
+    "settlement.prosperity",
+    "table.army_profiles",
+    "table.bonds",
+    "table.calendars",
+    "table.community_industry",
+    "table.community_labour",
+    "table.community_methods",
+    "table.community_societies",
+    "table.cult_doctrines",
+    "table.cult_holdings",
+    "table.faction_goals",
+    "table.faction_profiles",
+    "table.forced_weather",
+    "table.holder_levels",
+    "table.holder_techniques",
+    "table.house_profiles",
+    "table.law_jurisdictions",
+    "table.law_profiles",
+    "table.mortal_profiles",
+    "table.place_environment",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.production_runs",
+    "table.region_environment",
+    "table.region_pollution",
+    "table.resource_profiles",
+    "table.resource_workers",
+    "table.settlement_profiles",
+    "table.skills",
+    "table.sky_events",
+    "table.treaty_parties",
+    "table.workshop_designs",
+    "table.workshops",
+    "table.world_maps",
+    "table.world_materials",
+    "table.world_seasons",
+)
+@writes(
+    "people.prosperity",
+    "settlement.prosperity",
+    "table.cult_doctrines",
+    "table.entities",
+    "table.faction_goals",
+    "table.faction_profiles",
+    "table.house_profiles",
+    "table.mortal_profiles",
+    "table.polity_profiles",
+    "table.settlement_profiles",
+    "table.site_profits",
+    "table.workshops",
+)
+async def site_profits(ctx: TickContext) -> None:
+    book = await EconomyBook.load(ctx)
+    tally = ProfitTally()
+    await tend_profits(ctx, book, tally)
+    await ctx.session.flush()
+    ctx.count("sites_owned", tally.owned)
+    ctx.count("sites_settled", tally.sites)
+    ctx.count("profit", tally.profit)
+    ctx.count("losses", tally.losses)
+    ctx.count("invested", tally.invested)
+    ctx.count("taxes", tally.taxes)
+    ctx.count("owners_lobbying", tally.lobbied)
+
+
 PHASES = (
     Phase("industry_methods", industry_methods),
     Phase("industry_aftermath", industry_aftermath),
+    Phase("site_profits", site_profits),
 )

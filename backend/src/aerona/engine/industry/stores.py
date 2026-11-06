@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from aerona.catalog.methods import FUEL_FAMILY, METHODS, PERISHABLE, default_method
 from aerona.constants.units import PERCENT
@@ -20,11 +20,13 @@ from aerona.engine.industry.energy import scale_by_energy
 from aerona.engine.industry.methods import allowed, local_price, method_for
 from aerona.engine.industry.quality import at_least
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.stats import headcount
 
 TENTH = 10
 THOUSAND = 1000
 HUNTER_DIETS = (Diet.CARNIVORE, Diet.OMNIVORE)
 HUNTER_SIZES = (SizeClass.TINY, SizeClass.SMALL)
+BREW_STEP = "brew"
 
 
 @dataclass
@@ -187,3 +189,15 @@ async def noble_taste(ctx: TickContext, book: EconomyBook, community: EntityRow,
     society.satisfaction_noble = clamp_int(society.satisfaction_noble - ctx.rules.quality.noble_coarse_satisfaction, 0, PERCENT)
     tally.coarse += 1
     return True
+
+
+async def pour_drink(ctx: TickContext, community: EntityRow, row: CommunityIndustryRow) -> int:
+    brewed = await ctx.session.scalar(
+        select(func.coalesce(func.sum(ProductionRunRow.quantity), 0)).where(
+            ProductionRunRow.epoch == ctx.epoch, ProductionRunRow.community_entity_id == community.id, ProductionRunRow.step == BREW_STEP
+        )
+    )
+    want = max(1, headcount(community) * ctx.rules.drink.per_1000 // THOUSAND)
+    if "drink" not in row.locked:
+        row.drink = clamp_int(int(brewed or 0) * PERCENT / want, 0, PERCENT)
+    return row.drink

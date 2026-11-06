@@ -17,7 +17,13 @@ import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { named } from '../mind/labels'
-import { ControlPanel, ItemRow, MindCard } from '../mind/parts'
+import {
+  ControlPanel,
+  FormBar,
+  ItemRow,
+  MindCard,
+  NodePicker,
+} from '../mind/parts'
 import {
   type MethodKind,
   type Works,
@@ -25,15 +31,20 @@ import {
   type WorksMethod,
   type WorksOption,
   type WorksPollution,
+  type WorksLedger,
+  type WorksSite,
   type WorksStock,
   useWorks,
 } from '../works/api'
 import {
   ENERGY,
   LAND_ICON,
+  LEDGER_ICON,
+  OWNER_ICON,
   POLLUTANTS,
   POWER_ICON,
   PROCESSES,
+  SHOCK_ICON,
   STORES_ICON,
   TIER_ICON,
   TIER_TONE,
@@ -419,7 +430,7 @@ function StoresCard({ view, hold }: Props) {
           Nothing reckoned yet; the stores are counted at the next epoch.
         </Muted>
       ) : (
-        <div className='grid min-w-0 grid-cols-2 gap-3 @xl/mind:grid-cols-4'>
+        <div className='grid min-w-0 grid-cols-2 gap-3 @xl/mind:grid-cols-5'>
           <KpiTile
             label='Meals'
             value={stores.meal_tier_label}
@@ -448,6 +459,13 @@ function StoresCard({ view, hold }: Props) {
             value={stores.tools_worn}
             icon={TOOL_ICON}
             tone='warning'
+          />
+          <KpiTile
+            label='Drink'
+            value={stores.drink}
+            icon={STORES_ICON}
+            tone='gold'
+            meter={{ value: stores.drink, max: SPAN, label: 'Drink' }}
           />
         </div>
       )}
@@ -489,6 +507,13 @@ function StoresCard({ view, hold }: Props) {
                   label: 'Heat needed to live',
                   value: stores.heat_need,
                   min: 0,
+                },
+                {
+                  key: 'drink',
+                  label: 'Drink',
+                  value: stores.drink,
+                  min: 0,
+                  max: SPAN,
                 },
               ],
             },
@@ -676,6 +701,323 @@ function LandCard({ view, blocked, hold }: Props) {
   )
 }
 
+const ANYONE = [
+  'mortal',
+  'house',
+  'polity',
+  'settlement',
+  'people',
+  'faction',
+  'cult',
+]
+
+function SiteRow({
+  site,
+  view,
+  blocked,
+  hold,
+  owned,
+}: {
+  site: WorksSite
+  view: Works
+  blocked: string | null
+  hold: boolean
+  owned: boolean
+}) {
+  const [owner, setOwner] = useState<number | null>(site.owner?.id ?? null)
+  const give = useGodAction({
+    run: (to: number | null) =>
+      unwrap(
+        api.POST('/api/actions/workshop:owner', {
+          body: {
+            community_id: site.community?.id ?? view.node_id,
+            kind: site.kind ?? 'market',
+            owner_id: to,
+            hold,
+          },
+        })
+      ),
+  })
+  const busy = why(blocked, give.isPending)
+  const profit = site.last_profit
+  return (
+    <ItemRow
+      icon={site.kind ? OWNER_ICON : LAND_ICON}
+      tone={
+        profit === null || profit === undefined
+          ? 'muted'
+          : profit >= 0
+            ? 'success'
+            : 'danger'
+      }
+      title={
+        owned && site.community ? (
+          <>
+            {`${site.label} of `}
+            <EntityLink kind='entity' id={String(site.community.id)}>
+              {site.community.name}
+            </EntityLink>
+          </>
+        ) : site.resource ? (
+          <EntityLink kind='entity' id={String(site.resource.id)}>
+            {site.resource.name}
+          </EntityLink>
+        ) : (
+          site.label
+        )
+      }
+      meta={`${site.kind ? `level ${site.level} · ` : ''}${site.owner ? `owned by ${site.owner.name}` : `${site.owner_class}, not yet given`}`}
+      badges={
+        <>
+          {profit !== null && profit !== undefined && (
+            <Badge variant={profit >= 0 ? 'outline' : 'destructive'}>
+              {`${profit >= 0 ? 'Profit' : 'Loss'} ${Math.abs(profit)}`}
+            </Badge>
+          )}
+          {site.held && <Badge variant='secondary'>Held</Badge>}
+        </>
+      }
+      actions={
+        site.kind && site.owner ? (
+          <Button
+            size='icon-sm'
+            variant='ghost'
+            aria-label='Take the workshop from its owner'
+            disabled={busy !== null}
+            disabledReason={busy ?? undefined}
+            onClick={() => give.mutate(null)}
+          >
+            <X />
+          </Button>
+        ) : undefined
+      }
+      editLabel={site.kind ? 'who owns it' : undefined}
+      editor={
+        site.kind ? (
+          <FormBar
+            action={
+              <Button
+                size='sm'
+                disabled={busy !== null || owner === null}
+                disabledReason={
+                  busy ?? (owner === null ? 'Pick an owner.' : undefined)
+                }
+                onClick={() => give.mutate(owner)}
+              >
+                <OWNER_ICON />
+                Give it
+              </Button>
+            }
+          >
+            <NodePicker
+              label='Owner'
+              types={ANYONE}
+              value={owner}
+              onChange={setOwner}
+              blocked={busy}
+            />
+          </FormBar>
+        ) : undefined
+      }
+    />
+  )
+}
+
+function SitesCard({ view, blocked, hold }: Props) {
+  return (
+    <MindCard
+      title='Works and their owners'
+      icon={OWNER_ICON}
+      hint='Guilds, merchants, cults, the realm, landed houses or the community own each workshop and take its profit; you may hand any of them to anyone.'
+      wide
+    >
+      {view.sites.length === 0 ? (
+        <Muted variant='caption'>No workshops stand here yet.</Muted>
+      ) : (
+        <Paged items={view.sites} initial={4} noun={['workshop', 'workshops']}>
+          {(site) => (
+            <SiteRow
+              key={site.workshop_id ?? site.resource?.id ?? 0}
+              site={site}
+              view={view}
+              blocked={blocked}
+              hold={hold}
+              owned={false}
+            />
+          )}
+        </Paged>
+      )}
+    </MindCard>
+  )
+}
+
+function HoldingsCard({ view, blocked, hold }: Props) {
+  const earned = view.holdings.reduce(
+    (sum, site) => sum + (site.last_profit ?? 0),
+    0
+  )
+  return (
+    <MindCard
+      title='Holdings'
+      icon={LEDGER_ICON}
+      hint={`The workshops and resources this one owns${view.holdings.length ? `, earning ${earned} at last count` : ''}.`}
+    >
+      {view.holdings.length === 0 ? (
+        <Muted variant='caption'>
+          Owns no works. Give it a workshop from the place where it stands, or a
+          resource from that resource’s page.
+        </Muted>
+      ) : (
+        <Paged items={view.holdings} initial={4} noun={['holding', 'holdings']}>
+          {(site) => (
+            <SiteRow
+              key={`${site.workshop_id ?? 'r'}-${site.resource?.id ?? 0}`}
+              site={site}
+              view={view}
+              blocked={blocked}
+              hold={hold}
+              owned
+            />
+          )}
+        </Paged>
+      )}
+    </MindCard>
+  )
+}
+
+function LedgerRow({
+  row,
+  blocked,
+}: {
+  row: WorksLedger
+  blocked: string | null
+}) {
+  const strike = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/site_profit:remove', {
+          body: { profit_id: row.id },
+        })
+      ),
+  })
+  const busy = why(blocked, strike.isPending)
+  return (
+    <ItemRow
+      icon={LEDGER_ICON}
+      tone={row.profit >= 0 ? 'success' : 'danger'}
+      title={`${row.site} · epoch ${row.epoch}`}
+      meta={`sold ${row.revenue} · inputs ${row.inputs} · wages ${row.wages} · upkeep ${row.upkeep} · taxes ${row.taxes} · invested ${row.invested}${row.owner ? ` · to ${row.owner.name}` : ''}`}
+      badges={
+        <>
+          <Badge variant={row.profit >= 0 ? 'outline' : 'destructive'}>
+            {`${row.profit >= 0 ? 'Profit' : 'Loss'} ${Math.abs(row.profit)}`}
+          </Badge>
+          {row.held.length > 0 && <Badge variant='secondary'>Rewritten</Badge>}
+        </>
+      }
+      actions={
+        <Button
+          size='icon-sm'
+          variant='ghost'
+          aria-label='Strike the entry'
+          disabled={busy !== null}
+          disabledReason={busy ?? undefined}
+          onClick={() => strike.mutate()}
+        >
+          <X />
+        </Button>
+      }
+      editLabel='the figures'
+      editor={
+        <AdjustStats
+          id={`ledger-${row.id}`}
+          inline
+          groups={[
+            {
+              title: 'Figures',
+              fields: [
+                { key: 'revenue', label: 'Sold', value: row.revenue, min: 0 },
+                { key: 'inputs', label: 'Inputs', value: row.inputs, min: 0 },
+                { key: 'wages', label: 'Wages', value: row.wages, min: 0 },
+                { key: 'upkeep', label: 'Upkeep', value: row.upkeep, min: 0 },
+                { key: 'taxes', label: 'Taxes', value: row.taxes, min: 0 },
+                {
+                  key: 'invested',
+                  label: 'Invested',
+                  value: row.invested,
+                  min: 0,
+                },
+                {
+                  key: 'profit',
+                  label: 'Profit',
+                  value: row.profit,
+                  min: -100000,
+                },
+              ],
+            },
+          ]}
+          run={({ key, value }) =>
+            unwrap(
+              api.POST('/api/actions/site_profit:edit', {
+                body: { profit_id: row.id, [key]: value },
+              })
+            )
+          }
+        />
+      }
+    />
+  )
+}
+
+function LedgerCard({ view, blocked }: Props) {
+  return (
+    <MindCard
+      title='Ledger of profits'
+      icon={LEDGER_ICON}
+      hint='What each site sold, what it spent on inputs, wages, upkeep and taxes, and what its owner kept or lost.'
+      wide
+    >
+      {view.ledger.length === 0 ? (
+        <Muted variant='caption'>No profits or losses recorded yet.</Muted>
+      ) : (
+        <Paged items={view.ledger} initial={4} noun={['entry', 'entries']}>
+          {(row) => <LedgerRow key={row.id} row={row} blocked={blocked} />}
+        </Paged>
+      )}
+    </MindCard>
+  )
+}
+
+function ShocksCard({ view }: Props) {
+  return (
+    <MindCard
+      title='Bottlenecks'
+      icon={SHOCK_ICON}
+      hint='Works that stood idle at the last count for want of an input; a shortage here travels down every chain that needs it.'
+    >
+      {view.bottlenecks.length === 0 ? (
+        <Muted variant='caption'>Nothing stood idle for want of inputs.</Muted>
+      ) : (
+        <Paged
+          items={view.bottlenecks}
+          initial={4}
+          noun={['bottleneck', 'bottlenecks']}
+        >
+          {(row) => (
+            <ItemRow
+              key={`${row.step}-${row.missing}`}
+              icon={SHOCK_ICON}
+              tone='warning'
+              title={row.step}
+              meta={`${row.workshop} · short of ${row.missing.toLowerCase()} · epoch ${row.epoch}`}
+            />
+          )}
+        </Paged>
+      )}
+    </MindCard>
+  )
+}
+
 function Headline({ view }: { view: Works }) {
   const supply = view.energy.reduce((sum, row) => sum + row.supply, 0)
   const short = view.energy.reduce((sum, row) => sum + row.short, 0)
@@ -750,6 +1092,14 @@ export function WorksSection({ nodeId }: { nodeId: number }) {
           {view.community && (
             <StoresCard view={view} blocked={blocked} hold={hold} />
           )}
+          {view.community && (
+            <SitesCard view={view} blocked={blocked} hold={hold} />
+          )}
+          {view.community && (
+            <ShocksCard view={view} blocked={blocked} hold={hold} />
+          )}
+          <HoldingsCard view={view} blocked={blocked} hold={hold} />
+          <LedgerCard view={view} blocked={blocked} hold={hold} />
           <LandCard view={view} blocked={blocked} hold={hold} />
         </div>
         <ControlPanel

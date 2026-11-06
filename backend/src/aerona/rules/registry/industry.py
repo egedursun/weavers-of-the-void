@@ -96,3 +96,33 @@ class QualityRules:
 class SubstitutionRules:
     price_pct: int = rule(100, 0, 400, G, "How strongly the local price orders what people eat and burn first (%)")
     liking_pct: int = rule(100, 0, 400, G, "How strongly a people's liking for a food orders what they eat first (%)")
+
+
+@dataclass(frozen=True)
+class OwnershipRules:
+    wage_per_10_workers: int = rule(3, 0, 100, G, "Value ten workers at a site are paid each epoch")
+    upkeep_per_level: int = rule(4, 0, 100, G, "Value each level of a workshop costs its owner to keep each epoch")
+    invest_pct: int = rule(20, 0, 100, G, "Share of a site's profit that goes into its settlement's investment pool (%)")
+    wealth_per_value: int = rule(60, 1, 1000, G, "Value of profit that raises a mortal owner's wealth by one point")
+    prosperity_per_value: int = rule(80, 1, 1000, G, "Value of wages or profit that raises a community's prosperity by one point")
+    lobby_tax_pct: int = rule(12, 0, 100, G, "Share of revenue paid in taxes from which owners lobby for lower taxes (%)")
+    lobby_progress: int = rule(10, 0, 100, G, "How far one epoch of heavy taxes pushes an owning faction's demand for lower taxes")
+    law_progress: int = rule(10, 0, 100, G, "How far a law that bars a better method pushes an owning faction to abolish it")
+    war_owner_pct: int = rule(25, 0, 400, G, "How much each owner of works starved of a resource raises the chance of a war to seize it (%)")
+    price_per_level: int = rule(40, 0, 1000, G, "Value a workshop fetches for each of its levels when it is bought")
+
+
+@dataclass(frozen=True)
+class DrinkRules:
+    needed_at: int = rule(40, 0, 100, G, "Liking for a drink from which a people needs drink rather than enjoys it")
+    per_1000: int = rule(4, 1, 100, G, "Drink a thousand people want each epoch")
+    need_pct: int = rule(60, 0, 100, G, "How strongly a lack of drink weighs on a people that needs it (%)")
+    pleasure: int = rule(8, 0, 50, G, "How much plentiful drink lifts the pleasure of a people that only enjoys it")
+
+
+@dataclass(frozen=True)
+class MineRules:
+    depth_pct: int = rule(100, 0, 400, G, "How much more often a mine caves in as it goes deeper, at full depth (%)")
+    support_pct: int = rule(60, 0, 100, G, "How much hard rock holds the galleries up, at full hardness (%)")
+    pumped_flood_pct: int = rule(50, 0, 100, G, "How much pumped shafts keep water out of a mine (%)")
+    fire_cave_pct: int = rule(30, 0, 400, G, "How much more often fire-set galleries cave in (%)")

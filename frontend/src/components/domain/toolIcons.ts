@@ -157,6 +157,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   persuade: Megaphone,
   trade_lore: ScrollText,
   choose_method: Factory,
+  buy_workshop: KeyRound,
   produce_item: Package,
   build_structure: Castle,
   create_language: Languages,

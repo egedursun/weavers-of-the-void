@@ -2,16 +2,21 @@ from pydantic import Field
 from sqlalchemy import select
 
 from aerona.catalog.methods import ENERGY_LABELS, METHODS, POLLUTANT_LABELS, PROCESS_LABELS
+from aerona.catalog.production import WORKSHOP_LABELS
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.industry import ENERGY_COLUMNS, POLLUTION_COLUMNS, CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
+from aerona.db.tables.node import NodeRow
+from aerona.db.tables.ownership import LEDGER_COLUMNS, SiteProfitRow
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.industry import EnergyKind, MethodKind, Pollutant, ProcessKind
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 SPAN = 100
-STORE_FIELDS = ("heat_need", "tools_worn", "spoiled", "preserved", "meal_quality")
+STORE_FIELDS = ("heat_need", "tools_worn", "spoiled", "preserved", "meal_quality", "drink")
 
 
 class SetMethod(Command):
@@ -38,6 +43,7 @@ class SetIndustry(Command):
     spoiled: int | None = Field(default=None, ge=0)
     preserved: int | None = Field(default=None, ge=0)
     meal_quality: int | None = Field(default=None, ge=0, le=SPAN)
+    drink: int | None = Field(default=None, ge=0, le=SPAN)
     hold: bool = True
 
 
@@ -60,6 +66,28 @@ class PurifyLand(Command):
 
 class PollutionTarget(Command):
     region_id: int
+
+
+class SetWorkshopOwner(Command):
+    community_id: int
+    kind: WorkshopKind
+    owner_id: int | None = None
+    hold: bool = True
+
+
+class EditSiteProfit(Command):
+    profit_id: int
+    revenue: int | None = Field(default=None, ge=0)
+    inputs: int | None = Field(default=None, ge=0)
+    wages: int | None = Field(default=None, ge=0)
+    upkeep: int | None = Field(default=None, ge=0)
+    taxes: int | None = Field(default=None, ge=0)
+    invested: int | None = Field(default=None, ge=0)
+    profit: int | None = None
+
+
+class SiteProfitTarget(Command):
+    profit_id: int
 
 
 def held(locked: list[str] | None, fields: list[str], hold: bool) -> list[str]:
@@ -182,3 +210,46 @@ async def remove_pollution(scope: PlayerScope, command: PollutionTarget) -> Effe
     await scope.session.delete(row)
     await scope.session.flush()
     return Effect("The record of its pollution was wiped.", target_node_id=command.region_id)
+
+
+@player_action("workshop:owner", ActionKind.EDIT_RECORD)
+async def set_workshop_owner(scope: PlayerScope, command: SetWorkshopOwner) -> Effect:
+    place = await community(scope, command.community_id)
+    workshop = await scope.session.scalar(select(WorkshopRow).where(WorkshopRow.community_entity_id == place.id, WorkshopRow.kind == command.kind))
+    if workshop is None:
+        raise NotFoundError("That place has no such workshop.")
+    if command.owner_id is not None and await scope.session.get(NodeRow, command.owner_id) is None:
+        raise ValidationFailedError("That owner does not exist.")
+    workshop.owner_node_id = command.owner_id
+    workshop.held = command.hold
+    await scope.session.flush()
+    owner = await scope.session.get(NodeRow, command.owner_id) if command.owner_id is not None else None
+    told = f"now belongs to {owner.name}" if owner is not None else "has no owner until the place assigns one"
+    return Effect(f"The {WORKSHOP_LABELS[command.kind].lower()} of {place.name} {told}.", target_node_id=command.owner_id or place.id)
+
+
+@player_action("site_profit:edit", ActionKind.EDIT_RECORD)
+async def edit_site_profit(scope: PlayerScope, command: EditSiteProfit) -> Effect:
+    row = await scope.session.get(SiteProfitRow, command.profit_id)
+    if row is None:
+        raise NotFoundError("No such entry in the ledger of profits.")
+    touched = [name for name in (*LEDGER_COLUMNS, "profit") if getattr(command, name) is not None]
+    if not touched:
+        raise ValidationFailedError("Set at least one figure.")
+    for name in touched:
+        setattr(row, name, getattr(command, name))
+    row.locked = sorted(set(row.locked or []) | set(touched))
+    await scope.session.flush()
+    site = row.site.replace("_", " ")
+    return Effect(f"The ledger now shows a profit of {row.profit} from {site}.", target_node_id=row.owner_node_id or row.community_node_id)
+
+
+@player_action("site_profit:remove", ActionKind.EDIT_RECORD)
+async def remove_site_profit(scope: PlayerScope, command: SiteProfitTarget) -> Effect:
+    row = await scope.session.get(SiteProfitRow, command.profit_id)
+    if row is None:
+        raise NotFoundError("No such entry in the ledger of profits.")
+    target = row.owner_node_id or row.community_node_id
+    await scope.session.delete(row)
+    await scope.session.flush()
+    return Effect("The entry was struck from the ledger of profits.", target_node_id=target)

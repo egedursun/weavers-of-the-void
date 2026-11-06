@@ -13,6 +13,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import WarRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, ENDED_STATUSES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
@@ -123,7 +124,7 @@ async def _forgetting(ctx: TickContext, holdings: KnowledgeHoldings) -> int:
     keepers = await keepers_by_place(ctx.session, ctx.rules)
     rng = ctx.rng("forgetting")
     forgotten = 0
-    for community in await canon(ctx.session, COMMUNITY_TYPES):
+    for community in unheld(await canon(ctx.session, COMMUNITY_TYPES)):
         if forgotten >= settings.dark_age_forget_cap:
             break
         known = holdings.known_by(community.id)

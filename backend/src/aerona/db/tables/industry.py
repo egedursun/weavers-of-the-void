@@ -36,6 +36,7 @@ class CommunityIndustryRow(Base):
         at_least("spoiled", 0),
         at_least("preserved", 0),
         between("meal_quality", PERCENT_MIN, PERCENT_MAX),
+        between("drink", PERCENT_MIN, PERCENT_MAX),
         at_least("epoch", 0),
     )
 
@@ -53,6 +54,7 @@ class CommunityIndustryRow(Base):
     spoiled: Mapped[int] = mapped_column(default=0)
     preserved: Mapped[int] = mapped_column(default=0)
     meal_quality: Mapped[int] = mapped_column(default=50)
+    drink: Mapped[int] = mapped_column(default=0, server_default="0")
     epoch: Mapped[int]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

@@ -1,5 +1,6 @@
-from aerona.db.tables.economy import CommunityStockRow, ProductionRunRow
+from aerona.db.tables.economy import CommunityStockRow, ProductionRunRow, ResourceProfileRow, WorkshopRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
+from aerona.db.tables.ownership import SiteProfitRow
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
 
 WORKS = "section-works"
@@ -131,5 +132,72 @@ INDUSTRY_MECHANICS: tuple[Mechanic, ...] = (
         exposure=Exposure.CONTEXT,
         targets=COMMUNITIES,
         couplings=(Coupling(S.MIND, "a people's liking for a food orders what it eats first", E.MODIFIER, "substitution.liking_pct"),),
+    ),
+    Mechanic(
+        key="site_ownership",
+        spec_item="S6.3/RP2",
+        title="Every workshop and resource has an owner who takes its profit after inputs, wages, upkeep and taxes, and puts a share into the town",
+        subsystem=S.ECONOMY,
+        phases=("site_profits",),
+        surface=Surface(drawer=WORKS),
+        backfill="none: owners are given and ledgers kept from the next epoch",
+        fields=("owner_node_id", "revenue", "inputs", "wages", "upkeep", "taxes", "profit", "invested"),
+        tables=(SiteProfitRow.__tablename__, WorkshopRow.__tablename__),
+        exposure=Exposure.TOOL,
+        tools=("buy_workshop",),
+        targets=("settlement", "people", "faction", "cult", "polity", "house", "mortal"),
+        couplings=(
+            Coupling(S.POLITY, "taxes on sales fill the settlement's treasury", E.FLOW),
+            Coupling(S.DEMOGRAPHY, "wages lift the prosperity of the working community", E.FLOW, "ownership.prosperity_per_value"),
+            Coupling(
+                S.SOCIAL, "profits fill the treasuries of guilds, cults, realms and houses and the purses of mortals", E.FLOW, "ownership.wealth_per_value"
+            ),
+            Coupling(S.ECONOMY, "a share of profit goes into the investment pool", E.FLOW, "ownership.invest_pct"),
+        ),
+    ),
+    Mechanic(
+        key="owner_lobbying",
+        spec_item="S6.3/RP2",
+        title="Owners lobby for lower taxes, against laws that bar better methods, and for wars to seize what their works lack",
+        subsystem=S.POLITY,
+        phases=("site_profits", "industry_methods", "barter_and_rivalry"),
+        surface=Surface(drawer=WORKS),
+        backfill="none: owners lobby from the next epoch",
+        fields=("taxes", "revenue"),
+        tables=(SiteProfitRow.__tablename__,),
+        targets=("faction", "polity", "settlement"),
+        couplings=(
+            Coupling(S.POLITY, "heavy taxes push owning guilds to demand lower taxes", E.TRIGGER, "ownership.lobby_progress"),
+            Coupling(S.LAW, "a ban on magic bars magic methods and owners press to abolish it", E.RULE_SWITCH, "ownership.law_progress"),
+            Coupling(S.WAR, "owners of starved works raise the chance of a war to seize a resource", E.MODIFIER, "ownership.war_owner_pct"),
+        ),
+    ),
+    Mechanic(
+        key="mine_support",
+        spec_item="S6.3/RP2",
+        title="Deeper galleries cave in more, hard rock holds them up, pumps keep water out and fire-setting weakens them",
+        subsystem=S.ECONOMY,
+        phases=("resource_economy",),
+        surface=Surface(drawer=WORKS),
+        backfill="none: the depth of a mine is read from its spent reserve",
+        templates=("mining.",),
+        fields=("reserve", "initial_reserve", "extraction_difficulty"),
+        tables=(ResourceProfileRow.__tablename__,),
+        targets=("resource", "settlement", "people"),
+        couplings=(Coupling(S.BODY, "a cave-in crushes and maims the miners", E.TRIGGER, "mines.depth_pct"),),
+    ),
+    Mechanic(
+        key="drink_need",
+        spec_item="S6.3/RP2",
+        title="Brewed drink is a need for peoples who love a drink and a pleasure for the rest",
+        subsystem=S.MIND,
+        phases=("industry_aftermath", "mind_needs"),
+        surface=Surface(drawer=WORKS),
+        backfill="none: drink is reckoned from the next epoch",
+        fields=("drink",),
+        tables=(CommunityIndustryRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("settlement", "people", "mortal"),
+        couplings=(Coupling(S.MIND, "a people that loves a drink thirsts without brewing; others take pleasure in it", E.MODIFIER, "drink.need_pct"),),
     ),
 )

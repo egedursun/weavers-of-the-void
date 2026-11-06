@@ -2,16 +2,19 @@ from collections.abc import Mapping
 from enum import StrEnum
 
 from fastapi import APIRouter, Path
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.schemas.industry import (
+    WorksBottleneckView,
     WorksEnergyView,
+    WorksLedgerView,
     WorksMethodView,
     WorksOptionView,
     WorksPolluterView,
     WorksPollutionView,
+    WorksSiteView,
     WorksStockView,
     WorksStoresView,
     WorksView,
@@ -20,18 +23,25 @@ from aerona.api.schemas.mind import LabelView
 from aerona.api.views.common import node_ref, node_refs
 from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.methods import ENERGY_LABELS, ENERGY_SOURCES, METHODS, PERISHABLE, PROCESS_LABELS, PROCESS_METHODS, TIER_LABELS, default_method
+from aerona.catalog.ownership import OWNER_CLASS, OWNER_LABELS
+from aerona.catalog.production import STEPS, WORKSHOP_LABELS
 from aerona.core.errors import NotFoundError
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import HolderTechniqueRow
-from aerona.db.tables.economy import CommunityStockRow
+from aerona.db.tables.economy import CommunityStockRow, ProductionRunRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
+from aerona.db.tables.ownership import SiteProfitRow
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
 from aerona.domain.enums.environment import CoastKind, ScarKind
-from aerona.domain.enums.industry import EnergyKind, ProcessKind
+from aerona.domain.enums.industry import EnergyKind, OwnerClass, ProcessKind
+from aerona.domain.enums.polity import LawKind
 from aerona.engine.industry.methods import blocked_by
 from aerona.engine.industry.quality import tier_of
+from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.rules.registry import Rules
@@ -49,6 +59,7 @@ async def method_views(session: AsyncSession, community: EntityRow, ground: Regi
     techniques = set(await session.scalars(select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == community.id)))
     levels = (await known_levels(session, [community.id])).get(community.id, {})
     energy = await session.get(CommunityIndustryRow, community.id)
+    banned = (await LawBook.load(session)).in_force(community.id, LawKind.MAGIC_BAN) is not None
     views: list[WorksMethodView] = []
     for process in ProcessKind:
         row = rows.get(process)
@@ -73,6 +84,7 @@ async def method_views(session: AsyncSession, community: EntityRow, ground: Regi
                     band=ground.temperature_band if ground is not None else None,
                     coastal=ground is not None and ground.coast_kind is not CoastKind.NONE,
                     supply=int(getattr(energy, option.energy.value)) if energy is not None else 0,
+                    banned=banned,
                 ),
             )
             for option in PROCESS_METHODS[process]
@@ -121,6 +133,7 @@ def stores_view(rules: Rules, row: CommunityIndustryRow | None) -> WorksStoresVi
         meal_quality=row.meal_quality,
         meal_tier=tier,
         meal_tier_label=TIER_LABELS[tier],
+        drink=row.drink,
         epoch=row.epoch,
         held=list(row.locked or []),
     )
@@ -199,6 +212,123 @@ async def pollution_views(session: AsyncSession, region_ids: list[int]) -> list[
     return views
 
 
+async def last_profits(session: AsyncSession, workshop_ids: list[int], resource_ids: list[int]) -> dict[str, int]:
+    found: dict[str, int] = {}
+    rows = await session.scalars(
+        select(SiteProfitRow)
+        .where(or_(SiteProfitRow.workshop_id.in_(workshop_ids), SiteProfitRow.resource_node_id.in_(resource_ids)))
+        .order_by(SiteProfitRow.epoch, SiteProfitRow.id)
+    )
+    for row in rows:
+        key = f"workshop.{row.workshop_id}" if row.workshop_id is not None else f"resource.{row.resource_node_id}"
+        found[key] = row.profit
+    return found
+
+
+async def site_views(session: AsyncSession, workshops: list[WorkshopRow], resources: list[tuple[int, int, int | None]]) -> list[WorksSiteView]:
+    refs = await node_refs(
+        session,
+        [
+            *(row.community_entity_id for row in workshops),
+            *(row.owner_node_id for row in workshops if row.owner_node_id),
+            *(item for resource in resources for item in resource if item),
+        ],
+    )
+    profits = await last_profits(session, [row.id for row in workshops], [resource for resource, _, _ in resources])
+    views = [
+        WorksSiteView(
+            workshop_id=row.id,
+            kind=row.kind,
+            resource=None,
+            community=refs.get(row.community_entity_id),
+            label=WORKSHOP_LABELS[row.kind],
+            level=row.level,
+            owner=refs.get(row.owner_node_id) if row.owner_node_id is not None else None,
+            owner_class=OWNER_LABELS[OWNER_CLASS.get(row.kind, OwnerClass.COMMUNITY)],
+            held=row.held,
+            last_profit=profits.get(f"workshop.{row.id}"),
+        )
+        for row in workshops
+    ]
+    views.extend(
+        WorksSiteView(
+            workshop_id=None,
+            kind=None,
+            resource=refs.get(resource),
+            community=refs.get(home) if home is not None else None,
+            label=refs[resource].name if resource in refs else "A resource",
+            level=1,
+            owner=refs.get(owner),
+            owner_class="Owned by bond",
+            held=False,
+            last_profit=profits.get(f"resource.{resource}"),
+        )
+        for resource, owner, home in resources
+    )
+    return views
+
+
+async def owned_resources(session: AsyncSession, owner_id: int) -> list[tuple[int, int, int | None]]:
+    bonds = await session.scalars(
+        select(BondRow.target_node_id).where(BondRow.source_node_id == owner_id, BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE)
+    )
+    found: list[tuple[int, int, int | None]] = []
+    for target in bonds:
+        entity = await session.get(EntityRow, target)
+        if entity is not None and entity.entity_type is EntityType.RESOURCE:
+            found.append((target, owner_id, entity.location_id))
+    return found
+
+
+async def ledger_views(session: AsyncSession, node_id: int) -> list[WorksLedgerView]:
+    rows = list(
+        await session.scalars(
+            select(SiteProfitRow)
+            .where(or_(SiteProfitRow.owner_node_id == node_id, SiteProfitRow.community_node_id == node_id))
+            .order_by(SiteProfitRow.epoch.desc(), SiteProfitRow.id.desc())
+        )
+    )
+    refs = await node_refs(session, [item for row in rows for item in (row.owner_node_id, row.community_node_id) if item])
+    return [
+        WorksLedgerView(
+            id=row.id,
+            epoch=row.epoch,
+            site=row.site.replace("_", " "),
+            community=refs.get(row.community_node_id),
+            owner=refs.get(row.owner_node_id) if row.owner_node_id is not None else None,
+            revenue=row.revenue,
+            inputs=row.inputs,
+            wages=row.wages,
+            upkeep=row.upkeep,
+            taxes=row.taxes,
+            profit=row.profit,
+            invested=row.invested,
+            held=list(row.locked or []),
+        )
+        for row in rows
+    ]
+
+
+async def bottleneck_views(session: AsyncSession, community_id: int) -> list[WorksBottleneckView]:
+    latest = await session.scalar(select(func.max(ProductionRunRow.epoch)).where(ProductionRunRow.community_entity_id == community_id))
+    if latest is None:
+        return []
+    rows = await session.scalars(
+        select(ProductionRunRow)
+        .where(ProductionRunRow.community_entity_id == community_id, ProductionRunRow.epoch == latest, ProductionRunRow.bottleneck.is_not(None))
+        .order_by(ProductionRunRow.id)
+    )
+    return [
+        WorksBottleneckView(
+            step=STEPS[row.step].label if row.step in STEPS else row.step.replace("_", " "),
+            workshop=WORKSHOP_LABELS[row.workshop] if row.workshop is not None else "Homes",
+            missing=COMMODITIES[row.bottleneck].label if row.bottleneck is not None else "",
+            epoch=row.epoch,
+        )
+        for row in rows
+    ]
+
+
 @router.get("/works/{node_id}", response_model=WorksView)
 async def works_view(services: ServicesDep, node_id: int = Path(ge=1)) -> WorksView:
     async with reader(services) as session:
@@ -220,6 +350,19 @@ async def works_view(services: ServicesDep, node_id: int = Path(ge=1)) -> WorksV
             stores=stores_view(rules, industry),
             stocks=await stock_views(session, rules, node_id) if community else [],
             pollution=await pollution_views(session, regions),
+            sites=await site_views(
+                session, list(await session.scalars(select(WorkshopRow).where(WorkshopRow.community_entity_id == node_id).order_by(WorkshopRow.id))), []
+            )
+            if community
+            else [],
+            holdings=await site_views(
+                session,
+                list(await session.scalars(select(WorkshopRow).where(WorkshopRow.owner_node_id == node_id).order_by(WorkshopRow.id))),
+                await owned_resources(session, node_id),
+            ),
+            ledger=await ledger_views(session, node_id),
+            bottlenecks=await bottleneck_views(session, node_id) if community else [],
+            workshop_kinds=labels(WORKSHOP_LABELS),
             tiers=labels(TIER_LABELS),
             processes=labels(PROCESS_LABELS),
         )

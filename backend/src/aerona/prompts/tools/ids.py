@@ -175,6 +175,7 @@ class MortalToolId(StrEnum):
     PERSUADE = "persuade"
     TRADE_LORE = "trade_lore"
     CHOOSE_METHOD = "choose_method"
+    BUY_WORKSHOP = "buy_workshop"
 
 
 ToolId = SonToolId | MortalToolId

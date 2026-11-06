@@ -14,6 +14,7 @@ from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind, ExtractionKind, GoodsFlow, HazardKind
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.environment import TerrainKind
+from aerona.domain.enums.industry import MethodKind
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.models.entity_stats import SpeciesStats
@@ -314,6 +315,21 @@ async def strike_hazard(
     )
 
 
+def shaft_factor(ctx: TickContext, book: EconomyBook, resource: EntityRow, profile: ResourceProfileRow, *, community: EntityRow, hazard: HazardKind) -> float:
+    table = ctx.rules.mines
+    depth = (profile.initial_reserve - profile.reserve) / max(1, profile.initial_reserve)
+    props = book.materials.props(resource.world_id, profile.material, profile.world_material_id)
+    hardness = props.hardness if props is not None else PERCENT // 2
+    factor = (1 + depth * table.depth_pct / PERCENT) * max(0.0, 1 - hardness * table.support_pct / PERCENT / PERCENT)
+    process = process_of_kind(extraction_kind(profile))
+    method = method_for(book, community.id, process).kind if process is not None else None
+    if hazard is HazardKind.FLOODED_SHAFT and method is MethodKind.PUMPED_SHAFTS:
+        factor *= 1 - table.pumped_flood_pct / PERCENT
+    if hazard is HazardKind.CAVE_IN and method is MethodKind.FIRE_SETTING:
+        factor *= 1 + table.fire_cave_pct / PERCENT
+    return factor
+
+
 async def roll_hazards(
     ctx: TickContext, book: EconomyBook, resource: EntityRow, profile: ResourceProfileRow, community: EntityRow, *, workers: int
 ) -> HazardKind | None:
@@ -325,6 +341,8 @@ async def roll_hazards(
     if hazard is HazardKind.CAVE_IN and region is not None and region.rainfall >= ctx.rules.mining_hazards.flood_rainfall:
         hazard = HazardKind.FLOODED_SHAFT
     chance = hazard_chance(ctx.rules, hazard, profile.extraction_difficulty, book.skill(community.id, SkillKind.ENGINEERING))
+    if hazard in (HazardKind.CAVE_IN, HazardKind.FLOODED_SHAFT):
+        chance = round_half_up(chance * shaft_factor(ctx, book, resource, profile, community=community, hazard=hazard))
     for year in world_years(ctx.environment, resource.world_id or 0, "mining"):
         if ctx.rng(f"hazard.{resource.id}.{community.id}.{year.year}").chance(chance):
             await strike_hazard(ctx, book, resource, profile, community, workers=workers, hazard=hazard)

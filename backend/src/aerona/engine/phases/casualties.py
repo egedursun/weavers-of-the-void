@@ -488,7 +488,9 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     "table.holder_levels",
     "table.house_members",
     "table.incident_participants",
+    "table.injuries",
     "table.language_profiles",
+    "table.law_jurisdictions",
     "table.lexemes",
     "table.marriages",
     "table.memories",
@@ -497,7 +499,10 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     "table.name_registry",
     "table.nodes",
     "table.passions",
+    "table.personality_values",
+    "table.polity_members",
     "table.routes",
+    "table.spirit_profiles",
     "table.tradition_profiles",
     "table.traits",
     "table.world_maps",
@@ -518,6 +523,7 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     "table.mortal_profiles",
     "table.name_registry",
     "table.sons",
+    "table.spirit_profiles",
 )
 async def disaster_casualties(ctx: TickContext) -> None:
     losses = ctx.rules.casualties

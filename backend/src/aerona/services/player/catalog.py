@@ -1225,6 +1225,15 @@ ECONOMY_ACTIONS = (
     _sync(Meta("pollution:set", "Set and hold how fouled a land is", G.WORLDS), industry.set_pollution, industry.SetPollution, free, ("F24",)),
     _sync(Meta("pollution:purify", "Cleanse the air, water and soil of a land", G.WORLDS), industry.purify, industry.PurifyLand, free, ("F24",)),
     _sync(Meta("pollution:remove", "Wipe a land's record of pollution", G.WORLDS), industry.remove_pollution, industry.PollutionTarget, free, ("F24",)),
+    _sync(Meta("workshop:owner", "Give a workshop to an owner", G.SOCIETY), industry.set_workshop_owner, industry.SetWorkshopOwner, free, ("S6.3/RP2",)),
+    _sync(Meta("site_profit:edit", "Rewrite a ledger entry of profits", G.SOCIETY), industry.edit_site_profit, industry.EditSiteProfit, free, ("S6.3/RP2",)),
+    _sync(
+        Meta("site_profit:remove", "Strike an entry from the ledger of profits", G.SOCIETY),
+        industry.remove_site_profit,
+        industry.SiteProfitTarget,
+        free,
+        ("S6.3/RP2",),
+    ),
     _sync(
         Meta("material:create", "Forge a new material in a world", G.WORLDS),
         economy_depth.create_material,

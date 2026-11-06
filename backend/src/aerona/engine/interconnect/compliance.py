@@ -87,6 +87,7 @@ from aerona.db.tables.military import (
 )
 from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, PersonalityValueRow, PressureRow, SkillRow
 from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
+from aerona.db.tables.ownership import SiteProfitRow
 from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.db.tables.polity import (
     ClaimRow,
@@ -1456,6 +1457,17 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("choose_method", "tend_land"),
         ("industry.",),
         ("7e3748499664",),
+    ),
+    ComplianceRow(
+        "S6.3/RP2",
+        (SiteProfitRow.__tablename__,),
+        ("site_profits", "industry_aftermath"),
+        ("workshop:owner", "site_profit:edit", "site_profit:remove", "resource:owner", "industry:set"),
+        ("WorksSection", "section-works"),
+        ("mortal_context",),
+        ("buy_workshop",),
+        ("mining.",),
+        ("c313c215601c",),
     ),
     ComplianceRow(
         "F30",

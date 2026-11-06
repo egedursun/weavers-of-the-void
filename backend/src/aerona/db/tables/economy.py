@@ -165,6 +165,7 @@ class WorkshopRow(Base):
     idle_epochs: Mapped[int] = mapped_column(default=0)
     held: Mapped[bool] = mapped_column(default=False)
     design_id: Mapped[int | None] = mapped_column(ForeignKey("workshop_designs.id", ondelete="SET NULL"))
+    owner_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"), index=True)
 
 
 class ResourceProfileRow(Base):

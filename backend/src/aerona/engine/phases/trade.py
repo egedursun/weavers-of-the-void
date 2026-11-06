@@ -23,6 +23,7 @@ from aerona.engine.economy.money import MINTERS, MoneyTally, adopt, coin_metal, 
 from aerona.engine.economy.routes import Link, link_weight, trade_links
 from aerona.engine.economy.stocks import epoch_need, holding
 from aerona.engine.environment.book import EnvironmentBook
+from aerona.engine.industry.owners import owners_starved
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -110,7 +111,7 @@ def route_income(
     "table.world_seasons",
     "trade_route.culture",
 )
-@writes("faction.wealth", "people.prosperity", "people.wealth", "settlement.prosperity", "table.entities")
+@writes("faction.wealth", "people.prosperity", "people.wealth", "settlement.prosperity", "settlement.wealth", "table.entities")
 async def trade_income(ctx: TickContext) -> None:
     settings = ctx.rules.trade
     entities = {entity.id: entity for entity in await canon(ctx.session)}
@@ -165,7 +166,8 @@ async def _yields(ctx: TickContext, resource_ids: set[int], wanted: list[Commodi
 
 
 async def _seize(ctx: TickContext, hungry: EntityRow, holder: EntityRow, resource: EntityRow) -> bool:
-    if not ctx.rng(f"seize.{hungry.id}.{holder.id}.{ctx.epoch}").chance(ctx.rules.trade.rivalry_war_chance):
+    pressed = 1 + await owners_starved(ctx.session, hungry.id) * ctx.rules.ownership.war_owner_pct / PERCENT
+    if not ctx.rng(f"seize.{hungry.id}.{holder.id}.{ctx.epoch}").chance(ctx.rules.trade.rivalry_war_chance * pressed):
         return False
     if not await declare_war(ctx, hungry.id, holder.id, f"to seize {resource.name}", cause=WarCause.RESOURCE):
         return False
@@ -229,6 +231,7 @@ async def _seize_from_neighbours(
     "table.holder_levels",
     "table.nodes",
     "table.resource_profiles",
+    "table.workshops",
     "table.world_maps",
 )
 @writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")

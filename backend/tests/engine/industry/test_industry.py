@@ -5,21 +5,25 @@ from sqlalchemy import select
 from aerona.catalog.methods import METHODS
 from aerona.db.tables.culture import HolderTechniqueRow, IdeologyAdherentRow, IdeologyTenetRow
 from aerona.db.tables.demography import LabourRow
-from aerona.db.tables.economy import CommunityStockRow, ProductionRunRow, WorkshopRow
+from aerona.db.tables.economy import CommunityStockRow, ProductionRunRow, ResourceProfileRow, WorkshopRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.factions import FactionGoalRow, FactionProfileRow
 from aerona.db.tables.industry import RegionPollutionRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.culture import IdeologyTenet, Technique
 from aerona.domain.enums.demography import Job
-from aerona.domain.enums.economy import CommodityKind, WorkshopKind
+from aerona.domain.enums.economy import CommodityKind, HazardKind, WorkshopKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBand
 from aerona.domain.enums.faction import FactionGoalKind, FactionKind
 from aerona.domain.enums.industry import EnergyKind, MethodKind, Pollutant, ProcessKind, QualityTier
+from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.models.entity_stats import FactionStats, IdeologyStats
 from aerona.engine.economy.book import EconomyBook
+from aerona.engine.economy.extraction import shaft_factor
 from aerona.engine.industry.energy import draw, gauge, industry_row, survival_heat, unmet_pct
-from aerona.engine.industry.methods import MethodTally, adopt, choose_methods, profit, reveres_nature
+from aerona.engine.industry.methods import MethodTally, adopt, allowed, choose_methods, profit, reveres_nature
+from aerona.engine.industry.owners import ProfitTally, barred_works, buy, tend_profits
 from aerona.engine.industry.pollution import PollutionTally, disease_extra, fertility_factor, fish_factor, tend_pollution
 from aerona.engine.industry.quality import premium, tier_of
 from aerona.engine.industry.stores import StoreTally, preserve, spoil, wear_tools
@@ -178,3 +182,63 @@ async def test_works_and_crowds_foul_the_land_which_sickens_and_yields_less(real
     assert book.ground.regions[realm.region.id].scars.get("blighted", 0) > 0
     stored = await realm.session.get(RegionPollutionRow, realm.region.id)
     assert stored is not None and Pollutant.SOIL.value not in stored.locked
+
+
+async def test_owners_take_profit_after_costs_and_taxes_and_lobby_when_taxed(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Tollcross")
+    realm.session.add(SettlementProfileRow(settlement_entity_id=town.id, size_tier=SizeTier.TOWN, tax_rate=40, treasury=0, investment_pool=0))
+    guild = await make(realm.session, "Hammerers", EntityType.FACTION, FactionStats(strength=30), world_id=realm.world.id)
+    realm.session.add(FactionProfileRow(faction_entity_id=guild.id, kind=FactionKind.CRAFT_GUILD, home_entity_id=town.id, treasury=0))
+    forge = WorkshopRow(community_entity_id=town.id, kind=WorkshopKind.FORGE, level=1, built_epoch=1)
+    realm.session.add(forge)
+    await realm.session.flush()
+    realm.session.add(
+        ProductionRunRow(
+            epoch=ctx.epoch,
+            community_entity_id=town.id,
+            step="forge_tools",
+            workshop=WorkshopKind.FORGE,
+            output=CommodityKind.TOOLS,
+            quantity=40,
+            quality=60,
+            inputs={"ore": 5},
+            workers=20,
+            method=MethodKind.BLOOMERY,
+        )
+    )
+    await realm.session.flush()
+    book = await loaded(realm)
+    tally = ProfitTally()
+    rows = await tend_profits(ctx, book, tally)
+    assert forge.owner_node_id == guild.id and tally.owned == 1
+    assert len(rows) == 1 and rows[0].owner_node_id == guild.id and rows[0].taxes > 0 and rows[0].revenue > rows[0].inputs
+    profile = await realm.session.get(FactionProfileRow, guild.id)
+    town_profile = await realm.session.get(SettlementProfileRow, town.id)
+    assert profile is not None and town_profile is not None
+    assert town_profile.treasury == rows[0].taxes and town_profile.investment_pool == rows[0].invested
+    assert profile.treasury == max(0, rows[0].profit - rows[0].invested)
+    goal = await realm.session.scalar(select(FactionGoalRow).where(FactionGoalRow.faction_entity_id == guild.id))
+    assert goal is not None and goal.kind is FactionGoalKind.LOWER_TAXES and tally.lobbied == 1
+    buyer = await settlement(realm, "Coinford")
+    realm.session.add(SettlementProfileRow(settlement_entity_id=buyer.id, size_tier=SizeTier.TOWN, treasury=500))
+    await realm.session.flush()
+    assert await buy(ctx, forge, buyer.id) == RULES.ownership.price_per_level and forge.owner_node_id == buyer.id
+
+
+async def test_magic_bans_bar_magic_methods_and_deep_soft_mines_cave_in_more(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Hexley")
+    book = await loaded(realm)
+    industry_row(ctx, book, town.id).magic = 50
+    alembic = METHODS[MethodKind.ARCANE_ALEMBIC]
+    assert "forbids magic" in (allowed(book, town, alembic, banned=True) or "")
+    assert barred_works(book, {town.id}) == {town.id}
+    fresh = ResourceProfileRow(commodity=CommodityKind.ORE, reserve=100, initial_reserve=100, richness=50, extraction_difficulty=50, quality=50)
+    spent = ResourceProfileRow(commodity=CommodityKind.ORE, reserve=10, initial_reserve=100, richness=50, extraction_difficulty=50, quality=50)
+    shallow = shaft_factor(ctx, book, realm.region, fresh, community=town, hazard=HazardKind.CAVE_IN)
+    deep = shaft_factor(ctx, book, realm.region, spent, community=town, hazard=HazardKind.CAVE_IN)
+    assert deep > shallow > 0
+    await adopt(ctx, book, town, METHODS[MethodKind.PUMPED_SHAFTS], MethodTally())
+    dry = shaft_factor(ctx, book, realm.region, spent, community=town, hazard=HazardKind.FLOODED_SHAFT)
+    assert dry < shaft_factor(ctx, book, realm.region, spent, community=town, hazard=HazardKind.CAVE_IN)

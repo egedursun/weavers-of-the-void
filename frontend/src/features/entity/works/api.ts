@@ -12,6 +12,9 @@ export type WorksStock = components['schemas']['WorksStockView']
 export type WorksPollution = components['schemas']['WorksPollutionView']
 export type WorksStores = components['schemas']['WorksStoresView']
 export type MethodKind = components['schemas']['MethodKind']
+export type WorksSite = components['schemas']['WorksSiteView']
+export type WorksLedger = components['schemas']['WorksLedgerView']
+export type WorkshopKind = components['schemas']['WorkshopKind']
 
 export function worksKey(nodeId: number) {
   return [...loreKeys.entity(nodeId), 'works'] as const

@@ -96,7 +96,17 @@ from aerona.rules.registry.harshness import HarshnessRules
 from aerona.rules.registry.heroes import HeroesRules
 from aerona.rules.registry.image_gen import ImageGenRules
 from aerona.rules.registry.incitement import IncitementRules
-from aerona.rules.registry.industry import EnergyRules, MethodRules, PollutionRules, QualityRules, StoreRules, SubstitutionRules
+from aerona.rules.registry.industry import (
+    DrinkRules,
+    EnergyRules,
+    MethodRules,
+    MineRules,
+    OwnershipRules,
+    PollutionRules,
+    QualityRules,
+    StoreRules,
+    SubstitutionRules,
+)
 from aerona.rules.registry.intervention_costs import InterventionCostsRules
 from aerona.rules.registry.intervention_effects import InterventionEffectsRules
 from aerona.rules.registry.items import EnchantmentsRules, ItemPowersRules
@@ -319,6 +329,9 @@ class Rules:
     stores: StoreRules = field(default_factory=StoreRules)
     quality: QualityRules = field(default_factory=QualityRules)
     substitution: SubstitutionRules = field(default_factory=SubstitutionRules)
+    ownership: OwnershipRules = field(default_factory=OwnershipRules)
+    drink: DrinkRules = field(default_factory=DrinkRules)
+    mines: MineRules = field(default_factory=MineRules)
     local_renown: LocalRenownRules = field(default_factory=LocalRenownRules)
     currencies: CurrencyRules = field(default_factory=CurrencyRules)
     lore_trade: LoreTradeRules = field(default_factory=LoreTradeRules)

@@ -1,7 +1,7 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.mind import LabelView
 from aerona.api.schemas.records import NodeRef
-from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.industry import EnergyKind, MethodKind, ProcessKind, QualityTier
 from aerona.domain.enums.material import MaterialKind
 
@@ -83,8 +83,45 @@ class WorksStoresView(ApiModel):
     meal_quality: int
     meal_tier: QualityTier
     meal_tier_label: str
+    drink: int
     epoch: int | None
     held: list[str]
+
+
+class WorksSiteView(ApiModel):
+    workshop_id: int | None
+    kind: WorkshopKind | None
+    resource: NodeRef | None
+    community: NodeRef | None
+    label: str
+    level: int
+    owner: NodeRef | None
+    owner_class: str
+    held: bool
+    last_profit: int | None
+
+
+class WorksLedgerView(ApiModel):
+    id: int
+    epoch: int
+    site: str
+    community: NodeRef | None
+    owner: NodeRef | None
+    revenue: int
+    inputs: int
+    wages: int
+    upkeep: int
+    taxes: int
+    profit: int
+    invested: int
+    held: list[str]
+
+
+class WorksBottleneckView(ApiModel):
+    step: str
+    workshop: str
+    missing: str
+    epoch: int
 
 
 class WorksView(ApiModel):
@@ -96,5 +133,10 @@ class WorksView(ApiModel):
     stores: WorksStoresView | None
     stocks: list[WorksStockView]
     pollution: list[WorksPollutionView]
+    sites: list[WorksSiteView]
+    holdings: list[WorksSiteView]
+    ledger: list[WorksLedgerView]
+    bottlenecks: list[WorksBottleneckView]
+    workshop_kinds: list[LabelView]
     tiers: list[LabelView]
     processes: list[LabelView]

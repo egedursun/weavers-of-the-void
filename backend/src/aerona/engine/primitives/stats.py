@@ -1,3 +1,5 @@
+from typing import get_args
+
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.constants.engine import UNBOUNDED_STAT
 from aerona.constants.units import PERCENT
@@ -34,10 +36,23 @@ def stat(entity: EntityRow, key: str) -> int | None:
     return clamp_to_field(entity, key, combine(base, contributions).value)
 
 
+def model_bounds(entity: EntityRow, key: str) -> tuple[int, int | None]:
+    info = type(entity.stats).model_fields.get(key)
+    low, high = 0, None
+    stack: list[object] = [info.annotation] if info is not None else []
+    while stack:
+        item = stack.pop()
+        for meta in getattr(item, "metadata", []):
+            low = int(getattr(meta, "ge", low))
+            high = int(meta.le) if hasattr(meta, "le") else high
+        stack.extend(get_args(item))
+    return low, high
+
+
 def clamp_to_field(entity: EntityRow, key: str, value: float) -> int:
     live = LIVE_MODIFIERS.get()
     field = ENTITY_TYPES[entity.entity_type].stat(key)
-    low, high = field.bounds(live.rules) if field is not None and live is not None else (0, None)
+    low, high = field.bounds(live.rules) if field is not None and live is not None else model_bounds(entity, key)
     bounded = max(low, round_half_up(value))
     return bounded if high is None else min(high, bounded)
 

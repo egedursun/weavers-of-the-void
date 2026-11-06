@@ -3,10 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.methods import ENERGY_LABELS, METHODS, PROCESS_LABELS, TIER_LABELS
+from aerona.catalog.production import WORKSHOP_LABELS
 from aerona.db.tables.demography import LabourRow
-from aerona.db.tables.economy import ResourceProfileRow, TradeRouteProfileRow
+from aerona.db.tables.economy import ResourceProfileRow, TradeRouteProfileRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
+from aerona.db.tables.ownership import SiteProfitRow
 from aerona.domain.enums.entity import SOCIETY_TYPES
 from aerona.domain.enums.industry import EnergyKind
 from aerona.domain.enums.society import Commodity
@@ -21,6 +23,7 @@ from aerona.rules.registry import Rules
 from aerona.tools.framework.economy_lines import Names, commodity_lines, currency_line, debt_lines, loan_lines, route_line
 
 SHORT_INDEX = 50
+PROFITS_SHOWN = 3
 
 
 async def job_of(session: AsyncSession, rules: Rules, me: EntityRow, home: EntityRow) -> str:
@@ -77,12 +80,12 @@ async def stores_for(session: AsyncSession, rules: Rules, me: EntityRow) -> Stor
         currency=f"{coin.name} of {coin.metal}, purity {coin.purity}, trust {coin.trust}" if coin is not None else "",
         debts=debts,
         loans=loans,
-        works=await works_lines(session, rules, home),
+        works=await works_lines(session, rules, home, me),
         job=await job_of(session, rules, me, home) if me.id != home.id else "",
     )
 
 
-async def works_lines(session: AsyncSession, rules: Rules, home: EntityRow) -> list[str]:
+async def works_lines(session: AsyncSession, rules: Rules, home: EntityRow, me: EntityRow) -> list[str]:
     methods = list(
         await session.scalars(select(CommunityMethodRow).where(CommunityMethodRow.community_node_id == home.id).order_by(CommunityMethodRow.process))
     )
@@ -98,6 +101,13 @@ async def works_lines(session: AsyncSession, rules: Rules, home: EntityRow) -> l
         lines.append(
             f"meals {TIER_LABELS[tier_of(rules, row.meal_quality)].lower()}; spoiled {row.spoiled}, preserved {row.preserved}, tools worn {row.tools_worn}"
         )
+    owned = list(await session.scalars(select(WorkshopRow).where(WorkshopRow.owner_node_id.in_([home.id, me.id])).order_by(WorkshopRow.id)))
+    if owned:
+        lines.append("owns " + ", ".join(f"the {WORKSHOP_LABELS[row.kind].lower()} of level {row.level}" for row in owned))
+    recent = select(SiteProfitRow).where(SiteProfitRow.owner_node_id.in_([home.id, me.id])).order_by(SiteProfitRow.epoch.desc())
+    gains = list(await session.scalars(recent.limit(PROFITS_SHOWN)))
+    if gains:
+        lines.append("last profits: " + ", ".join(f"{row.site.replace('_', ' ')} {row.profit} (taxes {row.taxes})" for row in gains))
     top = (await RegionAtlas.load(session)).top_region(home.id)
     fouled = await session.get(RegionPollutionRow, top) if top is not None else None
     if fouled is not None and max(fouled.air, fouled.water, fouled.soil) > 0:

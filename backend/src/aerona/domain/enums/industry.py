@@ -80,3 +80,12 @@ class MethodKind(StrEnum):
     DRYING = "drying"
     ICING = "icing"
     MAGIC_KEEPING = "magic_keeping"
+
+
+class OwnerClass(StrEnum):
+    GUILD = "guild"
+    MERCHANTS = "merchants"
+    CULT = "cult"
+    REALM = "realm"
+    HOUSE = "house"
+    COMMUNITY = "community"

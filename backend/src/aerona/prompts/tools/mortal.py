@@ -62,6 +62,11 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "quality, tool wear and pollution, and a method that needs fewer hands puts some out of work. 1 action.",
         {"method": "The method to take up"},
     ),
+    T.BUY_WORKSHOP: ToolText(
+        "You buy a workshop of your community from whoever owns it, paying its price from your wealth or treasury. "
+        "Its profit (what it sells, less inputs, wages, upkeep and taxes) then comes to you, and so do its losses. 1 action.",
+        {"kind": "The kind of workshop to buy"},
+    ),
     T.TRADE_LORE: ToolText(
         "You trade a piece of lore you hold (a technique, a hidden site, knowledge of a land or a prophecy) to a neighbour who lacks it. "
         "Rarer lore is worth more, and each telling makes it less rare. You are paid in wealth or in renown for wisdom. 1 action.",

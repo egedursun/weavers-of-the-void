@@ -3,7 +3,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
+from aerona.db.tables.ownership import SiteProfitRow
+from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.industry import MethodKind, ProcessKind
 from aerona.services.player import industry
@@ -49,3 +52,24 @@ async def test_the_god_fouls_cleanses_and_wipes_a_land(scope: PlayerScope, sessi
     city = await make_entity(session, "Cray", EntityType.SETTLEMENT, world_id=world.world.id, location_id=world.region.id)
     with pytest.raises(ValidationFailedError):
         await industry.set_pollution(scope, industry.SetPollution(region_id=city.id, air=10))
+
+
+async def test_the_god_gives_a_workshop_and_rewrites_and_strikes_its_ledger(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
+    city = await make_entity(session, "Dunmere", EntityType.SETTLEMENT, world_id=world.world.id, location_id=world.region.id)
+    lord = await make_entity(session, "Orrin", EntityType.MORTAL, world_id=world.world.id, location_id=city.id)
+    forge = WorkshopRow(community_entity_id=city.id, kind=WorkshopKind.FORGE, level=2, built_epoch=1)
+    session.add(forge)
+    await session.flush()
+    await industry.set_workshop_owner(scope, industry.SetWorkshopOwner(community_id=city.id, kind=WorkshopKind.FORGE, owner_id=lord.id))
+    assert forge.owner_node_id == lord.id and forge.held
+    await industry.set_workshop_owner(scope, industry.SetWorkshopOwner(community_id=city.id, kind=WorkshopKind.FORGE, owner_id=None, hold=False))
+    assert forge.owner_node_id is None and not forge.held
+    with pytest.raises(NotFoundError):
+        await industry.set_workshop_owner(scope, industry.SetWorkshopOwner(community_id=city.id, kind=WorkshopKind.MILL, owner_id=lord.id))
+    entry = SiteProfitRow(epoch=1, owner_node_id=lord.id, community_node_id=city.id, workshop_id=forge.id, site="forge", revenue=90, profit=40, locked=[])
+    session.add(entry)
+    await session.flush()
+    await industry.edit_site_profit(scope, industry.EditSiteProfit(profit_id=entry.id, profit=-15, taxes=12))
+    assert entry.profit == -15 and entry.taxes == 12 and set(entry.locked) == {"profit", "taxes"}
+    await industry.remove_site_profit(scope, industry.SiteProfitTarget(profit_id=entry.id))
+    assert await session.get(SiteProfitRow, entry.id) is None

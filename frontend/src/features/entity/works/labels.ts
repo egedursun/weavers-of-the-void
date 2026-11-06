@@ -9,6 +9,9 @@ import {
   Flame,
   FlaskConical,
   Gem,
+  HandCoins,
+  KeyRound,
+  TriangleAlert,
   Hammer,
   Leaf,
   Mountain,
@@ -77,3 +80,6 @@ export const TIER_TONE: Record<string, Named['tone']> = {
 
 export const TIER_ICON = Gem
 export const TOOL_ICON = Hammer
+export const OWNER_ICON = KeyRound
+export const LEDGER_ICON = HandCoins
+export const SHOCK_ICON = TriangleAlert

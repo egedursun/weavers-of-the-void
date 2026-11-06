@@ -160,6 +160,7 @@ from aerona.db.tables.mind import (
 from aerona.db.tables.mortal import KindVariantRow, MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.db.tables.motifs import MotifOverrideRow
 from aerona.db.tables.node import NameRegistryRow, NodeRow
+from aerona.db.tables.ownership import SiteProfitRow
 from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.db.tables.polity import (
     ClaimRow,
@@ -437,6 +438,7 @@ __all__ = [
     "SettlementProfileRow",
     "SettlementTreasuryRow",
     "SiegeRow",
+    "SiteProfitRow",
     "SkillRow",
     "SkyEventRow",
     "SocialCircleRow",

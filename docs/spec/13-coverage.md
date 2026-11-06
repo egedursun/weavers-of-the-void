@@ -49,7 +49,7 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | G1R.3.25 | gap | Musical, poetic and dance forms generated per culture | §1R.3 | → S7.5 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.3.26 | gap | Performance troupes, scholars writing books on specific topics | §1R.3 | → S7.4/RP2, S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.3.27 | gap | Ethics per civilisation (killing, theft, slavery, torture, eating sapients…) with levels | §1R.3 | → F16 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.28 | gap | Food preparation, brewing, spoilage, vermin in stores, alcohol need | §1R.3 | → S6.3/RP2, F24 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.3.28 | gap | Food preparation, brewing, spoilage, vermin in stores, alcohol need | §1R.3 | → S6.3/RP2, F24 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.3.29 | gap | Hospital work: diagnosis, setting bones, suturing, dressing, crutches, traction | §1R.3 | → F23, S7.2/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.3.30 | gap | Justice: crimes with witnesses, investigations, interrogation, sentences | §1R.3 | → S4.5/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.3.31 | gap | Nobles' demands (room quality) and mandates (production orders, export bans) | §1R.3 | → S4.6/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
@@ -64,7 +64,7 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | G1R.3.40 | gap | Ghosts of the unburied with types, put to rest by memorials | §1R.3 | → S3.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.3.41 | gap | Per-site reputation of a character (hero, monster slayer, troublemaker) | §1R.3 | → F19 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.3.42 | gap | Sites with structure: towers, vaults, lairs, hamlets, monasteries, camps, with ownership history | §1R.3 | → S6.2/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.43 | gap | Cave-ins and structural support in mines | §1R.3 | → S6.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.3.43 | gap | Cave-ins and structural support in mines | §1R.3 | → S6.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.3.44 | gap | Sleep, fatigue, thirst, cleanliness (as aggregates at epoch scale) | §1R.3 | → F14 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.3.45 | gap | Language translation of names: every name has a meaning in its language | §1R.3 | → S8.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.4.1 | gap | Orbital elements: semi-major axis, eccentricity, inclination, period, resonance | §1R.4 | → S10.9 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
@@ -131,7 +131,7 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | G1R.5.35 | gap | Psychological warfare: terror, propaganda, atrocity backlash | §1R.5 | → S5.8/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.6.1 | gap | Alternative production methods for the same good | §1R.6 | → F24 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.6.2 | gap | Wages per job and standard of living per class | §1R.6 | → S4.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.6.3 | gap | Ownership of workplaces (nobles, guilds, state, cult, households) and profit distribution | §1R.6 | → S6.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.6.3 | gap | Ownership of workplaces (nobles, guilds, state, cult, households) and profit distribution | §1R.6 | → S6.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.6.4 | gap | Investment pools and construction capacity | §1R.6 | → S4.2/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.6.5 | gap | Market access: share of output that reaches a market | §1R.6 | → S6.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.6.6 | gap | Tariffs, subsidies, embargoes | §1R.6 | → S6.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
@@ -139,7 +139,7 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | G1R.6.8 | gap | Tiered population needs that unlock upgrades (Anno-style) | §1R.6 | → S4.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.6.9 | gap | Class promotion when needs are met | §1R.6 | → S4.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.6.10 | gap | Quality tiers of goods | §1R.6 | → F24 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
-| G1R.6.11 | gap | Storage, spoilage, perishables, preservation | §1R.6 | → S6.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.6.11 | gap | Storage, spoilage, perishables, preservation | §1R.6 | → S6.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.6.12 | gap | Energy sources (muscle, water, wind, magic, divine) | §1R.6 | → F24 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.6.13 | gap | Pollution and its health effects | §1R.6 | → F24 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.6.14 | gap | Interest rates, credit ratings, bankruptcy states, reserves | §1R.6 | → S6.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
@@ -521,7 +521,7 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | S6.2/RP4 | reference-pass | R31 | §6.2 reference pass 4 | — | — | — | — | — | — | — | — | planned |
 | S6.2/RP7 | reference-pass | A5 Dewey 560 | §6.2 reference pass 7 | — | — | — | — | — | — | — | — | planned |
 | S6.3 | section | Resource | §6.3 | engine/economy/{resources,extraction}.py | resource_economy, resource_regeneration | resource:* | ResourceProfile | EconomyBlock | extraction.* | economy.depth_backfill | tests/engine/core/test_tick_phases.py, test_economy_depth.py | done |
-| S6.3/RP2 | reference-pass | R1, R4 | §6.3 reference pass 2 | — | — | — | — | — | — | — | — | planned |
+| S6.3/RP2 | reference-pass | R1, R4 | §6.3 reference pass 2 | catalog/ownership.py (owner class by workshop kind), engine/industry/owners.py, db/tables/ownership.py (site_profits), workshops.owner_node_id, community_industry.drink; extraction.shaft_factor (depth, rock hardness, pumped shafts, fire-setting), trade._seize owner pressure, needs.drink_needs; food chain and spoilage by the F24 preserving methods; cross-wave: chartered company shareholders land with 6.4 RP6 (W18), now the owning faction | site_profits: unowned workshops go to the craft or merchant guild of the place, the cult holding it, the realm, a landed house seated there or the community; every workshop and resource worked this epoch keeps a ledger: sales by price and quality tier, less inputs, wages, upkeep by level and the settlement's tax; taxes fill the settlement treasury, a share of profit its investment pool, wages its prosperity, the rest goes to the owner's treasury or purse (guild, cult, realm, settlement, house, mortal) and losses come out of it; owning guilds taxed past a share of their sales press for lower taxes, owners under a ban on magic that would work magic press to abolish it (and the ban bars magic methods), owners of works starved of a resource raise the chance of a war to seize it; deep galleries cave in more, hard rock holds them, pumped shafts keep floods out and fire-setting weakens them, with crush injuries, deaths, sealed mines and broken-open caverns; brewing sets a place's drink: peoples who love a drink need it and thirst without it, others take pleasure in it; bottlenecks of each epoch stay visible | workshop:owner, site_profit:edit, site_profit:remove, resource:owner, industry:set (drink); mortal tool buy_workshop | WorksSection: works and their owners with an owner picker, holdings of every kind of node with their last profit, the ledger of profits with every figure editable, bottlenecks, drink in stores | stores_for works lines: owned workshops, last profits and taxes, drink | mining.cave_in, mining.flooded_shaft | migration c313c215601c: owners are given and ledgers kept from the next epoch | tests/engine/industry/test_industry.py; tests/services/player/test_industry_levers.py | done |
 | S6.3/RP5 | reference-pass | S-A OCM 38 | §6.3 reference pass 5 | — | — | — | — | — | — | — | — | planned |
 | S6.4 | section | Markets, money and trade routes | §6.4 | engine/economy/{routes,chokepoints,markets,money,realm_credit,toll_polities}.py | trade_flow, banking, markets | route, toll, pact, loan, currency, hoard, price levers | RouteAndMarket, EconomyScreen, HoardControl, LoanForge | EconomyBlock | trade_route.*, banking.*, market.* | economy.route_depth_backfill | tests/engine/port_structure/test_route_depth.py, test_market.py | done |
 | S6.4/RP2 | reference-pass | R4 | §6.4 reference pass 2 | — | — | — | — | — | — | — | — | planned |

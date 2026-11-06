@@ -15,7 +15,7 @@ from aerona.domain.enums.body import OPEN_INJURY_STATES
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.industry import QualityTier
-from aerona.domain.enums.mind import NeedKind, PressureKind, SkillFamily, SkillKind, TraitKind, ValueAxis
+from aerona.domain.enums.mind import NeedKind, PreferenceKind, PressureKind, SkillFamily, SkillKind, TraitKind, ValueAxis
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.society_depth import ShortfallEffect
 from aerona.engine.context import TickContext
@@ -25,7 +25,7 @@ from aerona.engine.industry.quality import at_least
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.mind.book import Values, best_skill, is_locked, mind_of, needs_of, pressures_of, write_needs, write_pressures
 from aerona.engine.mind.memories import strength_of
-from aerona.engine.mind.preferences import nature_bonus
+from aerona.engine.mind.preferences import market_fit, nature_bonus
 from aerona.engine.mortal.kin import close_kin_of, partners_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import known_levels
@@ -156,6 +156,20 @@ async def fine_fare(session: AsyncSession, rules: Rules, community: EntityRow | 
     return rules.quality.fine_meal_sustenance if row is not None and at_least(rules, row.meal_quality, QualityTier.FINE) else 0
 
 
+async def drink_needs(session: AsyncSession, rules: Rules, community: EntityRow | None, needs: dict[NeedKind, int]) -> None:
+    row = await session.get(CommunityIndustryRow, community.id) if community is not None else None
+    if row is None or community is None:
+        return
+    table = rules.drink
+    tastes = await market_fit(session, community.id)
+    thirsty = max((strength for (kind, _), strength in tastes.items() if kind is PreferenceKind.DRINK), default=0) >= table.needed_at
+    if thirsty:
+        current = needs.get(NeedKind.DRINK, FULL)
+        needs[NeedKind.DRINK] = pct(current * (PERCENT - table.need_pct) / PERCENT + row.drink * table.need_pct / PERCENT)
+    else:
+        needs[NeedKind.PLEASURE] = pct(needs.get(NeedKind.PLEASURE, 0) + table.pleasure * row.drink / PERCENT)
+
+
 async def mortal_needs(session: AsyncSession, rules: Rules, mortal: EntityRow, *, values: Values, traits: set[TraitKind], epoch: int) -> dict[NeedKind, int]:
     table = rules.needs
     community = await community_of(session, mortal)
@@ -204,6 +218,7 @@ async def mortal_needs(session: AsyncSession, rules: Rules, mortal: EntityRow, *
     if traits & PLEASURE_TRAITS:
         needs[NeedKind.PLEASURE] = pct(needs[NeedKind.PLEASURE] - table.trait_demand)
     needs.update(await deeper_needs(session, rules, mortal, community, pressures, sustenance=sustenance, wounds=open_wounds, epoch=epoch))
+    await drink_needs(session, rules, community, needs)
     return needs
 
 

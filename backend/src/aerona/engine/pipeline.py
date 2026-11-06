@@ -334,6 +334,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "markets",
     "trade_flow",
     "industry_aftermath",
+    "site_profits",
     "banking",
     "society_mobility",
     "structure_upkeep",

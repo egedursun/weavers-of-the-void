@@ -96,21 +96,20 @@ def blocked_by(
     band: TemperatureBand | None,
     coastal: bool,
     supply: int,
+    banned: bool = False,
 ) -> str | None:
-    if spec.technique is not None and spec.technique not in techniques:
-        return f"needs the technique of {spec.technique.value.replace('_', ' ')}"
-    if spec.branch is not None and levels.get(spec.branch, 0) < spec.level:
-        return f"needs {spec.branch.value.replace('_', ' ')} at level {spec.level}"
-    if spec.climate is not None and band not in spec.climate:
-        return "the climate does not allow it"
-    if spec.coast and not coastal:
-        return "needs a coast"
-    if spec.energy is not EnergyKind.MUSCLE and supply < spec.energy_need:
-        return f"too little {spec.energy.value} energy"
-    return None
+    checks = (
+        (banned and spec.energy is EnergyKind.MAGIC, "the law forbids magic here"),
+        (spec.technique is not None and spec.technique not in techniques, f"needs the technique of {(spec.technique or '').replace('_', ' ')}"),
+        (spec.branch is not None and levels.get(spec.branch, 0) < spec.level, f"needs {(spec.branch or '').replace('_', ' ')} at level {spec.level}"),
+        (spec.climate is not None and band not in spec.climate, "the climate does not allow it"),
+        (spec.coast and not coastal, "needs a coast"),
+        (spec.energy is not EnergyKind.MUSCLE and supply < spec.energy_need, f"too little {spec.energy.value} energy"),
+    )
+    return next((reason for failed, reason in checks if failed), None)
 
 
-def allowed(book: EconomyBook, community: EntityRow, spec: MethodSpec) -> str | None:
+def allowed(book: EconomyBook, community: EntityRow, spec: MethodSpec, *, banned: bool = False) -> str | None:
     region = book.ground.region_of(community.id)
     row = book.industry.get(community.id)
     return blocked_by(
@@ -120,6 +119,7 @@ def allowed(book: EconomyBook, community: EntityRow, spec: MethodSpec) -> str | 
         band=region.temperature_band if region is not None else None,
         coastal=region is not None and region.coast_kind is not CoastKind.NONE,
         supply=int(getattr(row, spec.energy.value)) if row is not None else 0,
+        banned=banned,
     )
 
 
@@ -230,7 +230,7 @@ async def adopt(ctx: TickContext, book: EconomyBook, community: EntityRow, spec:
     return row
 
 
-async def choose_methods(ctx: TickContext, book: EconomyBook, community: EntityRow, tally: MethodTally) -> None:
+async def choose_methods(ctx: TickContext, book: EconomyBook, community: EntityRow, tally: MethodTally, *, banned: bool = False) -> None:
     nature = await reveres_nature(ctx, community.id)
     margin = 1 + ctx.rules.methods.switch_margin_pct / PERCENT
     for process in ProcessKind:
@@ -239,7 +239,7 @@ async def choose_methods(ctx: TickContext, book: EconomyBook, community: EntityR
         row = book.methods.get(community.id, {}).get(process)
         if row is not None and "method" in row.locked:
             continue
-        options = [spec for spec in PROCESS_METHODS[process] if allowed(book, community, spec) is None] or [default_method(process)]
+        options = [spec for spec in PROCESS_METHODS[process] if allowed(book, community, spec, banned=banned) is None] or [default_method(process)]
         scored = sorted(options, key=lambda spec: (-profit(ctx, book, community, spec, nature=nature), spec.kind.value))
         best = scored[0]
         current = METHODS[row.method] if row is not None else None
