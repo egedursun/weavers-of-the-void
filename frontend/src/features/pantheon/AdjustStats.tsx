@@ -31,6 +31,7 @@ type AdjustStatsProps = {
   id: string
   groups: AdjustGroup[]
   note?: string
+  inline?: boolean
   run: (change: Change) => Promise<ActionResponse>
 }
 
@@ -101,7 +102,13 @@ function FieldEditor({
   )
 }
 
-export function AdjustStats({ id, groups, note, run }: AdjustStatsProps) {
+export function AdjustStats({
+  id,
+  groups,
+  note,
+  inline,
+  run,
+}: AdjustStatsProps) {
   const { reason } = useGodGate()
   const labels = new Map(
     groups.flatMap((group) => group.fields.map((field) => [field.key, field]))
@@ -112,6 +119,31 @@ export function AdjustStats({ id, groups, note, run }: AdjustStatsProps) {
       `${labels.get(change.key)?.label ?? change.key} set`,
   })
   const blocked = reason()
+  const fields = (
+    <>
+      {groups
+        .filter((group) => group.fields.length > 0)
+        .map((group) => (
+          <div key={group.title} className='flex min-w-0 flex-col gap-3'>
+            <Label variant='overline'>{group.title}</Label>
+            <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2'>
+              {group.fields.map((field) => (
+                <FieldEditor
+                  key={`${field.key}-${field.value}`}
+                  id={id}
+                  field={field}
+                  blocked={blocked}
+                  pending={save.isPending && save.variables?.key === field.key}
+                  onSet={(value) => save.mutate({ key: field.key, value })}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      {note && <Muted variant='caption'>{note}</Muted>}
+    </>
+  )
+  if (inline) return <div className='flex min-w-0 flex-col gap-4'>{fields}</div>
   return (
     <Collapsible className='flex min-w-0 flex-col gap-3'>
       <CollapsibleTrigger asChild>
@@ -121,28 +153,7 @@ export function AdjustStats({ id, groups, note, run }: AdjustStatsProps) {
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent className='flex min-w-0 flex-col gap-4'>
-        {groups
-          .filter((group) => group.fields.length > 0)
-          .map((group) => (
-            <div key={group.title} className='flex min-w-0 flex-col gap-3'>
-              <Label variant='overline'>{group.title}</Label>
-              <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2'>
-                {group.fields.map((field) => (
-                  <FieldEditor
-                    key={`${field.key}-${field.value}`}
-                    id={id}
-                    field={field}
-                    blocked={blocked}
-                    pending={
-                      save.isPending && save.variables?.key === field.key
-                    }
-                    onSet={(value) => save.mutate({ key: field.key, value })}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
-        {note && <Muted variant='caption'>{note}</Muted>}
+        {fields}
       </CollapsibleContent>
     </Collapsible>
   )

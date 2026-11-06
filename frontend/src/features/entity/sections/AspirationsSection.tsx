@@ -37,7 +37,7 @@ import {
   WANT_ICON,
 } from '../mind/aspirationLabels'
 import { named } from '../mind/labels'
-import { ControlPanel, MindCard, MindPicker } from '../mind/parts'
+import { AddBar, ControlPanel, MindCard, MindPicker } from '../mind/parts'
 
 const PERCENT = 100
 const WORKING = 'Working on it.'
@@ -144,38 +144,42 @@ function DreamCard({
           description='Adults take up a dream as the epochs pass; you can give one now.'
         />
       )}
-      <div className='flex min-w-0 items-end gap-2'>
-        <div className='min-w-0 flex-1'>
-          <MindPicker
-            label='Give a dream'
-            value={goal}
-            table={table(view.goals)}
-            blocked={busy}
-            onPick={setGoal}
-          />
-        </div>
-        <Button
-          size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => set.mutate(goal as LifeGoal)}
-        >
-          <Plus />
-          Set
-        </Button>
-        {dream && (
-          <Button
-            size='icon-sm'
-            variant='ghost'
-            aria-label='Take the dream away'
-            disabled={busy !== null}
-            disabledReason={busy ?? undefined}
-            onClick={() => remove.mutate()}
-          >
-            <X />
-          </Button>
-        )}
-      </div>
+      <AddBar
+        title='Give a dream'
+        action={
+          <div className='flex items-center gap-2'>
+            <Button
+              size='sm'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => set.mutate(goal as LifeGoal)}
+            >
+              <Plus />
+              Set
+            </Button>
+            {dream && (
+              <Button
+                size='icon-sm'
+                variant='ghost'
+                aria-label='Take the dream away'
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() => remove.mutate()}
+              >
+                <X />
+              </Button>
+            )}
+          </div>
+        }
+      >
+        <MindPicker
+          label='Kind'
+          value={goal}
+          table={table(view.goals)}
+          blocked={busy}
+          onPick={setGoal}
+        />
+      </AddBar>
     </MindCard>
   )
 }
@@ -285,26 +289,30 @@ function WantsAndFears({
             )}
           </Paged>
         )}
-        <div className='flex min-w-0 items-end gap-2'>
-          <div className='min-w-0 flex-1'>
-            <MindPicker
-              label='Give a want'
-              value={want}
-              table={table(view.want_kinds)}
-              blocked={busy}
-              onPick={setWant}
-            />
-          </div>
-          <Button
-            size='sm'
-            disabled={busy !== null}
-            disabledReason={busy ?? undefined}
-            onClick={() => addWant.mutate()}
-          >
-            <Plus />
-            Give
-          </Button>
-        </div>
+        <AddBar
+          title='Give a want'
+          action={
+            <div className='flex items-center gap-2'>
+              <Button
+                size='sm'
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() => addWant.mutate()}
+              >
+                <Plus />
+                Give
+              </Button>
+            </div>
+          }
+        >
+          <MindPicker
+            label='Kind'
+            value={want}
+            table={table(view.want_kinds)}
+            blocked={busy}
+            onPick={setWant}
+          />
+        </AddBar>
       </MindCard>
       <MindCard
         title='Fears'
@@ -340,26 +348,30 @@ function WantsAndFears({
             </div>
           ))
         )}
-        <div className='flex min-w-0 items-end gap-2'>
-          <div className='min-w-0 flex-1'>
-            <MindPicker
-              label='Give a fear'
-              value={fear}
-              table={table(view.fear_kinds)}
-              blocked={busy}
-              onPick={setFear}
-            />
-          </div>
-          <Button
-            size='sm'
-            disabled={busy !== null}
-            disabledReason={busy ?? undefined}
-            onClick={() => addFear.mutate()}
-          >
-            <Plus />
-            Give
-          </Button>
-        </div>
+        <AddBar
+          title='Give a fear'
+          action={
+            <div className='flex items-center gap-2'>
+              <Button
+                size='sm'
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() => addFear.mutate()}
+              >
+                <Plus />
+                Give
+              </Button>
+            </div>
+          }
+        >
+          <MindPicker
+            label='Kind'
+            value={fear}
+            table={table(view.fear_kinds)}
+            blocked={busy}
+            onPick={setFear}
+          />
+        </AddBar>
       </MindCard>
     </>
   )
@@ -540,26 +552,30 @@ function InspirationCard({
           )}
         </Paged>
       )}
-      <div className='flex min-w-0 items-end gap-2'>
-        <div className='min-w-0 flex-1'>
-          <MindPicker
-            label='Seize them with'
-            value={kind}
-            table={table(view.inspiration_kinds)}
-            blocked={busy}
-            onPick={setKind}
-          />
-        </div>
-        <Button
-          size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => inspire.mutate()}
-        >
-          <Flame />
-          Inspire
-        </Button>
-      </div>
+      <AddBar
+        title='Seize them with inspiration'
+        action={
+          <div className='flex items-center gap-2'>
+            <Button
+              size='sm'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => inspire.mutate()}
+            >
+              <Flame />
+              Inspire
+            </Button>
+          </div>
+        }
+      >
+        <MindPicker
+          label='Inspiration'
+          value={kind}
+          table={table(view.inspiration_kinds)}
+          blocked={busy}
+          onPick={setKind}
+        />
+      </AddBar>
     </MindCard>
   )
 }

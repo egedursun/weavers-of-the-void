@@ -40,7 +40,7 @@ import {
   named,
   plain,
 } from '../mind/labels'
-import { ControlPanel, MindCard, MindPicker } from '../mind/parts'
+import { AddBar, ControlPanel, MindCard, MindPicker } from '../mind/parts'
 import {
   ATTRIBUTE_ICONS,
   FACET_GROUPS,
@@ -456,29 +456,31 @@ function Ideas({ view }: { view: MindSplit }) {
         </div>
       )}
       <div className='flex min-w-0 flex-col gap-2 rounded-md border border-dashed p-2'>
-        <div className='flex min-w-0 items-end gap-2'>
-          <div className='min-w-0 flex-1'>
-            <MindPicker
-              label='Plant an idea'
-              value={picked}
-              table={choices}
-              blocked={
-                blocked ?? (none ? 'This mind already knows every idea.' : null)
-              }
-              placeholder='Choose an idea'
-              onPick={setPicked}
-            />
-          </div>
-          <Button
-            size='sm'
-            disabled={blocked !== null || picked === ''}
-            disabledReason={blocked ?? 'Choose an idea first.'}
-            onClick={() => plant.mutate(picked as IdeaKind)}
-          >
-            <Sprout />
-            Plant
-          </Button>
-        </div>
+        <AddBar
+          title='Plant an idea'
+          action={
+            <Button
+              size='sm'
+              disabled={blocked !== null || picked === ''}
+              disabledReason={blocked ?? 'Choose an idea first.'}
+              onClick={() => plant.mutate(picked as IdeaKind)}
+            >
+              <Sprout />
+              Plant
+            </Button>
+          }
+        >
+          <MindPicker
+            label='Idea'
+            value={picked}
+            table={choices}
+            blocked={
+              blocked ?? (none ? 'This mind already knows every idea.' : null)
+            }
+            placeholder='Choose an idea'
+            onPick={setPicked}
+          />
+        </AddBar>
         {preview && (
           <div className='flex min-w-0 flex-col gap-1'>
             <Muted variant='caption'>

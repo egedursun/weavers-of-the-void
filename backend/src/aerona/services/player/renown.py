@@ -11,6 +11,7 @@ from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.mind import ActKind, SkillKind
 from aerona.domain.enums.renown import ClaimKind, ClaimStatus, Currency, LoreKind, ReputationAxis
 from aerona.engine.renown.book import reputation_row
+from aerona.engine.renown.claims import punish
 from aerona.engine.renown.currencies import purse_of
 from aerona.engine.renown.deeds import DeedTally, credit, expose, new_claim, record_deed
 from aerona.engine.renown.lore import trade, value_of
@@ -250,7 +251,9 @@ async def expose_claim(scope: PlayerScope, command: DeedClaimTarget) -> Effect:
     deed = await deed_row(scope, row.deed_id)
     if row.kind is not ClaimKind.FALSE or row.status is ClaimStatus.EXPOSED:
         raise ValidationFailedError("Only a believed false claim can be exposed.")
-    await expose(await scope.context("deed_claim:expose"), deed, row, DeedTally())
+    ctx = await scope.context("deed_claim:expose")
+    await expose(ctx, deed, row, DeedTally())
+    await punish(ctx, row)
     return Effect("The false claim was exposed.", target_node_id=row.claimant_node_id)
 
 

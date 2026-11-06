@@ -12,6 +12,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.errors import AeronaError
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.mind import PreferenceRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.relations import ContestRow, GroupRankRow, RelationshipRow
 from aerona.db.tables.warfare import CaptiveRow
@@ -19,7 +20,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ArtMedium
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
-from aerona.domain.enums.mind import SkillKind, ThoughtKind, ValueHolder
+from aerona.domain.enums.mind import PreferenceKind, SkillKind, ThoughtKind, ValueHolder
 from aerona.domain.enums.relations import ContestEnd, ContestKind, ContestStake, GroupKind, RelationType
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.context import TickContext
@@ -160,6 +161,17 @@ STAKES: dict[ContestStake, Callable[[TickContext, Bout, EntityRow, EntityRow], A
 }
 
 
+async def judge_taste(ctx: TickContext, bout: Bout) -> int:
+    form = CONTESTS[bout.kind].work
+    judge = bout.judge_id or bout.place_id
+    if form is None or judge is None:
+        return 0
+    found = await ctx.session.scalar(
+        select(PreferenceRow.strength).where(PreferenceRow.holder_node_id == judge, PreferenceRow.kind == PreferenceKind.ART_FORM, PreferenceRow.target == form)
+    )
+    return int(found or 0)
+
+
 async def rounds_of(ctx: TickContext, bout: Bout) -> list[list[float]]:
     table = ctx.rules.contests
     rng = ctx.rng(seed_of("contest", bout.challenger.id, bout.defender.id, ctx.epoch, bout.kind.value))
@@ -169,10 +181,12 @@ async def rounds_of(ctx: TickContext, bout: Bout) -> list[list[float]]:
         1 + table.passion_pct / PERCENT * await strongest_against(ctx.session, side.id, other.id) / PERCENT
         for side, other in zip(sides, sides[::-1], strict=True)
     ]
-    lean = [await tilt(ctx.session, bout.judge_id, side.id) * table.judge_pct for side in sides]
+    taste = await judge_taste(ctx, bout)
+    merit = 1 + taste / (4 * PERCENT)
+    lean = [await tilt(ctx.session, bout.judge_id, side.id) * table.judge_pct * (1 - taste / (2 * PERCENT)) for side in sides]
     found = []
     for _ in range(table.rounds):
-        found.append([round(base[index] * drive[index] + lean[index] + rng.integer(0, table.jitter), 1) for index in range(2)])
+        found.append([round(base[index] * drive[index] * merit + lean[index] + rng.integer(0, table.jitter), 1) for index in range(2)])
     return found
 
 

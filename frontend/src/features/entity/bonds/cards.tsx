@@ -5,13 +5,19 @@ import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { EntityLink, Medallion, Paged } from '@/components/domain'
+import { EntityLink, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodAction } from '@/features/pantheon/godAction'
-import { EntityPicker } from '@/features/wars/military/controls'
 import { VALUE_ICONS, named } from '../mind/labels'
-import { MindCard, MindPicker } from '../mind/parts'
+import {
+  AddBar,
+  FormBar,
+  ItemRow,
+  MindCard,
+  MindPicker,
+  NodePicker,
+} from '../mind/parts'
 import {
   type AppealKind,
   type Bond,
@@ -97,13 +103,34 @@ function Meter({
   )
 }
 
+function RemoveButton({
+  label,
+  busy,
+  onClick,
+}: {
+  label: string
+  busy: string | null
+  onClick: () => void
+}) {
+  return (
+    <Button
+      size='icon-sm'
+      variant='ghost'
+      aria-label={label}
+      disabled={busy !== null}
+      disabledReason={busy ?? undefined}
+      onClick={onClick}
+    >
+      <X />
+    </Button>
+  )
+}
+
 function BondRow({ bond, view, blocked, hold }: { bond: Bond } & Props) {
   const remove = useGodAction({
     run: () =>
       unwrap(
-        api.POST('/api/actions/tie:remove', {
-          body: { relation_id: bond.id },
-        })
+        api.POST('/api/actions/tie:remove', { body: { relation_id: bond.id } })
       ),
   })
   const secret = useGodAction({
@@ -121,27 +148,38 @@ function BondRow({ bond, view, blocked, hold }: { bond: Bond } & Props) {
       ),
   })
   const busy = why(blocked, remove.isPending, secret.isPending)
+  const lead = named(RELATION_TYPES, bond.kinds[0] ?? 'acquaintance')
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-md border p-3'>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <EntityLink kind='entity' id={String(bond.subject.id)} showIcon>
+    <ItemRow
+      icon={lead.icon}
+      tone={lead.tone}
+      title={
+        <EntityLink kind='entity' id={String(bond.subject.id)}>
           {bond.subject.name}
         </EntityLink>
-        {bond.kinds.map((kind) => {
-          const spec = named(RELATION_TYPES, kind)
-          return (
+      }
+      meta={
+        bond.their_friendship === null
+          ? `Known since epoch ${bond.since_epoch}; no view in return yet`
+          : `Known since epoch ${bond.since_epoch} · in return: friendship ${bond.their_friendship}, romance ${bond.their_romance ?? 0}`
+      }
+      badges={
+        <>
+          {bond.kinds.map((kind) => (
             <Badge key={kind} variant='outline'>
-              <spec.icon aria-hidden='true' />
-              {spec.label}
+              {named(RELATION_TYPES, kind).label}
             </Badge>
-          )
-        })}
-        {bond.affair && (
-          <Badge variant={bond.affair_known ? 'destructive' : 'secondary'}>
-            {bond.affair_known ? 'Affair, found out' : 'Secret love'}
-          </Badge>
-        )}
-        <div className='ml-auto flex shrink-0 items-center gap-1'>
+          ))}
+          {bond.affair && (
+            <Badge variant={bond.affair_known ? 'destructive' : 'secondary'}>
+              {bond.affair_known ? 'Affair found out' : 'Secret love'}
+            </Badge>
+          )}
+          {bond.held.length > 0 && <Badge variant='secondary'>Held</Badge>}
+        </>
+      }
+      actions={
+        <>
           {bond.affair && (
             <Button
               size='icon-sm'
@@ -158,19 +196,70 @@ function BondRow({ bond, view, blocked, hold }: { bond: Bond } & Props) {
               {bond.affair_known ? <EyeOff /> : <Eye />}
             </Button>
           )}
-          <Button
-            size='icon-sm'
-            variant='ghost'
-            aria-label={`Forget the bond with ${bond.subject.name}`}
-            disabled={busy !== null}
-            disabledReason={busy ?? undefined}
+          <RemoveButton
+            label={`Forget the bond with ${bond.subject.name}`}
+            busy={busy}
             onClick={() => remove.mutate()}
-          >
-            <X />
-          </Button>
-        </div>
-      </div>
-      <div className='grid min-w-0 grid-cols-2 gap-3 @xl/mind:grid-cols-4'>
+          />
+        </>
+      }
+      editLabel={`how they feel about ${bond.subject.name}`}
+      editor={
+        <AdjustStats
+          id={`bond-${bond.id}`}
+          inline
+          groups={[
+            {
+              title: 'How they feel',
+              fields: [
+                {
+                  key: 'friendship',
+                  label: 'Friendship',
+                  value: bond.friendship,
+                  min: -SPAN,
+                  max: SPAN,
+                },
+                {
+                  key: 'romance',
+                  label: 'Romance',
+                  value: bond.romance,
+                  min: 0,
+                  max: SPAN,
+                },
+                {
+                  key: 'familiarity',
+                  label: 'Familiarity',
+                  value: bond.familiarity,
+                  min: 0,
+                  max: SPAN,
+                },
+                {
+                  key: 'rivalry',
+                  label: 'Rivalry',
+                  value: bond.rivalry,
+                  min: 0,
+                  max: SPAN,
+                },
+              ],
+            },
+          ]}
+          run={({ key, value }) =>
+            unwrap(
+              api.POST('/api/actions/tie:set', {
+                body: {
+                  holder_id: view.node_id,
+                  subject_id: bond.subject.id,
+                  [key]: value,
+                  mutual: false,
+                  hold,
+                },
+              })
+            )
+          }
+        />
+      }
+    >
+      <div className='grid min-w-0 grid-cols-2 gap-x-4 gap-y-2 @xl/mind:grid-cols-4'>
         <Meter
           label='Friendship'
           value={bond.friendship}
@@ -181,64 +270,7 @@ function BondRow({ bond, view, blocked, hold }: { bond: Bond } & Props) {
         <Meter label='Familiarity' value={bond.familiarity} tone='default' />
         <Meter label='Rivalry' value={bond.rivalry} tone='destructive' />
       </div>
-      <Muted variant='caption'>
-        {bond.their_friendship === null
-          ? `They have not yet formed a view in return. Known since epoch ${bond.since_epoch}.`
-          : `In return: friendship ${bond.their_friendship}, romance ${bond.their_romance ?? 0}. Known since epoch ${bond.since_epoch}.`}
-        {bond.held.length > 0 ? ` Held: ${bond.held.join(', ')}.` : ''}
-      </Muted>
-      <AdjustStats
-        id={`bond-${bond.id}`}
-        groups={[
-          {
-            title: 'How they feel',
-            fields: [
-              {
-                key: 'friendship',
-                label: 'Friendship',
-                value: bond.friendship,
-                min: -SPAN,
-                max: SPAN,
-              },
-              {
-                key: 'romance',
-                label: 'Romance',
-                value: bond.romance,
-                min: 0,
-                max: SPAN,
-              },
-              {
-                key: 'familiarity',
-                label: 'Familiarity',
-                value: bond.familiarity,
-                min: 0,
-                max: SPAN,
-              },
-              {
-                key: 'rivalry',
-                label: 'Rivalry',
-                value: bond.rivalry,
-                min: 0,
-                max: SPAN,
-              },
-            ],
-          },
-        ]}
-        run={({ key, value }) =>
-          unwrap(
-            api.POST('/api/actions/tie:set', {
-              body: {
-                holder_id: view.node_id,
-                subject_id: bond.subject.id,
-                [key]: value,
-                mutual: false,
-                hold,
-              },
-            })
-          )
-        }
-      />
-    </div>
+    </ItemRow>
   )
 }
 
@@ -264,7 +296,7 @@ export function BondsCard({ view, blocked, hold }: Props) {
     <MindCard
       title='Bonds'
       icon={BONDS_ICON}
-      hint='Mortals who share a place meet, talk, court, quarrel and teach; friendship, romance, familiarity and rivalry grow into bonds.'
+      hint='Mortals who share a place meet, talk, court, quarrel and teach; what they feel grows into bonds.'
       wide
     >
       {view.bonds.length === 0 ? (
@@ -285,29 +317,30 @@ export function BondsCard({ view, blocked, hold }: Props) {
           )}
         </Paged>
       )}
-      <div className='flex min-w-0 flex-wrap items-end gap-2'>
-        <div className='min-w-0 flex-1'>
-          <EntityPicker
-            label='Begin a bond with'
-            types={MORTALS}
-            value={subject}
-            onChange={setSubject}
-            blocked={busy}
-            icon={BONDS_ICON}
-          />
-        </div>
-        <Button
-          size='sm'
-          disabled={busy !== null || subject === null}
-          disabledReason={
-            busy ?? (subject === null ? 'Pick a mortal first.' : undefined)
-          }
-          onClick={() => begin.mutate()}
-        >
-          <Plus />
-          Begin
-        </Button>
-      </div>
+      <AddBar
+        title='Begin a bond'
+        action={
+          <Button
+            size='sm'
+            disabled={busy !== null || subject === null}
+            disabledReason={
+              busy ?? (subject === null ? 'Pick a mortal first.' : undefined)
+            }
+            onClick={() => begin.mutate()}
+          >
+            <Plus />
+            Begin
+          </Button>
+        }
+      >
+        <NodePicker
+          label='With'
+          types={MORTALS}
+          value={subject}
+          onChange={setSubject}
+          blocked={busy}
+        />
+      </AddBar>
     </MindCard>
   )
 }
@@ -352,7 +385,7 @@ export function PassionsCard({ view, blocked, hold }: Props) {
     <MindCard
       title='Passions'
       icon={PASSION_ICON}
-      hint='Love, loyalty, hatred and devotion. A passion above 80 can be called on in a battle, duel, oath or crisis: it lifts or it breaks.'
+      hint='Love, loyalty, hatred and devotion. At 80 or more a passion can be called on: it lifts or it breaks.'
     >
       {view.passions.length === 0 ? (
         <Muted variant='caption'>No passions burn yet.</Muted>
@@ -361,116 +394,123 @@ export function PassionsCard({ view, blocked, hold }: Props) {
           {(item) => {
             const spec = named(PASSION_KINDS, item.kind)
             return (
-              <div
+              <ItemRow
                 key={item.id}
-                className='flex min-w-0 flex-col gap-2 rounded-md border p-2'
-              >
-                <div className='flex min-w-0 items-center gap-2'>
-                  <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
-                  <div className='flex min-w-0 flex-1 flex-col'>
-                    <Text weight='semibold' truncate>
-                      {item.label}
-                      {item.object ? ` for ${item.object.name}` : ''}
-                    </Text>
-                    <Muted variant='caption'>{`${item.source_label}${item.held ? ' · held' : ''}${item.invoked_epoch !== null ? ` · last called on in epoch ${item.invoked_epoch}` : ''}`}</Muted>
-                  </div>
-                  <Button
-                    size='icon-sm'
-                    variant='ghost'
-                    aria-label={`Call on the ${item.label.toLowerCase()}`}
-                    disabled={busy !== null || !item.invocable}
-                    disabledReason={
-                      busy ??
-                      (!item.invocable
-                        ? 'Only a passion of 80 or more can be called on.'
-                        : undefined)
+                icon={spec.icon}
+                tone={spec.tone}
+                title={
+                  item.object
+                    ? `${item.label} for ${item.object.name}`
+                    : item.label
+                }
+                meta={`${item.source_label}${item.invoked_epoch !== null ? ` · called on in epoch ${item.invoked_epoch}` : ''}`}
+                badges={
+                  item.held ? (
+                    <Badge variant='secondary'>Held</Badge>
+                  ) : undefined
+                }
+                actions={
+                  <>
+                    <Button
+                      size='icon-sm'
+                      variant='ghost'
+                      aria-label={`Call on the ${item.label.toLowerCase()}`}
+                      disabled={busy !== null || !item.invocable}
+                      disabledReason={
+                        busy ??
+                        (!item.invocable
+                          ? 'Only a passion of 80 or more can be called on.'
+                          : undefined)
+                      }
+                      onClick={() => invoke.mutate(item.id)}
+                    >
+                      <Flame />
+                    </Button>
+                    <RemoveButton
+                      label={`Quench the ${item.label.toLowerCase()}`}
+                      busy={busy}
+                      onClick={() => quench.mutate(item.id)}
+                    />
+                  </>
+                }
+                editLabel='the strength'
+                editor={
+                  <AdjustStats
+                    id={`passion-${item.id}`}
+                    inline
+                    groups={[
+                      {
+                        title: 'Strength',
+                        fields: [
+                          {
+                            key: 'strength',
+                            label: 'Strength',
+                            value: item.strength,
+                            min: 0,
+                            max: SPAN,
+                          },
+                        ],
+                      },
+                    ]}
+                    run={({ value }) =>
+                      unwrap(
+                        api.POST('/api/actions/passion:set', {
+                          body: {
+                            holder_id: view.node_id,
+                            kind: item.kind,
+                            object_id: item.object?.id ?? 0,
+                            strength: value,
+                            source: item.source,
+                            hold,
+                          },
+                        })
+                      )
                     }
-                    onClick={() => invoke.mutate(item.id)}
-                  >
-                    <Flame />
-                  </Button>
-                  <Button
-                    size='icon-sm'
-                    variant='ghost'
-                    aria-label={`Quench the ${item.label.toLowerCase()}`}
-                    disabled={busy !== null}
-                    disabledReason={busy ?? undefined}
-                    onClick={() => quench.mutate(item.id)}
-                  >
-                    <X />
-                  </Button>
-                </div>
-                <Progress
+                  />
+                }
+              >
+                <Meter
+                  label='Strength'
                   value={item.strength}
-                  size='sm'
                   tone={item.kind === 'hatred' ? 'destructive' : 'warning'}
-                  aria-label={`${item.label} strength`}
                 />
-                <AdjustStats
-                  id={`passion-${item.id}`}
-                  groups={[
-                    {
-                      title: 'Strength',
-                      fields: [
-                        {
-                          key: 'strength',
-                          label: 'Strength',
-                          value: item.strength,
-                          min: 0,
-                          max: SPAN,
-                        },
-                      ],
-                    },
-                  ]}
-                  run={({ value }) =>
-                    unwrap(
-                      api.POST('/api/actions/passion:set', {
-                        body: {
-                          holder_id: view.node_id,
-                          kind: item.kind,
-                          object_id: item.object?.id ?? 0,
-                          strength: value,
-                          source: item.source,
-                          hold,
-                        },
-                      })
-                    )
-                  }
-                />
-              </div>
+              </ItemRow>
             )
           }}
         </Paged>
       )}
-      <div className='flex min-w-0 flex-col gap-2'>
+      <AddBar
+        title='Kindle a passion'
+        action={
+          <Button
+            size='sm'
+            disabled={busy !== null || object === null}
+            disabledReason={
+              busy ??
+              (object === null ? 'Pick what the passion is for.' : undefined)
+            }
+            onClick={() => kindle.mutate()}
+          >
+            <Flame />
+            Kindle
+          </Button>
+        }
+      >
         <MindPicker
-          label='Kindle a passion of'
+          label='Passion'
           value={kind}
           table={table(view.passion_kinds)}
           blocked={busy}
           onPick={setKind}
         />
-        <EntityPicker
+        <NodePicker
           label='For'
           types={ANYTHING}
           value={object}
           onChange={setObject}
           blocked={busy}
-          icon={PASSION_ICON}
         />
-        <Button
-          size='sm'
-          disabled={busy !== null || object === null}
-          disabledReason={
-            busy ??
-            (object === null ? 'Pick what the passion is for.' : undefined)
-          }
-          onClick={() => kindle.mutate()}
-        >
-          <Flame />
-          Kindle
-        </Button>
-      </div>
+      </AddBar>
     </MindCard>
   )
 }
@@ -512,107 +552,113 @@ function CircleRow({
       ),
   })
   const busy = why(blocked, edit.isPending, join.isPending, disband.isPending)
+  const facts = [
+    circle.axis
+      ? `bound by ${named(VALUE_ICONS, circle.axis).label.toLowerCase()}`
+      : null,
+    circle.taste_key
+      ? `drawn by ${circle.taste_key.replace(':', ' ').replaceAll('_', ' ')}`
+      : null,
+    circle.meeting_place ? `meets in ${circle.meeting_place.name}` : null,
+    `since epoch ${circle.founded_epoch}`,
+  ].filter(Boolean)
   return (
-    <div className='flex min-w-0 flex-col gap-3 rounded-md border p-3'>
-      <div className='flex min-w-0 items-center gap-2'>
-        <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
-        <div className='flex min-w-0 flex-1 flex-col'>
-          <EntityLink kind='entity' id={String(circle.circle.id)}>
-            {circle.circle.name}
-          </EntityLink>
-          <Muted variant='caption'>
-            {[
-              circle.label,
-              circle.axis
-                ? `bound by ${named(VALUE_ICONS, circle.axis).label.toLowerCase()}`
-                : null,
-              circle.taste_key
-                ? `drawn by ${circle.taste_key.replace(':', ' ').replaceAll('_', ' ')}`
-                : null,
-              circle.meeting_place
-                ? `meets in ${circle.meeting_place.name}`
-                : null,
-              `since epoch ${circle.founded_epoch}`,
-            ]
-              .filter(Boolean)
-              .join(' · ')}
-          </Muted>
-        </div>
-        <Button
-          size='sm'
-          variant='ghost'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
+    <ItemRow
+      icon={spec.icon}
+      tone={spec.tone}
+      title={
+        <EntityLink kind='entity' id={String(circle.circle.id)}>
+          {circle.circle.name}
+        </EntityLink>
+      }
+      meta={facts.join(' · ')}
+      badges={
+        <Badge variant='outline'>{`${circle.label} · ${circle.members.length}`}</Badge>
+      }
+      actions={
+        <RemoveButton
+          label={`Break up ${circle.circle.name}`}
+          busy={busy}
           onClick={() => disband.mutate()}
-        >
-          <X />
-          Break up
-        </Button>
-      </div>
-      {circle.ideology && (
-        <Muted variant='caption'>
-          {'Spreads the creed '}
-          <EntityLink kind='entity' id={String(circle.ideology.id)}>
-            {circle.ideology.name}
-          </EntityLink>
-        </Muted>
-      )}
-      <div className='flex min-w-0 flex-wrap gap-2'>
-        {circle.members.map((item) => (
-          <Badge
-            key={item.id}
-            variant={circle.leader?.id === item.id ? 'default' : 'outline'}
-          >
-            {circle.leader?.id === item.id && <Star aria-hidden='true' />}
-            {item.name}
-            <Button
-              size='icon-sm'
-              variant='ghost'
-              aria-label={`Send ${item.name} out of the circle`}
-              disabled={busy !== null}
-              disabledReason={busy ?? undefined}
-              onClick={() => join.mutate({ id: item.id, remove: true })}
-            >
-              <UserMinus />
-            </Button>
-          </Badge>
-        ))}
-      </div>
-      <div className='grid min-w-0 grid-cols-1 gap-2 @xl/mind:grid-cols-2'>
-        <MindPicker
-          label='Kind of circle'
-          value={circle.kind}
-          table={table(view.circle_kinds)}
-          blocked={busy}
-          onPick={(value) => edit.mutate(value as CircleKind)}
         />
-        <div className='flex min-w-0 items-end gap-2'>
-          <div className='min-w-0 flex-1'>
-            <EntityPicker
-              label='Bring in'
+      }
+      editLabel='the circle'
+      editor={
+        <>
+          <FormBar
+            action={
+              <Button
+                size='sm'
+                disabled={busy !== null || member === null}
+                disabledReason={
+                  busy ?? (member === null ? 'Pick a mortal first.' : undefined)
+                }
+                onClick={() =>
+                  member !== null && join.mutate({ id: member, remove: false })
+                }
+              >
+                <Plus />
+                Bring in
+              </Button>
+            }
+          >
+            <MindPicker
+              label='Kind of circle'
+              value={circle.kind}
+              table={table(view.circle_kinds)}
+              blocked={busy}
+              onPick={(value) => edit.mutate(value as CircleKind)}
+            />
+            <NodePicker
+              label='Bring in a mortal'
               types={MORTALS}
               value={member}
               onChange={setMember}
               blocked={busy}
-              icon={CIRCLE_ICON}
             />
-          </div>
-          <Button
-            size='sm'
-            disabled={busy !== null || member === null}
-            disabledReason={
-              busy ?? (member === null ? 'Pick a mortal first.' : undefined)
-            }
-            onClick={() =>
-              member !== null && join.mutate({ id: member, remove: false })
-            }
-          >
-            <Plus />
-            Bring in
-          </Button>
+          </FormBar>
+        </>
+      }
+    >
+      <div className='flex min-w-0 flex-col gap-2'>
+        {circle.ideology && (
+          <Muted variant='caption'>
+            {'Spreads the creed '}
+            <EntityLink kind='entity' id={String(circle.ideology.id)}>
+              {circle.ideology.name}
+            </EntityLink>
+          </Muted>
+        )}
+        <div className='flex min-w-0 flex-wrap gap-2'>
+          {circle.members.map((item) => (
+            <div
+              key={item.id}
+              className='flex min-w-0 items-center gap-1 rounded-full border bg-background py-0.5 pr-0.5 pl-3'
+            >
+              {circle.leader?.id === item.id && (
+                <Star
+                  aria-hidden='true'
+                  className='size-icon-xs text-primary'
+                />
+              )}
+              <EntityLink kind='entity' id={String(item.id)}>
+                {item.name}
+              </EntityLink>
+              <Button
+                size='icon-sm'
+                variant='ghost'
+                aria-label={`Send ${item.name} out of the circle`}
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() => join.mutate({ id: item.id, remove: true })}
+              >
+                <UserMinus />
+              </Button>
+            </div>
+          ))}
         </div>
       </div>
-    </div>
+    </ItemRow>
   )
 }
 
@@ -644,7 +690,11 @@ export function CirclesCard({
       wide
     >
       {view.circles.length === 0 ? (
-        <Muted variant='caption'>No circle gathers here yet.</Muted>
+        <Muted variant='caption'>
+          {place
+            ? 'No circle gathers here yet.'
+            : 'Not a member of any circle.'}
+        </Muted>
       ) : (
         <Paged items={view.circles} initial={3} noun={['circle', 'circles']}>
           {(circle) => (
@@ -659,26 +709,28 @@ export function CirclesCard({
         </Paged>
       )}
       {place && (
-        <div className='flex min-w-0 items-end gap-2'>
-          <div className='min-w-0 flex-1'>
-            <MindPicker
-              label='Gather a circle here'
-              value={kind}
-              table={table(view.circle_kinds)}
-              blocked={busy}
-              onPick={setKind}
-            />
-          </div>
-          <Button
-            size='sm'
-            disabled={busy !== null}
-            disabledReason={busy ?? undefined}
-            onClick={() => found.mutate()}
-          >
-            <Plus />
-            Gather
-          </Button>
-        </div>
+        <AddBar
+          title='Gather a circle here'
+          action={
+            <Button
+              size='sm'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => found.mutate()}
+            >
+              <Plus />
+              Gather
+            </Button>
+          }
+        >
+          <MindPicker
+            label='Kind of circle'
+            value={kind}
+            table={table(view.circle_kinds)}
+            blocked={busy}
+            onPick={setKind}
+          />
+        </AddBar>
       )}
     </MindCard>
   )
@@ -704,72 +756,68 @@ function RankRow({
   })
   const busy = why(blocked, remove.isPending)
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-md border p-2'>
-      <div className='flex min-w-0 items-center gap-2'>
-        <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
-        <div className='flex min-w-0 flex-1 flex-col'>
-          <Text
-            weight='semibold'
-            truncate
-          >{`${rank.member.name}: rank ${rank.rank} of ${rank.size}`}</Text>
-          <Muted variant='caption'>{`${rank.group_label} of ${rank.group.name} · since epoch ${rank.since_epoch}${rank.held.length ? ' · held' : ''}`}</Muted>
-        </div>
-        <Button
-          size='icon-sm'
-          variant='ghost'
-          aria-label={`Take ${rank.member.name}'s place away`}
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
+    <ItemRow
+      icon={spec.icon}
+      tone={spec.tone}
+      title={`${rank.member.name}: rank ${rank.rank} of ${rank.size}`}
+      meta={`${rank.group_label} of ${rank.group.name} · since epoch ${rank.since_epoch}`}
+      badges={
+        rank.held.length > 0 ? (
+          <Badge variant='secondary'>Held</Badge>
+        ) : undefined
+      }
+      actions={
+        <RemoveButton
+          label={`Take ${rank.member.name}'s place away`}
+          busy={busy}
           onClick={() => remove.mutate()}
-        >
-          <X />
-        </Button>
-      </div>
-      <Progress
-        value={rank.dominance}
-        size='sm'
-        tone='warning'
-        aria-label='Standing'
-      />
-      <AdjustStats
-        id={`rank-${rank.group.id}-${rank.member.id}`}
-        groups={[
-          {
-            title: 'Place in the order',
-            fields: [
-              {
-                key: 'rank',
-                label: 'Rank',
-                value: rank.rank,
-                min: 1,
-                max: Math.max(rank.size, 1),
-              },
-              {
-                key: 'dominance',
-                label: 'Standing',
-                value: rank.dominance,
-                min: 0,
-                max: SPAN,
-              },
-            ],
-          },
-        ]}
-        run={({ key, value }) =>
-          unwrap(
-            api.POST('/api/actions/rank:set', {
-              body: {
-                group_id: rank.group.id,
-                member_id: rank.member.id,
-                group_kind: rank.group_kind,
-                rank: key === 'rank' ? value : rank.rank,
-                dominance: key === 'dominance' ? value : null,
-                hold,
-              },
-            })
-          )
-        }
-      />
-    </div>
+        />
+      }
+      editLabel='the place in the order'
+      editor={
+        <AdjustStats
+          id={`rank-${rank.group.id}-${rank.member.id}`}
+          inline
+          groups={[
+            {
+              title: 'Place in the order',
+              fields: [
+                {
+                  key: 'rank',
+                  label: 'Rank',
+                  value: rank.rank,
+                  min: 1,
+                  max: Math.max(rank.size, 1),
+                },
+                {
+                  key: 'dominance',
+                  label: 'Standing',
+                  value: rank.dominance,
+                  min: 0,
+                  max: SPAN,
+                },
+              ],
+            },
+          ]}
+          run={({ key, value }) =>
+            unwrap(
+              api.POST('/api/actions/rank:set', {
+                body: {
+                  group_id: rank.group.id,
+                  member_id: rank.member.id,
+                  group_kind: rank.group_kind,
+                  rank: key === 'rank' ? value : rank.rank,
+                  dominance: key === 'dominance' ? value : null,
+                  hold,
+                },
+              })
+            )
+          }
+        />
+      }
+    >
+      <Meter label='Standing' value={rank.dominance} tone='warning' />
+    </ItemRow>
   )
 }
 
@@ -779,11 +827,12 @@ export function StandingCard({ view, blocked, hold }: Props) {
     <MindCard
       title='Pecking order'
       icon={STANDING_ICON}
-      hint='Households, courts, circles, warbands and crews rank their members by strength, office, renown and assertiveness; those below may challenge.'
+      hint='Groups rank their members by strength, office, renown and assertiveness; those below may challenge.'
     >
       {rows.length === 0 ? (
         <Muted variant='caption'>
-          No pecking order yet. Groups of three or more form one.
+          No pecking order yet. Households, courts, circles, warbands and crews
+          of three or more form one.
         </Muted>
       ) : (
         <Paged items={rows} initial={4} noun={['place', 'places']}>
@@ -809,7 +858,7 @@ export function ContestsCard({
   const [rival, setRival] = useState<number | null>(null)
   const [kind, setKind] = useState<string>('riddle_game')
   const [stake, setStake] = useState<string>('honour')
-  const hold = useGodAction({
+  const stage = useGodAction({
     run: () =>
       unwrap(
         api.POST('/api/actions/contest:hold', {
@@ -837,7 +886,7 @@ export function ContestsCard({
         api.POST('/api/actions/contest:remove', { body: { contest_id: id } })
       ),
   })
-  const busy = why(blocked, hold.isPending, fame.isPending, strike.isPending)
+  const busy = why(blocked, stage.isPending, fame.isPending, strike.isPending)
   return (
     <MindCard
       title='Contests of wit'
@@ -852,26 +901,30 @@ export function ContestsCard({
           {(item) => {
             const spec = named(CONTEST_KINDS, item.kind)
             return (
-              <div
+              <ItemRow
                 key={item.id}
-                className='flex min-w-0 flex-col gap-2 rounded-md border p-2'
-              >
-                <div className='flex min-w-0 flex-wrap items-center gap-2'>
-                  <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
-                  <Text weight='semibold'>{`${item.label} for ${item.stake_label.toLowerCase()}`}</Text>
-                  <Badge
-                    variant={item.outcome === 'drawn' ? 'outline' : 'default'}
-                  >
-                    {OUTCOMES[item.outcome] ?? item.outcome}
-                  </Badge>
-                  {item.famous && <Badge variant='secondary'>Famous</Badge>}
-                  <div className='ml-auto flex shrink-0 items-center gap-1'>
+                icon={spec.icon}
+                tone={spec.tone}
+                title={`${item.label} for ${item.stake_label.toLowerCase()}`}
+                meta={`${item.challenger?.name ?? 'Someone'} against ${item.defender?.name ?? 'someone'}${item.judge ? `, judged by ${item.judge.name}` : ''} · epoch ${item.epoch}`}
+                badges={
+                  <>
+                    <Badge
+                      variant={item.outcome === 'drawn' ? 'outline' : 'default'}
+                    >
+                      {OUTCOMES[item.outcome] ?? item.outcome}
+                    </Badge>
+                    {item.famous && <Badge variant='secondary'>Famous</Badge>}
+                  </>
+                }
+                actions={
+                  <>
                     <Button
                       size='icon-sm'
-                      variant='ghost'
+                      variant={item.famous ? 'secondary' : 'ghost'}
                       aria-label={
                         item.famous
-                          ? 'Let the contest be forgotten by the bards'
+                          ? 'Let the bards forget the contest'
                           : 'Make the contest famous'
                       }
                       disabled={busy !== null}
@@ -882,42 +935,71 @@ export function ContestsCard({
                     >
                       <Star />
                     </Button>
-                    <Button
-                      size='icon-sm'
-                      variant='ghost'
-                      aria-label='Strike the contest from memory'
-                      disabled={busy !== null}
-                      disabledReason={busy ?? undefined}
+                    <RemoveButton
+                      label='Strike the contest from memory'
+                      busy={busy}
                       onClick={() => strike.mutate(item.id)}
+                    />
+                  </>
+                }
+              >
+                <div className='flex min-w-0 flex-wrap items-center gap-2'>
+                  {item.rounds.map((round, index) => {
+                    const first = Math.round(round[0] ?? 0)
+                    const second = Math.round(round[1] ?? 0)
+                    return (
+                      <Badge
+                        key={`${item.id}-${index}`}
+                        variant={
+                          first > second
+                            ? 'default'
+                            : first < second
+                              ? 'destructive'
+                              : 'outline'
+                        }
+                      >
+                        {`Round ${index + 1}: ${first}–${second}`}
+                      </Badge>
+                    )
+                  })}
+                  {item.work && (
+                    <EntityLink
+                      kind='entity'
+                      id={String(item.work.id)}
+                      showIcon
                     >
-                      <X />
-                    </Button>
-                  </div>
+                      {item.work.name}
+                    </EntityLink>
+                  )}
                 </div>
-                <Muted variant='caption'>
-                  {`${item.challenger?.name ?? 'Someone'} against ${item.defender?.name ?? 'someone'}`}
-                  {item.judge ? `, judged by ${item.judge.name}` : ''}
-                  {` · epoch ${item.epoch} · rounds ${item.rounds.map((round) => `${Math.round(round[0] ?? 0)}–${Math.round(round[1] ?? 0)}`).join(', ')}`}
-                </Muted>
-                {item.work && (
-                  <EntityLink kind='entity' id={String(item.work.id)} showIcon>
-                    {item.work.name}
-                  </EntityLink>
-                )}
-              </div>
+              </ItemRow>
             )
           }}
         </Paged>
       )}
       {mortal && (
-        <div className='grid min-w-0 grid-cols-1 gap-2 @xl/mind:grid-cols-3'>
-          <EntityPicker
-            label='Challenge'
+        <AddBar
+          title='Stage a contest'
+          action={
+            <Button
+              size='sm'
+              disabled={busy !== null || rival === null}
+              disabledReason={
+                busy ?? (rival === null ? 'Pick an opponent first.' : undefined)
+              }
+              onClick={() => stage.mutate()}
+            >
+              <CONTEST_ICON />
+              Stage
+            </Button>
+          }
+        >
+          <NodePicker
+            label='Against'
             types={MORTALS}
             value={rival}
             onChange={setRival}
             blocked={busy}
-            icon={CONTEST_ICON}
           />
           <MindPicker
             label='Contest'
@@ -933,18 +1015,7 @@ export function ContestsCard({
             blocked={busy}
             onPick={setStake}
           />
-          <Button
-            size='sm'
-            disabled={busy !== null || rival === null}
-            disabledReason={
-              busy ?? (rival === null ? 'Pick an opponent first.' : undefined)
-            }
-            onClick={() => hold.mutate()}
-          >
-            <CONTEST_ICON />
-            Stage the contest
-          </Button>
-        </div>
+        </AddBar>
       )}
     </MindCard>
   )
@@ -985,7 +1056,8 @@ export function PersuasionsCard({ view, blocked }: Props) {
     <MindCard
       title='Arguments'
       icon={PERSUASION_ICON}
-      hint='Arguments appeal to belief, self-interest, authority, evidence or fear. Oratory and fit against stubbornness and passions decide them.'
+      hint='Appeals to belief, self-interest, authority, evidence or fear; oratory and fit against stubbornness and passions.'
+      wide
     >
       {view.persuasions.length === 0 ? (
         <Muted variant='caption'>No arguments yet.</Muted>
@@ -996,42 +1068,50 @@ export function PersuasionsCard({ view, blocked }: Props) {
           noun={['argument', 'arguments']}
         >
           {(item) => (
-            <div
+            <ItemRow
               key={item.id}
-              className='flex min-w-0 items-center gap-2 rounded-md border p-2'
-            >
-              <div className='flex min-w-0 flex-1 flex-col'>
-                <Text
-                  weight='semibold'
-                  truncate
-                >{`${item.speaker?.name ?? 'Someone'} to ${item.target?.name ?? 'someone'}`}</Text>
-                <Muted variant='caption'>{`${item.appeal_label} · ${item.aim_label.toLowerCase()}${item.axis ? ` (${named(VALUE_ICONS, item.axis).label.toLowerCase()})` : ''} · epoch ${item.epoch}`}</Muted>
-              </div>
-              <Badge
-                variant={item.success ? 'default' : 'outline'}
-              >{`${item.success ? 'Swayed' : 'Unmoved'} ${item.score}`}</Badge>
-              <Button
-                size='icon-sm'
-                variant='ghost'
-                aria-label='Forget the argument'
-                disabled={busy !== null}
-                disabledReason={busy ?? undefined}
-                onClick={() => forget.mutate(item.id)}
-              >
-                <X />
-              </Button>
-            </div>
+              icon={PERSUASION_ICON}
+              tone={item.success ? 'success' : 'muted'}
+              title={`${item.speaker?.name ?? 'Someone'} to ${item.target?.name ?? 'someone'}`}
+              meta={`${item.appeal_label} · ${item.aim_label.toLowerCase()}${item.axis ? ` (${named(VALUE_ICONS, item.axis).label.toLowerCase()})` : ''} · epoch ${item.epoch}`}
+              badges={
+                <Badge
+                  variant={item.success ? 'default' : 'outline'}
+                >{`${item.success ? 'Swayed' : 'Unmoved'} · ${item.score}`}</Badge>
+              }
+              actions={
+                <RemoveButton
+                  label='Forget the argument'
+                  busy={busy}
+                  onClick={() => forget.mutate(item.id)}
+                />
+              }
+            />
           )}
         </Paged>
       )}
-      <div className='flex min-w-0 flex-col gap-2'>
-        <EntityPicker
-          label='Argue with'
+      <AddBar
+        title='Argue'
+        action={
+          <Button
+            size='sm'
+            disabled={busy !== null || target === null}
+            disabledReason={
+              busy ?? (target === null ? 'Pick who to argue with.' : undefined)
+            }
+            onClick={() => argue.mutate()}
+          >
+            <PERSUASION_ICON />
+            Argue
+          </Button>
+        }
+      >
+        <NodePicker
+          label='With'
           types={MORTALS}
           value={target}
           onChange={setTarget}
           blocked={busy}
-          icon={PERSUASION_ICON}
         />
         <MindPicker
           label='Appeal'
@@ -1047,18 +1127,7 @@ export function PersuasionsCard({ view, blocked }: Props) {
           blocked={busy}
           onPick={setAxis}
         />
-        <Button
-          size='sm'
-          disabled={busy !== null || target === null}
-          disabledReason={
-            busy ?? (target === null ? 'Pick who to argue with.' : undefined)
-          }
-          onClick={() => argue.mutate()}
-        >
-          <PERSUASION_ICON />
-          Argue
-        </Button>
-      </div>
+      </AddBar>
     </MindCard>
   )
 }

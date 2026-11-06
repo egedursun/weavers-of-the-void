@@ -60,4 +60,5 @@ class ClaimRules:
     witness_pct: int = rule(10, 0, 100, G, "How much each witnessing community raises the chance a false claim is tested (%)")
     token_pct: int = rule(40, 0, 100, G, "How much a token held by the true doer raises the chance a false claim is tested (%)")
     exposure_shame: int = rule(15, 0, 100, G, "Trickery an exposed false claimant earns everywhere their claim was believed")
+    punish_pct: int = rule(50, 0, 100, G, "Chance an exposed impostor is punished as the law punishes theft (%)")
     exposure_memory: int = rule(-50, -100, 0, G, "Memory the true doer keeps of an exposed impostor")

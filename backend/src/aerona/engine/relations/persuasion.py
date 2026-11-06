@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.relations import APPEALS
@@ -9,7 +9,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import OfficeRow
-from aerona.db.tables.relations import PassionRow, PersuasionRow
+from aerona.db.tables.relations import GroupRankRow, PassionRow, PersuasionRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import Facet, SkillKind, ThoughtKind, ValueAxis, ValueHolder
@@ -28,6 +28,7 @@ VALUE_SPAN = 100
 HALF = PERCENT // 2
 WARM = (PassionKind.LOVE, PassionKind.LOYALTY)
 COUNCIL_VOICES = 3
+COURT_FLOOR = 10**6
 
 
 @dataclass(frozen=True)
@@ -154,10 +155,13 @@ async def office_holder(session: AsyncSession, polity_id: int, *kinds: OfficeKin
 
 
 async def council_lift(ctx: TickContext, speaker_id: int, polity_id: int) -> float:
+    standing = (
+        select(GroupRankRow.rank).where(GroupRankRow.group_node_id == polity_id, GroupRankRow.member_node_id == OfficeRow.holder_entity_id).scalar_subquery()
+    )
     query = (
         select(OfficeRow.holder_entity_id)
         .where(OfficeRow.polity_entity_id == polity_id, OfficeRow.holder_entity_id.is_not(None), OfficeRow.holder_entity_id != speaker_id)
-        .order_by(OfficeRow.id)
+        .order_by(func.coalesce(standing, COURT_FLOOR), OfficeRow.id)
         .limit(COUNCIL_VOICES)
     )
     councillors = [holder for holder in await ctx.session.scalars(query) if holder is not None]

@@ -1,13 +1,5 @@
 import { useState } from 'react'
-import {
-  Award,
-  EyeOff,
-  Plus,
-  ShieldCheck,
-  Trash2,
-  VolumeX,
-  X,
-} from 'lucide-react'
+import { Award, EyeOff, Plus, Trash2, VolumeX, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
@@ -18,17 +10,23 @@ import {
   EmptyState,
   EntityLink,
   KpiTile,
-  Medallion,
   Paged,
   Section,
 } from '@/components/domain'
-import { Muted, Text } from '@/components/typography'
+import { Label, Muted, Stat, Text } from '@/components/typography'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
-import { EntityPicker } from '@/features/wars/military/controls'
 import { named } from '../mind/labels'
-import { ControlPanel, MindCard, MindPicker } from '../mind/parts'
+import {
+  AddBar,
+  ControlPanel,
+  FormBar,
+  ItemRow,
+  MindCard,
+  MindPicker,
+  NodePicker,
+} from '../mind/parts'
 import {
   type DeedRecord,
   type LocalReputation,
@@ -59,6 +57,15 @@ const ANYONE = [
 ]
 const PLACES = ['settlement', 'people', 'polity', 'region']
 const MORTALS = ['mortal']
+const ABOUT = ['place', 'region', 'prophecy']
+const STANDINGS = ['prestige', 'piety', 'dread', 'tyranny'] as const
+const HARMFUL = new Set([
+  'cruelty',
+  'trickery',
+  'troublemaker',
+  'dread',
+  'tyranny',
+])
 
 type Props = { view: Renown; blocked: string | null; hold: boolean }
 
@@ -70,6 +77,56 @@ function table(
 
 function why(blocked: string | null, ...pending: boolean[]): string | null {
   return blocked ?? (pending.some(Boolean) ? WORKING : null)
+}
+
+function RemoveButton({
+  label,
+  busy,
+  onClick,
+}: {
+  label: string
+  busy: string | null
+  onClick: () => void
+}) {
+  return (
+    <Button
+      size='icon-sm'
+      variant='ghost'
+      aria-label={label}
+      disabled={busy !== null}
+      disabledReason={busy ?? undefined}
+      onClick={onClick}
+    >
+      <X />
+    </Button>
+  )
+}
+
+function Gauge({
+  label,
+  value,
+  harmful,
+}: {
+  label: string
+  value: number
+  harmful: boolean
+}) {
+  return (
+    <div className='flex min-w-0 flex-col gap-1'>
+      <div className='flex min-w-0 items-center justify-between gap-2'>
+        <Muted variant='caption'>{label}</Muted>
+        <Text variant='caption' weight='semibold'>
+          {value}
+        </Text>
+      </div>
+      <Progress
+        value={value}
+        size='sm'
+        tone={harmful ? 'destructive' : 'success'}
+        aria-label={`${label} ${value}`}
+      />
+    </div>
+  )
 }
 
 function ReputationRow({
@@ -95,77 +152,69 @@ function ReputationRow({
   const busy = why(blocked, remove.isPending)
   const other = viewer ? row.subject : row.community
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-md border p-2'>
-      <div className='flex min-w-0 items-center gap-2'>
-        <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
-        <div className='flex min-w-0 flex-1 flex-col'>
-          <Text
-            weight='semibold'
-            truncate
-          >{`${row.label}${row.skill ? ` (${row.skill.replaceAll('_', ' ')})` : ''}`}</Text>
-          {other && (
-            <Muted variant='caption'>
-              {viewer ? 'Of ' : 'In '}
-              <EntityLink kind='entity' id={String(other.id)}>
-                {other.name}
-              </EntityLink>
-              {` · heard in epoch ${row.heard_epoch}${row.held ? ' · held' : ''}`}
-            </Muted>
-          )}
-        </div>
-        <Button
-          size='icon-sm'
-          variant='ghost'
-          aria-label='Forget this reputation'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
+    <ItemRow
+      icon={spec.icon}
+      tone={spec.tone}
+      title={
+        other ? (
+          <EntityLink kind='entity' id={String(other.id)}>
+            {other.name}
+          </EntityLink>
+        ) : (
+          'Unknown'
+        )
+      }
+      meta={`${row.label}${row.skill ? ` (${row.skill.replaceAll('_', ' ')})` : ''} · heard in epoch ${row.heard_epoch}`}
+      badges={row.held ? <Badge variant='secondary'>Held</Badge> : undefined}
+      actions={
+        <RemoveButton
+          label='Forget this reputation'
+          busy={busy}
           onClick={() => remove.mutate()}
-        >
-          <X />
-        </Button>
-      </div>
-      <Progress
+        />
+      }
+      editLabel='how strongly they are known for it'
+      editor={
+        <AdjustStats
+          id={`reputation-${row.id}`}
+          inline
+          groups={[
+            {
+              title: 'How strongly they are known for it',
+              fields: [
+                {
+                  key: 'value',
+                  label: row.label,
+                  value: row.value,
+                  min: 0,
+                  max: SPAN,
+                },
+              ],
+            },
+          ]}
+          run={({ value }) =>
+            unwrap(
+              api.POST('/api/actions/renown:set', {
+                body: {
+                  subject_id: row.subject?.id ?? 0,
+                  community_id: row.community?.id ?? 0,
+                  axis: row.axis,
+                  skill: row.skill,
+                  value,
+                  hold,
+                },
+              })
+            )
+          }
+        />
+      }
+    >
+      <Gauge
+        label={row.label}
         value={row.value}
-        size='sm'
-        tone={
-          spec.tone === 'danger' || spec.tone === 'warning'
-            ? 'destructive'
-            : 'success'
-        }
-        aria-label={`${row.label} ${row.value}`}
+        harmful={HARMFUL.has(row.axis)}
       />
-      <AdjustStats
-        id={`reputation-${row.id}`}
-        groups={[
-          {
-            title: 'How strongly they are known for it',
-            fields: [
-              {
-                key: 'value',
-                label: row.label,
-                value: row.value,
-                min: 0,
-                max: SPAN,
-              },
-            ],
-          },
-        ]}
-        run={({ value }) =>
-          unwrap(
-            api.POST('/api/actions/renown:set', {
-              body: {
-                subject_id: row.subject?.id ?? 0,
-                community_id: row.community?.id ?? 0,
-                axis: row.axis,
-                skill: row.skill,
-                value,
-                hold,
-              },
-            })
-          )
-        }
-      />
-    </div>
+    </ItemRow>
   )
 }
 
@@ -200,7 +249,7 @@ function ReputationsCard({
       hint={
         viewer
           ? 'Each community keeps its own view of those it has seen or heard of, read through its ethics.'
-          : 'Each community knows this one for its own reasons: deeds seen, deeds heard of in rumours, read through what it holds right.'
+          : 'Each community knows them for its own reasons: deeds seen or heard of in rumours, read through what it holds right.'
       }
       wide
     >
@@ -211,46 +260,51 @@ function ReputationsCard({
             : 'No community knows them for anything yet.'}
         </Muted>
       ) : (
-        <Paged items={rows} initial={4} noun={['reputation', 'reputations']}>
-          {(row) => (
-            <ReputationRow
-              key={row.id}
-              row={row}
-              hold={hold}
-              blocked={blocked}
-              viewer={viewer}
-            />
-          )}
-        </Paged>
+        <div className='grid min-w-0 grid-cols-1 gap-3 @xl/mind:grid-cols-2'>
+          <Paged items={rows} initial={6} noun={['reputation', 'reputations']}>
+            {(row) => (
+              <ReputationRow
+                key={row.id}
+                row={row}
+                hold={hold}
+                blocked={blocked}
+                viewer={viewer}
+              />
+            )}
+          </Paged>
+        </div>
       )}
-      <div className='grid min-w-0 grid-cols-1 gap-2 @xl/mind:grid-cols-3'>
-        <EntityPicker
+      <AddBar
+        title='Spread the word'
+        action={
+          <Button
+            size='sm'
+            disabled={busy !== null || other === null}
+            disabledReason={
+              busy ?? (other === null ? 'Pick who or where first.' : undefined)
+            }
+            onClick={() => add.mutate()}
+          >
+            <Plus />
+            Spread
+          </Button>
+        }
+      >
+        <NodePicker
           label={viewer ? 'Of whom' : 'Where'}
           types={viewer ? ANYONE : PLACES}
           value={other}
           onChange={setOther}
           blocked={busy}
-          icon={RENOWN_ICON}
         />
         <MindPicker
-          label='For'
+          label='Known for'
           value={axis}
           table={table(view.axes)}
           blocked={busy}
           onPick={setAxis}
         />
-        <Button
-          size='sm'
-          disabled={busy !== null || other === null}
-          disabledReason={
-            busy ?? (other === null ? 'Pick who or where first.' : undefined)
-          }
-          onClick={() => add.mutate()}
-        >
-          <Plus />
-          Spread the word
-        </Button>
-      </div>
+      </AddBar>
     </MindCard>
   )
 }
@@ -282,6 +336,10 @@ function StandingCard({ view, blocked, hold }: Props) {
       ),
   })
   const busy = why(blocked, begin.isPending, silence.isPending, wipe.isPending)
+  const silenced =
+    standing !== null &&
+    standing.silenced_until !== null &&
+    standing.silenced_until >= standing.updated_epoch
   return (
     <MindCard
       title='Standing as a ruler'
@@ -290,49 +348,45 @@ function StandingCard({ view, blocked, hold }: Props) {
       wide
     >
       {standing === null ? (
-        <div className='flex min-w-0 flex-wrap items-center gap-2'>
-          <Muted variant='caption'>
-            No standing yet. It grows each epoch while they rule.
-          </Muted>
-          <Button
-            size='sm'
-            disabled={busy !== null}
-            disabledReason={busy ?? undefined}
-            onClick={() => begin.mutate()}
-          >
-            <Plus />
-            Give them standing
-          </Button>
-        </div>
+        <EmptyState
+          icon={STANDING_ICON}
+          size='compact'
+          title='No standing yet'
+          description='It grows each epoch while they rule. You can give it now.'
+          action={
+            <Button
+              size='sm'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => begin.mutate()}
+            >
+              <Plus />
+              Give standing
+            </Button>
+          }
+        />
       ) : (
         <>
           <div className='grid min-w-0 grid-cols-2 gap-3 @xl/mind:grid-cols-4'>
-            {(['prestige', 'piety', 'dread', 'tyranny'] as const).map((key) => {
+            {STANDINGS.map((key) => {
               const spec = named(CURRENCIES, key)
               return (
-                <div key={key} className='flex min-w-0 flex-col gap-1'>
+                <div
+                  key={key}
+                  className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/10 p-3'
+                >
                   <div className='flex min-w-0 items-center gap-2'>
                     <spec.icon
                       aria-hidden='true'
                       className='size-icon-sm text-muted-foreground'
                     />
-                    <Muted variant='caption'>{spec.label}</Muted>
-                    <Text
-                      variant='caption'
-                      weight='semibold'
-                      className='ml-auto'
-                    >
-                      {standing[key]}
-                    </Text>
+                    <Label variant='overline'>{spec.label}</Label>
                   </div>
+                  <Stat value={standing[key]} size='kpi' />
                   <Progress
                     value={standing[key]}
                     size='sm'
-                    tone={
-                      key === 'dread' || key === 'tyranny'
-                        ? 'destructive'
-                        : 'success'
-                    }
+                    tone={HARMFUL.has(key) ? 'destructive' : 'success'}
                     aria-label={`${spec.label} ${standing[key]}`}
                   />
                 </div>
@@ -348,39 +402,41 @@ function StandingCard({ view, blocked, hold }: Props) {
                 </EntityLink>
               </Muted>
             )}
-            {standing.silenced_until !== null &&
-              standing.silenced_until >= standing.updated_epoch && (
-                <Badge variant='secondary'>{`Dissent silenced until epoch ${standing.silenced_until}`}</Badge>
-              )}
-            <Button
-              size='sm'
-              variant='outline'
-              disabled={busy !== null}
-              disabledReason={busy ?? undefined}
-              onClick={() => silence.mutate(standing.updated_epoch + 3)}
-            >
-              <VolumeX />
-              Silence dissent
-            </Button>
-            <Button
-              size='sm'
-              variant='ghost'
-              disabled={busy !== null}
-              disabledReason={busy ?? undefined}
-              onClick={() => wipe.mutate()}
-            >
-              <Trash2 />
-              Wipe clean
-            </Button>
+            {silenced && (
+              <Badge variant='secondary'>{`Dissent silenced until epoch ${standing.silenced_until}`}</Badge>
+            )}
+            <div className='ml-auto flex shrink-0 flex-wrap items-center gap-2'>
+              <Button
+                size='sm'
+                variant='outline'
+                disabled={busy !== null || silenced}
+                disabledReason={
+                  busy ??
+                  (silenced ? 'Dissent is already silenced.' : undefined)
+                }
+                onClick={() => silence.mutate(standing.updated_epoch + 3)}
+              >
+                <VolumeX />
+                Silence dissent
+              </Button>
+              <Button
+                size='sm'
+                variant='ghost'
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() => wipe.mutate()}
+              >
+                <Trash2 />
+                Wipe clean
+              </Button>
+            </div>
           </div>
           <AdjustStats
             id={`standing-${view.node_id}`}
             groups={[
               {
                 title: 'Standing (0 to 100)',
-                fields: (
-                  ['prestige', 'piety', 'dread', 'tyranny'] as const
-                ).map((key) => ({
+                fields: STANDINGS.map((key) => ({
                   key,
                   label: named(CURRENCIES, key).label,
                   value: standing[key],
@@ -456,48 +512,118 @@ function DeedRow({ deed, view, blocked, hold }: { deed: DeedRecord } & Props) {
     claim.isPending
   )
   return (
-    <div className='flex min-w-0 flex-col gap-2 rounded-md border p-2'>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
-        <Text weight='semibold'>{`A deed of ${deed.label.toLowerCase()}${deed.act ? ` (${deed.act.replaceAll('_', ' ')})` : ''}`}</Text>
-        {deed.token && <Badge variant='secondary'>Token kept</Badge>}
-        <div className='ml-auto flex shrink-0 items-center gap-1'>
+    <ItemRow
+      icon={spec.icon}
+      tone={spec.tone}
+      title={`A deed of ${deed.label.toLowerCase()}${deed.act ? ` (${deed.act.replaceAll('_', ' ')})` : ''}`}
+      meta={`${deed.doer?.name ?? 'Someone'}${deed.place ? ` in ${deed.place.name}` : ''} · size ${deed.magnitude} · seen by ${deed.witnesses} · epoch ${deed.epoch}`}
+      badges={
+        deed.token ? <Badge variant='secondary'>Token kept</Badge> : undefined
+      }
+      actions={
+        <>
           <Button
             size='icon-sm'
-            variant='ghost'
-            aria-label={deed.token ? 'Lose the token' : 'Give the doer a token'}
+            variant={deed.token ? 'secondary' : 'ghost'}
+            aria-label={
+              deed.token ? 'Take the token away' : 'Give the doer a token'
+            }
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
             onClick={() => token.mutate()}
           >
             <Award />
           </Button>
-          <Button
-            size='icon-sm'
-            variant='ghost'
-            aria-label='Strike the deed from memory'
-            disabled={busy !== null}
-            disabledReason={busy ?? undefined}
+          <RemoveButton
+            label='Strike the deed from memory'
+            busy={busy}
             onClick={() => strike.mutate()}
+          />
+        </>
+      }
+      editLabel='claims and size'
+      editor={
+        <>
+          <FormBar
+            action={
+              <Button
+                size='sm'
+                disabled={busy !== null || claimant === null}
+                disabledReason={
+                  busy ??
+                  (claimant === null ? 'Pick a claimant first.' : undefined)
+                }
+                onClick={() => claim.mutate()}
+              >
+                <Plus />
+                Add claim
+              </Button>
+            }
           >
-            <X />
-          </Button>
-        </div>
-      </div>
-      <Muted variant='caption'>
-        {`${deed.doer?.name ?? 'Someone'}${deed.place ? ` in ${deed.place.name}` : ''} · size ${deed.magnitude} · seen by ${deed.witnesses} · epoch ${deed.epoch}`}
-      </Muted>
-      <div className='flex min-w-0 flex-col gap-1'>
+            <NodePicker
+              label='Claimed by'
+              types={MORTALS}
+              value={claimant}
+              onChange={setClaimant}
+              blocked={busy}
+            />
+            <MindPicker
+              label='Claim'
+              value={kind}
+              table={table(view.claim_kinds)}
+              blocked={busy}
+              onPick={setKind}
+            />
+          </FormBar>
+          <AdjustStats
+            id={`deed-${deed.id}`}
+            inline
+            groups={[
+              {
+                title: 'Size of the deed',
+                fields: [
+                  {
+                    key: 'magnitude',
+                    label: 'Size',
+                    value: deed.magnitude,
+                    min: 0,
+                    max: SPAN,
+                  },
+                ],
+              },
+            ]}
+            run={({ value }) =>
+              unwrap(
+                api.POST('/api/actions/deed:edit', {
+                  body: { deed_id: deed.id, magnitude: value, hold },
+                })
+              )
+            }
+          />
+        </>
+      }
+    >
+      <div className='flex min-w-0 flex-col divide-y rounded-md border bg-background'>
         {deed.claims.map((item) => (
-          <div key={item.id} className='flex min-w-0 items-center gap-2'>
-            <Badge variant={item.kind === 'false' ? 'destructive' : 'outline'}>
+          <div
+            key={item.id}
+            className='flex min-w-0 items-center gap-2 px-3 py-2'
+          >
+            <Badge
+              variant={
+                item.kind === 'false'
+                  ? 'destructive'
+                  : item.kind === 'true'
+                    ? 'default'
+                    : 'outline'
+              }
+            >
               {item.kind_label}
             </Badge>
-            <Text
-              variant='caption'
-              truncate
-              className='flex-1'
-            >{`${item.claimant?.name ?? 'Someone'} · ${item.status_label} · credited ${item.credited}`}</Text>
+            <Text variant='caption' truncate className='flex-1'>
+              {item.claimant?.name ?? 'Someone'}
+            </Text>
+            <Muted variant='caption'>{`${item.status_label} · credited ${item.credited}`}</Muted>
             {item.kind === 'false' && item.status === 'standing' && (
               <Button
                 size='icon-sm'
@@ -510,72 +636,15 @@ function DeedRow({ deed, view, blocked, hold }: { deed: DeedRecord } & Props) {
                 <EyeOff />
               </Button>
             )}
-            <Button
-              size='icon-sm'
-              variant='ghost'
-              aria-label='Withdraw the claim'
-              disabled={busy !== null}
-              disabledReason={busy ?? undefined}
+            <RemoveButton
+              label='Withdraw the claim'
+              busy={busy}
               onClick={() => drop.mutate(item.id)}
-            >
-              <X />
-            </Button>
+            />
           </div>
         ))}
       </div>
-      <div className='grid min-w-0 grid-cols-1 gap-2 @xl/mind:grid-cols-3'>
-        <EntityPicker
-          label='Claimed by'
-          types={MORTALS}
-          value={claimant}
-          onChange={setClaimant}
-          blocked={busy}
-          icon={ShieldCheck}
-        />
-        <MindPicker
-          label='Claim'
-          value={kind}
-          table={table(view.claim_kinds)}
-          blocked={busy}
-          onPick={setKind}
-        />
-        <Button
-          size='sm'
-          disabled={busy !== null || claimant === null}
-          disabledReason={
-            busy ?? (claimant === null ? 'Pick a claimant first.' : undefined)
-          }
-          onClick={() => claim.mutate()}
-        >
-          <Plus />
-          Add claim
-        </Button>
-      </div>
-      <AdjustStats
-        id={`deed-${deed.id}`}
-        groups={[
-          {
-            title: 'Size of the deed',
-            fields: [
-              {
-                key: 'magnitude',
-                label: 'Size',
-                value: deed.magnitude,
-                min: 0,
-                max: SPAN,
-              },
-            ],
-          },
-        ]}
-        run={({ value }) =>
-          unwrap(
-            api.POST('/api/actions/deed:edit', {
-              body: { deed_id: deed.id, magnitude: value, hold },
-            })
-          )
-        }
-      />
-    </div>
+    </ItemRow>
   )
 }
 
@@ -601,7 +670,7 @@ function DeedsCard({ view, blocked, hold }: Props) {
     <MindCard
       title='Deeds and claims'
       icon={DEED_ICON}
-      hint='Glory goes to whoever is believed: comrades share it, the vain may claim it falsely, witnesses, tokens and contests expose them.'
+      hint='Glory goes to whoever is believed: comrades share it, the vain claim it falsely, and witnesses, tokens and contests expose them.'
       wide
     >
       {view.deeds.length === 0 ? (
@@ -619,7 +688,20 @@ function DeedsCard({ view, blocked, hold }: Props) {
           )}
         </Paged>
       )}
-      <div className='grid min-w-0 grid-cols-1 gap-2 @xl/mind:grid-cols-3'>
+      <AddBar
+        title='Set down a deed'
+        action={
+          <Button
+            size='sm'
+            disabled={busy !== null}
+            disabledReason={busy ?? undefined}
+            onClick={() => record.mutate()}
+          >
+            <DEED_ICON />
+            Set it down
+          </Button>
+        }
+      >
         <MindPicker
           label='A deed of'
           value={axis}
@@ -627,24 +709,14 @@ function DeedsCard({ view, blocked, hold }: Props) {
           blocked={busy}
           onPick={setAxis}
         />
-        <EntityPicker
+        <NodePicker
           label='Seen in'
           types={PLACES}
           value={place}
           onChange={setPlace}
           blocked={busy}
-          icon={DEED_ICON}
         />
-        <Button
-          size='sm'
-          disabled={busy !== null}
-          disabledReason={busy ?? undefined}
-          onClick={() => record.mutate()}
-        >
-          <DEED_ICON />
-          Set it down
-        </Button>
-      </div>
+      </AddBar>
     </MindCard>
   )
 }
@@ -686,49 +758,53 @@ function LoreCard({ view, blocked }: Props) {
       title='Lore as currency'
       icon={LORE_ICON}
       hint='Techniques, hidden sites, maps and prophecies are worth more the fewer hold them; each telling makes them cheaper.'
+      wide
     >
       {view.trades.length === 0 ? (
         <Muted variant='caption'>No lore has changed hands yet.</Muted>
       ) : (
         <Paged items={view.trades} initial={4} noun={['trade', 'trades']}>
           {(item) => (
-            <div
+            <ItemRow
               key={item.id}
-              className='flex min-w-0 items-center gap-2 rounded-md border p-2'
-            >
-              <PRICE_ICON
-                aria-hidden='true'
-                className='size-icon-sm text-muted-foreground'
-              />
-              <div className='flex min-w-0 flex-1 flex-col'>
-                <Text
-                  weight='semibold'
-                  truncate
-                >{`${item.kind_label}: ${item.subject?.name ?? item.key.replaceAll('_', ' ')}`}</Text>
-                <Muted variant='caption'>{`${item.seller?.name ?? 'Someone'} to ${item.buyer?.name ?? 'someone'} · worth ${item.value} · paid in ${item.price_label.toLowerCase()} · epoch ${item.epoch}`}</Muted>
-              </div>
-              <Button
-                size='icon-sm'
-                variant='ghost'
-                aria-label='Strike the trade from the record'
-                disabled={busy !== null}
-                disabledReason={busy ?? undefined}
-                onClick={() => strike.mutate(item.id)}
-              >
-                <X />
-              </Button>
-            </div>
+              icon={PRICE_ICON}
+              tone='gold'
+              title={`${item.kind_label}: ${item.subject?.name ?? item.key.replaceAll('_', ' ')}`}
+              meta={`${item.seller?.name ?? 'Someone'} to ${item.buyer?.name ?? 'someone'} · epoch ${item.epoch}`}
+              badges={
+                <Badge variant='outline'>{`Worth ${item.value} · ${item.price_label.toLowerCase()}`}</Badge>
+              }
+              actions={
+                <RemoveButton
+                  label='Strike the trade from the record'
+                  busy={busy}
+                  onClick={() => strike.mutate(item.id)}
+                />
+              }
+            />
           )}
         </Paged>
       )}
-      <div className='flex min-w-0 flex-col gap-2'>
-        <EntityPicker
-          label='Give lore to'
+      <AddBar
+        title='Pass on a piece of lore'
+        action={
+          <Button
+            size='sm'
+            disabled={busy !== null || missing !== null}
+            disabledReason={busy ?? missing ?? undefined}
+            onClick={() => sell.mutate()}
+          >
+            <LORE_ICON />
+            Pass it on
+          </Button>
+        }
+      >
+        <NodePicker
+          label='To'
           types={ANYONE}
           value={buyer}
           onChange={setBuyer}
           blocked={busy}
-          icon={LORE_ICON}
         />
         <MindPicker
           label='Kind of lore'
@@ -737,31 +813,26 @@ function LoreCard({ view, blocked }: Props) {
           blocked={busy}
           onPick={setKind}
         />
-        <Input
-          aria-label='Which piece of lore'
-          placeholder='Technique key, or site, region or prophecy'
-          value={key}
-          onChange={(event) => setKey(event.target.value)}
-          disabled={busy !== null}
-        />
-        <EntityPicker
-          label='About (site, land or prophecy)'
-          types={['place', 'region', 'prophecy']}
+        <div className='flex min-w-0 flex-col gap-1'>
+          <Label as='label' htmlFor={`lore-key-${view.node_id}`}>
+            Which piece
+          </Label>
+          <Input
+            id={`lore-key-${view.node_id}`}
+            placeholder='Technique key, or site, region or prophecy'
+            value={key}
+            onChange={(event) => setKey(event.target.value)}
+            disabled={busy !== null}
+          />
+        </div>
+        <NodePicker
+          label='About'
+          types={ABOUT}
           value={subject}
           onChange={setSubject}
           blocked={busy}
-          icon={LORE_ICON}
         />
-        <Button
-          size='sm'
-          disabled={busy !== null || missing !== null}
-          disabledReason={busy ?? missing ?? undefined}
-          onClick={() => sell.mutate()}
-        >
-          <LORE_ICON />
-          Pass it on
-        </Button>
-      </div>
+      </AddBar>
     </MindCard>
   )
 }
@@ -792,11 +863,11 @@ export function RenownSection({ nodeId }: { nodeId: number }) {
     <Section
       id='section-renown'
       title='Reputation and standing'
-      description='What each community thinks of this one and what this one thinks of others, a ruler’s prestige, piety, dread and tyranny, deeds and who claims them, and lore traded.'
+      description='What each community thinks of this one and what this one thinks of others; a ruler’s standing; deeds and who claims them; lore traded.'
       icon={RENOWN_ICON}
     >
       <div className='@container/mind flex min-w-0 flex-col gap-4'>
-        <div className='grid min-w-0 grid-cols-1 gap-3 @md/mind:grid-cols-2 @3xl/mind:grid-cols-4'>
+        <div className='grid min-w-0 grid-cols-2 gap-3 @3xl/mind:grid-cols-4'>
           <KpiTile
             label='Glory'
             value={view.glory}
@@ -813,7 +884,7 @@ export function RenownSection({ nodeId }: { nodeId: number }) {
           />
           <KpiTile
             label='Known in'
-            value={`${places} places`}
+            value={`${places} ${places === 1 ? 'place' : 'places'}`}
             icon={RENOWN_ICON}
             tone='verdigris'
           />
@@ -824,7 +895,7 @@ export function RenownSection({ nodeId }: { nodeId: number }) {
             tone='warning'
           />
         </div>
-        <div className='grid min-w-0 grid-cols-1 gap-3 @xl/mind:grid-cols-2'>
+        <div className='grid min-w-0 grid-cols-1 gap-4 @xl/mind:grid-cols-2'>
           <ReputationsCard
             view={view}
             blocked={blocked}
@@ -842,13 +913,11 @@ export function RenownSection({ nodeId }: { nodeId: number }) {
         </div>
         <ControlPanel
           title='Hold what you set'
-          note='Values you set here are held against the world while the switch is on. Every change goes into the ledger and can be undone.'
+          note='Values you set here are held against the world while the switch is on. Reputations fade where nothing renews them; held ones stay. Every change goes into the ledger and can be undone.'
           hold={hold}
           onHold={setHold}
         >
-          <Muted variant='caption'>
-            Reputations fade where nothing renews them; held ones stay.
-          </Muted>
+          {null}
         </ControlPanel>
       </div>
     </Section>

@@ -16,7 +16,7 @@ from aerona.domain.models.entity_stats import PolityStats
 from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.phases.renown import fade_and_sum
 from aerona.engine.renown.book import acclaim, standing_with
-from aerona.engine.renown.claims import tend_claims
+from aerona.engine.renown.claims import punish, tend_claims
 from aerona.engine.renown.currencies import CurrencyTally, on_act, restraint, spend_prestige, tend_currencies
 from aerona.engine.renown.deeds import DeedTally, axis_for, credit, deed_seen, expose, hearsay, new_claim, record_deed
 from aerona.engine.renown.lore import trade, value_of
@@ -90,6 +90,7 @@ async def test_a_false_claim_steals_hearsay_until_it_is_exposed(realm: Realm) ->
     assert trick is not None and trick.value > 0
     grudge = await realm.session.scalar(select(MemoryRow).where(MemoryRow.holder_node_id == doer.id, MemoryRow.kind == MemoryKind.HUMILIATED_ME))
     assert grudge is not None
+    assert await punish(context(realm.session, tuned(claims={"punish_pct": 100})), claim)
     await tend_claims(ctx, DeedTally())
 
 

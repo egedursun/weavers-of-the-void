@@ -9,7 +9,7 @@ from aerona.db.tables.relations import ContestRow, GroupRankRow, PassionRow, Per
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.mind import MemoryKind, PreferenceKind, SkillKind, SkillSource, ThoughtKind, ValueAxis, ValueHolder
 from aerona.domain.enums.mortal import LifeStage
-from aerona.domain.enums.relations import AppealKind, ContestKind, ContestStake, PassionKind, PassionSource, PersuasionAim, RelationType
+from aerona.domain.enums.relations import AppealKind, ContestKind, ContestStake, GroupKind, PassionKind, PassionSource, PersuasionAim, RelationType
 from aerona.engine.mind.book import ensure_mind_row, stored_values, write_values
 from aerona.engine.mind.opinion import opinion
 from aerona.engine.mind.preferences import write_pref
@@ -18,10 +18,10 @@ from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.relations.affairs import AffairTally, flag_lovers, tend_affairs
 from aerona.engine.relations.book import ensure_relation, refresh_kinds, relation
 from aerona.engine.relations.circles import CircleTally, tend_circles
-from aerona.engine.relations.contests import Bout, ContestTally, hold_contest
+from aerona.engine.relations.contests import Bout, ContestTally, hold_contest, judge_taste
 from aerona.engine.relations.interactions import SocialTally, socialise
 from aerona.engine.relations.passions import PassionTally, bereaved, invoke, kindle, tend_passions
-from aerona.engine.relations.pecking import PeckingTally, tend_pecking
+from aerona.engine.relations.pecking import PeckingTally, challenge, tend_pecking
 from aerona.engine.relations.persuasion import persuade
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, active_bonds, context, mortal, settlement
@@ -171,3 +171,21 @@ async def test_a_contest_for_a_hand_moves_the_heart_of_the_one_contested(realm: 
     await kindle(realm.session, fool.id, PassionKind.HATRED, sage.id, strength=90, source=PassionSource.DIVINE, epoch=ctx.epoch)
     assert await realm.session.scalar(select(PassionRow).where(PassionRow.holder_node_id == fool.id)) is not None
     assert await realm.session.scalar(select(RelationshipRow).where(RelationshipRow.holder_node_id == fool.id, RelationshipRow.subject_node_id == sage.id))
+
+
+async def test_a_judge_who_loves_the_art_form_weighs_merit_and_a_challenge_is_fought_out(realm: Realm) -> None:
+    ctx = context(realm.session, tuned(contests={"jitter": 0}, pecking={"challenge_margin": 0, "challenge_pct": 100}))
+    town = await settlement(realm, "Rhos")
+    poet, rival, judge = await grown(realm, "Siân", town), await grown(realm, "Tudur", town), await grown(realm, "Urien", town)
+    bout = Bout(ContestKind.FLYTING, ContestStake.HONOUR, poet, rival, judge_id=judge.id, place_id=town.id)
+    assert await judge_taste(ctx, bout) == 0
+    await write_pref(realm.session, judge.id, PreferenceKind.ART_FORM, "epic_poem", 80)
+    assert await judge_taste(ctx, bout) == 80
+    upper = GroupRankRow(group_node_id=town.id, member_node_id=rival.id, group_kind=GroupKind.CIRCLE, rank=1, dominance=10, since_epoch=1, locked=[])
+    lower = GroupRankRow(group_node_id=town.id, member_node_id=poet.id, group_kind=GroupKind.CIRCLE, rank=2, dominance=90, since_epoch=1, locked=[])
+    realm.session.add_all([upper, lower])
+    await realm.session.flush()
+    tally = PeckingTally()
+    await challenge(ctx, upper, lower, tally)
+    met = await relation(realm.session, rival.id, poet.id)
+    assert tally.challenges == 1 and met is not None and met.familiarity > 0

@@ -15,7 +15,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import Facet, ThoughtKind
-from aerona.domain.enums.relations import GroupKind
+from aerona.domain.enums.relations import GroupKind, InteractionKind
 from aerona.engine.body.book import effective
 from aerona.engine.context import TickContext
 from aerona.engine.mind.aspirations import rules_over
@@ -25,6 +25,7 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.relations.book import WARLIKE, ensure_relation, shift
+from aerona.engine.relations.interactions import SocialTally, interact, load_scene
 
 FACET_SPAN = 50
 LEADING = frozenset({GroupKind.CIRCLE, GroupKind.WARBAND})
@@ -82,8 +83,20 @@ async def dominance(ctx: TickContext, mortal_id: int) -> int:
     return clamp_int(sum(value * share for value, share in parts) / weight, 0, PERCENT)
 
 
+async def confront(ctx: TickContext, challenger_id: int, holder_id: int) -> None:
+    challenger, holder = await ctx.session.get(EntityRow, challenger_id), await ctx.session.get(EntityRow, holder_id)
+    if challenger is None or holder is None or challenger.location_id is None or challenger.location_id != holder.location_id:
+        return
+    scene = await load_scene(ctx, challenger.location_id, [challenger, holder])
+    temper = (await facets_of(ctx.session, challenger_id)).get(Facet.ANGER, 0)
+    kind = InteractionKind.BRAWL if temper > 0 else InteractionKind.BOAST
+    rng = ctx.rng(seed_of("pecking_confront", challenger_id, holder_id, ctx.epoch))
+    await interact(scene, challenger_id, holder_id, kind, rng=rng, tally=SocialTally())
+
+
 async def challenge(ctx: TickContext, upper: GroupRankRow, lower: GroupRankRow, tally: PeckingTally) -> None:
     tally.challenges += 1
+    await confront(ctx, lower.member_node_id, upper.member_node_id)
     rng = ctx.rng(seed_of("pecking", upper.group_node_id, lower.member_node_id, ctx.epoch))
     odds = PERCENT // 2 + (lower.dominance - upper.dominance)
     for holder, other in ((upper.member_node_id, lower.member_node_id), (lower.member_node_id, upper.member_node_id)):

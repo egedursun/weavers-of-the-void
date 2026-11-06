@@ -99,14 +99,10 @@ function MortalBonds({
   blocked: string | null
 }) {
   const [hold, setHold] = useState(true)
-  const best =
-    view.ranks.length > 0
-      ? Math.min(...view.ranks.map((rank) => rank.rank))
-      : null
   const strongest = view.passions[0]?.strength ?? 0
   return (
     <div className='@container/mind flex min-w-0 flex-col gap-4'>
-      <div className='grid min-w-0 grid-cols-1 gap-3 @md/mind:grid-cols-2 @3xl/mind:grid-cols-5'>
+      <div className='grid min-w-0 grid-cols-2 gap-3 @3xl/mind:grid-cols-4'>
         <KpiTile
           label='Friends'
           value={count(view, FRIENDLY)}
@@ -132,14 +128,8 @@ function MortalBonds({
           tone='gold'
           meter={{ value: strongest, max: 100, label: 'Passion' }}
         />
-        <KpiTile
-          label='Best standing'
-          value={best === null ? 'None' : `Rank ${best}`}
-          icon={STANDING_ICON}
-          tone='verdigris'
-        />
       </div>
-      <div className='grid min-w-0 grid-cols-1 gap-3 @xl/mind:grid-cols-2'>
+      <div className='grid min-w-0 grid-cols-1 gap-4 @xl/mind:grid-cols-2'>
         <BondsCard view={view} blocked={blocked} hold={hold} />
         <PassionsCard view={view} blocked={blocked} hold={hold} />
         <StandingCard view={view} blocked={blocked} hold={hold} />
@@ -182,7 +172,7 @@ function GroupBonds({
           tone='warning'
         />
       </div>
-      <div className='grid min-w-0 grid-cols-1 gap-3 @xl/mind:grid-cols-2'>
+      <div className='grid min-w-0 grid-cols-1 gap-4 @xl/mind:grid-cols-2'>
         {view.order.length > 0 && (
           <StandingCard view={view} blocked={blocked} hold={hold} />
         )}
@@ -228,7 +218,7 @@ export function BondsSection({ nodeId }: { nodeId: number }) {
     <Section
       id='section-ties'
       title='Relationships, passions and standing'
-      description='Friendships, loves and rivalries; passions that lift or break; circles, pecking orders, contests of wit and arguments.'
+      description='Only mortals hold bonds, passions, contests and arguments; households, realms, factions and vessels keep pecking orders, and places host circles. Stars, worlds and gods have none of these.'
       icon={BONDS_ICON}
     >
       {view.mortal ? (

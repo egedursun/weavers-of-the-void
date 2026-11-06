@@ -3,13 +3,22 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.renown import DeedClaimRow, DeedRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.relations import ContestEnd, ContestKind, ContestStake
 from aerona.domain.enums.renown import ClaimKind, ClaimStatus
 from aerona.engine.context import TickContext
+from aerona.engine.mortal.justice import code_punishment, sentence
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.relations.contests import Bout, ContestTally, hold_contest
 from aerona.engine.renown.deeds import DeedTally, claim_falsely, expose, share_deeds
+
+
+async def punish(ctx: TickContext, claim: DeedClaimRow) -> bool:
+    claimant = await living_entity(ctx.session, claim.claimant_node_id)
+    if claimant is None or held(claimant.id) or not ctx.rng(seed_of("impostor", claim.id)).chance(ctx.rules.claims.punish_pct):
+        return False
+    return await sentence(ctx, claimant, CrimeKind.THEFT, await code_punishment(ctx, claimant.location_id, CrimeKind.THEFT))
 
 
 async def test_claim(ctx: TickContext, deed: DeedRow, claim: DeedClaimRow, tally: DeedTally) -> None:
@@ -25,6 +34,7 @@ async def test_claim(ctx: TickContext, deed: DeedRow, claim: DeedClaimRow, tally
             tally.verified += 1
             return
     await expose(ctx, deed, claim, tally)
+    await punish(ctx, claim)
 
 
 async def tend_claims(ctx: TickContext, tally: DeedTally) -> None:
