@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field, replace
 
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import COMMAND_SKILLS
 from aerona.constants.units import PERCENT
@@ -10,7 +11,7 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.chronicle import ChronicleRepository, caused_by
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.sons import SonRepository
-from aerona.db.tables.body import InjuryRow
+from aerona.db.tables.body import BodyRow, InjuryRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
@@ -19,7 +20,7 @@ from aerona.db.tables.mind import VALUE_MAX
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, SiegeRow, WarRow, WarSideRow
-from aerona.domain.enums.body import Capacity, HarmCause
+from aerona.domain.enums.body import Capacity, Consciousness, HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import GoodsFlow
@@ -791,6 +792,11 @@ async def _seasoned(ctx: TickContext, theatre: Theatre, sides: tuple[EntityRow, 
             await fought(ctx, commander, commander=True, survived=commander.status is EntityStatus.CANON)
 
 
+async def out_cold(session: AsyncSession, mortal_id: int) -> bool:
+    body = await session.get(BodyRow, mortal_id)
+    return body is not None and body.consciousness is Consciousness.UNCONSCIOUS
+
+
 async def _heroics(ctx: TickContext, theatre: Theatre, report: BattleReport, battle_id: int | None = None) -> None:
     anchor = report.record.id if report.record is not None else report.war.event_entity_id
     winners, losers = theatre.sides.heroes_of(report.winner.id), theatre.sides.heroes_of(report.loser.id)
@@ -800,8 +806,13 @@ async def _heroics(ctx: TickContext, theatre: Theatre, report: BattleReport, bat
             report.hero_texts.append(await duel(ctx, theatre, first, second, war=report.war, anchor_id=anchor, ground=report.ground))
             report.ids.extend((first.id, second.id))
     candidates = [hero for hero in theatre.sides.heroes_of(report.loser.id) if hero.status is EntityStatus.CANON]
-    if candidates and ctx.rng("capture").chance(ctx.rules.campaigns.capture_chance):
+    fallen = [hero for hero in candidates if await out_cold(ctx.session, hero.id)]
+    prisoner: EntityRow | None = None
+    if fallen and ctx.rng("capture_fallen").chance(ctx.rules.tissues.unconscious_capture_pct):
+        prisoner = ctx.rng("captive_fallen").pick(fallen)
+    elif candidates and ctx.rng("capture").chance(ctx.rules.campaigns.capture_chance):
         prisoner = ctx.rng("captive").pick(candidates)
+    if prisoner is not None:
         event = await war_event(ctx.session, report.war)
         await take_captive(ctx, report.winner, prisoner, report.war, description=event.name, home_id=report.loser.id)
         theatre.sides.mark_captive(prisoner.id)

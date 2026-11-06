@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.anatomy import FINGER_COUNT, Anatomy, anatomy_of
 from aerona.catalog.body_plans import BUILD_RANK, HEIGHT_RANK, PLANS, WHOLE_PLANS
 from aerona.catalog.mind import SKILLS, TRAITS
+from aerona.catalog.tissues import COUNTED_PARTS, FULL_COUNTS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.entities import EntityRepository
@@ -17,7 +18,19 @@ from aerona.db.tables.entities import EntityRow, EntityTagRow, EntityTraitRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import SkillRow, TraitRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.body import OPEN_INJURY_STATES, BodyBuild, BodyFunction, BodyPlan, Capacity, ConditionKind, HeightClass, InjuryState, StrikeStyle
+from aerona.domain.enums.body import (
+    OPEN_INJURY_STATES,
+    BodyBuild,
+    BodyFunction,
+    BodyPlan,
+    Capacity,
+    ConditionKind,
+    Consciousness,
+    HeightClass,
+    InjuryState,
+    StrikeStyle,
+    TreatmentStep,
+)
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.mind import TraitKind
@@ -254,6 +267,38 @@ async def metallurgy_of(session: AsyncSession, bearer_id: int, community_id: int
     return level
 
 
+def aid_of(rules: Rules, anatomy: Anatomy, injuries: list[InjuryRow]) -> float:
+    walking = {part.key for part in anatomy.with_function(BodyFunction.LOCOMOTION)}
+    best = 0
+    for row in injuries:
+        if row.state not in OPEN_INJURY_STATES or row.part not in walking:
+            continue
+        if TreatmentStep.CRUTCH.value in row.treatments:
+            best = max(best, rules.tissues.crutch_restore_pct)
+        if TreatmentStep.TRACTION.value in row.treatments:
+            best = max(best, rules.tissues.traction_restore_pct)
+    return best / PERCENT
+
+
+def consciousness_of(rules: Rules, bearer: Bearer, pain: int, blood: int) -> Consciousness:
+    table = rules.tissues
+    if blood <= table.blood_faint_at:
+        return Consciousness.UNCONSCIOUS
+    will = (stat(bearer, "will") if isinstance(bearer, EntityRow) else None) or PERCENT // 2
+    felt = pain * (1 - will / PERCENT * table.pain_will_pct / PERCENT)
+    if felt >= table.unconscious_at:
+        return Consciousness.UNCONSCIOUS
+    if felt >= table.dizzy_at:
+        return Consciousness.DIZZY
+    if felt >= table.nausea_at:
+        return Consciousness.NAUSEOUS
+    return Consciousness.AWAKE
+
+
+def counts_of(body: BodyRow) -> dict[str, int]:
+    return {key: getattr(body, column) for key, column in COUNTED_PARTS.items()}
+
+
 async def armour_of(session: AsyncSession, rules: Rules, bearer: Bearer, community_id: int | None) -> Armour:
     table = rules.armour
     if not isinstance(bearer, EntityRow):
@@ -310,15 +355,18 @@ def factors_of(
     state = BodyState(
         anatomy,
         wounds_from(injuries, prostheses),
-        body.fingers,
+        counts_of(body),
         open_severity(injuries),
         tuple((row.kind, row.severity * variant_scales.get(row.id, 1.0)) for row in conditions),
         reading.presence_pct,
         reading.reader,
         afflicted_parts(rules, conditions),
+        body.consciousness,
+        body.exertion,
+        aid_of(rules, anatomy, injuries),
     )
     actual = capacities(rules, stats, state)
-    whole = capacities(rules, replace(stats, age=None), BodyState(anatomy, (), FINGER_COUNT, 0))
+    whole = capacities(rules, replace(stats, age=None), BodyState(anatomy, (), FULL_COUNTS, 0))
     factors = {capacity: round(actual[capacity] * PERCENT / whole[capacity]) if whole[capacity] else PERCENT for capacity in Capacity}
     if bedridden(rules, bearer):
         factors.update(dict.fromkeys(BEDRIDDEN_LOSSES, 0))
@@ -338,7 +386,7 @@ async def function_level(session: AsyncSession, rules: Rules, node_id: int | Non
     if not anatomy.with_function(function):
         return 0
     injuries = await injuries_of(session, node_id)
-    state = BodyState(anatomy, wounds_from(injuries, await prostheses_of(session, node_id)), body.fingers, open_severity(injuries))
+    state = BodyState(anatomy, wounds_from(injuries, await prostheses_of(session, node_id)), counts_of(body), open_severity(injuries))
     return function_percents(rules, state)[function] if function in FUNCTION_LEVELS else PERCENT
 
 

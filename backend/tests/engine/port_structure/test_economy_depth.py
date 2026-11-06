@@ -33,14 +33,12 @@ from aerona.engine.economy.extraction import knowledge_gate
 from aerona.engine.economy.loot import loot_temples
 from aerona.engine.economy.markets import quote_market
 from aerona.engine.economy.materials import (
-    draw_strength,
-    forge_heat,
-    forgeable,
-    sharpness,
-    weapon_damage,
     MaterialBook,
     MaterialProps,
     battle_wear,
+    draw_strength,
+    forge_heat,
+    forgeable,
     from_spec,
     holy_edge,
     hull_guard,
@@ -49,6 +47,8 @@ from aerona.engine.economy.materials import (
     rig_of,
     rust_wear,
     set_node_material,
+    sharpness,
+    weapon_damage,
     wind_guard,
     worth_factor,
 )

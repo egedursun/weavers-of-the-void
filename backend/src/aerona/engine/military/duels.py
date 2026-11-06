@@ -2,11 +2,13 @@ from dataclasses import dataclass, field
 
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
+from aerona.db.tables.body import BodyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.military import DuelContext, DuelEnd
 from aerona.domain.enums.mind import TraitEffect, ValueAxis
 from aerona.engine.body.book import effective
+from aerona.engine.body.strike import worn_layers
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.beasts import mounted_power
 from aerona.engine.economy.sanctity import holy_strike
@@ -77,8 +79,20 @@ async def fighter(ctx: TickContext, hero: EntityRow, foe: EntityRow | None = Non
         reach=reach,
         honour=values.get(ValueAxis.HONOUR, 0),
         mercy=values.get(ValueAxis.MERCY, 0),
-        burden=burden_of(held, broken) * ctx.rules.item_powers.weight_fatigue_pct // PERCENT,
+        burden=burden_of(held, broken) * ctx.rules.item_powers.weight_fatigue_pct // PERCENT + await armour_burden(ctx, hero.id),
+        stamina=PERCENT - await spent_strength(ctx, hero.id),
     )
+
+
+async def armour_burden(ctx: TickContext, hero_id: int) -> int:
+    layers = await worn_layers(ctx.session, hero_id)
+    density = sum(layer.props.density for layer in layers) / len(layers) if layers else 0
+    return round(density * ctx.rules.tissues.duel_density_burden / PERCENT)
+
+
+async def spent_strength(ctx: TickContext, hero_id: int) -> int:
+    body = await ctx.session.get(BodyRow, hero_id)
+    return body.exertion if body is not None else 0
 
 
 def swing(rules: Rules, rng: SeededRandom, fighter: Fighter, foe: Fighter, first: bool) -> float:

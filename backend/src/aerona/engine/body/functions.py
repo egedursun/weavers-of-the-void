@@ -1,11 +1,11 @@
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 from aerona.catalog.anatomy import FINGERS, Anatomy
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import InjuryRow
-from aerona.domain.enums.body import BodyFunction, InjuryKind
+from aerona.domain.enums.body import BodyFunction, InjuryKind, NerveDamage
 from aerona.rules.registry.body import CapacityRules
 
 LEFT = "left_"
@@ -18,10 +18,11 @@ class Wound:
     kind: InjuryKind
     severity: int
     loss: int
+    nerve: NerveDamage = NerveDamage.NONE
 
     @classmethod
     def of(cls, row: InjuryRow, restored: int = 0) -> "Wound":
-        return cls(row.part, row.kind, row.severity, round(row.function_loss * (PERCENT - restored) / PERCENT))
+        return cls(row.part, row.kind, row.severity, round(row.function_loss * (PERCENT - restored) / PERCENT), row.nerve)
 
 
 def redundancy(rules: CapacityRules, function: BodyFunction) -> int:
@@ -54,7 +55,13 @@ def part_losses(anatomy: Anatomy, wounds: Iterable[Wound], venom_paralysis_at: i
 
 
 def function_levels(
-    rules: CapacityRules, anatomy: Anatomy, wounds: Iterable[Wound], fingers: int, venom_paralysis_at: int, *, afflicted: Iterable[tuple[str, int]] = ()
+    rules: CapacityRules,
+    anatomy: Anatomy,
+    wounds: Iterable[Wound],
+    counts: Mapping[str, int],
+    venom_paralysis_at: int,
+    *,
+    afflicted: Iterable[tuple[str, int]] = (),
 ) -> dict[BodyFunction, float]:
     losses, direct = part_losses(anatomy, wounds, venom_paralysis_at)
     for key, loss in afflicted:
@@ -70,7 +77,7 @@ def function_levels(
         for part in parts:
             value = 1 - losses.get(part.key, 0.0)
             if part.counted:
-                value *= max(0, min(part.counted, fingers)) / part.counted
+                value *= max(0, min(part.counted, counts.get(part.key, part.counted))) / part.counted
             values.append(value)
         weight = redundancy(rules, function) / PERCENT
         level = max(values) * (1 - weight) + sum(values) / len(values) * weight
@@ -78,7 +85,7 @@ def function_levels(
     return levels
 
 
-def weapon_grasp(rules: CapacityRules, anatomy: Anatomy, wounds: Iterable[Wound], fingers: int) -> float:
+def weapon_grasp(rules: CapacityRules, anatomy: Anatomy, wounds: Iterable[Wound], counts: Mapping[str, int]) -> float:
     losses, _ = part_losses(anatomy, wounds, venom_paralysis_at=PERCENT)
     grasping = anatomy.with_function(BodyFunction.GRASP)
     sides: dict[str, float] = {}
@@ -93,4 +100,4 @@ def weapon_grasp(rules: CapacityRules, anatomy: Anatomy, wounds: Iterable[Wound]
         return max((1 - losses.get(part.key, 0.0) for part in grasping), default=0.0)
     best = max(sides.get(RIGHT, 0.0), sides.get(LEFT, 0.0) * rules.off_hand_pct / PERCENT)
     has_fingers = anatomy.part(FINGERS) is not None
-    return best * (rules.fingerless_grip_pct / PERCENT if has_fingers and fingers <= 0 else 1.0)
+    return best * (rules.fingerless_grip_pct / PERCENT if has_fingers and counts.get(FINGERS, 1) <= 0 else 1.0)

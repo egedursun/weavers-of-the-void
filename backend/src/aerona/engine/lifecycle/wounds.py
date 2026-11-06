@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field, replace
 from enum import StrEnum
 
-from aerona.catalog.anatomy import FINGERS
 from aerona.catalog.mind import MELEE_SKILLS
+from aerona.catalog.tissues import COUNTED_PARTS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.chronicle import incident_for
 from aerona.db.repositories.entities import EntityRepository
@@ -20,6 +20,7 @@ from aerona.engine.body.book import Bearer, anatomy_for, ensure_body, function_l
 from aerona.engine.body.hits import MARK_KINDS, Armour, Harm, Hit, hits_for, loss_for
 from aerona.engine.body.state import refresh
 from aerona.engine.body.strike import Layer, Wielding, generic_layers, worn_layers
+from aerona.engine.body.tissues import tissue_loss
 from aerona.engine.context import TickContext
 from aerona.engine.economy.equipment import weapon_of
 from aerona.engine.economy.materials import draw_strength, sharpness
@@ -137,8 +138,9 @@ async def _record(ctx: TickContext, bearer: Bearer, body: BodyRow, harm: Harm, h
             state = InjuryState.LETHAL
         elif _lethal(hit):
             state = InjuryState.FRESH
-        if hit.part.key == FINGERS and hit.kind is InjuryKind.SEVERED:
-            body.fingers = max(0, body.fingers - hit.severity * ctx.rules.anatomy.fingers_per_severity)
+        counted = COUNTED_PARTS.get(hit.part.key)
+        if counted is not None and hit.kind is InjuryKind.SEVERED:
+            setattr(body, counted, max(0, getattr(body, counted) - hit.severity * ctx.rules.anatomy.fingers_per_severity))
         row = InjuryRow(
             bearer_node_id=bearer.id,
             world_id=world_id,
@@ -147,7 +149,12 @@ async def _record(ctx: TickContext, bearer: Bearer, body: BodyRow, harm: Harm, h
             damage_type=hit.damage_type,
             severity=hit.severity,
             state=state,
-            function_loss=0 if hit.part.key == FINGERS and hit.kind is InjuryKind.SEVERED else loss_for(ctx.rules.injury, hit.kind, hit.severity),
+            function_loss=0
+            if counted is not None and hit.kind is InjuryKind.SEVERED
+            else max(loss_for(ctx.rules.injury, hit.kind, hit.severity), tissue_loss(ctx.rules, hit.tissue)),
+            tissue=hit.tissue.deepest,
+            bleeding=hit.tissue.bleeding,
+            nerve=hit.tissue.nerve,
             cause_kind=harm.cause,
             cause_node_id=harm.source_node_id or harm.killer_id,
             event_entity_id=harm.event_entity_id,

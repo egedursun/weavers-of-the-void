@@ -9,6 +9,10 @@ R = BodyRegion
 
 FINGER_COUNT = 10
 FINGERS = "fingers"
+TOE_COUNT = 10
+TOES = "toes"
+TOOTH_COUNT = 32
+TEETH = "teeth"
 
 
 @dataclass(frozen=True)
@@ -76,6 +80,7 @@ HUMANOID_PARTS: tuple[Part, ...] = (
     *_pair("ear", "ear", R.HEAD, (F.HEARING,)),
     Part("nose", "Nose", R.HEAD, (F.PRESENCE,), severable=True),
     Part("jaw", "Jaw", R.HEAD, (F.SPEECH,)),
+    Part(TEETH, "Teeth", R.HEAD, (F.SPEECH, F.PRESENCE), severable=True, counted=TOOTH_COUNT),
     Part("tongue", "Tongue", R.HEAD, (F.SPEECH,), severable=True, internal=True),
     Part("neck", "Neck", R.TORSO, (F.BREATH,), vital=True),
     Part("torso", "Torso", R.TORSO, (F.VITAL,)),
@@ -85,6 +90,7 @@ HUMANOID_PARTS: tuple[Part, ...] = (
     Part(FINGERS, "Fingers", R.ARMS, (F.FINE_MANIPULATION,), severable=True, counted=FINGER_COUNT),
     *_pair("leg", "leg", R.LEGS, (F.LOCOMOTION,)),
     *_pair("foot", "foot", R.LEGS, (F.LOCOMOTION,)),
+    Part(TOES, "Toes", R.LEGS, (F.LOCOMOTION,), severable=True, counted=TOE_COUNT),
 )
 
 QUADRUPED_PARTS: tuple[Part, ...] = (

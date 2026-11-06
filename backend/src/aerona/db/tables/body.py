@@ -10,12 +10,15 @@ from aerona.domain.enums.body import (
     BodyPlan,
     BodyReading,
     ConditionKind,
+    Consciousness,
     DamageType,
     HarmCause,
     HeightClass,
     InjuryKind,
     InjuryState,
     MaimedKind,
+    NerveDamage,
+    TissueKind,
 )
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.material import MaterialKind
@@ -34,6 +37,10 @@ class BodyRow(Base):
         *(at_least(column, 0) for column in CAPACITY_COLUMNS),
         *(between(column, PERCENT_MIN, PERCENT_MAX) for column in (*ARMOUR_COLUMNS, *FUNCTION_COLUMNS, "pain")),
         at_least("fingers", 0),
+        at_least("toes", 0),
+        at_least("teeth", 0),
+        between("blood", PERCENT_MIN, PERCENT_MAX),
+        between("exertion", PERCENT_MIN, PERCENT_MAX),
         at_least("hp_max", 0),
         at_least("patients_healed", 0),
         at_least("patients_lost", 0),
@@ -46,6 +53,11 @@ class BodyRow(Base):
     build: Mapped[BodyBuild] = mapped_column(enum_type(BodyBuild, "build"), default=BodyBuild.AVERAGE)
     traits: Mapped[list[str]] = mapped_column(JSON, default=list)
     fingers: Mapped[int]
+    toes: Mapped[int] = mapped_column(default=10, server_default="10")
+    teeth: Mapped[int] = mapped_column(default=32, server_default="32")
+    blood: Mapped[int] = mapped_column(default=PERCENT, server_default="100")
+    exertion: Mapped[int] = mapped_column(default=0, server_default="0")
+    consciousness: Mapped[Consciousness] = mapped_column(enum_type(Consciousness, "consciousness"), default=Consciousness.AWAKE, server_default="awake")
     pain: Mapped[int] = mapped_column(default=0)
     hp_max: Mapped[int] = mapped_column(default=0)
     melee: Mapped[int] = mapped_column(default=PERCENT)
@@ -77,6 +89,7 @@ class InjuryRow(CreatedAtMixin, Base):
     __table_args__ = (
         between("severity", SEVERITY_MIN, SEVERITY_MAX),
         between("function_loss", PERCENT_MIN, PERCENT_MAX),
+        between("bleeding", PERCENT_MIN, PERCENT_MAX),
         at_least("epoch", 0),
         at_least("infected_epochs", 0),
         Index("ix_injuries_bearer_state", "bearer_node_id", "state"),
@@ -103,6 +116,11 @@ class InjuryRow(CreatedAtMixin, Base):
     infected_epochs: Mapped[int] = mapped_column(default=0)
     healed_epoch: Mapped[int | None]
     incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
+    tissue: Mapped[TissueKind | None] = mapped_column(enum_type(TissueKind, "tissue"))
+    bleeding: Mapped[int] = mapped_column(default=0, server_default="0")
+    nerve: Mapped[NerveDamage] = mapped_column(enum_type(NerveDamage, "nerve"), default=NerveDamage.NONE, server_default="none")
+    treatments: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+    misdiagnosed: Mapped[bool] = mapped_column(default=False, server_default="0")
 
 
 class ConditionRow(CreatedAtMixin, Base):

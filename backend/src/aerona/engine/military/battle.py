@@ -226,6 +226,8 @@ def modifier(rules: Rules, stack: Stack, side: Side, ground: Field, enemy: Side 
     weather = weather_now(side, enemy, ground) if enemy is not None else ground.weather
     heavy = row.armour in HEAVY
     fatigue = row.fatigue * (rules.weather_battle_effects.heavy_fatigue_pct / PERCENT if heavy and weather in HEAVY_WEATHER else 1.0)
+    worn = armour_material(stack)
+    fatigue *= 1 + (worn.density if worn is not None else 0) * rules.tissues.unit_density_fatigue_pct / PERCENT / PERCENT
     quality = row.quality / NORMAL * (1 + row.experience / PERCENT * rules.military_units.experience_pct / PERCENT) * (1 + side.veteran + side.wing_bonus)
     vigour = max(0.2, 1 - fatigue / (2 * PERCENT)) * (0.5 + min(PERCENT, row.morale + side.leadership) / PERCENT)
     height = 1.0

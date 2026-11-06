@@ -1,6 +1,6 @@
 import math
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from aerona.catalog.anatomy import Anatomy, Part
 from aerona.constants.units import PERCENT
@@ -8,6 +8,7 @@ from aerona.core.random import SeededRandom
 from aerona.db.tables.body import SEVERITY_MAX, SEVERITY_MIN
 from aerona.domain.enums.body import BodyFunction, BodyRegion, DamageType, HarmCause, InjuryKind, StrikeStyle
 from aerona.engine.body.strike import EDGED, Layer, Scorch, Wielding, heat_of, resolve, strike_of
+from aerona.engine.body.tissues import TissueHit, tissue_hit
 from aerona.rules.registry import Rules
 from aerona.rules.registry.body import InjuryRules
 
@@ -59,6 +60,7 @@ class Hit:
     hp: float
     absorbed: bool = False
     scorched: tuple[Scorch, ...] = ()
+    tissue: TissueHit = field(default_factory=TissueHit)
 
 
 def cause_mix(rules: InjuryRules, cause: HarmCause) -> dict[DamageType, int]:
@@ -279,6 +281,7 @@ def hits_for(
             region = weighted(rng, region_weights(rules, anatomy, harm.style)) or anatomy.parts[0].region
             chosen = pick_part(rules, anatomy, region, damage_type, severity, rng=rng)
         scorched: tuple[Scorch, ...] = ()
+        attack: float | None = None
         if harm.severity is None and wielding is not None and layers and physical(damage_type):
             strike = strike_of(
                 rules,
@@ -292,6 +295,7 @@ def hits_for(
             severity = round(severity * outcome.spent * rules.strike.severity_momentum_pct / PERCENT)
             damage_type = DamageType.BLUNT if damage_type in EDGED and outcome.damage_type is DamageType.BLUNT else damage_type
             scorched = outcome.scorched
+            attack = outcome.strike.attack if damage_type is not DamageType.FIRE else None
         elif harm.severity is None and rng.chance(armour.coverage(chosen.region)):
             severity -= table.armour_severity_cut
         if severity < SEVERITY_MIN:
@@ -299,5 +303,6 @@ def hits_for(
             hits.append(Hit(damage_type, chosen, SEVERITY_MIN, InjuryKind.BRUISE, soaked, absorbed=True, scorched=scorched))
             continue
         kind = harm.kind or kind_for(table, damage_type, chosen, severity, harm.cause)
-        hits.append(Hit(damage_type, chosen, severity, kind, magnitude, scorched=scorched))
+        reached = tissue_hit(rules, anatomy.plan, chosen, damage_type, severity, attack=attack)
+        hits.append(Hit(damage_type, chosen, severity, kind, magnitude, scorched=scorched, tissue=reached))
     return hits

@@ -214,6 +214,7 @@ from aerona.rules.registry.strike import StrikeRules
 from aerona.rules.registry.structures import ConstructionRules, StructureFunctionsRules, UpkeepRules
 from aerona.rules.registry.summoning import SummoningRules
 from aerona.rules.registry.time import TimeRules
+from aerona.rules.registry.tissues import TissueRules
 from aerona.rules.registry.trade import TradeRules
 from aerona.rules.registry.travel import TravelRules
 from aerona.rules.registry.travel_methods import TravelMethodsRules
@@ -275,6 +276,7 @@ class Rules:
     healing: HealingRules = field(default_factory=HealingRules)
     armour: ArmourRules = field(default_factory=ArmourRules)
     strike: StrikeRules = field(default_factory=StrikeRules)
+    tissues: TissueRules = field(default_factory=TissueRules)
     body_customs: BodyCustomsRules = field(default_factory=BodyCustomsRules)
     conditions: ConditionRules = field(default_factory=ConditionRules)
     prosthetics: ProstheticsRules = field(default_factory=ProstheticsRules)

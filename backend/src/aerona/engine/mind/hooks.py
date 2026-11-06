@@ -10,6 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import InjuryKind, InjuryState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, HERO_ROLES, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import ActKind, MemoryKind, SkillKind, TraitKind, TraitSource
+from aerona.engine.body.treatment import exert
 from aerona.engine.context import TickContext
 from aerona.engine.lore.taboos import violated
 from aerona.engine.mind.book import load_holder, values_for
@@ -69,6 +70,7 @@ async def fought(ctx: TickContext, fighter: EntityRow, *, commander: bool = Fals
     if not is_mortal(fighter):
         return
     skills = ctx.rules.skills
+    await exert(ctx, fighter)
     await practise_any(ctx.session, ctx.rules, fighter.id, (*MELEE_SKILLS, *MISSILE_SKILLS), skills.battle_xp, epoch=ctx.epoch)
     if commander:
         await practise_any(ctx.session, ctx.rules, fighter.id, COMMAND_SKILLS, skills.command_xp, epoch=ctx.epoch)
@@ -86,6 +88,7 @@ async def fought(ctx: TickContext, fighter: EntityRow, *, commander: bool = Fals
 
 async def duelled(ctx: TickContext, duellist: object) -> None:
     if isinstance(duellist, EntityRow) and is_mortal(duellist):
+        await exert(ctx, duellist)
         await practise_any(ctx.session, ctx.rules, duellist.id, MELEE_SKILLS, ctx.rules.skills.duel_xp, epoch=ctx.epoch)
 
 

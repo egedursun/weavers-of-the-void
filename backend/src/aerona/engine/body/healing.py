@@ -4,8 +4,9 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.anatomy import FINGER_COUNT, FINGERS, SIGHT_PARTS, Part
+from aerona.catalog.anatomy import SIGHT_PARTS, Part
 from aerona.catalog.mind import HEALING_SKILLS
+from aerona.catalog.tissues import COUNTED_PARTS, FULL_COUNTS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow, InjuryRow, ProsthesisRow
@@ -19,12 +20,14 @@ from aerona.domain.enums.body import (
     MADNESS_CONDITIONS,
     MEDICINE_ORDER,
     OPEN_INJURY_STATES,
+    BodyFunction,
     BodyRegion,
     ConditionKind,
     HarmCause,
     InjuryKind,
     InjuryState,
     MedicineTier,
+    TreatmentStep,
 )
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass, Technique
@@ -38,6 +41,7 @@ from aerona.engine.body.book import Bearer, anatomy_for, bearer_stats, ensure_bo
 from aerona.engine.body.conditions import end_condition, gain_condition
 from aerona.engine.body.hits import MARK_KINDS, PERMANENT_KINDS, TOTAL_LOSS_KINDS
 from aerona.engine.body.state import refresh
+from aerona.engine.body.treatment import bleed, regain_blood, treat
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import hospital_strengths
 from aerona.engine.disease.load import DiseaseLoads
@@ -62,6 +66,7 @@ from aerona.rules.registry.body import HealingRules, ProstheticsRules
 
 HEALER_ROLES = frozenset({MortalRole.HEALER, MortalRole.PRIEST, MortalRole.SAINT})
 FESTER_DEATH = "died of a festering wound"
+BLED_OUT = "bled to death from an open wound"
 PRECIOUS = frozenset({MaterialKind.SILVER, MaterialKind.GOLD, MaterialKind.STAR_METAL, MaterialKind.CRYSTAL, MaterialKind.DRAGONBONE, MaterialKind.SKYSTEEL})
 
 
@@ -170,6 +175,8 @@ class Care:
     artisan: EntityRow | None
     amputation: bool = True
     hospital: float = 0.0
+    medicine: int = 0
+    community_id: int | None = None
 
 
 @dataclass
@@ -240,7 +247,17 @@ class HealingWorld:
         home = community.id if community is not None else None
         tier = await known_tier(session, home, tier_of(rules.healing, medicine, magic, biomancy))
         ward = self.hospitals.get(region, 0.0) if region is not None else 0.0
-        return Care(tier, healer, disease, metallurgy, artisan, amputation=not await lacks(session, home, Technique.AMPUTATION), hospital=ward)
+        return Care(
+            tier,
+            healer,
+            disease,
+            metallurgy,
+            artisan,
+            amputation=not await lacks(session, home, Technique.AMPUTATION),
+            hospital=ward,
+            medicine=medicine,
+            community_id=home,
+        )
 
 
 async def _renown(ctx: TickContext, healer: Healer | None, *, healed: bool) -> None:
@@ -291,8 +308,10 @@ async def _fester(ctx: TickContext, bearer: Bearer, body: BodyRow, row: InjuryRo
     if row.infected_epochs >= table.lethal_after_epochs or rng.chance(deadly):
         if index >= tier_index(MedicineTier.SURGERY) and care.amputation and _limb(part) and rng.chance(table.amputation_chance):
             row.kind, row.function_loss, row.state, row.infected_epochs = InjuryKind.SEVERED, PERCENT, InjuryState.HEALING, 0
-            if row.part == FINGERS:
-                body.fingers = 0
+            row.treatments = [*row.treatments, TreatmentStep.AMPUTATE.value]
+            counted = COUNTED_PARTS.get(row.part)
+            if counted is not None:
+                setattr(body, counted, 0)
             await _treated(ctx, bearer, row, care.healer)
             if care.healer is not None:
                 await healed(ctx, care.healer.mortal.id, bearer.id, saved=True)
@@ -328,7 +347,11 @@ async def _fester(ctx: TickContext, bearer: Bearer, body: BodyRow, row: InjuryRo
 async def _close(ctx: TickContext, bearer: Bearer, row: InjuryRow, care: Care, rng_key: str) -> None:
     table = ctx.rules.healing
     rng = ctx.rng(seed_of("scar", rng_key))
-    lasting = row.kind in PERMANENT_KINDS or rng.chance(lasting_chance(table, row.kind, row.severity) * harshness(ctx.rules, HarshnessScale.PERMANENT_INJURY))
+    set_right = {TreatmentStep.SET_BONE.value, TreatmentStep.SPLINT.value} <= set(row.treatments)
+    spared = 1 - ctx.rules.tissues.set_bone_loss_pct / PERCENT if set_right else 1
+    lasting = row.kind in PERMANENT_KINDS or rng.chance(
+        lasting_chance(table, row.kind, row.severity) * harshness(ctx.rules, HarshnessScale.PERMANENT_INJURY) * spared
+    )
     if lasting:
         row.state = InjuryState.PERMANENT
         if row.kind not in TOTAL_LOSS_KINDS:
@@ -354,6 +377,36 @@ HEALING_KEY = "healing"
 INJURY_HOLD = "injuries"
 
 
+def infection_chance(ctx: TickContext, row: InjuryRow, body: BodyRow, care: Care, skill: int) -> float:
+    table = ctx.rules.healing
+    chance = infection_base(table, row.kind) * care.disease / table.disease_reference
+    chance *= harshness(ctx.rules, HarshnessScale.INFECTION) * (1 + (PERCENT - body.vital) * table.vital_infection_pct / PERCENT / PERCENT)
+    chance *= (PERCENT - medicine_cut(table, care.tier)) / PERCENT * (PERCENT - min(table.healer_skill_cap, skill)) / PERCENT
+    chance *= 1 - care.hospital * ctx.rules.structure_functions.hospital_infection_cut_pct / PERCENT
+    return chance * (1 - ctx.rules.tissues.clean_infection_pct / PERCENT if TreatmentStep.CLEAN.value in row.treatments else 1)
+
+
+async def bled_out(ctx: TickContext, bearer: Bearer, body: BodyRow, wounds: list[InjuryRow], care: Care) -> Tending:
+    if not isinstance(bearer, EntityRow):
+        return Tending()
+    if not await bleed(ctx, bearer, body, wounds, healer=care.healer is not None, rng=ctx.rng(seed_of("bleed", bearer.id, ctx.epoch))):
+        return Tending()
+    if body.blood > ctx.rules.tissues.bleed_death_at:
+        return Tending(changed=True)
+    await die(ctx, bearer, cause=BLED_OUT, manner=DeathCause.WOUNDS, event_id=max(wounds, key=lambda row: row.bleeding).event_entity_id)
+    return Tending(died=True, changed=True)
+
+
+async def _progress(ctx: TickContext, bearer: Bearer, row: InjuryRow, care: Care, key: str, *, healed: bool) -> bool:
+    if healed:
+        await _close(ctx, bearer, row, care, key)
+        return True
+    if row.state is InjuryState.FRESH:
+        row.state = InjuryState.HEALING
+        return True
+    return False
+
+
 async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending:
     if blocked(bearer.id, HEALING_KEY):
         return Tending()
@@ -365,20 +418,25 @@ async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending
     care = await world.care_for(ctx.session, bearer)
     stats = bearer_stats(bearer)
     divine = isinstance(bearer, SonRow | ForeignGodRow)
-    outcome = Tending()
-    for row in await injuries_of(ctx.session, bearer.id):
+    wounds = await injuries_of(ctx.session, bearer.id)
+    outcome = await bled_out(ctx, bearer, body, wounds, care)
+    if outcome.died:
+        return outcome
+    walking = {part.key for part in anatomy.with_function(BodyFunction.LOCOMOTION)}
+    skill = care.healer.skill if care.healer is not None else 0
+    for row in wounds:
         if row.state not in OPEN_INJURY_STATES:
             continue
         key = f"{bearer.id}.{row.id}.{ctx.epoch}"
         rng = ctx.rng(seed_of("heal", key))
+        if care.healer is not None and await treat(
+            ctx, row, skill=skill, medicine=care.medicine, community_id=care.community_id, walking=row.part in walking, rng=ctx.rng(seed_of("treat", key))
+        ):
+            outcome.changed = True
         campaign = row.cause_kind is HarmCause.BATTLE and row.epoch == ctx.epoch
-        skill = care.healer.skill if care.healer is not None else 0
         if row.state is not InjuryState.INFECTED and anatomy.infects:
-            chance = infection_base(table, row.kind) * care.disease / table.disease_reference
-            chance *= harshness(ctx.rules, HarshnessScale.INFECTION) * (1 + (PERCENT - body.vital) * table.vital_infection_pct / PERCENT / PERCENT)
-            chance *= (PERCENT - medicine_cut(table, care.tier)) / PERCENT * (PERCENT - min(table.healer_skill_cap, skill)) / PERCENT
-            chance *= 1 - care.hospital * ctx.rules.structure_functions.hospital_infection_cut_pct / PERCENT
             checks = max(1, ctx.rules.campaigns.seasons_per_war_epoch) if campaign else 1
+            chance = infection_chance(ctx, row, body, care, skill)
             if any(rng.chance(chance) for _ in range(checks)):
                 row.state = InjuryState.INFECTED
                 outcome.changed = True
@@ -389,18 +447,12 @@ async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending
                 outcome.died = True
                 return outcome
             continue
-        if not anatomy.heals:
-            continue
-        chance = heal_chance(table, row.severity, row.kind) * (1 + stats.endurance / PERCENT)
-        chance *= table.campaign_rest_pct / PERCENT if campaign else 1
-        chance *= 1 + table.healer_heal_bonus_pct * skill / PERCENT / PERCENT
-        chance *= 1 + table.divine_heal_bonus_pct / PERCENT if divine else 1
-        if rng.chance(chance):
-            await _close(ctx, bearer, row, care, key)
-            outcome.changed = True
-        elif row.state is InjuryState.FRESH:
-            row.state = InjuryState.HEALING
-            outcome.changed = True
+        if anatomy.heals:
+            chance = heal_chance(table, row.severity, row.kind) * (1 + stats.endurance / PERCENT)
+            chance *= table.campaign_rest_pct / PERCENT if campaign else 1
+            chance *= 1 + table.healer_heal_bonus_pct * skill / PERCENT / PERCENT
+            chance *= 1 + table.divine_heal_bonus_pct / PERCENT if divine else 1
+            outcome.changed = await _progress(ctx, bearer, row, care, key, healed=rng.chance(chance)) or outcome.changed
     if isinstance(bearer, EntityRow):
         outcome.changed = await _restore(ctx, bearer, body, care) or outcome.changed
     return outcome
@@ -420,8 +472,9 @@ async def _restore(ctx: TickContext, bearer: EntityRow, body: BodyRow, care: Car
         if care.tier is MedicineTier.REATTACHMENT and care.healer is not None and rng.chance(table.reattachment_chance):
             row.kind, row.state = InjuryKind.DEEP_CUT, InjuryState.HEALED_SCAR
             row.function_loss = table.reattachment_residual_pct
-            if row.part == FINGERS:
-                body.fingers = FINGER_COUNT
+            counted = COUNTED_PARTS.get(row.part)
+            if counted is not None:
+                setattr(body, counted, FULL_COUNTS[row.part])
             await _treated(ctx, bearer, row, care.healer)
             await note(
                 ctx,
@@ -599,8 +652,10 @@ async def heal_wounds(ctx: TickContext) -> None:
             continue
         if isinstance(bearer, EntityRow):
             body = await ensure_body(ctx.session, ctx.rules, bearer, ctx.epoch)
-            infected = bearer.id in open_bearers and any(row.state is InjuryState.INFECTED for row in await injuries_of(ctx.session, bearer.id))
+            open_rows = await injuries_of(ctx.session, bearer.id) if bearer.id in open_bearers else []
+            infected = any(row.state is InjuryState.INFECTED for row in open_rows)
             regenerate(ctx.rules, bearer, body, infected)
+            regain_blood(ctx.rules, body, any(row.bleeding > 0 and row.state in OPEN_INJURY_STATES for row in open_rows))
         if outcome.changed:
             ctx.count("tended")
             await refresh(ctx.session, ctx.rules, bearer, ctx.epoch)
@@ -615,8 +670,8 @@ async def mend(ctx: TickContext, bearer: Bearer, *, lasting: bool = False, heale
         restorable = lasting and row.state is InjuryState.PERMANENT and row.kind not in MARK_KINDS
         if not opened and not restorable:
             continue
-        if row.part == FINGERS and row.kind is InjuryKind.SEVERED and lasting:
-            body.fingers = FINGER_COUNT
+        if row.part in COUNTED_PARTS and row.kind is InjuryKind.SEVERED and lasting:
+            setattr(body, COUNTED_PARTS[row.part], FULL_COUNTS[row.part])
         if restorable and row.kind in TOTAL_LOSS_KINDS:
             row.kind = InjuryKind.DEEP_CUT
         row.state = InjuryState.HEALED_SCAR

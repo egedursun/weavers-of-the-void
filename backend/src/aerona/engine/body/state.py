@@ -13,6 +13,8 @@ from aerona.engine.body.book import (
     active_conditions,
     anatomy_for,
     armour_of,
+    consciousness_of,
+    counts_of,
     ensure_body,
     factors_of,
     injuries_of,
@@ -56,6 +58,8 @@ async def refresh(session: AsyncSession, rules: Rules, bearer: Bearer, epoch: in
     locked = set(body.locked)
     variants = await variants_by_id(session, (row.variant_id for row in conditions))
     scale = {variant_id: strength(variants, variant_id) for variant_id in variants}
+    if "consciousness" not in locked:
+        body.consciousness = consciousness_of(rules, bearer, pain_of(rules.capacities, open_severity(injuries)), body.blood)
     for capacity, value in factors_of(
         rules, bearer, body, injuries=injuries, prostheses=prostheses, conditions=conditions, reading=reading, variant_scale=scale
     ).items():
@@ -69,7 +73,7 @@ async def refresh(session: AsyncSession, rules: Rules, bearer: Bearer, epoch: in
             body.melee = round(body.melee * riding)
     if PAIN not in locked:
         body.pain = pain_of(rules.capacities, open_severity(injuries))
-    functions = function_percents(rules, BodyState(anatomy_for(body), wounds_from(injuries, prostheses), body.fingers, open_severity(injuries)))
+    functions = function_percents(rules, BodyState(anatomy_for(body), wounds_from(injuries, prostheses), counts_of(body), open_severity(injuries)))
     for function, level in functions.items():
         if function.value not in locked:
             setattr(body, function.value, level)
@@ -79,7 +83,8 @@ async def refresh(session: AsyncSession, rules: Rules, bearer: Bearer, epoch: in
         if column not in locked:
             setattr(body, column, value)
     bodily = [row for row in injuries if row.kind is not InjuryKind.VOID_TOUCH]
-    wits = function_percents(rules, BodyState(anatomy_for(body), wounds_from(bodily, prostheses), body.fingers, open_severity(bodily)))[BodyFunction.COGNITION]
+    wits_state = BodyState(anatomy_for(body), wounds_from(bodily, prostheses), counts_of(body), open_severity(bodily))
+    wits = function_percents(rules, wits_state)[BodyFunction.COGNITION]
     cap_sanity(rules, bearer, injuries, wits)
     body.updated_epoch = epoch
     return body

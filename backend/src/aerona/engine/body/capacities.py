@@ -1,9 +1,9 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 from aerona.catalog.anatomy import Anatomy
 from aerona.constants.units import PERCENT
-from aerona.domain.enums.body import BodyFunction, Capacity, ConditionKind
+from aerona.domain.enums.body import BodyFunction, Capacity, ConditionKind, Consciousness, NerveDamage
 from aerona.engine.body.functions import Wound, function_levels, weapon_grasp
 from aerona.rules.registry import Rules
 from aerona.rules.registry.body import CapacityRules
@@ -27,12 +27,15 @@ class BearerStats:
 class BodyState:
     anatomy: Anatomy
     wounds: tuple[Wound, ...]
-    fingers: int
+    counts: Mapping[str, int]
     open_severity: int
     conditions: tuple[tuple[ConditionKind, float], ...] = ()
     presence_pct: int = PERCENT
     reader: bool = False
     afflicted: tuple[tuple[str, int], ...] = ()
+    consciousness: Consciousness = Consciousness.AWAKE
+    exertion: int = 0
+    aid: float = 0.0
 
 
 def blend(level: float, weight: int) -> float:
@@ -79,11 +82,13 @@ def age_curve(rules: CapacityRules, age: int | None, lifespan: int | None) -> fl
 
 def capacities(rules: Rules, stats: BearerStats, state: BodyState) -> dict[Capacity, int]:
     table = rules.capacities
-    levels = function_levels(table, state.anatomy, state.wounds, state.fingers, rules.injury.venom_paralysis_at, afflicted=state.afflicted)
-    grip = weapon_grasp(table, state.anatomy, state.wounds, state.fingers)
+    levels = function_levels(table, state.anatomy, state.wounds, state.counts, rules.injury.venom_paralysis_at, afflicted=state.afflicted)
+    grip = weapon_grasp(table, state.anatomy, state.wounds, state.counts)
     pain = pain_of(table, state.open_severity) / PERCENT
     hurt = 1 - pain * table.pain_weight_pct / PERCENT
-    stride = max(levels[F.LOCOMOTION], levels[F.FLIGHT])
+    if any(wound.nerve is NerveDamage.SENSORY for wound in state.wounds):
+        levels[F.FINE_MANIPULATION] *= 1 - rules.tissues.numbness_pct / PERCENT
+    stride = max(levels[F.LOCOMOTION], levels[F.FLIGHT], state.aid)
     horn = levels[F.HORN] if state.anatomy.with_function(F.HORN) else 1.0
     tail = levels[F.TAIL] if state.anatomy.with_function(F.TAIL) else 1.0
     reading = max(levels[F.SIGHT], table.reader_restore_pct / PERCENT) if state.reader else levels[F.SIGHT]
@@ -133,14 +138,30 @@ def capacities(rules: Rules, stats: BearerStats, state: BodyState) -> dict[Capac
     for kind, severity in state.conditions:
         for capacity, penalty in condition_penalty(table, kind).items():
             values[capacity] *= 1 - penalty * severity / table.condition_full_severity / PERCENT
+    alert = alertness(rules, state.consciousness)
+    for capacity in (C.MELEE, C.MISSILE, C.COMMAND, C.CRAFT, C.SCHOLARSHIP):
+        values[capacity] *= alert
+    if state.exertion >= rules.tissues.exhausted_at:
+        values[C.MELEE] *= rules.tissues.exhausted_pct / PERCENT
+        values[C.MISSILE] *= rules.tissues.exhausted_pct / PERCENT
     return {capacity: max(0, round(value)) for capacity, value in values.items()}
+
+
+def alertness(rules: Rules, state: Consciousness) -> float:
+    table = rules.tissues
+    return {
+        Consciousness.AWAKE: 1.0,
+        Consciousness.NAUSEOUS: table.nauseous_pct / PERCENT,
+        Consciousness.DIZZY: table.dizzy_pct / PERCENT,
+        Consciousness.UNCONSCIOUS: 0.0,
+    }[state]
 
 
 FUNCTION_LEVELS = (F.VITAL, F.COGNITION, F.HEARING, F.SIGHT, F.VENOM, F.HORN, F.TAIL)
 
 
 def function_percents(rules: Rules, state: BodyState) -> dict[BodyFunction, int]:
-    levels = function_levels(rules.capacities, state.anatomy, state.wounds, state.fingers, rules.injury.venom_paralysis_at)
+    levels = function_levels(rules.capacities, state.anatomy, state.wounds, state.counts, rules.injury.venom_paralysis_at)
     return {function: max(0, min(PERCENT, round(levels[function] * PERCENT))) for function in FUNCTION_LEVELS}
 
 
@@ -148,8 +169,8 @@ def perception_factor(rules: CapacityRules, hearing: int, sight: int) -> float:
     return blend(hearing / PERCENT, rules.perception_hearing) * blend(sight / PERCENT, rules.perception_sight)
 
 
-def healthy(rules: Rules, stats: BearerStats, anatomy: Anatomy, fingers: int) -> dict[Capacity, int]:
-    return capacities(rules, stats, BodyState(anatomy, (), fingers, 0))
+def healthy(rules: Rules, stats: BearerStats, anatomy: Anatomy, counts: Mapping[str, int]) -> dict[Capacity, int]:
+    return capacities(rules, stats, BodyState(anatomy, (), counts, 0))
 
 
 def summary(values: dict[Capacity, int], keys: Iterable[Capacity] = tuple(Capacity)) -> dict[str, int]:

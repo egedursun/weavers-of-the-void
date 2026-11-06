@@ -237,7 +237,50 @@ class BodyPart(StrEnum):
     RIGHT_WING = "right_wing"
     ROOTS = "roots"
     TAIL = "tail"
+    TEETH = "teeth"
+    TOES = "toes"
     TONGUE = "tongue"
     TORSO = "torso"
     VENOM_GLAND = "venom_gland"
     WINGS = "wings"
+
+
+class TissueKind(StrEnum):
+    SKIN = "skin"
+    SCALE = "scale"
+    CHITIN = "chitin"
+    BARK = "bark"
+    FAT = "fat"
+    MUSCLE = "muscle"
+    TENDON = "tendon"
+    BONE = "bone"
+    ARTERY = "artery"
+    MOTOR_NERVE = "motor_nerve"
+    SENSORY_NERVE = "sensory_nerve"
+    ORGAN = "organ"
+
+
+class NerveDamage(StrEnum):
+    NONE = "none"
+    MOTOR = "motor"
+    SENSORY = "sensory"
+
+
+class Consciousness(StrEnum):
+    AWAKE = "awake"
+    NAUSEOUS = "nauseous"
+    DIZZY = "dizzy"
+    UNCONSCIOUS = "unconscious"
+
+
+class TreatmentStep(StrEnum):
+    DIAGNOSE = "diagnose"
+    CLEAN = "clean"
+    SUTURE = "suture"
+    SET_BONE = "set_bone"
+    SPLINT = "splint"
+    DRESS = "dress"
+    AMPUTATE = "amputate"
+    CAUTERISE = "cauterise"
+    CRUTCH = "crutch"
+    TRACTION = "traction"

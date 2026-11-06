@@ -18,9 +18,9 @@ from aerona.api.schemas.body import (
     PartView,
     ProsthesisView,
 )
-from aerona.catalog.anatomy import FINGER_COUNT
 from aerona.catalog.body_plans import PLANS
 from aerona.catalog.stats import max_hp
+from aerona.catalog.tissues import FULL_COUNTS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, MaimedCohortRow, ProsthesisRow
@@ -32,7 +32,7 @@ from aerona.domain.enums.body import OPEN_INJURY_STATES, BodyFunction, BodyReadi
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.node import NodeKind
-from aerona.engine.body.book import Bearer, anatomy_for, bearer_stats, injuries_of, prostheses_of, wounds_from
+from aerona.engine.body.book import Bearer, anatomy_for, bearer_stats, counts_of, injuries_of, prostheses_of, wounds_from
 from aerona.engine.body.capacities import BodyState, capacities
 from aerona.engine.body.cohorts import maimed_share
 from aerona.engine.body.customs import derived_reading, maimed_for_rule, people_of
@@ -155,9 +155,9 @@ async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyVie
         fitted = {row.injury_id: row for row in prostheses}
         reading = await reading_of(session, rules, bearer)
         wounds = wounds_from(injuries, prostheses)
-        levels = function_levels(rules.capacities, anatomy, wounds, body.fingers, rules.injury.venom_paralysis_at)
+        levels = function_levels(rules.capacities, anatomy, wounds, counts_of(body), rules.injury.venom_paralysis_at)
         stats = bearer_stats(bearer)
-        whole = capacities(rules, stats, BodyState(anatomy, (), FINGER_COUNT, 0))
+        whole = capacities(rules, stats, BodyState(anatomy, (), FULL_COUNTS, 0))
         world = await HealingWorld.load(session, rules)
         care = await world.care_for(session, bearer)
         people = await people_of(session, bearer) if isinstance(bearer, EntityRow) else None
@@ -170,7 +170,7 @@ async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyVie
             worst = max(on_part, key=lambda row: STATE_RANK[row.state], default=None)
             loss = max((row.function_loss for row in lasting), default=0)
             if part.counted:
-                loss = max(loss, round((part.counted - min(part.counted, body.fingers)) * PERCENT / part.counted))
+                loss = max(loss, round((part.counted - min(part.counted, counts_of(body).get(part.key, part.counted))) * PERCENT / part.counted))
             prosthesis = next((fitted[row.id].material for row in lasting if row.id in fitted), None)
             parts.append(
                 PartView(

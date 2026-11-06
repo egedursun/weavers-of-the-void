@@ -25,11 +25,13 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.body import BodyRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow, EntityTagRow
 from aerona.db.tables.lore import MessageRow
 from aerona.db.tables.mind import NeedRow, PressureRow, TraitRow
 from aerona.domain.enums.agent import AgentKind, MessageIntent
+from aerona.domain.enums.body import Consciousness
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
@@ -96,11 +98,17 @@ async def candidates(session_scope: Scope) -> list[Candidate]:
             select(BeastProfileRow.beast_entity_id, BeastProfileRow.intelligence).where(BeastProfileRow.beast_entity_id.in_([row.id for row in listed]))
         )
     }
+    senseless = set(
+        await session_scope.session.scalars(
+            select(BodyRow.node_id).where(BodyRow.node_id.in_([row.id for row in listed]), BodyRow.consciousness == Consciousness.UNCONSCIOUS)
+        )
+    )
     eligible = [
         row
         for row in listed
         if (row.entity_type not in CREATURES or minds.get(row.id, intelligence(row)) >= rules.mortal_agents.creature_min_intelligence)
         and not bedridden(rules, row)
+        and row.id not in senseless
     ]
     ids = [row.id for row in eligible]
     tags: dict[int, set[str]] = defaultdict(set)
