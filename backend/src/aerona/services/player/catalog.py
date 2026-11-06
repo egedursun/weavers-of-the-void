@@ -67,6 +67,7 @@ from aerona.services.player import (
     places,
     profiles,
     realms,
+    record_rows,
     regions,
     relations,
     rewards,
@@ -1078,6 +1079,9 @@ MIND_ACTIONS = (
     _sync(Meta("affliction:hold", "Hold an affliction at its stage or let it run", G.ENTITIES), afflictions.hold, afflictions.HoldAffliction, free, ("F30",)),
     _sync(Meta("affliction:cure", "Cure an affliction", G.ENTITIES), afflictions.cure_action, afflictions.CureAffliction, free, ("F30",)),
     _sync(Meta("affliction:delete", "Unmake an affliction as if it never was", G.ENTITIES), afflictions.delete, afflictions.AfflictionTarget, free, ("F30",)),
+    _sync(Meta("record_row:create", "Make a new row of any record of a thing", G.ENTITIES), record_rows.create_row, record_rows.CreateRow, free, ()),
+    _sync(Meta("record_row:edit", "Change or hold any value of a record row", G.ENTITIES), record_rows.edit_row, record_rows.EditRow, free, ()),
+    _sync(Meta("record_row:delete", "Unmake a row of any record of a thing", G.ENTITIES), record_rows.delete_row, record_rows.RowTarget, free, ()),
     _sync(Meta("mortal:set", "Set and hold a mortal's life, standing or loyalty", G.ENTITIES), mortals.set_mortal, mortals.SetMortal, free, ("S3.1",)),
     _sync(
         Meta("mortal:release", "Let a held mortal value follow their life again", G.ENTITIES), mortals.release_mortal, mortals.ReleaseMortal, free, ("S3.1",)

@@ -4319,6 +4319,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/records/{node_id}/rows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["record_rows_api_records__node_id__rows_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/worlds/{world_id}/calendar": {
         parameters: {
             query?: never;
@@ -14879,6 +14895,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/record_row:create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_record_row_create_api_actions_record_row_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/record_row:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_record_row_edit_api_actions_record_row_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/record_row:delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_record_row_delete_api_actions_record_row_delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/mortal:set": {
         parameters: {
             query?: never;
@@ -22823,6 +22887,32 @@ export interface components {
             reason: string;
             status: components["schemas"]["EntityStatus"];
         };
+        RecordRowCreateInput: {
+            table: string;
+            values: {
+                [key: string]: number | string | boolean | unknown[] | {
+                    [key: string]: unknown;
+                } | null;
+            };
+        };
+        RecordRowDeleteInput: {
+            table: string;
+            key: {
+                [key: string]: number | string | boolean | null;
+            };
+        };
+        RecordRowEditInput: {
+            table: string;
+            key: {
+                [key: string]: number | string | boolean | null;
+            };
+            values: {
+                [key: string]: number | string | boolean | unknown[] | {
+                    [key: string]: unknown;
+                } | null;
+            };
+            hold: boolean;
+        };
         RecordRowView: {
             id: number;
             values: {
@@ -25242,6 +25332,36 @@ export interface components {
             text: string;
         } & {
             [key: string]: unknown;
+        };
+        ThingRecordColumnView: {
+            name: string;
+            kind: string;
+            options: string[];
+            nullable: boolean;
+            primary: boolean;
+            owner: boolean;
+            required: boolean;
+            editable: boolean;
+        };
+        ThingRecordRowView: {
+            key: {
+                [key: string]: unknown;
+            };
+            values: {
+                [key: string]: unknown;
+            };
+            held: string[];
+        };
+        ThingRecordTableView: {
+            table: string;
+            label: string;
+            columns: components["schemas"]["ThingRecordColumnView"][];
+            rows: components["schemas"]["ThingRecordRowView"][];
+        };
+        ThingRecordsView: {
+            node_id: number;
+            tables: components["schemas"]["ThingRecordTableView"][];
+            creatable: components["schemas"]["ThingRecordTableView"][];
         };
         ThreadAdvanceInput: {
             thread_id: number;
@@ -34717,6 +34837,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AfflictionsView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_rows_api_records__node_id__rows_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThingRecordsView"];
                 };
             };
             422: {
@@ -54669,6 +54818,99 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["AfflictionDeleteInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_record_row_create_api_actions_record_row_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordRowCreateInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_record_row_edit_api_actions_record_row_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordRowEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_record_row_delete_api_actions_record_row_delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordRowDeleteInput"];
             };
         };
         responses: {

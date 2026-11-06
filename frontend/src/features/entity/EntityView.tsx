@@ -84,6 +84,7 @@ import { MemoriesSection } from './sections/MemoriesSection'
 import { MindSection } from './sections/MindSection'
 import { PathFinder } from './sections/PathFinder'
 import { PeopleBeliefs } from './sections/PeopleBeliefs'
+import { RecordRowsSection } from './sections/RecordRowsSection'
 import { SkillsSection } from './sections/SkillsSection'
 import { SocietyEconomy } from './sections/SocietyEconomy'
 import { TagEditor } from './sections/TagEditor'
@@ -173,6 +174,7 @@ const SECTION_LINKS = [
   { id: 'section-memories', label: 'Memories' },
   { id: 'section-biography', label: 'Biography' },
   { id: 'section-mechanics', label: 'Mechanics' },
+  { id: 'section-records', label: 'Every record' },
   { id: 'section-edit', label: 'Edit' },
 ]
 
@@ -580,6 +582,7 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         )}
         {embodied && <BodySection nodeId={entity.id} />}
         {afflictable && <AfflictionsSection nodeId={entity.id} />}
+        <RecordRowsSection nodeId={entity.id} />
         {entity.entity_type === 'people' && (
           <PeopleBodyCustoms peopleId={entity.id} />
         )}

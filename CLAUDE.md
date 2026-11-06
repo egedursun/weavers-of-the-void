@@ -53,6 +53,10 @@ These rules are enforced mechanically, and they bind Claude as much as anyone.
   - `scripts/check_source_rules.py`: no comments or docstrings (rule 4).
   - `scripts/check_prompt_bias.py`: gendered defaults, conflict quotas, forced strangeness, steering examples and hardcoded image media in LLM-facing and UI text (rule 2).
   - `scripts/check_wiring.py`: enum types never used, tables never read, player actions missing from the catalog, catalog actions with no frontend caller (rule 3). It also flags any table an engine phase writes that has no compliance-catalogue row with registered god levers (rule 6).
+  - `scripts/check_control.py` (rule 6). It finds automatically, by reading the code, every table whose rows the engine changes over time. Each must be creatable, editable and deletable by a god lever that the frontend reaches, and whose code (followed through its calls) really touches that table. Several cases are covered without per-table levers:
+    - Profile tables (one row per thing) through `profile:set`.
+    - Every node-linked table through the generic `record_row:create`, `record_row:edit` and `record_row:delete` levers and the "Every record" section in each drawer.
+    - Append-only histories and tables the engine wipes and rebuilds wholesale are outputs, not authored state.
   - `backend/tests/engine/core/test_god_control.py` whenever engine or db code changes (rule 6). It runs every engine step, found automatically, twice. First with every node held: nothing tied to a node may be created, changed or deleted. Then forced on one node: it must run cleanly. A new step that acts on a held node fails the commit. Skip held nodes with `held()` or `unheld()` from `aerona.db.write_guard` where the step chooses whom to act on. Field updates on held rows are already reverted for every node-linked table.
   - ruff, mypy and import layers for backend changes.
   - tsc, eslint and prettier for frontend changes (rule 5).
