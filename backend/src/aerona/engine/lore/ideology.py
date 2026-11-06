@@ -9,6 +9,7 @@ from aerona.db.tables.faith import CultTenetRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import IdeologyTenet, ItemClass
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
@@ -106,7 +107,7 @@ async def emerge(ctx: TickContext) -> EntityRow | None:
         select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
     )
     founders = set(await ctx.session.scalars(select(IdeologyProfileRow.founder_entity_id)))
-    for mortal in scholars:
+    for mortal in unheld(scholars):
         if mortal.id in founders or (stat(mortal, "intellect") or 0) < FOUNDER_INTELLECT:
             continue
         if ctx.rng(f"creed.{mortal.id}.{ctx.epoch}").chance(ctx.rules.ideologies.emergence_chance):

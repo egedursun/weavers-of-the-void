@@ -1,3 +1,4 @@
+from aerona.db.tables.mind import AttributeRow, FacetRow, IdeaRow
 from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
 
@@ -9,6 +10,7 @@ GEAR = "section-gear"
 MIND = "section-mind"
 BODY = "section-body"
 AFFLICTIONS = "section-afflictions"
+MIND_SPLIT = "section-mind-split"
 S = Subsystem
 PROFILES = (MortalProfileRow.__tablename__,)
 
@@ -104,6 +106,45 @@ BODY_GAP_MECHANICS: tuple[Mechanic, ...] = (
     ),
 )
 MIND_GAP_MECHANICS: tuple[Mechanic, ...] = (
+    Mechanic(
+        key="mind_split",
+        spec_item="F13",
+        title="Attributes say what a body and mind can do, facets how one reacts, beliefs what one values; extremes of temperament become traits",
+        subsystem=S.MIND,
+        phases=("mind_survey", "mind_split"),
+        surface=Surface(drawer=MIND_SPLIT),
+        backfill="mind_survey: attributes from each mortal's, beast's and god's stats; facets around their culture's beliefs, pushed by their traits",
+        templates=("mind.facet_trait",),
+        fields=("attribute", "facet", "value"),
+        tables=(AttributeRow.__tablename__, FacetRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal", "beast", "son", "foreign_god"),
+        couplings=(
+            Coupling(S.BODY, "toughness softens blows, recuperation speeds healing and disease resistance wards off infection"),
+            Coupling(S.MIND, "governing attributes speed learning; anxious or fragile facets raise stress and colour how a mind breaks"),
+            Coupling(S.WAR, "an assertive commander presses on and a cautious one holds back"),
+        ),
+    ),
+    Mechanic(
+        key="ideas",
+        spec_item="F13",
+        title="Ideas met in ideologies, doctrines, theories, books and teachers incubate for seasons, then settle in or are let go",
+        subsystem=S.MIND,
+        phases=("mind_ideas",),
+        surface=Surface(drawer=MIND_SPLIT),
+        backfill="none: ideas are met from the next epoch on",
+        templates=("idea.internalised", "idea.rejected"),
+        fields=("idea", "source", "progress", "state"),
+        tables=(IdeaRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("plant_idea",),
+        targets=("mortal",),
+        couplings=(
+            Coupling(S.FAITH, "a cult's tenets reach its members as ideas"),
+            Coupling(S.KNOWLEDGE, "what a people knows becomes theories its mortals turn over"),
+            Coupling(S.MIND, "an idea taken to heart shifts beliefs, abilities and temperament; while it incubates it costs focus"),
+        ),
+    ),
     Mechanic(
         key="mortal_stress",
         spec_item="F14",

@@ -272,6 +272,15 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "reason": "Why you touch them",
         },
     ),
+    T.PLANT_IDEA: ToolText(
+        "You plant an idea in one living mortal's mind. They turn it over for some seasons; it may settle in and shift their beliefs, abilities and temperament for good, "
+        "or they may let it go if it sits poorly with what they already believe. Costs {{ rules.costs.influence }} essence and one action.",
+        {
+            "mortal_id": "The mortal",
+            "idea": "The idea to plant, by its key",
+            "reason": "Why you plant it",
+        },
+    ),
     T.COIN_WORDS: ToolText(
         "You add words to a language's dictionary: meaning, word class and origin (from which event, from which words it was born). Languages grow this way and new names "
         "are derived from these words. Free, {{ rules.son_tools.coin_word_per_epoch }} times per age, at most {{ rules.son_tools.coin_word_max_words }} words each time.",

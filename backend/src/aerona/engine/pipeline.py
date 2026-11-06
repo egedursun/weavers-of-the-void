@@ -371,6 +371,8 @@ AGING_STAGE = stage(
 MIND_STAGE = stage(
     "mind_values",
     "mind_skills",
+    "mind_split",
+    "mind_ideas",
     "mind_memories",
     "mind_needs",
     "mortal_kin",

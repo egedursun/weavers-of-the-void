@@ -84,9 +84,9 @@ def table_names(texts: dict[Path, str]) -> dict[str, str]:
             for node in ast.parse(text).body:
                 if isinstance(node, ast.ClassDef):
                     for item in node.body:
-                        if isinstance(item, ast.Assign) and any(getattr(target, "id", "") == "__tablename__" for target in item.targets):
-                            if isinstance(item.value, ast.Constant):
-                                names[node.name] = str(item.value.value)
+                        named = isinstance(item, ast.Assign) and any(getattr(target, "id", "") == "__tablename__" for target in item.targets)
+                        if named and isinstance(item, ast.Assign) and isinstance(item.value, ast.Constant):
+                            names[node.name] = str(item.value.value)
     return names
 
 
@@ -183,6 +183,57 @@ def pages_without_shared_sections() -> list[str]:
     return found
 
 
+BOOKS = BACKEND / "services/books"
+TYPED = BOOKS / "typed.py"
+BOOK_TEMPLATES = (BOOKS / "templates/book.html.j2", BOOKS / "templates/macros.html.j2")
+CODEX_TEMPLATE = BOOKS / "templates/codex.md.j2"
+BOOK_SECTIONS = (
+    "typed(article.typed)",
+    "typed(world.typed)",
+    "typed(section.typed)",
+    "typed(book.creator_typed)",
+    "records(book.records)",
+)
+
+
+def frozen_names(text: str, name: str) -> set[str]:
+    found = re.search(rf"{name} = frozenset\(\s*\{{([^}}]*)\}}", text)
+    return set(re.findall(r'"([a-z_]+)"', found.group(1))) if found else set()
+
+
+def node_tables(texts: dict[Path, str], names: dict[str, str]) -> set[str]:
+    kinds: set[str] = set()
+    for path, text in texts.items():
+        if path.is_relative_to(TABLES):
+            for node in ast.parse(text).body:
+                if isinstance(node, ast.ClassDef) and any(getattr(base, "id", "") == "NodeRow" for base in node.bases) and node.name in names:
+                    kinds.add(names[node.name])
+    return kinds | {"nodes"}
+
+
+def book_gaps(texts: dict[Path, str]) -> list[str]:
+    names = table_names(texts)
+    classes = {table: name for name, table in names.items()}
+    typed = TYPED.read_text(encoding="utf-8")
+    skipped = frozen_names(typed, "SKIPPED_TABLES")
+    owners = frozen_names(typed, "OWNER_TABLES")
+    rendered = "\n".join(text for path, text in texts.items() if path.is_relative_to(BOOKS) and path != TYPED)
+    errors = [
+        f"table {table} is kept out of the generic book records but no book or codex code renders {classes.get(table, table)}"
+        for table in sorted(skipped)
+        if table in classes and not re.search(rf"\b{classes[table]}\b", rendered)
+    ]
+    errors += [
+        f"table {table} is a kind of node but its records never reach its book and codex entry (add it to OWNER_TABLES)"
+        for table in sorted(node_tables(texts, names) - owners)
+    ]
+    book = "\n".join(path.read_text(encoding="utf-8") for path in BOOK_TEMPLATES)
+    codex = CODEX_TEMPLATE.read_text(encoding="utf-8")
+    for snippet in BOOK_SECTIONS:
+        errors += [f"{label} does not render {snippet}" for label, text in (("the lore book", book), ("the codex", codex)) if snippet not in text]
+    return errors
+
+
 def main() -> int:
     texts = backend_texts()
     errors = [
@@ -192,6 +243,7 @@ def main() -> int:
         *actions_without_ui(texts, frontend_text()),
         *uncontrolled_tables(texts),
         *pages_without_shared_sections(),
+        *book_gaps(texts),
     ]
     for line in errors:
         print(f"ERROR {line}")

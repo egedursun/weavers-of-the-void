@@ -25,6 +25,9 @@ DEPTH = 6
 Key = tuple[str, str]
 
 
+STATEMENT_VERBS = {"insert": "create", "delete": "delete", "update": "edit"}
+
+
 @dataclass
 class Table:
     name: str
@@ -63,7 +66,7 @@ class Code:
         table: dict[str, tuple[str, str | None]] = {}
         for node in tree.body:
             if isinstance(node, ast.ImportFrom) and node.module:
-                base = node.module if not node.level else ".".join(name.split(".")[: -node.level] + [node.module])
+                base = node.module if not node.level else ".".join([*name.split(".")[: -node.level], node.module])
                 for alias in node.names:
                     full = f"{base}.{alias.name}"
                     table[alias.asname or alias.name] = (full, None) if full in self.modules else (base, alias.name)
@@ -138,28 +141,30 @@ class Code:
         }
 
     def kind(self, module: str, env: dict[str, set[str]], expr: ast.AST) -> set[str]:
-        if isinstance(expr, ast.Await):
+        if isinstance(expr, ast.Await | ast.Subscript):
             return self.kind(module, env, expr.value)
         if isinstance(expr, ast.Name):
             return set(env.get(expr.id, set()))
         if isinstance(expr, (ast.ListComp, ast.GeneratorExp, ast.SetComp)):
             return self.kind(module, env, expr.generators[0].iter) if expr.generators else set()
-        if isinstance(expr, ast.Subscript):
-            return self.kind(module, env, expr.value)
         if isinstance(expr, ast.IfExp):
             return self.kind(module, env, expr.body) | self.kind(module, env, expr.orelse)
         if isinstance(expr, ast.BoolOp):
             return set().union(*(self.kind(module, env, value) for value in expr.values))
-        if not isinstance(expr, ast.Call):
-            return set()
+        return self.call_kind(module, env, expr) if isinstance(expr, ast.Call) else set()
+
+    def name_kind(self, module: str, env: dict[str, set[str]], expr: ast.Call, func: ast.Name) -> set[str]:
+        if func.id in self.rows:
+            return {self.rows[func.id]}
+        if func.id in {"list", "sorted", "next", "iter", "unheld"} and expr.args:
+            return self.kind(module, env, expr.args[0])
+        hit = self.resolve(module, func.id)
+        return set(self.returns.get(hit, set())) if hit else self.selected(expr)
+
+    def call_kind(self, module: str, env: dict[str, set[str]], expr: ast.Call) -> set[str]:
         func = expr.func
         if isinstance(func, ast.Name):
-            if func.id in self.rows:
-                return {self.rows[func.id]}
-            if func.id in {"list", "sorted", "next", "iter", "unheld"} and expr.args:
-                return self.kind(module, env, expr.args[0])
-            hit = self.resolve(module, func.id)
-            return set(self.returns.get(hit, set())) if hit else self.selected(expr)
+            return self.name_kind(module, env, expr, func)
         if isinstance(func, ast.Attribute):
             if func.attr == "get" and expr.args and isinstance(expr.args[0], ast.Name) and expr.args[0].id in self.rows:
                 return {self.rows[expr.args[0].id]}
@@ -191,31 +196,33 @@ class Code:
                     env[sub.target.id] |= self.kind(module, env, sub.value)
         return env
 
+    def call_verbs(self, module: str, env: dict[str, set[str]], call: ast.Call, found: dict[str, set[str]]) -> None:
+        func = call.func
+        first = call.args[0] if call.args else None
+        if isinstance(func, ast.Name) and func.id in self.rows:
+            found["create"].add(self.rows[func.id])
+            return
+        if first is None:
+            return
+        if isinstance(func, ast.Name):
+            statement = STATEMENT_VERBS.get(func.id)
+            if statement is not None:
+                found[statement] |= self.annotated(first)
+            elif func.id == "setattr":
+                found["edit"] |= self.kind(module, env, first)
+        elif isinstance(func, ast.Attribute) and func.attr == "delete":
+            found["delete"] |= self.kind(module, env, first)
+        elif isinstance(func, ast.Attribute) and func.attr == "merge":
+            merged = self.kind(module, env, first)
+            found["create"] |= merged
+            found["edit"] |= merged
+
     def verbs(self, module: str, node: ast.FunctionDef | ast.AsyncFunctionDef) -> dict[str, set[str]]:
         env = self.environment(module, node)
         found: dict[str, set[str]] = {verb: set() for verb in VERBS}
         for sub in ast.walk(node):
             if isinstance(sub, ast.Call):
-                func = sub.func
-                first = sub.args[0] if sub.args else None
-                if isinstance(func, ast.Name):
-                    if func.id in self.rows:
-                        found["create"].add(self.rows[func.id])
-                    elif func.id == "insert" and first is not None:
-                        found["create"] |= self.annotated(first)
-                    elif func.id == "delete" and first is not None:
-                        found["delete"] |= self.annotated(first)
-                    elif func.id == "update" and first is not None:
-                        found["edit"] |= self.annotated(first)
-                    elif func.id == "setattr" and first is not None:
-                        found["edit"] |= self.kind(module, env, first)
-                elif isinstance(func, ast.Attribute) and first is not None:
-                    if func.attr == "delete":
-                        found["delete"] |= self.kind(module, env, first)
-                    elif func.attr == "merge":
-                        merged = self.kind(module, env, first)
-                        found["create"] |= merged
-                        found["edit"] |= merged
+                self.call_verbs(module, env, sub, found)
             elif isinstance(sub, (ast.Assign, ast.AugAssign, ast.AnnAssign)):
                 targets = sub.targets if isinstance(sub, ast.Assign) else [sub.target]
                 for leaf in (item for target in targets for item in ast.walk(target) if isinstance(item, ast.Attribute)):

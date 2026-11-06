@@ -96,7 +96,11 @@ async def run(epochs: int) -> dict[str, float]:
 
 
 def outside(values: dict[str, float]) -> list[str]:
-    return [f"{band.metric} = {values[band.metric]:.2f} outside [{band.low}, {band.high}]" for band in load_bands() if not band.low <= values[band.metric] <= band.high]
+    return [
+        f"{band.metric} = {values[band.metric]:.2f} outside [{band.low}, {band.high}]"
+        for band in load_bands()
+        if not band.low <= values[band.metric] <= band.high
+    ]
 
 
 def main() -> int:

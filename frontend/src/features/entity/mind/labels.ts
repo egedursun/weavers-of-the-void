@@ -99,6 +99,16 @@ export const VALUE_ICONS: Record<string, Named> = {
   superstition: { label: 'Omen-reading', icon: Moon, tone: 'verdigris' },
   xenophilia: { label: 'Openness to strangers', icon: Globe, tone: 'info' },
   death: { label: 'Veneration of the dead', icon: Skull, tone: 'muted' },
+  law: { label: 'Law', icon: Gavel, tone: 'gold' },
+  loyalty: { label: 'Loyalty', icon: Handshake, tone: 'gold' },
+  family: { label: 'Family', icon: House, tone: 'verdigris' },
+  friendship: { label: 'Friendship', icon: HeartHandshake, tone: 'success' },
+  truth: { label: 'Honesty', icon: Scale, tone: 'info' },
+  craftsmanship: { label: 'Craftsmanship', icon: Hammer, tone: 'warning' },
+  artwork: { label: 'Artwork', icon: Feather, tone: 'gold' },
+  competition: { label: 'Competition', icon: Trophy, tone: 'danger' },
+  perseverance_value: { label: 'Perseverance', icon: Mountain, tone: 'muted' },
+  leisure: { label: 'Leisure', icon: Utensils, tone: 'success' },
 }
 
 export const HOLDERS: Record<string, Named> = {
@@ -169,6 +179,7 @@ export const TRAIT_SOURCES: Record<string, string> = {
   education: 'Taught by a master',
   divine: 'Divine nature',
   player: 'Set by the Creator',
+  facet: 'From a marked temperament',
 }
 
 export const TRAIT_EFFECTS: Record<string, string> = {
@@ -381,6 +392,9 @@ export const LOCKS: Record<string, string> = {
   memories: 'memories',
   needs: 'needs and pressures',
   role: 'calling',
+  attributes: 'attributes',
+  facets: 'facets',
+  ideas: 'ideas',
 }
 
 export const MIND_ICON = Brain

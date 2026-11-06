@@ -14,13 +14,14 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType, MortalRole
-from aerona.domain.enums.mind import CareerChange, MemoryKind, SkillKind, SkillSource, TraitEffect, ValueAxis
+from aerona.domain.enums.mind import Attribute, CareerChange, MemoryKind, SkillKind, SkillSource, TraitEffect, ValueAxis
 from aerona.engine.body.book import factor
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import SKILLS_KEY, clamp_skill, effect_of, is_locked, mind_of, scaled_by, set_skill, skills_of, values_for
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.space import blend
+from aerona.engine.mind.split import effective_attributes, governing, talent
 from aerona.engine.mind.traits import teach_trait
 from aerona.engine.mortal.variants import learning, variants_by_id
 from aerona.engine.primitives.queries import active_bonds, living_entity
@@ -30,7 +31,6 @@ from aerona.rules.registry import Rules
 SKILL_LOCK = "skills"
 ROLE_LOCK = "role"
 STAT_MIDPOINT = 50
-DEFAULT_STAT = 50
 
 
 @dataclass(frozen=True)
@@ -40,18 +40,13 @@ class CareerMove:
     reason: CareerChange
 
 
-def governing(mortal: EntityRow, skill: SkillKind) -> float:
-    names = SKILLS[skill].stats
-    return sum(stat(mortal, name) or DEFAULT_STAT for name in names) / len(names)
-
-
-def seed_level(rules: Rules, mortal: EntityRow, skill: SkillKind, base: int, rng: SeededRandom) -> int:
+def seed_level(rules: Rules, mortal: EntityRow, skill: SkillKind, base: int, rng: SeededRandom, *, attributes: Mapping[Attribute, int]) -> int:
     table = rules.skills
     age = stat(mortal, "age") or table.adult_age
     lifespan = stat(mortal, "lifespan") or 0
     youth = min(1.0, age / table.adult_age) if table.adult_age else 1.0
     experience = min(table.seed_age_cap, max(0, age - table.adult_age) * table.seed_age_gain / PERCENT)
-    talent = (governing(mortal, skill) - STAT_MIDPOINT) * table.seed_stat_pct / PERCENT
+    talent = (governing(attributes, skill) - STAT_MIDPOINT) * table.seed_stat_pct / PERCENT
     level = (base + talent + experience) * youth + rng.integer(-table.seed_jitter, table.seed_jitter)
     if lifespan and SKILLS[skill].physical and age > lifespan * table.decline_start_pct / PERCENT:
         level -= table.decline_per_epoch
@@ -63,8 +58,9 @@ async def seed_skills(session: AsyncSession, rules: Rules, mortal: EntityRow, rn
         return 0
     role = mortal.mortal_role or MortalRole.COMMONER
     seeded = 0
+    attributes = await effective_attributes(session, rules, mortal)
     for skill, base in ROLE_SKILLS.get(role, ROLE_SKILLS[MortalRole.COMMONER]).items():
-        level = seed_level(rules, mortal, skill, base, rng)
+        level = seed_level(rules, mortal, skill, base, rng, attributes=attributes)
         if level > 0:
             await set_skill(session, mortal.id, skill, level, epoch=epoch, source=SkillSource.BACKFILL)
             seeded += 1
@@ -89,6 +85,9 @@ async def practise(
     if row is None:
         row = await set_skill(session, node_id, skill, 0, epoch=epoch, source=source)
     rate = scaled_by(await effect_of(session, node_id, TraitEffect.LEARNING, rules.traits.effect_scale_pct))
+    holder = await session.get(EntityRow, node_id)
+    if holder is not None:
+        rate *= talent(rules, await effective_attributes(session, rules, holder), skill)
     rate *= learning(await variants_by_id(session, [row.variant_id]), row.variant_id)
     schooled = await session.get(MortalProfileRow, node_id)
     if schooled is not None:

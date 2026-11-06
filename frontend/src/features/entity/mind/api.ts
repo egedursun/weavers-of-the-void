@@ -38,3 +38,29 @@ export function useMind(nodeId: number) {
 export function signed(value: number): string {
   return value > 0 ? `+${value}` : String(value)
 }
+
+export type MindSplit = components['schemas']['MindSplitView']
+export type MindAttribute = components['schemas']['AttributeView']
+export type MindFacet = components['schemas']['FacetView']
+export type MindIdea = components['schemas']['IdeaView']
+export type MindIdeaSpec = components['schemas']['IdeaSpecView']
+export type IdeaKind = components['schemas']['IdeaKind']
+export type IdeaState = components['schemas']['IdeaState']
+export type IdeaSource = components['schemas']['IdeaSource']
+
+export function mindSplitKey(nodeId: number) {
+  return [...loreKeys.entity(nodeId), 'mind-split'] as const
+}
+
+export function useMindSplit(nodeId: number) {
+  return useQuery({
+    queryKey: mindSplitKey(nodeId),
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/minds/{node_id}/split', {
+          params: { path: { node_id: nodeId } },
+        })
+      ),
+    retry: false,
+  })
+}

@@ -1245,6 +1245,17 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("body_survey", "economy_survey"),
     ),
     ComplianceRow(
+        "F13",
+        ("mind_attributes", "mind_facets", "incubating_ideas"),
+        ("mind_survey", "mind_split", "mind_ideas"),
+        ("mind:attributes", "mind:facets", "mind:idea", "mind:idea_edit", "mind:idea_remove", "mind:lock", "mind:unlock"),
+        ("MindSplitSection", "section-mind-split", "SplitControls"),
+        ("mortal_context",),
+        ("plant_idea",),
+        ("mind.facet_trait", "idea."),
+        ("mind_survey", "mind.belief_axes"),
+    ),
+    ComplianceRow(
         "F30",
         ("afflictions",),
         ("body_afflictions",),

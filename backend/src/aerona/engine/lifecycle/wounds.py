@@ -15,6 +15,7 @@ from aerona.domain.enums.body import BodyFunction, DamageType, HarmCause, Injury
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.mind import Attribute
 from aerona.domain.enums.mortal import HarshnessScale
 from aerona.engine.body.book import Bearer, anatomy_for, ensure_body, function_level, metallurgy_of
 from aerona.engine.body.digits import lose
@@ -32,6 +33,7 @@ from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lore.arms import grip
 from aerona.engine.mind.book import skills_of
 from aerona.engine.mind.hooks import wound_memories
+from aerona.engine.mind.split import attribute, lean_factor
 from aerona.engine.mortal.death import manner_of
 from aerona.engine.mortal.equipment import mount_pct, off_hand_pct, wielded
 from aerona.engine.mortal.standing import add_stress
@@ -279,6 +281,8 @@ async def apply_hits(ctx: TickContext, bearer: Bearer, harm: Harm, *, lethal: bo
     anatomy = anatomy_for(body)
     rng = ctx.rng(seed_of("hits", bearer.id, harm.cause.value, round_half_up(harm.damage)))
     harm = await armed(ctx, harm)
+    hardiness = lean_factor(await attribute(ctx.session, ctx.rules, bearer, Attribute.TOUGHNESS), ctx.rules.mind_split.toughness_pct)
+    harm = replace(harm, damage=harm.damage * max(0.0, 1 - hardiness))
     hits = hits_for(ctx.rules, anatomy, harm, _armour(body), rng, wielding=await wielding_of(ctx, harm), layers=await layers_for(ctx, bearer, body))
     await scorch_items(ctx, hits)
     if not lethal:

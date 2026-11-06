@@ -1,13 +1,16 @@
+from collections import defaultdict
+
 from sqlalchemy import select
 
-from aerona.catalog.mind import MELEE_SKILLS, MEMORIES
+from aerona.catalog.mind import MELEE_SKILLS, MEMORIES, TRAITS
+from aerona.catalog.mind_split import IDEAS, derived_axes
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
-from aerona.db.tables.mind import MemoryRow, MindRow
+from aerona.db.tables.mind import CultureValueRow, MemoryRow, MindRow, PersonalityValueRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import unheld
@@ -15,7 +18,7 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, MortalRole
-from aerona.domain.enums.mind import ActKind, CareerChange, MemoryKind, PressureKind, TraitEffect, ValueHolder
+from aerona.domain.enums.mind import ActKind, CareerChange, IdeaState, MemoryKind, PressureKind, TraitEffect, ValueAxis, ValueHolder
 from aerona.domain.enums.polity import OathKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import HeroQuestKind
@@ -40,11 +43,22 @@ from aerona.engine.mind.book import (
 )
 from aerona.engine.mind.depth import backfill_depth
 from aerona.engine.mind.hooks import FIGHTING_ROLES
+from aerona.engine.mind.ideas import ideas_of, turn_over
 from aerona.engine.mind.memories import forget_faded, kin_of, remember, strength_of
 from aerona.engine.mind.needs import update_needs, update_pressures
 from aerona.engine.mind.opinion import OpinionContext
 from aerona.engine.mind.skills import choose_career, left_to_beg, practise_any, seed_skills, teach_apprentices, weather_skills
 from aerona.engine.mind.space import value_reading
+from aerona.engine.mind.split import (
+    BEAST_SUMMARIES,
+    MORTAL_SUMMARIES,
+    Bodied,
+    has_attributes,
+    has_facets,
+    seed_split,
+    temper_facets,
+    weather_attributes,
+)
 from aerona.engine.mind.traits import seed_traits
 from aerona.engine.mind.values import drift_body, drift_culture, drift_divine, drift_person, seed_values
 from aerona.engine.notes import note
@@ -54,6 +68,7 @@ from aerona.engine.phases.remembrance import disaster_toll
 from aerona.engine.phases.society_support.quests import QuestOption
 from aerona.engine.polity.oaths import swear
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import active_bonds, canon, living_entity
@@ -62,6 +77,9 @@ from aerona.engine.services.community_relations import change_relation, lend_set
 from aerona.engine.services.war import ongoing_wars
 
 HISTORY_FIXUP = "mind.relation_history"
+AXES_FIXUP = "mind.belief_axes"
+SUMMARY_READS = tuple(f"{kind}.{name}" for kind, fields in (("mortal", MORTAL_SUMMARIES), ("beast", BEAST_SUMMARIES)) for name in fields.values())
+SUMMARY_WRITES = SUMMARY_READS
 AID_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.PEOPLE})
 BEGGAR_TAG = "beggar"
 HISTORY_NOTE = "the weight of older history"
@@ -83,6 +101,7 @@ async def seed_mind(ctx: TickContext, node: Holder) -> bool:
     values = await seed_values(ctx.session, ctx.rules, node, rng)
     if values is not None and kind is not None and kind is not ValueHolder.COMMUNITY:
         await write_values(ctx.session, kind, node.id, values)
+    await seed_split(ctx.session, ctx.rules, node, rng)
     if isinstance(node, EntityRow) and node.entity_type is EntityType.MORTAL:
         await seed_skills(ctx.session, ctx.rules, node, rng, ctx.epoch)
         await backfill_mortal_memories(ctx, node)
@@ -182,6 +201,8 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
     "table.holder_levels",
     "table.injuries",
     "table.memories",
+    "table.mind_attributes",
+    "table.mind_facets",
     "table.minds",
     "table.needs",
     "table.nodes",
@@ -191,13 +212,21 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
     "table.traits",
     "table.war_sides",
     "table.wars",
+    "table.sons",
+    "table.foreign_gods",
+    *SUMMARY_READS,
 )
 @writes(
+    *SUMMARY_WRITES,
     "table.applied_fixups",
     "table.community_relations",
     "table.culture_values",
+    "table.foreign_gods",
     "table.memories",
+    "table.mind_attributes",
+    "table.mind_facets",
     "table.minds",
+    "table.sons",
     "table.needs",
     "table.personality_values",
     "table.pressures",
@@ -219,12 +248,54 @@ async def mind_survey(ctx: TickContext) -> None:
         if god.id not in known and await seed_mind(ctx, god):
             created += 1
     ctx.count("minds", created)
+    ctx.count("belief_axes", await backfill_axes(ctx))
+    ctx.count("minds_split", await backfill_split(ctx, minds))
     ctx.count("depth_traits", await backfill_depth(ctx.session, ctx.rules, [entity for entity in minds if entity.entity_type is EntityType.MORTAL], ctx.epoch))
     settled = await settle_history(ctx)
     ctx.count("histories_settled", settled)
     if created or settled:
         await mind_needs(ctx)
         ctx.count("relations_refreshed", await refresh_relations(ctx.session, ctx.rules, ctx.epoch))
+
+
+async def axis_vectors(ctx: TickContext) -> tuple[dict[int, dict[ValueAxis, int]], dict[int, dict[ValueAxis, int]]]:
+    cultures: dict[int, dict[ValueAxis, int]] = defaultdict(dict)
+    persons: dict[int, dict[ValueAxis, int]] = defaultdict(dict)
+    for culture in await ctx.session.scalars(select(CultureValueRow)):
+        cultures[culture.entity_id][culture.axis] = culture.value
+    for person in await ctx.session.scalars(select(PersonalityValueRow)):
+        persons[person.node_id][person.axis] = person.value
+    return cultures, persons
+
+
+async def backfill_axes(ctx: TickContext) -> int:
+    if await ctx.session.get(AppliedFixupRow, AXES_FIXUP) is not None:
+        return 0
+    cultures, persons = await axis_vectors(ctx)
+    filled = 0
+    for owner, vector in cultures.items():
+        missing = {axis: value for axis, value in derived_axes(vector).items() if axis not in vector}
+        ctx.session.add_all(CultureValueRow(entity_id=owner, axis=axis, value=value) for axis, value in missing.items())
+        filled += 1 if missing else 0
+    for owner, vector in persons.items():
+        missing = {axis: value for axis, value in derived_axes(vector).items() if axis not in vector}
+        ctx.session.add_all(PersonalityValueRow(node_id=owner, axis=axis, value=value) for axis, value in missing.items())
+        filled += 1 if missing else 0
+    ctx.session.add(AppliedFixupRow(key=AXES_FIXUP, result={"holders": filled}))
+    await ctx.session.flush()
+    return filled
+
+
+async def backfill_split(ctx: TickContext, minds: list[EntityRow]) -> int:
+    seeded = 0
+    beasts = unheld(await canon(ctx.session, [EntityType.BEAST]))
+    sons = unheld(await ctx.session.scalars(select(SonRow).order_by(SonRow.id)))
+    gods = unheld(await ctx.session.scalars(select(ForeignGodRow).order_by(ForeignGodRow.id)))
+    nodes: list[Bodied] = [*minds, *beasts, *sons, *gods]
+    for node in nodes:
+        if has_attributes(node) or has_facets(node):
+            seeded += 1 if await seed_split(ctx.session, ctx.rules, node, ctx.rng(seed_of("backfill.split", node.id))) else 0
+    return seeded
 
 
 async def settle_history(ctx: TickContext) -> int:
@@ -517,6 +588,94 @@ async def mind_opinion(ctx: TickContext) -> None:
     ctx.count("relations_refreshed", await refresh_relations(ctx.session, ctx.rules, ctx.epoch))
 
 
+@reads(
+    "mortal.age",
+    "mortal.lifespan",
+    *SUMMARY_READS,
+    "table.conditions",
+    "table.culture_values",
+    "table.incubating_ideas",
+    "table.mind_attributes",
+    "table.mind_facets",
+    "table.minds",
+    "table.nodes",
+    "table.personality_values",
+    "table.skills",
+    "table.sons",
+    "table.foreign_gods",
+    "table.traits",
+)
+@writes(
+    *SUMMARY_WRITES,
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.foreign_gods",
+    "table.mind_attributes",
+    "table.mind_facets",
+    "table.sons",
+    "table.traits",
+)
+async def mind_split(ctx: TickContext) -> None:
+    weathered = tempered = 0
+    beasts = await canon(ctx.session, [EntityType.BEAST])
+    sons = list(await ctx.session.scalars(select(SonRow).order_by(SonRow.id)))
+    gods = list(await ctx.session.scalars(select(ForeignGodRow).order_by(ForeignGodRow.id)))
+    minds = [entity for entity in await living_minds(ctx.session) if entity.entity_type is EntityType.MORTAL]
+    nodes: list[Bodied] = [*unheld(minds), *unheld(beasts), *unheld(sons), *unheld(gods)]
+    for node in nodes:
+        weathered += 1 if await weather_attributes(ctx.session, ctx.rules, node, ctx.epoch) else 0
+        for trait in await temper_facets(ctx.session, ctx.rules, node, ctx.epoch):
+            tempered += 1
+            await note(ctx, f"{node.name} has grown {TRAITS[trait].label.lower()}.", key="mind.facet_trait", ids=[node.id])
+    ctx.count("attributes_weathered", weathered)
+    ctx.count("facet_traits", tempered)
+
+
+@reads(
+    "table.bonds",
+    "table.cult_tenets",
+    "table.entities",
+    "table.entity_flags",
+    "table.ideology_adherents",
+    "table.ideology_profiles",
+    "table.incubating_ideas",
+    "table.item_profiles",
+    "table.knowledge",
+    "table.mind_attributes",
+    "table.mind_facets",
+    "table.minds",
+    "table.nodes",
+    "table.personality_values",
+)
+@writes(
+    *SUMMARY_WRITES,
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.incubating_ideas",
+    "table.mind_attributes",
+    "table.mind_facets",
+    "table.personality_values",
+)
+async def mind_ideas(ctx: TickContext) -> None:
+    knowledge = await KnowledgeMap.load(ctx.session)
+    sleeping = await dormant_ids(ctx)
+    taken = internalised = rejected = 0
+    for mortal in unheld(await living_minds(ctx.session)):
+        if mortal.entity_type is not EntityType.MORTAL or mortal.id in sleeping:
+            continue
+        before = {row.id: row.state for row in await ideas_of(ctx.session, mortal.id)}
+        tally = await turn_over(ctx, mortal, knowledge)
+        taken, internalised, rejected = taken + tally.taken, internalised + tally.internalised, rejected + tally.rejected
+        for row in await ideas_of(ctx.session, mortal.id):
+            if before.get(row.id) is IdeaState.INCUBATING and row.state is IdeaState.INTERNALISED:
+                await note(ctx, f"{mortal.name} took {IDEAS[row.idea].label.lower()} to heart.", key="idea.internalised", ids=[mortal.id])
+            elif before.get(row.id) is IdeaState.INCUBATING and row.state is IdeaState.REJECTED:
+                await note(ctx, f"{mortal.name} let go of {IDEAS[row.idea].label.lower()}.", key="idea.rejected", ids=[mortal.id])
+    ctx.count("ideas_taken", taken)
+    ctx.count("ideas_internalised", internalised)
+    ctx.count("ideas_rejected", rejected)
+
+
 SURVEY_PHASES = (Phase("mind_survey", mind_survey),)
 
 
@@ -605,6 +764,8 @@ async def best_donor(ctx: TickContext, atlas: RegionAtlas, community: EntityRow)
 MIND_PHASES = (
     Phase("mind_values", mind_values),
     Phase("mind_skills", mind_skills),
+    Phase("mind_split", mind_split),
+    Phase("mind_ideas", mind_ideas),
     Phase("mind_memories", mind_memories),
     Phase("mind_needs", mind_needs),
     Phase("famine_aid", famine_aid),

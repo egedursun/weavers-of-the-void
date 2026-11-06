@@ -34,6 +34,7 @@ from aerona.domain.enums.culture import ItemClass, Technique
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.mind import Attribute
 from aerona.domain.enums.mortal import DeathCause, HarshnessScale
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import ItemStats
@@ -53,6 +54,7 @@ from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lore.research import lacks
 from aerona.engine.mind.hooks import failed_to_heal, healed
+from aerona.engine.mind.split import attribute, lean_factor
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.harshness import harshness
@@ -429,6 +431,9 @@ async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending
         return outcome
     walking = {part.key for part in anatomy.with_function(BodyFunction.LOCOMOTION)}
     skill = care.healer.skill if care.healer is not None else 0
+    split = ctx.rules.mind_split
+    ward = 1 - lean_factor(await attribute(ctx.session, ctx.rules, bearer, Attribute.DISEASE_RESISTANCE), split.resistance_pct)
+    mending = 1 + lean_factor(await attribute(ctx.session, ctx.rules, bearer, Attribute.RECUPERATION), split.recuperation_pct)
     for row in wounds:
         if row.state not in OPEN_INJURY_STATES:
             continue
@@ -441,7 +446,7 @@ async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending
         campaign = row.cause_kind is HarmCause.BATTLE and row.epoch == ctx.epoch
         if row.state is not InjuryState.INFECTED and anatomy.infects:
             checks = max(1, ctx.rules.campaigns.seasons_per_war_epoch) if campaign else 1
-            chance = infection_chance(ctx, row, body, care, skill)
+            chance = infection_chance(ctx, row, body, care, skill) * max(0.0, ward)
             if any(rng.chance(chance) for _ in range(checks)):
                 row.state = InjuryState.INFECTED
                 outcome.changed = True
@@ -453,7 +458,7 @@ async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending
                 return outcome
             continue
         if anatomy.heals:
-            chance = heal_chance(table, row.severity, row.kind) * (1 + stats.endurance / PERCENT)
+            chance = heal_chance(table, row.severity, row.kind) * (1 + stats.endurance / PERCENT) * max(0.0, mending)
             chance *= table.campaign_rest_pct / PERCENT if campaign else 1
             chance *= 1 + table.healer_heal_bonus_pct * skill / PERCENT / PERCENT
             chance *= 1 + table.divine_heal_bonus_pct / PERCENT if divine else 1

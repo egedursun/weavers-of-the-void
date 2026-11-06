@@ -4,8 +4,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.mind import (
+    AttributeShiftView,
+    AttributeView,
+    BeliefShiftView,
     CareerView,
+    FacetShiftView,
+    FacetView,
+    IdeaSpecView,
+    IdeaView,
     MemoryView,
+    MindSplitView,
     MindView,
     NeedView,
     OpinionComponentView,
@@ -14,6 +22,7 @@ from aerona.api.schemas.mind import (
     OpinionView,
     PressureView,
     SkillView,
+    SummaryView,
     TraitCapacityView,
     TraitEffectView,
     TraitView,
@@ -21,17 +30,22 @@ from aerona.api.schemas.mind import (
 )
 from aerona.api.views.common import node_ref, node_refs
 from aerona.catalog.mind import FIXED_ROLES, MEMORIES, NEED_LABELS, PRESSURE_LABELS, SKILLS, TRAITS, VALUE_LABELS
+from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS, SKILL_ATTRIBUTES
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import MIND_LOCKS, TraitRow
+from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.mind import IdeaKind, ValueAxis, ValueHolder
 from aerona.engine.body.book import factor
 from aerona.engine.body.customs import people_of
-from aerona.engine.mind.book import Holder, holder_kind, load_holder, mind_of, needs_of, pressures_of, skills_of, values_of
+from aerona.engine.mind.book import Holder, holder_kind, load_holder, mind_of, needs_of, pressures_of, skills_of, stored_values, values_of
+from aerona.engine.mind.ideas import fit, ideas_of
 from aerona.engine.mind.memories import memories_of, strength_of
 from aerona.engine.mind.opinion import Opinion, opinion
 from aerona.engine.mind.skills import level_cost
+from aerona.engine.mind.split import Bodied, attributes_of, culture_mean, derived_summaries, effective_attributes, facets_of, has_attributes, has_facets
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.services.community_relations import cosmos_epoch
 from aerona.rules.registry import Rules
@@ -41,7 +55,7 @@ NO_MIND = "No mind lives there."
 COMMUNITY_LOCKS = frozenset({"values", "memories", "needs"})
 LOCKS_BY_HOLDER = {
     ValueHolder.PERSONAL: frozenset(MIND_LOCKS),
-    ValueHolder.DIVINE: frozenset({"values", "traits", "memories"}),
+    ValueHolder.DIVINE: frozenset({"values", "traits", "memories", "attributes", "facets"}),
     ValueHolder.CULTURE: COMMUNITY_LOCKS,
     ValueHolder.COMMUNITY: frozenset({"memories", "needs"}),
     ValueHolder.DOCTRINE: frozenset({"values", "memories"}),
@@ -205,4 +219,120 @@ async def mind_view(services: ServicesDep, node_id: int = Path(ge=1)) -> MindVie
             if mortal and isinstance(node, EntityRow)
             else None,
             max_traits=rules.traits.max_traits,
+        )
+
+
+def idea_spec_view(idea: IdeaKind) -> IdeaSpecView:
+    spec = IDEAS[idea]
+    return IdeaSpecView(
+        idea=idea,
+        label=spec.label,
+        beliefs=[BeliefShiftView(axis=axis, label=VALUE_LABELS[axis][1 if shift > 0 else 0], value=shift) for axis, shift in spec.beliefs.items()],
+        gains=[AttributeShiftView(attribute=member, label=ATTRIBUTES[member].label, value=gain) for member, gain in spec.gains.items()],
+        costs=[AttributeShiftView(attribute=member, label=ATTRIBUTES[member].label, value=cost) for member, cost in spec.costs.items()],
+        facets=[FacetShiftView(facet=facet, label=FACETS[facet].label, value=shift) for facet, shift in spec.facets.items()],
+        distraction=spec.distraction,
+    )
+
+
+async def bodied(session: AsyncSession, node_id: int) -> Bodied | None:
+    entity = await session.get(EntityRow, node_id)
+    if entity is not None:
+        return entity
+    son = await session.get(SonRow, node_id)
+    if son is not None:
+        return son
+    return await session.get(ForeignGodRow, node_id)
+
+
+SPLIT_LOCKS = ("attributes", "facets", "ideas")
+
+
+@router.get("/minds/{node_id}/split", response_model=MindSplitView)
+async def mind_split_view(services: ServicesDep, node_id: int = Path(ge=1)) -> MindSplitView:
+    async with reader(services) as session:
+        rules = await world_rules(services, session)
+        node = await bodied(session, node_id)
+        if node is None:
+            ref = await node_ref(session, node_id)
+            if ref is None:
+                raise NotFoundError(NO_MIND)
+            return MindSplitView(
+                node_id=node_id,
+                name=ref.name,
+                has_attributes=False,
+                has_facets=False,
+                turns_ideas=False,
+                locked=[],
+                lockable=[],
+                attributes=[],
+                summaries=[],
+                facets=[],
+                ideas=[],
+                catalogue=[],
+                trait_threshold=rules.mind_split.trait_threshold,
+                idea_slots=rules.ideas.slots,
+            )
+        attributes = await attributes_of(session, node_id) if has_attributes(node) else {}
+        effective = await effective_attributes(session, rules, node) if attributes else {}
+        facets = await facets_of(session, node_id) if has_facets(node) else {}
+        mean = await culture_mean(session, rules, node) if has_facets(node) else {}
+        mind = await mind_of(session, node_id)
+        minded = mind is not None
+        values = await stored_values(session, ValueHolder.PERSONAL if isinstance(node, EntityRow) else ValueHolder.DIVINE, node_id)
+        rows = await ideas_of(session, node_id)
+        sources = await node_refs(session, [row.source_node_id for row in rows if row.source_node_id is not None])
+        turns = isinstance(node, EntityRow) and node.entity_type is EntityType.MORTAL
+        return MindSplitView(
+            node_id=node_id,
+            name=node.name,
+            has_attributes=has_attributes(node),
+            has_facets=has_facets(node),
+            turns_ideas=turns,
+            locked=[field for field in (mind.locked or []) if field in SPLIT_LOCKS] if mind is not None else [],
+            lockable=[field for field in SPLIT_LOCKS if minded and (field != "ideas" or turns) and (field != "facets" or has_facets(node))],
+            attributes=[
+                AttributeView(
+                    attribute=member,
+                    label=spec.label,
+                    physical=spec.physical,
+                    value=attributes[member],
+                    effective=effective.get(member, attributes[member]),
+                    governs=[skill for skill, members in SKILL_ATTRIBUTES.items() if member in members],
+                )
+                for member, spec in ATTRIBUTES.items()
+                if member in attributes
+            ],
+            summaries=[SummaryView(name=name, value=value) for name, value in derived_summaries(node, attributes).items()] if attributes else [],
+            facets=[
+                FacetView(
+                    facet=facet,
+                    label=spec.label,
+                    group=spec.group,
+                    value=facets[facet],
+                    mean=mean.get(facet, 0),
+                    high_trait=spec.high,
+                    low_trait=spec.low,
+                )
+                for facet, spec in FACETS.items()
+                if facet in facets
+            ],
+            ideas=[
+                IdeaView(
+                    id=row.id,
+                    idea=row.idea,
+                    label=IDEAS[row.idea].label,
+                    source=row.source,
+                    source_node=sources.get(row.source_node_id) if row.source_node_id is not None else None,
+                    progress=row.progress,
+                    state=row.state,
+                    started_epoch=row.started_epoch,
+                    finished_epoch=row.finished_epoch,
+                    fit=fit(values, row.idea),
+                )
+                for row in rows
+            ],
+            catalogue=[idea_spec_view(idea) for idea in IdeaKind] if turns else [],
+            trait_threshold=rules.mind_split.trait_threshold,
+            idea_slots=rules.ideas.slots,
         )

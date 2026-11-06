@@ -56,6 +56,8 @@ class SonResult(StrEnum):
     ABILITY_NEEDED = "Name the ability you strengthen."
     MORTALS_BOUND = "{{ first }} and {{ second }} are bound: {{ binding }}."
     MORTAL_TOUCHED = "Your touch fell on {{ name }}: {{ touch }}."
+    IDEA_KNOWN = "{{ name }} already knows {{ idea }}."
+    IDEA_PLANTED = "{{ name }} now turns over {{ idea }}."
     WORDS_LIMIT = "You have coined enough words this age."
     NOT_A_LANGUAGE = "This is not a language. A Language entity must exist first."
     NOT_A_CULT = "This is not a cult. Name one of your cults by its id."

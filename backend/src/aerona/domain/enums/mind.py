@@ -16,6 +16,117 @@ class ValueAxis(StrEnum):
     SUPERSTITION = "superstition"
     XENOPHILIA = "xenophilia"
     DEATH = "death"
+    LAW = "law"
+    LOYALTY = "loyalty"
+    FAMILY = "family"
+    FRIENDSHIP = "friendship"
+    TRUTH = "truth"
+    CRAFTSMANSHIP = "craftsmanship"
+    ARTWORK = "artwork"
+    COMPETITION = "competition"
+    PERSEVERANCE = "perseverance_value"
+    LEISURE = "leisure"
+
+
+class Attribute(StrEnum):
+    STRENGTH = "strength"
+    AGILITY = "agility"
+    TOUGHNESS = "toughness"
+    ENDURANCE = "endurance"
+    RECUPERATION = "recuperation"
+    DISEASE_RESISTANCE = "disease_resistance"
+    ANALYTICAL_ABILITY = "analytical_ability"
+    FOCUS = "focus"
+    WILLPOWER = "willpower"
+    CREATIVITY = "creativity"
+    INTUITION = "intuition"
+    PATIENCE = "patience"
+    MEMORY = "memory"
+    LINGUISTIC_ABILITY = "linguistic_ability"
+    SPATIAL_SENSE = "spatial_sense"
+    MUSICALITY = "musicality"
+    KINAESTHETIC_SENSE = "kinaesthetic_sense"
+    EMPATHY = "empathy"
+    SOCIAL_AWARENESS = "social_awareness"
+
+
+class FacetGroup(StrEnum):
+    EMOTIONAL = "emotional"
+    SOCIAL = "social"
+    DRIVE = "drive"
+    MIND = "mind"
+
+
+class Facet(StrEnum):
+    ANXIETY = "anxiety"
+    ANGER = "anger"
+    DEPRESSION = "depression"
+    SELF_CONSCIOUSNESS = "self_consciousness"
+    VULNERABILITY = "vulnerability"
+    CHEERFULNESS = "cheerfulness"
+    EXCITEMENT_SEEKING = "excitement_seeking"
+    EMOTIONAL_STABILITY = "emotional_stability"
+    FRIENDLINESS = "friendliness"
+    GREGARIOUSNESS = "gregariousness"
+    ASSERTIVENESS = "assertiveness"
+    TRUST = "trust"
+    ALTRUISM = "altruism"
+    MODESTY = "modesty"
+    POLITENESS = "politeness"
+    COOPERATION = "cooperation"
+    VANITY = "vanity"
+    ENVY = "envy"
+    GRATITUDE = "gratitude"
+    AMBITION = "ambition"
+    PERSEVERANCE = "perseverance"
+    ORDERLINESS = "orderliness"
+    DISCIPLINE = "discipline"
+    THOROUGHNESS = "thoroughness"
+    ACTIVITY_LEVEL = "activity_level"
+    CAUTION = "caution"
+    IMAGINATION = "imagination"
+    CURIOSITY = "curiosity"
+    ABSTRACTION = "abstraction"
+    ARTISTIC_INCLINATION = "artistic_inclination"
+    TOLERANCE_OF_STRANGENESS = "tolerance_of_strangeness"
+    HUMOUR = "humour"
+    SENSE_OF_DUTY = "sense_of_duty"
+    GREED = "greed"
+
+
+class IdeaKind(StrEnum):
+    RATIONALISM = "rationalism"
+    MYSTICISM = "mysticism"
+    ASCETICISM = "asceticism"
+    MERCY_FOR_ALL = "mercy_for_all"
+    MARTIAL_CREED = "martial_creed"
+    RULE_OF_LAW = "rule_of_law"
+    FREE_SPIRIT = "free_spirit"
+    KIN_FIRST = "kin_first"
+    HONOUR_CODE = "honour_code"
+    WANDERLUST = "wanderlust"
+    MATERIALISM = "materialism"
+    REVERENCE_FOR_NATURE = "reverence_for_nature"
+    CRAFT_DEVOTION = "craft_devotion"
+    BEAUTY_ABOVE_ALL = "beauty_above_all"
+    EGALITARIANISM = "egalitarianism"
+    DIVINE_ORDER = "divine_order"
+
+
+class IdeaSource(StrEnum):
+    IDEOLOGY = "ideology"
+    DOCTRINE = "doctrine"
+    THEORY = "theory"
+    BOOK = "book"
+    TEACHER = "teacher"
+    DIVINE = "divine"
+    PLAYER = "player"
+
+
+class IdeaState(StrEnum):
+    INCUBATING = "incubating"
+    INTERNALISED = "internalised"
+    REJECTED = "rejected"
 
 
 class ValueHolder(StrEnum):
@@ -78,6 +189,7 @@ class TraitSource(StrEnum):
     EDUCATION = "education"
     DIVINE = "divine"
     PLAYER = "player"
+    FACET = "facet"
 
 
 class SkillFamily(StrEnum):

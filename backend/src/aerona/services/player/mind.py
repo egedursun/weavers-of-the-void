@@ -2,20 +2,54 @@ from pydantic import Field
 from sqlalchemy import delete
 
 from aerona.catalog.mind import MEMORIES, SKILLS, TRAITS, VALUE_LABELS
+from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.mind import MIND_LOCKS, SKILL_MAX, SKILL_MIN, VALUE_MAX, VALUE_MIN, MemoryRow, SkillRow, TraitRow
+from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.mind import (
+    ATTRIBUTE_MAX,
+    ATTRIBUTE_MIN,
+    FACET_MAX,
+    FACET_MIN,
+    MIND_LOCKS,
+    SKILL_MAX,
+    SKILL_MIN,
+    VALUE_MAX,
+    VALUE_MIN,
+    IdeaRow,
+    MemoryRow,
+    SkillRow,
+    TraitRow,
+)
 from aerona.db.tables.mortal import KindVariantRow
+from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
-from aerona.domain.enums.mind import KindFamily, MemoryKind, NeedKind, PressureKind, SkillKind, SkillSource, TraitKind, TraitSource, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import (
+    Attribute,
+    Facet,
+    IdeaKind,
+    IdeaSource,
+    IdeaState,
+    KindFamily,
+    MemoryKind,
+    NeedKind,
+    PressureKind,
+    SkillKind,
+    SkillSource,
+    TraitKind,
+    TraitSource,
+    ValueAxis,
+    ValueHolder,
+)
 from aerona.engine.mind.book import (
     PRESSURE_TYPES,
     Holder,
     add_trait,
     ensure_mind_row,
+    has_mind,
     holder_kind,
     load_holder,
     remove_trait,
@@ -25,9 +59,23 @@ from aerona.engine.mind.book import (
     write_pressures,
     write_values,
 )
+from aerona.engine.mind.ideas import Encounter, internalise, reject, take_up
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.needs import NEED_LOCK
 from aerona.engine.mind.skills import ROLE_LOCK
+from aerona.engine.mind.split import (
+    ATTRIBUTE_LOCK,
+    FACET_LOCK,
+    Bodied,
+    attributes_of,
+    culture_mean,
+    estimate,
+    facets_of,
+    has_attributes,
+    has_facets,
+    store_attributes,
+    write_facets,
+)
 from aerona.engine.mind.values import VALUE_LOCK
 from aerona.engine.services.community_relations import refresh_relation
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
@@ -103,6 +151,36 @@ class SetPressure(MindTarget):
     pressure: PressureKind
     value: int = Field(ge=0, le=PERCENT)
     lock: bool = True
+
+
+class SetAttributes(MindTarget):
+    values: dict[Attribute, int]
+    lock: bool = True
+
+
+class SetFacets(MindTarget):
+    values: dict[Facet, int]
+    lock: bool = True
+
+
+class ImplantIdea(MindTarget):
+    idea: IdeaKind
+    progress: int = Field(default=0, ge=0, le=PERCENT)
+    state: IdeaState = IdeaState.INCUBATING
+    source: IdeaSource = IdeaSource.PLAYER
+    source_id: int | None = None
+
+
+class IdeaTarget(Command):
+    idea_id: int
+
+
+class EditIdea(IdeaTarget):
+    progress: int | None = Field(default=None, ge=0, le=PERCENT)
+    state: IdeaState | None = None
+    source: IdeaSource | None = None
+    source_id: int | None = None
+    clear_source: bool = False
 
 
 class SetRole(MindTarget):
@@ -331,3 +409,118 @@ async def set_role(scope: PlayerScope, command: SetRole) -> Effect:
     node.mortal_role = command.role
     await hold(scope, node, ROLE_LOCK, command.lock)
     return Effect(f"{node.name} is now a {label(command.role.value)}.", target_node_id=node.id)
+
+
+async def bodied_of(scope: PlayerScope, node_id: int) -> Bodied:
+    found = await bodied_of_any(scope, node_id)
+    if found is None:
+        raise NotFoundError("Nothing lives there.")
+    return found
+
+
+async def hold_where_minded(scope: PlayerScope, node: Bodied, field: str, held: bool) -> None:
+    if has_mind(node) and held:
+        await hold(scope, node, field, True)
+
+
+@player_action("mind:attributes", ActionKind.OTHER)
+async def set_attributes(scope: PlayerScope, command: SetAttributes) -> Effect:
+    node = await bodied_of(scope, command.node_id)
+    if not has_attributes(node):
+        raise ValidationFailedError(f"{node.name} has no body or mind to measure.")
+    current = await attributes_of(scope.session, node.id) or estimate(node)
+    for which, value in command.values.items():
+        current[which] = max(ATTRIBUTE_MIN, min(ATTRIBUTE_MAX, value))
+    await store_attributes(scope.session, node, current)
+    await hold_where_minded(scope, node, ATTRIBUTE_LOCK, command.lock)
+    changed = ", ".join(f"{ATTRIBUTES[which].label.lower()} {current[which]}" for which in command.values)
+    return Effect(f"{node.name} now has {changed}.", target_node_id=node.id)
+
+
+@player_action("mind:facets", ActionKind.OTHER)
+async def set_facets(scope: PlayerScope, command: SetFacets) -> Effect:
+    node = await bodied_of(scope, command.node_id)
+    if not has_facets(node):
+        raise ValidationFailedError(f"{node.name} has no temperament to shape.")
+    current = await facets_of(scope.session, node.id) or await culture_mean(scope.session, scope.rules, node)
+    for facet, value in command.values.items():
+        current[facet] = max(FACET_MIN, min(FACET_MAX, value))
+    await write_facets(scope.session, node.id, current)
+    await hold_where_minded(scope, node, FACET_LOCK, command.lock)
+    changed = ", ".join(f"{FACETS[facet].label.lower()} {current[facet]:+d}" for facet in command.values)
+    return Effect(f"{node.name}'s temperament is now {changed}.", target_node_id=node.id)
+
+
+async def source_exists(scope: PlayerScope, source_id: int | None) -> None:
+    if source_id is not None and await bodied_of_any(scope, source_id) is None:
+        raise ValidationFailedError("An idea can only come from a record that exists.")
+
+
+async def bodied_of_any(scope: PlayerScope, node_id: int) -> Bodied | None:
+    entity = await scope.session.get(EntityRow, node_id)
+    if entity is not None:
+        return entity
+    son = await scope.session.get(SonRow, node_id)
+    if son is not None:
+        return son
+    return await scope.session.get(ForeignGodRow, node_id)
+
+
+async def settle_idea(scope: PlayerScope, node: Holder, row: IdeaRow, state: IdeaState) -> None:
+    epoch = await scope.epoch()
+    if state is IdeaState.INTERNALISED and row.state is not IdeaState.INTERNALISED:
+        await internalise(scope.session, scope.rules, node, row, epoch)
+    elif state is IdeaState.REJECTED:
+        reject(row, epoch)
+    elif state is IdeaState.INCUBATING:
+        row.state, row.finished_epoch = IdeaState.INCUBATING, None
+
+
+@player_action("mind:idea", ActionKind.OTHER)
+async def implant_idea(scope: PlayerScope, command: ImplantIdea) -> Effect:
+    node = await holder_of(scope, command.node_id)
+    if not has_facets(node):
+        raise ValidationFailedError(f"{node.name} does not turn ideas over.")
+    await source_exists(scope, command.source_id)
+    await mind_for(scope, node)
+    row = await take_up(scope.session, node.id, Encounter(command.idea, command.source, command.source_id), await scope.epoch(), progress=command.progress)
+    if row is None:
+        raise ValidationFailedError(f"{node.name} already knows {IDEAS[command.idea].label.lower()}.")
+    await settle_idea(scope, node, row, command.state)
+    await scope.session.flush()
+    return Effect(f"{node.name} now turns over {IDEAS[command.idea].label.lower()}.", target_node_id=node.id, values={"idea_id": row.id})
+
+
+async def idea_row(scope: PlayerScope, idea_id: int) -> IdeaRow:
+    row = await scope.session.get(IdeaRow, idea_id)
+    if row is None:
+        raise NotFoundError("No such idea.")
+    return row
+
+
+@player_action("mind:idea_edit", ActionKind.OTHER)
+async def edit_idea(scope: PlayerScope, command: EditIdea) -> Effect:
+    row = await idea_row(scope, command.idea_id)
+    node = await holder_of(scope, row.holder_node_id)
+    await source_exists(scope, command.source_id)
+    if command.progress is not None:
+        row.progress = command.progress
+    if command.source is not None:
+        row.source = command.source
+    if command.source_id is not None:
+        row.source_node_id = command.source_id
+    if command.clear_source:
+        row.source_node_id = None
+    if command.state is not None:
+        await settle_idea(scope, node, row, command.state)
+    await scope.session.flush()
+    return Effect(f"{node.name}'s {IDEAS[row.idea].label.lower()} was changed.", target_node_id=node.id)
+
+
+@player_action("mind:idea_remove", ActionKind.OTHER)
+async def remove_idea(scope: PlayerScope, command: IdeaTarget) -> Effect:
+    row = await idea_row(scope, command.idea_id)
+    holder, idea = row.holder_node_id, row.idea
+    await scope.session.delete(row)
+    await scope.session.flush()
+    return Effect(f"The idea of {IDEAS[idea].label.lower()} was taken away.", target_node_id=holder)

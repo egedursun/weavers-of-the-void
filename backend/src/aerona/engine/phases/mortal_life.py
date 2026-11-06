@@ -56,7 +56,7 @@ MORTAL_STATS = (
 
 async def living_mortals(ctx: TickContext) -> list[EntityRow]:
     sleeping = await dormant_ids(ctx)
-    return [mortal for mortal in await canon(ctx.session, [EntityType.MORTAL]) if mortal.status is EntityStatus.CANON and mortal.id not in sleeping]
+    return [mortal for mortal in unheld(await canon(ctx.session, [EntityType.MORTAL])) if mortal.status is EntityStatus.CANON and mortal.id not in sleeping]
 
 
 @reads(

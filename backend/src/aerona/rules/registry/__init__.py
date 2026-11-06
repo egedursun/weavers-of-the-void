@@ -155,7 +155,9 @@ from aerona.rules.registry.military import (
 from aerona.rules.registry.mind import (
     CareersRules,
     CultureDriftRules,
+    IdeasRules,
     MemoryRules,
+    MindSplitRules,
     NeedsRules,
     OpinionRules,
     SkillsRules,
@@ -286,6 +288,8 @@ class Rules:
     culture_drift: CultureDriftRules = field(default_factory=CultureDriftRules)
     traits: TraitsRules = field(default_factory=TraitsRules)
     skills: SkillsRules = field(default_factory=SkillsRules)
+    mind_split: MindSplitRules = field(default_factory=MindSplitRules)
+    ideas: IdeasRules = field(default_factory=IdeasRules)
     careers: CareersRules = field(default_factory=CareersRules)
     memory: MemoryRules = field(default_factory=MemoryRules)
     opinion: OpinionRules = field(default_factory=OpinionRules)

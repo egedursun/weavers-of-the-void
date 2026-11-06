@@ -137,6 +137,8 @@ class EnginePhasesRules:
     mind_survey: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: minds for every mortal, people and god")
     mind_values: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: drift of cultures and personal values")
     mind_skills: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: teaching, rusting skills and changing callings")
+    mind_split: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: attributes growing with use and age, facets granting traits")
+    mind_ideas: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: ideas met, turned over, taken to heart or let go")
     mind_memories: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: fading memories")
     mind_needs: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: needs of mortals and pressures on communities")
     incident_threads: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: long chains of causes open story threads")

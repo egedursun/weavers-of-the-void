@@ -3,16 +3,19 @@ from collections.abc import Mapping
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import MEMORIES, NEED_LABELS, PRESSURE_LABELS, SKILLS, TRAITS, VALUE_LABELS
+from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.mind import PressureKind, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import IdeaState, PressureKind, ValueAxis, ValueHolder
 from aerona.engine.mind.book import Holder, holder_kind, needs_of, pressures_of, skills_of, traits_of, values_of
+from aerona.engine.mind.ideas import ideas_of
 from aerona.engine.mind.memories import strongest
 from aerona.engine.mind.space import top_values
+from aerona.engine.mind.split import attributes_of, facets_of
 from aerona.engine.mortal.describe import life_lines
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.rules.registry import Rules
@@ -87,6 +90,34 @@ async def borne_pressures(session: AsyncSession, rules: Rules, node: Holder) -> 
     return lines
 
 
+async def split_lines(session: AsyncSession, rules: Rules, node: Holder) -> list[str]:
+    table = rules.context
+    lines: list[str] = []
+    attributes = await attributes_of(session, node.id)
+    if attributes and table.mind_attributes_shown:
+        ranked = sorted(attributes.items(), key=lambda item: (-item[1], item[0]))
+        best = ", ".join(f"{ATTRIBUTES[member].label.lower()} {value}" for member, value in ranked[: table.mind_attributes_shown])
+        worst = ", ".join(f"{ATTRIBUTES[member].label.lower()} {value}" for member, value in reversed(ranked[-table.mind_attributes_shown :]))
+        lines.append(f"Strongest attributes: {best}; weakest: {worst}")
+    facets = await facets_of(session, node.id)
+    marked = sorted(facets.items(), key=lambda item: (-abs(item[1]), item[0]))[: table.mind_facets_shown]
+    if marked:
+        lines.append("Most marked facets: " + ", ".join(f"{FACETS[facet].label.lower()} {value:+d}" for facet, value in marked))
+    return lines
+
+
+async def idea_lines(session: AsyncSession, node_id: int) -> list[str]:
+    rows = await ideas_of(session, node_id)
+    turning = [f"{IDEAS[row.idea].label.lower()} ({row.progress}%)" for row in rows if row.state is IdeaState.INCUBATING]
+    settled = [IDEAS[row.idea].label.lower() for row in rows if row.state is IdeaState.INTERNALISED]
+    lines: list[str] = []
+    if turning:
+        lines.append("Ideas still turning over in your mind: " + ", ".join(turning))
+    if settled:
+        lines.append("Ideas you have taken to heart: " + ", ".join(settled))
+    return lines
+
+
 async def mind_lines(session: AsyncSession, rules: Rules, node: Holder, epoch: int, *, private: bool = False) -> list[str]:
     kind = holder_kind(node)
     if kind is None:
@@ -99,10 +130,12 @@ async def mind_lines(session: AsyncSession, rules: Rules, node: Holder, epoch: i
     values = await values_of(session, node)
     if values:
         lines.append(f"{HOLDER_WORDS[kind]} prizes most: {value_phrase(values, table.mind_values_shown)}")
+    lines.extend(await split_lines(session, rules, node))
     if isinstance(node, EntityRow) and node.entity_type is EntityType.MORTAL:
         lines.extend(await life_lines(session, rules, node, private=private))
     if not private:
         return lines
+    lines.extend(await idea_lines(session, node.id))
     skills = sorted((await skills_of(session, node.id)).values(), key=lambda row: (-row.level, row.skill))[: table.mind_skills_shown]
     if skills:
         lines.append("Best skills: " + ", ".join(f"{SKILLS[row.skill].label.lower()} {row.level}" for row in skills))

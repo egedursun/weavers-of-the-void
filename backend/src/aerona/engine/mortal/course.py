@@ -11,6 +11,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import OfficeRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.body import OPEN_INJURY_STATES, ConditionKind, HarmCause, InjuryState
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
@@ -380,7 +381,7 @@ async def foster_orphan(ctx: TickContext, mortal: EntityRow, profile: MortalProf
         EntityRow.id != mortal.id,
         EntityRow.social_class == SocialClass.NOBLE,
     )
-    fosterer = await ctx.session.scalar(statement.order_by(EntityRow.id).limit(1))
+    fosterer = next(iter(unheld(await ctx.session.scalars(statement.order_by(EntityRow.id)))), None)
     if fosterer is None:
         return False
     await foster(ctx.session, mortal.id, fosterer.id, ctx.epoch, description="taken in as a ward")

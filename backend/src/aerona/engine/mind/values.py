@@ -52,6 +52,7 @@ from aerona.engine.mind.drift_causes import (
     spend_impositions,
 )
 from aerona.engine.mind.space import blend
+from aerona.engine.mortal.kin import parents_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.faith import foreign_patron, living_patron
 from aerona.engine.primitives.queries import active_bonds, living_entity
@@ -148,12 +149,37 @@ async def seed_personal(session: AsyncSession, rules: Rules, mortal: EntityRow, 
     people = await people_of(session, mortal)
     culture = await stored_values(session, ValueHolder.CULTURE, people.id) if people is not None else {}
     raw: dict[ValueAxis, float] = defaultdict(float)
-    add_into(raw, culture, 1)
+    upbringing = [
+        (await mean_of(session, ValueHolder.PERSONAL, await parents_of(session, mortal.id)), table.parent_value_pct),
+        (await mean_of(session, ValueHolder.DOCTRINE, await bonded(session, mortal.id, BondKind.MEMBER_OF, EntityType.CULT)), table.cult_value_pct),
+        (await mean_of(session, ValueHolder.PERSONAL, await bonded(session, mortal.id, BondKind.APPRENTICE_OF, EntityType.MORTAL)), table.teacher_value_pct),
+    ]
+    remaining = 1.0
+    for source, share_pct in upbringing:
+        if source:
+            share = remaining * share_pct / PERCENT
+            add_into(raw, source, share)
+            remaining -= share
+    add_into(raw, culture, remaining)
     for trait in await traits_of(session, mortal.id):
         add_into(raw, TRAITS[trait].values, table.trait_value_pct / PERCENT)
     for axis in ValueAxis:
         raw[axis] += rng.integer(-table.personal_deviation, table.personal_deviation)
     return finished(raw)
+
+
+async def mean_of(session: AsyncSession, holder: ValueHolder, node_ids: list[int]) -> Values:
+    vectors = [vector for node_id in node_ids if (vector := await stored_values(session, holder, node_id))]
+    return {axis: round(sum(vector.get(axis, 0) for vector in vectors) / len(vectors)) for axis in ValueAxis} if vectors else {}
+
+
+async def bonded(session: AsyncSession, node_id: int, kind: BondKind, target_type: EntityType) -> list[int]:
+    found: list[int] = []
+    for bond in await active_bonds(session, [kind], sources=[node_id]):
+        target = await living_entity(session, bond.target_node_id)
+        if target is not None and target.entity_type is target_type:
+            found.append(target.id)
+    return found
 
 
 async def drift_divine(ctx: TickContext, god: SonRow | ForeignGodRow, index: ValueIndex) -> bool:

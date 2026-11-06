@@ -98,6 +98,7 @@ class SonToolId(StrEnum):
     FOUND_SCHOOL = "found_school"
     BIND_MORTALS = "bind_mortals"
     TOUCH_MORTAL = "touch_mortal"
+    PLANT_IDEA = "plant_idea"
     REVEAL_TENET = "reveal_tenet"
     OPEN_REBIRTH_GATE = "open_rebirth_gate"
 

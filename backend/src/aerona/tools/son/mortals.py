@@ -3,6 +3,7 @@ from typing import Annotated, Any
 
 from pydantic import Field
 
+from aerona.catalog.mind_split import IDEAS
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
@@ -10,8 +11,11 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.mind import IdeaKind, IdeaSource
 from aerona.domain.enums.mortal import Ability, MarriageKind
 from aerona.engine.body.healing import mend
+from aerona.engine.mind.book import ensure_mind_row
+from aerona.engine.mind.ideas import Encounter, take_up
 from aerona.engine.mortal.kinship import betroth, foster, marry
 from aerona.engine.mortal.standing import add_infamy, add_renown, add_stress
 from aerona.engine.primitives.numbers import clamp_int
@@ -43,6 +47,12 @@ class Touch(StrEnum):
     SHAME = "shame"
     HEAL_BODY = "heal_body"
     STRENGTHEN = "strengthen"
+
+
+class PlantIdeaInput(ToolInput):
+    mortal_id: int
+    idea: IdeaKind
+    reason: Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 
 
 class BindInput(ToolInput):
@@ -130,6 +140,22 @@ async def touch_mortal(call: SonCall, args: TouchInput) -> str:
     return result(SonResult.MORTAL_TOUCHED, name=mortal.name, touch=args.touch.value.replace("_", " "))
 
 
+async def plant_idea(call: SonCall, args: PlantIdeaInput) -> str:
+    mortal = await living_mortal(call, args.mortal_id)
+    label = IDEAS[args.idea].label.lower()
+    cost = call.rules.costs.influence
+    require_essence(call, cost)
+    await ensure_mind_row(call.session, mortal, call.epoch)
+    if await take_up(call.session, mortal.id, Encounter(args.idea, IdeaSource.DIVINE, call.son.id), call.epoch) is None:
+        fail(SonResult.IDEA_KNOWN, name=mortal.name, idea=label)
+    call.spend_essence(cost)
+    call.target(mortal.id)
+    await call.chronicle(
+        ChronicleKind.INTRIGUE, lines.PLANT_IDEA, entity_ids=[mortal.id], son=call.son.name, mortal=mortal.name, idea=label, reason=args.reason
+    )
+    return result(SonResult.IDEA_PLANTED, name=mortal.name, idea=label)
+
+
 def specs() -> list[ToolSpec[SonCall, Any]]:
     son = AgentKind.SON
     return [
@@ -146,5 +172,12 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
             TouchInput,
             ToolMeta(ActionKind.INFLUENCE, son_standard_action, essence_cost=lambda rules: rules.costs.influence),
             touch_mortal,
+        ),
+        ToolSpec(
+            SonToolId.PLANT_IDEA,
+            son,
+            PlantIdeaInput,
+            ToolMeta(ActionKind.INFLUENCE, son_standard_action, essence_cost=lambda rules: rules.costs.influence),
+            plant_idea,
         ),
     ]

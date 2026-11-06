@@ -7,10 +7,13 @@ from aerona.core.errors import NotFoundError
 from aerona.db.repositories.chronicle import ChronicleDraft, ChronicleRepository
 from aerona.db.tables.ledger import LedgerEntryRow
 from aerona.db.tables.lore import LexemeRow, ThreadRow
+from aerona.db.tables.mind import AttributeRow, FacetRow
+from aerona.db.tables.rule_override import RuleOverrideRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.mind import Attribute, Facet
 from aerona.domain.enums.node import ActorKind
 from aerona.rules.registry import Rules
 from aerona.services.books import book_page, codex_markdown
@@ -133,3 +136,18 @@ async def test_book_is_never_truncated(session: AsyncSession, rules: Rules, worl
     assert [people.name for people in guide.peoples] == ["Velari Folk"]
     page = render_book(book, tight).html
     assert " ".join(f"{long_line}3-5".split()) in page
+
+
+async def test_every_record_reaches_the_book_and_the_codex(session: AsyncSession, rules: Rules, world: Cosmos) -> None:
+    await enrich(session, world)
+    hero = await make_entity(session, "Orrin", EntityType.MORTAL, world_id=world.world.id)
+    session.add(AttributeRow(node_id=hero.id, attribute=Attribute.ANALYTICAL_ABILITY, value=71))
+    session.add(FacetRow(node_id=world.son.id, facet=Facet.CURIOSITY, value=33))
+    session.add(RuleOverrideRow(namespace="ideas", key="slots", value=3))
+    await session.flush()
+    page = await book_page(session, rules)
+    codex = await codex_markdown(session, rules, CodexLinks())
+    for text in (page.html, codex):
+        assert "Mind attributes" in text and "analytical ability" in text
+        assert "Mind facets" in text and "curiosity" in text
+        assert "Records of the Cosmos" in text and "Rule overrides" in text

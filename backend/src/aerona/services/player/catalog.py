@@ -1061,6 +1061,11 @@ MIND_ACTIONS = (
     _sync(Meta("mind:memory_remove", "Erase a memory", G.ENTITIES), mind.forget_memory, mind.MemoryTarget, free, ("F7",)),
     _sync(Meta("mind:need", "Set and hold a mortal's need", G.ENTITIES), mind.set_need, mind.SetNeed, free, ("F8",)),
     _sync(Meta("mind:pressure", "Set and hold a pressure on a community", G.SOCIETY), mind.set_pressure, mind.SetPressure, free, ("F8",)),
+    _sync(Meta("mind:attributes", "Set and hold what a body and mind can do", G.ENTITIES), mind.set_attributes, mind.SetAttributes, free, ("F13",)),
+    _sync(Meta("mind:facets", "Set and hold how a mortal or god reacts", G.ENTITIES), mind.set_facets, mind.SetFacets, free, ("F13",)),
+    _sync(Meta("mind:idea", "Plant an idea for a mortal to turn over", G.ENTITIES), mind.implant_idea, mind.ImplantIdea, free, ("F13",)),
+    _sync(Meta("mind:idea_edit", "Speed, settle or reshape an idea", G.ENTITIES), mind.edit_idea, mind.EditIdea, free, ("F13",)),
+    _sync(Meta("mind:idea_remove", "Take an idea away", G.ENTITIES), mind.remove_idea, mind.IdeaTarget, free, ("F13",)),
     _sync(Meta("variant:create", "Forge a new kind of trait, skill or state", G.ENTITIES), variants.create_variant, variants.CreateVariant, free, ("F9",)),
     _sync(Meta("variant:edit", "Reshape and hold a world-made kind", G.ENTITIES), variants.edit_variant, variants.EditVariant, free, ("F9",)),
     _sync(

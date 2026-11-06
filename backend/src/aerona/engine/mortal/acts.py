@@ -1,9 +1,10 @@
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 
 from aerona.catalog.mind import CAREER_SKILLS, PROFESSIONS
+from aerona.catalog.mind_split import BREAK_FACETS, STRESS_FACETS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
@@ -14,7 +15,7 @@ from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType, MortalRole
-from aerona.domain.enums.mind import MemoryKind, NeedKind, OpinionComponent, TraitKind, ValueAxis
+from aerona.domain.enums.mind import Facet, MemoryKind, NeedKind, OpinionComponent, TraitKind, ValueAxis
 from aerona.domain.enums.mortal import Ability, CareerPath, CrimeKind, DeathCause, LifeStage, StressBreak
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
@@ -29,6 +30,7 @@ from aerona.engine.mind.book import is_locked, mind_of, needs_of, traits_of, val
 from aerona.engine.mind.memories import remember, strength_of
 from aerona.engine.mind.opinion import opinion
 from aerona.engine.mind.space import value_alignment
+from aerona.engine.mind.split import facet_weight, facets_of
 from aerona.engine.mind.values import liege_of
 from aerona.engine.mortal.justice import code_punishment, community_ruler, sentence
 from aerona.engine.mortal.life import ability
@@ -172,11 +174,16 @@ async def accumulate_stress(ctx: TickContext, mortal: EntityRow, profile: Mortal
     if abs(profile.loyalty_liege - profile.loyalty_community) >= table.duty_gap:
         gain += table.duty_conflict_stress
     relief = 1 - (ability(mortal, Ability.WILLPOWER) - FULL // 2) / PERCENT * table.willpower_relief_pct / PERCENT
-    profile.stress = clamp_int(profile.stress + gain * max(0.0, relief) - table.decay, 0, FULL)
+    fragility = 1 + facet_weight(await facets_of(ctx.session, mortal.id), STRESS_FACETS) * ctx.rules.mind_split.stress_facet_pct / PERCENT
+    profile.stress = clamp_int(profile.stress + gain * max(0.0, relief) * max(0.0, fragility) - table.decay, 0, FULL)
 
 
-def break_weights(rules_flight_pct: int, traits: set[TraitKind], profile: MortalProfileRow) -> dict[StressBreak, float]:
+def break_weights(
+    rules_flight_pct: int, traits: set[TraitKind], profile: MortalProfileRow, facets: Mapping[Facet, int] | None = None, facet_pct: int = 0
+) -> dict[StressBreak, float]:
     weights = {kind: 1.0 + 3.0 * len(traits & matching) for kind, matching in BREAK_TRAITS.items()}
+    for kind, members in BREAK_FACETS.items():
+        weights[kind] += max(0.0, facet_weight(facets or {}, dict.fromkeys(members, 1))) * facet_pct / PERCENT
     weights[StressBreak.FLIGHT] *= rules_flight_pct / PERCENT * (1 + (FULL - profile.loyalty_liege) / PERCENT)
     return weights
 
@@ -275,7 +282,7 @@ async def stress_break(ctx: TickContext, mortal: EntityRow, profile: MortalProfi
     if profile.stress < table.break_threshold:
         return None
     traits = await traits_of(ctx.session, mortal.id)
-    weights = break_weights(table.flight_chance_pct, traits, profile)
+    weights = break_weights(table.flight_chance_pct, traits, profile, await facets_of(ctx.session, mortal.id), ctx.rules.mind_split.break_facet_pct)
     rng = ctx.rng(seed_of("break", mortal.id, ctx.epoch))
     kind = rng.weighted(list(weights), list(weights.values()))
     if kind is StressBreak.DESPAIR and await despair(ctx, mortal, rng):

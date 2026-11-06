@@ -2,6 +2,7 @@ from collections.abc import Sequence
 
 from sqlalchemy import select
 
+from aerona.catalog.mind_split import BOLD_FACETS
 from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
@@ -25,6 +26,7 @@ from aerona.engine.environment.book import add_scar
 from aerona.engine.military.clash import traits_of
 from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.mind.book import values_for
+from aerona.engine.mind.split import facet_weight, facets_for
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -288,6 +290,7 @@ async def aggression(ctx: TickContext, owner: EntityRow, army_row: ArmyRow) -> i
     values = await values_for(ctx.session, owner.id)
     score = PERCENT // 2 + values.get(ValueAxis.MARTIAL, 0) // 4
     score += 15 * len(traits & AGGRESSIVE) - 15 * len(traits & CAREFUL)
+    score += round(facet_weight(await facets_for(ctx.session, army_row.commander_entity_id), BOLD_FACETS) * ctx.rules.mind_split.bold_facet_pct)
     return clamp_int(score, 0, PERCENT)
 
 

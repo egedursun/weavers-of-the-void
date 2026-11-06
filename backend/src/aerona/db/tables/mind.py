@@ -6,6 +6,11 @@ from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN, RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.mind import (
+    Attribute,
+    Facet,
+    IdeaKind,
+    IdeaSource,
+    IdeaState,
     MemoryKind,
     NeedKind,
     PressureKind,
@@ -21,7 +26,11 @@ VALUE_MIN = -100
 VALUE_MAX = 100
 SKILL_MIN = 0
 SKILL_MAX = 100
-MIND_LOCKS = ("values", "traits", "skills", "memories", "needs", "role")
+ATTRIBUTE_MIN = 0
+ATTRIBUTE_MAX = 100
+FACET_MIN = -50
+FACET_MAX = 50
+MIND_LOCKS = ("values", "traits", "skills", "memories", "needs", "role", "attributes", "facets", "ideas")
 
 
 class MindRow(Base):
@@ -126,3 +135,41 @@ class PressureRow(Base):
     entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     pressure: Mapped[PressureKind] = mapped_column(enum_type(PressureKind, "pressure"), primary_key=True)
     value: Mapped[int]
+
+
+class AttributeRow(Base):
+    __tablename__ = "mind_attributes"
+    __table_args__ = (between("value", ATTRIBUTE_MIN, ATTRIBUTE_MAX),)
+
+    node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
+    attribute: Mapped[Attribute] = mapped_column(enum_type(Attribute, "attribute"), primary_key=True)
+    value: Mapped[int]
+
+
+class FacetRow(Base):
+    __tablename__ = "mind_facets"
+    __table_args__ = (between("value", FACET_MIN, FACET_MAX),)
+
+    node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
+    facet: Mapped[Facet] = mapped_column(enum_type(Facet, "facet"), primary_key=True)
+    value: Mapped[int]
+
+
+class IdeaRow(Base):
+    __tablename__ = "incubating_ideas"
+    __table_args__ = (
+        between("progress", PERCENT_MIN, PERCENT_MAX),
+        at_least("started_epoch", 0),
+        UniqueConstraint("holder_node_id", "idea", name="uq_incubating_ideas_holder_idea"),
+        Index("ix_incubating_ideas_state", "state"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    holder_node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"))
+    idea: Mapped[IdeaKind] = mapped_column(enum_type(IdeaKind, "idea"))
+    source: Mapped[IdeaSource] = mapped_column(enum_type(IdeaSource, "source"))
+    source_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    progress: Mapped[int] = mapped_column(default=0)
+    state: Mapped[IdeaState] = mapped_column(enum_type(IdeaState, "state"))
+    started_epoch: Mapped[int]
+    finished_epoch: Mapped[int | None]

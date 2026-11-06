@@ -39,6 +39,12 @@
    - **Every kind of thing, always.** A feature for things reaches every kind of node at once: the Creator, sons, foreign gods, worlds (planets and moons), stars and every entity type. Never pick some of them. Sections that apply to every thing go only into `frontend/src/features/entity/sections/ThingSections.tsx`, which every node drawer page renders. `scripts/check_wiring.py` fails when a node drawer page does not render it. A section for some kinds only must say why the others cannot have it.
    - The only tables exempt are the bookkeeping ones listed in `BOOKKEEPING_TABLES` in `backend/src/aerona/constants/control.py` (fixups, cursors, counters, notifications, the player's action ledger, score and achievements, and the per-epoch goods-flow log). Only the user may add to that list.
 
+7. **Every change reaches the Codex and the lore book.** Every update and addition (a new table, column, enum value, node kind, mechanic or record) must appear in the lore book (HTML/PDF) and the Codex (Markdown/zip), well formatted, with labelled values and a designed layout:
+   - Records owned by a node (an entity, son, foreign god, world, star or the Creator) appear in that node's entry through `services/books/typed.py`. Every kind of node renders its typed sections in both the book and the Codex.
+   - Records that belong to no single node appear as designed tables in the "Records of the Cosmos" appendix of both.
+   - A table may stay out of the generic records only when dedicated book and Codex code renders it. Nothing is ever truncated.
+   - A new kind of thing or a new layout needs its own readable rendering in both, not a raw dump.
+
 ## Enforcement
 
 These rules are enforced mechanically, and they bind Claude as much as anyone.
@@ -53,7 +59,7 @@ These rules are enforced mechanically, and they bind Claude as much as anyone.
 - **Git pre-commit** (`.githooks/pre-commit`, enabled with `git config core.hooksPath .githooks`). It runs on every commit:
   - `scripts/check_source_rules.py`: no comments or docstrings (rule 4).
   - `scripts/check_prompt_bias.py`: gendered defaults, conflict quotas, forced strangeness, steering examples and hardcoded image media in LLM-facing and UI text (rule 2).
-  - `scripts/check_wiring.py`: enum types never used, tables never read, player actions missing from the catalog, catalog actions with no frontend caller (rule 3). It also flags any table an engine phase writes that has no compliance-catalogue row with registered god levers (rule 6).
+  - `scripts/check_wiring.py`: enum types never used, tables never read, player actions missing from the catalog, catalog actions with no frontend caller (rule 3). It also flags any table an engine phase writes that has no compliance-catalogue row with registered god levers (rule 6). It also fails when a table is kept out of the generic book records with no dedicated renderer, when a kind of node is missing from the book's owners, or when the book or the Codex stops rendering typed sections for entities, sons, foreign gods, worlds, stars, the Creator or the records appendix (rule 7).
   - `scripts/check_control.py` (rule 6). It finds automatically, by reading the code, every table whose rows the engine changes over time. Each must be creatable, editable and deletable by a god lever that the frontend reaches, and whose code (followed through its calls) really touches that table. Several cases are covered without per-table levers:
     - Profile tables (one row per thing) through `profile:set`.
     - Every node-linked table through the generic `record_row:create`, `record_row:edit` and `record_row:delete` levers and the "Every record" section in each drawer.

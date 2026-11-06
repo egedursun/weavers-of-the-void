@@ -4,6 +4,7 @@ LEVEL_UP = Line("tools.son.level_up", "{son} grew stronger and rose to rank {lev
 POWER_AWOKE = Line("tools.son.power_awoke", "A new power awoke within {son}: {power}.")
 ANCHOR = Line("tools.son.anchor", "{son} bound their existence to {entity}: {reason}")
 BIND_MORTALS = Line("tools.son.bind_mortals", "{son} bound {first} and {second} ({binding}): {reason}")
+PLANT_IDEA = Line("tools.son.plant_idea", "{son} planted {idea} in the mind of {mortal}: {reason}")
 TOUCH_MORTAL = Line("tools.son.touch_mortal", "The touch of {son} fell on {mortal} ({touch}): {reason}")
 WORDS = Line("tools.son.words", "{son} whispered new words into the {language} tongue: {words}.")
 TENET = Line("tools.son.tenet", "{son} revealed a new tenet to {cult}: {tenet}.")

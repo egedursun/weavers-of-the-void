@@ -17,6 +17,23 @@
 
 {% endif %}
 {%- endmacro %}
+{% macro records(tables) -%}
+{% for table in tables %}
+### {{ table.title }}
+
+*{{ table.rows | length }} {{ "entry" if table.rows | length == 1 else "entries" }}*
+
+| {% for header in table.headers %}{{ header | cell }} | {% endfor %}
+
+|{% for header in table.headers %}---|{% endfor %}
+
+{% for row in table.rows %}
+| {% for value in row %}{{ value | cell }} | {% endfor %}
+
+{% endfor %}
+
+{% endfor %}
+{%- endmacro %}
 {% macro typed(sections) -%}
 {% for section in sections %}
 **{{ section.title }}.**{% for fact in section.facts %} {{ fact.label }}: {{ fact.value }}{% if not loop.last %};{% endif %}{% endfor %}
@@ -224,6 +241,9 @@
 {% if book.ledger %}
 - [Fate's Ledger](#ledger)
 {% endif %}
+{% if book.records %}
+- [Records of the Cosmos](#records)
+{% endif %}
 
 ---
 
@@ -281,6 +301,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 {% endif %}
 {{ epic(book.creator.epic, 3) }}
 {{ god_depth(book.creator.depth) }}
+{{ typed(book.creator_typed) }}
 {% if book.creator_beliefs %}
 ### Through the peoples' eyes
 
@@ -323,6 +344,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 
 {% endif %}
 {{ entity_depth(section.star.depth) }}
+{{ typed(section.typed) }}
 {% elif section.worlds %}
 ### Wandering worlds
 
@@ -349,6 +371,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 
 {% endif %}
 {{ entity_depth(world.world.depth) }}
+{{ typed(world.typed) }}
 **Traveller's guide.**
 
 {{ guide_markdown(world.guide) }}
@@ -406,6 +429,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 
 {% endif %}
 {{ god_depth(article.god.depth) }}
+{{ typed(article.typed) }}
 {{ bullets("Fate", article.fate) }}
 {% endfor %}
 {% endif %}
@@ -711,5 +735,16 @@ Score **{{ book.scores[-1].total }}** · Achievements **{{ book.achievements | l
 - **Epoch {{ entry.epoch }}.** {{ entry.actor_name }} · {{ entry.tool | replace("_", " ") | replace(":", " ") }}{% if entry.undone %} *(undone)*{% endif %}{% if entry.input_summary %} — {{ entry.input_summary | plain }}{% endif %}
 
 {% endfor %}
+{% endif %}
+{% if book.records %}
+---
+
+<a id="records"></a>
+
+## Records of the Cosmos
+
+*Every register the world keeps that belongs to no single being.*
+
+{{ records(book.records) }}
 {% endif %}
 {% endif %}

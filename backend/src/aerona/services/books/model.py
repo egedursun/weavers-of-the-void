@@ -37,7 +37,7 @@ from aerona.domain.models.records import EpochStatsData
 from aerona.rules.registry import Rules
 from aerona.services.books.history import HandEpoch, creator_hand, ending_line, god_fate, son_fate
 from aerona.services.books.mapsvg import MapPicture, map_picture
-from aerona.services.books.typed import TypedIndex, TypedSection
+from aerona.services.books.typed import RecordTable, TypedIndex, TypedSection
 from aerona.services.codex import CosmicEpoch, TravellerGuide, cosmic_chronicle, traveller_guide
 from aerona.services.images.records import cover_of
 from aerona.services.narrative import clean_lore
@@ -163,6 +163,7 @@ class WorldArticle:
     guide: TravellerGuide
     picture: MapPicture | None
     facts: list[Labelled] = field(default_factory=list)
+    typed: list[TypedSection] = field(default_factory=list)
 
 
 @dataclass
@@ -173,6 +174,7 @@ class StarSection:
     anchor: str | None = None
     cover: str | None = None
     facts: list[Labelled] = field(default_factory=list)
+    typed: list[TypedSection] = field(default_factory=list)
 
 
 @dataclass
@@ -184,6 +186,7 @@ class GodArticle:
     cover: str | None
     fate: list[str] = field(default_factory=list)
     anchor: str = ""
+    typed: list[TypedSection] = field(default_factory=list)
 
 
 @dataclass
@@ -303,6 +306,8 @@ class BookModel:
     focus_anchor: str | None = None
     creator_hand: list[HandEpoch] = field(default_factory=list)
     wars: list[WarArticle] = field(default_factory=list)
+    creator_typed: list[TypedSection] = field(default_factory=list)
+    records: list[RecordTable] = field(default_factory=list)
 
 
 def humanize(value: str) -> str:
@@ -478,7 +483,17 @@ class BookBuilder:
                 Labelled("Brightness", str(star.brightness)),
                 Labelled("Kindled", f"Epoch {star.created_epoch}"),
             ]
-            sections.append(StarSection(star, STAR_TYPE_LABELS[star.star_type], articles, star_anchor(star.id), await cover_of(self.session, star.id), facts))
+            sections.append(
+                StarSection(
+                    star,
+                    STAR_TYPE_LABELS[star.star_type],
+                    articles,
+                    star_anchor(star.id),
+                    await cover_of(self.session, star.id),
+                    facts,
+                    self.typed.of(star.id),
+                )
+            )
         leftovers: list[WorldArticle] = []
         for world in worlds:
             leftovers += await walk(world, 0)
@@ -516,6 +531,7 @@ class BookBuilder:
             guide=await traveller_guide(self.session, self.rules, world.id, complete=True),
             picture=await map_picture(self.session, self.rules, world.id, epoch),
             facts=facts,
+            typed=self.typed.of(world.id),
         )
 
     async def chapters(self) -> list[EpochChapter]:
@@ -731,7 +747,11 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
         ]
         stats = [Labelled(STATS[stat].label, str(getattr(god, stat.value))) for stat in Stat]
         fate = await god_fate(session, god, builder.names)
-        gods.append(GodArticle(god, builder.names.get(god.world_id, "?"), powers, stats, await cover_of(session, god.id), fate, god_anchor(god.id)))
+        gods.append(
+            GodArticle(
+                god, builder.names.get(god.world_id, "?"), powers, stats, await cover_of(session, god.id), fate, god_anchor(god.id), builder.typed.of(god.id)
+            )
+        )
     routes = [
         (builder.names.get(route.world_a_id, "?"), builder.names.get(route.world_b_id, "?"), route)
         for route in await session.scalars(select(RouteRow).order_by(RouteRow.id))
@@ -786,6 +806,8 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
         cosmic=await cosmic_chronicle(session, rules, complete=True) if multi_world else [],
         creator_hand=await creator_hand(session),
         wars=await builder.wars(),
+        creator_typed=builder.typed.of(creator.id) if creator is not None else [],
+        records=builder.typed.records,
     )
 
 

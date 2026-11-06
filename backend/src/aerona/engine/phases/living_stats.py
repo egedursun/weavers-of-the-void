@@ -6,6 +6,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
 from aerona.db.tables.place import PlaceSecretRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityType
@@ -44,9 +45,9 @@ async def solve_mysteries(ctx: TickContext) -> int:
     table = ctx.rules.record_schema
     lost = await flags_by_entity(ctx.session, EntityFlag.LOST)
     lost_knowledge = [item for item in await canon(ctx.session, [EntityType.KNOWLEDGE]) if item.id in lost]
-    communities = await canon(ctx.session, COMMUNITY_TYPES)
+    communities = unheld(await canon(ctx.session, COMMUNITY_TYPES))
     solved = 0
-    for place in await canon(ctx.session, [EntityType.PLACE]):
+    for place in unheld(await canon(ctx.session, [EntityType.PLACE])):
         if solved >= table.mystery_cap:
             break
         mystery = stat_or(place, "mystery", 0)

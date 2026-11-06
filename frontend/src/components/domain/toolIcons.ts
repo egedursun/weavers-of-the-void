@@ -140,6 +140,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   create_mortal: UserPlus,
   bind_mortals: HeartHandshake,
   touch_mortal: HandHeart,
+  plant_idea: Lightbulb,
   forge_item: Hammer,
   commission_artwork: Palette,
   design_rite: Wand2,

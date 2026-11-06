@@ -46,6 +46,16 @@ VALUE_LABELS = MappingProxyType(
         V.SUPERSTITION: ("Rationalism", "Omen-reading"),
         V.XENOPHILIA: ("Xenophobia", "Openness to strangers"),
         V.DEATH: ("Fear of death", "Veneration of the dead"),
+        V.LAW: ("Independence", "Law"),
+        V.LOYALTY: ("Opportunism", "Loyalty"),
+        V.FAMILY: ("Self", "Family"),
+        V.FRIENDSHIP: ("Self-reliance", "Friendship"),
+        V.TRUTH: ("Expedience", "Honesty"),
+        V.CRAFTSMANSHIP: ("Indifference to craft", "Craftsmanship"),
+        V.ARTWORK: ("Indifference to art", "Artwork"),
+        V.COMPETITION: ("Harmony", "Competition"),
+        V.PERSEVERANCE: ("Ease", "Perseverance"),
+        V.LEISURE: ("Industry", "Leisure"),
     }
 )
 
@@ -53,80 +63,80 @@ DOMAIN_VALUES: MappingProxyType[Domain, MappingProxyType[ValueAxis, int]] = Mapp
     {
         domain: MappingProxyType(values)
         for domain, values in {
-            Domain.SEA: {V.XENOPHILIA: 25, V.NATURE: 15, V.SUPERSTITION: 10},
-            Domain.FIRE: {V.MARTIAL: 20, V.PURITY: 20, V.TRADITION: -10},
-            Domain.EARTH: {V.TRADITION: 25, V.NATURE: 20, V.KINSHIP: 10},
-            Domain.SKY: {V.HIERARCHY: 15, V.PIETY: 15, V.KNOWLEDGE: 10},
-            Domain.STORM: {V.MARTIAL: 25, V.SUPERSTITION: 15, V.MERCY: -10},
-            Domain.DEATH: {V.DEATH: 40, V.PIETY: 10, V.MERCY: -5},
-            Domain.LIFE: {V.MERCY: 25, V.NATURE: 20, V.DEATH: -20},
-            Domain.DREAM: {V.SUPERSTITION: 30, V.KNOWLEDGE: 10, V.TRADITION: -5},
-            Domain.TIME: {V.TRADITION: 25, V.KNOWLEDGE: 15, V.DEATH: 10},
-            Domain.LIGHT: {V.PURITY: 25, V.PIETY: 20, V.MERCY: 10},
-            Domain.SHADOW: {V.HONOUR: -20, V.SUPERSTITION: 15, V.XENOPHILIA: -10},
-            Domain.WAR: {V.MARTIAL: 40, V.HONOUR: 15, V.MERCY: -15},
-            Domain.CRAFT: {V.KNOWLEDGE: 20, V.WEALTH: 15, V.TRADITION: -10},
-            Domain.KNOWLEDGE: {V.KNOWLEDGE: 40, V.SUPERSTITION: -15, V.TRADITION: -10},
-            Domain.LOVE: {V.MERCY: 25, V.KINSHIP: 20, V.MARTIAL: -15},
-            Domain.TRICKERY: {V.HONOUR: -30, V.WEALTH: 15, V.HIERARCHY: -10},
-            Domain.HUNT: {V.MARTIAL: 15, V.NATURE: 25, V.KINSHIP: 10},
-            Domain.PLANTS: {V.NATURE: 35, V.MERCY: 10, V.MARTIAL: -10},
-            Domain.BONE: {V.DEATH: 30, V.TRADITION: 15, V.PURITY: -10},
-            Domain.BLOOD: {V.KINSHIP: 25, V.MARTIAL: 15, V.MERCY: -15},
-            Domain.SOUND: {V.KNOWLEDGE: 10, V.XENOPHILIA: 15, V.TRADITION: 10},
-            Domain.STONE: {V.TRADITION: 30, V.HIERARCHY: 15, V.XENOPHILIA: -10},
-            Domain.ICE: {V.PURITY: 20, V.TRADITION: 15, V.MERCY: -10},
-            Domain.MADNESS: {V.SUPERSTITION: 30, V.TRADITION: -20, V.HIERARCHY: -10},
-            Domain.TRADE: {V.WEALTH: 35, V.XENOPHILIA: 25, V.MARTIAL: -10},
-            Domain.ROAD: {V.XENOPHILIA: 30, V.TRADITION: -15, V.KINSHIP: -10},
-            Domain.PLAGUE: {V.DEATH: 20, V.PURITY: 25, V.XENOPHILIA: -20},
-            Domain.HARVEST: {V.NATURE: 25, V.KINSHIP: 15, V.TRADITION: 15},
-            Domain.MOON: {V.SUPERSTITION: 25, V.NATURE: 10, V.DEATH: 10},
-            Domain.SUN: {V.HIERARCHY: 25, V.PIETY: 20, V.PURITY: 10},
-            Domain.STAR: {V.KNOWLEDGE: 25, V.SUPERSTITION: 20, V.PIETY: 10},
-            Domain.LIES: {V.HONOUR: -35, V.KNOWLEDGE: -10, V.WEALTH: 10},
-            Domain.OATH: {V.HONOUR: 40, V.TRADITION: 15, V.KINSHIP: 10},
-            Domain.MEMORY: {V.TRADITION: 30, V.DEATH: 20, V.KNOWLEDGE: 10},
-            Domain.HUNGER: {V.WEALTH: -20, V.MERCY: -15, V.MARTIAL: 15},
-            Domain.GLASS: {V.KNOWLEDGE: 20, V.PURITY: 15, V.WEALTH: 10},
-            Domain.SALT: {V.PURITY: 20, V.WEALTH: 15, V.TRADITION: 10},
-            Domain.ASH: {V.DEATH: 25, V.PURITY: 10, V.TRADITION: -10},
-            Domain.BORDER: {V.XENOPHILIA: -25, V.MARTIAL: 15, V.KINSHIP: 15},
-            Domain.SLEEP: {V.DEATH: 15, V.MERCY: 15, V.MARTIAL: -20},
+            Domain.SEA: {V.XENOPHILIA: 25, V.NATURE: 15, V.SUPERSTITION: 10, V.PERSEVERANCE: 10},
+            Domain.FIRE: {V.MARTIAL: 20, V.PURITY: 20, V.TRADITION: -10, V.CRAFTSMANSHIP: 15},
+            Domain.EARTH: {V.TRADITION: 25, V.NATURE: 20, V.KINSHIP: 10, V.FAMILY: 10, V.PERSEVERANCE: 10},
+            Domain.SKY: {V.HIERARCHY: 15, V.PIETY: 15, V.KNOWLEDGE: 10, V.LAW: 10},
+            Domain.STORM: {V.MARTIAL: 25, V.SUPERSTITION: 15, V.MERCY: -10, V.COMPETITION: 10},
+            Domain.DEATH: {V.DEATH: 40, V.PIETY: 10, V.MERCY: -5, V.FAMILY: 10},
+            Domain.LIFE: {V.MERCY: 25, V.NATURE: 20, V.DEATH: -20, V.FAMILY: 10, V.LEISURE: 10},
+            Domain.DREAM: {V.SUPERSTITION: 30, V.KNOWLEDGE: 10, V.TRADITION: -5, V.LEISURE: 10, V.ARTWORK: 10},
+            Domain.TIME: {V.TRADITION: 25, V.KNOWLEDGE: 15, V.DEATH: 10, V.PERSEVERANCE: 15},
+            Domain.LIGHT: {V.PURITY: 25, V.PIETY: 20, V.MERCY: 10, V.TRUTH: 20},
+            Domain.SHADOW: {V.HONOUR: -20, V.SUPERSTITION: 15, V.XENOPHILIA: -10, V.TRUTH: -15},
+            Domain.WAR: {V.MARTIAL: 40, V.HONOUR: 15, V.MERCY: -15, V.COMPETITION: 20, V.LOYALTY: 10},
+            Domain.CRAFT: {V.KNOWLEDGE: 20, V.WEALTH: 15, V.TRADITION: -10, V.CRAFTSMANSHIP: 30},
+            Domain.KNOWLEDGE: {V.KNOWLEDGE: 40, V.SUPERSTITION: -15, V.TRADITION: -10, V.TRUTH: 15},
+            Domain.LOVE: {V.MERCY: 25, V.KINSHIP: 20, V.MARTIAL: -15, V.FAMILY: 20, V.FRIENDSHIP: 20},
+            Domain.TRICKERY: {V.HONOUR: -30, V.WEALTH: 15, V.HIERARCHY: -10, V.TRUTH: -25, V.LAW: -15},
+            Domain.HUNT: {V.MARTIAL: 15, V.NATURE: 25, V.KINSHIP: 10, V.COMPETITION: 10, V.PERSEVERANCE: 10},
+            Domain.PLANTS: {V.NATURE: 35, V.MERCY: 10, V.MARTIAL: -10, V.LEISURE: 10},
+            Domain.BONE: {V.DEATH: 30, V.TRADITION: 15, V.PURITY: -10, V.CRAFTSMANSHIP: 10},
+            Domain.BLOOD: {V.KINSHIP: 25, V.MARTIAL: 15, V.MERCY: -15, V.FAMILY: 20, V.LOYALTY: 10},
+            Domain.SOUND: {V.KNOWLEDGE: 10, V.XENOPHILIA: 15, V.TRADITION: 10, V.ARTWORK: 20},
+            Domain.STONE: {V.TRADITION: 30, V.HIERARCHY: 15, V.XENOPHILIA: -10, V.PERSEVERANCE: 20, V.LAW: 10},
+            Domain.ICE: {V.PURITY: 20, V.TRADITION: 15, V.MERCY: -10, V.PERSEVERANCE: 15},
+            Domain.MADNESS: {V.SUPERSTITION: 30, V.TRADITION: -20, V.HIERARCHY: -10, V.LAW: -20, V.ARTWORK: 10},
+            Domain.TRADE: {V.WEALTH: 35, V.XENOPHILIA: 25, V.MARTIAL: -10, V.COMPETITION: 15},
+            Domain.ROAD: {V.XENOPHILIA: 30, V.TRADITION: -15, V.KINSHIP: -10, V.FRIENDSHIP: 10},
+            Domain.PLAGUE: {V.DEATH: 20, V.PURITY: 25, V.XENOPHILIA: -20, V.LAW: 10},
+            Domain.HARVEST: {V.NATURE: 25, V.KINSHIP: 15, V.TRADITION: 15, V.FAMILY: 15, V.PERSEVERANCE: 10},
+            Domain.MOON: {V.SUPERSTITION: 25, V.NATURE: 10, V.DEATH: 10, V.ARTWORK: 10},
+            Domain.SUN: {V.HIERARCHY: 25, V.PIETY: 20, V.PURITY: 10, V.LAW: 15},
+            Domain.STAR: {V.KNOWLEDGE: 25, V.SUPERSTITION: 20, V.PIETY: 10, V.ARTWORK: 10},
+            Domain.LIES: {V.HONOUR: -35, V.KNOWLEDGE: -10, V.WEALTH: 10, V.TRUTH: -35},
+            Domain.OATH: {V.HONOUR: 40, V.TRADITION: 15, V.KINSHIP: 10, V.LOYALTY: 25, V.TRUTH: 20},
+            Domain.MEMORY: {V.TRADITION: 30, V.DEATH: 20, V.KNOWLEDGE: 10, V.FAMILY: 15},
+            Domain.HUNGER: {V.WEALTH: -20, V.MERCY: -15, V.MARTIAL: 15, V.PERSEVERANCE: 15, V.LEISURE: -15},
+            Domain.GLASS: {V.KNOWLEDGE: 20, V.PURITY: 15, V.WEALTH: 10, V.ARTWORK: 15, V.CRAFTSMANSHIP: 10},
+            Domain.SALT: {V.PURITY: 20, V.WEALTH: 15, V.TRADITION: 10, V.PERSEVERANCE: 10},
+            Domain.ASH: {V.DEATH: 25, V.PURITY: 10, V.TRADITION: -10, V.PERSEVERANCE: 10},
+            Domain.BORDER: {V.XENOPHILIA: -25, V.MARTIAL: 15, V.KINSHIP: 15, V.LOYALTY: 15},
+            Domain.SLEEP: {V.DEATH: 15, V.MERCY: 15, V.MARTIAL: -20, V.LEISURE: 25},
         }.items()
     }
 )
 
 PEOPLE_STAT_VALUES = MappingProxyType(
     {
-        "martiality": MappingProxyType({V.MARTIAL: 70, V.MERCY: -20}),
-        "piety": MappingProxyType({V.PIETY: 70, V.SUPERSTITION: 20}),
+        "martiality": MappingProxyType({V.MARTIAL: 70, V.MERCY: -20, V.COMPETITION: 20}),
+        "piety": MappingProxyType({V.PIETY: 70, V.SUPERSTITION: 20, V.LAW: 10}),
         "magic": MappingProxyType({V.SUPERSTITION: 50, V.KNOWLEDGE: 20}),
-        "craft": MappingProxyType({V.KNOWLEDGE: 40, V.TRADITION: -20}),
-        "wealth": MappingProxyType({V.WEALTH: 60, V.XENOPHILIA: 20}),
-        "prosperity": MappingProxyType({V.WEALTH: 20, V.HIERARCHY: 15}),
+        "craft": MappingProxyType({V.KNOWLEDGE: 40, V.TRADITION: -20, V.CRAFTSMANSHIP: 50, V.ARTWORK: 15}),
+        "wealth": MappingProxyType({V.WEALTH: 60, V.XENOPHILIA: 20, V.COMPETITION: 15}),
+        "prosperity": MappingProxyType({V.WEALTH: 20, V.HIERARCHY: 15, V.LEISURE: 20}),
     }
 )
 
 PASSION_VALUES = MappingProxyType(
     {
-        Passion.MERCY: MappingProxyType({V.MERCY: 80, V.MARTIAL: -20}),
-        Passion.WRATH: MappingProxyType({V.MERCY: -50, V.MARTIAL: 50}),
-        Passion.AMBITION: MappingProxyType({V.HIERARCHY: 40, V.WEALTH: 25, V.TRADITION: -20}),
-        Passion.LOYALTY: MappingProxyType({V.KINSHIP: 45, V.HONOUR: 40, V.TRADITION: 20}),
+        Passion.MERCY: MappingProxyType({V.MERCY: 80, V.MARTIAL: -20, V.FRIENDSHIP: 20}),
+        Passion.WRATH: MappingProxyType({V.MERCY: -50, V.MARTIAL: 50, V.COMPETITION: 15}),
+        Passion.AMBITION: MappingProxyType({V.HIERARCHY: 40, V.WEALTH: 25, V.TRADITION: -20, V.COMPETITION: 40}),
+        Passion.LOYALTY: MappingProxyType({V.KINSHIP: 45, V.HONOUR: 40, V.TRADITION: 20, V.LOYALTY: 60, V.FRIENDSHIP: 20}),
     }
 )
 
 AGENDA_VALUES = MappingProxyType(
     {
-        EngineKind.MERCHANT_GUILD: MappingProxyType({V.WEALTH: 60, V.XENOPHILIA: 30, V.MARTIAL: -20}),
-        EngineKind.PRIESTS_COUNCIL: MappingProxyType({V.PIETY: 60, V.TRADITION: 30, V.HIERARCHY: 20}),
-        EngineKind.WARRIOR_BAND: MappingProxyType({V.MARTIAL: 60, V.HONOUR: 30, V.KINSHIP: 20}),
-        EngineKind.REBELS: MappingProxyType({V.HIERARCHY: -60, V.TRADITION: -30, V.MERCY: -10}),
+        EngineKind.MERCHANT_GUILD: MappingProxyType({V.WEALTH: 60, V.XENOPHILIA: 30, V.MARTIAL: -20, V.COMPETITION: 30}),
+        EngineKind.PRIESTS_COUNCIL: MappingProxyType({V.PIETY: 60, V.TRADITION: 30, V.HIERARCHY: 20, V.LAW: 20}),
+        EngineKind.WARRIOR_BAND: MappingProxyType({V.MARTIAL: 60, V.HONOUR: 30, V.KINSHIP: 20, V.LOYALTY: 30}),
+        EngineKind.REBELS: MappingProxyType({V.HIERARCHY: -60, V.TRADITION: -30, V.MERCY: -10, V.LAW: -50}),
     }
 )
 
-DOCTRINE_BASE = MappingProxyType({V.PIETY: 45, V.TRADITION: 15})
+DOCTRINE_BASE = MappingProxyType({V.PIETY: 45, V.TRADITION: 15, V.LAW: 15, V.TRUTH: 10})
 
 
 @dataclass(frozen=True)
@@ -157,7 +167,7 @@ TRAITS: MappingProxyType[TraitKind, TraitSpec] = MappingProxyType(
     {
         T.BRAVE: _trait(
             T.CRAVEN,
-            {V.MARTIAL: 15, V.HONOUR: 10},
+            {V.MARTIAL: 15, V.HONOUR: 10, V.PERSEVERANCE: 10},
             capacities={Capacity.MELEE: 10},
             effects={E.COURAGE: 30, E.WAR_APPETITE: 10},
             heritable=True,
@@ -166,7 +176,7 @@ TRAITS: MappingProxyType[TraitKind, TraitSpec] = MappingProxyType(
         ),
         T.CRAVEN: _trait(
             T.BRAVE,
-            {V.MARTIAL: -15},
+            {V.MARTIAL: -15, V.LEISURE: 10},
             capacities={Capacity.MELEE: -15, Capacity.COMMAND: -10},
             effects={E.COURAGE: -40, E.WAR_APPETITE: -20},
             heritable=True,
@@ -182,7 +192,7 @@ TRAITS: MappingProxyType[TraitKind, TraitSpec] = MappingProxyType(
         ),
         T.PATIENT: _trait(
             T.WRATHFUL,
-            {V.MERCY: 10, V.TRADITION: 5},
+            {V.MERCY: 10, V.TRADITION: 5, V.PERSEVERANCE: 10},
             capacities={Capacity.CRAFT: 5, Capacity.COMMAND: 5},
             effects={E.WAR_APPETITE: -15, E.LEARNING: 10},
             divine=True,
@@ -191,23 +201,27 @@ TRAITS: MappingProxyType[TraitKind, TraitSpec] = MappingProxyType(
         T.CRUEL: _trait(T.KIND, {V.MERCY: -30}, effects={E.CRUELTY: 40, E.TRUST: -10}, divine=True, label="Cruel"),
         T.KIND: _trait(T.CRUEL, {V.MERCY: 30}, capacities={Capacity.PRESENCE: 5}, effects={E.CRUELTY: -40, E.TRUST: 10}, divine=True, label="Kind"),
         T.AMBITIOUS: _trait(
-            T.CONTENT, {V.HIERARCHY: 15, V.WEALTH: 10}, effects={E.AGENT_WEIGHT: 25, E.BETRAYAL: 20, E.WAR_APPETITE: 10}, divine=True, label="Ambitious"
+            T.CONTENT,
+            {V.HIERARCHY: 15, V.WEALTH: 10, V.COMPETITION: 25},
+            effects={E.AGENT_WEIGHT: 25, E.BETRAYAL: 20, E.WAR_APPETITE: 10},
+            divine=True,
+            label="Ambitious",
         ),
-        T.CONTENT: _trait(T.AMBITIOUS, {V.TRADITION: 10}, effects={E.AGENT_WEIGHT: -20, E.BETRAYAL: -20}, label="Content"),
+        T.CONTENT: _trait(T.AMBITIOUS, {V.TRADITION: 10, V.LEISURE: 20, V.COMPETITION: -15}, effects={E.AGENT_WEIGHT: -20, E.BETRAYAL: -20}, label="Content"),
         T.GREEDY: _trait(T.GENEROUS, {V.WEALTH: 25, V.MERCY: -10}, effects={E.GREED: 35, E.BETRAYAL: 10}, divine=True, label="Greedy"),
         T.GENEROUS: _trait(
             T.GREEDY, {V.WEALTH: -15, V.MERCY: 15}, capacities={Capacity.PRESENCE: 5}, effects={E.GREED: -35, E.TRUST: 10}, divine=True, label="Generous"
         ),
-        T.HONEST: _trait(T.DECEITFUL, {V.HONOUR: 25}, effects={E.DECEIT: -40, E.TRUST: 15, E.BETRAYAL: -15}, divine=True, label="Honest"),
-        T.DECEITFUL: _trait(T.HONEST, {V.HONOUR: -25}, effects={E.DECEIT: 40, E.TRUST: -15, E.BETRAYAL: 20}, divine=True, label="Deceitful"),
+        T.HONEST: _trait(T.DECEITFUL, {V.HONOUR: 25, V.TRUTH: 35}, effects={E.DECEIT: -40, E.TRUST: 15, E.BETRAYAL: -15}, divine=True, label="Honest"),
+        T.DECEITFUL: _trait(T.HONEST, {V.HONOUR: -25, V.TRUTH: -35}, effects={E.DECEIT: 40, E.TRUST: -15, E.BETRAYAL: 20}, divine=True, label="Deceitful"),
         T.ZEALOUS: _trait(T.CYNICAL, {V.PIETY: 30, V.SUPERSTITION: 10}, effects={E.ZEAL: 40, E.DRIFT: -15}, divine=True, label="Zealous"),
         T.CYNICAL: _trait(T.ZEALOUS, {V.PIETY: -25, V.SUPERSTITION: -15}, effects={E.ZEAL: -40, E.TRUST: -10}, label="Cynical"),
         T.PARANOID: _trait(T.TRUSTING, {V.XENOPHILIA: -20}, effects={E.TRUST: -30, E.MEMORY_DECAY: -25}, divine=True, label="Paranoid"),
-        T.TRUSTING: _trait(T.PARANOID, {V.XENOPHILIA: 15}, effects={E.TRUST: 25}, label="Trusting"),
+        T.TRUSTING: _trait(T.PARANOID, {V.XENOPHILIA: 15, V.FRIENDSHIP: 15}, effects={E.TRUST: 25}, label="Trusting"),
         T.LUSTFUL: _trait(T.CHASTE, {V.PURITY: -15}, effects={E.FERTILITY: 25}, divine=True, label="Lustful"),
         T.CHASTE: _trait(T.LUSTFUL, {V.PURITY: 20, V.PIETY: 5}, effects={E.FERTILITY: -40}, divine=True, label="Chaste"),
-        T.GLUTTONOUS: _trait(T.ASCETIC, {V.WEALTH: 10, V.PURITY: -10}, capacities={Capacity.MOBILITY: -5}, label="Gluttonous"),
-        T.ASCETIC: _trait(T.GLUTTONOUS, {V.PIETY: 15, V.WEALTH: -20, V.PURITY: 10}, effects={E.ZEAL: 15}, divine=True, label="Ascetic"),
+        T.GLUTTONOUS: _trait(T.ASCETIC, {V.WEALTH: 10, V.PURITY: -10, V.LEISURE: 20}, capacities={Capacity.MOBILITY: -5}, label="Gluttonous"),
+        T.ASCETIC: _trait(T.GLUTTONOUS, {V.PIETY: 15, V.WEALTH: -20, V.PURITY: 10, V.LEISURE: -25}, effects={E.ZEAL: 15}, divine=True, label="Ascetic"),
         T.SCHOLARLY: _trait(
             T.ILLITERATE_PROUD,
             {V.KNOWLEDGE: 30},
@@ -221,11 +235,16 @@ TRAITS: MappingProxyType[TraitKind, TraitSpec] = MappingProxyType(
             T.SCHOLARLY, {V.KNOWLEDGE: -30, V.TRADITION: 10}, capacities={Capacity.SCHOLARSHIP: -20}, effects={E.LEARNING: -15}, label="Proudly unlettered"
         ),
         T.GREGARIOUS: _trait(
-            T.RECLUSIVE, {V.KINSHIP: 10, V.XENOPHILIA: 10}, capacities={Capacity.PRESENCE: 12}, effects={E.TRUST: 10}, heritable=True, label="Gregarious"
+            T.RECLUSIVE,
+            {V.KINSHIP: 10, V.XENOPHILIA: 10, V.FRIENDSHIP: 25},
+            capacities={Capacity.PRESENCE: 12},
+            effects={E.TRUST: 10},
+            heritable=True,
+            label="Gregarious",
         ),
         T.RECLUSIVE: _trait(
             T.GREGARIOUS,
-            {V.KINSHIP: -10, V.XENOPHILIA: -10},
+            {V.KINSHIP: -10, V.XENOPHILIA: -10, V.FRIENDSHIP: -20},
             capacities={Capacity.PRESENCE: -12, Capacity.SCHOLARSHIP: 5},
             effects={E.AGENT_WEIGHT: -10},
             divine=True,
@@ -233,12 +252,19 @@ TRAITS: MappingProxyType[TraitKind, TraitSpec] = MappingProxyType(
         ),
         T.VENGEFUL: _trait(T.FORGIVING, {V.HONOUR: 10, V.MERCY: -20}, effects={E.MEMORY_DECAY: -50, E.WAR_APPETITE: 10}, divine=True, label="Vengeful"),
         T.FORGIVING: _trait(T.VENGEFUL, {V.MERCY: 20}, effects={E.MEMORY_DECAY: 60, E.TRUST: 5}, divine=True, label="Forgiving"),
-        T.STUBBORN: _trait(T.FICKLE, {V.TRADITION: 15}, effects={E.DRIFT: -50}, heritable=True, divine=True, label="Stubborn"),
-        T.FICKLE: _trait(T.STUBBORN, {V.TRADITION: -15}, effects={E.DRIFT: 60, E.BETRAYAL: 10}, divine=True, label="Fickle"),
-        T.JUST: _trait(
-            T.ARBITRARY, {V.HONOUR: 15, V.HIERARCHY: -5}, capacities={Capacity.COMMAND: 5}, effects={E.JUSTICE: 40, E.TRUST: 10}, divine=True, label="Just"
+        T.STUBBORN: _trait(T.FICKLE, {V.TRADITION: 15, V.PERSEVERANCE: 25}, effects={E.DRIFT: -50}, heritable=True, divine=True, label="Stubborn"),
+        T.FICKLE: _trait(
+            T.STUBBORN, {V.TRADITION: -15, V.PERSEVERANCE: -25, V.LOYALTY: -15}, effects={E.DRIFT: 60, E.BETRAYAL: 10}, divine=True, label="Fickle"
         ),
-        T.ARBITRARY: _trait(T.JUST, {V.HONOUR: -10, V.HIERARCHY: 15}, effects={E.JUSTICE: -40, E.CRUELTY: 10}, divine=True, label="Arbitrary"),
+        T.JUST: _trait(
+            T.ARBITRARY,
+            {V.HONOUR: 15, V.HIERARCHY: -5, V.LAW: 25},
+            capacities={Capacity.COMMAND: 5},
+            effects={E.JUSTICE: 40, E.TRUST: 10},
+            divine=True,
+            label="Just",
+        ),
+        T.ARBITRARY: _trait(T.JUST, {V.HONOUR: -10, V.HIERARCHY: 15, V.LAW: -20}, effects={E.JUSTICE: -40, E.CRUELTY: 10}, divine=True, label="Arbitrary"),
         T.HUMBLE: _trait(T.PROUD, {V.HIERARCHY: -15, V.PIETY: 5}, effects={E.TRUST: 5, E.AGENT_WEIGHT: -5}, label="Humble"),
         T.PROUD: _trait(
             T.HUMBLE,
@@ -308,13 +334,12 @@ PLEASURE_TRAITS = frozenset({T.LUSTFUL, T.GLUTTONOUS})
 class SkillSpec:
     family: SkillFamily
     capacity: Capacity
-    stats: tuple[str, ...]
     physical: bool
     label: str
 
 
-def _skill(family: SkillFamily, capacity: Capacity, stats: tuple[str, ...], label: str, *, physical: bool = False) -> SkillSpec:
-    return SkillSpec(family, capacity, stats, physical, label)
+def _skill(family: SkillFamily, capacity: Capacity, label: str, *, physical: bool = False) -> SkillSpec:
+    return SkillSpec(family, capacity, physical, label)
 
 
 C, CM, SO, CR, KN, SU, FA = (
@@ -326,64 +351,63 @@ C, CM, SO, CR, KN, SU, FA = (
     SkillFamily.SURVIVAL,
     SkillFamily.FAITH,
 )
-STR, AGI, INT, CHA = ("strength",), ("agility",), ("intellect",), ("charisma",)
 
 SKILLS: MappingProxyType[SkillKind, SkillSpec] = MappingProxyType(
     {
-        S.BLADE: _skill(C, Capacity.MELEE, ("agility", "strength"), "Blade", physical=True),
-        S.SPEAR: _skill(C, Capacity.MELEE, ("strength", "agility"), "Spear", physical=True),
-        S.AXE: _skill(C, Capacity.MELEE, STR, "Axe", physical=True),
-        S.BLUNT: _skill(C, Capacity.MELEE, STR, "Mace and hammer", physical=True),
-        S.BOW: _skill(C, Capacity.MISSILE, AGI, "Bow", physical=True),
-        S.SLING: _skill(C, Capacity.MISSILE, AGI, "Sling", physical=True),
-        S.THROWING: _skill(C, Capacity.MISSILE, ("agility", "strength"), "Throwing", physical=True),
-        S.SHIELD: _skill(C, Capacity.MELEE, STR, "Shield", physical=True),
-        S.UNARMED: _skill(C, Capacity.MELEE, ("strength", "agility"), "Unarmed fighting", physical=True),
-        S.RIDING: _skill(C, Capacity.MOBILITY, AGI, "Riding", physical=True),
-        S.MOUNTED_COMBAT: _skill(C, Capacity.MELEE, ("agility", "strength"), "Mounted combat", physical=True),
-        S.SIEGECRAFT: _skill(C, Capacity.COMMAND, INT, "Siegecraft"),
-        S.NAVAL_COMBAT: _skill(C, Capacity.MELEE, ("agility", "intellect"), "Naval combat", physical=True),
-        S.BEAST_HANDLING: _skill(C, Capacity.PRESENCE, ("charisma", "agility"), "Beast handling"),
-        S.TACTICS: _skill(CM, Capacity.COMMAND, INT, "Tactics"),
-        S.STRATEGY: _skill(CM, Capacity.COMMAND, INT, "Strategy"),
-        S.LOGISTICS: _skill(CM, Capacity.COMMAND, INT, "Logistics"),
-        S.LEADERSHIP: _skill(CM, Capacity.COMMAND, CHA, "Leadership"),
-        S.INTIMIDATION: _skill(CM, Capacity.PRESENCE, ("strength", "charisma"), "Intimidation"),
-        S.ORATORY: _skill(SO, Capacity.PRESENCE, CHA, "Oratory"),
-        S.NEGOTIATION: _skill(SO, Capacity.PRESENCE, ("charisma", "intellect"), "Negotiation"),
-        S.INTRIGUE: _skill(SO, Capacity.SCHOLARSHIP, ("intellect", "charisma"), "Intrigue"),
-        S.ETIQUETTE: _skill(SO, Capacity.PRESENCE, CHA, "Etiquette"),
-        S.DECEPTION: _skill(SO, Capacity.PRESENCE, ("charisma", "intellect"), "Deception"),
-        S.TEACHING: _skill(SO, Capacity.PRESENCE, ("intellect", "charisma"), "Teaching"),
-        S.SMITHING: _skill(CR, Capacity.CRAFT, ("strength", "intellect"), "Smithing", physical=True),
-        S.CARPENTRY: _skill(CR, Capacity.CRAFT, ("strength", "agility"), "Carpentry", physical=True),
-        S.MASONRY: _skill(CR, Capacity.CRAFT, STR, "Masonry", physical=True),
-        S.WEAVING: _skill(CR, Capacity.CRAFT, AGI, "Weaving"),
-        S.POTTERY: _skill(CR, Capacity.CRAFT, AGI, "Pottery"),
-        S.JEWELLING: _skill(CR, Capacity.CRAFT, ("agility", "intellect"), "Jewelling"),
-        S.SHIPWRIGHT: _skill(CR, Capacity.CRAFT, ("strength", "intellect"), "Shipwright", physical=True),
-        S.ENGINEERING: _skill(CR, Capacity.SCHOLARSHIP, INT, "Engineering"),
-        S.ALCHEMY: _skill(CR, Capacity.SCHOLARSHIP, INT, "Alchemy"),
-        S.LORE: _skill(KN, Capacity.SCHOLARSHIP, INT, "Lore"),
-        S.MEDICINE: _skill(KN, Capacity.CRAFT, INT, "Medicine"),
-        S.SURGERY: _skill(KN, Capacity.CRAFT, ("intellect", "agility"), "Surgery"),
-        S.ASTRONOMY: _skill(KN, Capacity.SCHOLARSHIP, INT, "Astronomy"),
-        S.LAW: _skill(KN, Capacity.SCHOLARSHIP, INT, "Law"),
-        S.THEOLOGY: _skill(KN, Capacity.SCHOLARSHIP, INT, "Theology"),
-        S.LANGUAGES: _skill(KN, Capacity.SCHOLARSHIP, INT, "Languages"),
-        S.WRITING: _skill(KN, Capacity.SCHOLARSHIP, INT, "Writing"),
-        S.ACCOUNTING: _skill(KN, Capacity.SCHOLARSHIP, INT, "Accounting"),
-        S.HUNTING: _skill(SU, Capacity.MISSILE, AGI, "Hunting", physical=True),
-        S.TRACKING: _skill(SU, Capacity.MOBILITY, ("intellect", "agility"), "Tracking"),
-        S.FORAGING: _skill(SU, Capacity.MOBILITY, INT, "Foraging"),
-        S.SAILING: _skill(SU, Capacity.MOBILITY, ("agility", "strength"), "Sailing", physical=True),
-        S.NAVIGATION: _skill(SU, Capacity.SCHOLARSHIP, INT, "Navigation"),
-        S.MOUNTAINEERING: _skill(SU, Capacity.MOBILITY, ("strength", "agility"), "Mountaineering", physical=True),
-        S.SWIMMING: _skill(SU, Capacity.MOBILITY, ("strength", "agility"), "Swimming", physical=True),
-        S.RITUAL: _skill(FA, Capacity.PRESENCE, CHA, "Ritual"),
-        S.PROPHECY: _skill(FA, Capacity.SCHOLARSHIP, ("intellect", "charisma"), "Prophecy"),
-        S.SPELLCRAFT: _skill(FA, Capacity.SCHOLARSHIP, INT, "Spellcraft"),
-        S.SPIRIT_SPEAKING: _skill(FA, Capacity.PRESENCE, CHA, "Spirit-speaking"),
+        S.BLADE: _skill(C, Capacity.MELEE, "Blade", physical=True),
+        S.SPEAR: _skill(C, Capacity.MELEE, "Spear", physical=True),
+        S.AXE: _skill(C, Capacity.MELEE, "Axe", physical=True),
+        S.BLUNT: _skill(C, Capacity.MELEE, "Mace and hammer", physical=True),
+        S.BOW: _skill(C, Capacity.MISSILE, "Bow", physical=True),
+        S.SLING: _skill(C, Capacity.MISSILE, "Sling", physical=True),
+        S.THROWING: _skill(C, Capacity.MISSILE, "Throwing", physical=True),
+        S.SHIELD: _skill(C, Capacity.MELEE, "Shield", physical=True),
+        S.UNARMED: _skill(C, Capacity.MELEE, "Unarmed fighting", physical=True),
+        S.RIDING: _skill(C, Capacity.MOBILITY, "Riding", physical=True),
+        S.MOUNTED_COMBAT: _skill(C, Capacity.MELEE, "Mounted combat", physical=True),
+        S.SIEGECRAFT: _skill(C, Capacity.COMMAND, "Siegecraft"),
+        S.NAVAL_COMBAT: _skill(C, Capacity.MELEE, "Naval combat", physical=True),
+        S.BEAST_HANDLING: _skill(C, Capacity.PRESENCE, "Beast handling"),
+        S.TACTICS: _skill(CM, Capacity.COMMAND, "Tactics"),
+        S.STRATEGY: _skill(CM, Capacity.COMMAND, "Strategy"),
+        S.LOGISTICS: _skill(CM, Capacity.COMMAND, "Logistics"),
+        S.LEADERSHIP: _skill(CM, Capacity.COMMAND, "Leadership"),
+        S.INTIMIDATION: _skill(CM, Capacity.PRESENCE, "Intimidation"),
+        S.ORATORY: _skill(SO, Capacity.PRESENCE, "Oratory"),
+        S.NEGOTIATION: _skill(SO, Capacity.PRESENCE, "Negotiation"),
+        S.INTRIGUE: _skill(SO, Capacity.SCHOLARSHIP, "Intrigue"),
+        S.ETIQUETTE: _skill(SO, Capacity.PRESENCE, "Etiquette"),
+        S.DECEPTION: _skill(SO, Capacity.PRESENCE, "Deception"),
+        S.TEACHING: _skill(SO, Capacity.PRESENCE, "Teaching"),
+        S.SMITHING: _skill(CR, Capacity.CRAFT, "Smithing", physical=True),
+        S.CARPENTRY: _skill(CR, Capacity.CRAFT, "Carpentry", physical=True),
+        S.MASONRY: _skill(CR, Capacity.CRAFT, "Masonry", physical=True),
+        S.WEAVING: _skill(CR, Capacity.CRAFT, "Weaving"),
+        S.POTTERY: _skill(CR, Capacity.CRAFT, "Pottery"),
+        S.JEWELLING: _skill(CR, Capacity.CRAFT, "Jewelling"),
+        S.SHIPWRIGHT: _skill(CR, Capacity.CRAFT, "Shipwright", physical=True),
+        S.ENGINEERING: _skill(CR, Capacity.SCHOLARSHIP, "Engineering"),
+        S.ALCHEMY: _skill(CR, Capacity.SCHOLARSHIP, "Alchemy"),
+        S.LORE: _skill(KN, Capacity.SCHOLARSHIP, "Lore"),
+        S.MEDICINE: _skill(KN, Capacity.CRAFT, "Medicine"),
+        S.SURGERY: _skill(KN, Capacity.CRAFT, "Surgery"),
+        S.ASTRONOMY: _skill(KN, Capacity.SCHOLARSHIP, "Astronomy"),
+        S.LAW: _skill(KN, Capacity.SCHOLARSHIP, "Law"),
+        S.THEOLOGY: _skill(KN, Capacity.SCHOLARSHIP, "Theology"),
+        S.LANGUAGES: _skill(KN, Capacity.SCHOLARSHIP, "Languages"),
+        S.WRITING: _skill(KN, Capacity.SCHOLARSHIP, "Writing"),
+        S.ACCOUNTING: _skill(KN, Capacity.SCHOLARSHIP, "Accounting"),
+        S.HUNTING: _skill(SU, Capacity.MISSILE, "Hunting", physical=True),
+        S.TRACKING: _skill(SU, Capacity.MOBILITY, "Tracking"),
+        S.FORAGING: _skill(SU, Capacity.MOBILITY, "Foraging"),
+        S.SAILING: _skill(SU, Capacity.MOBILITY, "Sailing", physical=True),
+        S.NAVIGATION: _skill(SU, Capacity.SCHOLARSHIP, "Navigation"),
+        S.MOUNTAINEERING: _skill(SU, Capacity.MOBILITY, "Mountaineering", physical=True),
+        S.SWIMMING: _skill(SU, Capacity.MOBILITY, "Swimming", physical=True),
+        S.RITUAL: _skill(FA, Capacity.PRESENCE, "Ritual"),
+        S.PROPHECY: _skill(FA, Capacity.SCHOLARSHIP, "Prophecy"),
+        S.SPELLCRAFT: _skill(FA, Capacity.SCHOLARSHIP, "Spellcraft"),
+        S.SPIRIT_SPEAKING: _skill(FA, Capacity.PRESENCE, "Spirit-speaking"),
     }
 )
 
@@ -449,20 +473,20 @@ CAREER_VALUES: MappingProxyType[MortalRole, MappingProxyType[ValueAxis, int]] = 
     {
         role: MappingProxyType(values)
         for role, values in {
-            MortalRole.WARRIOR: {V.MARTIAL: 30, V.HONOUR: 10},
-            MortalRole.KNIGHT: {V.MARTIAL: 25, V.HONOUR: 20, V.HIERARCHY: 15},
+            MortalRole.WARRIOR: {V.MARTIAL: 30, V.HONOUR: 10, V.COMPETITION: 10},
+            MortalRole.KNIGHT: {V.MARTIAL: 25, V.HONOUR: 20, V.HIERARCHY: 15, V.LOYALTY: 15},
             MortalRole.HUNTER: {V.NATURE: 25, V.MARTIAL: 10},
             MortalRole.SEER: {V.SUPERSTITION: 30, V.PIETY: 15},
             MortalRole.PRIEST: {V.PIETY: 35, V.TRADITION: 10},
-            MortalRole.SAGE: {V.KNOWLEDGE: 35, V.TRADITION: 10},
-            MortalRole.HEALER: {V.MERCY: 30, V.KNOWLEDGE: 10},
-            MortalRole.ARTISAN: {V.KNOWLEDGE: 10, V.WEALTH: 15},
-            MortalRole.MERCHANT: {V.WEALTH: 35, V.XENOPHILIA: 15},
-            MortalRole.SCRIBE: {V.KNOWLEDGE: 25, V.HIERARCHY: 10},
-            MortalRole.FARMER: {V.NATURE: 15, V.TRADITION: 15},
-            MortalRole.EXPLORER: {V.XENOPHILIA: 30, V.TRADITION: -15},
-            MortalRole.CAPTAIN: {V.MARTIAL: 25, V.HIERARCHY: 15},
-            MortalRole.BANDIT: {V.HONOUR: -30, V.MERCY: -15},
+            MortalRole.SAGE: {V.KNOWLEDGE: 35, V.TRADITION: 10, V.TRUTH: 15},
+            MortalRole.HEALER: {V.MERCY: 30, V.KNOWLEDGE: 10, V.FRIENDSHIP: 10},
+            MortalRole.ARTISAN: {V.KNOWLEDGE: 10, V.WEALTH: 15, V.CRAFTSMANSHIP: 30, V.ARTWORK: 10},
+            MortalRole.MERCHANT: {V.WEALTH: 35, V.XENOPHILIA: 15, V.COMPETITION: 15},
+            MortalRole.SCRIBE: {V.KNOWLEDGE: 25, V.HIERARCHY: 10, V.LAW: 10, V.TRUTH: 5},
+            MortalRole.FARMER: {V.NATURE: 15, V.TRADITION: 15, V.FAMILY: 10, V.PERSEVERANCE: 10},
+            MortalRole.EXPLORER: {V.XENOPHILIA: 30, V.TRADITION: -15, V.PERSEVERANCE: 10},
+            MortalRole.CAPTAIN: {V.MARTIAL: 25, V.HIERARCHY: 15, V.LOYALTY: 10},
+            MortalRole.BANDIT: {V.HONOUR: -30, V.MERCY: -15, V.LAW: -30, V.LOYALTY: -10},
             MortalRole.COMMONER: {},
         }.items()
     }
@@ -532,24 +556,24 @@ ACT_READINGS: MappingProxyType[ActKind, MappingProxyType[ValueAxis, int]] = Mapp
     {
         act: MappingProxyType(values)
         for act, values in {
-            A.EXECUTION: {V.MERCY: -45, V.HIERARCHY: 25, V.HONOUR: 10, V.MARTIAL: 15},
+            A.EXECUTION: {V.MERCY: -45, V.HIERARCHY: 25, V.HONOUR: 10, V.MARTIAL: 15, V.LAW: 20},
             A.MUTILATION: {V.MERCY: -50, V.PURITY: -30, V.HIERARCHY: 15},
-            A.BETRAYAL: {V.HONOUR: -60, V.KINSHIP: -20},
+            A.BETRAYAL: {V.HONOUR: -60, V.KINSHIP: -20, V.LOYALTY: -40, V.TRUTH: -20},
             A.MERCY_TO_ENEMY: {V.MERCY: 50, V.MARTIAL: -25, V.HONOUR: 15},
             A.HUMAN_SACRIFICE: {V.MERCY: -45, V.PIETY: 30, V.SUPERSTITION: 25, V.DEATH: 20},
             A.TRADE_WITH_OUTSIDERS: {V.XENOPHILIA: 50, V.WEALTH: 35, V.TRADITION: -15},
-            A.BUILDING_TEMPLES: {V.PIETY: 50, V.TRADITION: 20, V.WEALTH: -10},
-            A.BURNING_BOOKS: {V.KNOWLEDGE: -60, V.TRADITION: 20, V.PURITY: 15},
-            A.CONQUEST: {V.MARTIAL: 45, V.HIERARCHY: 20, V.MERCY: -20, V.XENOPHILIA: -15},
+            A.BUILDING_TEMPLES: {V.PIETY: 50, V.TRADITION: 20, V.WEALTH: -10, V.CRAFTSMANSHIP: 10},
+            A.BURNING_BOOKS: {V.KNOWLEDGE: -60, V.TRADITION: 20, V.PURITY: 15, V.ARTWORK: -20},
+            A.CONQUEST: {V.MARTIAL: 45, V.HIERARCHY: 20, V.MERCY: -20, V.XENOPHILIA: -15, V.COMPETITION: 15},
             A.RAIDING: {V.MARTIAL: 35, V.HONOUR: -15, V.MERCY: -25},
-            A.DUELLING: {V.HONOUR: 40, V.MARTIAL: 30},
+            A.DUELLING: {V.HONOUR: 40, V.MARTIAL: 30, V.COMPETITION: 30},
             A.RANSOM: {V.WEALTH: 30, V.MERCY: 20, V.HONOUR: 10},
             A.TAKING_CAPTIVES: {V.MARTIAL: 25, V.MERCY: -20, V.HIERARCHY: 15},
-            A.OATHBREAKING: {V.HONOUR: -55, V.PIETY: -20},
+            A.OATHBREAKING: {V.HONOUR: -55, V.PIETY: -20, V.TRUTH: -30, V.LOYALTY: -30},
             A.LEARNING: {V.KNOWLEDGE: 50, V.TRADITION: -15},
-            A.HOSPITALITY: {V.XENOPHILIA: 35, V.KINSHIP: 20, V.MERCY: 15},
+            A.HOSPITALITY: {V.XENOPHILIA: 35, V.KINSHIP: 20, V.MERCY: 15, V.FRIENDSHIP: 25},
             A.WINTER_FIGHTING: {V.MARTIAL: 30, V.TRADITION: -35, V.MERCY: -15},
-            A.GUEST_KILLING: {V.HONOUR: -60, V.XENOPHILIA: -30, V.KINSHIP: -20, V.PIETY: -20},
+            A.GUEST_KILLING: {V.HONOUR: -60, V.XENOPHILIA: -30, V.KINSHIP: -20, V.PIETY: -20, V.FRIENDSHIP: -30},
             A.RITUAL_SCARRING: {V.TRADITION: 45, V.PIETY: 25, V.MARTIAL: 15, V.PURITY: -20},
         }.items()
     }

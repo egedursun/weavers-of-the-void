@@ -16,32 +16,31 @@ from aerona.db.base import Base
 from aerona.db.profile_guard import LOCK_COLUMN, shape_of_table, table_name
 
 KEY_TEXT = re.compile(r"[a-z0-9]+(?:[_.:][a-z0-9]+)*")
-OWNER_TABLES = frozenset({"entities", "nodes"})
+OWNER_TABLES = frozenset({"entities", "nodes", "sons", "worlds", "stars", "foreign_gods", "creator"})
 SKIPPED_TABLES = frozenset(
     {
-        "action_records",
-        "agent_turns",
+        "achievements",
         "bonds",
         "chronicle",
         "chronicle_entities",
-        "creation_motifs",
-        "creation_rewards",
-        "creation_verdicts",
+        "cosmos",
+        "councils",
         "entities",
-        "entity_flags",
         "entity_tags",
-        "epoch_agents",
+        "epoch_stats",
+        "epoch_world_narratives",
+        "epochs",
+        "foreign_god_powers",
         "images",
-        "incident_participants",
-        "incidents",
         "ledger_entries",
         "lexemes",
         "messages",
-        "name_registry",
-        "network_reviews",
-        "notifications",
-        "thread_links",
-        "turn_counters",
+        "scenarios",
+        "scores",
+        "son_powers",
+        "son_relations",
+        "threads",
+        "world_maps",
     }
 )
 SKIPPED_COLUMNS = frozenset({"id", LOCK_COLUMN, "created_at", "updated_at"})
@@ -95,6 +94,13 @@ class TypedSection:
     title: str
     facts: list[TypedFact] = field(default_factory=list)
     rows: list[str] = field(default_factory=list)
+
+
+@dataclass
+class RecordTable:
+    title: str
+    headers: list[str]
+    rows: list[list[str]] = field(default_factory=list)
 
 
 def words(key: str) -> str:
@@ -169,6 +175,7 @@ class TypedIndex:
     def __init__(self, names: dict[int, str]) -> None:
         self.names = names
         self.sections: dict[int, list[TypedSection]] = defaultdict(list)
+        self.records: list[RecordTable] = []
         self.references: dict[str, dict[int, str]] = {}
 
     async def load_references(self, session: AsyncSession) -> None:
@@ -204,6 +211,7 @@ class TypedIndex:
                 continue
             owner = _owner(mapper)
             if owner is None:
+                await index.load_records(session, mapper)
                 continue
             columns = [column for column in mapper.local_table.columns if column.key not in SKIPPED_COLUMNS and column.key != owner]
             if not columns:
@@ -217,6 +225,17 @@ class TypedIndex:
             for node_id, rows in grouped.items():
                 index.sections[node_id].append(index._section(table, columns, rows, single))
         return index
+
+    async def load_records(self, session: AsyncSession, mapper: Mapper[Any]) -> None:
+        columns = [column for column in mapper.local_table.columns if column.key not in SKIPPED_COLUMNS or column.primary_key]
+        table = RecordTable(title_of(table_name(mapper)), [words(column.key) for column in columns])
+        for row in await session.scalars(select(mapper.class_).order_by(*_order(mapper))):
+            table.rows.append([self.value(column, getattr(row, column.key)) for column in columns])
+        filled = [index for index in range(len(columns)) if any(row[index] for row in table.rows)]
+        if table.rows and filled:
+            table.headers = [table.headers[index] for index in filled]
+            table.rows = [[row[index] for index in filled] for row in table.rows]
+            self.records.append(table)
 
     def _section(self, table: str, columns: list[KeyedColumnElement[Any]], rows: list[Any], single: bool) -> TypedSection:
         section = TypedSection(title_of(table))

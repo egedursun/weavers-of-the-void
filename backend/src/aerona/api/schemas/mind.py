@@ -3,6 +3,12 @@ from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.entity import MortalRole
 from aerona.domain.enums.mind import (
+    Attribute,
+    Facet,
+    FacetGroup,
+    IdeaKind,
+    IdeaSource,
+    IdeaState,
     MemoryKind,
     NeedKind,
     OpinionComponent,
@@ -146,3 +152,85 @@ class MindView(ApiModel):
     opinions: list[OpinionView]
     career: CareerView | None
     max_traits: int
+
+
+class AttributeView(ApiModel):
+    attribute: Attribute
+    label: str
+    physical: bool
+    value: int
+    effective: int
+    governs: list[SkillKind]
+
+
+class FacetView(ApiModel):
+    facet: Facet
+    label: str
+    group: FacetGroup
+    value: int
+    mean: int
+    high_trait: TraitKind | None
+    low_trait: TraitKind | None
+
+
+class BeliefShiftView(ApiModel):
+    axis: ValueAxis
+    label: str
+    value: int
+
+
+class AttributeShiftView(ApiModel):
+    attribute: Attribute
+    label: str
+    value: int
+
+
+class FacetShiftView(ApiModel):
+    facet: Facet
+    label: str
+    value: int
+
+
+class IdeaSpecView(ApiModel):
+    idea: IdeaKind
+    label: str
+    beliefs: list[BeliefShiftView]
+    gains: list[AttributeShiftView]
+    costs: list[AttributeShiftView]
+    facets: list[FacetShiftView]
+    distraction: int
+
+
+class IdeaView(ApiModel):
+    id: int
+    idea: IdeaKind
+    label: str
+    source: IdeaSource
+    source_node: NodeRef | None
+    progress: int
+    state: IdeaState
+    started_epoch: int
+    finished_epoch: int | None
+    fit: int
+
+
+class SummaryView(ApiModel):
+    name: str
+    value: int
+
+
+class MindSplitView(ApiModel):
+    node_id: int
+    name: str
+    has_attributes: bool
+    has_facets: bool
+    turns_ideas: bool
+    locked: list[str]
+    lockable: list[str]
+    attributes: list[AttributeView]
+    summaries: list[SummaryView]
+    facets: list[FacetView]
+    ideas: list[IdeaView]
+    catalogue: list[IdeaSpecView]
+    trait_threshold: int
+    idea_slots: int

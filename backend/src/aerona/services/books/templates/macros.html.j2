@@ -10,6 +10,10 @@
 {% if items %}<ul class="stats">{% for item in items %}<li>{{ item.label }}<b>{{ item.value }}</b></li>{% endfor %}</ul>{% endif %}
 {%- endmacro %}
 
+{% macro records(tables) -%}
+{% for table in tables %}<section class="register"><h3 class="bm2">{{ table.title }}</h3><p class="meta small">{{ table.rows | length }} {{ "entry" if table.rows | length == 1 else "entries" }}</p><table><thead><tr>{% for header in table.headers %}<th>{{ header }}</th>{% endfor %}</tr></thead><tbody>{% for row in table.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></section>{% endfor %}
+{%- endmacro %}
+
 {% macro typed(sections) -%}
 {% for section in sections %}<section class="typed"><p class="sublabel">{{ section.title }}</p>{% if section.facts %}<dl class="facts">{% for fact in section.facts %}<div><dt>{{ fact.label }}</dt><dd>{{ fact.value }}</dd></div>{% endfor %}</dl>{% endif %}{% if section.rows %}<ul class="typed-rows">{% for row in section.rows %}<li>{{ row }}</li>{% endfor %}</ul>{% endif %}</section>{% endfor %}
 {%- endmacro %}
@@ -156,6 +160,7 @@
 {{ existence(article.god.existence_profile) }}
 {% if article.powers %}<p class="sublabel">Powers</p><ul>{% for power in article.powers %}<li><b>{{ power.label }}</b>: {{ power.value }}</li>{% endfor %}</ul>{% endif %}
 {{ god_depth(article.god.depth) }}
+{{ typed(article.typed) }}
 {% if article.fate %}<p class="sublabel">Fate</p><ul class="timeline">{% for line in article.fate %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
 <div class="clear"></div>
 </article>

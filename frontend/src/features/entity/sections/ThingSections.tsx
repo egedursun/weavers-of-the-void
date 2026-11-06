@@ -1,4 +1,5 @@
 import { EntityMechanics } from './EntityMechanics'
+import { MindSplitSection } from './MindSplitSection'
 import { RecordRowsSection } from './RecordRowsSection'
 
 export function ThingSections({
@@ -17,6 +18,7 @@ export function ThingSections({
         statKeys={statKeys}
         readOnlyReason={readOnlyReason}
       />
+      <MindSplitSection nodeId={nodeId} />
       <RecordRowsSection nodeId={nodeId} />
     </>
   )
