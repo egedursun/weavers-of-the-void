@@ -10,6 +10,8 @@ const SETTINGS: WorldSettings = {
   mortal_agent_parallelism: 1,
   llm_enabled: true,
   image_generation: false,
+  image_style: 'photoreal',
+  image_style_custom: '',
 }
 
 describe('world settings patch', () => {

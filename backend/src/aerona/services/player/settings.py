@@ -1,7 +1,9 @@
+from aerona.catalog.image_styles import CUSTOM_STYLE_MAX_LENGTH, style_label
 from aerona.core.errors import ValidationFailedError
+from aerona.db.tables.cosmos import CosmosRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.world import FateMode, SonDistribution
+from aerona.domain.enums.world import FateMode, ImageStyle, SonDistribution
 from aerona.services.player.chronicle import tell
 from aerona.services.player.lines import SETTINGS
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
@@ -16,6 +18,20 @@ class WorldSettings(Command):
     automatic_mortal_agents: bool = False
     council_every_epochs: int | None = None
     mortal_agent_parallelism: int | None = None
+    image_style: ImageStyle | None = None
+    image_style_custom: str | None = None
+
+
+def _set_image_style(cosmos: CosmosRow, command: WorldSettings) -> str:
+    style = command.image_style or cosmos.image_style
+    custom = (command.image_style_custom if command.image_style_custom is not None else cosmos.image_style_custom).strip()
+    if len(custom) > CUSTOM_STYLE_MAX_LENGTH:
+        raise ValidationFailedError(f"The custom image style is limited to {CUSTOM_STYLE_MAX_LENGTH} characters.")
+    if style is ImageStyle.CUSTOM and not custom:
+        raise ValidationFailedError("Describe the custom image style.")
+    cosmos.image_style = style
+    cosmos.image_style_custom = custom
+    return f"images in the {style_label(style, custom)} style"
 
 
 @player_action("settings", ActionKind.OTHER)
@@ -46,6 +62,8 @@ async def update_settings(scope: PlayerScope, command: WorldSettings) -> Effect:
             raise ValidationFailedError("At least one mortal agent must be able to act at a time.")
         cosmos.mortal_agent_parallelism = command.mortal_agent_parallelism
         fields.append(f"{command.mortal_agent_parallelism} mortal agents at once")
+    if command.image_style is not None or command.image_style_custom is not None:
+        fields.append(_set_image_style(cosmos, command))
     if not fields:
         raise ValidationFailedError("Nothing to change in the settings.")
     ctx = await scope.context("settings")

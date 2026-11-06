@@ -68,7 +68,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "description": "Its sound structure, its script, who speaks it, what is forbidden to say",
             **WORD_FIELDS,
             "image_prompt": (
-                "English photoreal prompt: an object showing this script or language, e.g. carved tablet, manuscript, inscription, with lighting and camera. "
+                "English image prompt: an object showing this script or language, e.g. carved tablet, manuscript, inscription, with lighting and composition. "
                 '{% include "shared/image_prompt_rules.md.j2" %}'
             ),
         },
@@ -120,7 +120,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "law_kind": "For a law: what it rules (succession_rule, tax_rate, penal_code, levy_law, slavery, tolls, sumptuary...); required for laws",
             "law_params": "For a law: its terms by name, only those its kind has; leave out a term to keep its default. Terms of each kind: "
             + law_terms_guide(),
-            "image_prompt": 'English photoreal prompt: the ritual being performed or a scene of the legend. {% include "shared/image_prompt_rules.md.j2" %}',
+            "image_prompt": 'English image prompt: the ritual being performed or a scene of the legend. {% include "shared/image_prompt_rules.md.j2" %}',
             "legend_category": "Only for a legend: what it would become if belief made it real: {{ legend_categories | join(', ') }}",
             "archetype": "Only for a legend: the kind of tale, which sets its lesson: " + ", ".join(item.value for item in LegendArchetype),
             "tradition_kind": "Only for a tradition: what kind of custom it is: " + ", ".join(item.value for item in TraditionKind),
@@ -188,7 +188,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "description": "What it is, how it was found, which material or observation it rests on",
             "base_ids": "Knowledge you know that it is built on (at most {{ " + M + ".knowledge_max_prereqs }})",
             "resource_id": "The resource it relies on",
-            "image_prompt": 'English photoreal prompt: people practicing this technique, tools, materials, setting. {% include "shared/image_prompt_rules.md.j2" %}',
+            "image_prompt": 'English image prompt: people practicing this technique, tools, materials, setting. {% include "shared/image_prompt_rules.md.j2" %}',
         },
     ),
     T.LEARN_KNOWLEDGE: ToolText(

@@ -6,11 +6,12 @@ from pydantic import Field
 from aerona.api.background import submit
 from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.schemas.common import ApiModel, JobAccepted, RequestModel
+from aerona.catalog.image_styles import CUSTOM_STYLE_MAX_LENGTH
 from aerona.constants.genesis import FIRST_SONS_CEILING
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.domain.enums.job import JobKind
 from aerona.domain.enums.rarity import Rarity
-from aerona.domain.enums.world import LoreLanguage
+from aerona.domain.enums.world import ImageStyle, LoreLanguage
 from aerona.domain.models.genesis import GenesisSettings
 from aerona.epoch.concurrency import WORLD_GROUP
 from aerona.jobs.context import JobContext
@@ -28,6 +29,8 @@ class GenesisRequest(RequestModel):
     lore_language: LoreLanguage = LoreLanguage.ENGLISH
     wizard: WizardInput | None = None
     first_sons: list[Rarity] | None = Field(default=None, max_length=FIRST_SONS_CEILING)
+    image_style: ImageStyle = ImageStyle.PHOTOREAL
+    image_style_custom: str = Field(default="", max_length=CUSTOM_STYLE_MAX_LENGTH)
 
 
 @router.get("/genesis/wizard", response_model=WizardOptions)
@@ -45,6 +48,8 @@ async def start_genesis(request: GenesisRequest, services: ServicesDep) -> JobAc
         lore_language=request.lore_language,
         wizard=request.wizard,
         first_sons=tuple(request.first_sons) if request.first_sons is not None else None,
+        image_style=request.image_style,
+        image_style_custom=request.image_style_custom,
     )
     await wizard.validate(command)
 

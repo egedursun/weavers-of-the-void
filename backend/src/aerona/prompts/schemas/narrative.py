@@ -120,7 +120,7 @@ class ForeignGodDepthOutput(OutputModel):
     view_of_pantheon: str = Field(default="", description="How it looks on the newly arrived pantheon and its sons; consistent with its attitude")
     worship: str = Field(default="", description="How its worshippers worship it: rites, offerings, prohibitions")
     hidden_truth: str = Field(default="", description="The truth about it that nobody knows")
-    image_prompt: str = Field(description="English photoreal portrait prompt of this god. {{ image_prompt_rules }}")
+    image_prompt: str = Field(description="English portrait image prompt of this god. {{ image_prompt_rules }}")
 
 
 class SonEpicOutput(OutputModel):

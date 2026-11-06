@@ -29,7 +29,7 @@ class GenesisRegionOutput(OutputModel):
     fertility: int = Field(ge=0, le=PERCENT_MAX)
     magic: int = Field(ge=0, le=PERCENT_MAX)
     water: bool = Field(default=False, description="True for a sea or ocean region that is water rather than land")
-    image_prompt: str = Field(description="English photoreal landscape prompt. {{ image_prompt_rules }}")
+    image_prompt: str = Field(description="English landscape image prompt. {{ image_prompt_rules }}")
 
 
 class GenesisCosmicResourceOutput(OutputModel):
@@ -38,7 +38,7 @@ class GenesisCosmicResourceOutput(OutputModel):
     rule: str = Field(description="How it is extracted, how it is used, what it makes possible")
     side_effect: str = Field(description="The price of long use: mutation, memory loss, the colour of the eyes…")
     region_index: int = Field(ge=0, description="Index into the regions list: where its first deposit lies")
-    image_prompt: str = Field(description="English photoreal prompt. {{ image_prompt_rules }}")
+    image_prompt: str = Field(description="English image prompt. {{ image_prompt_rules }}")
 
 
 class FirstCelestialOutput(OutputModel):
@@ -79,7 +79,7 @@ class SonPowersOutput(OutputModel):
     powers: list[PowerOutput] = Field(min_length=POWERS_PER_SON, max_length=POWERS_PER_SON)
     existence: ExistenceOutput
     image_prompt: str = Field(
-        description="English, photorealistic, detailed full-length portrait prompt: body, face, material, clothing, lighting, background, camera and lens. {{ image_prompt_rules }}"
+        description="English, detailed full-length portrait prompt: body, face, material, clothing, lighting, background, composition. {{ image_prompt_rules }}"
     )
 
 
@@ -87,7 +87,7 @@ class AwakenedRecord(OutputModel):
     name: str
     subtype: str
     description: str = Field(description="3 to 5 sentences")
-    image_prompt: str = Field(description="English photoreal image prompt. {{ image_prompt_rules }}")
+    image_prompt: str = Field(description="English image prompt. {{ image_prompt_rules }}")
 
 
 class AwakenedPeopleRecord(AwakenedRecord):

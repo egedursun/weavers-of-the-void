@@ -352,7 +352,7 @@ export const GOD_STATE: Schemas['StateResponse'] = {
   epoch_running: false,
   half_epoch: null,
   mood: { contentment: 64, anger: 22, interest: 71, loneliness: 38, label: 'content' },
-  image_gen: { available: false, reason: 'No image worker is configured.', current: null, queue: [], bulk: { running: false, stop_requested: false, auto: false, total: 0, done: 0, failed: 0, skipped: 0, rerun_requested: false }, width: 512, height: 512, steps: 20, log: [] },
+  image_gen: { available: false, reason: 'No image worker is configured.', current: null, queue: [], bulk: { running: false, stop_requested: false, auto: false, total: 0, done: 0, failed: 0, skipped: 0, rerun_requested: false, restyle: false }, width: 512, height: 512, steps: 20, log: [] },
   batch_deepen: { running: false, stop_requested: false, total: 0, done: 0, failed: 0, skipped: 0 },
   llm_enabled: true,
 }
@@ -688,6 +688,8 @@ const SETTINGS: Schemas['WorldSettingsView'] = {
   mortal_agent_parallelism: null,
   llm_enabled: true,
   image_generation: false,
+  image_style: 'photoreal',
+  image_style_custom: '',
 }
 
 const LEDGER: Schemas['LedgerPage'] = {

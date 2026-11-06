@@ -3,21 +3,23 @@ import hashlib
 import re
 import secrets
 import time
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from io import BytesIO
+from typing import Any
 
 from PIL import Image
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
+from aerona.catalog.image_styles import style_signature
 from aerona.constants.imaging import IN_CLAUSE_CHUNK, PNG_SIGNATURE
 from aerona.constants.schema import TITLE_MAX_LENGTH
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
-from aerona.db.tables.cosmos import CreatorRow
+from aerona.db.tables.cosmos import CosmosRow, CreatorRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.meta import ImageRow
@@ -26,6 +28,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.meta import ImageMime, ImageOrigin
 from aerona.domain.enums.node import NodeKind
+from aerona.domain.enums.world import ImageStyle
 from aerona.media.keys import original_key
 from aerona.media.store import MediaStore
 from aerona.services.images.collection import MediaCollector
@@ -154,12 +157,28 @@ async def has_image(session: AsyncSession, node_id: int) -> bool:
     return await session.scalar(select(ImageRow.id).where(ImageRow.target_node_id == node_id).limit(1)) is not None
 
 
-async def missing_targets(session: AsyncSession, limit: int | None = None) -> list[ImageTarget]:
-    with_image = select(ImageRow.target_node_id)
+@dataclass(frozen=True)
+class WorldStyle:
+    style: ImageStyle
+    custom: str
+
+    @property
+    def signature(self) -> str:
+        return style_signature(self.style, self.custom)
+
+
+async def world_style(session: AsyncSession) -> WorldStyle:
+    cosmos = await session.scalar(select(CosmosRow).limit(1))
+    if cosmos is None:
+        return WorldStyle(ImageStyle.PHOTOREAL, "")
+    return WorldStyle(cosmos.image_style, cosmos.image_style_custom)
+
+
+async def _targets_among(session: AsyncSession, condition: Callable[[Any], Any], limit: int | None = None) -> list[ImageTarget]:
     found: list[ImageTarget] = []
     for kind in TARGET_ORDER:
         table = PROMPT_TABLES[kind]
-        statement = select(table).where(table.id.not_in(with_image))
+        statement = select(table).where(condition(table.id))
         if kind is NodeKind.ENTITY:
             statement = statement.where(EntityRow.status == EntityStatus.CANON).order_by(func.coalesce(EntityRow.importance, 0).desc(), EntityRow.id)
         else:
@@ -169,6 +188,34 @@ async def missing_targets(session: AsyncSession, limit: int | None = None) -> li
             if limit is not None and len(found) >= limit:
                 return found
     return found
+
+
+async def missing_targets(session: AsyncSession, limit: int | None = None) -> list[ImageTarget]:
+    with_image = select(ImageRow.target_node_id)
+    return await _targets_among(session, lambda column: column.not_in(with_image), limit)
+
+
+async def off_style_covers(session: AsyncSession, signature: str) -> set[int]:
+    statement = (
+        select(ImageRow.target_node_id, ImageRow.origin, ImageRow.style)
+        .where(ImageRow.target_node_id.is_not(None))
+        .order_by(ImageRow.target_node_id, ImageRow.is_cover.desc(), ImageRow.id.desc())
+    )
+    covers: dict[int, bool] = {}
+    for node_id, origin, style in await session.execute(statement):
+        covers.setdefault(node_id, origin is ImageOrigin.GENERATED and (style or ImageStyle.PHOTOREAL.value) != signature)
+    return {node_id for node_id, off in covers.items() if off}
+
+
+async def restyle_targets(session: AsyncSession, signature: str) -> list[ImageTarget]:
+    off = await off_style_covers(session, signature)
+    if not off:
+        return []
+    return [target for target in await _targets_among(session, lambda column: column.in_(off)) if target.image_prompt]
+
+
+async def cover_in_style(session: AsyncSession, node_id: int, signature: str) -> bool:
+    return node_id not in await off_style_covers(session, signature) and await has_image(session, node_id)
 
 
 async def missing_count(session: AsyncSession) -> int:
@@ -193,6 +240,8 @@ class ImageRecords:
         origin: ImageOrigin,
         caption: str | None,
         prompt: str | None,
+        style: str | None = None,
+        cover: bool = False,
     ) -> ImageRow:
         digest = hashlib.sha256(data).hexdigest()
         duplicate = await session.scalar(select(ImageRow).where(ImageRow.target_node_id == target.node_id, ImageRow.sha256 == digest).limit(1))
@@ -205,6 +254,8 @@ class ImageRecords:
             await self.store.put(key, data)
         width, height = await asyncio.to_thread(_dimensions, data)
         first = not await has_image(session, target.node_id)
+        if cover and not first:
+            await session.execute(update(ImageRow).where(ImageRow.target_node_id == target.node_id).values(is_cover=False))
         row = ImageRow(
             target_node_id=target.node_id,
             file_name=name,
@@ -214,7 +265,8 @@ class ImageRecords:
             origin=origin,
             caption=caption.strip()[:CAPTION_MAX_LENGTH] if caption_valid(caption) and caption else None,
             prompt=prompt,
-            is_cover=first,
+            style=style,
+            is_cover=first or cover,
             size_bytes=len(data),
             width=width,
             height=height,
@@ -223,12 +275,14 @@ class ImageRecords:
         await session.flush()
         return row
 
-    async def add_generated(self, session: AsyncSession, node_id: int, png: bytes, prompt: str | None) -> ImageRow | None:
+    async def add_generated(
+        self, session: AsyncSession, node_id: int, png: bytes, prompt: str | None, *, style: str | None = None, cover: bool = False
+    ) -> ImageRow | None:
         kind = await NodeRepository(session).kind_of(node_id)
         if kind is None or not png.startswith(PNG_SIGNATURE):
             return None
         target = await resolve_target(session, node_id)
-        return await self._store(session, target, png, ImageMime.PNG, origin=ImageOrigin.GENERATED, caption=None, prompt=prompt)
+        return await self._store(session, target, png, ImageMime.PNG, origin=ImageOrigin.GENERATED, caption=None, prompt=prompt, style=style, cover=cover)
 
     async def upload(self, session: AsyncSession, node_id: int, data: bytes, mime: ImageMime, caption: str | None = None) -> ImageRow:
         target = await resolve_target(session, node_id)

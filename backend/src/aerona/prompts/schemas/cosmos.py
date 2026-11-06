@@ -37,7 +37,7 @@ class BirthRegionOutput(OutputModel):
     fertility: int = Field(ge=0, le=PERCENT_MAX)
     magic: int = Field(ge=0, le=PERCENT_MAX)
     water: bool = Field(default=False, description="True for a sea or ocean region that is water rather than land")
-    image_prompt: str = Field(description="English photoreal prompt. {{ image_prompt_rules }}")
+    image_prompt: str = Field(description="English image prompt. {{ image_prompt_rules }}")
 
 
 class SkyBodyOutput(OutputModel):
@@ -140,7 +140,7 @@ class NewWorldOutput(OutputModel):
     natives: list[NativeOutput] = Field(
         default_factory=list, description="Optional: living beings that existed on this world before the gods (a species or a people)"
     )
-    image_prompt: str = Field(description="English photoreal prompt: the whole world seen from orbit, with its star and sky. {{ image_prompt_rules }}")
+    image_prompt: str = Field(description="English image prompt: the whole world seen from orbit, with its star and sky. {{ image_prompt_rules }}")
 
 
 class BondDirection(StrEnum):

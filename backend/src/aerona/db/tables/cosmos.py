@@ -15,7 +15,7 @@ from aerona.domain.enums.chronicle import NotificationCategory
 from aerona.domain.enums.creator import CreatorMoodAxis, CreatorPassion
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.node import NodeKind
-from aerona.domain.enums.world import FateMode, LoreLanguage, SonDistribution
+from aerona.domain.enums.world import FateMode, ImageStyle, LoreLanguage, SonDistribution
 from aerona.domain.models.genesis import GenesisSettings
 from aerona.domain.models.profiles import Epic, GodDepth, TravelResource
 
@@ -46,6 +46,10 @@ class CosmosRow(TimestampMixin, Base):
     doom_fraction: Mapped[float] = mapped_column(Float, default=0.0)
     fate_mode: Mapped[FateMode] = mapped_column(enum_type(FateMode, "fate_mode"), default=FateMode.AUTO)
     son_distribution: Mapped[SonDistribution] = mapped_column(enum_type(SonDistribution, "son_distribution"), default=SonDistribution.AUTO)
+    image_style: Mapped[ImageStyle] = mapped_column(
+        enum_type(ImageStyle, "image_style"), default=ImageStyle.PHOTOREAL, server_default=ImageStyle.PHOTOREAL.value
+    )
+    image_style_custom: Mapped[str] = mapped_column(Text, default="", server_default="")
     council_every_epochs: Mapped[int | None]
     mortal_agents_per_epoch: Mapped[int | None]
     mortal_agent_parallelism: Mapped[int | None]

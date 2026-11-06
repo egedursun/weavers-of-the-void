@@ -10,6 +10,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.image_styles import styled_prompt
 from aerona.core.activity import ActivityLog, collecting
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from aerona.db.session import Database
@@ -22,7 +23,16 @@ from aerona.imaging.errors import ImageWorkerError
 from aerona.jobs.context import JOB_LABEL_KEY, JobContext
 from aerona.jobs.manager import JobManager
 from aerona.rules.registry import Rules
-from aerona.services.images.records import ImageRecords, ImageTarget, has_image, missing_targets, resolve_target
+from aerona.services.images.records import (
+    ImageRecords,
+    ImageTarget,
+    cover_in_style,
+    has_image,
+    missing_targets,
+    resolve_target,
+    restyle_targets,
+    world_style,
+)
 from aerona.services.lore_ports import ImagePromptWriter
 
 logger = logging.getLogger(__name__)
@@ -38,6 +48,7 @@ class ImageClass(StrEnum):
     MANUAL = "manual"
     BULK = "bulk"
     AUTO = "auto"
+    RESTYLE = "restyle"
 
 
 class Stage(StrEnum):
@@ -68,6 +79,7 @@ class BulkRun:
     running: bool = False
     stop_requested: bool = False
     auto: bool = False
+    restyle: bool = False
     total: int = 0
     done: int = 0
     failed: int = 0
@@ -262,8 +274,10 @@ class ImageQueue:
             prompt = await self._prompts.write_prompt(item.node_id)
         if not prompt:
             raise ValidationFailedError(f"{target.name} has no image prompt.")
+        async with self._database.read() as session:
+            style = await world_style(session)
         request = ImageJobRequest(
-            prompt=prompt,
+            prompt=styled_prompt(prompt, style.style, style.custom),
             width=rules.width,
             height=rules.height,
             steps=steps,
@@ -283,7 +297,9 @@ class ImageQueue:
             if await self._target_gone(session, item.node_id):
                 self.log(LogLevel.WARNING, f"{target.name} vanished during generation; the image was discarded.")
                 return None
-            row = await self._records.add_generated(session, item.node_id, generated.png, prompt)
+            row = await self._records.add_generated(
+                session, item.node_id, generated.png, prompt, style=style.signature, cover=item.image_class is ImageClass.RESTYLE
+            )
         if row is None:
             return None
         self._publish(EventKind.IMAGE_DONE, {"node_id": item.node_id, "image_id": row.id, "file": row.file_name, "cover": row.is_cover})
@@ -296,7 +312,7 @@ class ImageQueue:
             return True
         return False
 
-    async def start_bulk(self, auto: bool = False) -> BulkRun:
+    async def start_bulk(self, auto: bool = False, restyle: bool = False) -> BulkRun:
         reason = self.unavailable_reason()
         if reason is not None:
             raise ConflictError(reason)
@@ -306,14 +322,18 @@ class ImageQueue:
                 return self.bulk
             raise ConflictError("Image generation is already running.")
         async with self._database.read() as session:
-            targets = await missing_targets(session)
+            if restyle:
+                style = await world_style(session)
+                targets = await restyle_targets(session, style.signature)
+            else:
+                targets = await missing_targets(session)
         if not targets:
-            raise ConflictError("Every record already has an image.")
-        self.bulk = BulkRun(running=True, auto=auto, total=len(targets), started=datetime.now(UTC))
-        self.log(LogLevel.INFO, f"Image generation started for {len(targets)} records.")
+            raise ConflictError("Every generated image is already in the world's image style." if restyle else "Every record already has an image.")
+        self.bulk = BulkRun(running=True, auto=auto, restyle=restyle, total=len(targets), started=datetime.now(UTC))
+        self.log(LogLevel.INFO, f"{'Restyling' if restyle else 'Image generation'} started for {len(targets)} records.")
         tracked = None
         if self._jobs is not None:
-            label = f"painting of {len(targets)} images" + (" after the epoch" if auto else "")
+            label = (f"restyling of {len(targets)} images" if restyle else f"painting of {len(targets)} images") + (" after the epoch" if auto else "")
             tracked = await self._jobs.begin_external(JobKind.IMAGE, {JOB_LABEL_KEY: label, "total": len(targets), "auto": auto})
         self._bulk_task = asyncio.create_task(self._bulk([target.node_id for target in targets], tracked))
         return self.bulk
@@ -340,7 +360,7 @@ class ImageQueue:
         self._jobs.report_external(context)
 
     async def _bulk(self, node_ids: list[int], tracked: TrackedJob | None = None) -> None:
-        image_class = ImageClass.AUTO if self.bulk.auto else ImageClass.BULK
+        image_class = ImageClass.RESTYLE if self.bulk.restyle else ImageClass.AUTO if self.bulk.auto else ImageClass.BULK
         log = tracked[1] if tracked is not None else ActivityLog()
         failure: str | None = None
         try:
@@ -371,7 +391,10 @@ class ImageQueue:
     async def _bulk_one(self, node_id: int, image_class: ImageClass) -> None:
         target = await self._target(node_id)
         async with self._database.read() as session:
-            gained = await has_image(session, node_id)
+            if image_class is ImageClass.RESTYLE:
+                gained = await cover_in_style(session, node_id, (await world_style(session)).signature)
+            else:
+                gained = await has_image(session, node_id)
         if target is None or gained or (not target.image_prompt and self._prompts is None) or self._is_queued(node_id):
             self.bulk.skipped += 1
             return

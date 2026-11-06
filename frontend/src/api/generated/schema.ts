@@ -3375,6 +3375,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/image-gen/batch/restyle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["restyle_batch_api_image_gen_batch_restyle_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/image-gen/batch/stop": {
         parameters: {
             query?: never;
@@ -15697,6 +15713,7 @@ export interface components {
             running: boolean;
             stop_requested: boolean;
             auto: boolean;
+            restyle: boolean;
             total: number;
             done: number;
             failed: number;
@@ -18278,6 +18295,8 @@ export interface components {
             lore_language: components["schemas"]["LoreLanguage"];
             wizard?: components["schemas"]["WizardInput"] | null;
             first_sons?: components["schemas"]["Rarity"][] | null;
+            image_style: components["schemas"]["ImageStyle"];
+            image_style_custom: string;
         };
         GenesisSettings: {
             template?: components["schemas"]["GenesisTemplate"] | null;
@@ -18681,7 +18700,7 @@ export interface components {
             payload: components["schemas"]["BulkLogPayload"];
             at: string;
         };
-        ImageClass: "manual" | "bulk" | "auto";
+        ImageClass: "manual" | "bulk" | "auto" | "restyle";
         ImageDoneEvent: {
             id: number;
             kind: "image.done";
@@ -18713,6 +18732,7 @@ export interface components {
         ImageGenStatus: {
             status: components["schemas"]["QueueStatus"];
             missing: number;
+            off_style: number;
         };
         ImageListView: {
             image: components["schemas"]["ImageRecord"];
@@ -18761,6 +18781,7 @@ export interface components {
             origin: components["schemas"]["ImageOrigin"];
             caption: string | null;
             prompt: string | null;
+            style: string | null;
             is_cover: boolean;
             size_bytes: number;
             width: number | null;
@@ -18774,6 +18795,7 @@ export interface components {
             payload: components["schemas"]["EmptyPayload"];
             at: string;
         };
+        ImageStyle: "photoreal" | "painting" | "ink" | "watercolor" | "anime" | "custom";
         ImmunityView: {
             community_id: number;
             community: string;
@@ -21399,6 +21421,8 @@ export interface components {
             automatic_mortal_agents: boolean;
             council_every_epochs?: number | null;
             mortal_agent_parallelism?: number | null;
+            image_style?: components["schemas"]["ImageStyle"] | null;
+            image_style_custom?: string | null;
         };
         PatchSonsSonIdBody: {
             name?: string | null;
@@ -25961,6 +25985,8 @@ export interface components {
             mortal_agent_parallelism: number | null;
             llm_enabled: boolean;
             image_generation: boolean;
+            image_style: components["schemas"]["ImageStyle"];
+            image_style_custom: string;
         };
         WorldType: "ordinary" | "ocean" | "sand" | "ice" | "lava" | "crystal" | "living" | "dead" | "dream" | "mirror" | "gas" | "ringed" | "asteroid_belt" | "tidally_locked" | "void_pocket" | "gods_palace" | "generation_ship" | "corpse_world" | "super_earth" | "ice_giant" | "hot_giant" | "iron" | "carbon" | "greenhouse" | "dwarf_planet" | "chthonian" | "hycean" | "jungle" | "forge" | "fungal" | "shattered" | "hollow" | "ice_shell" | "methane";
         WorldTypeInfo: {
@@ -32598,6 +32624,25 @@ export interface operations {
         };
     };
     start_batch_api_image_gen_batch_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkRun"];
+                };
+            };
+        };
+    };
+    restyle_batch_api_image_gen_batch_restyle_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -54407,7 +54452,7 @@ export const hullClassValues: ReadonlyArray<FlattenedDeepRequired<components>["s
 export const ideologyStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IdeologyStats"]["kind"]> = ["ideology"];
 export const ideologyTenetValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IdeologyTenet"]> = ["legalism", "restraint", "egalitarianism", "divine_right", "mercantilism", "militarism", "asceticism", "rationalism", "nature_harmony", "xenophobia", "cosmopolitanism", "anti_god", "creatorism"];
 export const imageBulkLogEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageBulkLogEvent"]["kind"]> = ["image.bulk_log"];
-export const imageClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageClass"]> = ["manual", "bulk", "auto"];
+export const imageClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageClass"]> = ["manual", "bulk", "auto", "restyle"];
 export const imageDoneEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageDoneEvent"]["kind"]> = ["image.done"];
 export const imageFailedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageFailedEvent"]["kind"]> = ["image.failed"];
 export const imageMimeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageMime"]> = ["image/png", "image/jpeg", "image/webp"];
@@ -54415,6 +54460,7 @@ export const imageOriginValues: ReadonlyArray<FlattenedDeepRequired<components>[
 export const imageProgressEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageProgressEvent"]["kind"]> = ["image.progress"];
 export const imageQueuedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageQueuedEvent"]["kind"]> = ["image.queued"];
 export const imageStatusEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageStatusEvent"]["kind"]> = ["image.status"];
+export const imageStyleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImageStyle"]> = ["photoreal", "painting", "ink", "watercolor", "anime", "custom"];
 export const importModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImportMode"]> = ["replace", "merge", "discovery"];
 export const incidentRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IncidentRole"]> = ["subject", "actor", "target", "witness", "place"];
 export const inheritanceCustomValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["InheritanceCustom"]> = ["gavelkind", "primogeniture", "ultimogeniture", "matrilineal", "elective", "by_merit"];

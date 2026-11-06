@@ -11,7 +11,7 @@ STRENGTHS_PER_SON = 2
 MOTIFS_MIN = 1
 MOTIFS_MAX = 5
 
-IMAGE_PROMPT = "An English, photorealistic image-generation prompt: subject, material, light, setting, camera and lens. {{ image_prompt_rules }}"
+IMAGE_PROMPT = "An English image-generation prompt: subject, material, light, setting, composition. {{ image_prompt_rules }}"
 MOTIFS = "2 to 5 motif keys for the core images of this record: short lowercase English keys, each naming one concrete image taken from this record itself (an object, material, creature, colour, sound or phenomenon; one word, or two joined by an underscore), reused whenever the same image returns, whatever the lore language."
 
 
@@ -62,7 +62,7 @@ class SonProfileOutput(OutputModel):
     )
     existence: ExistenceOutput
     image_prompt: str = Field(
-        description="English, photorealistic, detailed full-length portrait prompt: body, face, material, clothing, lighting, background, camera and lens. {{ image_prompt_rules }}"
+        description="English, detailed full-length portrait prompt: body, face, material, clothing, lighting, background, composition. {{ image_prompt_rules }}"
     )
 
 
@@ -70,9 +70,7 @@ class CreatorGodOutput(OutputModel):
     title: str
     appearance: str = Field(description="The god's appearance or manifestation, 3 to 4 sentences")
     temperament: str = Field(description="The god's attitude towards their children and their creation, 2 sentences")
-    image_prompt: str = Field(
-        description="English, photorealistic, epic-scale god portrait prompt: scale, material, light, atmosphere, camera. {{ image_prompt_rules }}"
-    )
+    image_prompt: str = Field(description="English, epic-scale god portrait prompt: scale, material, light, atmosphere, composition. {{ image_prompt_rules }}")
 
 
 class NamingRuleOutput(OutputModel):
@@ -91,7 +89,7 @@ class NamingItemOutput(OutputModel):
     description: str = Field(
         description="3 to 5 sentences, tell what happened in the world's lore language; describe the record ITSELF. Do NOT write record numbers, stat names or values (morale 78, 565 soldiers, military strength 34); express magnitude in words"
     )
-    image_prompt: str = Field(description="English photoreal prompt. {{ image_prompt_rules }}")
+    image_prompt: str = Field(description="English image prompt. {{ image_prompt_rules }}")
     motifs: list[str] = Field(min_length=MOTIFS_MIN, max_length=MOTIFS_MAX, description=MOTIFS)
 
 

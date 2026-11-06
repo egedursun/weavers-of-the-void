@@ -133,6 +133,10 @@ export function startBulk() {
   return unwrap(api.POST('/api/image-gen/batch/start'))
 }
 
+export function restyleBulk() {
+  return unwrap(api.POST('/api/image-gen/batch/restyle'))
+}
+
 export function stopBulk() {
   return unwrap(api.POST('/api/image-gen/batch/stop'))
 }

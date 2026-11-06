@@ -486,6 +486,7 @@ class ImageRecord(ApiModel):
     origin: ImageOrigin
     caption: str | None
     prompt: str | None
+    style: str | None
     is_cover: bool
     size_bytes: int
     width: int | None

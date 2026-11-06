@@ -33,6 +33,7 @@ import {
   RARITY_TEXT_CLASS,
 } from '@/components/domain/rarityClasses'
 import { Label, Muted, Text } from '@/components/typography'
+import { ImageStylePicker } from '@/features/images/ImageStylePicker'
 import { romanNumeral } from '@/features/pantheon/labels'
 import { Counter } from './Counter'
 import {
@@ -395,6 +396,17 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
           value={draft.cosmos}
           options={cosmos}
           onChange={(value) => update({ cosmos: value })}
+        />
+      </SettingGroup>
+      <SettingGroup
+        label='Image style'
+        description='How every portrait and scene of this world is painted. You can change it later in Settings, under Images.'
+      >
+        <ImageStylePicker
+          value={draft.imageStyle}
+          custom={draft.imageStyleCustom}
+          onChange={(imageStyle) => update({ imageStyle })}
+          onCustomChange={(imageStyleCustom) => update({ imageStyleCustom })}
         />
       </SettingGroup>
       <Counter

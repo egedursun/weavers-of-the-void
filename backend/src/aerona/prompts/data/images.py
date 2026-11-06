@@ -11,10 +11,10 @@ IMAGE_DIRECTION: dict[EntityType, str] = {
     EntityType.LANGUAGE: "an object that shows this language: a carved tablet, manuscript page, inscription or glyph-covered artifact",
     EntityType.KNOWLEDGE: "people practicing this technique or knowledge, with its tools, materials and workplace",
     EntityType.TRADITION: "the ritual or festival being performed by the community",
-    EntityType.LEGEND: "a painterly-yet-photoreal scene illustrating the legend",
+    EntityType.LEGEND: "a scene illustrating the legend at its turning point",
     EntityType.NATURAL_LAW: "a cosmic visual metaphor of this natural law at work in the world",
     EntityType.PROPHECY: "a visionary scene of the prophecy, as a seer would see it",
-    EntityType.EVENT: "the event as it happens, documentary style",
+    EntityType.EVENT: "the event as it happens, caught in the moment",
     EntityType.CELESTIAL: "the celestial body in the night sky above the landscape",
     EntityType.PEOPLE: "a group portrait of these people in their daily life: clothing, tools, faces, dwellings behind them",
     EntityType.SETTLEMENT: "an establishing shot of the settlement from a nearby rise, people and smoke for life and scale",
@@ -24,10 +24,10 @@ IMAGE_DIRECTION: dict[EntityType, str] = {
     EntityType.STRUCTURE: "the monument or work in its setting, with people for scale",
     EntityType.ITEM: "a museum-grade still life of the object on a surface that fits its origin, raking light",
     EntityType.RESOURCE: "the resource where it is found or harvested, with the workers or creatures who gather it",
-    EntityType.SPIRIT: "a translucent presence half-visible in a real place, long exposure, uncanny but restrained",
+    EntityType.SPIRIT: "a translucent presence half-visible in a place of this world, uncanny but restrained",
     EntityType.REGION: "a sweeping landscape of the region, atmospheric perspective, characteristic weather",
     EntityType.PLACE: "the place itself in its surroundings, characteristic light and weather",
-    EntityType.SPECIES: "the creature in its habitat, wildlife photography",
+    EntityType.SPECIES: "the creature in its habitat, observed in the wild",
     EntityType.VESSEL: "the vehicle or conveyance in use, with its crew or riders",
     EntityType.OUTER_BEING: "an Outer Being: NEVER show it fully, only a fragment, a silhouette, a reflection, or its effect on the world",
     EntityType.CULT: "the cult gathered at its rite: robed members, sacred objects, the place of worship, faces lit by its particular light",
@@ -52,7 +52,7 @@ VESSEL_DIRECTIONS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\bbridge", re.IGNORECASE), "a bridge spanning the gap between worlds, travelers crossing, vertiginous depth"),
 )
 
-MEGAFAUNA_DIRECTION = "a colossal megafauna in its habitat with tiny human figures for scale; wildlife photography from a distance"
+MEGAFAUNA_DIRECTION = "a colossal megafauna in its habitat with tiny human figures for scale, seen from a distance"
 
 OUTER_BEING_TAIL = ", shown only partially: a fragment glimpsed through fog, glare or a reflection, its full shape never visible."
 OUTER_BEING_WORDS = re.compile(
@@ -72,10 +72,10 @@ class CosmosSubjectKind(StrEnum):
 
 COSMOS_DIRECTION: dict[CosmosSubjectKind, str] = {
     CosmosSubjectKind.WORLD: "the whole world seen from orbit or high above its sky, its unique physics visible (rings, seas, ice, glow), then a hint of its surface",
-    CosmosSubjectKind.STAR: "the star itself in deep space with its planets as small discs nearby, astrophotography, its color and character exaggerated just enough",
-    CosmosSubjectKind.FOREIGN_GOD: "a foreign god as its worshippers imagine it: a monumental idol or vision in its home world, never a cartoon",
-    CosmosSubjectKind.SON: "a divine child of the creator, a god in full figure as their worshippers see them, their two domains shaping their body, garb and the light around them, of the age, form and gender their description gives, never a cartoon",
-    CosmosSubjectKind.CREATOR: "the creator, a primordial god at the scale of the cosmos they shaped, a full-figure vision among stars and newborn worlds, in the form their description gives, never a cartoon",
+    CosmosSubjectKind.STAR: "the star itself in deep space with its planets as small discs nearby, its color and character exaggerated just enough",
+    CosmosSubjectKind.FOREIGN_GOD: "a foreign god as its worshippers imagine it: a monumental idol or vision in its home world",
+    CosmosSubjectKind.SON: "a divine child of the creator, a god in full figure as their worshippers see them, their two domains shaping their body, garb and the light around them, of the age, form and gender their description gives",
+    CosmosSubjectKind.CREATOR: "the creator, a primordial god at the scale of the cosmos they shaped, a full-figure vision among stars and newborn worlds, in the form their description gives",
 }
 
 

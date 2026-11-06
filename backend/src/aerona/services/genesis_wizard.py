@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.achievements import ordinal_word
+from aerona.catalog.image_styles import CUSTOM_STYLE_MAX_LENGTH
 from aerona.catalog.rarities import DEFAULT_FIRST_SONS
 from aerona.core.errors import ConflictError, ValidationFailedError
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -14,7 +15,7 @@ from aerona.db.session import Database
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.rarity import RARITY_ORDER, Rarity
-from aerona.domain.enums.world import CosmosSize, GenesisTemplate, LanguageTexture, LoreLanguage, TechnologyEra
+from aerona.domain.enums.world import CosmosSize, GenesisTemplate, ImageStyle, LanguageTexture, LoreLanguage, TechnologyEra
 from aerona.domain.models.genesis import GenesisSettings
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.events.bus import EventBus
@@ -288,6 +289,8 @@ class GenesisCommand:
     lore_language: LoreLanguage = LoreLanguage.ENGLISH
     wizard: WizardInput | None = None
     first_sons: tuple[Rarity, ...] | None = None
+    image_style: ImageStyle = ImageStyle.PHOTOREAL
+    image_style_custom: str = ""
 
 
 def extra_worlds(rules: Rules, size: CosmosSize) -> int:
@@ -417,6 +420,10 @@ class GenesisWizard:
         if not command.creator_name.strip() or not command.seed.strip():
             raise ValidationFailedError("Creator name and world seed are required.")
         resolve_first_sons(self._rules, command.first_sons)
+        if len(command.image_style_custom.strip()) > CUSTOM_STYLE_MAX_LENGTH:
+            raise ValidationFailedError(f"The custom image style is limited to {CUSTOM_STYLE_MAX_LENGTH} characters.")
+        if command.image_style is ImageStyle.CUSTOM and not command.image_style_custom.strip():
+            raise ValidationFailedError("Describe the custom image style.")
         if self._ports.genesis is None:
             raise ConflictError("Genesis needs the language model, which is turned off.")
         async with self._database.read() as session:
@@ -448,6 +455,8 @@ class GenesisWizard:
             cosmos = await repository.require_cosmos()
             if not cosmos.rules_snapshot:
                 await repository.store_rules(self._rules)
+            cosmos.image_style = command.image_style
+            cosmos.image_style_custom = command.image_style_custom.strip() if command.image_style is ImageStyle.CUSTOM else ""
             if settings is not None:
                 await save_settings(session, settings)
                 await pull_regions(session, self._rules, settings)

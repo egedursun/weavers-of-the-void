@@ -119,6 +119,7 @@ class ImageRow(CreatedAtMixin, Base):
     origin: Mapped[ImageOrigin] = mapped_column(enum_type(ImageOrigin, "origin"), default=ImageOrigin.GENERATED)
     caption: Mapped[str | None] = mapped_column(String(TITLE_MAX_LENGTH))
     prompt: Mapped[str | None] = mapped_column(Text)
+    style: Mapped[str | None] = mapped_column(Text)
     is_cover: Mapped[bool] = mapped_column(default=False)
     size_bytes: Mapped[int] = mapped_column(Integer, default=0)
     width: Mapped[int | None]

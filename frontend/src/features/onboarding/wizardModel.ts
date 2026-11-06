@@ -1,4 +1,9 @@
 import {
+  DEFAULT_IMAGE_STYLE,
+  type ImageStyle,
+  imageStyleProblem,
+} from '@/features/images/imageStyles'
+import {
   type CosmosSize,
   type GenesisRequest,
   type LanguageTexture,
@@ -36,6 +41,8 @@ export type WizardDraft = {
   cosmos: CosmosSize
   peoples: number
   firstSons: Rarity[] | null
+  imageStyle: ImageStyle
+  imageStyleCustom: string
 }
 
 export type WizardDefaults = {
@@ -58,6 +65,8 @@ export function initialDraft(defaults: WizardDefaults): WizardDraft {
     cosmos: 'single',
     peoples: defaults.peoples,
     firstSons: null,
+    imageStyle: DEFAULT_IMAGE_STYLE,
+    imageStyleCustom: '',
   }
 }
 
@@ -72,6 +81,8 @@ export function applyTemplate(
       creatorName: draft.creatorName,
       loreLanguage: draft.loreLanguage,
       firstSons: draft.firstSons,
+      imageStyle: draft.imageStyle,
+      imageStyleCustom: draft.imageStyleCustom,
     }
   return {
     ...draft,
@@ -104,6 +115,8 @@ export function stepProblem(
       )
     )
       return 'Magic and darkness go from 0 to 100.'
+    const style = imageStyleProblem(draft.imageStyle, draft.imageStyleCustom)
+    if (style) return style
   }
   return null
 }
@@ -129,6 +142,9 @@ export function toRequest(
     tone: draft.tone.trim() || null,
     lore_language: draft.loreLanguage,
     first_sons: firstSons,
+    image_style: draft.imageStyle,
+    image_style_custom:
+      draft.imageStyle === 'custom' ? draft.imageStyleCustom.trim() : '',
     wizard: {
       template: draft.template,
       magic: draft.magic,

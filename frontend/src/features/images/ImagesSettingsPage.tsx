@@ -7,6 +7,7 @@ import { MissingImages } from '@/features/gallery/MissingImages'
 import { useWorldState } from '@/features/overview/api'
 import { BulkImageGenPanel } from './BulkImageGenPanel'
 import { ImageGenSettings } from './ImageGenSettings'
+import { ImageStyleSettings } from './ImageStyleSettings'
 import { useHealth } from './api'
 
 export function ImagesSettingsPage() {
@@ -16,9 +17,9 @@ export function ImagesSettingsPage() {
   return (
     <div className='flex min-w-0 flex-col gap-6'>
       <Muted>
-        Paint every record that still has no image, watch the queue and see
-        which records are missing one. New records are also painted by
-        themselves at the end of every epoch.
+        Choose how the world is painted, paint every record that still has no
+        image, watch the queue and see which records are missing one. New
+        records are also painted by themselves at the end of every epoch.
       </Muted>
       <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3'>
         <MiniStat
@@ -45,6 +46,7 @@ export function ImagesSettingsPage() {
           tone='muted'
         />
       </div>
+      <ImageStyleSettings />
       <ImageGenSettings />
       <BulkImageGenPanel />
       <MissingImages type={null} />

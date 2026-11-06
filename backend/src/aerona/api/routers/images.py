@@ -19,7 +19,7 @@ from aerona.domain.enums.node import NodeKind
 from aerona.jobs.context import JobContext
 from aerona.services.images.media import StoredImage
 from aerona.services.images.queue import BulkRun, ImageClass, QueuedImage, QueueStatus
-from aerona.services.images.records import image_by_file_name, list_images, missing_count, missing_prompt_targets
+from aerona.services.images.records import image_by_file_name, list_images, missing_count, missing_prompt_targets, restyle_targets, world_style
 from aerona.services.importance import missing_images
 
 router = APIRouter(tags=["images"])
@@ -56,6 +56,7 @@ class GenerateRequest(RequestModel):
 class ImageGenStatus(ApiModel):
     status: QueueStatus
     missing: int
+    off_style: int
 
 
 @router.head(f"{MEDIA_PATH}/{{file_name}}", include_in_schema=False)
@@ -162,7 +163,9 @@ async def gallery_missing(
 async def image_gen_status(services: ServicesDep) -> ImageGenStatus:
     async with reader(services) as session:
         missing = await missing_count(session)
-    return ImageGenStatus(status=services.application.images.status(), missing=missing)
+        style = await world_style(session)
+        off_style = len(await restyle_targets(session, style.signature))
+    return ImageGenStatus(status=services.application.images.status(), missing=missing, off_style=off_style)
 
 
 @router.post("/image-gen", response_model=QueuedImage, status_code=status.HTTP_202_ACCEPTED)
@@ -173,6 +176,11 @@ async def generate_image(request: GenerateRequest, services: ServicesDep) -> Que
 @router.post("/image-gen/batch/start", response_model=BulkRun)
 async def start_batch(services: ServicesDep) -> BulkRun:
     return await services.application.images.start_bulk()
+
+
+@router.post("/image-gen/batch/restyle", response_model=BulkRun)
+async def restyle_batch(services: ServicesDep) -> BulkRun:
+    return await services.application.images.start_bulk(restyle=True)
 
 
 @router.post("/image-gen/batch/stop", response_model=BulkRun)

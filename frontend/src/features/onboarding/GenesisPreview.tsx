@@ -1,4 +1,4 @@
-import { CircleAlert, CircleCheck, Lock, Users } from 'lucide-react'
+import { CircleAlert, CircleCheck, ImageIcon, Lock, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { RARITY_LABEL } from '@/constants/rarity'
 import { Badge } from '@/components/ui/badge'
@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress'
 import { ExpandableText, RarityIcon } from '@/components/domain'
 import { RARITY_TEXT_CLASS } from '@/components/domain/rarityClasses'
 import { Label, Muted, Text } from '@/components/typography'
+import { imageStyleLabel } from '@/features/images/imageStyles'
 import { type WizardOptions } from './api'
 import {
   STEP_TITLE,
@@ -138,6 +139,12 @@ export function GenesisPreview({
           <Badge variant='outline'>
             <Users />
             {`${draft.peoples} ${draft.peoples === 1 ? 'people' : 'peoples'}`}
+          </Badge>
+          <Badge variant='outline' className='max-w-full'>
+            <ImageIcon />
+            <span className='truncate'>
+              {imageStyleLabel(draft.imageStyle, draft.imageStyleCustom)}
+            </span>
           </Badge>
         </div>
         <div className='flex min-w-0 flex-col gap-1.5'>

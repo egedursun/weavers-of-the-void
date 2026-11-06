@@ -394,7 +394,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "name": "The disaster's name in the world's language",
             "description": "What happens",
             "reason": "Why you send it",
-            "image_prompt": 'English photoreal prompt of the disaster striking. {% include "shared/image_prompt_rules.md.j2" %}',
+            "image_prompt": 'English image prompt of the disaster striking. {% include "shared/image_prompt_rules.md.j2" %}',
         },
     ),
     T.SHAPE_FOLK: ToolText(

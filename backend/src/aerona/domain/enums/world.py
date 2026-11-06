@@ -179,3 +179,12 @@ class GenesisTemplate(StrEnum):
     AFTER_THE_FALL = "after_the_fall"
     SKY_ISLANDS = "sky_islands"
     AGE_OF_ENGINES = "age_of_engines"
+
+
+class ImageStyle(StrEnum):
+    PHOTOREAL = "photoreal"
+    PAINTING = "painting"
+    INK = "ink"
+    WATERCOLOR = "watercolor"
+    ANIME = "anime"
+    CUSTOM = "custom"

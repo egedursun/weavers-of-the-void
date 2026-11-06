@@ -153,6 +153,7 @@ const STATE = {
       failed: 0,
       skipped: 0,
       rerun_requested: false,
+      restyle: false,
     },
     width: 768,
     height: 768,
@@ -249,6 +250,8 @@ const SETTINGS = {
   mortal_agent_parallelism: 2,
   llm_enabled: true,
   image_generation: false,
+  image_style: 'photoreal',
+  image_style_custom: '',
 }
 
 const HEALTH_REPORT = {

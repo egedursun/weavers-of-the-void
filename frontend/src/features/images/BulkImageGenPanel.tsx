@@ -60,6 +60,7 @@ function useImageMutation<T>(
 function bulkTitle(bulk: QueueStatus['bulk']): string {
   if (!bulk.running) return 'Last bulk run'
   if (bulk.stop_requested) return 'Stopping after the current image'
+  if (bulk.restyle) return 'Repainting images in the world style'
   return bulk.auto
     ? 'Painting missing images after the epoch'
     : 'Painting missing images'

@@ -4,7 +4,7 @@ from aerona.api.actions import Alias, mount_all
 from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.schemas.common import ApiModel
 from aerona.db.repositories.cosmos import CosmosRepository
-from aerona.domain.enums.world import FateMode, SonDistribution
+from aerona.domain.enums.world import FateMode, ImageStyle, SonDistribution
 
 router = APIRouter(tags=["settings"])
 
@@ -19,6 +19,8 @@ class WorldSettingsView(ApiModel):
     mortal_agent_parallelism: int | None
     llm_enabled: bool
     image_generation: bool
+    image_style: ImageStyle
+    image_style_custom: str
 
 
 @router.get("/settings", response_model=WorldSettingsView)
@@ -33,6 +35,8 @@ async def read_settings(services: ServicesDep) -> WorldSettingsView:
         mortal_agent_parallelism=cosmos.mortal_agent_parallelism,
         llm_enabled=services.agents.llm_enabled,
         image_generation=services.application.images.available,
+        image_style=cosmos.image_style,
+        image_style_custom=cosmos.image_style_custom,
     )
 
 

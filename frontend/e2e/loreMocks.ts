@@ -330,13 +330,14 @@ const IMAGE_GEN = {
     reason: 'No image worker is configured.',
     current: null,
     queue: [],
-    bulk: { running: false, stop_requested: false, auto: false, total: 0, done: 0, failed: 0, skipped: 0, started: null, finished: null, rerun_requested: false },
+    bulk: { running: false, stop_requested: false, auto: false, total: 0, done: 0, failed: 0, skipped: 0, started: null, finished: null, rerun_requested: false, restyle: false },
     width: 1024,
     height: 1024,
     steps: 8,
     log: [{ level: 'warning', at: NOW, text: 'The worker is not configured; set IMAGE_WORKER_URL to paint.' }],
   },
   missing: 7,
+  off_style: 0,
 }
 
 const THREADS = [

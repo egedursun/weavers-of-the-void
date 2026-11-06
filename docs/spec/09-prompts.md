@@ -20,7 +20,16 @@ has a stable **id**. Every structured output has a **JSON schema** id. Agents (0
    **Drop both**: the new app has one constant `MODEL = <current Haiku model id>` and never sends `effort`.
 2. **Language**: the old prompts said "You write in Turkish (image prompts in English)". The new app is
    English-only, so every such sentence is translated to **"You write in English."** and the image-prompt clause is
-   kept only as a reminder that image prompts are photoreal English prose. Translations below already apply this.
+   kept only as a reminder that image prompts are English prose. Translations below already apply this.
+   **Image style (supersedes every "photoreal", "camera and lens" wording below)**: image prompts describe content,
+   light and composition only and never name a medium, art style, camera or lens. The world's image style
+   (`cosmos.image_style`: `photoreal` default, `painting`, `ink`, `watercolor`, `anime`, or `custom` with
+   `cosmos.image_style_custom` free text ≤300) is chosen in the genesis wizard (world step) and in Settings > Images,
+   and is applied at render time (`catalog/image_styles.styled_prompt`: a style lead and tail around the stored
+   prompt; photographic terms are stripped from older prompts for non-photo styles). Each generated image records the
+   style signature (`images.style`); `POST /api/image-gen/batch/restyle` repaints every record whose generated cover
+   is in another style from its own stored prompt and makes the new image the cover (earlier images stay, uploads are
+   never touched); `GET /api/image-gen` reports the count as `off_style`.
 3. **Language-specific logic** (Turkish suffix harmony `ekDuzelt`, `toLocaleLowerCase('tr')`, Turkish stop-word
    lists, Turkish root stemming `kokBul`, vowel-harmony dialect checks) is marked
    **LANGUAGE-SPECIFIC: drop or replace**. The behaviour it protected is described so it can be re-implemented

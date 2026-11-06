@@ -18,6 +18,7 @@ const IDLE_BULK = {
   failed: 0,
   skipped: 0,
   rerun_requested: false,
+  restyle: false,
 }
 
 function queue(overrides: Record<string, unknown> = {}) {
@@ -50,7 +51,7 @@ function routes(
       image_worker_configured: configured,
       running_jobs: 0,
     },
-    'GET /api/image-gen': { status: queue(status), missing: 7 },
+    'GET /api/image-gen': { status: queue(status), missing: 7, off_style: 0 },
     'GET /api/names': [],
     'GET /api/jobs': [],
     'POST /api/image-gen': { queued: true, position: 0 },
@@ -235,7 +236,11 @@ describe('bulk image generation panel', () => {
     let bulk = IDLE_BULK
     const { screen, server, emit } = await renderScreen(<BulkImageGenPanel />, {
       ...routes(),
-      'GET /api/image-gen': () => ({ status: queue({ bulk }), missing: 7 }),
+      'GET /api/image-gen': () => ({
+        status: queue({ bulk }),
+        missing: 7,
+        off_style: 0,
+      }),
     })
     await expect
       .element(
