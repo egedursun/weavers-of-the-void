@@ -22,6 +22,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.debt_law import bind_debtor, debt_law_of, jail_debtor
 from aerona.engine.economy.stocks import goods_of
+from aerona.engine.finance.credit import interest_for, on_default, refuses
 from aerona.engine.notes import note
 from aerona.engine.polity.law_effects import may_coin
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -280,7 +281,7 @@ async def lend(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> None:
             continue
         lender = min(lenders, key=lambda bank: (bank.world_id != borrower.world_id, -riches(bank), bank.id))
         risky = await defaulted_before(ctx, borrower.id)
-        if risky and lender.affiliated_entity_id == borrower.id:
+        if (risky and lender.affiliated_entity_id == borrower.id) or await refuses(ctx, borrower.id):
             continue
         row = book.societies.get(borrower.id)
         loan = LoanRow(
@@ -288,7 +289,7 @@ async def lend(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> None:
             borrower_entity_id=borrower.id,
             currency_id=row.currency_id if row is not None else None,
             principal=table.principal,
-            interest_pct=table.interest_pct + (table.risk_interest_pct if risky else 0),
+            interest_pct=await interest_for(ctx, borrower.id, table.interest_pct + (table.risk_interest_pct if risky else 0)),
             issued_epoch=ctx.epoch,
             due_epoch=ctx.epoch + table.term_epochs,
             status=LoanStatus.OPEN,
@@ -357,6 +358,7 @@ async def default(ctx: TickContext, book: EconomyBook, loan: LoanRow, borrower: 
         await jail_debtor(ctx, borrower, lender, f"{max(0, owed(loan))} silver")
     loan.status = LoanStatus.DEFAULTED
     gain(lender, -table.default_bank_loss)
+    await on_default(ctx, borrower, lender)
     await change_relation(ctx, lender.id, borrower.id, -table.default_relation_loss, MemoryKind.BETRAYED_ME, note="defaulted on a loan")
     await ctx.chronicle(
         ChronicleKind.DEBT,

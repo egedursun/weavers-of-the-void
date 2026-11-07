@@ -44,6 +44,7 @@ from aerona.engine.phases import (
     exploration,
     factions,
     faith,
+    finance,
     geography,
     goals,
     god_death,
@@ -135,6 +136,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + relations.PHASES
     + renown.PHASES
     + industry.PHASES
+    + finance.PHASES
     + casualties.PHASES
     + ecology.PHASES
     + environment.PHASES
@@ -332,9 +334,13 @@ SOCIETY_ENGINE_STAGE = stage(
     "society_economy",
     "refining",
     "markets",
+    "trade_policy",
     "trade_flow",
+    "speculation",
     "industry_aftermath",
     "site_profits",
+    "economic_indicators",
+    "credit_ratings",
     "banking",
     "society_mobility",
     "structure_upkeep",

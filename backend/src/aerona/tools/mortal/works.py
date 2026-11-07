@@ -1,26 +1,34 @@
 from typing import Any
 
+from pydantic import Field
 from sqlalchemy import select
 
+from aerona.catalog.commodities import COMMODITIES
+from aerona.catalog.finance import POLICY_LABELS
 from aerona.catalog.methods import METHODS, PROCESS_LABELS
 from aerona.catalog.production import WORKSHOP_LABELS
-from aerona.db.tables.economy import WorkshopRow
+from aerona.db.tables.economy import MarketPriceRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.finance import TradePolicyRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.economy import WorkshopKind
-from aerona.domain.enums.entity import SOCIETY_TYPES
+from aerona.domain.enums.economy import CommodityKind, WorkshopKind
+from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
+from aerona.domain.enums.finance import TradePolicyKind
 from aerona.domain.enums.industry import MethodKind
 from aerona.engine.economy.book import EconomyBook
+from aerona.engine.finance.policy import lay
+from aerona.engine.finance.speculation import hunger_at, open_hoard
 from aerona.engine.industry.methods import MethodTally, adopt, allowed
 from aerona.engine.industry.owners import buy
+from aerona.engine.renown.currencies import realm_ruled_by
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
 from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
-from aerona.tools.framework.validation import fail
+from aerona.tools.framework.validation import fail, require_canon
 from aerona.tools.mortal import lines
 
 
@@ -30,6 +38,17 @@ class MethodInput(ToolInput):
 
 class BuyInput(ToolInput):
     kind: WorkshopKind
+
+
+class PolicyInput(ToolInput):
+    kind: TradePolicyKind
+    commodity: CommodityKind | None = None
+    partner_id: int | None = None
+    rate_pct: int = Field(default=20, ge=0, le=100)
+
+
+class SpeculateInput(ToolInput):
+    commodity: CommodityKind
 
 
 async def works_of(call: MortalCall) -> EntityRow | None:
@@ -87,8 +106,56 @@ async def buy_workshop(call: MortalCall, args: BuyInput) -> str:
     return result(MortalResult.WORKSHOP_BOUGHT, workshop=label, place=community.name, price=price)
 
 
+async def lay_trade_policy(call: MortalCall, args: PolicyInput) -> str:
+    realm = call.me.id if call.me.entity_type is EntityType.POLITY else await realm_ruled_by(call.session, call.me.id)
+    label = POLICY_LABELS[args.kind].lower()
+    if realm is None:
+        fail(MortalResult.POLICY_REFUSED, policy=label, why="you rule no realm")
+    if args.kind is TradePolicyKind.EMBARGO and args.partner_id is None and args.commodity is None:
+        fail(MortalResult.POLICY_REFUSED, policy=label, why="an embargo needs a partner or a good")
+    if args.partner_id is not None:
+        await require_canon(call.session, args.partner_id)
+    held_row = await call.session.scalar(
+        select(TradePolicyRow).where(TradePolicyRow.issuer_node_id == realm, TradePolicyRow.kind == args.kind, TradePolicyRow.commodity == args.commodity)
+    )
+    if held_row is not None and held_row.locked:
+        fail(MortalResult.POLICY_REFUSED, policy=label, why="a god holds it")
+    row = held_row or await lay(
+        call.tick, realm, args.kind, commodity=args.commodity, partner=args.partner_id, rate=args.rate_pct, reason=f"laid by {call.me.name}"
+    )
+    row.rate_pct = 100 if args.kind is TradePolicyKind.EMBARGO else args.rate_pct
+    good = COMMODITIES[args.commodity].label.lower() if args.commodity is not None else "every good"
+    call.target(realm)
+    await call.chronicle(ChronicleKind.TRADE, lines.POLICY_LAID, entity_ids=[call.me.id, realm], me=call.me.name, policy=label, good=good)
+    return result(MortalResult.POLICY_LAID, policy=label, good=good, rate=row.rate_pct)
+
+
+async def speculate(call: MortalCall, args: SpeculateInput) -> str:
+    label = COMMODITIES[args.commodity].label.lower()
+    market = await works_of(call)
+    if market is None:
+        fail(MortalResult.HOARD_REFUSED, good=label, why="you trade in no market")
+    price = await call.session.scalar(
+        select(MarketPriceRow.price)
+        .where(MarketPriceRow.market_entity_id == market.id, MarketPriceRow.commodity == args.commodity)
+        .order_by(MarketPriceRow.epoch.desc())
+        .limit(1)
+    )
+    if price is None:
+        fail(MortalResult.HOARD_REFUSED, good=label, why=f"{market.name} keeps no price for it")
+    famine = await hunger_at(call.tick, market.id) >= call.rules.speculation.famine_hunger
+    row = await open_hoard(call.tick, call.me.id, market, args.commodity, price, famine=famine)
+    if row is None:
+        fail(MortalResult.HOARD_REFUSED, good=label, why="there is too little to buy or you cannot pay")
+    call.target(market.id)
+    await call.chronicle(ChronicleKind.TRADE, lines.HOARD_OPENED, entity_ids=[call.me.id, market.id], me=call.me.name, good=label, place=market.name)
+    return result(MortalResult.HOARD_OPENED, units=row.units, good=label, place=market.name, price=price)
+
+
 def specs() -> list[ToolSpec[MortalCall, Any]]:
     return [
+        ToolSpec(MortalToolId.LAY_TRADE_POLICY, AgentKind.MORTAL, PolicyInput, ToolMeta(ActionKind.BARTER, mortal_standard_action), lay_trade_policy),
+        ToolSpec(MortalToolId.SPECULATE, AgentKind.MORTAL, SpeculateInput, ToolMeta(ActionKind.BARTER, mortal_standard_action), speculate),
         ToolSpec(MortalToolId.BUY_WORKSHOP, AgentKind.MORTAL, BuyInput, ToolMeta(ActionKind.BARTER, mortal_standard_action), buy_workshop),
         ToolSpec(MortalToolId.CHOOSE_METHOD, AgentKind.MORTAL, MethodInput, ToolMeta(ActionKind.PRODUCE, mortal_standard_action), choose_method),
     ]

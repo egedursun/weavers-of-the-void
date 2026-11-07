@@ -1,9 +1,11 @@
 from aerona.db.tables.economy import CommunityStockRow, ProductionRunRow, ResourceProfileRow, WorkshopRow
+from aerona.db.tables.finance import CreditProfileRow, EconomicIndicatorRow, SpeculationRow, TradePolicyRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
 from aerona.db.tables.ownership import SiteProfitRow
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
 
 WORKS = "section-works"
+FINANCE = "section-finance"
 S = Subsystem
 E = EdgeKind
 COMMUNITIES = ("settlement", "people", "polity", "faction", "cult")
@@ -199,5 +201,109 @@ INDUSTRY_MECHANICS: tuple[Mechanic, ...] = (
         exposure=Exposure.CONTEXT,
         targets=("settlement", "people", "mortal"),
         couplings=(Coupling(S.MIND, "a people that loves a drink thirsts without brewing; others take pleasure in it", E.MODIFIER, "drink.need_pct"),),
+    ),
+    Mechanic(
+        key="market_access",
+        spec_item="S6.4/RP2",
+        title="Only the share of output its roads and routes can carry reaches market; the rest is eaten or bartered at home for less",
+        subsystem=S.ECONOMY,
+        phases=("industry_methods", "site_profits", "trade_flow"),
+        surface=Surface(drawer=FINANCE),
+        backfill="none: access is reckoned from the next epoch",
+        fields=("market_access",),
+        tables=(CommunityIndustryRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("settlement", "people"),
+        couplings=(
+            Coupling(S.ENVIRONMENT, "roads and open routes widen access; dangerous routes narrow it", E.MODIFIER, "market_access.per_road"),
+            Coupling(S.ECONOMY, "remote works sell only part of what they make", E.MODIFIER, "market_access.unsold_pct"),
+        ),
+    ),
+    Mechanic(
+        key="trade_policies",
+        spec_item="S6.4/RP2",
+        title="Realms lay tariffs, subsidies and embargoes by good and partner; smugglers run bans and embargoes through outlaws",
+        subsystem=S.POLITY,
+        phases=("trade_policy", "trade_flow", "site_profits"),
+        surface=Surface(drawer=FINANCE),
+        backfill="none: realms lay policies from the next epoch",
+        templates=("trade_policy.smuggled",),
+        fields=("kind", "commodity", "partner_node_id", "rate_pct", "black_market"),
+        tables=(TradePolicyRow.__tablename__, CommunityIndustryRow.__tablename__),
+        exposure=Exposure.TOOL,
+        tools=("lay_trade_policy",),
+        targets=("polity", "settlement", "people", "faction"),
+        couplings=(
+            Coupling(S.ECONOMY, "a tariff raises the landed price and fills the treasury; a subsidy drains it", E.MODIFIER, "trade_policy.tariff_rate"),
+            Coupling(S.WAR, "realms at war embargo each other", E.TRIGGER, "trade_policy.embargo_chance"),
+            Coupling(S.LAW, "goods a law bans trade only through bandits and pirates, and crime rises with them", E.FLOW, "trade_policy.crime_per_10_units"),
+        ),
+    ),
+    Mechanic(
+        key="credit",
+        spec_item="S6.4/RP2",
+        title="Lenders rate borrowers by repayment, treasury and stability; credit runs sound, strained, in default and restructuring, and reserves back coin",
+        subsystem=S.ECONOMY,
+        phases=("credit_ratings", "banking"),
+        surface=Surface(drawer=FINANCE),
+        backfill="none: credit is rated from the next epoch",
+        templates=("banking.",),
+        fields=("rating", "state", "interest_pct", "reserves", "defaults", "restructured_until"),
+        tables=(CreditProfileRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("polity", "settlement", "people", "faction", "house", "mortal"),
+        couplings=(
+            Coupling(S.ECONOMY, "interest follows the rating and the trust in the borrower's coin", E.MODIFIER, "credit.spread_pct"),
+            Coupling(S.WAR, "a realm whose bank was defaulted on may go to war over the debt", E.TRIGGER, "credit.war_chance"),
+            Coupling(S.ECONOMY, "gold and silver reserves raise trust in coin", E.MODIFIER, "credit.reserve_trust"),
+        ),
+    ),
+    Mechanic(
+        key="speculation",
+        spec_item="S6.4/RP2",
+        title="Greedy merchants buy up rising goods and hoard food in famine; booms enrich them and busts ruin them",
+        subsystem=S.ECONOMY,
+        phases=("speculation",),
+        surface=Surface(drawer=FINANCE),
+        backfill="none: merchants speculate from the next epoch",
+        templates=("speculation.bust",),
+        fields=("units", "price", "status", "gain"),
+        tables=(SpeculationRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("speculate",),
+        targets=("mortal", "faction", "settlement", "people"),
+        couplings=(
+            Coupling(S.MIND, "only merchants of great greed speculate", E.RULE_SWITCH, "speculation.greed_at"),
+            Coupling(S.SOCIAL, "hoarding food in famine raises unrest and is judged by those who see it", E.TRIGGER, "speculation.unrest_per_hoard"),
+        ),
+    ),
+    Mechanic(
+        key="price_elasticity",
+        spec_item="S6.4/RP2",
+        title="Staple prices answer supply weakly, luxuries strongly; prosperous markets want more luxuries and merchants carry more",
+        subsystem=S.ECONOMY,
+        phases=("markets", "trade_flow"),
+        surface=Surface(drawer=FINANCE),
+        backfill="none: prices answer from the next epoch",
+        fields=("price", "demand"),
+        tables=(),
+        targets=("settlement", "people"),
+        couplings=(
+            Coupling(S.SOCIAL, "prosperity raises the demand for luxuries", E.MODIFIER, "elasticity.income_pct"),
+            Coupling(S.SOCIAL, "merchants and merchant guilds widen what routes carry", E.MODIFIER, "arbitrage.merchant_pct"),
+        ),
+    ),
+    Mechanic(
+        key="economic_indicators",
+        spec_item="S6.4/RP2",
+        title="Each realm and world keeps output, prices, trade balance, treasury, debt, idleness and living by class every epoch",
+        subsystem=S.ECONOMY,
+        phases=("economic_indicators",),
+        surface=Surface(drawer=FINANCE),
+        backfill="none: indicators are kept from the next epoch",
+        fields=("output", "price_index", "trade_balance", "treasury", "debt_ratio", "unemployment", "living"),
+        tables=(EconomicIndicatorRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("polity", "world"),
     ),
 )

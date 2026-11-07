@@ -67,6 +67,21 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "Its profit (what it sells, less inputs, wages, upkeep and taxes) then comes to you, and so do its losses. 1 action.",
         {"kind": "The kind of workshop to buy"},
     ),
+    T.LAY_TRADE_POLICY: ToolText(
+        "You lay or change a trade policy of the realm you rule: a tariff on a good (raising its price and your treasury, guarding your own makers), "
+        "a subsidy on a good your people make (paid from your treasury), or an embargo on a partner or a good (smugglers may run it). 1 action.",
+        {
+            "kind": "Tariff, subsidy or embargo",
+            "commodity": "The good, or none for every good",
+            "partner_id": "The realm or market it is aimed at, or none for all",
+            "rate_pct": "The rate for a tariff or subsidy",
+        },
+    ),
+    T.SPECULATE: ToolText(
+        "You buy up a share of a good in your market and hold it back, hoping its price rises. You sell when it does, or after a few epochs; "
+        "if prices fall you may be ruined. Hoarding food while people go hungry is judged by those who see it. 1 action.",
+        {"commodity": "The good to buy up"},
+    ),
     T.TRADE_LORE: ToolText(
         "You trade a piece of lore you hold (a technique, a hidden site, knowledge of a land or a prophecy) to a neighbour who lacks it. "
         "Rarer lore is worth more, and each telling makes it less rare. You are paid in wealth or in renown for wisdom. 1 action.",

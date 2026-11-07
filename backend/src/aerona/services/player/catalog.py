@@ -39,6 +39,7 @@ from aerona.services.player import (
     faith,
     fate_controls,
     feelings,
+    finance,
     foreign_gods,
     foundations,
     goals,
@@ -1226,6 +1227,17 @@ ECONOMY_ACTIONS = (
     _sync(Meta("pollution:purify", "Cleanse the air, water and soil of a land", G.WORLDS), industry.purify, industry.PurifyLand, free, ("F24",)),
     _sync(Meta("pollution:remove", "Wipe a land's record of pollution", G.WORLDS), industry.remove_pollution, industry.PollutionTarget, free, ("F24",)),
     _sync(Meta("workshop:owner", "Give a workshop to an owner", G.SOCIETY), industry.set_workshop_owner, industry.SetWorkshopOwner, free, ("S6.3/RP2",)),
+    _sync(Meta("trade_policy:set", "Lay a tariff, subsidy or embargo", G.SOCIETY), finance.set_trade_policy, finance.SetTradePolicy, free, ("S6.4/RP2",)),
+    _sync(
+        Meta("trade_policy:remove", "Lift a tariff, subsidy or embargo", G.SOCIETY), finance.remove_trade_policy, finance.TradePolicyTarget, free, ("S6.4/RP2",)
+    ),
+    _sync(Meta("credit:set", "Set and hold a borrower's credit", G.SOCIETY), finance.set_credit, finance.SetCredit, free, ("S6.4/RP2",)),
+    _sync(Meta("credit:remove", "Wipe a borrower's record of credit", G.SOCIETY), finance.remove_credit, finance.CreditTarget, free, ("S6.4/RP2",)),
+    _sync(Meta("speculation:open", "Take goods off a market into a hoard", G.SOCIETY), finance.open_speculation, finance.OpenSpeculation, free, ("S6.4/RP2",)),
+    _sync(Meta("speculation:edit", "Set and hold a hoard", G.SOCIETY), finance.edit_speculation, finance.EditSpeculation, free, ("S6.4/RP2",)),
+    _sync(Meta("speculation:remove", "Strike a hoard", G.SOCIETY), finance.remove_speculation, finance.SpeculationTarget, free, ("S6.4/RP2",)),
+    _sync(Meta("indicator:edit", "Rewrite a record of the economy", G.SOCIETY), finance.edit_indicator, finance.EditIndicator, free, ("S6.4/RP2",)),
+    _sync(Meta("indicator:remove", "Strike a record of the economy", G.SOCIETY), finance.remove_indicator, finance.IndicatorTarget, free, ("S6.4/RP2",)),
     _sync(Meta("site_profit:edit", "Rewrite a ledger entry of profits", G.SOCIETY), industry.edit_site_profit, industry.EditSiteProfit, free, ("S6.3/RP2",)),
     _sync(
         Meta("site_profit:remove", "Strike an entry from the ledger of profits", G.SOCIETY),

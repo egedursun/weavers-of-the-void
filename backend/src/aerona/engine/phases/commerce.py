@@ -14,13 +14,16 @@ from aerona.engine.economy.toll_polities import Realms
 from aerona.engine.environment.dangers import weighted_dangers
 from aerona.engine.environment.works import works_by_region
 from aerona.engine.factions.book import robber_ids
+from aerona.engine.finance.policy import PolicyBook
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 
 
 @reads(
     "people.population",
+    "people.prosperity",
     "settlement.population",
+    "settlement.prosperity",
     "table.army_profiles",
     "table.bonds",
     "table.calendars",
@@ -116,6 +119,7 @@ async def markets(ctx: TickContext) -> None:
     "table.holder_techniques",
     "table.language_registers",
     "table.law_jurisdictions",
+    "table.law_profiles",
     "table.market_price_holds",
     "table.market_prices",
     "table.name_registry",
@@ -138,6 +142,7 @@ async def markets(ctx: TickContext) -> None:
     "table.sky_events",
     "table.speaker_cohorts",
     "table.trade_flows",
+    "table.trade_policies",
     "table.trade_route_profiles",
     "table.trade_route_regions",
     "table.trade_route_tolls",
@@ -170,10 +175,12 @@ async def markets(ctx: TickContext) -> None:
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.community_industry",
     "table.community_societies",
     "table.community_stocks",
     "table.entities",
     "table.epoch_year_cursors",
+    "table.faction_profiles",
     "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
@@ -207,6 +214,7 @@ async def trade_flow(ctx: TickContext) -> None:
         ctx.count(f"backfilled_{key}", value)
     routes = await load_routes(ctx)
     quotes = {market.id: await quote_market(ctx, book, market) for market in nodes}
+    policies = await PolicyBook.load(ctx, book)
     for first, second, path in await contacts(ctx, book, nodes, routes, quotes):
         routes.append(await found_route(ctx, book, first, second, path, works=works))
         tally.founded += 1
@@ -217,7 +225,7 @@ async def trade_flow(ctx: TickContext) -> None:
     for route in routes:
         tally.dangers[route.entity.id] = assess(ctx, book, route, lairs)
         await set_tolls(ctx, book, route, masters, realms=realms, grants=grants)
-        await carry(ctx, book, route, quotes, tally)
+        await carry(ctx, book, route, quotes, tally, policies=policies)
         await upkeep(ctx, book, route, works=works, enemies=enemies, tally=tally)
     for market in nodes:
         await sync_aggregates(ctx.session, ctx.rules, market)
@@ -250,6 +258,7 @@ async def trade_flow(ctx: TickContext) -> None:
     "table.community_labour",
     "table.community_methods",
     "table.community_societies",
+    "table.credit_profiles",
     "table.currencies",
     "table.forced_weather",
     "table.holder_levels",
@@ -289,6 +298,7 @@ async def trade_flow(ctx: TickContext) -> None:
     "table.community_cohorts",
     "table.community_relations",
     "table.community_societies",
+    "table.credit_profiles",
     "table.incident_participants",
     "table.incidents",
     "table.loans",

@@ -2,14 +2,18 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES
+from aerona.catalog.finance import CREDIT_LABELS, POLICY_LABELS
 from aerona.catalog.methods import ENERGY_LABELS, METHODS, PROCESS_LABELS, TIER_LABELS
 from aerona.catalog.production import WORKSHOP_LABELS
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.economy import ResourceProfileRow, TradeRouteProfileRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.finance import CreditProfileRow, SpeculationRow, TradePolicyRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
 from aerona.db.tables.ownership import SiteProfitRow
+from aerona.db.tables.polity import PolityMemberRow
 from aerona.domain.enums.entity import SOCIETY_TYPES
+from aerona.domain.enums.finance import SpeculationStatus, TradePolicyKind
 from aerona.domain.enums.industry import EnergyKind
 from aerona.domain.enums.society import Commodity
 from aerona.engine.demography.labour import jobs_for
@@ -85,6 +89,36 @@ async def stores_for(session: AsyncSession, rules: Rules, me: EntityRow) -> Stor
     )
 
 
+async def finance_lines(session: AsyncSession, home: EntityRow, me: EntityRow) -> list[str]:
+    lines: list[str] = []
+    row = await session.get(CommunityIndustryRow, home.id)
+    if row is not None:
+        lines.append(f"market access {row.market_access} of 100" + (f", {row.black_market} loads smuggled in" if row.black_market else ""))
+    realm = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == home.id).limit(1))
+    for subject in dict.fromkeys(item for item in (me.id, home.id, realm) if item is not None):
+        credit = await session.get(CreditProfileRow, subject)
+        if credit is not None:
+            whose = "your" if subject == me.id else "your people's" if subject == home.id else "your realm's"
+            lines.append(f"{whose} credit {credit.rating} ({CREDIT_LABELS[credit.state].lower()}), borrowing at {credit.interest_pct}%")
+    if realm is not None:
+        laid = list(await session.scalars(select(TradePolicyRow).where(TradePolicyRow.issuer_node_id == realm).order_by(TradePolicyRow.id)))
+        if laid:
+            lines.append(
+                "your realm keeps "
+                + ", ".join(
+                    f"a {POLICY_LABELS[row.kind].lower()} on {COMMODITIES[row.commodity].label.lower() if row.commodity else 'every good'}"
+                    + (f" at {row.rate_pct}%" if row.kind is not TradePolicyKind.EMBARGO else "")
+                    for row in laid
+                )
+            )
+    hoards = list(
+        await session.scalars(select(SpeculationRow).where(SpeculationRow.merchant_node_id == me.id, SpeculationRow.status == SpeculationStatus.HOARDING))
+    )
+    if hoards:
+        lines.append("you hoard " + ", ".join(f"{row.units} {COMMODITIES[row.commodity].label.lower()} bought at {row.price}" for row in hoards))
+    return lines
+
+
 async def works_lines(session: AsyncSession, rules: Rules, home: EntityRow, me: EntityRow) -> list[str]:
     methods = list(
         await session.scalars(select(CommunityMethodRow).where(CommunityMethodRow.community_node_id == home.id).order_by(CommunityMethodRow.process))
@@ -108,6 +142,7 @@ async def works_lines(session: AsyncSession, rules: Rules, home: EntityRow, me: 
     gains = list(await session.scalars(recent.limit(PROFITS_SHOWN)))
     if gains:
         lines.append("last profits: " + ", ".join(f"{row.site.replace('_', ' ')} {row.profit} (taxes {row.taxes})" for row in gains))
+    lines.extend(await finance_lines(session, home, me))
     top = (await RegionAtlas.load(session)).top_region(home.id)
     fouled = await session.get(RegionPollutionRow, top) if top is not None else None
     if fouled is not None and max(fouled.air, fouled.water, fouled.soil) > 0:

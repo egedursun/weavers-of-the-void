@@ -81,6 +81,7 @@ from aerona.rules.registry.exploration import ExplorationRules
 from aerona.rules.registry.factions import BanditryRules, FactionsRules, IntrigueRules, MercenariesRules
 from aerona.rules.registry.faith import FaithRules
 from aerona.rules.registry.fate import FateRules
+from aerona.rules.registry.finance import AccessRules, ArbitrageRules, CreditRules, ElasticityRules, SpeculationRules, TradePolicyRules
 from aerona.rules.registry.folk import BiologyRules, CustomsRules
 from aerona.rules.registry.folk_belief import FolkBeliefRules
 from aerona.rules.registry.foreign_gods import ForeignGodsRules
@@ -332,6 +333,12 @@ class Rules:
     ownership: OwnershipRules = field(default_factory=OwnershipRules)
     drink: DrinkRules = field(default_factory=DrinkRules)
     mines: MineRules = field(default_factory=MineRules)
+    market_access: AccessRules = field(default_factory=AccessRules)
+    trade_policy: TradePolicyRules = field(default_factory=TradePolicyRules)
+    credit: CreditRules = field(default_factory=CreditRules)
+    speculation: SpeculationRules = field(default_factory=SpeculationRules)
+    elasticity: ElasticityRules = field(default_factory=ElasticityRules)
+    arbitrage: ArbitrageRules = field(default_factory=ArbitrageRules)
     local_renown: LocalRenownRules = field(default_factory=LocalRenownRules)
     currencies: CurrencyRules = field(default_factory=CurrencyRules)
     lore_trade: LoreTradeRules = field(default_factory=LoreTradeRules)

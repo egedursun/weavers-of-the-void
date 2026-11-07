@@ -103,6 +103,7 @@ from aerona.db.tables.faith import (
     SoulJudgementRow,
     SpiritProfileRow,
 )
+from aerona.db.tables.finance import CreditProfileRow, EconomicIndicatorRow, SpeculationRow, TradePolicyRow
 from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow, GodConflictRow, OuterBargainRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
@@ -275,6 +276,7 @@ __all__ = [
     "CreationVerdictRow",
     "CreatorMoodInputRow",
     "CreatorRow",
+    "CreditProfileRow",
     "CultDoctrineRow",
     "CultHoldingRow",
     "CultOfficeRow",
@@ -291,6 +293,7 @@ __all__ = [
     "DistrictRow",
     "DriftCauseRow",
     "DriftImpositionRow",
+    "EconomicIndicatorRow",
     "EndemicDiseaseRow",
     "EntityFlagRow",
     "EntityRow",
@@ -455,6 +458,7 @@ __all__ = [
     "SpeciesUseKindRow",
     "SpeciesUseRow",
     "SpeciesYieldRow",
+    "SpeculationRow",
     "SpiritProfileRow",
     "SpyAgentRow",
     "SpyNetworkRow",
@@ -466,6 +470,7 @@ __all__ = [
     "ThreadLinkRow",
     "ThreadRow",
     "TradeFlowRow",
+    "TradePolicyRow",
     "TradeRouteLossRow",
     "TradeRouteProfileRow",
     "TradeRouteRegionRow",

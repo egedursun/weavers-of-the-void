@@ -4495,6 +4495,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/finance/{node_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_view_api_finance__node_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/mortals/{mortal_id}/profile": {
         parameters: {
             query?: never;
@@ -11823,6 +11839,150 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/trade_policy:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_trade_policy_set_api_actions_trade_policy_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/trade_policy:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_trade_policy_remove_api_actions_trade_policy_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/credit:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_credit_set_api_actions_credit_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/credit:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_credit_remove_api_actions_credit_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/speculation:open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_speculation_open_api_actions_speculation_open_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/speculation:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_speculation_edit_api_actions_speculation_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/speculation:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_speculation_remove_api_actions_speculation_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/indicator:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_indicator_edit_api_actions_indicator_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/indicator:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_indicator_remove_api_actions_indicator_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/site_profit:edit": {
         parameters: {
             query?: never;
@@ -18462,6 +18622,20 @@ export interface components {
         };
         CreatorSignKind: "wrath" | "grace" | "silence" | "dream";
         CreatureTrait: "flying" | "venomous" | "soul_eater" | "radiant" | "fissiparous" | "hive_mind" | "stoneskin" | "time_rewinder" | "shapeshifter" | "mind_reader" | "armoured" | "burrowing" | "aquatic" | "amphibious" | "pack_hunter" | "ambush_predator" | "regenerating" | "poisonous_flesh" | "fire_breathing" | "cold_breathing" | "echolocation" | "camouflage" | "swarm_breeder" | "long_lived" | "mimic" | "spirit_sight" | "iron_eating" | "crop_pest" | "plague_bearer" | "sacred_animal" | "horned" | "tailed";
+        CreditRemoveInput: {
+            subject_id: number;
+        };
+        CreditSetInput: {
+            subject_id: number;
+            rating?: number | null;
+            state?: components["schemas"]["CreditState"] | null;
+            interest_pct?: number | null;
+            reserves?: number | null;
+            defaults?: number | null;
+            restructured_until?: number | null;
+            hold: boolean;
+        };
+        CreditState: "normal" | "strained" | "default" | "restructuring";
         CreedAdherentInput: {
             ideology_id: number;
             community_id: number;
@@ -20219,6 +20393,78 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        FinanceCreditView: {
+            rating: number;
+            state: components["schemas"]["CreditState"];
+            state_label: string;
+            interest_pct: number;
+            reserves: number;
+            defaults: number;
+            restructured_until: number | null;
+            epoch: number;
+            held: string[];
+        };
+        FinanceHoardView: {
+            id: number;
+            merchant: components["schemas"]["NodeRef"] | null;
+            market: components["schemas"]["NodeRef"] | null;
+            commodity: components["schemas"]["CommodityKind"];
+            commodity_label: string;
+            units: number;
+            price: number;
+            status: components["schemas"]["SpeculationStatus"];
+            status_label: string;
+            opened_epoch: number;
+            settled_epoch: number | null;
+            gain: number;
+            held: boolean;
+        };
+        FinanceIndicatorView: {
+            id: number;
+            epoch: number;
+            output: number;
+            price_index: number;
+            trade_balance: number;
+            treasury: number;
+            debt_ratio: number;
+            unemployment: number;
+            market_access: number;
+            black_market: number;
+            living: components["schemas"]["FinanceLivingView"][];
+            held: string[];
+        };
+        FinanceLivingView: {
+            key: string;
+            label: string;
+            value: number;
+        };
+        FinancePolicyView: {
+            id: number;
+            issuer: components["schemas"]["NodeRef"] | null;
+            kind: components["schemas"]["TradePolicyKind"];
+            kind_label: string;
+            commodity: components["schemas"]["CommodityKind"] | null;
+            commodity_label: string;
+            partner: components["schemas"]["NodeRef"] | null;
+            rate_pct: number;
+            since_epoch: number;
+            reason: string | null;
+            held: boolean;
+        };
+        FinanceView: {
+            node_id: number;
+            name: string;
+            realm: components["schemas"]["NodeRef"] | null;
+            credit: components["schemas"]["FinanceCreditView"] | null;
+            policies: components["schemas"]["FinancePolicyView"][];
+            hoards: components["schemas"]["FinanceHoardView"][];
+            indicators: components["schemas"]["FinanceIndicatorView"][];
+            market_access: number | null;
+            black_market: number | null;
+            policy_kinds: components["schemas"]["LabelView"][];
+            credit_states: components["schemas"]["LabelView"][];
+            commodities: components["schemas"]["LabelView"][];
+        };
         FirstSonsOptions: {
             minimum: number;
             maximum: number;
@@ -21103,6 +21349,20 @@ export interface components {
             battles: number;
             held: boolean;
         };
+        IndicatorEditInput: {
+            indicator_id: number;
+            output?: number | null;
+            price_index?: number | null;
+            trade_balance?: number | null;
+            treasury?: number | null;
+            debt_ratio?: number | null;
+            unemployment?: number | null;
+            market_access?: number | null;
+            black_market?: number | null;
+        };
+        IndicatorRemoveInput: {
+            indicator_id: number;
+        };
         IndustryRemoveInput: {
             community_id: number;
         };
@@ -21120,6 +21380,8 @@ export interface components {
             preserved?: number | null;
             meal_quality?: number | null;
             drink?: number | null;
+            market_access?: number | null;
+            black_market?: number | null;
             hold: boolean;
         };
         InfrastructureView: {
@@ -23160,7 +23422,7 @@ export interface components {
             death_year?: number | null;
             sex?: ("female" | "male" | "other") | null;
         };
-        MortalToolId: "look_at_world" | "inspect_entity" | "search_entities" | "found_language" | "coin_words" | "produce_item" | "build_structure" | "create_culture" | "discover_resource" | "claim_resource" | "found_settlement" | "establish_trade" | "declare_war" | "worship" | "pray_to_creator" | "develop_knowledge" | "learn_knowledge" | "diplomacy" | "go_on_adventure" | "find_route" | "explore_land" | "resurrection_rite" | "build_ship" | "launch_expedition" | "tame_species" | "weave_chimera" | "bind_spirit" | "search_ruins" | "sabotage" | "preach" | "challenge_god" | "deny_god" | "prophesy" | "escape" | "pay_ransom" | "rescue_captive" | "raise_army" | "appoint_commander" | "enact_law" | "appoint_officer" | "set_tax" | "propose_treaty" | "swear_oath" | "accept_treaty" | "break_treaty" | "build_spy_network" | "barter" | "lend" | "repay_debt" | "adopt" | "commission_artwork" | "design_rite" | "cast_rite" | "found_school" | "socialise" | "challenge_to_contest" | "persuade" | "trade_lore" | "choose_method" | "buy_workshop";
+        MortalToolId: "look_at_world" | "inspect_entity" | "search_entities" | "found_language" | "coin_words" | "produce_item" | "build_structure" | "create_culture" | "discover_resource" | "claim_resource" | "found_settlement" | "establish_trade" | "declare_war" | "worship" | "pray_to_creator" | "develop_knowledge" | "learn_knowledge" | "diplomacy" | "go_on_adventure" | "find_route" | "explore_land" | "resurrection_rite" | "build_ship" | "launch_expedition" | "tame_species" | "weave_chimera" | "bind_spirit" | "search_ruins" | "sabotage" | "preach" | "challenge_god" | "deny_god" | "prophesy" | "escape" | "pay_ransom" | "rescue_captive" | "raise_army" | "appoint_commander" | "enact_law" | "appoint_officer" | "set_tax" | "propose_treaty" | "swear_oath" | "accept_treaty" | "break_treaty" | "build_spy_network" | "barter" | "lend" | "repay_debt" | "adopt" | "commission_artwork" | "design_rite" | "cast_rite" | "found_school" | "socialise" | "challenge_to_contest" | "persuade" | "trade_lore" | "choose_method" | "buy_workshop" | "lay_trade_policy" | "speculate";
         MortalTurnFinishedEvent: {
             id: number;
             kind: "mortal.turn_finished";
@@ -26950,6 +27212,25 @@ export interface components {
             world_material_id?: number | null;
             rate: number;
         };
+        SpeculationEditInput: {
+            speculation_id: number;
+            units?: number | null;
+            price?: number | null;
+            status?: components["schemas"]["SpeculationStatus"] | null;
+            gain?: number | null;
+            hold: boolean;
+        };
+        SpeculationOpenInput: {
+            merchant_id: number;
+            market_id: number;
+            commodity: components["schemas"]["CommodityKind"];
+            units: number;
+            price: number;
+        };
+        SpeculationRemoveInput: {
+            speculation_id: number;
+        };
+        SpeculationStatus: "hoarding" | "sold" | "bust";
         SpiritAlignment: "guardian" | "neutral" | "vengeful";
         SpiritRestInput: {
             spirit_id: number;
@@ -27653,6 +27934,19 @@ export interface components {
         };
         TradeLoss: "bandits" | "sea" | "beasts" | "weather";
         TradeMode: "road" | "river" | "sea" | "caravan" | "sky";
+        TradePolicyKind: "tariff" | "subsidy" | "embargo";
+        TradePolicyRemoveInput: {
+            policy_id: number;
+        };
+        TradePolicySetInput: {
+            issuer_id: number;
+            kind: components["schemas"]["TradePolicyKind"];
+            commodity?: components["schemas"]["CommodityKind"] | null;
+            partner_id?: number | null;
+            rate_pct: number;
+            reason?: string | null;
+            hold: boolean;
+        };
         TradeRouteCloseInput: {
             route_id: number;
         };
@@ -37499,6 +37793,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WorksView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    finance_view_api_finance__node_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinanceView"];
                 };
             };
             422: {
@@ -51216,6 +51539,285 @@ export interface operations {
             };
         };
     };
+    action_trade_policy_set_api_actions_trade_policy_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradePolicySetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_trade_policy_remove_api_actions_trade_policy_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TradePolicyRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_credit_set_api_actions_credit_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreditSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_credit_remove_api_actions_credit_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreditRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_speculation_open_api_actions_speculation_open_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpeculationOpenInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_speculation_edit_api_actions_speculation_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpeculationEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_speculation_remove_api_actions_speculation_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpeculationRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_indicator_edit_api_actions_indicator_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IndicatorEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_indicator_remove_api_actions_indicator_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IndicatorRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_site_profit_edit_api_actions_site_profit_edit_post: {
         parameters: {
             query?: never;
@@ -60342,6 +60944,7 @@ export const creatorPassionValues: ReadonlyArray<FlattenedDeepRequired<component
 export const creatorRevelationEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatorRevelationEvent"]["kind"]> = ["creator.revelation"];
 export const creatorSignKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatorSignKind"]> = ["wrath", "grace", "silence", "dream"];
 export const creatureTraitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreatureTrait"]> = ["flying", "venomous", "soul_eater", "radiant", "fissiparous", "hive_mind", "stoneskin", "time_rewinder", "shapeshifter", "mind_reader", "armoured", "burrowing", "aquatic", "amphibious", "pack_hunter", "ambush_predator", "regenerating", "poisonous_flesh", "fire_breathing", "cold_breathing", "echolocation", "camouflage", "swarm_breeder", "long_lived", "mimic", "spirit_sight", "iron_eating", "crop_pest", "plague_bearer", "sacred_animal", "horned", "tailed"];
+export const creditStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CreditState"]> = ["normal", "strained", "default", "restructuring"];
 export const crimeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CrimeKind"]> = ["theft", "blasphemy", "treason", "murder", "desertion"];
 export const cultStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CultStats"]["kind"]> = ["cult"];
 export const cureKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CureKind"]> = ["rite", "technique", "medicine", "time", "quest"];
@@ -60551,7 +61154,7 @@ export const mortalRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const mortalSexValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalSex"]> = ["female", "male", "other"];
 export const mortalStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalStats"]["kind"]> = ["mortal"];
 export const mortalStatsSexAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalStats"]["sex"]> = ["female", "male", "other"];
-export const mortalToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalToolId"]> = ["look_at_world", "inspect_entity", "search_entities", "found_language", "coin_words", "produce_item", "build_structure", "create_culture", "discover_resource", "claim_resource", "found_settlement", "establish_trade", "declare_war", "worship", "pray_to_creator", "develop_knowledge", "learn_knowledge", "diplomacy", "go_on_adventure", "find_route", "explore_land", "resurrection_rite", "build_ship", "launch_expedition", "tame_species", "weave_chimera", "bind_spirit", "search_ruins", "sabotage", "preach", "challenge_god", "deny_god", "prophesy", "escape", "pay_ransom", "rescue_captive", "raise_army", "appoint_commander", "enact_law", "appoint_officer", "set_tax", "propose_treaty", "swear_oath", "accept_treaty", "break_treaty", "build_spy_network", "barter", "lend", "repay_debt", "adopt", "commission_artwork", "design_rite", "cast_rite", "found_school", "socialise", "challenge_to_contest", "persuade", "trade_lore", "choose_method", "buy_workshop"];
+export const mortalToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalToolId"]> = ["look_at_world", "inspect_entity", "search_entities", "found_language", "coin_words", "produce_item", "build_structure", "create_culture", "discover_resource", "claim_resource", "found_settlement", "establish_trade", "declare_war", "worship", "pray_to_creator", "develop_knowledge", "learn_knowledge", "diplomacy", "go_on_adventure", "find_route", "explore_land", "resurrection_rite", "build_ship", "launch_expedition", "tame_species", "weave_chimera", "bind_spirit", "search_ruins", "sabotage", "preach", "challenge_god", "deny_god", "prophesy", "escape", "pay_ransom", "rescue_captive", "raise_army", "appoint_commander", "enact_law", "appoint_officer", "set_tax", "propose_treaty", "swear_oath", "accept_treaty", "break_treaty", "build_spy_network", "barter", "lend", "repay_debt", "adopt", "commission_artwork", "design_rite", "cast_rite", "found_school", "socialise", "challenge_to_contest", "persuade", "trade_lore", "choose_method", "buy_workshop", "lay_trade_policy", "speculate"];
 export const mortalTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalTurnFinishedEvent"]["kind"]> = ["mortal.turn_finished"];
 export const mortalTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalTurnStartedEvent"]["kind"]> = ["mortal.turn_started"];
 export const mortalsStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalsStartedEvent"]["kind"]> = ["mortals.started"];
@@ -60667,6 +61270,7 @@ export const sonTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<
 export const speakerKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpeakerKind"]> = ["native", "second", "liturgical"];
 export const speciesStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpeciesStats"]["kind"]> = ["species"];
 export const speciesUseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpeciesUse"]> = ["food", "labour", "mount", "war", "guard", "companion", "sacrifice", "magic"];
+export const speculationStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpeculationStatus"]> = ["hoarding", "sold", "bust"];
 export const spiritAlignmentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpiritAlignment"]> = ["guardian", "neutral", "vengeful"];
 export const spiritStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpiritStats"]["kind"]> = ["spirit"];
 export const spokenIntentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SpokenIntent"]> = ["friendship", "alliance", "love", "threat", "mockery", "warning", "bargain"];
@@ -60703,6 +61307,7 @@ export const tissueKindValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const toolBlockValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ToolBlock"]> = ["rarity", "actor_type", "civilization_tier", "world_state", "unwired"];
 export const tradeLossValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TradeLoss"]> = ["bandits", "sea", "beasts", "weather"];
 export const tradeModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TradeMode"]> = ["road", "river", "sea", "caravan", "sky"];
+export const tradePolicyKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TradePolicyKind"]> = ["tariff", "subsidy", "embargo"];
 export const tradeRouteStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TradeRouteStats"]["kind"]> = ["trade_route"];
 export const tradeRouteStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TradeRouteStatus"]> = ["forming", "open", "blockaded", "closed", "decayed"];
 export const traditionEffectKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TraditionEffectKind"]> = ["cohesion", "satisfaction", "piety", "value", "fertility", "martial", "placation", "harvest", "safety", "food_saved", "rest", "vigil"];

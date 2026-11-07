@@ -152,3 +152,5 @@ SPIES_CAUGHT_EVENT = "caught spies"
 LAW_LAID = Line("tools.mortal.law_laid", "{me} laid down {law} for {realm}.")
 METHOD_CHOSEN = Line("tools.mortal.method_chosen", "{me} took up {method} for {process}.")
 WORKSHOP_BOUGHT = Line("tools.mortal.workshop_bought", "{me} bought the {workshop} of {place} for {price}.")
+POLICY_LAID = Line("tools.mortal.policy_laid", "{me} laid a {policy} on {good}.")
+HOARD_OPENED = Line("tools.mortal.hoard_opened", "{me} bought up {good} in {place} and held it back.")

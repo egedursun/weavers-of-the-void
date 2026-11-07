@@ -6,7 +6,7 @@ from aerona.catalog.methods import COLD
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import LeyLineRow
-from aerona.db.tables.industry import CommunityIndustryRow
+from aerona.db.tables.industry import ENERGY_COLUMNS, CommunityIndustryRow
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBand
@@ -90,7 +90,22 @@ async def supply_of(ctx: TickContext, book: EconomyBook, community: EntityRow, l
 def industry_row(ctx: TickContext, book: EconomyBook, community_id: int) -> CommunityIndustryRow:
     row = book.industry.get(community_id)
     if row is None:
-        row = CommunityIndustryRow(community_node_id=community_id, spent={}, short={}, epoch=ctx.epoch, locked=[], meal_quality=50)
+        row = CommunityIndustryRow(
+            community_node_id=community_id,
+            spent={},
+            short={},
+            epoch=ctx.epoch,
+            locked=[],
+            meal_quality=50,
+            drink=0,
+            market_access=100,
+            black_market=0,
+            heat_need=0,
+            tools_worn=0,
+            spoiled=0,
+            preserved=0,
+            **dict.fromkeys(ENERGY_COLUMNS, 0),
+        )
         ctx.session.add(row)
         book.industry[community_id] = row
     return row

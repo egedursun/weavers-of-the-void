@@ -3,6 +3,8 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 
 from aerona.catalog.commodities import COMMODITIES
+from aerona.catalog.finance import LUXURIES as LUXURY_GOODS
+from aerona.catalog.finance import STAPLES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import CurrencyRow, MarketPriceHoldRow, MarketPriceRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -26,7 +28,7 @@ from aerona.engine.mind.preferences import demand_factor, market_fit, material_f
 from aerona.engine.notes import note
 from aerona.engine.polity.law_effects import luxury_factor
 from aerona.engine.primitives.numbers import round_half_up
-from aerona.engine.primitives.stats import headcount
+from aerona.engine.primitives.stats import headcount, stat
 
 
 @dataclass(frozen=True)
@@ -70,10 +72,25 @@ def inflation(ctx: TickContext, currency: CurrencyRow | None) -> float:
     return 1 + ctx.rules.money.inflation_pct / PERCENT * lost
 
 
+def elasticity_of(ctx: TickContext, commodity: CommodityKind) -> float:
+    table = ctx.rules.elasticity
+    if commodity in STAPLES:
+        return table.staple_pct / PERCENT
+    return (table.luxury_pct if commodity in LUXURY_GOODS else table.goods_pct) / PERCENT
+
+
+def income_of(ctx: TickContext, market: EntityRow, commodity: CommodityKind) -> float:
+    if commodity not in LUXURY_GOODS:
+        return 1.0
+    prosperity = stat(market, "prosperity")
+    lift = ((prosperity if prosperity is not None else PERCENT // 2) - PERCENT // 2) / PERCENT
+    return max(0.0, 1 + lift * ctx.rules.elasticity.income_pct / PERCENT)
+
+
 def price_of(ctx: TickContext, commodity: CommodityKind, supply: int, demand: int, factor: float, *, premium: float = 1.0) -> int:
     table = ctx.rules.markets
     base = COMMODITIES[commodity].base_price * premium
-    pressure = (max(1, demand) / max(1, supply)) ** (table.elasticity_pct / PERCENT)
+    pressure = (max(1, demand) / max(1, supply)) ** (table.elasticity_pct / PERCENT * elasticity_of(ctx, commodity))
     low = base * table.price_floor_pct / PERCENT
     high = base * table.price_cap_pct / PERCENT
     return round_half_up(min(high, max(low, base * pressure * factor)))
@@ -157,7 +174,7 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
         if commodity is CommodityKind.LUXURIES:
             demand = round_half_up(demand * await luxury_factor(ctx.session, ctx.rules, market.id, book.societies.get(market.id)))
             demand = round_half_up(demand * await noble_demand(ctx, book, market))
-        demand = round_half_up(demand * demand_factor(ctx.rules, tastes, commodity.value))
+        demand = round_half_up(demand * demand_factor(ctx.rules, tastes, commodity.value) * income_of(ctx, market, commodity))
         monopoly = await monopoly_factor(ctx.session, market.id, commodity, ctx.rules.factions.monopoly_price_pct)
         premium = await material_premium(ctx, book, market, commodity)
         swing = swing_of(ctx, market, commodity, growth)

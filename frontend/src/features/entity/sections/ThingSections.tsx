@@ -3,6 +3,7 @@ import { BondsSection } from './BondsSection'
 import { EntityMechanics } from './EntityMechanics'
 import { EthicsSection } from './EthicsSection'
 import { FeelingsSection } from './FeelingsSection'
+import { FinanceSection } from './FinanceSection'
 import { MindSplitSection } from './MindSplitSection'
 import { RecordRowsSection } from './RecordRowsSection'
 import { RenownSection } from './RenownSection'
@@ -33,6 +34,7 @@ export function ThingSections({
       <BondsSection nodeId={nodeId} />
       <RenownSection nodeId={nodeId} />
       <WorksSection nodeId={nodeId} />
+      <FinanceSection nodeId={nodeId} />
       <RecordRowsSection nodeId={nodeId} />
     </>
   )

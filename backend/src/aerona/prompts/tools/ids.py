@@ -176,6 +176,8 @@ class MortalToolId(StrEnum):
     TRADE_LORE = "trade_lore"
     CHOOSE_METHOD = "choose_method"
     BUY_WORKSHOP = "buy_workshop"
+    LAY_TRADE_POLICY = "lay_trade_policy"
+    SPECULATE = "speculate"
 
 
 ToolId = SonToolId | MortalToolId

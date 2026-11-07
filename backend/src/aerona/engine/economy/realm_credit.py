@@ -17,6 +17,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.debt_law import bind_debtor, debt_law_of, jail_debtor
 from aerona.engine.economy.money import MoneyTally, banks, collapse, gain, owed, riches
+from aerona.engine.finance.credit import interest_for, on_default, refuses
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.services.community_relations import change_relation
@@ -85,14 +86,14 @@ async def lend_to_realms(ctx: TickContext, book: EconomyBook, tally: MoneyTally)
         if open_loan is not None or not ctx.rng(f"realm_loan.{realm.entity.id}.{ctx.epoch}").chance(table.polity_lend_chance):
             continue
         lender = min(lenders, key=lambda bank: (bank.world_id != realm.entity.world_id, -riches(bank), bank.id))
-        if await shy_of(ctx, realm.entity.id, lender):
+        if await shy_of(ctx, realm.entity.id, lender) or await refuses(ctx, realm.entity.id):
             continue
         loan = LoanRow(
             lender_entity_id=lender.id,
             borrower_entity_id=realm.entity.id,
             currency_id=await realm_currency(ctx, realm),
             principal=table.polity_principal,
-            interest_pct=table.interest_pct + (table.risk_interest_pct if await risky(ctx, realm.entity.id) else 0),
+            interest_pct=await interest_for(ctx, realm.entity.id, table.interest_pct + (table.risk_interest_pct if await risky(ctx, realm.entity.id) else 0)),
             issued_epoch=ctx.epoch,
             due_epoch=ctx.epoch + table.term_epochs,
             status=LoanStatus.OPEN,
@@ -127,6 +128,7 @@ async def realm_default(ctx: TickContext, book: EconomyBook, loan: LoanRow, real
         )
         return "jubilee"
     loan.status = LoanStatus.DEFAULTED
+    await on_default(ctx, realm.entity, lender)
     realm.profile.debt += round_half_up(left * table.polity_default_debt_pct / PERCENT)
     gain(lender, -table.default_bank_loss)
     await change_relation(ctx, lender.id, realm.entity.id, -table.default_relation_loss, MemoryKind.BETRAYED_ME, note="a realm defaulted on a loan")

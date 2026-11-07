@@ -61,6 +61,7 @@ from aerona.db.tables.faith import (
     SoulJudgementRow,
     SpiritProfileRow,
 )
+from aerona.db.tables.finance import CreditProfileRow, EconomicIndicatorRow, SpeculationRow, TradePolicyRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
@@ -1468,6 +1469,28 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("buy_workshop",),
         ("mining.",),
         ("c313c215601c",),
+    ),
+    ComplianceRow(
+        "S6.4/RP2",
+        (TradePolicyRow.__tablename__, CreditProfileRow.__tablename__, SpeculationRow.__tablename__, EconomicIndicatorRow.__tablename__),
+        ("trade_policy", "credit_ratings", "speculation", "economic_indicators", "trade_flow"),
+        (
+            "trade_policy:set",
+            "trade_policy:remove",
+            "credit:set",
+            "credit:remove",
+            "speculation:open",
+            "speculation:edit",
+            "speculation:remove",
+            "indicator:edit",
+            "indicator:remove",
+            "industry:set",
+        ),
+        ("FinanceSection", "section-finance"),
+        ("mortal_context",),
+        ("lay_trade_policy", "speculate"),
+        ("trade_policy.", "speculation."),
+        ("fe81c6759526",),
     ),
     ComplianceRow(
         "F30",

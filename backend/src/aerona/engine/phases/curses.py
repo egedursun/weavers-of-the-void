@@ -75,6 +75,7 @@ async def curser_of(ctx: TickContext, entity: EntityRow) -> int | None:
     "people.population",
     "settlement.population",
     "settlement.prosperity",
+    "settlement.wealth",
     "table.bodies",
     "table.body_customs",
     "table.entities",

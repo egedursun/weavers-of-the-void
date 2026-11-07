@@ -21,6 +21,8 @@ from aerona.domain.enums.industry import OwnerClass
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
+from aerona.engine.finance.access import sold_share
+from aerona.engine.finance.policy import PolicyBook, PolicyTally, subsidy_paid
 from aerona.engine.industry.methods import local_price
 from aerona.engine.industry.quality import premium
 from aerona.engine.polity.laws import LawBook
@@ -28,6 +30,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 
 TENTH = 10
+HARVEST_STEP = "harvest"
 
 
 @dataclass
@@ -153,7 +156,9 @@ def run_value(book: EconomyBook, ctx: TickContext, run: ProductionRunRow) -> tup
 COMMODITY_KEYS = frozenset(kind.value for kind in CommodityKind)
 
 
-async def ledgers_of(ctx: TickContext, book: EconomyBook) -> dict[tuple[int, str], Ledger]:
+async def ledgers_of(
+    ctx: TickContext, book: EconomyBook, *, policies: PolicyBook | None = None, policy_tally: PolicyTally | None = None
+) -> dict[tuple[int, str], Ledger]:
     table = ctx.rules.ownership
     ledgers: dict[tuple[int, str], Ledger] = {}
     runs = await ctx.session.scalars(
@@ -166,6 +171,13 @@ async def ledgers_of(ctx: TickContext, book: EconomyBook) -> dict[tuple[int, str
             owners = book.owners.get(run.resource_entity_id, [])
             key = (community, f"resource.{run.resource_entity_id}")
             ledger = ledgers.setdefault(key, Ledger(owners[0] if owners else community, community, None, run.resource_entity_id, run.step))
+        elif run.step == HARVEST_STEP:
+            key = (community, "fields")
+            if key not in ledgers:
+                land = book.entities.get(community)
+                landlord = await owner_for(ctx, land, OwnerClass.HOUSE) if land is not None else community
+                ledgers[key] = Ledger(landlord, community, None, None, "fields")
+            ledger = ledgers[key]
         elif workshop is not None:
             key = (community, f"workshop.{workshop.id}")
             ledger = ledgers.setdefault(key, Ledger(workshop.owner_node_id or community, community, workshop.id, None, workshop.kind.value))
@@ -173,6 +185,9 @@ async def ledgers_of(ctx: TickContext, book: EconomyBook) -> dict[tuple[int, str
         else:
             continue
         revenue, inputs = run_value(book, ctx, run)
+        revenue *= sold_share(ctx.rules, book.industry.get(community))
+        if policies is not None:
+            revenue += await subsidy_paid(ctx, policies, community, run.output, revenue, tally=policy_tally)
         ledger.revenue += revenue
         ledger.inputs += inputs
         ledger.wages += run.workers * table.wage_per_10_workers / TENTH
@@ -286,7 +301,9 @@ async def owners_starved(session: AsyncSession, community_id: int) -> int:
 
 async def tend_profits(ctx: TickContext, book: EconomyBook, tally: ProfitTally) -> list[SiteProfitRow]:
     await assign_owners(ctx, book, tally)
-    rows = [await settle(ctx, book, ledger, tally) for ledger in (await ledgers_of(ctx, book)).values() if not held(ledger.community)]
+    policies = await PolicyBook.load(ctx, book)
+    ledgers = await ledgers_of(ctx, book, policies=policies, policy_tally=PolicyTally())
+    rows = [await settle(ctx, book, ledger, tally) for ledger in ledgers.values() if not held(ledger.community)]
     banned = barred_works(book, await magic_banned(ctx.session, book))
     await lobby(ctx, book, rows, banned, tally)
     return rows

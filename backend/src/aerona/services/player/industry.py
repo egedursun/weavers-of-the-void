@@ -16,7 +16,7 @@ from aerona.domain.enums.industry import EnergyKind, MethodKind, Pollutant, Proc
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 SPAN = 100
-STORE_FIELDS = ("heat_need", "tools_worn", "spoiled", "preserved", "meal_quality", "drink")
+STORE_FIELDS = ("heat_need", "tools_worn", "spoiled", "preserved", "meal_quality", "drink", "market_access", "black_market")
 
 
 class SetMethod(Command):
@@ -44,6 +44,8 @@ class SetIndustry(Command):
     preserved: int | None = Field(default=None, ge=0)
     meal_quality: int | None = Field(default=None, ge=0, le=SPAN)
     drink: int | None = Field(default=None, ge=0, le=SPAN)
+    market_access: int | None = Field(default=None, ge=0, le=SPAN)
+    black_market: int | None = Field(default=None, ge=0)
     hold: bool = True
 
 
@@ -146,7 +148,22 @@ async def set_industry(scope: PlayerScope, command: SetIndustry) -> Effect:
     place = await community(scope, command.community_id)
     row = await scope.session.get(CommunityIndustryRow, place.id)
     if row is None:
-        row = CommunityIndustryRow(community_node_id=place.id, spent={}, short={}, epoch=await scope.epoch(), locked=[], meal_quality=50)
+        row = CommunityIndustryRow(
+            community_node_id=place.id,
+            spent={},
+            short={},
+            epoch=await scope.epoch(),
+            locked=[],
+            meal_quality=50,
+            drink=0,
+            market_access=100,
+            black_market=0,
+            heat_need=0,
+            tools_worn=0,
+            spoiled=0,
+            preserved=0,
+            **dict.fromkeys(ENERGY_COLUMNS, 0),
+        )
         scope.session.add(row)
     touched = [name for name in (*ENERGY_COLUMNS, *STORE_FIELDS) if getattr(command, name) is not None]
     if not touched:

@@ -1120,6 +1120,7 @@ SURVEY_PHASES = (Phase("mind_survey", mind_survey),)
     "table.deeds",
     "table.epoch_year_cursors",
     "table.goods_flows",
+    "table.incident_participants",
     "table.memories",
     "table.minds",
     "table.nodes",

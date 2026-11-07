@@ -17,6 +17,7 @@ from aerona.db.tables.economy import (
     TradeRouteTollRow,
 )
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -40,6 +41,7 @@ from aerona.engine.economy.route_dangers import CARAVAN_TERRAIN, DANGER_KEYS, Da
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.economy.toll_polities import Realms, fund_polity
 from aerona.engine.environment.profile import Works
+from aerona.engine.finance.policy import PolicyBook, PolicyTally, Terms, smuggle
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.notes import note
@@ -95,6 +97,7 @@ class RouteTally:
     volumes: dict[int, int] = field(default_factory=dict)
     strategic: dict[int, int] = field(default_factory=dict)
     dangers: dict[int, Dangers] = field(default_factory=dict)
+    policy: PolicyTally = field(default_factory=PolicyTally)
 
 
 @dataclass(frozen=True)
@@ -430,6 +433,7 @@ class Lane:
     landed: float
     volume: int
     desperate: bool = False
+    terms: Terms = field(default_factory=Terms)
 
 
 @dataclass(frozen=True)
@@ -439,22 +443,36 @@ class Haul:
     material: MaterialKind | None
 
 
-def lane_for(ctx: TickContext, route: Route, quotes: tuple[Quote, Quote], room: int, season: float, *, trust: int | None = None) -> Lane | None:
+def lane_for(
+    ctx: TickContext,
+    route: Route,
+    quotes: tuple[Quote, Quote],
+    room: int,
+    season: float,
+    *,
+    trust: int | None = None,
+    policies: PolicyBook | None = None,
+) -> Lane | None:
     table = ctx.rules.markets
     flow = ctx.rules.market
     first, second = route.ends
     left, right = quotes
     seller_id, buyer_id, cheap, dear = (first, second, left, right) if left.price <= right.price else (second, first, right, left)
+    terms = policies.terms(seller_id, buyer_id, left.commodity) if policies is not None else Terms()
+    if terms.blocked:
+        return None
     danger = stat(route.entity, "danger") or 0
     carriage = 1 + table.transport_cost_pct_per_hop * route.profile.length / PERCENT + table.danger_cost_pct * danger / PERCENT / PERCENT
-    landed = cheap.price * carriage * (1 + toll_total(route) / PERCENT)
+    landed = cheap.price * carriage * (1 + toll_total(route) / PERCENT) * (1 + terms.tariff_pct / PERCENT) * (1 - terms.subsidy_pct / PERCENT)
     if dear.price * PERCENT < landed * flow.flow_price_gap_pct:
         return None
     surplus = max(0, cheap.supply - max(cheap.demand, flow.flow_reserve))
     shortfall = max(0, dear.demand - dear.supply)
     trusted = 1.0 if trust is None else (ctx.rules.money.trust_trade_pct + (PERCENT - ctx.rules.money.trust_trade_pct) * trust / PERCENT) / PERCENT
-    volume = round_half_up(min(room, flow.flow_cap, round_half_up(surplus * flow.flow_share_pct / PERCENT), shortfall) * season * trusted)
-    return Lane(left.commodity, seller_id, buyer_id, landed, volume, dear.price * PERCENT >= cheap.price * flow.famine_gap_pct) if volume > 0 else None
+    reach = terms.access * terms.informed
+    volume = round_half_up(min(room, flow.flow_cap, round_half_up(surplus * flow.flow_share_pct / PERCENT * reach), shortfall) * season * trusted)
+    famine = dear.price * PERCENT >= cheap.price * flow.famine_gap_pct
+    return Lane(left.commodity, seller_id, buyer_id, landed, volume, famine, terms) if volume > 0 else None
 
 
 async def haul(ctx: TickContext, route: Route, lane: Lane) -> Haul:
@@ -503,6 +521,7 @@ async def settle(ctx: TickContext, book: EconomyBook, route: Route, lane: Lane, 
             ids=[buyer.id, seller.id, route.entity.id],
             kind=ChronicleKind.TRADE,
         )
+    await levy_terms(ctx, lane, value, tally)
     paid = 0
     waived = frozenset({lane.seller_id, lane.buyer_id}) in book.waived
     for toll in () if waived else route.tolls.values():
@@ -524,6 +543,19 @@ async def settle(ctx: TickContext, book: EconomyBook, route: Route, lane: Lane, 
         else:
             add_prosperity(ctx.rules, master, round_half_up((fee - share) * ctx.rules.tolls.revenue_wealth_per_value / THOUSAND))
     return value, paid
+
+
+async def levy_terms(ctx: TickContext, lane: Lane, value: int, tally: RouteTally) -> None:
+    terms = lane.terms
+    if terms.tariff_pct and terms.buyer_realm is not None:
+        duty = round_half_up(value * terms.tariff_pct / PERCENT)
+        tally.policy.tariffs += await fund_polity(ctx, terms.buyer_realm, duty, "tariff")
+    if terms.subsidy_pct and terms.seller_realm is not None:
+        profile = await ctx.session.get(PolityProfileRow, terms.seller_realm)
+        grant = min(round_half_up(value * terms.subsidy_pct / PERCENT), profile.treasury if profile is not None else 0)
+        if profile is not None and grant > 0:
+            profile.treasury -= grant
+            tally.policy.subsidies += grant
 
 
 async def mourn_losses(ctx: TickContext, book: EconomyBook, route: Route, lane: Lane, *, lost: int, tally: RouteTally) -> TradeLoss | None:
@@ -562,7 +594,15 @@ async def coin_trust(ctx: TickContext, book: EconomyBook, ends: tuple[int, int])
     return min(trusts) if trusts else None
 
 
-async def carry(ctx: TickContext, book: EconomyBook, route: Route, quotes: dict[int, dict[CommodityKind, Quote]], tally: RouteTally) -> int:
+async def carry(
+    ctx: TickContext,
+    book: EconomyBook,
+    route: Route,
+    quotes: dict[int, dict[CommodityKind, Quote]],
+    tally: RouteTally,
+    *,
+    policies: PolicyBook | None = None,
+) -> int:
     first, second = route.ends
     left_quotes, right_quotes = quotes.get(first), quotes.get(second)
     if left_quotes is None or right_quotes is None or route.profile.status is TradeRouteStatus.BLOCKADED:
@@ -572,8 +612,11 @@ async def carry(ctx: TickContext, book: EconomyBook, route: Route, quotes: dict[
     trust = await coin_trust(ctx, book, route.ends)
     moved = 0
     for commodity in COMMODITIES:
-        lane = lane_for(ctx, route, (left_quotes[commodity], right_quotes[commodity]), capacity - moved, season, trust=trust)
+        pair = (left_quotes[commodity], right_quotes[commodity])
+        lane = lane_for(ctx, route, pair, capacity - moved, season, trust=trust, policies=policies)
         if lane is None:
+            if policies is not None:
+                moved += await run_contraband(ctx, book, route, pair, policies, room=capacity - moved, season=season, tally=tally)
             continue
         done = await haul(ctx, route, lane)
         if done.sent <= 0:
@@ -608,6 +651,20 @@ async def carry(ctx: TickContext, book: EconomyBook, route: Route, quotes: dict[
     tally.moved += moved
     tally.volumes[route.entity.id] = moved
     return moved
+
+
+async def run_contraband(
+    ctx: TickContext, book: EconomyBook, route: Route, pair: tuple[Quote, Quote], policies: PolicyBook, *, room: int, season: float, tally: RouteTally
+) -> int:
+    left, right = pair
+    seller, buyer = route.ends if left.price <= right.price else (route.ends[1], route.ends[0])
+    cheap, dear = (left, right) if left.price <= right.price else (right, left)
+    if not policies.terms(seller, buyer, left.commodity).blocked or dear.price * PERCENT < cheap.price * ctx.rules.trade_policy.smuggle_gap_pct:
+        return 0
+    raw = lane_for(ctx, route, pair, room, season)
+    if raw is None:
+        return 0
+    return await smuggle(ctx, book, policies, seller=seller, buyer=buyer, commodity=left.commodity, volume=raw.volume, landed=raw.landed, tally=tally.policy)
 
 
 async def _pass_into_legend(ctx: TickContext, route: Route) -> None:

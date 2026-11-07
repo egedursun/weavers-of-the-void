@@ -11,6 +11,7 @@ from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.settlement import SettlementProfileRow, SettlementTreasuryRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.demography import Job
@@ -207,7 +208,7 @@ def material_commodity(family: MaterialFamily | None) -> CommodityKind:
 
 async def spend_treasury(ctx: TickContext, site_id: int, amount: int, label: str) -> int:
     town = await ctx.session.get(SettlementProfileRow, site_id)
-    if town is None or amount <= 0:
+    if town is None or amount <= 0 or held(site_id):
         return 0
     paid = min(amount, max(0, town.treasury))
     if paid:

@@ -159,6 +159,14 @@ class EnginePhasesRules:
     site_profits: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: owners of works and resources, their profits, taxes, investment and lobbying"
     )
+    trade_policy: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: tariffs, subsidies and embargoes realms lay and lift")
+    credit_ratings: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: credit ratings, bankruptcy states, interest and the reserves that back coin"
+    )
+    speculation: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: greedy merchants hoarding rising goods and food in famine, booms and busts")
+    economic_indicators: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: output, prices, trade balance, debt, idleness and living of realms and worlds"
+    )
     renown_hearsay: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: deeds heard of in rumours, fading reputations, renown and infamy")
     renown_claims: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: shared and false claims of deeds, tested and exposed")
     ruler_currencies: int = rule(

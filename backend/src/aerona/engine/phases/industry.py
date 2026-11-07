@@ -4,6 +4,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.industry import EnergyKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
+from aerona.engine.finance.access import gauge_access
 from aerona.engine.industry.energy import gauge, industry_row, leys_by_region, unmet_pct
 from aerona.engine.industry.methods import MethodTally, choose_methods
 from aerona.engine.industry.owners import ProfitTally, magic_banned, tend_profits
@@ -44,14 +45,17 @@ NOTE_CAP = 6
     "table.region_pollution",
     "table.resource_profiles",
     "table.resource_workers",
+    "table.settlement_infrastructure",
     "table.skills",
     "table.sky_events",
+    "table.trade_route_profiles",
     "table.treaty_parties",
     "table.workshop_designs",
     "table.workshops",
     "table.world_maps",
     "table.world_materials",
     "table.world_seasons",
+    "trade_route.danger",
 )
 @writes(
     "table.chronicle",
@@ -69,6 +73,7 @@ async def industry_methods(ctx: TickContext) -> None:
     leys = await leys_by_region(ctx)
     tally = MethodTally()
     banned = await magic_banned(ctx.session, book)
+    ctx.count("access_gauged", await gauge_access(ctx, book))
     for community in unheld(book.communities):
         await gauge(ctx, book, community, leys)
         await choose_methods(ctx, book, community, tally, banned=community.id in banned)
@@ -214,6 +219,7 @@ async def industry_aftermath(ctx: TickContext) -> None:
     "table.settlement_profiles",
     "table.skills",
     "table.sky_events",
+    "table.trade_policies",
     "table.treaty_parties",
     "table.workshop_designs",
     "table.workshops",

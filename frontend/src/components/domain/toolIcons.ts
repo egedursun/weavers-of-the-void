@@ -1,4 +1,5 @@
 import {
+  Warehouse,
   Factory,
   Leaf,
   UserCog,
@@ -158,6 +159,8 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   trade_lore: ScrollText,
   choose_method: Factory,
   buy_workshop: KeyRound,
+  lay_trade_policy: Landmark,
+  speculate: Warehouse,
   produce_item: Package,
   build_structure: Castle,
   create_language: Languages,
