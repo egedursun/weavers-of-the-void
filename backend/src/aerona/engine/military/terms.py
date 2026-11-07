@@ -9,7 +9,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.military import PeaceTermKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.renown import Currency, ReputationAxis
-from aerona.domain.enums.war import WarSide
+from aerona.domain.enums.war import WarSide, WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.military.peace import record
 from aerona.engine.military.support import realm_of
@@ -102,6 +102,14 @@ async def backlash(ctx: TickContext, perpetrator: EntityRow) -> int:
     if purse is not None:
         bump(purse, Currency.DREAD, table.atrocity_dread)
     return len(onlookers)
+
+
+async def war_between(ctx: TickContext, first_id: int, second_id: int) -> int | None:
+    ongoing = select(WarRow.id).where(WarRow.status != WarStatus.ENDED)
+    mine = select(WarSideRow.war_id).where(WarSideRow.entity_id == first_id, WarSideRow.left_epoch.is_(None), WarSideRow.war_id.in_(ongoing))
+    theirs = select(WarSideRow).where(WarSideRow.entity_id == second_id, WarSideRow.war_id.in_(mine), WarSideRow.left_epoch.is_(None))
+    row = await ctx.session.scalar(theirs.order_by(WarSideRow.war_id).limit(1))
+    return row.war_id if row is not None else None
 
 
 async def terror(ctx: TickContext, war_id: int, perpetrator: EntityRow, victim: EntityRow, deed: str) -> bool:

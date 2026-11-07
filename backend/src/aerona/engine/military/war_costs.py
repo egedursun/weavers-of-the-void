@@ -27,4 +27,6 @@ async def term_cost(ctx: TickContext, kind: PeaceTermKind, params: Params, targe
     if kind is PeaceTermKind.TRIBUTE:
         epochs = params.get("epochs", ctx.rules.peace.treaty_epochs)
         cost += (epochs if isinstance(epochs, int) and not isinstance(epochs, bool) else 0) * table.tribute_cost_per_epoch
+        amount = params.get("amount", 0)
+        cost += (amount if isinstance(amount, int) and not isinstance(amount, bool) else 0) // max(1, table.tribute_amount_per_cost)
     return cost

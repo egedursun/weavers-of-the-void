@@ -20,6 +20,7 @@ from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.taboos import forbidden
 from aerona.engine.military.captivity import announce, cohort_fates, ransom_lawful, rich, wring_intel
 from aerona.engine.military.ransom import grow_ward, marry_captive, named_ransom, pay_from_treasury, release_by_opinion, ward_returns
+from aerona.engine.military.terms import terror, war_between
 from aerona.engine.mind.book import stored_values, values_for, write_values
 from aerona.engine.mind.drives import closeness, cruelty_drive
 from aerona.engine.mind.hooks import judged, witnessed
@@ -78,6 +79,9 @@ async def defect(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: 
 async def execute(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: EntityRow, home: EntityRow) -> None:
     await release_captive(ctx, row, CaptiveStatus.EXECUTED)
     await death_path(ctx, captive, f"executed by {captor.name}", captor.id, "execution", forced=True, harm=HarmCause.PUNISHMENT)
+    war_id = await war_between(ctx, captor.id, home.id)
+    if war_id is not None:
+        await terror(ctx, war_id, captor, home, "execution of a captive")
     await start_blood_feud(ctx, home.id, captor.id, f"the execution of {captive.name}")
     await witnessed(ctx, home.id, captor.id, ActKind.EXECUTION, base=ctx.rules.memory.outrage_magnitude, note=captive.name)
     for relative in await kin_of(ctx, captive):

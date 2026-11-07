@@ -15,9 +15,11 @@ from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ItemClass, Technique
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.environment import MovementMode, ScarKind, WeatherKind
-from aerona.domain.enums.military import MoraleState, MutinyOutcome, Stance
+from aerona.domain.enums.military import CommandArea, MoraleState, MutinyOutcome, Stance
 from aerona.engine.context import TickContext
+from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.environment.book import EnvironmentBook, add_scar
 from aerona.engine.environment.perils import Wandering, danger_toll, navigate
 from aerona.engine.interconnect.flows import FlowCategory, flowing
@@ -44,8 +46,8 @@ from aerona.engine.military.campaign import (
     straggle,
     summer,
 )
-from aerona.engine.military.command import command_areas, thrift
-from aerona.engine.military.engineering import engineer, engineers, leave_earthworks, supply_limit
+from aerona.engine.military.command import Areas, area_factor, command_areas, thrift
+from aerona.engine.military.engineering import engineer, engineers, leave_earthworks, sappers, supply_limit
 from aerona.engine.military.finance import war_credit
 from aerona.engine.military.units import rearm, stacks_of, sync, take
 from aerona.engine.primitives.distance import RegionAtlas
@@ -142,8 +144,6 @@ def regroup(rules: Rules, rows: list[ArmyUnitRow], profile: ArmyProfileRow) -> i
         if "organisation" not in row.locked:
             loss = table.forced_march_organisation if profile.forced_march and profile.stance is Stance.MARCH else 0
             row.organisation = clamp_int(row.organisation + rested - loss, 0, PERCENT)
-        if "ammunition" not in row.locked and UNITS[row.kind].missile > 0 and profile.baggage > 0:
-            row.ammunition = min(table.volleys_carried, row.ammunition + table.resupply_volleys)
         if row.missing > 0 and "missing" not in row.locked:
             back = round_half_up(row.missing * table.rejoin_pct / PERCENT)
             row.count += back
@@ -154,9 +154,27 @@ def regroup(rules: Rules, rows: list[ArmyUnitRow], profile: ArmyProfileRow) -> i
     return returned
 
 
-def entrench(rules: Rules, profile: ArmyProfileRow, left: RegionEnvironmentRow | None = None) -> None:
+def dig_rate(rules: Rules, rows: list[ArmyUnitRow], areas: Areas) -> float:
+    crews = min(1.0, sappers(rows) / max(1, rules.army_depth.sappers_needed))
+    return (1 + crews * rules.army_depth.sapper_dig_pct / PERCENT) * area_factor(rules, areas, CommandArea.SIEGE)
+
+
+async def restock(ctx: TickContext, owner: EntityRow, profile: ArmyProfileRow, rows: list[ArmyUnitRow]) -> int:
+    table = ctx.rules.battle_depth
+    short = [row for row in rows if row.count > 0 and UNITS[row.kind].missile > 0 and row.ammunition < table.volleys_carried and "ammunition" not in row.locked]
+    wanted = -(-sum(row.count for row in short) // max(1, table.shooters_per_ammunition))
+    if not short or wanted <= 0 or profile.baggage <= 0 or await holding(ctx.session, owner.id, CommodityKind.WEAPONS) <= 0:
+        return 0
+    taken = await goods_of(ctx.session, ctx.epoch).take_units(owner.id, CommodityKind.WEAPONS, wanted, GoodsFlow.WAR)
+    share = min(1.0, taken / wanted)
+    for row in short:
+        row.ammunition = min(table.volleys_carried, row.ammunition + round_half_up(table.resupply_volleys * share))
+    return taken
+
+
+def entrench(rules: Rules, profile: ArmyProfileRow, left: RegionEnvironmentRow | None = None, rate: float = 1.0) -> None:
     if profile.stance in {Stance.ENTRENCH, Stance.GARRISON, Stance.BESIEGE}:
-        profile.entrenchment = clamp_int(profile.entrenchment + rules.logistics.entrench_gain, 0, PERCENT)
+        profile.entrenchment = clamp_int(profile.entrenchment + round_half_up(rules.logistics.entrench_gain * rate), 0, PERCENT)
     else:
         if left is not None and not held(left.entity_id):
             leave_earthworks(rules, profile, left)
@@ -396,7 +414,8 @@ async def campaign_season(
     wandering = await advance(ctx, atlas, ground, march, rows=rows, log=log, left=left, weather=weather, season_row=season_row, enemy=enemy)
     tire(ctx.rules, rows, profile)
     log.rejoined = regroup(ctx.rules, rows, profile)
-    entrench(ctx.rules, profile, left if log.moved else None)
+    await restock(ctx, march.owner, profile, rows)
+    entrench(ctx.rules, profile, left if log.moved else None, dig_rate(ctx.rules, rows, areas))
     region = ground.regions.get(profile.region_entity_id) if profile.region_entity_id is not None else None
     if profile.stance is not Stance.RETREAT and region is not None and not held(region.entity_id):
         log.works = engineer(ctx.rules, profile, rows, region)

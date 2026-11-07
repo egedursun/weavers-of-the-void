@@ -790,6 +790,9 @@ def outflank(rules: Rules, first: Side, second: Side, ground: Field, streams: St
         if wide and swift and not flanker.flanking:
             flanker.flanking = True
             flanker.tactic_factor *= 1 + table.flank_pct / PERCENT
+            for stack in line.stacks:
+                if stack.alive:
+                    disorganise(rules, stack, rules.battle_depth.flank_organisation)
             return PhaseLog(BattlePhase.CHARGE, 0, 0, f"{flanker.entity.name} turned the flank", {"flank": flanker.entity.name})
     return None
 
@@ -1108,7 +1111,11 @@ def classify_losses(rules: Rules, side: Side) -> tuple[int, int]:
         stack.row.wounded += hurt
         if stack.row.morale_state is MoraleState.BROKEN and stack.row.count > 0:
             stack.deserted = round(stack.row.count * depth.deserted_pct / PERCENT)
-            stack.row.count -= stack.deserted
+            scattered = stack.row.count - stack.deserted
+            stack.missing += scattered
+            stack.lost += scattered
+            stack.row.missing += scattered
+            stack.row.count = 0
         walking += stack.walking
         stretcher += stack.stretcher
     return walking, stretcher

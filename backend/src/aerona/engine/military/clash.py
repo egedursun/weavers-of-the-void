@@ -28,6 +28,7 @@ from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import ArmyRole, CaptiveFate, CommanderTrait, OutcomeClass, Tactic, UnitFamily, UnitKind
 from aerona.domain.enums.mind import Attribute, SkillKind, TraitEffect, ValueAxis
+from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.book import perception_of
 from aerona.engine.body.hits import Harm
@@ -53,8 +54,9 @@ from aerona.engine.polity.book import RealmBook
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.relations.passions import invoke
+from aerona.engine.renown.book import acclaim
 
 EDGE_FLOOR, EDGE_CEILING = 0.5, 2.0
 INSPIRING_CHARISMA = 70
@@ -344,7 +346,25 @@ async def clash(
             await strike_commander(ctx, armies[side.entity.id][0][1].commander_entity_id)
     if result.winner is not None and result.loser is not None and not result.refused:
         await take_engines(ctx, result.winner, result.loser)
+        for side, enemy in ((first, second), (second, first)):
+            if side.tactic is Tactic.NIGHT_RAID:
+                await night_honour(ctx, side, enemy)
     return result
+
+
+async def night_honour(ctx: TickContext, raider: Side, foe: Side) -> int:
+    table = ctx.rules.battle_depth
+    scorn = max(0, (await values_for(ctx.session, foe.entity.id)).get(ValueAxis.HONOUR, 0))
+    if scorn and not held(raider.entity.id):
+        await acclaim(ctx.session, raider.entity.id, foe.entity.id, ReputationAxis.TRICKERY, amount=table.night_dishonour * scorn / PERCENT, epoch=ctx.epoch)
+    shame = max(0, (await values_for(ctx.session, raider.entity.id)).get(ValueAxis.HONOUR, 0))
+    shaken = 0
+    for army_id in sorted({stack.row.army_entity_id for stack in raider.stacks}) if shame else []:
+        army = await living_entity(ctx.session, army_id)
+        if army is not None and not held(army_id):
+            shift_stat(army, "morale", -table.night_dishonour_morale * shame / PERCENT)
+            shaken += 1
+    return shaken
 
 
 async def strike_commander(ctx: TickContext, commander_id: int | None) -> bool:

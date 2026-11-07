@@ -553,6 +553,7 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.spy_networks",
     "table.treaty_breaches",
     "table.vessel_profiles",
+    "table.war_production",
     "table.war_sides",
 )
 async def war_upkeep(ctx: TickContext) -> None:

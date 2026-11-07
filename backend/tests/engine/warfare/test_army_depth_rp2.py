@@ -14,6 +14,7 @@ from aerona.db.tables.warfare import BattleRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.demography import MartialStyle
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind, TerrainKind
 from aerona.domain.enums.military import ArmyRole, CommandArea, CommanderTrait, OutcomeClass, Stance, UnitKind
@@ -21,12 +22,14 @@ from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.models.entity_stats import ItemStats, PolityStats
 from aerona.engine.economy.route_dangers import patrol_share
+from aerona.engine.economy.stocks import goods_of
 from aerona.engine.environment.profile import SCAR_FERTILITY
 from aerona.engine.military import orders, records
 from aerona.engine.military.battle import BattleResult, Field, dug_in, family_factor
 from aerona.engine.military.campaign import bridged, on_road, spar, step_cost
 from aerona.engine.military.command import areas_from, best_area, thrift
 from aerona.engine.military.engineering import engineer, engineers, leave_earthworks, supply_limit
+from aerona.engine.military.logistics import dig_rate, regroup, restock
 from aerona.engine.military.marshal import keep_templates
 from aerona.engine.military.standards import capture_standard
 from aerona.engine.military.templates import blend, upgrades, weights_of
@@ -197,3 +200,24 @@ async def test_drilling_officers_now_and_then_take_a_sparring_injury(session: As
 def test_the_field_summary_names_a_taken_standard() -> None:
     battle = BattleRow(width=0, reserves_committed=0, feint=False, salvaged=0, standard_entity_id=5)
     assert "standard Heron Banner taken" in records.battle_field(battle, {5: "Heron Banner"})
+
+
+def test_sappers_and_a_siege_minded_commander_dig_faster() -> None:
+    crews = [unit(UnitKind.SAPPERS, RULES.army_depth.sappers_needed, ident=1)]
+    assert dig_rate(RULES, [], {}) == 1.0
+    assert dig_rate(RULES, crews, {}) > 1.0
+    assert dig_rate(RULES, crews, {CommandArea.SIEGE: 100}) > dig_rate(RULES, crews, {})
+
+
+async def test_volleys_are_restocked_from_weapon_stores_not_from_nothing(session: AsyncSession, world_id: int) -> None:
+    ctx = make_ctx(session)
+    folk = await make(session, "Bow Folk", EntityType.PEOPLE, world_id, population=9000, martiality=60)
+    army = await orders.raise_standing_army(ctx, folk.id, 300)
+    archers = await records.create_record(ctx, "stack", {"army_entity_id": army.id, "kind": UnitKind.ARCHERS.value, "count": 100, "ammunition": 0})
+    profile = ArmyProfileRow(army_entity_id=army.id, stance=Stance.MARCH, baggage=50, supply_days=30, locked=[])
+    regroup(ctx.rules, [archers], profile)
+    assert archers.ammunition == 0
+    assert await restock(ctx, folk, profile, [archers]) == 0 and archers.ammunition == 0
+    await goods_of(session, ctx.epoch).add(folk.id, CommodityKind.WEAPONS, 10, GoodsFlow.PRODUCTION)
+    assert await restock(ctx, folk, profile, [archers]) > 0
+    assert archers.ammunition == ctx.rules.battle_depth.resupply_volleys

@@ -16,6 +16,7 @@ class ArmyDepthRules:
     earthworks_charge_pct: int = rule(40, 0, 100, W, "Charge strength lost against a defender behind full earthworks (%)")
     earthworks_decay: int = rule(3, 0, 100, W, "Earthworks left on the land that wear away each epoch")
     earthworks_fertility_pct: int = rule(10, 0, 100, W, "Harvest lost under full earthworks (%)")
+    sapper_dig_pct: int = rule(60, 0, 300, W, "Faster an entrenching army digs with enough sappers (%)")
     sapper_road_gain: int = rule(10, 0, 100, W, "Road an army's sappers lay in its region each season")
     road_at: int = rule(30, 0, 100, W, "Military road a region needs before armies march and supply along it as on a built road")
     road_decay: int = rule(1, 0, 100, W, "Military road that falls into disrepair each epoch")

@@ -74,8 +74,13 @@ async def broken_treaties(ctx: TickContext) -> list[Grievance]:
 
 
 async def embargoes(ctx: TickContext) -> list[Grievance]:
-    rows = await ctx.session.scalars(select(TradePolicyRow).where(TradePolicyRow.kind == TradePolicyKind.EMBARGO, TradePolicyRow.partner_node_id.is_not(None)))
-    return [(row.partner_node_id, row.issuer_node_id, CasusBelliKind.TRADE_DISPUTE, None) for row in rows if row.partner_node_id is not None]
+    rows = await ctx.session.scalars(select(TradePolicyRow).where(TradePolicyRow.partner_node_id.is_not(None)))
+    tolls = ctx.rules.war_conduct.toll_dispute_pct
+    return [
+        (row.partner_node_id, row.issuer_node_id, CasusBelliKind.TRADE_DISPUTE, None)
+        for row in rows
+        if row.partner_node_id is not None and (row.kind is TradePolicyKind.EMBARGO or (row.kind is TradePolicyKind.TARIFF and row.rate_pct >= tolls))
+    ]
 
 
 async def defaults(ctx: TickContext) -> list[Grievance]:

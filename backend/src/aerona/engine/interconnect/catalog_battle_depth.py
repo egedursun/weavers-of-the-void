@@ -28,6 +28,9 @@ BATTLE_DEPTH_MECHANICS = (
             Coupling(S.WAR, "shaken and wavering stacks fight weaker and waver from attacking", E.MODIFIER, "battle_depth.shaken_pct"),
             Coupling(S.FAITH, "leadership, a standard and priests rally a routing stack", E.TRIGGER, "battle_depth.rally_chance"),
             Coupling(S.WAR, "squares turn charges, loose order shrugs volleys, wedges strike harder", E.MODIFIER),
+            Coupling(S.WAR, "a turned flank throws every stack of the line into disorder", E.MODIFIER, "battle_depth.flank_organisation"),
+            Coupling(S.WAR, "a broken stack scatters: its deserters leave and the rest straggle home", E.FLOW, "battle_depth.deserted_pct"),
+            Coupling(S.ECONOMY, "volleys are restocked by drawing on the owner's weapon stores", E.FLOW, "battle_depth.shooters_per_ammunition"),
         ),
     ),
     Mechanic(

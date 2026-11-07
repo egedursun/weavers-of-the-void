@@ -26,7 +26,7 @@ WAR_CONDUCT_MECHANICS = (
         couplings=(
             Coupling(S.INTRIGUE, "a fabricated claim becomes a casus belli like any other", E.TRIGGER, "war_conduct.claim_strength"),
             Coupling(S.LAW, "a broken treaty gives every other party a casus belli", E.TRIGGER, "war_conduct.casus_belli_epochs"),
-            Coupling(S.ECONOMY, "a defaulted debt or an embargo gives a casus belli", E.TRIGGER),
+            Coupling(S.ECONOMY, "a defaulted debt, an embargo or steep tolls give a casus belli", E.TRIGGER, "war_conduct.toll_dispute_pct"),
             Coupling(S.FAITH, "a holy war tenet turns neighbours of another god into a casus belli", E.TRIGGER),
         ),
     ),
@@ -96,6 +96,7 @@ WAR_CONDUCT_MECHANICS = (
         targets=("polity", "community"),
         couplings=(
             Coupling(S.WAR, "war score pays for demands; what it cannot pay for is given up", E.MODIFIER, "war_conduct.score_unit"),
+            Coupling(S.ECONOMY, "tribute costs by its amount and its years", E.MODIFIER, "war_conduct.tribute_amount_per_cost"),
             Coupling(S.SOCIAL, "a beaten side with support to spare refuses and fights on, at a cost in weariness", E.TRIGGER, "war_conduct.fight_on_support"),
             Coupling(S.POLITY, "a worn ally leaves with a separate peace", E.TRIGGER, "war_conduct.separate_peace_at"),
         ),
@@ -116,6 +117,13 @@ WAR_CONDUCT_MECHANICS = (
             Coupling(S.MIND, "a people that shuns war loses heart; one that prizes it hardens", E.MODIFIER, "war_conduct.dread_morale"),
             Coupling(S.SOCIAL, "onlookers remember the cruelty and fear its author, more so where mercy is valued", E.FLOW, "war_conduct.atrocity_cruelty"),
             Coupling(S.MIND, "the ruler behind it gains dread", E.FLOW, "war_conduct.atrocity_dread"),
+            Coupling(S.SOCIAL, "executing an enemy's captive counts as terror too", E.TRIGGER),
+            Coupling(
+                S.CULTURE,
+                "a night raid earns treachery renown from honour-minded foes and shames honour-minded raiders",
+                E.MODIFIER,
+                "battle_depth.night_dishonour",
+            ),
             Coupling(S.CULTURE, "propaganda works and heralds raise war support at home", E.MODIFIER, "war_conduct.propaganda_support"),
         ),
     ),

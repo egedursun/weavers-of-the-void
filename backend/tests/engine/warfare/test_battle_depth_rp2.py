@@ -22,6 +22,7 @@ from aerona.engine.military.battle import (
     hide,
     make_stacks,
     missiles,
+    outflank,
     rally,
     refill,
     salvage,
@@ -169,9 +170,9 @@ def test_losses_split_into_their_classes_and_broken_stacks_shed_deserters() -> N
     stack.row.morale, stack.row.morale_state = 2, MoraleState.BROKEN
     host.captives = 40
     walking, stretcher = classify_losses(RULES, host)
-    assert stack.killed + stack.walking + stack.stretcher + stack.captured + stack.missing == 400
+    assert stack.killed + stack.walking + stack.stretcher + stack.captured + stack.missing == stack.lost
     assert stack.missing > 0 and stack.captured == 40 and walking == stack.walking and stretcher == stack.stretcher
-    assert stack.deserted > 0 and stack.row.count == 600 - stack.deserted and stack.row.missing == stack.missing
+    assert stack.deserted > 0 and stack.row.count == 0 and stack.lost == 1000 - stack.deserted and stack.row.missing == stack.missing
 
 
 def test_the_victor_salvages_arms_and_a_feint_pins_the_reserves() -> None:
@@ -186,3 +187,20 @@ def test_the_victor_salvages_arms_and_a_feint_pins_the_reserves() -> None:
     deploy(RULES, defender, Field(TerrainKind.HIGH_PASS, None, night=False))
     rules = replace(RULES, battle_depth=replace(RULES.battle_depth, feint_reserve_pct=100))
     assert feint(rules, seeded(), attacker, defender) and refill(defender) >= 0
+
+
+def test_a_broken_stack_scatters_and_does_not_fight_on() -> None:
+    host = side("Host", [unit(UnitKind.LEVY, 100, ident=1, morale=2)])
+    stack = host.stacks[0]
+    stack.row.morale_state = MoraleState.BROKEN
+    stack.routed = True
+    classify_losses(RULES, host)
+    assert stack.row.count == 0 and stack.deserted + stack.missing == 100 and stack.row.missing == stack.missing
+
+
+def test_a_turned_flank_throws_the_line_into_disorder() -> None:
+    riders = side("Riders", [unit(UnitKind.LIGHT_CAVALRY, 400, ident=1)])
+    line = side("Line", [unit(UnitKind.LEVY, 100, ident=2)], ident=2, defending=True)
+    before = line.stacks[0].row.organisation
+    assert outflank(RULES, riders, line, Field(TerrainKind.PLAIN, None, night=False)) is not None
+    assert line.stacks[0].row.organisation < before

@@ -4,19 +4,31 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.economy import LoanRow
+from aerona.db.tables.finance import TradePolicyRow
+from aerona.db.tables.mind import CultureValueRow
+from aerona.db.tables.renown import ReputationRow
 from aerona.db.tables.warfare import CasusBelliRow, WarProductionRow, WarSideRow
 from aerona.domain.enums.economy import CommodityKind, LoanStatus
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.military import PeaceTermKind
+from aerona.domain.enums.finance import TradePolicyKind
+from aerona.domain.enums.military import PeaceTermKind, UnitKind
+from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.enums.war import CasusBelliKind, WarSide
+from aerona.engine.military import orders
+from aerona.engine.military.clash import night_honour
 from aerona.engine.military.support import reluctance, support_aim
-from aerona.engine.military.terms import fights_on, separate_peace, terror
+from aerona.engine.military.terms import fights_on, separate_peace, terror, war_between
 from aerona.engine.military.war_costs import peace_budget, term_cost
 from aerona.engine.military.war_lines import keep_war_lines, war_output
+from aerona.engine.primitives.stats import stat
+from aerona.engine.renown.book import acclaim
 from aerona.engine.services.casus_belli import gather_casus_belli
 from aerona.engine.services.war import OngoingWar, open_war
 from aerona.rules.registry import Rules
 from tests.engine.warfare.factories import make, make_ctx
+from tests.engine.warfare.test_battle_depth_rp2 import side as battle_side
+from tests.engine.warfare.test_battle_depth_rp2 import unit as battle_unit
 
 RULES = Rules()
 
@@ -148,3 +160,64 @@ async def test_low_war_support_raises_fewer_levies(session: AsyncSession, world_
     assert reluctance(table.low_support_levy_pct, table.support_neutral, table.support_neutral) == 0
     assert reluctance(table.low_support_levy_pct, 0, table.support_neutral) == table.low_support_levy_pct / 100
     assert reluctance(table.low_support_levy_pct, side.support, table.support_neutral) > 0
+
+
+async def test_steep_tolls_give_a_casus_belli_and_tribute_costs_by_its_amount(session: AsyncSession, world_id: int) -> None:
+    ctx = make_ctx(session)
+    issuer, partner = await pair(session, world_id)
+    session.add(
+        TradePolicyRow(
+            issuer_node_id=issuer.id,
+            kind=TradePolicyKind.TARIFF,
+            partner_node_id=partner.id,
+            rate_pct=RULES.war_conduct.toll_dispute_pct,
+            since_epoch=1,
+            locked=[],
+        )
+    )
+    await session.flush()
+    tally = await gather_casus_belli(ctx)
+    assert tally.found.get(CasusBelliKind.TRADE_DISPUTE.value) == 1
+    small = await term_cost(ctx, PeaceTermKind.TRIBUTE, {"amount": 10, "epochs": 3}, None)
+    large = await term_cost(ctx, PeaceTermKind.TRIBUTE, {"amount": 1000, "epochs": 3}, None)
+    assert large > small
+
+
+async def test_executing_a_captive_of_the_enemy_is_terror(session: AsyncSession, world_id: int) -> None:
+    ctx = make_ctx(session)
+    captor, home = await pair(session, world_id)
+    war = await open_war(ctx, captor, home)
+    assert await war_between(ctx, captor.id, home.id) == war.id
+    assert await war_between(ctx, captor.id, captor.id) == war.id
+    side = await session.get(WarSideRow, (war.id, home.id))
+    assert side is not None
+    before = side.support
+    await terror(ctx, war.id, captor, home, "execution of a captive")
+    assert side.support != before
+
+
+async def test_a_night_raid_shames_a_people_that_prizes_honour(session: AsyncSession, world_id: int) -> None:
+    ctx = make_ctx(session)
+    raider_folk, foe_folk = await pair(session, world_id)
+    session.add_all(
+        [CultureValueRow(entity_id=raider_folk.id, axis=ValueAxis.HONOUR, value=80), CultureValueRow(entity_id=foe_folk.id, axis=ValueAxis.HONOUR, value=80)]
+    )
+    army = await orders.raise_standing_army(ctx, raider_folk.id, 200)
+    await session.flush()
+    raider = battle_side("Raiders", [battle_unit(UnitKind.LEVY, 50, ident=1)], ident=raider_folk.id)
+    raider.entity = raider_folk
+    raider.stacks[0].row.army_entity_id = army.id
+    foe = battle_side("Foe", [battle_unit(UnitKind.LEVY, 50, ident=2)], ident=foe_folk.id)
+    foe.entity = foe_folk
+    morale = stat(army, "morale") or 0
+    assert await night_honour(ctx, raider, foe) == 1 and (stat(army, "morale") or 0) < morale
+    views = list(
+        await session.scalars(select(ReputationRow).where(ReputationRow.subject_node_id == raider_folk.id, ReputationRow.axis == ReputationAxis.TRICKERY))
+    )
+    assert views and views[0].value > 0
+
+
+async def test_a_first_unheard_ill_repute_makes_no_empty_reputation(session: AsyncSession, world_id: int) -> None:
+    first, second = await pair(session, world_id)
+    assert await acclaim(session, first.id, second.id, ReputationAxis.HONOUR, amount=-10, epoch=1) is None
+    assert await session.scalar(select(ReputationRow).where(ReputationRow.subject_node_id == first.id)) is None

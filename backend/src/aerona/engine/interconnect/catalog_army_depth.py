@@ -47,6 +47,7 @@ ARMY_DEPTH_MECHANICS = (
         targets=("army", "region"),
         couplings=(
             Coupling(S.WAR, "a defender behind earthworks holds harder", E.MODIFIER, "logistics.entrench_defence_pct"),
+            Coupling(S.WAR, "sappers and a commander strong in siegecraft dig faster", E.MODIFIER, "army_depth.sapper_dig_pct"),
             Coupling(S.WAR, "charges against earthworks lose their weight", E.MODIFIER, "army_depth.earthworks_charge_pct"),
             Coupling(S.ECONOMY, "dug ground yields less harvest until it wears away", E.MODIFIER, "army_depth.earthworks_fertility_pct"),
         ),

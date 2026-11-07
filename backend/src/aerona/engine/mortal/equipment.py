@@ -6,6 +6,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.total import partial
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.mortal import MortalEquipmentRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.economy import MaterialFamily
@@ -61,7 +62,9 @@ async def mount_for(session: AsyncSession, mortal_id: int) -> int | None:
     return None
 
 
-async def auto_equip(session: AsyncSession, mortal_id: int) -> MortalEquipmentRow:
+async def auto_equip(session: AsyncSession, mortal_id: int) -> MortalEquipmentRow | None:
+    if held(mortal_id):
+        return None
     row = await ensure_equipment(session, mortal_id)
     rows = await held_profiles(session, mortal_id)
     owned = {item.item_entity_id for item in rows}

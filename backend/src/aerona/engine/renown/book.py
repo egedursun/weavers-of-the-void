@@ -31,6 +31,8 @@ async def acclaim(
     if not round(amount) or subject_id == community_id or write_blocked(subject_id, REPUTATION_KEY):
         return None
     row = await reputation_row(session, subject_id, community_id, axis, skill)
+    if row is None and amount < 0:
+        return None
     if row is None:
         row = ReputationRow(subject_node_id=subject_id, community_node_id=community_id, axis=axis, skill=skill, value=0, heard_epoch=epoch, locked=[])
         session.add(row)
