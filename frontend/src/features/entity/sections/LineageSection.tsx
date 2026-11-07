@@ -733,11 +733,7 @@ export function LineageSection({ nodeId }: { nodeId: number }) {
   const view = query.data
   if (query.isError)
     return (
-      <Section
-        id='section-lineage'
-        title='Blood and lineage'
-        icon={LINEAGE_ICON}
-      >
+      <Section id='section-blood' title='Blood and lineage' icon={LINEAGE_ICON}>
         <EmptyState
           icon={LINEAGE_ICON}
           title='This could not be read'
@@ -749,11 +745,7 @@ export function LineageSection({ nodeId }: { nodeId: number }) {
   const blocked = reason()
   if (view.reason)
     return (
-      <Section
-        id='section-lineage'
-        title='Blood and lineage'
-        icon={LINEAGE_ICON}
-      >
+      <Section id='section-blood' title='Blood and lineage' icon={LINEAGE_ICON}>
         <EmptyState
           icon={LINEAGE_ICON}
           title='No blood to read'
@@ -763,7 +755,7 @@ export function LineageSection({ nodeId }: { nodeId: number }) {
     )
   return (
     <Section
-      id='section-lineage'
+      id='section-blood'
       title='Blood and lineage'
       description='Genomes for mortals, the allele pools and the magical gift for peoples, and the family likeness of houses.'
       icon={LINEAGE_ICON}

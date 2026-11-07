@@ -1667,7 +1667,7 @@ export function IntrigueSection({ nodeId }: { nodeId: number }) {
       icon={INTRIGUE_ICON}
     >
       <div className='@container/mind flex min-w-0 flex-col gap-4'>
-        <div className='grid min-w-0 grid-cols-2 gap-3 @xl/mind:grid-cols-6'>
+        <div className='grid min-w-0 grid-cols-2 gap-3 @lg/mind:grid-cols-3 @4xl/mind:grid-cols-6'>
           <KpiTile
             label='Secrets kept'
             value={view.secrets.length}

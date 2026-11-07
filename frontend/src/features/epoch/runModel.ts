@@ -186,3 +186,18 @@ export function phaseRatio(phase: RunPhase | null): number | null {
   if (!phase || phase.total <= 0) return null
   return Math.min(1, Math.max(0, phase.no / phase.total))
 }
+
+export const STALE_RUN_MS = 15_000
+
+export function isStaleRun(
+  state: RunState,
+  serverRunning: boolean | undefined,
+  checkedAt: number
+): boolean {
+  return (
+    serverRunning === false &&
+    state.active &&
+    state.startedAt !== null &&
+    checkedAt - state.startedAt > STALE_RUN_MS
+  )
+}

@@ -1,6 +1,12 @@
 import { type ServerEvent } from '@/realtime'
 import { describe, expect, it } from 'vitest'
-import { IDLE_RUN, applyRunEvent, phaseRatio } from './runModel'
+import {
+  IDLE_RUN,
+  STALE_RUN_MS,
+  applyRunEvent,
+  isStaleRun,
+  phaseRatio,
+} from './runModel'
 
 function event(
   kind: string,
@@ -69,5 +75,20 @@ describe('epoch run model', () => {
       event('son.turn_started', { son_id: 1, son_name: 'A', resumed: false })
     )
     expect(state).toBe(IDLE_RUN)
+  })
+})
+
+describe('a run replayed from before a restart', () => {
+  it('is stale once the server says no epoch is running', () => {
+    const state = applyRunEvent(
+      IDLE_RUN,
+      event('epoch.started', { epoch: 7, resuming: false })
+    )
+    const started = state.startedAt ?? 0
+    expect(isStaleRun(state, false, started + STALE_RUN_MS + 1)).toBe(true)
+    expect(isStaleRun(state, true, started + STALE_RUN_MS + 1)).toBe(false)
+    expect(isStaleRun(state, false, started + 1)).toBe(false)
+    expect(isStaleRun(state, undefined, started + STALE_RUN_MS + 1)).toBe(false)
+    expect(isStaleRun(IDLE_RUN, false, started + STALE_RUN_MS + 1)).toBe(false)
   })
 })
