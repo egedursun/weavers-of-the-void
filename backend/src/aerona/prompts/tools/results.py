@@ -365,7 +365,7 @@ class MortalResult(StrEnum):
     LORE_TRADED = "{{ name }} received {{ lore }} for {{ price }}."
     METHOD_CHOSEN = "{{ name }} now practises {{ method }} for {{ process }}."
     WORKSHOP_BOUGHT = "You now own the {{ workshop }} of {{ place }}, bought for {{ price }}."
-    POLICY_LAID = "Your realm now keeps a {{ policy }} on {{ good }} at {{ rate }}%."
+    POLICY_LAID = "Your realm now keeps this {{ policy }} on {{ good }}, at {{ rate }}%."
     POLICY_REFUSED = "You cannot lay that {{ policy }}: {{ why }}."
     HOARD_OPENED = "You hold back {{ units }} {{ good }} from the market of {{ place }}, bought at {{ price }}."
     HOARD_REFUSED = "You cannot buy up {{ good }}: {{ why }}."

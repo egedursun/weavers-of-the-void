@@ -4,6 +4,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
 import {
   EmptyState,
   EntityLink,
@@ -11,7 +12,7 @@ import {
   Paged,
   Section,
 } from '@/components/domain'
-import { Muted } from '@/components/typography'
+import { Muted, Text } from '@/components/typography'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -173,61 +174,72 @@ function CreditCard({ view, blocked, hold }: Props) {
             )}
             {credit.held.length > 0 && <Badge variant='secondary'>Held</Badge>}
           </div>
-          <MindPicker
-            label='Standing with lenders'
-            value={credit.state}
-            table={table(view.credit_states)}
-            blocked={busy}
-            onPick={(value) => state.mutate(value as CreditState)}
-          />
-          <AdjustStats
-            id={`credit-${view.node_id}`}
-            inline
-            groups={[
-              {
-                title: 'Credit',
-                fields: [
-                  {
-                    key: 'rating',
-                    label: 'Rating',
-                    value: credit.rating,
-                    min: 0,
-                    max: SPAN,
-                  },
-                  {
-                    key: 'interest_pct',
-                    label: 'Interest',
-                    value: credit.interest_pct,
-                    min: 0,
-                    max: SPAN,
-                  },
-                  {
-                    key: 'reserves',
-                    label: 'Gold and silver reserves',
-                    value: credit.reserves,
-                    min: 0,
-                  },
-                  {
-                    key: 'defaults',
-                    label: 'Defaults',
-                    value: credit.defaults,
-                    min: 0,
-                  },
-                  {
-                    key: 'restructured_until',
-                    label: 'Restructuring until epoch',
-                    value: credit.restructured_until ?? 0,
-                    min: 0,
-                  },
-                ],
-              },
-            ]}
-            run={({ key, value }) =>
-              unwrap(
-                api.POST('/api/actions/credit:set', {
-                  body: { subject_id: view.node_id, [key]: value, hold },
-                })
-              )
+          <ItemRow
+            icon={CREDIT_ICON}
+            tone={CREDIT_TONE[credit.state] ?? 'muted'}
+            title='Set the credit by hand'
+            meta='Standing, rating, interest, reserves, defaults and restructuring'
+            editLabel='the credit'
+            editor={
+              <>
+                <MindPicker
+                  label='Standing with lenders'
+                  value={credit.state}
+                  table={table(view.credit_states)}
+                  blocked={busy}
+                  onPick={(value) => state.mutate(value as CreditState)}
+                />
+                <AdjustStats
+                  id={`credit-${view.node_id}`}
+                  inline
+                  groups={[
+                    {
+                      title: 'Credit',
+                      fields: [
+                        {
+                          key: 'rating',
+                          label: 'Rating',
+                          value: credit.rating,
+                          min: 0,
+                          max: SPAN,
+                        },
+                        {
+                          key: 'interest_pct',
+                          label: 'Interest',
+                          value: credit.interest_pct,
+                          min: 0,
+                          max: SPAN,
+                        },
+                        {
+                          key: 'reserves',
+                          label: 'Gold and silver reserves',
+                          value: credit.reserves,
+                          min: 0,
+                        },
+                        {
+                          key: 'defaults',
+                          label: 'Defaults',
+                          value: credit.defaults,
+                          min: 0,
+                        },
+                        {
+                          key: 'restructured_until',
+                          label: 'Restructuring until epoch',
+                          value: credit.restructured_until ?? 0,
+                          min: 0,
+                        },
+                      ],
+                    },
+                  ]}
+                  run={({ key, value }) =>
+                    unwrap(
+                      api.POST('/api/actions/credit:set', {
+                        body: { subject_id: view.node_id, [key]: value, hold },
+                      })
+                    )
+                  }
+                />
+              </>
             }
           />
           <Button
@@ -758,54 +770,64 @@ function AccessCard({ view, hold }: Props) {
       icon={ACCESS_ICON}
       hint='The share of what this place makes that its roads and routes carry to market, and what smugglers slipped in this epoch.'
     >
-      <div className='grid min-w-0 grid-cols-2 gap-3'>
-        <KpiTile
-          label='Access'
-          value={`${view.market_access ?? 0}%`}
-          icon={ACCESS_ICON}
-          tone='verdigris'
-          meter={{
-            value: view.market_access ?? 0,
-            max: SPAN,
-            label: 'Market access',
-          }}
+      <div className='flex min-w-0 flex-col gap-2'>
+        <div className='flex min-w-0 items-center justify-between gap-2'>
+          <Muted variant='caption'>Reaches market</Muted>
+          <Text
+            variant='caption'
+            weight='semibold'
+          >{`${view.market_access ?? 0}%`}</Text>
+        </div>
+        <Progress
+          value={view.market_access ?? 0}
+          size='sm'
+          tone='success'
+          aria-label={`Market access ${view.market_access ?? 0}`}
         />
-        <KpiTile
-          label='Smuggled'
-          value={view.black_market ?? 0}
-          icon={HOARD_ICON}
-          tone={(view.black_market ?? 0) > 0 ? 'danger' : 'muted'}
-        />
+        <div className='flex min-w-0 flex-wrap gap-2'>
+          <Badge
+            variant={(view.black_market ?? 0) > 0 ? 'destructive' : 'outline'}
+          >{`${view.black_market ?? 0} loads smuggled in`}</Badge>
+        </div>
       </div>
-      <AdjustStats
-        id={`access-${view.node_id}`}
-        inline
-        groups={[
-          {
-            title: 'Access',
-            fields: [
+      <ItemRow
+        icon={ACCESS_ICON}
+        tone='verdigris'
+        title='Set access by hand'
+        meta='What reaches market and what was smuggled in'
+        editLabel='market access'
+        editor={
+          <AdjustStats
+            id={`access-${view.node_id}`}
+            inline
+            groups={[
               {
-                key: 'market_access',
-                label: 'Market access',
-                value: view.market_access ?? 0,
-                min: 0,
-                max: SPAN,
+                title: 'Access',
+                fields: [
+                  {
+                    key: 'market_access',
+                    label: 'Market access',
+                    value: view.market_access ?? 0,
+                    min: 0,
+                    max: SPAN,
+                  },
+                  {
+                    key: 'black_market',
+                    label: 'Smuggled',
+                    value: view.black_market ?? 0,
+                    min: 0,
+                  },
+                ],
               },
-              {
-                key: 'black_market',
-                label: 'Smuggled',
-                value: view.black_market ?? 0,
-                min: 0,
-              },
-            ],
-          },
-        ]}
-        run={({ key, value }) =>
-          unwrap(
-            api.POST('/api/actions/industry:set', {
-              body: { community_id: view.node_id, [key]: value, hold },
-            })
-          )
+            ]}
+            run={({ key, value }) =>
+              unwrap(
+                api.POST('/api/actions/industry:set', {
+                  body: { community_id: view.node_id, [key]: value, hold },
+                })
+              )
+            }
+          />
         }
       />
     </MindCard>

@@ -105,6 +105,15 @@ async def market(scope: PlayerScope, node_id: int) -> EntityRow:
     return found
 
 
+async def policy_phrase(scope: PlayerScope, row: TradePolicyRow) -> str:
+    good = COMMODITIES[row.commodity].label.lower() if row.commodity is not None else "every good"
+    partner = await scope.session.get(NodeRow, row.partner_node_id) if row.partner_node_id is not None else None
+    against = f" against {partner.name}" if partner is not None else ""
+    if row.kind is TradePolicyKind.EMBARGO:
+        return f"lays an embargo on {good}{against}"
+    return f"lays a {POLICY_LABELS[row.kind].lower()} of {row.rate_pct}% on {good}{against}"
+
+
 @player_action("trade_policy:set", ActionKind.EDIT_RECORD)
 async def set_trade_policy(scope: PlayerScope, command: SetTradePolicy) -> Effect:
     issuer = await node(scope, command.issuer_id)
@@ -135,8 +144,7 @@ async def set_trade_policy(scope: PlayerScope, command: SetTradePolicy) -> Effec
     row.reason = command.reason or row.reason or "by the Creator's word"
     row.locked = held(row.locked, ["rate_pct", "kind"], command.hold)
     await scope.session.flush()
-    good = COMMODITIES[command.commodity].label.lower() if command.commodity is not None else "every good"
-    return Effect(f"{issuer.name} lays a {POLICY_LABELS[command.kind].lower()} on {good}.", target_node_id=issuer.id, values={"policy_id": row.id})
+    return Effect(f"{issuer.name} {await policy_phrase(scope, row)}.", target_node_id=issuer.id, values={"policy_id": row.id})
 
 
 @player_action("trade_policy:remove", ActionKind.EDIT_RECORD)
@@ -183,6 +191,8 @@ async def open_speculation(scope: PlayerScope, command: OpenSpeculation) -> Effe
     place = await market(scope, command.market_id)
     ctx = await scope.context("speculation_open")
     taken = sum(lot.quantity for lot in await goods_of(ctx.session, ctx.epoch).take(place.id, command.commodity, command.units, GoodsFlow.PLAYER))
+    if taken <= 0:
+        raise ValidationFailedError(f"The market of {place.name} holds no {COMMODITIES[command.commodity].label.lower()} to hoard.")
     row = SpeculationRow(
         merchant_node_id=command.merchant_id,
         market_node_id=place.id,

@@ -293,7 +293,7 @@ async def ledger_views(session: AsyncSession, node_id: int) -> list[WorksLedgerV
         WorksLedgerView(
             id=row.id,
             epoch=row.epoch,
-            site=row.site.replace("_", " "),
+            site=row.site.replace("_", " ").capitalize(),
             community=refs.get(row.community_node_id),
             owner=refs.get(row.owner_node_id) if row.owner_node_id is not None else None,
             revenue=row.revenue,

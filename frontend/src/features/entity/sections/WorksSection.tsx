@@ -295,26 +295,35 @@ function PowerCard({ view, blocked, hold }: Props) {
           />
         ))}
       </div>
-      <AdjustStats
-        id={`power-${view.node_id}`}
-        inline
-        groups={[
-          {
-            title: 'Power each epoch',
-            fields: view.energy.map((row) => ({
-              key: row.kind,
-              label: row.label,
-              value: row.supply,
-              min: 0,
-            })),
-          },
-        ]}
-        run={({ key, value }) =>
-          unwrap(
-            api.POST('/api/actions/industry:set', {
-              body: { community_id: view.node_id, [key]: value, hold },
-            })
-          )
+      <ItemRow
+        icon={POWER_ICON}
+        tone='verdigris'
+        title='Set the power by hand'
+        meta='Every source can be set and held against the world'
+        editLabel='the power each epoch'
+        editor={
+          <AdjustStats
+            id={`power-${view.node_id}`}
+            inline
+            groups={[
+              {
+                title: 'Power each epoch',
+                fields: view.energy.map((row) => ({
+                  key: row.kind,
+                  label: row.label,
+                  value: row.supply,
+                  min: 0,
+                })),
+              },
+            ]}
+            run={({ key, value }) =>
+              unwrap(
+                api.POST('/api/actions/industry:set', {
+                  body: { community_id: view.node_id, [key]: value, hold },
+                })
+              )
+            }
+          />
         }
       />
       {view.stores !== null && (
@@ -430,7 +439,7 @@ function StoresCard({ view, hold }: Props) {
           Nothing reckoned yet; the stores are counted at the next epoch.
         </Muted>
       ) : (
-        <div className='grid min-w-0 grid-cols-2 gap-3 @xl/mind:grid-cols-5'>
+        <div className='grid min-w-0 grid-cols-2 gap-3 @xl/mind:grid-cols-3'>
           <KpiTile
             label='Meals'
             value={stores.meal_tier_label}
@@ -470,60 +479,69 @@ function StoresCard({ view, hold }: Props) {
         </div>
       )}
       {stores !== null && (
-        <AdjustStats
-          id={`stores-${view.node_id}`}
-          inline
-          groups={[
-            {
-              title: 'This epoch',
-              fields: [
+        <ItemRow
+          icon={STORES_ICON}
+          tone='info'
+          title='Set the stores by hand'
+          meta='Meals, drink, spoilage, preserving, tool wear and the heat needed to live'
+          editLabel='the figures of this epoch'
+          editor={
+            <AdjustStats
+              id={`stores-${view.node_id}`}
+              inline
+              groups={[
                 {
-                  key: 'meal_quality',
-                  label: 'Meal quality',
-                  value: stores.meal_quality,
-                  min: 0,
-                  max: SPAN,
+                  title: 'This epoch',
+                  fields: [
+                    {
+                      key: 'meal_quality',
+                      label: 'Meal quality',
+                      value: stores.meal_quality,
+                      min: 0,
+                      max: SPAN,
+                    },
+                    {
+                      key: 'spoiled',
+                      label: 'Spoiled',
+                      value: stores.spoiled,
+                      min: 0,
+                    },
+                    {
+                      key: 'preserved',
+                      label: 'Preserved',
+                      value: stores.preserved,
+                      min: 0,
+                    },
+                    {
+                      key: 'tools_worn',
+                      label: 'Tools worn',
+                      value: stores.tools_worn,
+                      min: 0,
+                    },
+                    {
+                      key: 'heat_need',
+                      label: 'Heat needed to live',
+                      value: stores.heat_need,
+                      min: 0,
+                    },
+                    {
+                      key: 'drink',
+                      label: 'Drink',
+                      value: stores.drink,
+                      min: 0,
+                      max: SPAN,
+                    },
+                  ],
                 },
-                {
-                  key: 'spoiled',
-                  label: 'Spoiled',
-                  value: stores.spoiled,
-                  min: 0,
-                },
-                {
-                  key: 'preserved',
-                  label: 'Preserved',
-                  value: stores.preserved,
-                  min: 0,
-                },
-                {
-                  key: 'tools_worn',
-                  label: 'Tools worn',
-                  value: stores.tools_worn,
-                  min: 0,
-                },
-                {
-                  key: 'heat_need',
-                  label: 'Heat needed to live',
-                  value: stores.heat_need,
-                  min: 0,
-                },
-                {
-                  key: 'drink',
-                  label: 'Drink',
-                  value: stores.drink,
-                  min: 0,
-                  max: SPAN,
-                },
-              ],
-            },
-          ]}
-          run={({ key, value }) =>
-            unwrap(
-              api.POST('/api/actions/industry:set', {
-                body: { community_id: view.node_id, [key]: value, hold },
-              })
-            )
+              ]}
+              run={({ key, value }) =>
+                unwrap(
+                  api.POST('/api/actions/industry:set', {
+                    body: { community_id: view.node_id, [key]: value, hold },
+                  })
+                )
+              }
+            />
           }
         />
       )}
@@ -861,6 +879,7 @@ function HoldingsCard({ view, blocked, hold }: Props) {
       title='Holdings'
       icon={LEDGER_ICON}
       hint={`The workshops and resources this one owns${view.holdings.length ? `, earning ${earned} at last count` : ''}.`}
+      wide
     >
       {view.holdings.length === 0 ? (
         <Muted variant='caption'>
@@ -1090,16 +1109,16 @@ export function WorksSection({ nodeId }: { nodeId: number }) {
             <PowerCard view={view} blocked={blocked} hold={hold} />
           )}
           {view.community && (
+            <ShocksCard view={view} blocked={blocked} hold={hold} />
+          )}
+          {view.community && (
             <StoresCard view={view} blocked={blocked} hold={hold} />
           )}
           {view.community && (
             <SitesCard view={view} blocked={blocked} hold={hold} />
           )}
-          {view.community && (
-            <ShocksCard view={view} blocked={blocked} hold={hold} />
-          )}
-          <HoldingsCard view={view} blocked={blocked} hold={hold} />
           <LedgerCard view={view} blocked={blocked} hold={hold} />
+          <HoldingsCard view={view} blocked={blocked} hold={hold} />
           <LandCard view={view} blocked={blocked} hold={hold} />
         </div>
         <ControlPanel
