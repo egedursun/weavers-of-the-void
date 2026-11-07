@@ -14,6 +14,14 @@ from sqlalchemy.util import EMPTY_DICT
 from aerona.db.read_memo import memo_of, table_names
 
 PREFIX_KEYS = 2
+COLUMN_KEYS: dict[Mapper[Any], tuple[str, ...]] = {}
+
+
+def column_keys(mapper: Mapper[Any]) -> tuple[str, ...]:
+    found = COLUMN_KEYS.get(mapper)
+    if found is None:
+        found = COLUMN_KEYS[mapper] = tuple(prop.key for prop in mapper.column_attrs if not prop.deferred)
+    return found
 
 
 class FastSession(AsyncSession):
@@ -45,7 +53,9 @@ class FastSession(AsyncSession):
         if known is not None:
             state = instance_state(known)
             if not state.expired and state.mapper.isa(mapper):
-                return known
+                if all(key in state.dict for key in column_keys(mapper)):
+                    return known
+                return await super().get(entity, ident, populate_existing=True)
         tables = table_names(mapper.tables)
         if len(mapper.primary_key) == PREFIX_KEYS and isinstance(ident, tuple | list):
             siblings = await self.prefix_rows(mapper, ident[0], tables)

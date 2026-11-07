@@ -32,8 +32,8 @@ export function MindCard({
     <div
       className={
         wide
-          ? 'flex min-w-0 flex-col gap-4 rounded-lg border bg-background p-4 @xl/mind:col-span-2'
-          : 'flex min-w-0 flex-col gap-4 rounded-lg border bg-background p-4'
+          ? '@container/mind flex min-w-0 flex-col gap-4 rounded-lg border bg-background p-4 @xl/mind:col-span-2'
+          : '@container/mind flex min-w-0 flex-col gap-4 rounded-lg border bg-background p-4'
       }
     >
       <div className='flex min-w-0 items-center gap-2'>
