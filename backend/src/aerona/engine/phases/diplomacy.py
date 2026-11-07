@@ -19,6 +19,7 @@ from aerona.engine.body.cohorts import war_appetite
 from aerona.engine.context import TickContext
 from aerona.engine.economy.routes import blockade_pressure
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.intrigue.beliefs import daring
 from aerona.engine.mind.drives import betrayal_drive, closeness, war_drive
 from aerona.engine.mortal.kinship import marry
 from aerona.engine.phase import Phase
@@ -334,6 +335,7 @@ async def _neighbour_pair(
             * pair.war_weight(first.id, second.id)
             * min(await war_appetite(ctx, first), await war_appetite(ctx, second))
             * max(await war_drive(ctx.session, ctx.rules, first.id), await war_drive(ctx.session, ctx.rules, second.id))
+            * await daring(ctx, first.id, second.id)
         )
         and await declare_war(
             ctx, first.id, second.id, "blood feud turned to war" if feud else "accumulated grudge", cause=WarCause.VENDETTA if feud else WarCause.GRUDGE

@@ -18,6 +18,7 @@ from aerona.engine.interconnect.guards import AFTER_PHASE
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.transfers import move_amount
 from aerona.rules.registry import Rules
 
 A = AgeBand
@@ -227,8 +228,7 @@ def age_cohorts(session: AsyncSession, community: EntityRow, rows: dict[CohortKe
         if moving > 0:
             moves.append((key, (A.ADULT if band is A.CHILD else A.ELDER, sex, social_class, condition), moving))
     for source, target, moving in moves:
-        rows[source].count -= moving
-        row_for(session, rows, community.id, target, epoch).count += moving
+        move_amount(rows[source], row_for(session, rows, community.id, target, epoch), "count", moving)
 
 
 async def rebalance_classes(session: AsyncSession, rules: Rules, community: EntityRow, rows: dict[CohortKey, CohortRow], epoch: int) -> None:

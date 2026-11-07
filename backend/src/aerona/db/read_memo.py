@@ -5,6 +5,8 @@ from typing import Any, Concatenate
 from sqlalchemy import Table, event
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstanceState, ORMExecuteState, Session
+from sqlalchemy.sql import visitors
+from sqlalchemy.sql.elements import ClauseElement
 
 MEMO_KEY = "aerona.read_memo"
 FLUSHING_KEY = "aerona.read_memo.flushing"
@@ -134,6 +136,30 @@ event.listen(Session, "before_flush", note_flushing)
 event.listen(Session, "after_flush", forget_flushed)
 event.listen(Session, "after_soft_rollback", forget_all)
 event.listen(Session, "do_orm_execute", forget_on_write)
+
+
+def read_tables(state: ORMExecuteState) -> set[str]:
+    statement = state.statement
+    if not isinstance(statement, ClauseElement):
+        return set()
+    found = {element.name for element in visitors.iterate(statement) if isinstance(element, Table)}
+    for mapper in state.all_mappers:
+        found.update(table.name for table in mapper.tables if isinstance(table, Table))
+    return found
+
+
+def lazy_autoflush(state: ORMExecuteState) -> None:
+    if not state.is_select or state.execution_options.get("autoflush") is not None:
+        return
+    pending = pending_tables(state.session)
+    if not pending:
+        return
+    tables = read_tables(state)
+    if tables and pending.isdisjoint(tables):
+        state.update_execution_options(autoflush=False)
+
+
+event.listen(Session, "do_orm_execute", lazy_autoflush)
 
 
 def memoized[**P, R](*tables: Any) -> Callable[[Callable[Concatenate[AsyncSession, P], Awaitable[R]]], Callable[Concatenate[AsyncSession, P], Awaitable[R]]]:

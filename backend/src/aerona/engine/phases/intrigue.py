@@ -5,7 +5,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.intrigue.beliefs import fade_beliefs
 from aerona.engine.intrigue.identities import tend_identity
-from aerona.engine.intrigue.names import renew_names, research_names, seed_true_names
+from aerona.engine.intrigue.names import confide_names, renew_names, research_names, seed_true_names
 from aerona.engine.intrigue.schemes import OPEN, SchemeTally, plotters, tend_scheme
 from aerona.engine.intrigue.sources import (
     SourceTally,
@@ -15,6 +15,7 @@ from aerona.engine.intrigue.sources import (
     masked_lives,
     neighbours_seen,
     noble_debts,
+    scout_reports,
     spy_reports,
 )
 from aerona.engine.phase import Phase
@@ -56,6 +57,7 @@ async def intrigue_survey(ctx: TickContext) -> None:
     "settlement.population",
     "settlement.prosperity",
     "settlement.wealth",
+    "table.army_units",
     "table.beliefs",
     "table.hooks",
     "table.identities",
@@ -86,8 +88,10 @@ async def intrigue(ctx: TickContext) -> None:
     ctx.count("beliefs_faded", await fade_beliefs(ctx))
     await neighbours_seen(ctx, atlas, sources)
     await spy_reports(ctx, sources)
+    await scout_reports(ctx, sources)
     await likeness_noticed(ctx, sources)
     ctx.count("true_names_learned", await research_names(ctx))
+    ctx.count("true_names_confided", await confide_names(ctx))
     ctx.count("true_names_renewed", await renew_names(ctx, Namer(ctx.session, ctx.rules)))
     unmasked = 0
     for row in list(await ctx.session.scalars(select(IdentityRow).order_by(IdentityRow.mortal_node_id))):

@@ -1,12 +1,15 @@
 import asyncio
 import hashlib
+import multiprocessing
 from collections.abc import Sequence
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
 from dataclasses import dataclass
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.cartography.generator import generate_map
+from aerona.cartography.generator import GeneratedMap, generate_map
 from aerona.cartography.model import MARKER_TYPES, MapRequest, MarkerInput, PositionUpdate, RegionInput, WorldMap, placement_preference
 from aerona.cartography.terrain import TerrainOverrides
 from aerona.constants.cartography import MAP_GENERATOR_VERSION
@@ -19,6 +22,9 @@ from aerona.domain.enums.world import Discovery
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.rules.registry import Rules
 
+MAP_WORKERS = 4
+PARALLEL_FROM = 2
+POOL: list[ProcessPoolExecutor] = []
 MAPPED_STATUSES = (EntityStatus.CANON, EntityStatus.DEAD, EntityStatus.FULFILLED)
 
 
@@ -89,10 +95,24 @@ def _apply_positions(entities: dict[int, EntityRow], updates: Sequence[PositionU
             found.map_x, found.map_y = update.x, update.y
 
 
-async def store_world_map(session: AsyncSession, rules: Rules, world: WorldRow, epoch: int) -> WorldMap:
-    entities = await world_entities(session, world.id)
-    request = map_request(world, entities)
-    generated = await asyncio.to_thread(generate_map, request, rules)
+async def generated_maps(requests: Sequence[MapRequest], rules: Rules) -> list[GeneratedMap]:
+    if len(requests) < PARALLEL_FROM:
+        return [await asyncio.to_thread(generate_map, request, rules) for request in requests]
+    loop = asyncio.get_running_loop()
+    try:
+        return list(await asyncio.gather(*(loop.run_in_executor(map_pool(), generate_map, request, rules) for request in requests)))
+    except BrokenProcessPool:
+        POOL.clear()
+        return [await asyncio.to_thread(generate_map, request, rules) for request in requests]
+
+
+def map_pool() -> ProcessPoolExecutor:
+    if not POOL:
+        POOL.append(ProcessPoolExecutor(max_workers=MAP_WORKERS, mp_context=multiprocessing.get_context("spawn")))
+    return POOL[0]
+
+
+async def apply_world_map(session: AsyncSession, world: WorldRow, entities: list[EntityRow], generated: GeneratedMap, epoch: int) -> WorldMap:
     world_map = generated.world_map
     by_id = {entity.id: entity for entity in entities}
     _apply_positions(by_id, world_map.new_positions)
@@ -109,6 +129,12 @@ async def store_world_map(session: AsyncSession, rules: Rules, world: WorldRow, 
         existing.geometry = payload
     await session.flush()
     return world_map
+
+
+async def store_world_map(session: AsyncSession, rules: Rules, world: WorldRow, epoch: int) -> WorldMap:
+    entities = await world_entities(session, world.id)
+    (generated,) = await generated_maps([map_request(world, entities)], rules)
+    return await apply_world_map(session, world, entities, generated, epoch)
 
 
 async def regenerate_world_map(session: AsyncSession, rules: Rules, world_id: int, epoch: int) -> WorldMap:
@@ -129,9 +155,10 @@ async def map_is_stale(session: AsyncSession, world_id: int) -> bool:
 async def refresh_world_maps(session: AsyncSession, rules: Rules, epoch: int) -> list[MapRefresh]:
     refreshed: list[MapRefresh] = []
     statement = select(WorldRow).where(WorldRow.discovery != Discovery.FORGOTTEN).order_by(WorldRow.id)
-    for world in list(await session.scalars(statement)):
-        if not await map_is_stale(session, world.id):
-            continue
-        world_map = await store_world_map(session, rules, world, epoch)
+    stale = [world for world in list(await session.scalars(statement)) if await map_is_stale(session, world.id)]
+    members = {world.id: await world_entities(session, world.id) for world in stale}
+    maps = await generated_maps([map_request(world, members[world.id]) for world in stale], rules)
+    for world, generated in zip(stale, maps, strict=True):
+        world_map = await apply_world_map(session, world, members[world.id], generated, epoch)
         refreshed.append(MapRefresh(world_id=world.id, regions=len(world_map.regions), regenerated=True))
     return refreshed

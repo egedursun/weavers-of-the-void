@@ -141,15 +141,30 @@ def profile_held(row: object, column: str) -> bool:
     return write_blocked(int(getattr(row, shape.node_column)), profile_key(shape.table, column))
 
 
+def column_frozen(row: object, column: str) -> bool:
+    if column in held_columns(row):
+        return True
+    mapper = object_mapper(row)
+    shape = _shape(mapper)
+    if shape is not None:
+        node_id = getattr(row, shape.node_column)
+        return node_id is not None and write_blocked(int(node_id), profile_key(shape.table, column))
+    owned = owned_shape(mapper)
+    return owned is not None and any(write_blocked(node_id, profile_key(owned.table, column)) for node_id in owner_ids(row, owned))
+
+
 def restore_owned(row: object) -> list[str]:
     state = instance_state(row)
     shape = owned_shape(state.mapper)
     if shape is None or state.pending:
         return []
+    changed = [column for column in shape.columns if column in state.committed_state]
+    if not changed:
+        return []
     owners = owner_ids(row, shape)
     held = held_columns(row)
     restored: list[str] = []
-    for column in shape.columns:
+    for column in changed:
         history = get_history(row, column)
         if not history.deleted or not history.has_changes():
             continue
@@ -164,12 +179,15 @@ def restore_held(row: object) -> list[str]:
     shape = _shape(state.mapper)
     if shape is None or state.pending:
         return restore_owned(row)
+    changed = [column for column in shape.columns if column in state.committed_state]
+    if not changed:
+        return []
     node_id = getattr(row, shape.node_column)
     if node_id is None:
         return []
     held = held_columns(row)
     restored: list[str] = []
-    for column in shape.columns:
+    for column in changed:
         history = get_history(row, column)
         if not history.deleted or not history.has_changes():
             continue

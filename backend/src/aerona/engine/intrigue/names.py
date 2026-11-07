@@ -5,6 +5,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.intrigue import HookRow, TrueNameRow
 from aerona.db.tables.node import NodeRow
+from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -12,6 +13,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.intrigue import HookSource
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.secrets import grant_hook
+from aerona.engine.mortal.kin import partners_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.queries import living_entity
@@ -20,6 +22,7 @@ ALWAYS_NAMED = frozenset({EntityType.SPIRIT, EntityType.OUTER_BEING})
 SOMETIMES_NAMED = frozenset({EntityType.MORTAL, EntityType.PLACE, EntityType.ITEM, EntityType.SPECIES})
 SCHOLARS = frozenset({MortalRole.SAGE, MortalRole.SCRIBE, MortalRole.SEER})
 KNOWN = "known_by"
+INTIMATE_AT = 70
 
 
 async def name_bearer(ctx: TickContext, bearer_id: int, name: str, language_id: int | None = None) -> TrueNameRow | None:
@@ -78,6 +81,30 @@ async def research_names(ctx: TickContext) -> int:
                 learned += 1
                 break
     return learned
+
+
+async def intimates_of(ctx: TickContext, bearer_id: int) -> list[int]:
+    close = await ctx.session.scalars(
+        select(RelationshipRow.subject_node_id)
+        .where(RelationshipRow.holder_node_id == bearer_id, RelationshipRow.friendship >= INTIMATE_AT)
+        .order_by(RelationshipRow.friendship.desc(), RelationshipRow.subject_node_id)
+    )
+    return list(dict.fromkeys([*await partners_of(ctx.session, bearer_id), *close]))
+
+
+async def confide_names(ctx: TickContext) -> int:
+    confided = 0
+    for row in list(await ctx.session.scalars(select(TrueNameRow).order_by(TrueNameRow.bearer_node_id))):
+        bearer = await living_entity(ctx.session, row.bearer_node_id)
+        if bearer is None or bearer.entity_type is not EntityType.MORTAL or held(bearer.id):
+            continue
+        if not ctx.rng(seed_of("intrigue.confide_name", bearer.id, ctx.epoch)).chance(ctx.rules.intrigue.confide_name_pct):
+            continue
+        for intimate in await intimates_of(ctx, bearer.id):
+            if intimate not in row.known_by and await living_entity(ctx.session, intimate) is not None and await teach_name(ctx, row, intimate):
+                confided += 1
+                break
+    return confided
 
 
 async def knows_name(ctx: TickContext, knower_id: int, bearer_id: int | None) -> bool:

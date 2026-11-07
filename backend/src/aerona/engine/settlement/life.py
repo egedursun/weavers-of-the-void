@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 
 from aerona.catalog.materials import BUILD_MATERIALS, MATERIALS
 from aerona.constants.units import PERCENT
+from aerona.db.tables.communication import PublicOpinionRow
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleCultureRow
 from aerona.db.tables.disease import QuarantineRow
 from aerona.db.tables.economy import TradeFlowRow, WorkshopRow
@@ -57,6 +58,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.society import supply_index
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat
+from aerona.engine.renown.currencies import realm_of_community, ruler_of_realm
 from aerona.engine.settlement.book import Town, ledger, tier_for
 from aerona.engine.settlement.districts import AdminParts, admin_parts, designs_for, unify_market, wound_district
 from aerona.engine.settlement.storage import design_for, settlement_store, storage_index, store_kind
@@ -490,6 +492,15 @@ async def quarantined(ctx: TickContext, region: int | None) -> bool:
     return row is not None and row.until_epoch >= ctx.epoch
 
 
+async def ruler_discontent(ctx: TickContext, town_id: int) -> float:
+    realm = await realm_of_community(ctx.session, town_id)
+    ruler = await ruler_of_realm(ctx.session, realm) if realm is not None else None
+    opinion = await ctx.session.get(PublicOpinionRow, (town_id, ruler)) if ruler is not None else None
+    if opinion is None or opinion.approval >= 0:
+        return 0.0
+    return -opinion.approval * ctx.rules.communication.disapproval_unrest_pct / PERCENT
+
+
 async def stir_unrest(ctx: TickContext, town: Town, *, tension: int, festival: bool, region: int | None) -> None:
     table = ctx.rules.crime
     taxation = ctx.rules.taxation
@@ -500,6 +511,7 @@ async def stir_unrest(ctx: TickContext, town: Town, *, tension: int, festival: b
     hunger = max(0.0, 1 - food / FOOD_INDEX) if food is not None else 0.0
     rows = await cohorts_of(ctx.session, town.entity.id)
     pressure = await needs_unrest(ctx.session, ctx.rules, town.entity.id)
+    discontent = await ruler_discontent(ctx, town.entity.id)
     unrest = (
         profile.unrest * (1 - table.unrest_decay / PERCENT)
         + profile.tax_rate * taxation.unrest_per_tax / PERCENT
@@ -508,6 +520,7 @@ async def stir_unrest(ctx: TickContext, town: Town, *, tension: int, festival: b
         + pressure / 4
         + bound_revolt(ctx.rules, rows)
         + tension
+        + discontent
         + (ctx.rules.urban.ration_unrest if profile.rationing else 0)
         + (ctx.rules.epidemiology.quarantine_unrest if await quarantined(ctx, region) else 0)
         - (taxation.festival_relief if festival else 0)

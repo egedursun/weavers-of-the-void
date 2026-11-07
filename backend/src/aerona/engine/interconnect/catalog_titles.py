@@ -36,4 +36,30 @@ TITLE_MECHANICS: tuple[Mechanic, ...] = (
             Coupling(S.ENVIRONMENT, "lands held long under another title drift into it", E.FLOW, "titles.drift_epochs"),
         ),
     ),
+    Mechanic(
+        key="seats",
+        spec_item="S4.11",
+        title=(
+            "Faiths raise sees, archsees and a world's high seat for their foremost cleric, and free companies and guilds raise "
+            "captaincies and guildmasterships for their leaders, who gain prestige by them"
+        ),
+        subsystem=S.POLITY,
+        phases=("titles",),
+        surface=Surface(drawer=TITLES),
+        backfill="none: seats rise from the next epoch",
+        templates=("titles.seat_founded",),
+        fields=("rank", "holder_node_id", "prestige", "capital_entity_id"),
+        tables=(TitleProfileRow.__tablename__, TitleHolderRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("cult", "faction", "mortal"),
+        couplings=(
+            Coupling(
+                S.FAITH,
+                "a faith with enough followers raises a see, then an archsee, and the largest of a world holds the high seat",
+                E.TRIGGER,
+                "titles.see_followers",
+            ),
+            Coupling(S.SOCIAL, "the holder of a seat gains prestige each epoch by its rank", E.FLOW, "titles.seat_prestige"),
+        ),
+    ),
 )

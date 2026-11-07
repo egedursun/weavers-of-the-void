@@ -7,6 +7,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import CohortKey, row_for, total
 from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.transfers import move_amount
 
 BOUND = SocialClass.SERF_OR_SLAVE
 
@@ -42,8 +43,7 @@ async def move_people(
         count = round_half_up(rows[key].count * share)
         if count <= 0:
             continue
-        rows[key].count -= count
         landed = CohortCondition.NONE if condition in {CohortCondition.ENSLAVED, CohortCondition.CAPTIVE} else condition
-        row_for(ctx.session, rows, community.id, (band, sex, target, landed), ctx.epoch).count += count
-        moved += count
+        if move_amount(rows[key], row_for(ctx.session, rows, community.id, (band, sex, target, landed), ctx.epoch), "count", count):
+            moved += count
     return moved

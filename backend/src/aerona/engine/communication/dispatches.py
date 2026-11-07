@@ -9,8 +9,9 @@ from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.lore import MessageRow
-from aerona.db.tables.military import SpyNetworkRow
+from aerona.db.tables.military import ArmyProfileRow, SpyNetworkRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow, TreatyBreachRow, TreatyClauseRow
+from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind
@@ -18,14 +19,14 @@ from aerona.domain.enums.communication import DispatchContent, DispatchState, En
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faction import OUTLAW_KINDS
 from aerona.domain.enums.intrigue import BeliefSource, FavourOrigin
-from aerona.domain.enums.mind import ActKind, HonourModel, MemoryKind, PreferenceKind, SkillKind
+from aerona.domain.enums.mind import ActKind, HonourModel, MemoryKind, PreferenceKind, SkillKind, ValueAxis
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.communication.post import CLAUSES, COMMODITY, FACTS, FORGER, LOCKED_STATE, OVERLAND, SPIED, TREATY, send
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.beliefs import believe
 from aerona.engine.intrigue.favours import owe
-from aerona.engine.mind.book import best_skill
+from aerona.engine.mind.book import best_skill, values_for
 from aerona.engine.mind.ethics import culture_of, honour_of
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember
@@ -84,6 +85,27 @@ async def outlaws_near(ctx: TickContext, row: MessageRow) -> bool:
     return gang is not None
 
 
+async def enemy_army_near(ctx: TickContext, row: MessageRow) -> int | None:
+    atlas = await RegionAtlas.load(ctx.session)
+    lands = {atlas.top_region(end) for end in (row.sender_node_id, row.recipient_node_id)} - {None}
+    if not lands:
+        return None
+    armies = await ctx.session.execute(
+        select(ArmyRow.owner_entity_id)
+        .join(ArmyProfileRow, ArmyProfileRow.army_entity_id == ArmyRow.entity_id)
+        .where(ArmyRow.disbanded_epoch.is_(None), ArmyRow.war_id.is_not(None), ArmyProfileRow.region_entity_id.in_(list(lands)))
+        .order_by(ArmyRow.entity_id)
+    )
+    for (owner,) in armies:
+        if owner in (row.sender_node_id, row.recipient_node_id):
+            continue
+        if await bond_exists(ctx.session, owner, row.sender_node_id, BondKind.ENEMY) or await bond_exists(
+            ctx.session, owner, row.recipient_node_id, BondKind.ENEMY
+        ):
+            return int(owner)
+    return None
+
+
 async def waylay(ctx: TickContext, row: MessageRow, tally: DispatchTally) -> None:
     table = ctx.rules.communication
     if row.intercepted_by_node_id is None:
@@ -101,6 +123,13 @@ async def waylay(ctx: TickContext, row: MessageRow, tally: DispatchTally) -> Non
                     row.payload = {**row.payload, FORGER: network.owner_entity_id}
                     tally.forged += 1
             break
+    if row.intercepted_by_node_id is None and row.medium in OVERLAND:
+        seizer = await enemy_army_near(ctx, row)
+        if seizer is not None and ctx.rng(seed_of("dispatch.army", row.id, ctx.epoch)).chance(table.army_intercept_pct):
+            row.intercepted_by_node_id, row.state = seizer, DispatchState.INTERCEPTED
+            tally.intercepted += 1
+            if await readable(ctx, row, seizer):
+                await learn_facts(ctx, seizer, row.payload.get(FACTS, {}), BeliefSource.SPY, ctx.rules.belief_state.spy_confidence)
     if row.medium in OVERLAND and await outlaws_near(ctx, row) and ctx.rng(seed_of("dispatch.outlaws", row.id, ctx.epoch)).chance(table.outlaw_loss_pct):
         row.state = DispatchState.LOST
         tally.lost += 1
@@ -118,10 +147,11 @@ async def misread(ctx: TickContext, row: MessageRow) -> bool:
 
 
 async def welcome(ctx: TickContext, row: MessageRow) -> float:
-    if row.envoy_node_id is None:
-        return 1.0
-    skill = await best_skill(ctx.session, row.envoy_node_id, [SkillKind.NEGOTIATION, SkillKind.ETIQUETTE])
-    return 1 + skill / PERCENT * ctx.rules.communication.etiquette_pct / PERCENT
+    table = ctx.rules.communication
+    skill = await best_skill(ctx.session, row.envoy_node_id, [SkillKind.NEGOTIATION, SkillKind.ETIQUETTE]) if row.envoy_node_id is not None else 0
+    hierarchy = max(0, (await values_for(ctx.session, row.recipient_node_id)).get(ValueAxis.HIERARCHY, 0))
+    precedence = hierarchy / PERCENT * table.precedence_pct / PERCENT * (1 - skill / PERCENT)
+    return max(0.0, 1 + skill / PERCENT * table.etiquette_pct / PERCENT - precedence)
 
 
 async def warm(ctx: TickContext, holder_id: int, subject_id: int, friendship: float, kind: MemoryKind) -> None:

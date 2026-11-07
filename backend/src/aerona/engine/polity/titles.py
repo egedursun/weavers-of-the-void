@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.titles import CHARGES, RANK_WORDS, TIER_RANKS, TINCTURES
+from aerona.catalog.titles import CHARGES, RANK_WORDS, SEAT_RANKS, TIER_RANKS, TINCTURES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -340,7 +340,7 @@ async def dormancy(ctx: TickContext, book: RealmBook, tally: TitleTally) -> None
     for title in list(
         await ctx.session.scalars(select(TitleProfileRow).where(TitleProfileRow.destroyed_epoch.is_(None)).order_by(TitleProfileRow.title_entity_id))
     ):
-        if held(title.title_entity_id):
+        if held(title.title_entity_id) or title.rank in SEAT_RANKS:
             continue
         realm = await living_entity(ctx.session, title.polity_entity_id) if title.polity_entity_id is not None else None
         if title.polity_entity_id is not None and realm is None and HOLDER not in (title.locked or []):

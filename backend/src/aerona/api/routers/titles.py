@@ -11,6 +11,7 @@ from aerona.api.schemas.titles import TitleClaimView, TitleDetail, TitleDriftVie
 from aerona.api.views.common import node_refs
 from aerona.catalog.titles import RANK_WORDS, TENURE_LABELS
 from aerona.core.errors import NotFoundError
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.polity import ClaimRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleHolderRow, TitleProfileRow
@@ -81,6 +82,14 @@ async def titles_view(services: ServicesDep, node_id: int = Path(ge=1)) -> Title
                 .order_by(TitleProfileRow.title_entity_id)
             )
         )
+        seats = list(
+            await session.scalars(
+                select(TitleProfileRow)
+                .join(EntityRow, EntityRow.id == TitleProfileRow.title_entity_id)
+                .where(EntityRow.affiliated_entity_id == node_id, TitleProfileRow.destroyed_epoch.is_(None))
+                .order_by(TitleProfileRow.title_entity_id)
+            )
+        )
         claims = list(
             await session.scalars(select(ClaimRow).where(ClaimRow.claimant_entity_id == node_id, ClaimRow.title_entity_id.is_not(None)).order_by(ClaimRow.id))
         )
@@ -89,7 +98,7 @@ async def titles_view(services: ServicesDep, node_id: int = Path(ge=1)) -> Title
         ids = {
             node_id,
             *lands,
-            *(item for row in [*vassals, *held_rows, *chain] for item in (row.title_entity_id, row.holder_node_id)),
+            *(item for row in [*vassals, *held_rows, *seats, *chain] for item in (row.title_entity_id, row.holder_node_id)),
             *(row.holder_node_id for row in holders),
             *(row.title_entity_id for row in claims),
             *(
@@ -147,6 +156,7 @@ async def titles_view(services: ServicesDep, node_id: int = Path(ge=1)) -> Title
                 if row.title_entity_id in refs
             ],
             realm_titles=[item for row in held_rows if row.polity_entity_id == node_id and (item := await summary(session, row, refs)) is not None],
+            seat_titles=[item for row in seats if (item := await summary(session, row, refs)) is not None],
             de_jure_chain=[item for row in chain if (item := await summary(session, row, refs)) is not None],
             ranks=[LabelView(key=rank.value, label=label) for rank, label in RANK_WORDS.items()],
         )

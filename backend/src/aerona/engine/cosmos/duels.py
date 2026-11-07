@@ -15,6 +15,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.gods.progress import Progress, cap_gained_essence, grant_progress
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.transfers import move_amount
 
 ARENA_STATS = (Stat.STRENGTH, Stat.WISDOM, Stat.CUNNING, Stat.CHARISMA, Stat.WILL)
 
@@ -55,8 +56,8 @@ async def son_duel(ctx: TickContext, challenger: SonRow, defender: SonRow, stat:
     loser.fame = max(0, loser.fame - tools.challenge_loser_renown_loss)
     stolen = min(tools.challenge_max_steal, loser.essence)
     before = winner.essence
-    loser.essence -= stolen
-    winner.essence += stolen
+    if not move_amount(loser, winner, "essence", stolen):
+        stolen = 0
     cap_gained_essence(ctx.rules, winner, before)
     outcome_text = f"{winner.name} won ({first}-{second}); {loser.name} lost {wound} HP and had {stolen} essence snatched."
     text = f'{challenger.name} challenged {defender.name} to a trial of {stat.value} ("{reason}"). {outcome_text}'

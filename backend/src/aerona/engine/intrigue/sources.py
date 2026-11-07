@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.effect_packages import PACKAGES
 from aerona.catalog.intrigue import BELIEF_ATTRIBUTES
+from aerona.constants.units import PERCENT
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.culture import RiteProfileRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
@@ -11,32 +12,38 @@ from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.households import HouseholdRow
 from aerona.db.tables.intrigue import IdentityRow, SecretRow
-from aerona.db.tables.military import SpyAgentRow, SpyNetworkRow
+from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, SpyAgentRow, SpyNetworkRow
+from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import PackageKind, Visibility
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.communication import DispatchContent, Medium
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.intrigue import BeliefSource, IdentityReason, IntrigueSecret
-from aerona.domain.enums.military import AgentStatus
-from aerona.domain.enums.mind import Facet
+from aerona.domain.enums.military import AgentStatus, UnitKind
+from aerona.domain.enums.mind import Facet, SkillKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.communication.post import FACTS, SPIED, send
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.beliefs import believe
 from aerona.engine.intrigue.identities import assume
 from aerona.engine.intrigue.secrets import expose, keep_secret, learn
+from aerona.engine.mind.book import best_skill
 from aerona.engine.mind.split import facets_of
 from aerona.engine.mortal.kin import partners_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import Namer, seed_of
-from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.queries import bond_exists, living_entity
 from aerona.engine.primitives.stats import stat
 
 CURSED_PACKAGES = frozenset({PackageKind.VAMPIRISM})
 NEIGHBOUR_HOPS = 1
 DECEIVE_DEPTH = 60
+SOLDIERS = "soldiers"
+SCOUTS = frozenset({UnitKind.LIGHT_CAVALRY, UnitKind.SKIRMISHERS, UnitKind.HORSE_ARCHERS, UnitKind.SKY_MOUNTS})
 
 
 @dataclass
@@ -108,6 +115,58 @@ async def watched_ids(ctx: TickContext, target_id: int) -> list[int]:
         .order_by(EntityRow.id)
     )
     return [target_id, *rows]
+
+
+async def army_sizes(ctx: TickContext) -> dict[int, tuple[int, int | None, frozenset[UnitKind]]]:
+    rows = await ctx.session.execute(
+        select(ArmyRow.entity_id, ArmyRow.owner_entity_id, ArmyProfileRow.region_entity_id)
+        .join(ArmyProfileRow, ArmyProfileRow.army_entity_id == ArmyRow.entity_id)
+        .where(ArmyRow.disbanded_epoch.is_(None), ArmyRow.war_id.is_not(None))
+        .order_by(ArmyRow.entity_id)
+    )
+    found: dict[int, tuple[int, int | None, frozenset[UnitKind]]] = {}
+    for army_id, owner, region in rows:
+        units = list(await ctx.session.scalars(select(ArmyUnitRow).where(ArmyUnitRow.army_entity_id == army_id)))
+        found[army_id] = (owner, region, frozenset(unit.kind for unit in units if unit.count > 0))
+    return found
+
+
+async def soldiers_of(ctx: TickContext, army_id: int) -> int:
+    return sum(unit.count for unit in await ctx.session.scalars(select(ArmyUnitRow).where(ArmyUnitRow.army_entity_id == army_id)))
+
+
+async def false_campfires(ctx: TickContext, army_id: int) -> int:
+    commander = await ctx.session.scalar(select(ArmyRow.commander_entity_id).where(ArmyRow.entity_id == army_id))
+    if commander is None:
+        return 0
+    cunning = await best_skill(ctx.session, commander, [SkillKind.DECEPTION, SkillKind.TACTICS])
+    if not ctx.rng(seed_of("intrigue.campfires", army_id, ctx.epoch)).chance(cunning * ctx.rules.belief_state.feint_pct / PERCENT):
+        return 0
+    return ctx.rules.belief_state.campfire_pct
+
+
+async def scout_reports(ctx: TickContext, tally: SourceTally) -> None:
+    armies = await army_sizes(ctx)
+    for army_id, (owner, region, kinds) in armies.items():
+        if region is None or held(owner) or not kinds & SCOUTS:
+            continue
+        for other_id, (other_owner, other_region, _) in armies.items():
+            if other_id == army_id or other_region != region or other_owner == owner:
+                continue
+            if not await bond_exists(ctx.session, owner, other_owner, BondKind.ENEMY):
+                continue
+            seen = await soldiers_of(ctx, other_id)
+            fires = await false_campfires(ctx, other_id)
+            if fires:
+                planted = round_half_up(seen * (PERCENT + fires) / PERCENT)
+                if await believe(
+                    ctx, owner, other_id, SOLDIERS, planted, source=BeliefSource.DECEPTION, confidence=ctx.rules.belief_state.scout_confidence, false=True
+                ):
+                    tally.beliefs += 1
+                    ctx.count("false_campfires_believed")
+                continue
+            if await believe(ctx, owner, other_id, SOLDIERS, seen, source=BeliefSource.SCOUT, confidence=ctx.rules.belief_state.scout_confidence):
+                tally.beliefs += 1
 
 
 async def spy_reports(ctx: TickContext, tally: SourceTally) -> None:

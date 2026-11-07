@@ -6,11 +6,13 @@ from sqlalchemy.orm import ORMExecuteState, Session
 
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import register_index
+from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import BeliefRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.intrigue import BeliefSource
+from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat
@@ -123,12 +125,26 @@ class BeliefView:
         return row.value
 
 
+async def literacy_for(ctx: TickContext, holder_id: int, seen: dict[int, int]) -> int:
+    if holder_id not in seen:
+        holder = await ctx.session.get(EntityRow, holder_id)
+        folk = await people_of(ctx.session, holder) if holder is not None else None
+        culture = await ctx.session.get(PeopleCultureRow, folk.id) if folk is not None else None
+        seen[holder_id] = culture.literacy if culture is not None else 0
+    return seen[holder_id]
+
+
 async def fade_beliefs(ctx: TickContext) -> int:
     faded = 0
-    decay = ctx.rules.belief_state.decay
+    table = ctx.rules.belief_state
+    literacy: dict[int, int] = {}
     for row in list(await ctx.session.scalars(select(BeliefRow).where(BeliefRow.as_of_epoch < ctx.epoch))):
         if LOCK in (row.locked or []) or held(row.holder_node_id):
             continue
+        letters = await literacy_for(ctx, row.holder_node_id, literacy)
+        decay = table.decay * (1 - letters / PERCENT * table.records_pct / PERCENT)
+        if letters >= table.records_at and row.source is not BeliefSource.RECORDS:
+            row.source = BeliefSource.RECORDS
         row.confidence = clamp_int(row.confidence - decay, 0, PERCENT)
         if row.confidence <= 0:
             await ctx.session.delete(row)

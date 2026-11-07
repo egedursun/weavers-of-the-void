@@ -1,6 +1,8 @@
 from aerona.domain.enums.titles import TitleRank, TitleTenure
 
 TIER_RANKS: tuple[TitleRank, ...] = (TitleRank.LORDSHIP, TitleRank.COUNTY, TitleRank.DUCHY, TitleRank.KINGDOM, TitleRank.EMPIRE)
+FAITH_RANKS: tuple[TitleRank, ...] = (TitleRank.SEE, TitleRank.ARCHSEE, TitleRank.HIGH_SEAT)
+SEAT_RANKS = frozenset({*FAITH_RANKS, TitleRank.CAPTAINCY, TitleRank.GUILDMASTERSHIP})
 RANK_WORDS: dict[TitleRank, str] = {
     TitleRank.LORDSHIP: "Lordship",
     TitleRank.COUNTY: "County",

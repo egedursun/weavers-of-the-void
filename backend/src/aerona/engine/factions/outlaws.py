@@ -19,6 +19,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import ongoing_wars
 
@@ -131,9 +132,7 @@ async def pay_companies(ctx: TickContext, factions: FactionBook, realms: RealmBo
         if treaty is None or treaty.status is not TreatyStatus.IN_FORCE or employer is None:
             profile.employer_entity_id, profile.contract_entity_id = None, None
             continue
-        if employer.profile.treasury >= profile.pay:
-            employer.profile.treasury -= profile.pay
-            profile.treasury += profile.pay
+        if employer.profile.treasury >= profile.pay and move_amount(employer.profile, profile, "treasury", profile.pay):
             profile.unpaid_epochs = 0
             if "loyalty" not in profile.locked:
                 profile.loyalty = clamp_int(profile.loyalty + table.loyalty_paid, 0, PERCENT)

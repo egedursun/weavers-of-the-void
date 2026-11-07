@@ -1,4 +1,4 @@
-from sqlalchemy import update
+from sqlalchemy import select, update
 
 from aerona.db.read_memo import memo_of
 from aerona.db.tables.cosmos import CosmosRow
@@ -61,3 +61,12 @@ async def test_a_record_first_read_as_a_node_reads_whole_as_an_entity(realm: Rea
     assert node is not None
     found = await realm.session.get(EntityRow, town_id)
     assert found is not None and found.entity_type is EntityType.SETTLEMENT
+
+
+async def test_a_read_flushes_only_when_it_reads_a_table_with_pending_changes(realm: Realm) -> None:
+    town = await settlement(realm, "Fernhollow")
+    town.name = "Fernhollow Vale"
+    await realm.session.scalar(select(CosmosRow.epoch))
+    assert town in realm.session.dirty
+    named = await realm.session.scalar(select(NodeRow.name).where(NodeRow.id == town.id))
+    assert named == "Fernhollow Vale" and town not in realm.session.dirty

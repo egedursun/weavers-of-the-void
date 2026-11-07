@@ -3,7 +3,7 @@ from sqlalchemy import select
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import FavourRow
-from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, TreatyProfileRow, VassalageRow
+from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow, VassalageRow
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, DiplomacyProfileRow, PolityRegardRow, SphereRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType
@@ -18,7 +18,8 @@ from aerona.engine.polity.crisis_outcomes import settle
 from aerona.engine.polity.law_effects import may_coin
 from aerona.engine.polity.regard import RegardTally, on_conquest, tend_regard
 from aerona.engine.polity.spheres import SphereTally, tend_spheres
-from aerona.engine.polity.subjects import SubjectTally, forbidden_war, pays_tribute, sends_levies, tend_subjects
+from aerona.engine.polity.subjects import SubjectTally, forbidden_war, kind_for, pays_tribute, sends_levies, tend_subjects
+from aerona.engine.polity.wars import comrades
 from tests.engine.society.factories import Realm, context, make, people, tuned
 
 
@@ -133,3 +134,30 @@ async def test_subject_kinds_bind_tribute_levies_war_and_coin(realm: Realm) -> N
     await realm.session.flush()
     assert tally.dissolved == 1 and await realm.session.get(VassalageRow, vassal.id) is None
     assert other.id != overlord.id
+
+
+async def test_subjects_become_tributaries_clients_or_protectorates_and_are_defended(realm: Realm) -> None:
+    ctx = context(realm.session, tuned(statecraft={"protectorate_tiers": 2}))
+    overlord, overlord_core = await polity(realm, "Great Crown")
+    vassal, vassal_core = await polity(realm, "Small Crown")
+    book = await RealmBook.load(realm.session)
+    high, low = book.realms[overlord.id], book.realms[vassal.id]
+    assert await kind_for(ctx, book, low, high) is SubjectKind.TRIBUTARY
+    realm.session.add(SphereRow(power_entity_id=overlord.id, client_entity_id=vassal.id, strength=50, since_epoch=1))
+    await realm.session.flush()
+    assert await kind_for(ctx, book, low, high) is SubjectKind.CLIENT
+    await realm.session.delete(await realm.session.get(SphereRow, (overlord.id, vassal.id)))
+    for found in (overlord, vassal):
+        realm.session.add(PolityTerritoryRow(polity_entity_id=found.id, region_entity_id=realm.region.id, control=80, locked=[]))
+    high.profile.tier, low.profile.tier = 3, 0
+    await realm.session.flush()
+    book = await RealmBook.load(realm.session)
+    high, low = book.realms[overlord.id], book.realms[vassal.id]
+    assert await kind_for(ctx, book, low, high) is SubjectKind.PROTECTORATE
+    row = VassalageRow(vassal_entity_id=vassal.id, overlord_entity_id=overlord.id, kind=SubjectKind.PROTECTORATE, locked=[])
+    realm.session.add(row)
+    await realm.session.flush()
+    book = await RealmBook.load(realm.session)
+    assert overlord_core.id in comrades(book, vassal_core.id)
+    row.kind = SubjectKind.VASSAL
+    assert overlord_core.id not in comrades(book, vassal_core.id)

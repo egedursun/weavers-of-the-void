@@ -17,7 +17,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.engine.demography.basket import fed_index
 from aerona.engine.households.formation import found_household, house_everyone
 from aerona.engine.households.homes import home_of, sickness_factor
-from aerona.engine.households.life import HouseholdTally, members_of, pay_debts, renovate, tend_aggregates, tend_household
+from aerona.engine.households.life import HouseholdTally, lend_at_interest, match, members_of, pay_debts, renovate, tend_aggregates, tend_household
 from aerona.engine.mind.needs import home_needs
 from aerona.engine.mortal.kinship import add_parent
 from aerona.engine.polity.laws import LawBook
@@ -142,3 +142,32 @@ async def test_cohorts_become_anonymous_households_and_hunger_reads_what_was_eat
     realm.session.add(ClassStandingRow(community_entity_id=town.id, social_class=SocialClass.FARMER, fed_pct=90))
     await realm.session.flush()
     assert (await fed_index(realm.session, town.id) or 0) >= 85
+
+
+async def test_household_money_never_moves_through_a_locked_purse(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Quillmere")
+    groom = await mortal(realm, "Ezra", location_id=town.id)
+    elder = await mortal(realm, "Fen", location_id=town.id)
+    bride = await mortal(realm, "Gale", location_id=town.id)
+    for one in (groom, elder, bride):
+        await profile(realm, one.id, LifeStage.ADULT, wealth=10)
+    seeker = await found_household(ctx, groom)
+    giver = await found_household(ctx, elder)
+    realm.session.add(HouseholdMemberRow(member_node_id=bride.id, household_id=giver.id, role=HouseholdRole.DEPENDENT, joined_epoch=1))
+    giver.social_class = seeker.social_class
+    seeker.wealth, giver.wealth = 100, 200
+    giver.locked = ["wealth"]
+    await realm.session.flush()
+    assert await match(ctx, seeker, await members_of(ctx, seeker), HouseholdTally())
+    assert (seeker.wealth, giver.wealth) == (100, 200)
+
+    seeker.locked = ["wealth"]
+    giver.locked = []
+    seeker.debts = {str(giver.id): 50}
+    await pay_debts(ctx, seeker)
+    assert (seeker.wealth, giver.wealth) == (100, 200)
+    giver.wealth = 10_000
+    assert not await lend_at_interest(ctx, giver, elder, HouseholdTally())
+    assert not await renovate(ctx, seeker, await realm.session.scalar(select(DwellingRow).where(DwellingRow.household_id == seeker.id)), HouseholdTally())
+    assert (seeker.wealth, giver.wealth) == (100, 10_000)

@@ -9,6 +9,7 @@ from aerona.engine.phase import Phase
 
 
 @reads(
+    "faction.strength",
     "faction.wealth",
     "people.piety",
     "settlement.defense",
@@ -38,6 +39,7 @@ from aerona.engine.phase import Phase
     "table.polity_territories",
     "table.settlement_profiles",
     "table.vassalages",
+    "table.wars",
     "table.world_maps",
 )
 @writes(

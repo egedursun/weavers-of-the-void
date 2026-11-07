@@ -108,7 +108,7 @@ async def curse_decay(ctx: TickContext) -> None:
             await apply_hits(ctx, entity, Harm(rules.world_engine.curse_hp_loss, HarmCause.CURSE, CURSE_DEATH, source_node_id=curser, killer_id=curser))
 
 
-@reads("table.conditions", "table.epoch_year_cursors", "table.holder_levels")
+@reads("table.conditions", "table.entity_flags", "table.epoch_year_cursors", "table.holder_levels")
 @writes("table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents")
 async def lift_curses(ctx: TickContext) -> None:
     engine = ctx.rules.world_engine

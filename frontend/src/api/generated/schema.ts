@@ -31859,6 +31859,7 @@ export interface components {
                         titles_held: components["schemas"]["TitleSummary"][];
                         claims: components["schemas"]["TitleClaimView"][];
                         realm_titles: components["schemas"]["TitleSummary"][];
+                        seat_titles: components["schemas"]["TitleSummary"][];
                         de_jure_chain: components["schemas"]["TitleSummary"][];
                         ranks: components["schemas"]["LabelView"][];
         };
