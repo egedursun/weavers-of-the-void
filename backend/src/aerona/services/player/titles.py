@@ -3,6 +3,7 @@ from sqlalchemy import delete
 
 from aerona.catalog.titles import RANK_WORDS
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.titles import TITLE_FIELDS, DeJureLinkRow, TitleProfileRow
@@ -102,7 +103,7 @@ async def create(scope: PlayerScope, command: CreateTitle) -> Effect:
         RecordSpec(
             entity_type=EntityType.TITLE,
             name=command.name,
-            body=f"A {RANK_WORDS[command.rank].lower()} created by the Creator's word.",
+            body=f"{an(RANK_WORDS[command.rank].lower(), capital=True)} created by the Creator's word.",
             stats=TitleStats(prestige=SPAN // 4, territory=len(command.lands)),
             power=POWER,
             world_id=realm.world_id if realm is not None else None,
@@ -127,7 +128,7 @@ async def create(scope: PlayerScope, command: CreateTitle) -> Effect:
         await link(scope, record.id, land, ctx.epoch, False)
     await record_holder(ctx, row, command.holder_id, TitleTenure.CREATED)
     await scope.session.flush()
-    return Effect(f"{command.name} now stands, a {RANK_WORDS[command.rank].lower()}.", target_node_id=record.id, values={"title_id": record.id})
+    return Effect(f"{command.name} now stands, {an(RANK_WORDS[command.rank].lower())}.", target_node_id=record.id, values={"title_id": record.id})
 
 
 @player_action("title:edit", ActionKind.EDIT_RECORD)
@@ -168,7 +169,7 @@ async def edit(scope: PlayerScope, command: EditTitle) -> Effect:
         raise ValidationFailedError("Set at least one value.")
     row.locked = held(row.locked, touched, command.hold)
     await scope.session.flush()
-    return Effect(f"A {RANK_WORDS[row.rank].lower()} of prestige {row.prestige}, its arms {row.emblem}.", target_node_id=row.title_entity_id)
+    return Effect(f"{an(RANK_WORDS[row.rank].lower(), capital=True)} of prestige {row.prestige}, its arms {row.emblem}.", target_node_id=row.title_entity_id)
 
 
 @player_action("title:hold", ActionKind.EDIT_RECORD)

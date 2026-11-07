@@ -1,5 +1,6 @@
 from collections.abc import Iterable, Sequence
 
+from aerona.core.grammar import an
 from aerona.domain.enums.world import LoreLanguage
 from aerona.prompts.budget import ELLIPSIS, BudgetSection, budget, sectioned_budget
 from aerona.prompts.data.deepening import special_section
@@ -93,6 +94,7 @@ def signed(value: int) -> str:
 
 
 FILTERS = {
+    "an": an,
     "mood_level": mood_level,
     "degree": degree,
     "share_of": share_of,

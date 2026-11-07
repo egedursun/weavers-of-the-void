@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from aerona.core.grammar import an
 from aerona.domain.enums.meta import ScenarioKey
 from aerona.rules.registry import Rules
 
@@ -42,7 +43,7 @@ SCENARIOS: dict[ScenarioKey, ScenarioSpec] = {
         ),
         ScenarioSpec(
             ScenarioKey.MANY_WORLDS,
-            lambda rules: f"A {rules.goals.inhabited_worlds}-world cosmos",
+            lambda rules: f"{an(rules.goals.inhabited_worlds, capital=True)}-world cosmos",
             lambda rules: f"At least {rules.goals.inhabited_worlds} worlds in the cosmos, each with a living people.",
             lambda rules: rules.goals.multiworld_points,
         ),

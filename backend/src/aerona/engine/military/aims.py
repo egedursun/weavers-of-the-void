@@ -1,6 +1,7 @@
 from sqlalchemy import delete, or_, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import an
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -285,7 +286,7 @@ async def government_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: 
     except ValueError:
         government = GovernmentKind.REPUBLIC
     realm.profile.government = government
-    text = f"{victor.name} overturned the rule of {loser.name}; the realm is now a {government.value.replace('_', ' ')}"
+    text = f"{victor.name} overturned the rule of {loser.name}; the realm is now {an(government.value.replace('_', ' '))}"
     return text, Clause(ClauseKind.NON_AGGRESSION, loser.id, victor.id, {"government": government.value})
 
 

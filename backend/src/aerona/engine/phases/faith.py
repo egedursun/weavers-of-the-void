@@ -1,4 +1,5 @@
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import an
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
@@ -90,7 +91,7 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     ctx.count("devotion", await devotion(ctx, church, book.faith.patron(cult)))
     built = await spend(ctx, church, knowledge)
     if built in {"temple", "monastery"}:
-        lines.append(FaithLine(f"{church.cult.name} raised a {built} from its tithes.", f"faith.{built}", (cult,)))
+        lines.append(FaithLine(f"{church.cult.name} raised {an(built)} from its tithes.", f"faith.{built}", (cult,)))
     if built:
         ctx.count(f"spent_{built}")
     pilgrims, _ = await pilgrimage(ctx, church)

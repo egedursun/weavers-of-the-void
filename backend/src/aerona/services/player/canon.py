@@ -13,6 +13,7 @@ from aerona.constants.schema import (
     TITLE_MAX_LENGTH,
 )
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.names import normalize_name
@@ -473,7 +474,7 @@ async def merge_records(scope: PlayerScope, command: MergeRecords) -> Effect:
         raise ValidationFailedError("A record cannot be merged into itself.")
     if main.entity_type is not other.entity_type:
         raise ValidationFailedError(
-            f"Only records of the same type merge; {main.name} is a {main.entity_type.value}, {other.name} a {other.entity_type.value}."
+            f"Only records of the same type merge; {main.name} is {an(main.entity_type.value)}, {other.name} {an(other.entity_type.value)}."
         )
     epoch = await scope.epoch()
     moved = await _repoint_bonds(scope, main, other, epoch)

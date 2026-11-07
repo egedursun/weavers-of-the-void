@@ -2,6 +2,7 @@ from typing import Any
 
 from pydantic import Field
 
+from aerona.core.grammar import an
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import DuelContext, HullClass, PeaceTermKind, VesselArmament, WarAimKind
@@ -221,7 +222,7 @@ async def vessel_refit(scope: PlayerScope, command: VesselRefit) -> Effect:
         return Effect("No such vessel afloat.", command.vessel_id)
     order = Commission(hull=command.hull_class, armament=command.armament, hull_material=command.hull_material, fabric_material=command.fabric_material)
     await commission(ctx.session, ctx.rules, vessel, order)
-    return Effect(f"{vessel.name} is refitted as a {command.hull_class.value.replace('_', ' ')}.", vessel.id)
+    return Effect(f"{vessel.name} is refitted as {an(command.hull_class.value.replace('_', ' '))}.", vessel.id)
 
 
 @player_action("vessel:repair", ActionKind.EDIT_RECORD)

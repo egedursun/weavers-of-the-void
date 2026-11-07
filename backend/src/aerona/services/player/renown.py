@@ -3,6 +3,7 @@ from sqlalchemy import select
 
 from aerona.catalog.renown import AXIS_LABELS, CURRENCY_LABELS
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.renown import DeedClaimRow, DeedRow, LoreTradeRow, ReputationRow, RulerCurrencyRow
@@ -235,7 +236,7 @@ async def set_claim(scope: PlayerScope, command: SetDeedClaim) -> Effect:
     row.kind, row.status = command.kind, command.status
     row.locked = held(row.locked, ["status"], command.hold)
     await scope.session.flush()
-    return Effect(f"{claimant.name} now holds a {command.kind.value} claim to the deed.", target_node_id=claimant.id, values={"claim_id": row.id})
+    return Effect(f"{claimant.name} now holds {an(command.kind.value)} claim to the deed.", target_node_id=claimant.id, values={"claim_id": row.id})
 
 
 async def claim_row(scope: PlayerScope, claim_id: int) -> DeedClaimRow:

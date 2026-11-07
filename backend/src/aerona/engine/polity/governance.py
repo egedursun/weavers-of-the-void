@@ -7,6 +7,7 @@ from aerona.catalog.laws import PENALTY_CRUELTY
 from aerona.catalog.lore import IDEOLOGY_VALUES
 from aerona.catalog.mind import DOMAIN_VALUES
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import an
 from aerona.db.tables.body import MaimedCohortRow
 from aerona.db.tables.culture import IdeologyTenetRow
 from aerona.db.tables.demography import PeopleCultureRow
@@ -296,7 +297,7 @@ async def works(ctx: TickContext, realm: Realm, values: dict[ValueAxis, int], *,
     spend(ctx, realm, -table.build_cost, TreasuryEntry.BUILDING, f"{need.value.replace('_', ' ')} in {place.name}")
     await note(
         ctx,
-        f"{realm.entity.name} paid for a {need.value.replace('_', ' ')} in {place.name}.",
+        f"{realm.entity.name} paid for {an(need.value.replace('_', ' '))} in {place.name}.",
         key="polity.works",
         ids=[realm.entity.id, place.id],
         kind=ChronicleKind.CONSTRUCTION,

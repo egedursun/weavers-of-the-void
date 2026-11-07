@@ -4,6 +4,7 @@ from sqlalchemy import select
 from aerona.catalog.relations import CIRCLES, CONTESTS, PASSION_LABELS, STAKE_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow
 from aerona.db.tables.node import NodeRow
@@ -300,7 +301,7 @@ async def set_passion(scope: PlayerScope, command: SetPassion) -> Effect:
     row.locked = held(row.locked, ["strength", "kind"], command.hold)
     await scope.session.flush()
     label = PASSION_LABELS[command.kind].lower()
-    return Effect(f"{holder.name} now holds a {label} of strength {command.strength}.", target_node_id=holder.id, values={"passion_id": row.id})
+    return Effect(f"{holder.name} now holds {an(label)} of strength {command.strength}.", target_node_id=holder.id, values={"passion_id": row.id})
 
 
 async def passion_row(scope: PlayerScope, passion_id: int) -> PassionRow:
@@ -317,7 +318,7 @@ async def invoke_passion(scope: PlayerScope, command: PassionTarget) -> Effect:
     ctx = await scope.context("passion:invoke")
     lifted = await invoke(ctx, holder, [row.object_node_id])
     told = "was carried by" if lifted > 1 else "was not carried by"
-    return Effect(f"{holder.name} {told} a {PASSION_LABELS[row.kind].lower()}.", target_node_id=holder.id, values={"lift": round(lifted * PERCENT)})
+    return Effect(f"{holder.name} {told} {an(PASSION_LABELS[row.kind].lower())}.", target_node_id=holder.id, values={"lift": round(lifted * PERCENT)})
 
 
 @player_action("passion:remove", ActionKind.OTHER)
@@ -395,7 +396,7 @@ async def stage_contest(scope: PlayerScope, command: HoldContest) -> Effect:
         raise ValidationFailedError("A held mortal cannot be drawn into a contest.")
     label = CONTESTS[command.kind].label.lower()
     return Effect(
-        f"{challenger.name} and {defender.name} met in a {label} for {STAKE_LABELS[command.stake].lower()}.",
+        f"{challenger.name} and {defender.name} met in {an(label)} for {STAKE_LABELS[command.stake].lower()}.",
         target_node_id=challenger.id,
         values={"contest_id": row.id},
     )

@@ -3,6 +3,7 @@ from sqlalchemy import select
 
 from aerona.catalog.genetics import DWELLINGS, HOUSEHOLD_ROLE_LABELS
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.households import (
     HOUSEHOLD_FIELDS,
@@ -260,7 +261,7 @@ async def set_dwelling(scope: PlayerScope, command: SetDwelling) -> Effect:
         touched.append("district_id")
     row.locked = held(row.locked, touched, command.hold)
     await scope.session.flush()
-    return Effect(f"{home.name} lives in a {DWELLINGS[row.kind].label.lower()} of quality {row.quality} with {row.rooms} rooms.")
+    return Effect(f"{home.name} lives in {an(DWELLINGS[row.kind].label.lower())} of quality {row.quality} with {row.rooms} rooms.")
 
 
 @player_action("dwelling:remove", ActionKind.EDIT_RECORD)

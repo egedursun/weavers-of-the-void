@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.communication import CONTENT_LABELS, STATE_LABELS, SUBJECT_LABELS
 from aerona.catalog.intrigue import FAVOUR_LABELS, IDENTITY_LABELS, PHASE_LABELS, SCHEMES, SECRETS, belief_label
 from aerona.catalog.titles import RANK_WORDS
+from aerona.core.grammar import an
 from aerona.db.tables.communication import PublicOpinionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import CompanyShareRow, EstateProfileRow
@@ -51,9 +52,9 @@ async def intrigue_lines(session: AsyncSession, rules: Rules, me: EntityRow) -> 
     secrets = [f"{SECRETS[row.kind].label.lower()} (known to {len(row.known_by) - 1} others)" for row in own[:cap]]
     leverage: list[str] = []
     for hook in await session.scalars(select(HookRow).where(HookRow.holder_node_id == me.id, HookRow.used_epoch.is_(None)).order_by(HookRow.id).limit(cap)):
-        leverage.append(f"a {hook.strength.value} hook on {await name_of(session, hook.target_node_id)}")
+        leverage.append(f"{an(hook.strength.value)} hook on {await name_of(session, hook.target_node_id)}")
     for hook in await session.scalars(select(HookRow).where(HookRow.target_node_id == me.id, HookRow.used_epoch.is_(None)).order_by(HookRow.id).limit(cap)):
-        leverage.append(f"{await name_of(session, hook.holder_node_id)} holds a {hook.strength.value} hook on you")
+        leverage.append(f"{await name_of(session, hook.holder_node_id)} holds {an(hook.strength.value)} hook on you")
     favours = await session.scalars(
         select(FavourRow)
         .where(or_(FavourRow.owed_by_node_id == me.id, FavourRow.owed_to_node_id == me.id), FavourRow.called_epoch.is_(None))
@@ -133,7 +134,7 @@ async def letter_lines(session: AsyncSession, rules: Rules, me: EntityRow) -> tu
 async def title_lines(session: AsyncSession, me: EntityRow) -> list[str]:
     found: list[str] = []
     for row in await session.scalars(select(TitleProfileRow).where(TitleProfileRow.holder_node_id == me.id).order_by(TitleProfileRow.title_entity_id)):
-        found.append(f"you hold {await name_of(session, row.title_entity_id)}, a {RANK_WORDS[row.rank].lower()}")
+        found.append(f"you hold {await name_of(session, row.title_entity_id)}, {an(RANK_WORDS[row.rank].lower())}")
     claims = await session.scalars(select(ClaimRow).where(ClaimRow.claimant_entity_id == me.id, ClaimRow.title_entity_id.is_not(None)).order_by(ClaimRow.id))
     for claim in claims:
         found.append(f"you have a claim on {await name_of(session, claim.title_entity_id)}")

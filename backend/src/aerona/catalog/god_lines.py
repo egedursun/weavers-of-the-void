@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from aerona.core.grammar import fill
+
 
 @dataclass(frozen=True)
 class Line:
@@ -7,7 +9,7 @@ class Line:
     text: str
 
     def render(self, **fields: object) -> str:
-        return self.text.format(**fields)
+        return fill(self.text, **fields)
 
 
 def _lines(prefix: str, *texts: str) -> tuple[Line, ...]:
@@ -107,7 +109,7 @@ CURSE_REASON_TEMPLE = "{creator} did not forget the hand that tore down {place}"
 CURSE_REASON_CURSED = "anger overflowing, the curse fell on the blood of the cursed too"
 CURSE_REASON_KILLER = "the hand that took {count} lives became the target of the creator's anger"
 
-REPUTATION_CHANGE = Line("gods.reputation.change", "{son} now sees the creator as a {label} god.")
+REPUTATION_CHANGE = Line("gods.reputation.change", "{son} now sees the creator as {label:an} god.")
 PASSIONS_REVEALED = Line("gods.reputation.passions", "{creator} was revealed: the creator's passions are {passions}.")
 
 GOAL_SET = Line("gods.goals.set", "{creator} set a goal: {name}.")
@@ -229,7 +231,7 @@ ECONOMY_WITHDRAWAL = Line("gods.economy.withdrawal", "{entity} suffers withdrawa
 ECONOMY_RECOVERED = Line("gods.economy.recovered", "{entity} survived the withdrawal from {resource}; the addiction was broken.")
 ECONOMY_DEPOSIT_CLAIMED = Line("gods.economy.deposit_claimed", "{owner} claimed {deposit}; the key to travel between worlds is now in their hands.")
 ECONOMY_DEPOSIT_CLAIM_BOND = "claimed the cosmic resource"
-ECONOMY_DEPOSIT_BORN = Line("gods.economy.deposit_born", "A {resource} deposit appeared in {world} ({region}).")
+ECONOMY_DEPOSIT_BORN = Line("gods.economy.deposit_born", "{resource:An} deposit appeared in {world} ({region}).")
 DEPOSIT_NAME = "{resource} Deposit ({region})"
 DEPOSIT_SUBTYPE = "cosmic travel resource"
 DEPOSIT_DESCRIPTION = "A vein of {resource} appeared in {world}, in the soil of {region}. {rule}"

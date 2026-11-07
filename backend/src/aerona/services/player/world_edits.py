@@ -4,6 +4,7 @@ from aerona.cartography.terrain import default_terrain
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.repositories.names import NameRepository, normalize_name
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import WorldRow
@@ -90,7 +91,7 @@ def _physics(scope: PlayerScope, world: WorldRow, command: EditWorld, notes: lis
         world.terrain_sea = (terrain.sea_pct or 0) / PERCENT
         world.terrain_mountains = (terrain.mountains_pct or 0) / PERCENT
         world.terrain_humidity = max(-1.0, min(1.0, (terrain.moisture_pct or 0) / PERCENT))
-        notes.append(f"it became a {WORLD_TYPES[command.world_type].label.lower()}")
+        notes.append(f"it became {an(WORLD_TYPES[command.world_type].label.lower())}")
         mechanics = mechanics_of(command.world_type)
         if mechanics.forced_gravity is not None and command.gravity is None:
             world.gravity = mechanics.forced_gravity

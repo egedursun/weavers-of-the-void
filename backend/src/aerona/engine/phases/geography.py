@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.place_terrain import TERRAIN_NATURES
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
@@ -138,7 +139,7 @@ async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None =
         RecordSpec(
             entity_type=EntityType.PLACE,
             name=derived or f"{region.name} {nature.suffix}",
-            body=f"A {nature.subtype} of {region.name} that entered the map{hand}; until then it was a nameless corner of the region.",
+            body=f"{an(nature.subtype, capital=True)} of {region.name} that entered the map{hand}; until then it was a nameless corner of the region.",
             stats=PlaceStats(**values),
             power=settings.place_power,
             location_id=region.id,
@@ -153,7 +154,7 @@ async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None =
         moved = settlements[0]
         await EntityRepository(ctx.session).move(moved, place.id, ctx.epoch)
     edge = f"; {moved.name} stands at its edge" if moved is not None else ""
-    text = f"A {nature.subtype} of {region.name} entered the map: {place.name}{edge}."
+    text = f"{an(nature.subtype, capital=True)} of {region.name} entered the map: {place.name}{edge}."
     await note(ctx, text, key="geography.place_seeded", ids=[place.id, region.id, *([moved.id] if moved is not None else [])])
     return SeededPlace(place, moved, text)
 

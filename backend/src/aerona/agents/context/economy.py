@@ -5,6 +5,7 @@ from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.finance import CREDIT_LABELS, POLICY_LABELS
 from aerona.catalog.methods import ENERGY_LABELS, METHODS, PROCESS_LABELS, TIER_LABELS
 from aerona.catalog.production import WORKSHOP_LABELS
+from aerona.core.grammar import an
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.economy import ResourceProfileRow, TradeRouteProfileRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -106,7 +107,7 @@ async def finance_lines(session: AsyncSession, home: EntityRow, me: EntityRow) -
             lines.append(
                 "your realm keeps "
                 + ", ".join(
-                    f"a {POLICY_LABELS[row.kind].lower()} on {COMMODITIES[row.commodity].label.lower() if row.commodity else 'every good'}"
+                    f"{an(POLICY_LABELS[row.kind].lower())} on {COMMODITIES[row.commodity].label.lower() if row.commodity else 'every good'}"
                     + (f" at {row.rate_pct}%" if row.kind is not TradePolicyKind.EMBARGO else "")
                     for row in laid
                 )

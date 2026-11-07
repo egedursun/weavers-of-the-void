@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.core.grammar import an
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.faction import FactionGoalKind, FactionRank
 from aerona.engine.factions import control
@@ -56,7 +57,7 @@ class HireCompany(Command):
 @player_action("faction:edit", ActionKind.EDIT_RECORD)
 async def edit_faction(scope: PlayerScope, command: EditFaction) -> Effect:
     profile = await control.edit_faction(await scope.context("faction_edit"), command.faction_id, command.values, release=command.release)
-    return Effect(f"The faction is a {profile.kind.value.replace('_', ' ')} with {profile.treasury} in its coffers.", command.faction_id)
+    return Effect(f"The faction is {an(profile.kind.value.replace('_', ' '))} with {profile.treasury} in its coffers.", command.faction_id)
 
 
 @player_action("faction:goal", ActionKind.EDIT_RECORD)
@@ -78,7 +79,7 @@ async def set_goal(scope: PlayerScope, command: FactionGoal) -> Effect:
 @player_action("faction:member", ActionKind.EDIT_RECORD)
 async def set_member(scope: PlayerScope, command: FactionMember) -> Effect:
     row = await control.set_member(await scope.context("faction_member"), command.faction_id, command.mortal_id, rank=command.rank, remove=command.remove)
-    return Effect("The member is cast out." if row is None else f"The mortal is now a {row.rank.value} of the faction.", command.faction_id)
+    return Effect("The member is cast out." if row is None else f"The mortal is now {an(row.rank.value)} of the faction.", command.faction_id)
 
 
 @player_action("faction:fund", ActionKind.EDIT_RECORD)

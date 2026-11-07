@@ -4,6 +4,7 @@ from sqlalchemy import select
 from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.finance import CREDIT_LABELS, POLICY_LABELS, SPECULATION_LABELS
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.finance import CreditProfileRow, EconomicIndicatorRow, SpeculationRow, TradePolicyRow
 from aerona.db.tables.node import NodeRow
@@ -111,7 +112,7 @@ async def policy_phrase(scope: PlayerScope, row: TradePolicyRow) -> str:
     against = f" against {partner.name}" if partner is not None else ""
     if row.kind is TradePolicyKind.EMBARGO:
         return f"lays an embargo on {good}{against}"
-    return f"lays a {POLICY_LABELS[row.kind].lower()} of {row.rate_pct}% on {good}{against}"
+    return f"lays {an(POLICY_LABELS[row.kind].lower())} of {row.rate_pct}% on {good}{against}"
 
 
 @player_action("trade_policy:set", ActionKind.EDIT_RECORD)

@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.core.grammar import an
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.polity import (
     ClaimBasis,
@@ -146,7 +147,7 @@ class OathTarget(Command):
 @player_action("polity:edit", ActionKind.EDIT_RECORD)
 async def edit_polity(scope: PlayerScope, command: EditPolity) -> Effect:
     found = await control.edit_polity(await scope.context("polity_edit"), command.polity_id, command.values, release=command.release)
-    return Effect(f"{found.entity.name}: a {found.profile.government.value.replace('_', ' ')}, legitimacy {found.profile.legitimacy}.", command.polity_id)
+    return Effect(f"{found.entity.name}: {an(found.profile.government.value.replace('_', ' '))}, legitimacy {found.profile.legitimacy}.", command.polity_id)
 
 
 @player_action("polity:appoint", ActionKind.EDIT_RECORD)
@@ -545,7 +546,7 @@ async def add_clause(scope: PlayerScope, command: AddClause) -> Effect:
         beneficiary_id=command.beneficiary_id,
         params=command.params,
     )
-    return Effect(f"A {row.kind.value.replace('_', ' ')} clause is written in.", command.treaty_id, values={"clause_id": row.id})
+    return Effect(f"{an(row.kind.value.replace('_', ' '), capital=True)} clause is written in.", command.treaty_id, values={"clause_id": row.id})
 
 
 @player_action("treaty:clause_edit", ActionKind.EDIT_RECORD)

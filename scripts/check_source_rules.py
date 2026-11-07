@@ -37,6 +37,8 @@ TURKISH_ALLOWED_FILES = frozenset(
 PROMPT_HOME = Path("backend/src/aerona/prompts")
 PROMPT_MARKERS = re.compile(r"\b(you are|your task|respond with|return only|write a|as the narrator)\b", re.IGNORECASE)
 PROMPT_WORD_LIMIT = 40
+FIXED_ARTICLE = re.compile(r"(?<![A-Za-z{])[Aa] \{")
+ARTICLE_HOME = Path("backend/src")
 PROSE_ALLOWED = (PROMPT_HOME, Path("backend/src/aerona/catalog"), Path("backend/src/aerona/rules"), Path("backend/tests"), Path("scripts"))
 
 
@@ -65,6 +67,16 @@ def iter_files() -> list[Path]:
     return sorted(files)
 
 
+def fixed_article(tokens: list[tokenize.TokenInfo], index: int) -> bool:
+    token = tokens[index]
+    if token.type == tokenize.STRING:
+        return FIXED_ARTICLE.search(token.string) is not None
+    if token.type != tokenize.FSTRING_MIDDLE or index + 1 >= len(tokens):
+        return False
+    following = tokens[index + 1]
+    return following.type == tokenize.OP and following.string == "{" and FIXED_ARTICLE.search(token.string + "{") is not None
+
+
 def python_violations(path: Path, text: str) -> list[Violation]:
     found: list[Violation] = []
     relative = path.relative_to(ROOT)
@@ -72,9 +84,11 @@ def python_violations(path: Path, text: str) -> list[Violation]:
         tokens = list(tokenize.generate_tokens(io.StringIO(text).readline))
     except (tokenize.TokenError, SyntaxError):
         return [Violation(relative, 1, "unparseable python")]
-    for token in tokens:
+    for index, token in enumerate(tokens):
         if token.type == tokenize.COMMENT:
             found.append(Violation(relative, token.start[0], "comment"))
+        if relative.is_relative_to(ARTICLE_HOME) and fixed_article(tokens, index):
+            found.append(Violation(relative, token.start[0], "fixed article before a placeholder; use an(), {name:an} or | an"))
     tree = ast.parse(text)
     for node in ast.walk(tree):
         if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -243,6 +257,12 @@ def check_file(path: Path) -> list[Violation]:
         found.extend(Violation(relative, number, "comment") for number in style_comment_lines(text))
     elif suffix in MARKUP_SUFFIXES:
         found.extend(Violation(relative, number, "comment") for number in markup_comment_lines(text))
+        if relative.is_relative_to(ARTICLE_HOME):
+            found.extend(
+                Violation(relative, number, "fixed article before a placeholder; use an(), {name:an} or | an")
+                for number, raw in enumerate(text.splitlines(), start=1)
+                if FIXED_ARTICLE.search(raw)
+            )
     elif suffix in HASH_COMMENT_SUFFIXES or path.name in HASH_COMMENT_NAMES or path.name.startswith(".env"):
         found.extend(Violation(relative, number, "comment") for number in hash_comment_lines(text))
     return found

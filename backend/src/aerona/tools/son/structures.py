@@ -4,6 +4,7 @@ from pydantic import Field
 
 from aerona.constants.tool_inputs import NAME_MAX, NAME_MIN
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import fill
 from aerona.db.tables.structures import StructureDesignRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
@@ -54,7 +55,7 @@ async def commission_structure(call: SonCall, args: CommissionInput) -> str:
         fail(SonResult.STRUCTURE_REFUSED, reason=error.message)
     call.spend_essence(cost)
     kind = args.structure_kind.value.replace("_", " ")
-    return result(SonResult.COMMISSIONED, id=work.id, text=lines.COMMISSIONED.format(site=community.name, name=work.name, kind=kind))
+    return result(SonResult.COMMISSIONED, id=work.id, text=fill(lines.COMMISSIONED, site=community.name, name=work.name, kind=kind))
 
 
 def specs() -> list[ToolSpec[SonCall, Any]]:

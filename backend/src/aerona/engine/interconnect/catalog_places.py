@@ -1,4 +1,5 @@
 from aerona.catalog.place_terrain import PLACE_KINDS
+from aerona.core.grammar import an
 from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.domain.enums.place import SacredClass, SecretKind
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
@@ -98,7 +99,7 @@ def kind_behaviours() -> tuple[Mechanic, ...]:
             backfill="none: the kind acts from the next epoch",
             fields=("kind",),
             targets=PLACE,
-            couplings=(Coupling(S.FAITH, f"the sanctity a {spec.label.lower()} tends toward", EdgeKind.MODIFIER, SACRED_RULES[spec.sacred]),),
+            couplings=(Coupling(S.FAITH, f"the sanctity {an(spec.label.lower())} tends toward", EdgeKind.MODIFIER, SACRED_RULES[spec.sacred]),),
         )
         for kind, spec in PLACE_KINDS.items()
     )

@@ -6,6 +6,7 @@ from pydantic import TypeAdapter
 from aerona.catalog.lore import ART_MESSAGES, IDEOLOGY_APPEAL, IDEOLOGY_VALUES, ITEM_CLASSES, LEGEND_MORALS, RITE_TEMPLATES, TRADITIONS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.base import Base
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import (
@@ -269,7 +270,7 @@ async def open_lore(
     values: Mapping[str, Any],
 ) -> tuple[EntityRow, Base | None, Values]:
     if entity_type not in CREATABLE:
-        raise ValidationFailedError(f"A {entity_type.value} cannot be made here.")
+        raise ValidationFailedError(f"{an(entity_type.value, capital=True)} cannot be made here.")
     if not name.strip():
         raise ValidationFailedError("Name it first.")
     world, location = await place_of(ctx, location_id, world_id)

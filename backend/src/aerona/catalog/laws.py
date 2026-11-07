@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
+from aerona.core.grammar import fill
 from aerona.domain.enums.demography import MarriageCustom
 from aerona.domain.enums.polity import DebtRemedy, DecisionRule, GenderRule, GovernmentKind, LawKind, SuccessionRule
 
@@ -175,7 +176,7 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.LICENSED_MAGIC: "Mages pay a licence of {fee}.",
         LawKind.RITE_RESTRICTIONS: "Rites are restricted ({level}).",
         LawKind.FRANCHISE: "The vote belongs to the {voters}.",
-        LawKind.CONSTITUTION: "The realm is a {government} that decides by {decision_rule}; the vote belongs to the {voters}, and {estates}.",
+        LawKind.CONSTITUTION: "The realm is {government:an} that decides by {decision_rule}; the vote belongs to the {voters}, and {estates}.",
         LawKind.CUSTOM: "An old custom without a written rule.",
     }
 )
@@ -189,6 +190,6 @@ def law_effect(kind: LawKind, params: dict[str, int | str | bool]) -> str:
     words["estates"] = "the estates keep their rights" if merged.get("estates_rights") else "the estates hold no rights of their own"
     template = LAW_EFFECTS[kind]
     try:
-        return template.format(**words)
+        return fill(template, **words)
     except KeyError:
         return template

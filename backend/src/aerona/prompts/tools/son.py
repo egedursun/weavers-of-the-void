@@ -11,7 +11,7 @@ from aerona.prompts.tools.text import ToolText
 T = SonToolId
 
 CREATION_DESCRIPTION = (
-    "Creates a {{ entity.label }} ({{ entity.examples | join(', ') }}). "
+    "Creates {{ entity.label | an }} ({{ entity.examples | join(', ') }}). "
     "{% if entity.type in living_types and rules.son_tools.free_living_creation > 0 %}"
     "Living creation: the first living creation each age does NOT spend an action; later ones cost 1 action."
     "{% elif entity.type in land_types %}"

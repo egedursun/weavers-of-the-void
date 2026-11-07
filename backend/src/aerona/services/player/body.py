@@ -4,6 +4,7 @@ from sqlalchemy import select
 from aerona.catalog.tissues import DIGIT_LIMBS, FULL_COUNTS, digit_keys, digit_label
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.body import (
     ARMOUR_COLUMNS,
     CAPACITY_COLUMNS,
@@ -442,7 +443,9 @@ async def apply_prosthesis(scope: PlayerScope, command: FitProsthesis) -> Effect
     fitted = await fit_prosthesis(ctx, bearer, row, part, command.material, maker=None, quality=command.quality, item=item, world_material=world)
     await refresh(scope.session, scope.rules, bearer, ctx.epoch)
     return Effect(
-        f"{bearer.name} now wears a {_label(command.material.value)} {part.label.lower()}.", target_node_id=bearer.id, values={"prosthesis_id": fitted.id}
+        f"{bearer.name} now wears {an(_label(command.material.value))} {part.label.lower()}.",
+        target_node_id=bearer.id,
+        values={"prosthesis_id": fitted.id},
     )
 
 
@@ -493,7 +496,7 @@ async def set_plan(scope: PlayerScope, command: SetBodyPlan) -> Effect:
     body.traits = sorted({trait.value for trait in command.traits})
     if not isinstance(bearer, EntityRow) or bearer.entity_type is EntityType.MORTAL:
         await refresh(scope.session, scope.rules, bearer, epoch)
-    return Effect(f"{bearer.name} now has a {_label(command.plan.value)} body.", target_node_id=bearer.id)
+    return Effect(f"{bearer.name} now has {an(_label(command.plan.value))} body.", target_node_id=bearer.id)
 
 
 @player_action("body:frame", ActionKind.OTHER)

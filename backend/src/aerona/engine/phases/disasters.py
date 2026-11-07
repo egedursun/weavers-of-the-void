@@ -9,6 +9,7 @@ from aerona.cartography.model import ElevationClass
 from aerona.catalog.interventions import DISASTERS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import WorldRow
@@ -56,7 +57,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap, LawBook
 from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up
 from aerona.engine.primitives.queries import BondIndex, canon
-from aerona.engine.primitives.records import RecordSpec, create_record, indefinite
+from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import FOLLOWERS_KEY, POPULATION_KEY, headcount_value, set_stats, stat, stat_or
 from aerona.engine.primitives.thresholds import relative_threshold
 from aerona.engine.records import death_path
@@ -246,7 +247,7 @@ def _strike_stats(rules: Rules, entity: EntityRow, disaster: Disaster, scale: fl
 
 
 def disaster_phrase(disaster: Disaster) -> str:
-    return indefinite(DISASTERS[disaster].label.lower())
+    return an(DISASTERS[disaster].label.lower())
 
 
 async def apply_disaster(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: float) -> DisasterImpact:

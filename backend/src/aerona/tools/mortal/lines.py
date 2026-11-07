@@ -27,7 +27,9 @@ ROUTE_NOT_FOUND = Line("tools.mortal.route_not_found", "{me} searched for the wa
 EXPLORE_FAILED = Line("tools.mortal.explore_failed", "{me} set out into unknown lands but the road turned them back empty-handed.")
 EXPLORED = Line("tools.mortal.explored", "{me} set out into unknown lands and found {found}: {name}{pioneers}.")
 SHIP = Line("tools.mortal.ship", "{me} built an inter-world ship: {name}.")
-EXPEDITION = Line("tools.mortal.expedition", "{me} set out on a {intent} expedition to the world {world} ({count} people{vessel}, it will take {epochs} ages).")
+EXPEDITION = Line(
+    "tools.mortal.expedition", "{me} set out on {intent:an} expedition to the world {world} ({count} people{vessel}, it will take {epochs} ages)."
+)
 TAMED = Line("tools.mortal.tamed", "{me} tamed {species} ({how}).")
 TAME_FAILED = Line("tools.mortal.tame_failed", "{me} tried to tame {species} but failed.")
 CHIMERA = Line("tools.mortal.chimera", "{me} wove a chimera from {first} and {second}: {chimera}.")
@@ -151,7 +153,7 @@ SPIES_CAUGHT_EVENT = "caught spies"
 
 LAW_LAID = Line("tools.mortal.law_laid", "{me} laid down {law} for {realm}.")
 HOME_TENDED = Line("tools.mortal.home_tended", "{me} decided for {household}: {deed}.")
-SCHEME_BEGUN = Line("tools.mortal.scheme_begun", "{me} began to plot a {scheme}.")
+SCHEME_BEGUN = Line("tools.mortal.scheme_begun", "{me} began to plot {scheme:an}.")
 LEVERAGE_PRESSED = Line("tools.mortal.leverage_pressed", "{me} leaned on {target}: {deed}.")
 DISPATCH_SENT = Line("tools.mortal.dispatch_sent", "{me} sent {deed} to {target}.")
 TITLE_SEIZED = Line("tools.mortal.title_seized", "{me} {deed} {title}.")
@@ -160,7 +162,7 @@ LAW_PROPOSED = Line("tools.mortal.law_proposed", "{me} brought {law} before {rea
 ACCUSATION = Line("tools.mortal.accusation", "{me} accused {accused} of {crime}.")
 DEMAND = Line("tools.mortal.demand", "{me} demanded that {realm} {demand}.")
 BACKED = Line("tools.mortal.backed", "{me} backed the {side} in a crisis.")
-MANDATE = Line("tools.mortal.mandate", "{me} issued a {kind} mandate in {realm}.")
+MANDATE = Line("tools.mortal.mandate", "{me} issued {kind:an} mandate in {realm}.")
 TASK = Line("tools.mortal.task", "{me} set the {office} to {task}.")
 METHOD_CHOSEN = Line("tools.mortal.method_chosen", "{me} took up {method} for {process}.")
 WORKSHOP_BOUGHT = Line("tools.mortal.workshop_bought", "{me} bought the {workshop} of {place} for {price}.")

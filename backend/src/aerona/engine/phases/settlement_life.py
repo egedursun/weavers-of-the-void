@@ -1,3 +1,4 @@
+from aerona.core.grammar import an
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import unheld
@@ -178,7 +179,7 @@ async def settlement_life(ctx: TickContext) -> None:
         if tier is not None:
             await note(
                 ctx,
-                f"{settlement.name} is now a {tier.value}.",
+                f"{settlement.name} is now {an(tier.value)}.",
                 key="settlement.tier",
                 ids=[settlement.id],
                 kind=ChronicleKind.CIVILIZATION,

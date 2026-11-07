@@ -5,6 +5,7 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.constants.warfare import FACTION_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
@@ -186,7 +187,7 @@ async def found_faction(ctx: TickContext, community: EntityRow, kind: FactionKin
     patron = await bonds.patron(community.id)
     if patron is not None:
         await bonds.connect(BondDraft(faction.id, patron, BondKind.WORSHIPS, ctx.epoch, f"the faith of {community.name}"))
-    await _note(ctx, f"A {plan.subtype} was founded in {community.name}.", "faction.founded", (faction.id, community.id))
+    await _note(ctx, f"{an(plan.subtype, capital=True)} was founded in {community.name}.", "faction.founded", (faction.id, community.id))
     ctx.count("factions_founded")
     return faction
 
@@ -325,7 +326,7 @@ async def decree_faction(ctx: TickContext, community_id: int, kind: FactionKind)
     if community is None or community.entity_type not in SOCIETY_TYPES:
         raise ValidationFailedError("Factions are founded inside a living people or settlement.")
     if await _existing(ctx, community.id, kind):
-        raise ConflictError(f"{community.name} already has a {blueprint(kind).subtype}.")
+        raise ConflictError(f"{community.name} already has {an(blueprint(kind).subtype)}.")
     return await found_faction(ctx, community, kind)
 
 

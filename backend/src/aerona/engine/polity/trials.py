@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 
 from aerona.catalog.laws import PENALTY_CRUELTY
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import an
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import SecretRow
 from aerona.db.tables.justice import CaseWitnessRow, CrimeCaseRow
@@ -346,7 +347,7 @@ async def grieve(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow, punis
                     kind=MemoryKind.BETRAYED_ME,
                     magnitude=-table.grievance_grudge,
                     epoch=ctx.epoch,
-                    note=f"{accused.name} was condemned for a {CRIME_TEXT[case.crime]} they did not commit",
+                    note=f"{accused.name} was condemned for {an(CRIME_TEXT[case.crime])} they did not commit",
                 )
     if punishment is PunishmentKind.DEATH:
         await add_renown(ctx.session, accused.id, table.martyr_renown, ctx.epoch, rules=ctx.rules)
