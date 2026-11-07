@@ -31,6 +31,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.factions.book import CLASS_OF_KIND, FactionBook, log
 from aerona.engine.faith.book import patron_node
+from aerona.engine.finance.contraband import OUTLAWS, smuggle_books
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.memories import remember
 from aerona.engine.notes import note
@@ -491,6 +492,8 @@ async def smuggle(move: Move) -> bool:
     if town is not None and "crime" not in town.locked:
         town.crime = clamp_int(town.crime + table.smuggle_crime, 0, PERCENT)
     profile.treasury += table.smuggle_loot
+    if profile.kind in OUTLAWS:
+        await smuggle_books(ctx, profile)
     log(ctx, profile.faction_entity_id, A.SMUGGLE, target=profile.home_entity_id, goal=goal, amount=table.smuggle_loot)
     return True
 

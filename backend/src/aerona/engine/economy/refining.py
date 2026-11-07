@@ -27,6 +27,7 @@ from aerona.engine.structures.readers import workshop_output
 M = MaterialKind
 UPGRADES: dict[MaterialKind, MaterialKind] = {M.COPPER: M.BRONZE, M.IRON: M.STEEL}
 EXOTIC_FROM_IRON = M.SKYSTEEL
+KITCHEN_STEPS = frozenset({"butcher", "cheese"})
 PREFERENCE: dict[CommodityKind, tuple[MaterialKind, ...]] = {
     CommodityKind.WEAPONS: WEAPON_MATERIALS,
     CommodityKind.ARMOUR: ARMOUR_MATERIALS,
@@ -330,9 +331,23 @@ async def tend_workshops(ctx: TickContext, book: EconomyBook, community: EntityR
             workshop.idle_epochs = 0
 
 
+async def kitchen(ctx: TickContext, book: EconomyBook, community: EntityRow, tally: RefiningTally) -> int:
+    artisans = artisan_pool(ctx, book, community)
+    worked = 0
+    for step in CHAIN_STEPS:
+        if step.key not in KITCHEN_STEPS or artisans < ctx.rules.refining.workers_per_batch:
+            continue
+        used = await run_step(ctx, book, community, step, artisans=artisans, tally=tally)
+        artisans -= used
+        worked += used
+    return worked
+
+
 async def refine_community(ctx: TickContext, book: EconomyBook, community: EntityRow, tally: RefiningTally) -> None:
     artisans = artisan_pool(ctx, book, community)
     for step in CHAIN_STEPS:
+        if step.key in KITCHEN_STEPS:
+            continue
         if artisans < ctx.rules.refining.workers_per_batch:
             break
         artisans -= await run_step(ctx, book, community, step, artisans=artisans, tally=tally)

@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.knowledge import NATURAL_LAWS, RESOURCE_MECHANICS
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.society import NaturalLaw
@@ -54,7 +55,7 @@ async def _announce(ctx: TickContext, entity: EntityRow) -> None:
 async def weigh(ctx: TickContext, entities: list[EntityRow], announce: bool) -> int:
     weighed = 0
     for entity in entities:
-        if not await assign_mechanics(ctx.session, ctx.rules, entity):
+        if held(entity.id) or not await assign_mechanics(ctx.session, ctx.rules, entity):
             continue
         weighed += 1
         if announce and entity.status is EntityStatus.CANON:

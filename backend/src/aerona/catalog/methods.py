@@ -187,7 +187,7 @@ METHODS: MappingProxyType[MethodKind, MethodSpec] = MappingProxyType(
                 soil=2,
                 technique=Technique.STEEL,
                 labour_pct=80,
-                inputs=((CommodityKind.FUEL, 1, None),),
+                inputs=((CommodityKind.COAL, 1, None),),
             ),
             m(
                 M.DIVINE_FORGE,
@@ -286,6 +286,46 @@ METHODS: MappingProxyType[MethodKind, MethodSpec] = MappingProxyType(
                 level=2,
             ),
             m(M.MAGIC_LIGHT, P.LIGHTING, "Magic light", "Lights kindled and kept by spells", E.MAGIC, 2, output_pct=150, tool_wear=0, branch=B.MAGIC, level=1),
+            m(M.HOME_SLAUGHTER, P.BUTCHERY, "Home slaughter", "Beasts killed and dressed at home", E.MUSCLE, 1, tool_wear=1),
+            m(
+                M.SHAMBLES,
+                P.BUTCHERY,
+                "Shambles",
+                "A street of butchers working side by side",
+                E.MUSCLE,
+                1,
+                output_pct=120,
+                water=2,
+                labour_pct=60,
+                tool_wear=2,
+            ),
+            m(M.HAND_CHURNING, P.DAIRY, "Hand churning", "Curds pressed by hand", E.MUSCLE, 1, tool_wear=0),
+            m(
+                M.CAVE_AGEING,
+                P.DAIRY,
+                "Cave ageing",
+                "Wheels aged slowly on cold land or in deep cellars",
+                E.MUSCLE,
+                1,
+                quality_bonus=15,
+                tool_wear=0,
+                climate=COLD,
+                labour_pct=120,
+            ),
+            m(M.TREADING, P.PRESSING, "Treading", "Fruit trodden underfoot in vats", E.MUSCLE, 1, tool_wear=0, labour_pct=130),
+            m(
+                M.SCREW_PRESS,
+                P.PRESSING,
+                "Screw press",
+                "A great screw squeezes the fruit",
+                E.MUSCLE,
+                2,
+                output_pct=130,
+                quality_bonus=5,
+                branch=B.ARCHITECTURE,
+                level=1,
+                labour_pct=60,
+            ),
         )
     }
 )
@@ -308,6 +348,9 @@ PROCESS_LABELS: MappingProxyType[ProcessKind, str] = MappingProxyType(
         P.CHARCOAL: "Charcoal burning",
         P.PRESERVING: "Preserving food",
         P.LIGHTING: "Lighting",
+        P.BUTCHERY: "Butchery",
+        P.DAIRY: "Dairy",
+        P.PRESSING: "Pressing fruit",
     }
 )
 STEP_PROCESS: MappingProxyType[str, ProcessKind] = MappingProxyType(
@@ -325,6 +368,9 @@ STEP_PROCESS: MappingProxyType[str, ProcessKind] = MappingProxyType(
         "brew": P.BREWING,
         "potions": P.DISTILLING,
         "dress_stone": P.MASONRY,
+        "butcher": P.BUTCHERY,
+        "cheese": P.DAIRY,
+        "press_fruit": P.PRESSING,
     }
 )
 EXTRACTION_PROCESS: MappingProxyType[ExtractionKind, ProcessKind] = MappingProxyType(
@@ -362,9 +408,28 @@ TIER_LABELS: MappingProxyType[QualityTier, str] = MappingProxyType(
     }
 )
 PERISHABLE: MappingProxyType[CommodityKind, str] = MappingProxyType(
-    {CommodityKind.FISH: "fish_pct", CommodityKind.BREAD: "bread_pct", CommodityKind.GRAIN: "grain_pct", CommodityKind.MEDICINE: "medicine_pct"}
+    {
+        CommodityKind.FISH: "fish_pct",
+        CommodityKind.BREAD: "bread_pct",
+        CommodityKind.GRAIN: "grain_pct",
+        CommodityKind.MEDICINE: "medicine_pct",
+        CommodityKind.MEAT: "meat_pct",
+        CommodityKind.MILK: "milk_pct",
+        CommodityKind.FRUIT: "fruit_pct",
+        CommodityKind.CHEESE: "cheese_pct",
+        CommodityKind.TUBERS: "tubers_pct",
+    }
 )
-FUEL_FAMILY: tuple[CommodityKind, ...] = (CommodityKind.FUEL, CommodityKind.TIMBER)
+FUEL_FAMILY: tuple[CommodityKind, ...] = (CommodityKind.FUEL, CommodityKind.COAL, CommodityKind.PEAT, CommodityKind.DUNG, CommodityKind.TIMBER)
+FUEL_HEAT: MappingProxyType[CommodityKind, str] = MappingProxyType(
+    {
+        CommodityKind.FUEL: "heat_per_fuel",
+        CommodityKind.COAL: "heat_per_coal",
+        CommodityKind.PEAT: "heat_per_peat",
+        CommodityKind.DUNG: "heat_per_dung",
+        CommodityKind.TIMBER: "heat_per_timber",
+    }
+)
 
 
 def default_method(process: ProcessKind) -> MethodSpec:
@@ -387,6 +452,9 @@ PROCESS_OUTPUT: MappingProxyType[ProcessKind, CommodityKind] = MappingProxyType(
         P.CHARCOAL: CommodityKind.FUEL,
         P.PRESERVING: CommodityKind.FISH,
         P.LIGHTING: CommodityKind.LUXURIES,
+        P.BUTCHERY: CommodityKind.MEAT,
+        P.DAIRY: CommodityKind.CHEESE,
+        P.PRESSING: CommodityKind.LUXURIES,
     }
 )
 PROCESS_JOB: MappingProxyType[ProcessKind, Job] = MappingProxyType(
@@ -404,6 +472,7 @@ PROCESS_WORKSHOP: MappingProxyType[ProcessKind, WorkshopKind] = MappingProxyType
         P.DISTILLING: WorkshopKind.ALCHEMIST,
         P.MASONRY: WorkshopKind.MASON_YARD,
         P.CHARCOAL: WorkshopKind.CHARCOAL_KILN,
+        P.PRESSING: WorkshopKind.BREWERY,
     }
 )
-ALWAYS_PRACTISED = frozenset({P.FARMING, P.WEAVING, P.PRESERVING, P.LIGHTING})
+ALWAYS_PRACTISED = frozenset({P.FARMING, P.WEAVING, P.PRESERVING, P.LIGHTING, P.BUTCHERY, P.DAIRY})

@@ -11,6 +11,7 @@ from aerona.domain.enums.mind import ActKind, ValueAxis
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import faith_tenets
+from aerona.engine.finance.contraband import traffic
 from aerona.engine.gods.progress import cap_gained_essence
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.taboos import forbidden
@@ -72,6 +73,19 @@ async def ransom(ctx: TickContext, row: CaptiveCohortRow, captor: EntityRow, hom
     return settle_into(ctx, home, row.count)
 
 
+async def put_to_work(ctx: TickContext, row: CaptiveCohortRow, captor: EntityRow, home: EntityRow | None) -> CaptiveFate:
+    enslaved = await slavery_lawful(ctx, captor)
+    market = None if enslaved else await traffic(ctx, captor, row.count, row.origin_entity_id)
+    if market is not None:
+        settle_into(ctx, market, row.count)
+        return CaptiveFate.ENSLAVED
+    settle_into(ctx, captor, row.count)
+    await carry_language(ctx, row, captor)
+    if enslaved and home is not None:
+        await judged(ctx, captor.id, home.id, ActKind.SLAVERY)
+    return CaptiveFate.ENSLAVED if enslaved else CaptiveFate.LABOUR
+
+
 async def decide(ctx: TickContext, row: CaptiveCohortRow) -> CaptiveFate:
     table = ctx.rules.captivity
     captor = await living_entity(ctx.session, row.captor_entity_id)
@@ -93,12 +107,7 @@ async def decide(ctx: TickContext, row: CaptiveCohortRow) -> CaptiveFate:
         await sacrifice(ctx, row, captor)
         return CaptiveFate.SACRIFICED
     if rng.chance(table.labour_pct) or ctx.epoch - row.since_epoch >= ctx.rules.campaigns.captive_defection_epochs:
-        settle_into(ctx, captor, row.count)
-        await carry_language(ctx, row, captor)
-        enslaved = await slavery_lawful(ctx, captor)
-        if enslaved and home is not None:
-            await judged(ctx, captor.id, home.id, ActKind.SLAVERY)
-        return CaptiveFate.ENSLAVED if enslaved else CaptiveFate.LABOUR
+        return await put_to_work(ctx, row, captor, home)
     return CaptiveFate.HELD
 
 

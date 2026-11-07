@@ -42,6 +42,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 
 TENTH = 10
 CELLAR_LEVEL = 2
+CELLAR_METHODS = frozenset({MethodKind.ICING, MethodKind.CAVE_AGEING})
 CELLARS = (WorkshopKind.WAREHOUSE, WorkshopKind.GRANARY)
 
 
@@ -122,7 +123,7 @@ def blocked_by(
         (banned and spec.energy is EnergyKind.MAGIC, "the law forbids magic here"),
         (spec.technique is not None and spec.technique not in techniques, f"needs the technique of {(spec.technique or '').replace('_', ' ')}"),
         (spec.branch is not None and levels.get(spec.branch, 0) < spec.level, f"needs {(spec.branch or '').replace('_', ' ')} at level {spec.level}"),
-        (spec.climate is not None and band not in spec.climate and not (cellar and spec.kind is MethodKind.ICING), "the climate does not allow it"),
+        (spec.climate is not None and band not in spec.climate and not (cellar and spec.kind in CELLAR_METHODS), "the climate does not allow it"),
         (spec.coast and not coastal, "needs a coast"),
         (spec.energy is not EnergyKind.MUSCLE and supply < spec.energy_need, f"too little {spec.energy.value} energy"),
     )

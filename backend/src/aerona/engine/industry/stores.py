@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
-from aerona.catalog.methods import FUEL_FAMILY, METHODS, PERISHABLE, default_method
+from aerona.catalog.methods import FUEL_FAMILY, FUEL_HEAT, METHODS, PERISHABLE, default_method
 from aerona.constants.units import PERCENT
 from aerona.db.tables.ecology import HerdRow, SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.economy import CommunityStockRow, ProductionRunRow
@@ -16,6 +16,7 @@ from aerona.domain.enums.society import CreatureTrait, SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of, lots_of
+from aerona.engine.environment.years import world_years
 from aerona.engine.industry.energy import scale_by_energy
 from aerona.engine.industry.methods import allowed, feed, local_price, method_for
 from aerona.engine.industry.quality import at_least
@@ -26,7 +27,8 @@ TENTH = 10
 THOUSAND = 1000
 HUNTER_DIETS = (Diet.CARNIVORE, Diet.OMNIVORE)
 HUNTER_SIZES = (SizeClass.TINY, SizeClass.SMALL)
-BREW_STEP = "brew"
+DRINK_STEPS = ("brew", "press_fruit")
+STORED_GRAINS = frozenset({CommodityKind.GRAIN, CommodityKind.TUBERS})
 LIGHT_STEP = "lighting"
 
 
@@ -113,14 +115,14 @@ async def spoil(ctx: TickContext, book: EconomyBook, community: EntityRow, row: 
     granary = book.workshop(community.id, WorkshopKind.GRANARY)
     shelter = max(0.0, 1 - (granary.level if granary is not None else 0) * table.granary_pct / PERCENT)
     ledger = goods_of(ctx.session, ctx.epoch)
+    years = max(1, len(world_years(ctx.environment, community.world_id or 0, "stores")))
     lost_total = 0
     for lot in await perishables(ctx, community.id):
         if lot.held:
             continue
-        rate = getattr(table, PERISHABLE[lot.commodity]) / PERCENT * shelter
-        if lot.commodity is CommodityKind.GRAIN:
-            rate *= (1 + table.vermin_pct / PERCENT) if vermin else 1.0
-            rate *= (1 - table.hunters_pct / PERCENT) if hunters else 1.0
+        rate = 1 - (1 - getattr(table, PERISHABLE[lot.commodity]) / PERCENT * shelter) ** years
+        if lot.commodity in STORED_GRAINS:
+            rate = min(1.0, rate * ((1 + table.vermin_pct / PERCENT) if vermin else 1.0) * ((1 - table.hunters_pct / PERCENT) if hunters else 1.0))
         lost = min(lot.quantity - lot.preserved, round_half_up((lot.quantity - lot.preserved) * rate))
         if lost <= 0:
             continue
@@ -164,7 +166,7 @@ async def burn_fuel(ctx: TickContext, book: EconomyBook, community: EntityRow, r
     heat = row.spent.get(EnergyKind.HEAT.value, 0)
     if heat <= 0:
         return 0
-    per_heat = {CommodityKind.FUEL: table.heat_per_fuel, CommodityKind.TIMBER: table.heat_per_timber}
+    per_heat = {kind: int(getattr(table, key)) for kind, key in FUEL_HEAT.items()}
     order = sorted(
         (kind for kind in FUEL_FAMILY if per_heat[kind] > 0),
         key=lambda kind: (local_price(book, community.id, kind) * ctx.rules.substitution.price_pct / PERCENT / per_heat[kind], kind.value),
@@ -196,7 +198,7 @@ async def noble_taste(ctx: TickContext, book: EconomyBook, community: EntityRow,
 async def pour_drink(ctx: TickContext, community: EntityRow, row: CommunityIndustryRow) -> int:
     brewed = await ctx.session.scalar(
         select(func.coalesce(func.sum(ProductionRunRow.quantity), 0)).where(
-            ProductionRunRow.epoch == ctx.epoch, ProductionRunRow.community_entity_id == community.id, ProductionRunRow.step == BREW_STEP
+            ProductionRunRow.epoch == ctx.epoch, ProductionRunRow.community_entity_id == community.id, ProductionRunRow.step.in_(DRINK_STEPS)
         )
     )
     want = max(1, headcount(community) * ctx.rules.drink.per_1000 // THOUSAND)

@@ -1,5 +1,8 @@
 import {
   Anchor,
+  Apple,
+  Carrot,
+  Milk,
   Anvil,
   Axe,
   Beef,
@@ -175,6 +178,24 @@ export const COMMODITY: Record<
     family: 'luxury',
     store: 'goods',
   },
+  meat: { label: 'Meat', icon: Beef, family: 'subsistence', store: 'food' },
+  milk: { label: 'Milk', icon: Milk, family: 'subsistence', store: 'food' },
+  cheese: {
+    label: 'Cheese',
+    icon: Croissant,
+    family: 'subsistence',
+    store: 'food',
+  },
+  fruit: { label: 'Fruit', icon: Apple, family: 'subsistence', store: 'food' },
+  tubers: {
+    label: 'Tubers',
+    icon: Carrot,
+    family: 'subsistence',
+    store: 'food',
+  },
+  coal: { label: 'Coal', icon: Flame, family: 'industrial', store: 'goods' },
+  peat: { label: 'Peat', icon: Leaf, family: 'subsistence', store: 'goods' },
+  dung: { label: 'Dung', icon: Flame, family: 'subsistence', store: 'goods' },
 }
 
 export const GOODS_FAMILY: Record<GoodsFamily, Named & { note: string }> = {

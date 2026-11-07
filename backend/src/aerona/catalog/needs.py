@@ -35,6 +35,14 @@ SHORTFALL_EFFECTS: Mapping[CommodityKind, ShortfallEffect] = MappingProxyType(
         C.INCENSE: E.IMPIETY,
         C.SACRED_GOODS: E.IMPIETY,
         C.MAGICAL_REAGENTS: E.ARCANE,
+        C.MEAT: E.HUNGER,
+        C.MILK: E.HUNGER,
+        C.CHEESE: E.HUNGER,
+        C.FRUIT: E.HUNGER,
+        C.TUBERS: E.HUNGER,
+        C.COAL: E.COLD,
+        C.PEAT: E.COLD,
+        C.DUNG: E.COLD,
     }
 )
 

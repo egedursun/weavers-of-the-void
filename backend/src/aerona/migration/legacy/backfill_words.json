@@ -177,6 +177,31 @@
       "holy",
       "kutsal",
       "emanet"
+    ],
+    "coal": [
+      "coal",
+      "coalfield",
+      "colliery",
+      "lignite"
+    ],
+    "peat": [
+      "peat",
+      "bog",
+      "moor",
+      "turf"
+    ],
+    "fruit": [
+      "orchard",
+      "fruit",
+      "vineyard",
+      "grove",
+      "berries"
+    ],
+    "tubers": [
+      "tuber",
+      "tubers",
+      "roots",
+      "yam"
     ]
   },
   "materials": {

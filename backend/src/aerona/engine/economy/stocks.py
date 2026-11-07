@@ -154,6 +154,8 @@ class GoodsLedger:
         world_material_id: int | None = None,
         best_first: bool = True,
         force: bool = False,
+        exclude: frozenset[MaterialKind] = frozenset(),
+        exclude_worlds: frozenset[int] = frozenset(),
     ) -> list[Lot]:
         if quantity <= 0 or (held(community_id) and not force):
             return []
@@ -164,6 +166,8 @@ class GoodsLedger:
             and (force or not row.held)
             and (material is None or row.material == material)
             and (world_material_id is None or row.world_material_id == world_material_id)
+            and row.material not in exclude
+            and row.world_material_id not in exclude_worlds
         ]
         rows.sort(key=lambda row: (-row.quality if best_first else row.quality, row.id))
         taken: list[Lot] = []

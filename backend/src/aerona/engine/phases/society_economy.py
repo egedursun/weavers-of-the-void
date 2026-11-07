@@ -46,6 +46,7 @@ from aerona.engine.demography.wealth import settle_wealth
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.household import Meal, eat, enforce_storage, gather_commons, harvest_goods, wear
 from aerona.engine.economy.materials import MaterialBook, armour_protection, curse_bonus, enchantment_cap, set_node_material, weapon_damage
+from aerona.engine.economy.refining import RefiningTally, kitchen
 from aerona.engine.economy.stocks import aggregate_need, goods_of, holding, lots_of, sync_aggregates
 from aerona.engine.industry.energy import taste_meal
 from aerona.engine.interconnect.annotations import reads, writes
@@ -530,6 +531,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     await seed_stocks(ctx, entity)
     await harvest_goods(ctx, world.economy, entity, rate, society.shares[SocialClass.FARMER])
     await gather_commons(ctx, world.economy, entity, society.shares[SocialClass.FARMER])
+    await kitchen(ctx, world.economy, entity, RefiningTally())
     meal, basket = await consume(ctx, entity, society, world)
     await enforce_storage(ctx, world.economy, entity)
     row = await sync_aggregates(ctx.session, rules, entity)
@@ -687,6 +689,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.mortal_profiles",
     "table.name_registry",
     "table.production_runs",
+    "table.workshops",
 )
 async def society_economy(ctx: TickContext) -> None:
     session = ctx.session

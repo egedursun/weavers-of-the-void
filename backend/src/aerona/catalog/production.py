@@ -38,7 +38,10 @@ CHAIN_STEPS: tuple[ChainStep, ...] = (
     ChainStep("leather_armour", "Sewing leather armour", W.TANNERY, ((C.CLOTH, 2),), C.ARMOUR, 1, S.WEAVING, material=MaterialKind.LEATHER),
     ChainStep("weave", "Weaving", W.WEAVERY, ((C.LIVESTOCK, 1),), C.CLOTH, 2, S.WEAVING, material=MaterialKind.CLOTH),
     ChainStep("mill", "Milling and baking", W.MILL, ((C.GRAIN, 3),), C.BREAD, 3, S.CARPENTRY, B.AGRICULTURE, 1),
-    ChainStep("brew", "Brewing and wine-making", W.BREWERY, ((C.GRAIN, 2),), C.LUXURIES, 1, S.ALCHEMY, B.AGRICULTURE, 2),
+    ChainStep("butcher", "Butchering livestock", None, ((C.LIVESTOCK, 1),), C.MEAT, 2, S.BEAST_HANDLING),
+    ChainStep("cheese", "Making cheese from milk", None, ((C.MILK, 3),), C.CHEESE, 1, S.BEAST_HANDLING, B.AGRICULTURE, 1),
+    ChainStep("press_fruit", "Pressing fruit into wine", W.BREWERY, ((C.FRUIT, 3),), C.LUXURIES, 1, S.ALCHEMY, B.AGRICULTURE, 1),
+    ChainStep("brew", "Brewing ale from grain", W.BREWERY, ((C.GRAIN, 2),), C.LUXURIES, 1, S.ALCHEMY, B.AGRICULTURE, 2),
     ChainStep("breed_mounts", "Breeding mounts", W.STABLE, ((C.LIVESTOCK, 1), (C.FODDER, 2)), C.MOUNTS, 1, S.BEAST_HANDLING),
     ChainStep(
         "dress_stone", "Dressing stone", W.MASON_YARD, ((C.STONE, 2),), C.STONE, 1, S.MASONRY, B.ARCHITECTURE, 1, keeps_material=C.STONE, quality_gain=30
@@ -86,6 +89,13 @@ EXTRACTION_OF: MappingProxyType[CommodityKind, ExtractionKind] = MappingProxyTyp
         C.MOUNTS: ExtractionKind.HERDING,
         C.GRAIN: ExtractionKind.FARMING,
         C.FODDER: ExtractionKind.FARMING,
+        C.TUBERS: ExtractionKind.FARMING,
+        C.FRUIT: ExtractionKind.GATHERING,
+        C.MEAT: ExtractionKind.HERDING,
+        C.MILK: ExtractionKind.HERDING,
+        C.DUNG: ExtractionKind.HERDING,
+        C.COAL: ExtractionKind.MINING,
+        C.PEAT: ExtractionKind.GATHERING,
     }
 )
 WORKSHOP_LABELS: MappingProxyType[WorkshopKind, str] = MappingProxyType(

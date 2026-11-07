@@ -13,6 +13,7 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import ClaimRow, HeirloomRow, HouseMemberRow, HouseProfileRow, OfficeRow, SentenceRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import WarRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.demography import MarriageCustom
@@ -704,7 +705,7 @@ async def arrange_marriages(ctx: TickContext, book: HouseBook, realms: RealmBook
     pool: list[tuple[int, EntityRow]] = []
     for house_id in sorted(book.houses):
         for mortal in await living(ctx, book.members[house_id]):
-            if book.house_of.get(mortal.id) == house_id and await eligible(ctx, mortal):
+            if book.house_of.get(mortal.id) == house_id and not held(mortal.id) and await eligible(ctx, mortal):
                 pool.append((house_id, mortal))
     made: list[tuple[EntityRow, EntityRow]] = []
     taken: set[int] = set()

@@ -10,11 +10,13 @@ import {
   FlaskConical,
   Gem,
   HandCoins,
+  Grape,
   KeyRound,
   Lamp,
   TriangleAlert,
   Hammer,
   Leaf,
+  Milk,
   Mountain,
   Pickaxe,
   Shirt,
@@ -62,6 +64,9 @@ export const PROCESSES: Record<string, Named> = {
   charcoal: { label: 'Charcoal burning', icon: Flame, tone: 'warning' },
   preserving: { label: 'Preserving food', icon: Snowflake, tone: 'info' },
   lighting: { label: 'Lighting', icon: Lamp, tone: 'gold' },
+  butchery: { label: 'Butchery', icon: Beef, tone: 'danger' },
+  dairy: { label: 'Dairy', icon: Milk, tone: 'info' },
+  pressing: { label: 'Pressing fruit', icon: Grape, tone: 'gold' },
 }
 
 export const POLLUTANTS: Record<string, Named> = {

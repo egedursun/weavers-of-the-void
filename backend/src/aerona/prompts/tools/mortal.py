@@ -58,7 +58,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.CHOOSE_METHOD: ToolText(
         "You choose how your community does one kind of work: how it farms, fishes, fells, mines, mills, weaves, smelts, tans, brews, distils, "
-        "dresses stone, burns charcoal or keeps food from spoiling. A method needs its techniques, knowledge and energy; it changes output, "
+        "dresses stone, burns charcoal, keeps food from spoiling, lights its evenings, butchers, makes cheese or presses fruit. A method needs its techniques, knowledge and energy; it changes output, "
         "quality, tool wear and pollution, and a method that needs fewer hands puts some out of work. 1 action.",
         {"method": "The method to take up"},
     ),

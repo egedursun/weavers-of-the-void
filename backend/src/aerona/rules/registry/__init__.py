@@ -98,8 +98,10 @@ from aerona.rules.registry.heroes import HeroesRules
 from aerona.rules.registry.image_gen import ImageGenRules
 from aerona.rules.registry.incitement import IncitementRules
 from aerona.rules.registry.industry import (
+    ContrabandRules,
     DrinkRules,
     EnergyRules,
+    FoodChainRules,
     MethodRules,
     MineRules,
     OwnershipRules,
@@ -333,6 +335,8 @@ class Rules:
     ownership: OwnershipRules = field(default_factory=OwnershipRules)
     drink: DrinkRules = field(default_factory=DrinkRules)
     mines: MineRules = field(default_factory=MineRules)
+    food_chain: FoodChainRules = field(default_factory=FoodChainRules)
+    contraband: ContrabandRules = field(default_factory=ContrabandRules)
     market_access: AccessRules = field(default_factory=AccessRules)
     trade_policy: TradePolicyRules = field(default_factory=TradePolicyRules)
     credit: CreditRules = field(default_factory=CreditRules)

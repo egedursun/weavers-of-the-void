@@ -32,6 +32,9 @@ class EnergyRules:
     wind_heights_pct: int = rule(20, 0, 200, G, "Wind energy rough high ground adds, by roughness (%)")
     heat_per_fuel: int = rule(2, 0, 20, G, "Heat one unit of fuel gives")
     heat_per_timber: int = rule(1, 0, 20, G, "Heat one unit of raw timber gives when there is no fuel")
+    heat_per_coal: int = rule(3, 0, 20, G, "Heat one unit of coal gives")
+    heat_per_peat: int = rule(1, 0, 20, G, "Heat one unit of peat gives")
+    heat_per_dung: int = rule(1, 0, 20, G, "Heat one unit of dried dung gives")
     magic_density_pct: int = rule(20, 0, 200, G, "Magic energy the land's magic density gives (%)")
     magic_per_ley: int = rule(8, 0, 100, G, "Magic energy each ley line through the land gives")
     divine_per_shrine: int = rule(6, 0, 100, G, "Divine energy each level of a shrine workshop gives")
@@ -74,10 +77,15 @@ class PollutionRules:
 
 @dataclass(frozen=True)
 class StoreRules:
-    fish_pct: int = rule(30, 0, 100, G, "Share of unpreserved fish that spoils each epoch (%)")
-    bread_pct: int = rule(25, 0, 100, G, "Share of unpreserved bread that spoils each epoch (%)")
-    grain_pct: int = rule(6, 0, 100, G, "Share of unpreserved grain that spoils each epoch (%)")
-    medicine_pct: int = rule(5, 0, 100, G, "Share of unpreserved remedies that spoil each epoch (%)")
+    fish_pct: int = rule(30, 0, 100, G, "Share of unpreserved fish that spoils each sampled year (%)")
+    bread_pct: int = rule(25, 0, 100, G, "Share of unpreserved bread that spoils each sampled year (%)")
+    grain_pct: int = rule(6, 0, 100, G, "Share of unpreserved grain that spoils each sampled year (%)")
+    medicine_pct: int = rule(5, 0, 100, G, "Share of unpreserved remedies that spoil each sampled year (%)")
+    meat_pct: int = rule(30, 0, 100, G, "Share of unpreserved meat that spoils each sampled year (%)")
+    milk_pct: int = rule(60, 0, 100, G, "Share of unpreserved milk that spoils each sampled year (%)")
+    fruit_pct: int = rule(25, 0, 100, G, "Share of unpreserved fruit that spoils each sampled year (%)")
+    cheese_pct: int = rule(3, 0, 100, G, "Share of unpreserved cheese that spoils each sampled year (%)")
+    tubers_pct: int = rule(5, 0, 100, G, "Share of unpreserved tubers that spoil each sampled year (%)")
     vermin_pct: int = rule(60, 0, 400, G, "How much crop pests in the land raise the spoilage of stored grain (%)")
     granary_pct: int = rule(15, 0, 100, G, "How much each level of a granary lowers spoilage (%)")
     hunters_pct: int = rule(40, 0, 100, G, "How much tame pest hunters lower the spoilage of stored grain (%)")
@@ -137,3 +145,27 @@ class MineRules:
     support_pct: int = rule(60, 0, 100, G, "How much hard rock holds the galleries up, at full hardness (%)")
     pumped_flood_pct: int = rule(50, 0, 100, G, "How much pumped shafts keep water out of a mine (%)")
     fire_cave_pct: int = rule(30, 0, 400, G, "How much more often fire-set galleries cave in (%)")
+    coal_forest_at: int = rule(40, 0, 100, G, "Ancient forest cover from which a land holds coal measures under it")
+    coal_seam_pct: int = rule(35, 0, 100, G, "Chance a land with coal measures holds a seam waiting to be found (%)")
+
+
+@dataclass(frozen=True)
+class FoodChainRules:
+    milk_pct: int = rule(25, 0, 100, G, "Share of what herds yield that is milk (%)")
+    dung_per_10: int = rule(3, 0, 50, G, "Dung ten units of herd yield leave for burning")
+    tuber_pct: int = rule(15, 0, 100, G, "Share of a temperate harvest grown as tubers (%)")
+    tuber_cold_pct: int = rule(45, 0, 100, G, "Share of a cold or poor-soiled harvest grown as tubers (%)")
+    poor_soil_at: int = rule(35, 0, 100, G, "Soil fertility under which a harvest leans on tubers")
+    fruit_pct: int = rule(12, 0, 100, G, "Share of a warm, moist harvest that is fruit from orchards (%)")
+    fruit_moisture_at: int = rule(40, 0, 100, G, "Moisture from which orchards bear")
+    peat_per_1000: int = rule(40, 0, 1000, G, "Peat a thousand farmers cut from wholly wet land each epoch")
+
+
+@dataclass(frozen=True)
+class ContrabandRules:
+    void_corruption_at: int = rule(60, 0, 100, G, "Corruption from which a substance counts as a void material a ban on magic forbids")
+    book_value: int = rule(30, 0, 1000, G, "Coin a forbidden book fetches its smugglers")
+    book_crime: int = rule(3, 0, 50, G, "Crime a smuggled forbidden book adds where it is banned")
+    slave_chance: int = rule(25, 0, 100, G, "Chance outlaws buy captives where slavery is banned and sell them where it is allowed (%)")
+    slave_value_per_10: int = rule(4, 0, 1000, G, "Coin ten captives sold into slavery fetch their smugglers")
+    slave_crime: int = rule(5, 0, 50, G, "Crime a smuggled band of captives adds where slavery is banned")

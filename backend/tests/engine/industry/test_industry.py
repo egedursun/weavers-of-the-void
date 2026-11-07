@@ -3,6 +3,7 @@ from collections import Counter
 from sqlalchemy import select
 
 from aerona.catalog.methods import METHODS
+from aerona.catalog.production import STEPS
 from aerona.db.tables.culture import HolderTechniqueRow, IdeologyAdherentRow, IdeologyTenetRow
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.economy import CommunityStockRow, ProductionRunRow, ResourceProfileRow, WorkshopRow
@@ -22,8 +23,10 @@ from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.models.entity_stats import FactionStats, IdeologyStats
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.extraction import shaft_factor
+from aerona.engine.economy.household import burn_substitutes, field_shares
 from aerona.engine.economy.refining import lit as lit_factor
 from aerona.engine.industry.energy import draw, gauge, industry_row, survival_heat, unmet_pct
+from aerona.engine.industry.fuels import lay_coal_seams
 from aerona.engine.industry.methods import MethodTally, adopt, allowed, choose_methods, feed, owner_reveres, profit, reveres_nature
 from aerona.engine.industry.owners import ProfitTally, barred_works, buy, tend_profits
 from aerona.engine.industry.pollution import PollutionTally, disease_extra, fertility_factor, fish_factor, tend_pollution, void_scar
@@ -31,6 +34,7 @@ from aerona.engine.industry.quality import premium, tier_of
 from aerona.engine.industry.stores import StoreTally, kindle, preserve, spoil, wear_tools
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, context, make, settlement
+from tests.engine.society.factories import tuned as tuned_rules
 
 RULES = Rules()
 
@@ -48,6 +52,10 @@ def ground(realm: Realm, **values: object) -> RegionEnvironmentRow:
         "rainfall": 50,
         "magic_density": 0,
         "seasonality": 40,
+        "soil_fertility": 60,
+        "moisture": 50,
+        "base_forest": 0,
+        "base_wetland": 0,
         "temperature": 50,
         "latitude": 30,
         "dominant_terrain": TerrainKind.PLAIN,
@@ -254,7 +262,7 @@ async def test_magic_bans_bar_magic_methods_and_deep_soft_mines_cave_in_more(rea
 async def test_methods_take_their_inputs_and_hands_light_lifts_work_and_magic_stands_in_for_fuel(realm: Realm) -> None:
     ctx = context(realm.session)
     town = await settlement(realm, "Lampwick")
-    realm.session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.FUEL, quantity=30, quality=50))
+    realm.session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.COAL, quantity=30, quality=50))
     realm.session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.LIVESTOCK, quantity=100, quality=50))
     realm.session.add(WorkshopRow(community_entity_id=town.id, kind=WorkshopKind.WAREHOUSE, level=2, built_epoch=1))
     await realm.session.flush()
@@ -262,10 +270,10 @@ async def test_methods_take_their_inputs_and_hands_light_lifts_work_and_magic_st
     furnace = METHODS[MethodKind.BLAST_FURNACE]
     assert furnace.labour_pct < 100 and furnace.inputs
     assert await feed(ctx, town.id, furnace, 100) == 1.0
-    fuel = await realm.session.scalar(
-        select(CommunityStockRow).where(CommunityStockRow.community_entity_id == town.id, CommunityStockRow.commodity == CommodityKind.FUEL)
+    coal = await realm.session.scalar(
+        select(CommunityStockRow).where(CommunityStockRow.community_entity_id == town.id, CommunityStockRow.commodity == CommodityKind.COAL)
     )
-    assert fuel is not None and fuel.quantity == 20
+    assert coal is not None and coal.quantity == 20
     assert await feed(ctx, town.id, furnace, 400) == 0.5
     row = industry_row(ctx, book, town.id)
     row.magic = 40
@@ -285,3 +293,37 @@ async def test_owners_who_love_nature_shun_fouling_methods_and_void_rites_foul_t
     fouled = await void_scar(ctx, town.id)
     stored = await realm.session.get(RegionPollutionRow, realm.region.id)
     assert fouled > 0 and stored is not None and stored.air == RULES.pollution.void_rite and stored.soil == RULES.pollution.void_rite
+
+
+async def test_harvests_bring_tubers_fruit_milk_and_dung_and_households_burn_other_fuels(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Rootmoor")
+    realm.session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.PEAT, quantity=200, quality=50))
+    await realm.session.flush()
+    book = await loaded(realm, temperature_band=TemperatureBand.COLD, soil_fertility=20, moisture=60)
+    tubers, fruit = field_shares(ctx, book, town)
+    assert tubers == RULES.food_chain.tuber_cold_pct / 100 and fruit == 0.0
+    warm = await loaded(realm, temperature_band=TemperatureBand.WARM, soil_fertility=70, moisture=70)
+    assert field_shares(ctx, warm, town)[1] > 0
+    covered = await burn_substitutes(ctx, town, 30)
+    peat = await realm.session.scalar(
+        select(CommunityStockRow).where(CommunityStockRow.community_entity_id == town.id, CommunityStockRow.commodity == CommodityKind.PEAT)
+    )
+    assert covered == 30 and peat is not None and peat.quantity < 200
+
+
+async def test_food_chain_steps_and_coal_seams_exist_and_meat_spoils_unless_preserved(realm: Realm) -> None:
+    ctx = context(realm.session)
+    assert {"butcher", "cheese", "press_fruit"} <= set(STEPS)
+    assert STEPS["cheese"].output is CommodityKind.CHEESE and STEPS["butcher"].output is CommodityKind.MEAT
+    assert METHODS[MethodKind.BLAST_FURNACE].inputs[0][0] is CommodityKind.COAL
+    town = await settlement(realm, "Smokehollow")
+    meat = CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.MEAT, quantity=100, quality=50)
+    realm.session.add(meat)
+    await realm.session.flush()
+    book = await loaded(realm, base_forest=80, base_wetland=40)
+    row = industry_row(ctx, book, town.id)
+    assert await spoil(ctx, book, town, row, StoreTally()) > 0 and meat.quantity < 100
+    laid = await lay_coal_seams(context(realm.session, tuned_rules(mines={"coal_seam_pct": 100})), book)
+    seam = await realm.session.scalar(select(ResourceProfileRow).where(ResourceProfileRow.commodity == CommodityKind.COAL))
+    assert laid >= 1 and seam is not None and not seam.revealed

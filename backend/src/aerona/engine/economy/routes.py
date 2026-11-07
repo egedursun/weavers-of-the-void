@@ -38,7 +38,7 @@ from aerona.engine.economy.chokepoints import press_route_aims, weigh_chokepoint
 from aerona.engine.economy.credit import sell_on_credit
 from aerona.engine.economy.markets import Quote
 from aerona.engine.economy.route_dangers import CARAVAN_TERRAIN, DANGER_KEYS, Dangers, Lairs, dangers_of, feed_beast, season_pct_of, split, spoil
-from aerona.engine.economy.stocks import goods_of
+from aerona.engine.economy.stocks import goods_of, lots_of
 from aerona.engine.economy.toll_polities import Realms, fund_polity
 from aerona.engine.environment.profile import Works
 from aerona.engine.finance.policy import PolicyBook, PolicyTally, Terms, smuggle
@@ -478,7 +478,9 @@ def lane_for(
 async def haul(ctx: TickContext, route: Route, lane: Lane) -> Haul:
     ledger = goods_of(ctx.session, ctx.epoch)
     danger = stat(route.entity, "danger") or 0
-    taken = await ledger.take(lane.seller_id, lane.commodity, lane.volume, GoodsFlow.TRADE)
+    taken = await ledger.take(
+        lane.seller_id, lane.commodity, lane.volume, GoodsFlow.TRADE, exclude=lane.terms.banned.kinds, exclude_worlds=lane.terms.banned.worlds
+    )
     sent = sum(lot.quantity for lot in taken)
     keep = sent - min(sent, round_half_up(lane.volume * ctx.rules.trade_routes.danger_loss_pct / PERCENT * danger / PERCENT))
     delivered = 0
@@ -614,6 +616,8 @@ async def carry(
     for commodity in COMMODITIES:
         pair = (left_quotes[commodity], right_quotes[commodity])
         lane = lane_for(ctx, route, pair, capacity - moved, season, trust=trust, policies=policies)
+        if policies is not None:
+            moved += await run_banned_lots(ctx, book, route, pair, policies, tally=tally)
         if lane is None:
             if policies is not None:
                 moved += await run_contraband(ctx, book, route, pair, policies, room=capacity - moved, season=season, tally=tally)
@@ -665,6 +669,33 @@ async def run_contraband(
     if raw is None:
         return 0
     return await smuggle(ctx, book, policies, seller=seller, buyer=buyer, commodity=left.commodity, volume=raw.volume, landed=raw.landed, tally=tally.policy)
+
+
+async def run_banned_lots(ctx: TickContext, book: EconomyBook, route: Route, pair: tuple[Quote, Quote], policies: PolicyBook, *, tally: RouteTally) -> int:
+    moved = 0
+    for seller, buyer in (route.ends, (route.ends[1], route.ends[0])):
+        banned = policies.banned.get(buyer)
+        if not banned:
+            continue
+        for lot in await lots_of(ctx.session, seller, pair[0].commodity):
+            forbidden = lot.material in banned.kinds or (lot.world_material_id is not None and lot.world_material_id in banned.worlds)
+            if lot.quantity <= 0 or not forbidden:
+                continue
+            landed = max(pair[0].price, pair[1].price) * 1.0
+            moved += await smuggle(
+                ctx,
+                book,
+                policies,
+                seller=seller,
+                buyer=buyer,
+                commodity=lot.commodity,
+                volume=lot.quantity,
+                landed=landed,
+                tally=tally.policy,
+                material=lot.material,
+                world_material_id=lot.world_material_id,
+            )
+    return moved
 
 
 async def _pass_into_legend(ctx: TickContext, route: Route) -> None:

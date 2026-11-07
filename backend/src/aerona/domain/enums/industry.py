@@ -41,6 +41,9 @@ class ProcessKind(StrEnum):
     CHARCOAL = "charcoal"
     PRESERVING = "preserving"
     LIGHTING = "lighting"
+    BUTCHERY = "butchery"
+    DAIRY = "dairy"
+    PRESSING = "pressing"
 
 
 class MethodKind(StrEnum):
@@ -85,6 +88,12 @@ class MethodKind(StrEnum):
     OIL_LAMPS = "oil_lamps"
     GLOW_MOSS = "glow_moss"
     MAGIC_LIGHT = "magic_light"
+    HOME_SLAUGHTER = "home_slaughter"
+    SHAMBLES = "shambles"
+    HAND_CHURNING = "hand_churning"
+    CAVE_AGEING = "cave_ageing"
+    TREADING = "treading"
+    SCREW_PRESS = "screw_press"
 
 
 class OwnerClass(StrEnum):

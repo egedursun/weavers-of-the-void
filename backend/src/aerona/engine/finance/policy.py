@@ -18,12 +18,14 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.finance import TradePolicyKind
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import PressureKind
 from aerona.domain.enums.polity import TreatyKind, TreatyStatus
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of
+from aerona.engine.finance.contraband import BannedMaterials, banned_materials
 from aerona.engine.industry.energy import industry_row
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import LawBook
@@ -46,6 +48,7 @@ class Terms:
     informed: float = 1.0
     seller_realm: int | None = None
     buyer_realm: int | None = None
+    banned: BannedMaterials = field(default_factory=BannedMaterials)
 
     @property
     def blocked(self) -> bool:
@@ -70,6 +73,7 @@ class PolicyBook:
     outlaws: dict[int, int] = field(default_factory=dict)
     access: dict[int, int] = field(default_factory=dict)
     informed: dict[int, float] = field(default_factory=dict)
+    banned: dict[int, BannedMaterials] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, ctx: TickContext, book: EconomyBook) -> "PolicyBook":
@@ -89,6 +93,7 @@ class PolicyBook:
         for gang in await ctx.session.scalars(gangs):
             if gang.home_entity_id is not None:
                 found.outlaws.setdefault(gang.home_entity_id, gang.faction_entity_id)
+        found.banned = await banned_materials(ctx, laws, [community.id for community in book.communities])
         for community in book.communities:
             banned = {good for law, goods in ILLEGAL_GOODS.items() if laws.in_force(community.id, law) is not None for good in goods}
             if banned:
@@ -130,6 +135,7 @@ class PolicyBook:
             informed=(self.informed.get(seller, 1.0) + self.informed.get(buyer, 1.0)) / 2,
             seller_realm=seller_realm,
             buyer_realm=buyer_realm,
+            banned=self.banned.get(buyer, BannedMaterials()),
         )
 
 
@@ -144,6 +150,8 @@ async def smuggle(
     volume: int,
     landed: float,
     tally: PolicyTally,
+    material: MaterialKind | None = None,
+    world_material_id: int | None = None,
 ) -> int:
     table = ctx.rules.trade_policy
     outlaw = policies.outlaws.get(buyer) or policies.outlaws.get(seller)
@@ -152,7 +160,8 @@ async def smuggle(
         return 0
     ledger = goods_of(ctx.session, ctx.epoch)
     moved = 0
-    for lot in await ledger.take(seller, commodity, units, GoodsFlow.TRADE):
+    contraband = await ledger.take(seller, commodity, units, GoodsFlow.TRADE, material=material, world_material_id=world_material_id)
+    for lot in contraband:
         moved += await ledger.add(
             buyer, commodity, lot.quantity, GoodsFlow.TRADE, material=lot.material, world_material_id=lot.world_material_id, quality=lot.quality
         )

@@ -2,7 +2,7 @@ from collections import Counter
 
 from sqlalchemy import func, or_, select
 
-from aerona.catalog.methods import COLD
+from aerona.catalog.methods import COLD, FUEL_HEAT
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import LeyLineRow
@@ -99,7 +99,7 @@ async def supply_of(ctx: TickContext, book: EconomyBook, community: EntityRow, l
     wind: float = table.wind_base
     if region is not None:
         wind += (table.wind_coast if region.coast_kind is not CoastKind.NONE else 0) + region.roughness * table.wind_heights_pct / PERCENT
-    burnable = held.get(CommodityKind.FUEL, 0) * table.heat_per_fuel + held.get(CommodityKind.TIMBER, 0) * table.heat_per_timber
+    burnable = sum(held.get(kind, 0) * int(getattr(table, key)) for kind, key in FUEL_HEAT.items())
     need = survival_heat(ctx.rules, headcount(community), region.temperature_band if region is not None else None)
     magic = (region.magic_density * table.magic_density_pct / PERCENT + leys.get(region.entity_id, 0) * table.magic_per_ley) if region is not None else 0
     magic += await mages_of(ctx, community.id) * table.magic_per_mage

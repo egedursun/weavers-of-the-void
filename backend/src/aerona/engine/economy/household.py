@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import func, select
 
 from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
+from aerona.catalog.methods import FUEL_FAMILY, FUEL_HEAT
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import MaimedCohortRow
 from aerona.db.tables.economy import ProductionRunRow
@@ -11,7 +12,7 @@ from aerona.db.tables.settlement import SettlementInfrastructureRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
-from aerona.domain.enums.environment import CoastKind
+from aerona.domain.enums.environment import CoastKind, TemperatureBand
 from aerona.domain.enums.industry import ProcessKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import Commodity, SocialClass
@@ -31,7 +32,21 @@ from aerona.rules.registry import Rules
 
 THOUSAND = 1000
 HARVEST_STEP = "harvest"
-EATING_ORDER = (CommodityKind.BREAD, CommodityKind.LIVESTOCK, CommodityKind.FISH, CommodityKind.GRAIN)
+EATING_ORDER = (
+    CommodityKind.BREAD,
+    CommodityKind.MEAT,
+    CommodityKind.CHEESE,
+    CommodityKind.LIVESTOCK,
+    CommodityKind.FISH,
+    CommodityKind.TUBERS,
+    CommodityKind.GRAIN,
+    CommodityKind.FRUIT,
+    CommodityKind.MILK,
+)
+TENTH = 10
+COMMONS_MATERIAL = {CommodityKind.TIMBER: MaterialKind.WOOD, CommodityKind.STONE: MaterialKind.STONE}
+COLD_LAND = frozenset({TemperatureBand.FROZEN, TemperatureBand.COLD})
+ORCHARD_LAND = frozenset({TemperatureBand.TEMPERATE, TemperatureBand.WARM, TemperatureBand.HOT})
 
 
 @dataclass(frozen=True)
@@ -76,9 +91,18 @@ async def harvest_goods(ctx: TickContext, book: EconomyBook, community: EntityRo
     if mix.fish > 0:
         sea *= scale_by_energy(book, community.id, fishing.energy, round_half_up(fishing.energy_need * crews * mix.fish))
     fodder = round_half_up(land * mix.pasture * table.fodder_share_pct / PERCENT)
+    chain = ctx.rules.food_chain
+    herds = round_half_up(land * mix.pasture) - fodder
+    milk = round_half_up(herds * chain.milk_pct / PERCENT)
+    tuber_share, fruit_share = field_shares(ctx, book, community)
+    fields = land * mix.grain
     split = {
-        CommodityKind.GRAIN: round_half_up(land * mix.grain),
-        CommodityKind.LIVESTOCK: round_half_up(land * mix.pasture) - fodder,
+        CommodityKind.GRAIN: round_half_up(fields * (1 - tuber_share - fruit_share)),
+        CommodityKind.TUBERS: round_half_up(fields * tuber_share),
+        CommodityKind.FRUIT: round_half_up(fields * fruit_share),
+        CommodityKind.LIVESTOCK: herds - milk,
+        CommodityKind.MILK: milk,
+        CommodityKind.DUNG: round_half_up(herds * chain.dung_per_10 / TENTH),
         CommodityKind.FODDER: fodder,
         CommodityKind.FISH: round_half_up(sea * mix.fish),
     }
@@ -99,6 +123,17 @@ async def harvest_goods(ctx: TickContext, book: EconomyBook, community: EntityRo
         )
     )
     return split
+
+
+def field_shares(ctx: TickContext, book: EconomyBook, community: EntityRow) -> tuple[float, float]:
+    chain = ctx.rules.food_chain
+    region = book.ground.region_of(community.id)
+    if region is None:
+        return chain.tuber_pct / PERCENT, 0.0
+    poor = region.temperature_band in COLD_LAND or region.soil_fertility < chain.poor_soil_at
+    tubers = (chain.tuber_cold_pct if poor else chain.tuber_pct) / PERCENT
+    orchards = region.temperature_band in ORCHARD_LAND and region.moisture >= chain.fruit_moisture_at
+    return tubers, (chain.fruit_pct / PERCENT if orchards else 0.0)
 
 
 def eating_order(staples: tuple[CommodityKind, ...]) -> tuple[CommodityKind, ...]:
@@ -177,10 +212,11 @@ async def gather_commons(ctx: TickContext, book: EconomyBook, community: EntityR
     gathered = {
         CommodityKind.TIMBER: round_half_up(farmers * table.commons_timber_per_1000_farmers / THOUSAND * region.forest_cover / PERCENT),
         CommodityKind.STONE: round_half_up(farmers * table.commons_stone_per_1000_farmers / THOUSAND * region.roughness / PERCENT),
+        CommodityKind.PEAT: round_half_up(farmers * ctx.rules.food_chain.peat_per_1000 / THOUSAND * region.wetland / PERCENT),
     }
     ledger = goods_of(ctx.session, ctx.epoch)
     for kind, amount in gathered.items():
-        material = MaterialKind.WOOD if kind is CommodityKind.TIMBER else MaterialKind.STONE
+        material = COMMONS_MATERIAL.get(kind)
         await ledger.add(community.id, kind, amount, GoodsFlow.HARVEST, material=material)
     return gathered
 
@@ -204,7 +240,33 @@ async def wear(ctx: TickContext, community: EntityRow) -> Wear:
             continue
         wanted[kind] = need
         got[kind] = sum(lot.quantity for lot in await goods_of(ctx.session, ctx.epoch).take(community.id, kind, need, GoodsFlow.CONSUMPTION, best_first=False))
+    if CommodityKind.FUEL in wanted and got.get(CommodityKind.FUEL, 0) < wanted[CommodityKind.FUEL]:
+        got[CommodityKind.FUEL] += await burn_substitutes(ctx, community, wanted[CommodityKind.FUEL] - got[CommodityKind.FUEL])
     return Wear(wanted, got)
+
+
+async def burn_substitutes(ctx: TickContext, community: EntityRow, short: int) -> int:
+    table = ctx.rules.energy
+    society = await ctx.session.get(CommunitySocietyRow, community.id)
+    fuel_heat = max(1, table.heat_per_fuel)
+
+    def cost(kind: CommodityKind) -> float:
+        spec = COMMODITIES[kind]
+        price = spec.base_price * (society.price(spec.aggregate) / PERCENT if society is not None else 1.0)
+        return price / max(1, int(getattr(table, FUEL_HEAT[kind])))
+
+    covered = 0
+    heat = short * fuel_heat
+    for kind in sorted((kind for kind in FUEL_FAMILY if kind not in (CommodityKind.FUEL, CommodityKind.TIMBER)), key=lambda item: (cost(item), item.value)):
+        per = int(getattr(table, FUEL_HEAT[kind]))
+        if heat <= 0 or per <= 0:
+            continue
+        burned = sum(
+            lot.quantity for lot in await goods_of(ctx.session, ctx.epoch).take(community.id, kind, -(-heat // per), GoodsFlow.CONSUMPTION, best_first=False)
+        )
+        heat -= burned * per
+        covered += burned * per // fuel_heat
+    return min(short, covered)
 
 
 async def enforce_storage(ctx: TickContext, book: EconomyBook, community: EntityRow) -> int:

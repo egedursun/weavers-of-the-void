@@ -1,23 +1,29 @@
 from sqlalchemy import select
 
+from aerona.db.tables.culture import BookContentRow, ItemProfileRow
 from aerona.db.tables.economy import CommunityStockRow, LoanRow, MarketPriceRow, ProductionRunRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.finance import CreditProfileRow, EconomicIndicatorRow, TradePolicyRow
 from aerona.db.tables.mind import FacetRow
-from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, TreatyPartyRow, TreatyProfileRow
+from aerona.db.tables.polity import LawJurisdictionRow, LawProfileRow, PolityMemberRow, PolityProfileRow, TreatyPartyRow, TreatyProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
-from aerona.domain.enums.economy import CommodityKind, LoanStatus
+from aerona.domain.enums.culture import ItemClass
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow, LoanStatus
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.finance import CreditState, SpeculationStatus, TradePolicyKind
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import Facet
-from aerona.domain.enums.polity import DecisionRule, GovernmentKind, TreatyKind, TreatyStatus
+from aerona.domain.enums.polity import DecisionRule, GovernmentKind, Jurisdiction, LawArea, LawKind, TreatyKind, TreatyStatus
 from aerona.domain.enums.settlement import SizeTier
-from aerona.domain.models.entity_stats import FactionStats, PolityStats, TreatyStats
+from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.models.entity_stats import FactionStats, ItemStats, KnowledgeStats, LawStats, PolityStats, TreatyStats
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.markets import elasticity_of, income_of
+from aerona.engine.economy.stocks import goods_of
 from aerona.engine.finance.access import access_pct, sold_share
+from aerona.engine.finance.contraband import smuggle_books, traffic
 from aerona.engine.finance.credit import CreditTally, interest_for, on_default, rate, rated_interest
 from aerona.engine.finance.indicators import IndicatorTally, record_indicators
 from aerona.engine.finance.policy import PolicyBook, PolicyTally, smuggle, tend_policies
@@ -179,3 +185,41 @@ async def test_capacity_widens_access_allies_join_embargoes_and_thin_coin_raises
     await tend_policies(context(realm.session, rules), book, policies, PolicyTally())
     joined = await realm.session.scalar(select(TradePolicyRow).where(TradePolicyRow.issuer_node_id == second.id, TradePolicyRow.partner_node_id == enemy.id))
     assert joined is not None and joined.kind is TradePolicyKind.EMBARGO and "treaty" in (joined.reason or "")
+
+
+async def law(realm: Realm, name: str, kind: LawKind, place: EntityRow, **params: str) -> None:
+    entity = await make(realm.session, name, EntityType.LAW, LawStats(), world_id=realm.world.id)
+    realm.session.add(LawProfileRow(law_entity_id=entity.id, kind=kind, area=LawArea.PENAL, params=params, enforcement=80))
+    realm.session.add(LawJurisdictionRow(law_entity_id=entity.id, node_entity_id=place.id, jurisdiction=Jurisdiction.POLITY))
+    await realm.session.flush()
+
+
+async def test_bans_on_magic_forbid_void_materials_and_outlaws_traffic_captives_and_books(realm: Realm) -> None:
+    ctx = context(realm.session, tuned(contraband={"slave_chance": 100}))
+    free, bound = await settlement(realm, "Freeholm"), await settlement(realm, "Chainport")
+    gang = await make(realm.session, "Red Hands", EntityType.FACTION, FactionStats(strength=30), world_id=realm.world.id)
+    realm.session.add(FactionProfileRow(faction_entity_id=gang.id, kind=FactionKind.BANDITS, home_entity_id=free.id, treasury=0))
+    realm.session.add(SettlementProfileRow(settlement_entity_id=free.id, size_tier=SizeTier.TOWN, crime=10))
+    await law(realm, "Law of the Bound", LawKind.SLAVERY, bound, status="allowed")
+    await law(realm, "Ban on Sorcery", LawKind.MAGIC_BAN, free)
+    realm.session.add(CommunityStockRow(community_entity_id=bound.id, commodity=CommodityKind.ORE, material=MaterialKind.VOID_GLASS, quantity=20, quality=50))
+    realm.session.add(CommunityStockRow(community_entity_id=bound.id, commodity=CommodityKind.ORE, material=MaterialKind.IRON, quantity=20, quality=50))
+    lore = await make(
+        realm.session, "Unspoken Names", EntityType.KNOWLEDGE, KnowledgeStats(), world_id=realm.world.id, knowledge_branch=KnowledgeBranch.FORBIDDEN
+    )
+    tome = await make(realm.session, "The Grey Codex", EntityType.ITEM, ItemStats(), world_id=realm.world.id, location_id=free.id)
+    realm.session.add(ItemProfileRow(item_entity_id=tome.id, item_class=ItemClass.BOOK))
+    realm.session.add(BookContentRow(book_entity_id=tome.id, knowledge_entity_id=lore.id))
+    await realm.session.flush()
+    market = await traffic(ctx, free, 40, None)
+    profile = await realm.session.get(FactionProfileRow, gang.id)
+    town = await realm.session.get(SettlementProfileRow, free.id)
+    assert market is not None and market.id == bound.id and profile is not None and profile.treasury > 0 and town is not None and town.crime > 10
+    book = await EconomyBook.load(ctx)
+    policies = await PolicyBook.load(ctx, book)
+    banned = policies.banned.get(free.id)
+    assert banned is not None and MaterialKind.VOID_GLASS in banned.kinds and policies.banned.get(bound.id) is None
+    lawful = await goods_of(realm.session, ctx.epoch).take(bound.id, CommodityKind.ORE, 40, GoodsFlow.TRADE, exclude=banned.kinds)
+    assert {lot.material for lot in lawful} == {MaterialKind.IRON}
+    before = profile.treasury
+    assert await smuggle_books(ctx, profile) == 1 and profile.treasury > before

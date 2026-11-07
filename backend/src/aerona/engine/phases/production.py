@@ -28,6 +28,7 @@ from aerona.engine.economy.refining import RefiningTally, refine_community
 from aerona.engine.economy.stocks import sync_aggregates
 from aerona.engine.economy.survey import depth_backfill, economy_backfill, profile_resources, seed_communities
 from aerona.engine.environment.book import active_sky
+from aerona.engine.industry.fuels import lay_coal_seams
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -489,10 +490,21 @@ async def species_yields(ctx: TickContext) -> None:
     "table.world_materials",
     "table.world_seasons",
 )
-@writes("table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents", "table.resource_profiles")
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.incident_participants",
+    "table.incidents",
+    "table.nodes",
+    "table.resource_profiles",
+)
 async def deposit_finding(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     table = ctx.rules.extraction
+    ctx.count("coal_seams_laid", await lay_coal_seams(ctx, book))
+    book = await EconomyBook.load(ctx)
     found = 0
     hidden = [
         (resource, book.profiles[resource.id]) for resource in book.resources() if resource.id in book.profiles and not book.profiles[resource.id].revealed

@@ -35,6 +35,11 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
             CommoditySpec(C.FISH, "Fish", F.SUBSISTENCE, Commodity.FOOD, 110, 9, consumption=lambda rules: rules.consumption.fish_per_1000),
             CommoditySpec(C.BREAD, "Bread", F.SUBSISTENCE, Commodity.FOOD, 130, 14, consumption=lambda rules: rules.consumption.bread_per_1000),
             CommoditySpec(C.FODDER, "Fodder", F.SUBSISTENCE, Commodity.FOOD, 60, consumption=lambda rules: rules.consumption.fodder_per_1000),
+            CommoditySpec(C.MEAT, "Meat", F.SUBSISTENCE, Commodity.FOOD, 150, 14, consumption=lambda rules: rules.consumption.meat_per_1000),
+            CommoditySpec(C.MILK, "Milk", F.SUBSISTENCE, Commodity.FOOD, 90, 7, consumption=lambda rules: rules.consumption.milk_per_1000),
+            CommoditySpec(C.CHEESE, "Cheese", F.SUBSISTENCE, Commodity.FOOD, 160, 15, consumption=lambda rules: rules.consumption.cheese_per_1000),
+            CommoditySpec(C.FRUIT, "Fruit", F.SUBSISTENCE, Commodity.FOOD, 100, 6, consumption=lambda rules: rules.consumption.fruit_per_1000),
+            CommoditySpec(C.TUBERS, "Tubers", F.SUBSISTENCE, Commodity.FOOD, 70, 9, consumption=lambda rules: rules.consumption.tubers_per_1000),
             CommoditySpec(
                 C.TIMBER,
                 "Timber",
@@ -45,6 +50,9 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
                 consumption=lambda rules: rules.consumption.timber_per_1000,
             ),
             CommoditySpec(C.FUEL, "Fuel", F.SUBSISTENCE, Commodity.GOODS, 70, consumption=lambda rules: rules.consumption.fuel_per_1000),
+            CommoditySpec(C.COAL, "Coal", F.INDUSTRIAL, Commodity.GOODS, 90, consumption=lambda rules: rules.consumption.coal_per_1000),
+            CommoditySpec(C.PEAT, "Peat", F.SUBSISTENCE, Commodity.GOODS, 45, consumption=lambda rules: rules.consumption.peat_per_1000),
+            CommoditySpec(C.DUNG, "Dung", F.SUBSISTENCE, Commodity.GOODS, 20, consumption=lambda rules: rules.consumption.dung_per_1000),
             CommoditySpec(
                 C.ORE,
                 "Ore",

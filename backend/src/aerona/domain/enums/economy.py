@@ -29,6 +29,14 @@ class CommodityKind(StrEnum):
     INCENSE = "incense"
     SACRED_GOODS = "sacred_goods"
     MAGICAL_REAGENTS = "magical_reagents"
+    MEAT = "meat"
+    MILK = "milk"
+    CHEESE = "cheese"
+    FRUIT = "fruit"
+    TUBERS = "tubers"
+    COAL = "coal"
+    PEAT = "peat"
+    DUNG = "dung"
 
 
 class MaterialFamily(StrEnum):
