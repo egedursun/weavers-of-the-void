@@ -1,10 +1,14 @@
 from collections.abc import Iterable
+from functools import lru_cache
 
 from aerona.constants.language import FIRST_UNIQUE_SUFFIX_NUMBER, NAME_SIMILARITY_FAR, ROMAN_NUMERAL_LIMIT, ROMAN_NUMERALS
 from aerona.language.alphabet import strip_diacritics
 from aerona.rules.registry import Rules
 
+NORMALIZED_NAMES = 65536
 
+
+@lru_cache(maxsize=NORMALIZED_NAMES)
 def normalize_name(name: str) -> str:
     return strip_diacritics(name.strip().casefold())
 

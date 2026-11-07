@@ -794,6 +794,24 @@ async def _age(ctx: TickContext, book: EconomyBook, route: Route, tally: RouteTa
     return True
 
 
+def orphaned(book: EconomyBook, route: Route) -> bool:
+    return any(end not in book.entities for end in route.ends)
+
+
+async def close_orphan(ctx: TickContext, route: Route, tally: RouteTally) -> None:
+    if held(route, "status") or route.profile.status is TradeRouteStatus.CLOSED:
+        return
+    route.profile.status = TradeRouteStatus.CLOSED
+    route.profile.blockaded_by_entity_id = None
+    tally.decayed += 1
+    await ctx.chronicle(
+        ChronicleKind.TRADE,
+        f"{route.entity.name} lost a market at one end and no caravan takes it any more.",
+        template_key="trade_route.orphaned",
+        entity_ids=[route.entity.id],
+    )
+
+
 async def upkeep(ctx: TickContext, book: EconomyBook, route: Route, *, works: dict[int, Works], enemies: set[tuple[int, int]], tally: RouteTally) -> None:
     profile = route.profile
     if not held(route, "capacity"):

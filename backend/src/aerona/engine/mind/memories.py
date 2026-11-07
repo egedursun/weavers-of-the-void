@@ -5,7 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import MEMORIES
 from aerona.constants.units import PERCENT
-from aerona.db.read_memo import memo_of, table_names
+from aerona.db.key_index import index_spec, keyed_rows
+from aerona.db.read_memo import table_names
 from aerona.db.repositories.chronicle import incident_for
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow
@@ -110,16 +111,15 @@ async def remember_both(
     await remember(session, rules, holder_id=second, subject_id=first, kind=kind, magnitude=magnitude, epoch=epoch, note=note)
 
 
+MEMORY_PAIRS = index_spec(MemoryRow, "holder_node_id", "subject_node_id")
+
+
 async def memories_about(session: AsyncSession, holder_id: int, subject_id: int) -> list[MemoryRow]:
-    memo = memo_of(session, "memories_held", MEMORY_TABLES)
-    if memo is None:
-        statement = select(MemoryRow).where(MemoryRow.holder_node_id == holder_id, MemoryRow.subject_node_id == subject_id)
-        return list(await session.scalars(statement.order_by(MemoryRow.epoch, MemoryRow.id)))
-    held: list[MemoryRow] | None = memo.get(holder_id)
-    if held is None:
-        held = list(await session.scalars(select(MemoryRow).where(MemoryRow.holder_node_id == holder_id).order_by(MemoryRow.epoch, MemoryRow.id)))
-        memo[holder_id] = held
-    return [row for row in held if row.subject_node_id == subject_id]
+    pairs = await keyed_rows(session, MEMORY_PAIRS)
+    if pairs is not None:
+        return sorted(pairs.rows.get((holder_id, subject_id), []), key=lambda row: (row.epoch, row.id))
+    statement = select(MemoryRow).where(MemoryRow.holder_node_id == holder_id, MemoryRow.subject_node_id == subject_id)
+    return list(await session.scalars(statement.order_by(MemoryRow.epoch, MemoryRow.id)))
 
 
 async def memories_between(session: AsyncSession, first: int, second: int) -> list[MemoryRow]:

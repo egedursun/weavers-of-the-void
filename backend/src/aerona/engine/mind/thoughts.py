@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.mind_split import FACETS
 from aerona.catalog.thoughts import EMOTIONS, MOOD_ORDER, NEEDS, THOUGHTS
 from aerona.constants.units import PERCENT
+from aerona.db.key_index import index_spec, keyed_rows
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import ThoughtRow
 from aerona.db.tables.mortal import MortalProfileRow
@@ -69,6 +70,26 @@ async def shift_mind(session: AsyncSession, rules: Rules, holder_id: int, belief
             await write_facets(session, holder_id, shifted)
 
 
+EPOCH_THOUGHTS = index_spec(ThoughtRow, "holder_node_id", "kind", "subject_node_id", scope="epoch")
+
+
+async def same_thought(session: AsyncSession, holder_id: int, kind: ThoughtKind, epoch: int, subject: int | None) -> ThoughtRow | None:
+    current = await keyed_rows(session, EPOCH_THOUGHTS, epoch)
+    if current is not None:
+        found = current.rows.get((holder_id, kind, subject))
+        return found[0] if found else None
+    return await session.scalar(
+        select(ThoughtRow)
+        .where(
+            ThoughtRow.holder_node_id == holder_id,
+            ThoughtRow.kind == kind,
+            ThoughtRow.epoch == epoch,
+            ThoughtRow.subject_node_id.is_(None) if subject is None else ThoughtRow.subject_node_id == subject,
+        )
+        .limit(1)
+    )
+
+
 async def think(
     session: AsyncSession,
     rules: Rules,
@@ -90,16 +111,7 @@ async def think(
     if size <= 0:
         return None
     subject = subject_id if subject_id != holder_id else None
-    same = await session.scalar(
-        select(ThoughtRow)
-        .where(
-            ThoughtRow.holder_node_id == holder_id,
-            ThoughtRow.kind == kind,
-            ThoughtRow.epoch == epoch,
-            ThoughtRow.subject_node_id.is_(None) if subject is None else ThoughtRow.subject_node_id == subject,
-        )
-        .limit(1)
-    )
+    same = await same_thought(session, holder_id, kind, epoch, subject)
     if same is not None:
         same.intensity = max(same.intensity, size)
         await session.flush()

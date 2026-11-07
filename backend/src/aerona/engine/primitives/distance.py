@@ -14,6 +14,7 @@ from aerona.engine.primitives.map_store import stored_regions
 from aerona.rules.registry import Rules
 
 ATLAS_TABLES = table_names((EntityRow, WorldMapRow))
+MAP_TABLES = table_names((WorldMapRow,))
 
 
 @dataclass(frozen=True)
@@ -24,11 +25,36 @@ class Placement:
     location_id: int | None
 
 
+@dataclass(frozen=True)
+class Terrain:
+    graphs: dict[int, RegionGraph]
+    records: dict[int, RegionRecord]
+
+    @classmethod
+    def of(cls, records: dict[int, list[RegionRecord]]) -> "Terrain":
+        return cls(
+            {world_id: RegionGraph(world_records) for world_id, world_records in records.items()},
+            {record.id: record for world_records in records.values() for record in world_records},
+        )
+
+
+async def terrain_of(session: AsyncSession) -> Terrain:
+    memo = memo_of(session, "atlas.terrain", MAP_TABLES)
+    if memo is not None and "terrain" in memo:
+        found: Terrain = memo["terrain"]
+        return found
+    terrain = Terrain.of(await stored_regions(session))
+    if memo is not None:
+        memo["terrain"] = terrain
+    return terrain
+
+
 class RegionAtlas:
-    def __init__(self, placements: dict[int, Placement], records: dict[int, list[RegionRecord]]) -> None:
+    def __init__(self, placements: dict[int, Placement], records: dict[int, list[RegionRecord]], terrain: Terrain | None = None) -> None:
+        shared = terrain or Terrain.of(records)
         self._placements = placements
-        self._graphs = {world_id: RegionGraph(world_records) for world_id, world_records in records.items()}
-        self._records = {record.id: record for world_records in records.values() for record in world_records}
+        self._graphs = shared.graphs
+        self._records = shared.records
         self._top: dict[int, int | None] = {}
 
     @classmethod
@@ -39,7 +65,7 @@ class RegionAtlas:
             return found
         rows = await session.execute(select(EntityRow.id, EntityRow.entity_type, EntityRow.world_id, EntityRow.location_id))
         placements = {row[0]: Placement(row[0], row[1], row[2], row[3]) for row in rows}
-        atlas = cls(placements, await stored_regions(session))
+        atlas = cls(placements, {}, await terrain_of(session))
         if memo is not None:
             memo["atlas"] = atlas
         return atlas
