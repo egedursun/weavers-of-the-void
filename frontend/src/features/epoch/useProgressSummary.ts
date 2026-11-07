@@ -1,7 +1,9 @@
+import { useEffect } from 'react'
 import { formatClock, formatDuration } from '@/lib/units'
 import { JOB_KIND_LABEL, isJobKind } from '@/constants/jobs'
 import { useWorldState } from '@/features/overview/api'
 import { type Job, useRunningJobs } from './api'
+import { isStaleRun } from './runModel'
 import { useEpochRun } from './runStore'
 import { useEpochTiming } from './useEpochTiming'
 
@@ -21,6 +23,11 @@ export function useProgressSummary(): ProgressSummary {
   const state = useWorldState()
   const run = useEpochRun()
   const jobs = useRunningJobs()
+  const stale = isStaleRun(run, state.data?.epoch_running, state.dataUpdatedAt)
+  const reset = run.reset
+  useEffect(() => {
+    if (stale) reset()
+  }, [stale, reset])
   const timing = useEpochTiming(Boolean(state.data?.epoch_running))
   if (timing.active) {
     const parts = [
