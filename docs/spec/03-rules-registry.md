@@ -3300,7 +3300,7 @@ Old namespace `OLUMLU_AJAN` · 4 rows · defined in `src/rules.js` · also read 
 | key | old key | default | min | max | group | label |
 |---|---|---|---|---|---|---|
 | action_points | ap | 3 | 1 | 6 | Mortal agents | Mortal action points |
-| agents_per_epoch | varsayilan | 4 | 0 | 1000 | Mortal agents | Mortal agents per epoch |
+| agents_per_epoch | varsayilan | 10 | 0 | 1000 | Mortal agents | Mortal agents per epoch |
 | max_turns | maxTurns | 12 | 4 | 20 | Mortal agents | Mortal turn limit (steps) |
 | creature_min_intelligence | zeka_esigi | 55 | 0 | 100 | Mortal agents | Minimum intelligence for a creature to play as an agent |
 

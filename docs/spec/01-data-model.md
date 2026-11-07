@@ -918,7 +918,7 @@ CREATE TABLE cosmos (
   fate_mode TEXT NOT NULL DEFAULT 'auto' CHECK (fate_mode IN ('auto','off')),
   son_distribution TEXT NOT NULL DEFAULT 'auto' CHECK (son_distribution IN ('auto','manual')),
   council_every_epochs INTEGER NOT NULL DEFAULT 4,
-  mortal_agents_per_epoch INTEGER NOT NULL DEFAULT 4, mortal_agent_parallelism INTEGER NOT NULL DEFAULT 1,
+  mortal_agents_per_epoch INTEGER NOT NULL DEFAULT 10, mortal_agent_parallelism INTEGER NOT NULL DEFAULT 1,
   unjudged_since_epoch INTEGER,            -- kader_borc
   alignment_until_epoch INTEGER,           -- hizalanma_son
   creator_profile JSON,                    -- appearance, temperament, image_prompt, note
