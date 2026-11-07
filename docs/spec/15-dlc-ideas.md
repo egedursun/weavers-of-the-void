@@ -1,6 +1,6 @@
 # 15. DLC ideas
 
-Status: **idea, not a plan.** This document splits the whole of spec 13 (depth expansion) into 85 themed expansions plus The Loom, the foundation they all stand on, as if each were sold separately, and gives each one the copy printed on the back of its box. The split is non-redundant: every mechanic of spec 13 belongs to exactly one expansion. The **Covers** line under each expansion names the spec 13 sections it holds. Integration still follows the waves of spec 13 Part J; this split does not change them.
+Status: **idea, not a plan.** This document splits the whole of spec 13 (depth expansion) into 85 themed expansions plus The Loom, the foundation they all stand on, as if each were sold separately, and gives each one the copy printed on the back of its box. The split is non-redundant: every mechanic of spec 13 belongs to exactly one expansion. The **Covers** line under each expansion names the spec 13 sections it holds. Integration still follows the waves of spec 13 Part J; this split does not change them. Expansion 86 reaches past spec 13: it has no spec counterpart yet, so its **Covers** line reads TBD until its spec is written.
 
 ---
 
@@ -1578,3 +1578,27 @@ Six of them go down into the vault: a scout, a guide, a healer, a fighter, a sch
 **In your world:** An excavation of a previous creation's ruin reached its fourth stage and found a book of a lost technique. The scholars began to study it, but the dig had also freed a sealed spirit, and the party's scholar came home afraid of the deep.
 
 **Covers:** 6.2 RP, 6.2 RP4.
+
+---
+
+## XII. The Boundless
+
+### 86. The Boundless
+
+*Past the last star, another sky. Past the last sky, another reality.*
+
+Until now your heavens ended at the star systems you made. The Boundless opens the rest. Every system gains an address in a galaxy, every galaxy a place in a cluster, every cluster a thread in the cosmic web. Raise galaxies of every real and fabled kind, send fleets, merchants and envoys across the dark between them, then look sideways: the cosmos is layered, and beside this reality lie others with their own laws, their own galaxies and their own inhabitants. All of it is one cosmos, and all of it is yours to shape.
+
+- **A Place in the Galaxy**: every star system sits somewhere real: core, bulge, bar, spiral arm, disc, halo or a stream torn from a swallowed neighbour, at a true distance from the centre. Position sets how crowded the night sky is, how often nearby supernovae and close stellar passes strike, how rich in metals new worlds form and where the galaxy's habitable band runs.
+- **Galaxies Real and Fabled**: spirals, barred spirals, ellipticals, lenticulars, irregulars, rings, dwarfs and starburst galaxies, beside fabled kinds: a galaxy that is a sleeping god's body, one grown as a single lattice of crystal, one whose stars run their lives backward, one dreamed into being by its peoples. Each kind sets how stars are born, which stars it holds and what its worlds can become.
+- **Structures of the Galaxy**: a central black hole that can wake into an active core and flood the inner systems with radiation, spiral arms that sweep through systems as waves of star birth, dust lanes that hide whole regions from every astronomer, globular clusters of ancient stars, galactic tides that loosen comets and a galactic year in which the whole galaxy turns.
+- **Many Galaxies, One Cosmos**: create, name, reshape, merge and unmake galaxies. Colliding galaxies ignite bursts of new stars and scatter systems into new neighbourhoods, and satellites are slowly swallowed by their hosts. Galaxies gather into groups, clusters and superclusters strung along filaments of the cosmic web around great empty voids.
+- **Crossing the Deep**: between galaxies, sails and launch windows are not enough. Voyages need galactic gates, bridges between clusters, ships that carry generations, roads laid by gods or folds through another dimension. Distance delays news and orders by centuries, so a far colony can outgrow, forget or reinvent the realm that founded it.
+- **Commerce of the Clusters**: goods only one galaxy yields, trade leagues spanning a whole cluster, envoys and treaties between galactic powers, tolls and embargoes at the gates, and peoples spread across galaxies who share one memory, or split into strangers when a gate closes.
+- **Layers of Reality**: the cosmos holds many dimensions: mirror, shadow, elemental, dream, timeless, higher, pocket, folded and fabled ones of your own design. Each has its own physics, time rate, magic, life and galaxies. Thin places, crossings and convergences join them, and the realms of the dead and the dream worlds you already know take their places among them.
+- **Beings from Beyond**: natives of other dimensions cross over as travellers, traders, wardens, refugees, swarms and minds larger than worlds, each with goals of its own. Dimensional events reshape the map: two layers drifting into convergence, one bleeding into another, a dimension collapsing or a new one being born.
+- **Yours from Edge to Edge**: create, edit, hold and delete every galaxy, cluster, crossing, dimension, being and event. A cosmic map zooms from the web of clusters down to a single region, and sons can claim galaxies, open or seal crossings and court the powers of other dimensions.
+
+**In your world:** A son opened a gate between two galaxies of one cluster. Merchants crossed first, and a shared trade tongue grew along the road. Then a convergence pressed a timeless dimension against the gate, and travellers emerged centuries after they had entered. The colony they sailed for no longer remembered its founders, and the son had to choose between sealing the gate and keeping the road alive.
+
+**Covers:** TBD.
