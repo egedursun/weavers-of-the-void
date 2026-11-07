@@ -242,9 +242,9 @@ export function ItemRow({
   const [open, setOpen] = useState(false)
   return (
     <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-muted/10 p-3'>
-      <div className='flex min-w-0 items-start gap-3'>
+      <div className='flex min-w-0 flex-wrap items-start gap-3'>
         <Medallion icon={icon} tone={tone} size='sm' />
-        <div className='flex min-w-0 flex-1 flex-col gap-1'>
+        <div className='flex min-w-0 flex-1 basis-48 flex-col gap-1'>
           <div className='flex min-w-0 flex-wrap items-center gap-2'>
             <Text weight='semibold' truncate>
               {title}
@@ -253,7 +253,7 @@ export function ItemRow({
           </div>
           {meta && <Muted variant='caption'>{meta}</Muted>}
         </div>
-        <div className='flex shrink-0 items-center gap-1'>
+        <div className='flex shrink-0 flex-wrap items-center justify-end gap-1'>
           {actions}
           {editor && (
             <Button
