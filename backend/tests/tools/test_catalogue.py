@@ -57,6 +57,21 @@ def test_input_fields_are_described_by_the_prompt_catalog(spec: Any) -> None:
     schema = input_schema(spec.input_model, text.fields)
     assert schema["type"] == "object"
     assert "$defs" not in str(schema.keys())
+    assert open_choices(schema) == [], "a field with fixed choices also offers free text, so the model invents values"
+
+
+def open_choices(node: Any, path: str = "") -> list[str]:
+    found: list[str] = []
+    if isinstance(node, dict):
+        options = node.get("anyOf") or node.get("oneOf") or []
+        if any("enum" in option for option in options) and any(option.get("type") == "string" and "enum" not in option for option in options):
+            found.append(path)
+        for key, value in node.items():
+            found.extend(open_choices(value, f"{path}.{key}"))
+    elif isinstance(node, list):
+        for index, item in enumerate(node):
+            found.extend(open_choices(item, f"{path}[{index}]"))
+    return found
 
 
 @pytest.mark.parametrize("spec", SPECS, ids=lambda spec: f"{spec.agent.value}.{spec.name}")
