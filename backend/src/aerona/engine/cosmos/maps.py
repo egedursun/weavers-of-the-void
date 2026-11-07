@@ -1,9 +1,6 @@
 import asyncio
 import hashlib
-import multiprocessing
 from collections.abc import Sequence
-from concurrent.futures import ProcessPoolExecutor
-from concurrent.futures.process import BrokenProcessPool
 from dataclasses import dataclass
 
 from sqlalchemy import select
@@ -22,9 +19,6 @@ from aerona.domain.enums.world import Discovery
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.rules.registry import Rules
 
-MAP_WORKERS = 4
-PARALLEL_FROM = 2
-POOL: list[ProcessPoolExecutor] = []
 MAPPED_STATUSES = (EntityStatus.CANON, EntityStatus.DEAD, EntityStatus.FULFILLED)
 
 
@@ -96,20 +90,7 @@ def _apply_positions(entities: dict[int, EntityRow], updates: Sequence[PositionU
 
 
 async def generated_maps(requests: Sequence[MapRequest], rules: Rules) -> list[GeneratedMap]:
-    if len(requests) < PARALLEL_FROM:
-        return [await asyncio.to_thread(generate_map, request, rules) for request in requests]
-    loop = asyncio.get_running_loop()
-    try:
-        return list(await asyncio.gather(*(loop.run_in_executor(map_pool(), generate_map, request, rules) for request in requests)))
-    except BrokenProcessPool:
-        POOL.clear()
-        return [await asyncio.to_thread(generate_map, request, rules) for request in requests]
-
-
-def map_pool() -> ProcessPoolExecutor:
-    if not POOL:
-        POOL.append(ProcessPoolExecutor(max_workers=MAP_WORKERS, mp_context=multiprocessing.get_context("spawn")))
-    return POOL[0]
+    return [await asyncio.to_thread(generate_map, request, rules) for request in requests]
 
 
 async def apply_world_map(session: AsyncSession, world: WorldRow, entities: list[EntityRow], generated: GeneratedMap, epoch: int) -> WorldMap:

@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.ethics import CRIME_ACTS, HONOUR_MODELS
 from aerona.catalog.thoughts import THOUGHTS
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import BodyPart, DamageType, HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind
@@ -45,23 +46,30 @@ MUTILATION_KINDS: dict[PunishmentKind, InjuryKind] = {
     PunishmentKind.TONGUE: InjuryKind.SEVERED,
     PunishmentKind.EYES: InjuryKind.GOUGED,
 }
-SENTENCE_TEXT: dict[PunishmentKind, str] = {
-    PunishmentKind.FINE: "was fined",
-    PunishmentKind.FLOGGING: "was flogged",
-    PunishmentKind.EXILE: "was sent into exile",
-    PunishmentKind.BRANDING: "was branded",
-    PunishmentKind.HAND: "lost a hand to the law",
-    PunishmentKind.TONGUE: "had their tongue cut out by the law",
-    PunishmentKind.EYES: "was blinded by the law",
-    PunishmentKind.DEATH: "was put to death",
-}
-CRIME_TEXT: dict[CrimeKind, str] = {
-    CrimeKind.THEFT: "theft",
-    CrimeKind.BLASPHEMY: "blasphemy",
-    CrimeKind.TREASON: "treason",
-    CrimeKind.MURDER: "murder",
-    CrimeKind.DESERTION: "desertion",
-}
+SENTENCE_TEXT = total(
+    PunishmentKind,
+    {
+        PunishmentKind.FINE: "was fined",
+        PunishmentKind.PUBLIC_SHAMING: "was shamed in public",
+        PunishmentKind.FLOGGING: "was flogged",
+        PunishmentKind.EXILE: "was sent into exile",
+        PunishmentKind.BRANDING: "was branded",
+        PunishmentKind.HAND: "lost a hand to the law",
+        PunishmentKind.TONGUE: "had their tongue cut out by the law",
+        PunishmentKind.EYES: "was blinded by the law",
+        PunishmentKind.DEATH: "was put to death",
+    },
+)
+CRIME_TEXT = total(
+    CrimeKind,
+    {
+        CrimeKind.THEFT: "theft",
+        CrimeKind.BLASPHEMY: "blasphemy",
+        CrimeKind.TREASON: "treason",
+        CrimeKind.MURDER: "murder",
+        CrimeKind.DESERTION: "desertion",
+    },
+)
 
 
 async def community_ruler(session: AsyncSession, community_id: int | None) -> EntityRow | None:

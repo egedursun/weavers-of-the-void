@@ -2,6 +2,7 @@ from types import MappingProxyType
 
 from aerona.catalog.genetics import LOCI, LOOKS_LOCI
 from aerona.catalog.mind import SKILLS
+from aerona.core.total import partial
 from aerona.domain.enums.culture import ArtMedium, CalendarSlot
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind
@@ -52,7 +53,8 @@ SUBJECTS = (
 LOOKS_TARGETS = tuple(f"{locus.value}:{allele}" for locus in LOOKS_LOCI for allele in LOCI[locus].keys)
 CRAFTS = tuple(skill for skill, spec in SKILLS.items() if spec.family is SkillFamily.CRAFT)
 
-STATIC_TARGETS: MappingProxyType[PreferenceKind, tuple[str, ...]] = MappingProxyType(
+STATIC_TARGETS = partial(
+    PreferenceKind,
     {
         P.MATERIAL: tuple(material.value for material in MaterialKind),
         P.FOOD: tuple(food.value for food in FOODS),
@@ -68,7 +70,8 @@ STATIC_TARGETS: MappingProxyType[PreferenceKind, tuple[str, ...]] = MappingProxy
         P.CRAFT: tuple(craft.value for craft in CRAFTS),
         P.DEITY_ASPECT: tuple(domain.value for domain in Domain),
         P.LOOKS: LOOKS_TARGETS,
-    }
+    },
+    without={PreferenceKind.CREATURE, PreferenceKind.PLANT},
 )
 SPECIES_KINDS = frozenset({P.CREATURE, P.PLANT})
 

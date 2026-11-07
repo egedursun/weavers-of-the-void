@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.lore import WEAPONS
 from aerona.catalog.materials import MATERIALS, METAL_FAMILIES
 from aerona.constants.units import PERCENT
+from aerona.core.total import partial
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.mortal import MortalEquipmentRow
 from aerona.domain.enums.bond import BondKind
@@ -17,15 +18,19 @@ from aerona.rules.registry import Rules
 
 SLOT_COLUMNS: dict[EquipmentSlot, str] = {slot: f"{slot.value}_id" for slot in EquipmentSlot}
 FOCUS_CLASSES = frozenset({ItemClass.STAFF, ItemClass.RING, ItemClass.IDOL, ItemClass.HOLY_RELIC, ItemClass.MIRROR})
-SLOT_CLASSES: dict[EquipmentSlot, frozenset[ItemClass]] = {
-    EquipmentSlot.WIELDED_MAIN: frozenset(WEAPONS),
-    EquipmentSlot.WIELDED_OFF: frozenset({*WEAPONS, ItemClass.SHIELD}),
-    EquipmentSlot.ARMOUR_BODY: frozenset({ItemClass.ARMOUR}),
-    EquipmentSlot.ARMOUR_HEAD: frozenset({ItemClass.HELMET, ItemClass.CROWN}),
-    EquipmentSlot.ARMOUR_UNDER: frozenset({ItemClass.PADDING}),
-    EquipmentSlot.ARMOUR_COVER: frozenset({ItemClass.CLOAK}),
-    EquipmentSlot.FOCUS: FOCUS_CLASSES,
-}
+SLOT_CLASSES = partial(
+    EquipmentSlot,
+    {
+        EquipmentSlot.WIELDED_MAIN: frozenset(WEAPONS),
+        EquipmentSlot.WIELDED_OFF: frozenset({*WEAPONS, ItemClass.SHIELD}),
+        EquipmentSlot.ARMOUR_BODY: frozenset({ItemClass.ARMOUR}),
+        EquipmentSlot.ARMOUR_HEAD: frozenset({ItemClass.HELMET, ItemClass.CROWN}),
+        EquipmentSlot.ARMOUR_UNDER: frozenset({ItemClass.PADDING}),
+        EquipmentSlot.ARMOUR_COVER: frozenset({ItemClass.CLOAK}),
+        EquipmentSlot.FOCUS: FOCUS_CLASSES,
+    },
+    without={EquipmentSlot.MOUNT},
+)
 
 
 MATERIAL_KINDS = frozenset(kind.value for kind in MaterialKind)

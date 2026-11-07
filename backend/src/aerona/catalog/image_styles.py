@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass
-from types import MappingProxyType
 
+from aerona.core.total import partial
 from aerona.domain.enums.world import ImageStyle
 
 CUSTOM_STYLE_MAX_LENGTH = 300
@@ -14,7 +14,8 @@ class StyleLook:
     tail: str
 
 
-STYLE_LOOKS: MappingProxyType[ImageStyle, StyleLook] = MappingProxyType(
+STYLE_LOOKS = partial(
+    ImageStyle,
     {
         ImageStyle.PHOTOREAL: StyleLook(
             "Photoreal",
@@ -41,7 +42,8 @@ STYLE_LOOKS: MappingProxyType[ImageStyle, StyleLook] = MappingProxyType(
             "Anime illustration of",
             "Clean bold line art, cel shading, vibrant flat colours",
         ),
-    }
+    },
+    without={ImageStyle.CUSTOM},
 )
 
 PHOTO_TERMS = re.compile(

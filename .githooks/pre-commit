@@ -35,7 +35,7 @@ if echo "$STAGED" | grep -qE '^backend/(src|tests)/.*\.py$|^backend/pyproject\.t
   PROVING="$PROVING tests/tools/test_every_tool.py tests/tools/test_catalogue.py"
   PROVING="$PROVING tests/epoch/test_epoch_llm.py::test_full_epoch_with_scripted_model"
   PROVING="$PROVING tests/epoch/test_epoch_engine_only.py::test_engine_only_epochs_run_end_to_end"
-  PROVING="$PROVING $("$PYTHON" scripts/covering_tests.py)"
+  PROVING="$PROVING $("$PYTHON" scripts/covering_tests.py | tr '\n' ' ')"
 fi
 if [ -n "$PROVING" ]; then
   run proving sh -c "cd backend && .venv/bin/pytest -q -p no:cacheprovider -n auto --dist worksteal $PROVING"
