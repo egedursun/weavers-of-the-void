@@ -14,6 +14,8 @@ IMPROVEMENTS:
 
 7.  [ ] 3D model jenerasyonu. Çok hızlı ve küçük bir model kullanılarak karakterlerin low fidelity 3D görselleri yapılabilir. Tamamen on-request olur böylelikle sistemi çok yormaz.
 
+8.  [ ] Oyun kullanma kılavuzu / user manual tarzı bir entegrasyon yapılmalı.
+
 ---
 
 YENİLİKLER:

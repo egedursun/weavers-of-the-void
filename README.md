@@ -471,7 +471,7 @@ Weavers of the Void ships as the complete edition. **The Loom** and all **85 exp
 
 <table>
 <tr>
-<td width="230" valign="top"><img src="common/assets/images/dlc-covers/00-the-loom.jpg" width="220" alt="The Loom cover art"></td>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/00-the-loom.jpg"><img src="common/assets/images/dlc-covers/00-the-loom.jpg" width="220" alt="The Loom box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/00-the-loom.jpg"><img src="common/assets/images/dlc-backs/00-the-loom.jpg" width="220" alt="The Loom box back"></a><br><sub>Back · click to read</sub></td>
 <td valign="top">
 
 *Every thread is connected. Now you can see them all.*
