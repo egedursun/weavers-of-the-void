@@ -18,6 +18,7 @@ from aerona.engine.mind.book import Values, values_for
 from aerona.engine.mind.space import value_distance
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm
+from aerona.engine.polity.trials import injustices
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, bond_exists
 from aerona.engine.primitives.stats import stat
@@ -85,6 +86,9 @@ async def loyalty_parts(ctx: TickContext, realm: Realm, member: EntityRow, won: 
     prosperity = stat(member, "prosperity")
     if prosperity is not None and prosperity > MIDDLE:
         parts[LoyaltyPart.PROSPERITY] = round_half_up((prosperity - MIDDLE) * table.prosperity_benefit_pct / PERCENT)
+    wronged = await injustices(ctx, member.id)
+    if wronged:
+        parts[LoyaltyPart.INJUSTICE] = wronged * ctx.rules.trials.injustice_grievance
     return parts
 
 

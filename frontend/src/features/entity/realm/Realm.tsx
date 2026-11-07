@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import {
   ChevronRight,
   Church,
@@ -36,7 +35,6 @@ import type { components } from '@/api/generated/schema'
 import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
 import {
   ChangeChip,
   EmptyState,
@@ -66,7 +64,6 @@ import {
   GOVERNMENTS,
   LAW_AREAS,
   LAW_KINDS,
-  LAW_PARAMS,
   LEGITIMACY_BASES,
   MEMBER_TYPES,
   OFFICES,
@@ -84,6 +81,8 @@ import {
   plain,
   sentence,
 } from './labels'
+import { useLawKinds } from './lawKinds'
+import { ParamField } from './lawTerms'
 import {
   AdjustPanel,
   ChoiceCard,
@@ -144,14 +143,6 @@ function toneOf(value: number): 'success' | 'warning' | 'destructive' {
   if (value < UNJUST) return 'destructive'
   if (value < PERCENT * 0.7) return 'warning'
   return 'success'
-}
-
-function useLawKinds() {
-  return useQuery({
-    queryKey: ['laws', 'kinds'],
-    staleTime: Number.POSITIVE_INFINITY,
-    queryFn: () => unwrap(api.GET('/api/laws/kinds')),
-  })
 }
 
 function RealmCrest({ realm }: { realm: Realm }) {
@@ -915,56 +906,6 @@ function TreasuryLedger({ realm }: { realm: Realm }) {
         <ShowMore state={list} noun={['entry', 'entries']} />
       </div>
     </Panel>
-  )
-}
-
-function ParamField({
-  spec,
-  value,
-  onChange,
-  blocked,
-}: {
-  spec: components['schemas']['LawParamSpec']
-  value: string | number | boolean
-  onChange: (value: string | number | boolean) => void
-  blocked: string | null
-}) {
-  const label = plain(LAW_PARAMS, spec.key)
-  if (spec.kind === 'bool')
-    return (
-      <label className='flex min-w-0 items-center gap-2 self-end rounded-lg border bg-background p-2'>
-        <Switch
-          checked={Boolean(value)}
-          disabled={blocked !== null}
-          onCheckedChange={onChange}
-          aria-label={label}
-        />
-        <Text as='span' truncate>
-          {label}
-        </Text>
-      </label>
-    )
-  if (spec.kind === 'choice')
-    return (
-      <MindPicker
-        label={label}
-        value={String(value)}
-        table={Object.fromEntries(
-          spec.choices.map((choice) => [choice, sentence(choice)])
-        )}
-        blocked={blocked}
-        onPick={onChange}
-      />
-    )
-  return (
-    <NumberField
-      label={`${label} (${spec.low}–${spec.high})`}
-      min={spec.low}
-      max={spec.high}
-      value={String(value)}
-      blocked={blocked}
-      onChange={(next) => onChange(Math.round(Number(next) || 0))}
-    />
   )
 }
 

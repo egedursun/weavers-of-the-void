@@ -68,6 +68,77 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "or move the household to a richer place nearby. Your purse, your home and your people must allow it. 1 action.",
         {"choice": "What your household does"},
     ),
+    T.PLOT_SCHEME: ToolText(
+        "You begin a scheme against someone: to murder, abduct, seduce, sway, fabricate a claim or a hook, steal a relic, seize a throne, poison a well, "
+        "frame, elope, convert in secret, spoil a wedding, free a prisoner, sabotage a land or learn a true name. "
+        "Friends join as agents, power gathers from skill in intrigue and deception, and it strikes against the target's spymaster and intuition. "
+        "Each epoch it may be discovered. One scheme at a time. 1 action.",
+        {"kind": "The scheme", "target_id": "Whom or what it is aimed at"},
+    ),
+    T.PRESS_LEVERAGE: ToolText(
+        "You lean on someone you hold a hook on, or who owes you a favour: to marry you, to step down from their offices, or to lend you support. "
+        "A weak hook is spent; a favour called in may be refused. 1 action.",
+        {"target_id": "Whom you press", "demand": "What you demand"},
+    ),
+    T.SEND_DISPATCH: ToolText(
+        "You send a message to someone: a proposal, a demand, a threat, an insult, word of a gift, a declaration, a report, a plea or intelligence, "
+        "by envoy, letter, herald, messenger bird or signal fire. It takes time by distance, medium and season; spies may read or seize it, "
+        "outlaws may waylay it, and in another tongue it may be misread. 1 action.",
+        {"recipient_id": "To whom", "content": "What it says", "medium": "How it travels"},
+    ),
+    T.BARGAIN_WITH_ESTATE: ToolText(
+        "As the ruler of a realm, you grant one of its estates a privilege (freedom from taxes, a monopoly, a seat in council, the right to bear arms, "
+        "immunity from the courts) to win its loyalty, or take one back at a cost in loyalty. 1 action.",
+        {"estate_id": "The estate", "privilege": "The privilege", "grant": "True to grant it, false to take it back"},
+    ),
+    T.PROPOSE_LAW: ToolText(
+        "As a ruler or a holder of a council office, you bring a typed law (or a new wording of one already in force) before your realm. "
+        "It does not pass at once: each epoch it moves by the weight of those for it against those against it, under the realm's way of deciding, "
+        "and it fails if it stalls. Hooks you hold over council members may win their votes. 1 action.",
+        {
+            "kind": "What the law rules, by its kind",
+            "params": "The law's terms by name, only those its kind has; leave out a term to keep its default. Terms of each kind: " + law_terms_guide(),
+        },
+    ),
+    T.ACCUSE: ToolText(
+        "You accuse a mortal of your settlement of a crime (theft, murder, treason, blasphemy or desertion) and stand as a witness against them. "
+        "The case is tried in a later epoch in the way the realm's penal code sets, and a true charge is easier to prove than a false one. 1 action.",
+        {"accused_id": "Whom you accuse", "crime": "The crime you charge them with"},
+    ),
+    T.ISSUE_DEMAND: ToolText(
+        "As ruler or regent you demand something of another realm: a land ceded, a vassal released, its faith changed to yours, or a payment. "
+        "A crisis opens: other realms back a side, the weaker side backs down or concedes, and if neither yields it becomes war. 1 action.",
+        {
+            "target_id": "The realm you make the demand of",
+            "demand": "What you demand: cede_region, release_vassal, convert or pay",
+            "subject_id": "The land to cede or the vassal to release, if the demand names one",
+        },
+    ),
+    T.BACK_CRISIS: ToolText(
+        "As ruler or regent you put your realm behind one side of a crisis between other realms; backers weigh on who yields and join the war if it comes. 1 action.",
+        {"crisis_id": "The crisis", "side": "Which side you back: demander or target"},
+    ),
+    T.ISSUE_MANDATE: ToolText(
+        "As ruler or regent you issue a mandate: a production order, a ban on exporting a good, an order to build a quarter, relief from the state "
+        "granaries for a hungry land, or a curfew. Unmet mandates cost you legitimacy, and harsh ones weigh on your people. 1 action.",
+        {
+            "kind": "produce, export_ban, build, famine_relief or curfew",
+            "settlement_id": "The settlement it is laid on, if any",
+            "commodity": "The good to produce, ban or send",
+            "district": "The quarter to build",
+            "amount": "How much to produce or send",
+        },
+    ),
+    T.ASSIGN_TASK: ToolText(
+        "As ruler or regent you set an officer of your council to a task: improving relations with a realm, training troops, collecting taxes, "
+        "disrupting schemes, carrying the faith into a land, or purging corruption. 1 action.",
+        {"office_id": "The office", "task": "The task", "target_id": "The realm or land the task aims at, if any"},
+    ),
+    T.SEIZE_TITLE: ToolText(
+        "As the ruler of a realm, you take up a title whose lands your realm mostly holds by right and whose seat you hold: "
+        "you usurp it from its holder, at a cost in legitimacy, or restore it if it lies dormant. 1 action.",
+        {"title_id": "The title to take"},
+    ),
     T.BUY_WORKSHOP: ToolText(
         "You buy a workshop of your community from whoever owns it, paying its price from your wealth or treasury. "
         "Its profit (what it sells, less inputs, wages, upkeep and taxes) then comes to you, and so do its losses. 1 action.",
@@ -404,6 +475,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.ENACT_LAW: ToolText(
         "As ruler or regent you lay down a typed law for your whole realm: its kind decides what it rules and its terms decide how. "
+        "In a realm that decides by council, assembly or divine will, the law goes before them as a proposal instead of passing at once. "
         "1 action, {{ " + M + ".enact_law_per_epoch }} per age.",
         {
             "kind": "What the law rules: succession_rule, inheritance_split, land_tenure, slavery, serfdom, tax_rate, tithe, tolls, debt_law, penal_code, levy_law, conscription, standing_army, veteran_pension, ransom_custom, marriage_law, sumptuary, guild_charter, foreigner_rights, religious_tolerance, worship_ban, blood_feud, quarantine, burial_law, sanitation, magic_ban, licensed_magic or rite_restrictions",

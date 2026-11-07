@@ -93,6 +93,9 @@ class RarityGatesRules:
     create_treaty: int = rule(
         1, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can broker a Treaty (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
     )
+    create_title: int = rule(
+        2, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can create a Title (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )
     create_ideology: int = rule(
         1, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can found an Ideology (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
     )

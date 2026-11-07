@@ -13,8 +13,19 @@ MAX_SAFE_INTEGER = 2**53 - 1
 HALF = 0.5
 
 
+FIELD_INDEX: dict[str, dict[str, Field[Any]]] = {}
+
+
+def _fields_of(kind: type[Any]) -> dict[str, Field[Any]]:
+    key = f"{kind.__module__}.{kind.__qualname__}"
+    found = FIELD_INDEX.get(key)
+    if found is None:
+        found = FIELD_INDEX[key] = {item.name: item for item in fields(kind)}
+    return found
+
+
 def _namespace_definitions(rules: Rules) -> dict[str, Any]:
-    return {definition.name: getattr(rules, definition.name) for definition in fields(rules)}
+    return {name: getattr(rules, name) for name in _fields_of(type(rules))}
 
 
 def catalog(rules: Rules) -> list[RuleDescriptor]:
@@ -22,10 +33,10 @@ def catalog(rules: Rules) -> list[RuleDescriptor]:
 
 
 def _definition(rules: Rules, namespace: str, key: str) -> Field[Any]:
-    instance = _namespace_definitions(rules).get(namespace)
+    instance = getattr(rules, namespace, None) if namespace in _fields_of(type(rules)) else None
     if instance is None:
         raise NotFoundError(f"Unknown rule namespace {namespace}.")
-    definition = next((item for item in fields(instance) if item.name == key), None)
+    definition = _fields_of(type(instance)).get(key)
     if definition is None:
         raise NotFoundError(f"Unknown rule {namespace}.{key}.")
     return definition

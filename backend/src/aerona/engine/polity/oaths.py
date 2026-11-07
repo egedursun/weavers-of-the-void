@@ -12,12 +12,14 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import HERO_ROLES, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.intrigue import IntrigueSecret
 from aerona.domain.enums.mind import ActKind, MemoryKind, WantKind
 from aerona.domain.enums.polity import OathKind, OathStatus
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.gods.progress import cap_gained_essence
+from aerona.engine.intrigue.secrets import keep_secret
 from aerona.engine.mind.aspirations import open_wants
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember
@@ -127,6 +129,14 @@ async def break_oath(ctx: TickContext, oath: OathRow, reason: str) -> None:
     if swearer.entity_type is EntityType.MORTAL:
         await add_honour(ctx.session, swearer.id, -ctx.rules.standing.honour_broken_oath, ctx.epoch)
     await add_flag(ctx.session, swearer.id, EntityFlag.OATHBREAKER, ctx.epoch)
+    await keep_secret(
+        ctx,
+        swearer.id,
+        IntrigueSecret.BROKEN_OATH,
+        about_id=oath.recipient_node_id,
+        known_by=tuple(filter(None, (oath.recipient_node_id,))),
+        source=f"oath.{oath.id}",
+    )
     if oath.recipient_node_id is not None:
         await remember(
             ctx.session,

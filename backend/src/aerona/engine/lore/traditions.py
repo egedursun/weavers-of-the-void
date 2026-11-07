@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 
 from aerona.catalog.lore import TRADITIONS
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memo_of, table_names
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow
 from aerona.db.tables.culture import TraditionEffectRow, TraditionParticipationRow, TraditionProfileRow
@@ -51,6 +52,9 @@ FIT = 50
 HUNGRY = 0
 MATURITY = 16
 VALUE_SCALE = 10
+
+
+TABOO_TABLES = table_names((BondRow, TraditionProfileRow))
 
 
 @dataclass(frozen=True)
@@ -431,6 +435,17 @@ async def celebrate(ctx: TickContext, tradition: EntityRow, community: EntityRow
 
 
 async def taboos(ctx: TickContext, community_id: int) -> set[str]:
+    memo = memo_of(ctx.session, "taboos", TABOO_TABLES)
+    known: frozenset[str] | None = memo.get(community_id) if memo is not None else None
+    if known is None:
+        known = frozenset(await _taboos(ctx, community_id))
+        after = memo_of(ctx.session, "taboos", TABOO_TABLES)
+        if after is not None:
+            after[community_id] = known
+    return set(known)
+
+
+async def _taboos(ctx: TickContext, community_id: int) -> set[str]:
     traditions = select(BondRow.target_node_id).where(
         BondRow.source_node_id == community_id, BondRow.kind == BondKind.CELEBRATES, BondRow.state == BondState.ACTIVE
     )

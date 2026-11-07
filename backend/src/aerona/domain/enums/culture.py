@@ -70,6 +70,7 @@ class Technique(StrEnum):
     ALPHABET = "alphabet"
     PAPER = "paper"
     PRINTING = "printing"
+    CRYPTOGRAPHY = "cryptography"
     CALENDAR = "calendar"
     NAVIGATION_STARS = "navigation_stars"
     ECLIPSE_PREDICTION = "eclipse_prediction"

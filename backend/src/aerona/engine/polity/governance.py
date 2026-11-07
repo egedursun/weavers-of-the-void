@@ -14,6 +14,7 @@ from aerona.db.tables.disease import OutbreakRow, QuarantineRow
 from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultTenetRow
+from aerona.db.tables.justice import LawProposalRow
 from aerona.db.tables.mind import PersonalityValueRow
 from aerona.db.tables.polity import LawProfileRow, PolityTreasuryRow
 from aerona.db.tables.settlement import SettlementProfileRow, SettlementTreasuryRow
@@ -32,6 +33,7 @@ from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, Treasury
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.customs import culture_of
+from aerona.engine.communication.opinion import mean_approval
 from aerona.engine.context import TickContext
 from aerona.engine.demography.kinship import INHERITANCE_RULES
 from aerona.engine.factions.balance import faction_pull
@@ -40,6 +42,7 @@ from aerona.engine.mind.book import traits_of
 from aerona.engine.mind.ethics import ethics_of, honour_of
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
+from aerona.engine.polity.enactment import propose
 from aerona.engine.polity.law_effects import jubilee, levy_terms, standing_soldiers, tenure_and_serfdom
 from aerona.engine.polity.laws import LawBook, discord, enact, repeal, settle_justice, validate
 from aerona.engine.polity.offices import best_skill, powers_of
@@ -60,7 +63,9 @@ LEAN = 25
 BASELINE_LAWS = frozenset({LawKind.SUCCESSION_RULE, LawKind.SLAVERY, LawKind.RELIGIOUS_TOLERANCE, LawKind.TAX_RATE, LawKind.PENAL_CODE})
 COUNCIL_KINDS = 5
 SWAY_SCALE = 10
-COUNCIL_OFFICES = frozenset({OfficeKind.CHANCELLOR, OfficeKind.MARSHAL, OfficeKind.TREASURER, OfficeKind.HIGH_JUDGE, OfficeKind.SPYMASTER, OfficeKind.REGENT})
+COUNCIL_OFFICES = frozenset(
+    {OfficeKind.CHANCELLOR, OfficeKind.MARSHAL, OfficeKind.TREASURER, OfficeKind.HIGH_JUDGE, OfficeKind.SPYMASTER, OfficeKind.REGENT, OfficeKind.CHAPLAIN}
+)
 T = TenetKind
 CHURCH_LAWS: dict[TenetKind, tuple[LawKind, dict[str, int | str | bool]]] = {
     T.ANTI_MAGIC: (LawKind.MAGIC_BAN, {"severity": 70}),
@@ -172,6 +177,12 @@ async def outraged_laws(ctx: TickContext, realm: Realm, laws: LawBook, values: d
     return [(LawKind.PENAL_CODE, harsher)]
 
 
+async def wants_censorship(ctx: TickContext, realm: Realm, laws: LawBook, values: dict[ValueAxis, int]) -> bool:
+    if laws.in_force(realm.entity.id, LawKind.CENSORSHIP) is not None or values.get(ValueAxis.HIERARCHY, 0) < LEAN:
+        return False
+    return await mean_approval(ctx, list(realm.members), realm.ruler_id) <= ctx.rules.communication.censor_wish_at
+
+
 async def wanted_laws(
     ctx: TickContext, realm: Realm, laws: LawBook, values: dict[ValueAxis, int], *, lost: bool, fighting: bool
 ) -> list[tuple[LawKind, dict[str, int | str | bool]]]:
@@ -187,6 +198,8 @@ async def wanted_laws(
         wants.append((LawKind.SUCCESSION_RULE, {"rule": rule}))
     if await plagued(ctx, realm) and laws.in_force(polity.id, LawKind.QUARANTINE) is None and rng.chance(table.plague_quarantine_chance):
         wants.append((LawKind.QUARANTINE, {}))
+    if await wants_censorship(ctx, realm, laws, values):
+        wants.append((LawKind.CENSORSHIP, {"strictness": clamp_int(PERCENT // 2 + values.get(ValueAxis.HIERARCHY, 0) // 2, 0, PERCENT)}))
     if lost and laws.in_force(polity.id, LawKind.CONSCRIPTION) is None and rng.chance(table.defeat_conscription_chance):
         wants.append((LawKind.CONSCRIPTION, {}))
     if fighting and laws.in_force(polity.id, LawKind.LEVY_LAW) is None:
@@ -238,6 +251,10 @@ async def agenda(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawBook)
             if realm.profile.decision_rule is not DecisionRule.AUTOCRATIC
             else LegitimacyBasis.DECREE
         )
+        if kind not in BASELINE_LAWS:
+            if await propose(ctx, realm, kind, params, champion_id=realm.ruler_id, basis=basis) is not None:
+                taken.append(f"proposed {kind.value}")
+            continue
         law = await enact(ctx, polity, kind, params, by_id=realm.ruler_id, basis=basis)
         laws.laws[law.id] = law
         profile = await ctx.session.get(LawProfileRow, law.id)
@@ -245,9 +262,6 @@ async def agenda(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawBook)
             laws.profiles[law.id] = profile
             laws.by_node[polity.id].append(law.id)
         taken.append(f"enacted {kind.value}")
-        if kind in BASELINE_LAWS:
-            continue
-        await note(ctx, f"{polity.name} laid down {law.name}.", key="polity.law_enacted", ids=[polity.id, law.id], kind=ChronicleKind.CIVILIZATION)
     taken.extend(await taxes(ctx, realm, laws, values))
     taken.extend(await temples(ctx, realm, values))
     taken.extend(await works(ctx, realm, values, fighting=fighting))
@@ -299,7 +313,7 @@ async def consider(
     *,
     sponsor_id: int | None,
     sway: int,
-) -> EntityRow | None:
+) -> LawProposalRow | None:
     table = ctx.rules.legislation
     polity = realm.entity
     merged = validate(kind, params)
@@ -321,17 +335,8 @@ async def consider(
         (laws.profiles[law_id] for law_id in laws.by_node.get(polity.id, []) if law_id in laws.profiles and laws.profiles[law_id].kind is kind),
         None,
     )
-    if current is not None:
-        if "params" in current.locked or current.params == merged:
-            return None
-        current.params = merged
-        current.enacted_by_entity_id = sponsor_id if sponsor_id is not None else current.enacted_by_entity_id
-        law = laws.laws.get(current.law_entity_id)
-        if law is not None:
-            await note(
-                ctx, f"{polity.name} rewrote {law.name}, urged on by {who}.", key="polity.law_amended", ids=[polity.id, law.id], kind=ChronicleKind.CIVILIZATION
-            )
-        return law
+    if current is not None and ("params" in current.locked or current.params == merged):
+        return None
     basis = (
         LegitimacyBasis.DIVINE
         if sponsor is not None and sponsor.entity_type is EntityType.CULT
@@ -339,14 +344,8 @@ async def consider(
         if sponsor
         else LegitimacyBasis.DECREE
     )
-    law = await enact(ctx, polity, kind, merged, by_id=sponsor_id if sponsor_id is not None else realm.ruler_id, basis=basis)
-    laws.laws[law.id] = law
-    profile = await ctx.session.get(LawProfileRow, law.id)
-    if profile is not None:
-        laws.profiles[law.id] = profile
-        laws.by_node[polity.id].append(law.id)
-    await note(ctx, f"{polity.name} laid down {law.name}, as {who} urged.", key="polity.law_proposed", ids=[polity.id, law.id], kind=ChronicleKind.CIVILIZATION)
-    return law
+    champion = sponsor_id if sponsor_id is not None else realm.ruler_id
+    return await propose(ctx, realm, kind, merged, champion_id=champion, basis=basis, law_id=current.law_entity_id if current is not None else None)
 
 
 async def crises(ctx: TickContext, realm: Realm, laws: LawBook) -> list[tuple[LawKind, dict[str, int | str | bool]]]:
@@ -502,7 +501,8 @@ async def collect(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
         if town is None or town.free_city or not income:
             continue
         share = round_half_up(int(income) * table.polity_tax_pct / PERCENT)
-        arriving = round_half_up(share * (1 - leak * member.autonomy / PERCENT))
+        skim = realm.profile.corruption * ctx.rules.affairs.skim_pct / PERCENT / PERCENT
+        arriving = round_half_up(share * (1 - leak * member.autonomy / PERCENT) * (1 - skim))
         taken = min(town.treasury, share)
         town.treasury -= taken
         ctx.session.add(
@@ -733,7 +733,9 @@ async def enforce(ctx: TickContext, realm: Realm, laws: LawBook) -> int:
         if "enforcement" not in profile.locked:
             gap = discord(profile.kind, profile.params, values)
             base = order * table.enforcement_order_pct / PERCENT + judge_skill * table.enforcement_judge_pct / PERCENT
-            profile.enforcement = clamp_int(base - gap / 2, 0, PERCENT)
+            voice = await mean_approval(ctx, list(realm.members), law_id) * ctx.rules.communication.enforcement_pct / PERCENT
+            eroded = realm.profile.corruption * ctx.rules.affairs.enforcement_loss_pct / PERCENT / PERCENT
+            profile.enforcement = clamp_int((base - gap / 2 + voice) * (1 - eroded), 0, PERCENT)
         profile.conflict = max(0, profile.conflict - table.conflict_decay)
         if discord(profile.kind, profile.params, values) >= table.discord_distance:
             unrest += table.discord_unrest

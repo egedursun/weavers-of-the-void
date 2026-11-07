@@ -27,12 +27,17 @@ from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, Personali
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.domain.enums.body import ConditionKind, InjuryKind
 from aerona.domain.enums.entity import EntityType
+from aerona.engine.interconnect.catalog_affairs import AFFAIRS_MECHANICS
+from aerona.engine.interconnect.catalog_communication import COMMUNICATION_MECHANICS
 from aerona.engine.interconnect.catalog_couplings import COUPLING_MECHANICS
 from aerona.engine.interconnect.catalog_economy import ECONOMY_DEPTH_MECHANICS
+from aerona.engine.interconnect.catalog_estates import ESTATE_MECHANICS
 from aerona.engine.interconnect.catalog_faith import BEHAVIOURS as FAITH_BEHAVIOURS
 from aerona.engine.interconnect.catalog_faith import FAITH_MECHANICS
 from aerona.engine.interconnect.catalog_foundations import FOUNDATION_MECHANICS
 from aerona.engine.interconnect.catalog_industry import INDUSTRY_MECHANICS
+from aerona.engine.interconnect.catalog_intrigue import INTRIGUE_MECHANICS
+from aerona.engine.interconnect.catalog_justice import JUSTICE_MECHANICS
 from aerona.engine.interconnect.catalog_lineage import LINEAGE_MECHANICS
 from aerona.engine.interconnect.catalog_lore import BEHAVIOURS as LORE_BEHAVIOURS
 from aerona.engine.interconnect.catalog_lore import LORE_MECHANICS
@@ -52,7 +57,9 @@ from aerona.engine.interconnect.catalog_rumours import RUMOUR_MECHANICS
 from aerona.engine.interconnect.catalog_society import BEHAVIOURS as SOCIETY_BEHAVIOURS
 from aerona.engine.interconnect.catalog_society import SOCIETY_MECHANICS
 from aerona.engine.interconnect.catalog_society_depth import SOCIETY_DEPTH_MECHANICS
+from aerona.engine.interconnect.catalog_statecraft import STATECRAFT_MECHANICS
 from aerona.engine.interconnect.catalog_structures import STRUCTURE_MECHANICS
+from aerona.engine.interconnect.catalog_titles import TITLE_MECHANICS
 from aerona.engine.interconnect.catalog_wilds import BEHAVIOURS as WILDS_BEHAVIOURS
 from aerona.engine.interconnect.catalog_wilds import WILDS_MECHANICS
 from aerona.engine.interconnect.registry import MECHANICS, Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface, register
@@ -960,6 +967,13 @@ BUILT_IN = (
     *MORTAL_MECHANICS,
     *INDUSTRY_MECHANICS,
     *LINEAGE_MECHANICS,
+    *INTRIGUE_MECHANICS,
+    *COMMUNICATION_MECHANICS,
+    *TITLE_MECHANICS,
+    *ESTATE_MECHANICS,
+    *JUSTICE_MECHANICS,
+    *STATECRAFT_MECHANICS,
+    *AFFAIRS_MECHANICS,
     *FOUNDATION_MECHANICS,
     *PLACE_MECHANICS,
     *PLACE_BEHAVIOURS,

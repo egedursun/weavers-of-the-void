@@ -88,6 +88,11 @@ class RealmBook:
         polity_id = self.member_of.get(entity_id)
         return self.realms.get(polity_id) if polity_id is not None else None
 
+    def realm_for(self, node_id: int | None) -> Realm | None:
+        if node_id is None:
+            return None
+        return self.realms.get(node_id) or self.realm_of(node_id)
+
     def members(self, realm: Realm) -> list[EntityRow]:
         return [self.entities[member_id] for member_id in realm.members if member_id in self.entities and self.entities[member_id].status is EntityStatus.CANON]
 

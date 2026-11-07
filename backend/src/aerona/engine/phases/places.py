@@ -187,6 +187,7 @@ async def miner_of(ctx: TickContext, atlas: RegionAtlas, region_id: int | None) 
     "table.place_secrets",
     "table.region_environment",
     "table.resource_profiles",
+    "table.rite_profiles",
     "table.skills",
     "table.world_maps",
 )

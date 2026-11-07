@@ -32,12 +32,14 @@ KIND_VALUES: Mapping[LawKind, Mapping[ValueAxis, int]] = {
     LawKind.SLAVERY: {ValueAxis.MERCY: -1, ValueAxis.HIERARCHY: 1},
     LawKind.PENAL_CODE: {ValueAxis.MERCY: -1, ValueAxis.TRADITION: 1},
     LawKind.CONSCRIPTION: {ValueAxis.MARTIAL: 1},
+    LawKind.CENSORSHIP: {ValueAxis.HIERARCHY: 1, ValueAxis.TRUTH: -1, ValueAxis.KNOWLEDGE: -1},
     LawKind.RELIGIOUS_TOLERANCE: {ValueAxis.XENOPHILIA: 1, ValueAxis.PIETY: -1},
     LawKind.FOREIGNER_RIGHTS: {ValueAxis.XENOPHILIA: 1},
     LawKind.SUMPTUARY: {ValueAxis.HIERARCHY: 1, ValueAxis.WEALTH: -1},
     LawKind.MAGIC_BAN: {ValueAxis.SUPERSTITION: 1, ValueAxis.KNOWLEDGE: -1},
     LawKind.TAX_RATE: {ValueAxis.WEALTH: -1},
     LawKind.BLOOD_FEUD: {ValueAxis.HONOUR: 1, ValueAxis.KINSHIP: 1},
+    LawKind.FRANCHISE: {ValueAxis.HIERARCHY: -1},
 }
 
 
@@ -226,7 +228,7 @@ async def law_param(session: AsyncSession, node_id: int, kind: LawKind, key: str
     return None
 
 
-def discord(kind: LawKind, params: Mapping[str, ParamValue], values: Mapping[ValueAxis, int]) -> int:
+def law_reading(kind: LawKind, params: Mapping[str, ParamValue], values: Mapping[ValueAxis, int]) -> int:
     leaning = KIND_VALUES.get(kind)
     if not leaning:
         return 0
@@ -238,7 +240,11 @@ def discord(kind: LawKind, params: Mapping[str, ParamValue], values: Mapping[Val
     elif kind in {LawKind.RELIGIOUS_TOLERANCE, LawKind.FOREIGNER_RIGHTS}:
         harsh = -1 if params.get("level") in {"persecution", "none"} else 1
     reading = sum(values.get(axis, 0) * sign * harsh for axis, sign in leaning.items())
-    return clamp_int(-reading / max(1, len(leaning)), 0, PERCENT)
+    return clamp_int(reading / max(1, len(leaning)), -PERCENT, PERCENT)
+
+
+def discord(kind: LawKind, params: Mapping[str, ParamValue], values: Mapping[ValueAxis, int]) -> int:
+    return clamp_int(-law_reading(kind, params, values), 0, PERCENT)
 
 
 def justice_of(kind: LawKind, params: Mapping[str, ParamValue], values: Mapping[ValueAxis, int]) -> int:

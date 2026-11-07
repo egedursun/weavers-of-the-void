@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import SKILLS, TRAITS
 from aerona.constants.units import PERCENT
+from aerona.db.fast_session import rows_by_prefix
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import (
@@ -103,10 +104,10 @@ async def locked_for(session: AsyncSession, node_id: int, key: str) -> bool:
 
 async def stored_values(session: AsyncSession, holder: ValueHolder, node_id: int) -> Values:
     if holder in CULTURE_HOLDERS:
-        rows = await session.scalars(select(CultureValueRow).where(CultureValueRow.entity_id == node_id))
+        rows = await rows_by_prefix(session, CultureValueRow, node_id)
         return {row.axis: row.value for row in rows}
     if holder in PERSONAL_HOLDERS:
-        found = await session.scalars(select(PersonalityValueRow).where(PersonalityValueRow.node_id == node_id))
+        found = await rows_by_prefix(session, PersonalityValueRow, node_id)
         return {row.axis: row.value for row in found}
     return {}
 
@@ -174,7 +175,7 @@ async def load_holder(session: AsyncSession, node_id: int) -> Holder | None:
 
 
 async def traits_of(session: AsyncSession, node_id: int) -> set[TraitKind]:
-    return set(await session.scalars(select(TraitRow.trait).where(TraitRow.node_id == node_id)))
+    return {row.trait for row in await rows_by_prefix(session, TraitRow, node_id)}
 
 
 async def add_trait(session: AsyncSession, node_id: int, trait: TraitKind, source: TraitSource, epoch: int, *, source_node_id: int | None = None) -> bool:
@@ -208,7 +209,7 @@ def trait_capacity(traits: Iterable[TraitKind], capacity: Capacity, scale_pct: i
 
 
 async def effect_of(session: AsyncSession, node_id: int, effect: TraitEffect, scale_pct: int = PERCENT) -> int:
-    rows = list(await session.scalars(select(TraitRow).where(TraitRow.node_id == node_id)))
+    rows = await rows_by_prefix(session, TraitRow, node_id)
     variants = await variants_by_id(session, (row.variant_id for row in rows))
     total = sum(TRAITS[row.trait].effects.get(effect, 0) * strength(variants, row.variant_id) for row in rows)
     return round(total * scale_pct / PERCENT)
@@ -272,12 +273,12 @@ async def set_skill(
 
 
 async def needs_of(session: AsyncSession, node_id: int) -> dict[NeedKind, int]:
-    rows = await session.scalars(select(NeedRow).where(NeedRow.node_id == node_id))
+    rows = await rows_by_prefix(session, NeedRow, node_id)
     return {row.need: row.value for row in rows}
 
 
 async def pressures_of(session: AsyncSession, entity_id: int) -> dict[PressureKind, int]:
-    rows = await session.scalars(select(PressureRow).where(PressureRow.entity_id == entity_id))
+    rows = await rows_by_prefix(session, PressureRow, entity_id)
     return {row.pressure: row.value for row in rows}
 
 
@@ -289,8 +290,9 @@ async def pressure(session: AsyncSession, entity_id: int, kind: PressureKind) ->
 async def write_needs(session: AsyncSession, node_id: int, needs: dict[NeedKind, int]) -> None:
     if write_blocked(node_id, NEEDS_KEY):
         return
+    existing = {row.need: row for row in await rows_by_prefix(session, NeedRow, node_id)}
     for need, value in needs.items():
-        row = await session.get(NeedRow, (node_id, need))
+        row = existing.get(need)
         if row is None:
             session.add(NeedRow(node_id=node_id, need=need, value=clamp_int(value, 0, PERCENT)))
         else:

@@ -98,6 +98,7 @@ TREATY_EFFECTS: MappingProxyType[TreatyKind, tuple[TreatyEffect, ...]] = Mapping
         TreatyKind.TRADE_PACT: (TreatyEffect(add("wealth", lambda rules: rules.modifiers.treaty_trade_wealth)),),
         TreatyKind.CONDOTTA: (TreatyEffect(add("defense", lambda rules: rules.modifiers.treaty_alliance_stability)),),
         TreatyKind.INTERWORLD: (TreatyEffect(add("wealth", lambda rules: rules.modifiers.treaty_trade_wealth)),),
+        TreatyKind.COALITION: (TreatyEffect(add("defense", lambda rules: rules.modifiers.treaty_alliance_stability)),),
     }
 )
 

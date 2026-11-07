@@ -23,9 +23,19 @@ def snapshot_rules(rules: Rules) -> RulesSnapshot:
     return {namespace: {key: float(value) for key, value in values.items()} for namespace, values in asdict(rules).items()}
 
 
+SNAPSHOT_RULES: dict[tuple[tuple[str, str, float], ...], Rules] = {}
+SNAPSHOT_CAP = 16
+
+
 def rules_from_snapshot(snapshot: RulesSnapshot) -> Rules:
-    overrides = canonical_overrides({(namespace, key): value for namespace, values in snapshot.items() for key, value in values.items()})
-    return apply_overrides(Rules(), overrides)
+    key = tuple(sorted((namespace, name, float(value)) for namespace, values in snapshot.items() for name, value in values.items()))
+    found = SNAPSHOT_RULES.get(key)
+    if found is None:
+        if len(SNAPSHOT_RULES) >= SNAPSHOT_CAP:
+            SNAPSHOT_RULES.clear()
+        overrides = canonical_overrides({(namespace, name): value for namespace, name, value in key})
+        found = SNAPSHOT_RULES[key] = apply_overrides(Rules(), overrides)
+    return found
 
 
 def snapshot_differences(snapshot: RulesSnapshot, defaults: Rules) -> dict[tuple[str, str], tuple[float, float]]:

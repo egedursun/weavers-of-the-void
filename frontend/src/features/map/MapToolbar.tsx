@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react'
 import {
+  Scroll,
   Biohazard,
   BookOpen,
   Church,
@@ -78,6 +79,7 @@ const LAYER_ICON: Record<LayerMode, LucideIcon> = {
   terrain: Mountain,
   political: Flag,
   realms: Landmark,
+  de_jure: Scroll,
   regions: MapIcon,
   creators: Crown,
   religions: Church,

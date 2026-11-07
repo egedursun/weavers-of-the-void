@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import {
+  Church,
+  Megaphone,
   Ban,
   BookOpenCheck,
   Coins,
@@ -119,6 +121,18 @@ const OFFICE_POWERS: Record<string, Named & { hint: string }> = {
     icon: ScrollText,
     tone: 'success',
     hint: 'Wins friends at a foreign court',
+  },
+  proclaim: {
+    label: 'Proclaim',
+    icon: Megaphone,
+    tone: 'warning',
+    hint: 'Cries the ruler’s word and wins the people’s approval',
+  },
+  preach: {
+    label: 'Preach',
+    icon: Church,
+    tone: 'verdigris',
+    hint: 'Carries the realm’s faith into its lands',
   },
 }
 const LAW_HOLDS: Record<string, Named & { hint: string }> = {

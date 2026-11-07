@@ -32,6 +32,7 @@ class GovernmentRules:
     governor_autonomy: int = rule(3, 0, 100, P, "Autonomy a fully skilled governor removes from its province each epoch")
     governor_control: int = rule(3, 0, 100, P, "Control a fully skilled governor adds to its province each epoch")
     ambassador_relation: int = rule(3, 0, 100, P, "Relation a fully skilled ambassador wins with the host each epoch")
+    chaplain_piety: int = rule(2, 0, 100, P, "Piety a fully skilled court chaplain kindles in each land of the realm each epoch")
     embassy_count: int = rule(2, 0, 50, P, "Most embassies a realm keeps")
     emblem_cohesion: int = rule(1, 0, 100, P, "Cohesion the realm's banner adds to its armies each epoch")
     emblem_artwork: int = rule(2, 0, 100, P, "Legitimacy per propaganda artwork bearing the realm's emblem")

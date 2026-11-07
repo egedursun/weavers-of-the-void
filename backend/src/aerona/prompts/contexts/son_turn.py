@@ -24,6 +24,8 @@ class ExistenceProfile(ContextItem):
     state_label: str | None = None
     manifestation: str | None = None
     true_name: str | None = None
+    known_by: int = 0
+    names_known: list[str] = Field(default_factory=list)
 
 
 class AnchorLine(ContextItem):

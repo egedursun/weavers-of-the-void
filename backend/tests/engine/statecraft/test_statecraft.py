@@ -1,0 +1,135 @@
+from sqlalchemy import select
+
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.intrigue import FavourRow
+from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, TreatyProfileRow, VassalageRow
+from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, DiplomacyProfileRow, PolityRegardRow, SphereRow
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.polity import DecisionRule, GovernmentKind, RegionalStanding, TreatyKind
+from aerona.domain.enums.statecraft import CrisisDemand, CrisisSide, CrisisState, SubjectKind
+from aerona.domain.enums.war import WarCause
+from aerona.domain.models.entity_stats import PolityStats
+from aerona.engine.polity.book import RealmBook
+from aerona.engine.polity.coalitions import CoalitionTally, tend_coalitions
+from aerona.engine.polity.crises import CrisisTally, Verdict, crisis_instead
+from aerona.engine.polity.crisis_outcomes import settle
+from aerona.engine.polity.law_effects import may_coin
+from aerona.engine.polity.regard import RegardTally, on_conquest, tend_regard
+from aerona.engine.polity.spheres import SphereTally, tend_spheres
+from aerona.engine.polity.subjects import SubjectTally, forbidden_war, pays_tribute, sends_levies, tend_subjects
+from tests.engine.society.factories import Realm, context, make, people, tuned
+
+
+async def polity(realm: Realm, name: str, *, treasury: int = 100, standing: RegionalStanding = RegionalStanding.MINOR_POWER) -> tuple[EntityRow, EntityRow]:
+    core = await people(realm, f"Folk of {name}")
+    found = await make(realm.session, name, EntityType.POLITY, PolityStats(), world_id=realm.world.id)
+    realm.session.add(
+        PolityProfileRow(
+            polity_entity_id=found.id,
+            government=GovernmentKind.CHIEFDOM,
+            decision_rule=DecisionRule.AUTOCRATIC,
+            core_entity_id=core.id,
+            treasury=treasury,
+            standing=standing,
+            emblem={},
+            legitimacy_parts={},
+            locked=[],
+        )
+    )
+    realm.session.add(PolityMemberRow(polity_entity_id=found.id, member_entity_id=core.id))
+    await realm.session.flush()
+    return found, core
+
+
+async def test_a_conquest_alarms_its_neighbours_and_the_fearful_band_into_a_coalition(realm: Realm) -> None:
+    rules = tuned(statecraft={"conquest_threat": 100, "far_threat_pct": 100, "coalition_war_pct": 0})
+    ctx = context(realm.session, rules)
+    aggressor, _ = await polity(realm, "Iron Crown")
+    first, _ = await polity(realm, "Reed Throne")
+    second, _ = await polity(realm, "Salt Throne")
+    assert await on_conquest(ctx, aggressor.id) == 2
+    regard = await realm.session.get(PolityRegardRow, (first.id, aggressor.id))
+    assert regard is not None and regard.threat >= rules.diplomacy.coalition_threshold
+    tally = CoalitionTally()
+    await tend_coalitions(ctx, tally)
+    assert tally.formed == 1
+    coalition = await realm.session.scalar(select(TreatyProfileRow).where(TreatyProfileRow.kind == TreatyKind.COALITION))
+    assert coalition is not None
+    await tend_regard(ctx, RegardTally())
+    assert regard.threat == 100 - rules.statecraft.threat_decay
+    assert await realm.session.get(DiplomacyProfileRow, second.id) is not None
+
+
+async def test_a_claim_war_opens_a_crisis_and_a_concession_pays_and_rewards_backers(realm: Realm) -> None:
+    ctx = context(realm.session, tuned(statecraft={"crisis_pct": 100}))
+    demander, demander_core = await polity(realm, "Lion Throne", treasury=0)
+    target, target_core = await polity(realm, "Hart Throne", treasury=200)
+    backer, _ = await polity(realm, "Owl Throne")
+    assert await crisis_instead(ctx, demander_core.id, target_core.id, WarCause.CLAIM)
+    crisis = await realm.session.scalar(select(CrisisRow))
+    assert crisis is not None and crisis.demand is CrisisDemand.CEDE_REGION and crisis.state is CrisisState.ESCALATING
+    crisis.demand, crisis.amount = CrisisDemand.PAY, 50
+    realm.session.add(CrisisBackerRow(crisis_id=crisis.id, backer_entity_id=backer.id, side=CrisisSide.DEMANDER, promised=20, swing=True))
+    await realm.session.flush()
+    book = await RealmBook.load(realm.session)
+    await settle(ctx, book, Verdict(crisis, CrisisState.CONCEDED), CrisisTally())
+    assert crisis.state is CrisisState.CONCEDED
+    assert book.realms[demander.id].profile.treasury == 50 and book.realms[target.id].profile.treasury == 150
+    favour = await realm.session.scalar(select(FavourRow).where(FavourRow.owed_by_node_id == demander.id))
+    assert favour is not None and favour.owed_to_node_id == backer.id
+
+
+async def test_a_crisis_that_no_one_yields_becomes_war(realm: Realm) -> None:
+    ctx = context(realm.session)
+    demander, demander_core = await polity(realm, "Wolf Throne")
+    target, target_core = await polity(realm, "Bear Throne")
+    crisis = CrisisRow(demander_entity_id=demander.id, target_entity_id=target.id, demand=CrisisDemand.PAY, amount=10, opened_epoch=1, locked=[])
+    realm.session.add(crisis)
+    await realm.session.flush()
+    await settle(ctx, await RealmBook.load(realm.session), Verdict(crisis, CrisisState.WAR), CrisisTally())
+    assert crisis.state is CrisisState.WAR
+    enemy = await realm.session.scalar(select(BondRow).where(BondRow.kind == BondKind.ENEMY, BondRow.source_node_id == demander_core.id))
+    assert enemy is not None and enemy.target_node_id == target_core.id
+
+
+async def test_spheres_are_contested_and_the_great_powers_meet_in_summits(realm: Realm) -> None:
+    ctx = context(realm.session, tuned(statecraft={"summit_epochs": 1, "sphere_contest": 40}))
+    strong, _ = await polity(realm, "Sun Crown", standing=RegionalStanding.GREAT_POWER)
+    weak, _ = await polity(realm, "Moon Crown", standing=RegionalStanding.GREAT_POWER)
+    client, _ = await polity(realm, "Star Crown")
+    realm.session.add(SphereRow(power_entity_id=strong.id, client_entity_id=client.id, strength=60, since_epoch=1))
+    realm.session.add(SphereRow(power_entity_id=weak.id, client_entity_id=client.id, strength=30, since_epoch=1))
+    await realm.session.flush()
+    tally = SphereTally()
+    await tend_spheres(ctx, tally)
+    assert await realm.session.get(SphereRow, (weak.id, client.id)) is None and tally.lost == 1
+    winner = await realm.session.get(SphereRow, (strong.id, client.id))
+    assert winner is not None and winner.strength > 60
+    assert tally.summits == 1
+    trust = await realm.session.get(PolityRegardRow, (strong.id, weak.id))
+    assert trust is not None and trust.trust > 50
+
+
+async def test_subject_kinds_bind_tribute_levies_war_and_coin(realm: Realm) -> None:
+    ctx = context(realm.session)
+    overlord, _ = await polity(realm, "High Crown")
+    vassal, vassal_core = await polity(realm, "Low Crown")
+    other, other_core = await polity(realm, "Far Crown")
+    row = VassalageRow(vassal_entity_id=vassal.id, overlord_entity_id=overlord.id, kind=SubjectKind.TRIBUTARY, locked=[])
+    realm.session.add(row)
+    await realm.session.flush()
+    assert pays_tribute(row) and not sends_levies(row)
+    assert await forbidden_war(ctx, vassal_core.id, other_core.id, WarCause.HOSTILITY)
+    assert not await forbidden_war(ctx, vassal_core.id, other_core.id, WarCause.INDEPENDENCE)
+    assert not await may_coin(realm.session, ctx.rules, vassal_core.id)
+    row.private_war, row.coinage = True, True
+    assert not await forbidden_war(ctx, vassal_core.id, other_core.id, WarCause.HOSTILITY)
+    row.kind = SubjectKind.PERSONAL_UNION
+    await realm.session.flush()
+    tally = SubjectTally()
+    await tend_subjects(ctx, tally)
+    await realm.session.flush()
+    assert tally.dissolved == 1 and await realm.session.get(VassalageRow, vassal.id) is None
+    assert other.id != overlord.id

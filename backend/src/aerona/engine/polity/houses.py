@@ -19,6 +19,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.demography import MarriageCustom
 from aerona.domain.enums.entity import HERO_ROLES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
+from aerona.domain.enums.intrigue import HookDemand
 from aerona.domain.enums.mind import ActKind, MemoryKind, TraitKind, ValueAxis
 from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import ClaimBasis, GenderRule, HouseTrait, LawKind, OathKind, OfficeKind, OfficePower
@@ -33,6 +34,8 @@ from aerona.engine.faith.book import faith_tenets
 from aerona.engine.genetics.genome import consanguinity
 from aerona.engine.genetics.life import bless_blood, found_genome
 from aerona.engine.genetics.lineage import blood_traits
+from aerona.engine.intrigue.favours import hook_on
+from aerona.engine.intrigue.leverage import leaned_on
 from aerona.engine.lifecycle.succession import dynasty_root
 from aerona.engine.mind.book import traits_of
 from aerona.engine.mind.ethics import ethic_reading
@@ -728,7 +731,7 @@ async def arrange_marriages(ctx: TickContext, book: HouseBook, realms: RealmBook
                 continue
             theirs = await values_of(ctx, other)
             distance = value_distance(mine, theirs)
-            if distance > FIT_DISTANCE:
+            if distance > FIT_DISTANCE and await hook_on(ctx, mortal.id, other.id) is None:
                 continue
             blood = await consanguinity(ctx.session, ctx.rules, mortal.id, other.id)
             kin_pull = ctx.rules.genetics.kin_claim_pull if kin_admired else -ctx.rules.genetics.kin_marriage_fear
@@ -742,7 +745,7 @@ async def arrange_marriages(ctx: TickContext, book: HouseBook, realms: RealmBook
             )
             if best is None or gain > best[0]:
                 best = (gain, other)
-        if best is None:
+        if best is None or not await willing_match(ctx, mortal, mine, best[1]):
             continue
         spouse = best[1]
         await marry(ctx.session, mortal, spouse, ctx.epoch, kind=MarriageKind.POLITICAL, description="arranged marriage")
@@ -752,6 +755,12 @@ async def arrange_marriages(ctx: TickContext, book: HouseBook, realms: RealmBook
         taken |= wed(custom, mortal, spouse)
         made.append((mortal, spouse))
     return made
+
+
+async def willing_match(ctx: TickContext, mortal: EntityRow, mine: dict[ValueAxis, int], spouse: EntityRow) -> bool:
+    if value_distance(mine, await values_of(ctx, spouse)) <= FIT_DISTANCE:
+        return True
+    return await leaned_on(ctx, mortal.id, spouse.id, HookDemand.MARRIAGE)
 
 
 async def suitable(

@@ -5,6 +5,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.engine import LOCATION_CHAIN_MAX_HOPS, SUBTREE_STEP_LIMIT
+from aerona.db.bond_index import bond_lookup
+from aerona.db.read_memo import memoized
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
@@ -15,6 +17,8 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.son import SonStatus
+
+ACTIVE_ONLY = (BondState.ACTIVE,)
 
 
 async def canon(session: AsyncSession, types: Iterable[EntityType] | None = None, world_id: int | None = None) -> list[EntityRow]:
@@ -74,7 +78,11 @@ async def active_bonds(
     sources: Sequence[int] | None = None,
     targets: Sequence[int] | None = None,
 ) -> list[BondRow]:
-    statement = select(BondRow).where(BondRow.state == BondState.ACTIVE, BondRow.kind.in_(list(kinds)))
+    wanted = tuple(kinds)
+    lookup = await bond_lookup(session)
+    if lookup is not None:
+        return lookup.select(wanted, ACTIVE_ONLY, sources, targets)
+    statement = select(BondRow).where(BondRow.state == BondState.ACTIVE, BondRow.kind.in_(list(wanted)))
     if sources is not None:
         statement = statement.where(BondRow.source_node_id.in_(list(sources)))
     if targets is not None:
@@ -139,6 +147,7 @@ class BondIndex:
         self._incoming[(bond.target_node_id, bond.kind)].append(bond)
 
 
+@memoized(BondRow, EntityRow)
 async def spoken_language(session: AsyncSession, speaker_id: int) -> EntityRow | None:
     statement = (
         select(EntityRow)

@@ -22,6 +22,7 @@ from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.demography.kinship import has_room, may_wed
+from aerona.engine.factions.guilds import enrol_apprentice
 from aerona.engine.genetics.genome import body_marks
 from aerona.engine.households.formation import OLD, YOUNG, found_household, join_household
 from aerona.engine.households.homes import district_for, dwelling_of, expectation, home_quality, starting_quality
@@ -408,6 +409,7 @@ async def apprentice(ctx: TickContext, household: HouseholdRow, members: list[Me
     if master is None:
         return False
     await connect(ctx.session, child.mortal.id, master.id, BondKind.APPRENTICE_OF, ctx.epoch, description="apprenticed by the household")
+    await enrol_apprentice(ctx, household.settlement_node_id, child.mortal.id)
     return await decided(
         ctx,
         household,

@@ -1,4 +1,5 @@
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 
 from sqlalchemy import delete, select
 
@@ -47,6 +48,7 @@ from aerona.domain.enums.polity import (
     TreatyKind,
     TreatyStatus,
 )
+from aerona.domain.enums.statecraft import SubjectKind
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.succession import pass_rule
 from aerona.engine.polity.accords import PARTY_TYPES, Clause, accept, end_treaty, reject, sign
@@ -560,16 +562,42 @@ async def create_vassalage(ctx: TickContext, vassal_id: int, overlord_id: int, *
     return row
 
 
+@dataclass(frozen=True)
+class SubjectTerms:
+    kind: SubjectKind | None = None
+    liberty: int | None = None
+    private_war: bool | None = None
+    coinage: bool | None = None
+    confirm_succession: bool | None = None
+
+
 async def edit_vassalage(
-    ctx: TickContext, vassal_id: int, *, tribute_pct: int | None, levy_pct: int | None, loyalty: int | None, release: Sequence[str]
+    ctx: TickContext,
+    vassal_id: int,
+    *,
+    tribute_pct: int | None,
+    levy_pct: int | None,
+    loyalty: int | None,
+    release: Sequence[str],
+    terms: SubjectTerms | None = None,
 ) -> VassalageRow:
     row = await ctx.session.get(VassalageRow, vassal_id)
     if row is None:
         raise NotFoundError("That realm is no one's vassal.")
-    for key, value in (("tribute_pct", tribute_pct), ("levy_pct", levy_pct), ("loyalty", loyalty)):
+    for key, value in (("tribute_pct", tribute_pct), ("levy_pct", levy_pct), ("loyalty", loyalty), ("liberty", terms.liberty if terms else None)):
         if value is not None:
             setattr(row, key, counted(key, value, cap=PERCENT))
             row.locked = lock(row.locked, key)
+    if terms is not None:
+        for key, flag in (
+            ("kind", terms.kind),
+            ("private_war", terms.private_war),
+            ("coinage", terms.coinage),
+            ("confirm_succession", terms.confirm_succession),
+        ):
+            if flag is not None:
+                setattr(row, key, flag)
+                row.locked = lock(row.locked, key)
     row.locked = release_keys(row.locked, release)
     await ctx.session.flush()
     return row

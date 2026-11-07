@@ -168,6 +168,7 @@ export const PART_SPEC: Record<LoyaltyPart, Spec> = {
   victories: { label: 'Victories', icon: Trophy, tone: 'success' },
   faith: { label: 'Shared faith', icon: Church, tone: 'success' },
   prosperity: { label: 'Prosperity', icon: Sprout, tone: 'success' },
+  injustice: { label: 'Wrongful convictions', icon: Scale, tone: 'danger' },
 }
 
 export const EVENT_SPEC: Record<MobilityEvent, Spec> = {

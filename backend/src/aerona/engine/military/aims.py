@@ -22,6 +22,7 @@ from aerona.engine.military.peace import AIM_TERMS, PeaceTerm, conclude, extra_t
 from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.formation import set_ruler
+from aerona.engine.polity.regard import on_conquest
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import change_religion
 from aerona.engine.primitives.numbers import clamp_int
@@ -172,6 +173,8 @@ async def cede(ctx: TickContext, book: RealmBook, victor: EntityRow, loser: Enti
         ctx.session.add(PolityTerritoryRow(polity_entity_id=realm.entity.id, region_entity_id=region_id, control=control))
     if occupation is not None:
         await ctx.session.delete(occupation)
+    if realm is not None and lost is not None:
+        await on_conquest(ctx, realm.entity.id)
     return realm is not None or lost is not None
 
 

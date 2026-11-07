@@ -17,6 +17,7 @@ from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.materials import alloy_inputs, workable
 from aerona.engine.economy.stocks import epoch_need, goods_of, holding, lots_of
 from aerona.engine.economy.workshop_designs import capacity_scale, output_scale, quality_bonus
+from aerona.engine.factions.guilds import guild_standard
 from aerona.engine.industry.energy import scale_by_energy
 from aerona.engine.industry.methods import feed, method_for, process_of_step
 from aerona.engine.notes import note
@@ -233,7 +234,8 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
         + skill * table.skill_quality_per_level
         + step.quality_gain
         + quality_bonus(design)
-        + (method.quality_bonus if method is not None else 0),
+        + (method.quality_bonus if method is not None else 0)
+        + await guild_standard(ctx, community.id),
         0,
         PERCENT,
     )

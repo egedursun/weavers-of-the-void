@@ -154,7 +154,17 @@ const LOOKS: { words: string[]; look: Look }[] = [
     look: { icon: BookOpen, tone: 'info', family: 'Lore' },
   },
   {
-    words: ['polity', 'law', 'office', 'treaty', 'vassal', 'claim', 'realm'],
+    words: [
+      'polity',
+      'law',
+      'office',
+      'treaty',
+      'vassal',
+      'claim',
+      'realm',
+      'title',
+      'de_jure',
+    ],
     look: { icon: Landmark, tone: 'gold', family: 'Rule' },
   },
   {

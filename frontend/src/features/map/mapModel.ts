@@ -15,6 +15,7 @@ export const LAYER_MODES = [
   'terrain',
   'political',
   'realms',
+  'de_jure',
   'regions',
   'creators',
   'religions',
@@ -40,6 +41,7 @@ export const LAYER_LABEL: Record<LayerMode, string> = {
   terrain: 'Terrain',
   political: 'Political',
   realms: 'Realms',
+  de_jure: 'De jure titles',
   regions: 'Regions',
   creators: 'Creators',
   religions: 'Religions',
@@ -62,6 +64,7 @@ export const LAYER_LABEL: Record<LayerMode, string> = {
 
 export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
   realms: 'map-layer-realms',
+  de_jure: 'map-layer-de-jure',
   ground: 'map-layer-terrain',
   soil: 'map-layer-soil',
   climate: 'map-layer-climate',

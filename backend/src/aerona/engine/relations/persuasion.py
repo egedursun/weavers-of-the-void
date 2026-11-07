@@ -16,6 +16,7 @@ from aerona.domain.enums.mind import Facet, SkillKind, ThoughtKind, ValueAxis, V
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.relations import AppealKind, PassionKind, PersuasionAim
 from aerona.engine.context import TickContext
+from aerona.engine.intrigue.beliefs import evidence_trust
 from aerona.engine.mind.aspirations import rules_over
 from aerona.engine.mind.book import is_locked, mind_of, skill_level, stored_values, values_for, write_values
 from aerona.engine.mind.split import facets_of
@@ -29,6 +30,7 @@ HALF = PERCENT // 2
 WARM = (PassionKind.LOVE, PassionKind.LOYALTY)
 COUNCIL_VOICES = 3
 COURT_FLOOR = 10**6
+EVIDENCE_TRUST_DIVISOR = 4
 
 
 @dataclass(frozen=True)
@@ -60,7 +62,7 @@ async def appeal_fit(session: AsyncSession, speaker: int, target: int, appeal: A
     elif appeal is AppealKind.AUTHORITY:
         fit += await rules_over(session, speaker) / 2 + (speaking.renown if speaking is not None else 0) / 4
     elif appeal is AppealKind.EVIDENCE:
-        fit += await skill_level(session, speaker, SkillKind.LORE) / 2
+        fit += await skill_level(session, speaker, SkillKind.LORE) / 2 + await evidence_trust(session, target) / EVIDENCE_TRUST_DIVISOR
     elif appeal is AppealKind.FEAR:
         fit += (speaking.infamy if speaking is not None else 0) / 2
     elif appeal is AppealKind.SELF_INTEREST:

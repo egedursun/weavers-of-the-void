@@ -9,7 +9,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.polity import LawKind, LegitimacyBasis, OfficeKind
+from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook, enact
 from aerona.engine.polity.offices import appoint
@@ -20,6 +20,7 @@ from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_acti
 from aerona.tools.framework.validation import fail
 from aerona.tools.mortal import lines
 from aerona.tools.mortal.inputs import AppointOfficerInput, EnactLawInput, SetTaxInput
+from aerona.tools.mortal.justice import bring_law
 
 THRONES = (OfficeKind.RULER, OfficeKind.REGENT)
 TAX_CAP = 50
@@ -40,6 +41,10 @@ async def enact_law(call: MortalCall, args: EnactLawInput) -> str:
     tools = call.rules.mortal_tools
     await call.within_limit(TurnCounter.LAWS_ENACTED, tools.enact_law_per_epoch, "mortal_tools.enact_law_per_epoch", MortalResult.LAW_LIMIT)
     realm = await throne_of(call)
+    if realm.profile.decision_rule is not DecisionRule.AUTOCRATIC:
+        text = await bring_law(call, realm, args.kind, args.params or {})
+        await call.bump(TurnCounter.LAWS_ENACTED)
+        return text
     try:
         law = await enact(call.tick, realm.entity, args.kind, args.params or {}, by_id=call.me.id, basis=LegitimacyBasis.DECREE, name=args.name)
     except ValidationFailedError as error:

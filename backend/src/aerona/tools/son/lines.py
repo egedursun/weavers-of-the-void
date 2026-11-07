@@ -6,6 +6,7 @@ ANCHOR = Line("tools.son.anchor", "{son} bound their existence to {entity}: {rea
 BIND_MORTALS = Line("tools.son.bind_mortals", "{son} bound {first} and {second} ({binding}): {reason}")
 PLANT_IDEA = Line("tools.son.plant_idea", "{son} planted {idea} in the mind of {mortal}: {reason}")
 SHAPE_BLOOD = Line("tools.son.shape_blood", "{son} worked {trait} into the blood of {mortal}: {reason}")
+REVEAL_TRUE_NAME = Line("tools.son.reveal_true_name", "{son} revealed the true name of {bearer} to {learner}: {reason}")
 TEND_LAND = Line("tools.son.tend_land", "{son} {verb} the land of {region}: {reason}")
 SPREAD_WORD = Line("tools.son.spread_word", "{son} spread word of {subject} in {community}: {reason}")
 STIR_HEARTS = Line("tools.son.stir_hearts", "{son} stirred {stir} in {first} toward {second}: {reason}")

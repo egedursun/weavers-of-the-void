@@ -7,6 +7,7 @@ from aerona.catalog.mind import MEMORIES
 from aerona.catalog.society import community_relation_label
 from aerona.constants.schema import SINGLETON_ID
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memo_of
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import FeudRow
@@ -86,10 +87,16 @@ async def remember_relation(session: AsyncSession, rules: Rules, first: int, sec
 async def relation(session: AsyncSession, rules: Rules, first: int, second: int) -> int:
     if first == second:
         return RELATION_MAX
+    memo = memo_of(session, "relation")
+    key = (id(rules), *pair_key(first, second))
+    if memo is not None and key in memo:
+        found: int = memo[key]
+        return found
     row = await _row(session, first, second)
-    if row is not None:
-        return row.value
-    return await initial_relation(session, rules, first, second)
+    value = row.value if row is not None else await initial_relation(session, rules, first, second)
+    if memo is not None:
+        memo[key] = value
+    return value
 
 
 async def refresh_relation(session: AsyncSession, rules: Rules, epoch: int, first: int, second: int) -> int:

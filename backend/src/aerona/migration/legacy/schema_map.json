@@ -700,7 +700,8 @@
       "antlasma": "treaty",
       "ideoloji": "ideology",
       "ayin": "rite",
-      "canavar": "beast"
+      "canavar": "beast",
+      "unvan": "title"
     },
     "entity_status": {
       "kanon": "canon",
@@ -2112,6 +2113,10 @@
       "kurnazlik": "cunning",
       "un": "renown",
       "dehset": "terror"
+    },
+    "title": {
+      "prestij": "prestige",
+      "toprak": "territory"
     }
   },
   "entity_extra_stats": {

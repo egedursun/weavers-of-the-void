@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
+  Church,
+  Building2,
+  Landmark,
   Ban,
   BookLock,
   Coins,
@@ -106,6 +109,15 @@ const FACTION_KINDS: Record<string, Named> = {
   void_pirates: { label: 'Void pirates', icon: Ship, tone: 'danger' },
   social_circle: { label: 'Social circle', icon: Users, tone: 'success' },
   mage_order: { label: 'Mage order', icon: Sparkles, tone: 'verdigris' },
+  estate: { label: 'Estate of the realm', icon: Landmark, tone: 'gold' },
+  party: { label: 'Party', icon: Vote, tone: 'info' },
+  movement: { label: 'Movement', icon: Megaphone, tone: 'warning' },
+  chartered_company: {
+    label: 'Chartered company',
+    icon: Building2,
+    tone: 'gold',
+  },
+  holy_order: { label: 'Holy order', icon: Church, tone: 'verdigris' },
 }
 const FACTION_SCALES: Record<string, Named> = {
   band: { label: 'Band', icon: Users, tone: 'muted' },

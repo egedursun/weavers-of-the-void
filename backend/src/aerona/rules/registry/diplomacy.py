@@ -105,3 +105,6 @@ class DiplomacyRules:
         15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Chance per epoch an alliance past its lifetime ends (%; allies with a common enemy renew the oath)"
     )
     alliance_end_cap: int = rule(4, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Most alliances lapsing on their own per epoch")
+    coalition_threshold: int = rule(
+        50, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Threat a realm's neighbours must feel before they band into a coalition against it"
+    )

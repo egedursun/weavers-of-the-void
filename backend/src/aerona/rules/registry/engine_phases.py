@@ -153,6 +153,72 @@ class EnginePhasesRules:
     relations_passions: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: passions kindled by bonds, oaths, memories and upbringing")
     relations_pecking: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: pecking orders in households, courts, circles, warbands and crews")
     genetics_survey: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: allele pools for every people and a genome for every mortal")
+    intrigue_survey: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: true names, hidden conditions, hidden debts and memberships, and the false names of spies, exiles and the blood-cursed",
+    )
+    correspondence: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: messages on their way, interception, delivery, envoys, gifts and insults between rulers, ciphers and signal links",
+    )
+    estates: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: estates and their privileges, movements and parties, chartered companies, holy orders, guild ranks and craft secrets",
+    )
+    titles: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: titles founded, passed on, drifting de jure lands, claims, usurpation, creation, restoration, partition and personal unions",
+    )
+    public_opinion: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: what every community thinks of its ruler, its wars, its laws, its gods and its creeds"
+    )
+    legislature: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: laws before each realm weighed by their voices, hooks and obstruction, debated, rioted over, softened, passed or failed",
+    )
+    affairs: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: council tasks, elections and seats, corruption and taxes, mandates and nobles' demands, the policy network and the fundamental law",
+    )
+    statecraft: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: threat and trust between realms, coalitions, crises and their backers, spheres and summits, subjects and their terms",
+    )
+    trials: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: cases at law tried before a judge, a jury, by combat or by ordeal, the guilty sentenced and the wrongly convicted mourned",
+    )
+    intrigue: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: beliefs seen, spied and fading, secrets learned and exposed, masks wearing thin, true names sought and schemes plotted",
+    )
     bloodlines: int = rule(
         1,
         0,

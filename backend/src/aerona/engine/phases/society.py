@@ -152,6 +152,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "settlement.population",
     "settlement.prosperity",
     "table.bonds",
+    "table.ciphers",
     "table.community_societies",
     "table.culture_ethics",
     "table.culture_values",
@@ -172,13 +173,17 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.polity_profiles",
     "table.pressures",
     "table.reputations",
+    "table.secrets",
     "table.settlement_profiles",
+    "table.signal_links",
     "table.tradition_profiles",
     "table.traits",
     "table.tributes",
     "table.war_aims",
     "table.war_sides",
     "table.wars",
+    "table.world_maps",
+    "table.world_seasons",
 )
 @writes(
     "settlement.defense",
@@ -194,10 +199,12 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.incident_participants",
     "table.incidents",
     "table.memories",
+    "table.messages",
     "table.mortal_profiles",
     "table.name_registry",
     "table.oaths",
     "table.reputations",
+    "table.secrets",
     "table.war_aims",
 )
 async def uprisings(ctx: TickContext) -> None:

@@ -22,6 +22,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.industry.owners import credit_owner, purse_value
+from aerona.engine.intrigue.beliefs import believed_prices
 from aerona.engine.mind.hooks import judged
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -115,8 +116,9 @@ async def open_hoards(ctx: TickContext, book: EconomyBook, tally: SpeculationTal
         if not rng.chance(table.chance_pct):
             continue
         now, before = await prices(ctx, market.id, ctx.epoch), await prices(ctx, market.id, ctx.epoch - 1)
+        seen = await believed_prices(ctx, merchant, market.id, now)
         famine = await hunger_at(ctx, market.id) >= table.famine_hunger
-        commodity = next((kind for kind in FOOD_HOARDS if kind in now), None) if famine else best_rise(ctx, now, before)
+        commodity = next((kind for kind in FOOD_HOARDS if kind in now), None) if famine else best_rise(ctx, seen, before)
         if commodity is None or commodity not in now:
             continue
         if await open_hoard(ctx, merchant, market, commodity, now[commodity], famine=famine) is not None:

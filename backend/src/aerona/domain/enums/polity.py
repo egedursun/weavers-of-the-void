@@ -32,6 +32,8 @@ class OfficeKind(StrEnum):
     SPYMASTER = "spymaster"
     GOVERNOR = "governor"
     AMBASSADOR = "ambassador"
+    HERALD = "herald"
+    CHAPLAIN = "chaplain"
 
 
 class OfficePower(StrEnum):
@@ -44,6 +46,8 @@ class OfficePower(StrEnum):
     SPY = "spy"
     GOVERN = "govern"
     EMBASSY = "embassy"
+    PROCLAIM = "proclaim"
+    PREACH = "preach"
 
 
 class RegionalStanding(StrEnum):
@@ -89,6 +93,7 @@ class LawArea(StrEnum):
     SOCIAL = "social"
     PUBLIC_HEALTH = "public_health"
     MAGIC = "magic"
+    CONSTITUTIONAL = "constitutional"
 
 
 class LawKind(StrEnum):
@@ -113,6 +118,7 @@ class LawKind(StrEnum):
     FOREIGNER_RIGHTS = "foreigner_rights"
     RELIGIOUS_TOLERANCE = "religious_tolerance"
     WORSHIP_BAN = "worship_ban"
+    CENSORSHIP = "censorship"
     BLOOD_FEUD = "blood_feud"
     QUARANTINE = "quarantine"
     BURIAL_LAW = "burial_law"
@@ -120,6 +126,8 @@ class LawKind(StrEnum):
     MAGIC_BAN = "magic_ban"
     LICENSED_MAGIC = "licensed_magic"
     RITE_RESTRICTIONS = "rite_restrictions"
+    FRANCHISE = "franchise"
+    CONSTITUTION = "constitution"
     CUSTOM = "custom"
 
 
@@ -148,6 +156,7 @@ class ClaimBasis(StrEnum):
     CONQUEST = "conquest"
     DIVINE = "divine"
     FABRICATED = "fabricated"
+    DE_JURE = "de_jure"
 
 
 class HouseTrait(StrEnum):
@@ -189,6 +198,7 @@ class TreatyKind(StrEnum):
     CONDOTTA = "condotta"
     GUARANTEE = "guarantee"
     INTERWORLD = "interworld"
+    COALITION = "coalition"
 
 
 class TreatyStatus(StrEnum):
@@ -254,5 +264,8 @@ LAW_AREAS: dict[LawKind, LawArea] = {
     LawKind.MAGIC_BAN: LawArea.MAGIC,
     LawKind.LICENSED_MAGIC: LawArea.MAGIC,
     LawKind.RITE_RESTRICTIONS: LawArea.MAGIC,
+    LawKind.CENSORSHIP: LawArea.SOCIAL,
+    LawKind.FRANCHISE: LawArea.CONSTITUTIONAL,
+    LawKind.CONSTITUTION: LawArea.CONSTITUTIONAL,
     LawKind.CUSTOM: LawArea.SOCIAL,
 }

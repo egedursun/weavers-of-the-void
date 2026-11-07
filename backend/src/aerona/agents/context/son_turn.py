@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.agents.context.intrigue import name_knowers, names_known
 from aerona.agents.context.powers import powers_text
 from aerona.agents.context.reputation_line import reputation_line
 from aerona.agents.context.scope import Scope
@@ -92,6 +93,8 @@ async def son_system_context(scope: Scope, son: SonRow, points: int, catalogue: 
             state_label=EXISTENCE_MODES[profile.mode] if profile and profile.mode else None,
             manifestation=profile.manifestation or None if profile else None,
             true_name=profile.true_name or None if profile else None,
+            known_by=await name_knowers(scope.session, son.id),
+            names_known=await names_known(scope.session, son.id, scope.rules.context.son_location_tree_lines),
         ),
         appearance=personality.appearance,
         temperament=personality.temperament,

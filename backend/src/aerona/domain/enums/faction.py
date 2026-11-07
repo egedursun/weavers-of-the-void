@@ -20,6 +20,11 @@ class FactionKind(StrEnum):
     VOID_PIRATES = "void_pirates"
     SOCIAL_CIRCLE = "social_circle"
     MAGE_ORDER = "mage_order"
+    ESTATE = "estate"
+    PARTY = "party"
+    MOVEMENT = "movement"
+    CHARTERED_COMPANY = "chartered_company"
+    HOLY_ORDER = "holy_order"
 
 
 class FactionScale(StrEnum):
@@ -75,3 +80,19 @@ ARMED_KINDS = frozenset(
     {FactionKind.WARRIOR_ORDER, FactionKind.REBELS, FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.VOID_PIRATES, FactionKind.MERCENARY_COMPANY}
 )
 SECRET_KINDS = frozenset({FactionKind.ASSASSINS, FactionKind.SECRET_SOCIETY})
+
+
+class EstatePrivilege(StrEnum):
+    TAX_EXEMPTION = "tax_exemption"
+    MONOPOLY = "monopoly"
+    COUNCIL_SEAT = "council_seat"
+    ARMS = "arms"
+    JUDICIAL_IMMUNITY = "judicial_immunity"
+
+
+class MovementCause(StrEnum):
+    ABOLITION = "abolition"
+    INDEPENDENCE = "independence"
+    REVIVAL = "revival"
+    LAND_REFORM = "land_reform"
+    FRANCHISE = "franchise"

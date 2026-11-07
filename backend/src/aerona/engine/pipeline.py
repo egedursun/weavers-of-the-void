@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import AeronaError, NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
-from aerona.db.session import Database
+from aerona.db.session import Database, Steps
 from aerona.domain.enums.epoch import EpochPhase
 from aerona.engine import records, snapshot, transition
 from aerona.engine.context import Publisher, TickContext, TickEnvironment, phase_window
@@ -17,6 +17,7 @@ from aerona.engine.interconnect.guards import run_guarded
 from aerona.engine.notes import FoldResult, fold_tick_lines, last_chronicle_id
 from aerona.engine.phase import Phase
 from aerona.engine.phases import (
+    affairs,
     afterlife,
     belief_memory,
     births,
@@ -25,6 +26,7 @@ from aerona.engine.phases import (
     civilization,
     climate,
     commerce,
+    communication,
     cosmic_economy,
     cosmos_upkeep,
     creator_mood,
@@ -41,6 +43,7 @@ from aerona.engine.phases import (
     environment,
     epidemics,
     espionage,
+    estates,
     exploration,
     factions,
     faith,
@@ -59,6 +62,8 @@ from aerona.engine.phases import (
     industry,
     institutions,
     interconnect,
+    intrigue,
+    justice,
     knowledge_levels,
     language_contact,
     language_death,
@@ -100,7 +105,9 @@ from aerona.engine.phases import (
     society_economy,
     sons,
     spirits,
+    statecraft,
     structures,
+    titles,
     trade,
     travel,
     tribute,
@@ -140,6 +147,13 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + industry.PHASES
     + genetics.PHASES
     + households.PHASES
+    + intrigue.PHASES
+    + communication.PHASES
+    + titles.PHASES
+    + justice.PHASES
+    + statecraft.PHASES
+    + affairs.PHASES
+    + estates.PHASES
     + finance.PHASES
     + casualties.PHASES
     + ecology.PHASES
@@ -243,6 +257,7 @@ CLEANUP_STAGE = stage(
     "mortal_survey",
     "genetics_survey",
     "household_survey",
+    "intrigue_survey",
     "economy_survey",
     "structure_survey",
     "expire_truces",
@@ -253,6 +268,7 @@ SUB_ENGINE_STAGE = stage(
     "labour_allocation",
     "harvest",
     "diplomacy",
+    "correspondence",
     "war_upkeep",
     "tribute",
     "treaty_cycles",
@@ -281,6 +297,10 @@ SUB_ENGINE_STAGE = stage(
     "civilization",
     "world_balance",
     "polity_cycles",
+    "legislature",
+    "titles",
+    "statecraft",
+    "affairs",
     "sky",
     "beyond",
     "soul_cycles",
@@ -330,6 +350,7 @@ SOCIETY_STAGE = stage(
     "house_cycles",
     "bloodlines",
     "love_and_rivalry",
+    "intrigue",
     "dialect_divergence",
     "language_death",
     "language_contact",
@@ -352,10 +373,13 @@ SOCIETY_ENGINE_STAGE = stage(
     "society_mobility",
     "structure_upkeep",
     "settlement_life",
+    "trials",
+    "public_opinion",
     "households",
     "heroes",
     "spontaneous_births",
     "factions",
+    "estates",
     "ideology_cycles",
     "engine_works",
     "splendor_growth",
@@ -487,10 +511,10 @@ def find_phase(name: str) -> Phase:
     return found
 
 
-async def run_phase(environment: TickEnvironment, database: Database, phase: Phase) -> None:
+async def run_phase(environment: TickEnvironment, database: Database, phase: Phase, steps: Steps | None = None) -> None:
     started = time.perf_counter()
     try:
-        async with database.write() as session:
+        async with database.write() if steps is None else steps.step() as session:
             await run_guarded(phase, TickContext(environment, session, phase.name))
     except AeronaError:
         raise
@@ -510,18 +534,19 @@ async def run_phases(
     tolerant: frozenset[str] = frozenset(),
 ) -> TickStats:
     skipped = disabled | disabled_by_rules(environment.rules)
-    for phase in phases:
-        if phase.name in skipped:
-            environment.stats.count(f"{phase.name}.{DISABLED_COUNTER}")
-            continue
-        try:
-            await run_phase(environment, database, phase)
-        except EnginePhaseError as error:
-            if phase.name not in tolerant:
-                raise
-            LOGGER.exception("Engine step %s failed and was skipped", phase.name)
-            environment.stats.count(f"{phase.name}.{FAILED_COUNTER}")
-            environment.publish(EventKind.ENGINE_PHASE, {"epoch": environment.epoch, "phase": phase.name, "error": error.message})
+    async with database.steps() as steps:
+        for phase in phases:
+            if phase.name in skipped:
+                environment.stats.count(f"{phase.name}.{DISABLED_COUNTER}")
+                continue
+            try:
+                await run_phase(environment, database, phase, steps)
+            except EnginePhaseError as error:
+                if phase.name not in tolerant:
+                    raise
+                LOGGER.exception("Engine step %s failed and was skipped", phase.name)
+                environment.stats.count(f"{phase.name}.{FAILED_COUNTER}")
+                environment.publish(EventKind.ENGINE_PHASE, {"epoch": environment.epoch, "phase": phase.name, "error": error.message})
     return environment.stats
 
 

@@ -10,19 +10,28 @@ from aerona.db.tables.culture import HolderTechniqueRow, RiteProfileRow
 from aerona.db.tables.economy import MarketPriceRow, TradeRouteProfileRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import LeyLineRow, WorldSeasonRow
-from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityProfileRow, TreatyProfileRow
+from aerona.db.tables.estates import EstateProfileRow
+from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.intrigue import HookRow, TrueNameRow
+from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow
 from aerona.db.tables.sons import SonRelationRow, SonRow
+from aerona.db.tables.statecraft import CrisisRow
+from aerona.db.tables.titles import DeJureLinkRow, TitleProfileRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import CivilizationTier, EntityFlag, EntityType
+from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.intrigue import HookSource, HookStrength
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
-from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.son import SonStatus
+from aerona.domain.enums.statecraft import CrisisDemand
+from aerona.domain.enums.titles import TitleRank
 from aerona.domain.enums.world import StarType
-from aerona.domain.models.entity_stats import HouseStats, MortalStats, PolityStats
+from aerona.domain.models.entity_stats import FactionStats, HouseStats, MortalStats, PolityStats, TitleStats
 from aerona.domain.models.profiles import TravelResource
 from aerona.engine.cosmos.maps import refresh_world_maps
 from aerona.engine.economy.stocks import goods_of
@@ -282,3 +291,71 @@ async def well_housed(session: AsyncSession, realm: Realm) -> Ids:
     home = await found_household(await manual_context(session, "household"), head)
     home.wealth = 200
     return {"household": home.id}
+
+
+async def named_spirit(session: AsyncSession, realm: Realm) -> Ids:
+    found = await spirit(session, realm)
+    session.add(TrueNameRow(bearer_node_id=found["spirit"], name="Ashvael", known_by=[found["spirit"]], since_epoch=EPOCH, locked=[]))
+    await session.flush()
+    return found
+
+
+async def hooked_mortal(session: AsyncSession, realm: Realm) -> Ids:
+    found = await second_mortal(session, realm)
+    session.add(
+        HookRow(holder_node_id=realm.mortal_id, target_node_id=found["mortal"], strength=HookStrength.STRONG, source=HookSource.SECRET, created_epoch=EPOCH)
+    )
+    await session.flush()
+    return found
+
+
+async def claimable_title(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruler(session, realm)
+    session.add(PolityTerritoryRow(polity_entity_id=found["polity"], region_entity_id=realm.cosmos.region_id, control=80, locked=[]))
+    title = await make_entity(session, "Old Crown of the Vale", EntityType.TITLE, world_id=realm.cosmos.world_id, stats=TitleStats())
+    session.add(TitleProfileRow(title_entity_id=title.id, rank=TitleRank.DUCHY, regalia=[], drift={}, locked=[]))
+    session.add(DeJureLinkRow(title_entity_id=title.id, member_entity_id=realm.cosmos.region_id, since_epoch=EPOCH))
+    await session.flush()
+    return {**found, "title": title.id}
+
+
+async def realm_estate(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruler(session, realm)
+    estate = await make_entity(session, "Lords of the Vale", EntityType.FACTION, world_id=realm.cosmos.world_id, stats=FactionStats())
+    session.add(FactionProfileRow(faction_entity_id=estate.id, kind=FactionKind.ESTATE, home_entity_id=realm.settlement_id, influence_over={}, locked=[]))
+    session.add(
+        EstateProfileRow(faction_entity_id=estate.id, polity_entity_id=found["polity"], social_class=SocialClass.NOBLE, loyalty=30, influence=30, locked=[])
+    )
+    await session.flush()
+    return {**found, "estate": estate.id}
+
+
+async def other_realm(session: AsyncSession, realm: Realm, name: str) -> int:
+    polity = await make_entity(session, name, EntityType.POLITY, world_id=realm.cosmos.world_id, stats=PolityStats())
+    session.add(PolityProfileRow(polity_entity_id=polity.id, government=next(iter(GovernmentKind)), decision_rule=next(iter(DecisionRule)), treasury=200))
+    await session.flush()
+    return polity.id
+
+
+async def rival_realm(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruler(session, realm)
+    return {**found, "rival": await other_realm(session, realm, "Marsh Crown")}
+
+
+async def foreign_crisis(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruler(session, realm)
+    first = await other_realm(session, realm, "Reed Throne")
+    second = await other_realm(session, realm, "Fen Throne")
+    crisis = CrisisRow(demander_entity_id=first, target_entity_id=second, demand=CrisisDemand.PAY, amount=20, opened_epoch=EPOCH, locked=[])
+    session.add(crisis)
+    await session.flush()
+    return {**found, "crisis": crisis.id}
+
+
+async def council_office(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruler(session, realm)
+    other = await second_mortal(session, realm)
+    office = OfficeRow(polity_entity_id=found["polity"], kind=OfficeKind.MARSHAL, holder_entity_id=other["mortal"])
+    session.add(office)
+    await session.flush()
+    return {**found, "office": office.id}

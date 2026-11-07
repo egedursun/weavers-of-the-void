@@ -505,6 +505,20 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             ("peace", "alliance", "vassal oath", "marriage pact", "trade pact"),
         ),
         EntityTypeSpec(
+            EntityType.TITLE,
+            "Title",
+            "Titles",
+            "title",
+            None,
+            frozenset(),
+            False,
+            (
+                StatField("prestige", "Prestige"),
+                StatField("territory", "De jure lands", lambda rules: 0, lambda rules: 10000),
+            ),
+            ("lordship", "county", "duchy", "kingdom", "empire", "see", "archsee", "high seat", "captaincy", "guildmastership"),
+        ),
+        EntityTypeSpec(
             EntityType.IDEOLOGY,
             "Ideology",
             "Ideologies",
@@ -596,6 +610,7 @@ CREATION_BASE_COST_RULES: dict[EntityType, RuleBound] = {
     EntityType.POLITY: lambda rules: rules.creation_base_cost.polity,
     EntityType.HOUSE: lambda rules: rules.creation_base_cost.house,
     EntityType.TREATY: lambda rules: rules.creation_base_cost.treaty,
+    EntityType.TITLE: lambda rules: rules.creation_base_cost.title,
     EntityType.IDEOLOGY: lambda rules: rules.creation_base_cost.ideology,
     EntityType.BEAST: lambda rules: rules.creation_base_cost.beast,
     EntityType.RITE: lambda rules: rules.creation_base_cost.rite,

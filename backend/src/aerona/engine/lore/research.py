@@ -15,6 +15,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import WarSideRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -81,6 +82,8 @@ async def known_bonds(session: AsyncSession) -> list[tuple[int, int, KnowledgeBr
 async def ensure_holders(ctx: TickContext) -> int:
     made = 0
     for holder, _knowledge, branch, frontier, learned in await known_bonds(ctx.session):
+        if held(holder):
+            continue
         row = await ctx.session.get(HolderLevelRow, (holder, branch))
         if row is None:
             start = 1 if learned >= ctx.epoch else frontier
@@ -234,12 +237,12 @@ async def adopt_techniques(ctx: TickContext) -> int:
     for holder_id in sorted(levels):
         if adopted >= table.cap:
             break
-        held = await techniques_of(ctx.session, holder_id)
+        known = await techniques_of(ctx.session, holder_id)
         holder = await ctx.session.get(EntityRow, holder_id)
-        if holder is None or holder.status is not EntityStatus.CANON:
+        if holder is None or holder.status is not EntityStatus.CANON or held(holder_id):
             continue
         for technique, spec in TECHNIQUES.items():
-            if technique in held or levels[holder_id].get(spec.branch, 0) < spec.level or not gate_open(spec.gate, levels[holder_id]):
+            if technique in known or levels[holder_id].get(spec.branch, 0) < spec.level or not gate_open(spec.gate, levels[holder_id]):
                 continue
             if not gate_open(BRANCH_GRAPH[spec.branch], levels[holder_id]) and spec.level > 1:
                 continue
@@ -248,7 +251,7 @@ async def adopt_techniques(ctx: TickContext) -> int:
                 continue
             secret = holder.entity_type in ORDERS and rng.chance(table.secret_pct)
             ctx.session.add(HolderTechniqueRow(holder_entity_id=holder_id, technique=technique, since_epoch=ctx.epoch, secret=secret))
-            held.add(technique)
+            known.add(technique)
             adopted += 1
     return adopted
 
@@ -263,6 +266,8 @@ async def diffuse_techniques(ctx: TickContext) -> int:
     )
     for first, second in links.all():
         for giver, taker in ((first, second), (second, first)):
+            if held(taker):
+                continue
             hidden = set(
                 await ctx.session.scalars(select(HolderLevelRow.branch).where(HolderLevelRow.holder_entity_id == giver, HolderLevelRow.secret.is_(True)))
             )

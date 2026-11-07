@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
@@ -186,10 +187,13 @@ async def robber_ids(session: AsyncSession) -> frozenset[int]:
     return frozenset(await session.scalars(statement))
 
 
-async def monopoly_factor(session: AsyncSession, community_id: int, commodity: CommodityKind, rules_pct: int) -> float:
-    found = await session.scalar(
-        select(FactionProfileRow.faction_entity_id)
-        .where(FactionProfileRow.home_entity_id == community_id, FactionProfileRow.monopoly == commodity.value)
-        .limit(1)
+@memoized(FactionProfileRow)
+async def monopolies_at(session: AsyncSession, community_id: int) -> frozenset[str]:
+    rows = await session.scalars(
+        select(FactionProfileRow.monopoly).where(FactionProfileRow.home_entity_id == community_id, FactionProfileRow.monopoly.is_not(None))
     )
-    return rules_pct / PERCENT if found is not None else 1.0
+    return frozenset(str(row) for row in rows)
+
+
+async def monopoly_factor(session: AsyncSession, community_id: int, commodity: CommodityKind, rules_pct: int) -> float:
+    return rules_pct / PERCENT if commodity.value in await monopolies_at(session, community_id) else 1.0

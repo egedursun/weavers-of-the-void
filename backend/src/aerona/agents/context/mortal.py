@@ -4,11 +4,14 @@ from aerona.agents.context.economy import resource_yield, stores_for
 from aerona.agents.context.entity_detail import entity_detail
 from aerona.agents.context.entity_line import line_items
 from aerona.agents.context.geography import environment_facts, region_records, weather_words
+from aerona.agents.context.intrigue import estate_lines, intrigue_lines, letter_lines, title_lines
+from aerona.agents.context.justice import case_lines, proposal_lines
 from aerona.agents.context.language_lines import language_lines
 from aerona.agents.context.lineage import lineage_lines
 from aerona.agents.context.recent_chronicle import prompt_text, recent_rows
 from aerona.agents.context.scope import Scope
 from aerona.agents.context.society import home_for
+from aerona.agents.context.statecraft import affairs_lines, statecraft_lines
 from aerona.agents.context.world_header import world_header
 from aerona.agents.context.world_line import world_line
 from aerona.agents.context.world_summary import route_lines
@@ -147,7 +150,30 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
     if home is None:
         return None
     bits = await lineage_lines(scope.session, scope.rules, me)
-    return home.model_copy(update={"looks": bits.looks, "gift": bits.gift, "household": bits.household, "dwelling": bits.dwelling})
+    plots = await intrigue_lines(scope.session, scope.rules, me)
+    letters, opinions = await letter_lines(scope.session, scope.rules, me)
+    return home.model_copy(
+        update={
+            "looks": bits.looks,
+            "gift": bits.gift,
+            "household": bits.household,
+            "dwelling": bits.dwelling,
+            "secrets": plots.secrets,
+            "leverage": plots.leverage,
+            "mask": plots.mask,
+            "scheme": plots.scheme,
+            "true_names": plots.names,
+            "beliefs": plots.beliefs,
+            "letters": letters,
+            "opinions": opinions,
+            "titles": await title_lines(scope.session, me),
+            "estates": await estate_lines(scope.session, me),
+            "proposals": await proposal_lines(scope.session, me),
+            "cases": await case_lines(scope.session, me, scope.epoch),
+            "abroad": await statecraft_lines(scope.session, me),
+            "affairs": await affairs_lines(scope.session, me),
+        }
+    )
 
 
 async def mortal_context(scope: Scope, me: EntityRow, full: bool = False) -> MortalContextContext:

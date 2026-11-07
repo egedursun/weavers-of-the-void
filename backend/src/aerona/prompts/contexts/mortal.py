@@ -150,6 +150,20 @@ class HomeLine(ContextItem):
     gift: str = ""
     household: str = ""
     dwelling: str = ""
+    secrets: list[str] = Field(default_factory=list)
+    leverage: list[str] = Field(default_factory=list)
+    mask: str = ""
+    scheme: str = ""
+    true_names: list[str] = Field(default_factory=list)
+    beliefs: list[str] = Field(default_factory=list)
+    letters: list[str] = Field(default_factory=list)
+    opinions: list[str] = Field(default_factory=list)
+    titles: list[str] = Field(default_factory=list)
+    estates: list[str] = Field(default_factory=list)
+    proposals: list[str] = Field(default_factory=list)
+    cases: list[str] = Field(default_factory=list)
+    abroad: list[str] = Field(default_factory=list)
+    affairs: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

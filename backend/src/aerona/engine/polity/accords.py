@@ -16,10 +16,12 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClauseKind, OathKind, PartyRole, TreatyKind, TreatyStatus
 from aerona.domain.models.entity_stats import TreatyStats
+from aerona.engine.communication.post import offer_treaty
 from aerona.engine.context import TickContext
 from aerona.engine.lore.language import register_barrier
 from aerona.engine.mind.memories import remember
 from aerona.engine.polity.oaths import oath_god, swear
+from aerona.engine.polity.regard import on_kept, on_marriage
 from aerona.engine.primitives.queries import active_bonds, close, connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat
@@ -38,6 +40,7 @@ TREATY_WORDS = MappingProxyType(
         TreatyKind.CONDOTTA: "the Condotta",
         TreatyKind.GUARANTEE: "the Guarantee",
         TreatyKind.INTERWORLD: "the Treaty of the Worlds",
+        TreatyKind.COALITION: "the Coalition",
     }
 )
 DEFAULT_CLAUSES = MappingProxyType(
@@ -54,6 +57,7 @@ DEFAULT_CLAUSES = MappingProxyType(
         TreatyKind.INTERWORLD: (ClauseKind.TRADE_RIGHTS, ClauseKind.NON_AGGRESSION),
         TreatyKind.GUARANTEE: (ClauseKind.NON_AGGRESSION,),
         TreatyKind.CONDOTTA: (ClauseKind.CALL_TO_ARMS,),
+        TreatyKind.COALITION: (ClauseKind.CALL_TO_ARMS,),
     }
 )
 DERIVED = MappingProxyType(
@@ -67,6 +71,7 @@ DERIVED = MappingProxyType(
         TreatyKind.TRIBUTE: BondKind.PAYS_TRIBUTE,
         TreatyKind.TRADE_PACT: BondKind.TRADES_WITH,
         TreatyKind.INTERWORLD: BondKind.TRADES_WITH,
+        TreatyKind.COALITION: BondKind.ALLY,
     }
 )
 TRIBUTARY_ROLES = (PartyRole.VASSAL,)
@@ -195,6 +200,8 @@ async def sign(
             )
             profile.oath_id = oath.id
     await execute_on_signing(ctx, treaty, chosen)
+    if kind is TreatyKind.MARRIAGE_PACT and len(parties) >= 2:
+        await on_marriage(ctx, parties[0][0], parties[-1][0])
     ctx.count(f"treaty.{kind.value}")
     return treaty
 
@@ -240,6 +247,8 @@ async def end_treaty(ctx: TickContext, profile: TreatyProfileRow, status: Treaty
         treaty.fate_note = f"Epoch {ctx.epoch}: {reason}."
     if status in {TreatyStatus.FULFILLED, TreatyStatus.EXPIRED}:
         await remember_kept(ctx, profile, treaty)
+        parties = list(await ctx.session.scalars(select(TreatyPartyRow.party_node_id).where(TreatyPartyRow.treaty_entity_id == profile.treaty_entity_id)))
+        await on_kept(ctx, parties, profile.kind)
 
 
 async def remember_kept(ctx: TickContext, profile: TreatyProfileRow, treaty: EntityRow | None) -> None:
@@ -336,13 +345,15 @@ async def propose(
     )
     for party, role in parties:
         ctx.session.add(TreatyPartyRow(treaty_entity_id=treaty.id, party_node_id=party, role=role))
-    for clause in list(clauses) or [Clause(item, parties[0][0], parties[-1][0]) for item in DEFAULT_CLAUSES.get(kind, ())]:
+    terms = list(clauses) or [Clause(item, parties[0][0], parties[-1][0]) for item in DEFAULT_CLAUSES.get(kind, ())]
+    for clause in terms:
         ctx.session.add(
             TreatyClauseRow(
                 treaty_entity_id=treaty.id, kind=clause.kind, obligor_node_id=clause.obligor, beneficiary_node_id=clause.beneficiary, params=clause.params
             )
         )
     await ctx.session.flush()
+    await offer_treaty(ctx, proposer_id, [party for party, _ in parties], treaty.id, [clause.kind.value for clause in terms])
     ctx.count("treaty_proposed")
     return treaty
 

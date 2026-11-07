@@ -40,6 +40,15 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
     ("genetics", "house_resemblances"): "bloodlines: a house gains its likeness once enough of its blood shares a look",
     ("households", "household_aggregates"): "households: the anonymous households of every cohort are reckoned each epoch",
     ("dwellings", "dwelling_furnishings"): "none: homes are furnished by gods and agents from the next epoch",
+    ("secrets_and_hooks", "secrets"): "intrigue_survey: hidden conditions, noble debts and hidden memberships become secrets",
+    ("secrets_and_hooks", "hooks"): "none: hooks are won as secrets are learned from the next epoch",
+    ("false_identities", "identities"): "intrigue_survey: active spies, the blood-cursed and some exiles take false names",
+    ("dispatches", "messages"): "none: messages between the living are sent from the next epoch; earlier messages are prayers and visions",
+    ("public_opinion", "public_opinion"): "none: opinions form from the next epoch",
+    ("ciphers_and_signals", "ciphers"): "none: ciphers are devised from the next epoch",
+    ("ciphers_and_signals", "signal_links"): "none: signal links are raised from the next epoch",
+    ("titles", "title_holders"): "titles: every new title records its first holder",
+    ("titles", "de_jure_links"): "titles: every new title takes its realm's lands by right",
 }
 
 

@@ -27,6 +27,7 @@ from aerona.api.schemas.maps import (
     MapTrade,
     MapView,
     MapWar,
+    RegionDeJure,
     RegionGround,
     RegionRealm,
     RegionStocks,
@@ -48,6 +49,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultHoldingRow
 from aerona.db.tables.military import ArmyProfileRow, CampaignFrontRow, OccupationRow
 from aerona.db.tables.polity import PolityTerritoryRow
+from aerona.db.tables.titles import DeJureLinkRow, TitleProfileRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import BondKind, BondState
@@ -178,6 +180,7 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
             trade=await trade_lines(session, world_id, positions),
             outbreaks=await outbreak_lines(session, world_id, positions),
             realms=await region_realms(session, world_id),
+            de_jure=await region_de_jure(session, world_id),
             armies=await army_marks(session, world_id, positions),
             occupations=await occupation_marks(session, world_id),
             fronts=await front_lines(session, world_id, positions),
@@ -201,6 +204,41 @@ async def region_realms(session: AsyncSession, world_id: int) -> dict[int, Regio
         current = found.get(row.region_entity_id)
         if current is None or row.control > current.control:
             found[row.region_entity_id] = RegionRealm(polity_id=row.polity_entity_id, name=name, control=row.control)
+    return found
+
+
+async def top_title(session: AsyncSession, title_id: int) -> TitleProfileRow | None:
+    current = await session.get(TitleProfileRow, title_id)
+    seen: set[int] = set()
+    while current is not None and current.de_jure_liege_entity_id is not None and current.title_entity_id not in seen:
+        seen.add(current.title_entity_id)
+        upper = await session.get(TitleProfileRow, current.de_jure_liege_entity_id)
+        if upper is None:
+            break
+        current = upper
+    return current
+
+
+async def region_de_jure(session: AsyncSession, world_id: int) -> dict[int, RegionDeJure]:
+    realms = await region_realms(session, world_id)
+    links = await session.execute(
+        select(DeJureLinkRow.member_entity_id, DeJureLinkRow.title_entity_id)
+        .join(EntityRow, EntityRow.id == DeJureLinkRow.member_entity_id)
+        .where(EntityRow.world_id == world_id, EntityRow.entity_type == EntityType.REGION)
+    )
+    found: dict[int, RegionDeJure] = {}
+    for region_id, title_id in links:
+        top = await top_title(session, title_id)
+        entity = await session.get(EntityRow, top.title_entity_id) if top is not None else None
+        if top is None or entity is None:
+            continue
+        held = realms.get(region_id)
+        found[region_id] = RegionDeJure(
+            title_id=top.title_entity_id,
+            name=entity.name,
+            polity_id=top.polity_entity_id,
+            held_by_right=held is not None and held.polity_id == top.polity_entity_id,
+        )
     return found
 
 

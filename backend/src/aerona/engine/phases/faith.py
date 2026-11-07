@@ -214,6 +214,7 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     "cult.devotion",
     "cult.influence",
     "cult.zeal",
+    "mortal.lifespan",
     "mortal.strength",
     "people.population",
     "settlement.population",

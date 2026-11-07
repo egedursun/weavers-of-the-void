@@ -20,6 +20,7 @@ from aerona.domain.enums.relations import AppealKind, InteractionKind, Persuasio
 from aerona.domain.enums.renown import ReputationAxis
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.intrigue.talk import affair_secret, ask_back, confide_own, gift_earns, gossip_secret
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.aspirations import open_wants
 from aerona.engine.mind.book import Values, needs_of, stored_values
@@ -248,6 +249,7 @@ async def gossip(scene: Scene, actor: int, target: int) -> None:
     heard = await ensure_relation(session, target, worst.subject_node_id, scene.ctx.epoch)
     if heard is not None:
         shift(rules, heard, scene.ctx.epoch, friendship=-rules.social.gossip_spread, familiarity=1)
+    await gossip_secret(scene.ctx, actor, target)
 
 
 async def comfort(scene: Scene, actor: int, target: int) -> None:
@@ -271,9 +273,12 @@ async def gift(scene: Scene, actor: int, target: int) -> None:
     if await pass_wealth(scene, actor, target, scene.ctx.rules.social.gift_wealth):
         ctx = scene.ctx
         await remember(ctx.session, ctx.rules, holder_id=target, subject_id=actor, kind=MemoryKind.GIFTED_ME, magnitude=10, epoch=ctx.epoch)
+        await gift_earns(ctx, actor, target)
 
 
 async def favour(scene: Scene, actor: int, target: int) -> None:
+    if await ask_back(scene.ctx, actor, target) is False:
+        return
     await pass_wealth(scene, target, actor, scene.ctx.rules.social.favour_wealth)
 
 
@@ -303,6 +308,7 @@ async def seduce(scene: Scene, actor: int, target: int) -> None:
         row = await ensure_relation(ctx.session, holder, subject, ctx.epoch)
         if row is not None and "affair" not in row.locked:
             row.affair = True
+    await affair_secret(ctx, actor, target)
     await conscience(ctx, actor, ActKind.ADULTERY, min(spouses))
 
 
@@ -337,6 +343,8 @@ async def argue(scene: Scene, actor: int, target: int) -> None:
 async def confide_lore(scene: Scene, actor: int, target: int) -> None:
     if await confide(scene.ctx, scene.mortals[actor], scene.mortals[target]):
         scene.ctx.count("lore_confided")
+    if await confide_own(scene.ctx, actor, target):
+        scene.ctx.count("secrets_confided")
 
 
 EFFECTS: dict[InteractionKind, Callable[[Scene, int, int], Awaitable[None]]] = {

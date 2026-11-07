@@ -59,6 +59,8 @@ OFFICE_TIER_RULES: Mapping[OfficeKind, str] = MappingProxyType(
         OfficeKind.TREASURER: "treasurer_tier",
         OfficeKind.HIGH_JUDGE: "high_judge_tier",
         OfficeKind.SPYMASTER: "spymaster_tier",
+        OfficeKind.HERALD: "herald_tier",
+        OfficeKind.CHAPLAIN: "chaplain_tier",
         OfficeKind.GOVERNOR: "governor_tier",
     }
 )

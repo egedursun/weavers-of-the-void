@@ -5,6 +5,7 @@ from sqlalchemy import ColumnElement, and_, or_, select
 
 from aerona.catalog.bonds import EVENT_BOND_KINDS, UNORDERED_PAIR_KINDS, bond_spec, endpoints_valid, should_swap
 from aerona.core.errors import NotFoundError
+from aerona.db.bond_index import bond_lookup
 from aerona.db.repositories.base import Repository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
@@ -137,6 +138,10 @@ class BondRepository(Repository):
         return len(bonds)
 
     async def active_between(self, first: int, second: int, kinds: Iterable[BondKind]) -> list[BondRow]:
+        lookup = await bond_lookup(self.session)
+        if lookup is not None:
+            pairs = {(first, second), (second, first)}
+            return [bond for bond in lookup.select(kinds, (BondState.ACTIVE,), [first, second]) if (bond.source_node_id, bond.target_node_id) in pairs]
         statement = select(BondRow).where(_pair_filter(first, second, True), BondRow.kind.in_(list(kinds)), BondRow.state == BondState.ACTIVE)
         return list(await self.session.scalars(statement.order_by(BondRow.id)))
 
@@ -144,6 +149,9 @@ class BondRepository(Repository):
         return bool(await self.active_between(first, second, [kind]))
 
     async def outgoing(self, node_id: int, kind: BondKind | None = None, active_only: bool = True) -> list[BondRow]:
+        lookup = await bond_lookup(self.session)
+        if lookup is not None:
+            return lookup.select([kind] if kind is not None else None, (BondState.ACTIVE,) if active_only else tuple(BondState), [node_id])
         statement = select(BondRow).where(BondRow.source_node_id == node_id)
         if kind is not None:
             statement = statement.where(BondRow.kind == kind)
@@ -152,6 +160,9 @@ class BondRepository(Repository):
         return list(await self.session.scalars(statement.order_by(BondRow.id)))
 
     async def incoming(self, node_id: int, kind: BondKind | None = None, active_only: bool = True) -> list[BondRow]:
+        lookup = await bond_lookup(self.session)
+        if lookup is not None:
+            return lookup.select([kind] if kind is not None else None, (BondState.ACTIVE,) if active_only else tuple(BondState), targets=[node_id])
         statement = select(BondRow).where(BondRow.target_node_id == node_id)
         if kind is not None:
             statement = statement.where(BondRow.kind == kind)

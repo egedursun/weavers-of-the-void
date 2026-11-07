@@ -15,6 +15,7 @@ from tests.tools.every_setup import (
     last_war,
     leaking_world,
     ley_line,
+    named_spirit,
     outsider,
     seasons,
     second_mortal,
@@ -250,4 +251,5 @@ SON_CASES: dict[str, Case] = {
     "redirect_river": Case(plain(from_region_id=region, to_region_id=created("region"), reason=REASON), combined(second_region, surveyed)),
     "tend_land": Case(plain(region_id=region, reason=REASON), surveyed),
     "shape_blood": Case(plain(mortal_id=mortal, locus="height", allele="tall", reason=REASON)),
+    "reveal_true_name": Case(plain(bearer_id=created("spirit"), learner_id=mortal, reason=REASON), named_spirit),
 }

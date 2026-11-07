@@ -10,6 +10,7 @@ from aerona.engine.phase import Phase
 
 @reads(
     "table.army_profiles",
+    "table.beliefs",
     "table.bonds",
     "table.calendars",
     "table.community_industry",

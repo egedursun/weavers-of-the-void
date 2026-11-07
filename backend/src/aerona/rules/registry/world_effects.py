@@ -33,7 +33,9 @@ class WorldEffectsRules:
     curse_stat_loss: int = rule(3, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Prosperity, fertility, strength and wealth a cursed entity loses each epoch")
     resource_regen: int = rule(4, 0, 100, RuleGroup.ECONOMY, "Per-epoch abundance regeneration of resources")
     item_curse_threshold: int = rule(50, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Minimum curse of an item that harms its owner")
-    item_curse_hp_divisor: int = rule(5, 1, 1000, RuleGroup.HEROES_AND_MORTALS, "HP damage of a cursed item to its owner: curse / this number")
+    item_curse_hp_divisor: int = rule(
+        5, 1, 1000, RuleGroup.HEROES_AND_MORTALS, "Harm a cursed item deals its owner, before their body takes it: curse / this number"
+    )
     item_curse_stat_divisor: int = rule(20, 1, 1000, RuleGroup.HEROES_AND_MORTALS, "Prosperity and defense damage of a cursed item: curse / this number")
     magic_storm_min_magic: int = rule(70, 0, 100, RuleGroup.COSMIC_HORROR, "Minimum magic of a region where a magic storm can break out")
     magic_storm_might_gain: int = rule(5, 0, 100, RuleGroup.COSMIC_HORROR, "Might increase of resources and items in a magic storm")

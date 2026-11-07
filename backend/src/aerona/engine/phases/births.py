@@ -30,6 +30,7 @@ from aerona.engine.demography.urban import founding_factor
 from aerona.engine.genetics.life import express, fertility_factor, found_genome, raise_child, upbringing_pct
 from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.intrigue.sources import hidden_birth
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.ruler_roles import ruler_role
 from aerona.engine.mind.book import effect_of, pressures_of, scaled_by
@@ -1011,7 +1012,9 @@ async def couples_bear_children(ctx: TickContext) -> None:
         fertile = await bloodline_fertility(ctx.session, rules, first.id, second.id)
         if not rng.chance(await couple_chance(ctx, first, second, bond.kind) * fertile):
             continue
-        await deliver(ctx, first, second, namer)
+        children = await deliver(ctx, first, second, namer)
+        if bond.kind is BondKind.LOVES:
+            await hidden_birth(ctx, first, second, children)
         born += 1
 
 
