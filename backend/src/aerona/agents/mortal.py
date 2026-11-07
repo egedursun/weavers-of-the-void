@@ -133,11 +133,11 @@ async def candidates(session_scope: Scope) -> list[Candidate]:
         pressure[entity_id] = max(pressure[entity_id], value)
     for node_id, value in await session_scope.session.execute(select(NeedRow.node_id, NeedRow.value).where(NeedRow.node_id.in_(ids))):
         pressure[node_id] = max(pressure[node_id], PERCENT - value)
-    moods = dict(
-        (
-            await session_scope.session.execute(select(MortalProfileRow.entity_id, MortalProfileRow.mood_score).where(MortalProfileRow.entity_id.in_(ids)))
-        ).tuples()
-    )
+    moods: dict[int, int] = {}
+    for entity_id, mood in await session_scope.session.execute(
+        select(MortalProfileRow.entity_id, MortalProfileRow.mood_score).where(MortalProfileRow.entity_id.in_(ids))
+    ):
+        moods[entity_id] = mood
     held: dict[int, list[TraitKind]] = defaultdict(list)
     for node_id, trait in await session_scope.session.execute(select(TraitRow.node_id, TraitRow.trait).where(TraitRow.node_id.in_(ids))):
         held[node_id].append(trait)
