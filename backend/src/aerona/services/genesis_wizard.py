@@ -136,7 +136,7 @@ TEMPLATES: dict[GenesisTemplate, WizardTemplate] = {
             LanguageTexture.FLOWING,
             3,
             CosmosSize.LARGE,
-            "A cosmos where star-wind fills the ships' sails and worlds are strung like beads on a thread.",
+            "A cosmos where star-wind fills the ships' sails and every world circles a sun of its own.",
         ),
         WizardTemplate(
             GenesisTemplate.SAND_AND_ASH,

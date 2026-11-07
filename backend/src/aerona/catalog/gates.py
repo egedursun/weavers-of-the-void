@@ -17,7 +17,7 @@ class Gate(StrEnum):
     TAKE_LIFE = "take_life"
     SEAL_GATE = "seal_gate"
     REKINDLE_STAR = "rekindle_star"
-    STITCH_LEAK = "stitch_leak"
+    SEAL_LEAK = "seal_leak"
     LEGENDARY_TOOLS = "legendary_tools"
     OPEN_COSMIC_BED = "open_cosmic_bed"
     BIRTH_WORLD = "birth_world"
@@ -35,7 +35,7 @@ GATE_RULES: dict[Gate, Callable[[Rules], int]] = {
     Gate.TAKE_LIFE: lambda rules: rules.rarity_gates.take_life,
     Gate.SEAL_GATE: lambda rules: rules.rarity_gates.seal_gate,
     Gate.REKINDLE_STAR: lambda rules: rules.rarity_gates.rekindle_star,
-    Gate.STITCH_LEAK: lambda rules: rules.rarity_gates.stitch_leak,
+    Gate.SEAL_LEAK: lambda rules: rules.rarity_gates.seal_leak,
     Gate.LEGENDARY_TOOLS: lambda rules: rules.rarity_gates.legendary_tools,
     Gate.OPEN_COSMIC_BED: lambda rules: rules.rarity_gates.open_cosmic_bed,
     Gate.BIRTH_WORLD: lambda rules: rules.rarity_gates.birth_world,

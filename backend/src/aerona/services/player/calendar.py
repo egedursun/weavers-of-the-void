@@ -219,7 +219,7 @@ async def set_ley_strength(scope: PlayerScope, command: LeyStrength) -> Effect:
 async def dissolve_ley(scope: PlayerScope, command: LeyLineTarget) -> Effect:
     line = await time_control.dissolve_ley(scope.session, command.line_id)
     first, second = await _name(scope, line.region_a_id), await _name(scope, line.region_b_id)
-    return Effect(f"The ley line between {first} and {second} is unmade; the land may weave it again if its magic runs strong.", line.region_a_id)
+    return Effect(f"The ley line between {first} and {second} is unmade; the land may form it again if its magic runs strong.", line.region_a_id)
 
 
 @player_action("ley:work", ActionKind.OTHER)

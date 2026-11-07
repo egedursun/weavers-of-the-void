@@ -2,7 +2,10 @@
 
 1. **No unneeded tests.** Never run the full backend suite, broad `-k` sweeps, Playwright or e2e on your own initiative. Per change: ruff, mypy, lint-imports, `scripts/check_source_rules.py`, `npx tsc -b`, eslint, plus at most the few test files that directly cover the touched code. If those pass, commit, push and deploy. Run broad suites only when the user explicitly asks.
 
-2. **Prompts never constrain the lore.** Any text the LLM sees (prompt templates, schema descriptions, tool texts, `prompts/data`, `catalog` lines, chronicle strings, frontend placeholders and suggestion lists) must let the world become any kind of lore:
+2. **Prompts never constrain the lore.** Whatever seed, god or world the player creates (sea myth, vampires, cosmic myth, anything), the lore must be able to go there. A world that drifts to the same images whatever the seed is a defect. Images from the player's seed, typed values and the world's own canon are fine, and the model inventing images is fine; our text pushing imagery is not. Any text the LLM sees (prompt templates, schema descriptions, tool texts and results, `prompts/data`, `catalog` lines, chronicle strings, genesis template seeds, frontend placeholders and suggestion lists) must let the world become any kind of lore:
+   - No imagery through exemplification: no example lists, sample sentences, canned narrative lines or template seeds that carry images (lamps, threads, salt, bone…).
+   - No figurative metaphors in our own wording (weave, woven, thread, stitch, web, tapestry, "threads of fate"): use plain verbs and nouns.
+   - Never fix drift by constraining the model (bans on its own images, anti-monoculture rules): fix our text.
    - No quotas or mandates: forced conflict, rivalry, tension, rebellion, grudges, or mandatory hidden truths or prices.
    - No fixed creator persona or hostile default.
    - No gendered defaults: no he, his, father or brother.
@@ -65,7 +68,7 @@ These rules are enforced mechanically, and they bind Claude as much as anyone.
   Only the user may lift it, by creating `.claude/allow-broad-tests`; Claude never creates that file.
 - **Git pre-commit** (`.githooks/pre-commit`, enabled with `git config core.hooksPath .githooks`). It runs on every commit:
   - `scripts/check_source_rules.py`: no comments or docstrings (rule 4).
-  - `scripts/check_prompt_bias.py`: gendered defaults, conflict quotas, forced strangeness, steering examples and hardcoded image media in LLM-facing and UI text (rule 2).
+  - `scripts/check_prompt_bias.py`: gendered defaults, conflict quotas, forced strangeness, steering examples (including bare example lists), borrowed imagery and hardcoded image media in LLM-facing and UI text (rule 2). A newly found imagery family is added to it in the same change, with a case in `backend/tests/unit/test_prompt_bias_rules.py`.
   - `scripts/check_wiring.py`: enum types never used, tables never read, player actions missing from the catalog, catalog actions with no frontend caller (rule 3). It also flags any table an engine phase writes that has no compliance-catalogue row with registered god levers (rule 6). It also fails when a table is kept out of the generic book records with no dedicated renderer, when a kind of node is missing from the book's owners, or when the book or the Codex stops rendering typed sections for entities, sons, foreign gods, worlds, stars, the Creator or the records appendix (rule 7).
   - `scripts/check_control.py` (rule 6). It finds automatically, by reading the code, every table whose rows the engine changes over time. Each must be creatable, editable and deletable by a god lever that the frontend reaches, and whose code (followed through its calls) really touches that table. Several cases are covered without per-table levers:
     - Profile tables (one row per thing) through `profile:set`.

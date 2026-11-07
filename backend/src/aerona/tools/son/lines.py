@@ -21,7 +21,7 @@ GIFT_REFUSED = Line("tools.son.gift_refused", "{community} refused {son}'s trans
 GIFT_BOND = "{son}'s gift"
 GIFT = Line("tools.son.gift", '{son} gave {sibling} a gift: {notes}. "{words}"')
 PRAYER = Line("tools.son.prayer", '{son} prayed to the Creator{request}: "{message}"')
-BOND = Line("tools.son.bond", "{son} wove a bond: {source} {relation} {target}{description}.")
+BOND = Line("tools.son.bond", "{son} declared a bond: {source} {relation} {target}{description}.")
 CREATED = Line("tools.son.created", "{son}{partner} created {type:an}: {name}{subtype}{location}.{effects}")
 CROWDED_LAND = Line("tools.son.crowded_land", "{son} opened a new {type} for mortals squeezed into crowded lands: {name}.")
 FIRST_LIFE = Line(
@@ -72,7 +72,7 @@ RAISE_DISTRICT = Line("tools.son.raise_district", "{son} raised {district:an} in
 DESIGN_DISTRICT = Line("tools.son.design_district", "{son} devised the {design}, a new kind of {base} for the cities of the world.")
 REORDER_SEASONS = Line("tools.son.reorder_seasons", "{son} turned the year of {world}: its seasons now run {order}.")
 SEAL = Line("tools.son.seal", "{son} sealed the road between {first} and {second}; the two worlds' leakage decreased.")
-STITCH = Line("tools.son.stitch", "{son} stitched the tear of the {world} world ({how}); leakage {old} to {new}.")
+STITCH = Line("tools.son.stitch", "{son} sealed the leak of the {world} world ({how}); leakage {old} to {new}.")
 OUTER_BARGAIN = Line("tools.son.outer_bargain", "{son} bargained with the nameless thing. Their siblings saw another shadow over them.")
 OUTER_THREAD = Line(
     "tools.son.outer_thread",

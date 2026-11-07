@@ -174,7 +174,7 @@ async def _announce_hidden(ctx: TickContext, route: RouteRow, knower: bool, sage
         credit = f" {sage.name} sensed it in a dream."
     elif not knower and son is not None:
         credit = f" {son.name} heard the passage tremble."
-    tail = " The route is severed for now; it will open when its stitch closes." if severed else ""
+    tail = " The route is severed for now; it will open again in time." if severed else ""
     await note(
         ctx,
         f"A hidden route was revealed between {first} and {second}: {method_label(route.method)}.{credit}{tail}",
@@ -534,9 +534,9 @@ async def _closed_route(ctx: TickContext, journey: JourneyRow, traveller: Entity
                 journey,
                 ctx.epoch,
                 JourneyEventKind.VOID_STORM,
-                f"the route snapped; the expedition is waiting for the stitch to close (Epoch {status.opens_epoch})",
+                f"the route snapped; the expedition is waiting for it to reopen (Epoch {status.opens_epoch})",
             )
-            resume = f"it will continue when the stitch closes at the start of Epoch {status.opens_epoch}"
+            resume = f"it will continue when the route reopens at the start of Epoch {status.opens_epoch}"
             text = f"{traveller.name}'s expedition to {target} waits at the mouth of the broken road; {resume}."
             await note(ctx, text, key="travel.waiting", ids=[traveller.id])
         return

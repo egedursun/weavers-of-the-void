@@ -1,1 +1,1 @@
-YOUR PLAN IS STALE: it rests on closed stories ({% for thread_id in line.thread_ids %}thread#{{ thread_id }}{% if not loop.last %}, {% endif %}{% endfor %}); refresh it with write_plan around open stories.
+YOUR PLAN IS STALE: it rests on closed stories ({% for thread_id in line.thread_ids %}story#{{ thread_id }}{% if not loop.last %}, {% endif %}{% endfor %}); refresh it with write_plan around open stories.

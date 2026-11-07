@@ -125,7 +125,7 @@ def _shut_until(route: RouteRow) -> tuple[RouteState, str, int | None] | None:
         return None
     if route.closure is RouteClosure.SCORCHED:
         return RouteState.SCORCHED, f"A stellar flare scorched the sail route shut; it cools by the start of Epoch {until}.", until
-    return RouteState.SEVERED, f"A storm severed the route; its stitch closes at the start of Epoch {until}.", until
+    return RouteState.SEVERED, f"A storm severed the route; it reopens at the start of Epoch {until}.", until
 
 
 def _closed_status(route: RouteRow, forgotten: Collection[int]) -> tuple[RouteState, str, int | None] | None:
@@ -599,7 +599,7 @@ async def connect_world(ctx: TickContext, world: WorldRow, target_id: int | None
         ctx.rules,
         ctx.rng("stitch"),
         ctx.epoch,
-        RouteSpec(chosen.id, world.id, method, known=False, description="The cosmos's own stitch: a passage nobody knows yet."),
+        RouteSpec(chosen.id, world.id, method, known=False, description="A passage the cosmos opened by itself, known to nobody yet."),
     )
 
 
@@ -699,9 +699,9 @@ async def sever_route(
     opener = f"{by} unleashed a void storm{f' ({reason})' if reason else ''}: " if by else "A void storm "
     verb = "it swallowed" if by else "swallowed"
     hidden_word = "hidden " if was_hidden else ""
-    text = f"{opener}{verb} the {hidden_word}route between {first} and {second}; its stitch closes at the start of Epoch {ctx.epoch + span}"
+    text = f"{opener}{verb} the {hidden_word}route between {first} and {second}; it reopens at the start of Epoch {ctx.epoch + span}"
     if lost or waiting:
-        text += f"; of the {lost + waiting} expeditions on the road, {lost} were lost, {waiting} survived and wait for the stitch to close"
+        text += f"; of the {lost + waiting} expeditions on the road, {lost} were lost, {waiting} survived and wait for it to reopen"
     text += "."
     if revealed:
         text += " As the route snapped, light leaking through the crack betrayed it: it is no longer hidden; it can be used again once the storm calms."
@@ -721,17 +721,17 @@ async def stitch_route(ctx: TickContext, route_id: int, by: str) -> str:
         raise ValidationFailedError("This route is already open.")
     forgotten = await forgotten_world_ids(session)
     if route.world_a_id in forgotten or route.world_b_id in forgotten:
-        raise ValidationFailedError("A world at the end of this route was forgotten; the route inside the mist cannot be stitched.")
+        raise ValidationFailedError("A world at the end of this route was forgotten; the route inside the mist cannot be reopened.")
     if route.method is TravelMethod.DIVINE_BRIDGE and route.builder_son_id is not None:
         builder = await session.get(SonRow, route.builder_son_id)
         if builder is None or builder.status is not SonStatus.ACTIVE:
-            raise ValidationFailedError("The bridge's builder fell; the bridge collapsed with them, nothing remains to stitch.")
+            raise ValidationFailedError("The bridge's builder fell; the bridge collapsed with them, nothing remains to reopen.")
     severed = route.temp_closed_until_epoch is not None or route.closure in (RouteClosure.SEVERED, RouteClosure.SNAPPED)
     route.active = True
     route.closure = None
     route.temp_closed_until_epoch = None
     route.temp_open_until_epoch = None
-    action = "re-stitched the severed route" if severed else "broke the seal of the sealed route and reopened it"
+    action = "reopened the severed route" if severed else "broke the seal of the sealed route and reopened it"
     text = f"{by} {action} between {await world_name(session, route.world_a_id)} and {await world_name(session, route.world_b_id)}."
     await ctx.chronicle(ChronicleKind.COSMIC, text, template_key="travel.route_stitched", feed_category=FeedCategory.GATE)
     await session.flush()

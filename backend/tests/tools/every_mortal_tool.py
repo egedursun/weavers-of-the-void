@@ -97,7 +97,7 @@ MORTAL_CASES: dict[str, Case] = {
     "build_ship": folk(plain(name="Road Barge", description=TEXT[:200]), seafarers),
     "launch_expedition": folk(plain(route_id=route), seafarers, prelude=(Step("build_ship", plain(name="Road Barge", description=TEXT[:200]), by_people),)),
     "tame_species": folk(plain(species_id=species, how="with salt and patience")),
-    "weave_chimera": named(
+    "merge_species": named(
         plain(a_id=species, b_id=created("species"), name="Lamp Hare", goal="a guide for night roads"), combined(second_species, knows_biomancy)
     ),
     "bind_spirit": named(plain(spirit_id=created("spirit"), target_id=created("item")), combined(spirit, item, knows_magic)),

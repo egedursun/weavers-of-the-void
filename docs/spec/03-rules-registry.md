@@ -101,7 +101,7 @@ Each gate stores a rarity ordinal 0..5 (tunable). Defaults:
 | can_al | take_life | 2 rare | `can_al` (and only if `DEATH.take_life_per_epoch > 0`) |
 | kapi_muhurle | seal_gate | 3 epic | `kapi_muhurle` |
 | yildiz_tutustur | rekindle_star | 3 epic | `yildiz_tutustur` (only if a dead/black/remnant star exists) |
-| sizinti_dik | stitch_leak | 3 epic | `sizinti_dik` |
+| sizinti_dik | seal_leak | 3 epic | `sizinti_dik` |
 | efsanevi_araclar | legendary_tools | 4 legendary | `donustur` (transform), `yok_et` (destroy), `evlat_dogur` (bear child) |
 | yatak_ac | open_cosmic_bed | 4 legendary | `yatak_ac` (open cosmic travel-resource deposit) |
 | dunya_dogur | birth_world | 4 legendary | `dunya_dogur` |
@@ -1133,7 +1133,7 @@ Old namespace `OTESI` · 73 rows · defined in `src/otesi.js` · also read by `s
 | oathbreaker_relation_loss | mahkeme_iliski | 10 | 0 | 100 | The Beyond | Relation loss between the oathbreaker and its neighbours |
 | immortality_threshold | olumsuzluk_esik | 120 | 0 | 200 | The Beyond | Intellect + charisma total of a mortal who can attain immortality |
 | immortality_son_wrath | olumsuzluk_ofke | 4 | 0 | 100 | The Beyond | Wrath gain of the sons when a mortal becomes immortal |
-| restitch_route_cost | dik_bedel | 40 | 0 | 500 | Cosmic actions | Cost for the god to re-stitch a severed or sealed route (essence) |
+| reopen_route_cost | dik_bedel | 40 | 0 | 500 | Cosmic actions | Cost for the god to re-stitch a severed or sealed route (essence) |
 | sever_route_cost | kopar_bedel | 40 | 0 | 500 | Cosmic actions | Cost for the god to sever a route for a few epochs (essence) |
 | sever_route_epochs | kopar_sure | 3 | 1 | 50 | Cosmos and travel | Epochs a route severed by the god stays closed (if no duration is given) |
 | cult_default_followers | tarikat_murit_varsayilan | 50 | 1 | 100,000 | The Beyond | Followers assumed for a cult with no recorded follower count (soul harvest) |
@@ -1686,8 +1686,8 @@ Old namespace `YARATIK` · 66 rows · defined in `src/yaratik.js` · also read b
 | chimera_hp_cap | kimera_can_tavan | 1000 | 1 | 100,000 | Creatures | Maximum HP of a chimera |
 | chimera_trait_cap | kimera_ozellik_tavan | 3 | 0 | 10 | Creatures | Maximum traits a chimera can carry |
 | chimera_danger_bonus | kimera_tehlike | 10 | 0 | 100 | Creatures | Extra danger of a chimera |
-| chimera_weave_chance | kimera_dokuma_sans | 6 | 0 | 100 | Creatures | A community or mortal knowing biomancy weaves a chimera on its own (% per epoch) |
-| chimera_weave_distance | kimera_dokuma_mesafe | 4 | 0 | 99 | Creatures | Farthest distance of the spontaneous chimera weaver to the species (steps) |
+| chimera_merge_chance | kimera_dokuma_sans | 6 | 0 | 100 | Creatures | A community or mortal knowing biomancy weaves a chimera on its own (% per epoch) |
+| chimera_merge_distance | kimera_dokuma_mesafe | 4 | 0 | 99 | Creatures | Farthest distance of the spontaneous chimera weaver to the species (steps) |
 | radiant_danger_drop | isik_tehlike | 2 | 0 | 100 | Creatures | Light-radiating species lowers region danger (per epoch) |
 | radiant_fertility_gain | isik_bereket | 2 | 0 | 100 | Creatures | Light-radiating species raises region fertility (per epoch) |
 | mind_reader_victims | akil_okuyan_tavan | 3 | 0 | 100 | Creatures | Maximum neighbours whose sanity a mind-reading or soul-eating species gnaws |
@@ -3797,7 +3797,7 @@ Old namespace `NADIRLIK_KAPI` · 40 rows · defined in `src/rules.js`. Minimum s
 | spirit_cloak | ruh_kapla | 1 | 0 | 5 | Rarity tiers | Spirit cloaking: lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic) |
 | hang_extinguish_star | yildiz_as | 5 | 0 | 5 | Rarity tiers | Hanging and extinguishing stars: lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic) |
 | interworld_treaty | antlasma | 2 | 0 | 5 | Rarity tiers | Inter-world treaty: lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic) |
-| stitch_leak | sizinti_dik | 3 | 0 | 5 | Rarity tiers | Stitching a leak: lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic) |
+| seal_leak | sizinti_dik | 3 | 0 | 5 | Rarity tiers | Stitching a leak: lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic) |
 | open_cosmic_bed | yatak_ac | 4 | 0 | 5 | Rarity tiers | Opening a cosmic bed (channel): lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic) |
 | foreign_god_war | yabanci_savas | 2 | 0 | 5 | Rarity tiers | War with a foreign god (tool and spontaneous war): lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic) |
 | birth_world | dunya_dogur | 4 | 0 | 5 | Rarity tiers | Birthing a world: lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic) |
@@ -4017,7 +4017,7 @@ Old namespace `OGUL_ARAC` · 192 rows · defined in `src/tools.js` · also read 
 | gift_per_epoch | armagan_tur | 1 | 0 | 20 | Son tools | Maximum gifts a son can give in one epoch |
 | prayer_per_epoch | dua_tur | 1 | 0 | 20 | Son tools | Maximum prayers a son can make to his father in one epoch |
 | holy_world_per_epoch | kutsal_dunya_tur | 1 | 0 | 20 | Son tools | Maximum holy-world declarations a son can make in one epoch |
-| stitch_per_epoch | sizinti_dik_tur | 1 | 0 | 20 | Son tools | Maximum rifts a son can stitch in one epoch |
+| seal_per_epoch | sizinti_dik_tur | 1 | 0 | 20 | Son tools | Maximum rifts a son can stitch in one epoch |
 | free_living_creation | canli_bedava | 1 | 0 | 1 | Son tools | The epoch's first living creation costs no action (1 on, 0 off) |
 | link_cost | bag_bedel | 2 | 0 | 100 | Son tools | create_link (bag_kur) cost (essence) |
 | link_per_epoch | bag_tavan | 3 | 0 | 50 | Son tools | create_link per epoch |
@@ -4051,9 +4051,9 @@ Old namespace `OGUL_ARAC` · 192 rows · defined in `src/tools.js` · also read 
 | treaty_cost | antlasma_oz | 20 | 0 | 500 | Son tools | make_treaty (antlasma_yap) cost (essence) |
 | treaty_ap | antlasma_ap | 1 | 1 | 5 | Son tools | make_treaty action cost |
 | treaty_relation | antlasma_iliski | 15 | 0 | 100 | Son tools | Contribution of an inter-world treaty to the two communities' relation |
-| stitch_cost | sizinti_oz | 35 | 0 | 500 | Son tools | stitch_leak (sizinti_dik) cost (essence) |
-| stitch_ap | sizinti_ap | 1 | 1 | 5 | Son tools | stitch_leak action cost |
-| stitch_leak_reduction | sizinti_azalis | 25 | 1 | 100 | Son tools | Leak reduction from stitch_leak |
+| seal_cost | sizinti_oz | 35 | 0 | 500 | Son tools | seal_leak (sizinti_dik) cost (essence) |
+| seal_ap | sizinti_ap | 1 | 1 | 5 | Son tools | seal_leak action cost |
+| seal_leak_reduction | sizinti_azalis | 25 | 1 | 100 | Son tools | Leak reduction from seal_leak |
 | open_deposit_cost | yatak_oz | 60 | 0 | 1000 | Son tools | open_deposit (yatak_ac) cost (essence) |
 | open_deposit_ap | yatak_ap | 2 | 1 | 5 | Son tools | open_deposit action cost |
 | location_suggestions | konum_oneri | 5 | 0 | 50 | Son tools | Number of locations suggested on a missing-location creation error |

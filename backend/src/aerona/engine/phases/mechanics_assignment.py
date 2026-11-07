@@ -45,7 +45,7 @@ async def _announce(ctx: TickContext, entity: EntityRow) -> None:
     if entity.natural_law is not None and entity.natural_law is not NaturalLaw.NONE:
         await note(
             ctx,
-            f"{entity.name} wove itself into the workings of the world: {NATURAL_LAWS[entity.natural_law].effect}",
+            f"{entity.name} became part of the workings of the world: {NATURAL_LAWS[entity.natural_law].effect}",
             key="mechanics.law",
             ids=[entity.id],
             kind=ChronicleKind.COSMIC_LAW,

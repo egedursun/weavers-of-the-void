@@ -24,9 +24,9 @@ from aerona.engine.cosmos.fauna import (
     DANGER_KEY,
     SPECIES_STAT_KEYS,
     common_child,
+    merge_species,
     species_danger,
     traits_of,
-    weave_chimera,
 )
 from aerona.engine.cosmos.resources import set_mechanics, travel_resource
 from aerona.engine.cosmos.sanity import sanity_of, shift_sanity
@@ -47,7 +47,7 @@ from aerona.engine.primitives.stats import FOLLOWERS_KEY, POPULATION_KEY, put_st
 from aerona.rules.registry import Rules
 
 VICTIM_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.MORTAL})
-WEAVER_TYPES = frozenset({*COMMUNITY_TYPES, EntityType.MORTAL})
+MAKER_TYPES = frozenset({*COMMUNITY_TYPES, EntityType.MORTAL})
 FERTILITY_KEY = "fertility"
 MARTIALITY_KEY = "martiality"
 MAGIC_KEY = "magic"
@@ -223,7 +223,7 @@ async def hybridize(ctx: TickContext) -> EntityRow | None:
                 continue
             if await common_child(ctx.session, first.id, second.id):
                 continue
-            hybrid = await weave_chimera(
+            hybrid = await merge_species(
                 ctx,
                 first,
                 second,
@@ -240,34 +240,32 @@ async def _weaving_candidate(ctx: TickContext, atlas: RegionAtlas) -> tuple[Enti
     knowledge = await KnowledgeMap.load(ctx.session)
     megafauna = await flags_by_entity(ctx.session, EntityFlag.MEGAFAUNA)
     species = [item for item in await _species(ctx) if item.id not in megafauna]
-    reach = ctx.rules.creatures.chimera_weave_distance
-    for weaver in await canon(ctx.session, WEAVER_TYPES):
-        if not knowledge.knows(weaver.id, KnowledgeBranch.BIOMANCY):
+    reach = ctx.rules.creatures.chimera_merge_distance
+    for maker in await canon(ctx.session, MAKER_TYPES):
+        if not knowledge.knows(maker.id, KnowledgeBranch.BIOMANCY):
             continue
         near = sorted(
-            (item for item in species if item.world_id == weaver.world_id and atlas.distance(weaver.id, item.id) <= reach),
-            key=lambda item: (atlas.distance(weaver.id, item.id), item.id),
+            (item for item in species if item.world_id == maker.world_id and atlas.distance(maker.id, item.id) <= reach),
+            key=lambda item: (atlas.distance(maker.id, item.id), item.id),
         )
         for index, first in enumerate(near):
             for second in near[index + 1 :]:
                 if not await common_child(ctx.session, first.id, second.id):
-                    return weaver, first, second
+                    return maker, first, second
     return None
 
 
 async def weave_spontaneously(ctx: TickContext) -> EntityRow | None:
     candidate = await _weaving_candidate(ctx, await RegionAtlas.load(ctx.session))
-    if candidate is None or not ctx.rng("weave").chance(ctx.rules.creatures.chimera_weave_chance):
+    if candidate is None or not ctx.rng("weave").chance(ctx.rules.creatures.chimera_merge_chance):
         return None
-    weaver, first, second = candidate
-    chimera = await weave_chimera(
-        ctx, first, second, weaver=weaver, description=f"{weaver.name} joined {first.name} and {second.name} with biomancy and wove a chimera."
+    maker, first, second = candidate
+    chimera = await merge_species(
+        ctx, first, second, maker=maker, description=f"{maker.name} joined {first.name} and {second.name} with biomancy and made a chimera."
     )
-    await BondRepository(ctx.session).connect(BondDraft(weaver.id, chimera.id, BondKind.TAMED, ctx.epoch, "its own weaving"))
-    text = f"{weaver.name} wove a chimera from {first.name} and {second.name}: {chimera.name}."
-    await ctx.chronicle(
-        ChronicleKind.CHIMERA, text, template_key="creatures.chimera_woven", entity_ids=[weaver.id, chimera.id], feed_category=FeedCategory.LIFE
-    )
+    await BondRepository(ctx.session).connect(BondDraft(maker.id, chimera.id, BondKind.TAMED, ctx.epoch, "its own making"))
+    text = f"{maker.name} merged {first.name} and {second.name} into a chimera: {chimera.name}."
+    await ctx.chronicle(ChronicleKind.CHIMERA, text, template_key="creatures.chimera_woven", entity_ids=[maker.id, chimera.id], feed_category=FeedCategory.LIFE)
     return chimera
 
 
@@ -284,12 +282,12 @@ async def chimera_escapes(ctx: TickContext) -> int:
         if not makers or not rng.probability(stat_or(chimera, DANGER_KEY, creatures.chimera_default_danger) / creatures.chimera_escape_divisor):
             continue
         await repository.add_flag(chimera.id, EntityFlag.ESCAPED, ctx.epoch)
-        weaver = await ctx.session.get(EntityRow, makers[0].source_node_id)
-        if weaver is not None and weaver.status is EntityStatus.CANON:
-            await BondRepository(ctx.session).connect(BondDraft(chimera.id, weaver.id, BondKind.HUNTS, ctx.epoch, "escaped and returned"))
+        maker = await ctx.session.get(EntityRow, makers[0].source_node_id)
+        if maker is not None and maker.status is EntityStatus.CANON:
+            await BondRepository(ctx.session).connect(BondDraft(chimera.id, maker.id, BondKind.HUNTS, ctx.epoch, "escaped and returned"))
             for key in (POPULATION_KEY, FOLLOWERS_KEY):
-                scale_stat(ctx.rules, weaver, key, (PERCENT - creatures.chimera_escape_population_loss_pct) / PERCENT)
-        await note(ctx, f"{chimera.name} got out of control and turned on those who wove it.", key="creatures.chimera_escaped", ids=[chimera.id])
+                scale_stat(ctx.rules, maker, key, (PERCENT - creatures.chimera_escape_population_loss_pct) / PERCENT)
+        await note(ctx, f"{chimera.name} got out of control and turned on those who made it.", key="creatures.chimera_escaped", ids=[chimera.id])
         count += 1
     return count
 
@@ -695,10 +693,10 @@ async def cross_species(session: AsyncSession, rules: Rules, first_id: int, seco
         raise ValidationFailedError("A chimera needs two different species.")
     ctx = await manual_context(session, "chimera", rules, key=f"{first_id}:{second_id}")
     first, second = await _require_species(session, first_id), await _require_species(session, second_id)
-    weaver = await session.get(EntityRow, weaver_id) if weaver_id is not None else None
-    chimera = await weave_chimera(ctx, first, second, weaver=weaver)
-    if weaver is not None:
-        await BondRepository(session).connect(BondDraft(weaver.id, chimera.id, BondKind.TAMED, ctx.epoch, "its own weaving"))
+    maker = await session.get(EntityRow, weaver_id) if weaver_id is not None else None
+    chimera = await merge_species(ctx, first, second, maker=maker)
+    if maker is not None:
+        await BondRepository(session).connect(BondDraft(maker.id, chimera.id, BondKind.TAMED, ctx.epoch, "its own making"))
     return chimera
 
 

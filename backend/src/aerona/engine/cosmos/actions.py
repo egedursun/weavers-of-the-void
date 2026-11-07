@@ -56,7 +56,7 @@ async def cleanse_leak(ctx: TickContext, world_id: int, by: str) -> str:
     if expelled and being is not None:
         await retire(ctx.session, being, ctx.epoch, f"Epoch {ctx.epoch}: the creator pushed it outside.", status=EntityStatus.DESTROYED)
     tail = " and the thing that had come in was pushed outside" if expelled else ""
-    text = f"{by} stitched {world.name}'s tear; the leak receded{tail}."
+    text = f"{by} sealed {world.name}'s leak; it receded{tail}."
     await ctx.chronicle(ChronicleKind.CREATOR_HAND, text, template_key="cosmos.leak_cleansed", world_id=world.id, feed_category=FeedCategory.LEAK)
     await ctx.session.flush()
     return text

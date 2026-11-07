@@ -35,7 +35,7 @@ CREATION_FIELDS: dict[str, str] = {
     **LINK_FIELDS,
     "image_prompt": IMAGE_PROMPT_FIELD,
     "tags": "Short tags",
-    "thread_id": "Which open story (thread#) this creation advances",
+    "story_id": "Which open story (story#) this creation advances",
     "co_creator_id": "To create together with a covenanted sibling, their id: they pay half the cost, the creation belongs to both of you",
     "location_id": (
         "The id of the entity it is inside ({{ container_labels | join(', ') }})"
@@ -134,7 +134,7 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "second_id": "For war_between: the second side",
         "archetype": "For ruler_of: the kind of legend the coming ruler must fit (" + ARCHETYPES + ")",
         "sky_kind": "For sky_event: the sign in the sky (" + SKY_KINDS + ")",
-        "event_kind": "For within_epochs: the kind of happening foretold (a war, a plague, a flood...)",
+        "event_kind": "For within_epochs: the kind of happening foretold (a war, a birth, a flood, a crowning...)",
         "within_epochs": "In how many ages it must come true; if it does not, the seer is mocked",
         "consequence": "What it means when it comes true: " + CONSEQUENCES,
         "consequence_id": "Whom the consequence touches (the one who will rule, the city that will fall)",
@@ -375,7 +375,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"message": "Your prayer", "request": "essence, blessing, permission, vengeance, forgiveness or none"},
     ),
     T.MAKE_BOND: ToolText(
-        "You declare a narrative bond between two existing things ({{ weavable_bonds | join(', ') }}). It densifies the world's web. Worship, enmity, knowledge, ownership, "
+        "You declare a narrative bond between two existing things ({{ weavable_bonds | join(', ') }}). It adds a connection to the world. Worship, enmity, knowledge, ownership, "
         "captivity and alliance are not made with this tool; they have their own tools. Needs {{ rules.son_tools.link_cost }} essence, does not spend an action, "
         "{{ rules.son_tools.link_per_epoch }} per age.",
         {
@@ -708,10 +708,10 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "terms": "The treaty's condition, its oath",
         },
     ),
-    T.STITCH_LEAK: ToolText(
-        "You stitch the tears of the world you are on: the intensity of what leaks in from outside (leakage) decreases by {{ rules.son_tools.stitch_leak_reduction }}. "
-        "{{ rules.son_tools.stitch_per_epoch }} per age. {{ rules.son_tools.stitch_cost }} essence, {{ rules.son_tools.stitch_ap }} action.",
-        {"how": "With what and how you stitch the tear"},
+    T.SEAL_LEAK: ToolText(
+        "You seal the leaks of the world you are on: the intensity of what leaks in from outside (leakage) decreases by {{ rules.son_tools.seal_leak_reduction }}. "
+        "{{ rules.son_tools.seal_per_epoch }} per age. {{ rules.son_tools.seal_cost }} essence, {{ rules.son_tools.seal_ap }} action.",
+        {"how": "With what and how you seal the leak"},
     ),
     T.OPEN_COSMIC_BED: ToolText(
         "On the world you are on, you open a bed of the cosmic travel resource in a region or place: mortals can claim it and travel between worlds. The cosmos's travel "

@@ -226,7 +226,7 @@ SON_CASES: dict[str, Case] = {
     "hang_star": Case(plain(name="Lamplight", description="A small steady star over the valley.")),
     "extinguish_star": Case(plain(star_id=created("star"), reason="its light has run its course"), home_star),
     "talk_to_foreign_god": Case(plain(god_id=god, words="Let us speak of the roads between us.")),
-    "stitch_leak": Case(plain(how="by lamplight and thread"), leaking_world),
+    "seal_leak": Case(plain(how="by lamplight and prayer"), leaking_world),
     "bargain_with_outsider": Case(plain(outsider_id=created("outsider"), request="a road through the far dark"), outsider),
     "birth_world": Case(plain(inspiration="A world of long valleys and lamplit roads.")),
     "raise_district": Case(plain(settlement_id=settlement, kind="market", reason=REASON)),

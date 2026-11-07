@@ -87,6 +87,6 @@ class ModifiersRules:
 
 @dataclass(frozen=True)
 class IncidentRules:
-    thread_chain_min: int = rule(4, 2, 50, RuleGroup.INTERCONNECTION, "Length of a chain of causes at which the engine opens a story thread")
+    thread_chain_min: int = rule(4, 2, 50, RuleGroup.INTERCONNECTION, "Length of a chain of causes at which the engine opens a story")
     chain_depth: int = rule(12, 2, 200, RuleGroup.INTERCONNECTION, "Most links of a cause chain followed back from an incident")
-    threads_per_epoch: int = rule(2, 0, 20, RuleGroup.INTERCONNECTION, "Most story threads the engine opens from cause chains in one epoch")
+    threads_per_epoch: int = rule(2, 0, 20, RuleGroup.INTERCONNECTION, "Most stories the engine opens from cause chains in one epoch")

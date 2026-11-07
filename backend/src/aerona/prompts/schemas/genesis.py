@@ -39,7 +39,7 @@ class GenesisCosmicResourceOutput(OutputModel):
     name: str
     description: str
     rule: str = Field(description="How it is extracted, how it is used, what it makes possible")
-    side_effect: str = Field(description="The price of long use: mutation, memory loss, the colour of the eyes…")
+    side_effect: str = Field(description="What long use does to those who use it, if anything; write none if it does nothing")
     region_index: int = Field(ge=0, description="Index into the regions list: where its first deposit lies")
     image_prompt: str = Field(description="English image prompt. {{ image_prompt_rules }}")
 

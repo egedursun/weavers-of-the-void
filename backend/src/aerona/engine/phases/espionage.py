@@ -111,7 +111,7 @@ async def found_networks(ctx: TickContext) -> int:
         await ctx.session.flush()
         await recruit(ctx, network)
         founded += 1
-        await _note(ctx, f"{owner.name} began weaving a secret agent network inside {target.name}.", "espionage.network_founded", (owner.id, target.id))
+        await _note(ctx, f"{owner.name} began building a secret agent network inside {target.name}.", "espionage.network_founded", (owner.id, target.id))
     return founded
 
 

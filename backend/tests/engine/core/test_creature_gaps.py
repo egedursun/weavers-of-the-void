@@ -10,7 +10,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.models.entity_stats import SpeciesStats, SpiritStats
-from aerona.engine.cosmos.fauna import weave_chimera
+from aerona.engine.cosmos.fauna import merge_species
 from aerona.engine.cosmos.sanity import sanity_of
 from aerona.engine.phases.creatures import (
     chimera_escapes,
@@ -114,21 +114,21 @@ async def test_species_in_different_lands_do_not_hybridize(session: AsyncSession
 
 
 async def biomancer(session: AsyncSession, world: CoreWorld, location_id: int) -> EntityRow:
-    weaver = await mortal(session, "Orsa", world, location_id, intellect=90)
+    maker = await mortal(session, "Orsa", world, location_id, intellect=90)
     lore = await knowledge(session, world, "Flesh Craft", KnowledgeBranch.BIOMANCY)
-    await bond(session, weaver.id, lore.id, BondKind.KNOWS)
-    return weaver
+    await bond(session, maker.id, lore.id, BondKind.KNOWS)
+    return maker
 
 
 async def test_biomancer_weaves_a_chimera_on_its_own(session: AsyncSession, world: CoreWorld) -> None:
-    ctx = await manual_context(session, "weave", tuned_rules(creatures={"chimera_weave_chance": 100}))
+    ctx = await manual_context(session, "weave", tuned_rules(creatures={"chimera_merge_chance": 100}))
     await beast(session, world, "Marshstrider")
-    weaver = await biomancer(session, world, world.regions[2].id)
+    maker = await biomancer(session, world, world.regions[2].id)
     chimera = await weave_spontaneously(ctx)
     assert chimera is not None and await has_flag(session, chimera.id, EntityFlag.CHIMERA)
     repository = BondRepository(session)
-    assert await repository.exists_between(weaver.id, chimera.id, BondKind.PRODUCED)
-    assert await repository.exists_between(weaver.id, chimera.id, BondKind.TAMED)
+    assert await repository.exists_between(maker.id, chimera.id, BondKind.PRODUCED)
+    assert await repository.exists_between(maker.id, chimera.id, BondKind.TAMED)
     kinds = list(await session.scalars(select(ChronicleRow.kind).where(ChronicleRow.template_key == "creatures.chimera_woven")))
     assert kinds == [ChronicleKind.CHIMERA]
 
@@ -136,10 +136,10 @@ async def test_biomancer_weaves_a_chimera_on_its_own(session: AsyncSession, worl
 async def test_no_spontaneous_weaving_without_biomancy_or_when_chance_is_zero(session: AsyncSession, world: CoreWorld) -> None:
     await beast(session, world, "Marshstrider")
     await mortal(session, "Plain", world, world.regions[2].id)
-    certain = await manual_context(session, "weave", tuned_rules(creatures={"chimera_weave_chance": 100}))
+    certain = await manual_context(session, "weave", tuned_rules(creatures={"chimera_merge_chance": 100}))
     assert await weave_spontaneously(certain) is None
     await biomancer(session, world, world.regions[2].id)
-    never = await manual_context(session, "weave", tuned_rules(creatures={"chimera_weave_chance": 0}))
+    never = await manual_context(session, "weave", tuned_rules(creatures={"chimera_merge_chance": 0}))
     assert await weave_spontaneously(never) is None
     assert "creatures.chimera_woven" not in await keys(session)
 
@@ -147,12 +147,12 @@ async def test_no_spontaneous_weaving_without_biomancy_or_when_chance_is_zero(se
 async def test_woven_chimera_escapes_and_turns_on_its_weavers(session: AsyncSession, world: CoreWorld) -> None:
     ctx = await manual_context(session, "escape", tuned_rules(creatures={"chimera_escape_divisor": 1}))
     other = await beast(session, world, "Marshstrider")
-    weaver = await settlement(session, "Weavers Rest", world, world.regions[0], population=1000)
-    chimera = await weave_chimera(ctx, world.species, other, weaver=weaver)
+    maker = await settlement(session, "Weavers Rest", world, world.regions[0], population=1000)
+    chimera = await merge_species(ctx, world.species, other, maker=maker)
     assert await chimera_escapes(ctx) == 1
     assert await has_flag(session, chimera.id, EntityFlag.ESCAPED)
-    assert await BondRepository(session).exists_between(chimera.id, weaver.id, BondKind.HUNTS)
-    assert stat(weaver, "population") == 1000 * (100 - ctx.rules.creatures.chimera_escape_population_loss_pct) // 100
+    assert await BondRepository(session).exists_between(chimera.id, maker.id, BondKind.HUNTS)
+    assert stat(maker, "population") == 1000 * (100 - ctx.rules.creatures.chimera_escape_population_loss_pct) // 100
     assert "creatures.chimera_escaped" in await keys(session)
     assert await chimera_escapes(ctx) == 0
 
@@ -160,7 +160,7 @@ async def test_woven_chimera_escapes_and_turns_on_its_weavers(session: AsyncSess
 async def test_chimera_without_a_weaver_never_escapes(session: AsyncSession, world: CoreWorld) -> None:
     ctx = await manual_context(session, "escape", tuned_rules(creatures={"chimera_escape_divisor": 1}))
     other = await beast(session, world, "Marshstrider")
-    await weave_chimera(ctx, world.species, other)
+    await merge_species(ctx, world.species, other)
     assert await chimera_escapes(ctx) == 0
 
 

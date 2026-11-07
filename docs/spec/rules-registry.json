@@ -2125,7 +2125,7 @@
  },
  {
   "namespace": "BEYOND",
-  "key": "restitch_route_cost",
+  "key": "reopen_route_cost",
   "old_namespace": "OTESI",
   "old_key": "dik_bedel",
   "default": 40,
@@ -7585,7 +7585,7 @@
  },
  {
   "namespace": "CREATURES",
-  "key": "chimera_weave_chance",
+  "key": "chimera_merge_chance",
   "old_namespace": "YARATIK",
   "old_key": "kimera_dokuma_sans",
   "default": 6,
@@ -7597,7 +7597,7 @@
  },
  {
   "namespace": "CREATURES",
-  "key": "chimera_weave_distance",
+  "key": "chimera_merge_distance",
   "old_namespace": "YARATIK",
   "old_key": "kimera_dokuma_mesafe",
   "default": 4,
@@ -29389,7 +29389,7 @@
  },
  {
   "namespace": "RARITY_GATES",
-  "key": "stitch_leak",
+  "key": "seal_leak",
   "old_namespace": "NADIRLIK_KAPI",
   "old_key": "sizinti_dik",
   "default": 3,
@@ -31525,7 +31525,7 @@
  },
  {
   "namespace": "SON_TOOLS",
-  "key": "stitch_per_epoch",
+  "key": "seal_per_epoch",
   "old_namespace": "OGUL_ARAC",
   "old_key": "sizinti_dik_tur",
   "default": 1,
@@ -31933,38 +31933,38 @@
  },
  {
   "namespace": "SON_TOOLS",
-  "key": "stitch_cost",
+  "key": "seal_cost",
   "old_namespace": "OGUL_ARAC",
   "old_key": "sizinti_oz",
   "default": 35,
   "min": 0,
   "max": 500,
   "group": "Son tools",
-  "label": "stitch_leak (sizinti_dik) cost (essence)",
+  "label": "seal_leak (sizinti_dik) cost (essence)",
   "module": "src/tools.js"
  },
  {
   "namespace": "SON_TOOLS",
-  "key": "stitch_ap",
+  "key": "seal_ap",
   "old_namespace": "OGUL_ARAC",
   "old_key": "sizinti_ap",
   "default": 1,
   "min": 1,
   "max": 5,
   "group": "Son tools",
-  "label": "stitch_leak action cost",
+  "label": "seal_leak action cost",
   "module": "src/tools.js"
  },
  {
   "namespace": "SON_TOOLS",
-  "key": "stitch_leak_reduction",
+  "key": "seal_leak_reduction",
   "old_namespace": "OGUL_ARAC",
   "old_key": "sizinti_azalis",
   "default": 25,
   "min": 1,
   "max": 100,
   "group": "Son tools",
-  "label": "Leak reduction from stitch_leak",
+  "label": "Leak reduction from seal_leak",
   "module": "src/tools.js"
  },
  {

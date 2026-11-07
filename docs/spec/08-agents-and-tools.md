@@ -1101,7 +1101,7 @@ Tool summary:
 | 60 | yildiz_sondur | extinguish_star | Mythic (yildiz_as) | sondur_ap (2) | OGUL_KOZMIK.yildiz_sondur() | – |
 | 61 | yabanci_tanriyla_konus | talk_to_foreign_god | a contacted (`temas=1`) awake foreign god exists (any rarity) | 1 | 0 | – |
 | 62 | antlasma_yap | make_interworld_treaty | ≥2 worlds AND Rare (antlasma) | antlasma_ap (1) | antlasma_oz (20) | – |
-| 63 | sizinti_dik | stitch_leak | Epic (sizinti_dik) | sizinti_ap (1) | sizinti_oz (35) | sizinti_dik_tur |
+| 63 | sizinti_dik | seal_leak | Epic (sizinti_dik) | sizinti_ap (1) | sizinti_oz (35) | sizinti_dik_tur |
 | 64 | yatak_ac | open_cosmic_bed | Legendary (yatak_ac) | yatak_ap (2) | yatak_oz (60) | – |
 | 65 | yabanci_tanriyla_savas | war_on_foreign_god | Rare (yabanci_savas) AND contacted awake foreign god exists | ysavas_ap (2) | ysavas_oz (30) | – |
 | 66 | dis_varlikla_pazarlik | bargain_with_outsider | a canonical `dis` (outer being) exists (any rarity) | 0 | 0 (gains) | dis_pazarlik_tur |
@@ -1633,7 +1633,7 @@ NOTE: `tdef.ad === 'Halk'` compares the Turkish display label — use the type k
 - Validation: AP; kayitDurumu a/b; both ∈ {halk, yerlesim, hizip, tarikat} and distinct → "You must choose two separate communities (people, settlement, faction or cult)."; same world → "{a} and {b} are in the same world; this tool is for interworld treaties."; neither on son's world → "One of the communities must be on the world you are on (world#{n}); your hand does not reach two foreign worlds at once."; `yolAcik(a, b)` (a known route with `rotaAcikMi` true – slingshot routes only when aligned) → "There is no known, open road between world#{a} and world#{b}; the treaty's word does not reach the other side."; enemies → "{a} and {b} are enemies; peace must come first."; same bond exists → "There is already {an alliance | trade} between {a} and {b}."; essence.
 - Effect: bond v:a → v:b `{tur}` ("interworld treaty ({me}): {terms}"); `derin.js tIliskiDegistir(a, b, antlasma_iliski, 'interworld treaty', cag)` (community relation); me.oz −= 20; ap −= 1; chronicle 'diplomasi': "{me} established an interworld {alliance | trade} treaty between {a} in the {A} world and {b} in the {B} world: {terms}". Result: "Treaty made: {a} ⇄ {b} ({label}). {status}"
 
-**63. `sizinti_dik` → `stitch_leak`** (AP `sizinti_ap`; Ess `sizinti_oz`; Limit `sizinti_dik_tur`)
+**63. `sizinti_dik` → `seal_leak`** (AP `sizinti_ap`; Ess `sizinti_oz`; Limit `sizinti_dik_tur`)
 - Description: "You stitch the tears of the world you are on: the intensity of what leaks in from outside (leakage) decreases. Once per epoch. {35} essence, {1} action."
 - Input: `nasil` string 10–300 — "With what and how you stitch the tear".
 - Validation: AP; limit → "You already stitched a tear this epoch (World rule OGUL_ARAC.sizinti_dik_tur = {n})."; world missing → "The world you are on is not registered."; `sizinti <= 0` → "There is no tear to stitch on {world} (leakage 0)."; essence.
@@ -1749,9 +1749,9 @@ Groups: "Son tools" (Oğul araçları) unless noted; LN = "Language and names" (
 | treaty_cost | antlasma_oz | 20 | 0 | 500 | Son tools | make_interworld_treaty cost (essence) |
 | treaty_ap | antlasma_ap | 1 | 1 | 5 | Son tools | make_interworld_treaty action cost |
 | treaty_relation | antlasma_iliski | 15 | 0 | 100 | Son tools | Interworld treaty's contribution to the two communities' relation |
-| stitch_leak_cost | sizinti_oz | 35 | 0 | 500 | Son tools | stitch_leak cost (essence) |
-| stitch_leak_ap | sizinti_ap | 1 | 1 | 5 | Son tools | stitch_leak action cost |
-| stitch_leak_reduction | sizinti_azalis | 25 | 1 | 100 | Son tools | Leakage reduction from stitch_leak |
+| seal_leak_cost | sizinti_oz | 35 | 0 | 500 | Son tools | seal_leak cost (essence) |
+| seal_leak_ap | sizinti_ap | 1 | 1 | 5 | Son tools | seal_leak action cost |
+| seal_leak_reduction | sizinti_azalis | 25 | 1 | 100 | Son tools | Leakage reduction from seal_leak |
 | cosmic_bed_cost | yatak_oz | 60 | 0 | 1000 | Son tools | open_cosmic_bed cost (essence) |
 | cosmic_bed_ap | yatak_ap | 2 | 1 | 5 | Son tools | open_cosmic_bed action cost |
 | location_suggestions | konum_oneri | 5 | 0 | 50 | Son tools | Locations suggested on a missing-location error |
@@ -2621,7 +2621,7 @@ Effect: ap−1; success (`skill >= difficulty`): bond me `evcil` (tamed) → spe
 `{species} now serves you.` Failure: with probability `(danger || default)/tame_rage_div` population and hp of me ×`(100 - tame_loss)/100` (clamped 1..SINIR.nufus_tavan)
 and bond species `avlar` → me "enraged by the taming"; chronicle `{me} tried to tame {species} but failed.`; result `{species} did not submit.`
 
-### kimera_dok / weave_chimera — all — 1 action
+### kimera_dok / merge_species — all — 1 action
 "With biomagic you merge two creature species in your world, near you (at most {YARATIK.kimera_dokuma_mesafe} steps), into a single chimera (requires
 biomagic knowledge). The chimera carries the traits of both species; but it may get out of control. 1 action."
 Input `{a_id, b_id, name, goal: 10–300}`. Validation: ap; knows biomagic (`To weave a chimera you must know biomagic.`); two distinct canon species

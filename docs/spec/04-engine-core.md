@@ -1866,7 +1866,7 @@ Availability is decided once when the server is built, from the mortal's type (`
 | gemi_yap | build_ship | halk, yerlesim, hizip | 1 AP | – |
 | sefere_cik | launch_expedition | all | 1 AP | one ongoing journey |
 | evcillestir | tame_species | halk, yerlesim, olumlu, hizip | 1 AP | – |
-| kimera_dok | weave_chimera | all | 1 AP | – |
+| kimera_dok | merge_species | all | 1 AP | – |
 | ruh_kapla | bind_spirit | all | 1 AP | – |
 | kalinti_ara | search_ruins | all | 1 AP | – |
 | sabotaj | sabotage | hizip, tarikat, olumlu | 1 AP | – |
@@ -2230,7 +2230,7 @@ difficulty = (t.tehlike || tame_default_danger) / (tame_danger_divisor/100)
 Success (`skill >= difficulty`): bond `me → species` `evcil` (description = how); chronicle `evcillestirme`: `"{me} tamed {t} ({nasil})."`; returns `"{t} now serves you. Actions left: {ap}"`.
 Failure: with probability `(t.tehlike || tame_default_danger) / tame_attack_divisor`: for `nufus` and `can` (if present) `x = clamp(x × (100 − tame_attack_loss_pct)/100, 1, SINIR.nufus_tavan)`; save; bond `species → me` `avlar` "enraged by the taming attempt". Chronicle `evcillestirme`: `"{me} tried to tame {t} but failed."`; returns `"{t} did not submit. Actions left: {ap}"`.
 
-**kimera_dok** (weave_chimera; all) — *"With biomancy you merge two creature species of your world that are near you (at most {YARATIK.kimera_dokuma_mesafe} steps) into a single chimera (requires biomancy knowledge). The chimera carries traits of both species; but it may slip out of control. 1 action."*
+**kimera_dok** (merge_species; all) — *"With biomancy you merge two creature species of your world that are near you (at most {YARATIK.kimera_dokuma_mesafe} steps) into a single chimera (requires biomancy knowledge). The chimera carries traits of both species; but it may slip out of control. 1 action."*
 Input: `a_id`, `b_id` int; `ad` 2–60; `amac` 10–300.
 Logic: AP; not knows `biyobuyu` → `"You must know biomancy to weave a chimera."`; A, B must be distinct canon species → `"Choose two separate living species."`; for each: different world → `"{t} is in another world; you can only weave species of your own world."`; `derin.mesafe(me, t) > YARATIK.kimera_dokuma_mesafe` (steps through the location chains to the nearest common ancestor; 99 if none) → `"{t} is too far (World rule YARATIK.kimera_dokuma_mesafe = {n} steps)."`; name taken. `ap -= 1`. `k = yaratik.kimeraDok(A, B, {cag, ad, dokuyan: me, aciklama: "{me} merged {A} with {B} through biomancy: {amac}"})` (creates the chimera species; not added to `ctx.yaratimlar`). Bond `me → k` `evcil` "self-woven". Chronicle `kimera`: `"{me} wove a chimera from {A} and {B}: {k}."` ids `[me, A, B, k]`. Returns `"A chimera was born: #{k.id} {k.ad}. Traits: {ozellik:* tags without prefix, or 'none'}. Actions left: {ap}"`.
 

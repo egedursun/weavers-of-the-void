@@ -53,7 +53,7 @@ class HeroesRules:
     hunt_quest_min_danger: int = rule(50, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Minimum species danger for a hunt quest")
     quest_max_distance: int = rule(4, 0, 20, RuleGroup.HEROES_AND_MORTALS, "Maximum distance of the quest target (map steps)")
     quest_weight_hunt: int = rule(3, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Quest selection: hunt weight")
-    quest_weight_thread: int = rule(4, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Quest selection: open story-thread weight")
+    quest_weight_thread: int = rule(4, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Quest selection: open story weight")
     quest_weight_lost_item: int = rule(2, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Quest selection: lost-item weight")
     quest_strong_item_power: int = rule(5, 0, 12, RuleGroup.HEROES_AND_MORTALS, "Power level of a lost item counted as strong")
     quest_weight_strong_item_bonus: int = rule(2, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Quest selection: extra weight of a strong lost item")

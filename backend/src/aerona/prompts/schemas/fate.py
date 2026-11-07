@@ -45,8 +45,8 @@ class ClosedThreadOutput(OutputModel):
 
 
 class AdvancedThreadOutput(OutputModel):
-    id: int = Field(description="thread")
-    record_id: int = Field(description="This age's record that advanced the thread (event, creation or named record)")
+    id: int = Field(description="story")
+    record_id: int = Field(description="This age's record that advanced the story (event, creation or named record)")
     how: str = Field(description="One sentence: how the story took a step")
 
 
@@ -59,7 +59,7 @@ class RewardOutput(OutputModel):
     son_id: int
     fame: int = Field(ge=FAME_MIN)
     reason: str = Field(
-        description="Visible in the chronicle: one sentence in the world's lore language; do not write thread or record numbers, mention the story by name"
+        description="Visible in the chronicle: one sentence in the world's lore language; do not write story or record numbers, mention the story by name"
     )
 
 
@@ -81,14 +81,14 @@ class FateJudgmentOutput(OutputModel):
     verdicts: list[VerdictOutput]
     namings: list[NamingItemOutput] = Field(description="For every pending record opened by the world engine")
     fulfilled_prophecies: list[FulfilledProphecyOutput]
-    resolved_thread: ResolvedThreadOutput | None = Field(
+    resolved_story: ResolvedThreadOutput | None = Field(
         default=None, description="The story among the priority candidates (stretched too long or stagnant) that resolved this age"
     )
-    closed_threads: list[ClosedThreadOutput] = Field(description="Threads that close this age")
-    advanced_threads: list[AdvancedThreadOutput] = Field(
-        description="If an event or record of this age concretely advanced an open thread even though nobody gave thread_id"
+    closed_stories: list[ClosedThreadOutput] = Field(description="Stories that close this age")
+    advanced_stories: list[AdvancedThreadOutput] = Field(
+        description="If an event or record of this age concretely advanced an open story even though nobody gave story_id"
     )
-    new_threads: list[NewThreadOutput] = Field(
+    new_stories: list[NewThreadOutput] = Field(
         description="New open stories born this age: unresolved questions, unfinished business, quests, rivalries, bonds or changes still unfolding"
     )
     rewards: list[RewardOutput] = Field(description="Fame for sons who advanced open stories or visibly enriched the world")

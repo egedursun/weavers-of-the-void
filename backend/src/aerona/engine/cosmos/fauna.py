@@ -52,8 +52,8 @@ def _chimera_stat(rng: SeededRandom, rules: Rules, first: EntityRow, second: Ent
     return clamp_int(average + rng.die(creatures.chimera_die) - creatures.chimera_shift, 0, ceiling)
 
 
-async def weave_chimera(
-    ctx: TickContext, first: EntityRow, second: EntityRow, *, name: str | None = None, weaver: EntityRow | None = None, description: str | None = None
+async def merge_species(
+    ctx: TickContext, first: EntityRow, second: EntityRow, *, name: str | None = None, maker: EntityRow | None = None, description: str | None = None
 ) -> EntityRow:
     creatures = ctx.rules.creatures
     rng = ctx.rng("chimera")
@@ -71,7 +71,7 @@ async def weave_chimera(
         RecordSpec(
             name=name or f"{first.name.split()[0]}-{second.name.split()[0]}",
             entity_type=EntityType.SPECIES,
-            body=description or f"A chimera woven by combining {first.name} and {second.name}.",
+            body=description or f"A chimera made by combining {first.name} and {second.name}.",
             stats=stats,
             power=max(first.power_level, second.power_level),
             world_id=first.world_id,
@@ -85,8 +85,8 @@ async def weave_chimera(
     bonds = BondRepository(ctx.session)
     for parent in (first, second):
         await bonds.connect(BondDraft(chimera.id, parent.id, BondKind.DESCENDS_FROM, ctx.epoch, "chimera"))
-    if weaver is not None:
-        await bonds.connect(BondDraft(weaver.id, chimera.id, BondKind.PRODUCED, ctx.epoch, "wove a chimera"))
+    if maker is not None:
+        await bonds.connect(BondDraft(maker.id, chimera.id, BondKind.PRODUCED, ctx.epoch, "made a chimera"))
     return chimera
 
 

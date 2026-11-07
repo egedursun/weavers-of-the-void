@@ -64,7 +64,7 @@ class WorldEffectsRules:
     law_unjust_prosperity_loss: int = rule(2, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Per-epoch prosperity loss of a settlement with unjust laws")
     sorcerer_min_intellect: int = rule(60, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Minimum intellect of a mortal who can be a sorcerer")
     sorcerer_protect_chance: int = rule(
-        50, 0, 100, RuleGroup.HEROES_AND_MORTALS, "A sorcerer weaves a protection (otherwise bounty) spell over their homeland (%)"
+        50, 0, 100, RuleGroup.HEROES_AND_MORTALS, "A sorcerer casts a protection (otherwise bounty) spell over their homeland (%)"
     )
     birth_cap: int = rule(2, 0, 50, RuleGroup.HEROES_AND_MORTALS, "Maximum births from lovers and spouses per epoch")
     inheritance_default_stat: int = rule(40, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Default of an unrecorded mortal stat (inheritance and spirits)")

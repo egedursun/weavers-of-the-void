@@ -356,10 +356,7 @@ async def _time_traveller(ctx: TickContext, thread: ThreadRow, place: EntityRow)
         RecordSpec(
             name=f"The Traveller who came to {place.name}",
             entity_type=EntityType.MORTAL,
-            body=(
-                "Someone who came from the end of this story, from the future. "
-                "They cannot fully tell what they saw; but they seem to know how this thread will end."
-            ),
+            body=("Someone who came from the end of this story, from the future. They cannot fully tell what they saw; but they seem to know how it will end."),
             stats=MortalStats(
                 hp=sky.traveler_hp,
                 strength=clamp_percent(sky.traveler_strength_base + rng.die(sky.traveler_strength_die)),
@@ -393,7 +390,7 @@ async def _echo_prophecy(ctx: TickContext, thread: ThreadRow) -> EntityRow:
         ctx.session,
         ctx.epoch,
         RecordSpec(
-            name=f"The Word that Fell Back (thread {thread.id})",
+            name=f"The Word that Fell Back (story {thread.id})",
             entity_type=EntityType.PROPHECY,
             body="The word of something not yet lived fell into the past; it was found on old stones, as if written before this epoch.",
             stats=ProphecyStats(certainty=clamp_percent(sky.echo_certainty_base + rng.die(sky.echo_certainty_die))),
@@ -404,7 +401,7 @@ async def _echo_prophecy(ctx: TickContext, thread: ThreadRow) -> EntityRow:
     )
     ctx.session.add(ThreadLinkRow(thread_id=thread.id, entity_id=prophecy.id, role=ThreadLinkRole.RELATED, epoch=ctx.epoch))
     await note(
-        ctx, f"The prophecy of something that has not happened yet was found on old stones (thread#{thread.id}).", key="sky.echo_prophecy", ids=[prophecy.id]
+        ctx, f"The prophecy of something that has not happened yet was found on old stones (story#{thread.id}).", key="sky.echo_prophecy", ids=[prophecy.id]
     )
     return prophecy
 
@@ -414,7 +411,7 @@ async def time_echo(ctx: TickContext, thread_id: int | None = None) -> EntityRow
     if thread_id is not None:
         thread = await ctx.session.get(ThreadRow, thread_id)
         if thread is None or thread.status is not ThreadStatus.OPEN:
-            raise ValidationFailedError("No such open thread.")
+            raise ValidationFailedError("No such open story.")
     else:
         thread = rng.pick_or_none(list(await ctx.session.scalars(select(ThreadRow).where(ThreadRow.status == ThreadStatus.OPEN).order_by(ThreadRow.id))))
     if thread is None:

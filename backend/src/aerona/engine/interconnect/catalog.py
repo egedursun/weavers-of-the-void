@@ -156,7 +156,7 @@ CORE_MECHANICS = (
         backfill="incidents.roles_backfill: actor and target roles and war causes for old incidents (incidents themselves from migration 26caa21842b3)",
         exposure=Exposure.CONTEXT,
         targets=("mortal", "people", "settlement", "son"),
-        couplings=(Coupling(Subsystem.CULTURE, "long chains of causes open story threads", EdgeKind.TRIGGER, "incidents.thread_chain_min"),),
+        couplings=(Coupling(Subsystem.CULTURE, "long chains of causes open stories", EdgeKind.TRIGGER, "incidents.thread_chain_min"),),
         tables=(IncidentRow.__tablename__, IncidentParticipantRow.__tablename__),
     ),
     Mechanic(
@@ -274,7 +274,7 @@ CORE_MECHANICS = (
         subsystem=Subsystem.MAGIC,
         phases=("ley_lines", "magic_storms", "wizards"),
         surface=Surface(drawer=ENVIRONMENT_SECTION, layer="map-layer-ley"),
-        backfill="ley_lines: lines and nexus are woven from the existing magic of neighbouring regions on the first run",
+        backfill="ley_lines: lines and nexus form from the existing magic of neighbouring regions on the first run",
         templates=("environment.ley_line_formed", "environment.nexus_formed", "tools.son.sever_ley"),
         fields=("function",),
         tables=(LeyLineRow.__tablename__,),

@@ -242,8 +242,8 @@ async def syncretize(session: AsyncSession, rules: Rules, entity_id: int, god_id
         raise ValidationFailedError(f"{entity.name} already worships {god.name}.")
     ctx = await manual_context(session, "syncretize", rules, key=f"{entity_id}:{god_id}")
     patron = await patron_son(session, entity)
-    await adopt_old_god(ctx, entity, god, patron is not None, "the Creator wove the two faiths together")
-    text = f"The Creator wove the faith of {entity.name} together with the old rites of {god.name}."
+    await adopt_old_god(ctx, entity, god, patron is not None, "the Creator joined the two faiths")
+    text = f"The Creator joined the faith of {entity.name} with the old rites of {god.name}."
     await ctx.chronicle(ChronicleKind.CREATOR_HAND, text, template_key="native_faith.syncretized", entity_ids=[entity.id])
     return text
 

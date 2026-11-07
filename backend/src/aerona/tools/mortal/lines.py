@@ -32,7 +32,7 @@ EXPEDITION = Line(
 )
 TAMED = Line("tools.mortal.tamed", "{me} tamed {species} ({how}).")
 TAME_FAILED = Line("tools.mortal.tame_failed", "{me} tried to tame {species} but failed.")
-CHIMERA = Line("tools.mortal.chimera", "{me} wove a chimera from {first} and {second}: {chimera}.")
+CHIMERA = Line("tools.mortal.chimera", "{me} merged {first} and {second} into a chimera: {chimera}.")
 RUIN_KNOWLEDGE = Line("tools.mortal.ruin_knowledge", "{me} rediscovered the forgotten knowledge {knowledge} in the ruins of {ruin}.")
 RUIN_ITEM = Line("tools.mortal.ruin_item", "{me} found and took {item} in the ruins of {ruin}.")
 RUIN_CURSE = Line("tools.mortal.ruin_curse", "{me} awakened something sleeping while digging the ruins of {ruin}; a curse settled upon it.")
@@ -96,7 +96,7 @@ SHIP_SUBTYPE = "ship{suffix}"
 SHIPYARD = "built in its shipyard"
 WITH_VESSEL = ", with {vessel}"
 ENRAGED = "enraged by the taming"
-WOVEN = "woven by itself"
+WOVEN = "made by itself"
 CHIMERA_DESCRIPTION = "{me} joined {first} with {second} by biomancy: {goal}"
 RUIN_FOUND = "found in the ruins of {ruin}"
 CAUGHT_SUFFIX = "; and you were caught"

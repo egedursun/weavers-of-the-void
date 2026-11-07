@@ -239,11 +239,11 @@ async def edit_record(scope: PlayerScope, command: EditRecord) -> Effect:
 async def open_thread(scope: PlayerScope, command: OpenThread) -> Effect:
     text = command.text.strip()
     if not text:
-        raise ValidationFailedError("The thread must have a text.")
+        raise ValidationFailedError("The story must have a text.")
     epoch = await scope.epoch()
     thread = await open_story(scope.session, text, command.related_ids, epoch)
     if thread is None:
-        raise ValidationFailedError("The thread must have a text.")
+        raise ValidationFailedError("The story must have a text.")
     related = await story_entities(scope.session, thread.id)
     creator = await scope.creator()
     ctx = await scope.context("thread_open")
@@ -255,7 +255,7 @@ async def open_thread(scope: PlayerScope, command: OpenThread) -> Effect:
 async def close_thread(scope: PlayerScope, command: CloseThread) -> Effect:
     thread = await scope.session.get(ThreadRow, command.thread_id)
     if thread is None or thread.status is not ThreadStatus.OPEN:
-        raise NotFoundError("No such open thread.")
+        raise NotFoundError("No such open story.")
     await close_story(scope.session, thread, command.how.strip() or THREAD_DEFAULT_CLOSING, await scope.epoch())
     creator = await scope.creator()
     ctx = await scope.context("thread_close")
@@ -278,7 +278,7 @@ class EditEpoch(Command):
 async def advance_thread(scope: PlayerScope, command: AdvanceThread) -> Effect:
     thread = await scope.session.get(ThreadRow, command.thread_id)
     if thread is None or thread.status is not ThreadStatus.OPEN:
-        raise NotFoundError("No such open thread.")
+        raise NotFoundError("No such open story.")
     entity = await guards.entity(scope.session, command.entity_id)
     if not await advance_story(scope.session, thread, entity.id, await scope.epoch()):
         raise ValidationFailedError(f"{entity.name} already moved this story forward.")

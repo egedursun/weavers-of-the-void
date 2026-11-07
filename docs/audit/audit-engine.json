@@ -2712,15 +2712,15 @@
     "id": "CRE-009",
     "verdict": "UNTESTED",
     "evidence": "backend/src/aerona/engine/phases/creatures.py:207 hybridize",
-    "test": "backend/tests/engine/cosmos/test_actions.py (cross_species via weave_chimera)",
-    "note": "Behaviour present; dedicated test missing. hybridize() (same-location natural hybrids, one per epoch) has no test; the shared weave_chimera and manual cross_species are tested."
+    "test": "backend/tests/engine/cosmos/test_actions.py (cross_species via merge_species)",
+    "note": "Behaviour present; dedicated test missing. hybridize() (same-location natural hybrids, one per epoch) has no test; the shared merge_species and manual cross_species are tested."
   },
   {
     "id": "CRE-010",
     "verdict": "UNTESTED",
     "evidence": "backend/src/aerona/engine/phases/creatures.py:248 weave_spontaneously",
     "test": "none",
-    "note": "Behaviour present; dedicated test missing. Spontaneous biomancer weaving (weave_spontaneously, _weaving_candidate) is untested; mortal tool and weave_chimera are tested."
+    "note": "Behaviour present; dedicated test missing. Spontaneous biomancer weaving (weave_spontaneously, _weaving_candidate) is untested; mortal tool and merge_species are tested."
   },
   {
     "id": "CRE-011",
@@ -2732,7 +2732,7 @@
   {
     "id": "CRE-012",
     "verdict": "IMPLEMENTED",
-    "evidence": "backend/src/aerona/engine/cosmos/fauna.py:87 weave_chimera",
+    "evidence": "backend/src/aerona/engine/cosmos/fauna.py:87 merge_species",
     "test": "backend/tests/engine/cosmos/test_life_and_beyond.py::test_mutation_and_chimera",
     "note": "Manual cross_species / mortal tool."
   },

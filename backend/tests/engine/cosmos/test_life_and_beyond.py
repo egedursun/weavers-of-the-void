@@ -16,7 +16,7 @@ from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.enums.world import StarType, WorldType
 from aerona.domain.models.entity_stats import KnowledgeStats, MortalStats, PeopleStats, SpeciesStats, SpiritStats, StructureStats
 from aerona.engine.context import TickContext
-from aerona.engine.cosmos.fauna import stowaway, weave_chimera
+from aerona.engine.cosmos.fauna import merge_species, stowaway
 from aerona.engine.cosmos.quests import legendary_quests, open_quest, settle_quest
 from aerona.engine.phases.afterlife import archive_burned, cosmic_court, mirror_worlds, pursuit_of_immortality, soul_bind, soul_descent
 from aerona.engine.phases.creatures import _mutation_chance, danger_reversion, predation_pressure, predator_bonds, species_mutations, starving_predators
@@ -32,7 +32,7 @@ async def test_mutation_and_chimera(session: AsyncSession, cosmos: Cosmos, rules
     assert await species_mutations(ctx) == 1
     assert EntityFlag.MUTATED in await EntityRepository(session).flags(beast.id)
     other = await make_entity(session, "Owlstag", EntityType.SPECIES, SpeciesStats(strength=30, danger=20), world_id=cosmos.home.id)
-    chimera = await weave_chimera(ctx, beast, other)
+    chimera = await merge_species(ctx, beast, other)
     assert chimera.engine_kind is EngineKind.CHIMERA and EntityFlag.CHIMERA in await EntityRepository(session).flags(chimera.id)
     assert await BondRepository(session).exists_between(chimera.id, beast.id, BondKind.DESCENDS_FROM)
 

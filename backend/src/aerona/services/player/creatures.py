@@ -74,7 +74,7 @@ async def split(scope: PlayerScope, command: PeopleTarget) -> Effect:
 @player_action("species:chimera", ActionKind.WEAVE_CHIMERA)
 async def chimera(scope: PlayerScope, command: Chimera) -> Effect:
     woven = await cross_species(scope.session, scope.rules, command.first_id, command.second_id, command.weaver_id)
-    return Effect(f"{woven.name} was woven.", woven.id, created_ids=(woven.id,))
+    return Effect(f"{woven.name} was made.", woven.id, created_ids=(woven.id,))
 
 
 @player_action("species:trail", ActionKind.MEGAFAUNA_TRAIL)

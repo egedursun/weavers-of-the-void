@@ -59,7 +59,7 @@ class ContextRules:
         120, 0, 10000, RuleGroup.CONTEXT_BUDGETS, "Context budget: minimum space for a non-fitting line to be included truncated (characters)"
     )
     memory_named_worshippers: int = rule(12, 0, 1000, RuleGroup.CONTEXT_BUDGETS, "Son memory: worshippers shown by name (the rest as a count)")
-    son_threads: int = rule(6, 1, 100, RuleGroup.CONTEXT_BUDGETS, "Son: open story threads shown")
+    son_threads: int = rule(6, 1, 100, RuleGroup.CONTEXT_BUDGETS, "Son: open stories shown")
     fate_chronicle_lines: int = rule(24, 1, 400, RuleGroup.CONTEXT_BUDGETS, "Fate: lines of recent events")
     mortal_context_chars: int = rule(12000, 2000, 200000, RuleGroup.CONTEXT_BUDGETS, "Mortal: entire context (characters)")
     memory_creations_chars: int = rule(1600, 200, 50000, RuleGroup.CONTEXT_BUDGETS, "Son memory: creations (characters)")

@@ -86,7 +86,7 @@ async def reopen_severed(ctx: TickContext) -> int:
                 feed=FeedCategory.GATE,
             )
         else:
-            await note(ctx, f"The route severed by the void was stitched again (route#{route.id}).", key="horror.route_stitched", feed=FeedCategory.GATE)
+            await note(ctx, f"The route severed by the void opened again (route#{route.id}).", key="horror.route_stitched", feed=FeedCategory.GATE)
     return reopened
 
 

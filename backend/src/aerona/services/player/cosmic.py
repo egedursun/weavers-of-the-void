@@ -171,7 +171,7 @@ async def route_action(scope: PlayerScope, command: RouteCommand) -> Effect:
         message = f"The route was severed until epoch {result.severed_until}."
         return Effect(message, route.id, essence_spent=spent, kind=ActionKind.SEVER_ROUTE, tool=tool, values={"until": result.severed_until})
     if command.action is RouteAction.STITCH:
-        spent = guards.charge(creator, scope.rules.beyond.restitch_route_cost, "beyond.restitch_route_cost")
+        spent = guards.charge(creator, scope.rules.beyond.reopen_route_cost, "beyond.reopen_route_cost")
         message = await stitch_route(ctx, route.id, creator.name)
         return Effect(message, route.id, essence_spent=spent, kind=ActionKind.STITCH_ROUTE, tool=tool)
     if route.known:

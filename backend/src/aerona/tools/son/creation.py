@@ -139,7 +139,7 @@ async def _naming(call: SonCall, args: CreationInput) -> tuple[str, str | None]:
 
 
 async def _thread(call: SonCall, plan: CreationPlan) -> None:
-    thread_id = plan.args.thread_id
+    thread_id = plan.args.story_id
     if thread_id is None:
         return
     thread = await call.session.get(ThreadRow, thread_id)

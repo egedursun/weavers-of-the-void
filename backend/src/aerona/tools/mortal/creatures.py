@@ -14,7 +14,7 @@ from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, Ent
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.hits import Harm
-from aerona.engine.cosmos.fauna import weave_chimera as weave
+from aerona.engine.cosmos.fauna import merge_species as merge
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.phases.afterlife import soul_bind
 from aerona.engine.phases.society_support.knowledge import teach
@@ -84,8 +84,8 @@ async def tame_species(call: MortalCall, args: TameInput) -> str:
     return result(MortalResult.NOT_TAMED, name=species.name)
 
 
-async def weave_chimera(call: MortalCall, args: ChimeraInput) -> str:
-    steps = call.rules.creatures.chimera_weave_distance
+async def merge_species(call: MortalCall, args: ChimeraInput) -> str:
+    steps = call.rules.creatures.chimera_merge_distance
     if not await i_know(call, KnowledgeBranch.BIOMANCY):
         fail(MortalResult.BIOMANCY_REQUIRED)
     if args.a_id == args.b_id:
@@ -99,7 +99,7 @@ async def weave_chimera(call: MortalCall, args: ChimeraInput) -> str:
             fail(MortalResult.SPECIES_TOO_FAR, name=species.name, steps=steps)
     await name_free(call, args.name)
     description = lines.CHIMERA_DESCRIPTION.format(me=call.me.name, first=first.name, second=second.name, goal=args.goal)
-    chimera = await weave(call.tick, first, second, name=args.name, weaver=call.me, description=description)
+    chimera = await merge(call.tick, first, second, name=args.name, maker=call.me, description=description)
     await BondRepository(call.session).connect(BondDraft(call.me.id, chimera.id, BondKind.TAMED, call.epoch, lines.WOVEN))
     call.remember_creation(chimera.id)
     call.target(chimera.id)
@@ -197,7 +197,7 @@ def specs() -> list[ToolSpec[MortalCall, Any]]:
     standard = mortal_standard_action
     return [
         ToolSpec(MortalToolId.TAME_SPECIES, mortal, TameInput, ToolMeta(ActionKind.TAME, standard), tame_species),
-        ToolSpec(MortalToolId.WEAVE_CHIMERA, mortal, ChimeraInput, ToolMeta(ActionKind.WEAVE_CHIMERA, standard), weave_chimera),
+        ToolSpec(MortalToolId.MERGE_SPECIES, mortal, ChimeraInput, ToolMeta(ActionKind.WEAVE_CHIMERA, standard), merge_species),
         ToolSpec(MortalToolId.BIND_SPIRIT, mortal, BindSpiritInput, ToolMeta(ActionKind.BIND_SPIRIT, standard), bind_spirit),
         ToolSpec(MortalToolId.SEARCH_RUINS, mortal, RuinsInput, ToolMeta(ActionKind.SEARCH_RUINS, standard), search_ruins),
     ]

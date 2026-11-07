@@ -35,7 +35,7 @@ def revelation_constraints(rules: Rules) -> list[Constraint]:
 def judgment_constraints(rules: Rules) -> list[Constraint]:
     fate = rules.fate
     return [
-        ArrayBounds(("advanced_threads",), max_items=fate.thread_advance_cap),
+        ArrayBounds(("advanced_stories",), max_items=fate.thread_advance_cap),
         NumberBounds(("rewards", ITEMS, "fame"), 1, max(1, fate.reward_cap)),
         ArrayBounds(("facts",), max_items=fate.canon_facts_max),
         ArrayBounds(("words",), max_items=fate.words_per_epoch_cap),

@@ -86,9 +86,9 @@ def test_runtime_constraints_shape_the_schema() -> None:
         PromptId.FATE_JUDGMENT_USER,
         RULES,
         [
-            OmitField(("resolved_thread",)),
-            ArrayBounds(("closed_threads",), min_items=2),
-            ArrayBounds(("new_threads",), max_items=1),
+            OmitField(("resolved_story",)),
+            ArrayBounds(("closed_stories",), min_items=2),
+            ArrayBounds(("new_stories",), max_items=1),
             EnumValues(("words", ITEMS, "language_id"), (20, 21)),
             RequireField(("facts",)),
             StringLength(("verdicts", ITEMS, "rationale"), 5),
@@ -96,9 +96,9 @@ def test_runtime_constraints_shape_the_schema() -> None:
         ],
     )
     properties = schema["properties"]
-    assert "resolved_thread" not in properties
-    assert properties["closed_threads"]["minItems"] == 2
-    assert properties["new_threads"]["maxItems"] == 1
+    assert "resolved_story" not in properties
+    assert properties["closed_stories"]["minItems"] == 2
+    assert properties["new_stories"]["maxItems"] == 1
     assert properties["words"]["items"]["properties"]["language_id"]["enum"] == [20, 21]
     assert "facts" in schema["required"]
     assert properties["rewards"]["items"]["properties"]["fame"]["maximum"] == 3

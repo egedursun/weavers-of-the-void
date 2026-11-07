@@ -57,7 +57,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"target_id": "The mortal you challenge", "kind": "The contest", "stake": "What is at stake"},
     ),
     T.CHOOSE_METHOD: ToolText(
-        "You choose how your community does one kind of work: how it farms, fishes, fells, mines, mills, weaves, smelts, tans, brews, distils, "
+        "You choose how your community does one kind of work: how it farms, fishes, fells, mines, mills, makes cloth, smelts, tans, brews, distils, "
         "dresses stone, burns charcoal, keeps food from spoiling, lights its evenings, butchers, makes cheese or presses fruit. A method needs its techniques, knowledge and energy; it changes output, "
         "quality, tool wear and pollution, and a method that needs fewer hands puts some out of work. 1 action.",
         {"method": "The method to take up"},
@@ -258,11 +258,11 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.DISCOVER_RESOURCE: ToolText(
-        "You discover a new resource on your land (ore vein, healing herb, sacred spring, bone bed…) and own it. 1 action, "
+        "You discover a new resource on your land (ore vein, healing herb, sacred spring, clay pit…) and own it. 1 action, "
         "{{ " + M + ".discover_resource_per_epoch }} per age.",
         {
             "name": NAME_FIELD,
-            "subtype": "ore vein, healing herb, sacred spring, bone bed…",
+            "subtype": "ore vein, healing herb, sacred spring, clay pit…",
             "description": DESCRIPTION_FIELD,
             "location_id": "Your own region or a place in your region",
             "domain": "One of: {{ domains | join(', ') }}",
@@ -370,7 +370,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.BUILD_SHIP: ToolText(
         "You build an inter-world ship (requires shipbuilding knowledge). Its power depends on your craft, your mining and your metallurgy. 1 action.",
-        {"name": NAME_FIELD, "subtype": "light-sail, bone-hulled, generation ship…", "description": DESCRIPTION_FIELD, "image_prompt": IMAGE_PROMPT_FIELD},
+        {"name": NAME_FIELD, "subtype": "the kind of ship, in your own words", "description": DESCRIPTION_FIELD, "image_prompt": IMAGE_PROMPT_FIELD},
     ),
     T.LAUNCH_EXPEDITION: ToolText(
         "You organize an expedition to another world along a known route: to found a colony, open trade, explore, conquer or go on pilgrimage. The journey may take several "
@@ -391,10 +391,10 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "Dangerous and intelligent species are hard. 1 action.",
         {"species_id": "The species' id", "how": "How you tame it"},
     ),
-    T.WEAVE_CHIMERA: ToolText(
-        "With biomancy you merge two creature species in your world, near you (at most {{ rules.creatures.chimera_weave_distance }} steps), into a single chimera (requires "
+    T.MERGE_SPECIES: ToolText(
+        "With biomancy you merge two creature species in your world, near you (at most {{ rules.creatures.chimera_merge_distance }} steps), into a single chimera (requires "
         "biomancy knowledge). The chimera carries the traits of both species; but it may get out of control. 1 action.",
-        {"a_id": "The first species", "b_id": "The second species", "name": NAME_FIELD, "goal": "Why you weave it"},
+        {"a_id": "The first species", "b_id": "The second species", "name": NAME_FIELD, "goal": "Why you make it"},
     ),
     T.BIND_SPIRIT: ToolText(
         "With magic you bind a free spirit in your own or a neighbouring region to an item, ship or monument there (requires magic knowledge). The item becomes ensouled; "
@@ -434,7 +434,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "second_id": "For a war: the second side",
             "archetype": "For who will rule: the kind of legend the coming ruler must fit",
             "sky_kind": "For a sign in the sky: which sign",
-            "event_kind": "For a foretold happening: what kind (war, plague, flood...)",
+            "event_kind": "For a foretold happening: what kind (war, birth, flood, crowning...)",
             "within_epochs": "In how many ages it must come true; if it does not, you are mocked and your cult loses heart",
             "consequence": "What it means when it comes true: {{ prophecy_consequences }}",
             "consequence_id": "Whom the consequence touches",

@@ -23,7 +23,7 @@ ELLIPSIS = "…"
 
 TOOLS: MappingProxyType[str, tuple[str, ActionKind]] = MappingProxyType(
     {
-        "ag_onar": ("stitch_leak", ActionKind.CLEANSE_LEAK),
+        "ag_onar": ("seal_leak", ActionKind.CLEANSE_LEAK),
         "ahit_et": ("swear_covenant", ActionKind.COVENANT),
         "armagan_ver": ("give_gift", ActionKind.INFLUENCE),
         "babaya_dua": ("pray_to_creator", ActionKind.CHAT),

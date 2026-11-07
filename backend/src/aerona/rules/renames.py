@@ -13,6 +13,14 @@ RENAMED_RULES: Mapping[RuleKey, RuleKey] = MappingProxyType(
         ("mobilisation", "martial_pct"): ("levies", "martial_pct"),
         ("mobilisation", "cohesion_pct"): ("levies", "cohesion_pct"),
         ("mobilisation", "harvest_pct"): ("levies", "harvest_pct"),
+        ("son_tools", "stitch_per_epoch"): ("son_tools", "seal_per_epoch"),
+        ("son_tools", "stitch_cost"): ("son_tools", "seal_cost"),
+        ("son_tools", "stitch_ap"): ("son_tools", "seal_ap"),
+        ("son_tools", "stitch_leak_reduction"): ("son_tools", "seal_leak_reduction"),
+        ("creatures", "chimera_weave_chance"): ("creatures", "chimera_merge_chance"),
+        ("creatures", "chimera_weave_distance"): ("creatures", "chimera_merge_distance"),
+        ("beyond", "restitch_route_cost"): ("beyond", "reopen_route_cost"),
+        ("rarity_gates", "stitch_leak"): ("rarity_gates", "seal_leak"),
     }
 )
 

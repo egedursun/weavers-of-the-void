@@ -62,7 +62,7 @@ async def test_manual_services(session: AsyncSession, cosmos: Cosmos, rules: Rul
     journey = await send_expedition(session, rules, people.id, route.id, JourneyIntent.COLONY, population=500)
     assert isinstance(journey, JourneyRow)
     assert "storm" in await sever_by_hand(session, rules, route.id, "Aeron", duration=2)
-    assert "re-stitched" in await stitch_by_hand(session, rules, route.id, "Aeron")
+    assert "reopened the severed route" in await stitch_by_hand(session, rules, route.id, "Aeron")
     beast = await make_entity(session, "Graveling", EntityType.SPECIES, SpeciesStats(strength=50, danger=40), world_id=other.id, location_id=region.id)
     deer = await make_entity(session, "Glimdeer", EntityType.SPECIES, SpeciesStats(strength=20, danger=10), world_id=other.id, location_id=region.id)
     mutant = await force_mutation(session, rules, beast.id)

@@ -165,7 +165,7 @@ LEGEND_DESCRIPTION = "{story}."
 STORY_CREATOR = "When {killer} reached for {victim}'s life, {creator}'s hand descended from above the sky; no son could take a life devoted to the creator"
 STORY_PATRON = "{patron} stepped in front of {victim}; {killer}'s death command struck a sibling's shield and scattered"
 STORY_ITEM = "The {item} that {victim} carried drew death's breath onto itself and cracked; its owner survived"
-STORY_CHOSEN = "{victim} was one of the chosen; the threads of fate have not let go of them yet"
+STORY_CHOSEN = "{victim} was one of the chosen; fate has not let go of them yet"
 STORY_PROTECTED = "{victim} was protected; death's hand slid off them"
 STORY_FATES = (
     "That night {victim} heard death's footsteps in a dream and fled before dawn",

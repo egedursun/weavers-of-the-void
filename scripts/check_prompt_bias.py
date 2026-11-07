@@ -33,6 +33,7 @@ class Pattern:
     rule: str
     regex: re.Pattern[str]
     prompts_only: bool = False
+    prose_only: bool = False
 
 
 PATTERNS = (
@@ -59,10 +60,20 @@ PATTERNS = (
     Pattern(
         "steering example",
         re.compile(
-            r"\b(e\.g\.|for example|for instance|such as)[^.;:]{0,40}\b(salt|ash|bone|blood|death)\b",
+            r"\b(e\.g\.|for example|for instance|such as)[^.;:]{0,40}\b(salt|ash|bone|blood|death)\b|"
+            r"\b(salt|ash|bone|blood|death)[\w-]*[^.;:{}]{0,40}…",
             re.IGNORECASE,
         ),
         prompts_only=True,
+    ),
+    Pattern(
+        "borrowed imagery",
+        re.compile(
+            r"\b(wove|woven|weave|weaves|weaved|weaving (?:a|an|the|together|into|itself)|unthread\w*|stitch(?:es|ed|ing)?|re-?stitch\w*|"
+            r"spindles?|spun|threads?|tapestry of|web of|world's web|strung like|shuttle|weft)\b",
+            re.IGNORECASE,
+        ),
+        prose_only=True,
     ),
     Pattern(
         MEDIUM_RULE,
@@ -118,6 +129,15 @@ def frontend_strings(path: Path) -> list[tuple[int, str]]:
     return list(enumerate(path.read_text(encoding="utf-8").splitlines(), start=1))
 
 
+JINJA = re.compile(r"\{[{%#].*?[}%#]\}")
+
+
+def prose(path: Path, value: str) -> str:
+    if path.suffix == ".j2":
+        return JINJA.sub(" ", value)
+    return value if path.suffix == ".py" and any(character.isspace() for character in value.strip()) else ""
+
+
 def matches(path: Path, line: int, value: str, in_prompts: bool) -> list[Finding]:
     if MORTAL_KINSHIP.search(value):
         return []
@@ -125,7 +145,7 @@ def matches(path: Path, line: int, value: str, in_prompts: bool) -> list[Finding
         Finding(path, line, pattern.rule, match.group(0))
         for pattern in PATTERNS
         if (in_prompts or not pattern.prompts_only) and not (pattern.rule == MEDIUM_RULE and path in STYLE_HOMES)
-        for match in [pattern.regex.search(value)]
+        for match in [pattern.regex.search(prose(path, value) if pattern.prose_only else value)]
         if match
     ]
 

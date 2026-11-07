@@ -2224,7 +2224,7 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (),
     ),
     ComplianceRow(
-        "Control: threads",
+        "Control: stories",
         ("threads", "thread_links"),
         (),
         ("thread:open", "thread:advance", "thread:close"),

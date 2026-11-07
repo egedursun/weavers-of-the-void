@@ -45,7 +45,7 @@ NAMING LANGUAGES (each world has its own sound system; a record is named and jud
 {% for item in wars %}#{{ item.id }} {{ item.name }} ({{ item.clashes }} clashes){% if not loop.last %}; {% endif %}{% endfor %}
 {%- endmacro %}
 {% macro thread_line(thread) -%}
-thread#{{ thread.id }} (Age {{ thread.age }}{% if thread.worlds %}, {{ thread.worlds | join(" + ") }}{% endif %}{% if thread.advanced %}, advanced {{ thread.advanced }} times, last Age {{ thread.last_age if thread.last_age is not none else thread.age }}{% else %}, never advanced{% endif %}): {{ thread.text }}{% if thread.related_ids %} [related: {% for related in thread.related_ids %}#{{ related }}{% if not loop.last %}, {% endif %}{% endfor %}]{% endif %}
+story#{{ thread.id }} (Age {{ thread.age }}{% if thread.worlds %}, {{ thread.worlds | join(" + ") }}{% endif %}{% if thread.advanced %}, advanced {{ thread.advanced }} times, last Age {{ thread.last_age if thread.last_age is not none else thread.age }}{% else %}, never advanced{% endif %}): {{ thread.text }}{% if thread.related_ids %} [related: {% for related in thread.related_ids %}#{{ related }}{% if not loop.last %}, {% endif %}{% endfor %}]{% endif %}
 {%- endmacro %}
 {% macro chronicle_rows(rows) -%}
 {% for row in rows %}

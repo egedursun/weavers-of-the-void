@@ -148,9 +148,7 @@ class RarityGatesRules:
     interworld_treaty: int = rule(
         2, 0, 5, RuleGroup.RARITY_TIERS, "Inter-world treaty: lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
     )
-    stitch_leak: int = rule(
-        3, 0, 5, RuleGroup.RARITY_TIERS, "Stitching a leak: lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
-    )
+    seal_leak: int = rule(3, 0, 5, RuleGroup.RARITY_TIERS, "Sealing a leak: lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)")
     open_cosmic_bed: int = rule(
         4, 0, 5, RuleGroup.RARITY_TIERS, "Opening a cosmic bed (channel): lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
     )

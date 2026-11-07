@@ -81,7 +81,7 @@ class BeyondRules:
     oathbreaker_relation_loss: int = rule(10, 0, 100, RuleGroup.THE_BEYOND, "Relation loss between the oathbreaker and its neighbours")
     immortality_threshold: int = rule(120, 0, 200, RuleGroup.THE_BEYOND, "Intellect + charisma total of a mortal who can attain immortality")
     immortality_son_wrath: int = rule(4, 0, 100, RuleGroup.THE_BEYOND, "Wrath gain of the sons when a mortal becomes immortal")
-    restitch_route_cost: int = rule(40, 0, 500, RuleGroup.COSMIC_ACTIONS, "Cost for the god to re-stitch a severed or sealed route (essence)")
+    reopen_route_cost: int = rule(40, 0, 500, RuleGroup.COSMIC_ACTIONS, "Cost for the god to reopen a severed or sealed route (essence)")
     sever_route_cost: int = rule(40, 0, 500, RuleGroup.COSMIC_ACTIONS, "Cost for the god to sever a route for a few epochs (essence)")
     sever_route_epochs: int = rule(3, 1, 50, RuleGroup.COSMOS_AND_TRAVEL, "Epochs a route severed by the god stays closed (if no duration is given)")
     cult_default_followers: int = rule(50, 1, 100000, RuleGroup.THE_BEYOND, "Followers assumed for a cult with no recorded follower count (soul harvest)")

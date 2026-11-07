@@ -142,11 +142,11 @@ async def apply_prophecies(session: AsyncSession, rules: Rules, ruling: FateRuli
 async def apply_threads(session: AsyncSession, rules: Rules, ruling: FateRuling, output: FateJudgmentOutput) -> None:
     epoch = ruling.epoch
     closing: list[ClosedThreadOutput] = []
-    if output.resolved_thread is not None:
-        closing.append(ClosedThreadOutput(id=output.resolved_thread.id, how=output.resolved_thread.how))
-    closing.extend(output.closed_threads)
+    if output.resolved_story is not None:
+        closing.append(ClosedThreadOutput(id=output.resolved_story.id, how=output.resolved_story.how))
+    closing.extend(output.closed_stories)
     closed_ids = {item.id for item in closing}
-    for advanced in output.advanced_threads[: rules.fate.thread_advance_cap]:
+    for advanced in output.advanced_stories[: rules.fate.thread_advance_cap]:
         thread = await session.get(ThreadRow, advanced.id)
         record = await session.get(EntityRow, advanced.record_id)
         how = clean_fate_note(advanced.how)
@@ -165,8 +165,8 @@ async def apply_threads(session: AsyncSession, rules: Rules, ruling: FateRuling,
         await write_line(session, rules, epoch, ChronicleKind.FATE, f"A story closed: {how}".strip(), key="fate.thread_closed", entity_ids=related)
 
 
-async def new_threads(session: AsyncSession, ruling: FateRuling, output: FateJudgmentOutput, limit: int) -> None:
-    for item in output.new_threads[:limit]:
+async def new_stories(session: AsyncSession, ruling: FateRuling, output: FateJudgmentOutput, limit: int) -> None:
+    for item in output.new_stories[:limit]:
         await open_story(session, sanitize(item.text), await single_world_links(session, item.related_ids), ruling.epoch)
 
 
@@ -263,7 +263,7 @@ async def apply_fate_ruling(session: AsyncSession, rules: Rules, ruling: FateRul
         await apply_prophecies(session, rules, ruling, output)
         await apply_threads(session, rules, ruling, output)
         await apply_facts(session, rules, ruling, output)
-        await new_threads(session, ruling, output, rules.fate.new_thread_cap)
+        await new_stories(session, ruling, output, rules.fate.new_thread_cap)
         await apply_words(session, rules, ruling, output)
         await apply_rewards(session, rules, ruling, output)
     debt = ruling.debt

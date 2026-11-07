@@ -163,9 +163,9 @@ async def test_creation_advances_an_open_thread_and_notes_a_closed_one(database:
         await session.flush()
         open_id, closed_id = open_thread.id, closed.id
     toolkit = await son_toolkit(database, realm.son_id, action_points=4)
-    await ok(toolkit, "tell_legend", creation("The Drowned King", realm.people_id, thread_id=open_id))
-    noted = await ok(toolkit, "tell_legend", creation("The Second Tide", realm.people_id, thread_id=closed_id))
-    assert f"thread#{closed_id} is not open" in noted
+    await ok(toolkit, "tell_legend", creation("The Drowned King", realm.people_id, story_id=open_id))
+    noted = await ok(toolkit, "tell_legend", creation("The Second Tide", realm.people_id, story_id=closed_id))
+    assert f"story#{closed_id} is not open" in noted
     async with database.read() as session:
         advanced = await session.get(ThreadRow, open_id)
         links = list(await session.scalars(select(ThreadLinkRow.thread_id)))

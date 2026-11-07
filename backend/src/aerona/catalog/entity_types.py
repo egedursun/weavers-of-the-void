@@ -90,7 +90,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             LAND,
             True,
             _percent(("abundance", "Abundance"), ("value", "Value"), ("might", "Might")),
-            ("ore vein", "magical substance", "healing herb", "sacred spring", "rare crystal", "bone bed"),
+            ("ore vein", "magical substance", "healing herb", "sacred spring", "rare crystal", "clay pit"),
             frozenset({EngineKind.COSMIC_TRAVEL_RESOURCE}),
         ),
         EntityTypeSpec(
@@ -210,7 +210,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset(),
             False,
             _percent(("spread", "Spread"), ("complexity", "Complexity"), ("sacredness", "Sacredness")),
-            ("spoken language", "sacred language", "script", "sign language", "merchant cant", "language of the dead"),
+            ("spoken language", "sacred language", "script", "sign language", "merchant cant", "court language"),
             frozenset({EngineKind.DIALECT, EngineKind.PRIMITIVE_LANGUAGE}),
         ),
         EntityTypeSpec(
@@ -284,7 +284,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset(),
             False,
             _percent(("brightness", "Brightness"), ("influence", "Influence")),
-            ("star", "constellation", "moon", "comet", "wandering light", "wound in the sky"),
+            ("star", "constellation", "moon", "comet", "wandering light", "second sun"),
             frozenset({EngineKind.COMET}),
         ),
         EntityTypeSpec(
@@ -296,7 +296,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             INHABITED,
             False,
             _percent(("renown", "Renown"), ("influence", "Influence")),
-            ("folk song", "epic", "statue", "fresco", "play", "book", "dance", "lament", "weaving"),
+            ("folk song", "epic", "statue", "fresco", "play", "book", "dance", "lament", "mosaic"),
         ),
         EntityTypeSpec(
             EntityType.LAW,
@@ -341,7 +341,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset(),
             False,
             _percent(("certainty", "Certainty")),
-            ("prophecy", "doom sign", "cursed word"),
+            ("prophecy", "omen", "promise"),
             frozenset({EngineKind.ECLIPSE_PROPHECY}),
         ),
         EntityTypeSpec(
@@ -353,7 +353,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             INHABITED,
             False,
             _percent(("severity", "Severity")),
-            ("war", "plague", "flood", "famine", "migration", "uprising", "catastrophe"),
+            ("war", "festival", "discovery", "flood", "migration", "founding", "coronation"),
             frozenset(
                 {
                     EngineKind.WAR,
@@ -396,7 +396,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("armor", "Armour"),
                 StatField("strangeness", "Strangeness"),
             ),
-            ("light-sailer", "bone-hulled ship", "generation ship", "ancient gate", "cosmic mount", "divine bridge"),
+            ("light-sailer", "sailing ship", "generation ship", "ancient gate", "cosmic mount", "divine bridge"),
             frozenset({EngineKind.GHOST_SHIP}),
         ),
         EntityTypeSpec(
@@ -544,7 +544,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("power", "Power", lambda rules: 1, lambda rules: 10),
                 StatField("castings", "Castings", lambda rules: 0, lambda rules: 100000),
             ),
-            ("calling of flame", "rain summoning", "warding of the walls", "raising of the fallen", "reading of omens"),
+            ("blessing of the harvest", "rain summoning", "warding of the walls", "healing of the sick", "reading of omens"),
         ),
         EntityTypeSpec(
             EntityType.BEAST,
@@ -563,7 +563,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
                 StatField("renown", "Renown"),
                 StatField("terror", "Terror"),
             ),
-            ("dragon of the north", "great wolf", "sea serpent", "cave bear", "terror of the marsh"),
+            ("great predator", "sea creature", "flying beast", "burrowing creature", "herd giant"),
         ),
         EntityTypeSpec(
             EntityType.NATURAL_LAW,
@@ -574,7 +574,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             frozenset(),
             False,
             (),
-            ("return of the dead", "price of magic", "order of the seasons"),
+            ("order of the seasons", "how magic works", "what follows death"),
         ),
     )
 }

@@ -24,7 +24,7 @@ TABLE_LABELS: dict[str, str] = {
     "chronicle": "Chronicle",
     "canon_facts": "Fact",
     "threads": "Thread",
-    "thread_links": "Thread link",
+    "thread_links": "Story link",
     "lexemes": "Word",
     "son_relations": "Relation",
     "community_relations": "Community relation",

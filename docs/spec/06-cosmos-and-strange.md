@@ -1356,7 +1356,7 @@ legendary quests, cosmic law, pursuit of immortality. Each runs spontaneously; t
 | mahkeme_iliski | court_relation_loss | 10 | 0 | 100 | Relation loss between oathbreaker and neighbours |
 | olumsuzluk_esik | immortality_threshold | 120 | 0 | 200 | Intellect + charisma of a mortal who can reach immortality |
 | olumsuzluk_ofke | immortality_son_anger | 4 | 0 | 100 | Sons' anger rise when a mortal becomes immortal |
-| dik_bedel | stitch_cost | 40 | 0 | 500 | Creator's cost to re-stitch a severed or sealed route (essence) (Cosmic actions) |
+| dik_bedel | seal_cost | 40 | 0 | 500 | Creator's cost to re-stitch a severed or sealed route (essence) (Cosmic actions) |
 | kopar_bedel | sever_cost | 40 | 0 | 500 | Creator's cost to sever a route for a few epochs (essence) (Cosmic actions) |
 | kopar_sure | sever_duration | 3 | 1 | 50 | Epochs a creator-severed route stays closed (if not given) (Cosmos & travel) |
 | tarikat_murit_varsayilan | cult_followers_default | 50 | 1 | 100000 | Followers assumed for a cult with none written (soul harvest) |
@@ -1446,7 +1446,7 @@ creator's sky storm and creator's direct hand (cost `sever_cost` via `epoch.yolE
 7. Return `{route_id, severed_until, duration, lost, waiting, revealed, text}`.
 Re-opening on expiry happens in the horror engine (§8.4 step 1).
 
-**`stitch_route(route_id, {epoch, by})`** (`rotaDik`, creator cost `stitch_cost`): must exist, be inactive ("This route
+**`stitch_route(route_id, {epoch, by})`** (`rotaDik`, creator cost `seal_cost`): must exist, be inactive ("This route
 is already open."), not touch a forgotten world ("…the route inside the mist cannot be stitched."), not a bridge whose
 builder is not active ("The bridge's builder fell; the bridge collapsed with him, nothing remains to stitch."). Set
 active=1, clear severed_until and temp_until. Chronicle `cosmic`: "{by} {re-stitched the severed route | broke the seal
@@ -1856,13 +1856,13 @@ danger mean-reversion, invasive species), taming/mounts' war contribution, stowa
    bodies and language changed split from {people}; they now consider themselves another people."})`; original
    population ×= (100 − share)/100; tag `mutated`; bond `descends_from` ("mutation"); note.
 5. **Natural hybridization**: species pairs with a location, same location, `chance(hybrid_pct)` per pair, not already
-   having a common child (an entity with `descends_from` both): `weave_chimera(a, b, {name: "{a first word} {b first
+   having a common child (an entity with `descends_from` both): `merge_species(a, b, {name: "{a first word} {b first
    word} Hybrid", description: "[World engine] {a} and {b} mixed over generations in the same lands and bore a
    hybrid."})`; set subtype `hybrid`; note "{a} and {b} hybridized." — at most one per epoch (loops exit).
 6. **Spontaneous chimera weaving** (`chimera_weaving`, no-LLM path): candidate search first — canon
    people/settlement/faction/cult/mortal knowing `biomancy`; nearby species (same world, distance ≤
-   `chimera_weave_distance`, not megafauna) sorted by distance, id; first pair without a common child. If a candidate
-   and `chance(chimera_weave_pct)`: `weave_chimera(A, B, {weaver: v, description: "[World engine] {v} joined {A} and
+   `chimera_merge_distance`, not megafauna) sorted by distance, id; first pair without a common child. If a candidate
+   and `chance(chimera_merge_chance)`: `merge_species(A, B, {weaver: v, description: "[World engine] {v} joined {A} and
    {B} with biomancy and wove a chimera."})`; bond weaver `tamed` chimera ("its own weaving"); chronicle `chimera
    (kimera)`: "{v} wove a chimera from {A} and {B}: {chimera}."; note.
 7. **Chimera escape**: chimeras (tag chimera, not `escaped`) with an active `produced` bond from a weaver:
@@ -1890,7 +1890,7 @@ danger mean-reversion, invasive species), taming/mounts' war contribution, stowa
     went extinct; {y}, which hunted it, starved and turned on the settlements."
 13. **Invasive species**: each canon species tagged invasive lowers its location's fertility by invasive_fertility.
 
-### 9.4 Chimera (`weave_chimera(a, b, {epoch, name, weaver, description})`, old `kimeraDok`) — also used by son tool `kimera_dok` and mortal tools
+### 9.4 Chimera (`merge_species(a, b, {epoch, name, weaver, description})`, old `kimeraDok`) — also used by son tool `kimera_dok` and mortal tools
 - `stat(k) = clamp(round(((a.k || chimera_stat_default) + (b.k || chimera_stat_default))/2 + d(chimera_die) −
   chimera_shift), 0, k == hp ? chimera_hp_cap : 100)`.
 - Traits = union of both, first `chimera_traits_max`.
@@ -1928,8 +1928,8 @@ in ships' holds and became a non-native invader there."})`; bond `descends_from`
 | kimera_can_tavan | chimera_hp_cap | 1000 | 1 | 100000 | Chimera max HP |
 | kimera_ozellik_tavan | chimera_traits_max | 3 | 0 | 10 | Max traits a chimera can carry |
 | kimera_tehlike | chimera_danger | 10 | 0 | 100 | Chimera extra danger |
-| kimera_dokuma_sans | chimera_weave_pct | 6 | 0 | 100 | A biomancy-knowing community/mortal spontaneously weaves a chimera (per epoch %) |
-| kimera_dokuma_mesafe | chimera_weave_distance | 4 | 0 | 99 | Max distance (steps) from the weaver to the species |
+| kimera_dokuma_sans | chimera_merge_chance | 6 | 0 | 100 | A biomancy-knowing community/mortal spontaneously weaves a chimera (per epoch %) |
+| kimera_dokuma_mesafe | chimera_merge_distance | 4 | 0 | 99 | Max distance (steps) from the weaver to the species |
 | isik_tehlike | light_danger | 2 | 0 | 100 | Light-emitting species lowers region danger (per epoch) |
 | isik_bereket | light_fertility | 2 | 0 | 100 | Light-emitting species raises region fertility (per epoch) |
 | akil_okuyan_tavan | mind_reader_victims | 3 | 0 | 100 | Max neighbours whose sanity a mind-reader or soul-eater gnaws |

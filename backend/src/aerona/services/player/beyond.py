@@ -143,7 +143,7 @@ async def abandon_quest(scope: PlayerScope, command: ThreadTarget) -> Effect:
 async def time_echo(scope: PlayerScope, command: ThreadTarget) -> Effect:
     echo = await order_time_echo(scope.session, scope.rules, command.thread_id)
     if echo is None:
-        raise ValidationFailedError("That thread leaves no echo in time.")
+        raise ValidationFailedError("That story leaves no echo in time.")
     return Effect(f"{echo.name} echoed through time.", echo.id, created_ids=(echo.id,))
 
 

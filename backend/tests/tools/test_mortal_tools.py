@@ -233,7 +233,7 @@ async def test_creature_tools(database: Database) -> None:
         item = await make_entity(session, "Bell of Brine", EntityType.ITEM, world_id=realm.cosmos.world_id, location_id=realm.settlement_id)
     toolkit = await mortal_toolkit(database, realm.people_id, action_points=4)
     await toolkit.runtime.call("tame_species", {"species_id": realm.species_id, "how": "with salted meat"})
-    woven = await ok(toolkit, "weave_chimera", {"a_id": realm.species_id, "b_id": other.id, "name": "Houndcrab", "goal": "a guardian for the shore"})
+    woven = await ok(toolkit, "merge_species", {"a_id": realm.species_id, "b_id": other.id, "name": "Houndcrab", "goal": "a guardian for the shore"})
     assert "chimera" in woven.lower()
     bound = await ok(toolkit, "bind_spirit", {"spirit_id": spirit.id, "target_id": item.id})
     assert "bound" in bound

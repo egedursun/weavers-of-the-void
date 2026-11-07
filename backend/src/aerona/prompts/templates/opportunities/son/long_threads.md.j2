@@ -1,1 +1,1 @@
-Long stories that must reach their climax (make a creation that carries it to its conclusion by giving thread_id; Fate closes it): {% for thread in line.thread_ids[:rules.opportunities.list_narrow] %}thread#{{ thread }}{% if not loop.last %}, {% endif %}{% endfor %}
+Long stories that must reach their climax (make a creation that carries it to its conclusion by giving story_id; Fate closes it): {% for thread in line.thread_ids[:rules.opportunities.list_narrow] %}story#{{ thread }}{% if not loop.last %}, {% endif %}{% endfor %}

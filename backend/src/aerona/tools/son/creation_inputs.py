@@ -65,7 +65,7 @@ class CreationInput(ToolInput):
     links: Annotated[list[CreationLinkInput], Field(min_length=1)]
     image_prompt: Annotated[str, Field(max_length=IMAGE_PROMPT_MAX)] | None = None
     tags: Annotated[list[Tag], Field(max_length=TAGS_MAX)] | None = None
-    thread_id: int | None = None
+    story_id: int | None = None
     co_creator_id: int | None = None
 
     def stat_values(self) -> dict[str, Any]:

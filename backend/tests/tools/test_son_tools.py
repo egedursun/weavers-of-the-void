@@ -278,7 +278,7 @@ async def test_cosmic_tools(database: Database) -> None:
         await connect(session, realm.son_id, realm.other_people_id, BondKind.RELATED)
         star_id = await session.scalar(select(StarRow.id).where(StarRow.name == "Cinder Eye"))
     toolkit = await son_toolkit(database, realm.son_id, action_points=10)
-    await ok(toolkit, "stitch_leak", {"how": "with threads of salt"})
+    await ok(toolkit, "seal_leak", {"how": "with clay and prayer"})
     await ok(toolkit, "bind_spirit", {"spirit_id": spirit.id, "target_id": statue.id})
     await ok(toolkit, "rekindle_star", {"star_id": star_id})
     await ok(toolkit, "hang_star", {"name": "Pale Lantern", "description": "A small white star that hums at dusk."})

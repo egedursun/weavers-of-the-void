@@ -78,18 +78,18 @@ def judgment_constraints(rules: Rules, inputs: FateInputs) -> list[Constraint]:
     fate = rules.fate
     candidates = inputs.quota.candidates
     constraints: list[Constraint] = [
-        ArrayBounds(("closed_threads",), min_items=max(0, inputs.quota.min_close - (1 if candidates else 0))),
-        ArrayBounds(("new_threads",), max_items=inputs.quota.new_max),
+        ArrayBounds(("closed_stories",), min_items=max(0, inputs.quota.min_close - (1 if candidates else 0))),
+        ArrayBounds(("new_stories",), max_items=inputs.quota.new_max),
         ArrayBounds(("facts",), min_items=min(fate.canon_facts_min, fate.canon_facts_max, len(inputs.judged.ids) + len(inputs.pending.ids))),
     ]
     if candidates:
-        constraints += [EnumValues(("resolved_thread", "id"), tuple(candidates)), RequireField(("resolved_thread",))]
+        constraints += [EnumValues(("resolved_story", "id"), tuple(candidates)), RequireField(("resolved_story",))]
     else:
-        constraints.append(OmitField(("resolved_thread",)))
+        constraints.append(OmitField(("resolved_story",)))
     if inputs.language_ids:
         constraints.append(EnumValues(("words", ITEMS, "language_id"), tuple(inputs.language_ids)))
     if inputs.quota.closable_ids:
-        constraints.append(EnumValues(("closed_threads", ITEMS, "id"), tuple(inputs.quota.closable_ids)))
+        constraints.append(EnumValues(("closed_stories", ITEMS, "id"), tuple(inputs.quota.closable_ids)))
     return constraints
 
 

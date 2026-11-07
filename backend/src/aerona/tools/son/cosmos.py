@@ -114,7 +114,7 @@ class TalkInput(ToolInput):
     words: Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 
 
-class StitchInput(ToolInput):
+class LeakSealInput(ToolInput):
     how: Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 
 
@@ -384,18 +384,18 @@ async def talk_to_foreign_god(call: SonCall, args: TalkInput) -> str:
     return result(SonResult.TALKED, outcome=outcome[:1].upper() + outcome[1:])
 
 
-async def stitch_leak(call: SonCall, args: StitchInput) -> str:
+async def seal_leak(call: SonCall, args: LeakSealInput) -> str:
     tools = call.rules.son_tools
-    await call.within_limit(TurnCounter.LEAK_STITCHED, tools.stitch_per_epoch, "son_tools.stitch_per_epoch", SonResult.STITCH_LIMIT)
+    await call.within_limit(TurnCounter.LEAK_STITCHED, tools.seal_per_epoch, "son_tools.seal_per_epoch", SonResult.STITCH_LIMIT)
     world = await call.session.get(WorldRow, call.world_id) if call.world_id is not None else None
     if world is None:
         fail(SonResult.WORLD_UNREGISTERED)
     if world.leakage <= 0:
         fail(SonResult.NO_TEAR, name=world.name)
-    require_essence(call, tools.stitch_cost)
+    require_essence(call, tools.seal_cost)
     old = world.leakage
-    world.leakage = max(0, old - tools.stitch_leak_reduction)
-    call.spend_essence(tools.stitch_cost)
+    world.leakage = max(0, old - tools.seal_leak_reduction)
+    call.spend_essence(tools.seal_cost)
     call.target(world.id)
     await call.bump(TurnCounter.LEAK_STITCHED)
     await call.chronicle(ChronicleKind.COSMIC, lines.STITCH, world_id=world.id, son=call.son.name, world=world.name, how=args.how, old=old, new=world.leakage)
@@ -553,16 +553,16 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
         ),
         ToolSpec(SonToolId.TALK_TO_FOREIGN_GOD, son, TalkInput, ToolMeta(ActionKind.FOREIGN_GOD_TALK, son_standard_action), talk_to_foreign_god),
         ToolSpec(
-            SonToolId.STITCH_LEAK,
+            SonToolId.SEAL_LEAK,
             son,
-            StitchInput,
+            LeakSealInput,
             ToolMeta(
                 ActionKind.STITCH_LEAK,
-                lambda rules: rules.son_tools.stitch_ap,
-                essence_cost=lambda rules: rules.son_tools.stitch_cost,
-                rarity_gate=gate(Gate.STITCH_LEAK),
+                lambda rules: rules.son_tools.seal_ap,
+                essence_cost=lambda rules: rules.son_tools.seal_cost,
+                rarity_gate=gate(Gate.SEAL_LEAK),
             ),
-            stitch_leak,
+            seal_leak,
         ),
         ToolSpec(SonToolId.BARGAIN_WITH_OUTSIDER, son, OuterBargainInput, ToolMeta(ActionKind.OUTER_BARGAIN, no_cost), bargain_with_outsider),
         ToolSpec(

@@ -18,11 +18,11 @@ class FateRules:
     budget_engine_notes_chars: int = rule(12000, 500, 200000, RuleGroup.CONTEXT_BUDGETS, "Fate: engine notes (characters)")
     budget_judgment_prompt_chars: int = rule(140000, 10000, 2000000, RuleGroup.CONTEXT_BUDGETS, "Fate: entire judgment prompt (characters)")
     budget_chronicler_prompt_chars: int = rule(30000, 2000, 400000, RuleGroup.CONTEXT_BUDGETS, "Entire chronicler prompt (characters)")
-    open_thread_cap: int = rule(12, 2, 100, RuleGroup.FATE_AND_CHRONICLE, "Open story-thread cap (when exceeded, Fate closes more)")
-    forced_close_cap: int = rule(6, 0, 50, RuleGroup.FATE_AND_CHRONICLE, "Maximum forced thread closures in one epoch")
-    new_thread_cap: int = rule(4, 0, 50, RuleGroup.FATE_AND_CHRONICLE, "Maximum new threads in one epoch")
-    stale_thread_epochs: int = rule(4, 1, 100, RuleGroup.FATE_AND_CHRONICLE, "A thread not advancing for this many epochs becomes a closure candidate")
-    long_thread_steps: int = rule(8, 2, 200, RuleGroup.FATE_AND_CHRONICLE, "After this many advances a thread should be concluded")
+    open_thread_cap: int = rule(12, 2, 100, RuleGroup.FATE_AND_CHRONICLE, "Open story cap (when exceeded, Fate closes more)")
+    forced_close_cap: int = rule(6, 0, 50, RuleGroup.FATE_AND_CHRONICLE, "Maximum forced story closures in one epoch")
+    new_thread_cap: int = rule(4, 0, 50, RuleGroup.FATE_AND_CHRONICLE, "Maximum new stories in one epoch")
+    stale_thread_epochs: int = rule(4, 1, 100, RuleGroup.FATE_AND_CHRONICLE, "A story not advancing for this many epochs becomes a closure candidate")
+    long_thread_steps: int = rule(8, 2, 200, RuleGroup.FATE_AND_CHRONICLE, "After this many advances a story should be concluded")
     reward_cap: int = rule(15, 0, 500, RuleGroup.FATE_AND_CHRONICLE, "Maximum renown a son can receive from Fate in one epoch")
     canon_facts_max: int = rule(24, 0, 200, RuleGroup.FATE_AND_CHRONICLE, "Maximum canon facts in a judgment")
     canon_facts_min: int = rule(3, 0, 50, RuleGroup.FATE_AND_CHRONICLE, "Minimum canon facts in a judgment")
@@ -31,7 +31,7 @@ class FateRules:
     seer_wrong_charisma_loss: int = rule(8, 0, 100, RuleGroup.FATE_AND_CHRONICLE, "Charisma taken from the seer for a misinterpreted prophecy")
     reward_streak_window: int = rule(5, 0, 100, RuleGroup.FATE_AND_CHRONICLE, "Fate reward: epochs looked back for consecutive rewards (0: no decay)")
     reward_streak_keep_pct: int = rule(75, 0, 100, RuleGroup.FATE_AND_CHRONICLE, "Fate reward: share remaining for each reward received in recent epochs (%)")
-    thread_advance_cap: int = rule(6, 0, 50, RuleGroup.FATE_AND_CHRONICLE, "Maximum threads Fate advances with events in one epoch")
+    thread_advance_cap: int = rule(6, 0, 50, RuleGroup.FATE_AND_CHRONICLE, "Maximum stories Fate advances with events in one epoch")
     prophecy_renown: int = rule(10, 0, 500, RuleGroup.FATE_AND_CHRONICLE, "Renown to the creating son for a fulfilled prophecy")
     prophecy_xp: int = rule(30, 0, 1000, RuleGroup.FATE_AND_CHRONICLE, "XP to the creating son for a fulfilled prophecy")
     banned_previous_openings: int = rule(6, 0, 50, RuleGroup.FATE_AND_CHRONICLE, "Previous narrative openings forbidden to the chronicler")
@@ -88,14 +88,14 @@ class FateRules:
     message_tic_cap: int = rule(3, 0, 20, RuleGroup.FATE_AND_CHRONICLE, "Message tic: maximum forbidden words per message")
     son_opening_words: int = rule(3, 1, 20, RuleGroup.FATE_AND_CHRONICLE, "Length of the message opening forbidden to a son (words)")
     summary_min_chars: int = rule(120, 0, 2000, RuleGroup.FATE_AND_CHRONICLE, "Shortest form of the epoch summary (characters)")
-    thread_recent_advancers: int = rule(3, 0, 50, RuleGroup.CONTEXT_BUDGETS, "Recent creations advancing each thread in the Fate prompt")
-    closure_candidates_shown: int = rule(6, 0, 100, RuleGroup.CONTEXT_BUDGETS, "Threads written into the Fate prompt as priority closure candidates")
+    thread_recent_advancers: int = rule(3, 0, 50, RuleGroup.CONTEXT_BUDGETS, "Recent creations advancing each story in the Fate prompt")
+    closure_candidates_shown: int = rule(6, 0, 100, RuleGroup.CONTEXT_BUDGETS, "Stories written into the Fate prompt as priority closure candidates")
     zero_progress_close_epochs: int = rule(
         6,
         1,
         200,
         RuleGroup.FATE_AND_CHRONICLE,
-        "A thread that never advanced may be closed only after this many stagnant epochs (closing a young thread as 'nothing happened' is an easy ending)",
+        "A story that never advanced may be closed only after this many stagnant epochs (closing a young story as 'nothing happened' is an easy ending)",
     )
     budget_chronicler_engine_chars: int = rule(6000, 500, 200000, RuleGroup.CONTEXT_BUDGETS, "Chronicler: engine notes (characters)")
     seer_default_charisma: int = rule(40, 0, 100, RuleGroup.FATE_AND_CHRONICLE, "Charisma of a seer with unknown charisma")

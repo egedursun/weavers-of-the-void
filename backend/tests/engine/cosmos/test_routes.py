@@ -120,7 +120,7 @@ async def test_sever_and_stitch(ctx: TickContext, cosmos: Cosmos) -> None:
     assert result.revealed and route.known and not route.active and result.waiting == 1
     assert route.temp_closed_until_epoch == ctx.epoch + 3
     text = await stitch_route(ctx, route.id, "The Creator")
-    assert route.active and "re-stitched" in text
+    assert route.active and "reopened the severed route" in text
 
 
 async def test_alignment_reveals_and_unseals(ctx: TickContext, cosmos: Cosmos) -> None:
