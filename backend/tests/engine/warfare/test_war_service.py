@@ -3,10 +3,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.warfare import TributeRow, WarSideRow
+from aerona.db.tables.warfare import CasusBelliRow, TributeRow, WarSideRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.war import TributeStatus, WarEnding, WarSide, WarStatus
+from aerona.domain.enums.war import CasusBelliKind, TributeStatus, WarEnding, WarSide, WarStatus
 from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.services.sides import SideIndex
 from aerona.engine.services.war import (
@@ -76,8 +76,9 @@ async def test_open_war_records_typed_rows_sides_and_armies(session: AsyncSessio
     await society(session, first.id, warrior=20.0)
     hero = await make(session, "Bren", EntityType.MORTAL, world_id, strength=60, charisma=50)
     await bond(session, hero.id, first.id, BondKind.PROTECTS)
+    session.add(CasusBelliRow(holder_entity_id=first.id, target_entity_id=second.id, kind=CasusBelliKind.CLAIM, justification=100, since_epoch=1, locked=[]))
     war = await open_war(ctx, first, second)
-    assert war.status is WarStatus.MOBILIZING
+    assert war.status is WarStatus.MOBILIZING and war.justified
     sides = list(await session.scalars(select(WarSideRow).where(WarSideRow.war_id == war.id)))
     assert {(row.entity_id, row.side) for row in sides} == {(first.id, WarSide.ATTACKER), (second.id, WarSide.DEFENDER)}
     strength = await MilitaryStrength.load(session, rules)

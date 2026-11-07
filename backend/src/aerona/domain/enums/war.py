@@ -25,6 +25,19 @@ class WarSide(StrEnum):
     DEFENDER = "defender"
 
 
+class CasusBelliKind(StrEnum):
+    CLAIM = "claim"
+    HOLY_WAR = "holy_war"
+    VENDETTA = "vendetta"
+    BROKEN_TREATY = "broken_treaty"
+    INSULT = "insult"
+    LIBERATION = "liberation"
+    TRADE_DISPUTE = "trade_dispute"
+    DEBT_DEFAULT = "debt_default"
+    RESOURCE_NEED = "resource_need"
+    CONQUEST = "conquest"
+
+
 class WarCause(StrEnum):
     HOSTILITY = "hostility"
     UPRISING = "uprising"

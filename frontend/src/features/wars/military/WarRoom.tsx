@@ -69,6 +69,7 @@ import { ArmyPanel } from './ArmyPanel'
 import { BattleDepthPanel } from './BattleDepth'
 import { AimParams, SiegeDepth, WarLedger, WarOrders } from './Orders'
 import { PeaceTreaty } from './PeaceBuilder'
+import { SupportControls, SupportLine, WarCause } from './WarConduct'
 import { WarMap } from './WarMap'
 import {
   type BattleReport,
@@ -168,6 +169,7 @@ type SideEntry = {
   side: string
   weariness: number
   left: number | null
+  row: Room['weariness'][number] | undefined
 }
 
 const AIM_TARGETS = [
@@ -192,6 +194,7 @@ function sideEntries(room: Room): SideEntry[] {
     side: side.side,
     weariness: weariness.get(side.entity?.id ?? 0) ?? 0,
     left: side.left_epoch,
+    row: room.weariness.find((item) => item.entity?.id === side.entity?.id),
   }))
 }
 
@@ -458,6 +461,7 @@ function WarControls({
           ))}
         </div>
       </div>
+      <SupportControls room={room} blocked={blocked} />
       <div data-surface='WarAims' className='flex min-w-0 flex-col gap-2'>
         <Label variant='overline'>War aims</Label>
         {room.aims.length > 0 && (
@@ -594,6 +598,7 @@ function SideCard({
                       className='shrink-0'
                     />
                   </div>
+                  {entry.row && <SupportLine row={entry.row} />}
                 </li>
               )
             }}
@@ -1497,6 +1502,7 @@ export function WarRoom({ warId }: { warId: number }) {
       className='@container/mil flex min-w-0 flex-col gap-4'
     >
       <Versus room={data} />
+      <WarCause room={data} />
       <RoomStats room={data} />
       <IncitementCard war={data.war} blocked={blocked} />
       <WarLedger warId={warId} blocked={blocked} />

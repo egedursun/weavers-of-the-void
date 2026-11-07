@@ -1823,6 +1823,8 @@ ECONOMY_ACTIONS = (
     _sync(Meta("war:impose_peace", "Impose peace terms", G.WARFARE), military.impose_peace, military.ImposePeace, free, ("S5.8",)),
     _sync(Meta("war:call_allies", "Call allies to war", G.WARFARE), military.call_allies, military.CallAllies, free, ("S5.8",)),
     _sync(Meta("war:weariness", "Set a side's war weariness", G.WARFARE), military.set_weariness, military.Weariness, free, ("S5.8",)),
+    _sync(Meta("war:edit_side", "Set and hold a side's weariness and war support", G.WARFARE), military.edit_side, military.EditSide, free, ("S5.8/RP2",)),
+    _sync(Meta("war:separate_peace", "Have an ally make a separate peace", G.WARFARE), military.separate_peace, military.SideTarget, free, ("S5.8/RP2",)),
     _sync(Meta("occupation:edit", "Edit or end an occupation", G.WARFARE), military.edit_occupation, military.EditOccupation, free, ("S5.8",)),
     _sync(Meta("captives:settle", "Decide the fate of captives", G.WARFARE), military.settle_captives, military.SettleCaptives, free, ("S5.7",)),
     _sync(Meta("commander:trait", "Give or take a battle trait", G.WARFARE), military.commander_trait, military.CommanderTraitOrder, free, ("S5.1",)),

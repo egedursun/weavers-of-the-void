@@ -255,6 +255,7 @@ from aerona.rules.registry.trade import TradeRules
 from aerona.rules.registry.travel import TravelRules
 from aerona.rules.registry.travel_methods import TravelMethodsRules
 from aerona.rules.registry.ui import UiRules
+from aerona.rules.registry.war_conduct import WarConductRules
 from aerona.rules.registry.war_depth import (
     BattleMagicRules,
     CampaignDepthRules,
@@ -362,6 +363,7 @@ class Rules:
     companies: CompanyRules = field(default_factory=CompanyRules)
     battle_depth: BattleDepthRules = field(default_factory=BattleDepthRules)
     army_depth: ArmyDepthRules = field(default_factory=ArmyDepthRules)
+    war_conduct: WarConductRules = field(default_factory=WarConductRules)
     holy_orders: OrderRules = field(default_factory=OrderRules)
     guild_ranks: GuildRules = field(default_factory=GuildRules)
     elasticity: ElasticityRules = field(default_factory=ElasticityRules)

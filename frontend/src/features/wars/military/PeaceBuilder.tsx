@@ -5,6 +5,7 @@ import {
   Handshake,
   HeartHandshake,
   MapPin,
+  Scale,
   ScrollText,
 } from 'lucide-react'
 import { api } from '@/api/client'
@@ -22,6 +23,7 @@ import {
   ChoiceField,
   FieldGrid,
   Panel,
+  Plain,
   Tag,
   NumberField,
   ToggleField,
@@ -155,6 +157,14 @@ export function PeaceTreaty({
                   <Text as='span' variant='caption'>
                     for {term.beneficiary.name}
                   </Text>
+                )}
+                {typeof term.params.cost === 'number' && (
+                  <Plain
+                    icon={Scale}
+                  >{`Cost ${term.params.cost} of war score`}</Plain>
+                )}
+                {term.params.separate === true && (
+                  <Plain icon={Handshake}>Separate peace</Plain>
                 )}
                 {term.treaty && (
                   <EntityLink kind='entity' id={String(term.treaty.id)}>

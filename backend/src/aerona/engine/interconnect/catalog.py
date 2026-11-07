@@ -62,6 +62,7 @@ from aerona.engine.interconnect.catalog_society_depth import SOCIETY_DEPTH_MECHA
 from aerona.engine.interconnect.catalog_statecraft import STATECRAFT_MECHANICS
 from aerona.engine.interconnect.catalog_structures import STRUCTURE_MECHANICS
 from aerona.engine.interconnect.catalog_titles import TITLE_MECHANICS
+from aerona.engine.interconnect.catalog_war_conduct import WAR_CONDUCT_MECHANICS
 from aerona.engine.interconnect.catalog_wilds import BEHAVIOURS as WILDS_BEHAVIOURS
 from aerona.engine.interconnect.catalog_wilds import WILDS_MECHANICS
 from aerona.engine.interconnect.registry import MECHANICS, Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface, register
@@ -959,6 +960,7 @@ BUILT_IN = (
     *MILITARY_DEPTH_MECHANICS,
     *BATTLE_DEPTH_MECHANICS,
     *ARMY_DEPTH_MECHANICS,
+    *WAR_CONDUCT_MECHANICS,
     *FAITH_MECHANICS,
     *LORE_MECHANICS,
     *RUMOUR_MECHANICS,

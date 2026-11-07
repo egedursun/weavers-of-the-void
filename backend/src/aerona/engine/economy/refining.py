@@ -21,6 +21,7 @@ from aerona.engine.economy.workshop_designs import capacity_scale, output_scale,
 from aerona.engine.factions.guilds import guild_standard
 from aerona.engine.industry.energy import scale_by_energy
 from aerona.engine.industry.methods import feed, method_for, process_of_step
+from aerona.engine.military.war_lines import war_output
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount
@@ -241,6 +242,7 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
         PERCENT,
     )
     made = round_half_up(batches * step.output_qty * output_scale(design) * (method.output_pct / PERCENT if method is not None else 1.0))
+    made = round_half_up(made * await war_output(ctx, community.id, step.output))
     out_material = material if step.keeps_material is not None else step.material
     await goods_of(ctx.session, ctx.epoch).add(
         community.id, step.output, made, GoodsFlow.PRODUCTION, material=out_material, world_material_id=world_material, quality=quality

@@ -5,11 +5,13 @@ from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, enum_type
 from aerona.db.profile_guard import register_profile_table
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.military import DefenderAction, OutcomeClass, SackChoice, SiegeAction, StarvationStage, Tactic
 from aerona.domain.enums.war import (
     BattleOutcome,
     CaptiveStatus,
+    CasusBelliKind,
     HeroQuestKind,
     HeroQuestStatus,
     SiegeStatus,
@@ -48,6 +50,39 @@ class WarRow(CreatedAtMixin, Base):
     victor_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     loser_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     incited_by_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
+    casus_belli_id: Mapped[int | None] = mapped_column(ForeignKey("casus_belli.id", ondelete="SET NULL", use_alter=True))
+    justified: Mapped[bool] = mapped_column(default=True)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class CasusBelliRow(Base):
+    __tablename__ = "casus_belli"
+    __table_args__ = (
+        CheckConstraint("justification >= 0 AND justification <= 100", name="justification_range"),
+        Index("ix_casus_belli_holder", "holder_entity_id", "target_entity_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    holder_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
+    target_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[CasusBelliKind] = mapped_column(enum_type(CasusBelliKind, "kind"))
+    source_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    justification: Mapped[int] = mapped_column(default=0)
+    since_epoch: Mapped[int] = mapped_column(default=0)
+    expires_epoch: Mapped[int | None]
+    used_war_id: Mapped[int | None] = mapped_column(ForeignKey("wars.id", ondelete="SET NULL"))
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class WarProductionRow(Base):
+    __tablename__ = "war_production"
+    __table_args__ = (CheckConstraint("efficiency >= 0", name="efficiency_min"),)
+
+    community_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    commodity: Mapped[CommodityKind] = mapped_column(enum_type(CommodityKind, "commodity"))
+    efficiency: Mapped[int] = mapped_column(default=0)
+    converted: Mapped[bool] = mapped_column(default=True)
+    since_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
@@ -61,6 +96,8 @@ class WarSideRow(Base):
     joined_epoch: Mapped[int]
     left_epoch: Mapped[int | None]
     weariness: Mapped[int] = mapped_column(default=0)
+    support: Mapped[int] = mapped_column(default=60)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class ArmyRow(Base):

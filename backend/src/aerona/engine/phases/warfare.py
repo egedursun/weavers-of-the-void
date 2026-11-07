@@ -93,10 +93,13 @@ from aerona.engine.military.occupation import announce_partisans, end_occupation
 from aerona.engine.military.siege import SiegeSeason, breach_bonus, open_siege, sack, siege_season, wall_defence
 from aerona.engine.military.siege_depth import sack_choice
 from aerona.engine.military.standards import capture_standard
+from aerona.engine.military.support import rally_support
+from aerona.engine.military.terms import fights_on, separate_peace, terror
 from aerona.engine.military.trials import settle_trial, trial_claims
 from aerona.engine.military.units import muster, profile_of, reconcile_sizes, resize, retire_stacks
 from aerona.engine.military.upkeep import drill_armies, hire_mercenaries, lost_trade, occupation_levies, occupation_revolts, war_taxes
 from aerona.engine.military.vessels import muster_fleet
+from aerona.engine.military.war_lines import keep_war_lines
 from aerona.engine.mind.book import best_effective, values_for
 from aerona.engine.mind.hooks import duelled, fought, judged
 from aerona.engine.mind.thoughts import think
@@ -116,6 +119,7 @@ from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.records import death_path
 from aerona.engine.renown.currencies import on_victory
 from aerona.engine.renown.deeds import acclaim_deed
+from aerona.engine.services.casus_belli import gather_casus_belli
 from aerona.engine.services.community_relations import change_relation, start_blood_feud
 from aerona.engine.services.sides import SideIndex
 from aerona.engine.services.war import (
@@ -315,6 +319,11 @@ async def campaign_upkeep(ctx: TickContext) -> None:
     ctx.count("armies_drilled", await drill_armies(ctx))
     for key, value in (await keep_templates(ctx)).items():
         ctx.count(f"templates_{key}", value)
+    for key, value in (await keep_war_lines(ctx)).items():
+        ctx.count(f"war_lines_{key}", value)
+    casus_belli = await gather_casus_belli(ctx)
+    ctx.count("casus_belli_found", sum(casus_belli.found.values()))
+    ctx.count("casus_belli_lapsed", casus_belli.lapsed)
     ctx.count("home_news", await home_news(ctx, atlas))
     ctx.count("wounded_recovered", await recover_wounded(ctx))
     for key, value in (await pay_contracts(ctx)).items():
@@ -371,12 +380,14 @@ async def weariness(ctx: TickContext) -> int:
     for item in await ongoing_wars(ctx.session):
         war = item.war
         rows = {row.entity_id: row for row in await ctx.session.scalars(select(WarSideRow).where(WarSideRow.war_id == war.id, WarSideRow.left_epoch.is_(None)))}
+        for ally in [row for side_id, row in sorted(rows.items()) if side_id not in (item.attacker_id, item.defender_id)]:
+            await tire_side(ctx, atlas, war, ally)
+            await separate_peace(ctx, item, ally)
         for side_id in (item.attacker_id, item.defender_id):
             row = rows.get(side_id)
             if row is None:
                 continue
-            dead = await _side_losses(ctx, war, side_id)
-            await weary(ctx, war, row, dead=dead, maimed=dead * ctx.rules.maimed.return_pct // PERCENT, occupied=await _occupied(ctx, atlas, side_id))
+            await tire_side(ctx, atlas, war, row)
             if "weariness" not in war_locks(war):
                 row.weariness = clamp_int(row.weariness + await war_taxes(ctx, row) + await lost_trade(ctx, row), 0, PERCENT_MAX)
             behind = (war.score < 0) if side_id == item.attacker_id else (war.score > 0)
@@ -385,6 +396,14 @@ async def weariness(ctx: TickContext) -> int:
                 ended += 1
                 break
     return ended
+
+
+async def tire_side(ctx: TickContext, atlas: RegionAtlas, war: WarRow, row: WarSideRow) -> None:
+    dead = await _side_losses(ctx, war, row.entity_id)
+    maimed = dead * ctx.rules.maimed.return_pct // PERCENT
+    occupied = await _occupied(ctx, atlas, row.entity_id)
+    await weary(ctx, war, row, dead=dead, maimed=maimed, occupied=occupied)
+    await rally_support(ctx, war, row, dead=dead, maimed=maimed, occupied=occupied)
 
 
 async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behind: bool) -> None:
@@ -422,16 +441,20 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.army_profiles",
     "table.army_templates",
     "table.army_units",
+    "table.artwork_profiles",
     "table.battles",
     "table.beast_profiles",
     "table.beliefs",
     "table.bodies",
     "table.bonds",
     "table.calendars",
+    "table.casus_belli",
     "table.ciphers",
     "table.claims",
     "table.community_cohorts",
+    "table.community_societies",
     "table.community_stocks",
+    "table.cult_tenets",
     "table.culture_values",
     "table.currencies",
     "table.districts",
@@ -460,6 +483,7 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
+    "table.public_opinion",
     "table.region_environment",
     "table.routes",
     "table.settlement_infrastructure",
@@ -468,11 +492,14 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.signal_links",
     "table.sky_events",
     "table.spy_agents",
+    "table.trade_policies",
+    "table.treaty_breaches",
     "table.treaty_clauses",
     "table.treaty_profiles",
     "table.unit_designs",
     "table.vassalages",
     "table.vessel_profiles",
+    "table.war_production",
     "table.war_sides",
     "table.wars",
     "table.workshops",
@@ -497,6 +524,7 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.bonds",
     "table.captive_cohorts",
     "table.captives",
+    "table.casus_belli",
     "table.claims",
     "table.community_cohorts",
     "table.community_stocks",
@@ -1031,6 +1059,8 @@ async def _sacked(
     homeward = [March(army, besieged, await profile_of(ctx, army, besieged), None, False) for owner, (army, _) in armies.items() if owner == besieged.id]
     choice = await sack_choice(ctx, siege, attacker, armies[attacker.id][1].commander_entity_id) if siege is not None else SackChoice.SACK
     ctx.count("sack_dead", await sack(ctx, besieged, profile, homeward=homeward, victor=attacker, siege=siege, choice=choice))
+    if siege is not None and choice in {SackChoice.SACK, SackChoice.RAZE}:
+        await terror(ctx, siege.war_id, attacker, besieged, choice.value)
     ctx.count("temple_loot", await loot_temples(ctx, besieged, attacker))
 
 
@@ -1076,6 +1106,8 @@ async def _honours(
     await _toll(ctx, result, field, armies[winner.id][1].commander_entity_id)
     await hail_victor(ctx, winner, armies[winner.id][1].commander_entity_id)
     await capture_standard(ctx, war, result, attacker_id=attacker_id)
+    if result.outcome is OutcomeClass.MASSACRE and result.loser is not None:
+        await terror(ctx, war.id, winner, result.loser.entity, "massacre")
 
 
 async def _toll(ctx: TickContext, result: BattleResult, field: Field, commander_id: int | None) -> None:
@@ -1211,6 +1243,8 @@ async def check_war_end(
             roles={attacker.id: IncidentRole.ACTOR, defender.id: IncidentRole.ACTOR},
         )
         return settlement
+    if routed is None and await fights_on(ctx, war, loser):
+        return None
     settlement = await end_war(ctx, war, WarEnding.VICTORY, victor_id=victor.id, loser_id=loser.id)
     salted = await _salt_earth(ctx, war, settlement, loser)
     terms = f"conquered {loser.name}" if settlement.ending is WarEnding.CONQUEST else f"{loser.name} will pay tribute"
@@ -1514,6 +1548,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.campaign_fronts",
     "table.captive_cohorts",
     "table.captives",
+    "table.casus_belli",
     "table.claims",
     "table.commander_traits",
     "table.community_cohorts",

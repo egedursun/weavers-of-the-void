@@ -20,6 +20,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.chokepoints import contested_route, route_term
 from aerona.engine.faith.book import patron_node
 from aerona.engine.military.peace import AIM_TERMS, PeaceTerm, conclude, extra_terms, record
+from aerona.engine.military.war_costs import peace_budget, term_cost
 from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.formation import set_ruler
@@ -337,15 +338,34 @@ async def peace_terms(
     notes: list[str] = []
     clauses: list[Clause] = []
     rows: list[PeaceTermRow] = []
+    budget = await peace_budget(ctx, war, victor.id) if chosen is None else None
     for aim in await aims_of(ctx, war.id, victor.id):
+        cost = await term_cost(ctx, AIM_TERMS[aim.kind], aim.params, aim.target_entity_id)
+        if budget is not None and cost > budget:
+            notes.append(f"{victor.name} gave up its demand for {AIM_TERMS[aim.kind].value.replace('_', ' ')}: the war had not won enough for it.")
+            continue
         found = await TERMS[aim.kind](ctx, war, aim, (victor, loser), book)
         if found is not None:
+            budget = budget - cost if budget is not None else None
             notes.append(found[0] + ".")
             clauses.append(found[1])
-            rows.append(record(ctx, war, AIM_TERMS[aim.kind], victor_id=victor.id, loser_id=loser.id, params=dict(aim.params), note=found[0]))
+            params = {**dict(aim.params), "cost": cost}
+            rows.append(record(ctx, war, AIM_TERMS[aim.kind], victor_id=victor.id, loser_id=loser.id, params=params, note=found[0]))
     terms = chosen if chosen is not None else await extra_terms(ctx, war, victor, loser, ending=ending)
+    if budget is not None:
+        terms = await afford(ctx, terms, budget)
     await conclude(ctx, war, ending, (victor, loser), clauses=clauses, notes=notes, terms=terms, rows=rows)
     return notes
+
+
+async def afford(ctx: TickContext, terms: list[PeaceTerm], budget: int) -> list[PeaceTerm]:
+    kept: list[PeaceTerm] = []
+    for term in terms:
+        cost = await term_cost(ctx, term.kind, term.params, None)
+        if cost <= budget:
+            budget -= cost
+            kept.append(PeaceTerm(term.kind, {**term.params, "cost": cost}))
+    return kept
 
 
 async def white_peace(

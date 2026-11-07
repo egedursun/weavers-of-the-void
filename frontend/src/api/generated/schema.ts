@@ -16399,6 +16399,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/war:edit_side": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+                post: operations["action_war_edit_side_api_actions_war_edit_side_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/war:separate_peace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+                post: operations["action_war_separate_peace_api_actions_war_separate_peace_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/occupation:edit": {
         parameters: {
             query?: never;
@@ -20510,6 +20542,19 @@ export interface components {
                         effect: string;
         };
                 CasualtyFate: "killed" | "wounded" | "maimed" | "captured";
+                CasusBelliKind: "claim" | "holy_war" | "vendetta" | "broken_treaty" | "insult" | "liberation" | "trade_dispute" | "debt_default" | "resource_need" | "conquest";
+                CasusBelliView: {
+                        id: number;
+            holder: components["schemas"]["NodeRef"] | null;
+            target: components["schemas"]["NodeRef"] | null;
+            kind: components["schemas"]["CasusBelliKind"];
+                        label: string;
+                        justification: number;
+                        since_epoch: number;
+                        expires_epoch: number | null;
+                        used_war_id: number | null;
+                        locked: string[];
+        };
                 Catalogue: {
             enums: components["schemas"]["EnumCatalogue"];
                         rarities: components["schemas"]["Labelled"][];
@@ -26949,7 +26994,7 @@ export interface components {
                         motif: string;
             mode: components["schemas"]["MotifOverrideMode"];
         };
-                MovementCause: "abolition" | "independence" | "revival" | "land_reform" | "franchise";
+                MovementCause: "abolition" | "independence" | "revival" | "land_reform" | "franchise" | "peace";
                 MovementEditInput: {
                         movement_id: number;
                         support?: number | null;
@@ -30213,6 +30258,11 @@ export interface components {
             entity: components["schemas"]["NodeRef"] | null;
             side: components["schemas"]["WarSide"];
                         weariness: number;
+                        support: number;
+                        left_epoch?: number | null;
+                        primary: boolean;
+                        locked?: string[];
+                        budget: number;
         };
                 SiegeAction: "blockade" | "bombard" | "mine" | "assault" | "negotiate";
                 SiegeEditInput: {
@@ -32669,6 +32719,14 @@ export interface components {
                         second_id: number;
                         war_id?: number | null;
         };
+                WarEditSideInput: {
+                        war_id: number;
+                        side_id: number;
+                        values?: {
+                [key: string]: number | string | boolean | null;
+            };
+                        release?: string[];
+        };
                 WarEndInput: {
                         war_id: number;
                         ending: components["schemas"]["WarEnding"];
@@ -32703,6 +32761,8 @@ export interface components {
                 WarRoomView: {
             war: components["schemas"]["WarSummary"];
                         weariness: components["schemas"]["SideWeariness"][];
+                        justified: boolean;
+            casus_belli?: components["schemas"]["CasusBelliView"] | null;
                         aims: components["schemas"]["AimView"][];
                         armies: components["schemas"]["ArmyCard"][];
                         sieges: components["schemas"]["SiegeTracker"][];
@@ -32710,6 +32770,10 @@ export interface components {
                         occupations: components["schemas"]["OccupationView"][];
                         captives: components["schemas"]["CaptiveCohortView"][];
                         battles: components["schemas"]["BattleReportView"][];
+        };
+                WarSeparatePeaceInput: {
+                        war_id: number;
+                        side_id: number;
         };
                 WarSide: "attacker" | "defender";
                 WarSideView: {
@@ -64466,6 +64530,68 @@ export interface operations {
             };
         };
     };
+    action_war_edit_side_api_actions_war_edit_side_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarEditSideInput"];
+            };
+        };
+        responses: {
+                        200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+                        422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_war_separate_peace_api_actions_war_separate_peace_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarSeparatePeaceInput"];
+            };
+        };
+        responses: {
+                        200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+                        422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_occupation_edit_api_actions_occupation_edit_post: {
         parameters: {
             query?: never;
@@ -69743,6 +69869,7 @@ export const captiveStatusValues: ReadonlyArray<FlattenedDeepRequired<components
 export const careerPathValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CareerPath"]> = ["stay", "army", "office", "apprentice", "vows", "trade", "wander", "bandit"];
 export const caseStageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CaseStage"]> = ["investigation", "trial", "closed"];
 export const casualtyFateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CasualtyFate"]> = ["killed", "wounded", "maimed", "captured"];
+export const casusBelliKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CasusBelliKind"]> = ["claim", "holy_war", "vendetta", "broken_treaty", "insult", "liberation", "trade_dispute", "debt_default", "resource_need", "conquest"];
 export const celestialStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CelestialStats"]["kind"]> = ["celestial"];
 export const chatAttitudeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ChatAttitude"]> = ["loyal", "distant", "rebellious", "afraid", "grateful", "mocking"];
 export const chronicleAuditKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ChronicleAuditKind"]> = ["rejected_mentioned", "son_skipped", "event_skipped", "verdict_skipped", "winner_as_loser", "active_as_silent", "deed_miscredited", "number_contradiction"];
@@ -70025,7 +70152,7 @@ export const mortalTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequi
 export const mortalTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalTurnStartedEvent"]["kind"]> = ["mortal.turn_started"];
 export const mortalsStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalsStartedEvent"]["kind"]> = ["mortals.started"];
 export const motifOverrideModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MotifOverrideMode"]> = ["pinned", "allowed"];
-export const movementCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MovementCause"]> = ["abolition", "independence", "revival", "land_reform", "franchise"];
+export const movementCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MovementCause"]> = ["abolition", "independence", "revival", "land_reform", "franchise", "peace"];
 export const naturalLawValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalLaw"]> = ["none", "immortality", "short_life", "dead_return", "magic_price", "war_ban", "bounty", "drought", "sea_ban", "one_language", "disasters", "souls_reincarnate", "gift_flowering", "gift_withering"];
 export const naturalLawStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalLawStats"]["kind"]> = ["natural_law"];
 export const naturalTraitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalTrait"]> = ["dark_sight", "cold_blooded", "winged", "amphibious", "thick_hide", "keen_senses", "venomous", "regenerating", "burrowing", "hive_minded"];

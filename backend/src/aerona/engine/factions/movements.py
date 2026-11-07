@@ -12,6 +12,7 @@ from aerona.db.tables.factions import FactionGoalRow, FactionProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.society_depth import PolityLoyaltyRow
+from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -19,7 +20,7 @@ from aerona.domain.enums.faction import FactionGoalKind, FactionKind, MovementCa
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import DecisionRule, LawKind
 from aerona.domain.enums.society import SocialClass
-from aerona.domain.enums.war import WarCause
+from aerona.domain.enums.war import WarCause, WarStatus
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -45,6 +46,7 @@ GOALS: dict[MovementCause, FactionGoalKind] = {
     MovementCause.REVIVAL: FactionGoalKind.CONVERT_REALM,
     MovementCause.LAND_REFORM: FactionGoalKind.ABOLISH_LAW,
     MovementCause.FRANCHISE: FactionGoalKind.ENACT_LAW,
+    MovementCause.PEACE: FactionGoalKind.PEACE_WITH,
 }
 LAW_TARGETS: dict[MovementCause, LawKind] = {
     MovementCause.ABOLITION: LawKind.SLAVERY,
@@ -130,12 +132,39 @@ async def franchise(ctx: TickContext, ground: Ground) -> float:
     return max(0.0, -ground.values.get(ValueAxis.HIERARCHY, 0) / 2)
 
 
+async def sides_at_war(ctx: TickContext, community_id: int) -> list[WarSideRow]:
+    ongoing = select(WarRow.id).where(WarRow.status != WarStatus.ENDED)
+    return list(
+        await ctx.session.scalars(
+            select(WarSideRow).where(WarSideRow.entity_id == community_id, WarSideRow.left_epoch.is_(None), WarSideRow.war_id.in_(ongoing))
+        )
+    )
+
+
+async def peace(ctx: TickContext, ground: Ground) -> float:
+    sides = await sides_at_war(ctx, ground.community.id)
+    if not sides:
+        return 0.0
+    return max(0.0, (ctx.rules.war_conduct.support_neutral - min(side.support for side in sides)) * 2.0)
+
+
+async def press_for_peace(ctx: TickContext, realm: Realm) -> int:
+    pressed = 0
+    for member in sorted({*realm.members, realm.entity.id}):
+        for side in await sides_at_war(ctx, member):
+            if not held(member) and "weariness" not in side.locked:
+                side.weariness = clamp_int(side.weariness + ctx.rules.war_conduct.peace_movement_weariness, 0, PERCENT)
+                pressed += 1
+    return pressed
+
+
 PRESSURES: dict[MovementCause, Callable[[TickContext, Ground], Awaitable[float]]] = {
     MovementCause.ABOLITION: abolition,
     MovementCause.INDEPENDENCE: independence,
     MovementCause.REVIVAL: revival,
     MovementCause.LAND_REFORM: land_reform,
     MovementCause.FRANCHISE: franchise,
+    MovementCause.PEACE: peace,
 }
 
 
@@ -207,7 +236,9 @@ async def protest(ctx: TickContext, community: EntityRow, share: int) -> bool:
 
 
 async def rise(ctx: TickContext, realm: Realm, row: MovementProfileRow, strongest: EntityRow, *, tally: MovementTally, book: RealmBook) -> None:
-    if row.cause is MovementCause.INDEPENDENCE and strongest.id in realm.members:
+    if row.cause is MovementCause.PEACE:
+        await press_for_peace(ctx, realm)
+    elif row.cause is MovementCause.INDEPENDENCE and strongest.id in realm.members:
         await secede(ctx, book, realm, strongest)
     else:
         core = realm.profile.core_entity_id
@@ -221,9 +252,10 @@ async def rise(ctx: TickContext, realm: Realm, row: MovementProfileRow, stronges
             cause=WarCause.UPRISING,
             world_cap=False,
         )
+    deed = "forced the wars of" if row.cause is MovementCause.PEACE else "rose in arms against"
     await note(
         ctx,
-        f"The movement for {CAUSE_LABELS[row.cause].lower()} rose in arms against {realm.entity.name}.",
+        f"The movement for {CAUSE_LABELS[row.cause].lower()} {deed} {realm.entity.name}{' toward an end' if row.cause is MovementCause.PEACE else ''}.",
         key="movements.revolt",
         ids=[row.faction_entity_id, realm.entity.id],
         kind=ChronicleKind.CIVILIZATION,

@@ -18,11 +18,18 @@ SOURCE_SUFFIXES = frozenset({".py", ".j2", ".json", ".yaml"})
 DESCRIPTORS = catalog(Rules())
 
 
+SKIPPED_BACKEND_PARTS = frozenset({".mypy_cache", "__pycache__", ".ruff_cache"})
+
+
 def consumer_source() -> str:
     backend = [
         path.read_text(encoding="utf-8")
         for path in SOURCE_ROOT.rglob("*")
-        if path.is_file() and path.suffix in SOURCE_SUFFIXES and REGISTRY_ROOT not in path.parents and path != LEGACY_VOCABULARY
+        if path.is_file()
+        and path.suffix in SOURCE_SUFFIXES
+        and REGISTRY_ROOT not in path.parents
+        and path != LEGACY_VOCABULARY
+        and not SKIPPED_BACKEND_PARTS & set(path.parts)
     ]
     frontend = [
         path.read_text(encoding="utf-8")
@@ -32,16 +39,18 @@ def consumer_source() -> str:
     return "\n".join(backend + frontend)
 
 
-def is_read(key: str, source: str) -> bool:
-    if re.search(rf"\b{re.escape(key)}\b", source):
+def is_read(key: str, words: set[str], quoted: set[str]) -> bool:
+    if key in words:
         return True
     cuts = [index + 1 for index, char in enumerate(key) if char == "_"]
-    return any(f'"{key[:cut]}"' in source and f'"{key[cut:]}"' in source for cut in cuts)
+    return any(key[:cut] in quoted and key[cut:] in quoted for cut in cuts)
 
 
 def test_every_rule_key_is_read_by_a_consumer_outside_the_registry() -> None:
     source = consumer_source()
-    assert [descriptor.path for descriptor in DESCRIPTORS if not is_read(descriptor.key, source)] == []
+    words = set(re.findall(r"\w+", source))
+    quoted = set(re.findall(r'"(\w+)"', source))
+    assert [descriptor.path for descriptor in DESCRIPTORS if not is_read(descriptor.key, words, quoted)] == []
 
 
 def test_every_rule_belongs_to_a_declared_group() -> None:

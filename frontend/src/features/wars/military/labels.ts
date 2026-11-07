@@ -80,6 +80,7 @@ import {
   ThumbsDown,
   Triangle,
   Trophy,
+  Users,
   Undo2,
   VenetianMask,
   WandSparkles,
@@ -550,6 +551,29 @@ export const MORALE_STATE: Record<Schemas['MoraleState'], Named> = {
 export const TARGET_CLASS: Record<Schemas['TargetClass'], Named> = {
   soft: { label: 'Soft target', icon: Feather, tone: 'muted' },
   hard: { label: 'Hard target', icon: ShieldHalf, tone: 'gold' },
+}
+
+export const CASUS_BELLI: Record<Schemas['CasusBelliKind'], Named> = {
+  claim: { label: 'A claim', icon: Crown, tone: 'gold' },
+  holy_war: { label: 'Holy war', icon: Church, tone: 'verdigris' },
+  vendetta: { label: 'Vendetta for killed kin', icon: Swords, tone: 'danger' },
+  broken_treaty: { label: 'A broken treaty', icon: ScrollText, tone: 'danger' },
+  insult: { label: 'An insult', icon: Megaphone, tone: 'warning' },
+  liberation: { label: 'Liberation of kin', icon: Users, tone: 'info' },
+  trade_dispute: { label: 'A trade dispute', icon: Banknote, tone: 'warning' },
+  debt_default: { label: 'A defaulted debt', icon: Coins, tone: 'warning' },
+  resource_need: {
+    label: 'Need of land and food',
+    icon: Wheat,
+    tone: 'warning',
+  },
+  conquest: { label: 'Conquest', icon: Flag, tone: 'muted' },
+}
+
+export const WAR_GOODS: Record<string, Named> = {
+  weapons: { label: 'Weapons', icon: Swords, tone: 'danger' },
+  armour: { label: 'Armour', icon: Shield, tone: 'info' },
+  siege_materiel: { label: 'Siege materiel', icon: Castle, tone: 'warning' },
 }
 
 export const COMMAND_AREA: Record<Schemas['CommandArea'], Named> = {

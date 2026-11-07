@@ -1,0 +1,139 @@
+from aerona.db.tables.economy import ProductionRunRow
+from aerona.db.tables.estates import MovementProfileRow
+from aerona.db.tables.military import PeaceTermRow
+from aerona.db.tables.renown import ReputationRow
+from aerona.db.tables.warfare import CasusBelliRow, WarProductionRow, WarRow, WarSideRow
+from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
+
+UPKEEP = ("war_upkeep",)
+S = Subsystem
+E = EdgeKind
+ROOM = "WarRoom"
+
+WAR_CONDUCT_MECHANICS = (
+    Mechanic(
+        key="casus_belli",
+        spec_item="S5.8/RP2",
+        title="Claims, holy wars, vendettas, broken treaties, insults, kin to free, embargoes, debts and hunger give a casus belli that ripens",
+        subsystem=S.POLITY,
+        phases=UPKEEP,
+        surface=Surface(drawer="CasusBelli"),
+        backfill="none: grievances become casus belli from the next epoch",
+        fields=("kind", "justification", "expires_epoch", "used_war_id"),
+        tables=(CasusBelliRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("polity", "community"),
+        couplings=(
+            Coupling(S.INTRIGUE, "a fabricated claim becomes a casus belli like any other", E.TRIGGER, "war_conduct.claim_strength"),
+            Coupling(S.LAW, "a broken treaty gives every other party a casus belli", E.TRIGGER, "war_conduct.casus_belli_epochs"),
+            Coupling(S.ECONOMY, "a defaulted debt or an embargo gives a casus belli", E.TRIGGER),
+            Coupling(S.FAITH, "a holy war tenet turns neighbours of another god into a casus belli", E.TRIGGER),
+        ),
+    ),
+    Mechanic(
+        key="unjustified_war",
+        spec_item="S5.8/RP2",
+        title="A war without a ripe casus belli is unjustified: its ruler gains tyranny, other realms see a threat and its own people back it less",
+        subsystem=S.POLITY,
+        phases=("campaigns", "war_upkeep"),
+        surface=Surface(drawer=ROOM),
+        backfill="migration fbe28f7f70df: wars already fought count as justified",
+        fields=("justified", "casus_belli_id", "tyranny", "threat"),
+        tables=(WarRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("polity",),
+        couplings=(
+            Coupling(S.MIND, "the ruler of an unjustified attacker gains tyranny", E.FLOW, "war_conduct.unjustified_tyranny"),
+            Coupling(S.POLITY, "every other realm sees a threat in it", E.MODIFIER, "war_conduct.unjustified_threat"),
+            Coupling(S.SOCIAL, "its own people back the war less", E.MODIFIER, "war_conduct.unjustified_support"),
+        ),
+    ),
+    Mechanic(
+        key="war_support",
+        spec_item="S5.8/RP2",
+        title="Each side's war support follows opinion, justification, propaganda, its dead weighed by kinship, taxes, the maimed and occupied homes",
+        subsystem=S.COMMUNICATION,
+        phases=UPKEEP,
+        surface=Surface(drawer=ROOM),
+        backfill="migration fbe28f7f70df: every side starts at the starting support",
+        fields=("support",),
+        tables=(WarSideRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("community", "polity"),
+        couplings=(
+            Coupling(S.COMMUNICATION, "public opinion of the war and propaganda raise it", E.MODIFIER, "war_conduct.opinion_support_pct"),
+            Coupling(S.DEMOGRAPHY, "the dead weigh on it, more where kinship is valued", E.MODIFIER, "war_conduct.casualty_support_pct"),
+            Coupling(S.ECONOMY, "war taxes wear it down", E.MODIFIER, "war_conduct.tax_support_pct"),
+            Coupling(S.WAR, "low support raises desertion and fails levies", E.MODIFIER, "war_conduct.low_support_desertion_pct"),
+            Coupling(S.POLITY, "low support pushes the realm toward peace, more under assemblies", E.MODIFIER, "war_conduct.support_peace_pct"),
+        ),
+    ),
+    Mechanic(
+        key="peace_movement",
+        spec_item="S5.8/RP2",
+        title="Where war support sinks a peace movement rises, protests, and if it rises up forces its realm's wars toward an end",
+        subsystem=S.SOCIAL,
+        phases=("estates",),
+        surface=Surface(drawer="EstatesSection"),
+        backfill="none",
+        fields=("cause", "support"),
+        tables=(MovementProfileRow.__tablename__,),
+        exposure=Exposure.CONTEXT,
+        targets=("polity",),
+        couplings=(Coupling(S.WAR, "a rising peace movement adds weariness to every war of its realm", E.MODIFIER, "war_conduct.peace_movement_weariness"),),
+    ),
+    Mechanic(
+        key="peace_costs",
+        spec_item="S5.8/RP2",
+        title="Each demand costs war score; the victor claims only what the war won, the beaten may fight on, allies may make a separate peace",
+        subsystem=S.WAR,
+        phases=("campaigns", "war_upkeep"),
+        surface=Surface(drawer=ROOM),
+        backfill="none",
+        fields=("cost", "left_epoch"),
+        tables=(PeaceTermRow.__tablename__, WarSideRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("polity", "community"),
+        couplings=(
+            Coupling(S.WAR, "war score pays for demands; what it cannot pay for is given up", E.MODIFIER, "war_conduct.score_unit"),
+            Coupling(S.SOCIAL, "a beaten side with support to spare refuses and fights on, at a cost in weariness", E.TRIGGER, "war_conduct.fight_on_support"),
+            Coupling(S.POLITY, "a worn ally leaves with a separate peace", E.TRIGGER, "war_conduct.separate_peace_at"),
+        ),
+    ),
+    Mechanic(
+        key="terror_and_propaganda",
+        spec_item="S5.8/RP2",
+        title="Sacks and massacres frighten a fearful people and harden a martial one, and cost their perpetrator renown and trust",
+        subsystem=S.CULTURE,
+        phases=("campaigns",),
+        surface=Surface(drawer=ROOM),
+        backfill="none",
+        fields=("morale", "support", "resistance", "cruelty"),
+        tables=(ReputationRow.__tablename__, WarSideRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("polity", "community"),
+        couplings=(
+            Coupling(S.MIND, "a people that shuns war loses heart; one that prizes it hardens", E.MODIFIER, "war_conduct.dread_morale"),
+            Coupling(S.SOCIAL, "onlookers remember the cruelty and fear its author, more so where mercy is valued", E.FLOW, "war_conduct.atrocity_cruelty"),
+            Coupling(S.MIND, "the ruler behind it gains dread", E.FLOW, "war_conduct.atrocity_dread"),
+            Coupling(S.CULTURE, "propaganda works and heralds raise war support at home", E.MODIFIER, "war_conduct.propaganda_support"),
+        ),
+    ),
+    Mechanic(
+        key="war_production",
+        spec_item="S5.8/RP2",
+        title="A community at war turns to its scarcest war good and grows more efficient at it each epoch; switching resets it, and civilian goods suffer",
+        subsystem=S.ECONOMY,
+        phases=("war_upkeep", "refining"),
+        surface=Surface(drawer="WarProduction"),
+        backfill="none",
+        fields=("commodity", "efficiency", "converted"),
+        tables=(WarProductionRow.__tablename__, ProductionRunRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("community",),
+        couplings=(
+            Coupling(S.ECONOMY, "sustained output grows its efficiency to a cap", E.MODIFIER, "war_conduct.efficiency_gain"),
+            Coupling(S.SOCIAL, "cloth, luxuries and incense are made less while it lasts", E.MODIFIER, "war_conduct.civilian_cut_pct"),
+        ),
+    ),
+)

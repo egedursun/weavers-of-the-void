@@ -69,6 +69,18 @@ class Weariness(Command):
     weariness: int = Field(ge=0, le=100)
 
 
+class EditSide(Command):
+    war_id: int
+    side_id: int
+    values: dict[str, int | str | bool | None] = Field(default_factory=dict)
+    release: list[str] = Field(default_factory=list)
+
+
+class SideTarget(Command):
+    war_id: int
+    side_id: int
+
+
 class EditOccupation(Command):
     region_id: int
     control: int | None = Field(default=None, ge=0, le=100)
@@ -167,6 +179,18 @@ async def call_allies(scope: PlayerScope, command: CallAllies) -> Effect:
 async def set_weariness(scope: PlayerScope, command: Weariness) -> Effect:
     row = await control.set_weariness(await scope.context("war_weariness"), command.war_id, command.side_id, command.weariness)
     return Effect(f"War weariness set to {row.weariness}.", command.side_id)
+
+
+@player_action("war:edit_side", ActionKind.EDIT_RECORD)
+async def edit_side(scope: PlayerScope, command: EditSide) -> Effect:
+    row = await control.edit_side(await scope.context("war_side"), command.war_id, command.side_id, command.values, release=command.release)
+    return Effect(f"The side stands at weariness {row.weariness} and war support {row.support}.", command.side_id)
+
+
+@player_action("war:separate_peace", ActionKind.OTHER)
+async def separate_peace(scope: PlayerScope, command: SideTarget) -> Effect:
+    await control.force_separate_peace(await scope.context("war_separate_peace"), command.war_id, command.side_id)
+    return Effect("The ally made a separate peace and left the war.", command.side_id)
 
 
 @player_action("occupation:edit", ActionKind.EDIT_RECORD)

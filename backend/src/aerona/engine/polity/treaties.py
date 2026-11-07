@@ -26,6 +26,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.intrigue.beliefs import daring
 from aerona.engine.intrigue.favours import owe
 from aerona.engine.intrigue.leverage import leaned_on
+from aerona.engine.military.support import new_side
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.mortal.kinship import marry
 from aerona.engine.notes import note
@@ -564,7 +565,7 @@ async def send_levies(ctx: TickContext, vassal_core: int | None, lord_core: int 
         present = await ctx.session.scalar(select(WarSideRow.entity_id).where(WarSideRow.war_id == side.war_id, WarSideRow.entity_id == vassal_core))
         if present is not None or not ctx.rng(f"levy.{vassal_core}.{side.war_id}").chance(share):
             continue
-        ctx.session.add(WarSideRow(war_id=side.war_id, entity_id=vassal_core, side=side.side, joined_epoch=ctx.epoch))
+        ctx.session.add(new_side(ctx, side.war_id, vassal_core, side.side))
         sent += 1
     return sent
 

@@ -67,6 +67,7 @@ CORRUPT_FROM = PERCENT // 2
     "table.skills",
     "table.sky_events",
     "table.treaty_parties",
+    "table.war_production",
     "table.workshop_designs",
     "table.workshops",
     "table.world_maps",

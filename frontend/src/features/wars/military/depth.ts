@@ -11,7 +11,9 @@ import {
   ClipboardList,
   Crown,
   Drama,
+  Factory,
   Feather,
+  Flag,
   Flame,
   Gavel,
   Gem,
@@ -155,6 +157,8 @@ export const RECORD_ICON: Record<string, LucideIcon> = {
   feud: Flame,
   vessel: Ship,
   army_template: ClipboardList,
+  casus_belli: Flag,
+  war_production: Factory,
 }
 
 export const HULL: Record<string, Named> = {

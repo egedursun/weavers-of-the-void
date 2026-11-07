@@ -248,7 +248,7 @@ from aerona.db.tables.sons import SonPowerRow, SonRelationRow, SonRow
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, DiplomacyProfileRow, PolityRegardRow, SphereRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow, StructureStaffRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleHolderRow, TitleProfileRow
-from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, HeroQuestRow, SiegeRow, TributeRow, WarRow, WarSideRow
+from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, CasusBelliRow, HeroQuestRow, SiegeRow, TributeRow, WarProductionRow, WarRow, WarSideRow
 
 __all__ = [
     "AchievementRow",
@@ -285,6 +285,7 @@ __all__ = [
     "CaptiveRow",
     "CaseWitnessRow",
     "CastingRow",
+    "CasusBelliRow",
     "ChronicleEntityRow",
     "ChronicleRow",
     "CipherRow",
@@ -567,6 +568,7 @@ __all__ = [
     "VassalageRow",
     "VesselProfileRow",
     "WarAimRow",
+    "WarProductionRow",
     "WarRow",
     "WarSideRow",
     "WorkshopDesignRow",

@@ -32,6 +32,7 @@ from aerona.engine.demography.labour import fighting_age, mobilisation
 from aerona.engine.economy.equipment import equip_army
 from aerona.engine.gods.incitement import held_incitement
 from aerona.engine.interconnect.flows import flowing
+from aerona.engine.military.support import new_side, reluctance, support_of
 from aerona.engine.military.units import muster, resize
 from aerona.engine.mind.hooks import freed, taken_captive
 from aerona.engine.polity.accords import Clause, sign
@@ -46,6 +47,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.primitives.strength import MilitaryStrength
+from aerona.engine.services.casus_belli import press_casus_belli
 from aerona.engine.services.sides import SideIndex
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
@@ -361,11 +363,12 @@ async def open_war(
     await ctx.session.flush()
     ctx.session.add_all(
         [
-            WarSideRow(war_id=war.id, entity_id=attacker.id, side=WarSide.ATTACKER, joined_epoch=ctx.epoch),
-            WarSideRow(war_id=war.id, entity_id=defender.id, side=WarSide.DEFENDER, joined_epoch=ctx.epoch),
+            new_side(ctx, war.id, attacker.id, WarSide.ATTACKER),
+            new_side(ctx, war.id, defender.id, WarSide.DEFENDER),
         ]
     )
     await ctx.session.flush()
+    await press_casus_belli(ctx, war, attacker, defender)
     bonds = BondRepository(ctx.session)
     for side in (attacker, defender):
         await bonds.connect(BondDraft(event.id, side.id, BondKind.PARTY_TO, ctx.epoch, "side", role=BondRole.SIDE, war_id=war.id))
@@ -448,6 +451,9 @@ async def raise_army(ctx: TickContext, strength: MilitaryStrength, sides: SideIn
     adults = await fighting_age(ctx.session, community.id, ctx.rules)
     if adults is not None:
         wanted = max(campaigns.army_min_soldiers, min(wanted, adults))
+    conduct = ctx.rules.war_conduct
+    unwilling = reluctance(conduct.low_support_levy_pct, await support_of(ctx, war.id, community.id), conduct.support_neutral)
+    wanted = max(campaigns.army_min_soldiers, round_half_up(wanted * (1 - unwilling)))
     size = levy(ctx.rules, community, wanted)
     zeal_bonus = 0
     if community.entity_type is EntityType.CULT:

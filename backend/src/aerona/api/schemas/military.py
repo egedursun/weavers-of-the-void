@@ -25,7 +25,7 @@ from aerona.domain.enums.military import (
     WarAimKind,
 )
 from aerona.domain.enums.society import SocialClass
-from aerona.domain.enums.war import BattleOutcome, SiegeStatus, WarSide
+from aerona.domain.enums.war import BattleOutcome, CasusBelliKind, SiegeStatus, WarSide
 
 
 class UnitKindSpec(ApiModel):
@@ -237,11 +237,31 @@ class SideWeariness(ApiModel):
     entity: NodeRef | None
     side: WarSide
     weariness: int
+    support: int = 0
+    left_epoch: int | None = None
+    primary: bool = True
+    locked: list[str] = Field(default_factory=list)
+    budget: int = 0
+
+
+class CasusBelliView(ApiModel):
+    id: int
+    holder: NodeRef | None
+    target: NodeRef | None
+    kind: CasusBelliKind
+    label: str
+    justification: int
+    since_epoch: int
+    expires_epoch: int | None
+    used_war_id: int | None
+    locked: list[str]
 
 
 class WarRoomView(ApiModel):
     war: WarSummary
     weariness: list[SideWeariness]
+    justified: bool = True
+    casus_belli: CasusBelliView | None = None
     aims: list[AimView]
     armies: list[ArmyCard]
     sieges: list[SiegeTracker]

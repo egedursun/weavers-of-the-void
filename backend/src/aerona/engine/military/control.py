@@ -26,6 +26,8 @@ from aerona.domain.enums.military import (
 from aerona.domain.enums.war import SiegeStatus, WarEnding, WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.military.captivity import settle_into
+from aerona.engine.military.support import new_side
+from aerona.engine.military.terms import separate_peace
 from aerona.engine.military.units import drill_fields, profile_of, stacks_of, sync
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.control import lock
@@ -34,7 +36,7 @@ from aerona.engine.polity.wars import comrades
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.services.sides import SideIndex
-from aerona.engine.services.war import army_or_raise
+from aerona.engine.services.war import OngoingWar, army_or_raise, sides_of
 from aerona.engine.services.war_geography import Neighbourhood
 from aerona.engine.services.war_resolution import WarSettlement, end_war
 
@@ -260,7 +262,7 @@ async def call_allies(ctx: TickContext, war_id: int, side_id: int) -> int:
         ally = await living_entity(ctx.session, ally_id)
         if ally_id in present or ally is None or ally.status is not EntityStatus.CANON or ally.entity_type not in {EntityType.PEOPLE, EntityType.SETTLEMENT}:
             continue
-        ctx.session.add(WarSideRow(war_id=war.id, entity_id=ally_id, side=row.side, joined_epoch=ctx.epoch))
+        ctx.session.add(new_side(ctx, war.id, ally_id, row.side))
         present.add(ally_id)
         joined += 1
         await ctx.session.flush()
@@ -281,6 +283,39 @@ async def set_weariness(ctx: TickContext, war_id: int, side_id: int, weariness: 
         raise NotFoundError("That side does not fight in this war.")
     row.weariness = percent("weariness", weariness)
     await ctx.session.flush()
+    return row
+
+
+SIDE_FIELDS = ("weariness", "support")
+
+
+async def edit_side(ctx: TickContext, war_id: int, side_id: int, values: Values, *, release: list[str]) -> WarSideRow:
+    row = await ctx.session.get(WarSideRow, (war_id, side_id))
+    if row is None:
+        raise NotFoundError("That side does not fight in this war.")
+    for key, value in values.items():
+        if key not in SIDE_FIELDS:
+            raise ValidationFailedError(f"Unknown war side field: {key}.")
+        setattr(row, key, percent(key, value))
+        row.locked = lock(list(row.locked or []), key)
+    row.locked = [item for item in (row.locked or []) if item not in set(release)]
+    await ctx.session.flush()
+    return row
+
+
+async def force_separate_peace(ctx: TickContext, war_id: int, side_id: int) -> WarSideRow:
+    war = await ctx.session.get(WarRow, war_id)
+    row = await ctx.session.get(WarSideRow, (war_id, side_id))
+    sides = await sides_of(ctx.session, war) if war is not None else None
+    if war is None or row is None or sides is None:
+        raise NotFoundError("That side does not fight in this war.")
+    if side_id in sides:
+        raise ValidationFailedError("A side that leads the war ends it with a peace, not a separate one.")
+    if row.left_epoch is not None:
+        raise ValidationFailedError("That side has already left the war.")
+    row.weariness = max(row.weariness, ctx.rules.war_conduct.separate_peace_at)
+    row.locked = [item for item in (row.locked or []) if item != "left_epoch"]
+    await separate_peace(ctx, OngoingWar(war, *sides), row)
     return row
 
 

@@ -96,3 +96,4 @@ class MovementCause(StrEnum):
     REVIVAL = "revival"
     LAND_REFORM = "land_reform"
     FRANCHISE = "franchise"
+    PEACE = "peace"

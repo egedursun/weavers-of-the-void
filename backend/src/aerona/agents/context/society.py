@@ -2,7 +2,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.lore import lore_lines
-from aerona.agents.context.military import army_sheet, fleet_sheet, intrigue_sheet, war_sheet
+from aerona.agents.context.military import army_sheet, fleet_sheet, grievance_sheet, intrigue_sheet, war_sheet
 from aerona.agents.context.realm import statecraft
 from aerona.agents.context.society_depth import depth_lines
 from aerona.agents.context.wilds import wild_lines
@@ -203,9 +203,12 @@ async def war_lines(session: AsyncSession, rules: Rules, me: EntityRow, home: En
         event = await session.get(EntityRow, war.event_entity_id)
         rows = await session.scalars(select(WarAimRow).where(WarAimRow.war_id == war.id, WarAimRow.side_entity_id == home.id))
         aims = [words(row.kind.value) for row in rows]
-        line = f"{event.name if event is not None else 'a war'} (weariness {side.weariness}, cause {words(war.cause.value)}"
+        justified = "" if war.justified else ", unjustified"
+        name = event.name if event is not None else "a war"
+        line = f"{name} (weariness {side.weariness}, war support {side.support}{justified}, cause {words(war.cause.value)}"
         wars.append(line + (f", aims: {', '.join(aims)})" if aims else ")"))
         wars.extend(await war_sheet(session, rules, war, home.id))
+    wars.extend(await grievance_sheet(session, home.id))
     wars.extend(await intrigue_sheet(session, home.id))
     wars.extend(await fleet_sheet(session, home.id))
     army_id = await session.scalar(select(ArmyRow.entity_id).where(ArmyRow.commander_entity_id == me.id, ArmyRow.disbanded_epoch.is_(None)).limit(1))

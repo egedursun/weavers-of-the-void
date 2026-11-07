@@ -107,8 +107,18 @@ def all_edges() -> list[Edge]:
     return list(cached_edges())
 
 
+@cache
+def edges_by_mechanic() -> dict[str, tuple[Edge, ...]]:
+    found: dict[str, list[Edge]] = defaultdict(list)
+    for edge in cached_edges():
+        found[edge.writer].append(edge)
+        if edge.reader is not None and edge.reader != edge.writer:
+            found[edge.reader].append(edge)
+    return {key: tuple(edges) for key, edges in found.items()}
+
+
 def edges_of(mechanic_key: str) -> list[Edge]:
-    return [edge for edge in all_edges() if mechanic_key in (edge.writer, edge.reader)]
+    return list(edges_by_mechanic().get(mechanic_key, ()))
 
 
 def matrix() -> dict[tuple[Subsystem, Subsystem], set[str]]:

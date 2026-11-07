@@ -28,6 +28,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.environment.book import add_scar
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.military.clash import traits_of
+from aerona.engine.military.support import reluctance, support_of
 from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.split import facet_weight, facets_for
@@ -119,6 +120,12 @@ async def class_desertion(ctx: TickContext, owner: EntityRow, profile: ArmyProfi
     table = ctx.rules.campaign_depth
     society = await ctx.session.get(CommunitySocietyRow, owner.id)
     hold = 1 - profile.cohesion / PERCENT * table.cohesion_desertion_pct / PERCENT
+    army = await ctx.session.get(ArmyRow, profile.army_entity_id)
+    hold *= 1 + reluctance(
+        ctx.rules.war_conduct.low_support_desertion_pct,
+        await support_of(ctx, army.war_id if army is not None else None, owner.id),
+        ctx.rules.war_conduct.support_neutral,
+    )
     leaving = 0
     for row in rows:
         if row.count <= 0 or row.social_class is None or society is None:

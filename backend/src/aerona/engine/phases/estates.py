@@ -39,6 +39,7 @@ from aerona.engine.phase import Phase
     "table.polity_territories",
     "table.settlement_profiles",
     "table.vassalages",
+    "table.war_sides",
     "table.wars",
     "table.world_maps",
 )

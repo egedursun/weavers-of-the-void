@@ -1,6 +1,7 @@
 import { Anchor, ClipboardList, Swords } from 'lucide-react'
 import { Muted } from '@/components/typography'
 import { UnitDesigns } from './Designs'
+import { CasusBelli, WarProduction } from './Grievances'
 import { FoundNetwork } from './Intrigue'
 import { DeclareWar, RaiseArmy } from './Orders'
 import { MercenaryContracts, NamedPrisoners } from './Retinue'
@@ -62,6 +63,10 @@ export function MilitaryDepth({
             </Muted>
           </Panel>
         )
+      )}
+      {community && <CasusBelli holderId={entityId} blocked={blocked} />}
+      {community && kind !== 'polity' && (
+        <WarProduction communityId={entityId} blocked={blocked} />
       )}
       {community && (
         <MercenaryContracts employerId={entityId} blocked={blocked} />

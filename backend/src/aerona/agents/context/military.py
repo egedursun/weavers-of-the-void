@@ -2,11 +2,12 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.command import AREAS
+from aerona.catalog.war_terms import CASUS_BELLI_LABELS
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, FeudRow, MercenaryContractRow, SpyNetworkRow
-from aerona.db.tables.warfare import ArmyRow, BattleRow, SiegeRow, WarRow
+from aerona.db.tables.warfare import ArmyRow, BattleRow, CasusBelliRow, SiegeRow, WarProductionRow, WarRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.military import ContractStatus, FeudStatus, MoraleState, VesselStatus
@@ -124,6 +125,18 @@ async def field_names(session: AsyncSession, battle: BattleRow) -> list[EntityRo
         item for item in (battle.planned_entity_id, battle.trap_entity_id, battle.command_collapsed_entity_id, battle.standard_entity_id) if item is not None
     ]
     return list(await session.scalars(select(EntityRow).where(EntityRow.id.in_(ids)))) if ids else []
+
+
+async def grievance_sheet(session: AsyncSession, community_id: int) -> list[str]:
+    lines: list[str] = []
+    held = select(CasusBelliRow).where(CasusBelliRow.holder_entity_id == community_id, CasusBelliRow.used_war_id.is_(None))
+    for row in await session.scalars(held.order_by(CasusBelliRow.justification.desc(), CasusBelliRow.id)):
+        target = await session.get(EntityRow, row.target_entity_id)
+        lines.append(f"casus belli against {target.name if target else 'a rival'}: {CASUS_BELLI_LABELS[row.kind].lower()}, justification {row.justification}")
+    line = await session.get(WarProductionRow, community_id)
+    if line is not None and line.converted:
+        lines.append(f"workshops turned to {words(line.commodity.value)} for the war, efficiency +{line.efficiency}%")
+    return lines
 
 
 async def intrigue_sheet(session: AsyncSession, community_id: int) -> list[str]:

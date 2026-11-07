@@ -13,6 +13,7 @@ from aerona.api.schemas.military import (
     BattlePhaseView,
     BattleReportView,
     CaptiveCohortView,
+    CasusBelliView,
     FrontView,
     MilitaryOverview,
     MovementView,
@@ -28,6 +29,7 @@ from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
 from aerona.catalog.battle_depth import FORMATIONS, MORALE_LABELS
 from aerona.catalog.units import UNITS, weapon_of
+from aerona.catalog.war_terms import CASUS_BELLI_LABELS
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
@@ -43,16 +45,18 @@ from aerona.db.tables.military import (
     SpyNetworkRow,
     WarAimRow,
 )
-from aerona.db.tables.warfare import ArmyRow, BattleRow, SiegeRow, WarSideRow
+from aerona.db.tables.warfare import ArmyRow, BattleRow, CasusBelliRow, SiegeRow, WarSideRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.military import CommanderTrait, Stance
+from aerona.domain.enums.war import WarSide
 from aerona.engine.economy.route_dangers import PATROLS, patrolled_regions_of
 from aerona.engine.military.battle import class_of
 from aerona.engine.military.campaign import on_road
 from aerona.engine.military.command import best_area, command_areas
 from aerona.engine.military.engineering import RIVERS, earthworks_of, engineers, sappers, supply_limit
 from aerona.engine.primitives.stats import stat
+from aerona.engine.services.war import sides_of
 from aerona.rules.registry import Rules
 
 router = APIRouter(tags=["military"])
@@ -382,6 +386,21 @@ async def unit_kinds() -> list[UnitKindSpec]:
     ]
 
 
+def casus_belli_view(row: CasusBelliRow, refs: dict[int, NodeRef]) -> CasusBelliView:
+    return CasusBelliView(
+        id=row.id,
+        holder=ref(refs, row.holder_entity_id),
+        target=ref(refs, row.target_entity_id),
+        kind=row.kind,
+        label=CASUS_BELLI_LABELS[row.kind],
+        justification=row.justification,
+        since_epoch=row.since_epoch,
+        expires_epoch=row.expires_epoch,
+        used_war_id=row.used_war_id,
+        locked=list(row.locked or []),
+    )
+
+
 @router.get("/wars/{war_id}/room", response_model=WarRoomView)
 async def war_room(services: ServicesDep, war_id: Id) -> WarRoomView:
     async with reader(services) as session:
@@ -405,9 +424,27 @@ async def war_room(services: ServicesDep, war_id: Id) -> WarRoomView:
                 *(item for row in captives for item in (row.captor_entity_id, row.origin_entity_id) if item),
             ],
         )
+        cause = await session.get(CasusBelliRow, war.casus_belli_id) if war.casus_belli_id is not None else None
+        cause_refs = await node_refs(session, [cause.holder_entity_id, cause.target_entity_id] if cause is not None else [])
+        primary = await sides_of(session, war)
         return WarRoomView(
             war=(await summaries(session, [war]))[0],
-            weariness=[SideWeariness(entity=ref(refs, row.entity_id), side=row.side, weariness=row.weariness) for row in sides],
+            weariness=[
+                SideWeariness(
+                    entity=ref(refs, row.entity_id),
+                    side=row.side,
+                    weariness=row.weariness,
+                    support=row.support,
+                    left_epoch=row.left_epoch,
+                    primary=primary is not None and row.entity_id in primary,
+                    locked=list(row.locked or []),
+                    budget=services.rules.current.war_conduct.base_budget
+                    + max(0, war.score if row.side is WarSide.ATTACKER else -war.score) * services.rules.current.war_conduct.score_unit,
+                )
+                for row in sides
+            ],
+            justified=war.justified,
+            casus_belli=casus_belli_view(cause, cause_refs) if cause is not None else None,
             aims=[aim_view(row, refs) for row in aims],
             armies=await army_cards(session, armies, services.rules.current),
             sieges=[siege_view(row, refs) for row in sieges],

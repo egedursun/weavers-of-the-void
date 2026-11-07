@@ -27,7 +27,7 @@ from aerona.db.tables.military import (
     UnitDesignRow,
     WarAimRow,
 )
-from aerona.db.tables.warfare import BattleRow, CaptiveRow, SiegeRow, WarRow
+from aerona.db.tables.warfare import BattleRow, CaptiveRow, CasusBelliRow, SiegeRow, WarProductionRow, WarRow
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.military import UnitKind
 from aerona.engine.context import TickContext
@@ -74,6 +74,8 @@ KINDS: dict[str, RecordKind] = {
         RecordKind("spy_agent", SpyAgentRow, "Spy agent", "network_id", ("network_id",)),
         RecordKind("feud", FeudRow, "Feud", "first_entity_id", ("first_entity_id", "second_entity_id")),
         RecordKind("army_template", ArmyTemplateRow, "Army template", "polity_entity_id", ("polity_entity_id", "name")),
+        RecordKind("casus_belli", CasusBelliRow, "Casus belli", "holder_entity_id", ("holder_entity_id", "target_entity_id", "kind")),
+        RecordKind("war_production", WarProductionRow, "War production line", "community_entity_id", ("community_entity_id", "commodity")),
         RecordKind("vessel", VesselProfileRow, "Vessel", "entity_id", (), creatable=False, deletable=False),
     )
 }

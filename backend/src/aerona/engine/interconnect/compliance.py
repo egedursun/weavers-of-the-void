@@ -163,7 +163,7 @@ from aerona.db.tables.society_depth import (
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, DiplomacyProfileRow, PolityRegardRow, SphereRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow, StructureStaffRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleHolderRow, TitleProfileRow
-from aerona.db.tables.warfare import SiegeRow, WarRow, WarSideRow
+from aerona.db.tables.warfare import CasusBelliRow, SiegeRow, WarProductionRow, WarRow, WarSideRow
 
 
 @dataclass(frozen=True)
@@ -897,6 +897,17 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (),
         (),
         ("adc3f030249b",),
+    ),
+    ComplianceRow(
+        "S5.8/RP2",
+        (CasusBelliRow.__tablename__, WarProductionRow.__tablename__),
+        ("war_upkeep",),
+        ("military:create", "military:edit", "military:release", "military:delete", "war:edit_side", "war:separate_peace"),
+        ("CasusBelli", "WarProduction", "WarRoom"),
+        ("mortal_context",),
+        (),
+        ("war.separate_peace", "war.fought_on", "war.terror"),
+        ("fbe28f7f70df",),
     ),
     ComplianceRow(
         "S7.3",

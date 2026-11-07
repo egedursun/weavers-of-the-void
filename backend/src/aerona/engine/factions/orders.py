@@ -18,6 +18,7 @@ from aerona.domain.enums.war import WarCause, WarSide, WarStatus
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
 from aerona.engine.military.orders import raise_standing_army
+from aerona.engine.military.support import new_side
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import patron_node
@@ -190,7 +191,7 @@ async def serve_holy_wars(ctx: TickContext, order: EntityRow, row: HolyOrderProf
         if side is None or served is not None:
             continue
         if fortress.id not in {item.entity_id for item in sides}:
-            ctx.session.add(WarSideRow(war_id=war.id, entity_id=fortress.id, side=side, joined_epoch=ctx.epoch))
+            ctx.session.add(new_side(ctx, war.id, fortress.id, side))
             event = await war_event(ctx.session, war)
             await connect(ctx.session, fortress.id, event.id, BondKind.PARTY_TO, ctx.epoch, description="sent the order to the holy war")
         vowed = await vowed_of(ctx, order)

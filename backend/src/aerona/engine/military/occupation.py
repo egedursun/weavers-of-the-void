@@ -11,6 +11,7 @@ from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.military.aims import REGION_AIMS, advance
 from aerona.engine.military.logistics import March
+from aerona.engine.military.support import peace_pressure
 from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.space import value_distance
@@ -107,7 +108,7 @@ async def weary(ctx: TickContext, war: WarRow, side: WarSideRow, *, dead: int, m
 
 async def seeks_peace(ctx: TickContext, war: WarRow, side: WarSideRow, *, humiliated: bool) -> bool:
     table = ctx.rules.war_weariness
-    pressure = side.weariness
+    pressure = side.weariness + await peace_pressure(ctx, side)
     if humiliated and (await values_for(ctx.session, side.entity_id)).get(ValueAxis.HONOUR, 0) > 0:
         pressure = round_half_up(pressure * (1 - table.honour_hold_pct / PERCENT))
     return pressure >= table.peace_threshold

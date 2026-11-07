@@ -32,6 +32,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.interconnect.causes import succession_incident
 from aerona.engine.intrigue.favours import owe
 from aerona.engine.military.causes import press_claim_war
+from aerona.engine.military.support import new_side
 from aerona.engine.mind.book import traits_of
 from aerona.engine.mortal.kin import children_of, siblings_of
 from aerona.engine.notes import note
@@ -518,7 +519,7 @@ async def house_sides(ctx: TickContext, realm: Realm, war: WarRow, claimant_id: 
             place = await living_entity(ctx.session, seat)
             if place is None or seat in present or place.entity_type not in {EntityType.SETTLEMENT, EntityType.PEOPLE} or seat == host_id:
                 continue
-            ctx.session.add(WarSideRow(war_id=war.id, entity_id=seat, side=side, joined_epoch=ctx.epoch))
+            ctx.session.add(new_side(ctx, war.id, seat, side))
             present.add(seat)
         joined += 1
     return joined

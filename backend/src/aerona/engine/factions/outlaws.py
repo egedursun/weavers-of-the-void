@@ -10,6 +10,7 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClauseKind, OfficePower, PartyRole, TreatyKind, TreatyStatus
 from aerona.engine.context import TickContext
 from aerona.engine.factions.book import FactionBook, log
+from aerona.engine.military.support import new_side
 from aerona.engine.notes import note
 from aerona.engine.polity.accords import Clause, end_treaty, sign
 from aerona.engine.polity.book import Realm, RealmBook
@@ -162,7 +163,7 @@ async def defect(
         enemy = item.defender_id if item.attacker_id == core else item.attacker_id
         side = await ctx.session.scalar(select(WarSideRow.side).where(WarSideRow.war_id == item.war.id, WarSideRow.entity_id == enemy).limit(1))
         if side is not None and await ctx.session.get(WarSideRow, (item.war.id, company.id)) is None:
-            ctx.session.add(WarSideRow(war_id=item.war.id, entity_id=company.id, side=side, joined_epoch=ctx.epoch))
+            ctx.session.add(new_side(ctx, item.war.id, company.id, side))
         log(ctx, company.id, FactionActionKind.DEFECTED, target=enemy, note="changed sides")
         await note(
             ctx,

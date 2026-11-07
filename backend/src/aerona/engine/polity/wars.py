@@ -13,6 +13,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.lore.arms import wear_in_duel
 from aerona.engine.military.alliance import betrayed_call
 from aerona.engine.military.duels import bout, fighter
+from aerona.engine.military.support import new_side
 from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.subjects import protected_by
@@ -59,7 +60,7 @@ async def join_wars(ctx: TickContext, book: RealmBook) -> int:
                 if ally_id in called and not await answer_call(ctx, ally_id, row.entity_id):
                     await betrayed_call(ctx, ally_id, row.entity_id)
                     continue
-                ctx.session.add(WarSideRow(war_id=war.id, entity_id=ally_id, side=row.side, joined_epoch=ctx.epoch))
+                ctx.session.add(new_side(ctx, war.id, ally_id, row.side))
                 present.add(ally_id)
                 await BondRepository(ctx.session).connect(
                     BondDraft(ally_id, event.id, BondKind.PARTY_TO, ctx.epoch, "joined the war", role=BondRole.SIDE, war_id=war.id)
