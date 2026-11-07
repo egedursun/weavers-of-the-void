@@ -124,6 +124,7 @@ async def genome_view(session: AsyncSession, rules: Rules, row: GenomeRow) -> Ge
         beauty=row.beauty,
         inbreeding=row.inbreeding,
         recognisability=row.recognisability,
+        potential=dict(row.potential),
         divine_son=await node_ref(session, row.divine_son_id),
         likeness=[LikenessView(parent=parents[int(key)], likeness=value) for key, value in sorted(row.likeness.items()) if int(key) in parents],
         epoch=row.epoch,

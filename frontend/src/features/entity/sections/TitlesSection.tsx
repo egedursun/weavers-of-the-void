@@ -18,7 +18,7 @@ import {
   MindPicker,
   NodePicker,
 } from '../mind/parts'
-import { RefLink } from '../realm/parts'
+import { NodeListEditor, RefLink } from '../realm/parts'
 import {
   type TitleDetail,
   type TitleRank,
@@ -169,9 +169,18 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
     run: () =>
       unwrap(api.POST('/api/actions/title:remove', { body: { title_id: id } })),
   })
+  const crown = useGodAction({
+    run: (regalia: number[]) =>
+      unwrap(
+        api.POST('/api/actions/title:edit', {
+          body: { title_id: id, regalia, clear_liege: false, hold: ctx.hold },
+        })
+      ),
+  })
   const busy = why(
     ctx.blocked,
     rank.isPending,
+    crown.isPending,
     pass.isPending,
     arms.isPending,
     fate.isPending,
@@ -248,6 +257,8 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
               </>
             )}
             {`arms: ${detail.emblem ?? 'none'}; since epoch ${detail.created_epoch}`}
+            {detail.regalia.length > 0 &&
+              `; regalia: ${detail.regalia.map((item) => item.name).join(', ')}`}
           </>
         }
         badges={
@@ -307,6 +318,13 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
                   })
                 )
               }
+            />
+            <NodeListEditor
+              label='Regalia'
+              types={['item']}
+              nodes={detail.regalia}
+              blocked={busy}
+              onChange={(ids) => crown.mutate(ids)}
             />
             <div className='flex min-w-0 flex-wrap justify-end gap-2'>
               {detail.liege && (

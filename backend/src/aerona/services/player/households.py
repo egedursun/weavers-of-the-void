@@ -25,6 +25,9 @@ SPAN = 100
 MEMBERS = "members"
 
 
+PLAIN_FIELDS = ("name", "social_class", "formed_epoch")
+
+
 class FoundHousehold(Command):
     head_id: int
 
@@ -43,6 +46,7 @@ class EditHousehold(Command):
     servants: int | None = Field(default=None, ge=0)
     dependents: int | None = Field(default=None, ge=0)
     burden: int | None = Field(default=None, ge=0, le=SPAN)
+    formed_epoch: int | None = Field(default=None, ge=0)
     head_id: int | None = None
     hold: bool = True
 
@@ -145,7 +149,7 @@ async def found(scope: PlayerScope, command: FoundHousehold) -> Effect:
 @player_action("household:edit", ActionKind.EDIT_RECORD)
 async def edit(scope: PlayerScope, command: EditHousehold) -> Effect:
     home = await household(scope, command.household_id)
-    touched = [name for name in (*HOUSEHOLD_FIELDS, "name", "social_class") if getattr(command, name) is not None]
+    touched = [name for name in (*HOUSEHOLD_FIELDS, *PLAIN_FIELDS) if getattr(command, name) is not None]
     for name in touched:
         setattr(home, name, getattr(command, name))
     if command.head_id is not None:
@@ -157,7 +161,7 @@ async def edit(scope: PlayerScope, command: EditHousehold) -> Effect:
         touched.append(MEMBERS)
     if not touched:
         raise ValidationFailedError("Set at least one value.")
-    home.locked = held(home.locked, [name for name in touched if name not in ("name", "social_class")], command.hold)
+    home.locked = held(home.locked, [name for name in touched if name not in PLAIN_FIELDS], command.hold)
     await scope.session.flush()
     return Effect(f"{home.name}: wealth {home.wealth}, income {home.income}, expenses {home.expenses}, burden {home.burden}.")
 

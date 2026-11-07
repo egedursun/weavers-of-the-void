@@ -43,6 +43,10 @@ async def test_the_god_grants_presses_and_breaks_hooks_and_favours(scope: Player
     await intrigue.edit_hook(scope, intrigue.EditHook(hook_id=hook.id, strength=HookStrength.WEAK, hold=False))
     await intrigue.press(scope, intrigue.UseHook(hook_id=hook.id, demand=HookDemand.SUPPORT))
     assert hook.used_epoch is not None and hook.last_demand is HookDemand.SUPPORT
+    await intrigue.edit_hook(scope, intrigue.EditHook(hook_id=hook.id, last_demand=HookDemand.VOTE, hold=False))
+    assert hook.last_demand is HookDemand.VOTE
+    await intrigue.edit_hook(scope, intrigue.EditHook(hook_id=hook.id, clear_demand=True, hold=False))
+    assert hook.last_demand is None
     await intrigue.delete_hook(scope, intrigue.HookTarget(hook_id=hook.id))
     owed = await intrigue.indebt(scope, intrigue.OweFavour(owed_by_id=second, owed_to_id=first, magnitude=30, origin=FavourOrigin.RESCUE))
     favour = await session.get(FavourRow, owed.values["favour_id"])
@@ -71,6 +75,8 @@ async def test_the_god_masks_unmasks_and_schemes(scope: PlayerScope, session: As
     assert scheme is not None and scheme.phase is SchemePhase.RECRUIT
     await intrigue.edit_scheme(scope, intrigue.EditScheme(scheme_id=scheme.id, phase=SchemePhase.PREPARE, power=30, agents=[second]))
     assert scheme.power == 30 and scheme.agents == [second]
+    await intrigue.edit_scheme(scope, intrigue.EditScheme(scheme_id=scheme.id, discovered_by=[second]))
+    assert scheme.discovered_by == [second] and "discovered_by" in scheme.locked
     await intrigue.hold_scheme(scope, intrigue.EditScheme(scheme_id=scheme.id))
     assert "phase" in scheme.locked
     await intrigue.delete_scheme(scope, intrigue.SchemeTarget(scheme_id=scheme.id))

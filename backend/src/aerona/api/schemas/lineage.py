@@ -49,6 +49,7 @@ class GenomeView(ApiModel):
     beauty: int
     inbreeding: int
     recognisability: int
+    potential: dict[str, int]
     divine_son: NodeRef | None
     likeness: list[LikenessView]
     epoch: int

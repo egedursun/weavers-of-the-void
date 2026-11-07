@@ -1,5 +1,5 @@
-import { type ReactNode, useId, useMemo } from 'react'
-import { SlidersHorizontal, type LucideIcon } from 'lucide-react'
+import { type ReactNode, useId, useMemo, useState } from 'react'
+import { Plus, SlidersHorizontal, X, type LucideIcon } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -20,7 +20,7 @@ import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useNames } from '../api/queries'
-import { ControlPanel } from '../mind/parts'
+import { ControlPanel, FormBar, NodePicker } from '../mind/parts'
 import { type Named, badgeVariant, plain } from './labels'
 
 export function Panel({
@@ -407,5 +407,82 @@ export function RefLink({
     <EntityLink kind={kind} id={String(node.id)}>
       {node.name}
     </EntityLink>
+  )
+}
+
+export function NodeListEditor({
+  label,
+  types,
+  nodes,
+  blocked,
+  onChange,
+}: {
+  label: string
+  types: string[]
+  nodes: { id: number; kind: string; name: string }[]
+  blocked: string | null
+  onChange: (ids: number[]) => void
+}) {
+  const [adding, setAdding] = useState<number | null>(null)
+  const ids = nodes.map((node) => node.id)
+  const listed = adding !== null && ids.includes(adding)
+  return (
+    <div className='flex min-w-0 flex-col gap-2'>
+      <Label variant='overline'>{label}</Label>
+      {nodes.length === 0 ? (
+        <Muted variant='caption'>None yet.</Muted>
+      ) : (
+        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+          {nodes.map((node) => (
+            <Badge key={node.id} variant='outline'>
+              <RefLink node={node} />
+              <Button
+                size='icon-sm'
+                variant='ghost'
+                aria-label={`Remove ${node.name}`}
+                disabled={blocked !== null}
+                disabledReason={blocked ?? undefined}
+                onClick={() => onChange(ids.filter((id) => id !== node.id))}
+              >
+                <X />
+              </Button>
+            </Badge>
+          ))}
+        </div>
+      )}
+      <FormBar
+        action={
+          <Button
+            size='sm'
+            variant='outline'
+            disabled={blocked !== null || adding === null || listed}
+            disabledReason={
+              blocked ??
+              (adding === null
+                ? 'Choose one first.'
+                : listed
+                  ? 'Already listed.'
+                  : undefined)
+            }
+            onClick={() => {
+              if (adding === null) return
+              onChange([...ids, adding])
+              setAdding(null)
+            }}
+          >
+            <Plus />
+            Add
+          </Button>
+        }
+      >
+        <NodePicker
+          label={`Add to ${label.toLowerCase()}`}
+          types={types}
+          value={adding}
+          onChange={setAdding}
+          blocked={blocked}
+        />
+      </FormBar>
+    </div>
   )
 }

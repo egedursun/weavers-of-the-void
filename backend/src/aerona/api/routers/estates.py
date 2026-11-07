@@ -145,12 +145,11 @@ async def estates_view(services: ServicesDep, node_id: int = Path(ge=1)) -> Esta
             else []
             for row in guild_profiles
         }
-        privileges = {
-            row.faction_entity_id: list(
-                await session.scalars(select(EstatePrivilegeRow.privilege).where(EstatePrivilegeRow.estate_entity_id == row.faction_entity_id))
-            )
+        granted = {
+            row.faction_entity_id: list(await session.scalars(select(EstatePrivilegeRow).where(EstatePrivilegeRow.estate_entity_id == row.faction_entity_id)))
             for row in estates
         }
+        privileges = {estate_id: [item.privilege for item in rows] for estate_id, rows in granted.items()}
         ids = {
             node_id,
             *(item for row in estates for item in (row.faction_entity_id, row.polity_entity_id)),
@@ -176,6 +175,7 @@ async def estates_view(services: ServicesDep, node_id: int = Path(ge=1)) -> Esta
                     loyalty=row.loyalty,
                     influence=row.influence,
                     privileges=privileges[row.faction_entity_id],
+                    privilege_since={item.privilege.value: item.granted_epoch for item in granted[row.faction_entity_id]},
                     held=sorted(row.locked or []),
                 )
                 for row in estates

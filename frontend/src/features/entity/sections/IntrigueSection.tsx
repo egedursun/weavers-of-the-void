@@ -50,7 +50,7 @@ import {
   MindPicker,
   NodePicker,
 } from '../mind/parts'
-import { RefLink } from '../realm/parts'
+import { NodeListEditor, RefLink } from '../realm/parts'
 
 const SPAN = 100
 const WORKING = 'Working on it.'
@@ -350,7 +350,12 @@ function HookRow({ hook, ctx, held }: { hook: Hook; ctx: Ctx; held: boolean }) {
     run: (value: HookStrength) =>
       unwrap(
         api.POST('/api/actions/hook:edit', {
-          body: { hook_id: hook.id, strength: value, hold: ctx.hold },
+          body: {
+            hook_id: hook.id,
+            strength: value,
+            clear_demand: false,
+            hold: ctx.hold,
+          },
         })
       ),
   })
@@ -360,7 +365,27 @@ function HookRow({ hook, ctx, held }: { hook: Hook; ctx: Ctx; held: boolean }) {
         api.POST('/api/actions/hook:delete', { body: { hook_id: hook.id } })
       ),
   })
-  const busy = why(ctx.blocked, use.isPending, edit.isPending, strike.isPending)
+  const recall = useGodAction({
+    run: (value: HookDemand | null) =>
+      unwrap(
+        api.POST('/api/actions/hook:edit', {
+          body: {
+            hook_id: hook.id,
+            last_demand: value,
+            clear_demand: value === null,
+            hold: ctx.hold,
+          },
+        })
+      ),
+  })
+  const demands = table(ctx.view.hook_demands)
+  const busy = why(
+    ctx.blocked,
+    use.isPending,
+    edit.isPending,
+    strike.isPending,
+    recall.isPending
+  )
   const spent = hook.used_epoch !== null
   const other = held ? hook.target : hook.holder
   return (
@@ -373,7 +398,7 @@ function HookRow({ hook, ctx, held }: { hook: Hook; ctx: Ctx; held: boolean }) {
           <Ref node={other} />
         </>
       }
-      meta={`${STRENGTHS[hook.strength]} hook from ${hook.source_label.toLowerCase()}; ${spent ? `spent in epoch ${hook.used_epoch}` : STRENGTH_RANK[hook.strength].toLowerCase()}`}
+      meta={`${STRENGTHS[hook.strength]} hook from ${hook.source_label.toLowerCase()}; ${spent ? `spent in epoch ${hook.used_epoch}` : STRENGTH_RANK[hook.strength].toLowerCase()}${hook.last_demand ? `; last pressed for ${(demands[hook.last_demand] ?? hook.last_demand).toLowerCase()}` : ''}`}
       badges={<Held held={hook.held} />}
       actions={
         <Button
@@ -397,6 +422,26 @@ function HookRow({ hook, ctx, held }: { hook: Hook; ctx: Ctx; held: boolean }) {
             blocked={busy}
             onPick={(value) => edit.mutate(value as HookStrength)}
           />
+          <div className='grid min-w-0 grid-cols-1 items-end gap-3 sm:grid-cols-2'>
+            <MindPicker
+              label='Last demand'
+              value={hook.last_demand ?? ''}
+              table={demands}
+              blocked={busy}
+              onPick={(value) => recall.mutate(value as HookDemand)}
+            />
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null || !hook.last_demand}
+              disabledReason={
+                busy ?? (hook.last_demand ? undefined : 'No demand to forget.')
+              }
+              onClick={() => recall.mutate(null)}
+            >
+              Forget the demand
+            </Button>
+          </div>
           {!spent && (
             <AddBar
               title='Press it'
@@ -961,6 +1006,14 @@ function SchemeRow({ scheme, ctx }: { scheme: Scheme; ctx: Ctx }) {
         })
       ),
   })
+  const crew = useGodAction({
+    run: (body: { agents?: number[]; discovered_by?: number[] }) =>
+      unwrap(
+        api.POST('/api/actions/scheme:edit', {
+          body: { scheme_id: scheme.id, ...body, hold: ctx.hold },
+        })
+      ),
+  })
   const freeze = useGodAction({
     run: (hold: boolean) =>
       unwrap(
@@ -980,6 +1033,7 @@ function SchemeRow({ scheme, ctx }: { scheme: Scheme; ctx: Ctx }) {
   const busy = why(
     ctx.blocked,
     phase.isPending,
+    crew.isPending,
     freeze.isPending,
     strike.isPending
   )
@@ -1006,6 +1060,8 @@ function SchemeRow({ scheme, ctx }: { scheme: Scheme; ctx: Ctx }) {
           )}
           {`${scheme.phase_label.toLowerCase()}, power ${scheme.power} of ${scheme.difficulty}, secrecy ${scheme.secrecy}, ${scheme.agents.length} agents`}
           {scheme.outcome ? `: ${scheme.outcome}` : ''}
+          {scheme.discovered_by.length > 0 &&
+            `; discovered by ${scheme.discovered_by.map((node) => node.name).join(', ')}`}
         </>
       }
       badges={<Held held={frozen} />}
@@ -1063,6 +1119,20 @@ function SchemeRow({ scheme, ctx }: { scheme: Scheme; ctx: Ctx }) {
                 })
               )
             }
+          />
+          <NodeListEditor
+            label='Agents'
+            types={['mortal']}
+            nodes={scheme.agents}
+            blocked={busy}
+            onChange={(ids) => crew.mutate({ agents: ids })}
+          />
+          <NodeListEditor
+            label='Discovered by'
+            types={['mortal', 'settlement', 'polity', 'people', 'faction']}
+            nodes={scheme.discovered_by}
+            blocked={busy}
+            onChange={(ids) => crew.mutate({ discovered_by: ids })}
           />
           <div className='flex justify-end'>
             <Button

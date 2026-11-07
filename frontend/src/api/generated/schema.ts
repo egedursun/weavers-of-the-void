@@ -20963,6 +20963,7 @@ export interface components {
                         route_id?: number | null;
                         region_id?: number | null;
             commodity?: components["schemas"]["CommodityKind"] | null;
+                        chartered_epoch?: number | null;
                         hold: boolean;
         };
                 CompanyRemoveInput: {
@@ -22890,6 +22891,7 @@ export interface components {
                         estate_id: number;
             privilege: components["schemas"]["EstatePrivilege"];
                         grant: boolean;
+                        granted_epoch?: number | null;
                         hold: boolean;
         };
                 EstateRemoveInput: {
@@ -22903,6 +22905,9 @@ export interface components {
                         loyalty: number;
                         influence: number;
                         privileges: components["schemas"]["EstatePrivilege"][];
+                        privilege_since: {
+                [key: string]: number;
+            };
                         held: string[];
         };
                 EstatesView: {
@@ -23732,6 +23737,9 @@ export interface components {
                         beauty?: number | null;
                         inbreeding?: number | null;
                         recognisability?: number | null;
+                        potential?: {
+                [key: string]: number;
+            } | null;
                         divine_son_id?: number | null;
                         clear_divine: boolean;
                         hold: boolean;
@@ -23760,6 +23768,9 @@ export interface components {
                         beauty: number;
                         inbreeding: number;
                         recognisability: number;
+                        potential: {
+                [key: string]: number;
+            };
             divine_son: components["schemas"]["NodeRef"] | null;
                         likeness: components["schemas"]["LikenessView"][];
                         epoch: number;
@@ -24120,6 +24131,8 @@ export interface components {
                 HookEditInput: {
                         hook_id: number;
             strength?: components["schemas"]["HookStrength"] | null;
+            last_demand?: components["schemas"]["HookDemand"] | null;
+                        clear_demand: boolean;
                         hold: boolean;
         };
                 HookGrantInput: {
@@ -24265,6 +24278,7 @@ export interface components {
                         servants?: number | null;
                         dependents?: number | null;
                         burden?: number | null;
+                        formed_epoch?: number | null;
                         head_id?: number | null;
                         hold: boolean;
         };
@@ -29780,6 +29794,7 @@ export interface components {
                         secrecy?: number | null;
                         progress?: number | null;
                         agents?: number[] | null;
+                        discovered_by?: number[] | null;
                         hold: boolean;
         };
                 SchemeHoldInput: {
@@ -29789,6 +29804,7 @@ export interface components {
                         secrecy?: number | null;
                         progress?: number | null;
                         agents?: number[] | null;
+                        discovered_by?: number[] | null;
                         hold: boolean;
         };
                 SchemeKind: "rite" | "descent" | "bargain";
@@ -31784,6 +31800,7 @@ export interface components {
                         succession_law_id?: number | null;
                         emblem?: string | null;
                         prestige?: number | null;
+                        regalia?: number[] | null;
                         hold: boolean;
         };
                 TitleGrantInput: {
@@ -31802,6 +31819,7 @@ export interface components {
                         succession_law_id?: number | null;
                         emblem?: string | null;
                         prestige?: number | null;
+                        regalia?: number[] | null;
                         hold: boolean;
         };
                 TitleHolderView: {

@@ -1,10 +1,11 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.db.tables.estates import EstatePrivilegeRow, EstateProfileRow, MovementProfileRow, MovementSupportRow
+from aerona.db.tables.estates import CompanyProfileRow, EstatePrivilegeRow, EstateProfileRow, MovementProfileRow, MovementSupportRow
+from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.faction import EstatePrivilege, MovementCause
+from aerona.domain.enums.faction import EstatePrivilege, FactionKind, MovementCause
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import PolityStats
@@ -34,7 +35,10 @@ async def test_the_god_gathers_estates_and_raises_movements(scope: PlayerScope, 
     estate_id = estate.faction_entity_id
     await estates.edit(scope, estates.EditEstate(estate_id=estate_id, loyalty=80))
     await estates.privilege(scope, estates.SetPrivilege(estate_id=estate_id, privilege=EstatePrivilege.COUNCIL_SEAT))
-    assert await session.get(EstatePrivilegeRow, (estate_id, EstatePrivilege.COUNCIL_SEAT)) is not None
+    granted = await session.get(EstatePrivilegeRow, (estate_id, EstatePrivilege.COUNCIL_SEAT))
+    assert granted is not None
+    await estates.privilege(scope, estates.SetPrivilege(estate_id=estate_id, privilege=EstatePrivilege.COUNCIL_SEAT, granted_epoch=4))
+    assert granted.granted_epoch == 4
     await estates.privilege(scope, estates.SetPrivilege(estate_id=estate_id, privilege=EstatePrivilege.COUNCIL_SEAT, grant=False))
     assert await session.get(EstatePrivilegeRow, (estate_id, EstatePrivilege.COUNCIL_SEAT)) is None
     await estates.remove(scope, estates.EstateTarget(estate_id=estate_id))
@@ -50,3 +54,12 @@ async def test_the_god_gathers_estates_and_raises_movements(scope: PlayerScope, 
     await estates.remove_support(scope, estates.SupportTarget(movement_id=movement_id, community_id=town.id))
     await estates.remove_movement(scope, estates.MovementTarget(movement_id=movement_id))
     assert await session.get(MovementProfileRow, movement_id) is None
+
+
+async def test_the_god_charters_a_company_and_sets_when_it_was_chartered(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
+    company = await make_entity(session, "Fenwater Company", EntityType.FACTION, world_id=world.world.id, location_id=world.region.id)
+    session.add(FactionProfileRow(faction_entity_id=company.id, kind=FactionKind.CHARTERED_COMPANY))
+    await session.flush()
+    await estates.edit_company(scope, estates.EditCompany(company_id=company.id, dividend_pct=12, chartered_epoch=2))
+    row = await session.get(CompanyProfileRow, company.id)
+    assert row is not None and row.dividend_pct == 12 and row.chartered_epoch == 2 and "dividend_pct" in row.locked

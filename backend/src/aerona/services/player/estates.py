@@ -53,6 +53,7 @@ class SetPrivilege(Command):
     estate_id: int
     privilege: EstatePrivilege
     grant: bool = True
+    granted_epoch: int | None = Field(default=None, ge=0)
     hold: bool = True
 
 
@@ -92,6 +93,7 @@ class EditCompany(Command):
     route_id: int | None = None
     region_id: int | None = None
     commodity: CommodityKind | None = None
+    chartered_epoch: int | None = Field(default=None, ge=0)
     hold: bool = True
 
 
@@ -186,6 +188,8 @@ async def privilege(scope: PlayerScope, command: SetPrivilege) -> Effect:
         if found_row is None:
             found_row = EstatePrivilegeRow(estate_entity_id=row.faction_entity_id, privilege=command.privilege, granted_epoch=await scope.epoch())
             scope.session.add(found_row)
+        if command.granted_epoch is not None:
+            found_row.granted_epoch = command.granted_epoch
         found_row.locked = command.hold
     elif found_row is not None:
         await scope.session.delete(found_row)
@@ -286,6 +290,8 @@ async def edit_company(scope: PlayerScope, command: EditCompany) -> Effect:
     if command.commodity is not None:
         row.commodity = command.commodity
         touched.append("commodity")
+    if command.chartered_epoch is not None:
+        row.chartered_epoch = command.chartered_epoch
     row.locked = held(row.locked, touched, command.hold)
     await scope.session.flush()
     return Effect(f"The company pays {row.dividend_pct}% to its shareholders.", target_node_id=command.company_id)

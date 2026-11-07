@@ -56,6 +56,8 @@ class HookTarget(Command):
 class EditHook(Command):
     hook_id: int
     strength: HookStrength | None = None
+    last_demand: HookDemand | None = None
+    clear_demand: bool = False
     hold: bool = True
 
 
@@ -124,6 +126,7 @@ class EditScheme(Command):
     secrecy: int | None = Field(default=None, ge=0, le=SPAN)
     progress: int | None = Field(default=None, ge=0, le=SPAN)
     agents: list[int] | None = None
+    discovered_by: list[int] | None = None
     hold: bool = True
 
 
@@ -267,6 +270,10 @@ async def edit_hook(scope: PlayerScope, command: EditHook) -> Effect:
     row = await found_row(scope, HookRow, command.hook_id, "hook")
     if command.strength is not None:
         row.strength = command.strength
+    if command.last_demand is not None:
+        row.last_demand = command.last_demand
+    elif command.clear_demand:
+        row.last_demand = None
     row.locked = command.hold
     await scope.session.flush()
     return Effect(f"The hook is {row.strength.value}{' and held' if row.locked else ''}.", target_node_id=row.holder_node_id)
@@ -425,6 +432,12 @@ async def edit_scheme(scope: PlayerScope, command: EditScheme) -> Effect:
             await mortal(scope, agent)
         row.agents = sorted(set(command.agents))
         touched.append("agents")
+    if command.discovered_by is not None:
+        for finder in command.discovered_by:
+            if await scope.session.get(NodeRow, finder) is None:
+                raise ValidationFailedError("No such record.")
+        row.discovered_by = sorted(set(command.discovered_by))
+        touched.append("discovered_by")
     if not touched:
         raise ValidationFailedError("Set at least one value.")
     row.locked = held(row.locked, touched, command.hold)

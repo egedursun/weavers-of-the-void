@@ -8,7 +8,7 @@ from aerona.domain.enums.intrigue import BeliefSource, FavourOrigin, HookDemand,
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 
 SECRET_FIELDS = ("severity", "known_by", "exposed_epoch")
-SCHEME_FIELDS = ("phase", "power", "secrecy", "progress", "agents")
+SCHEME_FIELDS = ("phase", "power", "secrecy", "progress", "agents", "discovered_by")
 
 
 class SecretRow(Base):

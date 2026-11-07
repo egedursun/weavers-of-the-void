@@ -15,6 +15,7 @@ class EstateView(ApiModel):
     loyalty: int
     influence: int
     privileges: list[EstatePrivilege]
+    privilege_since: dict[str, int]
     held: list[str]
 
 

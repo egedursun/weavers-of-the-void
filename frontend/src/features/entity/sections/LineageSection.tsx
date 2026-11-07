@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Eraser, Plus, RefreshCw, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { type components } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -36,8 +37,11 @@ import {
   STANCE_TONE,
 } from '../lineage/labels'
 import { ControlPanel, ItemRow, MindCard, MindPicker } from '../mind/parts'
+import { sentence } from '../realm/labels'
 
 const SPAN = 100
+const POTENTIAL = 'potential.'
+type Ability = components['schemas']['Ability']
 const WORKING = 'Working on it.'
 
 function why(blocked: string | null, ...pending: boolean[]): string | null {
@@ -204,8 +208,15 @@ function GenomeCard({
       <ItemRow
         icon={LOOKS_ICON}
         tone='gold'
-        title='Set beauty, inbreeding and recognisability'
-        meta='Held values stop the world from reading them anew'
+        title='Set beauty, inbreeding, recognisability and inborn potential'
+        meta={
+          Object.keys(genome.potential).length > 0
+            ? `Potential: ${Object.entries(genome.potential)
+                .sort(([first], [second]) => first.localeCompare(second))
+                .map(([ability, value]) => `${ability} ${value}`)
+                .join(', ')}`
+            : 'Held values stop the world from reading them anew'
+        }
         editLabel='genome values'
         editor={
           <AdjustStats
@@ -238,16 +249,37 @@ function GenomeCard({
                   },
                 ],
               },
+              {
+                title: 'Inborn potential',
+                fields: Object.entries(genome.potential)
+                  .sort(([first], [second]) => first.localeCompare(second))
+                  .map(([ability, value]) => ({
+                    key: `${POTENTIAL}${ability}`,
+                    label: sentence(ability),
+                    value,
+                    min: 0,
+                    max: SPAN,
+                  })),
+              },
             ]}
             run={({ key, value }) =>
               unwrap(
                 api.POST('/api/actions/genome:edit', {
-                  body: {
-                    mortal_id: nodeId,
-                    [key]: value,
-                    clear_divine: false,
-                    hold,
-                  },
+                  body: key.startsWith(POTENTIAL)
+                    ? {
+                        mortal_id: nodeId,
+                        potential: {
+                          [key.slice(POTENTIAL.length)]: value,
+                        } as Record<Ability, number>,
+                        clear_divine: false,
+                        hold,
+                      }
+                    : {
+                        mortal_id: nodeId,
+                        [key]: value,
+                        clear_divine: false,
+                        hold,
+                      },
                 })
               )
             }

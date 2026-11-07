@@ -551,6 +551,7 @@ function HouseholdCard({ household, ctx }: { household: Household; ctx: Ctx }) {
         )}
         <Badge variant='outline'>{`${household.servants} servants`}</Badge>
         <Badge variant='outline'>{`${household.dependents} dependents`}</Badge>
+        <Badge variant='outline'>{`Formed in epoch ${household.formed_epoch}`}</Badge>
         {household.last_decision_label && (
           <Badge variant='secondary'>
             {`${household.last_decision_label}, epoch ${household.decided_epoch ?? ''}`}
@@ -617,6 +618,17 @@ function HouseholdCard({ household, ctx }: { household: Household; ctx: Ctx }) {
                     value: household.burden,
                     min: 0,
                     max: SPAN,
+                  },
+                ],
+              },
+              {
+                title: 'History',
+                fields: [
+                  {
+                    key: 'formed_epoch',
+                    label: 'Formed in epoch',
+                    value: household.formed_epoch,
+                    min: 0,
                   },
                 ],
               },

@@ -107,7 +107,7 @@ function EstateRow({ row, ctx }: { row: Estate; ctx: Ctx }) {
         <>
           {row.privileges.map((item) => (
             <Badge key={item} variant='secondary'>
-              {PRIVILEGE_ICONS[item]?.label ?? item}
+              {`${PRIVILEGE_ICONS[item]?.label ?? item}, since epoch ${row.privilege_since[item] ?? 0}`}
             </Badge>
           ))}
           {row.held.length > 0 && <Badge variant='outline'>Held</Badge>}
@@ -164,6 +164,36 @@ function EstateRow({ row, ctx }: { row: Estate; ctx: Ctx }) {
               )
             }
           />
+          {row.privileges.length > 0 && (
+            <AdjustStats
+              id={`privileges-${row.estate.id}`}
+              inline
+              groups={[
+                {
+                  title: 'Granted in epoch',
+                  fields: row.privileges.map((item) => ({
+                    key: item,
+                    label: PRIVILEGE_ICONS[item]?.label ?? item,
+                    value: row.privilege_since[item] ?? 0,
+                    min: 0,
+                  })),
+                },
+              ]}
+              run={({ key, value }) =>
+                unwrap(
+                  api.POST('/api/actions/estate:privilege', {
+                    body: {
+                      estate_id: row.estate.id,
+                      privilege: key as EstatePrivilege,
+                      grant: true,
+                      granted_epoch: value,
+                      hold: ctx.hold,
+                    },
+                  })
+                )
+              }
+            />
+          )}
           {row.privileges.map((item) => (
             <div
               key={item}
@@ -513,7 +543,7 @@ function CompanyRow({ row, ctx }: { row: Company; ctx: Ctx }) {
               {'; '}
             </>
           )}
-          {`worth ${row.value}, pays ${row.dividend_pct}% to ${row.shares.length} shareholders`}
+          {`worth ${row.value}, pays ${row.dividend_pct}% to ${row.shares.length} shareholders, chartered in epoch ${row.chartered_epoch}`}
         </>
       }
       badges={
@@ -548,15 +578,21 @@ function CompanyRow({ row, ctx }: { row: Company; ctx: Ctx }) {
                     min: 0,
                     max: SPAN,
                   },
+                  {
+                    key: 'chartered_epoch',
+                    label: 'Chartered in epoch',
+                    value: row.chartered_epoch,
+                    min: 0,
+                  },
                 ],
               },
             ]}
-            run={({ value }) =>
+            run={({ key, value }) =>
               unwrap(
                 api.POST('/api/actions/company:edit', {
                   body: {
                     company_id: row.company.id,
-                    dividend_pct: value,
+                    [key]: value,
                     hold: ctx.hold,
                   },
                 })
