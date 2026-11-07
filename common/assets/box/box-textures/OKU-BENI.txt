@@ -1,0 +1,29 @@
+WEAVERS OF THE VOID - KUTU 3B MODELI
+====================================
+
+Olculer : 145 (G) x 200 (Y) x 100 (D) mm
+Birim   : milimetre (1 birim = 1 mm), Y ekseni yukari, on yuz +Z yonune bakar
+Kabartma: 3.4 mm, dogrudan geometriye islendi (0.5 mm izgara, ~1 milyon ucgen)
+
+DOSYALAR
+  kutu.obj   Model. 6 ayri nesne: kutu_front, kutu_back, kutu_left,
+             kutu_right, kutu_top, kutu_bottom (UV ve normaller dahil)
+  kutu.mtl   Malzemeler. Her yuze ait dokular otomatik baglanir.
+  textures/  Her yuz icin:
+    *_color.jpg      Renk / desen (tam cozunurluk)
+    *_normal.jpg     Normal haritasi (OpenGL, +Y yukari) - ince gravur detayi
+    *_roughness.jpg  Puruzluluk (altin alanlar parlak, baski yari mat)
+    *_metallic.jpg   Metallik (beyaz = altin varak, siyah = baski)
+    *_height.jpg     Yukseklik haritasi (siyah = yuzey, beyaz = 3.4 mm)
+
+KULLANIM NOTLARI
+  - kutu.obj, kutu.mtl ve textures klasoru ayni yerde kalmali.
+  - Blender: File > Import > Wavefront (.obj). Iceri aldiktan sonra
+    olcek 0.001 yapilirsa gercek metre olcusune gelir.
+    Metallik ve puruzluluk haritalarini Principled BSDF'in Metallic ve
+    Roughness girislerine baglayin (Non-Color olarak).
+  - Kabartma zaten geometride oldugu icin height haritasini tekrar
+    displacement olarak kullanmayin. Daha hafif bir model isterseniz duz
+    bir kutuya height haritasini displacement olarak uygulayabilirsiniz.
+  - Bazi programlar MTL'deki Pr/Pm (PBR) satirlarini okumaz; bu durumda
+    renk ve normal yine yuklenir, metal/puruzluluk elle baglanir.

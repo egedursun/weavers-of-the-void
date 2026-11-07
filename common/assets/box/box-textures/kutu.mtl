@@ -1,0 +1,90 @@
+newmtl mat_front
+Ka 1.000 1.000 1.000
+Kd 1.000 1.000 1.000
+Ks 0.250 0.250 0.250
+Ns 120
+d 1.0
+illum 2
+map_Kd textures/front_color.jpg
+map_Bump -bm 1.0 textures/front_normal.jpg
+norm textures/front_normal.jpg
+Pr 1.0
+map_Pr textures/front_roughness.jpg
+Pm 1.0
+map_Pm textures/front_metallic.jpg
+
+newmtl mat_back
+Ka 1.000 1.000 1.000
+Kd 1.000 1.000 1.000
+Ks 0.250 0.250 0.250
+Ns 120
+d 1.0
+illum 2
+map_Kd textures/back_color.jpg
+map_Bump -bm 1.0 textures/back_normal.jpg
+norm textures/back_normal.jpg
+Pr 1.0
+map_Pr textures/back_roughness.jpg
+Pm 1.0
+map_Pm textures/back_metallic.jpg
+
+newmtl mat_left
+Ka 1.000 1.000 1.000
+Kd 1.000 1.000 1.000
+Ks 0.250 0.250 0.250
+Ns 120
+d 1.0
+illum 2
+map_Kd textures/left_color.jpg
+map_Bump -bm 1.0 textures/left_normal.jpg
+norm textures/left_normal.jpg
+Pr 1.0
+map_Pr textures/left_roughness.jpg
+Pm 1.0
+map_Pm textures/left_metallic.jpg
+
+newmtl mat_right
+Ka 1.000 1.000 1.000
+Kd 1.000 1.000 1.000
+Ks 0.250 0.250 0.250
+Ns 120
+d 1.0
+illum 2
+map_Kd textures/right_color.jpg
+map_Bump -bm 1.0 textures/right_normal.jpg
+norm textures/right_normal.jpg
+Pr 1.0
+map_Pr textures/right_roughness.jpg
+Pm 1.0
+map_Pm textures/right_metallic.jpg
+
+newmtl mat_top
+Ka 1.000 1.000 1.000
+Kd 1.000 1.000 1.000
+Ks 0.250 0.250 0.250
+Ns 120
+d 1.0
+illum 2
+map_Kd textures/top_color.jpg
+map_Bump -bm 1.0 textures/top_normal.jpg
+norm textures/top_normal.jpg
+Pr 1.0
+map_Pr textures/top_roughness.jpg
+Pm 1.0
+map_Pm textures/top_metallic.jpg
+
+newmtl mat_bottom
+Ka 1.000 1.000 1.000
+Kd 1.000 1.000 1.000
+Ks 0.250 0.250 0.250
+Ns 120
+d 1.0
+illum 2
+map_Kd textures/bottom_color.jpg
+map_Bump -bm 1.0 textures/bottom_normal.jpg
+norm textures/bottom_normal.jpg
+Pr 1.0
+map_Pr textures/bottom_roughness.jpg
+Pm 1.0
+map_Pm textures/bottom_metallic.jpg
+
