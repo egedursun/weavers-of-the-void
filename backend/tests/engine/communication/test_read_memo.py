@@ -3,6 +3,8 @@ from sqlalchemy import update
 from aerona.db.read_memo import memo_of
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.node import NodeRow
+from aerona.domain.enums.entity import EntityType
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.services.community_relations import relation
 from tests.engine.society.factories import Realm, context, settlement
@@ -49,3 +51,13 @@ async def test_a_fast_get_finds_known_rows_and_remembers_missing_ones_until_they
     assert await realm.session.get(EntityRow, town_id) is town
     late = await settlement(realm, "Dogwood")
     assert await realm.session.get(EntityRow, late.id) is late
+
+
+async def test_a_record_first_read_as_a_node_reads_whole_as_an_entity(realm: Realm) -> None:
+    town = await settlement(realm, "Elmreach")
+    town_id = town.id
+    realm.session.expunge(town)
+    node = await realm.session.get(NodeRow, town_id)
+    assert node is not None
+    found = await realm.session.get(EntityRow, town_id)
+    assert found is not None and found.entity_type is EntityType.SETTLEMENT
