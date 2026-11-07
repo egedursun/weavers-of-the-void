@@ -14,6 +14,7 @@ from aerona.constants.http import EVENTS_PATH
 from aerona.constants.timeouts import SSE_PING_SECONDS
 from aerona.events.bus import Event
 from aerona.events.kinds import EventKind
+from aerona.services.live_log import world_key_of
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ async def stream_events(
 
     async def generate() -> AsyncIterator[dict[str, str]]:
         jobs = services.jobs
+        world = await world_key_of(services.database)
         hello = {
             "id": services.bus.last_id,
             "kind": EventKind.STREAM_HELLO.value,
@@ -49,6 +51,7 @@ async def stream_events(
                 "groups": jobs.active_groups(),
                 "running_jobs": jobs.running_count,
                 "last_event_id": services.bus.last_id,
+                "world_key": world,
             },
             "at": datetime.now(UTC).isoformat(),
         }

@@ -181,7 +181,7 @@ async def build_application(
     agents = attach_toolkits(AgentRuntime(database=database, model=language_model, publish=bus_publisher(bus)))
     errors = ErrorRing()
     install_error_ring(errors)
-    live_log = LiveLog(bus, metrics, current)
+    live_log = LiveLog(bus, metrics, current, database)
     await live_log.restore()
     await seed_bus_epoch(database, bus)
     live_log.attach()
@@ -228,6 +228,7 @@ async def build_application(
         model=language_model,
         agents=agents,
     )
+    world_changed.register(live_log.world_changed)
     world_changed.register(rules.load)
     world_changed.register(motifs.clear)
     world_changed.register(search.invalidate)

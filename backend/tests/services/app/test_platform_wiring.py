@@ -28,6 +28,11 @@ async def open_application(open_database: OpenDatabase, tmp_path: Path, bus: Eve
     return await build_application(settings, database, bus, rules), database, rules
 
 
+def forget_world(database_path: Path) -> None:
+    for suffix in ("", "-wal", "-shm"):
+        Path(f"{database_path}{suffix}").unlink(missing_ok=True)
+
+
 def record() -> CallRecord:
     return CallRecord(label="Fate", model="m", kind=CallKind.STRUCTURED, duration_seconds=1.0, attempts=1)
 
@@ -53,6 +58,8 @@ async def test_calls_carry_the_epoch_and_old_epochs_are_pruned(tmp_path: Path, o
 async def test_events_are_stamped_persisted_and_restored(tmp_path: Path, open_database: OpenDatabase) -> None:
     bus = EventBus()
     application, database, _rules = await open_application(open_database, tmp_path, bus)
+    async with database.write() as session:
+        await seed_cosmos(session)
     bus.publish(EventKind.EPOCH_PROGRESS, {"epoch": 7, "no": 1})
     stamped = bus.publish(EventKind.SYSTEM_NOTE, {"text": "hello"})
     assert stamped.payload["epoch"] == 7
@@ -66,6 +73,36 @@ async def test_events_are_stamped_persisted_and_restored(tmp_path: Path, open_da
     assert "hello" in texts
     assert again.last_id >= stamped.id
     await stop_application(reopened)
+    await database.dispose()
+
+
+async def test_a_replaced_world_never_shows_the_old_world_s_feed(tmp_path: Path, open_database: OpenDatabase) -> None:
+    bus = EventBus()
+    application, database, _rules = await open_application(open_database, tmp_path, bus)
+    async with database.write() as session:
+        await seed_cosmos(session)
+    bus.publish(EventKind.SYSTEM_NOTE, {"text": "the old world"})
+    await application.live_log.drain()
+    await stop_application(application)
+    await database.dispose()
+    forget_world(Settings(data_dir=tmp_path / "data").database_path)
+    empty = EventBus()
+    reopened, database, _rules = await open_application(open_database, tmp_path, empty)
+    assert [item.payload.get("text") for item in empty.replay_after(0)] == []
+    async with database.write() as session:
+        await seed_cosmos(session)
+    empty.publish(EventKind.SYSTEM_NOTE, {"text": "the new world"})
+    await reopened.live_log.drain()
+    await reopened.world_changed.fire("the world was replaced")
+    assert "the new world" not in [item.payload.get("text") for item in empty.replay_after(0)]
+    await reopened.live_log.drain()
+    await stop_application(reopened)
+    await database.dispose()
+    last = EventBus()
+    final, database, _rules = await open_application(open_database, tmp_path, last)
+    texts = [item.payload.get("text") for item in last.replay_after(0)]
+    assert "the old world" not in texts and "the new world" in texts
+    await stop_application(final)
     await database.dispose()
 
 

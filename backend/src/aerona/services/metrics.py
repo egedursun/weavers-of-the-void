@@ -228,11 +228,13 @@ class MetricsService:
         async with self._telemetry.sessions() as session, session.begin():
             session.add(LiveEventRow(timestamp_ms=int(time.time() * MILLISECONDS), kind=kind.value, data=data))
 
-    async def record_events(self, events: Sequence[Event]) -> None:
+    async def record_events(self, events: Sequence[Event], world_key: str | None) -> None:
         async with self._telemetry.sessions() as session, session.begin():
             for item in events:
                 data = json.loads(json.dumps(item.payload, default=str))
-                await session.merge(LiveEventRow(id=item.id, timestamp_ms=int(item.at.timestamp() * MILLISECONDS), kind=item.kind.value, data=data))
+                await session.merge(
+                    LiveEventRow(id=item.id, timestamp_ms=int(item.at.timestamp() * MILLISECONDS), kind=item.kind.value, data=data, world_key=world_key)
+                )
 
     async def prune_events(self, keep: int) -> int:
         async with self._telemetry.sessions() as session, session.begin():
@@ -242,9 +244,12 @@ class MetricsService:
             result = await session.execute(delete(LiveEventRow).where(LiveEventRow.id <= int(top) - keep))
             return int(getattr(result, "rowcount", 0) or 0)
 
-    async def load_events(self, limit: int) -> list[Event]:
+    async def load_events(self, limit: int, world_key: str | None) -> list[Event]:
+        if world_key is None:
+            return []
         async with self._telemetry.sessions() as session:
-            rows = list(await session.scalars(select(LiveEventRow).order_by(LiveEventRow.id.desc()).limit(limit)))
+            statement = select(LiveEventRow).where(LiveEventRow.world_key == world_key).order_by(LiveEventRow.id.desc()).limit(limit)
+            rows = list(await session.scalars(statement))
         return [
             Event(id=row.id, kind=EventKind(row.kind), payload=row.data, at=datetime.fromtimestamp(row.timestamp_ms / MILLISECONDS, UTC))
             for row in reversed(rows)

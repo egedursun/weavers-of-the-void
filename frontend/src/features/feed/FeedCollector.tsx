@@ -12,6 +12,7 @@ import { playTone, startDrone, stopDrone } from './feedSound'
 import { useFeed, useFeedPreferences } from './feedStore'
 import { THROTTLED_STREAM_KINDS } from './feedStream'
 import { closesStreams, feedToast } from './feedToasts'
+import { leavesWorld } from './feedWorld'
 
 const ACTIVITY_LOG_KEY = [...queryKeys.epochs.all, 'activity-log'] as const
 
@@ -84,6 +85,7 @@ export function FeedCollector() {
   useAmbientDrone()
   useImageGenEvents()
   useAnyEvent((event) => {
+    if (leavesWorld(event)) useFeed.getState().clear()
     apply(event)
     if (closesStreams(event)) closeOpen()
     feedToast(event, since)

@@ -52,3 +52,4 @@ class LiveEventRow(TelemetryBase):
     timestamp_ms: Mapped[int] = mapped_column(BigInteger, index=True)
     kind: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
     data: Mapped[dict[str, Any]] = mapped_column(JSON)
+    world_key: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH), index=True)

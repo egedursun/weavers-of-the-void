@@ -41,6 +41,9 @@ class EventBus:
     def set_capacity(self, size: int) -> None:
         self._history = deque(self._history, maxlen=size)
 
+    def forget_history(self) -> None:
+        self._history.clear()
+
     def restore(self, events: list[Event]) -> None:
         for item in events:
             self._history.append(item)

@@ -7,12 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from aerona.constants.telemetry import TELEMETRY_DATABASE_FILENAME
 from aerona.constants.timeouts import SQLITE_BUSY_TIMEOUT_MS
 from aerona.db.inline_sqlite import inline_engine
-from aerona.db.telemetry.tables import LlmCallRow, TelemetryBase
+from aerona.db.telemetry.tables import LiveEventRow, LlmCallRow, TelemetryBase
 from aerona.domain.enums.telemetry import LlmCallStatus
 
 ASYNC_DRIVER_PREFIX = "sqlite+aiosqlite:///"
 TABLE_DEFINITION_QUERY = "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = :name"
 STALE_SUFFIX = "_stale"
+WORLD_KEY_COLUMN = "world_key"
 
 
 def telemetry_url(data_dir: Path) -> str:
@@ -43,8 +44,16 @@ def rebuild_stale_calls(connection: Connection) -> None:
     connection.execute(text(f'DROP TABLE "{stale}"'))
 
 
+def drop_unowned_events(connection: Connection) -> None:
+    table = LiveEventRow.__tablename__
+    definition = connection.execute(text(TABLE_DEFINITION_QUERY), {"name": table}).scalar()
+    if definition is not None and WORLD_KEY_COLUMN not in definition:
+        connection.execute(text(f'DROP TABLE "{table}"'))
+
+
 def prepare(connection: Connection) -> None:
     rebuild_stale_calls(connection)
+    drop_unowned_events(connection)
     TelemetryBase.metadata.create_all(connection)
 
 
