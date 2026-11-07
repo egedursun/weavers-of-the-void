@@ -1,9 +1,9 @@
 from collections.abc import Sequence
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import event, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Mapper, class_mapper
+from sqlalchemy.orm import Mapper, ORMExecuteState, Session, class_mapper
 from sqlalchemy.orm._typing import OrmExecuteOptionsParameter
 from sqlalchemy.orm.attributes import instance_state
 from sqlalchemy.orm.interfaces import ORMOption
@@ -12,6 +12,8 @@ from sqlalchemy.sql.selectable import ForUpdateParameter
 from sqlalchemy.util import EMPTY_DICT
 
 from aerona.db.read_memo import memo_of, table_names
+
+PREFIX_KEYS = 2
 
 
 class FastSession(AsyncSession):
@@ -45,7 +47,7 @@ class FastSession(AsyncSession):
             if not state.expired and state.mapper.isa(mapper):
                 return known
         tables = table_names(mapper.tables)
-        if len(mapper.primary_key) > 1 and isinstance(ident, tuple | list):
+        if len(mapper.primary_key) == PREFIX_KEYS and isinstance(ident, tuple | list):
             siblings = await self.prefix_rows(mapper, ident[0], tables)
             if siblings is not None:
                 wanted = tuple(ident)
@@ -83,3 +85,11 @@ async def rows_by_prefix[O](session: AsyncSession, model: type[O], value: Any) -
         if found is not None:
             return list(found)
     return list(await session.scalars(select(model).where(mapper.primary_key[0] == value)))
+
+
+def fetch_matches(state: ORMExecuteState) -> None:
+    if (state.is_update or state.is_delete) and not state.is_executemany and state.execution_options.get("synchronize_session") is None:
+        state.update_execution_options(synchronize_session="fetch")
+
+
+event.listen(Session, "do_orm_execute", fetch_matches)

@@ -1,5 +1,9 @@
+import asyncio
 import hashlib
+import multiprocessing
+import shutil
 import time
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 from sqlalchemy import Float, select
@@ -39,8 +43,7 @@ async def table_digests(database: Database) -> dict[str, str]:
     return digests
 
 
-async def seeded_run(open_database: OpenDatabase, path: Path) -> dict[str, str]:
-    database = open_database(path)
+async def seeded_run(database: Database) -> dict[str, str]:
     try:
         async with database.write() as session:
             await seed_rich_cosmos(session)
@@ -50,9 +53,18 @@ async def seeded_run(open_database: OpenDatabase, path: Path) -> dict[str, str]:
         await database.dispose()
 
 
-async def test_a_seeded_twenty_epoch_run_leaves_an_identical_database(tmp_path: Path, open_database: OpenDatabase) -> None:
-    first = await seeded_run(open_database, tmp_path / "first.db")
-    second = await seeded_run(open_database, tmp_path / "second.db")
+def digests_in_process(template: str, path: str) -> dict[str, str]:
+    shutil.copyfile(template, path)
+    return asyncio.run(seeded_run(Database(f"sqlite+aiosqlite:///{path}")))
+
+
+async def test_a_seeded_twenty_epoch_run_leaves_an_identical_database(tmp_path: Path, schema_template: Path) -> None:
+    loop = asyncio.get_running_loop()
+    with ProcessPoolExecutor(max_workers=2, mp_context=multiprocessing.get_context("spawn")) as pool:
+        first, second = await asyncio.gather(
+            loop.run_in_executor(pool, digests_in_process, str(schema_template), str(tmp_path / "first.db")),
+            loop.run_in_executor(pool, digests_in_process, str(schema_template), str(tmp_path / "second.db")),
+        )
     differing = sorted(name for name in first if first[name] != second.get(name))
     assert differing == []
     whole = hashlib.sha256("".join(first[name] for name in sorted(first)).encode()).hexdigest()

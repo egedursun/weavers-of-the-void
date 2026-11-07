@@ -18,23 +18,26 @@ BOND_TABLE = BondRow.__tablename__
 class BondLookup:
     by_source: dict[int, list[BondRow]] = field(default_factory=lambda: defaultdict(list))
     by_target: dict[int, list[BondRow]] = field(default_factory=lambda: defaultdict(list))
-    ends: dict[int, tuple[int, int]] = field(default_factory=dict)
+    ends: dict[int, tuple[int, int, BondKind]] = field(default_factory=dict)
+    by_kind: dict[BondKind, list[BondRow]] = field(default_factory=lambda: defaultdict(list))
 
     def add(self, row: BondRow) -> None:
         self.by_source[row.source_node_id].append(row)
         self.by_target[row.target_node_id].append(row)
-        self.ends[row.id] = (row.source_node_id, row.target_node_id)
+        self.by_kind[row.kind].append(row)
+        self.ends[row.id] = (row.source_node_id, row.target_node_id, row.kind)
 
     def remove(self, row: BondRow) -> None:
-        source, target = self.ends.pop(row.id, (row.source_node_id, row.target_node_id))
+        source, target, kind = self.ends.pop(row.id, (row.source_node_id, row.target_node_id, row.kind))
         self.by_source[source] = [bond for bond in self.by_source.get(source, []) if bond is not row]
         self.by_target[target] = [bond for bond in self.by_target.get(target, []) if bond is not row]
+        self.by_kind[kind] = [bond for bond in self.by_kind.get(kind, []) if bond is not row]
 
     def moved(self, row: BondRow) -> None:
-        if self.ends.get(row.id) != (row.source_node_id, row.target_node_id):
+        if self.ends.get(row.id) != (row.source_node_id, row.target_node_id, row.kind):
             self.remove(row)
             self.add(row)
-            for bonds in (self.by_source[row.source_node_id], self.by_target[row.target_node_id]):
+            for bonds in (self.by_source[row.source_node_id], self.by_target[row.target_node_id], self.by_kind[row.kind]):
                 bonds.sort(key=lambda bond: bond.id)
 
     def select(
@@ -51,6 +54,8 @@ class BondLookup:
             pool = [bond for source in dict.fromkeys(sources) for bond in self.by_source.get(source, [])]
         elif wanted_targets is not None:
             pool = [bond for target in wanted_targets for bond in self.by_target.get(target, [])]
+        elif wanted_kinds is not None:
+            pool = [bond for kind in wanted_kinds for bond in self.by_kind.get(kind, [])]
         else:
             pool = [bond for bonds in self.by_source.values() for bond in bonds]
         found = [

@@ -1,3 +1,8 @@
+import json
+import os
+import subprocess
+import sys
+
 from aerona.catalog.genetics import LOCI
 from aerona.core.random import SeededRandom
 from aerona.db.tables.factions import FactionProfileRow
@@ -153,3 +158,16 @@ def test_colour_blindness_slows_crafts_of_colour_and_the_gift_steadies_and_stren
     steadiness, strength = gift_factors(RULES, gifted, MagicSchool.STORM)
     assert steadiness < 1.0 and strength > 1.0
     assert gift_factors(RULES, seeing, MagicSchool.STORM) == (1.0, 1.0)
+
+
+def test_pool_drift_reads_the_same_whatever_the_hash_seed() -> None:
+    script = (
+        "import json; from aerona.engine.genetics.pools import drifted; "
+        "print(json.dumps(drifted(40, {'amber': 30, 'ash': 20, 'umber': 50}, {'sable': 10, 'flax': 60, 'russet': 30})))"
+    )
+    readings = {
+        subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, check=True, env={**os.environ, "PYTHONHASHSEED": seed}).stdout
+        for seed in ("1", "2", "3", "4")
+    }
+    assert len(readings) == 1
+    assert list(json.loads(readings.pop())) == sorted(["amber", "ash", "umber", "sable", "flax", "russet"])

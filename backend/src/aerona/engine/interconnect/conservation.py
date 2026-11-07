@@ -86,6 +86,6 @@ async def residuals(session: AsyncSession, before: StockSnapshot, flows: Flows) 
     moved: Counter[tuple[int, str]] = Counter()
     for (_, key, node_id, _), delta in flows.items():
         moved[(node_id, key)] += delta
-    items = set(before.values) | set(after.values)
+    items = sorted(set(before.values) | set(after.values))
     found = {item: after.values.get(item, 0) - before.values.get(item, 0) - moved.get(item, 0) for item in items}
     return {item: value for item, value in found.items() if value}

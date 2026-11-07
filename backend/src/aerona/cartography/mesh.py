@@ -163,9 +163,10 @@ class CellMesh:
         return ordered
 
 
-def _ordered_polygon(centre: Sequence[float], vertices: NDArray[np.float64]) -> list[Point]:
-    angles = np.arctan2(vertices[:, 1] - centre[1], vertices[:, 0] - centre[0])
-    return [(float(vertices[index, 0]), float(vertices[index, 1])) for index in np.argsort(angles, kind="stable")]
+def _ordered_polygon(centre: Sequence[float], vertices: list[list[float]]) -> list[Point]:
+    cx, cy = float(centre[0]), float(centre[1])
+    angles = [math.atan2(y - cy, x - cx) for x, y in vertices]
+    return [(vertices[index][0], vertices[index][1]) for index in sorted(range(len(vertices)), key=angles.__getitem__)]
 
 
 @lru_cache(maxsize=MESH_CACHE)
@@ -177,6 +178,8 @@ def build_mesh(seed: str, window: GridWindow) -> CellMesh:
     edge_pairs: list[tuple[int, int]] = []
     segments: list[Segment | None] = []
     vertices = np.asarray(diagram.vertices, dtype=np.float64)
+    corners = vertices.tolist()
+    left, right, top, bottom = window.left, window.right, window.top, window.bottom
     for (first, second), ridge in zip(np.asarray(diagram.ridge_points).tolist(), diagram.ridge_vertices, strict=True):
         if first >= count or second >= count:
             continue
@@ -187,15 +190,19 @@ def build_mesh(seed: str, window: GridWindow) -> CellMesh:
         if -1 in ridge or len(ridge) < 2:
             segments.append(None)
             continue
-        start, end = vertices[ridge[0]], vertices[ridge[1]]
-        segments.append(_clip_segment((float(start[0]), float(start[1]), float(end[0]), float(end[1])), window))
+        x1, y1 = corners[ridge[0]]
+        x2, y2 = corners[ridge[1]]
+        if left <= x1 <= right and left <= x2 <= right and top <= y1 <= bottom and top <= y2 <= bottom:
+            segments.append((x1, y1, x2, y2))
+        else:
+            segments.append(_clip_segment((x1, y1, x2, y2), window))
     order = sorted(range(len(edge_pairs)), key=lambda index: edge_pairs[index])
     regions = diagram.regions
     point_region = np.asarray(diagram.point_region)
     polygons: list[tuple[Point, ...]] = []
     for index in range(count):
         region = [vertex for vertex in regions[int(point_region[index])] if vertex >= 0]
-        outline = _ordered_polygon(real[index], vertices[region]) if region else []
+        outline = _ordered_polygon(real[index], [corners[vertex] for vertex in region]) if region else []
         polygons.append(tuple(_clip_polygon(outline, window)))
     return CellMesh(
         window=window,
