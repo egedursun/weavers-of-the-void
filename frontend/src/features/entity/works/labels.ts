@@ -11,6 +11,7 @@ import {
   Gem,
   HandCoins,
   KeyRound,
+  Lamp,
   TriangleAlert,
   Hammer,
   Leaf,
@@ -60,6 +61,7 @@ export const PROCESSES: Record<string, Named> = {
   masonry: { label: 'Dressing stone', icon: Mountain, tone: 'muted' },
   charcoal: { label: 'Charcoal burning', icon: Flame, tone: 'warning' },
   preserving: { label: 'Preserving food', icon: Snowflake, tone: 'info' },
+  lighting: { label: 'Lighting', icon: Lamp, tone: 'gold' },
 }
 
 export const POLLUTANTS: Record<string, Named> = {
@@ -83,3 +85,4 @@ export const TOOL_ICON = Hammer
 export const OWNER_ICON = KeyRound
 export const LEDGER_ICON = HandCoins
 export const SHOCK_ICON = TriangleAlert
+export const LIGHT_ICON = Lamp

@@ -1,16 +1,19 @@
 from collections import Counter
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 
 from aerona.catalog.methods import COLD
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import LeyLineRow
 from aerona.db.tables.industry import ENERGY_COLUMNS, CommunityIndustryRow
+from aerona.db.tables.mind import SkillRow
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
-from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBand
+from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBand, WeatherEffect
 from aerona.domain.enums.industry import EnergyKind
+from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
@@ -61,6 +64,31 @@ def workers_of(book: EconomyBook, community: EntityRow) -> int:
     return hands if hands is not None else headcount(community)
 
 
+async def mages_of(ctx: TickContext, community_id: int) -> int:
+    mortals = select(EntityRow.id).where(
+        EntityRow.entity_type == EntityType.MORTAL,
+        EntityRow.status == EntityStatus.CANON,
+        or_(EntityRow.affiliated_entity_id == community_id, EntityRow.location_id == community_id),
+    )
+    found = await ctx.session.scalar(
+        select(func.count(SkillRow.holder_node_id)).where(
+            SkillRow.holder_node_id.in_(mortals),
+            SkillRow.skill == SkillKind.SPELLCRAFT,
+            SkillRow.subject_node_id.is_(None),
+            SkillRow.level >= ctx.rules.energy.mage_skill_at,
+        )
+    )
+    return int(found or 0)
+
+
+def weather_wind(ctx: TickContext, book: EconomyBook, community: EntityRow) -> int:
+    ground = book.ground.region_of(community.id)
+    if ground is None:
+        return 0
+    season = book.ground.growing_season(ground.world_id)
+    return book.ground.weather(ctx.environment.world_seed, ctx.epoch, ground, season, f"wind.{community.id}").effect(WeatherEffect.WIND)
+
+
 async def supply_of(ctx: TickContext, book: EconomyBook, community: EntityRow, leys: Counter[int]) -> tuple[dict[EnergyKind, int], int]:
     table = ctx.rules.energy
     region = book.ground.region_of(community.id)
@@ -74,6 +102,8 @@ async def supply_of(ctx: TickContext, book: EconomyBook, community: EntityRow, l
     burnable = held.get(CommodityKind.FUEL, 0) * table.heat_per_fuel + held.get(CommodityKind.TIMBER, 0) * table.heat_per_timber
     need = survival_heat(ctx.rules, headcount(community), region.temperature_band if region is not None else None)
     magic = (region.magic_density * table.magic_density_pct / PERCENT + leys.get(region.entity_id, 0) * table.magic_per_ley) if region is not None else 0
+    magic += await mages_of(ctx, community.id) * table.magic_per_mage
+    wind *= 1 + weather_wind(ctx, book, community) * table.weather_wind_pct / PERCENT / PERCENT
     shrine = book.workshop(community.id, WorkshopKind.SHRINE_WORKSHOP)
     divine = (shrine.level if shrine is not None else 0) * table.divine_per_shrine + clergy_of(book, community) * table.divine_per_100_clergy / PERCENT
     supply = {
@@ -100,6 +130,7 @@ def industry_row(ctx: TickContext, book: EconomyBook, community_id: int) -> Comm
             drink=0,
             market_access=100,
             black_market=0,
+            light=0,
             heat_need=0,
             tools_worn=0,
             spoiled=0,
@@ -143,9 +174,18 @@ def draw(book: EconomyBook, community_id: int, kind: EnergyKind, need: int) -> i
         return need
     granted = min(need, available(row, kind))
     row.spent = {**row.spent, kind.value: row.spent.get(kind.value, 0) + granted}
+    if granted < need and kind is EnergyKind.HEAT and magic_heat_pct(book) > 0:
+        rate = magic_heat_pct(book)
+        spells = min(available(row, EnergyKind.MAGIC), -(-(need - granted) * PERCENT // rate))
+        row.spent = {**row.spent, EnergyKind.MAGIC.value: row.spent.get(EnergyKind.MAGIC.value, 0) + spells}
+        granted = min(need, granted + spells * rate // PERCENT)
     if granted < need:
         row.short = {**row.short, kind.value: row.short.get(kind.value, 0) + need - granted}
     return granted
+
+
+def magic_heat_pct(book: EconomyBook) -> int:
+    return book.magic_heat_pct
 
 
 def scale_by_energy(book: EconomyBook, community_id: int, kind: EnergyKind, need: int) -> float:

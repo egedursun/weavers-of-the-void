@@ -61,6 +61,7 @@ from aerona.engine.environment.local import weather_here
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import exorcise, seal_with, soul_near, unseal_with
 from aerona.engine.gods.interventions import apply_abundance
+from aerona.engine.industry.pollution import void_scar
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.intel import gain_intel
@@ -881,6 +882,8 @@ async def cast(
         casting.effect = "; ".join(text for text in done if text)[:480] or "the rite was worked to no end"
         await infamy(ctx, caster, row, target)
     await judged(ctx, caster.id, target.id if target is not None else caster.id, SCHOOL_ACTS.get(row.school, ActKind.MAGIC_USE))
+    if row.school is MagicSchool.VOID:
+        await void_scar(ctx, target.id if target is not None else caster.id)
     set_stats(rite, castings=(stat(rite, "castings") or 0) + 1)
     ctx.session.add(casting)
     await ctx.session.flush()

@@ -16,7 +16,7 @@ from aerona.domain.enums.industry import EnergyKind, MethodKind, Pollutant, Proc
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 SPAN = 100
-STORE_FIELDS = ("heat_need", "tools_worn", "spoiled", "preserved", "meal_quality", "drink", "market_access", "black_market")
+STORE_FIELDS = ("heat_need", "tools_worn", "spoiled", "preserved", "meal_quality", "drink", "light", "market_access", "black_market")
 
 
 class SetMethod(Command):
@@ -46,6 +46,7 @@ class SetIndustry(Command):
     drink: int | None = Field(default=None, ge=0, le=SPAN)
     market_access: int | None = Field(default=None, ge=0, le=SPAN)
     black_market: int | None = Field(default=None, ge=0)
+    light: int | None = Field(default=None, ge=0, le=SPAN)
     hold: bool = True
 
 
@@ -158,6 +159,7 @@ async def set_industry(scope: PlayerScope, command: SetIndustry) -> Effect:
             drink=0,
             market_access=100,
             black_market=0,
+            light=0,
             heat_need=0,
             tools_worn=0,
             spoiled=0,

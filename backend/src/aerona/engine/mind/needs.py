@@ -6,6 +6,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.body import ConditionRow, InjuryRow
+from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.industry import CommunityIndustryRow
 from aerona.db.tables.mind import MemoryRow, NeedRow, SkillRow
@@ -13,6 +14,7 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.body import OPEN_INJURY_STATES
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.industry import QualityTier
 from aerona.domain.enums.mind import NeedKind, PreferenceKind, PressureKind, SkillFamily, SkillKind, TraitKind, ValueAxis
@@ -29,7 +31,7 @@ from aerona.engine.mind.preferences import market_fit, nature_bonus
 from aerona.engine.mortal.kin import close_kin_of, partners_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import known_levels
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.society import class_shares, stock
 from aerona.engine.primitives.stats import stat
@@ -156,6 +158,18 @@ async def fine_fare(session: AsyncSession, rules: Rules, community: EntityRow | 
     return rules.quality.fine_meal_sustenance if row is not None and at_least(rules, row.meal_quality, QualityTier.FINE) else 0
 
 
+async def fine_cloth(session: AsyncSession, rules: Rules, community_id: int) -> bool:
+    rows = list(
+        await session.scalars(
+            select(CommunityStockRow).where(
+                CommunityStockRow.community_entity_id == community_id, CommunityStockRow.commodity == CommodityKind.CLOTH, CommunityStockRow.quantity > 0
+            )
+        )
+    )
+    stocked = sum(row.quantity for row in rows)
+    return stocked > 0 and at_least(rules, round_half_up(sum(row.quality * row.quantity for row in rows) / stocked), QualityTier.FINE)
+
+
 async def drink_needs(session: AsyncSession, rules: Rules, community: EntityRow | None, needs: dict[NeedKind, int]) -> None:
     row = await session.get(CommunityIndustryRow, community.id) if community is not None else None
     if row is None or community is None:
@@ -219,6 +233,8 @@ async def mortal_needs(session: AsyncSession, rules: Rules, mortal: EntityRow, *
         needs[NeedKind.PLEASURE] = pct(needs[NeedKind.PLEASURE] - table.trait_demand)
     needs.update(await deeper_needs(session, rules, mortal, community, pressures, sustenance=sustenance, wounds=open_wounds, epoch=epoch))
     await drink_needs(session, rules, community, needs)
+    if community is not None and await fine_cloth(session, rules, community.id):
+        needs[NeedKind.COMFORT] = pct(needs.get(NeedKind.COMFORT, 0) + rules.quality.fine_cloth_comfort)
     return needs
 
 

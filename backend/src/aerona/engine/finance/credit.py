@@ -59,18 +59,27 @@ async def reserves_of(ctx: TickContext, realm_id: int) -> int:
     return int(total or 0)
 
 
-async def trust_of(ctx: TickContext, subject_id: int) -> int | None:
+async def coin_of(ctx: TickContext, subject_id: int) -> CurrencyRow | None:
     society = await ctx.session.get(CommunitySocietyRow, subject_id)
     if society is None or society.currency_id is None:
         return None
-    currency = await ctx.session.get(CurrencyRow, society.currency_id)
-    return currency.trust if currency is not None else None
+    return await ctx.session.get(CurrencyRow, society.currency_id)
 
 
-def rated_interest(ctx: TickContext, rating: int, trust: int | None) -> int:
+async def scarcity_of(ctx: TickContext, subject_id: int) -> int:
     table = ctx.rules.credit
-    scarcity = (PERCENT - trust) * table.supply_pct / PERCENT if trust is not None else 0
-    return clamp_int(table.base_interest + (PERCENT - rating) * table.spread_pct / PERCENT + scarcity, 0, PERCENT)
+    currency = await coin_of(ctx, subject_id)
+    if currency is None:
+        return 0
+    entity = await ctx.session.get(EntityRow, subject_id)
+    need = max(1, (headcount(entity) if entity is not None else 0) * table.supply_per_1000 // THOUSAND)
+    thin = max(0, PERCENT - currency.supply * PERCENT // need)
+    return max(PERCENT - currency.trust, thin)
+
+
+def rated_interest(ctx: TickContext, rating: int, scarcity: int) -> int:
+    table = ctx.rules.credit
+    return clamp_int(table.base_interest + (PERCENT - rating) * table.spread_pct / PERCENT + scarcity * table.supply_pct / PERCENT, 0, PERCENT)
 
 
 async def borrowers(ctx: TickContext) -> list[int]:
@@ -113,7 +122,7 @@ async def rate(ctx: TickContext, subject_id: int, tally: CreditTally) -> CreditP
         else:
             row.state = CreditState.NORMAL
     if "interest_pct" not in locked:
-        row.interest_pct = rated_interest(ctx, row.rating, await trust_of(ctx, subject_id))
+        row.interest_pct = rated_interest(ctx, row.rating, await scarcity_of(ctx, subject_id))
     if realm is not None and "reserves" not in locked:
         row.reserves = await reserves_of(ctx, subject_id)
     row.epoch = ctx.epoch

@@ -26,18 +26,23 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import IdeologyTenet, Technique
 from aerona.domain.enums.demography import Job
-from aerona.domain.enums.economy import CommodityKind, ExtractionKind
+from aerona.domain.enums.economy import CommodityKind, ExtractionKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBand
 from aerona.domain.enums.faction import FactionGoalKind, FactionKind
-from aerona.domain.enums.industry import EnergyKind, ProcessKind
+from aerona.domain.enums.industry import EnergyKind, MethodKind, ProcessKind
+from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
+from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.industry.quality import premium
+from aerona.engine.mind.book import values_for
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 
 TENTH = 10
+CELLAR_LEVEL = 2
+CELLARS = (WorkshopKind.WAREHOUSE, WorkshopKind.GRANARY)
 
 
 @dataclass
@@ -47,6 +52,20 @@ class MethodTally:
     displaced: int = 0
     resisted: int = 0
     changes: dict[str, int] = field(default_factory=dict)
+
+
+async def feed(ctx: TickContext, community_id: int, spec: MethodSpec, units: int) -> float:
+    if not spec.inputs or units <= 0:
+        return 1.0
+    ledger = goods_of(ctx.session, ctx.epoch)
+    wanted = {commodity: -(-units * per // TENTH) for commodity, per, _ in spec.inputs}
+    held = {commodity: await holding(ctx.session, community_id, commodity, material) for commodity, _, material in spec.inputs}
+    share = min(1.0, *(held[commodity] / need for commodity, need in wanted.items() if need > 0))
+    for commodity, _, material in spec.inputs:
+        take = round_half_up(wanted[commodity] * share)
+        if take > 0:
+            await ledger.take(community_id, commodity, take, GoodsFlow.INPUT, material=material)
+    return share
 
 
 async def reveres_nature(ctx: TickContext, community_id: int) -> bool:
@@ -97,12 +116,13 @@ def blocked_by(
     coastal: bool,
     supply: int,
     banned: bool = False,
+    cellar: bool = False,
 ) -> str | None:
     checks = (
         (banned and spec.energy is EnergyKind.MAGIC, "the law forbids magic here"),
         (spec.technique is not None and spec.technique not in techniques, f"needs the technique of {(spec.technique or '').replace('_', ' ')}"),
         (spec.branch is not None and levels.get(spec.branch, 0) < spec.level, f"needs {(spec.branch or '').replace('_', ' ')} at level {spec.level}"),
-        (spec.climate is not None and band not in spec.climate, "the climate does not allow it"),
+        (spec.climate is not None and band not in spec.climate and not (cellar and spec.kind is MethodKind.ICING), "the climate does not allow it"),
         (spec.coast and not coastal, "needs a coast"),
         (spec.energy is not EnergyKind.MUSCLE and supply < spec.energy_need, f"too little {spec.energy.value} energy"),
     )
@@ -120,7 +140,12 @@ def allowed(book: EconomyBook, community: EntityRow, spec: MethodSpec, *, banned
         coastal=region is not None and region.coast_kind is not CoastKind.NONE,
         supply=int(getattr(row, spec.energy.value)) if row is not None else 0,
         banned=banned,
+        cellar=has_cellar(book, community.id),
     )
+
+
+def has_cellar(book: EconomyBook, community_id: int) -> bool:
+    return any((store := book.workshop(community_id, kind)) is not None and store.level >= CELLAR_LEVEL for kind in CELLARS)
 
 
 def profit(ctx: TickContext, book: EconomyBook, community: EntityRow, spec: MethodSpec, *, nature: bool) -> float:
@@ -132,6 +157,8 @@ def profit(ctx: TickContext, book: EconomyBook, community: EntityRow, spec: Meth
     scarcity = 2 if supply < spec.energy_need * TENTH else 1
     cost = spec.energy_need * table.energy_price * scarcity / TENTH
     cost += spec.tool_wear * local_price(book, community.id, CommodityKind.TOOLS) * table.wear_price_pct / PERCENT / TENTH
+    cost += sum(units * local_price(book, community.id, commodity) for commodity, units, _ in spec.inputs) / TENTH
+    cost += (spec.labour_pct - PERCENT) * table.labour_price / PERCENT
     if nature:
         cost += spec.fouls * price * table.nature_pollution_pct / PERCENT / TENTH
     return gross - cost
@@ -213,7 +240,7 @@ async def adopt(ctx: TickContext, book: EconomyBook, community: EntityRow, spec:
     row.method, row.adopted_epoch, row.displaced = spec.kind, ctx.epoch, 0
     tally.changed += 1
     tally.changes[spec.kind.value] = tally.changes.get(spec.kind.value, 0) + 1
-    gain = spec.output_pct - before.output_pct
+    gain = max(spec.output_pct - before.output_pct, round_half_up((before.labour_pct - spec.labour_pct) * PERCENT / max(1, before.labour_pct)))
     if gain > 0:
         row.displaced = displace(ctx, book, community, spec.process, gain)
         tally.displaced += row.displaced
@@ -230,12 +257,21 @@ async def adopt(ctx: TickContext, book: EconomyBook, community: EntityRow, spec:
     return row
 
 
+async def owner_reveres(ctx: TickContext, owner_id: int, cache: dict[int, bool]) -> bool:
+    if owner_id not in cache:
+        values = await values_for(ctx.session, owner_id)
+        cache[owner_id] = await reveres_nature(ctx, owner_id) or values.get(ValueAxis.NATURE, 0) >= ctx.rules.methods.nature_value_at
+    return cache[owner_id]
+
+
 async def choose_methods(ctx: TickContext, book: EconomyBook, community: EntityRow, tally: MethodTally, *, banned: bool = False) -> None:
-    nature = await reveres_nature(ctx, community.id)
+    beliefs: dict[int, bool] = {}
     margin = 1 + ctx.rules.methods.switch_margin_pct / PERCENT
     for process in ProcessKind:
         if not practised(book, community, process):
             continue
+        site = book.workshop(community.id, PROCESS_WORKSHOP[process]) if process in PROCESS_WORKSHOP else None
+        nature = await owner_reveres(ctx, site.owner_node_id if site is not None and site.owner_node_id is not None else community.id, beliefs)
         row = book.methods.get(community.id, {}).get(process)
         if row is not None and "method" in row.locked:
             continue

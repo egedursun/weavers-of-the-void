@@ -14,19 +14,21 @@ from aerona.domain.enums.culture import IdeologyTenet, Technique
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind, HazardKind, WorkshopKind
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBand
+from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBand, TerrainKind
 from aerona.domain.enums.faction import FactionGoalKind, FactionKind
 from aerona.domain.enums.industry import EnergyKind, MethodKind, Pollutant, ProcessKind, QualityTier
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.models.entity_stats import FactionStats, IdeologyStats
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.extraction import shaft_factor
+from aerona.engine.economy.refining import lit as lit_factor
 from aerona.engine.industry.energy import draw, gauge, industry_row, survival_heat, unmet_pct
-from aerona.engine.industry.methods import MethodTally, adopt, allowed, choose_methods, profit, reveres_nature
+from aerona.engine.industry.methods import MethodTally, adopt, allowed, choose_methods, feed, owner_reveres, profit, reveres_nature
 from aerona.engine.industry.owners import ProfitTally, barred_works, buy, tend_profits
-from aerona.engine.industry.pollution import PollutionTally, disease_extra, fertility_factor, fish_factor, tend_pollution
+from aerona.engine.industry.pollution import PollutionTally, disease_extra, fertility_factor, fish_factor, tend_pollution, void_scar
 from aerona.engine.industry.quality import premium, tier_of
-from aerona.engine.industry.stores import StoreTally, preserve, spoil, wear_tools
+from aerona.engine.industry.stores import StoreTally, kindle, preserve, spoil, wear_tools
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, context, make, settlement
 
@@ -45,6 +47,10 @@ def ground(realm: Realm, **values: object) -> RegionEnvironmentRow:
         "temperature_band": TemperatureBand.TEMPERATE,
         "rainfall": 50,
         "magic_density": 0,
+        "seasonality": 40,
+        "temperature": 50,
+        "latitude": 30,
+        "dominant_terrain": TerrainKind.PLAIN,
         "scars": {},
         "disease_load": 0,
         "locked": [],
@@ -126,6 +132,7 @@ async def test_perishables_spoil_unless_preserved_and_work_wears_tools(realm: Re
     ctx = context(realm.session)
     town = await settlement(realm, "Saltmarsh")
     fish = CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.FISH, quantity=200, quality=50)
+    realm.session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.ORE, material=MaterialKind.SALT, quantity=50, quality=50))
     tools = CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.TOOLS, quantity=50, quality=50)
     realm.session.add_all([fish, tools])
     realm.session.add(
@@ -242,3 +249,39 @@ async def test_magic_bans_bar_magic_methods_and_deep_soft_mines_cave_in_more(rea
     await adopt(ctx, book, town, METHODS[MethodKind.PUMPED_SHAFTS], MethodTally())
     dry = shaft_factor(ctx, book, realm.region, spent, community=town, hazard=HazardKind.FLOODED_SHAFT)
     assert dry < shaft_factor(ctx, book, realm.region, spent, community=town, hazard=HazardKind.CAVE_IN)
+
+
+async def test_methods_take_their_inputs_and_hands_light_lifts_work_and_magic_stands_in_for_fuel(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Lampwick")
+    realm.session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.FUEL, quantity=30, quality=50))
+    realm.session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.LIVESTOCK, quantity=100, quality=50))
+    realm.session.add(WorkshopRow(community_entity_id=town.id, kind=WorkshopKind.WAREHOUSE, level=2, built_epoch=1))
+    await realm.session.flush()
+    book = await loaded(realm)
+    furnace = METHODS[MethodKind.BLAST_FURNACE]
+    assert furnace.labour_pct < 100 and furnace.inputs
+    assert await feed(ctx, town.id, furnace, 100) == 1.0
+    fuel = await realm.session.scalar(
+        select(CommunityStockRow).where(CommunityStockRow.community_entity_id == town.id, CommunityStockRow.commodity == CommodityKind.FUEL)
+    )
+    assert fuel is not None and fuel.quantity == 20
+    assert await feed(ctx, town.id, furnace, 400) == 0.5
+    row = industry_row(ctx, book, town.id)
+    row.magic = 40
+    assert draw(book, town.id, EnergyKind.HEAT, 10) == 10 and row.spent["magic"] > 0
+    assert allowed(book, town, METHODS[MethodKind.ICING]) is None
+    row.muscle = 50
+    lit = await kindle(ctx, book, town, row)
+    assert lit > 0 and row.light == lit
+    assert lit_factor(ctx, book, town.id) > 1
+
+
+async def test_owners_who_love_nature_shun_fouling_methods_and_void_rites_foul_the_land(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Fernhollow")
+    await realm.session.flush()
+    assert not await owner_reveres(ctx, town.id, {})
+    fouled = await void_scar(ctx, town.id)
+    stored = await realm.session.get(RegionPollutionRow, realm.region.id)
+    assert fouled > 0 and stored is not None and stored.air == RULES.pollution.void_rite and stored.soil == RULES.pollution.void_rite

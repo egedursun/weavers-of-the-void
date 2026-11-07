@@ -36,6 +36,7 @@ from aerona.engine.phase import Phase
     "table.sky_events",
     "table.trade_policies",
     "table.treaty_parties",
+    "table.treaty_profiles",
     "table.war_sides",
     "table.wars",
     "table.workshop_designs",

@@ -19,6 +19,7 @@ from aerona.engine.environment.book import add_scar
 from aerona.engine.industry.energy import draw
 from aerona.engine.industry.methods import reveres_nature
 from aerona.engine.notes import note
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount
 from aerona.engine.services.community_relations import change_relation
@@ -184,3 +185,15 @@ async def tend_pollution(ctx: TickContext, book: EconomyBook, tally: PollutionTa
     await rites(ctx, book, tally)
     await turn_against(ctx, book, sources, tally)
     await blight(ctx, book, tally)
+
+
+async def void_scar(ctx: TickContext, entity_id: int) -> int:
+    region_id = (await RegionAtlas.load(ctx.session)).top_region(entity_id)
+    if region_id is None:
+        return 0
+    row = await ctx.session.get(RegionPollutionRow, region_id)
+    if row is None:
+        row = RegionPollutionRow(region_node_id=region_id, air=0, water=0, soil=0, polluters={}, epoch=ctx.epoch, locked=[])
+        ctx.session.add(row)
+    amount = ctx.rules.pollution.void_rite
+    return shift(row, Pollutant.AIR, amount) + shift(row, Pollutant.SOIL, amount)

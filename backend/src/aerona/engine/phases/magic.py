@@ -133,6 +133,7 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
     "table.polity_profiles",
     "table.polity_territories",
     "table.region_environment",
+    "table.region_pollution",
     "table.resurrection_orders",
     "table.reverences",
     "table.rite_profiles",
@@ -154,6 +155,7 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.region_pollution",
     "table.skills",
 )
 async def wizards(ctx: TickContext) -> None:

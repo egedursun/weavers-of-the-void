@@ -9,7 +9,7 @@ from aerona.engine.industry.energy import gauge, industry_row, leys_by_region, u
 from aerona.engine.industry.methods import MethodTally, choose_methods
 from aerona.engine.industry.owners import ProfitTally, magic_banned, tend_profits
 from aerona.engine.industry.pollution import PollutionTally, tend_pollution
-from aerona.engine.industry.stores import StoreTally, burn_fuel, noble_taste, pour_drink, preserve, spoil, wear_tools
+from aerona.engine.industry.stores import StoreTally, burn_fuel, kindle, noble_taste, pour_drink, preserve, spoil, wear_tools
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -39,6 +39,7 @@ NOTE_CAP = 6
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.ley_lines",
+    "table.personality_values",
     "table.place_environment",
     "table.polity_members",
     "table.region_environment",
@@ -63,10 +64,13 @@ NOTE_CAP = 6
     "table.community_industry",
     "table.community_labour",
     "table.community_methods",
+    "table.community_stocks",
     "table.epoch_year_cursors",
     "table.faction_goals",
+    "table.goods_flows",
     "table.incident_participants",
     "table.incidents",
+    "table.production_runs",
 )
 async def industry_methods(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
@@ -75,8 +79,9 @@ async def industry_methods(ctx: TickContext) -> None:
     banned = await magic_banned(ctx.session, book)
     ctx.count("access_gauged", await gauge_access(ctx, book))
     for community in unheld(book.communities):
-        await gauge(ctx, book, community, leys)
+        row = await gauge(ctx, book, community, leys)
         await choose_methods(ctx, book, community, tally, banned=community.id in banned)
+        await kindle(ctx, book, community, row)
     await ctx.session.flush()
     ctx.count("methods_chosen", tally.chosen)
     ctx.count("methods_changed", tally.changed)

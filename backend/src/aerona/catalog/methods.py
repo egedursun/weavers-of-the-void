@@ -6,6 +6,7 @@ from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind, ExtractionKind, WorkshopKind
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.industry import EnergyKind, MethodKind, Pollutant, ProcessKind, QualityTier
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
 
 E = EnergyKind
@@ -36,6 +37,8 @@ class MethodSpec:
     level: int = 0
     climate: frozenset[TemperatureBand] | None = None
     coast: bool = False
+    labour_pct: int = 100
+    inputs: tuple[tuple[CommodityKind, int, MaterialKind | None], ...] = ()
 
     @property
     def fouls(self) -> int:
@@ -62,6 +65,7 @@ METHODS: MappingProxyType[MethodKind, MethodSpec] = MappingProxyType(
                 soil=1,
                 tool_wear=2,
                 technique=Technique.PLOUGH,
+                labour_pct=80,
             ),
             m(
                 M.IRRIGATED_TERRACES,
@@ -94,6 +98,7 @@ METHODS: MappingProxyType[MethodKind, MethodSpec] = MappingProxyType(
                 output_pct=125,
                 quality_bonus=10,
                 tool_wear=0,
+                inputs=((CommodityKind.INCENSE, 1, None),),
             ),
             m(M.LINE_AND_NET, P.FISHING, "Line and net", "Fish taken from boats close to shore", E.MUSCLE, 2),
             m(M.FISH_WEIRS, P.FISHING, "Fish weirs", "Fences in the current trap the shoals", E.WATER, 1, output_pct=115),
@@ -110,9 +115,32 @@ METHODS: MappingProxyType[MethodKind, MethodSpec] = MappingProxyType(
                 coast=True,
             ),
             m(M.AXE_FELLING, P.LOGGING, "Axe felling", "Trees felled and split by hand", E.MUSCLE, 2, tool_wear=2),
-            m(M.WATER_SAWMILL, P.LOGGING, "Water sawmill", "A wheel drives the saws", E.WATER, 3, output_pct=140, branch=B.ARCHITECTURE, level=1),
+            m(
+                M.WATER_SAWMILL,
+                P.LOGGING,
+                "Water sawmill",
+                "A wheel drives the saws",
+                E.WATER,
+                3,
+                output_pct=140,
+                branch=B.ARCHITECTURE,
+                level=1,
+                labour_pct=60,
+            ),
             m(M.PICK_AND_SHOVEL, P.MINING, "Pick and shovel", "Seams dug out by hand", E.MUSCLE, 3, soil=2, tool_wear=3),
-            m(M.FIRE_SETTING, P.MINING, "Fire-setting", "Fires crack the rock face", E.HEAT, 3, output_pct=125, air=3, soil=2, tool_wear=2),
+            m(
+                M.FIRE_SETTING,
+                P.MINING,
+                "Fire-setting",
+                "Fires crack the rock face",
+                E.HEAT,
+                3,
+                output_pct=125,
+                air=3,
+                soil=2,
+                tool_wear=2,
+                inputs=((CommodityKind.TIMBER, 1, None),),
+            ),
             m(
                 M.PUMPED_SHAFTS,
                 P.MINING,
@@ -128,10 +156,10 @@ METHODS: MappingProxyType[MethodKind, MethodSpec] = MappingProxyType(
                 level=2,
             ),
             m(M.EARTH_SHAPING, P.MINING, "Earth-shaping", "Magic opens the stone", E.MAGIC, 4, output_pct=140, soil=1, tool_wear=0, branch=B.MAGIC, level=2),
-            m(M.HAND_QUERN, P.MILLING, "Hand quern", "Grain ground at home", E.MUSCLE, 2, output_pct=80),
-            m(M.WATERMILL, P.MILLING, "Watermill", "A river turns the millstones", E.WATER, 2, output_pct=120, branch=B.ARCHITECTURE, level=1),
-            m(M.WINDMILL, P.MILLING, "Windmill", "Sails turn the millstones", E.WIND, 2, output_pct=115, branch=B.ARCHITECTURE, level=1),
-            m(M.HAND_LOOM, P.WEAVING, "Hand loom", "Cloth woven by hand", E.MUSCLE, 1),
+            m(M.HAND_QUERN, P.MILLING, "Hand quern", "Grain ground at home", E.MUSCLE, 2, output_pct=80, labour_pct=150),
+            m(M.WATERMILL, P.MILLING, "Watermill", "A river turns the millstones", E.WATER, 2, output_pct=120, branch=B.ARCHITECTURE, level=1, labour_pct=50),
+            m(M.WINDMILL, P.MILLING, "Windmill", "Sails turn the millstones", E.WIND, 2, output_pct=115, branch=B.ARCHITECTURE, level=1, labour_pct=60),
+            m(M.HAND_LOOM, P.WEAVING, "Hand loom", "Cloth woven by hand", E.MUSCLE, 1, labour_pct=130),
             m(
                 M.WATER_FRAME,
                 P.WEAVING,
@@ -143,6 +171,7 @@ METHODS: MappingProxyType[MethodKind, MethodSpec] = MappingProxyType(
                 water=1,
                 branch=B.ARCHITECTURE,
                 level=2,
+                labour_pct=50,
             ),
             m(M.BLOOMERY, P.SMELTING, "Bloomery", "Charcoal fires work the metal", E.HEAT, 2, air=2, soil=1),
             m(
@@ -157,12 +186,47 @@ METHODS: MappingProxyType[MethodKind, MethodSpec] = MappingProxyType(
                 air=4,
                 soil=2,
                 technique=Technique.STEEL,
+                labour_pct=80,
+                inputs=((CommodityKind.FUEL, 1, None),),
             ),
-            m(M.DIVINE_FORGE, P.SMELTING, "Divine forge", "Holy fire works the metal", E.DIVINE, 3, output_pct=110, quality_bonus=25, tool_wear=0),
+            m(
+                M.DIVINE_FORGE,
+                P.SMELTING,
+                "Divine forge",
+                "Holy fire works the metal",
+                E.DIVINE,
+                3,
+                output_pct=110,
+                quality_bonus=25,
+                tool_wear=0,
+                inputs=((CommodityKind.SACRED_GOODS, 1, None),),
+            ),
             m(M.PIT_TANNING, P.TANNING, "Pit tanning", "Hides steeped in pits of bark", E.MUSCLE, 1, water=3, soil=1),
-            m(M.OIL_CURING, P.TANNING, "Oil curing", "Hides cured over smoke with oils", E.HEAT, 1, output_pct=90, quality_bonus=5, air=1),
+            m(
+                M.OIL_CURING,
+                P.TANNING,
+                "Oil curing",
+                "Hides cured over smoke with oils",
+                E.HEAT,
+                1,
+                output_pct=90,
+                quality_bonus=5,
+                air=1,
+                inputs=((CommodityKind.FISH, 1, None),),
+            ),
             m(M.OPEN_VAT, P.BREWING, "Open vat", "Brewed in open vats", E.HEAT, 1),
-            m(M.CELLAR_BREWING, P.BREWING, "Cellar brewing", "Aged slowly in cool cellars", E.HEAT, 1, quality_bonus=10, branch=B.AGRICULTURE, level=3),
+            m(
+                M.CELLAR_BREWING,
+                P.BREWING,
+                "Cellar brewing",
+                "Aged slowly in cool cellars",
+                E.HEAT,
+                1,
+                quality_bonus=10,
+                branch=B.AGRICULTURE,
+                level=3,
+                labour_pct=120,
+            ),
             m(M.HERBAL_STILL, P.DISTILLING, "Herbal still", "Remedies boiled from herbs", E.HEAT, 1),
             m(
                 M.ARCANE_ALEMBIC,
@@ -175,16 +239,53 @@ METHODS: MappingProxyType[MethodKind, MethodSpec] = MappingProxyType(
                 quality_bonus=10,
                 air=1,
                 technique=Technique.ALCHEMY,
+                labour_pct=70,
             ),
             m(M.HAND_CHISEL, P.MASONRY, "Hand chisel", "Stone dressed by hand", E.MUSCLE, 2, air=1, tool_wear=2),
-            m(M.WATER_SAW, P.MASONRY, "Water saw", "A wheel drives the stone saws", E.WATER, 2, output_pct=140, branch=B.ARCHITECTURE, level=2),
+            m(M.WATER_SAW, P.MASONRY, "Water saw", "A wheel drives the stone saws", E.WATER, 2, output_pct=140, branch=B.ARCHITECTURE, level=2, labour_pct=60),
             m(M.CLAMP_KILN, P.CHARCOAL, "Clamp kiln", "Wood smoulders under turf", E.MUSCLE, 1, air=3),
             m(M.RETORT_KILN, P.CHARCOAL, "Retort kiln", "Sealed kilns waste little", E.MUSCLE, 1, output_pct=125, air=1, branch=B.METALLURGY, level=2),
-            m(M.SALTING, P.PRESERVING, "Salting", "Packed in salt", E.MUSCLE, 1, tool_wear=0),
+            m(M.SALTING, P.PRESERVING, "Salting", "Packed in salt", E.MUSCLE, 1, tool_wear=0, inputs=((CommodityKind.ORE, 1, MaterialKind.SALT),)),
             m(M.SMOKING, P.PRESERVING, "Smoking", "Hung in smokehouses", E.HEAT, 1, air=1, tool_wear=0),
             m(M.DRYING, P.PRESERVING, "Drying", "Laid out in the sun and wind", E.WIND, 1, output_pct=80, tool_wear=0, climate=DRY_HEAT),
-            m(M.ICING, P.PRESERVING, "Icing", "Kept in ice cellars", E.MUSCLE, 1, output_pct=130, tool_wear=0, climate=COLD),
+            m(M.ICING, P.PRESERVING, "Icing", "Kept in ice on cold land or in deep cellars", E.MUSCLE, 1, output_pct=130, tool_wear=0, climate=COLD),
             m(M.MAGIC_KEEPING, P.PRESERVING, "Magic keeping", "Spells hold back the rot", E.MAGIC, 2, output_pct=150, tool_wear=0, branch=B.MAGIC, level=1),
+            m(
+                M.TALLOW_CANDLES,
+                P.LIGHTING,
+                "Tallow candles",
+                "Candles rendered from animal fat",
+                E.MUSCLE,
+                1,
+                air=1,
+                tool_wear=0,
+                inputs=((CommodityKind.LIVESTOCK, 1, None),),
+            ),
+            m(
+                M.OIL_LAMPS,
+                P.LIGHTING,
+                "Oil lamps",
+                "Lamps burning oil pressed from fish",
+                E.MUSCLE,
+                1,
+                output_pct=120,
+                air=1,
+                tool_wear=0,
+                inputs=((CommodityKind.FISH, 1, None),),
+            ),
+            m(
+                M.GLOW_MOSS,
+                P.LIGHTING,
+                "Glow-moss",
+                "Moss that gives its own light, tended in wet places",
+                E.MUSCLE,
+                1,
+                output_pct=90,
+                tool_wear=0,
+                branch=B.AGRICULTURE,
+                level=2,
+            ),
+            m(M.MAGIC_LIGHT, P.LIGHTING, "Magic light", "Lights kindled and kept by spells", E.MAGIC, 2, output_pct=150, tool_wear=0, branch=B.MAGIC, level=1),
         )
     }
 )
@@ -206,6 +307,7 @@ PROCESS_LABELS: MappingProxyType[ProcessKind, str] = MappingProxyType(
         P.MASONRY: "Dressing stone",
         P.CHARCOAL: "Charcoal burning",
         P.PRESERVING: "Preserving food",
+        P.LIGHTING: "Lighting",
     }
 )
 STEP_PROCESS: MappingProxyType[str, ProcessKind] = MappingProxyType(
@@ -284,6 +386,7 @@ PROCESS_OUTPUT: MappingProxyType[ProcessKind, CommodityKind] = MappingProxyType(
         P.MASONRY: CommodityKind.STONE,
         P.CHARCOAL: CommodityKind.FUEL,
         P.PRESERVING: CommodityKind.FISH,
+        P.LIGHTING: CommodityKind.LUXURIES,
     }
 )
 PROCESS_JOB: MappingProxyType[ProcessKind, Job] = MappingProxyType(
@@ -303,4 +406,4 @@ PROCESS_WORKSHOP: MappingProxyType[ProcessKind, WorkshopKind] = MappingProxyType
         P.CHARCOAL: WorkshopKind.CHARCOAL_KILN,
     }
 )
-ALWAYS_PRACTISED = frozenset({P.FARMING, P.WEAVING, P.PRESERVING})
+ALWAYS_PRACTISED = frozenset({P.FARMING, P.WEAVING, P.PRESERVING, P.LIGHTING})

@@ -5,26 +5,26 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.finance import CreditProfileRow, EconomicIndicatorRow, TradePolicyRow
 from aerona.db.tables.mind import FacetRow
-from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
+from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, TreatyPartyRow, TreatyProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.economy import CommodityKind, LoanStatus
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.finance import CreditState, SpeculationStatus, TradePolicyKind
 from aerona.domain.enums.mind import Facet
-from aerona.domain.enums.polity import DecisionRule, GovernmentKind
+from aerona.domain.enums.polity import DecisionRule, GovernmentKind, TreatyKind, TreatyStatus
 from aerona.domain.enums.settlement import SizeTier
-from aerona.domain.models.entity_stats import FactionStats, PolityStats
+from aerona.domain.models.entity_stats import FactionStats, PolityStats, TreatyStats
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.markets import elasticity_of, income_of
 from aerona.engine.finance.access import access_pct, sold_share
-from aerona.engine.finance.credit import CreditTally, interest_for, on_default, rate
+from aerona.engine.finance.credit import CreditTally, interest_for, on_default, rate, rated_interest
 from aerona.engine.finance.indicators import IndicatorTally, record_indicators
-from aerona.engine.finance.policy import PolicyBook, PolicyTally, smuggle
+from aerona.engine.finance.policy import PolicyBook, PolicyTally, smuggle, tend_policies
 from aerona.engine.finance.speculation import SpeculationTally, open_hoard, settle_hoards
 from aerona.engine.industry.energy import industry_row
 from aerona.rules.registry import Rules
-from tests.engine.society.factories import Realm, context, make, mortal, settlement
+from tests.engine.society.factories import Realm, context, make, mortal, settlement, tuned
 
 RULES = Rules()
 
@@ -43,7 +43,7 @@ async def realm_of(realm: Realm, name: str, *members: EntityRow) -> EntityRow:
 async def test_access_elasticity_and_income_follow_roads_routes_goods_and_prosperity(realm: Realm) -> None:
     ctx = context(realm.session)
     assert access_pct(RULES, 0, []) == RULES.market_access.base_pct
-    assert access_pct(RULES, 3, [10, 10]) > access_pct(RULES, 3, [90, 90]) > access_pct(RULES, 0, [])
+    assert access_pct(RULES, 3, [(10, 0), (10, 0)]) > access_pct(RULES, 3, [(90, 0), (90, 0)]) > access_pct(RULES, 0, [])
     assert sold_share(RULES, None) == 1.0
     assert elasticity_of(ctx, CommodityKind.GRAIN) < elasticity_of(ctx, CommodityKind.TOOLS) < elasticity_of(ctx, CommodityKind.LUXURIES)
     rich = await settlement(realm, "Goldmere", prosperity=90)
@@ -158,3 +158,24 @@ async def test_realms_and_worlds_keep_their_economic_indicators(realm: Realm) ->
     assert crown.id in subjects and realm.world.id in subjects and tally.recorded == len(rows)
     mine = next(row for row in rows if row.subject_node_id == crown.id)
     assert mine.output > 0 and mine.treasury == 200 and await realm.session.get(CreditProfileRow, crown.id) is None
+
+
+async def test_capacity_widens_access_allies_join_embargoes_and_thin_coin_raises_interest(realm: Realm) -> None:
+    ctx = context(realm.session)
+    assert access_pct(RULES, 0, [(0, 100)]) > access_pct(RULES, 0, [(0, 0)])
+    assert rated_interest(ctx, 60, 80) > rated_interest(ctx, 60, 0)
+    one, two, foe = await settlement(realm, "Allyton"), await settlement(realm, "Pactmere"), await settlement(realm, "Foehold")
+    first, second, enemy = await realm_of(realm, "First Crown", one), await realm_of(realm, "Second Crown", two), await realm_of(realm, "Foe Crown", foe)
+    pact = await make(realm.session, "The Iron Pact", EntityType.TREATY, TreatyStats(), world_id=realm.world.id)
+    realm.session.add(TreatyProfileRow(treaty_entity_id=pact.id, kind=TreatyKind.ALLIANCE_DEFENSIVE, status=TreatyStatus.IN_FORCE, signed_epoch=1))
+    realm.session.add_all([TreatyPartyRow(treaty_entity_id=pact.id, party_node_id=first.id), TreatyPartyRow(treaty_entity_id=pact.id, party_node_id=second.id)])
+    realm.session.add(
+        TradePolicyRow(issuer_node_id=first.id, kind=TradePolicyKind.EMBARGO, partner_node_id=enemy.id, rate_pct=100, since_epoch=1, locked=["kind"])
+    )
+    await realm.session.flush()
+    book = await EconomyBook.load(ctx)
+    policies = await PolicyBook.load(ctx, book)
+    rules = tuned(trade_policy={"treaty_embargo_chance": 100})
+    await tend_policies(context(realm.session, rules), book, policies, PolicyTally())
+    joined = await realm.session.scalar(select(TradePolicyRow).where(TradePolicyRow.issuer_node_id == second.id, TradePolicyRow.partner_node_id == enemy.id))
+    assert joined is not None and joined.kind is TradePolicyKind.EMBARGO and "treaty" in (joined.reason or "")

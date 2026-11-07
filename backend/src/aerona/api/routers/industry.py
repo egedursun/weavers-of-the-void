@@ -39,7 +39,7 @@ from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
 from aerona.domain.enums.environment import CoastKind, ScarKind
 from aerona.domain.enums.industry import EnergyKind, OwnerClass, ProcessKind
 from aerona.domain.enums.polity import LawKind
-from aerona.engine.industry.methods import blocked_by
+from aerona.engine.industry.methods import CELLAR_LEVEL, CELLARS, blocked_by
 from aerona.engine.industry.quality import tier_of
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
@@ -60,6 +60,8 @@ async def method_views(session: AsyncSession, community: EntityRow, ground: Regi
     levels = (await known_levels(session, [community.id])).get(community.id, {})
     energy = await session.get(CommunityIndustryRow, community.id)
     banned = (await LawBook.load(session)).in_force(community.id, LawKind.MAGIC_BAN) is not None
+    stores = await session.scalars(select(WorkshopRow.level).where(WorkshopRow.community_entity_id == community.id, WorkshopRow.kind.in_(list(CELLARS))))
+    cellar = any(level >= CELLAR_LEVEL for level in stores)
     views: list[WorksMethodView] = []
     for process in ProcessKind:
         row = rows.get(process)
@@ -77,6 +79,11 @@ async def method_views(session: AsyncSession, community: EntityRow, ground: Regi
                 water=option.water,
                 soil=option.soil,
                 tool_wear=option.tool_wear,
+                labour_pct=option.labour_pct,
+                inputs=[
+                    f"{units} {(material.value.replace('_', ' ') + ' ') if material is not None else ''}{COMMODITIES[commodity].label.lower()} per ten"
+                    for commodity, units, material in option.inputs
+                ],
                 blocked=blocked_by(
                     option,
                     techniques=techniques,
@@ -85,6 +92,7 @@ async def method_views(session: AsyncSession, community: EntityRow, ground: Regi
                     coastal=ground is not None and ground.coast_kind is not CoastKind.NONE,
                     supply=int(getattr(energy, option.energy.value)) if energy is not None else 0,
                     banned=banned,
+                    cellar=cellar,
                 ),
             )
             for option in PROCESS_METHODS[process]
@@ -134,6 +142,7 @@ def stores_view(rules: Rules, row: CommunityIndustryRow | None) -> WorksStoresVi
         meal_tier=tier,
         meal_tier_label=TIER_LABELS[tier],
         drink=row.drink,
+        light=row.light,
         epoch=row.epoch,
         held=list(row.locked or []),
     )

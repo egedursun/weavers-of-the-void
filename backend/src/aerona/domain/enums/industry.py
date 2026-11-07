@@ -40,6 +40,7 @@ class ProcessKind(StrEnum):
     MASONRY = "masonry"
     CHARCOAL = "charcoal"
     PRESERVING = "preserving"
+    LIGHTING = "lighting"
 
 
 class MethodKind(StrEnum):
@@ -80,6 +81,10 @@ class MethodKind(StrEnum):
     DRYING = "drying"
     ICING = "icing"
     MAGIC_KEEPING = "magic_keeping"
+    TALLOW_CANDLES = "tallow_candles"
+    OIL_LAMPS = "oil_lamps"
+    GLOW_MOSS = "glow_moss"
+    MAGIC_LIGHT = "magic_light"
 
 
 class OwnerClass(StrEnum):

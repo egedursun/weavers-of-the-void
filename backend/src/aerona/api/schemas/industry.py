@@ -18,6 +18,8 @@ class WorksOptionView(ApiModel):
     water: int
     soil: int
     tool_wear: int
+    labour_pct: int
+    inputs: list[str]
     blocked: str | None
 
 
@@ -84,6 +86,7 @@ class WorksStoresView(ApiModel):
     meal_tier: QualityTier
     meal_tier_label: str
     drink: int
+    light: int
     epoch: int | None
     held: list[str]
 

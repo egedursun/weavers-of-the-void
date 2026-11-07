@@ -5,12 +5,13 @@ from sqlalchemy import func, select
 
 from aerona.catalog.finance import ILLEGAL_GOODS
 from aerona.constants.units import PERCENT
+from aerona.core.random import SeededRandom
 from aerona.db.tables.economy import MarketPriceRow, ProductionRunRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.finance import TradePolicyRow
 from aerona.db.tables.mind import PressureRow
-from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
+from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, TreatyPartyRow, TreatyProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -18,6 +19,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.finance import TradePolicyKind
 from aerona.domain.enums.mind import PressureKind
+from aerona.domain.enums.polity import TreatyKind, TreatyStatus
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
@@ -31,6 +33,7 @@ from aerona.engine.services.war import ongoing_wars
 OUTLAW_KINDS = (FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.VOID_PIRATES)
 MERCHANT_GUILDS = (FactionKind.MERCHANT_GUILD, FactionKind.WANDERING_MARKET)
 NOTE_CAP = 4
+ALLIANCES = (TreatyKind.ALLIANCE_DEFENSIVE, TreatyKind.ALLIANCE_OFFENSIVE)
 
 
 @dataclass(frozen=True)
@@ -229,6 +232,13 @@ async def hungry_members(ctx: TickContext, members: list[int]) -> bool:
     return found is not None
 
 
+async def allies_of(ctx: TickContext, realm_id: int) -> list[int]:
+    live = select(TreatyProfileRow.treaty_entity_id).where(TreatyProfileRow.status == TreatyStatus.IN_FORCE, TreatyProfileRow.kind.in_(list(ALLIANCES)))
+    mine = select(TreatyPartyRow.treaty_entity_id).where(TreatyPartyRow.party_node_id == realm_id, TreatyPartyRow.treaty_entity_id.in_(live))
+    parties = await ctx.session.scalars(select(TreatyPartyRow.party_node_id).where(TreatyPartyRow.treaty_entity_id.in_(mine)))
+    return sorted({party for party in parties if party != realm_id})
+
+
 async def enemies_of(ctx: TickContext, realm: EntityRow, policies: PolicyBook) -> set[int]:
     enemies: set[int] = set()
     for war in await ongoing_wars(ctx.session, realm.id):
@@ -237,8 +247,95 @@ async def enemies_of(ctx: TickContext, realm: EntityRow, policies: PolicyBook) -
     return enemies
 
 
-async def tend_policies(ctx: TickContext, book: EconomyBook, policies: PolicyBook, tally: PolicyTally) -> None:
+@dataclass
+class Stance:
+    realm: EntityRow
+    profile: PolityProfileRow
+    rng: SeededRandom
+    flooded: set[CommodityKind]
+    enemies: set[int]
+    hungry: bool
+
+
+async def lay_once(
+    ctx: TickContext,
+    policies: PolicyBook,
+    stance: Stance,
+    kind: TradePolicyKind,
+    *,
+    commodity: CommodityKind | None,
+    partner: int | None,
+    rate: int,
+    reason: str,
+    chance: int,
+) -> bool:
+    if existing(policies, stance.realm.id, kind, commodity, partner) is not None or not stance.rng.chance(chance):
+        return False
+    policies.policies[stance.realm.id].append(await lay(ctx, stance.realm.id, kind, commodity=commodity, partner=partner, rate=rate, reason=reason))
+    return True
+
+
+async def lay_wanted(ctx: TickContext, book: EconomyBook, policies: PolicyBook, stance: Stance, tally: PolicyTally) -> None:
     table = ctx.rules.trade_policy
+    for commodity in sorted(stance.flooded, key=lambda item: item.value):
+        reason = "its owners pressed against cheap imports"
+        tally.laid += await lay_once(
+            ctx,
+            policies,
+            stance,
+            TradePolicyKind.TARIFF,
+            commodity=commodity,
+            partner=None,
+            rate=table.tariff_rate,
+            reason=reason,
+            chance=table.tariff_chance,
+        )
+    for enemy in sorted(stance.enemies):
+        tally.laid += await lay_once(
+            ctx, policies, stance, TradePolicyKind.EMBARGO, commodity=None, partner=enemy, rate=PERCENT, reason="at war", chance=table.embargo_chance
+        )
+    for ally in await allies_of(ctx, stance.realm.id):
+        bound = f"bound by treaty with {book.entities[ally].name}" if ally in book.entities else "bound by treaty"
+        for row in list(policies.policies.get(ally, [])):
+            target = row.partner_node_id
+            if row.kind is not TradePolicyKind.EMBARGO or target is None or target == stance.realm.id:
+                continue
+            stance.enemies.add(target)
+            laid = await lay_once(
+                ctx,
+                policies,
+                stance,
+                TradePolicyKind.EMBARGO,
+                commodity=row.commodity,
+                partner=target,
+                rate=PERCENT,
+                reason=bound,
+                chance=table.treaty_embargo_chance,
+            )
+            tally.laid += laid
+    if stance.hungry and stance.profile.treasury >= table.subsidy_treasury:
+        reason = "its people went hungry"
+        tally.laid += await lay_once(
+            ctx, policies, stance, TradePolicyKind.SUBSIDY, commodity=CommodityKind.GRAIN, partner=None, rate=table.subsidy_rate, reason=reason, chance=PERCENT
+        )
+
+
+async def lift_passed(ctx: TickContext, policies: PolicyBook, stance: Stance, tally: PolicyTally) -> None:
+    for row in list(policies.policies.get(stance.realm.id, [])):
+        if row.locked or row.since_epoch >= ctx.epoch:
+            continue
+        passed = (
+            (row.kind is TradePolicyKind.TARIFF and row.commodity not in stance.flooded)
+            or (row.kind is TradePolicyKind.EMBARGO and row.partner_node_id not in stance.enemies)
+            or (row.kind is TradePolicyKind.SUBSIDY and not stance.hungry)
+        )
+        if passed and stance.rng.chance(ctx.rules.trade_policy.lift_chance):
+            policies.policies[stance.realm.id].remove(row)
+            await ctx.session.delete(row)
+            tally.lifted += 1
+
+
+async def tend_policies(ctx: TickContext, book: EconomyBook, policies: PolicyBook, tally: PolicyTally) -> None:
     members_of: dict[int, list[int]] = defaultdict(list)
     for member, realm_id in policies.member_of.items():
         members_of[realm_id].append(member)
@@ -246,56 +343,17 @@ async def tend_policies(ctx: TickContext, book: EconomyBook, policies: PolicyBoo
         realm = book.entities.get(profile.polity_entity_id)
         if realm is None or held(realm.id):
             continue
-        rng = ctx.rng(f"trade_policy.{realm.id}.{ctx.epoch}")
         members = members_of.get(realm.id, [])
-        flooded = await imported_made(ctx, members)
-        for commodity in sorted(flooded, key=lambda item: item.value):
-            if existing(policies, realm.id, TradePolicyKind.TARIFF, commodity, None) is None and rng.chance(table.tariff_chance):
-                policies.policies[realm.id].append(
-                    await lay(
-                        ctx,
-                        realm.id,
-                        TradePolicyKind.TARIFF,
-                        commodity=commodity,
-                        partner=None,
-                        rate=table.tariff_rate,
-                        reason="its owners pressed against cheap imports",
-                    )
-                )
-                tally.laid += 1
-        enemies = await enemies_of(ctx, realm, policies)
-        for enemy in sorted(enemies):
-            if existing(policies, realm.id, TradePolicyKind.EMBARGO, None, enemy) is None and rng.chance(table.embargo_chance):
-                policies.policies[realm.id].append(
-                    await lay(ctx, realm.id, TradePolicyKind.EMBARGO, commodity=None, partner=enemy, rate=PERCENT, reason="at war")
-                )
-                tally.laid += 1
-        hungry = await hungry_members(ctx, members)
-        if hungry and profile.treasury >= table.subsidy_treasury and existing(policies, realm.id, TradePolicyKind.SUBSIDY, CommodityKind.GRAIN, None) is None:
-            policies.policies[realm.id].append(
-                await lay(
-                    ctx,
-                    realm.id,
-                    TradePolicyKind.SUBSIDY,
-                    commodity=CommodityKind.GRAIN,
-                    partner=None,
-                    rate=table.subsidy_rate,
-                    reason="its people went hungry",
-                )
-            )
-            tally.laid += 1
-        for row in list(policies.policies.get(realm.id, [])):
-            if row.locked:
-                continue
-            passed = (
-                (row.kind is TradePolicyKind.TARIFF and row.commodity not in flooded)
-                or (row.kind is TradePolicyKind.EMBARGO and row.partner_node_id not in enemies)
-                or (row.kind is TradePolicyKind.SUBSIDY and not hungry)
-            )
-            if passed and row.since_epoch < ctx.epoch and rng.chance(table.lift_chance):
-                policies.policies[realm.id].remove(row)
-                await ctx.session.delete(row)
-                tally.lifted += 1
+        stance = Stance(
+            realm=realm,
+            profile=profile,
+            rng=ctx.rng(f"trade_policy.{realm.id}.{ctx.epoch}"),
+            flooded=await imported_made(ctx, members),
+            enemies=await enemies_of(ctx, realm, policies),
+            hungry=await hungry_members(ctx, members),
+        )
+        await lay_wanted(ctx, book, policies, stance, tally)
+        await lift_passed(ctx, policies, stance, tally)
 
 
 async def subsidy_paid(

@@ -17,19 +17,21 @@ from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
 
 
-async def route_dangers(ctx: TickContext) -> dict[int, list[int]]:
-    dangers: dict[int, list[int]] = defaultdict(list)
+async def route_dangers(ctx: TickContext) -> dict[int, list[tuple[int, int]]]:
+    dangers: dict[int, list[tuple[int, int]]] = defaultdict(list)
     for profile in await ctx.session.scalars(select(TradeRouteProfileRow).where(TradeRouteProfileRow.status.in_(list(LIVE_STATUSES)))):
         route = await ctx.session.get(EntityRow, profile.route_entity_id)
-        danger = (stat(route, "danger") or 0) if route is not None else 0
-        dangers[profile.first_market_id].append(danger)
-        dangers[profile.second_market_id].append(danger)
+        found = ((stat(route, "danger") or 0), (stat(route, "capacity") or 0)) if route is not None else (0, 0)
+        dangers[profile.first_market_id].append(found)
+        dangers[profile.second_market_id].append(found)
     return dangers
 
 
-def access_pct(rules: Rules, roads: int, dangers: list[int]) -> int:
+def access_pct(rules: Rules, roads: int, routes: list[tuple[int, int]]) -> int:
     table = rules.market_access
-    reach = table.base_pct + roads * table.per_road + len(dangers) * table.per_route
+    dangers = [danger for danger, _ in routes]
+    carried = sum(capacity for _, capacity in routes)
+    reach = table.base_pct + roads * table.per_road + len(routes) * table.per_route + carried * table.per_10_capacity / 10
     risk = sum(dangers) / len(dangers) if dangers else 0
     return clamp_int(reach * (1 - risk * table.danger_pct / PERCENT / PERCENT), 0, PERCENT)
 

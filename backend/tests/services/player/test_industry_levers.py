@@ -31,10 +31,10 @@ async def test_the_god_sets_holds_and_releases_a_way_of_working(scope: PlayerSco
 
 async def test_the_god_sets_power_and_stores_and_wipes_them(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
     city = await make_entity(session, "Brindle", EntityType.SETTLEMENT, world_id=world.world.id, location_id=world.region.id)
-    await industry.set_industry(scope, industry.SetIndustry(community_id=city.id, water=40, magic=12, meal_quality=70, tools_worn=3))
+    await industry.set_industry(scope, industry.SetIndustry(community_id=city.id, water=40, magic=12, meal_quality=70, tools_worn=3, light=55))
     row = await session.get(CommunityIndustryRow, city.id)
     assert row is not None and row.water == 40 and row.magic == 12 and row.meal_quality == 70
-    assert set(row.locked) == {"water", "magic", "meal_quality", "tools_worn"}
+    assert set(row.locked) == {"water", "magic", "meal_quality", "tools_worn", "light"} and row.light == 55
     with pytest.raises(ValidationFailedError):
         await industry.set_industry(scope, industry.SetIndustry(community_id=city.id))
     await industry.remove_industry(scope, industry.IndustryTarget(community_id=city.id))

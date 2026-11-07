@@ -11,10 +11,12 @@ class MethodRules:
     switch_margin_pct: int = rule(10, 0, 100, G, "How much more profit a production method must promise before a place changes to it (%)")
     nature_pollution_pct: int = rule(60, 0, 400, G, "How much a creed of harmony with nature weighs the pollution of a method against its profit (%)")
     energy_price: int = rule(4, 0, 100, G, "Value one unit of scarce energy costs when a place weighs a method")
+    labour_price: int = rule(2, 0, 100, G, "Value each hand a method needs above the oldest way costs a place when it weighs a method")
     wear_price_pct: int = rule(100, 0, 400, G, "How much the price of tools weighs a method that wears them out (%)")
     displace_pct: int = rule(40, 0, 100, G, "Share of a method's gain in output that frees artisans from their craft (%)")
     displace_cap_pct: int = rule(20, 0, 100, G, "Most of a place's artisans one change of method can put out of work (%)")
     guild_progress: int = rule(15, 0, 100, G, "How far a labour-saving method pushes a craft guild's demand to protect its craft")
+    nature_value_at: int = rule(30, -100, 100, G, "Love of nature from which an owner shuns methods that foul the land")
     guild_priority: int = rule(10, 0, 100, G, "Priority a labour-saving method adds to a craft guild's demand to protect its craft")
 
 
@@ -34,6 +36,12 @@ class EnergyRules:
     magic_per_ley: int = rule(8, 0, 100, G, "Magic energy each ley line through the land gives")
     divine_per_shrine: int = rule(6, 0, 100, G, "Divine energy each level of a shrine workshop gives")
     divine_per_100_clergy: int = rule(8, 0, 100, G, "Divine energy a hundred clergy give")
+    magic_heat_pct: int = rule(50, 0, 400, G, "Heat each unit of spare magic gives when fuel runs short (%)")
+    magic_per_mage: int = rule(6, 0, 100, G, "Magic energy each mage of a place gives")
+    mage_skill_at: int = rule(3, 1, 20, G, "Spellcraft from which a mortal counts as a mage of the place")
+    weather_wind_pct: int = rule(100, 0, 400, G, "How strongly the year's winds raise or lower wind energy (%)")
+    light_per_1000: int = rule(2, 0, 100, G, "Lamp fuel a thousand people burn each epoch to light their evenings")
+    light_work_pct: int = rule(20, 0, 200, G, "How much full light lifts what workshops can make (%)")
     extraction_per_100_workers: int = rule(1, 0, 20, G, "How many times its need a method draws for each hundred workers at a site")
     cold_heat_per_1000: int = rule(4, 0, 100, G, "Heat a thousand people on cold land need to survive each epoch")
     frozen_heat_pct: int = rule(200, 100, 800, G, "How much more heat frozen land needs than cold land (%)")
@@ -61,6 +69,7 @@ class PollutionRules:
     blight_at: int = rule(80, 0, 100, G, "Soil pollution at which the land is blighted")
     blight_depth: int = rule(10, 0, 100, G, "Blight extreme soil pollution scars into the land each epoch")
     rite_clean: int = rule(10, 0, 100, G, "Pollution a purification rite clears from the land")
+    void_rite: int = rule(8, 0, 100, G, "Air and soil pollution a rite of the void leaves on the land")
 
 
 @dataclass(frozen=True)
@@ -88,6 +97,7 @@ class QualityRules:
     artifact_at: int = rule(97, 0, 100, G, "Quality from which goods are artifacts")
     premium_step_pct: int = rule(25, 0, 200, G, "How much each tier above common raises the price of goods, and each below lowers it (%)")
     fine_meal_sustenance: int = rule(10, 0, 50, G, "How much a fine meal lifts the need for food")
+    fine_cloth_comfort: int = rule(8, 0, 50, G, "How much fine cloth in the stores lifts the need for comfort")
     noble_fine_pct: int = rule(40, 0, 400, G, "How much more nobles want luxuries when they are fine or better (%)")
     noble_coarse_satisfaction: int = rule(4, 0, 50, G, "Satisfaction nobles lose each epoch when only coarse luxuries are to be had")
 

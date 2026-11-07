@@ -99,10 +99,11 @@ async def open_hoard(ctx: TickContext, merchant: int, market: EntityRow, commodi
         locked=[],
     )
     ctx.session.add(row)
+    town = await ctx.session.get(SettlementProfileRow, market.id)
+    spike = table.unrest_per_hoard if famine else table.unrest_per_hoard * table.spike_unrest_pct / PERCENT
+    if town is not None and "unrest" not in (town.locked or []):
+        town.unrest = clamp_int(town.unrest + spike, 0, PERCENT)
     if famine:
-        town = await ctx.session.get(SettlementProfileRow, market.id)
-        if town is not None and "unrest" not in (town.locked or []):
-            town.unrest = clamp_int(town.unrest + table.unrest_per_hoard, 0, PERCENT)
         await judged(ctx, merchant, market.id, ActKind.HOARDING_IN_FAMINE)
     return row
 

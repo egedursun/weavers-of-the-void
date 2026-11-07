@@ -38,6 +38,7 @@ class CommunityIndustryRow(Base):
         between("meal_quality", PERCENT_MIN, PERCENT_MAX),
         between("drink", PERCENT_MIN, PERCENT_MAX),
         between("market_access", PERCENT_MIN, PERCENT_MAX),
+        between("light", PERCENT_MIN, PERCENT_MAX),
         at_least("black_market", 0),
         at_least("epoch", 0),
     )
@@ -59,6 +60,7 @@ class CommunityIndustryRow(Base):
     drink: Mapped[int] = mapped_column(default=0, server_default="0")
     market_access: Mapped[int] = mapped_column(default=100, server_default="100")
     black_market: Mapped[int] = mapped_column(default=0, server_default="0")
+    light: Mapped[int] = mapped_column(default=0, server_default="0")
     epoch: Mapped[int]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

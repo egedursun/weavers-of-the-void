@@ -6,6 +6,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, BattleCasualtyRow, BattleStackRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.demography import AgeBand, CohortCondition
 from aerona.domain.enums.entity import EntityStatus
@@ -111,6 +112,8 @@ async def recover_wounded(ctx: TickContext) -> int:
         )
     )
     for row in rows:
+        if held(row.community_entity_id):
+            continue
         healed = max(1, row.count // epochs)
         cohorts = await cohorts_of(ctx.session, row.community_entity_id)
         row.count -= healed

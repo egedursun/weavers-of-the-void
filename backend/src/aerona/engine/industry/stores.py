@@ -17,7 +17,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of, lots_of
 from aerona.engine.industry.energy import scale_by_energy
-from aerona.engine.industry.methods import allowed, local_price, method_for
+from aerona.engine.industry.methods import allowed, feed, local_price, method_for
 from aerona.engine.industry.quality import at_least
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount
@@ -27,6 +27,7 @@ THOUSAND = 1000
 HUNTER_DIETS = (Diet.CARNIVORE, Diet.OMNIVORE)
 HUNTER_SIZES = (SizeClass.TINY, SizeClass.SMALL)
 BREW_STEP = "brew"
+LIGHT_STEP = "lighting"
 
 
 @dataclass
@@ -77,6 +78,7 @@ async def preserve(ctx: TickContext, book: EconomyBook, community: EntityRow, ro
     if want <= 0:
         return 0
     keep = round_half_up(want * scale_by_energy(book, community.id, spec.energy, spec.energy_need * -(-round_half_up(want) // TENTH)))
+    keep = round_half_up(keep * await feed(ctx, community.id, spec, keep))
     if keep <= 0:
         return 0
     kept = 0
@@ -201,3 +203,29 @@ async def pour_drink(ctx: TickContext, community: EntityRow, row: CommunityIndus
     if "drink" not in row.locked:
         row.drink = clamp_int(int(brewed or 0) * PERCENT / want, 0, PERCENT)
     return row.drink
+
+
+async def kindle(ctx: TickContext, book: EconomyBook, community: EntityRow, row: CommunityIndustryRow) -> int:
+    spec = method_for(book, community.id, ProcessKind.LIGHTING)
+    if allowed(book, community, spec) is not None:
+        spec = default_method(ProcessKind.LIGHTING)
+    want = max(1, headcount(community) * ctx.rules.energy.light_per_1000 // THOUSAND)
+    powered = scale_by_energy(book, community.id, spec.energy, spec.energy_need * -(-want // TENTH))
+    fed = await feed(ctx, community.id, spec, want)
+    light = clamp_int(spec.output_pct * min(powered, fed), 0, PERCENT)
+    if "light" not in row.locked:
+        row.light = light
+    ctx.session.add(
+        ProductionRunRow(
+            epoch=ctx.epoch,
+            community_entity_id=community.id,
+            step=LIGHT_STEP,
+            output=CommodityKind.LUXURIES,
+            quantity=round_half_up(want * min(powered, fed)),
+            quality=PERCENT // 2,
+            inputs={},
+            workers=0,
+            method=spec.kind,
+        )
+    )
+    return row.light

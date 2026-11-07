@@ -10,7 +10,8 @@ G = RuleGroup.MARKETS_AND_MONEY
 class AccessRules:
     base_pct: int = rule(35, 0, 100, G, "Share of its output a place with no roads or routes still brings to market (%)")
     per_road: int = rule(8, 0, 100, G, "Market access each level of roads adds (%)")
-    per_route: int = rule(15, 0, 100, G, "Market access each open trade route adds (%)")
+    per_route: int = rule(10, 0, 100, G, "Market access each open trade route adds (%)")
+    per_10_capacity: int = rule(2, 0, 100, G, "Market access each ten loads of route capacity add (%)")
     danger_pct: int = rule(60, 0, 100, G, "How much the danger of its routes takes from a place's market access (%)")
     unsold_pct: int = rule(40, 0, 100, G, "Value output that never reaches a market still fetches, eaten or bartered at home (%)")
 
@@ -24,6 +25,7 @@ class TradePolicyRules:
     subsidy_hunger: int = rule(40, 0, 100, G, "Hunger at which a realm subsidises the food of its members")
     subsidy_treasury: int = rule(100, 0, 100000, G, "Treasury a realm needs before it pays subsidies")
     embargo_chance: int = rule(30, 0, 100, G, "Chance each epoch a realm at war embargoes its enemy (%)")
+    treaty_embargo_chance: int = rule(40, 0, 100, G, "Chance each epoch a realm joins the embargo of an ally it is bound to by treaty (%)")
     lift_chance: int = rule(25, 0, 100, G, "Chance each epoch a realm lifts a tariff, subsidy or embargo whose cause has passed (%)")
     smuggle_gap_pct: int = rule(150, 100, 1000, G, "Price gap between two markets that tempts smugglers past a ban or embargo (%)")
     smuggle_share_pct: int = rule(30, 0, 100, G, "Share of a blocked trade smugglers carry (%)")
@@ -36,6 +38,7 @@ class CreditRules:
     base_interest: int = rule(6, 0, 100, G, "Interest a borrower of perfect credit pays (%)")
     spread_pct: int = rule(25, 0, 200, G, "Interest each point of credit below perfect adds, in hundredths (%)")
     supply_pct: int = rule(10, 0, 100, G, "Interest a scarce money supply adds at most (%)")
+    supply_per_1000: int = rule(40, 1, 10000, G, "Coin a thousand people's money supply needs before it counts as plentiful")
     strained_debt_pct: int = rule(150, 0, 1000, G, "Debt against treasury past which a borrower is strained (%)")
     restructure_epochs: int = rule(3, 1, 50, G, "Epochs a borrower spends restructuring after a default")
     default_loss: int = rule(30, 0, 100, G, "Credit a default costs")
@@ -57,6 +60,7 @@ class SpeculationRules:
     hold_epochs: int = rule(4, 1, 50, G, "Epochs a speculator holds a hoard before selling at any price")
     famine_hunger: int = rule(40, 0, 100, G, "Hunger at which speculators hoard food")
     unrest_per_hoard: int = rule(5, 0, 50, G, "Unrest a hoard of food raises in a hungry market")
+    spike_unrest_pct: int = rule(40, 0, 400, G, "How much of that unrest any other hoard raises as prices spike (%)")
     wealth_per_value: int = rule(60, 1, 1000, G, "Value that moves a speculator's wealth by one point")
 
 

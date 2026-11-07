@@ -21382,6 +21382,7 @@ export interface components {
             drink?: number | null;
             market_access?: number | null;
             black_market?: number | null;
+            light?: number | null;
             hold: boolean;
         };
         InfrastructureView: {
@@ -22951,7 +22952,7 @@ export interface components {
             text: string;
             answered: boolean;
         };
-        MethodKind: "hand_sickle" | "ox_plough" | "irrigated_terraces" | "crop_rotation" | "divine_harvest" | "line_and_net" | "fish_weirs" | "deep_sea_fleets" | "axe_felling" | "water_sawmill" | "pick_and_shovel" | "fire_setting" | "pumped_shafts" | "earth_shaping" | "hand_quern" | "watermill" | "windmill" | "hand_loom" | "water_frame" | "bloomery" | "blast_furnace" | "divine_forge" | "pit_tanning" | "oil_curing" | "open_vat" | "cellar_brewing" | "herbal_still" | "arcane_alembic" | "hand_chisel" | "water_saw" | "clamp_kiln" | "retort_kiln" | "salting" | "smoking" | "drying" | "icing" | "magic_keeping";
+        MethodKind: "hand_sickle" | "ox_plough" | "irrigated_terraces" | "crop_rotation" | "divine_harvest" | "line_and_net" | "fish_weirs" | "deep_sea_fleets" | "axe_felling" | "water_sawmill" | "pick_and_shovel" | "fire_setting" | "pumped_shafts" | "earth_shaping" | "hand_quern" | "watermill" | "windmill" | "hand_loom" | "water_frame" | "bloomery" | "blast_furnace" | "divine_forge" | "pit_tanning" | "oil_curing" | "open_vat" | "cellar_brewing" | "herbal_still" | "arcane_alembic" | "hand_chisel" | "water_saw" | "clamp_kiln" | "retort_kiln" | "salting" | "smoking" | "drying" | "icing" | "magic_keeping" | "tallow_candles" | "oil_lamps" | "glow_moss" | "magic_light";
         MethodRemoveInput: {
             community_id: number;
             process: components["schemas"]["ProcessKind"];
@@ -24836,7 +24837,7 @@ export interface components {
             commodity: components["schemas"]["CommodityKind"];
             price_pct: number;
         };
-        ProcessKind: "farming" | "fishing" | "logging" | "mining" | "milling" | "weaving" | "smelting" | "tanning" | "brewing" | "distilling" | "masonry" | "charcoal" | "preserving";
+        ProcessKind: "farming" | "fishing" | "logging" | "mining" | "milling" | "weaving" | "smelting" | "tanning" | "brewing" | "distilling" | "masonry" | "charcoal" | "preserving" | "lighting";
         Profession: "soldier" | "rider" | "smith" | "builder" | "weaver" | "healer" | "scholar" | "priest" | "sorcerer" | "merchant" | "diplomat" | "hunter" | "sailor" | "commander";
         ProfileColumnRecord: {
             name: string;
@@ -28809,6 +28810,8 @@ export interface components {
             water: number;
             soil: number;
             tool_wear: number;
+            labour_pct: number;
+            inputs: string[];
             blocked: string | null;
         };
         WorksPolluterView: {
@@ -28860,6 +28863,7 @@ export interface components {
             meal_tier: components["schemas"]["QualityTier"];
             meal_tier_label: string;
             drink: number;
+            light: number;
             epoch: number | null;
             held: string[];
         };
@@ -61144,7 +61148,7 @@ export const memorialFormValues: ReadonlyArray<FlattenedDeepRequired<components>
 export const memoryKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemoryKind"]> = ["harmed_me", "killed_kin", "saved_me", "betrayed_me", "kept_oath", "broke_oath", "maimed_me", "humiliated_me", "gifted_me", "converted_me", "conquered_us", "freed_us", "famine_aid", "desecrated_holy", "married_into", "fought_us", "traded_with", "allied_with", "made_peace", "demanded_tribute", "cheated_us", "spied_on_us", "envied", "failed_to_heal", "taught_me", "held_captive", "lamented", "divine_will", "goodwill", "ill_will", "long_history", "dreads", "formative"];
 export const memoryOriginValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MemoryOrigin"]> = ["derived", "player"];
 export const messageIntentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MessageIntent"]> = ["friendship", "alliance", "love", "threat", "mockery", "warning", "bargain", "prayer", "answer", "chat", "dream", "command"];
-export const methodKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MethodKind"]> = ["hand_sickle", "ox_plough", "irrigated_terraces", "crop_rotation", "divine_harvest", "line_and_net", "fish_weirs", "deep_sea_fleets", "axe_felling", "water_sawmill", "pick_and_shovel", "fire_setting", "pumped_shafts", "earth_shaping", "hand_quern", "watermill", "windmill", "hand_loom", "water_frame", "bloomery", "blast_furnace", "divine_forge", "pit_tanning", "oil_curing", "open_vat", "cellar_brewing", "herbal_still", "arcane_alembic", "hand_chisel", "water_saw", "clamp_kiln", "retort_kiln", "salting", "smoking", "drying", "icing", "magic_keeping"];
+export const methodKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MethodKind"]> = ["hand_sickle", "ox_plough", "irrigated_terraces", "crop_rotation", "divine_harvest", "line_and_net", "fish_weirs", "deep_sea_fleets", "axe_felling", "water_sawmill", "pick_and_shovel", "fire_setting", "pumped_shafts", "earth_shaping", "hand_quern", "watermill", "windmill", "hand_loom", "water_frame", "bloomery", "blast_furnace", "divine_forge", "pit_tanning", "oil_curing", "open_vat", "cellar_brewing", "herbal_still", "arcane_alembic", "hand_chisel", "water_saw", "clamp_kiln", "retort_kiln", "salting", "smoking", "drying", "icing", "magic_keeping", "tallow_candles", "oil_lamps", "glow_moss", "magic_light"];
 export const miracleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Miracle"]> = ["healing", "bounty", "peace", "protection"];
 export const mobilityEventValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MobilityEvent"]> = ["ennobled", "enslaved", "freed", "ruined"];
 export const modifierOpValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ModifierOp"]> = ["add", "multiply"];
@@ -61198,7 +61202,7 @@ export const powerEffectValues: ReadonlyArray<FlattenedDeepRequired<components>[
 export const prayerRequestValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PrayerRequest"]> = ["essence", "blessing", "permission", "vengeance", "forgiveness", "none", "wish"];
 export const preferenceKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreferenceKind"]> = ["material", "food", "drink", "creature", "plant", "colour", "shape", "art_form", "artwork_subject", "season", "weather", "terrain", "activity", "craft", "deity_aspect"];
 export const pressureKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PressureKind"]> = ["hunger", "insecurity", "overcrowding", "poverty", "impiety", "humiliation", "stagnation"];
-export const processKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ProcessKind"]> = ["farming", "fishing", "logging", "mining", "milling", "weaving", "smelting", "tanning", "brewing", "distilling", "masonry", "charcoal", "preserving"];
+export const processKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ProcessKind"]> = ["farming", "fishing", "logging", "mining", "milling", "weaving", "smelting", "tanning", "brewing", "distilling", "masonry", "charcoal", "preserving", "lighting"];
 export const professionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Profession"]> = ["soldier", "rider", "smith", "builder", "weaver", "healer", "scholar", "priest", "sorcerer", "merchant", "diplomat", "hunter", "sailor", "commander"];
 export const promptAreaValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PromptArea"]> = ["shared", "context", "genesis", "son_turn", "fate", "chronicler", "naming", "voices", "deepening", "image_prompts", "council", "translation", "world_birth", "network_repair", "mortal", "opportunities", "agent", "chronicle", "localisation"];
 export const promptIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PromptId"]> = ["cliche_ban", "image_prompt_rules", "section_keys_rule", "no_numbers_clause", "lore_language", "rationale_rule", "verdict_criteria", "tired_images", "world_header", "dialect_block", "world_line", "cosmos_lines", "entity_line", "bond_lines", "society_lines", "entity_detail", "recent_chronicle", "thread_lines", "siblings", "powers", "location_tree", "language_lines", "geography_lines", "world_summary", "son_memory", "sky_calendar", "budget_trailer", "inspect_sibling", "genesis_system", "genesis_user", "genesis_wizard_settings", "son_powers_system", "son_powers_user", "creator_portrait_system", "creator_portrait_user", "summon_son_system", "summon_son_user", "awaken_peoples_system", "awaken_peoples_user", "revelation_system", "revelation_user", "son_turn_system", "son_turn_user", "son_turn_resume_note", "son_turn_continuation", "creator_wishes", "reputation_line", "fate_judgment_system", "fate_judgment_user", "fate_extra_judgment_user", "fate_prescreen_warnings", "fate_creation_entry", "age_events", "age_events_by_world", "chronicler_system", "chronicler_concise_system", "chronicler_user", "chronicler_fix_opening_user", "chronicler_audit_fix_user", "chronicler_missing_worlds_user", "chronicler_lost_age_user", "chronicler_lost_world_sections_user", "naming_system", "naming_user", "voices_system", "voices_user", "deepen_entity_system", "deepen_entity_user", "deepen_celestial_system", "deepen_celestial_user", "creator_epic_system", "creator_epic_user", "creator_deepen_system", "creator_deepen_user", "foreign_god_deepen_system", "foreign_god_deepen_user", "son_epic_system", "son_epic_user", "entity_image_prompts_system", "entity_image_prompts_user", "cosmos_image_prompts_system", "cosmos_image_prompts_user", "council_persona", "council_agenda", "council_session_system", "council_session_user", "son_chat_system", "son_chat_user", "translate_system", "translate_user", "new_world_system", "new_world_user", "world_inspiration", "bond_node_line", "bond_suggest_system", "bond_suggest_user", "bond_name_related_system", "bond_name_related_user", "mortal_turn_system", "mortal_turn_user", "mortal_turn_continuation", "mortal_context", "son_opportunities", "mortal_opportunities", "creator_opportunities", "tool_rejection", "tool_failure_refund", "son_gate_rejection", "mortal_gate_rejection", "captive_gate_rejection", "actions_spent", "status_line", "sleep_notice", "pending_long_job", "entity_state_reason", "field_error", "per_epoch_limit", "creator_sign", "sentient_demand", "localise_system", "localise_user"];

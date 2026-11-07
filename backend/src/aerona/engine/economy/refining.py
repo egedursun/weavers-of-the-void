@@ -18,7 +18,7 @@ from aerona.engine.economy.materials import alloy_inputs, workable
 from aerona.engine.economy.stocks import epoch_need, goods_of, holding, lots_of
 from aerona.engine.economy.workshop_designs import capacity_scale, output_scale, quality_bonus
 from aerona.engine.industry.energy import scale_by_energy
-from aerona.engine.industry.methods import method_for, process_of_step
+from aerona.engine.industry.methods import feed, method_for, process_of_step
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount
@@ -57,6 +57,11 @@ def artisan_pool(ctx: TickContext, book: EconomyBook, community: EntityRow) -> i
 def target_units(ctx: TickContext, community: EntityRow, commodity: CommodityKind) -> int:
     need = epoch_need(ctx.rules, headcount(community), commodity)
     return round_half_up(max(1, need) * ctx.rules.refining.target_index / ctx.rules.economy.supply_index_epoch)
+
+
+def lit(ctx: TickContext, book: EconomyBook, community_id: int) -> float:
+    row = book.industry.get(community_id)
+    return 1 + (row.light if row is not None else 0) * ctx.rules.energy.light_work_pct / PERCENT / PERCENT
 
 
 def capacity(ctx: TickContext, step: ChainStep, workshop: WorkshopRow | None, design: WorkshopDesignRow | None = None) -> int:
@@ -183,7 +188,7 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
     table = ctx.rules.refining
     workshop = book.workshop(community.id, step.workshop) if step.workshop is not None else None
     design = book.design_of(workshop)
-    room = round_half_up(capacity(ctx, step, workshop, design) * await workshop_output(ctx.session, ctx.rules, workshop))
+    room = round_half_up(capacity(ctx, step, workshop, design) * await workshop_output(ctx.session, ctx.rules, workshop) * lit(ctx, book, community.id))
     if room <= 0 or (step.branch is not None and book.level(community.id, step.branch) < step.level):
         return 0
     wanted = target_units(ctx, community, step.output) - await holding(ctx.session, community.id, step.output)
@@ -192,12 +197,14 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
     material, world_material = await best_input(ctx, book, community, step)
     held = await inputs_for(ctx, community, step, material, world_material)
     short = [commodity for commodity, per_batch in step.inputs if held.get(commodity, 0) < per_batch]
-    hands = artisans // table.workers_per_batch
-    batches = min(room, hands, -(-wanted // step.output_qty), *(held.get(commodity, 0) // per_batch for commodity, per_batch in step.inputs))
     process = process_of_step(step.key)
     method = method_for(book, community.id, process) if process is not None else None
+    crew = max(1, round_half_up(table.workers_per_batch * (method.labour_pct if method is not None else PERCENT) / PERCENT))
+    hands = artisans // crew
+    batches = min(room, hands, -(-wanted // step.output_qty), *(held.get(commodity, 0) // per_batch for commodity, per_batch in step.inputs))
     if method is not None and batches > 0:
         batches = int(batches * scale_by_energy(book, community.id, method.energy, method.energy_need * batches))
+        batches = int(batches * await feed(ctx, community.id, method, batches))
     if short and step.workshop is not None and workshop is not None:
         await note_bottleneck(ctx, community, step, short[0], tally)
         ctx.session.add(
@@ -245,7 +252,7 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
             quantity=made,
             quality=quality,
             inputs=used,
-            workers=batches * table.workers_per_batch,
+            workers=batches * crew,
             method=method.kind if method is not None else None,
         )
     )
@@ -254,7 +261,7 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
         if batches >= room and workshop.level < table.max_level and ctx.rng(f"upgrade.{workshop.id}").chance(table.upgrade_chance):
             workshop.level += 1
     tally.batches += batches
-    return batches * table.workers_per_batch
+    return batches * crew
 
 
 def needed_workshops(ctx: TickContext, book: EconomyBook, community: EntityRow) -> list[WorkshopKind]:

@@ -58,6 +58,7 @@ class EconomyBook:
     methods: dict[int, dict[ProcessKind, CommunityMethodRow]] = field(default_factory=dict)
     industry: dict[int, CommunityIndustryRow] = field(default_factory=dict)
     pollution: dict[int, RegionPollutionRow] = field(default_factory=dict)
+    magic_heat_pct: int = 0
 
     @classmethod
     async def load(cls, ctx: TickContext) -> "EconomyBook":
@@ -118,6 +119,7 @@ class EconomyBook:
         return book
 
     async def load_industry(self, ctx: TickContext) -> None:
+        self.magic_heat_pct = ctx.rules.energy.magic_heat_pct
         for method in await ctx.session.scalars(select(CommunityMethodRow).order_by(CommunityMethodRow.id)):
             self.methods.setdefault(method.community_node_id, {})[method.process] = method
         self.industry = {row.community_node_id: row for row in await ctx.session.scalars(select(CommunityIndustryRow))}

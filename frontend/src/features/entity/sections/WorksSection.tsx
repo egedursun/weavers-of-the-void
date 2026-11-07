@@ -40,6 +40,7 @@ import {
   ENERGY,
   LAND_ICON,
   LEDGER_ICON,
+  LIGHT_ICON,
   OWNER_ICON,
   POLLUTANTS,
   POWER_ICON,
@@ -108,6 +109,10 @@ function optionChips(option: WorksOption): string[] {
     `${named(ENERGY, option.energy).label} ${option.energy_need}`,
     `output ${option.output_pct}%`,
     ...(option.quality_bonus ? [`quality +${option.quality_bonus}`] : []),
+    ...(option.labour_pct !== 100
+      ? [`${option.labour_pct}% of the hands`]
+      : []),
+    ...option.inputs,
     ...(option.tool_wear ? [`wear ${option.tool_wear}`] : ['no tool wear']),
     ...(fouls.length ? fouls : ['clean']),
   ]
@@ -476,6 +481,13 @@ function StoresCard({ view, hold }: Props) {
             tone='gold'
             meter={{ value: stores.drink, max: SPAN, label: 'Drink' }}
           />
+          <KpiTile
+            label='Evenings lit'
+            value={stores.light}
+            icon={LIGHT_ICON}
+            tone='gold'
+            meter={{ value: stores.light, max: SPAN, label: 'Evenings lit' }}
+          />
         </div>
       )}
       {stores !== null && (
@@ -483,7 +495,7 @@ function StoresCard({ view, hold }: Props) {
           icon={STORES_ICON}
           tone='info'
           title='Set the stores by hand'
-          meta='Meals, drink, spoilage, preserving, tool wear and the heat needed to live'
+          meta='Meals, drink, light, spoilage, preserving, tool wear and the heat needed to live'
           editLabel='the figures of this epoch'
           editor={
             <AdjustStats
@@ -528,6 +540,13 @@ function StoresCard({ view, hold }: Props) {
                       key: 'drink',
                       label: 'Drink',
                       value: stores.drink,
+                      min: 0,
+                      max: SPAN,
+                    },
+                    {
+                      key: 'light',
+                      label: 'Evenings lit',
+                      value: stores.light,
                       min: 0,
                       max: SPAN,
                     },
