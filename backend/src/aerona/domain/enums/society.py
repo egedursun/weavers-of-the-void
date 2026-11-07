@@ -68,6 +68,8 @@ class NaturalLaw(StrEnum):
     ONE_LANGUAGE = "one_language"
     DISASTERS = "disasters"
     SOULS_REINCARNATE = "souls_reincarnate"
+    GIFT_FLOWERING = "gift_flowering"
+    GIFT_WITHERING = "gift_withering"
 
 
 class ResourceMechanic(StrEnum):

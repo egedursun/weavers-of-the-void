@@ -62,6 +62,12 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "quality, tool wear and pollution, and a method that needs fewer hands puts some out of work. 1 action.",
         {"method": "The method to take up"},
     ),
+    T.TEND_HOME: ToolText(
+        "As head of your household or its head's spouse, you decide for it: improve your home, take on or let go a servant, "
+        "apprentice a child to a master, take in a lodger, match an unmarried member with another household, sell a furnishing, "
+        "or move the household to a richer place nearby. Your purse, your home and your people must allow it. 1 action.",
+        {"choice": "What your household does"},
+    ),
     T.BUY_WORKSHOP: ToolText(
         "You buy a workshop of your community from whoever owns it, paying its price from your wealth or treasury. "
         "Its profit (what it sells, less inputs, wages, upkeep and taxes) then comes to you, and so do its losses. 1 action.",

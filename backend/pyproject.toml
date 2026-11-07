@@ -46,6 +46,8 @@ dev = [
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
+markers = ["tool_failure_expected: the test makes a tool crash on purpose"]
+filterwarnings = ["error::sqlalchemy.exc.SADeprecationWarning", "error::DeprecationWarning:aerona", "error::DeprecationWarning:tests"]
 
 [tool.ruff]
 line-length = 160
@@ -57,6 +59,7 @@ ignore = ["PLR0913", "PLR2004"]
 
 [tool.mypy]
 strict = true
+enable_error_code = ["deprecated"]
 plugins = ["pydantic.mypy"]
 mypy_path = "src"
 

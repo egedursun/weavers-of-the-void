@@ -142,6 +142,7 @@ async def holy_and_tainted_stocks(ctx: TickContext, book: EconomyBook, lure: dic
     "table.community_methods",
     "table.community_societies",
     "table.community_stocks",
+    "table.epoch_year_cursors",
     "table.forced_weather",
     "table.holder_levels",
     "table.holder_techniques",
@@ -169,7 +170,12 @@ async def holy_and_tainted_stocks(ctx: TickContext, book: EconomyBook, lure: dic
     "spirit.unrest",
     "structure.durability",
     "structure.splendor",
+    "table.chronicle",
+    "table.chronicle_entities",
     "table.entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
 )
 async def material_decay(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
@@ -476,6 +482,8 @@ async def species_yields(ctx: TickContext) -> None:
     "table.forced_weather",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.name_registry",
+    "table.nodes",
     "table.place_environment",
     "table.region_environment",
     "table.region_pollution",
@@ -497,6 +505,7 @@ async def species_yields(ctx: TickContext) -> None:
     "table.entities",
     "table.incident_participants",
     "table.incidents",
+    "table.name_registry",
     "table.nodes",
     "table.resource_profiles",
 )

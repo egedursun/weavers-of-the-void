@@ -19,6 +19,7 @@ class FactionKind(StrEnum):
     WANDERING_MARKET = "wandering_market"
     VOID_PIRATES = "void_pirates"
     SOCIAL_CIRCLE = "social_circle"
+    MAGE_ORDER = "mage_order"
 
 
 class FactionScale(StrEnum):

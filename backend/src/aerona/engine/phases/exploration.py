@@ -26,7 +26,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
-from aerona.domain.enums.epoch import DeferredStepKind
+from aerona.domain.enums.epoch import DeferredStepKind, DeferredStepStatus
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.society import Commodity, KnowledgeBranch
 from aerona.domain.enums.travel import HorizonStatus, TravelMethod, VehicleKind
@@ -520,8 +520,17 @@ async def record_intuition(ctx: TickContext, me: EntityRow, how: str, method: Tr
     return f"{me.name}, searching {how}, sensed the existence of a world nobody knew; at the end of the epoch that world will come to light."
 
 
+async def held_intuitions(session: AsyncSession) -> set[int]:
+    steps = await session.scalars(
+        select(DeferredStepRow).where(DeferredStepRow.kind == DeferredStepKind.SENSED_WORLD, DeferredStepRow.status == DeferredStepStatus.HELD)
+    )
+    return {int(step.payload["intuition_id"]) for step in steps if "intuition_id" in step.payload}
+
+
 async def pending_intuitions(session: AsyncSession) -> list[HorizonIntuitionRow]:
-    return list(await session.scalars(select(HorizonIntuitionRow).where(HorizonIntuitionRow.status == HorizonStatus.PENDING).order_by(HorizonIntuitionRow.id)))
+    held = await held_intuitions(session)
+    rows = await session.scalars(select(HorizonIntuitionRow).where(HorizonIntuitionRow.status == HorizonStatus.PENDING).order_by(HorizonIntuitionRow.id))
+    return [row for row in rows if row.id not in held]
 
 
 async def begin_intuition(session: AsyncSession, intuition: HorizonIntuitionRow) -> EntityRow | None:
@@ -701,6 +710,7 @@ async def foreign_god_land(ctx: TickContext, god_id: int | None = None) -> list[
     "table.community_societies",
     "table.epoch_year_cursors",
     "table.holder_levels",
+    "table.horizon_intuitions",
     "table.language_profiles",
     "table.lexemes",
     "table.name_registry",
@@ -716,9 +726,11 @@ async def foreign_god_land(ctx: TickContext, god_id: int | None = None) -> list[
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.deferred_steps",
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.horizon_intuitions",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",

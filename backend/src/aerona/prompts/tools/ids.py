@@ -102,6 +102,7 @@ class SonToolId(StrEnum):
     STIR_HEARTS = "stir_hearts"
     SPREAD_WORD = "spread_word"
     TEND_LAND = "tend_land"
+    SHAPE_BLOOD = "shape_blood"
     REVEAL_TENET = "reveal_tenet"
     OPEN_REBIRTH_GATE = "open_rebirth_gate"
 
@@ -176,6 +177,7 @@ class MortalToolId(StrEnum):
     TRADE_LORE = "trade_lore"
     CHOOSE_METHOD = "choose_method"
     BUY_WORKSHOP = "buy_workshop"
+    TEND_HOME = "tend_home"
     LAY_TRADE_POLICY = "lay_trade_policy"
     SPECULATE = "speculate"
 

@@ -1,5 +1,6 @@
 from types import MappingProxyType
 
+from aerona.catalog.genetics import LOCI, LOOKS_LOCI
 from aerona.catalog.mind import SKILLS
 from aerona.domain.enums.culture import ArtMedium, CalendarSlot
 from aerona.domain.enums.domain import Domain
@@ -29,6 +30,7 @@ PREFERENCE_LABELS: MappingProxyType[PreferenceKind, str] = MappingProxyType(
         P.ACTIVITY: "Pastime",
         P.CRAFT: "Craft",
         P.DEITY_ASPECT: "Aspect of the divine",
+        P.LOOKS: "Looks",
     }
 )
 
@@ -47,6 +49,7 @@ SUBJECTS = (
     EntityType.LEGEND,
     EntityType.SPIRIT,
 )
+LOOKS_TARGETS = tuple(f"{locus.value}:{allele}" for locus in LOOKS_LOCI for allele in LOCI[locus].keys)
 CRAFTS = tuple(skill for skill, spec in SKILLS.items() if spec.family is SkillFamily.CRAFT)
 
 STATIC_TARGETS: MappingProxyType[PreferenceKind, tuple[str, ...]] = MappingProxyType(
@@ -64,6 +67,7 @@ STATIC_TARGETS: MappingProxyType[PreferenceKind, tuple[str, ...]] = MappingProxy
         P.ACTIVITY: ACTIVITIES,
         P.CRAFT: tuple(craft.value for craft in CRAFTS),
         P.DEITY_ASPECT: tuple(domain.value for domain in Domain),
+        P.LOOKS: LOOKS_TARGETS,
     }
 )
 SPECIES_KINDS = frozenset({P.CREATURE, P.PLANT})

@@ -152,10 +152,10 @@ async def touch_mortal(call: SonCall, args: TouchInput) -> str:
     elif args.touch is Touch.BURDEN_MIND:
         await add_stress(call.session, mortal.id, tools.touch_amount, call.epoch)
     elif args.touch is Touch.GRANT_RENOWN:
-        await add_renown(call.session, mortal.id, tools.touch_amount, call.epoch)
+        await add_renown(call.session, mortal.id, tools.touch_amount, call.epoch, rules=call.rules)
         await think(call.session, call.rules, mortal.id, ThoughtKind.GAINED_RENOWN, call.epoch, subject_id=call.son.id)
     elif args.touch is Touch.SHAME:
-        await add_infamy(call.session, mortal.id, tools.touch_amount, call.epoch)
+        await add_infamy(call.session, mortal.id, tools.touch_amount, call.epoch, rules=call.rules)
         await think(call.session, call.rules, mortal.id, ThoughtKind.WAS_SHAMED, call.epoch, subject_id=call.son.id)
     elif args.touch is Touch.HEAL_BODY:
         await mend(call.tick, mortal)

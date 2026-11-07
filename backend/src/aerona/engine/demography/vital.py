@@ -8,13 +8,13 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
 from aerona.domain.enums.mortal import HarshnessScale
-from aerona.domain.enums.society import Commodity
 from aerona.engine.context import TickContext
+from aerona.engine.demography.basket import fed_index
 from aerona.engine.demography.cohorts import CohortKey, age_cohorts, row_for, seed, total
 from aerona.engine.environment.years import world_years
 from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.numbers import round_half_up
-from aerona.engine.primitives.society import class_shares, supply_index
+from aerona.engine.primitives.society import class_shares
 from aerona.engine.services.war import ongoing_wars
 from aerona.rules.registry import Rules
 
@@ -40,7 +40,7 @@ class VitalYear:
 
 
 async def hunger_of(session: AsyncSession, community: EntityRow) -> float:
-    index = await supply_index(session, community.id, Commodity.FOOD)
+    index = await fed_index(session, community.id)
     if index is None:
         return 0.0
     return max(0.0, min(1.0, 1 - index / FED_INDEX))

@@ -5,11 +5,12 @@ cd "$ROOT"
 STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
 [ -z "$STAGED" ] && exit 0
 PYTHON="$ROOT/backend/.venv/bin/python"
-echo "pre-commit: source rules, prompt bias, wiring, control"
+echo "pre-commit: source rules, prompt bias, wiring, control, deprecated APIs"
 "$PYTHON" scripts/check_source_rules.py
 "$PYTHON" scripts/check_prompt_bias.py
 "$PYTHON" scripts/check_wiring.py
 "$PYTHON" scripts/check_control.py
+"$PYTHON" scripts/check_deprecated_apis.py
 if echo "$STAGED" | grep -qE '^(backend/|scripts/).*\.py$'; then
   echo "pre-commit: ruff, mypy, import layers"
   (cd backend && .venv/bin/ruff check src && .venv/bin/ruff format --check src && .venv/bin/mypy src/aerona && .venv/bin/lint-imports)
@@ -17,6 +18,16 @@ fi
 if echo "$STAGED" | grep -qE '^backend/src/aerona/(engine|db)/.*\.py$|^backend/tests/engine/core/test_god_control\.py$'; then
   echo "pre-commit: every engine step obeys holds and runs when forced (rule 6)"
   (cd backend && .venv/bin/pytest -q -p no:cacheprovider tests/engine/core/test_god_control.py)
+fi
+if echo "$STAGED" | grep -qE '^backend/(src|tests)/.*\.py$|^backend/pyproject\.toml$'; then
+  echo "pre-commit: every agent tool runs, every tool field is described, a full scripted epoch runs, and every test importing the change passes (rule 8)"
+  COVERING=$("$PYTHON" scripts/covering_tests.py)
+  (cd backend && .venv/bin/pytest -q -p no:cacheprovider \
+    tests/tools/test_every_tool.py \
+    tests/tools/test_catalogue.py \
+    tests/epoch/test_epoch_llm.py::test_full_epoch_with_scripted_model \
+    tests/epoch/test_epoch_engine_only.py::test_engine_only_epochs_run_end_to_end \
+    $COVERING)
 fi
 FRONT=$(echo "$STAGED" | grep -E '^frontend/.*\.(ts|tsx)$' | grep -v '^frontend/src/api/generated/' | sed 's#^frontend/##' || true)
 if [ -n "$FRONT" ]; then

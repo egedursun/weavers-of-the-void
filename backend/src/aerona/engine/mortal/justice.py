@@ -89,7 +89,7 @@ async def code_punishment(ctx: TickContext, community_id: int | None, crime: Cri
 async def shame_publicly(ctx: TickContext, culprit: EntityRow, judge: EntityRow | None) -> None:
     culture = await culture_of(ctx.session, culprit.id)
     spec = HONOUR_MODELS[await honour_of(ctx.session, culture.id if culture is not None else None)]
-    await add_infamy(ctx.session, culprit.id, ctx.rules.ethics.pillory_infamy * spec.public_shame_pct / PERCENT, ctx.epoch)
+    await add_infamy(ctx.session, culprit.id, ctx.rules.ethics.pillory_infamy * spec.public_shame_pct / PERCENT, ctx.epoch, rules=ctx.rules)
     size = THOUGHTS[ThoughtKind.WAS_SHAMED].intensity * spec.public_shame_pct / PERCENT
     await think(ctx.session, ctx.rules, culprit.id, ThoughtKind.WAS_SHAMED, ctx.epoch, subject_id=judge.id if judge is not None else None, intensity=size)
 
@@ -118,7 +118,7 @@ async def sentence(ctx: TickContext, culprit: EntityRow, crime: CrimeKind, punis
             Harm(ctx.rules.crime.punishment_hp, HarmCause.PUNISHMENT, reason, damage_type=DamageType.FIRE, part=BodyPart.FACE, severity=1),
             lethal=False,
         )
-        await add_infamy(ctx.session, culprit.id, table.branding_infamy, ctx.epoch)
+        await add_infamy(ctx.session, culprit.id, table.branding_infamy, ctx.epoch, rules=ctx.rules)
     elif punishment in MUTILATIONS:
         for part in MUTILATIONS[punishment]:
             harm = Harm(
@@ -133,7 +133,7 @@ async def sentence(ctx: TickContext, culprit: EntityRow, crime: CrimeKind, punis
             )
             await apply_hits(ctx, culprit, harm, lethal=False)
         if judge is not None:
-            await add_infamy(ctx.session, judge.id, table.cruelty_infamy, ctx.epoch)
+            await add_infamy(ctx.session, judge.id, table.cruelty_infamy, ctx.epoch, rules=ctx.rules)
             await judged(ctx, judge.id, culprit.id, ActKind.MUTILATION)
     elif punishment is PunishmentKind.DEATH:
         if judge is not None:

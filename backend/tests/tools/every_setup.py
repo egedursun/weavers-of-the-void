@@ -1,0 +1,284 @@
+from typing import Any
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.cosmos import CosmosRow
+from aerona.db.tables.culture import HolderTechniqueRow, RiteProfileRow
+from aerona.db.tables.economy import MarketPriceRow, TradeRouteProfileRow, WorkshopRow
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import LeyLineRow, WorldSeasonRow
+from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityProfileRow, TreatyProfileRow
+from aerona.db.tables.sons import SonRelationRow, SonRow
+from aerona.db.tables.warfare import ArmyRow, WarRow
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
+from aerona.domain.enums.entity import CivilizationTier, EntityFlag, EntityType
+from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
+from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.son import SonStatus
+from aerona.domain.enums.world import StarType
+from aerona.domain.models.entity_stats import HouseStats, MortalStats, PolityStats
+from aerona.domain.models.profiles import TravelResource
+from aerona.engine.cosmos.maps import refresh_world_maps
+from aerona.engine.economy.stocks import goods_of
+from aerona.engine.households.formation import found_household
+from aerona.engine.phases.environment import environment_survey
+from aerona.engine.primitives.manual import manual_context
+from aerona.engine.services.war import take_captive
+from tests.tools.every_tool import Ids
+from tests.tools.factories import Realm, connect, make_entity
+
+EPOCH = 3
+
+
+async def surveyed(session: AsyncSession, _realm: Realm) -> Ids:
+    await session.flush()
+    context = await manual_context(session, "survey")
+    await refresh_world_maps(session, context.rules, EPOCH)
+    await environment_survey(context)
+    return {}
+
+
+async def death_son(session: AsyncSession, realm: Realm) -> Ids:
+    son = await session.get(SonRow, realm.son_id)
+    assert son is not None
+    son.domain_secondary = Domain.DEATH
+    return await spirit(session, realm)
+
+
+async def second_mortal(session: AsyncSession, realm: Realm) -> Ids:
+    stats = MortalStats(hp=40, strength=30, agility=30, intellect=30, charisma=30, age=12, lifespan=70)
+    other = await make_entity(session, "Oren Vale", EntityType.MORTAL, world_id=realm.cosmos.world_id, location_id=realm.settlement_id, stats=stats)
+    return {"mortal": other.id}
+
+
+async def second_settlement(session: AsyncSession, realm: Realm) -> Ids:
+    town = await make_entity(session, "Lowmere", EntityType.SETTLEMENT, world_id=realm.cosmos.world_id, location_id=realm.cosmos.region_id)
+    return {"settlement": town.id}
+
+
+async def second_region(session: AsyncSession, realm: Realm) -> Ids:
+    land = await make_entity(session, "Greyfold", EntityType.REGION, world_id=realm.cosmos.world_id)
+    return {"region": land.id}
+
+
+async def spirit(session: AsyncSession, realm: Realm) -> Ids:
+    being = await make_entity(session, "Lantern Wisp", EntityType.SPIRIT, world_id=realm.cosmos.world_id, location_id=realm.cosmos.region_id)
+    return {"spirit": being.id}
+
+
+async def faithful_spirit(session: AsyncSession, realm: Realm) -> Ids:
+    ids = await spirit(session, realm)
+    await connect(session, ids["spirit"], realm.son_id, BondKind.WORSHIPS)
+    return ids
+
+
+async def item(session: AsyncSession, realm: Realm) -> Ids:
+    thing = await make_entity(session, "Ledger Lamp", EntityType.ITEM, world_id=realm.cosmos.world_id, location_id=realm.settlement_id)
+    return {"item": thing.id}
+
+
+async def outsider(session: AsyncSession, realm: Realm) -> Ids:
+    being = await make_entity(session, "The Far Listener", EntityType.OUTER_BEING, world_id=realm.cosmos.world_id)
+    return {"outsider": being.id}
+
+
+async def dead_star(session: AsyncSession, realm: Realm) -> Ids:
+    world = await session.get(WorldRow, realm.cosmos.world_id)
+    assert world is not None and world.star_id is not None
+    star = await session.get(StarRow, world.star_id)
+    assert star is not None
+    star.star_type = StarType.DEAD_STAR
+    return {"star": star.id}
+
+
+async def home_star(session: AsyncSession, realm: Realm) -> Ids:
+    world = await session.get(WorldRow, realm.cosmos.world_id)
+    assert world is not None and world.star_id is not None
+    return {"star": world.star_id}
+
+
+async def dead_sibling(session: AsyncSession, realm: Realm) -> Ids:
+    son = await session.get(SonRow, realm.sibling_id)
+    assert son is not None
+    son.status = SonStatus.DEAD
+    son.death_epoch = EPOCH - 1
+    return {}
+
+
+async def worships_dead_sibling(session: AsyncSession, realm: Realm) -> Ids:
+    await dead_sibling(session, realm)
+    await connect(session, realm.people_id, realm.sibling_id, BondKind.WORSHIPS)
+    return {}
+
+
+async def sky_son(session: AsyncSession, realm: Realm) -> Ids:
+    son = await session.get(SonRow, realm.son_id)
+    assert son is not None
+    son.domain_primary = Domain.SKY
+    son.domain_secondary = Domain.STORM
+    return {}
+
+
+async def friendly_sibling(session: AsyncSession, realm: Realm) -> Ids:
+    first, second = sorted((realm.son_id, realm.sibling_id))
+    session.add(SonRelationRow(son_a_id=first, son_b_id=second, value=60))
+    return {}
+
+
+async def travel_resource(session: AsyncSession, _realm: Realm) -> Ids:
+    cosmos = await session.scalar(select(CosmosRow))
+    assert cosmos is not None
+    cosmos.travel_resource = TravelResource(name="Lampdust", rule="Carries ships between worlds.")
+    return {}
+
+
+async def leaking_world(session: AsyncSession, realm: Realm) -> Ids:
+    world = await session.get(WorldRow, realm.cosmos.world_id)
+    assert world is not None
+    world.leakage = 40
+    return {}
+
+
+async def ley_line(session: AsyncSession, realm: Realm) -> Ids:
+    ids = await second_region(session, realm)
+    line = LeyLineRow(world_id=realm.cosmos.world_id, region_a_id=realm.cosmos.region_id, region_b_id=ids["region"], strength=50, formed_epoch=1)
+    session.add(line)
+    await session.flush()
+    return {"line": line.id}
+
+
+async def house(session: AsyncSession, realm: Realm) -> Ids:
+    entity = await make_entity(session, "House Morrow", EntityType.HOUSE, world_id=realm.cosmos.world_id, stats=HouseStats())
+    session.add(HouseProfileRow(house_entity_id=entity.id, founder_entity_id=realm.mortal_id, head_entity_id=realm.mortal_id, divine_son_id=realm.son_id))
+    await connect(session, realm.mortal_id, entity.id, BondKind.MEMBER_OF)
+    return {"house": entity.id}
+
+
+async def ruler(session: AsyncSession, realm: Realm) -> Ids:
+    polity = await make_entity(session, "Vale Crown", EntityType.POLITY, world_id=realm.cosmos.world_id, stats=PolityStats())
+    session.add(PolityProfileRow(polity_entity_id=polity.id, government=next(iter(GovernmentKind)), decision_rule=next(iter(DecisionRule))))
+    session.add(OfficeRow(polity_entity_id=polity.id, kind=OfficeKind.RULER, holder_entity_id=realm.mortal_id))
+    await connect(session, realm.settlement_id, polity.id, BondKind.MEMBER_OF)
+    return {"polity": polity.id}
+
+
+async def advanced(session: AsyncSession, realm: Realm) -> Ids:
+    for entity_id in (realm.people_id, realm.settlement_id):
+        row = await session.get(EntityRow, entity_id)
+        assert row is not None
+        row.civ_tier = int(max(CivilizationTier))
+    return {}
+
+
+async def knows(session: AsyncSession, realm: Realm, branch: KnowledgeBranch, name: str) -> Ids:
+    lore = await make_entity(session, name, EntityType.KNOWLEDGE, world_id=realm.cosmos.world_id, knowledge_branch=branch)
+    await connect(session, realm.mortal_id, lore.id, BondKind.KNOWS)
+    return {"lore": lore.id}
+
+
+async def knows_magic(session: AsyncSession, realm: Realm) -> Ids:
+    return await knows(session, realm, KnowledgeBranch.MAGIC, "Lampcraft")
+
+
+async def knows_biomancy(session: AsyncSession, realm: Realm) -> Ids:
+    return await knows(session, realm, KnowledgeBranch.BIOMANCY, "Grafting")
+
+
+async def captive_of_outlaws(session: AsyncSession, realm: Realm) -> Ids:
+    captor = await session.get(EntityRow, realm.faction_id)
+    captive = await session.get(EntityRow, realm.mortal_id)
+    assert captor is not None and captive is not None
+    await take_captive(await manual_context(session, "capture"), captor, captive, None, description="taken on the road", home_id=realm.settlement_id)
+    return {}
+
+
+async def ruin(session: AsyncSession, realm: Realm) -> Ids:
+    site = await make_entity(session, "Old Waystation", EntityType.PLACE, world_id=realm.cosmos.world_id, location_id=realm.cosmos.region_id)
+    await EntityRepository(session).add_flag(site.id, EntityFlag.RUIN)
+    return {"ruin": site.id}
+
+
+async def technique(session: AsyncSession, realm: Realm) -> Ids:
+    session.add(HolderTechniqueRow(holder_entity_id=realm.mortal_id, technique=next(iter(Technique))))
+    return {}
+
+
+async def market(session: AsyncSession, realm: Realm) -> Ids:
+    session.add(MarketPriceRow(market_entity_id=realm.people_id, commodity=CommodityKind.GRAIN, epoch=EPOCH, price=10, supply=500, demand=100))
+    session.add(WorkshopRow(community_entity_id=realm.people_id, kind=WorkshopKind.MARKET, built_epoch=1, owner_node_id=realm.faction_id))
+    await goods_of(session, EPOCH).add(realm.people_id, CommodityKind.GRAIN, 500, GoodsFlow.HARVEST)
+    return {}
+
+
+async def owns_resource(session: AsyncSession, realm: Realm) -> Ids:
+    await connect(session, realm.people_id, realm.resource_id, BondKind.OWNS)
+    return {}
+
+
+async def second_species(session: AsyncSession, realm: Realm) -> Ids:
+    beast = await make_entity(session, "Ridge Hare", EntityType.SPECIES, world_id=realm.cosmos.world_id, location_id=realm.cosmos.region_id)
+    return {"species": beast.id}
+
+
+async def folk_knows(session: AsyncSession, realm: Realm, branch: KnowledgeBranch, name: str) -> Ids:
+    lore = await make_entity(session, name, EntityType.KNOWLEDGE, world_id=realm.cosmos.world_id, knowledge_branch=branch)
+    await connect(session, realm.people_id, lore.id, BondKind.KNOWS)
+    return {"lore": lore.id}
+
+
+async def seafarers(session: AsyncSession, realm: Realm) -> Ids:
+    await advanced(session, realm)
+    await folk_knows(session, realm, KnowledgeBranch.SHIPBUILDING, "Hullcraft")
+    return await folk_knows(session, realm, KnowledgeBranch.SKY_NAVIGATION, "Starcharts")
+
+
+async def last_war(session: AsyncSession, _realm: Realm, ids: Ids) -> Ids:
+    war = await session.scalar(select(WarRow.id).order_by(WarRow.id.desc()).limit(1))
+    army = await session.scalar(select(ArmyRow.entity_id).order_by(ArmyRow.entity_id.desc()).limit(1))
+    return {**ids, **({"war": war} if war is not None else {}), **({"army": army} if army is not None else {})}
+
+
+async def last_treaty(session: AsyncSession, _realm: Realm, ids: Ids) -> Ids:
+    treaty = await session.scalar(select(TreatyProfileRow.treaty_entity_id).order_by(TreatyProfileRow.treaty_entity_id.desc()).limit(1))
+    assert treaty is not None
+    return {**ids, "treaty": treaty}
+
+
+async def last_rite(session: AsyncSession, _realm: Realm, ids: Ids) -> Ids:
+    rite = await session.scalar(select(RiteProfileRow.rite_entity_id).order_by(RiteProfileRow.rite_entity_id.desc()).limit(1))
+    assert rite is not None
+    return {**ids, "rite": rite}
+
+
+async def last_trade_route(session: AsyncSession, _realm: Realm, ids: Ids) -> Ids:
+    route = await session.scalar(select(TradeRouteProfileRow.route_entity_id).order_by(TradeRouteProfileRow.route_entity_id.desc()).limit(1))
+    assert route is not None
+    return {**ids, "trade_route": route}
+
+
+def created(key: str) -> Any:
+    def pick(_realm: Realm, ids: Ids) -> int:
+        return ids[key]
+
+    return pick
+
+
+async def seasons(session: AsyncSession, realm: Realm) -> Ids:
+    await surveyed(session, realm)
+    await sky_son(session, realm)
+    count = len(list(await session.scalars(select(WorldSeasonRow.position).where(WorldSeasonRow.world_id == realm.cosmos.world_id))))
+    return {"seasons": count}
+
+
+async def well_housed(session: AsyncSession, realm: Realm) -> Ids:
+    head = await session.get(EntityRow, realm.mortal_id)
+    assert head is not None
+    home = await found_household(await manual_context(session, "household"), head)
+    home.wealth = 200
+    return {"household": home.id}

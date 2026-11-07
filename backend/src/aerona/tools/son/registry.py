@@ -25,6 +25,7 @@ from aerona.tools.son import (
     knowledge,
     land,
     language,
+    lineage,
     lore,
     materials,
     memory,
@@ -77,6 +78,7 @@ FAMILIES: tuple[Callable[[], list[SonSpec]], ...] = (
     land.specs,
     regions.specs,
     works.specs,
+    lineage.specs,
 )
 PORT_TAGS: dict[str, Callable[[ToolPorts], bool]] = {
     "views": lambda ports: ports.views is not None,

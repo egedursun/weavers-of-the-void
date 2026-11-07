@@ -16,4 +16,4 @@ async def shift_honour(ctx: TickContext, mortal_id: int, delta: int) -> int:
 
 
 async def shift_infamy(ctx: TickContext, mortal_id: int, delta: int) -> int:
-    return (await add_infamy(ctx.session, mortal_id, delta, ctx.epoch)).infamy
+    return (await add_infamy(ctx.session, mortal_id, delta, ctx.epoch, rules=ctx.rules)).infamy

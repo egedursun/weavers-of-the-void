@@ -26,6 +26,7 @@ class StageSpec:
     sunlight_harm: bool = False
     transforms: bool = False
     recruits: bool = False
+    appearance: str = ""
     fears_source: bool = False
 
 
@@ -57,8 +58,8 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
             frozenset({T.BITE}),
             0,
             (
-                StageSpec("Necrosis", 1, ConditionKind.CHRONIC_ILLNESS, 3, stats(endurance=-10)),
-                StageSpec("Lasting weakness", None, ConditionKind.CHRONIC_ILLNESS, 1, stats(strength=-5)),
+                StageSpec("Necrosis", 1, ConditionKind.CHRONIC_ILLNESS, 3, stats(endurance=-10), appearance="blackened flesh around an old bite"),
+                StageSpec("Lasting weakness", None, ConditionKind.CHRONIC_ILLNESS, 1, stats(strength=-5), appearance="a puckered bite scar"),
             ),
             frozenset({C.MEDICINE}),
             Visibility.OBVIOUS,
@@ -97,7 +98,16 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
             "Under the full face of the world's first moon the bearer becomes a thinking beast; a bite passes the curse on.",
             frozenset({T.BITE, T.CURSE}),
             1,
-            (StageSpec("Moon-changed", None, stats=stats(strength=15, charisma=-10), grants=frozenset({BodyFunction.VENOM}), transforms=True),),
+            (
+                StageSpec(
+                    "Moon-changed",
+                    None,
+                    stats=stats(strength=15, charisma=-10),
+                    grants=frozenset({BodyFunction.VENOM}),
+                    transforms=True,
+                    appearance="a restless, watchful gaze",
+                ),
+            ),
             frozenset({C.RITE, C.QUEST}),
             Visibility.HIDDEN,
             contagion=frozenset({T.BITE}),
@@ -120,6 +130,7 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
                     grants=frozenset({BodyFunction.VENOM}),
                     ageless=True,
                     sunlight_harm=True,
+                    appearance="a pallor that never warms",
                 ),
             ),
             frozenset({C.RITE, C.QUEST}),
@@ -133,7 +144,18 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
             "A god's favour: strength beyond the mortal measure, and a fear of the giver.",
             frozenset({T.RITE, T.BIRTH}),
             0,
-            (StageSpec("Blessed", None, ConditionKind.CHOSEN_MARK, 1, stats(strength=10), grants=frozenset({BodyFunction.PRESENCE}), fears_source=True),),
+            (
+                StageSpec(
+                    "Blessed",
+                    None,
+                    ConditionKind.CHOSEN_MARK,
+                    1,
+                    stats(strength=10),
+                    grants=frozenset({BodyFunction.PRESENCE}),
+                    fears_source=True,
+                    appearance="a faint radiance about the skin",
+                ),
+            ),
             frozenset({C.RITE}),
             Visibility.NOTICEABLE,
             hereditary=True,
@@ -145,9 +167,18 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
             frozenset({T.CONTACT, T.INHALATION, T.GAZE}),
             0,
             (
-                StageSpec("Tainted", 2, ConditionKind.VOID_TAINT, 2, sanity_loss=5),
-                StageSpec("Maddened", 2, ConditionKind.VISIONS, 3, sanity_loss=10),
-                StageSpec("Claimed", None, ConditionKind.VOID_TAINT, 5, sanity_loss=5, quenches=frozenset({NeedKind.BELONGING}), recruits=True),
+                StageSpec("Tainted", 2, ConditionKind.VOID_TAINT, 2, sanity_loss=5, appearance="dark veins tracing the skin"),
+                StageSpec("Maddened", 2, ConditionKind.VISIONS, 3, sanity_loss=10, appearance="eyes that follow what no one else sees"),
+                StageSpec(
+                    "Claimed",
+                    None,
+                    ConditionKind.VOID_TAINT,
+                    5,
+                    sanity_loss=5,
+                    quenches=frozenset({NeedKind.BELONGING}),
+                    recruits=True,
+                    appearance="a hollow, far-off stare",
+                ),
             ),
             frozenset({C.RITE, C.QUEST}),
             Visibility.NOTICEABLE,
@@ -159,7 +190,7 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
             "A bound spirit rides the bearer and speaks with their mouth.",
             frozenset({T.RITE, T.CURSE}),
             0,
-            (StageSpec("Ridden", None, ConditionKind.POSSESSION, 3),),
+            (StageSpec("Ridden", None, ConditionKind.POSSESSION, 3, appearance="a second will moving behind the eyes"),),
             frozenset({C.RITE}),
             Visibility.NOTICEABLE,
             cure_level=2,
@@ -183,7 +214,7 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
             "A god's curse of a hunger that no meal fills.",
             frozenset({T.CURSE}),
             0,
-            (StageSpec("Starving", None, ConditionKind.ENDLESS_HUNGER, 3, needs=frozenset({NeedKind.SUSTENANCE})),),
+            (StageSpec("Starving", None, ConditionKind.ENDLESS_HUNGER, 3, needs=frozenset({NeedKind.SUSTENANCE}), appearance="gaunt despite every meal"),),
             frozenset({C.RITE, C.QUEST}),
             Visibility.OBVIOUS,
             cure_level=2,

@@ -66,6 +66,26 @@ ID_LISTS = frozenset(
 )
 REFERENCE_LISTS = {"revealed_aims": "war_aims"}
 PAIRED_LISTS = {"martial_record": ("won", "lost")}
+PERCENT_SIGN = "%"
+
+
+def _pairs(value: dict[str, Any]) -> str:
+    return "; ".join(f"{words(str(locus))}: {' / '.join(words(str(item)) for item in items)}" for locus, items in value.items() if isinstance(items, list))
+
+
+def _shares(value: dict[str, Any]) -> str:
+    return "; ".join(
+        f"{words(str(locus))}: " + ", ".join(f"{words(str(key))} {share}{PERCENT_SIGN}" for key, share in found.items() if share)
+        for locus, found in value.items()
+        if isinstance(found, dict)
+    )
+
+
+def _debts(value: dict[str, Any]) -> str:
+    return ", ".join(f"household {key} is owed {amount}" for key, amount in value.items())
+
+
+COLUMN_FORMATS: dict[str, Callable[[dict[str, Any]], str]] = {"genes": _pairs, "frequencies": _shares, "debts": _debts}
 ORDER_COLUMNS = ("epoch", "since_epoch", "started_epoch", "slot", "position", "rank", "id")
 
 
@@ -260,6 +280,9 @@ class TypedIndex:
         return composite if composite is not None else str(value)
 
     def composite(self, column: KeyedColumnElement[Any], value: Any) -> str | None:
+        special = COLUMN_FORMATS.get(column.key)
+        if special is not None and isinstance(value, dict):
+            return special(value)
         if isinstance(value, list | tuple | set | frozenset):
             return self.sequence(column, list(value))
         if isinstance(value, dict):

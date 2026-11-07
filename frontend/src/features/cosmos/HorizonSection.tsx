@@ -1,4 +1,16 @@
-import { CloudFog, Compass, Mountain, Telescope, Wind } from 'lucide-react'
+import {
+  CloudFog,
+  Compass,
+  Hourglass,
+  Mountain,
+  Pause,
+  Play,
+  RotateCcw,
+  Sparkles,
+  Telescope,
+  Wind,
+  X,
+} from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { formatDecimal } from '@/lib/format'
@@ -8,13 +20,155 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EntityLink, Section } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { CosmicActionButton } from './CosmicActionButton'
-import { useDiscoverySummary } from './api'
+import { useDiscoverySummary, useSensedWorlds } from './api'
 import { type CosmosIndex, crowdedRegions } from './model/cosmosModel'
 import { HORIZON_STATUS_LABEL } from './model/labels'
 import { type RuleBook, ruleText } from './model/rules'
 import { useCosmicAction } from './useCosmicAction'
 
 const CROWDED_LIST_LENGTH = 4
+const STEP_STATUS: Record<string, string> = {
+  pending: 'Waiting',
+  running: 'Being born',
+  done: 'Born',
+  failed: 'Failed',
+  held: 'Held',
+}
+
+function SensedBirths() {
+  const { data } = useSensedWorlds()
+  const request = useCosmicAction({
+    run: (intuitionId: number) =>
+      unwrap(
+        api.POST('/api/actions/sensed_world:request', {
+          body: { intuition_id: intuitionId },
+        })
+      ),
+  })
+  const hold = useCosmicAction({
+    run: ({ stepId, value }: { stepId: number; value: boolean }) =>
+      unwrap(
+        api.POST('/api/actions/sensed_world:hold', {
+          body: { step_id: stepId, hold: value },
+        })
+      ),
+  })
+  const retry = useCosmicAction({
+    run: (stepId: number) =>
+      unwrap(
+        api.POST('/api/actions/sensed_world:retry', {
+          body: { step_id: stepId },
+        })
+      ),
+  })
+  const cancel = useCosmicAction({
+    run: (stepId: number) =>
+      unwrap(
+        api.POST('/api/actions/sensed_world:cancel', {
+          body: { step_id: stepId },
+        })
+      ),
+  })
+  if (!data || (data.steps.length === 0 && data.intuitions.length === 0))
+    return null
+  const open = data.steps.filter((step) => step.status !== 'done')
+  const unqueued = data.intuitions.filter((item) => !item.queued)
+  return (
+    <div className='flex min-w-0 flex-col gap-2'>
+      <Text weight='semibold'>Sensed worlds waiting to be born</Text>
+      {open.length === 0 && unqueued.length === 0 && (
+        <Muted variant='caption'>
+          Every sensed world has been born or let go.
+        </Muted>
+      )}
+      <ul className='flex min-w-0 flex-col gap-1.5'>
+        {open.map((step) => (
+          <li
+            key={step.id}
+            className='flex min-w-0 flex-wrap items-center gap-2'
+          >
+            <Hourglass
+              aria-hidden='true'
+              className='size-icon-sm shrink-0 text-primary'
+            />
+            <Text as='span' variant='caption'>
+              {step.seeker ? `Sensed by ${step.seeker.name}` : 'A sensed world'}
+              {` · epoch ${step.epoch}${step.attempts ? ` · ${plural(step.attempts, 'attempt')}` : ''}`}
+            </Text>
+            <Badge
+              size='sm'
+              variant={step.status === 'failed' ? 'destructive' : 'outline'}
+            >
+              {STEP_STATUS[step.status] ?? step.status}
+            </Badge>
+            {(step.status === 'pending' || step.status === 'held') && (
+              <CosmicActionButton
+                actionId='sensed_world:hold'
+                label={step.status === 'held' ? 'Release' : 'Hold'}
+                icon={step.status === 'held' ? Play : Pause}
+                variant='ghost'
+                size='sm'
+                pending={hold.isPending && hold.variables?.stepId === step.id}
+                onRun={() =>
+                  hold.mutate({
+                    stepId: step.id,
+                    value: step.status !== 'held',
+                  })
+                }
+              />
+            )}
+            {step.status === 'failed' && (
+              <CosmicActionButton
+                actionId='sensed_world:retry'
+                label='Try again'
+                icon={RotateCcw}
+                variant='ghost'
+                size='sm'
+                pending={retry.isPending && retry.variables === step.id}
+                onRun={() => retry.mutate(step.id)}
+              />
+            )}
+            {step.status !== 'running' && (
+              <CosmicActionButton
+                actionId='sensed_world:cancel'
+                label='Call off'
+                icon={X}
+                variant='ghost'
+                size='sm'
+                pending={cancel.isPending && cancel.variables === step.id}
+                onRun={() => cancel.mutate(step.id)}
+              />
+            )}
+          </li>
+        ))}
+        {unqueued.map((item) => (
+          <li
+            key={`intuition-${item.id}`}
+            className='flex min-w-0 flex-wrap items-center gap-2'
+          >
+            <Telescope
+              aria-hidden='true'
+              className='size-icon-sm shrink-0 text-muted-foreground'
+            />
+            <Text as='span' variant='caption'>
+              {item.seeker ? `Sensed by ${item.seeker.name}` : 'A sensed world'}
+              {` · epoch ${item.epoch}`}
+            </Text>
+            <CosmicActionButton
+              actionId='sensed_world:request'
+              label='Bring it to birth'
+              icon={Sparkles}
+              variant='ghost'
+              size='sm'
+              pending={request.isPending && request.variables === item.id}
+              onRun={() => request.mutate(item.id)}
+            />
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
 const FOUND_LIST_LENGTH = 8
 
 type HorizonSectionProps = {
@@ -171,6 +325,7 @@ export function HorizonSection({ worldId, index, rules }: HorizonSectionProps) {
           ))}
         </ul>
       )}
+      <SensedBirths />
       <Muted variant='caption'>
         {`Each epoch a community or explorer sets out on its own with a ${ruleText(rules.get('explorationBase'))}% chance, at most ${ruleText(cap)} new lands per world; cramped land pushes harder. Tune these in World rules › Exploration.`}
       </Muted>

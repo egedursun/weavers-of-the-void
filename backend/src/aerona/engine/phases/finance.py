@@ -45,9 +45,7 @@ from aerona.engine.phase import Phase
     "table.world_materials",
     "table.world_seasons",
 )
-@writes(
-    "table.trade_policies",
-)
+@writes("table.trade_policies")
 async def trade_policy(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     tally = PolicyTally()
@@ -67,12 +65,7 @@ async def trade_policy(ctx: TickContext) -> None:
     "table.loans",
     "table.polity_profiles",
 )
-@writes(
-    "table.credit_profiles",
-    "table.currencies",
-    "table.war_sides",
-    "table.wars",
-)
+@writes("table.credit_profiles", "table.currencies", "table.war_sides", "table.wars")
 async def credit_ratings(ctx: TickContext) -> None:
     tally = CreditTally()
     await tend_credit(ctx, tally)
@@ -166,9 +159,7 @@ async def speculation(ctx: TickContext) -> None:
     "table.world_materials",
     "table.world_seasons",
 )
-@writes(
-    "table.economic_indicators",
-)
+@writes("table.economic_indicators")
 async def economic_indicators(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
     tally = IndicatorTally()

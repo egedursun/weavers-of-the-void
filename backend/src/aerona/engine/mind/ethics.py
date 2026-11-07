@@ -146,7 +146,14 @@ async def drift_ethics(ctx: TickContext, culture: EntityRow) -> int:
     if not values:
         return 0
     moved = 0
-    for act, row in (await ethics_of(ctx.session, culture.id)).items():
+    held = await ethics_of(ctx.session, culture.id)
+    for act in ActKind:
+        if act not in held:
+            await write_stance(
+                ctx.session, culture.id, act, stance_for(ctx.rules, await target_reading(ctx.session, ctx.rules, culture, act, values)), ctx.epoch
+            )
+            moved += 1
+    for act, row in held.items():
         if STANCE_FIELD in (row.locked or []):
             continue
         wanted = stance_for(ctx.rules, await target_reading(ctx.session, ctx.rules, culture, act, values))
@@ -210,11 +217,11 @@ async def conscience(ctx: TickContext, actor_id: int, act: ActKind, victim_id: i
     table = ctx.rules.ethics
     if row.stance in GOOD:
         await shift_conviction(ctx, actor.id, ctx.rules.aspirations.conviction_gain, act)
-        await add_renown(ctx.session, actor.id, table.renown_gain, ctx.epoch)
+        await add_renown(ctx.session, actor.id, table.renown_gain, ctx.epoch, rules=ctx.rules)
         await think(ctx.session, ctx.rules, actor.id, ThoughtKind.ACTED_ON_CONSCIENCE, ctx.epoch, subject_id=victim_id)
     elif row.stance in BAD:
         await shift_conviction(ctx, actor.id, -ctx.rules.aspirations.conviction_loss, act)
-        await add_infamy(ctx.session, actor.id, table.infamy_gain, ctx.epoch)
+        await add_infamy(ctx.session, actor.id, table.infamy_gain, ctx.epoch, rules=ctx.rules)
         await add_stress(ctx.session, actor.id, table.guilt_stress * await guilt_scale(ctx.session, culture.id if culture else None) / PERCENT, ctx.epoch)
         await think(ctx.session, ctx.rules, actor.id, ThoughtKind.ACTED_AGAINST_CONSCIENCE, ctx.epoch, subject_id=victim_id)
         profile = await ctx.session.get(MortalProfileRow, actor.id)

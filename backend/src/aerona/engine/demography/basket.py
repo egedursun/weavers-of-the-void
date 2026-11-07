@@ -16,7 +16,7 @@ from aerona.domain.enums.demography import AgeBand, CohortCondition
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TemperatureBand
-from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.domain.enums.society_depth import ShortfallEffect
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -380,6 +380,15 @@ async def effect_shortfalls(session: AsyncSession, community_id: int) -> dict[Sh
     fed = sum(row.fed_pct * weights[social_class] for social_class, row in standing.items())
     found[E.HUNGER] = clamp_int(PERCENT - round_half_up(fed / whole), 0, PERCENT) if whole > 0 else 0
     return found
+
+
+async def fed_index(session: AsyncSession, community_id: int) -> int | None:
+    society = await session.get(CommunitySocietyRow, community_id)
+    stocked = society.stock(Commodity.FOOD) if society is not None else None
+    if not await standing_of(session, community_id):
+        return stocked
+    eaten = PERCENT - (await effect_shortfalls(session, community_id)).get(E.HUNGER, 0)
+    return max(stocked or 0, eaten)
 
 
 async def poverty_of(session: AsyncSession, community_id: int, shares: Mapping[SocialClass, float]) -> int:

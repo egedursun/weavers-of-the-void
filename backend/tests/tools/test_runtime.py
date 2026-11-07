@@ -1,6 +1,7 @@
 import asyncio
 from typing import Any
 
+import pytest
 from sqlalchemy import select
 
 from aerona.db.session import Database
@@ -98,6 +99,7 @@ def _runtime(database: Database, son_id: int, specs: list[ToolSpec[SonCall, Any]
     return SonToolRuntime(database, settings, specs, ports or ToolPorts())
 
 
+@pytest.mark.tool_failure_expected
 async def test_failure_refunds_essence_and_actions(database: Database) -> None:
     realm = await seed_realm(database)
     async with database.write() as session:
@@ -204,6 +206,7 @@ class FakeBirth:
         return BornChild(son_id=parent_son_id + 1000, name="Ashkin", title="the Young", rarity_label="Epic")
 
 
+@pytest.mark.tool_failure_expected
 async def test_long_job_success_and_refund(database: Database) -> None:
     realm = await seed_realm(database)
     toolkit = await son_toolkit(database, realm.son_id, action_points=4, ports=ToolPorts(child_birth=FakeBirth()))

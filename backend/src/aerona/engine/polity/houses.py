@@ -19,7 +19,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.demography import MarriageCustom
 from aerona.domain.enums.entity import HERO_ROLES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
-from aerona.domain.enums.mind import MemoryKind, TraitKind, ValueAxis
+from aerona.domain.enums.mind import ActKind, MemoryKind, TraitKind, ValueAxis
 from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import ClaimBasis, GenderRule, HouseTrait, LawKind, OathKind, OfficeKind, OfficePower
 from aerona.domain.enums.society import SocialClass
@@ -30,8 +30,12 @@ from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.kinship import has_room, match_bonus, may_wed, terms_of
 from aerona.engine.faith.book import faith_tenets
+from aerona.engine.genetics.genome import consanguinity
+from aerona.engine.genetics.life import bless_blood, found_genome
+from aerona.engine.genetics.lineage import blood_traits
 from aerona.engine.lifecycle.succession import dynasty_root
 from aerona.engine.mind.book import traits_of
+from aerona.engine.mind.ethics import ethic_reading
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.space import value_distance
 from aerona.engine.mortal.kin import children_of, parents_of, spouses_of
@@ -140,17 +144,9 @@ async def join(ctx: TickContext, book: HouseBook, house_id: int, mortal: EntityR
 
 
 async def bless(ctx: TickContext, profile: HouseProfileRow | None, mortal: EntityRow) -> None:
-    if profile is None or mortal.birth_epoch < ctx.epoch:
+    if profile is None or mortal.birth_epoch < ctx.epoch or not profile.traits:
         return
-    traits = set(profile.traits)
-    if HouseTrait.LONG_LIVED in traits:
-        set_stats(mortal, lifespan=round_half_up((stat(mortal, "lifespan") or 0) * 1.15))
-    if HouseTrait.GIANT_BLOODED in traits:
-        set_stats(mortal, strength=clamp_int((stat(mortal, "strength") or 0) + 10, 0, PERCENT))
-    if HouseTrait.SEER_GIFT in traits:
-        set_stats(mortal, intellect=clamp_int((stat(mortal, "intellect") or 0) + 5, 0, PERCENT))
-    if HouseTrait.CURSED in traits:
-        set_stats(mortal, lifespan=round_half_up((stat(mortal, "lifespan") or 0) * 0.85))
+    bless_blood(ctx.rules, mortal, await found_genome(ctx, mortal), [HouseTrait(trait) for trait in profile.traits])
 
 
 MOTTOS: dict[ValueAxis, str] = {
@@ -456,6 +452,7 @@ async def gain_traits(ctx: TickContext, book: HouseBook, profile: HouseProfileRo
         found.append(HouseTrait.GOD_BLOODED)
         if profile.divine_son_id is None:
             profile.divine_son_id = next(mortal.creator_son_id for mortal in alive if mortal.creator_son_id is not None)
+    found.extend(trait for trait in await blood_traits(ctx, alive, held | set(found)) if trait not in found)
     for trait in found:
         if not ctx.rng(f"house_trait.{profile.house_entity_id}.{trait.value}.{ctx.epoch}").chance(table.trait_chance):
             continue
@@ -715,6 +712,7 @@ async def arrange_marriages(ctx: TickContext, book: HouseBook, realms: RealmBook
         if not ctx.rng(f"marriage.{mortal.id}.{ctx.epoch}").chance(table.marriage_chance):
             continue
         mine = await values_of(ctx, mortal)
+        kin_admired = await ethic_reading(ctx.session, ctx.rules, mortal.id, ActKind.INCEST, mine) > 0
         custom = await custom_of(ctx, mortal)
         closed = bool(ctx.rules.legislation.endogamy_strict) and await endogamous(ctx.session, mortal.location_id)
         people = await people_of(ctx.session, mortal)
@@ -732,8 +730,11 @@ async def arrange_marriages(ctx: TickContext, book: HouseBook, realms: RealmBook
             distance = value_distance(mine, theirs)
             if distance > FIT_DISTANCE:
                 continue
+            blood = await consanguinity(ctx.session, ctx.rules, mortal.id, other.id)
+            kin_pull = ctx.rules.genetics.kin_claim_pull if kin_admired else -ctx.rules.genetics.kin_marriage_fear
             gain = (
-                book.profiles[other_house].prestige
+                blood * kin_pull / PERCENT
+                + book.profiles[other_house].prestige
                 - distance / 2
                 + (TWENTY if realms.member_of.get(other.location_id or -1) != realms.member_of.get(mortal.location_id or -1) else 0)
                 + match_bonus(ctx.rules, await terms_of(ctx.session, mortal), await terms_of(ctx.session, other))

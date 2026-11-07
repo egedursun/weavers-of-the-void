@@ -1,0 +1,139 @@
+from typing import Any
+
+from aerona.domain.enums.culture import Technique
+from tests.tools.every_setup import (
+    advanced,
+    captive_of_outlaws,
+    created,
+    item,
+    knows_biomancy,
+    knows_magic,
+    last_rite,
+    last_treaty,
+    market,
+    owns_resource,
+    ruin,
+    ruler,
+    seafarers,
+    second_mortal,
+    second_species,
+    spirit,
+    technique,
+    well_housed,
+    worships_dead_sibling,
+)
+from tests.tools.every_son_tool import faction, knowledge, mortal, people, plain, region, resource, route, settlement, species
+from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
+from tests.tools.factories import Realm
+
+REASON = "for the good of the valley roads"
+TECHNIQUE = next(iter(Technique)).value
+
+
+def by_mortal(realm: Realm, _ids: Ids) -> int:
+    return realm.mortal_id
+
+
+def by_people(realm: Realm, _ids: Ids) -> int:
+    return realm.people_id
+
+
+def by_cult(realm: Realm, _ids: Ids) -> int:
+    return realm.cult_id
+
+
+def by_faction(realm: Realm, _ids: Ids) -> int:
+    return realm.faction_id
+
+
+def by_settlement(realm: Realm, _ids: Ids) -> int:
+    return realm.settlement_id
+
+
+def named(arguments: Any, setup: Any = None, **options: Any) -> Case:
+    return Case(arguments, setup, by_mortal, **options) if setup is not None else Case(arguments, actor=by_mortal, **options)
+
+
+def folk(arguments: Any, setup: Any = None, **options: Any) -> Case:
+    return Case(arguments, setup, by_people, **options) if setup is not None else Case(arguments, actor=by_people, **options)
+
+
+MORTAL_CASES: dict[str, Case] = {
+    "look_at_world": named(plain()),
+    "inspect_entity": named(plain(id=people)),
+    "search_entities": named(plain(query="Kessar")),
+    "found_language": folk(plain(name="Valen", description=TEXT[:200], words=[{"word": "orin", "meaning": "road"}])),
+    "coin_words": folk(plain(words=[{"word": "lumen", "meaning": "lamp"}])),
+    "produce_item": folk(plain(name="Road Lamp", description=TEXT[:200], resource_ids=lambda realm, _ids: [realm.resource_id])),
+    "build_structure": folk(plain(name="Lamp House", description=TEXT[:200], location_id=settlement)),
+    "create_culture": folk(plain(name="Lamp Night", description=TEXT[:200])),
+    "discover_resource": folk(plain(name="Amber Seam", description=TEXT[:200], location_id=region)),
+    "claim_resource": folk(plain(resource_id=resource)),
+    "found_settlement": folk(plain(name="Lanternford", description=TEXT[:200], location_id=region)),
+    "establish_trade": folk(plain(target_id=settlement, goods="lamps and grain")),
+    "declare_war": folk(plain(target_id=settlement, reason=REASON)),
+    "sabotage": Case(plain(target_id=people, how="loosen the mill gears"), actor=by_faction),
+    "build_spy_network": folk(plain(target_id=faction, cover="as lamp sellers at the gates")),
+    "diplomacy": folk(plain(target_id=settlement, terms="share the river road")),
+    "worship": folk(plain(son_id=lambda realm, _ids: realm.sibling_id, offering="lamps lit at dusk")),
+    "pray_to_creator": folk(plain(prayer="Keep the valley roads open.")),
+    "preach": Case(plain(target_id=settlement, sermon="Light a lamp for every traveller on the road."), actor=by_cult),
+    "deny_god": folk(plain(reason=REASON)),
+    "prophesy": named(plain(name="The Lamp Sign", saying="When the lamps go out the river will rise.")),
+    "resurrection_rite": folk(plain(son_id=lambda realm, _ids: realm.sibling_id), worships_dead_sibling),
+    "develop_knowledge": folk(plain(name="Lampwork", description=TEXT[:200])),
+    "learn_knowledge": folk(plain(knowledge_id=knowledge, from_id=mortal)),
+    "go_on_adventure": named(plain(target_id=species, goal="track the dusk hounds")),
+    "challenge_god": named(plain(son_id=lambda realm, _ids: realm.son_id, reason=REASON)),
+    "adopt": named(plain(child_id=created("mortal"), reason=REASON), second_mortal),
+    "find_route": folk(plain(how="follow the old lamp posts"), seafarers),
+    "explore_land": folk(plain(name="Greyfold", description=TEXT[:200]), advanced),
+    "build_ship": folk(plain(name="Road Barge", description=TEXT[:200]), seafarers),
+    "launch_expedition": folk(plain(route_id=route), seafarers, prelude=(Step("build_ship", plain(name="Road Barge", description=TEXT[:200]), by_people),)),
+    "tame_species": folk(plain(species_id=species, how="with salt and patience")),
+    "weave_chimera": named(
+        plain(a_id=species, b_id=created("species"), name="Lamp Hare", goal="a guide for night roads"), combined(second_species, knows_biomancy)
+    ),
+    "bind_spirit": named(plain(spirit_id=created("spirit"), target_id=created("item")), combined(spirit, item, knows_magic)),
+    "search_ruins": named(plain(target_id=created("ruin"), how="dig by lamplight"), ruin),
+    "escape": named(plain(how="slip out at the change of guard"), captive_of_outlaws),
+    "pay_ransom": folk(plain(captive_id=mortal), captive_of_outlaws),
+    "rescue_captive": folk(plain(captive_id=mortal, plan="a night raid by the river"), captive_of_outlaws),
+    "raise_army": folk(plain(name="Valley Guard")),
+    "appoint_commander": folk(plain(mortal_id=mortal), prelude=(Step("raise_army", plain(name="Valley Guard"), by_people),)),
+    "barter": folk(plain(target_id=settlement, give_ids=lambda realm, _ids: [realm.resource_id], terms="lamps for grain"), owns_resource),
+    "lend": folk(plain(debtor_id=settlement, amount=10, what="grain"), advanced),
+    "repay_debt": Case(
+        plain(creditor_id=people), advanced, by_settlement, prelude=(Step("lend", plain(debtor_id=settlement, amount=10, what="grain"), by_people),)
+    ),
+    "commission_artwork": folk(plain(name="Road Hymn")),
+    "design_rite": named(plain(name="Lamp Rite", power=2, workings=[{"effect": "heal", "magnitude": 10}])),
+    "cast_rite": named(
+        plain(rite_id=created("rite"), target_id=people),
+        prelude=(Step("design_rite", plain(name="Lamp Rite", power=2, workings=[{"effect": "heal", "magnitude": 10}]), by_mortal),),
+        lookup=last_rite,
+    ),
+    "found_school": named(plain(name="School of Ledgers", tenets=["legalism"])),
+    "enact_law": named(plain(), ruler),
+    "appoint_officer": named(plain(office="chancellor", mortal_id=created("mortal")), combined(ruler, second_mortal)),
+    "set_tax": named(plain(rate=10), ruler),
+    "propose_treaty": folk(plain(target_id=settlement)),
+    "accept_treaty": Case(
+        plain(treaty_id=created("treaty")), actor=by_settlement, prelude=(Step("propose_treaty", plain(target_id=settlement), by_people),), lookup=last_treaty
+    ),
+    "break_treaty": folk(
+        plain(treaty_id=created("treaty")),
+        prelude=(Step("seal_treaty", plain(parties=lambda realm, _ids: [{"party_id": realm.people_id}, {"party_id": realm.settlement_id}])),),
+        lookup=last_treaty,
+    ),
+    "swear_oath": named(plain()),
+    "socialise": named(plain(target_id=created("mortal")), second_mortal),
+    "challenge_to_contest": named(plain(target_id=created("mortal")), second_mortal),
+    "persuade": named(plain(target_id=created("mortal")), second_mortal),
+    "trade_lore": named(plain(buyer_id=created("mortal"), key=TECHNIQUE), combined(second_mortal, technique)),
+    "lay_trade_policy": named(plain(), ruler),
+    "speculate": folk(plain(commodity="grain"), market),
+    "buy_workshop": folk(plain(kind="market"), market),
+    "choose_method": folk(plain()),
+    "tend_home": named(plain(choice="renovate"), well_housed),
+}

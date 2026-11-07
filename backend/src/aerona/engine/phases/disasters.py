@@ -17,7 +17,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.happenings import RegionGeomorphRow
 from aerona.db.tables.structures import StructureProfileRow
-from aerona.db.write_guard import unheld
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
@@ -44,6 +44,7 @@ from aerona.engine.environment.geomorph import erupted, eruption_chance, quaked,
 from aerona.engine.environment.notable import remember_event_year
 from aerona.engine.environment.profile import RIVER_RANK
 from aerona.engine.happenings.profile import add_footprint, derive_footprint, flow_of, open_profile, record_casualties
+from aerona.engine.households.homes import sickness_factor
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits, fatal_injury
@@ -150,6 +151,8 @@ def _drop(entity: EntityRow, key: str, amount: float) -> None:
 
 
 async def _strike_mortal(ctx: TickContext, mortal: EntityRow, disaster: Disaster, scale: float, knowledge: KnowledgeMap) -> bool:
+    if held(mortal.id):
+        return False
     effects = ctx.rules.intervention_effects
     death_chances = {
         Disaster.EARTHQUAKE: effects.earthquake_mortal_death_chance,
@@ -160,7 +163,12 @@ async def _strike_mortal(ctx: TickContext, mortal: EntityRow, disaster: Disaster
         Disaster.ERUPTION: ctx.rules.geomorphology.eruption_mortal_death_chance,
         Disaster.VOLCANIC_QUAKE: effects.earthquake_mortal_death_chance * ctx.rules.geomorphology.volcanic_quake_pct / PERCENT,
     }
-    medicine = knowledge.ratio(ctx.rules, mortal.id, KnowledgeBranch.MEDICINE, effects.medicine_plague_severity) if disaster is Disaster.PLAGUE else 1.0
+    medicine = (
+        knowledge.ratio(ctx.rules, mortal.id, KnowledgeBranch.MEDICINE, effects.medicine_plague_severity)
+        * await sickness_factor(ctx.session, ctx.rules, mortal.id)
+        if disaster is Disaster.PLAGUE
+        else 1.0
+    )
     rng = ctx.rng(f"disaster_mortal.{mortal.id}")
     phrase = DISASTERS[disaster].death_phrase
     label = DISASTERS[disaster].label.lower()
@@ -531,7 +539,7 @@ async def _city_plagues(ctx: TickContext, world: DisasterWorld) -> None:
     effects = ctx.rules.world_effects
     for city in cities:
         population = stat_or(city, "population", 0)
-        if population < settings.city_plague_min_population or world.struck >= settings.cap:
+        if held(city.id) or population < settings.city_plague_min_population or world.struck >= settings.cap:
             continue
         crowded = population >= crowd(city)
         hungry = (await society_of(ctx.session, ctx.rules, city.id)).stocks[Commodity.FOOD] < effects.hungry_food
@@ -696,6 +704,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.event_footprints",
     "table.event_profiles",
     "table.forced_weather",
+    "table.genomes",
     "table.holder_levels",
     "table.holder_techniques",
     "table.immunities",

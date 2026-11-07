@@ -152,6 +152,18 @@ class EnginePhasesRules:
     relations_circles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: circles gathering around shared tastes and beliefs")
     relations_passions: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: passions kindled by bonds, oaths, memories and upbringing")
     relations_pecking: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: pecking orders in households, courts, circles, warbands and crews")
+    genetics_survey: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: allele pools for every people and a genome for every mortal")
+    bloodlines: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: drifting allele pools, the gift and how peoples read it, looks, house resemblance and gifted children",
+    )
+    household_survey: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: a household and a home for every named mortal")
+    households: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: household purses, care, homes and their quality, and the choices households make"
+    )
     industry_methods: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: energy of each place and the production methods it chooses")
     industry_aftermath: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: preserving, spoilage, tool wear, fuel burned, pollution and its harm, and what nobles want"

@@ -357,6 +357,9 @@ class ActKind(StrEnum):
     HOARDING_IN_FAMINE = "hoarding_in_famine"
     SLAVERY = "slavery"
     ADULTERY = "adultery"
+    USURY = "usury"
+    INFANTICIDE = "infanticide"
+    ABANDONING_ELDERS = "abandoning_elders"
 
 
 class NeedKind(StrEnum):
@@ -518,6 +521,8 @@ class ThoughtKind(StrEnum):
     SENT_BY_THE_CREATOR = "sent_by_the_creator"
     LIKED_SURROUNDINGS = "liked_surroundings"
     DISLIKED_SURROUNDINGS = "disliked_surroundings"
+    PROUD_OF_HOME = "proud_of_home"
+    ASHAMED_OF_HOME = "ashamed_of_home"
     ENJOYED_FAVOURITE = "enjoyed_favourite"
     ENDURED_A_DISLIKE = "endured_a_dislike"
     ACTED_ON_CONSCIENCE = "acted_on_conscience"
@@ -686,6 +691,7 @@ class PreferenceKind(StrEnum):
     ACTIVITY = "activity"
     CRAFT = "craft"
     DEITY_ASPECT = "deity_aspect"
+    LOOKS = "looks"
 
 
 class EthicalStance(StrEnum):

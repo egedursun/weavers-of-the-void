@@ -10,6 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.military import ArmyUnitRow
 from aerona.db.tables.region import RegionDangerRow, RegionMemoryRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
@@ -103,7 +104,7 @@ async def harm_settlers(ctx: TickContext, atlas: RegionAtlas, dangers: dict[int,
         region_id = atlas.top_region(community.id)
         rows = dangers.get(region_id or 0, [])
         region = regions.get(region_id or 0)
-        if not rows or region is None:
+        if not rows or region is None or held(community.id):
             continue
         await strike_community(ctx, community, region, rows, tally)
     return tally

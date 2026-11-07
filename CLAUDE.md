@@ -45,6 +45,13 @@
    - A table may stay out of the generic records only when dedicated book and Codex code renders it. Nothing is ever truncated.
    - A new kind of thing or a new layout needs its own readable rendering in both, not a raw dump.
 
+8. **Every defect closes its class, and every tool is proven to work.** Fixing a defect is not enough. In the same change:
+   - Add a test that fails on the old code and passes on the fix.
+   - Add a mechanical guard (a check script, a pre-commit gate, a warning turned into an error, a type rule) so the same defect cannot come back. Then look for its siblings, defects that share the cause, and close them too.
+   - Every agent tool (each son and mortal tool) has a case in `backend/tests/tools/every_son_tool.py` or `every_mortal_tool.py`. That case reaches the tool's success path through the real tool runtime. `tests/tools/test_every_tool.py` fails when a tool has no case or when its case is rejected. A new tool is unfinished until its case passes.
+   - A tool call that crashes inside the runtime fails every test where it happens. Only a test that crashes a tool on purpose may say so with `@pytest.mark.tool_failure_expected`.
+   - Deprecated library APIs are never used. SQLAlchemy and our own deprecation warnings are errors in tests, mypy reports deprecated calls, and `scripts/check_deprecated_apis.py` scans the code.
+
 ## Enforcement
 
 These rules are enforced mechanically, and they bind Claude as much as anyone.
@@ -65,6 +72,12 @@ These rules are enforced mechanically, and they bind Claude as much as anyone.
     - Every node-linked table through the generic `record_row:create`, `record_row:edit` and `record_row:delete` levers and the "Every record" section in each drawer.
     - Append-only histories and tables the engine wipes and rebuilds wholesale are outputs, not authored state.
   - `backend/tests/engine/core/test_god_control.py` whenever engine or db code changes (rule 6). It runs every engine step, found automatically, twice. First with every node held: nothing tied to a node may be created, changed or deleted. Then forced on one node: it must run cleanly. A new step that acts on a held node fails the commit. Skip held nodes with `held()` or `unheld()` from `aerona.db.write_guard` where the step chooses whom to act on. Field updates on held rows are already reverted for every node-linked table.
-  - ruff, mypy and import layers for backend changes.
+  - `scripts/check_deprecated_apis.py` on every commit (rule 8). It finds every retired SQLAlchemy, pydantic, FastAPI, Starlette, httpx and Alembic API, such as `Result.tuples()`, and fails on any use of one in source, tests or scripts.
+  - The proving gate on every backend change (rule 8):
+    - `tests/tools/test_every_tool.py`: every son and mortal tool runs to success.
+    - `tests/tools/test_catalogue.py`: every tool field the model sees is described.
+    - A full epoch with a scripted model, and an engine-only epoch.
+    - Every test file that imports a changed function, class or constant, or a changed test helper. `scripts/covering_tests.py` lists them from the staged diff.
+  - ruff, mypy (with deprecated calls as errors) and import layers for backend changes.
   - tsc, eslint and prettier for frontend changes (rule 5).
 - **Never bypass a check.** No `--no-verify`, no allowlists, and no downgrading an error to a warning. A failing check means the work is not done: fix what it found, in the same task.

@@ -150,6 +150,13 @@ export const ACTS: Record<ActKind, LoreNamed> = {
     icon: HeartCrack,
     tone: 'warning',
   },
+  usury: { label: 'Lending at interest', icon: Landmark, tone: 'warning' },
+  infanticide: { label: 'Killing an infant', icon: UserX, tone: 'danger' },
+  abandoning_elders: {
+    label: 'Leaving the old to fend alone',
+    icon: DoorOpen,
+    tone: 'danger',
+  },
 }
 
 export function effectLabel(effect: TraditionEffect): string {

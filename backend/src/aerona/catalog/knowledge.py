@@ -51,6 +51,8 @@ NATURAL_LAWS: dict[NaturalLaw, KeyedText[NaturalLaw]] = {
         KeyedText(NaturalLaw.ONE_LANGUAGE, "One language", "Languages spread faster through conquest and trade."),
         KeyedText(NaturalLaw.DISASTERS, "Disasters", "Natural disasters happen more often."),
         KeyedText(NaturalLaw.SOULS_REINCARNATE, "Souls reincarnate", "Souls that pass judgement may be born again into a new life."),
+        KeyedText(NaturalLaw.GIFT_FLOWERING, "Gift flowering", "The magical gift is born more often in every bloodline."),
+        KeyedText(NaturalLaw.GIFT_WITHERING, "Gift withering", "The magical gift is born more rarely and fades from bloodlines."),
     )
 }
 

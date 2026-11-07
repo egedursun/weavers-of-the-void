@@ -35,6 +35,7 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of, holding
+from aerona.engine.industry.energy import available
 from aerona.engine.industry.quality import premium
 from aerona.engine.mind.book import values_for
 from aerona.engine.notes import note
@@ -165,6 +166,38 @@ def profit(ctx: TickContext, book: EconomyBook, community: EntityRow, spec: Meth
     return gross - cost
 
 
+def expected_runs(ctx: TickContext, book: EconomyBook, community: EntityRow, spec: MethodSpec) -> int:
+    job = PROCESS_JOB.get(spec.process)
+    if job is not None:
+        working = book.labour.get(community.id, {}).get(job)
+        workers = working.workers if working is not None else 0
+        return max(1, round_half_up(workers * ctx.rules.energy.extraction_per_100_workers / PERCENT))
+    site = book.workshop(community.id, PROCESS_WORKSHOP[spec.process]) if spec.process in PROCESS_WORKSHOP else None
+    return max(1, site.level * ctx.rules.refining.batches_per_level if site is not None else 1)
+
+
+async def runnable_share(ctx: TickContext, book: EconomyBook, community: EntityRow, spec: MethodSpec) -> float:
+    runs = expected_runs(ctx, book, community, spec)
+    share = 1.0
+    need = spec.energy_need * runs
+    if need > 0:
+        share = min(share, available(book.industry.get(community.id), spec.energy) / need) if community.id in book.industry else share
+    for commodity, per, material in spec.inputs:
+        wanted = -(-runs * per // TENTH)
+        if wanted > 0:
+            share = min(share, await holding(ctx.session, community.id, commodity, material) / wanted)
+    return max(0.0, share)
+
+
+async def expected_profit(ctx: TickContext, book: EconomyBook, community: EntityRow, spec: MethodSpec, *, nature: bool) -> float:
+    gross = profit(ctx, book, community, spec, nature=nature)
+    if spec.energy is EnergyKind.MUSCLE and not spec.inputs:
+        return gross
+    share = await runnable_share(ctx, book, community, spec)
+    price = local_price(book, community.id, PROCESS_OUTPUT[spec.process])
+    return gross - price * spec.output_pct / PERCENT * (1 - share)
+
+
 async def craft_guilds(ctx: TickContext, community_id: int) -> list[FactionProfileRow]:
     statement = select(FactionProfileRow).where(FactionProfileRow.home_entity_id == community_id, FactionProfileRow.kind == FactionKind.CRAFT_GUILD)
     return [row for row in await ctx.session.scalars(statement.order_by(FactionProfileRow.faction_entity_id)) if not held(row.faction_entity_id)]
@@ -277,13 +310,9 @@ async def choose_methods(ctx: TickContext, book: EconomyBook, community: EntityR
         if row is not None and "method" in row.locked:
             continue
         options = [spec for spec in PROCESS_METHODS[process] if allowed(book, community, spec, banned=banned) is None] or [default_method(process)]
-        scored = sorted(options, key=lambda spec: (-profit(ctx, book, community, spec, nature=nature), spec.kind.value))
-        best = scored[0]
         current = METHODS[row.method] if row is not None else None
-        if (
-            current is not None
-            and current in options
-            and profit(ctx, book, community, best, nature=nature) <= profit(ctx, book, community, current, nature=nature) * margin
-        ):
+        worth = {spec.kind: await expected_profit(ctx, book, community, spec, nature=nature) for spec in {*options, *([current] if current else [])}}
+        best = min(options, key=lambda spec: (-worth[spec.kind], spec.kind.value))
+        if current is not None and current in options and worth[best.kind] <= worth[current.kind] * margin:
             continue
         await adopt(ctx, book, community, best, tally)

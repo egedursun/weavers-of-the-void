@@ -1,5 +1,6 @@
 import {
   Warehouse,
+  Home,
   Factory,
   Leaf,
   UserCog,
@@ -148,6 +149,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   stir_hearts: HeartHandshake,
   spread_word: Megaphone,
   tend_land: Leaf,
+  shape_blood: Dna,
   forge_item: Hammer,
   commission_artwork: Palette,
   design_rite: Wand2,
@@ -158,6 +160,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   persuade: Megaphone,
   trade_lore: ScrollText,
   choose_method: Factory,
+  tend_home: Home,
   buy_workshop: KeyRound,
   lay_trade_policy: Landmark,
   speculate: Warehouse,

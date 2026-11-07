@@ -47,6 +47,7 @@ from aerona.db.tables.economy import (
     WorldMaterialRow,
 )
 from aerona.db.tables.environment import ForcedWeatherRow, LeyLineRow, NotableYearRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.epochs import DeferredStepRow
 from aerona.db.tables.factions import FactionActionRow, FactionGoalRow, FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.faith import (
     AfterlifeStratumRow,
@@ -62,7 +63,9 @@ from aerona.db.tables.faith import (
     SpiritProfileRow,
 )
 from aerona.db.tables.finance import CreditProfileRow, EconomicIndicatorRow, SpeculationRow, TradePolicyRow
+from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
+from aerona.db.tables.households import DwellingFurnishingRow, DwellingRow, HouseholdAggregateRow, HouseholdMemberRow, HouseholdRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.military import (
@@ -1491,6 +1494,81 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("lay_trade_policy", "speculate"),
         ("trade_policy.", "speculation."),
         ("fe81c6759526",),
+    ),
+    ComplianceRow(
+        "EXP-017",
+        (DeferredStepRow.__tablename__,),
+        ("exploration",),
+        ("sensed_world:request", "sensed_world:hold", "sensed_world:retry", "sensed_world:cancel", "intuition:discard", "intuition:discard_all"),
+        ("HorizonSection",),
+        ("mortal_context",),
+        (),
+        ("exploration.",),
+        ("18f9896a5251",),
+    ),
+    ComplianceRow(
+        "F26",
+        (GenomeRow.__tablename__, AllelePoolRow.__tablename__, HouseResemblanceRow.__tablename__),
+        ("genetics_survey", "bloodlines", "couple_births"),
+        (
+            "genome:found",
+            "genome:gene",
+            "genome:edit",
+            "genome:redraw",
+            "genome:remove",
+            "allele_pool:found",
+            "allele_pool:frequency",
+            "allele_pool:remove",
+            "resemblance:set",
+            "resemblance:remove",
+        ),
+        ("LineageSection", "section-lineage"),
+        ("mortal_context",),
+        ("shape_blood",),
+        ("genetics.",),
+        ("18f9896a5251",),
+    ),
+    ComplianceRow(
+        "F26/RP8",
+        (AllelePoolRow.__tablename__,),
+        ("bloodlines",),
+        ("allele_pool:stance", "allele_pool:share", "genome:gene"),
+        ("LineageSection", "section-lineage"),
+        ("mortal_context",),
+        ("shape_blood",),
+        ("genetics.order_recruits",),
+        ("18f9896a5251",),
+    ),
+    ComplianceRow(
+        "F29",
+        (
+            HouseholdRow.__tablename__,
+            HouseholdMemberRow.__tablename__,
+            DwellingRow.__tablename__,
+            DwellingFurnishingRow.__tablename__,
+            HouseholdAggregateRow.__tablename__,
+        ),
+        ("household_survey", "households"),
+        (
+            "household:found",
+            "household:edit",
+            "household:debt",
+            "household:hold",
+            "household:remove",
+            "household:member",
+            "household:release",
+            "dwelling:set",
+            "dwelling:remove",
+            "furnishing:add",
+            "furnishing:remove",
+            "household_aggregate:edit",
+            "household_aggregate:remove",
+        ),
+        ("HomeSection", "section-home"),
+        ("mortal_context",),
+        ("tend_home",),
+        ("households.",),
+        ("18f9896a5251",),
     ),
     ComplianceRow(
         "F30",

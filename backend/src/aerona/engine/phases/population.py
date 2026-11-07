@@ -6,10 +6,11 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
+from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import PowerEffect
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.demography.basket import fed_index
 from aerona.engine.demography.biology import footprint, hunger_level
 from aerona.engine.demography.cohorts import cohorts_of, reconcile
 from aerona.engine.demography.urban import growth_factor
@@ -25,7 +26,6 @@ from aerona.engine.primitives.ledger import LedgerKey, record
 from aerona.engine.primitives.modifiers import GROWTH_KEY, LIVE_MODIFIERS, virtual_value
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
-from aerona.engine.primitives.society import supply_index
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat
 
 
@@ -115,7 +115,7 @@ async def grow_community(
     magic = model.knowledge.level(community.id, KnowledgeBranch.MAGIC)
     pressures = Pressures(
         fertility=vigour,
-        hunger=hunger_level(rules, biology, ground, await supply_index(ctx.session, community.id, Commodity.FOOD), magic),
+        hunger=hunger_level(rules, biology, ground, await fed_index(ctx.session, community.id), magic),
         crowding=max(0.0, load.population * footprint(rules, biology) / max(1.0, capacity)),
         disease=diseases.of(community),
         stress=await stress_of(ctx, community),
@@ -145,7 +145,9 @@ async def grow_community(
     "settlement.population",
     "settlement.prosperity",
     "table.bonds",
+    "table.class_standing",
     "table.community_cohorts",
+    "table.community_needs",
     "table.community_societies",
     "table.endemic_diseases",
     "table.holder_levels",

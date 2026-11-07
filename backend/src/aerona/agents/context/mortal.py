@@ -5,6 +5,7 @@ from aerona.agents.context.entity_detail import entity_detail
 from aerona.agents.context.entity_line import line_items
 from aerona.agents.context.geography import environment_facts, region_records, weather_words
 from aerona.agents.context.language_lines import language_lines
+from aerona.agents.context.lineage import lineage_lines
 from aerona.agents.context.recent_chronicle import prompt_text, recent_rows
 from aerona.agents.context.scope import Scope
 from aerona.agents.context.society import home_for
@@ -29,6 +30,7 @@ from aerona.prompts.contexts.common import ChronicleRow, LabelValue, LexiconWord
 from aerona.prompts.contexts.mortal import (
     FolkGodName,
     HeardRumour,
+    HomeLine,
     KnowledgeItem,
     MortalContextContext,
     MortalGod,
@@ -140,6 +142,14 @@ async def heard_rumours(scope: Scope, me: EntityRow) -> list[HeardRumour]:
     ]
 
 
+async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
+    home = await home_for(scope.session, me)
+    if home is None:
+        return None
+    bits = await lineage_lines(scope.session, scope.rules, me)
+    return home.model_copy(update={"looks": bits.looks, "gift": bits.gift, "household": bits.household, "dwelling": bits.dwelling})
+
+
 async def mortal_context(scope: Scope, me: EntityRow, full: bool = False) -> MortalContextContext:
     atlas = await RegionAtlas.load(scope.session)
     regions = await horizon_regions(scope, me, atlas)
@@ -171,7 +181,7 @@ async def mortal_context(scope: Scope, me: EntityRow, full: bool = False) -> Mor
             for entity in await owned(scope, me, EntityType.RESOURCE)
         ],
         stores=await stores_for(scope.session, scope.rules, me),
-        home=await home_for(scope.session, me),
+        home=await hearth_for(scope, me),
         items=[NamedRecord(id=entity.id, name=entity.name) for entity in await owned(scope, me, EntityType.ITEM)],
         mentions=[ChronicleRow(age=row.epoch, text=prompt_text(row.text)) for row in reversed(mentions)],
         rumours=await heard_rumours(scope, me),

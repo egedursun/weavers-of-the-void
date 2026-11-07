@@ -24,6 +24,7 @@ from aerona.tools.mortal import (
     cosmos,
     creatures,
     diplomacy,
+    hearth,
     heroes,
     knowledge,
     language,
@@ -60,6 +61,7 @@ ACTOR_TYPES: dict[MortalToolId, frozenset[EntityType]] = {
     T.PERSUADE: NAMED,
     T.TRADE_LORE: COMMUNITIES_AND_NAMED,
     T.CHOOSE_METHOD: COMMUNITIES_AND_NAMED,
+    T.TEND_HOME: NAMED,
     T.BUY_WORKSHOP: COMMUNITIES_AND_NAMED,
     T.LAY_TRADE_POLICY: COMMUNITIES_AND_NAMED,
     T.SPECULATE: COMMUNITIES_AND_NAMED,
@@ -167,6 +169,7 @@ FAMILIES: tuple[Callable[[], list[MortalSpec]], ...] = (
     oaths.specs,
     social.specs,
     works.specs,
+    hearth.specs,
 )
 
 

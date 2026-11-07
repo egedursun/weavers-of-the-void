@@ -105,7 +105,9 @@ from aerona.db.tables.faith import (
 )
 from aerona.db.tables.finance import CreditProfileRow, EconomicIndicatorRow, SpeculationRow, TradePolicyRow
 from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow, GodConflictRow, OuterBargainRow
+from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
+from aerona.db.tables.households import DwellingFurnishingRow, DwellingRow, HouseholdAggregateRow, HouseholdMemberRow, HouseholdRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.job import JobRow
@@ -228,6 +230,7 @@ __all__ = [
     "AfflictionRow",
     "AfterlifeStratumRow",
     "AgentTurnRow",
+    "AllelePoolRow",
     "AppliedFixupRow",
     "ArchiveHoldingRow",
     "ArmyMovementRow",
@@ -293,6 +296,8 @@ __all__ = [
     "DistrictRow",
     "DriftCauseRow",
     "DriftImpositionRow",
+    "DwellingFurnishingRow",
+    "DwellingRow",
     "EconomicIndicatorRow",
     "EndemicDiseaseRow",
     "EntityFlagRow",
@@ -320,6 +325,7 @@ __all__ = [
     "FolkBeliefRow",
     "ForeignGodPowerRow",
     "ForeignGodRow",
+    "GenomeRow",
     "GodConflictRow",
     "GoodsFlowRow",
     "GroupRankRow",
@@ -333,6 +339,10 @@ __all__ = [
     "HorizonIntuitionRow",
     "HouseMemberRow",
     "HouseProfileRow",
+    "HouseResemblanceRow",
+    "HouseholdAggregateRow",
+    "HouseholdMemberRow",
+    "HouseholdRow",
     "IdeologyAdherentRow",
     "IdeologyProfileRow",
     "IdeologyTenetRow",

@@ -27,7 +27,8 @@ from aerona.engine.industry.methods import local_price
 from aerona.engine.industry.quality import premium
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.prosperity import add_prosperity
+from aerona.engine.primitives.prosperity import PROSPERITY_KEY, add_prosperity
+from aerona.engine.primitives.stats import stat
 
 THOUSAND = 1000
 HARVEST_STEP = "harvest"
@@ -132,7 +133,11 @@ async def purse_value(ctx: TickContext, owner_id: int) -> int:
         if row is not None:
             return int(getattr(row, column))
     mortal = await session.get(MortalProfileRow, owner_id)
-    return mortal.wealth * ctx.rules.ownership.wealth_per_value if mortal is not None else 0
+    if mortal is not None:
+        return mortal.wealth * ctx.rules.ownership.wealth_per_value
+    owner = await session.get(EntityRow, owner_id)
+    prosperity = stat(owner, PROSPERITY_KEY) if owner is not None else None
+    return int(prosperity * ctx.rules.ownership.prosperity_per_value) if prosperity is not None else 0
 
 
 async def buy(ctx: TickContext, workshop: WorkshopRow, buyer_id: int) -> int | None:

@@ -116,6 +116,7 @@ async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.forced_weather",
+    "table.genomes",
     "table.holder_levels",
     "table.holder_techniques",
     "table.incubating_ideas",

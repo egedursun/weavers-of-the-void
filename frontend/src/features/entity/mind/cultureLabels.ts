@@ -44,6 +44,7 @@ export const PREFERENCE_KINDS: Record<string, Named> = {
   activity: { label: 'Pastime', icon: Flower2, tone: 'success' },
   craft: { label: 'Craft', icon: Hammer, tone: 'warning' },
   deity_aspect: { label: 'Aspect of the divine', icon: Sparkles, tone: 'gold' },
+  looks: { label: 'Looks', icon: Gem, tone: 'gold' },
 }
 
 export const STANCES: Record<string, Named> = {

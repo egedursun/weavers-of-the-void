@@ -281,6 +281,17 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "reason": "Why you plant it",
         },
     ),
+    T.SHAPE_BLOOD: ToolText(
+        "You work an allele into both halves of a living mortal's blood: any locus of looks, of predisposition, of divine blood or of aptitude "
+        "for a form of magic. Their children inherit it as blood is inherited. "
+        "Costs {{ rules.costs.influence }} essence and one action.",
+        {
+            "mortal_id": "The mortal whose blood you shape",
+            "locus": "The locus to set",
+            "allele": "The allele both halves of that locus will carry",
+            "reason": "Why you shape it",
+        },
+    ),
     T.TEND_LAND: ToolText(
         "You cleanse a land of the waste its works and crowds leave in its air, water and soil, or you foul it. "
         "Fouled land breeds sickness, yields less and thins the catch; cleansed land recovers. "
@@ -299,7 +310,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "subject_id": "Whose name you spread",
             "community_id": "Where the word is heard",
             "axis": "The kind of reputation",
-            "raise": "True to raise it, false to lower it",
+            "raise_it": "True to raise it, false to lower it",
             "reason": "Why you spread it",
         },
     ),

@@ -10,6 +10,7 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.genetics import GenomeRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.bond import BondKind, BondRole
@@ -26,6 +27,7 @@ from aerona.engine.body.healing import HealingWorld, tier_index
 from aerona.engine.body.hits import weighted
 from aerona.engine.context import TickContext
 from aerona.engine.demography.urban import founding_factor
+from aerona.engine.genetics.life import express, fertility_factor, found_genome, raise_child, upbringing_pct
 from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.mortal_death import die
@@ -280,6 +282,8 @@ async def born_mortal(ctx: TickContext, community: EntityRow, plan: BirthPlan, n
     language = await spoken_language(ctx.session, community.id)
     if language is not None:
         await connect(ctx.session, mortal.id, language.id, BondKind.SPEAKS, ctx.epoch)
+    genome = await found_genome(ctx, mortal)
+    express(ctx.rules, mortal, genome.genes)
     ctx.count("mortals_born")
     return mortal
 
@@ -686,15 +690,25 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
 
 @reads(
     "cult.followers",
+    "mortal.beauty",
+    "mortal.creativity",
+    "mortal.endurance",
+    "mortal.lifespan",
+    "mortal.perception",
+    "mortal.strength",
+    "mortal.willpower",
+    "mortal.wisdom",
     "people.piety",
     "people.population",
     "settlement.piety",
     "settlement.population",
     "species.intelligence",
+    "table.allele_pools",
     "table.bonds",
     "table.community_societies",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.genomes",
     "table.language_profiles",
     "table.lexemes",
     "table.maimed_cohorts",
@@ -705,6 +719,8 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
     "table.world_maps",
 )
 @writes(
+    "mortal.lifespan",
+    "mortal.strength",
     "people.population",
     "settlement.population",
     "table.bonds",
@@ -713,6 +729,7 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, already: int) -> None:
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.genomes",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",
@@ -794,6 +811,8 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
     profile, _ = await ensure_profile(ctx.session, child.id, ctx.epoch)
     profile.life_stage = LifeStage.INFANT
     await bloodline_marks(ctx, child, (first, second))
+    genome = await found_genome(ctx, child, (first, second))
+    raise_child(ctx.rules, child, genome, await upbringing_pct(ctx, child.id, (first, second)))
     language = await spoken_language(ctx.session, first.id) or await spoken_language(ctx.session, second.id)
     if language is not None:
         await connect(ctx.session, child.id, language.id, BondKind.SPEAKS, ctx.epoch)
@@ -840,6 +859,7 @@ async def couple_chance(ctx: TickContext, first: EntityRow, second: EntityRow, k
         chance *= max(0.0, 1 - profile.stress / table.stress_divisor)
         chance *= await sustenance_need(ctx.session, parent.id)
         chance *= scaled_by(await effect_of(ctx.session, parent.id, TraitEffect.FERTILITY, rules.traits.effect_scale_pct))
+        chance *= fertility_factor(rules, await ctx.session.get(GenomeRow, parent.id))
     culture = await culture_of(ctx.session, first.location_id) if first.location_id is not None else {}
     chance *= max(0.0, 1 + culture.get(ValueAxis.KINSHIP, 0) * table.kinship_pct / PERCENT / PERCENT)
     return chance
@@ -941,6 +961,7 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
     "table.culture_values",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.genomes",
     "table.holder_levels",
     "table.house_members",
     "table.house_profiles",

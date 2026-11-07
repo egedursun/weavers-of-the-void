@@ -146,6 +146,10 @@ class HomeLine(ContextItem):
     loyalty: str = ""
     labour: list[str] = Field(default_factory=list)
     works: list[str] = Field(default_factory=list)
+    looks: str = ""
+    gift: str = ""
+    household: str = ""
+    dwelling: str = ""
 
 
 class ExpeditionLine(ContextItem):

@@ -28,10 +28,12 @@ NOTE_CAP = 6
     "table.community_methods",
     "table.community_societies",
     "table.community_stocks",
+    "table.culture_values",
     "table.epoch_year_cursors",
     "table.faction_goals",
     "table.faction_profiles",
     "table.forced_weather",
+    "table.goods_flows",
     "table.holder_levels",
     "table.holder_techniques",
     "table.ideology_adherents",
@@ -56,6 +58,7 @@ NOTE_CAP = 6
     "table.world_maps",
     "table.world_materials",
     "table.world_seasons",
+    "trade_route.capacity",
     "trade_route.danger",
 )
 @writes(

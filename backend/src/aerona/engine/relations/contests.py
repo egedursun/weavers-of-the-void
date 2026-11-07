@@ -147,8 +147,8 @@ async def win_favour(ctx: TickContext, bout: Bout, winner: EntityRow, loser: Ent
 
 
 async def win_honour(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRow) -> None:
-    await add_renown(ctx.session, winner.id, ctx.rules.contests.renown / 2, ctx.epoch)
-    await add_infamy(ctx.session, loser.id, ctx.rules.contests.infamy, ctx.epoch)
+    await add_renown(ctx.session, winner.id, ctx.rules.contests.renown / 2, ctx.epoch, rules=ctx.rules)
+    await add_infamy(ctx.session, loser.id, ctx.rules.contests.infamy, ctx.epoch, rules=ctx.rules)
 
 
 STAKES: dict[ContestStake, Callable[[TickContext, Bout, EntityRow, EntityRow], Awaitable[None]]] = {
@@ -244,8 +244,8 @@ async def hold_contest(ctx: TickContext, bout: Bout, tally: ContestTally) -> Con
 
 async def settle(ctx: TickContext, bout: Bout, row: ContestRow, winner: EntityRow, loser: EntityRow, *, margin: int, tally: ContestTally) -> None:
     table = ctx.rules.contests
-    await add_renown(ctx.session, winner.id, table.renown, ctx.epoch)
-    await add_infamy(ctx.session, loser.id, table.infamy, ctx.epoch)
+    await add_renown(ctx.session, winner.id, table.renown, ctx.epoch, rules=ctx.rules)
+    await add_infamy(ctx.session, loser.id, table.infamy, ctx.epoch, rules=ctx.rules)
     await think(ctx.session, ctx.rules, winner.id, ThoughtKind.WON_CONTEST, ctx.epoch, subject_id=loser.id)
     await think(ctx.session, ctx.rules, loser.id, ThoughtKind.LOST_CONTEST, ctx.epoch, subject_id=winner.id)
     sore = await ensure_relation(ctx.session, loser.id, winner.id, ctx.epoch)

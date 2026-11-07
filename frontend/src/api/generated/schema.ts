@@ -4511,6 +4511,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/lineage/{node_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["lineage_view_api_lineage__node_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/home/{node_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["home_view_api_home__node_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sensed-worlds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sensed_worlds_api_sensed_worlds_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/mortals/{mortal_id}/profile": {
         parameters: {
             query?: never;
@@ -9551,6 +9599,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/actions/sensed_world:request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_sensed_world_request_api_actions_sensed_world_request_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/sensed_world:hold": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_sensed_world_hold_api_actions_sensed_world_hold_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/sensed_world:retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_sensed_world_retry_api_actions_sensed_world_retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/sensed_world:cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_sensed_world_cancel_api_actions_sensed_world_cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/actions/intuition:discard_all": {
         parameters: {
             query?: never;
@@ -11977,6 +12089,406 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["action_indicator_remove_api_actions_indicator_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/genome:found": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_genome_found_api_actions_genome_found_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/genome:gene": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_genome_gene_api_actions_genome_gene_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/genome:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_genome_edit_api_actions_genome_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/genome:redraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_genome_redraw_api_actions_genome_redraw_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/genome:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_genome_remove_api_actions_genome_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/allele_pool:found": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_allele_pool_found_api_actions_allele_pool_found_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/allele_pool:frequency": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_allele_pool_frequency_api_actions_allele_pool_frequency_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/allele_pool:stance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_allele_pool_stance_api_actions_allele_pool_stance_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/allele_pool:share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_allele_pool_share_api_actions_allele_pool_share_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/allele_pool:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_allele_pool_remove_api_actions_allele_pool_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resemblance:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resemblance_set_api_actions_resemblance_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/resemblance:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_resemblance_remove_api_actions_resemblance_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/household:found": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_household_found_api_actions_household_found_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/household:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_household_edit_api_actions_household_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/household:debt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_household_debt_api_actions_household_debt_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/household:hold": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_household_hold_api_actions_household_hold_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/household:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_household_remove_api_actions_household_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/household:member": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_household_member_api_actions_household_member_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/household:release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_household_release_api_actions_household_release_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/dwelling:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_dwelling_set_api_actions_dwelling_set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/dwelling:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_dwelling_remove_api_actions_dwelling_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/furnishing:add": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_furnishing_add_api_actions_furnishing_add_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/furnishing:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_furnishing_remove_api_actions_furnishing_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/household_aggregate:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_household_aggregate_edit_api_actions_household_aggregate_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/household_aggregate:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["action_household_aggregate_remove_api_actions_household_aggregate_remove_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -16658,7 +17170,7 @@ export interface components {
             earned: boolean;
             epoch: number | null;
         };
-        ActKind: "execution" | "mutilation" | "betrayal" | "mercy_to_enemy" | "human_sacrifice" | "trade_with_outsiders" | "building_temples" | "burning_books" | "conquest" | "raiding" | "duelling" | "ransom" | "taking_captives" | "oathbreaking" | "learning" | "hospitality" | "winter_fighting" | "guest_killing" | "ritual_scarring" | "killing_kin" | "killing_outsider" | "killing_in_war" | "killing_captive" | "regicide" | "duel_to_death" | "revenge_killing" | "theft" | "treason" | "cowardice" | "desecration" | "bribery" | "suicide" | "torture" | "eating_sapients" | "iconoclasm" | "conversion_by_force" | "polygamy" | "incest" | "magic_use" | "blood_magic" | "void_magic" | "necromancy" | "hoarding_in_famine" | "slavery" | "adultery";
+        ActKind: "execution" | "mutilation" | "betrayal" | "mercy_to_enemy" | "human_sacrifice" | "trade_with_outsiders" | "building_temples" | "burning_books" | "conquest" | "raiding" | "duelling" | "ransom" | "taking_captives" | "oathbreaking" | "learning" | "hospitality" | "winter_fighting" | "guest_killing" | "ritual_scarring" | "killing_kin" | "killing_outsider" | "killing_in_war" | "killing_captive" | "regicide" | "duel_to_death" | "revenge_killing" | "theft" | "treason" | "cowardice" | "desecration" | "bribery" | "suicide" | "torture" | "eating_sapients" | "iconoclasm" | "conversion_by_force" | "polygamy" | "incest" | "magic_use" | "blood_magic" | "void_magic" | "necromancy" | "hoarding_in_famine" | "slavery" | "adultery" | "usury" | "infanticide" | "abandoning_elders";
         ActingMechanic: {
             key: string;
             title: string;
@@ -16852,6 +17364,18 @@ export interface components {
             payload: components["schemas"]["EventPayload"];
             at: string;
         };
+        AggregateView: {
+            social_class: components["schemas"]["SocialClass"];
+            social_class_label: string;
+            households: number;
+            mean_size: number;
+            dwelling_kind: components["schemas"]["DwellingKind"];
+            dwelling_label: string;
+            quality: number;
+            wealth: number;
+            epoch: number;
+            held: string[];
+        };
         AimOrder: {
             kind: components["schemas"]["WarAimKind"];
             params?: {
@@ -16868,6 +17392,36 @@ export interface components {
                 [key: string]: number | string | boolean;
             };
             locked?: string[];
+        };
+        AllelePoolFoundInput: {
+            people_id: number;
+        };
+        AllelePoolFrequencyInput: {
+            people_id: number;
+            locus: components["schemas"]["Locus"];
+            allele: string;
+            frequency: number;
+            hold: boolean;
+        };
+        AllelePoolRemoveInput: {
+            people_id: number;
+        };
+        AllelePoolShareInput: {
+            people_id: number;
+            gifted_share?: number | null;
+            cohort?: string | null;
+            cohort_share?: number | null;
+            hold: boolean;
+        };
+        AllelePoolStanceInput: {
+            people_id: number;
+            stance: components["schemas"]["GiftStance"];
+            hold: boolean;
+        };
+        AlleleView: {
+            key: string;
+            label: string;
+            frequency?: number | null;
         };
         AllianceBetrayInput: {
             traitor_id: number;
@@ -18983,6 +19537,7 @@ export interface components {
             gate_weakness_pct: number;
         };
         DefenderAction: "sally" | "repair" | "ration" | "seek_relief";
+        DeferredStepStatus: "pending" | "running" | "done" | "failed" | "held";
         DemographyView: {
             entity_id: number;
             people_id: number | null;
@@ -19374,6 +19929,33 @@ export interface components {
             epochs: number;
         };
         DuelContext: "war" | "honour" | "trial" | "champion" | "god";
+        DwellingKind: "hut" | "longhouse" | "townhouse" | "manor" | "palace" | "tent" | "cave" | "ship" | "tower";
+        DwellingRemoveInput: {
+            household_id: number;
+        };
+        DwellingSetInput: {
+            household_id: number;
+            kind?: components["schemas"]["DwellingKind"] | null;
+            quality?: number | null;
+            rooms?: number | null;
+            district_id?: number | null;
+            clear_district: boolean;
+            hold: boolean;
+        };
+        DwellingView: {
+            kind: components["schemas"]["DwellingKind"];
+            kind_label: string;
+            quality: number;
+            effective_quality: number;
+            expected_quality: number;
+            rooms: number;
+            district_id: number | null;
+            district_label: string | null;
+            settlement: components["schemas"]["NodeRef"] | null;
+            furnishings: components["schemas"]["FurnishingView"][];
+            built_epoch: number;
+            held: string[];
+        };
         EdgeKind: "modifier" | "rule_switch" | "flow" | "trigger";
         EffectView: {
             effect: components["schemas"]["ShortfallEffect"];
@@ -20178,7 +20760,7 @@ export interface components {
             set_by_player: boolean;
             locked: string[];
         };
-        FactionKind: "merchant_guild" | "craft_guild" | "priesthood" | "warrior_order" | "noble_council" | "peasant_league" | "rebels" | "bandits" | "pirates" | "assassins" | "scholars_academy" | "secret_society" | "mercenary_company" | "interworld_federation" | "wandering_market" | "void_pirates" | "social_circle";
+        FactionKind: "merchant_guild" | "craft_guild" | "priesthood" | "warrior_order" | "noble_council" | "peasant_league" | "rebels" | "bandits" | "pirates" | "assassins" | "scholars_academy" | "secret_society" | "mercenary_company" | "interworld_federation" | "wandering_market" | "void_pirates" | "social_circle" | "mage_order";
         FactionMemberInput: {
             faction_id: number;
             mortal_id: number;
@@ -20659,9 +21241,29 @@ export interface components {
         };
         FuneralCustom: "burial" | "cremation" | "sky_burial" | "sea_burial" | "entombment" | "ancestor_shrine" | "endocannibalism" | "reanimation" | "soul_binding";
         FuneralRite: "burial" | "burning" | "exposure" | "nameless" | "none";
+        FurnishingAddInput: {
+            household_id: number;
+            item_id: number;
+        };
+        FurnishingRemoveInput: {
+            item_id: number;
+        };
+        FurnishingView: {
+            item: components["schemas"]["NodeRef"];
+            placed_epoch: number;
+        };
         GateNeed: {
             branch: components["schemas"]["KnowledgeBranch"];
             level: number;
+        };
+        GeneView: {
+            locus: components["schemas"]["Locus"];
+            label: string;
+            group: components["schemas"]["LocusGroup"];
+            first: string;
+            second: string;
+            shown: string;
+            shown_label: string;
         };
         GenerateRequest: {
             node_id: number;
@@ -20700,9 +21302,54 @@ export interface components {
             seed_idea?: string | null;
         };
         GenesisTemplate: "dark_fantasy" | "mythic_age" | "cosmic_horror" | "fairy_tale" | "star_myth" | "sand_and_ash" | "primordial_dawn" | "crowns_and_knives" | "drowned_world" | "long_winter" | "after_the_fall" | "sky_islands" | "age_of_engines";
+        GenomeEditInput: {
+            mortal_id: number;
+            beauty?: number | null;
+            inbreeding?: number | null;
+            recognisability?: number | null;
+            divine_son_id?: number | null;
+            clear_divine: boolean;
+            hold: boolean;
+        };
+        GenomeFoundInput: {
+            mortal_id: number;
+        };
+        GenomeGeneInput: {
+            mortal_id: number;
+            locus: components["schemas"]["Locus"];
+            first: string;
+            second: string;
+            hold: boolean;
+        };
+        GenomeRedrawInput: {
+            mortal_id: number;
+        };
+        GenomeRemoveInput: {
+            mortal_id: number;
+        };
+        GenomeView: {
+            genes: components["schemas"]["GeneView"][];
+            gifts: components["schemas"]["GiftView"][];
+            appearance: string;
+            marks: string[];
+            beauty: number;
+            inbreeding: number;
+            recognisability: number;
+            divine_son: components["schemas"]["NodeRef"] | null;
+            likeness: components["schemas"]["LikenessView"][];
+            epoch: number;
+            held: string[];
+        };
         GeographyPreview: {
             world_id: number;
             text: string;
+        };
+        GiftStance: "honoured" | "feared" | "persecuted" | "taxed";
+        GiftView: {
+            school: string;
+            label: string;
+            aptitude: number;
+            gifted: boolean;
         };
         GoalsOverview: {
             scenarios: components["schemas"]["ScenarioView"][];
@@ -20993,6 +21640,20 @@ export interface components {
             name: string;
             year: number | null;
         };
+        HomeView: {
+            node_id: number;
+            node_kind: string;
+            can_hold_household: boolean;
+            can_hold_aggregates: boolean;
+            reason: string | null;
+            household: components["schemas"]["HouseholdView"] | null;
+            households: components["schemas"]["HouseholdView"][];
+            aggregates: components["schemas"]["AggregateView"][];
+            roles: components["schemas"]["LabelView"][];
+            dwellings: components["schemas"]["LabelView"][];
+            classes: components["schemas"]["LabelView"][];
+            neighbours: components["schemas"]["LabelView"][];
+        };
         HonourModel: "dignity" | "honour" | "face";
         HorizonStatus: "pending" | "processing" | "born" | "wasted";
         HorrorCultInput: {
@@ -21075,6 +21736,96 @@ export interface components {
             claims: components["schemas"]["ClaimView"][];
             heirlooms: components["schemas"]["HeirloomView"][];
             locked: string[];
+        };
+        HouseholdAggregateEditInput: {
+            community_id: number;
+            social_class: components["schemas"]["SocialClass"];
+            households?: number | null;
+            mean_size?: number | null;
+            dwelling_kind?: components["schemas"]["DwellingKind"] | null;
+            quality?: number | null;
+            wealth?: number | null;
+            hold: boolean;
+        };
+        HouseholdAggregateRemoveInput: {
+            community_id: number;
+            social_class: components["schemas"]["SocialClass"];
+        };
+        HouseholdDebtInput: {
+            household_id: number;
+            lender_household_id: number;
+            amount: number;
+            hold: boolean;
+        };
+        HouseholdDebtView: {
+            household_id: number;
+            name: string;
+            amount: number;
+        };
+        HouseholdDecision: "marry" | "apprentice" | "migrate" | "renovate" | "take_lodger" | "hire_servant" | "dismiss_servant" | "sell_furnishing" | "lend";
+        HouseholdEditInput: {
+            household_id: number;
+            name?: string | null;
+            social_class?: components["schemas"]["SocialClass"] | null;
+            wealth?: number | null;
+            income?: number | null;
+            expenses?: number | null;
+            servants?: number | null;
+            dependents?: number | null;
+            burden?: number | null;
+            head_id?: number | null;
+            hold: boolean;
+        };
+        HouseholdFoundInput: {
+            head_id: number;
+        };
+        HouseholdHoldInput: {
+            household_id: number;
+            fields: string[];
+            hold: boolean;
+        };
+        HouseholdMemberInput: {
+            household_id: number;
+            mortal_id: number;
+            role: components["schemas"]["HouseholdRole"];
+            cares_for_id?: number | null;
+            hold: boolean;
+        };
+        HouseholdMemberView: {
+            mortal: components["schemas"]["NodeRef"];
+            role: components["schemas"]["HouseholdRole"];
+            role_label: string;
+            cares_for: components["schemas"]["NodeRef"] | null;
+            joined_epoch: number;
+            held: boolean;
+        };
+        HouseholdReleaseInput: {
+            mortal_id: number;
+        };
+        HouseholdRemoveInput: {
+            household_id: number;
+        };
+        HouseholdRole: "head" | "spouse" | "heir" | "dependent" | "carer" | "servant" | "ward" | "lodger";
+        HouseholdView: {
+            id: number;
+            name: string;
+            head: components["schemas"]["NodeRef"] | null;
+            settlement: components["schemas"]["NodeRef"] | null;
+            social_class: components["schemas"]["SocialClass"] | null;
+            wealth: number;
+            income: number;
+            expenses: number;
+            servants: number;
+            dependents: number;
+            burden: number;
+            debts: components["schemas"]["HouseholdDebtView"][];
+            last_decision: components["schemas"]["HouseholdDecision"] | null;
+            last_decision_label: string | null;
+            decided_epoch: number | null;
+            formed_epoch: number;
+            members: components["schemas"]["HouseholdMemberView"][];
+            dwelling: components["schemas"]["DwellingView"] | null;
+            held: string[];
         };
         HullClass: "raft" | "boat" | "galley" | "longship" | "cog" | "carrack" | "warship" | "light_sailer" | "bone_hull" | "generation_ship" | "skyship" | "living_ship";
         HullSpecView: {
@@ -22268,11 +23019,28 @@ export interface components {
             creator_kill_cost: number;
         };
         LifeStage: "infant" | "child" | "youth" | "adult" | "elder" | "ancient";
+        LikenessView: {
+            parent: components["schemas"]["NodeRef"];
+            likeness: number;
+        };
         LimboRecord: {
             entity_id: number;
             name: string;
             born_epoch: number;
             rationale: string | null;
+        };
+        LineageView: {
+            node_id: number;
+            node_kind: string;
+            can_hold_genome: boolean;
+            can_hold_pool: boolean;
+            can_hold_likeness: boolean;
+            reason: string | null;
+            genome: components["schemas"]["GenomeView"] | null;
+            pool: components["schemas"]["PoolView"] | null;
+            resemblance: components["schemas"]["ResemblanceView"] | null;
+            loci: components["schemas"]["LocusView"][];
+            stances: components["schemas"]["LabelView"][];
         };
         LinkGroup: "all" | "travel" | "no_location" | "conflict" | "faith" | "lineage" | "knowledge";
         LinkGroupInfo: {
@@ -22360,6 +23128,15 @@ export interface components {
             value: number;
             heard_epoch: number;
             held: boolean;
+        };
+        Locus: "height" | "build" | "skin" | "hair_colour" | "hair_texture" | "eye_colour" | "face" | "voice" | "longevity" | "fertility" | "disease_resistance" | "madness" | "colour_blindness" | "giant_blood" | "divine_blood" | "curse_marker" | "gift_elemental_fire" | "gift_elemental_water" | "gift_earth" | "gift_storm" | "gift_life" | "gift_death" | "gift_mind" | "gift_illusion" | "gift_divination" | "gift_warding" | "gift_binding" | "gift_summoning" | "gift_blood" | "gift_void";
+        LocusGroup: "looks" | "predisposition" | "gift";
+        LocusView: {
+            locus: components["schemas"]["Locus"];
+            label: string;
+            group: components["schemas"]["LocusGroup"];
+            group_label: string;
+            alleles: components["schemas"]["AlleleView"][];
         };
         LogEntry: {
             level: string;
@@ -23423,7 +24200,7 @@ export interface components {
             death_year?: number | null;
             sex?: ("female" | "male" | "other") | null;
         };
-        MortalToolId: "look_at_world" | "inspect_entity" | "search_entities" | "found_language" | "coin_words" | "produce_item" | "build_structure" | "create_culture" | "discover_resource" | "claim_resource" | "found_settlement" | "establish_trade" | "declare_war" | "worship" | "pray_to_creator" | "develop_knowledge" | "learn_knowledge" | "diplomacy" | "go_on_adventure" | "find_route" | "explore_land" | "resurrection_rite" | "build_ship" | "launch_expedition" | "tame_species" | "weave_chimera" | "bind_spirit" | "search_ruins" | "sabotage" | "preach" | "challenge_god" | "deny_god" | "prophesy" | "escape" | "pay_ransom" | "rescue_captive" | "raise_army" | "appoint_commander" | "enact_law" | "appoint_officer" | "set_tax" | "propose_treaty" | "swear_oath" | "accept_treaty" | "break_treaty" | "build_spy_network" | "barter" | "lend" | "repay_debt" | "adopt" | "commission_artwork" | "design_rite" | "cast_rite" | "found_school" | "socialise" | "challenge_to_contest" | "persuade" | "trade_lore" | "choose_method" | "buy_workshop" | "lay_trade_policy" | "speculate";
+        MortalToolId: "look_at_world" | "inspect_entity" | "search_entities" | "found_language" | "coin_words" | "produce_item" | "build_structure" | "create_culture" | "discover_resource" | "claim_resource" | "found_settlement" | "establish_trade" | "declare_war" | "worship" | "pray_to_creator" | "develop_knowledge" | "learn_knowledge" | "diplomacy" | "go_on_adventure" | "find_route" | "explore_land" | "resurrection_rite" | "build_ship" | "launch_expedition" | "tame_species" | "weave_chimera" | "bind_spirit" | "search_ruins" | "sabotage" | "preach" | "challenge_god" | "deny_god" | "prophesy" | "escape" | "pay_ransom" | "rescue_captive" | "raise_army" | "appoint_commander" | "enact_law" | "appoint_officer" | "set_tax" | "propose_treaty" | "swear_oath" | "accept_treaty" | "break_treaty" | "build_spy_network" | "barter" | "lend" | "repay_debt" | "adopt" | "commission_artwork" | "design_rite" | "cast_rite" | "found_school" | "socialise" | "challenge_to_contest" | "persuade" | "trade_lore" | "choose_method" | "buy_workshop" | "tend_home" | "lay_trade_policy" | "speculate";
         MortalTurnFinishedEvent: {
             id: number;
             kind: "mortal.turn_finished";
@@ -23527,7 +24304,7 @@ export interface components {
             id: number;
             name: string;
         };
-        NaturalLaw: "none" | "immortality" | "short_life" | "dead_return" | "magic_price" | "war_ban" | "bounty" | "drought" | "sea_ban" | "one_language" | "disasters" | "souls_reincarnate";
+        NaturalLaw: "none" | "immortality" | "short_life" | "dead_return" | "magic_price" | "war_ban" | "bounty" | "drought" | "sea_ban" | "one_language" | "disasters" | "souls_reincarnate" | "gift_flowering" | "gift_withering";
         NaturalLawStats: {
             kind: "natural_law";
         };
@@ -24544,6 +25321,15 @@ export interface components {
             soil?: number | null;
             hold: boolean;
         };
+        PoolView: {
+            loci: components["schemas"]["LocusView"][];
+            gift_stance: components["schemas"]["GiftStance"];
+            gift_stance_label: string;
+            gifted_share: number;
+            cohort_shares: components["schemas"]["LabelView"][];
+            epoch: number;
+            held: string[];
+        };
         PopulationCohortView: {
             age_band: components["schemas"]["AgeBand"];
             sex: components["schemas"]["Sex"];
@@ -24786,7 +25572,7 @@ export interface components {
             sender: components["schemas"]["NodeRef"] | null;
             sender_cover?: string | null;
         };
-        PreferenceKind: "material" | "food" | "drink" | "creature" | "plant" | "colour" | "shape" | "art_form" | "artwork_subject" | "season" | "weather" | "terrain" | "activity" | "craft" | "deity_aspect";
+        PreferenceKind: "material" | "food" | "drink" | "creature" | "plant" | "colour" | "shape" | "art_form" | "artwork_subject" | "season" | "weather" | "terrain" | "activity" | "craft" | "deity_aspect" | "looks";
         PreferenceKindView: {
             kind: components["schemas"]["PreferenceKind"];
             label: string;
@@ -25668,6 +26454,25 @@ export interface components {
             held: boolean;
             secret: boolean;
         };
+        ResemblanceRemoveInput: {
+            house_id: number;
+        };
+        ResemblanceSetInput: {
+            house_id: number;
+            locus: components["schemas"]["Locus"];
+            allele: string;
+            share: number;
+            hold: boolean;
+        };
+        ResemblanceView: {
+            locus: components["schemas"]["Locus"];
+            locus_label: string;
+            allele: string;
+            allele_label: string;
+            share: number;
+            since_epoch: number;
+            held: string[];
+        };
         ResetRequest: {
             confirm: string;
         };
@@ -26251,6 +27056,16 @@ export interface components {
             characters: number;
             limit: number | null;
         };
+        SensedStepView: {
+            id: number;
+            intuition_id: number | null;
+            seeker: components["schemas"]["NodeRef"] | null;
+            status: components["schemas"]["DeferredStepStatus"];
+            attempts: number;
+            error: string | null;
+            epoch: number;
+            result_world: number | null;
+        };
         SensedWorld: {
             id: number;
             mortal_entity_id: number;
@@ -26260,6 +27075,23 @@ export interface components {
             method: components["schemas"]["TravelMethod"] | null;
             status: components["schemas"]["HorizonStatus"];
             result_world_id: number | null;
+        };
+        SensedWorldCancelInput: {
+            step_id: number;
+        };
+        SensedWorldHoldInput: {
+            step_id: number;
+            hold: boolean;
+        };
+        SensedWorldRequestInput: {
+            intuition_id: number;
+        };
+        SensedWorldRetryInput: {
+            step_id: number;
+        };
+        SensedWorldsView: {
+            steps: components["schemas"]["SensedStepView"][];
+            intuitions: components["schemas"]["WaitingIntuitionView"][];
         };
         SentenceView: {
             id: number;
@@ -26859,7 +27691,7 @@ export interface components {
             value: number;
         };
         SonStatus: "active" | "asleep" | "exiled" | "dead";
-        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_creator" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "raise_beast" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "shape_folk" | "sever_ley" | "loose_disease" | "forge_material" | "hide_secret" | "sanctify_place" | "raise_nexus" | "reshape_land" | "sanctify_region" | "curse_region" | "redirect_river" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "seal_treaty" | "bless_bloodline" | "void_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world" | "raise_district" | "design_district" | "open_trade_route" | "close_trade_route" | "commission_structure" | "commission_artwork" | "design_rite" | "cast_rite" | "found_school" | "bind_mortals" | "touch_mortal" | "plant_idea" | "stir_hearts" | "spread_word" | "tend_land" | "reveal_tenet" | "open_rebirth_gate" | "wage_war" | "raise_host" | "disband_host" | "lay_siege" | "offer_peace" | "commission_vessel" | "design_unit" | "plant_spies";
+        SonToolId: "world_summary" | "inspect_entity" | "search_entities" | "my_memory" | "inspect_sibling" | "write_plan" | "choose_anchor" | "coin_words" | "call_sibling" | "swear_covenant" | "give_gift" | "challenge" | "rebel" | "pray_to_creator" | "make_bond" | "harvest_resource" | "create_region" | "create_place" | "create_resource" | "found_settlement" | "create_species" | "raise_beast" | "create_people" | "create_mortal" | "forge_item" | "build_structure" | "create_language" | "tell_legend" | "found_tradition" | "found_cult" | "found_faction" | "hang_celestial" | "create_artwork" | "decree_law" | "summon_spirit" | "inspire_knowledge" | "utter_prophecy" | "start_event" | "create_vessel" | "decree_natural_law" | "affect_entity" | "declare_chosen" | "curse" | "take_life" | "resurrect_sibling" | "scatter_bones" | "miracle" | "send_dream" | "send_disaster" | "teach_knowledge" | "advance_knowledge" | "incite_war" | "transform" | "destroy" | "birth_child" | "move_to_world" | "reorder_seasons" | "shape_weather" | "shape_folk" | "sever_ley" | "loose_disease" | "forge_material" | "hide_secret" | "sanctify_place" | "raise_nexus" | "reshape_land" | "sanctify_region" | "curse_region" | "redirect_river" | "declare_holy_world" | "seal_gate" | "rekindle_star" | "bind_spirit" | "hang_star" | "extinguish_star" | "talk_to_foreign_god" | "make_interworld_treaty" | "seal_treaty" | "bless_bloodline" | "void_treaty" | "stitch_leak" | "open_cosmic_bed" | "war_on_foreign_god" | "bargain_with_outsider" | "birth_world" | "raise_district" | "design_district" | "open_trade_route" | "close_trade_route" | "commission_structure" | "commission_artwork" | "design_rite" | "cast_rite" | "found_school" | "bind_mortals" | "touch_mortal" | "plant_idea" | "stir_hearts" | "spread_word" | "tend_land" | "shape_blood" | "reveal_tenet" | "open_rebirth_gate" | "wage_war" | "raise_host" | "disband_host" | "lay_siege" | "offer_peace" | "commission_vessel" | "design_unit" | "plant_spies";
         SonToolsView: {
             son_id: number;
             rarity: components["schemas"]["Rarity"];
@@ -27778,7 +28610,7 @@ export interface components {
             subject_id?: number | null;
             clear_subject: boolean;
         };
-        ThoughtKind: "married" | "child_born" | "saw_kin_die" | "lost_spouse" | "lost_child" | "betrayed" | "was_insulted" | "was_gifted" | "was_saved" | "was_cheated" | "won_battle" | "defeated" | "won_duel" | "lost_duel" | "was_wounded" | "was_maimed" | "lost_limb_but_lived" | "was_healed" | "fell_ill" | "witnessed_atrocity" | "was_captured" | "was_freed" | "killed_foe" | "rose_in_rank" | "fell_in_rank" | "gained_renown" | "was_shamed" | "was_punished" | "was_conquered" | "prayed_answered" | "prayer_ignored" | "saw_miracle" | "lost_faith" | "found_faith" | "saw_desecration" | "touched_by_a_god" | "admired_great_work" | "heard_great_music" | "attended_feast" | "made_masterwork" | "learned_something" | "taught_apprentice" | "took_idea_to_heart" | "ate_fine_food" | "went_hungry" | "went_thirsty" | "drank_well" | "slept_well" | "exhausted" | "lived_in_comfort" | "lived_in_squalor" | "felt_hale" | "felt_unwell" | "felt_safe" | "felt_unsafe" | "among_kin" | "missed_kin" | "among_friends" | "felt_lonely" | "loved" | "longed_for_love" | "had_peace_and_quiet" | "crowded" | "respected" | "overlooked" | "belonged" | "adrift" | "felt_purpose" | "lacked_purpose" | "prayed_in_peace" | "faith_unmet" | "learned_nothing" | "made_something" | "nothing_made" | "saw_beauty" | "surrounded_by_ugliness" | "walked_in_nature" | "cut_off_from_nature" | "had_adventure" | "restless" | "tested_in_combat" | "blade_rusting" | "prospered" | "wanted_for_money" | "enjoyed_leisure" | "bored" | "lived_in_order" | "lived_in_disorder" | "relived_memory" | "mourned" | "made_peace_with_loss" | "had_nightmare" | "had_good_dream" | "dreamed_of_longing" | "received_visitation" | "sent_by_the_creator" | "liked_surroundings" | "disliked_surroundings" | "enjoyed_favourite" | "endured_a_dislike" | "acted_on_conscience" | "acted_against_conscience" | "kin_shamed" | "shame_restored" | "dream_progress" | "dream_fulfilled" | "dream_shattered" | "want_fulfilled" | "fear_near" | "inspired" | "inspiration_lost" | "disillusioned" | "made_a_friend" | "lost_a_friend" | "laughed_together" | "was_comforted" | "was_flattered" | "quarrelled" | "reconciled" | "fell_in_love" | "heartbroken" | "jealous" | "brawled" | "was_threatened" | "confided_in" | "won_contest" | "lost_contest" | "was_persuaded" | "rose_in_standing" | "lost_standing" | "passion_stirred" | "passion_broke";
+        ThoughtKind: "married" | "child_born" | "saw_kin_die" | "lost_spouse" | "lost_child" | "betrayed" | "was_insulted" | "was_gifted" | "was_saved" | "was_cheated" | "won_battle" | "defeated" | "won_duel" | "lost_duel" | "was_wounded" | "was_maimed" | "lost_limb_but_lived" | "was_healed" | "fell_ill" | "witnessed_atrocity" | "was_captured" | "was_freed" | "killed_foe" | "rose_in_rank" | "fell_in_rank" | "gained_renown" | "was_shamed" | "was_punished" | "was_conquered" | "prayed_answered" | "prayer_ignored" | "saw_miracle" | "lost_faith" | "found_faith" | "saw_desecration" | "touched_by_a_god" | "admired_great_work" | "heard_great_music" | "attended_feast" | "made_masterwork" | "learned_something" | "taught_apprentice" | "took_idea_to_heart" | "ate_fine_food" | "went_hungry" | "went_thirsty" | "drank_well" | "slept_well" | "exhausted" | "lived_in_comfort" | "lived_in_squalor" | "felt_hale" | "felt_unwell" | "felt_safe" | "felt_unsafe" | "among_kin" | "missed_kin" | "among_friends" | "felt_lonely" | "loved" | "longed_for_love" | "had_peace_and_quiet" | "crowded" | "respected" | "overlooked" | "belonged" | "adrift" | "felt_purpose" | "lacked_purpose" | "prayed_in_peace" | "faith_unmet" | "learned_nothing" | "made_something" | "nothing_made" | "saw_beauty" | "surrounded_by_ugliness" | "walked_in_nature" | "cut_off_from_nature" | "had_adventure" | "restless" | "tested_in_combat" | "blade_rusting" | "prospered" | "wanted_for_money" | "enjoyed_leisure" | "bored" | "lived_in_order" | "lived_in_disorder" | "relived_memory" | "mourned" | "made_peace_with_loss" | "had_nightmare" | "had_good_dream" | "dreamed_of_longing" | "received_visitation" | "sent_by_the_creator" | "liked_surroundings" | "disliked_surroundings" | "proud_of_home" | "ashamed_of_home" | "enjoyed_favourite" | "endured_a_dislike" | "acted_on_conscience" | "acted_against_conscience" | "kin_shamed" | "shame_restored" | "dream_progress" | "dream_fulfilled" | "dream_shattered" | "want_fulfilled" | "fear_near" | "inspired" | "inspiration_lost" | "disillusioned" | "made_a_friend" | "lost_a_friend" | "laughed_together" | "was_comforted" | "was_flattered" | "quarrelled" | "reconciled" | "fell_in_love" | "heartbroken" | "jealous" | "brawled" | "was_threatened" | "confided_in" | "won_contest" | "lost_contest" | "was_persuaded" | "rose_in_standing" | "lost_standing" | "passion_stirred" | "passion_broke";
         ThoughtKindView: {
             kind: components["schemas"]["ThoughtKind"];
             label: string;
@@ -28518,6 +29350,13 @@ export interface components {
         VoicesEditViewInput: {
             view_id: number;
             text: string;
+        };
+        WaitingIntuitionView: {
+            id: number;
+            seeker: components["schemas"]["NodeRef"] | null;
+            epoch: number;
+            how: string | null;
+            queued: boolean;
         };
         WantKind: "marry" | "gain_office" | "fine_weapon" | "visit_a_shrine" | "learn_a_skill" | "gain_wealth" | "have_a_child" | "travel" | "win_glory" | "make_peace" | "avenge" | "find_a_teacher";
         WantView: {
@@ -37834,6 +38673,83 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lineage_view_api_lineage__node_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LineageView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    home_view_api_home__node_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                node_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeView"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sensed_worlds_api_sensed_worlds_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SensedWorldsView"];
                 };
             };
         };
@@ -47254,6 +48170,130 @@ export interface operations {
             };
         };
     };
+    action_sensed_world_request_api_actions_sensed_world_request_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SensedWorldRequestInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_sensed_world_hold_api_actions_sensed_world_hold_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SensedWorldHoldInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_sensed_world_retry_api_actions_sensed_world_retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SensedWorldRetryInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_sensed_world_cancel_api_actions_sensed_world_cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SensedWorldCancelInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     action_intuition_discard_all_api_actions_intuition_discard_all_post: {
         parameters: {
             query?: never;
@@ -51801,6 +52841,781 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["IndicatorRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_genome_found_api_actions_genome_found_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenomeFoundInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_genome_gene_api_actions_genome_gene_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenomeGeneInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_genome_edit_api_actions_genome_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenomeEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_genome_redraw_api_actions_genome_redraw_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenomeRedrawInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_genome_remove_api_actions_genome_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenomeRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_allele_pool_found_api_actions_allele_pool_found_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AllelePoolFoundInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_allele_pool_frequency_api_actions_allele_pool_frequency_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AllelePoolFrequencyInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_allele_pool_stance_api_actions_allele_pool_stance_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AllelePoolStanceInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_allele_pool_share_api_actions_allele_pool_share_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AllelePoolShareInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_allele_pool_remove_api_actions_allele_pool_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AllelePoolRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resemblance_set_api_actions_resemblance_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResemblanceSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_resemblance_remove_api_actions_resemblance_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResemblanceRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_household_found_api_actions_household_found_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HouseholdFoundInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_household_edit_api_actions_household_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HouseholdEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_household_debt_api_actions_household_debt_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HouseholdDebtInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_household_hold_api_actions_household_hold_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HouseholdHoldInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_household_remove_api_actions_household_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HouseholdRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_household_member_api_actions_household_member_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HouseholdMemberInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_household_release_api_actions_household_release_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HouseholdReleaseInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_dwelling_set_api_actions_dwelling_set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DwellingSetInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_dwelling_remove_api_actions_dwelling_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DwellingRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_furnishing_add_api_actions_furnishing_add_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FurnishingAddInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_furnishing_remove_api_actions_furnishing_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FurnishingRemoveInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_household_aggregate_edit_api_actions_household_aggregate_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HouseholdAggregateEditInput"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_household_aggregate_remove_api_actions_household_aggregate_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HouseholdAggregateRemoveInput"];
             };
         };
         responses: {
@@ -60854,7 +62669,7 @@ type ReadonlyArray<T> = [
 ] ? Readonly<Exclude<T, undefined>> : Readonly<Exclude<T, undefined>[]>;
 export const abilityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Ability"]> = ["endurance", "willpower", "perception", "wisdom", "creativity", "beauty"];
 export const achievementKeyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AchievementKey"]> = ["second_sky", "constellation", "prophecy_fulfilled", "return_from_death", "fathers_hand", "babel", "crowded_world", "first_prayer", "creators_cult", "interstellar_traveller", "saga_completed", "god_of_epochs", "ancient", "crowded_pantheon", "first_explorers", "sensed_world", "weapons_silent"];
-export const actKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActKind"]> = ["execution", "mutilation", "betrayal", "mercy_to_enemy", "human_sacrifice", "trade_with_outsiders", "building_temples", "burning_books", "conquest", "raiding", "duelling", "ransom", "taking_captives", "oathbreaking", "learning", "hospitality", "winter_fighting", "guest_killing", "ritual_scarring", "killing_kin", "killing_outsider", "killing_in_war", "killing_captive", "regicide", "duel_to_death", "revenge_killing", "theft", "treason", "cowardice", "desecration", "bribery", "suicide", "torture", "eating_sapients", "iconoclasm", "conversion_by_force", "polygamy", "incest", "magic_use", "blood_magic", "void_magic", "necromancy", "hoarding_in_famine", "slavery", "adultery"];
+export const actKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActKind"]> = ["execution", "mutilation", "betrayal", "mercy_to_enemy", "human_sacrifice", "trade_with_outsiders", "building_temples", "burning_books", "conquest", "raiding", "duelling", "ransom", "taking_captives", "oathbreaking", "learning", "hospitality", "winter_fighting", "guest_killing", "ritual_scarring", "killing_kin", "killing_outsider", "killing_in_war", "killing_captive", "regicide", "duel_to_death", "revenge_killing", "theft", "treason", "cowardice", "desecration", "bribery", "suicide", "torture", "eating_sapients", "iconoclasm", "conversion_by_force", "polygamy", "incest", "magic_use", "blood_magic", "void_magic", "necromancy", "hoarding_in_famine", "slavery", "adultery", "usury", "infanticide", "abandoning_elders"];
 export const actionGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActionGroup"]> = ["creator", "sons", "god_power", "death", "messages", "interventions", "entities", "diplomacy", "canon", "cosmos", "worlds", "foreign_gods", "goals", "settings", "society", "warfare", "creatures", "beyond", "languages", "memory", "fate"];
 export const actionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActionKind"]> = ["create_entity", "revelation", "summon_son", "bear_child", "command", "absolute_command", "bless_essence", "bless_hp", "bless_stat", "bless_existence", "add_star", "ascend", "lightning", "chain", "exile_son", "suppress_rebellion", "suppress_failed", "forgive", "answer_prayer", "chat", "resurrect_son", "kill_son", "take_life", "resurrect_mortal", "deify", "demote", "grant_power", "choose_prophet", "manifestation", "lineage_curse", "lift_lineage_curse", "convert", "wrath", "world_wrath", "drain_essence", "devour", "harvest_community", "kill_foreign_god", "canon_restore", "canon_strike", "edit_record", "edit_creator", "merge_records", "archive_record", "create_world", "birth_world", "forget_world", "remember_world", "exile_entity", "pardon", "ignite_star", "hang_star", "extinguish_star", "rekindle_star", "seal_gate", "sever_route", "stitch_route", "reveal_route", "recall_journey", "cleanse_leak", "sky_event", "spirit_cloak", "legendary_quest", "miracle", "disaster", "teach_knowledge", "advance_knowledge", "set_knowledge_level", "assign_mechanics", "syncretize_faith", "birth_creole", "curse", "dream", "influence", "declare_chosen", "incite_war", "transform", "destroy", "covenant", "change_anchor", "challenge", "speak_to_sibling", "weave_bond", "pray_to_creator", "harvest_resource", "gift", "holy_world", "interworld_treaty", "foreign_god_war", "open_cosmic_bed", "stitch_leak", "outer_bargain", "rebel", "convene_council", "awaken_peoples", "set_passions", "push_reputation", "found_language", "coin_words", "produce", "build", "create_culture", "discover_resource", "claim", "found_settlement", "establish_trade", "declare_war", "worship", "develop_knowledge", "learn", "diplomacy", "adventure", "discover_route", "explore_land", "resurrection_rite", "build_ship", "set_out", "tame", "weave_chimera", "bind_spirit", "search_ruins", "sabotage", "preach", "defy_god", "deny_god", "prophesy", "escape", "pay_ransom", "rescue_captive", "raise_army", "appoint_commander", "build_spy_network", "barter", "lend", "repay", "adopt", "network_repair", "ledger_undo", "sibling_scheme", "scatter_bones", "move_to_world", "reorder_seasons", "shape_weather", "sever_ley", "reshape_land", "foreign_god_talk", "write_plan", "abandon_settlement", "apocalypse", "awaken_species", "betrayal", "bless_army", "cosmic_archive", "cosmic_plague", "creator_sign", "crown_ruler", "cultural_contact", "designate_heir", "disband_army", "dissolve_faction", "end_blood_feud", "epoch_star", "ethnogenesis", "evaluate_goals", "force_battle", "foreign_god_land", "forget_legend", "forgive_debt", "forgive_tribute", "found_faction", "found_market", "fulfil_prophecy", "golden_age", "grant_independence", "grant_victory", "horror_event", "hunt", "impose_tribute", "incite_uprising", "introduce_species", "lay_spirit_to_rest", "megafauna_trail", "mint_coin", "mirror_birth", "mutate_species", "order_exodus", "order_feeding", "outer_cult", "planet_act", "pour_essence", "raise_hero", "raise_notable", "recall_hero", "reclaim_colony", "regenerate_map", "resettle_ruin", "reveal_previous_creation", "revive_legend", "set_doom_clock", "set_immortal", "set_route_danger", "set_sanity", "set_son_relation", "set_tier", "shape_society", "shelter_from_ruin", "soul_descent", "soul_harvest", "spare_prey", "spawn_pirates", "split_people", "summon_outer_being", "time_echo", "train_apprentice", "wake_foreign_god", "edit_language", "regenerate_signature", "add_epoch_words", "discard_intuition", "rejudge_fate", "retry_fate", "override_verdict", "retry_voices", "audit_chronicle", "retry_births", "edit_historian_view", "delete_historian_view", "maintenance", "dissolve_community", "raze_structure", "write_fate", "commemorate", "revive_world", "appoint_guardian", "set_abundance", "seed_place", "declare_pilgrimage_site", "order_end", "hide_secret", "reveal_secret", "sanctify_place", "raise_nexus", "lay_siege", "offer_peace", "design_unit", "other", "enact_law", "appoint_officer", "set_tax", "propose_treaty", "accept_treaty", "break_treaty", "swear_oath", "release_oath", "bless_bloodline", "steer_faction"];
 export const actionModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActionMode"]> = ["ledgered", "job"];
@@ -60965,6 +62780,7 @@ export const debtStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const decisionRuleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DecisionRule"]> = ["autocratic", "council", "assembly", "divine"];
 export const decreeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DecreeKind"]> = ["war", "peace", "alliance", "marriage", "trade"];
 export const defenderActionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DefenderAction"]> = ["sally", "repair", "ration", "seek_relief"];
+export const deferredStepStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DeferredStepStatus"]> = ["pending", "running", "done", "failed", "held"];
 export const dietValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Diet"]> = ["herbivore", "carnivore", "omnivore", "scavenger", "filter", "photosynthetic", "mineral", "soul", "void"];
 export const disasterValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Disaster"]> = ["earthquake", "flood", "plague", "drought", "storm", "eruption", "volcanic_quake"];
 export const discoveryValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Discovery"]> = ["known", "legend", "unknown", "forgotten"];
@@ -60980,6 +62796,7 @@ export const dreamReadingValues: ReadonlyArray<FlattenedDeepRequired<components>
 export const dreamStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DreamState"]> = ["pursuing", "fulfilled", "failed"];
 export const driftCauseValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DriftCause"]> = ["god", "ruler", "neighbours", "ideology", "war_fought", "war_won", "war_lost", "plague", "famine", "trade", "conquest"];
 export const duelContextValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DuelContext"]> = ["war", "honour", "trial", "champion", "god"];
+export const dwellingKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DwellingKind"]> = ["hut", "longhouse", "townhouse", "manor", "palace", "tent", "cave", "ship", "tower"];
 export const edgeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EdgeKind"]> = ["modifier", "rule_switch", "flow", "trigger"];
 export const elevationClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ElevationClass"]> = ["mountainous", "hilly", "plain", "water"];
 export const emotionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Emotion"]> = ["joy", "contentment", "pride", "love", "gratitude", "relief", "hope", "awe", "amusement", "fear", "anxiety", "anger", "rage", "grief", "sadness", "shame", "guilt", "envy", "jealousy", "disgust", "loneliness", "boredom", "despair", "longing"];
@@ -61018,7 +62835,7 @@ export const facetValues: ReadonlyArray<FlattenedDeepRequired<components>["schem
 export const facetGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FacetGroup"]> = ["emotional", "social", "drive", "mind"];
 export const factionActionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FactionActionKind"]> = ["lobby", "bribe", "petition", "strike", "riot", "coup", "assassinate", "smuggle", "raid", "fund_war", "recruit", "schism", "suppressed", "hired", "defected"];
 export const factionGoalKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FactionGoalKind"]> = ["lower_taxes", "monopoly_on", "install_claimant", "abolish_law", "enact_law", "war_on", "peace_with", "protect_craft", "convert_realm", "independence", "loot"];
-export const factionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FactionKind"]> = ["merchant_guild", "craft_guild", "priesthood", "warrior_order", "noble_council", "peasant_league", "rebels", "bandits", "pirates", "assassins", "scholars_academy", "secret_society", "mercenary_company", "interworld_federation", "wandering_market", "void_pirates", "social_circle"];
+export const factionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FactionKind"]> = ["merchant_guild", "craft_guild", "priesthood", "warrior_order", "noble_council", "peasant_league", "rebels", "bandits", "pirates", "assassins", "scholars_academy", "secret_society", "mercenary_company", "interworld_federation", "wandering_market", "void_pirates", "social_circle", "mage_order"];
 export const factionRankValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FactionRank"]> = ["leader", "officer", "member", "novice"];
 export const factionScaleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FactionScale"]> = ["band", "company", "organisation", "network"];
 export const factionStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FactionStats"]["kind"]> = ["faction"];
@@ -61043,6 +62860,7 @@ export const funeralCustomValues: ReadonlyArray<FlattenedDeepRequired<components
 export const funeralRiteValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FuneralRite"]> = ["burial", "burning", "exposure", "nameless", "none"];
 export const genesisFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisFinishedEvent"]["kind"]> = ["genesis.finished"];
 export const genesisTemplateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisTemplate"]> = ["dark_fantasy", "mythic_age", "cosmic_horror", "fairy_tale", "star_myth", "sand_and_ash", "primordial_dawn", "crowns_and_knives", "drowned_world", "long_winter", "after_the_fall", "sky_islands", "age_of_engines"];
+export const giftStanceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GiftStance"]> = ["honoured", "feared", "persecuted", "taxed"];
 export const governmentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GovernmentKind"]> = ["chiefdom", "monarchy", "theocracy", "oligarchy", "republic", "tribal_confederation", "empire", "hive_council", "god_kingdom", "occupation"];
 export const gravityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Gravity"]> = ["low", "normal", "high"];
 export const griefStageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GriefStage"]> = ["shock", "mourning", "acceptance", "complicated"];
@@ -61057,6 +62875,8 @@ export const honourModelValues: ReadonlyArray<FlattenedDeepRequired<components>[
 export const horizonStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HorizonStatus"]> = ["pending", "processing", "born", "wasted"];
 export const horrorEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HorrorEventKind"]> = ["stars_align", "eye_in_the_sky", "wave_of_silence", "reverse_rain", "visit_of_the_void", "the_dimming", "whispers_from_beyond"];
 export const houseStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HouseStats"]["kind"]> = ["house"];
+export const householdDecisionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HouseholdDecision"]> = ["marry", "apprentice", "migrate", "renovate", "take_lodger", "hire_servant", "dismiss_servant", "sell_furnishing", "lend"];
+export const householdRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HouseholdRole"]> = ["head", "spouse", "heir", "dependent", "carer", "servant", "ward", "lodger"];
 export const hullClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["HullClass"]> = ["raft", "boat", "galley", "longship", "cog", "carrack", "warship", "light_sailer", "bone_hull", "generation_ship", "skyship", "living_ship"];
 export const ideaKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IdeaKind"]> = ["rationalism", "mysticism", "asceticism", "mercy_for_all", "martial_creed", "rule_of_law", "free_spirit", "kin_first", "honour_code", "wanderlust", "materialism", "reverence_for_nature", "craft_devotion", "beauty_above_all", "egalitarianism", "divine_order"];
 export const ideaSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IdeaSource"]> = ["ideology", "doctrine", "theory", "book", "teacher", "divine", "player"];
@@ -61125,6 +62945,8 @@ export const linkGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["s
 export const llmCallKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LlmCallKind"]> = ["agent", "structured"];
 export const llmCallStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LlmCallStatus"]> = ["ok", "partial", "error"];
 export const loanStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LoanStatus"]> = ["open", "repaid", "defaulted", "forgiven"];
+export const locusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Locus"]> = ["height", "build", "skin", "hair_colour", "hair_texture", "eye_colour", "face", "voice", "longevity", "fertility", "disease_resistance", "madness", "colour_blindness", "giant_blood", "divine_blood", "curse_marker", "gift_elemental_fire", "gift_elemental_water", "gift_earth", "gift_storm", "gift_life", "gift_death", "gift_mind", "gift_illusion", "gift_divination", "gift_warding", "gift_binding", "gift_summoning", "gift_blood", "gift_void"];
+export const locusGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LocusGroup"]> = ["looks", "predisposition", "gift"];
 export const logLevelValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LogLevel"]> = ["info", "warning", "error"];
 export const loreKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LoreKind"]> = ["technique", "site", "map", "prophecy"];
 export const loreLanguageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LoreLanguage"]> = ["english", "turkish"];
@@ -61158,12 +62980,12 @@ export const mortalRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const mortalSexValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalSex"]> = ["female", "male", "other"];
 export const mortalStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalStats"]["kind"]> = ["mortal"];
 export const mortalStatsSexAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalStats"]["sex"]> = ["female", "male", "other"];
-export const mortalToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalToolId"]> = ["look_at_world", "inspect_entity", "search_entities", "found_language", "coin_words", "produce_item", "build_structure", "create_culture", "discover_resource", "claim_resource", "found_settlement", "establish_trade", "declare_war", "worship", "pray_to_creator", "develop_knowledge", "learn_knowledge", "diplomacy", "go_on_adventure", "find_route", "explore_land", "resurrection_rite", "build_ship", "launch_expedition", "tame_species", "weave_chimera", "bind_spirit", "search_ruins", "sabotage", "preach", "challenge_god", "deny_god", "prophesy", "escape", "pay_ransom", "rescue_captive", "raise_army", "appoint_commander", "enact_law", "appoint_officer", "set_tax", "propose_treaty", "swear_oath", "accept_treaty", "break_treaty", "build_spy_network", "barter", "lend", "repay_debt", "adopt", "commission_artwork", "design_rite", "cast_rite", "found_school", "socialise", "challenge_to_contest", "persuade", "trade_lore", "choose_method", "buy_workshop", "lay_trade_policy", "speculate"];
+export const mortalToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalToolId"]> = ["look_at_world", "inspect_entity", "search_entities", "found_language", "coin_words", "produce_item", "build_structure", "create_culture", "discover_resource", "claim_resource", "found_settlement", "establish_trade", "declare_war", "worship", "pray_to_creator", "develop_knowledge", "learn_knowledge", "diplomacy", "go_on_adventure", "find_route", "explore_land", "resurrection_rite", "build_ship", "launch_expedition", "tame_species", "weave_chimera", "bind_spirit", "search_ruins", "sabotage", "preach", "challenge_god", "deny_god", "prophesy", "escape", "pay_ransom", "rescue_captive", "raise_army", "appoint_commander", "enact_law", "appoint_officer", "set_tax", "propose_treaty", "swear_oath", "accept_treaty", "break_treaty", "build_spy_network", "barter", "lend", "repay_debt", "adopt", "commission_artwork", "design_rite", "cast_rite", "found_school", "socialise", "challenge_to_contest", "persuade", "trade_lore", "choose_method", "buy_workshop", "tend_home", "lay_trade_policy", "speculate"];
 export const mortalTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalTurnFinishedEvent"]["kind"]> = ["mortal.turn_finished"];
 export const mortalTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalTurnStartedEvent"]["kind"]> = ["mortal.turn_started"];
 export const mortalsStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalsStartedEvent"]["kind"]> = ["mortals.started"];
 export const motifOverrideModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MotifOverrideMode"]> = ["pinned", "allowed"];
-export const naturalLawValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalLaw"]> = ["none", "immortality", "short_life", "dead_return", "magic_price", "war_ban", "bounty", "drought", "sea_ban", "one_language", "disasters", "souls_reincarnate"];
+export const naturalLawValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalLaw"]> = ["none", "immortality", "short_life", "dead_return", "magic_price", "war_ban", "bounty", "drought", "sea_ban", "one_language", "disasters", "souls_reincarnate", "gift_flowering", "gift_withering"];
 export const naturalLawStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalLawStats"]["kind"]> = ["natural_law"];
 export const naturalTraitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NaturalTrait"]> = ["dark_sight", "cold_blooded", "winged", "amphibious", "thick_hide", "keen_senses", "venomous", "regenerating", "burrowing", "hive_minded"];
 export const needGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NeedGroup"]> = ["body", "social", "spirit", "action"];
@@ -61200,7 +63022,7 @@ export const placeStatsKindValues: ReadonlyArray<FlattenedDeepRequired<component
 export const polityStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PolityStats"]["kind"]> = ["polity"];
 export const powerEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PowerEffect"]> = ["cheap_creation", "duel_master", "essence_spring", "worshipped", "tireless", "untouchable", "dream_whisper", "war_father", "harvester", "seer", "reviving", "bounty_giver", "curser"];
 export const prayerRequestValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PrayerRequest"]> = ["essence", "blessing", "permission", "vengeance", "forgiveness", "none", "wish"];
-export const preferenceKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreferenceKind"]> = ["material", "food", "drink", "creature", "plant", "colour", "shape", "art_form", "artwork_subject", "season", "weather", "terrain", "activity", "craft", "deity_aspect"];
+export const preferenceKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreferenceKind"]> = ["material", "food", "drink", "creature", "plant", "colour", "shape", "art_form", "artwork_subject", "season", "weather", "terrain", "activity", "craft", "deity_aspect", "looks"];
 export const pressureKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PressureKind"]> = ["hunger", "insecurity", "overcrowding", "poverty", "impiety", "humiliation", "stagnation"];
 export const processKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ProcessKind"]> = ["farming", "fishing", "logging", "mining", "milling", "weaving", "smelting", "tanning", "brewing", "distilling", "masonry", "charcoal", "preserving", "lighting", "butchery", "dairy", "pressing"];
 export const professionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Profession"]> = ["soldier", "rider", "smith", "builder", "weaver", "healer", "scholar", "priest", "sorcerer", "merchant", "diplomat", "hunter", "sailor", "commander"];
@@ -61267,7 +63089,7 @@ export const sonDistributedEventKindValues: ReadonlyArray<FlattenedDeepRequired<
 export const sonDistributionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonDistribution"]> = ["auto", "manual"];
 export const sonNewEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonNewEvent"]["kind"]> = ["son.new"];
 export const sonStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonStatus"]> = ["active", "asleep", "exiled", "dead"];
-export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_creator", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "raise_beast", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "shape_folk", "sever_ley", "loose_disease", "forge_material", "hide_secret", "sanctify_place", "raise_nexus", "reshape_land", "sanctify_region", "curse_region", "redirect_river", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "seal_treaty", "bless_bloodline", "void_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world", "raise_district", "design_district", "open_trade_route", "close_trade_route", "commission_structure", "commission_artwork", "design_rite", "cast_rite", "found_school", "bind_mortals", "touch_mortal", "plant_idea", "stir_hearts", "spread_word", "tend_land", "reveal_tenet", "open_rebirth_gate", "wage_war", "raise_host", "disband_host", "lay_siege", "offer_peace", "commission_vessel", "design_unit", "plant_spies"];
+export const sonToolIdValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonToolId"]> = ["world_summary", "inspect_entity", "search_entities", "my_memory", "inspect_sibling", "write_plan", "choose_anchor", "coin_words", "call_sibling", "swear_covenant", "give_gift", "challenge", "rebel", "pray_to_creator", "make_bond", "harvest_resource", "create_region", "create_place", "create_resource", "found_settlement", "create_species", "raise_beast", "create_people", "create_mortal", "forge_item", "build_structure", "create_language", "tell_legend", "found_tradition", "found_cult", "found_faction", "hang_celestial", "create_artwork", "decree_law", "summon_spirit", "inspire_knowledge", "utter_prophecy", "start_event", "create_vessel", "decree_natural_law", "affect_entity", "declare_chosen", "curse", "take_life", "resurrect_sibling", "scatter_bones", "miracle", "send_dream", "send_disaster", "teach_knowledge", "advance_knowledge", "incite_war", "transform", "destroy", "birth_child", "move_to_world", "reorder_seasons", "shape_weather", "shape_folk", "sever_ley", "loose_disease", "forge_material", "hide_secret", "sanctify_place", "raise_nexus", "reshape_land", "sanctify_region", "curse_region", "redirect_river", "declare_holy_world", "seal_gate", "rekindle_star", "bind_spirit", "hang_star", "extinguish_star", "talk_to_foreign_god", "make_interworld_treaty", "seal_treaty", "bless_bloodline", "void_treaty", "stitch_leak", "open_cosmic_bed", "war_on_foreign_god", "bargain_with_outsider", "birth_world", "raise_district", "design_district", "open_trade_route", "close_trade_route", "commission_structure", "commission_artwork", "design_rite", "cast_rite", "found_school", "bind_mortals", "touch_mortal", "plant_idea", "stir_hearts", "spread_word", "tend_land", "shape_blood", "reveal_tenet", "open_rebirth_gate", "wage_war", "raise_host", "disband_host", "lay_siege", "offer_peace", "commission_vessel", "design_unit", "plant_spies"];
 export const sonTurnFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnFinishedEvent"]["kind"]> = ["son.turn_finished"];
 export const sonTurnQueuedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnQueuedEvent"]["kind"]> = ["son.turn_queued"];
 export const sonTurnStartedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SonTurnStartedEvent"]["kind"]> = ["son.turn_started"];
@@ -61305,7 +63127,7 @@ export const temperatureBandValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const tenetKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TenetKind"]> = ["pacifism", "holy_war", "asceticism", "sacred_suffering", "purity_of_body", "ancestor_veneration", "human_sacrifice", "animal_sacrifice", "celibate_clergy", "proselytism", "exclusivity", "syncretic_openness", "monastic_learning", "anti_magic", "sanctified_magic", "judgement_by_deeds", "judgement_by_faith", "reincarnation", "martyrdom_glory", "divine_kingship", "dietary_law", "sacred_species", "pilgrimage_duty", "souls_rest"];
 export const terrainHazardValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TerrainHazard"]> = ["avalanche", "spring_flood", "wildfire", "whiteout"];
 export const terrainKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TerrainKind"]> = ["plain", "steppe", "forest", "jungle", "marsh", "hills", "mountains", "high_pass", "desert", "tundra", "ice_sheet", "volcanic", "coast", "island", "river_valley", "canyon", "underground", "crystal_field", "flesh", "void_shore", "ruin_field", "urban", "sea"];
-export const thoughtKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ThoughtKind"]> = ["married", "child_born", "saw_kin_die", "lost_spouse", "lost_child", "betrayed", "was_insulted", "was_gifted", "was_saved", "was_cheated", "won_battle", "defeated", "won_duel", "lost_duel", "was_wounded", "was_maimed", "lost_limb_but_lived", "was_healed", "fell_ill", "witnessed_atrocity", "was_captured", "was_freed", "killed_foe", "rose_in_rank", "fell_in_rank", "gained_renown", "was_shamed", "was_punished", "was_conquered", "prayed_answered", "prayer_ignored", "saw_miracle", "lost_faith", "found_faith", "saw_desecration", "touched_by_a_god", "admired_great_work", "heard_great_music", "attended_feast", "made_masterwork", "learned_something", "taught_apprentice", "took_idea_to_heart", "ate_fine_food", "went_hungry", "went_thirsty", "drank_well", "slept_well", "exhausted", "lived_in_comfort", "lived_in_squalor", "felt_hale", "felt_unwell", "felt_safe", "felt_unsafe", "among_kin", "missed_kin", "among_friends", "felt_lonely", "loved", "longed_for_love", "had_peace_and_quiet", "crowded", "respected", "overlooked", "belonged", "adrift", "felt_purpose", "lacked_purpose", "prayed_in_peace", "faith_unmet", "learned_nothing", "made_something", "nothing_made", "saw_beauty", "surrounded_by_ugliness", "walked_in_nature", "cut_off_from_nature", "had_adventure", "restless", "tested_in_combat", "blade_rusting", "prospered", "wanted_for_money", "enjoyed_leisure", "bored", "lived_in_order", "lived_in_disorder", "relived_memory", "mourned", "made_peace_with_loss", "had_nightmare", "had_good_dream", "dreamed_of_longing", "received_visitation", "sent_by_the_creator", "liked_surroundings", "disliked_surroundings", "enjoyed_favourite", "endured_a_dislike", "acted_on_conscience", "acted_against_conscience", "kin_shamed", "shame_restored", "dream_progress", "dream_fulfilled", "dream_shattered", "want_fulfilled", "fear_near", "inspired", "inspiration_lost", "disillusioned", "made_a_friend", "lost_a_friend", "laughed_together", "was_comforted", "was_flattered", "quarrelled", "reconciled", "fell_in_love", "heartbroken", "jealous", "brawled", "was_threatened", "confided_in", "won_contest", "lost_contest", "was_persuaded", "rose_in_standing", "lost_standing", "passion_stirred", "passion_broke"];
+export const thoughtKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ThoughtKind"]> = ["married", "child_born", "saw_kin_die", "lost_spouse", "lost_child", "betrayed", "was_insulted", "was_gifted", "was_saved", "was_cheated", "won_battle", "defeated", "won_duel", "lost_duel", "was_wounded", "was_maimed", "lost_limb_but_lived", "was_healed", "fell_ill", "witnessed_atrocity", "was_captured", "was_freed", "killed_foe", "rose_in_rank", "fell_in_rank", "gained_renown", "was_shamed", "was_punished", "was_conquered", "prayed_answered", "prayer_ignored", "saw_miracle", "lost_faith", "found_faith", "saw_desecration", "touched_by_a_god", "admired_great_work", "heard_great_music", "attended_feast", "made_masterwork", "learned_something", "taught_apprentice", "took_idea_to_heart", "ate_fine_food", "went_hungry", "went_thirsty", "drank_well", "slept_well", "exhausted", "lived_in_comfort", "lived_in_squalor", "felt_hale", "felt_unwell", "felt_safe", "felt_unsafe", "among_kin", "missed_kin", "among_friends", "felt_lonely", "loved", "longed_for_love", "had_peace_and_quiet", "crowded", "respected", "overlooked", "belonged", "adrift", "felt_purpose", "lacked_purpose", "prayed_in_peace", "faith_unmet", "learned_nothing", "made_something", "nothing_made", "saw_beauty", "surrounded_by_ugliness", "walked_in_nature", "cut_off_from_nature", "had_adventure", "restless", "tested_in_combat", "blade_rusting", "prospered", "wanted_for_money", "enjoyed_leisure", "bored", "lived_in_order", "lived_in_disorder", "relived_memory", "mourned", "made_peace_with_loss", "had_nightmare", "had_good_dream", "dreamed_of_longing", "received_visitation", "sent_by_the_creator", "liked_surroundings", "disliked_surroundings", "proud_of_home", "ashamed_of_home", "enjoyed_favourite", "endured_a_dislike", "acted_on_conscience", "acted_against_conscience", "kin_shamed", "shame_restored", "dream_progress", "dream_fulfilled", "dream_shattered", "want_fulfilled", "fear_near", "inspired", "inspiration_lost", "disillusioned", "made_a_friend", "lost_a_friend", "laughed_together", "was_comforted", "was_flattered", "quarrelled", "reconciled", "fell_in_love", "heartbroken", "jealous", "brawled", "was_threatened", "confided_in", "won_contest", "lost_contest", "was_persuaded", "rose_in_standing", "lost_standing", "passion_stirred", "passion_broke"];
 export const threadStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ThreadStatus"]> = ["open", "closed"];
 export const tissueKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TissueKind"]> = ["skin", "scale", "chitin", "bark", "fat", "muscle", "tendon", "bone", "artery", "motor_nerve", "sensory_nerve", "organ"];
 export const toolBlockValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ToolBlock"]> = ["rarity", "actor_type", "civilization_tier", "world_state", "unwired"];

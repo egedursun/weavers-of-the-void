@@ -21,8 +21,9 @@ from aerona.domain.enums.mind import NeedKind, PreferenceKind, PressureKind, Ski
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.society_depth import ShortfallEffect
 from aerona.engine.context import TickContext
-from aerona.engine.demography.basket import effect_shortfalls, poverty_of
+from aerona.engine.demography.basket import effect_shortfalls, fed_index, poverty_of
 from aerona.engine.gods.queries import community_of
+from aerona.engine.households.homes import home_of
 from aerona.engine.industry.quality import at_least
 from aerona.engine.lifecycle.aging import is_notable
 from aerona.engine.mind.book import Values, best_skill, is_locked, mind_of, needs_of, pressures_of, write_needs, write_pressures
@@ -95,7 +96,8 @@ async def community_pressures(ctx: TickContext, community: EntityRow, culture: V
     prosperity = stat(community, "prosperity")
     prosperity = prosperity if prosperity is not None else table.unknown_prosperity
     population = stat(community, "population") or 0
-    food = await stock(session, ctx.rules, community.id, Commodity.FOOD)
+    fed = await fed_index(session, community.id)
+    food = fed if fed is not None else await stock(session, ctx.rules, community.id, Commodity.FOOD)
     basket = await effect_shortfalls(session, community.id)
     plenty = ctx.rules.consumption
     hunger = max(
@@ -235,7 +237,25 @@ async def mortal_needs(session: AsyncSession, rules: Rules, mortal: EntityRow, *
     await drink_needs(session, rules, community, needs)
     if community is not None and await fine_cloth(session, rules, community.id):
         needs[NeedKind.COMFORT] = pct(needs.get(NeedKind.COMFORT, 0) + rules.quality.fine_cloth_comfort)
+    await home_needs(session, rules, mortal, needs)
     return needs
+
+
+def blended(current: int, quality: int, weight_pct: int) -> int:
+    return pct(current + (quality - current) * weight_pct / PERCENT)
+
+
+async def home_needs(session: AsyncSession, rules: Rules, mortal: EntityRow, needs: dict[NeedKind, int]) -> None:
+    _household, dwelling, quality, members = await home_of(session, rules, mortal.id)
+    if dwelling is None:
+        return
+    table = rules.households
+    needs[NeedKind.COMFORT] = blended(needs.get(NeedKind.COMFORT, 0), quality, table.comfort_home_pct)
+    needs[NeedKind.BEAUTY] = blended(needs.get(NeedKind.BEAUTY, 0), quality, table.beauty_home_pct)
+    needs[NeedKind.STATUS] = blended(needs.get(NeedKind.STATUS, 0), quality, table.status_home_pct)
+    spare = dwelling.rooms - members
+    rest = spare * table.rest_rooms if spare >= 0 else spare * table.crowding_rest
+    needs[NeedKind.REST] = pct(needs.get(NeedKind.REST, 0) + rest)
 
 
 async def deeper_needs(

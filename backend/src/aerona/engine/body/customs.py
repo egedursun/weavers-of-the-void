@@ -18,6 +18,7 @@ from aerona.engine.body.hits import TOTAL_LOSS_KINDS
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.gods.queries import community_of
 from aerona.engine.primitives.faith import living_patron
+from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
@@ -150,6 +151,7 @@ def presence_pct(
     *,
     role: MortalRole | None,
     patron_id: int | None,
+    beauty: int | None = None,
 ) -> int:
     table = rules.body_customs
     reading = custom.reading if custom is not None else BodyReading.NEUTRAL
@@ -177,6 +179,8 @@ def presence_pct(
     for condition in conditions:
         if condition.kind is ConditionKind.CHOSEN_MARK and reading is BodyReading.PURITY:
             shift += table.purity_chosen_pct
+    if beauty is not None:
+        shift += round_half_up((beauty - rules.genetics.beauty_base) * rules.genetics.presence_beauty_pct / PERCENT)
     return max(table.reading_floor_pct, min(table.reading_cap_pct, PERCENT + shift))
 
 

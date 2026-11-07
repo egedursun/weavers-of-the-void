@@ -45,6 +45,7 @@ from aerona.engine.phases import (
     factions,
     faith,
     finance,
+    genetics,
     geography,
     goals,
     god_death,
@@ -54,6 +55,7 @@ from aerona.engine.phases import (
     heroes,
     heroism,
     horror,
+    households,
     industry,
     institutions,
     interconnect,
@@ -136,6 +138,8 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + relations.PHASES
     + renown.PHASES
     + industry.PHASES
+    + genetics.PHASES
+    + households.PHASES
     + finance.PHASES
     + casualties.PHASES
     + ecology.PHASES
@@ -237,6 +241,8 @@ CLEANUP_STAGE = stage(
     "mind_survey",
     "body_survey",
     "mortal_survey",
+    "genetics_survey",
+    "household_survey",
     "economy_survey",
     "structure_survey",
     "expire_truces",
@@ -322,6 +328,7 @@ SOCIETY_STAGE = stage(
     "speciation",
     "couple_births",
     "house_cycles",
+    "bloodlines",
     "love_and_rivalry",
     "dialect_divergence",
     "language_death",
@@ -345,6 +352,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "society_mobility",
     "structure_upkeep",
     "settlement_life",
+    "households",
     "heroes",
     "spontaneous_births",
     "factions",

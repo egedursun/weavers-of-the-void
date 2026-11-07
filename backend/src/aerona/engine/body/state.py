@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import ARMOUR_COLUMNS, BodyRow, InjuryRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.genetics import GenomeRow
 from aerona.domain.enums.body import BodyFunction, Capacity, InjuryKind
 from aerona.domain.enums.bond import BondKind
 from aerona.engine.body.book import (
@@ -45,7 +46,16 @@ async def reading_of(session: AsyncSession, rules: Rules, bearer: Bearer) -> Rea
     patron = await living_patron(session, bearer)
     injuries = await injuries_of(session, bearer.id)
     conditions = await active_conditions(session, bearer.id)
-    pct = presence_pct(rules, custom, injuries, conditions, role=bearer.mortal_role, patron_id=patron.id if patron is not None else None)
+    genome = await session.get(GenomeRow, bearer.id)
+    pct = presence_pct(
+        rules,
+        custom,
+        injuries,
+        conditions,
+        role=bearer.mortal_role,
+        patron_id=patron.id if patron is not None else None,
+        beauty=genome.beauty if genome is not None else None,
+    )
     return Reading(pct, await has_reader(session, bearer))
 
 

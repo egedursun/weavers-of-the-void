@@ -1,5 +1,6 @@
+import logging
 import shutil
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Callable, Iterator
 from pathlib import Path
 
 import pytest
@@ -17,9 +18,37 @@ STARTUP_SECONDS = 120
 type OpenDatabase = Callable[[Path], Database]
 
 
+TOOL_RUNTIME_LOGGER = "aerona.tools.framework.runtime"
+
+
+class SwallowedFailures(logging.Handler):
+    def __init__(self) -> None:
+        super().__init__(logging.ERROR)
+        self.records: list[logging.LogRecord] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        if record.exc_info is not None:
+            self.records.append(record)
+
+
 @pytest.fixture(autouse=True)
 def local_media(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("AERONA_MEDIA_BACKEND", MediaBackend.FILE.value)
+
+
+@pytest.fixture(autouse=True)
+def no_swallowed_tool_failures(request: pytest.FixtureRequest) -> Iterator[None]:
+    handler = SwallowedFailures()
+    logger = logging.getLogger(TOOL_RUNTIME_LOGGER)
+    logger.addHandler(handler)
+    try:
+        yield
+    finally:
+        logger.removeHandler(handler)
+    if handler.records and request.node.get_closest_marker("tool_failure_expected") is None:
+        first = handler.records[0]
+        assert first.exc_info is not None
+        pytest.fail(f"a tool call crashed inside the runtime: {first.exc_info[0].__name__ if first.exc_info[0] else ''}: {first.exc_info[1]}")
 
 
 @pytest.fixture(scope="session")

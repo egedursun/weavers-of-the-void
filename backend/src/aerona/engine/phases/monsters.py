@@ -94,6 +94,7 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
     "table.house_members",
     "table.house_profiles",
     "table.incident_participants",
+    "table.injuries",
     "table.language_profiles",
     "table.law_jurisdictions",
     "table.lexemes",
@@ -106,11 +107,13 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
     "table.passions",
     "table.people_biology",
     "table.people_culture",
+    "table.personality_values",
     "table.polity_members",
     "table.routes",
     "table.skills",
     "table.species_profiles",
     "table.species_ranges",
+    "table.spirit_profiles",
     "table.tradition_profiles",
     "table.traits",
     "table.world_maps",
@@ -140,6 +143,7 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
     "table.mortal_profiles",
     "table.name_registry",
     "table.sons",
+    "table.spirit_profiles",
 )
 async def monster_raids(ctx: TickContext) -> None:
     rules = ctx.rules

@@ -16,9 +16,11 @@ from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.entity import EntityFlag, EntityStatus
 from aerona.domain.enums.world import WorldType
+from aerona.engine.genetics.genome import appearance_text
 from aerona.prompts import PromptId
 from aerona.prompts.contexts.imagery import CosmosImagePromptsContext, CosmosSubject, EntityImagePromptsContext, ImageSubject, WorldAmbience
 from aerona.prompts.data.images import CosmosSubjectKind, fix_image_prompt
@@ -46,6 +48,10 @@ async def entity_subjects(scope: Scope, limit: int, ids: Sequence[int] | None) -
     repository = EntityRepository(scope.session)
     kinds = select(VesselProfileRow.entity_id, VesselProfileRow.kind).where(VesselProfileRow.entity_id.in_([row.id for row in rows]))
     vehicles = {entity_id: kind for entity_id, kind in await scope.session.execute(kinds)}
+    looks = {
+        genome.holder_node_id: appearance_text(genome.genes, genome.marks)
+        for genome in await scope.session.scalars(select(GenomeRow).where(GenomeRow.holder_node_id.in_([row.id for row in rows])))
+    }
     return [
         (
             row,
@@ -59,6 +65,7 @@ async def entity_subjects(scope: Scope, limit: int, ids: Sequence[int] | None) -
                 megafauna=await repository.has_flag(row.id, EntityFlag.MEGAFAUNA),
                 vehicle=vehicles.get(row.id),
                 ambience=ambience(scope.worlds.get(row.world_id)),
+                appearance=looks.get(row.id),
             ),
         )
         for row in rows

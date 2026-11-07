@@ -1,0 +1,144 @@
+from dataclasses import replace
+
+from sqlalchemy import select
+
+from aerona.db.tables.demography import CohortRow
+from aerona.db.tables.households import DwellingRow, HouseholdAggregateRow, HouseholdMemberRow, HouseholdRow
+from aerona.db.tables.mind import CultureEthicRow
+from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.society_depth import ClassStandingRow
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
+from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.genetics import DwellingKind, HouseholdDecision, HouseholdRole
+from aerona.domain.enums.mind import ActKind, EthicalStance, NeedKind
+from aerona.domain.enums.mortal import LifeStage
+from aerona.domain.enums.society import SocialClass
+from aerona.engine.demography.basket import fed_index
+from aerona.engine.households.formation import found_household, house_everyone
+from aerona.engine.households.homes import home_of, sickness_factor
+from aerona.engine.households.life import HouseholdTally, members_of, pay_debts, renovate, tend_aggregates, tend_household
+from aerona.engine.mind.needs import home_needs
+from aerona.engine.mortal.kinship import add_parent
+from aerona.engine.polity.laws import LawBook
+from aerona.rules.registry import Rules
+from tests.engine.society.factories import Realm, context, link, mortal, people, settlement
+
+RULES = Rules()
+
+
+async def profile(realm: Realm, mortal_id: int, stage: LifeStage, wealth: int = 0) -> MortalProfileRow:
+    row = await realm.session.get(MortalProfileRow, mortal_id)
+    if row is None:
+        row = MortalProfileRow(entity_id=mortal_id, life_stage=stage, wealth=wealth)
+        realm.session.add(row)
+    row.life_stage, row.wealth = stage, wealth
+    await realm.session.flush()
+    return row
+
+
+async def test_every_mortal_is_housed_and_children_join_their_parents(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Lanternford")
+    parent = await mortal(realm, "Ama", location_id=town.id)
+    child = await mortal(realm, "Bo", location_id=town.id, age=4)
+    await profile(realm, parent.id, LifeStage.ADULT, wealth=40)
+    await profile(realm, child.id, LifeStage.CHILD)
+    await add_parent(realm.session, parent.id, child.id, 1)
+    await realm.session.flush()
+    assert await house_everyone(ctx) == 2
+    head = await realm.session.get(HouseholdMemberRow, parent.id)
+    kid = await realm.session.get(HouseholdMemberRow, child.id)
+    assert head is not None and kid is not None and head.household_id == kid.household_id
+    assert head.role is HouseholdRole.HEAD and kid.role is HouseholdRole.DEPENDENT
+    household = await realm.session.get(HouseholdRow, head.household_id)
+    assert household is not None and household.wealth == 40
+    dwelling = await realm.session.scalar(select(DwellingRow).where(DwellingRow.household_id == household.id))
+    assert dwelling is not None and dwelling.quality > 0
+    assert await house_everyone(ctx) == 0
+
+
+async def test_a_household_keeps_its_purse_bears_its_weak_and_improves_its_home(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Millbrook")
+    head = await mortal(realm, "Cass", location_id=town.id)
+    elder = await mortal(realm, "Dov", location_id=town.id, age=70)
+    await profile(realm, head.id, LifeStage.ADULT, wealth=20)
+    await profile(realm, elder.id, LifeStage.ELDER)
+    home = await found_household(ctx, head)
+    realm.session.add(HouseholdMemberRow(member_node_id=elder.id, household_id=home.id, role=HouseholdRole.DEPENDENT, joined_epoch=1))
+    await realm.session.flush()
+    await tend_household(ctx, home, await LawBook.load(realm.session), HouseholdTally())
+    assert home.income > 0 and home.expenses > 0
+    assert home.burden > 0
+    home.wealth = 500
+    dwelling = await realm.session.scalar(select(DwellingRow).where(DwellingRow.household_id == home.id))
+    assert dwelling is not None
+    before = dwelling.quality
+    assert await renovate(ctx, home, dwelling, HouseholdTally())
+    assert dwelling.quality == min(100, before + RULES.households.renovate_gain) and home.last_decision is HouseholdDecision.RENOVATE
+
+
+async def test_a_destitute_household_gives_up_an_infant_only_where_its_people_allow_it(realm: Realm) -> None:
+    folk = await people(realm, "Hardwater Folk")
+    town = await settlement(realm, "Hardwater")
+    await link(realm.session, town.id, folk.id, BondKind.DESCENDS_FROM)
+    head = await mortal(realm, "Esk", location_id=town.id)
+    baby = await mortal(realm, "Fay", location_id=town.id, age=0)
+    await profile(realm, head.id, LifeStage.ADULT)
+    await profile(realm, baby.id, LifeStage.INFANT)
+    home = await found_household(context(realm.session), head)
+    realm.session.add(HouseholdMemberRow(member_node_id=baby.id, household_id=home.id, role=HouseholdRole.DEPENDENT, joined_epoch=1))
+    realm.session.add(CultureEthicRow(holder_entity_id=folk.id, act=ActKind.INFANTICIDE, stance=EthicalStance.UNTHINKABLE, since_epoch=1, locked=[]))
+    await realm.session.flush()
+    tuned = replace(RULES, households=replace(RULES.households, infanticide_pct=100, abandon_pct=0, migrate_pct=0))
+    for epoch in range(3, 6):
+        await tend_household(context(realm.session, tuned, epoch=epoch), home, await LawBook.load(realm.session), HouseholdTally())
+    assert baby.status is EntityStatus.CANON
+
+
+async def test_usury_debts_are_paid_down_with_interest(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Coinmere")
+    rich = await found_household(ctx, await mortal(realm, "Gil", location_id=town.id))
+    poor = await found_household(ctx, await mortal(realm, "Hob", location_id=town.id))
+    rich.wealth, poor.wealth = 0, 1000
+    poor.debts = {str(rich.id): 100}
+    await pay_debts(ctx, poor)
+    assert poor.debts == {} and rich.wealth == 100 + 100 * RULES.households.usury_interest_pct // 100
+
+
+async def test_home_quality_feeds_needs_and_squalor_breeds_sickness(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Rookery")
+    head = await mortal(realm, "Ivo", location_id=town.id)
+    home = await found_household(ctx, head)
+    dwelling = await realm.session.scalar(select(DwellingRow).where(DwellingRow.household_id == home.id))
+    assert dwelling is not None
+    dwelling.quality, dwelling.rooms, dwelling.kind = 95, 6, DwellingKind.MANOR
+    needs = {NeedKind.COMFORT: 10, NeedKind.BEAUTY: 10, NeedKind.STATUS: 10, NeedKind.REST: 50}
+    await home_needs(realm.session, RULES, head, needs)
+    assert needs[NeedKind.COMFORT] > 10 and needs[NeedKind.REST] > 50
+    healthy = await sickness_factor(realm.session, RULES, head.id)
+    dwelling.quality = 5
+    assert await sickness_factor(realm.session, RULES, head.id) > healthy
+    household, found, quality, members = await home_of(realm.session, RULES, head.id)
+    assert household is not None and found is not None and quality == 5 and members == 1
+    assert len(await members_of(ctx, home)) == 1
+
+
+async def test_cohorts_become_anonymous_households_and_hunger_reads_what_was_eaten(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Grainholm")
+    realm.session.add(
+        CohortRow(
+            community_entity_id=town.id, age_band=AgeBand.ADULT, sex=Sex.FEMALE, social_class=SocialClass.FARMER, condition=CohortCondition.NONE, count=500
+        )
+    )
+    await realm.session.flush()
+    await tend_aggregates(ctx, HouseholdTally())
+    row = await realm.session.get(HouseholdAggregateRow, (town.id, SocialClass.FARMER))
+    assert row is not None and row.households == 500 // RULES.households.mean_size
+    realm.session.add(ClassStandingRow(community_entity_id=town.id, social_class=SocialClass.FARMER, fed_pct=90))
+    await realm.session.flush()
+    assert (await fed_index(realm.session, town.id) or 0) >= 85

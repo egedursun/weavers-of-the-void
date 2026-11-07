@@ -2,6 +2,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from types import MappingProxyType
 
+from aerona.catalog.aspirations import PERKS
 from aerona.catalog.modifier_effects import (
     BLESSING_COMMUNITY_KEYS,
     BLESSING_MORTAL_KEYS,
@@ -47,6 +48,7 @@ SOURCE_SUBSYSTEMS: MappingProxyType[ModifierSource, Subsystem] = MappingProxyTyp
         S.PLAYER: Subsystem.CORE,
         S.SUPPRESSION: Subsystem.CORE,
         S.PIN: Subsystem.CORE,
+        S.PERK: Subsystem.MIND,
     }
 )
 
@@ -75,6 +77,7 @@ REASONS: MappingProxyType[str, str] = MappingProxyType(
 REASON_FAMILIES: MappingProxyType[str, str] = MappingProxyType(
     {
         "modifier.injury": "wounds and the state of their body",
+        "perk": "the perk of {kind} their mastery earned",
         "modifier.trait": "their temperament",
         "modifier.law": "the {kind} law {source} binds them",
         "modifier.tradition": "the {kind} of {source} they keep",
@@ -153,6 +156,7 @@ SOURCE_KEYS: MappingProxyType[ModifierSource, frozenset[str]] = MappingProxyType
         S.SEASON: frozenset({"prosperity"}),
         S.WEATHER: frozenset({"prosperity", "morale"}),
         S.NATURAL_LAW: frozenset({"fertility"}),
+        S.PERK: frozenset(spec.stat for spec in PERKS.values()),
     }
 )
 SOURCE_WRITERS: MappingProxyType[ModifierSource, str] = MappingProxyType(
@@ -162,5 +166,6 @@ SOURCE_WRITERS: MappingProxyType[ModifierSource, str] = MappingProxyType(
         S.SEASON: "environment_modifiers",
         S.WEATHER: "environment_modifiers",
         S.NATURAL_LAW: "natural_law_fertility",
+        S.PERK: "aspirations",
     }
 )

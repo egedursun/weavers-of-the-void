@@ -8,6 +8,7 @@ from aerona.catalog.mind_split import BREAK_FACETS, STRESS_FACETS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.mind import MemoryRow, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
@@ -24,6 +25,7 @@ from aerona.engine.body.book import perception_of
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.genetics.life import madness_factor
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import is_locked, mind_of, needs_of, traits_of, values_for
@@ -292,6 +294,7 @@ async def stress_break(ctx: TickContext, mortal: EntityRow, profile: MortalProfi
     table = ctx.rules.stress
     strain = profile.stress + max(0, -profile.mood_score) * ctx.rules.thoughts.mood_break_pct / PERCENT
     strain -= profile.conviction * ctx.rules.aspirations.conviction_break_pct / PERCENT
+    strain *= madness_factor(ctx.rules, await ctx.session.get(GenomeRow, mortal.id))
     if strain < table.break_threshold:
         return None
     if await invoke(ctx, mortal, None) > 1:
@@ -401,7 +404,7 @@ async def plot(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) -
     )
     await add_wealth(ctx.session, liege.id, -table.plot_wealth, ctx.epoch)
     await add_wealth(ctx.session, mortal.id, table.plot_wealth, ctx.epoch)
-    await add_renown(ctx.session, mortal.id, table.plot_renown, ctx.epoch)
+    await add_renown(ctx.session, mortal.id, table.plot_renown, ctx.epoch, rules=ctx.rules)
     await note(ctx, f"{mortal.name} plotted against {liege.name} and profited by it.", key="mind.plot", ids=[mortal.id, liege.id])
     return True
 

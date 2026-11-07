@@ -319,6 +319,6 @@ async def visit(ctx: TickContext, mortal: EntityRow, draft: DreamDraft) -> Dream
     if row is None:
         return None
     await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.RECEIVED_VISITATION, ctx.epoch, subject_id=draft.sender_id)
-    await add_renown(ctx.session, mortal.id, ctx.rules.dreams.visitation_renown, ctx.epoch)
+    await add_renown(ctx.session, mortal.id, ctx.rules.dreams.visitation_renown, ctx.epoch, rules=ctx.rules)
     await interpret(ctx, mortal, row)
     return row

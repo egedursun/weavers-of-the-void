@@ -9,6 +9,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.body import BodyCustomRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.mind import SKILL_MAX, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import write_blocked
@@ -18,6 +19,7 @@ from aerona.domain.enums.mind import Attribute, CareerChange, MemoryKind, SkillK
 from aerona.engine.body.book import factor
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.genetics.genome import colour_factor
 from aerona.engine.mind.aspirations import focus_rate, open_wants, steered_values
 from aerona.engine.mind.book import SKILLS_KEY, clamp_skill, effect_of, is_locked, mind_of, scaled_by, set_skill, skills_of, values_for
 from aerona.engine.mind.memories import remember
@@ -90,6 +92,7 @@ async def practise(
     holder = await session.get(EntityRow, node_id)
     if holder is not None:
         rate *= talent(rules, await effective_attributes(session, rules, holder), skill)
+        rate *= colour_factor(rules, await session.get(GenomeRow, node_id), skill)
         rate *= await focus_rate(session, rules, node_id, skill)
     rate *= learning(await variants_by_id(session, [row.variant_id]), row.variant_id)
     schooled = await session.get(MortalProfileRow, node_id)

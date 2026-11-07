@@ -18,6 +18,7 @@ from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.environment import ForcedWeatherRow, LeyLineRow, WorldSeasonRow
 from aerona.db.tables.faith import PossessionRow, SpiritProfileRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, CaptiveCohortRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -60,6 +61,7 @@ from aerona.engine.environment.control import force_weather
 from aerona.engine.environment.local import weather_here
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import exorcise, seal_with, soul_near, unseal_with
+from aerona.engine.genetics.genome import gift_factors
 from aerona.engine.gods.interventions import apply_abundance
 from aerona.engine.industry.pollution import void_scar
 from aerona.engine.interconnect.flows import FlowCategory, flowing
@@ -869,14 +871,15 @@ async def cast(
         effect="",
     )
     mastery = await school_level(ctx.session, caster.id, rite.id)
+    steadiness, strength = gift_factors(ctx.rules, await ctx.session.get(GenomeRow, caster.id), row.school)
     await practise_subject(ctx.session, ctx.rules, caster.id, SkillKind.SPELLCRAFT, subject_id=rite.id, xp=ctx.rules.skills.spellcraft_xp, epoch=ctx.epoch)
-    if rng.chance(row.backlash_chance * (1 - mastery / PERCENT * ctx.rules.skills.school_backlash_pct / PERCENT)):
+    if rng.chance(row.backlash_chance * steadiness * (1 - mastery / PERCENT * ctx.rules.skills.school_backlash_pct / PERCENT)):
         casting.succeeded, casting.backlash = False, await backlash(ctx, caster, row)
         casting.effect = f"the rite turned on {caster.name} ({casting.backlash.value})"
     else:
         damp = await dampening(ctx, caster, row)
         works = [await working(ctx, caster, target, effect, row) for effect in await effects_of(ctx, rite.id)]
-        done = [await EFFECTS[work.effect.effect](ctx, replace(work, magnitude=round_half_up(work.magnitude * damp))) for work in works]
+        done = [await EFFECTS[work.effect.effect](ctx, replace(work, magnitude=round_half_up(work.magnitude * damp * strength))) for work in works]
         if damp < 1:
             done.append("the wet weather smothered its fire")
         casting.effect = "; ".join(text for text in done if text)[:480] or "the rite was worked to no end"

@@ -50,6 +50,7 @@ class DeferredStepStatus(StrEnum):
     RUNNING = "running"
     DONE = "done"
     FAILED = "failed"
+    HELD = "held"
 
 
 class EngineStage(StrEnum):

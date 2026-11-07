@@ -286,7 +286,7 @@ async def patronise(ctx: TickContext, mortal: EntityRow, profile: MortalProfileR
     if artwork is not None:
         set_stats(artwork, renown=clamp_int((stat(artwork, "renown") or 0) + table.patronage_renown, 0, FULL))
     profile.wealth = clamp_int(profile.wealth - table.patronage_cost, 0, FULL)
-    await add_renown(ctx.session, mortal.id, table.patronage_renown, ctx.epoch)
+    await add_renown(ctx.session, mortal.id, table.patronage_renown, ctx.epoch, rules=ctx.rules)
     await note(
         ctx,
         f"{mortal.name} became the patron of {artwork.name if artwork else 'a work of art'}.",

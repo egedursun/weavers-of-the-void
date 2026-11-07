@@ -86,6 +86,7 @@ from aerona.rules.registry.folk import BiologyRules, CustomsRules
 from aerona.rules.registry.folk_belief import FolkBeliefRules
 from aerona.rules.registry.foreign_gods import ForeignGodsRules
 from aerona.rules.registry.genesis import GenesisRules
+from aerona.rules.registry.genetics import GeneticsRules, GiftRules, HouseholdRules
 from aerona.rules.registry.geography import GeographyRules
 from aerona.rules.registry.geomorphology import GeomorphologyRules
 from aerona.rules.registry.goals import GoalsRules
@@ -341,6 +342,9 @@ class Rules:
     trade_policy: TradePolicyRules = field(default_factory=TradePolicyRules)
     credit: CreditRules = field(default_factory=CreditRules)
     speculation: SpeculationRules = field(default_factory=SpeculationRules)
+    genetics: GeneticsRules = field(default_factory=GeneticsRules)
+    gift: GiftRules = field(default_factory=GiftRules)
+    households: HouseholdRules = field(default_factory=HouseholdRules)
     elasticity: ElasticityRules = field(default_factory=ElasticityRules)
     arbitrage: ArbitrageRules = field(default_factory=ArbitrageRules)
     local_renown: LocalRenownRules = field(default_factory=LocalRenownRules)

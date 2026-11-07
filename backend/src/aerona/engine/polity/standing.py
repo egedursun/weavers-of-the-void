@@ -8,6 +8,7 @@ from aerona.db.tables.culture import ArtworkProfileRow, ItemProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultDoctrineRow, CultTenetRow
+from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
@@ -130,7 +131,16 @@ async def body_and_name(ctx: TickContext, realm: Realm, ruler: EntityRow, laws: 
     if (wholeness and any(row.state in LASTING_INJURY_STATES for row in injuries)) or maimed_for_rule(custom, injuries):
         parts["maimed where wholeness is law"] = -table.unwhole
     conditions = list(await ctx.session.scalars(select(ConditionRow).where(ConditionRow.bearer_node_id == ruler.id)))
-    presence = presence_pct(ctx.rules, custom, injuries, conditions, role=ruler.mortal_role, patron_id=realm.profile.patron_son_id)
+    genome = await ctx.session.get(GenomeRow, ruler.id)
+    presence = presence_pct(
+        ctx.rules,
+        custom,
+        injuries,
+        conditions,
+        role=ruler.mortal_role,
+        patron_id=realm.profile.patron_son_id,
+        beauty=genome.beauty if genome is not None else None,
+    )
     reading = round_half_up((presence - PERCENT) * table.body_reading_pct / PERCENT)
     if reading:
         parts["the people's reading of the ruler's body"] = reading

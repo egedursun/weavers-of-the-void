@@ -25,6 +25,7 @@ class ImageSubject(ContextItem):
     megafauna: bool = False
     vehicle: VehicleKind | None = None
     ambience: WorldAmbience | None = None
+    appearance: str | None = None
 
     @property
     def direction(self) -> str:

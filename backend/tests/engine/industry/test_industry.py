@@ -92,6 +92,7 @@ async def test_a_place_takes_up_a_better_method_displaces_artisans_and_stirs_its
     guild = await make(realm.session, "Smiths", EntityType.FACTION, FactionStats(strength=30), world_id=realm.world.id)
     realm.session.add(FactionProfileRow(faction_entity_id=guild.id, kind=FactionKind.CRAFT_GUILD, home_entity_id=town.id))
     realm.session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.FUEL, quantity=400, quality=50))
+    realm.session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.COAL, quantity=400, quality=50))
     await realm.session.flush()
     book = await loaded(realm)
     row = await gauge(ctx, book, town, leys=Counter())
@@ -327,3 +328,22 @@ async def test_food_chain_steps_and_coal_seams_exist_and_meat_spoils_unless_pres
     laid = await lay_coal_seams(context(realm.session, tuned_rules(mines={"coal_seam_pct": 100})), book)
     seam = await realm.session.scalar(select(ResourceProfileRow).where(ResourceProfileRow.commodity == CommodityKind.COAL))
     assert laid >= 1 and seam is not None and not seam.revealed
+
+
+async def test_a_place_never_chooses_a_method_it_cannot_run_for_want_of_power_or_inputs(realm: Realm) -> None:
+    ctx = context(realm.session)
+    town = await settlement(realm, "Shrinewell")
+    realm.session.add(WorkshopRow(community_entity_id=town.id, kind=WorkshopKind.SHRINE_WORKSHOP, level=1, built_epoch=1))
+    realm.session.add(LabourRow(community_entity_id=town.id, job=Job.FARMING, workers=2000, output_pct=100, epoch=1))
+    await realm.session.flush()
+    book = await loaded(realm)
+    row = await gauge(ctx, book, town, leys=Counter())
+    assert 0 < row.divine < METHODS[MethodKind.DIVINE_HARVEST].energy_need * 20
+    assert allowed(book, town, METHODS[MethodKind.DIVINE_HARVEST]) is None
+    await choose_methods(ctx, book, town, MethodTally())
+    assert book.methods[town.id][ProcessKind.FARMING].method is not MethodKind.DIVINE_HARVEST
+    realm.session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.INCENSE, quantity=5000, quality=50))
+    row.divine = 5000
+    await realm.session.flush()
+    await choose_methods(ctx, book, town, MethodTally())
+    assert book.methods[town.id][ProcessKind.FARMING].method is MethodKind.DIVINE_HARVEST

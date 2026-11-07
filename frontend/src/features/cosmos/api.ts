@@ -55,6 +55,7 @@ export type NaturalLaw = Schemas['NaturalLaw']
 export const cosmosKeys = {
   cosmos: [...queryKeys.world.all, 'cosmos'] as const,
   discovery: [...queryKeys.world.all, 'cosmos', 'discovery'] as const,
+  sensed: [...queryKeys.world.all, 'cosmos', 'sensed'] as const,
   guide: (worldId: number) =>
     [...queryKeys.world.all, 'cosmos', 'guide', worldId] as const,
   state: [...queryKeys.world.all, 'state'] as const,
@@ -81,6 +82,13 @@ export function useDiscoverySummary() {
   return useQuery({
     queryKey: cosmosKeys.discovery,
     queryFn: () => unwrap(api.GET('/api/discovery-summary')),
+  })
+}
+
+export function useSensedWorlds() {
+  return useQuery({
+    queryKey: cosmosKeys.sensed,
+    queryFn: () => unwrap(api.GET('/api/sensed-worlds')),
   })
 }
 

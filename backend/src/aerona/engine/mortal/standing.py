@@ -2,8 +2,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.domain.enums.mind import ThoughtKind
+from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.profile import ensure_profile, is_held
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.rules.registry import Rules
 
 STANDING_COLUMNS = ("wealth", "renown", "honour", "infamy", "legitimacy", "stress", "health", "education")
 
@@ -17,16 +20,22 @@ async def shift(session: AsyncSession, mortal_id: int, column: str, amount: floa
     return row
 
 
-async def add_renown(session: AsyncSession, mortal_id: int, amount: float, epoch: int) -> MortalProfileRow:
-    return await shift(session, mortal_id, "renown", amount, epoch)
+async def add_renown(session: AsyncSession, mortal_id: int, amount: float, epoch: int, *, rules: Rules | None = None) -> MortalProfileRow:
+    row = await shift(session, mortal_id, "renown", amount, epoch)
+    if rules is not None and amount >= rules.thoughts.renown_thought:
+        await think(session, rules, mortal_id, ThoughtKind.GAINED_RENOWN, epoch)
+    return row
 
 
 async def add_honour(session: AsyncSession, mortal_id: int, amount: float, epoch: int) -> MortalProfileRow:
     return await shift(session, mortal_id, "honour", amount, epoch)
 
 
-async def add_infamy(session: AsyncSession, mortal_id: int, amount: float, epoch: int) -> MortalProfileRow:
-    return await shift(session, mortal_id, "infamy", amount, epoch)
+async def add_infamy(session: AsyncSession, mortal_id: int, amount: float, epoch: int, *, rules: Rules | None = None) -> MortalProfileRow:
+    row = await shift(session, mortal_id, "infamy", amount, epoch)
+    if rules is not None and amount >= rules.thoughts.infamy_thought:
+        await think(session, rules, mortal_id, ThoughtKind.WAS_SHAMED, epoch)
+    return row
 
 
 async def add_wealth(session: AsyncSession, mortal_id: int, amount: float, epoch: int) -> MortalProfileRow:

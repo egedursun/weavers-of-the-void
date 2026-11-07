@@ -125,10 +125,10 @@ CLASS_INCOME: Mapping[SocialClass, int] = MappingProxyType(
 
 JOB_GOODS: Mapping[Job, tuple[CommodityKind, ...]] = MappingProxyType(
     {
-        J.FARMING: (C.GRAIN, C.BREAD),
-        J.HERDING: (C.LIVESTOCK, C.FODDER, C.MOUNTS),
+        J.FARMING: (C.GRAIN, C.BREAD, C.FRUIT, C.TUBERS),
+        J.HERDING: (C.LIVESTOCK, C.FODDER, C.MOUNTS, C.MEAT, C.MILK, C.CHEESE, C.DUNG),
         J.FISHING: (C.FISH,),
-        J.MINING: (C.ORE, C.STONE),
+        J.MINING: (C.ORE, C.STONE, C.COAL, C.PEAT),
         J.CRAFTING: (C.TOOLS, C.CLOTH, C.WEAPONS, C.ARMOUR, C.FUEL, C.MEDICINE),
         J.TRADE: (C.LUXURIES,),
         J.CLERGY: (C.INCENSE, C.SACRED_GOODS),

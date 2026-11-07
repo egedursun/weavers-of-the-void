@@ -177,6 +177,8 @@ THOUGHTS: MappingProxyType[ThoughtKind, ThoughtSpec] = MappingProxyType(
         T.SENT_BY_THE_CREATOR: th(E.AWE, 50, "Felt something the Creator sent"),
         T.LIKED_SURROUNDINGS: th(E.CONTENTMENT, 20, "Liked what was around them"),
         T.DISLIKED_SURROUNDINGS: th(E.DISGUST, 20, "Disliked what was around them"),
+        T.PROUD_OF_HOME: th(E.PRIDE, 25, "Was proud of their home"),
+        T.ASHAMED_OF_HOME: th(E.SHAME, 30, "Was ashamed of their home"),
         T.ENJOYED_FAVOURITE: th(E.JOY, 20, "Enjoyed a favourite"),
         T.ENDURED_A_DISLIKE: th(E.DISGUST, 20, "Endured something they dislike"),
         T.ACTED_ON_CONSCIENCE: th(E.PRIDE, 35, "Did what their people hold right"),
