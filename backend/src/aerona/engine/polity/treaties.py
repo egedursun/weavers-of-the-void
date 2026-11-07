@@ -10,6 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OathRow, PolityProfileRow, TreatyBreachRow, TreatyClauseRow, TreatyProfileRow, VassalageRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, TributeRow, WarRow, WarSideRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import GoodsFlow
@@ -68,6 +69,7 @@ BOND_KINDS = MappingProxyType(
     }
 )
 ADOPT_FIXUP = "treaties_from_bonds"
+KIND = "kind"
 PEACEFUL = frozenset({ClauseKind.NON_AGGRESSION, ClauseKind.CALL_TO_ARMS})
 OFFENSIVE = frozenset({TreatyKind.ALLIANCE_OFFENSIVE, TreatyKind.CONDOTTA})
 DEFENSIVE = frozenset({TreatyKind.ALLIANCE_DEFENSIVE, TreatyKind.MARRIAGE_PACT, TreatyKind.VASSALAGE, TreatyKind.GUARANTEE, TreatyKind.COALITION})
@@ -483,11 +485,13 @@ async def vassal_rows(ctx: TickContext, book: RealmBook) -> None:
                 overlord_entity_id=overlord.entity.id,
                 treaty_entity_id=profile.treaty_entity_id,
                 since_epoch=ctx.epoch,
-                kind=kind_for(book, vassal, overlord),
+                kind=await kind_for(ctx, book, vassal, overlord),
                 locked=[],
             )
             ctx.session.add(row)
             book.vassals[vassal.entity.id] = row
+        elif KIND not in row.locked and not held(vassal.entity.id):
+            row.kind = await kind_for(ctx, book, vassal, overlord)
         row.overlord_entity_id = overlord.entity.id
         row.treaty_entity_id = profile.treaty_entity_id
         first, second = roles.get(PartyRole.VASSAL), roles.get(PartyRole.OVERLORD)

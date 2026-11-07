@@ -44,6 +44,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "mortal.willpower",
     "mortal.wisdom",
     "table.army_officers",
+    "table.beliefs",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
@@ -58,6 +59,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.genomes",
     "table.griefs",
     "table.holder_levels",
+    "table.hooks",
     "table.incubating_ideas",
     "table.injuries",
     "table.item_profiles",
@@ -83,6 +85,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
 )
 @writes(
     "mortal.hp",
+    "table.beliefs",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
@@ -90,12 +93,14 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.deeds",
     "table.entities",
     "table.favours",
+    "table.hooks",
     "table.injuries",
     "table.memories",
     "table.mortal_profiles",
     "table.persuasions",
     "table.relationships",
     "table.reputations",
+    "table.secrets",
     "table.skills",
     "table.thoughts",
 )

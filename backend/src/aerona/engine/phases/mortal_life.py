@@ -117,6 +117,7 @@ async def mortal_survey(ctx: TickContext) -> None:
 
 
 @reads(
+    "item.protection",
     "mortal.age",
     "mortal.agility",
     "mortal.beauty",
@@ -138,6 +139,7 @@ async def mortal_survey(ctx: TickContext) -> None:
     "table.cult_tenets",
     "table.culture_values",
     "table.entity_flags",
+    "table.entity_tags",
     "table.epoch_year_cursors",
     "table.genomes",
     "table.holder_levels",

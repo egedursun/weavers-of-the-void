@@ -15,6 +15,7 @@ from aerona.engine.military.alliance import betrayed_call
 from aerona.engine.military.duels import bout, fighter
 from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
+from aerona.engine.polity.subjects import protected_by
 from aerona.engine.polity.treaties import allies_called, answer_call, champion_for
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat
@@ -28,6 +29,9 @@ def comrades(book: RealmBook, entity_id: int) -> list[int]:
     found: list[int] = []
     if realm is not None:
         found.extend(member for member in realm.members if member != entity_id)
+        protector = protected_by(book, realm)
+        if protector is not None and protector.profile.core_entity_id is not None:
+            found.append(protector.profile.core_entity_id)
         if realm.profile.core_entity_id == entity_id:
             for vassal in book.vassals.values():
                 if vassal.overlord_entity_id == realm.entity.id:

@@ -758,6 +758,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "cult.followers",
     "mortal.death_year",
     "mortal.hp",
+    "mortal.lifespan",
     "people.population",
     "people.prosperity",
     "place.fertility",

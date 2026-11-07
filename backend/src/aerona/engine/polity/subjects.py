@@ -1,7 +1,11 @@
 from dataclasses import dataclass
 
+from sqlalchemy import select
+
 from aerona.constants.units import PERCENT
 from aerona.db.tables.polity import VassalageRow
+from aerona.db.tables.statecraft import SphereRow
+from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.statecraft import SubjectKind
@@ -16,6 +20,7 @@ from aerona.engine.primitives.strength import MilitaryStrength
 
 TRIBUTE_KINDS = frozenset({SubjectKind.VASSAL, SubjectKind.TRIBUTARY, SubjectKind.COLONY})
 LEVY_KINDS = frozenset({SubjectKind.VASSAL, SubjectKind.MARCH, SubjectKind.COLONY})
+PROTECTED_KINDS = frozenset({SubjectKind.CLIENT, SubjectKind.PROTECTORATE})
 FREE_CAUSES = frozenset({WarCause.INDEPENDENCE, WarCause.TRIBUTE_REVOLT, WarCause.UPRISING, WarCause.LIBERATION})
 LIBERTY = "liberty"
 LOYALTY = "loyalty"
@@ -39,13 +44,26 @@ def sends_levies(row: VassalageRow) -> bool:
     return row.kind in LEVY_KINDS
 
 
-def kind_for(book: RealmBook, vassal: Realm, overlord: Realm) -> SubjectKind:
+async def kind_for(ctx: TickContext, book: RealmBook, vassal: Realm, overlord: Realm) -> SubjectKind:
     if vassal.entity.world_id != overlord.entity.world_id:
         return SubjectKind.COLONY
+    if await ctx.session.get(SphereRow, (overlord.entity.id, vassal.entity.id)) is not None:
+        return SubjectKind.CLIENT
+    if not borders(book, vassal, overlord):
+        return SubjectKind.TRIBUTARY
     others = [realm for realm in book.realms.values() if realm.entity.id not in (vassal.entity.id, overlord.entity.id)]
     if any(borders(book, vassal, realm) and not borders(book, overlord, realm) for realm in others):
         return SubjectKind.MARCH
+    members = [member for member in vassal.members if member is not None]
+    armed = await ctx.session.scalar(select(ArmyRow.entity_id).where(ArmyRow.owner_entity_id.in_(members), ArmyRow.disbanded_epoch.is_(None)).limit(1))
+    if armed is None and vassal.profile.tier + ctx.rules.statecraft.protectorate_tiers <= overlord.profile.tier:
+        return SubjectKind.PROTECTORATE
     return SubjectKind.VASSAL
+
+
+def protected_by(book: RealmBook, realm: Realm) -> Realm | None:
+    row = book.vassals.get(realm.entity.id)
+    return book.realms.get(row.overlord_entity_id) if row is not None and row.kind in PROTECTED_KINDS else None
 
 
 async def forbidden_war(ctx: TickContext, first_id: int, second_id: int, cause: WarCause) -> bool:

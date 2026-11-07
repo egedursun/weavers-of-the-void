@@ -16,3 +16,8 @@ class TitleRules:
     restore_pct: int = rule(20, 0, 100, H, "Chance each epoch a claimant holding enough of a dormant title's lands restores it (%)")
     union_pct: int = rule(100, 0, 100, H, "Chance a mortal who comes to hold the top titles of two realms rules both in a personal union (%)")
     claim_strength: int = rule(40, 0, 100, H, "Strength of a claim on a title a realm holds lands of but not the title")
+    see_followers: int = rule(200, 0, 1_000_000, H, "Followers a faith needs before its heartland becomes a see with a seat for its foremost cleric")
+    archsee_followers: int = rule(
+        2000, 0, 1_000_000, H, "Followers a faith needs before its see becomes an archsee; the largest such faith of a world holds the high seat"
+    )
+    seat_prestige: int = rule(2, 0, 50, H, "Prestige the holder of a see, captaincy or guildmastership gains each epoch for each step of its rank")

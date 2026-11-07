@@ -58,5 +58,6 @@ class TitlesView(ApiModel):
     titles_held: list[TitleSummary]
     claims: list[TitleClaimView]
     realm_titles: list[TitleSummary]
+    seat_titles: list[TitleSummary]
     de_jure_chain: list[TitleSummary]
     ranks: list[LabelView]

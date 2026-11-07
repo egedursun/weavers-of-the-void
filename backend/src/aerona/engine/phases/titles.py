@@ -1,10 +1,12 @@
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
+from aerona.engine.polity.seats import SeatTally, tend_seats
 from aerona.engine.polity.titles import TitleTally, tend_titles
 
 
 @reads(
+    "cult.followers",
     "table.bonds",
     "table.de_jure_links",
     "table.epoch_year_cursors",
@@ -44,6 +46,10 @@ async def titles(ctx: TickContext) -> None:
     await tend_titles(ctx, tally)
     for key, value in vars(tally).items():
         ctx.count(f"titles_{key}", value)
+    seats = SeatTally()
+    await tend_seats(ctx, seats)
+    for key, value in vars(seats).items():
+        ctx.count(f"seats_{key}", value)
 
 
 PHASES = (Phase("titles", titles),)

@@ -596,6 +596,7 @@ function HoldingsCard({ ctx }: { ctx: Ctx }) {
   const empty =
     view.titles_held.length === 0 &&
     view.realm_titles.length === 0 &&
+    view.seat_titles.length === 0 &&
     view.claims.length === 0 &&
     view.de_jure_chain.length === 0
   return (
@@ -603,7 +604,7 @@ function HoldingsCard({ ctx }: { ctx: Ctx }) {
       title='Titles'
       icon={TITLE_ICON}
       wide
-      hint='The titles it holds or that its realm is ruled by, the titles it has a claim on, and the chain of titles its land belongs to by right.'
+      hint='The titles it holds or that its realm is ruled by, the seat it raised for its leader, the titles it has a claim on, and the chain of titles its land belongs to by right.'
     >
       {empty && (
         <Muted variant='caption'>Holds no title and is held by none.</Muted>
@@ -630,6 +631,14 @@ function HoldingsCard({ ctx }: { ctx: Ctx }) {
           >
             {(item) => <SummaryRow key={item.title.id} item={item} />}
           </Paged>
+        </div>
+      )}
+      {view.seat_titles.length > 0 && (
+        <div className='flex min-w-0 flex-col gap-2'>
+          <Label variant='overline'>Seat of its leader</Label>
+          {view.seat_titles.map((item) => (
+            <SummaryRow key={item.title.id} item={item} />
+          ))}
         </div>
       )}
       {view.claims.length > 0 && (

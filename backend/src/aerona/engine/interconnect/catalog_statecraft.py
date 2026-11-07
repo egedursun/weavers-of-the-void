@@ -90,6 +90,13 @@ STATECRAFT_MECHANICS: tuple[Mechanic, ...] = (
             Coupling(S.ECONOMY, "only vassals, tributaries and colonies pay tribute, and a subject without coinage rights mints no coin", E.MODIFIER),
             Coupling(S.WAR, "only vassals, marches and colonies send levies, and a subject without the right of private war makes none", E.MODIFIER),
             Coupling(S.POLITY, "a subject wishing hard for liberty demands better terms or rises", E.TRIGGER, "statecraft.liberty_revolt"),
+            Coupling(
+                S.POLITY,
+                "a subject far from its overlord is a tributary, one in its sphere a client and a small unarmed neighbour a protectorate",
+                E.TRIGGER,
+                "statecraft.protectorate_tiers",
+            ),
+            Coupling(S.WAR, "an overlord joins the wars of its clients and protectorates", E.TRIGGER),
         ),
     ),
 )

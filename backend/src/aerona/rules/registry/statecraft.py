@@ -12,6 +12,9 @@ class StatecraftRules:
     war_threat: int = rule(12, 0, 100, W, "Threat a war declared without a claim stirs in the realms that hear of it")
     breach_threat: int = rule(10, 0, 100, W, "Threat a broken treaty stirs in the realms that hear of it")
     far_threat_pct: int = rule(40, 0, 100, W, "Share of threat a realm feels when the aggressor does not border it (%)")
+    protectorate_tiers: int = rule(
+        2, 0, 10, W, "Tiers a bordering subject with no army of its own must stand below its overlord to become a protectorate the overlord defends"
+    )
     distance_threat_pct: int = rule(50, 0, 200, W, "How much distance in values swells the threat a realm feels (%)")
     threat_decay: int = rule(5, 0, 100, W, "Threat that fades each epoch")
     marriage_threat: int = rule(10, 0, 100, W, "Threat a marriage pact between two realms soothes")
