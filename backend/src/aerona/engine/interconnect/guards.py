@@ -8,6 +8,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.profile_guard import restore_held
+from aerona.db.read_memo import memo_of, table_names
 from aerona.db.repositories.chronicle import LAST_INCIDENT
 from aerona.db.tables.interconnect import ModifierRow
 from aerona.db.write_guard import HELD_SCOPE, WRITE_GUARD, HeldScope
@@ -17,6 +18,8 @@ from aerona.engine.interconnect.flows import current_category
 from aerona.engine.interconnect.registry import mechanic_keys_for_phase, suppression_key
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.modifiers import GUARD_SOURCES, ModifierIndex, live_modifiers
+
+MODIFIER_TABLES = table_names((ModifierRow,))
 
 
 @dataclass(frozen=True)
@@ -124,10 +127,21 @@ def guarded(state: GuardState) -> Iterator[None]:
         ACTIVE_GUARD.reset(token)
 
 
+async def phase_indexes(ctx: TickContext) -> tuple[GuardIndex, ModifierIndex]:
+    memo = memo_of(ctx.session, "phase_indexes", MODIFIER_TABLES)
+    found: tuple[GuardIndex, ModifierIndex] | None = memo.get(ctx.epoch) if memo is not None else None
+    if found is None:
+        found = (await GuardIndex.load(ctx.session, ctx.epoch), await ModifierIndex.load(ctx.session, ctx.epoch))
+        after = memo_of(ctx.session, "phase_indexes", MODIFIER_TABLES)
+        if after is not None:
+            after[ctx.epoch] = found
+    return found
+
+
 async def run_guarded(phase: Phase, ctx: TickContext, *, only: int | None = None) -> None:
     LAST_INCIDENT.set(None)
-    state = GuardState(await GuardIndex.load(ctx.session, ctx.epoch), mechanic_keys_for_phase(phase.name), phase.name, ctx.environment.stats.flows, only)
-    index = await ModifierIndex.load(ctx.session, ctx.epoch)
+    guard_index, index = await phase_indexes(ctx)
+    state = GuardState(guard_index, mechanic_keys_for_phase(phase.name), phase.name, ctx.environment.stats.flows, only)
     with guarded(state), live_modifiers(index, ctx.epoch, ctx.rules):
         await phase.run(ctx)
         for row in list(ctx.session.dirty):

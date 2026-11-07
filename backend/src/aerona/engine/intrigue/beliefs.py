@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 
-from sqlalchemy import func, select
+from sqlalchemy import event, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import ORMExecuteState, Session
 
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import register_index
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import BeliefRow
 from aerona.db.write_guard import held
@@ -21,6 +23,58 @@ DARING_MIN = 0.5
 DARING_MAX = 1.5
 
 
+BELIEF_INDEX = "aerona.belief_index"
+
+
+def foreign_beliefs(sync: Session, index: dict[int, dict[tuple[int, str], BeliefRow]]) -> bool:
+    for item in sync.new:
+        if isinstance(item, BeliefRow) and index.get(item.holder_node_id, {}).get((item.subject_node_id, item.attribute)) is not item:
+            return True
+    return any(isinstance(item, BeliefRow) for item in sync.deleted)
+
+
+async def beliefs_of(session: AsyncSession, holder_id: int) -> dict[tuple[int, str], BeliefRow]:
+    sync = session.sync_session
+    index: dict[int, dict[tuple[int, str], BeliefRow]] = sync.info.setdefault(BELIEF_INDEX, {})
+    if foreign_beliefs(sync, index):
+        await session.flush()
+        index = sync.info.setdefault(BELIEF_INDEX, {})
+    known = index.get(holder_id)
+    if known is None:
+        known = {}
+        for row in await session.scalars(select(BeliefRow).where(BeliefRow.holder_node_id == holder_id).order_by(BeliefRow.id)):
+            known.setdefault((row.subject_node_id, row.attribute), row)
+        index[holder_id] = known
+    return known
+
+
+def follow_beliefs(sync: Session, *_: object) -> None:
+    index: dict[int, dict[tuple[int, str], BeliefRow]] | None = sync.info.get(BELIEF_INDEX)
+    if index is None:
+        return
+    for item in sync.new:
+        if isinstance(item, BeliefRow) and item.holder_node_id in index:
+            index[item.holder_node_id].setdefault((item.subject_node_id, item.attribute), item)
+    for item in [*sync.deleted, *sync.dirty]:
+        if isinstance(item, BeliefRow):
+            index.pop(item.holder_node_id, None)
+
+
+def drop_beliefs(sync: Session, *_: object) -> None:
+    sync.info.pop(BELIEF_INDEX, None)
+
+
+def drop_beliefs_on_write(state: ORMExecuteState) -> None:
+    if not state.is_select and getattr(getattr(state.statement, "table", None), "name", BeliefRow.__tablename__) == BeliefRow.__tablename__:
+        drop_beliefs(state.session)
+
+
+event.listen(Session, "after_flush", follow_beliefs)
+event.listen(Session, "after_soft_rollback", drop_beliefs)
+event.listen(Session, "do_orm_execute", drop_beliefs_on_write)
+register_index(BELIEF_INDEX)
+
+
 async def believe(
     ctx: TickContext, holder_id: int, subject_id: int, attribute: str, truth: int, *, source: BeliefSource, confidence: int, false: bool = False
 ) -> BeliefRow | None:
@@ -33,9 +87,8 @@ async def believe(
         if false or spread <= 0
         else round_half_up(truth * (PERCENT + ctx.rng(f"belief.{holder_id}.{subject_id}.{attribute}.{ctx.epoch}").integer(-spread, spread)) / PERCENT)
     )
-    row = await ctx.session.scalar(
-        select(BeliefRow).where(BeliefRow.holder_node_id == holder_id, BeliefRow.subject_node_id == subject_id, BeliefRow.attribute == attribute).limit(1)
-    )
+    known = await beliefs_of(ctx.session, holder_id)
+    row = known.get((subject_id, attribute))
     if row is None:
         row = BeliefRow(
             holder_node_id=holder_id,
@@ -49,6 +102,7 @@ async def believe(
             locked=[],
         )
         ctx.session.add(row)
+        known[(subject_id, attribute)] = row
         return row
     if LOCK in (row.locked or []) or (row.confidence > confidence and row.as_of_epoch == ctx.epoch):
         return row
@@ -63,11 +117,7 @@ class BeliefView:
     holder_id: int
 
     async def of(self, subject_id: int, attribute: str, truth: int) -> int:
-        row = await self.session.scalar(
-            select(BeliefRow)
-            .where(BeliefRow.holder_node_id == self.holder_id, BeliefRow.subject_node_id == subject_id, BeliefRow.attribute == attribute)
-            .limit(1)
-        )
+        row = (await beliefs_of(self.session, self.holder_id)).get((subject_id, attribute))
         if row is None or row.confidence <= 0:
             return round_half_up(truth * self.rules.belief_state.prior_pct / PERCENT)
         return row.value

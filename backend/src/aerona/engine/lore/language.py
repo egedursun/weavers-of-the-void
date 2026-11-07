@@ -2,6 +2,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ArtworkProfileRow, LanguageIntelligibilityRow, LanguageRegisterRow, LanguageStandingRow, SpeakerCohortRow
 from aerona.db.tables.demography import PeopleCultureRow
@@ -118,13 +119,18 @@ async def interpreter(session: AsyncSession, rules: Rules, *communities: int, to
 
 
 async def tongues_of(session: AsyncSession, community_id: int) -> set[int]:
+    return set(await known_tongues(session, community_id))
+
+
+@memoized(BondRow, EntityRow, SpeakerCohortRow)
+async def known_tongues(session: AsyncSession, community_id: int) -> frozenset[int]:
     native = await spoken_language(session, community_id)
     found = {native.id} if native is not None else set()
     seconds = await session.scalars(
         select(SpeakerCohortRow.language_entity_id).where(SpeakerCohortRow.community_entity_id == community_id, SpeakerCohortRow.share > 0)
     )
     found.update(seconds)
-    return found
+    return frozenset(found)
 
 
 async def barrier(session: AsyncSession, rules: Rules, first: int, second: int, epoch: int) -> float:

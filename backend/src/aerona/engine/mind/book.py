@@ -1,7 +1,7 @@
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import SKILLS, TRAITS
@@ -116,12 +116,25 @@ async def write_values(session: AsyncSession, holder: ValueHolder, node_id: int,
     if write_blocked(node_id, VALUES_KEY):
         return
     if holder in CULTURE_HOLDERS:
-        await session.execute(delete(CultureValueRow).where(CultureValueRow.entity_id == node_id))
-        session.add_all(CultureValueRow(entity_id=node_id, axis=axis, value=clamp_value(values.get(axis, NEUTRAL))) for axis in ValueAxis)
+        culture = {row.axis: row for row in await rows_by_prefix(session, CultureValueRow, node_id)}
+        for axis in ValueAxis:
+            known = culture.pop(axis, None)
+            if known is None:
+                session.add(CultureValueRow(entity_id=node_id, axis=axis, value=clamp_value(values.get(axis, NEUTRAL))))
+            elif known.value != clamp_value(values.get(axis, NEUTRAL)):
+                known.value = clamp_value(values.get(axis, NEUTRAL))
+        for stale in culture.values():
+            await session.delete(stale)
     elif holder in PERSONAL_HOLDERS:
-        await session.execute(delete(PersonalityValueRow).where(PersonalityValueRow.node_id == node_id))
-        session.add_all(PersonalityValueRow(node_id=node_id, axis=axis, value=clamp_value(values.get(axis, NEUTRAL))) for axis in ValueAxis)
-    await session.flush()
+        personal = {row.axis: row for row in await rows_by_prefix(session, PersonalityValueRow, node_id)}
+        for axis in ValueAxis:
+            mine = personal.pop(axis, None)
+            if mine is None:
+                session.add(PersonalityValueRow(node_id=node_id, axis=axis, value=clamp_value(values.get(axis, NEUTRAL))))
+            elif mine.value != clamp_value(values.get(axis, NEUTRAL)):
+                mine.value = clamp_value(values.get(axis, NEUTRAL))
+        for gone in personal.values():
+            await session.delete(gone)
 
 
 @dataclass

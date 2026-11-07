@@ -101,8 +101,18 @@ def forget_flushed(sync: Session, *_: object) -> None:
     forget(sync, captured | flushing_tables(sync))
 
 
+SESSION_INDEXES: list[str] = []
+
+
+def register_index(key: str) -> None:
+    if key not in SESSION_INDEXES:
+        SESSION_INDEXES.append(key)
+
+
 def forget_all(sync: Session, *_: object) -> None:
     forget(sync, None)
+    for key in SESSION_INDEXES:
+        sync.info.pop(key, None)
 
 
 def forget_on_write(state: ORMExecuteState) -> None:
