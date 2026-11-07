@@ -13,7 +13,7 @@
 
 <p align="center">
   <img alt="Version" src="https://img.shields.io/badge/version-0.1.0-d4af37?style=flat-square">
-  <img alt="Expansions" src="https://img.shields.io/badge/expansions-85%20included-7b3fe4?style=flat-square">
+  <img alt="Expansions" src="https://img.shields.io/badge/expansions-86%20included-7b3fe4?style=flat-square">
   <img alt="Rules" src="https://img.shields.io/badge/tunable%20rules-3%2C300%2B-4b2a8c?style=flat-square">
   <img alt="Python" src="https://img.shields.io/badge/python-3.13-3776ab?style=flat-square&logo=python&logoColor=white">
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-async-009688?style=flat-square&logo=fastapi&logoColor=white">
@@ -29,7 +29,7 @@
   <a href="#the-pitch">The pitch</a> ·
   <a href="#god-cards">God cards</a> ·
   <a href="#the-cosmos">The cosmos</a> ·
-  <a href="#the-complete-edition-the-loom-and-85-expansions">85 expansions</a> ·
+  <a href="#the-complete-edition-the-loom-and-86-expansions">86 expansions</a> ·
   <a href="#a-tour-of-the-app">The app</a> ·
   <a href="#architecture">Architecture</a> ·
   <a href="#documentation">Docs</a>
@@ -55,7 +55,7 @@
   <a href="#74-starfall"><img src="common/assets/images/dlc-covers/74-starfall.jpg" width="15%" alt="Starfall"></a>
 </p>
 
-<p align="center"><sub><b>The Loom and 85 expansions, all included.</b> <a href="#the-cover-wall">See all 86 covers →</a></sub></p>
+<p align="center"><sub><b>The Loom and 86 expansions, all included.</b> <a href="#the-cover-wall">See all 87 covers →</a></sub></p>
 
 ---
 
@@ -75,8 +75,8 @@
 - [A tour of the app](#a-tour-of-the-app)
 - [The agents](#the-agents)
 - [By the numbers](#by-the-numbers)
-- [The complete edition: The Loom and 85 expansions](#the-complete-edition-the-loom-and-85-expansions)
-  - [The Loom](#the-loom) · [The eleven chapters](#the-eleven-chapters) · [The cover wall](#the-cover-wall) · [Every expansion](#every-expansion)
+- [The complete edition: The Loom and 86 expansions](#the-complete-edition-the-loom-and-86-expansions)
+  - [The Loom](#the-loom) · [The twelve chapters](#the-twelve-chapters) · [The cover wall](#the-cover-wall) · [Every expansion](#every-expansion)
   - [I](#chapter-i) · [II](#chapter-ii) · [III](#chapter-iii) · [IV](#chapter-iv) · [V](#chapter-v) · [VI](#chapter-vi) · [VII](#chapter-vii) · [VIII](#chapter-viii) · [IX](#chapter-ix) · [X](#chapter-x) · [XI](#chapter-xi)
 - [Quick start](#quick-start)
 - [Configuration](#configuration)
@@ -112,7 +112,7 @@ Nothing is scripted. Nothing is lost. Every number has a reason you can read, an
 
 - **A story nobody wrote.** No script, no event deck, no quest list. Every legend in your chronicle grows out of causes you can trace.
 - **Gods with minds of their own.** Your sons are agents, not dice rolls. They plan, they hold grudges, they lie to the council and they rebel.
-- **Depth all the way down.** Eighty-five expansions of interlocking mechanics, from the soil under a field to the death of a star, all running at once.
+- **Depth all the way down.** Eighty-six expansions of interlocking mechanics, from the soil under a field to the far side of reality, all running at once.
 - **Total control, zero lock-in.** Every rule tunable, every mechanic triggerable, every act undoable, every prompt visible. Your world lives on your disk.
 - **Beautiful by default.** A celestial interface, a living map, a 3D cosmos and a painting for every record, generated on your own machine.
 
@@ -436,8 +436,8 @@ Twenty-nine agent roles, every one on Claude Haiku, every prompt in one typed ca
 
 | | |
 |---:|---|
-| **85** | themed expansions plus **The Loom**, all included |
-| **86** | painted covers, one for The Loom and each expansion |
+| **86** | themed expansions plus **The Loom**, all included |
+| **87** | painted covers, one for The Loom and each expansion |
 | **80+** | deterministic simulation phases |
 | **3,300+** | tunable balance rules, editable live |
 | **100+** | divine tools for the sons, in 13 families |
@@ -457,15 +457,15 @@ Twenty-nine agent roles, every one on Claude Haiku, every prompt in one typed ca
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
-## The complete edition: The Loom and 85 expansions
+## The complete edition: The Loom and 86 expansions
 
 <p align="center">
   <img src="common/assets/images/collectors-edition.jpg" width="520" alt="The Weavers of the Void collector's edition box on a display pedestal">
 </p>
 
-<p align="center"><sub><b>The Collector's Edition</b> · the base experience and all 85 expansions in one box</sub></p>
+<p align="center"><sub><b>The Collector's Edition</b> · the base experience and all 86 expansions in one box</sub></p>
 
-Weavers of the Void ships as the complete edition. **The Loom** and all **85 expansions** across eleven chapters are fully integrated into the engine, the agents and the interface. There is nothing to unlock, nothing to install and nothing to wait for: every mechanic below runs in every world from the first epoch, and every one of them can be tuned, triggered and inspected from the app.
+Weavers of the Void ships as the complete edition. **The Loom** and all **86 expansions** across twelve chapters are fully integrated into the engine, the agents and the interface. There is nothing to unlock, nothing to install and nothing to wait for: every mechanic below runs in every world from the first epoch, and every one of them can be tuned, triggered and inspected from the app.
 
 ### The Loom
 
@@ -492,7 +492,7 @@ Before the gods walk and the armies march, the world needs a loom. Pull any thre
 </tr>
 </table>
 
-### The eleven chapters
+### The twelve chapters
 
 | Chapter | Expansions | What it brings |
 |---|---|---|
@@ -507,10 +507,11 @@ Before the gods walk and the armies march, the world needs a loom. Pull any thre
 | ☀ [**IX. The Gods**](#chapter-ix) | 65–72 | Forty domains, dominion, belief that reshapes gods, avatars, the court of heaven, apotheosis, laws of creation and the hungering dark |
 | 🪐 [**X. The Cosmos**](#chapter-x) | 73–80 | Orbital heavens, impacts, terraforming, thirty-four world types, rifts, star travel, deep time and turning ages |
 | 📖 [**XI. Knowledge and Eras**](#chapter-xi) | 81–85 | Discovery, scholarship, open-ended technology, the storyteller and expeditions into the dark |
+| 🌌 [**XII. Galaxies and Dimensions**](#chapter-xii) | 86 | Galaxies real and fabled, clusters and the cosmic web, travel and trade between galaxies, layered dimensions and beings from beyond |
 
 ### The cover wall
 
-The Loom and eighty-five expansions: eighty-six covers, one wall. Click any cover to jump to its features.
+The Loom and eighty-six expansions: eighty-seven covers, one wall. Click any cover to jump to its features.
 
 <p align="center">
 <a href="#the-loom"><img src="common/assets/images/dlc-covers/00-the-loom.jpg" width="11%" alt="The Loom"></a>
@@ -599,6 +600,7 @@ The Loom and eighty-five expansions: eighty-six covers, one wall. Click any cove
 <a href="#83-steam-and-lightning"><img src="common/assets/images/dlc-covers/83-steam-and-lightning.jpg" width="11%" alt="Expansion 83"></a>
 <a href="#84-fateweaver"><img src="common/assets/images/dlc-covers/84-fateweaver.jpg" width="11%" alt="Expansion 84"></a>
 <a href="#85-into-the-dark"><img src="common/assets/images/dlc-covers/85-into-the-dark.jpg" width="11%" alt="Expansion 85"></a>
+<a href="#86-the-boundless"><img src="common/assets/images/dlc-covers/86-the-boundless.jpg" width="11%" alt="Expansion 86"></a>
 </p>
 
 ### Every expansion
@@ -2581,6 +2583,43 @@ Six of them go down into the vault: a scout, a guide, a healer, a fighter, a sch
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
+<a id="chapter-xii"></a>
+
+### 🌌 XII. Galaxies and Dimensions
+
+<details open>
+<summary><b>Expansion 86</b> · <sub>1 expansion</sub></summary>
+
+<table>
+<tr>
+<td width="230" valign="top" align="center"><a href="common/assets/images/dlc-covers/86-the-boundless.jpg"><img src="common/assets/images/dlc-covers/86-the-boundless.jpg" width="220" alt="The Boundless box front"></a><br><sub>Front</sub><br><br><a href="common/assets/images/dlc-backs/86-the-boundless.jpg"><img src="common/assets/images/dlc-backs/86-the-boundless.jpg" width="220" alt="The Boundless box back"></a><br><sub>Back · click to read</sub></td>
+<td valign="top">
+
+#### 86. The Boundless
+
+*Past the last star, another sky. Past the last sky, another reality.*
+
+Until now your heavens ended at the star systems you made. The Boundless opens the rest. Every system gains an address in a galaxy, every galaxy a place in a cluster, every cluster a thread in the cosmic web. Raise galaxies of every real and fabled kind, send fleets, merchants and envoys across the dark between them, then look sideways: the cosmos is layered, and beside this reality lie others with their own laws, their own galaxies and their own inhabitants. All of it is one cosmos, and all of it is yours to shape.
+
+- **A Place in the Galaxy** — every star system sits somewhere real: core, bulge, bar, spiral arm, disc, halo or a stream torn from a swallowed neighbour, at a true distance from the centre. Position sets how crowded the night sky is, how often nearby supernovae and close stellar passes strike, how rich in metals new worlds form and where the galaxy's habitable band runs.
+- **Galaxies Real and Fabled** — spirals, barred spirals, ellipticals, lenticulars, irregulars, rings, dwarfs and starburst galaxies, beside fabled kinds: a galaxy that is a sleeping god's body, one grown as a single lattice of crystal, one whose stars run their lives backward, one dreamed into being by its peoples. Each kind sets how stars are born, which stars it holds and what its worlds can become.
+- **Structures of the Galaxy** — a central black hole that can wake into an active core and flood the inner systems with radiation, spiral arms that sweep through systems as waves of star birth, dust lanes that hide whole regions from every astronomer, globular clusters of ancient stars, galactic tides that loosen comets and a galactic year in which the whole galaxy turns.
+- **Many Galaxies, One Cosmos** — create, name, reshape, merge and unmake galaxies. Colliding galaxies ignite bursts of new stars and scatter systems into new neighbourhoods, and satellites are slowly swallowed by their hosts. Galaxies gather into groups, clusters and superclusters strung along filaments of the cosmic web around great empty voids.
+- **Crossing the Deep** — between galaxies, sails and launch windows are not enough. Voyages need galactic gates, bridges between clusters, ships that carry generations, roads laid by gods or folds through another dimension. Distance delays news and orders by centuries, so a far colony can outgrow, forget or reinvent the realm that founded it.
+- **Commerce of the Clusters** — goods only one galaxy yields, trade leagues spanning a whole cluster, envoys and treaties between galactic powers, tolls and embargoes at the gates, and peoples spread across galaxies who share one memory, or split into strangers when a gate closes.
+- **Layers of Reality** — the cosmos holds many dimensions: mirror, shadow, elemental, dream, timeless, higher, pocket, folded and fabled ones of your own design. Each has its own physics, time rate, magic, life and galaxies. Thin places, crossings and convergences join them, and the realms of the dead and the dream worlds you already know take their places among them.
+- **Beings from Beyond** — natives of other dimensions cross over as travellers, traders, wardens, refugees, swarms and minds larger than worlds, each with goals of its own. Dimensional events reshape the map: two layers drifting into convergence, one bleeding into another, a dimension collapsing or a new one being born.
+- **Yours from Edge to Edge** — create, edit, hold and delete every galaxy, cluster, crossing, dimension, being and event. A cosmic map zooms from the web of clusters down to a single region, and sons can claim galaxies, open or seal crossings and court the powers of other dimensions.
+
+**In your world:** A son opened a gate between two galaxies of one cluster. Merchants crossed first, and a shared trade tongue grew along the road. Then a convergence pressed a timeless dimension against the gate, and travellers emerged centuries after they had entered. The colony they sailed for no longer remembered its founders, and the son had to choose between sealing the gate and keeping the road alive.
+
+</td>
+</tr>
+</table>
+</details>
+
+<p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
+
 ## Quick start
 
 Four commands from a fresh clone to a living world:
@@ -2947,7 +2986,7 @@ No. Weavers of the Void runs on your Claude subscription through the Claude Agen
 Your database, backups and images stay on your disk. Only the agents' prompts and replies travel to Claude.
 
 **Are the expansions extra?**
-No. The Loom and all 85 expansions are part of every world from the first epoch.
+No. The Loom and all 86 expansions are part of every world from the first epoch.
 
 **Can I play in Turkish?**
 Yes. Choose Turkish as the lore language in the genesis wizard, and every chronicle, name and legend is written in it; even the engine's own chronicle lines are localised by an agent. The interface itself is English.
@@ -2979,8 +3018,8 @@ It is seeded. The same world with the same seed produces the same history, which
 | [Agents and tools](docs/spec/08-agents-and-tools.md) · [Prompts](docs/spec/09-prompts.md) | Every agent role, every son tool, every prompt |
 | [Epoch pipeline](docs/spec/10-epoch-pipeline.md) | The life of an epoch, resume, backups and the live stream |
 | [API](docs/spec/11-api.md) · [Frontend](docs/spec/12-frontend.md) | Every route and every screen |
-| [Depth expansion](docs/spec/13-depth-expansion.md) · [Interconnection](docs/spec/13-interconnection.md) · [Coverage](docs/spec/13-coverage.md) | The mechanics behind the 85 expansions and how they weave together |
-| [Expansions](docs/spec/15-dlc-ideas.md) | The Loom and all 85 expansions in full |
+| [Depth expansion](docs/spec/13-depth-expansion.md) · [Interconnection](docs/spec/13-interconnection.md) · [Coverage](docs/spec/13-coverage.md) | The mechanics behind the 86 expansions and how they weave together |
+| [Expansions](docs/spec/15-dlc-ideas.md) | The Loom and all 86 expansions in full |
 | [Mechanic coverage](docs/spec/coverage.md) | Traceability from every mechanic to its module, trigger, control, screen and test |
 
 ---

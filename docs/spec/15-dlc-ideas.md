@@ -1581,7 +1581,7 @@ Six of them go down into the vault: a scout, a guide, a healer, a fighter, a sch
 
 ---
 
-## XII. The Boundless
+## XII. Galaxies and Dimensions
 
 ### 86. The Boundless
 
