@@ -146,10 +146,13 @@ def restore_owned(row: object) -> list[str]:
     shape = owned_shape(state.mapper)
     if shape is None or state.pending:
         return []
+    changed = [column for column in shape.columns if column in state.committed_state]
+    if not changed:
+        return []
     owners = owner_ids(row, shape)
     held = held_columns(row)
     restored: list[str] = []
-    for column in shape.columns:
+    for column in changed:
         history = get_history(row, column)
         if not history.deleted or not history.has_changes():
             continue
@@ -164,12 +167,15 @@ def restore_held(row: object) -> list[str]:
     shape = _shape(state.mapper)
     if shape is None or state.pending:
         return restore_owned(row)
+    changed = [column for column in shape.columns if column in state.committed_state]
+    if not changed:
+        return []
     node_id = getattr(row, shape.node_column)
     if node_id is None:
         return []
     held = held_columns(row)
     restored: list[str] = []
-    for column in shape.columns:
+    for column in changed:
         history = get_history(row, column)
         if not history.deleted or not history.has_changes():
             continue
