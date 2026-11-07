@@ -244,7 +244,7 @@ export function ItemRow({
     <div className='flex min-w-0 flex-col gap-3 rounded-lg border bg-muted/10 p-3'>
       <div className='flex min-w-0 flex-wrap items-start gap-3'>
         <Medallion icon={icon} tone={tone} size='sm' />
-        <div className='flex min-w-0 flex-1 basis-48 flex-col gap-1'>
+        <div className='flex min-w-0 flex-1 basis-36 flex-col gap-1'>
           <div className='flex min-w-0 flex-wrap items-center gap-2'>
             <Text weight='semibold' truncate>
               {title}
