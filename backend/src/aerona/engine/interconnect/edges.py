@@ -34,11 +34,13 @@ def phase_table() -> dict[str, Phase]:
     return {phase.name: phase for phase in all_phases()}
 
 
+@cache
 def mechanic_reads(mechanic: Mechanic) -> frozenset[str]:
     table = phase_table()
     return frozenset(key for name in mechanic.phases if name in table for key in declared_reads(table[name].run) if key not in INFRASTRUCTURE)
 
 
+@cache
 def mechanic_writes(mechanic: Mechanic) -> frozenset[str]:
     table = phase_table()
     return frozenset(key for name in mechanic.phases if name in table for key in declared_writes(table[name].run) if key not in INFRASTRUCTURE)
