@@ -100,7 +100,8 @@ class SubstitutionRules:
 
 @dataclass(frozen=True)
 class OwnershipRules:
-    wage_per_10_workers: int = rule(3, 0, 100, G, "Value ten workers at a site are paid each epoch")
+    coin_pct: int = rule(1, 0, 100, G, "Coin each hundred value of goods sold or used brings a site's ledger (%)")
+    wage_per_1000_workers: int = rule(20, 0, 1000, G, "Coin a thousand workers at a site are paid each epoch")
     upkeep_per_level: int = rule(4, 0, 100, G, "Value each level of a workshop costs its owner to keep each epoch")
     invest_pct: int = rule(20, 0, 100, G, "Share of a site's profit that goes into its settlement's investment pool (%)")
     wealth_per_value: int = rule(60, 1, 1000, G, "Value of profit that raises a mortal owner's wealth by one point")

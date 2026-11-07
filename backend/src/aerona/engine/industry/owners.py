@@ -29,7 +29,7 @@ from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 
-TENTH = 10
+THOUSAND = 1000
 HARVEST_STEP = "harvest"
 
 
@@ -145,12 +145,16 @@ async def buy(ctx: TickContext, workshop: WorkshopRow, buyer_id: int) -> int | N
     return price
 
 
+def coin(ctx: TickContext, value: float) -> float:
+    return value * ctx.rules.ownership.coin_pct / PERCENT / PERCENT
+
+
 def run_value(book: EconomyBook, ctx: TickContext, run: ProductionRunRow) -> tuple[float, float]:
     revenue = run.quantity * local_price(book, run.community_entity_id, run.output) * premium(ctx.rules, run.quality)
     inputs = sum(
         units * local_price(book, run.community_entity_id, CommodityKind(commodity)) for commodity, units in run.inputs.items() if commodity in COMMODITY_KEYS
     )
-    return revenue, inputs
+    return coin(ctx, revenue), coin(ctx, inputs)
 
 
 COMMODITY_KEYS = frozenset(kind.value for kind in CommodityKind)
@@ -190,7 +194,7 @@ async def ledgers_of(
             revenue += await subsidy_paid(ctx, policies, community, run.output, revenue, tally=policy_tally)
         ledger.revenue += revenue
         ledger.inputs += inputs
-        ledger.wages += run.workers * table.wage_per_10_workers / TENTH
+        ledger.wages += run.workers * table.wage_per_1000_workers / THOUSAND
     return ledgers
 
 

@@ -20,6 +20,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.finance.credit import owed
 from aerona.engine.industry.methods import local_price
+from aerona.engine.industry.owners import coin
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 
 PERCENT_FIGURES = frozenset({"unemployment", "market_access"})
@@ -46,7 +47,7 @@ class Figures:
 
 async def output_of(ctx: TickContext, book: EconomyBook, members: set[int]) -> int:
     runs = await ctx.session.scalars(select(ProductionRunRow).where(ProductionRunRow.epoch == ctx.epoch, ProductionRunRow.community_entity_id.in_(members)))
-    return round_half_up(sum(run.quantity * local_price(book, run.community_entity_id, run.output) for run in runs))
+    return round_half_up(coin(ctx, sum(run.quantity * local_price(book, run.community_entity_id, run.output) for run in runs)))
 
 
 async def price_index_of(ctx: TickContext, members: set[int]) -> int:

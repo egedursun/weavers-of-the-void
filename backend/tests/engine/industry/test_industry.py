@@ -200,9 +200,9 @@ async def test_owners_take_profit_after_costs_and_taxes_and_lobby_when_taxed(rea
             step="forge_tools",
             workshop=WorkshopKind.FORGE,
             output=CommodityKind.TOOLS,
-            quantity=40,
+            quantity=40000,
             quality=60,
-            inputs={"ore": 5},
+            inputs={"ore": 5000},
             workers=20,
             method=MethodKind.BLOOMERY,
         )
