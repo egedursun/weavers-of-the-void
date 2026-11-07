@@ -313,7 +313,8 @@ async def choose_methods(ctx: TickContext, book: EconomyBook, community: EntityR
             continue
         options = [spec for spec in PROCESS_METHODS[process] if allowed(book, community, spec, banned=banned) is None] or [default_method(process)]
         current = METHODS[row.method] if row is not None else None
-        worth = {spec.kind: await expected_profit(ctx, book, community, spec, nature=nature) for spec in {*options, *([current] if current else [])}}
+        candidates = dict.fromkeys([*options, *([current] if current else [])])
+        worth = {spec.kind: await expected_profit(ctx, book, community, spec, nature=nature) for spec in candidates}
         best = min(options, key=lambda spec: (-worth[spec.kind], spec.kind.value))
         if current is not None and current in options and worth[best.kind] <= worth[current.kind] * margin:
             continue

@@ -286,7 +286,7 @@ async def weather_attributes(session: AsyncSession, rules: Rules, node: Bodied, 
                 current[member] = clamp_attribute(current[member] - table.age_decline)
     if isinstance(node, EntityRow):
         conditions = await session.scalars(select(ConditionRow.kind).where(ConditionRow.bearer_node_id == node.id, ConditionRow.ended_epoch.is_(None)))
-        for kind in set(conditions):
+        for kind in sorted(set(conditions)):
             for member in CONDITION_ATTRIBUTES[kind]:
                 if current[member] > table.condition_floor:
                     current[member] = max(table.condition_floor, current[member] - table.condition_loss)

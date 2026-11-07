@@ -104,7 +104,7 @@ def observed(members: list[tuple[EntityRow, GenomeRow]]) -> dict[str, dict[str, 
 
 
 def drifted(rules_pct: int, current: dict[str, int], seen: dict[str, int]) -> dict[str, int]:
-    keys = set(current) | set(seen)
+    keys = sorted(set(current) | set(seen))
     return normalised({key: current.get(key, 0) + (seen.get(key, 0) - current.get(key, 0)) * rules_pct / PERCENT for key in keys})
 
 

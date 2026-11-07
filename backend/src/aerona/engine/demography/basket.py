@@ -2,6 +2,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.attributes import flag_modified, instance_state
 
 from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
 from aerona.catalog.needs import EFFECT_CLASSES, SERVE_ORDER, SHORTFALL_EFFECTS, basket_weight
@@ -38,6 +39,9 @@ WARM_BANDS = frozenset({TemperatureBand.WARM, TemperatureBand.HOT})
 PLENTY_CLASSES = (SocialClass.NOBLE, SocialClass.MERCHANT)
 LUXURY_CAP = PERCENT * 10
 NeedKey = tuple[SocialClass, CommodityKind]
+
+
+NEED_COLUMNS = ("wanted", "got", "epoch")
 
 
 @dataclass(frozen=True)
@@ -233,6 +237,10 @@ async def save_basket(ctx: TickContext, community: EntityRow, basket: Basket, fo
     for key, row in found.items():
         if key not in basket.rows and row.held_pct is None:
             row.wanted, row.got, row.epoch = 0, 0, ctx.epoch
+    for row in found.values():
+        if instance_state(row).modified:
+            for name in NEED_COLUMNS:
+                flag_modified(row, name)
     standing = await standing_of(ctx.session, community.id)
     for social_class, need in basket.classes.items():
         kept = standing.get(social_class)

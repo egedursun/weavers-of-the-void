@@ -189,8 +189,12 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
 
 
 async def store_quotes(ctx: TickContext, market: EntityRow, quotes: dict[CommodityKind, Quote]) -> None:
+    current = {
+        row.commodity: row
+        for row in await ctx.session.scalars(select(MarketPriceRow).where(MarketPriceRow.market_entity_id == market.id, MarketPriceRow.epoch == ctx.epoch))
+    }
     for quote in quotes.values():
-        row = await ctx.session.get(MarketPriceRow, (market.id, quote.commodity, ctx.epoch))
+        row = current.get(quote.commodity)
         if row is None:
             ctx.session.add(
                 MarketPriceRow(

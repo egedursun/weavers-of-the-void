@@ -107,7 +107,7 @@ async def base_will(ctx: TickContext, realm: Realm) -> dict[ValueAxis, int]:
             if not advisers:
                 return own
             weight = ctx.rules.government.ruler_weight_pct / PERCENT
-            return {axis: round_half_up(own.get(axis, 0) * weight + advisers.get(axis, 0) * (1 - weight)) for axis in set(own) | set(advisers)}
+            return {axis: round_half_up(own.get(axis, 0) * weight + advisers.get(axis, 0) * (1 - weight)) for axis in sorted(set(own) | set(advisers))}
     if profile.decision_rule is DecisionRule.COUNCIL:
         voted = await counsel(ctx, realm, exclude=None)
         if voted:

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.engine import LOCATION_CHAIN_MAX_HOPS, SUBTREE_STEP_LIMIT
 from aerona.db.bond_index import bond_lookup
-from aerona.db.read_memo import memoized
+from aerona.db.read_memo import memo_of, memoized, table_names
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
@@ -19,16 +19,24 @@ from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.son import SonStatus
 
 ACTIVE_ONLY = (BondState.ACTIVE,)
+CANON_TABLES = table_names((EntityRow,))
 
 
 async def canon(session: AsyncSession, types: Iterable[EntityType] | None = None, world_id: int | None = None) -> list[EntityRow]:
-    statement = select(EntityRow).where(EntityRow.status == EntityStatus.CANON)
     wanted = list(types) if types is not None else None
-    if wanted is not None:
-        statement = statement.where(EntityRow.entity_type.in_(wanted))
-    if world_id is not None:
-        statement = statement.where(EntityRow.world_id == world_id)
-    return list(await session.scalars(statement.order_by(EntityRow.id)))
+    key = (tuple(sorted(wanted)) if wanted is not None else None, world_id)
+    memo = memo_of(session, "canon", CANON_TABLES)
+    found: list[EntityRow] | None = memo.get(key) if memo is not None else None
+    if found is None:
+        statement = select(EntityRow).where(EntityRow.status == EntityStatus.CANON)
+        if wanted is not None:
+            statement = statement.where(EntityRow.entity_type.in_(wanted))
+        if world_id is not None:
+            statement = statement.where(EntityRow.world_id == world_id)
+        found = list(await session.scalars(statement.order_by(EntityRow.id)))
+        if memo is not None:
+            memo[key] = found
+    return list(found)
 
 
 async def entity(session: AsyncSession, entity_id: int | None) -> EntityRow | None:
