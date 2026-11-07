@@ -5,33 +5,62 @@ cd "$ROOT"
 STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
 [ -z "$STAGED" ] && exit 0
 PYTHON="$ROOT/backend/.venv/bin/python"
-echo "pre-commit: source rules, prompt bias, wiring, control, deprecated APIs, transfers"
-"$PYTHON" scripts/check_source_rules.py
-"$PYTHON" scripts/check_prompt_bias.py
-"$PYTHON" scripts/check_wiring.py
-"$PYTHON" scripts/check_control.py
-"$PYTHON" scripts/check_deprecated_apis.py
-"$PYTHON" scripts/check_transfers.py
+LOGS=$(mktemp -d)
+trap 'rm -rf "$LOGS"' EXIT
+JOBS=""
+
+run() {
+  name=$1
+  shift
+  ("$@" > "$LOGS/$name.log" 2>&1; echo $? > "$LOGS/$name.status") &
+  JOBS="$JOBS $name"
+}
+
+run source_rules "$PYTHON" scripts/check_source_rules.py
+run prompt_bias "$PYTHON" scripts/check_prompt_bias.py
+run wiring "$PYTHON" scripts/check_wiring.py
+run control "$PYTHON" scripts/check_control.py
+run deprecated_apis "$PYTHON" scripts/check_deprecated_apis.py
+run transfers "$PYTHON" scripts/check_transfers.py
+
 if echo "$STAGED" | grep -qE '^(backend/|scripts/).*\.py$'; then
-  echo "pre-commit: ruff, mypy, import layers"
-  (cd backend && .venv/bin/ruff check src && .venv/bin/ruff format --check src && .venv/bin/mypy src/aerona && .venv/bin/lint-imports)
+  run static sh -c 'cd backend && .venv/bin/ruff check src && .venv/bin/ruff format --check src && .venv/bin/mypy src/aerona && .venv/bin/lint-imports'
 fi
+
+PROVING=""
 if echo "$STAGED" | grep -qE '^backend/src/aerona/(engine|db)/.*\.py$|^backend/tests/engine/core/test_god_control\.py$'; then
-  echo "pre-commit: every engine step obeys holds and runs when forced (rule 6)"
-  (cd backend && .venv/bin/pytest -q -p no:cacheprovider -n auto --dist worksteal tests/engine/core/test_god_control.py)
+  PROVING="tests/engine/core/test_god_control.py"
 fi
 if echo "$STAGED" | grep -qE '^backend/(src|tests)/.*\.py$|^backend/pyproject\.toml$'; then
-  echo "pre-commit: every agent tool runs, every tool field is described, a full scripted epoch runs, and every test importing the change passes (rule 8)"
-  COVERING=$("$PYTHON" scripts/covering_tests.py)
-  (cd backend && .venv/bin/pytest -q -p no:cacheprovider -n auto --dist worksteal \
-    tests/tools/test_every_tool.py \
-    tests/tools/test_catalogue.py \
-    tests/epoch/test_epoch_llm.py::test_full_epoch_with_scripted_model \
-    tests/epoch/test_epoch_engine_only.py::test_engine_only_epochs_run_end_to_end \
-    $COVERING)
+  PROVING="$PROVING tests/tools/test_every_tool.py tests/tools/test_catalogue.py"
+  PROVING="$PROVING tests/epoch/test_epoch_llm.py::test_full_epoch_with_scripted_model"
+  PROVING="$PROVING tests/epoch/test_epoch_engine_only.py::test_engine_only_epochs_run_end_to_end"
+  PROVING="$PROVING $("$PYTHON" scripts/covering_tests.py)"
 fi
+if [ -n "$PROVING" ]; then
+  run proving sh -c "cd backend && .venv/bin/pytest -q -p no:cacheprovider -n auto --dist worksteal $PROVING"
+fi
+
 FRONT=$(echo "$STAGED" | grep -E '^frontend/.*\.(ts|tsx)$' | grep -v '^frontend/src/api/generated/' | sed 's#^frontend/##' || true)
 if [ -n "$FRONT" ]; then
-  echo "pre-commit: tsc, eslint, prettier"
-  (cd frontend && npx tsc -b && echo "$FRONT" | xargs npx eslint --no-warn-ignored && echo "$FRONT" | xargs npx prettier --check)
+  echo "$FRONT" > "$LOGS/front.list"
+  run frontend sh -c "cd frontend && npx tsc -b && xargs npx eslint --no-warn-ignored < '$LOGS/front.list' && xargs npx prettier --check < '$LOGS/front.list'"
+fi
+
+echo "pre-commit: running$JOBS in parallel"
+wait
+FAILED=""
+for name in $JOBS; do
+  status=$(cat "$LOGS/$name.status" 2>/dev/null || echo 1)
+  if [ "$status" = "0" ]; then
+    echo "pre-commit: $name ok ($(tail -n 1 "$LOGS/$name.log"))"
+  else
+    echo "pre-commit: $name FAILED"
+    cat "$LOGS/$name.log"
+    FAILED="$FAILED $name"
+  fi
+done
+if [ -n "$FAILED" ]; then
+  echo "pre-commit: failed:$FAILED"
+  exit 1
 fi

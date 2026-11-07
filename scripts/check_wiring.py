@@ -29,9 +29,22 @@ def frontend_text() -> str:
     return "\n".join(path.read_text(encoding="utf-8") for path in FRONTEND.rglob("*") if frontend_source(path))
 
 
+WORD = re.compile(r"\w+")
+WORD_HOMES: dict[str, frozenset[Path]] = {}
+
+
+def word_homes(texts: dict[Path, str]) -> dict[str, frozenset[Path]]:
+    if not WORD_HOMES:
+        homes: dict[str, set[Path]] = {}
+        for path, text in texts.items():
+            for word in set(WORD.findall(text)):
+                homes.setdefault(word, set()).add(path)
+        WORD_HOMES.update({word: frozenset(paths) for word, paths in homes.items()})
+    return WORD_HOMES
+
+
 def used_elsewhere(name: str, home: Path, texts: dict[Path, str]) -> bool:
-    pattern = re.compile(rf"\b{name}\b")
-    return any(path != home and pattern.search(text) for path, text in texts.items())
+    return bool(word_homes(texts).get(name, frozenset()) - {home})
 
 
 def orphan_enums(texts: dict[Path, str]) -> list[str]:
@@ -45,11 +58,11 @@ def orphan_enums(texts: dict[Path, str]) -> list[str]:
 
 
 def orphan_tables(texts: dict[Path, str]) -> list[str]:
-    outside = {path: text for path, text in texts.items() if not path.is_relative_to(TABLES)}
+    homes = word_homes(texts)
     found: list[str] = []
     for path in sorted(TABLES.rglob("*.py")):
         for name in re.findall(r"^class (\w+Row)\(", texts[path], re.MULTILINE):
-            if not any(re.search(rf"\b{name}\b", text) for text in outside.values()):
+            if not any(not home.is_relative_to(TABLES) for home in homes.get(name, frozenset())):
                 found.append(f"{path.relative_to(ROOT)}: table {name} is never read or written outside db/tables")
     return found
 

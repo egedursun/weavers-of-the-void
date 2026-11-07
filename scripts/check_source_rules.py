@@ -1,8 +1,13 @@
 import ast
+import hashlib
 import io
+import json
+import os
 import re
 import sys
+import tempfile
 import tokenize
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -268,8 +273,51 @@ def check_file(path: Path) -> list[Violation]:
     return found
 
 
+RULES_VERSION = hashlib.sha1(Path(__file__).read_bytes()).hexdigest()
+CACHE = Path(tempfile.gettempdir()) / f"aerona-source-rules-{RULES_VERSION[:16]}.json"
+PARALLEL_FROM = 64
+
+
+def cache_key(path: Path) -> str:
+    return hashlib.sha1(str(path.relative_to(ROOT)).encode() + b"\0" + path.read_bytes()).hexdigest()
+
+
+def load_cache() -> dict[str, list[list[object]]]:
+    try:
+        found = json.loads(CACHE.read_text())
+    except (OSError, ValueError):
+        return {}
+    return found if isinstance(found, dict) else {}
+
+
+def store_cache(cache: dict[str, list[list[object]]]) -> None:
+    staging = CACHE.with_suffix(f".{os.getpid()}.tmp")
+    try:
+        staging.write_text(json.dumps(cache))
+        staging.replace(CACHE)
+    except OSError:
+        staging.unlink(missing_ok=True)
+
+
+def checked(path: Path) -> list[list[object]]:
+    return [[str(violation.path), violation.line, violation.rule] for violation in check_file(path)]
+
+
 def main() -> int:
-    violations = [violation for path in iter_files() for violation in check_file(path)]
+    cache = load_cache()
+    files = iter_files()
+    keys = {path: cache_key(path) for path in files}
+    missing = [path for path in files if keys[path] not in cache]
+    if len(missing) >= PARALLEL_FROM:
+        with ProcessPoolExecutor() as pool:
+            results = list(pool.map(checked, missing, chunksize=32))
+    else:
+        results = [checked(path) for path in missing]
+    for path, result in zip(missing, results, strict=True):
+        cache[keys[path]] = result
+    if missing:
+        store_cache({keys[path]: cache[keys[path]] for path in files})
+    violations = [Violation(Path(str(path)), int(str(line)), str(rule)) for file in files for path, line, rule in cache[keys[file]]]
     for violation in violations:
         print(violation.render())
     print(f"source rules: {len(violations)} violation(s)")
