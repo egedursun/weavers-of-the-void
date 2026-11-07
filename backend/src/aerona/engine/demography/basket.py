@@ -31,6 +31,7 @@ from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat
+from aerona.engine.primitives.transfers import move_amount
 from aerona.rules.registry import Rules
 
 E = ShortfallEffect
@@ -321,9 +322,8 @@ async def sicken(ctx: TickContext, community: EntityRow, short: int) -> int:
         count = round_half_up(rows[key].count * ctx.rules.consumption.sickness_pct / PERCENT * short / PERCENT)
         if count <= 0:
             continue
-        rows[key].count -= count
-        row_for(ctx.session, rows, community.id, (band, sex, social_class, CohortCondition.SICK), ctx.epoch).count += count
-        moved += count
+        if move_amount(rows[key], row_for(ctx.session, rows, community.id, (band, sex, social_class, CohortCondition.SICK), ctx.epoch), "count", count):
+            moved += count
     if moved >= ctx.rules.consumption.notable_sick:
         await note(ctx, f"With no medicine to be had, {moved} of {community.name} fell sick.", key="consumption.sickness", ids=[community.id])
     return moved

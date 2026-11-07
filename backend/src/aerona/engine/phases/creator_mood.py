@@ -16,6 +16,7 @@ from aerona.engine.primitives.numbers import clamp_percent
     "table.action_records",
     "table.bonds",
     "table.cosmos",
+    "table.creator_mood_inputs",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.messages",

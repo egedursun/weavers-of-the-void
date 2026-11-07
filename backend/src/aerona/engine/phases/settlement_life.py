@@ -89,6 +89,7 @@ JUSTICE_FULL = 100
     "table.place_environment",
     "table.polity_members",
     "table.pressures",
+    "table.public_opinion",
     "table.quarantines",
     "table.region_environment",
     "table.settlement_infrastructure",

@@ -14,7 +14,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.intrigue import FavourOrigin
+from aerona.domain.enums.intrigue import FavourOrigin, HookDemand
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind, TreatyStatus
@@ -24,6 +24,7 @@ from aerona.engine.communication.post import proposal_pending
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.beliefs import daring
 from aerona.engine.intrigue.favours import owe
+from aerona.engine.intrigue.leverage import leaned_on
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.mortal.kinship import marry
 from aerona.engine.notes import note
@@ -52,7 +53,9 @@ from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.society import move_stock
 from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.primitives.strength import MilitaryStrength
+from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.relations.persuasion import envoy_sways
+from aerona.engine.renown.currencies import realm_of_community, ruler_of_realm
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import declare_war
 
@@ -208,9 +211,18 @@ async def allies_called(ctx: TickContext, party_id: int, side: WarSide | None = 
     return found
 
 
+async def leader_of(ctx: TickContext, community_id: int) -> int | None:
+    realm = await realm_of_community(ctx.session, community_id)
+    return await ruler_of_realm(ctx.session, realm) if realm is not None else None
+
+
 async def answer_call(ctx: TickContext, ally_id: int, party_id: int) -> bool:
     table = ctx.rules.treaties
     if ctx.rng(f"call.{ally_id}.{party_id}.{ctx.epoch}").chance(table.call_to_arms_chance):
+        return True
+    asker, answerer = await leader_of(ctx, party_id), await leader_of(ctx, ally_id)
+    if asker is not None and answerer is not None and await leaned_on(ctx, asker, answerer, HookDemand.SUPPORT):
+        ctx.count("calls_answered_for_a_debt")
         return True
     ally = await living_entity(ctx.session, ally_id)
     if ally is not None and ally.entity_type in COMMUNITY_TYPES:
@@ -357,9 +369,7 @@ async def pay_tribute(ctx: TickContext, profile: TreatyProfileRow, clause: Treat
     receiver_realm = await ctx.session.get(PolityProfileRow, receiver.id)
     if payer_realm is not None and receiver_realm is not None:
         moved = min(payer_realm.treasury, amount * table.realm_tribute_scale)
-        payer_realm.treasury -= moved
-        receiver_realm.treasury += moved
-        paid = paid or moved > 0
+        paid = (move_amount(payer_realm, receiver_realm, "treasury", moved) and moved > 0) or paid
     if paid:
         clause.last_kept_epoch = ctx.epoch
         ctx.count("tributes_paid")
@@ -495,9 +505,7 @@ async def vassal_duties(ctx: TickContext, book: RealmBook) -> dict[str, int]:
         if vassal is None or overlord is None:
             continue
         owed = round_half_up(vassal.profile.treasury * row.tribute_pct / PERCENT) if pays_tribute(row) else 0
-        if owed > 0:
-            vassal.profile.treasury -= owed
-            overlord.profile.treasury += owed
+        if owed > 0 and move_amount(vassal.profile, overlord.profile, "treasury", owed):
             counts["tribute"] += owed
         if sends_levies(row):
             counts["levies"] += await send_levies(ctx, vassal.profile.core_entity_id, overlord.profile.core_entity_id, row.levy_pct)

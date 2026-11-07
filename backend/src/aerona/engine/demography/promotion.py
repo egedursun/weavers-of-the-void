@@ -27,6 +27,7 @@ from aerona.engine.phases.births import NOTABLE_ROLES, raise_notable
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import active_bonds, add_flag, living_entity, remove_flag
 from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.transfers import move_amount
 
 MAIMED_KEY = "maimed"
 F = BodyFunction
@@ -176,9 +177,9 @@ async def sync_maimed(ctx: TickContext, community: EntityRow) -> int:
         part = min(rows[key].count, abs(gap) - moved)
         if part <= 0:
             break
-        rows[key].count -= part
         target = (key[0], key[1], key[2], CohortCondition.MAIMED if gap > 0 else CohortCondition.NONE)
-        row_for(ctx.session, rows, community.id, target, ctx.epoch).count += part
+        if not move_amount(rows[key], row_for(ctx.session, rows, community.id, target, ctx.epoch), "count", part):
+            break
         moved += part
     return moved
 
@@ -201,9 +202,9 @@ async def sync_veterans(ctx: TickContext, community: EntityRow) -> int:
         part = min(rows[key].count, abs(gap) - moved)
         if part <= 0:
             break
-        rows[key].count -= part
         target = (key[0], key[1], key[2], CohortCondition.VETERAN if gap > 0 else CohortCondition.NONE)
-        row_for(ctx.session, rows, community.id, target, ctx.epoch).count += part
+        if not move_amount(rows[key], row_for(ctx.session, rows, community.id, target, ctx.epoch), "count", part):
+            break
         moved += part
     return moved
 

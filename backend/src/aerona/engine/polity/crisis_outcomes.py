@@ -17,6 +17,7 @@ from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.crises import DEMAND_TEXT, CrisisTally, Verdict, ripe_crises
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.services.war import declare_war
 
 LEGITIMACY = "legitimacy"
@@ -54,9 +55,7 @@ async def concede(ctx: TickContext, book: RealmBook, crisis: CrisisRow, demander
         target.profile.state_religion_id = crisis.subject_node_id
         return True
     paid = min(crisis.amount, max(0, target.profile.treasury))
-    target.profile.treasury -= paid
-    demander.profile.treasury += paid
-    return paid > 0
+    return paid > 0 and move_amount(target.profile, demander.profile, "treasury", paid)
 
 
 async def reward_backers(ctx: TickContext, crisis: CrisisRow, demander: Realm) -> None:

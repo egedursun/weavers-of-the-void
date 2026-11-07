@@ -55,6 +55,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import add_flag, connect, has_flag, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.transfers import move_amount
 from aerona.rules.registry import Rules
 
 TWENTY = 20
@@ -802,9 +803,8 @@ async def dowry(ctx: TickContext, book: HouseBook, house_id: int, spouse: Entity
     if giver is None or giver not in book.profiles or house_id not in book.profiles:
         return
     amount = round_half_up(book.profiles[giver].wealth * ctx.rules.houses.dowry_pct / PERCENT)
-    if amount and "wealth" not in book.profiles[giver].locked:
-        book.profiles[giver].wealth -= amount
-        book.profiles[house_id].wealth += amount
+    if amount:
+        move_amount(book.profiles[giver], book.profiles[house_id], "wealth", amount)
 
 
 async def break_celibacy(ctx: TickContext, *mortals: EntityRow) -> None:

@@ -3,23 +3,31 @@ from dataclasses import dataclass
 from sqlalchemy import or_, select
 
 from aerona.constants.units import PERCENT
-from aerona.db.tables.economy import TradeRouteProfileRow
+from aerona.db.tables.economy import LoanRow, TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import CompanyProfileRow, CompanyShareRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.military import OccupationRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.economy import LoanStatus
+from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.polity import GovernmentKind
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
+from aerona.engine.polity.book import RealmBook
+from aerona.engine.polity.formation import found_polity, refresh_realms
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import active_bonds, add_flag, close
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.services.community_relations import change_relation
 
 POWER = 3
 WEALTH = "wealth"
@@ -33,6 +41,9 @@ class CompanyTally:
     dividends: int = 0
     collapsed: int = 0
     conquered: int = 0
+    guarded: int = 0
+    defaulted: int = 0
+    dominions: int = 0
 
 
 async def realm_of(ctx: TickContext, community_id: int | None) -> int | None:
@@ -112,16 +123,46 @@ async def found_companies(ctx: TickContext, tally: CompanyTally) -> None:
             tally.chartered += 1
 
 
-async def pay_dividends(ctx: TickContext, row: CompanyProfileRow, tally: CompanyTally) -> None:
+async def pay_dividends(ctx: TickContext, company: EntityRow, row: CompanyProfileRow, tally: CompanyTally) -> None:
     table = ctx.rules.companies
-    for share in await ctx.session.scalars(select(CompanyShareRow).where(CompanyShareRow.company_entity_id == row.faction_entity_id)):
+    purse = stat(company, WEALTH) or 0
+    for share in await ctx.session.scalars(
+        select(CompanyShareRow).where(CompanyShareRow.company_entity_id == row.faction_entity_id).order_by(CompanyShareRow.holder_node_id)
+    ):
         holder = await ctx.session.get(EntityRow, share.holder_node_id)
         if holder is None or held(holder.id):
             continue
-        paid = round_half_up(table.dividend_wealth * share.share / PERCENT * row.dividend_pct / PERCENT * PERCENT / 10)
+        paid = min(purse, round_half_up(table.dividend_wealth * share.share / PERCENT * row.dividend_pct / PERCENT * PERCENT / 10))
         if paid:
+            purse -= paid
             set_stats(holder, wealth=clamp_int((stat(holder, WEALTH) or 0) + paid, 0, PERCENT))
             tally.dividends += 1
+    set_stats(company, wealth=purse)
+
+
+async def hire_guards(ctx: TickContext, company: EntityRow, tally: CompanyTally) -> None:
+    table = ctx.rules.companies
+    wealth = stat(company, WEALTH) or 0
+    strength = stat(company, STRENGTH) or 0
+    if wealth < table.guard_wealth or strength >= PERCENT:
+        return
+    set_stats(company, wealth=wealth - table.guard_wage, strength=clamp_int(strength + table.guard_strength, 0, PERCENT))
+    tally.guarded += 1
+
+
+async def default_loans(ctx: TickContext, company: EntityRow, tally: CompanyTally) -> None:
+    table = ctx.rules.banking
+    for loan in list(
+        await ctx.session.scalars(
+            select(LoanRow).where(LoanRow.borrower_entity_id == company.id, LoanRow.status == LoanStatus.OPEN, LoanRow.held.is_(False)).order_by(LoanRow.id)
+        )
+    ):
+        lender = await ctx.session.get(EntityRow, loan.lender_entity_id)
+        loan.status = LoanStatus.DEFAULTED
+        if lender is not None and not held(lender.id):
+            set_stats(lender, wealth=clamp_int((stat(lender, WEALTH) or 0) - table.default_bank_loss, 0, PERCENT))
+            await change_relation(ctx, lender.id, company.id, -table.default_relation_loss, MemoryKind.BETRAYED_ME, note="a company failed owing a loan")
+        tally.defaulted += 1
 
 
 async def collapse(ctx: TickContext, company: EntityRow, row: CompanyProfileRow, tally: CompanyTally) -> None:
@@ -130,6 +171,7 @@ async def collapse(ctx: TickContext, company: EntityRow, row: CompanyProfileRow,
         holder = await ctx.session.get(EntityRow, share.holder_node_id)
         if holder is not None and not held(holder.id):
             set_stats(holder, wealth=clamp_int((stat(holder, WEALTH) or 0) - table.collapse_loss, 0, PERCENT))
+    await default_loans(ctx, company, tally)
     await retire_in(ctx, company, "the company failed and its shareholders lost their stakes", close_bonds=True)
     await note(
         ctx, f"{company.name} collapsed, and every shareholder lost by it.", key="companies.collapsed", ids=[company.id], kind=ChronicleKind.CIVILIZATION
@@ -155,6 +197,46 @@ async def conquer(ctx: TickContext, company: EntityRow, row: CompanyProfileRow, 
     tally.conquered += 1
 
 
+async def far_market(ctx: TickContext, row: CompanyProfileRow, home_id: int | None) -> EntityRow | None:
+    route = await ctx.session.get(TradeRouteProfileRow, row.route_entity_id) if row.route_entity_id is not None else None
+    if route is None:
+        return None
+    return await ctx.session.get(EntityRow, route.second_market_id if route.first_market_id == home_id else route.first_market_id)
+
+
+async def found_dominion(ctx: TickContext, company: EntityRow, row: CompanyProfileRow, tally: CompanyTally) -> bool:
+    occupation = await ctx.session.get(OccupationRow, row.region_entity_id) if row.region_entity_id is not None else None
+    if occupation is None or occupation.occupier_entity_id != company.id or ctx.epoch - occupation.since_epoch < ctx.rules.companies.dominion_epochs:
+        return False
+    profile = await ctx.session.get(FactionProfileRow, company.id)
+    market = await far_market(ctx, row, profile.home_entity_id if profile is not None else None)
+    if market is None or market.status is not EntityStatus.CANON or market.entity_type is not EntityType.SETTLEMENT or held(market.id):
+        return False
+    book = await RealmBook.load(ctx.session)
+    current = book.realm_of(market.id)
+    if current is not None and current.profile.core_entity_id == market.id:
+        return False
+    for bond in await active_bonds(ctx.session, [BondKind.RULES], targets=[market.id]):
+        await close(ctx.session, bond, ctx.epoch, f"ruled now by {company.name}")
+    await add_flag(ctx.session, market.id, EntityFlag.INDEPENDENT, ctx.epoch)
+    realm = await found_polity(ctx, book, market)
+    realm.entity.name = f"the dominion of {company.name.removeprefix('the ')}"
+    realm.profile.government = GovernmentKind.OLIGARCHY
+    await refresh_realms(ctx, book)
+    await ctx.session.delete(occupation)
+    row.region_entity_id = None
+    await retire_in(ctx, company, f"the company became {realm.entity.name}", close_bonds=True)
+    await note(
+        ctx,
+        f"{company.name} put away its ledgers and ruled the land it held as {realm.entity.name}.",
+        key="companies.dominion",
+        ids=[company.id, realm.entity.id, market.id],
+        kind=ChronicleKind.CIVILIZATION,
+    )
+    tally.dominions += 1
+    return True
+
+
 async def tend_companies(ctx: TickContext, tally: CompanyTally) -> None:
     table = ctx.rules.companies
     await found_companies(ctx, tally)
@@ -168,6 +250,9 @@ async def tend_companies(ctx: TickContext, tally: CompanyTally) -> None:
         if row.value < table.collapse_wealth:
             await collapse(ctx, company, row, tally)
             continue
-        await pay_dividends(ctx, row, tally)
+        await pay_dividends(ctx, company, row, tally)
+        await hire_guards(ctx, company, tally)
+        if await found_dominion(ctx, company, row, tally):
+            continue
         if (stat(company, STRENGTH) or 0) >= table.conquest_strength:
             await conquer(ctx, company, row, tally)

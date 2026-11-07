@@ -15,6 +15,7 @@ from aerona.engine.polity.titles import TitleTally, tend_titles
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
+    "table.ruler_currencies",
     "table.title_holders",
     "table.title_profiles",
     "table.vassalages",
@@ -34,6 +35,7 @@ from aerona.engine.polity.titles import TitleTally, tend_titles
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
+    "table.ruler_currencies",
     "table.title_holders",
     "table.title_profiles",
 )

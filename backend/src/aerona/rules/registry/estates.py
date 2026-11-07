@@ -45,6 +45,10 @@ class CompanyRules:
     collapse_wealth: int = rule(5, 0, 100, F, "Wealth below which a company collapses and its shareholders lose their stakes")
     collapse_loss: int = rule(10, 0, 100, F, "Wealth each shareholder loses when a company collapses")
     conquest_strength: int = rule(60, 0, 100, F, "Strength from which an armed company seizes the land at its route's far end")
+    guard_wealth: int = rule(30, 0, 100, F, "Wealth from which a company keeps hired guards on its route")
+    guard_wage: int = rule(3, 0, 100, F, "Wealth a company pays its hired guards each epoch")
+    guard_strength: int = rule(5, 0, 100, F, "Strength a company's hired guards add each epoch")
+    dominion_epochs: int = rule(5, 1, 100, F, "Epochs a company must hold the land at its route's far end before it rules that land as a realm")
 
 
 @dataclass(frozen=True)
@@ -53,6 +57,8 @@ class OrderRules:
     warrior_share: int = rule(10, 0, 100, F, "Share of warriors a faith's heartland needs before a holy order rises (%)")
     tithe_wealth: int = rule(3, 0, 100, F, "Wealth a holy order draws each epoch from its faith's tithes")
     fortress_defense: int = rule(10, 0, 100, F, "Defence a holy order adds to the border town it holds")
+    recruit_pct: int = rule(20, 0, 100, F, "Chance each epoch a warrior or noble of the faith near a holy order takes its vows (%)")
+    host_per_strength: int = rule(5, 0, 100, F, "Soldiers a holy order sends to a holy war for each point of its strength")
 
 
 @dataclass(frozen=True)

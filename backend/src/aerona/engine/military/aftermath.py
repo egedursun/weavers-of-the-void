@@ -25,6 +25,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, shift_stat, stat
 from aerona.engine.primitives.strength import equipment
+from aerona.engine.primitives.transfers import move_amount
 
 EXOTIC = frozenset({TerrainKind.FLESH, TerrainKind.VOID_SHORE, TerrainKind.CRYSTAL_FIELD})
 RECOVERING = CohortCondition.SICK
@@ -97,9 +98,8 @@ async def send_home_wounded(ctx: TickContext, side: Side, wounded: int) -> int:
         if moved >= returned or band is not AgeBand.ADULT or social is not SocialClass.WARRIOR or condition is not CohortCondition.NONE:
             continue
         part = min(rows[key].count, returned - moved)
-        rows[key].count -= part
-        row_for(ctx.session, rows, owner.id, (band, sex, social, RECOVERING), ctx.epoch).count += part
-        moved += part
+        if move_amount(rows[key], row_for(ctx.session, rows, owner.id, (band, sex, social, RECOVERING), ctx.epoch), "count", part):
+            moved += part
     return returned
 
 
@@ -116,9 +116,9 @@ async def recover_wounded(ctx: TickContext) -> int:
             continue
         healed = max(1, row.count // epochs)
         cohorts = await cohorts_of(ctx.session, row.community_entity_id)
-        row.count -= healed
-        row_for(ctx.session, cohorts, row.community_entity_id, (row.age_band, row.sex, row.social_class, CohortCondition.VETERAN), ctx.epoch).count += healed
-        recovered += healed
+        veterans = row_for(ctx.session, cohorts, row.community_entity_id, (row.age_band, row.sex, row.social_class, CohortCondition.VETERAN), ctx.epoch)
+        if move_amount(row, veterans, "count", healed):
+            recovered += healed
     return recovered
 
 

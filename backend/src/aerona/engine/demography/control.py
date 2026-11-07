@@ -43,6 +43,7 @@ from aerona.engine.primitives.modifiers import ModifierDraft, add_modifier
 from aerona.engine.primitives.queries import add_flag, connect, remove_flag
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.stats import headcount_bounds, set_stats
+from aerona.engine.primitives.transfers import move_amount
 
 FOUNDED_POWER = 2
 FOUNDED_SUBTYPE = "people"
@@ -285,13 +286,12 @@ async def move_cohort(
         if from_condition is not None and state is not from_condition:
             continue
         part = min(rows[key].count, count - moved)
-        rows[key].count -= part
         landed = condition if condition is not None else (CohortCondition.ENSLAVED if target is SocialClass.SERF_OR_SLAVE else state)
         if target is not SocialClass.SERF_OR_SLAVE and landed is CohortCondition.ENSLAVED:
             landed = CohortCondition.NONE
         destination = (age, sex, target, landed)
-        row_for(ctx.session, rows, community.id, destination, ctx.epoch).count += part
-        moved += part
+        if move_amount(rows[key], row_for(ctx.session, rows, community.id, destination, ctx.epoch), "count", part):
+            moved += part
     await resync_society(ctx, community, rows)
     await ctx.session.flush()
     return moved

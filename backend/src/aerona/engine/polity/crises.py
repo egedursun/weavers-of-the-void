@@ -6,10 +6,12 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, PolityRegardRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.intrigue import HookDemand
 from aerona.domain.enums.polity import RegionalStanding
 from aerona.domain.enums.statecraft import CrisisDemand, CrisisSide, CrisisState
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
+from aerona.engine.intrigue.leverage import leaned_on
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.primitives.numbers import round_half_up
@@ -129,6 +131,17 @@ async def trust_of(ctx: TickContext, holder: int, subject: int) -> int:
     return row.trust if row is not None else PERCENT // 2
 
 
+async def called_in(ctx: TickContext, book: RealmBook, crisis: CrisisRow, realm: Realm) -> CrisisSide | None:
+    if realm.ruler_id is None:
+        return None
+    for side, party in ((CrisisSide.DEMANDER, crisis.demander_entity_id), (CrisisSide.TARGET, crisis.target_entity_id)):
+        asker = book.realms.get(party)
+        if asker is not None and asker.ruler_id is not None and await leaned_on(ctx, asker.ruler_id, realm.ruler_id, HookDemand.SUPPORT):
+            ctx.count("crisis_backing_called_in")
+            return side
+    return None
+
+
 async def gather(ctx: TickContext, book: RealmBook, crisis: CrisisRow, tally: CrisisTally) -> None:
     table = ctx.rules.statecraft
     world = book.realms[crisis.demander_entity_id].entity.world_id
@@ -146,6 +159,8 @@ async def gather(ctx: TickContext, book: RealmBook, crisis: CrisisRow, tally: Cr
             side = CrisisSide.DEMANDER if for_demander > for_target else CrisisSide.TARGET
         elif realm.profile.standing in GREAT:
             side, swing = CrisisSide.DEMANDER, True
+        else:
+            side = await called_in(ctx, book, crisis, realm)
         if side is None:
             continue
         ctx.session.add(CrisisBackerRow(crisis_id=crisis.id, backer_entity_id=realm_id, side=side, promised=table.swing_promise if swing else 0, swing=swing))

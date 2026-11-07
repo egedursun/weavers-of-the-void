@@ -5,12 +5,13 @@ cd "$ROOT"
 STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
 [ -z "$STAGED" ] && exit 0
 PYTHON="$ROOT/backend/.venv/bin/python"
-echo "pre-commit: source rules, prompt bias, wiring, control, deprecated APIs"
+echo "pre-commit: source rules, prompt bias, wiring, control, deprecated APIs, transfers"
 "$PYTHON" scripts/check_source_rules.py
 "$PYTHON" scripts/check_prompt_bias.py
 "$PYTHON" scripts/check_wiring.py
 "$PYTHON" scripts/check_control.py
 "$PYTHON" scripts/check_deprecated_apis.py
+"$PYTHON" scripts/check_transfers.py
 if echo "$STAGED" | grep -qE '^(backend/|scripts/).*\.py$'; then
   echo "pre-commit: ruff, mypy, import layers"
   (cd backend && .venv/bin/ruff check src && .venv/bin/ruff format --check src && .venv/bin/mypy src/aerona && .venv/bin/lint-imports)

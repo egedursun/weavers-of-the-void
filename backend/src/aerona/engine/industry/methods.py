@@ -41,6 +41,7 @@ from aerona.engine.intrigue.beliefs import BeliefView, price_key
 from aerona.engine.mind.book import values_for
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.transfers import move_amount
 
 TENTH = 10
 CELLAR_LEVEL = 2
@@ -254,10 +255,8 @@ def displace(ctx: TickContext, book: EconomyBook, community: EntityRow, process:
         idle = LabourRow(community_entity_id=community.id, job=Job.IDLE, workers=0, output_pct=PERCENT, epoch=ctx.epoch)
         ctx.session.add(idle)
         rows[Job.IDLE] = idle
-    if idle.held:
+    if idle.held or working.held or not move_amount(working, idle, "workers", freed):
         return 0
-    working.workers -= freed
-    idle.workers += freed
     return freed
 
 

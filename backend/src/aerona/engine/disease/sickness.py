@@ -11,6 +11,7 @@ from aerona.engine.interconnect.flows import FlowCategory
 from aerona.engine.interconnect.guards import blocked
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.transfers import move_amount
 
 SICK_KEY = "sick"
 
@@ -45,9 +46,8 @@ def shift(ctx: TickContext, rows: dict[CohortKey, CohortRow], community_id: int,
         part = max(0, min(rows[key].count, part, amount - moved))
         if part <= 0:
             continue
-        rows[key].count -= part
-        row_for(ctx.session, rows, community_id, (key[0], key[1], key[2], target), ctx.epoch).count += part
-        moved += part
+        if move_amount(rows[key], row_for(ctx.session, rows, community_id, (key[0], key[1], key[2], target), ctx.epoch), "count", part):
+            moved += part
     return moved
 
 

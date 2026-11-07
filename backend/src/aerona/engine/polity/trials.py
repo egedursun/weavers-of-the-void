@@ -7,7 +7,7 @@ from aerona.catalog.laws import PENALTY_CRUELTY
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import an
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.intrigue import SecretRow
+from aerona.db.tables.intrigue import IdentityRow, SecretRow
 from aerona.db.tables.justice import CaseWitnessRow, CrimeCaseRow
 from aerona.db.tables.polity import SentenceRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -25,6 +25,8 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.favours import hook_on, use_hook
+from aerona.engine.intrigue.identities import EXPOSURE
+from aerona.engine.intrigue.secrets import learn
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import skill_level, traits_of, values_for
 from aerona.engine.mind.ethics import culture_of, ethic_reading, honour_of
@@ -183,6 +185,22 @@ def close(ctx: TickContext, case: CrimeCaseRow, verdict: Verdict) -> None:
     case.stage, case.verdict, case.closed_epoch = CaseStage.CLOSED, verdict, ctx.epoch
 
 
+async def uncover(ctx: TickContext, case: CrimeCaseRow, culprit_id: int, investigator_id: int) -> int:
+    secrets = await ctx.session.scalars(
+        select(SecretRow).where(SecretRow.holder_node_id == culprit_id, SecretRow.kind.in_(list(CRIME_SECRETS[case.crime]))).order_by(SecretRow.id)
+    )
+    found = 0
+    for secret in list(secrets):
+        if await learn(ctx, secret, investigator_id):
+            found += 1
+    mask = await ctx.session.get(IdentityRow, culprit_id)
+    if mask is not None and mask.exposed_epoch is None and EXPOSURE not in (mask.locked or []) and not held(culprit_id):
+        mask.exposure = clamp_int(mask.exposure + ctx.rules.intrigue.identity_investigation, 0, PERCENT)
+        ctx.count("identities_traced")
+    ctx.count("secrets_uncovered", found)
+    return found
+
+
 async def investigate(ctx: TickContext, case: CrimeCaseRow, culprit: EntityRow, investigator: EntityRow | None) -> None:
     table = ctx.rules.trials
     await hear_witnesses(ctx, case, culprit.id)
@@ -192,6 +210,8 @@ async def investigate(ctx: TickContext, case: CrimeCaseRow, culprit: EntityRow, 
         ctx.count("case_tortured")
     if case.evidence >= table.name_at:
         case.accused_entity_id = culprit.id
+        if investigator is not None:
+            await uncover(ctx, case, culprit.id, investigator.id)
     else:
         blamed = await scapegoat(ctx, case, culprit.id)
         if blamed is None:
@@ -244,6 +264,32 @@ async def open_case(ctx: TickContext, town: Town, laws: LawBook, *, judge: Entit
     await ctx.session.flush()
     await investigate(ctx, case, culprit, investigator)
     ctx.count(f"case.{crime.value}")
+    return case
+
+
+async def report_crime(ctx: TickContext, town_id: int, culprit_id: int, crime: CrimeKind) -> CrimeCaseRow | None:
+    if held(town_id) or not await is_city(ctx, town_id):
+        return None
+    laws = await LawBook.load(ctx.session)
+    polity = laws.member_of.get(town_id)
+    investigator = await investigator_for(ctx, polity, town_id)
+    judge = await judge_for(ctx, polity, town_id)
+    case = CrimeCaseRow(
+        settlement_entity_id=town_id,
+        polity_entity_id=polity,
+        crime=crime,
+        culprit_entity_id=culprit_id,
+        accused_entity_id=None,
+        investigator_entity_id=investigator.id if investigator is not None else None,
+        judge_entity_id=judge.id if judge is not None else None,
+        stage=CaseStage.INVESTIGATION,
+        evidence=0,
+        forged=False,
+        opened_epoch=ctx.epoch,
+        locked=[],
+    )
+    ctx.session.add(case)
+    await ctx.session.flush()
     return case
 
 

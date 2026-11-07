@@ -13,6 +13,7 @@ from aerona.engine.mortal.kin import partners_of
 from aerona.engine.mortal.kinship import marry
 from aerona.engine.polity.enactment import back_law, pledge_vote
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.relations.book import relation
 
 HOLDER = "holder_entity_id"
@@ -46,10 +47,8 @@ async def support(ctx: TickContext, holder: EntityRow, target: EntityRow) -> str
     given = await ctx.session.get(MortalProfileRow, target.id)
     taken = await ctx.session.get(MortalProfileRow, holder.id)
     amount = ctx.rules.intrigue.support_wealth
-    if given is None or taken is None or WEALTH in given.locked or WEALTH in taken.locked or given.wealth < amount:
+    if given is None or taken is None or given.wealth < amount or not move_amount(given, taken, WEALTH, amount):
         return None
-    given.wealth -= amount
-    taken.wealth += amount
     return f"{target.name} lent {holder.name} {amount} of their wealth"
 
 

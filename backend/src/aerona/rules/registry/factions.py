@@ -109,6 +109,7 @@ class IntrigueRules:
     war_favour: int = rule(30, 0, 100, RuleGroup.REPUTATION, "Magnitude of the favour joining a war earns")
     identity_slip: int = rule(4, 0, 50, RuleGroup.REPUTATION, "Exposure a false identity gains each epoch for a mortal of little caution")
     identity_look: int = rule(3, 0, 50, RuleGroup.REPUTATION, "Exposure a false identity gains each epoch for every ten points of recognisability")
+    identity_investigation: int = rule(40, 0, 100, RuleGroup.REPUTATION, "Exposure a false identity gains when an investigation names its wearer (%)")
     scheme_cap: int = rule(4, 0, 50, RuleGroup.REPUTATION, "Most new schemes the world's mortals and factions begin each epoch")
     scheme_ambition_pct: int = rule(8, 0, 100, RuleGroup.REPUTATION, "Chance each epoch an ambitious or cruel mortal with a rival begins a scheme (%)")
     recruit_epochs: int = rule(1, 0, 10, RuleGroup.REPUTATION, "Epochs a scheme spends recruiting before it prepares")
@@ -117,6 +118,12 @@ class IntrigueRules:
     defence_spymaster: int = rule(20, 0, 100, RuleGroup.REPUTATION, "Defence a target's spymaster adds for every ten points of intrigue skill")
     defence_intuition_pct: int = rule(50, 0, 200, RuleGroup.REPUTATION, "How much the target's intuition adds to its defence (%)")
     discovery_pct: int = rule(15, 0, 100, RuleGroup.REPUTATION, "Chance each epoch a scheme is discovered at full counter-intelligence and no secrecy (%)")
+    agent_wage: int = rule(15, 0, 1000, RuleGroup.REPUTATION, "Wealth a schemer pays each agent hired when friends, hooks and favours fall short")
+    defence_bodyguard: int = rule(2, 0, 20, RuleGroup.REPUTATION, "Defence a ruler's court champion adds against schemes for every ten points of strength")
+    cover_patience_pct: int = rule(60, 0, 100, RuleGroup.REPUTATION, "How much a skilled schemer waits for night, fog, crowds or panic before striking (%)")
+    agent_exposure_pct: int = rule(
+        50, 0, 100, RuleGroup.REPUTATION, "Share of a discovered scheme's weight its agents bear in the target's memory and in infamy (%)"
+    )
     night_fog_pct: int = rule(20, 0, 100, RuleGroup.REPUTATION, "How much fog or a winter night raises a scheme's success and lowers its witnesses (%)")
     storm_pct: int = rule(15, 0, 100, RuleGroup.REPUTATION, "How much a storm raises a scheme's success by cutting pursuit (%)")
     crowd_pct: int = rule(10, 0, 100, RuleGroup.REPUTATION, "How much a festival raises a scheme's success while adding witnesses (%)")
@@ -134,6 +141,9 @@ class IntrigueRules:
         20, 0, 100, RuleGroup.REPUTATION, "Chance each epoch a mortal or spirit whose true name is widely known takes a new one through initiation (%)"
     )
     research_name_pct: int = rule(5, 0, 100, RuleGroup.REPUTATION, "Chance each epoch a scholar of old tongues learns a true name in their land (%)")
+    confide_name_pct: int = rule(
+        3, 0, 100, RuleGroup.REPUTATION, "Chance each epoch a mortal confides their true name to a spouse, lover or intimate friend (%)"
+    )
 
 
 @dataclass(frozen=True)

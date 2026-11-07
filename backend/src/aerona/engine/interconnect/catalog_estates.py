@@ -69,14 +69,14 @@ ESTATE_MECHANICS: tuple[Mechanic, ...] = (
         key="chartered_companies",
         spec_item="S4.3/RP2",
         title=(
-            "Rich merchant guilds charter companies that hold the trade of a route abroad, pay their shareholders, "
-            "may seize land at the far end and may collapse"
+            "Rich merchant guilds charter companies that hold the trade of a route abroad, keep hired guards, pay their shareholders, "
+            "may seize land at the far end, may rule it as a realm and may collapse"
         ),
         subsystem=S.ECONOMY,
         phases=("estates",),
         surface=Surface(drawer=ESTATES),
         backfill="none: companies are chartered from the next epoch",
-        templates=("companies.collapsed", "companies.conquest"),
+        templates=("companies.collapsed", "companies.conquest", "companies.dominion"),
         fields=("dividend_pct", "value", "share", "route_entity_id", "region_entity_id"),
         tables=(CompanyProfileRow.__tablename__, CompanyShareRow.__tablename__),
         exposure=Exposure.CONTEXT,
@@ -85,16 +85,23 @@ ESTATE_MECHANICS: tuple[Mechanic, ...] = (
             Coupling(S.ECONOMY, "a company draws wealth from its route and pays dividends to its shareholders", E.FLOW, "companies.route_profit"),
             Coupling(S.WAR, "a strong company seizes the land at its route's far end", E.TRIGGER, "companies.conquest_strength"),
             Coupling(S.ECONOMY, "a collapsing company costs every shareholder", E.FLOW, "companies.collapse_loss"),
+            Coupling(S.WAR, "a company pays hired guards from its coffers and grows stronger", E.FLOW, "companies.guard_wage"),
+            Coupling(S.POLITY, "a company that holds the far land long enough rules it as a realm", E.TRIGGER, "companies.dominion_epochs"),
+            Coupling(S.ECONOMY, "a collapsing company defaults on its loans and its lenders lose by it", E.FLOW, "banking.default_bank_loss"),
         ),
     ),
     Mechanic(
         key="holy_orders",
         spec_item="S4.3/RP2",
-        title="Faiths with warriors among their faithful found holy orders fed by their tithes and holding border towns",
+        title=(
+            "Faiths with warriors among their faithful found holy orders fed by their tithes, holding border towns, "
+            "taking warriors and nobles of the faith as vowed members and riding to holy wars"
+        ),
         subsystem=S.FAITH,
         phases=("estates",),
         surface=Surface(drawer=ESTATES),
         backfill="none: holy orders rise from the next epoch",
+        templates=("orders.vows", "orders.holy_war"),
         fields=("cult_entity_id", "fortress_entity_id", "tithe_share"),
         tables=(HolyOrderProfileRow.__tablename__,),
         exposure=Exposure.CONTEXT,
@@ -102,6 +109,8 @@ ESTATE_MECHANICS: tuple[Mechanic, ...] = (
         couplings=(
             Coupling(S.ECONOMY, "a holy order draws on its faith's tithes", E.FLOW, "holy_orders.tithe_wealth"),
             Coupling(S.WAR, "a holy order strengthens the defences of its border town", E.MODIFIER, "holy_orders.fortress_defense"),
+            Coupling(S.SOCIAL, "warriors and nobles of the faith take the order's vows", E.TRIGGER, "holy_orders.recruit_pct"),
+            Coupling(S.WAR, "a holy order sends a host from its border town to its faith's holy wars", E.TRIGGER, "holy_orders.host_per_strength"),
         ),
     ),
     Mechanic(

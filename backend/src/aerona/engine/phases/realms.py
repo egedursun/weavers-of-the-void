@@ -62,6 +62,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.culture_honour",
     "table.culture_values",
     "table.currencies",
+    "table.designated_heirs",
     "table.districts",
     "table.entity_flags",
     "table.epoch_year_cursors",

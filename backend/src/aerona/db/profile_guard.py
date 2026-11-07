@@ -141,6 +141,18 @@ def profile_held(row: object, column: str) -> bool:
     return write_blocked(int(getattr(row, shape.node_column)), profile_key(shape.table, column))
 
 
+def column_frozen(row: object, column: str) -> bool:
+    if column in held_columns(row):
+        return True
+    mapper = object_mapper(row)
+    shape = _shape(mapper)
+    if shape is not None:
+        node_id = getattr(row, shape.node_column)
+        return node_id is not None and write_blocked(int(node_id), profile_key(shape.table, column))
+    owned = owned_shape(mapper)
+    return owned is not None and any(write_blocked(node_id, profile_key(owned.table, column)) for node_id in owner_ids(row, owned))
+
+
 def restore_owned(row: object) -> list[str]:
     state = instance_state(row)
     shape = owned_shape(state.mapper)

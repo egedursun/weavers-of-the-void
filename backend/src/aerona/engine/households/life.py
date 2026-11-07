@@ -37,9 +37,11 @@ from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, connect
 from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.records import death_path
 
 MEMBERS = "members"
+WEALTH = "wealth"
 PRESTIGE_SWING = 2
 PRESTIGE_MIDPOINT = 5
 CLASS_DWELLING: dict[SocialClass, DwellingKind] = {
@@ -192,10 +194,14 @@ async def keep_purse(ctx: TickContext, household: HouseholdRow, members: list[Me
         household.income = income
     if "expenses" not in locked:
         household.expenses = expenses
-    if "wealth" not in locked:
+    if WEALTH not in locked:
         household.wealth = max(0, household.wealth + household.income - household.expenses)
     if dwelling is not None and "quality" not in (dwelling.locked or []) and household.wealth <= 0 and household.income < household.expenses:
         dwelling.quality = clamp_int(dwelling.quality - table.decay, 0, PERCENT)
+
+
+def transfer(payer: HouseholdRow, payee: HouseholdRow, amount: int) -> bool:
+    return move_amount(payer, payee, WEALTH, amount)
 
 
 async def pay_debts(ctx: TickContext, household: HouseholdRow) -> None:
@@ -208,14 +214,10 @@ async def pay_debts(ctx: TickContext, household: HouseholdRow) -> None:
         if lender is None or principal <= 0:
             continue
         interest = round_half_up(principal * rate / PERCENT)
-        if household.wealth >= principal + interest:
-            household.wealth -= principal + interest
-            lender.wealth += principal + interest
+        if household.wealth >= principal + interest and transfer(household, lender, principal + interest):
             continue
         paid = min(household.wealth, interest)
-        household.wealth -= paid
-        lender.wealth += paid
-        remaining[lender_key] = principal + interest - paid
+        remaining[lender_key] = principal + interest - (paid if transfer(household, lender, paid) else 0)
     household.debts = remaining
 
 
@@ -329,7 +331,7 @@ async def migrate(
 
 
 async def sell_furnishing(ctx: TickContext, household: HouseholdRow, dwelling: DwellingRow | None, tally: HouseholdTally) -> bool:
-    if dwelling is None:
+    if dwelling is None or WEALTH in (household.locked or []):
         return False
     item = await ctx.session.scalar(
         select(DwellingFurnishingRow).where(DwellingFurnishingRow.dwelling_id == dwelling.id).order_by(DwellingFurnishingRow.item_node_id).limit(1)
@@ -367,9 +369,7 @@ async def match(ctx: TickContext, household: HouseholdRow, members: list[Member]
             ):
                 continue
             await marry(ctx.session, single.mortal, candidate.mortal, ctx.epoch, kind=MarriageKind.MONOGAMOUS, description="matched by their households")
-            dowry = round_half_up(other.wealth * ctx.rules.households.dowry_pct / PERCENT)
-            other.wealth -= dowry
-            household.wealth += dowry
+            transfer(other, household, round_half_up(other.wealth * ctx.rules.households.dowry_pct / PERCENT))
             if not candidate.row.locked:
                 await join_household(ctx, household, candidate.mortal, HouseholdRole.SPOUSE)
             return await decided(
@@ -422,7 +422,8 @@ async def apprentice(ctx: TickContext, household: HouseholdRow, members: list[Me
 
 async def renovate(ctx: TickContext, household: HouseholdRow, dwelling: DwellingRow | None, tally: HouseholdTally) -> bool:
     table = ctx.rules.households
-    if dwelling is None or household.wealth < table.renovate_wealth or dwelling.quality >= PERCENT or {"quality", "rooms"} & set(dwelling.locked or []):
+    blocked = {"quality", "rooms"} & set(dwelling.locked or []) if dwelling is not None else set()
+    if dwelling is None or household.wealth < table.renovate_wealth or dwelling.quality >= PERCENT or blocked or WEALTH in (household.locked or []):
         return False
     household.wealth -= table.renovate_cost
     dwelling.quality = clamp_int(dwelling.quality + table.renovate_gain, 0, PERCENT)
@@ -486,8 +487,8 @@ async def lend_at_interest(ctx: TickContext, household: HouseholdRow, head: Enti
     if poorest is None or poorest.head_node_id is None or held(poorest.head_node_id) or "debts" in (poorest.locked or []):
         return False
     lent = household.wealth // 4
-    household.wealth -= lent
-    poorest.wealth += lent
+    if not transfer(household, poorest, lent):
+        return False
     poorest.debts = {**poorest.debts, str(household.id): poorest.debts.get(str(household.id), 0) + lent}
     await judged(ctx, head.id, poorest.head_node_id, ActKind.USURY, note=f"lent at interest to {poorest.name}")
     tally.acts += 1

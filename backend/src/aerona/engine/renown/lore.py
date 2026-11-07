@@ -21,6 +21,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import connect, living_entity
+from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.relations.book import ensure_relation, shift
 from aerona.engine.renown.book import acclaim
 
@@ -116,11 +117,12 @@ async def pay(ctx: TickContext, seller: EntityRow, buyer: EntityRow, value: int)
     cost = max(1, value // table.wealth_per_value)
     purse = await ctx.session.get(FactionProfileRow, buyer.id)
     if purse is not None and purse.treasury >= cost and "treasury" not in purse.locked:
-        purse.treasury -= cost
         till = await ctx.session.get(FactionProfileRow, seller.id)
-        if till is not None and "treasury" not in till.locked:
-            till.treasury += cost
-        return LorePrice.WEALTH
+        if till is None:
+            purse.treasury -= cost
+            return LorePrice.WEALTH
+        if move_amount(purse, till, "treasury", cost):
+            return LorePrice.WEALTH
     home = buyer.location_id or buyer.id
     await acclaim(ctx.session, seller.id, home, ReputationAxis.WISDOM, amount=value / table.renown_per_value, epoch=ctx.epoch)
     return LorePrice.RENOWN

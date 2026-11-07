@@ -28,6 +28,9 @@ class CommunicationRules:
     insult_harm: int = rule(15, 0, 100, D, "Friendship an insult costs, doubled in a culture of honour")
     threat_harm: int = rule(10, 0, 100, D, "Friendship a threat costs")
     plea_mercy: int = rule(5, 0, 100, D, "Friendship a heartfelt plea earns")
+    precedence_pct: int = rule(
+        30, 0, 100, D, "How much a hierarchical culture cools to a message whose forms of address and precedence fall short of its envoy's etiquette (%)"
+    )
     etiquette_pct: int = rule(50, 0, 200, D, "How much an envoy's negotiation and etiquette raise the welcome a message gets (%)")
     envoy_hostility: int = rule(-50, -100, 0, D, "Friendship below which a hostile court may mistreat an envoy")
     envoy_harm_pct: int = rule(30, 0, 100, D, "Chance a hostile court mistreats an envoy (%)")
@@ -52,6 +55,8 @@ class CommunicationRules:
     censorship_found_pct: int = rule(10, 0, 100, D, "Chance each epoch censorship is noticed, souring approval of the ruler (%)")
     censorship_distrust: int = rule(15, 0, 100, D, "Approval of the ruler lost when censorship is noticed")
     legitimacy_pct: int = rule(20, 0, 100, D, "Share of the realm's mean approval of its ruler added to legitimacy (%)")
+    disapproval_unrest_pct: int = rule(10, 0, 100, D, "Unrest a town gains each epoch for every hundred points it disapproves of its ruler (%)")
+    army_intercept_pct: int = rule(30, 0, 100, D, "Chance an enemy army sitting at either end seizes a message passing over land (%)")
     stability_pct: int = rule(20, 0, 100, D, "Share of the realm's mean disapproval of its ruler taken from stability (%)")
     war_support_pct: int = rule(30, 0, 100, D, "Share of approval of a war that eases or deepens war weariness (%)")
     enforcement_pct: int = rule(20, 0, 100, D, "Share of approval of a law added to its enforcement (%)")

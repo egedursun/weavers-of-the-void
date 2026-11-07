@@ -64,7 +64,7 @@ SCHEMES: dict[PlotKind, SchemeSpec] = {
         SchemeSpec(PlotKind.CONVERT_SECRETLY, "Secret conversion", 35, 60, 0, IntrigueSecret.SECRET_CULT_MEMBERSHIP),
         SchemeSpec(PlotKind.SABOTAGE_WEDDING, "Sabotaged wedding", 40, 55, 1),
         SchemeSpec(PlotKind.FREE_PRISONER, "Freeing a prisoner", 55, 45, 2, IntrigueSecret.CRIME),
-        SchemeSpec(PlotKind.ECOSABOTAGE, "Sabotage of the land", 50, 50, 1, IntrigueSecret.ECOSABOTAGE),
+        SchemeSpec(PlotKind.ECOSABOTAGE, "Sabotage of the land", 50, 50, 1, IntrigueSecret.ECOSABOTAGE, ActKind.DESECRATION),
         SchemeSpec(PlotKind.LEARN_TRUE_NAME, "Learning a true name", 70, 60, 1),
         SchemeSpec(PlotKind.FORGE_LETTER, "Forged letter", 50, 55, 1, IntrigueSecret.CRIME),
     )
@@ -117,6 +117,7 @@ BELIEF_ATTRIBUTE_LABELS: dict[str, str] = {
     "defense": "Defences",
     "population": "Population",
     "prosperity": "Prosperity",
+    "soldiers": "Soldiers in the field",
     "secret_severity": "Weight of a secret",
 }
 BELIEF_SOURCE_LABELS: dict[BeliefSource, str] = {
