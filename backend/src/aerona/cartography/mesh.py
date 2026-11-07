@@ -16,6 +16,7 @@ Segment = tuple[float, float, float, float]
 
 
 MESH_CACHE = 8
+JITTER_CACHE = 1 << 18
 
 
 @dataclass(frozen=True)
@@ -55,6 +56,7 @@ def map_window(positions: Iterable[Point], rules: Rules) -> GridWindow:
     )
 
 
+@lru_cache(maxsize=JITTER_CACHE)
 def _jittered(seed: str, column: int, row: int, spacing: int) -> Point:
     random = keyed_random(f"{seed}:{column}:{row}")
     x = (column + 0.5 + (random() - 0.5) * GRID_JITTER) * spacing
@@ -88,6 +90,8 @@ def _crossing(start: Point, end: Point, axis: int, limit: float) -> Point:
 
 
 def _clip_polygon(vertices: list[Point], window: GridWindow) -> list[Point]:
+    if all(window.left <= x <= window.right and window.top <= y <= window.bottom for x, y in vertices):
+        return vertices
     output = vertices
     for axis, limit, keep_above in ((0, window.left, True), (0, window.right, False), (1, window.top, True), (1, window.bottom, False)):
         if not output:

@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import MEMORIES
 from aerona.constants.units import PERCENT
+from aerona.db.bond_index import bond_lookup
+from aerona.db.read_memo import memoized
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -165,6 +167,18 @@ async def _enemies(session: AsyncSession, node_id: int) -> set[int]:
     return {bond.other_end(node_id) for bond in bonds}
 
 
+@memoized(RelationshipRow)
+async def bonds_held(session: AsyncSession, holder_id: int) -> dict[int, RelationshipRow]:
+    found: dict[int, RelationshipRow] = {}
+    for row in await session.scalars(select(RelationshipRow).where(RelationshipRow.holder_node_id == holder_id).order_by(RelationshipRow.id)):
+        found.setdefault(row.subject_node_id, row)
+    return found
+
+
+async def personal_bond(session: AsyncSession, first: int, second: int) -> RelationshipRow | None:
+    return (await bonds_held(session, first)).get(second)
+
+
 async def pair_facts(session: AsyncSession, first: int, second: int) -> PairFacts:
     bonds = BondRepository(session)
     first_god, second_god = await _patron(session, first), await _patron(session, second)
@@ -172,7 +186,7 @@ async def pair_facts(session: AsyncSession, first: int, second: int) -> PairFact
     relation = await session.get(CommunityRelationRow, (min(first, second), max(first, second)))
     kin = any([await bonds.exists_between(first, second, kind) for kind in KIN_BONDS])
     common = (await _enemies(session, first) & await _enemies(session, second)) - {first, second}
-    bond = await session.scalar(select(RelationshipRow).where(RelationshipRow.holder_node_id == first, RelationshipRow.subject_node_id == second))
+    bond = await personal_bond(session, first, second)
     glory, infamy = await standing_with(session, second, first)
     purse = await session.get(RulerCurrencyRow, second)
     return PairFacts(
@@ -217,6 +231,14 @@ def with_rulers(rules: Rules, base: float, ruler_views: list[int]) -> int:
 
 
 async def mortal_rulers(session: AsyncSession, community_id: int) -> list[int]:
+    lookup = await bond_lookup(session)
+    if lookup is not None:
+        found = set()
+        for bond in lookup.select([BondKind.RULES], [BondState.ACTIVE], targets=[community_id]):
+            ruler = await session.get(EntityRow, bond.source_node_id)
+            if ruler is not None and ruler.entity_type is EntityType.MORTAL and ruler.status is EntityStatus.CANON:
+                found.add(ruler.id)
+        return sorted(found)
     statement = (
         select(BondRow.source_node_id)
         .join(EntityRow, EntityRow.id == BondRow.source_node_id)

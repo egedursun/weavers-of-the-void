@@ -2,6 +2,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass, replace
 
 from sqlalchemy import ColumnElement, and_, or_, select
+from sqlalchemy.orm.attributes import instance_state
+from sqlalchemy.orm.util import identity_key
 
 from aerona.catalog.bonds import EVENT_BOND_KINDS, UNORDERED_PAIR_KINDS, bond_spec, endpoints_valid, should_swap
 from aerona.core.errors import NotFoundError
@@ -179,6 +181,9 @@ class BondRepository(Repository):
             kind = await NodeRepository(self.session).kind_of(bond.target_node_id)
             if kind in PATRON_KINDS:
                 return bond.target_node_id
+        known = self.session.sync_session.identity_map.get(identity_key(EntityRow, entity_id))
+        if isinstance(known, EntityRow) and not instance_state(known).expired:
+            return known.creator_son_id
         creator_son_id: int | None = await self.session.scalar(select(EntityRow.creator_son_id).where(EntityRow.id == entity_id))
         return creator_son_id
 

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.renown import GLORIOUS, INFAMOUS
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memoized
 from aerona.db.tables.renown import ReputationRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.mind import SkillKind
@@ -50,8 +51,13 @@ async def views_held_by(session: AsyncSession, community_id: int) -> list[Reputa
     return list(await session.scalars(query))
 
 
+@memoized(ReputationRow)
+async def views_of(session: AsyncSession, community_id: int) -> tuple[ReputationRow, ...]:
+    return tuple(await session.scalars(select(ReputationRow).where(ReputationRow.community_node_id == community_id).order_by(ReputationRow.id)))
+
+
 async def standing_with(session: AsyncSession, subject_id: int, community_id: int) -> tuple[int, int]:
-    rows = await session.scalars(select(ReputationRow).where(ReputationRow.subject_node_id == subject_id, ReputationRow.community_node_id == community_id))
+    rows = [row for row in await views_of(session, community_id) if row.subject_node_id == subject_id]
     glory = infamy = 0
     for row in rows:
         if row.axis in GLORIOUS:

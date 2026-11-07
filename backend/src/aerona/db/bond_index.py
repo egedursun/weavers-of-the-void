@@ -6,7 +6,7 @@ from sqlalchemy import event, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import ORMExecuteState, Session
 
-from aerona.db.read_memo import KEEP_KEY, pending_tables
+from aerona.db.read_memo import KEEP_KEY, pending_tables, register_index
 from aerona.db.tables.bonds import BondRow
 from aerona.domain.enums.bond import BondKind, BondState
 
@@ -108,3 +108,4 @@ def drop_on_write(state: ORMExecuteState) -> None:
 event.listen(Session, "after_flush", follow_flush)
 event.listen(Session, "after_soft_rollback", drop_lookup)
 event.listen(Session, "do_orm_execute", drop_on_write)
+register_index(INDEX_KEY)
