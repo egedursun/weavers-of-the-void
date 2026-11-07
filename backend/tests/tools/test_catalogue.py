@@ -1,9 +1,11 @@
 from typing import Any
 
 import jinja2.meta
+import jsonschema
 import pytest
 from pydantic import BaseModel
 
+from aerona.domain.enums.ecology import Sociality
 from aerona.prompts import MortalToolId, SonToolId, tool_text
 from aerona.prompts.environment import environment
 from aerona.prompts.tools.context import ToolTextContext
@@ -57,21 +59,33 @@ def test_input_fields_are_described_by_the_prompt_catalog(spec: Any) -> None:
     schema = input_schema(spec.input_model, text.fields)
     assert schema["type"] == "object"
     assert "$defs" not in str(schema.keys())
-    assert open_choices(schema) == [], "a field with fixed choices also offers free text, so the model invents values"
+    assert closed_choices(schema) == [], "a field with fixed choices must still let loose spellings reach the tool's own matcher"
 
 
-def open_choices(node: Any, path: str = "") -> list[str]:
+def closed_choices(node: Any, path: str = "", loose: bool = False) -> list[str]:
     found: list[str] = []
     if isinstance(node, dict):
-        options = node.get("anyOf") or node.get("oneOf") or []
-        if any("enum" in option for option in options) and any(option.get("type") == "string" and "enum" not in option for option in options):
+        options = node.get("anyOf") or []
+        open_text = any(isinstance(option, dict) and option.get("type") == "string" and "enum" not in option for option in options)
+        if "enum" in node and not loose:
             found.append(path)
         for key, value in node.items():
-            found.extend(open_choices(value, f"{path}.{key}"))
+            found.extend(closed_choices(value, f"{path}.{key}", loose=open_text if key == "anyOf" else False))
     elif isinstance(node, list):
         for index, item in enumerate(node):
-            found.extend(open_choices(item, f"{path}[{index}]"))
+            found.extend(closed_choices(item, f"{path}[{index}]", loose=loose))
     return found
+
+
+class LooseChoice(ToolInput):
+    sociality: Sociality | None = None
+
+
+def test_loose_spellings_and_empty_markers_pass_the_sdk_schema_and_reach_the_matcher() -> None:
+    schema = input_schema(LooseChoice, {"sociality": "How it lives"})
+    for given, expected in (("PACK", Sociality.PACK), ("Herd", Sociality.HERD), ("none", None)):
+        jsonschema.validate(instance={"sociality": given}, schema=schema)
+        assert LooseChoice.model_validate({"sociality": given}).sociality is expected
 
 
 @pytest.mark.parametrize("spec", SPECS, ids=lambda spec: f"{spec.agent.value}.{spec.name}")
