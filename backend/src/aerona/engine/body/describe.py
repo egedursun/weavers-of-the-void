@@ -6,6 +6,7 @@ from aerona.catalog.effect_packages import PACKAGES
 from aerona.catalog.tissues import digits_phrase
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import an
+from aerona.core.total import partial
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.entities import EntityRow
@@ -52,11 +53,15 @@ CONDITION_TEXT: dict[ConditionKind, str] = {
 
 NERVE_TEXT: dict[NerveDamage, str] = {NerveDamage.MOTOR: "limp", NerveDamage.SENSORY: "numb"}
 
-CONSCIOUSNESS_TEXT: dict[Consciousness, str] = {
-    Consciousness.NAUSEOUS: "nauseous with pain",
-    Consciousness.DIZZY: "dizzy",
-    Consciousness.UNCONSCIOUS: "unconscious",
-}
+CONSCIOUSNESS_TEXT = partial(
+    Consciousness,
+    {
+        Consciousness.NAUSEOUS: "nauseous with pain",
+        Consciousness.DIZZY: "dizzy",
+        Consciousness.UNCONSCIOUS: "unconscious",
+    },
+    without={Consciousness.AWAKE},
+)
 
 LOST: dict[InjuryKind, str] = {InjuryKind.SEVERED: "lost", InjuryKind.GOUGED: "gouged out", InjuryKind.DESTROYED: "ruined"}
 

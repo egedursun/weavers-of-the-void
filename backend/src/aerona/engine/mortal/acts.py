@@ -8,6 +8,7 @@ from aerona.catalog.mind_split import BREAK_FACETS, STRESS_FACETS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import an
 from aerona.core.random import SeededRandom
+from aerona.core.total import partial
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.mind import MemoryRow, SkillRow
@@ -62,15 +63,19 @@ BREAK_TRAITS: dict[StressBreak, frozenset[TraitKind]] = {
     StressBreak.REVELATION: frozenset({TraitKind.CURIOUS, TraitKind.SCHOLARLY}),
 }
 FIGHTERS = frozenset({MortalRole.WARRIOR, MortalRole.KNIGHT, MortalRole.CAPTAIN})
-CAREER_ROLES: dict[CareerPath, MortalRole] = {
-    CareerPath.ARMY: MortalRole.WARRIOR,
-    CareerPath.OFFICE: MortalRole.SCRIBE,
-    CareerPath.APPRENTICE: MortalRole.APPRENTICE,
-    CareerPath.VOWS: MortalRole.PRIEST,
-    CareerPath.TRADE: MortalRole.MERCHANT,
-    CareerPath.WANDER: MortalRole.EXPLORER,
-    CareerPath.BANDIT: MortalRole.BANDIT,
-}
+CAREER_ROLES = partial(
+    CareerPath,
+    {
+        CareerPath.ARMY: MortalRole.WARRIOR,
+        CareerPath.OFFICE: MortalRole.SCRIBE,
+        CareerPath.APPRENTICE: MortalRole.APPRENTICE,
+        CareerPath.VOWS: MortalRole.PRIEST,
+        CareerPath.TRADE: MortalRole.MERCHANT,
+        CareerPath.WANDER: MortalRole.EXPLORER,
+        CareerPath.BANDIT: MortalRole.BANDIT,
+    },
+    without={CareerPath.STAY},
+)
 CAREER_TRAITS: dict[CareerPath, frozenset[TraitKind]] = {
     CareerPath.ARMY: frozenset({TraitKind.BRAVE, TraitKind.WRATHFUL, TraitKind.RECKLESS, TraitKind.CUNNING_TACTICIAN}),
     CareerPath.OFFICE: frozenset({TraitKind.AMBITIOUS, TraitKind.JUST, TraitKind.PROUD}),

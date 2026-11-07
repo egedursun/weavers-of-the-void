@@ -1,9 +1,10 @@
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.core.total import partial
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
@@ -102,13 +103,17 @@ def eldest_daughter(by_age: list[EntityRow]) -> EntityRow:
     return next((child for child in by_age if sex_of(child) == FEMALE), by_age[0])
 
 
-SOLE_HEIR: dict[InheritanceCustom, Callable[[list[EntityRow]], EntityRow]] = {
-    InheritanceCustom.PRIMOGENITURE: lambda by_age: by_age[0],
-    InheritanceCustom.ULTIMOGENITURE: lambda by_age: by_age[-1],
-    InheritanceCustom.MATRILINEAL: eldest_daughter,
-    InheritanceCustom.BY_MERIT: lambda by_age: max(by_age, key=lambda child: (merit(child), -child.id)),
-    InheritanceCustom.ELECTIVE: lambda by_age: max(by_age, key=lambda child: (charisma(child), -child.id)),
-}
+SOLE_HEIR: Mapping[InheritanceCustom, Callable[[list[EntityRow]], EntityRow]] = partial(
+    InheritanceCustom,
+    {
+        InheritanceCustom.PRIMOGENITURE: lambda by_age: by_age[0],
+        InheritanceCustom.ULTIMOGENITURE: lambda by_age: by_age[-1],
+        InheritanceCustom.MATRILINEAL: eldest_daughter,
+        InheritanceCustom.BY_MERIT: lambda by_age: max(by_age, key=lambda child: (merit(child), -child.id)),
+        InheritanceCustom.ELECTIVE: lambda by_age: max(by_age, key=lambda child: (charisma(child), -child.id)),
+    },
+    without={InheritanceCustom.GAVELKIND},
+)
 
 
 def heirs_by_custom(custom: InheritanceCustom, children: list[EntityRow]) -> list[EntityRow]:

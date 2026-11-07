@@ -1,5 +1,5 @@
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
@@ -7,6 +7,7 @@ from sqlalchemy import select
 
 from aerona.catalog.commodities import COMMODITIES
 from aerona.constants.units import PERCENT
+from aerona.core.total import partial
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
@@ -38,7 +39,8 @@ TEMPER_WEIGHT: MappingProxyType[BeastTemper, Callable[[Rules], int]] = MappingPr
         BeastTemper.TAMED: lambda rules: rules.route_dangers.beast_tamed_pct,
     }
 )
-EFFECT_WEIGHT: MappingProxyType[WeatherEffect, Callable[[Rules], int]] = MappingProxyType(
+EFFECT_WEIGHT: Mapping[WeatherEffect, Callable[[Rules], int]] = partial(
+    WeatherEffect,
     {
         WeatherEffect.FOOTING: lambda rules: rules.route_dangers.weather_footing_pct,
         WeatherEffect.COLD: lambda rules: rules.route_dangers.weather_cold_pct,
@@ -46,7 +48,8 @@ EFFECT_WEIGHT: MappingProxyType[WeatherEffect, Callable[[Rules], int]] = Mapping
         WeatherEffect.WET: lambda rules: rules.route_dangers.weather_wet_pct,
         WeatherEffect.WIND: lambda rules: rules.route_dangers.weather_wind_pct,
         WeatherEffect.VISIBILITY: lambda rules: rules.route_dangers.weather_visibility_pct,
-    }
+    },
+    without={WeatherEffect.GROWTH, WeatherEffect.MORALE},
 )
 FALLING_EFFECTS = frozenset({WeatherEffect.FOOTING, WeatherEffect.VISIBILITY})
 MODE_EXPOSURE: MappingProxyType[TradeMode, tuple[WeatherEffect, ...]] = MappingProxyType(

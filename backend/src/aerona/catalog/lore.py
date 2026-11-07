@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
+from aerona.core.total import total
 from aerona.domain.enums.culture import (
     ArtMedium,
     IdeologyTenet,
@@ -222,7 +223,8 @@ class ItemSpec:
     damage_type: str | None = None
 
 
-ITEM_CLASSES = MappingProxyType(
+ITEM_CLASSES = total(
+    ItemClass,
     {
         spec.item_class: spec
         for spec in (
@@ -240,6 +242,8 @@ ITEM_CLASSES = MappingProxyType(
             ItemSpec(ItemClass.ARMOUR, coverage=60, weight=8),
             ItemSpec(ItemClass.SHIELD, coverage=30, weight=4),
             ItemSpec(ItemClass.HELMET, coverage=10, weight=2),
+            ItemSpec(ItemClass.PADDING, coverage=50, weight=2),
+            ItemSpec(ItemClass.CLOAK, coverage=20, weight=1),
             *(
                 ItemSpec(kind)
                 for kind in (
@@ -266,7 +270,7 @@ ITEM_CLASSES = MappingProxyType(
                 )
             ),
         )
-    }
+    },
 )
 WEAPONS = frozenset(
     {

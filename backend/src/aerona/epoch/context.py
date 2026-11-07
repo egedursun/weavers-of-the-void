@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from aerona.agents.runtime import AgentRuntime
+from aerona.core.total import partial
 from aerona.db.session import Database
 from aerona.domain.enums.epoch import EpochPhase, EpochStepKind, EpochStepStatus
 from aerona.epoch.concurrency import StopSignal
@@ -13,13 +14,17 @@ from aerona.events.kinds import EventKind
 from aerona.jobs.context import JobContext
 from aerona.rules.registry import Rules
 
-PHASE_NAMES = {
-    EpochPhase.GODS: "The gods' turn",
-    EpochPhase.MORTALS: "The mortals' turn",
-    EpochPhase.ENGINE: "The world's own course",
-    EpochPhase.FATE: "Fate and the chronicler",
-    EpochPhase.TRANSITION: "Epoch transition: growth, belief, essence, sky",
-}
+PHASE_NAMES = partial(
+    EpochPhase,
+    {
+        EpochPhase.GODS: "The gods' turn",
+        EpochPhase.MORTALS: "The mortals' turn",
+        EpochPhase.ENGINE: "The world's own course",
+        EpochPhase.FATE: "Fate and the chronicler",
+        EpochPhase.TRANSITION: "Epoch transition: growth, belief, essence, sky",
+    },
+    without={EpochPhase.NOT_STARTED},
+)
 PHASE_COUNT = len(PHASE_NAMES)
 
 

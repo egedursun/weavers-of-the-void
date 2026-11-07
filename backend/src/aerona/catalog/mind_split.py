@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
+from aerona.core.total import total
 from aerona.domain.enums.body import ConditionKind
 from aerona.domain.enums.culture import IdeologyTenet
 from aerona.domain.enums.faith import TenetKind
@@ -60,7 +61,8 @@ SUMMARIES: MappingProxyType[str, tuple[Attribute, ...]] = MappingProxyType(
     }
 )
 
-SKILL_ATTRIBUTES: MappingProxyType[SkillKind, tuple[Attribute, ...]] = MappingProxyType(
+SKILL_ATTRIBUTES: MappingProxyType[SkillKind, tuple[Attribute, ...]] = total(
+    SkillKind,
     {
         S.BLADE: (A.STRENGTH, A.AGILITY, A.KINAESTHETIC_SENSE),
         S.SPEAR: (A.STRENGTH, A.AGILITY, A.KINAESTHETIC_SENSE),
@@ -103,6 +105,7 @@ SKILL_ATTRIBUTES: MappingProxyType[SkillKind, tuple[Attribute, ...]] = MappingPr
         S.LAW: (A.MEMORY, A.ANALYTICAL_ABILITY),
         S.THEOLOGY: (A.MEMORY, A.INTUITION, A.WILLPOWER),
         S.LANGUAGES: (A.LINGUISTIC_ABILITY, A.MEMORY),
+        S.CRYPTOGRAPHY: (A.ANALYTICAL_ABILITY, A.LINGUISTIC_ABILITY, A.PATIENCE),
         S.WRITING: (A.LINGUISTIC_ABILITY, A.CREATIVITY, A.MUSICALITY),
         S.ACCOUNTING: (A.ANALYTICAL_ABILITY, A.MEMORY),
         S.HUNTING: (A.INTUITION, A.PATIENCE, A.AGILITY),
@@ -116,7 +119,7 @@ SKILL_ATTRIBUTES: MappingProxyType[SkillKind, tuple[Attribute, ...]] = MappingPr
         S.PROPHECY: (A.INTUITION, A.CREATIVITY),
         S.SPELLCRAFT: (A.ANALYTICAL_ABILITY, A.FOCUS, A.WILLPOWER),
         S.SPIRIT_SPEAKING: (A.INTUITION, A.EMPATHY, A.WILLPOWER),
-    }
+    },
 )
 
 

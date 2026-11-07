@@ -4,6 +4,7 @@ from types import MappingProxyType
 from sqlalchemy import delete, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.total import partial
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -50,7 +51,8 @@ from aerona.engine.settlement.districts import office_tier
 from aerona.rules.registry import Rules
 
 S = SkillKind
-OFFICE_SKILLS: Mapping[OfficeKind, tuple[tuple[SkillKind, ...], str]] = MappingProxyType(
+OFFICE_SKILLS = partial(
+    OfficeKind,
     {
         OfficeKind.CHANCELLOR: ((S.NEGOTIATION, S.ETIQUETTE, S.ORATORY), "charisma"),
         OfficeKind.MARSHAL: ((S.TACTICS, S.STRATEGY, S.LEADERSHIP), "strength"),
@@ -62,7 +64,8 @@ OFFICE_SKILLS: Mapping[OfficeKind, tuple[tuple[SkillKind, ...], str]] = MappingP
         OfficeKind.HERALD: ((S.ORATORY, S.ETIQUETTE), "charisma"),
         OfficeKind.CHAPLAIN: ((S.THEOLOGY, S.ORATORY), "wisdom"),
         OfficeKind.REGENT: ((S.LEADERSHIP, S.LAW), "charisma"),
-    }
+    },
+    without={OfficeKind.HEIR_DESIGNATE, OfficeKind.RULER},
 )
 COUNCIL = (OfficeKind.CHANCELLOR, OfficeKind.MARSHAL, OfficeKind.TREASURER, OfficeKind.HIGH_JUDGE, OfficeKind.SPYMASTER, OfficeKind.HERALD, OfficeKind.CHAPLAIN)
 W = OfficePower

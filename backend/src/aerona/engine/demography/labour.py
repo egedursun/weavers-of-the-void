@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.needs import GATED_JOBS, JOB_GOODS, MOVABLE_JOBS, WORKSHOP_JOBS
 from aerona.constants.units import PERCENT
+from aerona.core.total import partial
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import LabourRow, PeopleCultureRow
 from aerona.db.tables.economy import ResourceProfileRow, ResourceWorkerRow, WorkshopRow
@@ -47,7 +48,8 @@ AGE_WORK: Mapping[AgeBand, float] = MappingProxyType({AgeBand.CHILD: 0.2, AgeBan
 CONDITION_WORK: Mapping[CohortCondition, float] = MappingProxyType(
     {CohortCondition.NONE: 1.0, CohortCondition.VETERAN: 0.9, CohortCondition.ENSLAVED: 1.0, CohortCondition.CAPTIVE: 0.8}
 )
-CLASS_JOBS: Mapping[SocialClass, Mapping[Job, float]] = MappingProxyType(
+CLASS_JOBS = partial(
+    SocialClass,
     {
         C.FARMER: {J.FARMING: 1.0},
         C.SERF_OR_SLAVE: {J.FARMING: 0.6, J.MINING: 0.3, J.BUILDING: 0.1},
@@ -57,7 +59,8 @@ CLASS_JOBS: Mapping[SocialClass, Mapping[Job, float]] = MappingProxyType(
         C.MONASTIC: {J.CLERGY: 0.5, J.SCHOLARSHIP: 0.3, J.FARMING: 0.2},
         C.SCRIBE: {J.SCHOLARSHIP: 1.0},
         C.NOBLE: {J.IDLE: 0.8, J.SOLDIERING: 0.2},
-    }
+    },
+    without={SocialClass.OUTCAST, SocialClass.WARRIOR},
 )
 FOOD_JOBS = (J.FARMING, J.HERDING, J.FISHING)
 BOUND_JOBS = frozenset({J.FARMING, J.HERDING, J.MINING, J.BUILDING})
