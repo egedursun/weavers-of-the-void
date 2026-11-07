@@ -42,6 +42,7 @@ class EditTitle(Command):
     succession_law_id: int | None = None
     emblem: str | None = Field(default=None, min_length=1, max_length=60)
     prestige: int | None = Field(default=None, ge=0, le=SPAN)
+    regalia: list[int] | None = None
     hold: bool = True
 
 
@@ -160,6 +161,9 @@ async def edit(scope: PlayerScope, command: EditTitle) -> Effect:
     if command.prestige is not None:
         row.prestige = command.prestige
         touched.append("prestige")
+    if command.regalia is not None:
+        row.regalia = sorted({(await entity(scope, item, "The regalia", frozenset({EntityType.ITEM}))).id for item in command.regalia})
+        touched.append("regalia")
     if not touched:
         raise ValidationFailedError("Set at least one value.")
     row.locked = held(row.locked, touched, command.hold)

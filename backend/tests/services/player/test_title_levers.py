@@ -5,6 +5,7 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.titles import DeJureLinkRow, TitleProfileRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.titles import TitleRank
+from aerona.domain.models.entity_stats import ItemStats
 from aerona.services.player import titles
 from aerona.services.player.scope import PlayerScope
 from tests.services.player.factories import PlayerWorld, make_entity
@@ -22,6 +23,13 @@ async def test_the_god_creates_grants_redraws_and_destroys_titles(scope: PlayerS
     assert row.rank is TitleRank.KINGDOM and row.prestige == 70 and {"rank", "prestige", "emblem"} <= set(row.locked)
     with pytest.raises(ValidationFailedError):
         await titles.edit(scope, titles.EditTitle(title_id=title_id, liege_id=title_id))
+    crown = await make_entity(
+        session, "Fen Crown", EntityType.ITEM, world_id=world.world.id, location_id=world.region.id, stats=ItemStats(damage=0, protection=0, might=5, curse=0)
+    )
+    await titles.edit(scope, titles.EditTitle(title_id=title_id, regalia=[crown.id]))
+    assert row.regalia == [crown.id] and "regalia" in row.locked
+    with pytest.raises(ValidationFailedError):
+        await titles.edit(scope, titles.EditTitle(title_id=title_id, regalia=[lord.id]))
     await titles.grant(scope, titles.PassTitle(title_id=title_id, holder_id=rival.id, usurped=True))
     assert row.holder_node_id == rival.id
     await titles.remove_de_jure(scope, titles.DeJureTarget(title_id=title_id, member_id=world.region.id))

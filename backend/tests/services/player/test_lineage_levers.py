@@ -6,6 +6,7 @@ from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblance
 from aerona.db.tables.households import DwellingFurnishingRow, HouseholdAggregateRow, HouseholdMemberRow, HouseholdRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.genetics import DwellingKind, GiftStance, HouseholdRole, Locus
+from aerona.domain.enums.mortal import Ability
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import HouseStats, ItemStats
 from aerona.services.player import genetics, households
@@ -25,6 +26,10 @@ async def test_the_god_writes_shapes_and_strikes_a_mortal_s_blood(scope: PlayerS
         await genetics.set_gene(scope, genetics.SetGene(mortal_id=hero.id, locus=Locus.HAIR_COLOUR, first="violet", second="copper"))
     await genetics.edit(scope, genetics.EditGenome(mortal_id=hero.id, beauty=90, inbreeding=10))
     assert row.beauty == 90 and row.inbreeding == 10 and {"beauty", "inbreeding"} <= set(row.locked)
+    await genetics.edit(scope, genetics.EditGenome(mortal_id=hero.id, potential={Ability.WISDOM: 77}))
+    assert row.potential[Ability.WISDOM.value] == 77 and "potential" in row.locked
+    with pytest.raises(ValidationFailedError):
+        await genetics.edit(scope, genetics.EditGenome(mortal_id=hero.id, potential={Ability.WISDOM: 101}))
     await genetics.redraw(scope, genetics.GenomeTarget(mortal_id=hero.id))
     await genetics.remove(scope, genetics.GenomeTarget(mortal_id=hero.id))
     assert await session.get(GenomeRow, hero.id) is None
@@ -74,6 +79,8 @@ async def test_the_god_founds_shapes_furnishes_and_dissolves_a_household(scope: 
     assert member is not None and member.household_id == home.id and member.locked
     await households.edit(scope, households.EditHousehold(household_id=home.id, wealth=120, burden=30, social_class=SocialClass.MERCHANT))
     assert home.wealth == 120 and home.burden == 30 and {"wealth", "burden"} <= set(home.locked)
+    await households.edit(scope, households.EditHousehold(household_id=home.id, formed_epoch=3))
+    assert home.formed_epoch == 3 and "formed_epoch" not in home.locked
     await households.set_debt(scope, households.SetDebt(household_id=home.id, lender_household_id=other.id, amount=50))
     assert home.debts == {str(other.id): 50}
     await households.hold(scope, households.HoldHousehold(household_id=home.id, fields=["decisions"]))
