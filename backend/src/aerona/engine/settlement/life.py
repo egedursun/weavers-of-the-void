@@ -10,7 +10,6 @@ from aerona.db.tables.economy import TradeFlowRow, WorkshopRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.mind import CultureValueRow
-from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.settlement import (
     ADMIN_MAX,
     DistrictRow,
@@ -30,7 +29,6 @@ from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, WeatherEffect
 from aerona.domain.enums.mind import ValueAxis
-from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.settlement import TIER_ORDER, WATER_ORDER, BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import SiegeStatus
@@ -42,17 +40,17 @@ from aerona.engine.economy.stocks import aggregate_need
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.years import world_years
 from aerona.engine.factions.book import robber_ids
+from aerona.engine.factions.estates import armed_share, exempt_share
 from aerona.engine.happenings.emergence import record_fire
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import lacks
 from aerona.engine.military.occupation import occupation_over, occupation_tax, pay_occupier
 from aerona.engine.mind.drives import unrest as needs_unrest
 from aerona.engine.mind.space import value_distance
-from aerona.engine.mortal.justice import community_ruler
 from aerona.engine.notes import note
 from aerona.engine.phases.disasters import strike_plague
-from aerona.engine.polity.justice import judge_town
 from aerona.engine.polity.laws import LawBook
+from aerona.engine.polity.trials import judge_for, open_case
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -149,6 +147,7 @@ async def collect_taxes(ctx: TickContext, town: Town) -> int:
     people = stat(town.entity, "population") or 0
     wealth = stat(town.entity, "wealth") or stat(town.entity, "prosperity") or 0
     taxable = people / PERCENT * table.per_capita_output * max(0.1, wealth / PERCENT) * (1 - logistics_waste(ctx.rules, town))
+    taxable *= 1 - await exempt_share(ctx, town.entity.id)
     admin = town.profile.admin_capacity / PERCENT
     rate = town.profile.tax_rate / PERCENT * (ctx.rules.urban.free_city_tax_pct / PERCENT if town.profile.free_city else 1.0)
     income = round_half_up(taxable * rate * town.profile.public_order / PERCENT * admin)
@@ -163,7 +162,8 @@ async def pay_soldiers(ctx: TickContext, town: Town) -> bool:
     table = ctx.rules.urban
     society = await ctx.session.get(CommunitySocietyRow, town.entity.id)
     warriors = society.share(SocialClass.WARRIOR) if society is not None else 0
-    keep(town.profile, "militia", round_half_up((stat(town.entity, "population") or 0) * warriors / PERCENT * table.militia_pct / PERCENT))
+    armed = warriors + await armed_share(ctx, town.entity.id) * ctx.rules.estates.militia_pct / PERCENT
+    keep(town.profile, "militia", round_half_up((stat(town.entity, "population") or 0) * armed / PERCENT * table.militia_pct / PERCENT))
     garrison = await ctx.session.scalar(
         select(ArmyRow.entity_id)
         .join(EntityFlagRow, EntityFlagRow.entity_id == ArmyRow.entity_id)
@@ -481,14 +481,8 @@ async def punish(ctx: TickContext, town: Town, laws: LawBook) -> bool:
     table = ctx.rules.crime
     if not ctx.rng(f"punish.{town.entity.id}").chance(table.punishment_chance * town.profile.crime / PERCENT):
         return False
-    polity = laws.member_of.get(town.entity.id)
-    ruler = (
-        await ctx.session.scalar(select(OfficeRow.holder_entity_id).where(OfficeRow.polity_entity_id == polity, OfficeRow.kind == OfficeKind.RULER).limit(1))
-        if polity is not None
-        else None
-    )
-    judge = (await living_entity(ctx.session, ruler) if ruler is not None else None) or await community_ruler(ctx.session, town.entity.id)
-    return await judge_town(ctx, town, laws, judge=judge) is not None
+    judge = await judge_for(ctx, laws.member_of.get(town.entity.id), town.entity.id)
+    return await open_case(ctx, town, laws, judge=judge) is not None
 
 
 async def quarantined(ctx: TickContext, region: int | None) -> bool:

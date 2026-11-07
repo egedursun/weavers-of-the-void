@@ -25,6 +25,7 @@ from aerona.domain.enums.society import Commodity, KnowledgeBranch
 from aerona.domain.enums.war import CaptiveStatus, TributeStatus, WarCause, WarSide, WarStatus
 from aerona.domain.models.entity_stats import ArmyStats, EventStats
 from aerona.engine.body.book import effective
+from aerona.engine.communication.post import herald_war
 from aerona.engine.context import TickContext
 from aerona.engine.demography.labour import fighting_age, mobilisation
 from aerona.engine.economy.equipment import equip_army
@@ -33,6 +34,9 @@ from aerona.engine.interconnect.flows import flowing
 from aerona.engine.military.units import muster, resize
 from aerona.engine.mind.hooks import freed, taken_captive
 from aerona.engine.polity.accords import Clause, sign
+from aerona.engine.polity.crises import crisis_instead
+from aerona.engine.polity.regard import on_war
+from aerona.engine.polity.subjects import forbidden_war
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.levies import levy, levy_category
 from aerona.engine.primitives.naming import Namer, seed_of
@@ -255,17 +259,24 @@ async def declare_war(
     world_cap: bool = True,
     community_cap: bool = False,
     since_epoch: int | None = None,
+    brokered: bool = False,
 ) -> bool:
     counters = ctx.environment.stats.counters
     if world_cap and counters[DECLARATIONS_COUNTER] >= ctx.rules.diplomacy.declarations_cap:
         return False
     if await can_open_war(ctx.session, ctx.rules, first_id, second_id, ctx.epoch, world_cap=world_cap, community_cap=community_cap) is not None:
         return False
+    if await forbidden_war(ctx, first_id, second_id, cause):
+        return False
+    if not brokered and await crisis_instead(ctx, first_id, second_id, cause):
+        return False
     bonds = BondRepository(ctx.session)
     await bonds.close_between(first_id, second_id, [BondKind.ALLY, BondKind.TRADES_WITH], ctx.epoch, "war declared")
     epoch = since_epoch if since_epoch is not None else ctx.epoch
     await bonds.connect(BondDraft(first_id, second_id, BondKind.ENEMY, epoch, reason, war_cause=cause, incited_by_son_id=incited_by_son_id))
     ctx.count("hostilities_declared")
+    await herald_war(ctx, first_id, second_id, reason)
+    await on_war(ctx, first_id, cause)
     if world_cap:
         counters[DECLARATIONS_COUNTER] += 1
     return True

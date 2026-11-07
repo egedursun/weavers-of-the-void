@@ -1,5 +1,8 @@
+import hashlib
 import logging
+import os
 import shutil
+import tempfile
 from collections.abc import AsyncIterator, Callable, Iterator
 from pathlib import Path
 
@@ -8,12 +11,13 @@ from asgi_lifespan import LifespanManager
 from httpx import ASGITransport, AsyncClient
 
 from aerona.constants.media import MediaBackend
-from aerona.db.migrations import upgrade_to_head_sync
+from aerona.db.migrations import SCRIPT_LOCATION, upgrade_to_head_sync
 from aerona.db.session import Database
 from aerona.main import create_app
 from aerona.settings import Settings
 
 STARTUP_SECONDS = 120
+SCHEMA_CACHE = Path(tempfile.gettempdir()) / "aerona-schema"
 
 type OpenDatabase = Callable[[Path], Database]
 
@@ -51,11 +55,22 @@ def no_swallowed_tool_failures(request: pytest.FixtureRequest) -> Iterator[None]
         pytest.fail(f"a tool call crashed inside the runtime: {first.exc_info[0].__name__ if first.exc_info[0] else ''}: {first.exc_info[1]}")
 
 
+def schema_digest() -> str:
+    digest = hashlib.sha256()
+    for script in sorted(SCRIPT_LOCATION.rglob("*.py")):
+        digest.update(script.read_bytes())
+    return digest.hexdigest()[:24]
+
+
 @pytest.fixture(scope="session")
-def schema_template(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    path = tmp_path_factory.mktemp("schema") / "schema.db"
-    upgrade_to_head_sync(f"sqlite+aiosqlite:///{path}")
-    return path
+def schema_template() -> Path:
+    cached = SCHEMA_CACHE / f"{schema_digest()}.db"
+    if not cached.exists():
+        SCHEMA_CACHE.mkdir(parents=True, exist_ok=True)
+        building = SCHEMA_CACHE / f"{cached.stem}.{os.getpid()}.building"
+        upgrade_to_head_sync(f"sqlite+aiosqlite:///{building}")
+        os.replace(building, cached)
+    return cached
 
 
 @pytest.fixture

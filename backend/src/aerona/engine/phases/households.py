@@ -32,6 +32,8 @@ async def household_survey(ctx: TickContext) -> None:
     "table.bonds",
     "table.community_cohorts",
     "table.culture_ethics",
+    "table.culture_values",
+    "table.districts",
     "table.dwelling_furnishings",
     "table.dwellings",
     "table.epoch_year_cursors",
@@ -53,6 +55,7 @@ async def household_survey(ctx: TickContext) -> None:
     "table.polity_profiles",
     "table.site_profits",
     "table.thoughts",
+    "table.tradition_profiles",
 )
 @writes(
     "table.bonds",

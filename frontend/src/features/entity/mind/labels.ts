@@ -265,6 +265,7 @@ export const SKILL_ICONS: Record<string, Named> = {
   lore: { label: 'Lore', icon: BookOpen },
   languages: { label: 'Languages', icon: Languages },
   writing: { label: 'Writing', icon: ScrollText },
+  cryptography: { label: 'Cryptography', icon: ScrollText },
   accounting: { label: 'Accounting', icon: Calculator },
   mountaineering: { label: 'Mountaineering', icon: Mountain },
   swimming: { label: 'Swimming', icon: Waves },

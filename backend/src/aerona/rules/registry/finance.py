@@ -76,3 +76,4 @@ class ElasticityRules:
 class ArbitrageRules:
     merchant_pct: int = rule(100, 0, 400, G, "How much a full share of merchants at either end raises what a route carries (%)")
     guild_pct: int = rule(25, 0, 400, G, "How much a merchant guild at either end raises what a route carries (%)")
+    belief_pct: int = rule(50, 0, 400, G, "How much a community's confident knowledge of its neighbours raises what its routes carry, at full confidence (%)")

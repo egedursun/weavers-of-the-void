@@ -6,10 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.cartography.graph import RegionGraph
 from aerona.cartography.model import ElevationClass, RegionRecord
 from aerona.constants.engine import ADJACENT_HOPS, LOCATION_CHAIN_MAX_HOPS, UNKNOWN_DISTANCE
+from aerona.db.read_memo import memo_of, table_names
+from aerona.db.tables.celestial import WorldMapRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.engine.primitives.map_store import stored_regions
 from aerona.rules.registry import Rules
+
+ATLAS_TABLES = table_names((EntityRow, WorldMapRow))
 
 
 @dataclass(frozen=True)
@@ -29,9 +33,16 @@ class RegionAtlas:
 
     @classmethod
     async def load(cls, session: AsyncSession) -> "RegionAtlas":
+        memo = memo_of(session, "atlas", ATLAS_TABLES)
+        if memo is not None and "atlas" in memo:
+            found: RegionAtlas = memo["atlas"]
+            return found
         rows = await session.execute(select(EntityRow.id, EntityRow.entity_type, EntityRow.world_id, EntityRow.location_id))
         placements = {row[0]: Placement(row[0], row[1], row[2], row[3]) for row in rows}
-        return cls(placements, await stored_regions(session))
+        atlas = cls(placements, await stored_regions(session))
+        if memo is not None:
+            memo["atlas"] = atlas
+        return atlas
 
     def remember(self, entity: EntityRow) -> None:
         self._placements[entity.id] = Placement(entity.id, entity.entity_type, entity.world_id, entity.location_id)

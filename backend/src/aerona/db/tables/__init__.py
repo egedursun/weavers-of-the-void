@@ -1,9 +1,22 @@
+from aerona.db.tables.affairs import (
+    CouncilSeatRow,
+    CourtPositionRow,
+    CourtRow,
+    ElectionRow,
+    MandateRow,
+    NobleDemandRow,
+    PolicyApprovalRow,
+    ResolutionRow,
+    ResolutionVoteRow,
+    TaxPolicyRow,
+)
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.agency import ActionRecordRow, AgentTurnRow, CreationRewardRow, EpochAgentRow, TurnCounterRow
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldMapRow, WorldRow
 from aerona.db.tables.climate import ClimateOrderRow
+from aerona.db.tables.communication import CipherRow, PublicOpinionRow, SignalLinkRow
 from aerona.db.tables.cosmic_state import AddictionImmunityRow, CivilizationTierLockRow, ResourceMechanicRow, VesselProfileRow, WorldLeakItemRow
 from aerona.db.tables.cosmos import AppliedFixupRow, CosmosRow, CreatorMoodInputRow, CreatorRow
 from aerona.db.tables.culture import (
@@ -89,6 +102,16 @@ from aerona.db.tables.epochs import (
     EpochStepRow,
     EpochWorldNarrativeRow,
 )
+from aerona.db.tables.estates import (
+    CompanyProfileRow,
+    CompanyShareRow,
+    EstatePrivilegeRow,
+    EstateProfileRow,
+    GuildSecretRow,
+    HolyOrderProfileRow,
+    MovementProfileRow,
+    MovementSupportRow,
+)
 from aerona.db.tables.factions import FactionActionRow, FactionGoalRow, FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.faith import (
     AfterlifeStratumRow,
@@ -110,7 +133,9 @@ from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, Eve
 from aerona.db.tables.households import DwellingFurnishingRow, DwellingRow, HouseholdAggregateRow, HouseholdMemberRow, HouseholdRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
+from aerona.db.tables.intrigue import BeliefRow, FavourRow, HookRow, IdentityRow, SchemeRow, SecretRow, TrueNameRow
 from aerona.db.tables.job import JobRow
+from aerona.db.tables.justice import CaseWitnessRow, CrimeCaseRow, LawProposalRow, ProposalStanceRow
 from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
 from aerona.db.tables.lore import (
@@ -219,7 +244,9 @@ from aerona.db.tables.society_depth import (
     PolityLoyaltyRow,
 )
 from aerona.db.tables.sons import SonPowerRow, SonRelationRow, SonRow
+from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, DiplomacyProfileRow, PolityRegardRow, SphereRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow, StructureStaffRow
+from aerona.db.tables.titles import DeJureLinkRow, TitleHolderRow, TitleProfileRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, HeroQuestRow, SiegeRow, TributeRow, WarRow, WarSideRow
 
 __all__ = [
@@ -244,6 +271,7 @@ __all__ = [
     "BattleRow",
     "BattleStackRow",
     "BeastProfileRow",
+    "BeliefRow",
     "BodyCustomRow",
     "BodyRow",
     "BondRow",
@@ -253,9 +281,11 @@ __all__ = [
     "CanonFactRow",
     "CaptiveCohortRow",
     "CaptiveRow",
+    "CaseWitnessRow",
     "CastingRow",
     "ChronicleEntityRow",
     "ChronicleRow",
+    "CipherRow",
     "CivilizationTierLockRow",
     "ClaimRow",
     "ClassStandingRow",
@@ -268,28 +298,38 @@ __all__ = [
     "CommunityRelationRow",
     "CommunitySocietyRow",
     "CommunityStockRow",
+    "CompanyProfileRow",
+    "CompanyShareRow",
     "ConditionRow",
     "ConstructionRow",
     "ContestRow",
     "CorveeRow",
     "CosmosRow",
     "CouncilRow",
+    "CouncilSeatRow",
+    "CourtPositionRow",
+    "CourtRow",
     "CreationMotifRow",
     "CreationRewardRow",
     "CreationVerdictRow",
     "CreatorMoodInputRow",
     "CreatorRow",
     "CreditProfileRow",
+    "CrimeCaseRow",
+    "CrisisBackerRow",
+    "CrisisRow",
     "CultDoctrineRow",
     "CultHoldingRow",
     "CultOfficeRow",
     "CultTenetRow",
     "CultureValueRow",
     "CurrencyRow",
+    "DeJureLinkRow",
     "DeedClaimRow",
     "DeedRow",
     "DeferredStepRow",
     "DesignatedHeirRow",
+    "DiplomacyProfileRow",
     "DiseaseCureRow",
     "DiseaseProfileRow",
     "DistrictDesignRow",
@@ -299,6 +339,7 @@ __all__ = [
     "DwellingFurnishingRow",
     "DwellingRow",
     "EconomicIndicatorRow",
+    "ElectionRow",
     "EndemicDiseaseRow",
     "EntityFlagRow",
     "EntityRow",
@@ -313,6 +354,8 @@ __all__ = [
     "EpochStepRow",
     "EpochWorldNarrativeRow",
     "EpochYearCursorRow",
+    "EstatePrivilegeRow",
+    "EstateProfileRow",
     "EventCasualtyRow",
     "EventFootprintRow",
     "EventProfileRow",
@@ -321,6 +364,7 @@ __all__ = [
     "FactionMembershipRow",
     "FactionProfileRow",
     "FateRewardRow",
+    "FavourRow",
     "FeudRow",
     "FolkBeliefRow",
     "ForeignGodPowerRow",
@@ -329,6 +373,7 @@ __all__ = [
     "GodConflictRow",
     "GoodsFlowRow",
     "GroupRankRow",
+    "GuildSecretRow",
     "HeirloomRow",
     "HerdRow",
     "HeresyRow",
@@ -336,6 +381,8 @@ __all__ = [
     "HistorianViewRow",
     "HolderLevelRow",
     "HolderTechniqueRow",
+    "HolyOrderProfileRow",
+    "HookRow",
     "HorizonIntuitionRow",
     "HouseMemberRow",
     "HouseProfileRow",
@@ -343,6 +390,7 @@ __all__ = [
     "HouseholdAggregateRow",
     "HouseholdMemberRow",
     "HouseholdRow",
+    "IdentityRow",
     "IdeologyAdherentRow",
     "IdeologyProfileRow",
     "IdeologyTenetRow",
@@ -364,6 +412,7 @@ __all__ = [
     "LanguageStandingRow",
     "LawJurisdictionRow",
     "LawProfileRow",
+    "LawProposalRow",
     "LearnedTacticRow",
     "LedgerChangeRow",
     "LedgerEntryRow",
@@ -374,6 +423,7 @@ __all__ = [
     "LoanRow",
     "LoreTradeRow",
     "MaimedCohortRow",
+    "MandateRow",
     "MapNoteRow",
     "MapSnapshotRow",
     "MarketPriceHoldRow",
@@ -388,9 +438,12 @@ __all__ = [
     "MortalEquipmentRow",
     "MortalProfileRow",
     "MotifOverrideRow",
+    "MovementProfileRow",
+    "MovementSupportRow",
     "NameRegistryRow",
     "NeedRow",
     "NetworkReviewRow",
+    "NobleDemandRow",
     "NodeMaterialRow",
     "NodeRow",
     "NotableYearRow",
@@ -410,17 +463,21 @@ __all__ = [
     "PlaceEnvironmentRow",
     "PlaceProfileRow",
     "PlaceSecretRow",
+    "PolicyApprovalRow",
     "PolityLoyaltyRow",
     "PolityMapKnowledgeRow",
     "PolityMemberRow",
     "PolityProfileRow",
+    "PolityRegardRow",
     "PolityTerritoryRow",
     "PolityTreasuryRow",
     "PossessionRow",
     "PressureRow",
     "ProductionRunRow",
     "ProphecyConditionRow",
+    "ProposalStanceRow",
     "ProsthesisRow",
+    "PublicOpinionRow",
     "QuarantineRow",
     "RegionDangerRow",
     "RegionEnvironmentRow",
@@ -432,6 +489,8 @@ __all__ = [
     "RelationshipRow",
     "RelicRow",
     "ReputationRow",
+    "ResolutionRow",
+    "ResolutionVoteRow",
     "ResourceMechanicRow",
     "ResourceProfileRow",
     "ResourceWorkerRow",
@@ -444,13 +503,16 @@ __all__ = [
     "RuleOverrideRow",
     "RulerCurrencyRow",
     "ScenarioRow",
+    "SchemeRow",
     "ScoreRow",
+    "SecretRow",
     "SentenceRow",
     "SettlementHistoryRow",
     "SettlementInfrastructureRow",
     "SettlementProfileRow",
     "SettlementTreasuryRow",
     "SiegeRow",
+    "SignalLinkRow",
     "SiteProfitRow",
     "SkillRow",
     "SkyEventRow",
@@ -469,6 +531,7 @@ __all__ = [
     "SpeciesUseRow",
     "SpeciesYieldRow",
     "SpeculationRow",
+    "SphereRow",
     "SpiritProfileRow",
     "SpyAgentRow",
     "SpyNetworkRow",
@@ -477,8 +540,11 @@ __all__ = [
     "StructureLeyRow",
     "StructureProfileRow",
     "StructureStaffRow",
+    "TaxPolicyRow",
     "ThreadLinkRow",
     "ThreadRow",
+    "TitleHolderRow",
+    "TitleProfileRow",
     "TradeFlowRow",
     "TradePolicyRow",
     "TradeRouteLossRow",
@@ -493,6 +559,7 @@ __all__ = [
     "TreatyPartyRow",
     "TreatyProfileRow",
     "TributeRow",
+    "TrueNameRow",
     "TurnCounterRow",
     "UnitDesignRow",
     "VassalageRow",

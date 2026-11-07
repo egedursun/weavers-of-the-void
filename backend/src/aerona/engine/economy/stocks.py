@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import BACKFILL_SPLITS, COMMODITIES
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memo_of, table_names
 from aerona.db.tables.economy import CommunityStockRow, GoodsFlowRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -31,11 +32,18 @@ class Lot:
     quality: int
 
 
+STOCK_TABLES = table_names((CommunityStockRow,))
+
+
 async def lots_of(session: AsyncSession, community_id: int, commodity: CommodityKind | None = None) -> list[CommunityStockRow]:
-    statement = select(CommunityStockRow).where(CommunityStockRow.community_entity_id == community_id)
-    if commodity is not None:
-        statement = statement.where(CommunityStockRow.commodity == commodity)
-    return list(await session.scalars(statement.order_by(CommunityStockRow.id)))
+    memo = memo_of(session, "lots", STOCK_TABLES)
+    lots: list[CommunityStockRow] | None = memo.get(community_id) if memo is not None else None
+    if lots is None:
+        statement = select(CommunityStockRow).where(CommunityStockRow.community_entity_id == community_id)
+        lots = list(await session.scalars(statement.order_by(CommunityStockRow.id)))
+        if memo is not None:
+            memo[community_id] = lots
+    return [row for row in lots if commodity is None or row.commodity == commodity]
 
 
 async def holding(session: AsyncSession, community_id: int, commodity: CommodityKind, material: MaterialKind | None = None) -> int:

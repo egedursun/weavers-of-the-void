@@ -33,7 +33,7 @@ class WorldHuntRules:
     armor_save_min_protection: int = rule(40, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Minimum protection of armor able to turn death into a wound")
     armor_save_base_pct: int = rule(50, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Chance armor protects the hero from death: base (%)")
     armor_save_divisor: int = rule(250, 1, 10000, RuleGroup.HEROES_AND_MORTALS, "Armor contribution to the save chance: protection / this number")
-    armor_save_hp_loss: int = rule(60, 0, 1000, RuleGroup.HEROES_AND_MORTALS, "HP loss of a hero saved by their armor")
+    armor_save_hp_loss: int = rule(60, 0, 1000, RuleGroup.HEROES_AND_MORTALS, "Harm a monster deals to a hero their armor saves, before their body takes it")
     unknown_hp: int = rule(100, 1, 1000, RuleGroup.HEROES_AND_MORTALS, "HP before armor damage of a hero with no recorded HP")
     armor_save_wear: int = rule(15, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Protection loss of the armor that saved the hero")
     lament_power: int = rule(2, 1, 12, RuleGroup.HEROES_AND_MORTALS, "Power level of the fallen hero's lament")

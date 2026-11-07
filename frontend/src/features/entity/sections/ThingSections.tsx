@@ -1,15 +1,22 @@
+import { AffairsSection } from './AffairsSection'
 import { AspirationsSection } from './AspirationsSection'
 import { BondsSection } from './BondsSection'
+import { CorrespondenceSection } from './CorrespondenceSection'
 import { EntityMechanics } from './EntityMechanics'
+import { EstatesSection } from './EstatesSection'
 import { EthicsSection } from './EthicsSection'
 import { FeelingsSection } from './FeelingsSection'
 import { FinanceSection } from './FinanceSection'
 import { HomeSection } from './HomeSection'
+import { IntrigueSection } from './IntrigueSection'
+import { JusticeSection } from './JusticeSection'
 import { LineageSection } from './LineageSection'
 import { MindSplitSection } from './MindSplitSection'
 import { RecordRowsSection } from './RecordRowsSection'
 import { RenownSection } from './RenownSection'
+import { StatecraftSection } from './StatecraftSection'
 import { TastesSection } from './TastesSection'
+import { TitlesSection } from './TitlesSection'
 import { WorksSection } from './WorksSection'
 
 export function ThingSections({
@@ -39,6 +46,13 @@ export function ThingSections({
       <FinanceSection nodeId={nodeId} />
       <LineageSection nodeId={nodeId} />
       <HomeSection nodeId={nodeId} />
+      <IntrigueSection nodeId={nodeId} />
+      <CorrespondenceSection nodeId={nodeId} />
+      <TitlesSection nodeId={nodeId} />
+      <EstatesSection nodeId={nodeId} />
+      <JusticeSection nodeId={nodeId} />
+      <StatecraftSection nodeId={nodeId} />
+      <AffairsSection nodeId={nodeId} />
       <RecordRowsSection nodeId={nodeId} />
     </>
   )

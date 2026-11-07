@@ -54,6 +54,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.deeds",
     "table.entity_flags",
     "table.faction_memberships",
+    "table.favours",
     "table.genomes",
     "table.griefs",
     "table.holder_levels",
@@ -73,6 +74,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.prostheses",
     "table.relationships",
     "table.reputations",
+    "table.secrets",
     "table.skills",
     "table.thoughts",
     "table.tradition_profiles",
@@ -87,6 +89,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.deed_claims",
     "table.deeds",
     "table.entities",
+    "table.favours",
     "table.injuries",
     "table.memories",
     "table.mortal_profiles",
@@ -204,6 +207,7 @@ async def relations_pecking(ctx: TickContext) -> None:
 
 
 @reads(
+    "mortal.charisma",
     "table.bonds",
     "table.captives",
     "table.deed_claims",

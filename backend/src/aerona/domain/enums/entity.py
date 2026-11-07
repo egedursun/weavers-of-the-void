@@ -32,6 +32,7 @@ class EntityType(StrEnum):
     POLITY = "polity"
     HOUSE = "house"
     TREATY = "treaty"
+    TITLE = "title"
     IDEOLOGY = "ideology"
     RITE = "rite"
     BEAST = "beast"

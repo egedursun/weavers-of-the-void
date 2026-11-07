@@ -15,10 +15,12 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import LASTING_INJURY_STATES
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitKind
 from aerona.domain.enums.polity import GenderRule, LawKind, OathKind, OfficeKind, OfficePower, SuccessionRule, TreatyStatus
 from aerona.domain.enums.settlement import TIER_ORDER
@@ -27,6 +29,7 @@ from aerona.domain.enums.war import WarSide
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.causes import succession_incident
+from aerona.engine.intrigue.favours import owe
 from aerona.engine.military.causes import press_claim_war
 from aerona.engine.mind.book import traits_of
 from aerona.engine.mortal.kin import children_of, siblings_of
@@ -39,7 +42,7 @@ from aerona.engine.polity.repute import shift_infamy
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, bond_exists, close, connect, has_flag, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import war_event
 from aerona.engine.settlement.book import towns
@@ -56,10 +59,12 @@ OFFICE_SKILLS: Mapping[OfficeKind, tuple[tuple[SkillKind, ...], str]] = MappingP
         OfficeKind.SPYMASTER: ((S.INTRIGUE, S.DECEPTION), "agility"),
         OfficeKind.GOVERNOR: ((S.LEADERSHIP, S.LAW, S.LOGISTICS), "charisma"),
         OfficeKind.AMBASSADOR: ((S.NEGOTIATION, S.LANGUAGES, S.ETIQUETTE), "charisma"),
+        OfficeKind.HERALD: ((S.ORATORY, S.ETIQUETTE), "charisma"),
+        OfficeKind.CHAPLAIN: ((S.THEOLOGY, S.ORATORY), "wisdom"),
         OfficeKind.REGENT: ((S.LEADERSHIP, S.LAW), "charisma"),
     }
 )
-COUNCIL = (OfficeKind.CHANCELLOR, OfficeKind.MARSHAL, OfficeKind.TREASURER, OfficeKind.HIGH_JUDGE, OfficeKind.SPYMASTER)
+COUNCIL = (OfficeKind.CHANCELLOR, OfficeKind.MARSHAL, OfficeKind.TREASURER, OfficeKind.HIGH_JUDGE, OfficeKind.SPYMASTER, OfficeKind.HERALD, OfficeKind.CHAPLAIN)
 W = OfficePower
 DEFAULT_POWERS: Mapping[OfficeKind, tuple[OfficePower, ...]] = MappingProxyType(
     {
@@ -73,6 +78,8 @@ DEFAULT_POWERS: Mapping[OfficeKind, tuple[OfficePower, ...]] = MappingProxyType(
         OfficeKind.SPYMASTER: (W.SPY,),
         OfficeKind.GOVERNOR: (W.GOVERN,),
         OfficeKind.AMBASSADOR: (W.EMBASSY,),
+        OfficeKind.HERALD: (W.PROCLAIM,),
+        OfficeKind.CHAPLAIN: (W.PREACH,),
     }
 )
 POWER_SKILLS: Mapping[OfficePower, OfficeKind] = MappingProxyType(
@@ -86,6 +93,8 @@ POWER_SKILLS: Mapping[OfficePower, OfficeKind] = MappingProxyType(
         W.SPY: OfficeKind.SPYMASTER,
         W.GOVERN: OfficeKind.GOVERNOR,
         W.EMBASSY: OfficeKind.AMBASSADOR,
+        W.PROCLAIM: OfficeKind.HERALD,
+        W.PREACH: OfficeKind.CHAPLAIN,
     }
 )
 POWER_VALUES = frozenset(item.value for item in OfficePower)
@@ -392,6 +401,7 @@ async def name_heir(ctx: TickContext, realm: Realm, line: list[EntityRow]) -> En
     if designate.holder_entity_id != heir.id:
         designate.holder_entity_id = heir.id
         designate.since_epoch = ctx.epoch
+        await owe(ctx, heir.id, realm.ruler_id, FavourOrigin.SUCCESSION_SUPPORT, ctx.rules.intrigue.succession_favour)
     return heir
 
 
@@ -609,7 +619,20 @@ async def office_effects(ctx: TickContext, book: RealmBook, realm: Realm) -> dic
             continue
         await change_relation(ctx, core, host.profile.core_entity_id, table.ambassador_relation * skill, MemoryKind.GOODWILL, note="an embassy at court")
         counts["embassies"] += 1
+    counts["preached"] = await preach(ctx, book, realm)
     return counts
+
+
+async def preach(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
+    preached = 0
+    for _, skill in await wielders(ctx, realm, OfficePower.PREACH):
+        if skill <= 0:
+            continue
+        for member in book.members(realm):
+            if not held(member.id) and stat(member, "piety") is not None:
+                shift_stat(member, "piety", ctx.rules.government.chaplain_piety * skill)
+        preached += 1
+    return preached
 
 
 async def govern(ctx: TickContext, book: RealmBook, realm: Realm) -> int:

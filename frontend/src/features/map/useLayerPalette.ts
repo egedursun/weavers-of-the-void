@@ -63,6 +63,7 @@ const ALPHA: Record<LayerMode, number> = {
   terrain: 0,
   political: 0.2,
   realms: 0.15,
+  de_jure: 0.12,
   regions: 0.3,
   creators: 0.3,
   religions: 0.42,
@@ -260,6 +261,15 @@ function regionKey(
           ),
       }
     }
+    case 'de_jure': {
+      const right =
+        view.de_jure?.[String(regionId)] ?? view.de_jure?.[String(topId)]
+      if (!right) return null
+      return {
+        key: `dejure:${right.title_id}`,
+        alpha: right.held_by_right ? alpha : alpha + POLITICAL_ALPHA_GAIN,
+      }
+    }
     case 'political': {
       const control = controlOf(view, regionId, topId)
       if (!control) return null
@@ -315,6 +325,12 @@ function labelFor(
       (item) => item.polity_id === id
     )
     return held?.name ?? `Realm ${id}`
+  }
+  if (kind === 'dejure') {
+    const right = Object.values(view.de_jure ?? {}).find(
+      (item) => item.title_id === id
+    )
+    return right?.name ?? `Title ${id}`
   }
   if (kind === 'ruler') {
     const control = Object.values(view.political).find(

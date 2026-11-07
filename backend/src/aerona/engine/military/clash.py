@@ -34,6 +34,7 @@ from aerona.engine.economy.materials import MaterialBook
 from aerona.engine.economy.sanctity import holy_strike
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import ancestral_site, guardians_of
+from aerona.engine.intrigue.sources import cowardice
 from aerona.engine.lore.items import standard_of
 from aerona.engine.lore.language import barrier
 from aerona.engine.military.aftermath import flaring_items
@@ -356,6 +357,8 @@ async def earn_traits(ctx: TickContext, result: BattleResult, ground: Field, com
                 ctx.session.add(CommanderTraitRow(mortal_entity_id=commander_id, trait=trait, since_epoch=ctx.epoch))
                 held.add(trait)
                 earned += 1
+        if not won:
+            await cowardice(ctx, commander_id, side.entity.id)
     return earned
 
 

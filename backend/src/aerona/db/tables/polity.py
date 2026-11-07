@@ -25,6 +25,7 @@ from aerona.domain.enums.polity import (
     TreatyStatus,
 )
 from aerona.domain.enums.settlement import TreasuryEntry
+from aerona.domain.enums.statecraft import CouncilTask, SubjectKind
 
 
 class PolityProfileRow(Base):
@@ -38,6 +39,7 @@ class PolityProfileRow(Base):
         at_least("debt", 0),
         at_least("war_chest", 0),
         at_least("tier", 0),
+        between("corruption", PERCENT_MIN, PERCENT_MAX),
     )
 
     polity_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
@@ -51,6 +53,7 @@ class PolityProfileRow(Base):
     administration: Mapped[int] = mapped_column(default=0)
     overextension: Mapped[int] = mapped_column(default=0)
     war_weariness: Mapped[int] = mapped_column(default=0)
+    corruption: Mapped[int] = mapped_column(default=0, server_default="0")
     tier: Mapped[int] = mapped_column(default=0)
     tier_strain: Mapped[int] = mapped_column(default=0)
     standing: Mapped[RegionalStanding] = mapped_column(enum_type(RegionalStanding, "standing"), default=RegionalStanding.MINOR_POWER)
@@ -90,7 +93,11 @@ class PolityTerritoryRow(Base):
 
 class OfficeRow(Base):
     __tablename__ = "offices"
-    __table_args__ = (Index("ix_offices_polity", "polity_entity_id", "kind"), Index("ix_offices_holder", "holder_entity_id"))
+    __table_args__ = (
+        Index("ix_offices_polity", "polity_entity_id", "kind"),
+        Index("ix_offices_holder", "holder_entity_id"),
+        between("diligence", PERCENT_MIN, PERCENT_MAX),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     polity_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
@@ -102,6 +109,9 @@ class OfficeRow(Base):
     title: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
     since_epoch: Mapped[int] = mapped_column(default=0)
     powers: Mapped[list[str]] = mapped_column(JSON, default=list)
+    task: Mapped[CouncilTask | None] = mapped_column(enum_type(CouncilTask, "task"))
+    task_target_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    diligence: Mapped[int] = mapped_column(default=50, server_default="50")
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
@@ -136,6 +146,7 @@ class VassalageRow(Base):
         between("loyalty", PERCENT_MIN, PERCENT_MAX),
         between("tribute_pct", PERCENT_MIN, PERCENT_MAX),
         between("levy_pct", PERCENT_MIN, PERCENT_MAX),
+        between("liberty", PERCENT_MIN, PERCENT_MAX),
     )
 
     vassal_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
@@ -145,6 +156,12 @@ class VassalageRow(Base):
     tribute_pct: Mapped[int] = mapped_column(default=10)
     levy_pct: Mapped[int] = mapped_column(default=10)
     loyalty: Mapped[int] = mapped_column(default=50)
+    kind: Mapped[SubjectKind] = mapped_column(enum_type(SubjectKind, "kind"), default=SubjectKind.VASSAL, server_default=SubjectKind.VASSAL.value)
+    liberty: Mapped[int] = mapped_column(default=20, server_default="20")
+    private_war: Mapped[bool] = mapped_column(default=False, server_default="0")
+    coinage: Mapped[bool] = mapped_column(default=False, server_default="0")
+    confirm_succession: Mapped[bool] = mapped_column(default=True, server_default="1")
+    confirmed_ruler_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
@@ -217,6 +234,7 @@ class ClaimRow(Base):
     house_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     polity_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     office: Mapped[OfficeKind] = mapped_column(enum_type(OfficeKind, "office"), default=OfficeKind.RULER)
+    title_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"), index=True)
     strength: Mapped[int] = mapped_column(default=50)
     basis: Mapped[ClaimBasis] = mapped_column(enum_type(ClaimBasis, "basis"))
     pressed: Mapped[bool] = mapped_column(default=False)
@@ -315,3 +333,4 @@ class SentenceRow(Base):
     crime: Mapped[CrimeKind] = mapped_column(enum_type(CrimeKind, "crime"))
     penalty: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
     epoch: Mapped[int]
+    case_id: Mapped[int | None] = mapped_column(ForeignKey("crime_cases.id", ondelete="SET NULL"), index=True)

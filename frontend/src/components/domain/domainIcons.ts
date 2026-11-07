@@ -83,6 +83,7 @@ export const ENTITY_TYPE_ICON: Record<Schemas['EntityType'], LucideIcon> = {
   polity: Landmark,
   house: Shield,
   treaty: Handshake,
+  title: Crown,
   ideology: Lightbulb,
   beast: Footprints,
   rite: Wand2,

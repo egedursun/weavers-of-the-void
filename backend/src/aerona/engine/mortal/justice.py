@@ -12,6 +12,7 @@ from aerona.domain.enums.mortal import CrimeKind, DeathCause, PunishmentKind
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.factions.estates import immune
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.ethics import culture_of, honour_of
@@ -97,6 +98,8 @@ async def shame_publicly(ctx: TickContext, culprit: EntityRow, judge: EntityRow 
 async def sentence(ctx: TickContext, culprit: EntityRow, crime: CrimeKind, punishment: PunishmentKind, *, judge: EntityRow | None = None) -> bool:
     table = ctx.rules.punishment
     reason = f"punished for {CRIME_TEXT[crime]}"
+    if await immune(ctx, culprit):
+        return False
     await think(ctx.session, ctx.rules, culprit.id, ThoughtKind.WAS_PUNISHED, ctx.epoch, subject_id=judge.id if judge is not None else None)
     if crime in JUDGED_CRIMES:
         await judged(ctx, culprit.id, culprit.id, CRIME_ACTS[crime])

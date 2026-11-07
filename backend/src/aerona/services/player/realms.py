@@ -13,6 +13,7 @@ from aerona.domain.enums.polity import (
     TreatyKind,
     TreatyStatus,
 )
+from aerona.domain.enums.statecraft import SubjectKind
 from aerona.engine.polity import control
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -526,6 +527,11 @@ class EditVassalage(Command):
     tribute_pct: int | None = Field(default=None, ge=0, le=100)
     levy_pct: int | None = Field(default=None, ge=0, le=100)
     loyalty: int | None = Field(default=None, ge=0, le=100)
+    kind: SubjectKind | None = None
+    liberty: int | None = Field(default=None, ge=0, le=100)
+    private_war: bool | None = None
+    coinage: bool | None = None
+    confirm_succession: bool | None = None
     release: list[str] = Field(default_factory=list)
 
 
@@ -590,8 +596,19 @@ async def edit_vassalage(scope: PlayerScope, command: EditVassalage) -> Effect:
         levy_pct=command.levy_pct,
         loyalty=command.loyalty,
         release=command.release,
+        terms=control.SubjectTerms(
+            kind=command.kind,
+            liberty=command.liberty,
+            private_war=command.private_war,
+            coinage=command.coinage,
+            confirm_succession=command.confirm_succession,
+        ),
     )
-    return Effect(f"The vassal pays {row.tribute_pct}% and sends {row.levy_pct}% of its levies; loyalty {row.loyalty}.", command.vassal_id)
+    return Effect(
+        f"The {row.kind.value.replace('_', ' ')} pays {row.tribute_pct}% and sends {row.levy_pct}% of its levies; "
+        f"loyalty {row.loyalty}, wish for liberty {row.liberty}.",
+        command.vassal_id,
+    )
 
 
 class EditHouse(Command):

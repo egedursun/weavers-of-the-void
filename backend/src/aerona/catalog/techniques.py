@@ -81,6 +81,9 @@ TECHNIQUES = MappingProxyType(
             TechniqueSpec(T.ALPHABET, B.WRITING, 1, "The alphabet", "A few letters write any word."),
             TechniqueSpec(T.PAPER, B.WRITING, 2, "Paper", "Writing is cheap and books multiply."),
             TechniqueSpec(T.PRINTING, B.WRITING, 4, "Printing", "Books are made by the hundred.", Gate(all_of=((B.METALLURGY, 2),))),
+            TechniqueSpec(
+                T.CRYPTOGRAPHY, B.WRITING, 3, "Cryptography", "Letters are written in ciphers only their readers can break.", Gate(all_of=((B.TRADE, 2),))
+            ),
             TechniqueSpec(T.CALENDAR, B.ASTRONOMY, 1, "The calendar", "Seasons and holy days are counted."),
             TechniqueSpec(T.NAVIGATION_STARS, B.ASTRONOMY, 2, "Star navigation", "Ships steer by the stars.", Gate(all_of=((B.SEAFARING, 1),))),
             TechniqueSpec(T.ECLIPSE_PREDICTION, B.ASTRONOMY, 3, "Eclipse prediction", "Darkenings of the sun are foretold."),

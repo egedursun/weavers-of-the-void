@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.mind_split import ATTRIBUTES, CONDITION_ATTRIBUTES, FACETS, IDEAS, SKILL_ATTRIBUTES, SUMMARIES
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
+from aerona.db.fast_session import rows_by_prefix
 from aerona.db.tables.body import ConditionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -95,20 +96,21 @@ def clamp_facet(value: float) -> int:
 
 
 async def attributes_of(session: AsyncSession, node_id: int) -> Attributes:
-    rows = await session.scalars(select(AttributeRow).where(AttributeRow.node_id == node_id))
+    rows = await rows_by_prefix(session, AttributeRow, node_id)
     return {row.attribute: row.value for row in rows}
 
 
 async def facets_of(session: AsyncSession, node_id: int) -> Facets:
-    rows = await session.scalars(select(FacetRow).where(FacetRow.node_id == node_id))
+    rows = await rows_by_prefix(session, FacetRow, node_id)
     return {row.facet: row.value for row in rows}
 
 
 async def write_attributes(session: AsyncSession, node_id: int, values: Mapping[Attribute, int]) -> None:
     if write_blocked(node_id, ATTRIBUTES_KEY):
         return
+    existing = {row.attribute: row for row in await rows_by_prefix(session, AttributeRow, node_id)}
     for attribute, value in values.items():
-        row = await session.get(AttributeRow, (node_id, attribute))
+        row = existing.get(attribute)
         if row is None:
             session.add(AttributeRow(node_id=node_id, attribute=attribute, value=clamp_attribute(value)))
         else:
@@ -119,8 +121,9 @@ async def write_attributes(session: AsyncSession, node_id: int, values: Mapping[
 async def write_facets(session: AsyncSession, node_id: int, values: Mapping[Facet, int]) -> None:
     if write_blocked(node_id, FACETS_KEY):
         return
+    existing = {row.facet: row for row in await rows_by_prefix(session, FacetRow, node_id)}
     for facet, value in values.items():
-        row = await session.get(FacetRow, (node_id, facet))
+        row = existing.get(facet)
         if row is None:
             session.add(FacetRow(node_id=node_id, facet=facet, value=clamp_facet(value)))
         else:

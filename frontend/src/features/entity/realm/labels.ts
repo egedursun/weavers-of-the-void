@@ -1,4 +1,6 @@
 import {
+  Map,
+  Megaphone,
   Baby,
   BadgeCheck,
   Ban,
@@ -122,6 +124,8 @@ export const OFFICES: Record<string, Named> = {
   spymaster: { label: 'Spymaster', icon: Eye, tone: 'verdigris' },
   governor: { label: 'Governor', icon: MapIcon, tone: 'success' },
   ambassador: { label: 'Ambassador', icon: Handshake, tone: 'info' },
+  herald: { label: 'Herald', icon: Megaphone, tone: 'warning' },
+  chaplain: { label: 'Court chaplain', icon: Church, tone: 'verdigris' },
 }
 
 export const LAW_AREAS: Record<string, Named> = {
@@ -137,6 +141,11 @@ export const LAW_AREAS: Record<string, Named> = {
     tone: 'success',
   },
   magic: { label: 'Magic', icon: WandSparkles, tone: 'verdigris' },
+  constitutional: {
+    label: 'The fundamental law',
+    icon: ScrollText,
+    tone: 'gold',
+  },
 }
 
 export const LAW_KINDS: Record<string, string> = {
@@ -161,6 +170,7 @@ export const LAW_KINDS: Record<string, string> = {
   foreigner_rights: 'Rights of foreigners',
   religious_tolerance: 'Religious tolerance',
   worship_ban: 'Worship ban',
+  censorship: 'Censorship',
   blood_feud: 'Blood feud',
   quarantine: 'Quarantine',
   burial_law: 'Burial',
@@ -168,6 +178,8 @@ export const LAW_KINDS: Record<string, string> = {
   magic_ban: 'Ban on magic',
   licensed_magic: 'Licensed magic',
   rite_restrictions: 'Restricted rites',
+  franchise: 'Franchise',
+  constitution: 'Constitution',
   custom: 'Custom',
 }
 
@@ -205,6 +217,8 @@ export const LAW_PARAMS: Record<string, string> = {
   works: 'Works',
   severity: 'Severity',
   fee: 'Fee',
+  trial: 'Trial by',
+  torture: 'Questioning under torture',
 }
 
 export const LEGITIMACY_BASES: Record<string, Named> = {
@@ -220,6 +234,7 @@ export const CLAIM_BASES: Record<string, Named> = {
   conquest: { label: 'By conquest', icon: Swords, tone: 'danger' },
   divine: { label: 'By divine right', icon: Sparkles, tone: 'verdigris' },
   fabricated: { label: 'Forged', icon: Feather, tone: 'warning' },
+  de_jure: { label: 'By right of the land', icon: Map, tone: 'info' },
 }
 
 export const TREATY_KINDS: Record<string, Named & { plural: string }> = {
@@ -279,6 +294,12 @@ export const TREATY_KINDS: Record<string, Named & { plural: string }> = {
     plural: 'Interworld pacts',
     icon: Globe,
     tone: 'verdigris',
+  },
+  coalition: {
+    label: 'Coalition',
+    plural: 'Coalitions',
+    icon: Users,
+    tone: 'danger',
   },
 }
 

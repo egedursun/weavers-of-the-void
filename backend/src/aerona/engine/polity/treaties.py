@@ -14,12 +14,16 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind, TreatyStatus
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import TributeStatus, WarCause, WarSide, WarStatus
+from aerona.engine.communication.post import proposal_pending
 from aerona.engine.context import TickContext
+from aerona.engine.intrigue.beliefs import daring
+from aerona.engine.intrigue.favours import owe
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.mortal.kinship import marry
 from aerona.engine.notes import note
@@ -39,7 +43,9 @@ from aerona.engine.polity.accords import (
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.loyalty import vassal_loyalty
 from aerona.engine.polity.oaths import break_oath
+from aerona.engine.polity.regard import on_breach
 from aerona.engine.polity.repute import shift_honour, shift_infamy
+from aerona.engine.polity.subjects import kind_for, pays_tribute, sends_levies
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import active_bonds, living_entity
@@ -61,7 +67,7 @@ BOND_KINDS = MappingProxyType(
 ADOPT_FIXUP = "treaties_from_bonds"
 PEACEFUL = frozenset({ClauseKind.NON_AGGRESSION, ClauseKind.CALL_TO_ARMS})
 OFFENSIVE = frozenset({TreatyKind.ALLIANCE_OFFENSIVE, TreatyKind.CONDOTTA})
-DEFENSIVE = frozenset({TreatyKind.ALLIANCE_DEFENSIVE, TreatyKind.MARRIAGE_PACT, TreatyKind.VASSALAGE, TreatyKind.GUARANTEE})
+DEFENSIVE = frozenset({TreatyKind.ALLIANCE_DEFENSIVE, TreatyKind.MARRIAGE_PACT, TreatyKind.VASSALAGE, TreatyKind.GUARANTEE, TreatyKind.COALITION})
 
 
 async def adopt_bonds(ctx: TickContext) -> int:
@@ -122,6 +128,8 @@ async def breach(ctx: TickContext, profile: TreatyProfileRow, breaker_id: int, *
     )
     ctx.session.add(row)
     await end_treaty(ctx, profile, TreatyStatus.BROKEN, reason)
+    wronged = [party.party_node_id for party in await parties_of(ctx.session, profile.treaty_entity_id) if party.party_node_id != breaker_id]
+    await on_breach(ctx, breaker_id, wronged)
     breaker = await living_entity(ctx.session, breaker_id)
     treaty = await ctx.session.get(EntityRow, profile.treaty_entity_id)
     write = await ctx.chronicle(
@@ -416,8 +424,10 @@ async def guard(ctx: TickContext, profile: TreatyProfileRow) -> int:
             for guarantor in guarantors:
                 if attacker is None or guarantor == attacker or guarantor in wards:
                     continue
-                willing = ctx.rng(f"guard.{profile.treaty_entity_id}.{guarantor}.{war.id}").chance(ctx.rules.treaties.guarantor_chance)
+                odds = ctx.rules.treaties.guarantor_chance * await daring(ctx, guarantor, attacker)
+                willing = ctx.rng(f"guard.{profile.treaty_entity_id}.{guarantor}.{war.id}").chance(odds)
                 if willing and await declare_war(ctx, guarantor, attacker, "it stood by the land it guaranteed", cause=WarCause.PUNITIVE):
+                    await owe(ctx, ward, guarantor, FavourOrigin.WAR_SUPPORT, ctx.rules.intrigue.war_favour)
                     joined += 1
     return joined
 
@@ -463,6 +473,7 @@ async def vassal_rows(ctx: TickContext, book: RealmBook) -> None:
                 overlord_entity_id=overlord.entity.id,
                 treaty_entity_id=profile.treaty_entity_id,
                 since_epoch=ctx.epoch,
+                kind=kind_for(book, vassal, overlord),
                 locked=[],
             )
             ctx.session.add(row)
@@ -483,19 +494,21 @@ async def vassal_duties(ctx: TickContext, book: RealmBook) -> dict[str, int]:
         overlord = book.realms.get(row.overlord_entity_id)
         if vassal is None or overlord is None:
             continue
-        owed = round_half_up(vassal.profile.treasury * row.tribute_pct / PERCENT)
+        owed = round_half_up(vassal.profile.treasury * row.tribute_pct / PERCENT) if pays_tribute(row) else 0
         if owed > 0:
             vassal.profile.treasury -= owed
             overlord.profile.treasury += owed
             counts["tribute"] += owed
-        counts["levies"] += await send_levies(ctx, vassal.profile.core_entity_id, overlord.profile.core_entity_id, row.levy_pct)
+        if sends_levies(row):
+            counts["levies"] += await send_levies(ctx, vassal.profile.core_entity_id, overlord.profile.core_entity_id, row.levy_pct)
         weak = overlord.profile.stability < table.weak_overlord_stability
         vassal_core = await living_entity(ctx.session, vassal.profile.core_entity_id) if vassal.profile.core_entity_id is not None else None
         lord_core = await living_entity(ctx.session, overlord.profile.core_entity_id) if overlord.profile.core_entity_id is not None else None
         if vassal_core is None or lord_core is None:
             continue
         stronger = await strength.power(vassal_core) > await strength.power(lord_core) * table.vassal_revolt_strength_pct / PERCENT
-        if row.loyalty >= table.revolt_loyalty or not (weak or stronger):
+        restless = row.loyalty < table.revolt_loyalty or row.liberty >= ctx.rules.statecraft.liberty_revolt
+        if not restless or not (weak or stronger):
             continue
         treaty = await ctx.session.get(TreatyProfileRow, row.treaty_entity_id) if row.treaty_entity_id is not None else None
         patron = await new_overlord(ctx, book, vassal, overlord)
@@ -592,7 +605,7 @@ async def answer_proposals(ctx: TickContext) -> dict[str, int]:
     table = ctx.rules.treaties
     counts = {"accepted": 0, "rejected": 0}
     for profile in list(await ctx.session.scalars(select(TreatyProfileRow).where(TreatyProfileRow.status == TreatyStatus.PROPOSED))):
-        if profile.signed_epoch >= ctx.epoch:
+        if profile.signed_epoch >= ctx.epoch or await proposal_pending(ctx, profile.treaty_entity_id):
             continue
         parties = [row.party_node_id for row in await parties_of(ctx.session, profile.treaty_entity_id)]
         others = [party for party in parties if party != profile.proposed_by_node_id]

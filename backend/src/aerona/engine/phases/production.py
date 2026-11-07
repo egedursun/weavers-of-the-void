@@ -54,6 +54,7 @@ CORRUPT_FROM = PERCENT // 2
     "table.community_societies",
     "table.community_stocks",
     "table.epoch_year_cursors",
+    "table.faction_profiles",
     "table.forced_weather",
     "table.goods_flows",
     "table.holder_levels",

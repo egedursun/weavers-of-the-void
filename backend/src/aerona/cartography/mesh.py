@@ -1,6 +1,7 @@
 import math
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
+from functools import lru_cache
 
 import numpy as np
 from numpy.typing import NDArray
@@ -12,6 +13,9 @@ from aerona.rules.registry import Rules
 
 Point = tuple[float, float]
 Segment = tuple[float, float, float, float]
+
+
+MESH_CACHE = 8
 
 
 @dataclass(frozen=True)
@@ -160,6 +164,7 @@ def _ordered_polygon(centre: Sequence[float], vertices: NDArray[np.float64]) -> 
     return [(float(vertices[index, 0]), float(vertices[index, 1])) for index in np.argsort(angles, kind="stable")]
 
 
+@lru_cache(maxsize=MESH_CACHE)
 def build_mesh(seed: str, window: GridWindow) -> CellMesh:
     real, ghosts = grid_points(seed, window)
     count = len(real)

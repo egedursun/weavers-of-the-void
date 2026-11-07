@@ -292,6 +292,15 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "reason": "Why you shape it",
         },
     ),
+    T.REVEAL_TRUE_NAME: ToolText(
+        "You reveal the true name of a being to one within your reach. Whoever knows a true name holds a strong hook on its bearer, "
+        "strengthens rites worked against it and is shielded from its own. Costs {{ rules.costs.influence }} essence and one action.",
+        {
+            "bearer_id": "The being whose true name you reveal",
+            "learner_id": "Who learns it",
+            "reason": "Why you reveal it",
+        },
+    ),
     T.TEND_LAND: ToolText(
         "You cleanse a land of the waste its works and crowds leave in its air, water and soil, or you foul it. "
         "Fouled land breeds sickness, yields less and thins the catch; cleansed land recovers. "

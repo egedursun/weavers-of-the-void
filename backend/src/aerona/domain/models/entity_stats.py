@@ -233,6 +233,12 @@ class TreatyStats(ValueObject):
     trust: Percent | None = None
 
 
+class TitleStats(ValueObject):
+    kind: Literal["title"] = "title"
+    prestige: Percent | None = None
+    territory: Count | None = None
+
+
 class IdeologyStats(ValueObject):
     kind: Literal["ideology"] = "ideology"
     adherents: Count | None = None
@@ -286,6 +292,7 @@ EntityStats = Annotated[
     | PolityStats
     | HouseStats
     | TreatyStats
+    | TitleStats
     | IdeologyStats
     | RiteStats
     | BeastStats

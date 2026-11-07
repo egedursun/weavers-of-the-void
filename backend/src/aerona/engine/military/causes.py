@@ -9,6 +9,7 @@ from aerona.domain.enums.military import WarAimKind
 from aerona.domain.enums.mind import ActKind, ValueAxis
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
+from aerona.engine.intrigue.beliefs import BeliefView
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.hooks import judged
 from aerona.engine.primitives.distance import RegionAtlas
@@ -98,18 +99,19 @@ async def raiders(ctx: TickContext) -> int:
             continue
         home = atlas.top_region(raider.id)
         wealth = stat(raider, "wealth") or stat(raider, "prosperity") or 0
-        victims = [
-            other
+        seen = BeliefView(ctx.session, ctx.rules, raider.id)
+        believed = {
+            other.id: await seen.of(other.id, "wealth", stat(other, "wealth") or stat(other, "prosperity") or 0)
             for other in communities
             if other.id != raider.id
             and other.world_id == raider.world_id
             and other.id not in at_war
             and (atlas.region_hops(home, atlas.top_region(other.id)) or PERCENT) <= 1
-            and (stat(other, "wealth") or stat(other, "prosperity") or 0) - wealth >= table.raid_wealth_gap
-        ]
+        }
+        victims = [other for other in communities if other.id in believed and believed[other.id] - wealth >= table.raid_wealth_gap]
         if not victims:
             continue
-        victim = max(victims, key=lambda item: (stat(item, "wealth") or stat(item, "prosperity") or 0, -item.id))
+        victim = max(victims, key=lambda item: (believed[item.id], -item.id))
         if await declare_war(ctx, raider.id, victim.id, f"{raider.name} went raiding for the riches of {victim.name}", cause=WarCause.RAID, world_cap=False):
             raids += 1
         at_war.update({raider.id, victim.id})

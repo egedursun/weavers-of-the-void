@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from aerona.domain.enums.demography import MarriageCustom
-from aerona.domain.enums.polity import DebtRemedy, GenderRule, LawKind, SuccessionRule
+from aerona.domain.enums.polity import DebtRemedy, DecisionRule, GenderRule, GovernmentKind, LawKind, SuccessionRule
 
 
 @dataclass(frozen=True)
@@ -24,6 +24,9 @@ def pick(*values: str, default: str | None = None) -> Param:
     return Param(default if default is not None else values[0], choices=values)
 
 
+FRANCHISES = ("nobles", "landholders", "free", "all")
+CRIME_TERMS = ("theft", "murder", "treason", "blasphemy", "desertion")
+TORTURE_CRUELTY = 15
 PENALTIES = ("fine", "pillory", "flogging", "hand", "blinding", "tongue", "exile", "wergild", "death")
 LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = MappingProxyType(
     {
@@ -47,6 +50,8 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = MappingProxyType(
             "treason": pick(*PENALTIES, default="death"),
             "blasphemy": pick(*PENALTIES, default="fine"),
             "desertion": pick(*PENALTIES, default="flogging"),
+            "trial": pick("judge", "jury", "combat", "ordeal"),
+            "torture": pick("allowed", "forbidden", default="forbidden"),
         },
         LawKind.LEVY_LAW: {"share": Param(10, 0, 50), "duration": Param(1, 1, 10)},
         LawKind.CONSCRIPTION: {"min_age": Param(16, 10, 60), "share": Param(20, 0, 60)},
@@ -63,6 +68,7 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = MappingProxyType(
         LawKind.FOREIGNER_RIGHTS: {"level": pick("none", "residence", "citizenship", default="residence")},
         LawKind.RELIGIOUS_TOLERANCE: {"level": pick("persecution", "tolerated", "free", default="tolerated")},
         LawKind.WORSHIP_BAN: {"son_id": Param(0, 0, 10**9)},
+        LawKind.CENSORSHIP: {"strictness": Param(50)},
         LawKind.BLOOD_FEUD: {"wergild_allowed": Param(True)},
         LawKind.QUARANTINE: {"automatic": Param(True), "epochs": Param(2, 1, 20)},
         LawKind.BURIAL_LAW: {"rite": pick("burial", "burning", "exposure")},
@@ -70,6 +76,13 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = MappingProxyType(
         LawKind.MAGIC_BAN: {"severity": Param(50)},
         LawKind.LICENSED_MAGIC: {"fee": Param(20)},
         LawKind.RITE_RESTRICTIONS: {"level": Param(30)},
+        LawKind.FRANCHISE: {"voters": pick(*FRANCHISES)},
+        LawKind.CONSTITUTION: {
+            "government": pick(*(item.value for item in GovernmentKind), default=GovernmentKind.MONARCHY.value),
+            "decision_rule": pick(*(item.value for item in DecisionRule), default=DecisionRule.COUNCIL.value),
+            "voters": pick(*FRANCHISES),
+            "estates_rights": Param(True),
+        },
         LawKind.CUSTOM: {},
     }
 )
@@ -104,6 +117,9 @@ LAW_TITLES = MappingProxyType(
         LawKind.PENAL_CODE: "the Code of Punishments",
         LawKind.LEVY_LAW: "the Levy",
         LawKind.CONSCRIPTION: "the Conscription",
+        LawKind.CENSORSHIP: "the Law of Censorship",
+        LawKind.FRANCHISE: "the Law of the Franchise",
+        LawKind.CONSTITUTION: "the Fundamental Law",
         LawKind.QUARANTINE: "the Quarantine Law",
         LawKind.VETERAN_PENSION: "the Veterans' Due",
         LawKind.SUMPTUARY: "the Sumptuary Law",
@@ -119,8 +135,9 @@ def defaults_for(kind: LawKind) -> dict[str, int | str | bool]:
 
 
 def penal_cruelty(params: dict[str, int | str | bool]) -> int:
-    values = [PENALTY_CRUELTY.get(str(value), 0) for key, value in params.items() if key in LAW_PARAMS[LawKind.PENAL_CODE]]
-    return round(sum(values) / len(values)) if values else 0
+    values = [PENALTY_CRUELTY.get(str(params[key]), 0) for key in CRIME_TERMS if key in params]
+    torture = TORTURE_CRUELTY if params.get("torture") == "allowed" else 0
+    return min(100, round(sum(values) / len(values)) + torture if values else torture)
 
 
 LAW_EFFECTS = MappingProxyType(
@@ -134,7 +151,10 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.TITHE: "{rate}% goes to the state temples.",
         LawKind.TOLLS: "Roads through the realm charge {rate}%.",
         LawKind.DEBT_LAW: "Defaulters face {remedy}.",
-        LawKind.PENAL_CODE: "Theft: {theft}; murder: {murder}; treason: {treason}; blasphemy: {blasphemy}; desertion: {desertion}.",
+        LawKind.PENAL_CODE: (
+            "Theft: {theft}; murder: {murder}; treason: {treason}; blasphemy: {blasphemy}; desertion: {desertion}; "
+            "trial by {trial}; questioning under torture {torture}."
+        ),
         LawKind.LEVY_LAW: "{share}% of the able are levied for {duration} seasons; armies grow.",
         LawKind.CONSCRIPTION: "Everyone from age {min_age} may be drafted; {share}% more soldiers.",
         LawKind.STANDING_ARMY: "{share}% of the people serve in a standing army.",
@@ -147,12 +167,15 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.RELIGIOUS_TOLERANCE: "Foreign faiths are under {level}; conversions follow.",
         LawKind.WORSHIP_BAN: "The worship of a god is banned.",
         LawKind.BLOOD_FEUD: "Blood feuds may end in wergild: {wergild_allowed}.",
+        LawKind.CENSORSHIP: "Contrary rumours, broadsheets and satire are suppressed with strictness {strictness}.",
         LawKind.QUARANTINE: "Sick lands are sealed for {epochs} epochs.",
         LawKind.BURIAL_LAW: "The dead are given to {rite}; burning slows plague.",
         LawKind.SANITATION: "The realm pays for sanitation works.",
         LawKind.MAGIC_BAN: "Sorcery is banned; {severity}% of would-be wizards are stopped.",
         LawKind.LICENSED_MAGIC: "Mages pay a licence of {fee}.",
         LawKind.RITE_RESTRICTIONS: "Rites are restricted ({level}).",
+        LawKind.FRANCHISE: "The vote belongs to the {voters}.",
+        LawKind.CONSTITUTION: "The realm is a {government} that decides by {decision_rule}; the vote belongs to the {voters}, and {estates}.",
         LawKind.CUSTOM: "An old custom without a written rule.",
     }
 )
@@ -163,6 +186,7 @@ def law_effect(kind: LawKind, params: dict[str, int | str | bool]) -> str:
     words = {key: str(value).replace("_", " ") for key, value in merged.items()}
     words["wholeness"] = ", the maimed may not rule" if merged.get("wholeness_required") else ""
     words["allowed"] = "may" if merged.get("allowed") else "may not"
+    words["estates"] = "the estates keep their rights" if merged.get("estates_rights") else "the estates hold no rights of their own"
     template = LAW_EFFECTS[kind]
     try:
         return template.format(**words)

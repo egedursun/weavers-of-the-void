@@ -1,4 +1,6 @@
-from sqlalchemy import CheckConstraint, ForeignKey, Index, String, Text, UniqueConstraint
+from typing import Any
+
+from sqlalchemy import JSON, CheckConstraint, ForeignKey, Index, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, validates
 
 from aerona.constants.schema import (
@@ -23,6 +25,7 @@ from aerona.domain.enums.chronicle import (
     ThreadLinkRole,
     ThreadStatus,
 )
+from aerona.domain.enums.communication import DispatchContent, DispatchState, EnvoyFate, Medium
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.models.records import CouncilMinutes
 
@@ -205,6 +208,25 @@ class MessageRow(CreatedAtMixin, Base):
     answered: Mapped[bool] = mapped_column(default=False)
     answered_epoch: Mapped[int | None]
     answer_essence: Mapped[int | None]
+    medium: Mapped[Medium | None] = mapped_column(enum_type(Medium, "medium"))
+    content: Mapped[DispatchContent | None] = mapped_column(enum_type(DispatchContent, "content"))
+    state: Mapped[DispatchState | None] = mapped_column(enum_type(DispatchState, "state"))
+    language_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    envoy_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    envoy_fate: Mapped[EnvoyFate | None] = mapped_column(enum_type(EnvoyFate, "envoy_fate"))
+    intercepted_by_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    arrival_epoch: Mapped[int | None]
+    forged: Mapped[bool] = mapped_column(default=False)
+    misread: Mapped[bool] = mapped_column(default=False)
+    enciphered: Mapped[bool] = mapped_column(default=False)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+    @validates("intent")
+    def _dreams_travel_by_dream(self, _key: str, value: MessageIntent) -> MessageIntent:
+        if value is MessageIntent.DREAM:
+            self.medium = Medium.DREAM
+        return value
 
 
 class FateRewardRow(CreatedAtMixin, Base):

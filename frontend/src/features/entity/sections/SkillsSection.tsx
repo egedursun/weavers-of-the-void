@@ -70,6 +70,7 @@ const ALL_SKILLS: Record<string, string> = {
   theology: 'Theology',
   languages: 'Languages',
   writing: 'Writing',
+  cryptography: 'Cryptography',
   accounting: 'Accounting',
   hunting: 'Hunting',
   tracking: 'Tracking',

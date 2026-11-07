@@ -1,12 +1,12 @@
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
 from aerona.catalog.needs import EFFECT_CLASSES, SERVE_ORDER, SHORTFALL_EFFECTS, basket_weight
 from aerona.constants.units import PERCENT
+from aerona.db.fast_session import rows_by_prefix
 from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -214,11 +214,11 @@ def build_basket(
 
 
 async def standing_of(session: AsyncSession, community_id: int) -> dict[SocialClass, ClassStandingRow]:
-    return {row.social_class: row for row in await session.scalars(select(ClassStandingRow).where(ClassStandingRow.community_entity_id == community_id))}
+    return {row.social_class: row for row in await rows_by_prefix(session, ClassStandingRow, community_id)}
 
 
 async def needs_of(session: AsyncSession, community_id: int) -> dict[NeedKey, CommunityNeedRow]:
-    rows = await session.scalars(select(CommunityNeedRow).where(CommunityNeedRow.community_entity_id == community_id))
+    rows = await rows_by_prefix(session, CommunityNeedRow, community_id)
     return {(row.social_class, row.commodity): row for row in rows}
 
 

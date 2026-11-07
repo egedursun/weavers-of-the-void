@@ -65,6 +65,8 @@ from aerona.engine.genetics.genome import gift_factors
 from aerona.engine.gods.interventions import apply_abundance
 from aerona.engine.industry.pollution import void_scar
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.intrigue.names import name_power
+from aerona.engine.intrigue.sources import hidden_rites
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.intel import gain_intel
 from aerona.engine.lore.kinds import RiteEffectParams, kind_of, params_of
@@ -872,6 +874,7 @@ async def cast(
     )
     mastery = await school_level(ctx.session, caster.id, rite.id)
     steadiness, strength = gift_factors(ctx.rules, await ctx.session.get(GenomeRow, caster.id), row.school)
+    strength *= await name_power(ctx, caster.id, target)
     await practise_subject(ctx.session, ctx.rules, caster.id, SkillKind.SPELLCRAFT, subject_id=rite.id, xp=ctx.rules.skills.spellcraft_xp, epoch=ctx.epoch)
     if rng.chance(row.backlash_chance * steadiness * (1 - mastery / PERCENT * ctx.rules.skills.school_backlash_pct / PERCENT)):
         casting.succeeded, casting.backlash = False, await backlash(ctx, caster, row)
@@ -885,6 +888,7 @@ async def cast(
         casting.effect = "; ".join(text for text in done if text)[:480] or "the rite was worked to no end"
         await infamy(ctx, caster, row, target)
     await judged(ctx, caster.id, target.id if target is not None else caster.id, SCHOOL_ACTS.get(row.school, ActKind.MAGIC_USE))
+    await hidden_rites(ctx, caster, rite, row)
     if row.school is MagicSchool.VOID:
         await void_scar(ctx, target.id if target is not None else caster.id)
     set_stats(rite, castings=(stat(rite, "castings") or 0) + 1)

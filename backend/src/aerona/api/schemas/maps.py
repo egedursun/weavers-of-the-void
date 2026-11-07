@@ -104,6 +104,13 @@ class RegionRealm(ApiModel):
     control: int
 
 
+class RegionDeJure(ApiModel):
+    title_id: int
+    name: str
+    polity_id: int | None
+    held_by_right: bool
+
+
 class MapLore(ApiModel):
     kind: str
     entity_id: int
@@ -197,6 +204,7 @@ class MapView(ApiModel):
     trade: list[MapTrade]
     outbreaks: list[MapOutbreak] = Field(default_factory=list)
     realms: dict[int, RegionRealm] = Field(default_factory=dict)
+    de_jure: dict[int, RegionDeJure] = Field(default_factory=dict)
     armies: list[MapArmy] = Field(default_factory=list)
     occupations: dict[int, MapOccupation] = Field(default_factory=dict)
     fronts: list[MapFront] = Field(default_factory=list)

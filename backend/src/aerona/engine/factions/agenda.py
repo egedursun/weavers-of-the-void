@@ -366,9 +366,9 @@ async def petition(move: Move) -> bool:
     if kind is None:
         log(ctx, profile.faction_entity_id, A.PETITION, goal=goal, success=False, note="nothing to ask")
         return False
-    law = await consider(ctx, realm, laws, kind, params, sponsor_id=profile.faction_entity_id, sway=sway)
-    log(ctx, profile.faction_entity_id, A.PETITION, target=realm.entity.id, goal=goal, success=law is not None, note=kind.value)
-    return law is not None
+    proposal = await consider(ctx, realm, laws, kind, params, sponsor_id=profile.faction_entity_id, sway=sway)
+    log(ctx, profile.faction_entity_id, A.PETITION, target=realm.entity.id, goal=goal, success=proposal is not None, note=kind.value)
+    return proposal is not None
 
 
 def petition_terms(laws: LawBook, realm: Realm, profile: FactionProfileRow, goal: FactionGoalRow) -> tuple[LawKind | None, dict[str, int | str | bool]]:
@@ -380,10 +380,17 @@ def petition_terms(laws: LawBook, realm: Realm, profile: FactionProfileRow, goal
         params = dict(wish[1]) if wish is not None else {}
         if LawKind(goal.target_key) is LawKind.GUILD_CHARTER:
             params["guild_id"] = profile.faction_entity_id
+        if LawKind(goal.target_key) is LawKind.FRANCHISE:
+            params = {"voters": "all"}
         return LawKind(goal.target_key), params
     if goal.kind is G.ABOLISH_LAW and goal.target_key is not None:
         kind = LawKind(goal.target_key)
-        relief: dict[LawKind, dict[str, int | str | bool]] = {LawKind.SERFDOM: {"allowed": False}, LawKind.TAX_RATE: {"rate": 5}, LawKind.TOLLS: {"rate": 0}}
+        relief: dict[LawKind, dict[str, int | str | bool]] = {
+            LawKind.SERFDOM: {"allowed": False},
+            LawKind.TAX_RATE: {"rate": 5},
+            LawKind.TOLLS: {"rate": 0},
+            LawKind.SLAVERY: {"status": "banned"},
+        }
         return kind, relief.get(kind, {})
     if goal.kind is G.CONVERT_REALM:
         return LawKind.RELIGIOUS_TOLERANCE, {"level": "free"}

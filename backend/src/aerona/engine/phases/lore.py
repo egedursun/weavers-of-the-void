@@ -468,6 +468,7 @@ async def tradition_cycles(ctx: TickContext) -> None:
 
 
 @reads(
+    "cult.followers",
     "people.population",
     "settlement.population",
     "table.bonds",

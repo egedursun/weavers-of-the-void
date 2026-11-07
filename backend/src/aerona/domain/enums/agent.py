@@ -19,6 +19,7 @@ class MessageIntent(StrEnum):
     CHAT = "chat"
     DREAM = "dream"
     COMMAND = "command"
+    DISPATCH = "dispatch"
 
 
 class PrayerRequest(StrEnum):

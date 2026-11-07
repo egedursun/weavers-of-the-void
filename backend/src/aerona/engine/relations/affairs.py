@@ -11,6 +11,7 @@ from aerona.domain.enums.mortal import MarriageEnd
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.relations import RelationType
 from aerona.engine.context import TickContext
+from aerona.engine.intrigue.talk import affair_secret
 from aerona.engine.military.feuds import house_feud
 from aerona.engine.mind.ethics import culture_of, honour_of
 from aerona.engine.mind.hooks import judged
@@ -47,6 +48,7 @@ async def flag_lovers(ctx: TickContext, row: RelationshipRow) -> bool:
     back = await relation(ctx.session, row.subject_node_id, row.holder_node_id)
     if back is not None and "affair" not in back.locked and not write_blocked(back.holder_node_id, RELATIONS_KEY):
         back.affair = True
+    await affair_secret(ctx, row.holder_node_id, row.subject_node_id)
     return True
 
 

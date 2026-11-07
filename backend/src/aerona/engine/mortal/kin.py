@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.bond_index import bond_lookup
 from aerona.db.tables.bonds import BondRow
 from aerona.domain.enums.bond import BondKind, BondState
 
@@ -10,12 +11,16 @@ MARITAL_KINDS = (BondKind.SPOUSE_OF, BondKind.CONCUBINE_OF)
 
 async def _ends(session: AsyncSession, kind: BondKind, *, source: int | None = None, target: int | None = None, past: bool = False) -> list[int]:
     states = list(KIN_STATES) if past else [BondState.ACTIVE]
-    statement = select(BondRow).where(BondRow.kind == kind, BondRow.state.in_(states))
-    if source is not None:
-        statement = statement.where(BondRow.source_node_id == source)
-    if target is not None:
-        statement = statement.where(BondRow.target_node_id == target)
-    rows = list(await session.scalars(statement.order_by(BondRow.id)))
+    lookup = await bond_lookup(session)
+    if lookup is not None:
+        rows = lookup.select([kind], states, [source] if source is not None else None, [target] if target is not None else None)
+    else:
+        statement = select(BondRow).where(BondRow.kind == kind, BondRow.state.in_(states))
+        if source is not None:
+            statement = statement.where(BondRow.source_node_id == source)
+        if target is not None:
+            statement = statement.where(BondRow.target_node_id == target)
+        rows = list(await session.scalars(statement.order_by(BondRow.id)))
     return [row.target_node_id if source is not None else row.source_node_id for row in rows]
 
 

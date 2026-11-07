@@ -3,7 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import SIGHT_PARTS
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memo_of, table_names
 from aerona.db.tables.body import BodyCustomRow, ConditionRow, InjuryRow
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import CultureValueRow
@@ -30,12 +32,25 @@ SEER_DOMAINS = frozenset({Domain.DREAM, Domain.STAR, Domain.MOON, Domain.TIME, D
 SEER_RITES = frozenset({TraditionKind.INITIATION, TraditionKind.SCAR_RITE, TraditionKind.OFFERING})
 HONOURED_CAUSES = frozenset({HarmCause.BATTLE, HarmCause.DUEL, HarmCause.MONSTER, HarmCause.QUEST})
 SHAMEFUL_CAUSES = frozenset({HarmCause.PUNISHMENT, HarmCause.TORTURE})
+PEOPLE_TABLES = table_names((BondRow, EntityRow))
 CUSTOM_FIELDS = ("reading", "wholeness_required", "seer_eye", "scar_festivals", "pension")
 
 
 async def people_of(session: AsyncSession, entity: EntityRow) -> EntityRow | None:
     if entity.entity_type is EntityType.PEOPLE:
         return entity
+    memo = memo_of(session, "people_of", PEOPLE_TABLES)
+    if memo is not None and entity.id in memo:
+        known: EntityRow | None = memo[entity.id]
+        return known
+    found = await _people_of(session, entity)
+    after = memo_of(session, "people_of", PEOPLE_TABLES)
+    if after is not None:
+        after[entity.id] = found
+    return found
+
+
+async def _people_of(session: AsyncSession, entity: EntityRow) -> EntityRow | None:
     community = entity if entity.entity_type is EntityType.SETTLEMENT else await community_of(session, entity)
     if community is None:
         return None

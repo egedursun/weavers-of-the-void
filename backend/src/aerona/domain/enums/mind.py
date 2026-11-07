@@ -245,6 +245,7 @@ class SkillKind(StrEnum):
     THEOLOGY = "theology"
     LANGUAGES = "languages"
     WRITING = "writing"
+    CRYPTOGRAPHY = "cryptography"
     ACCOUNTING = "accounting"
     HUNTING = "hunting"
     TRACKING = "tracking"

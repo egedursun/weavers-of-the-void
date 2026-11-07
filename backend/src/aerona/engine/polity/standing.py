@@ -4,6 +4,7 @@ from aerona.catalog.mind import MEMORIES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.communication import PublicOpinionRow
 from aerona.db.tables.culture import ArtworkProfileRow, ItemProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
@@ -17,6 +18,7 @@ from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.body import LASTING_INJURY_STATES
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.communication import OpinionSubject
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
@@ -25,6 +27,7 @@ from aerona.domain.enums.polity import LawKind, OathKind, RegionalStanding
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.war import WarCause, WarStatus
 from aerona.engine.body.customs import customs_of, maimed_for_rule, presence_pct
+from aerona.engine.communication.opinion import mean_approval
 from aerona.engine.context import TickContext
 from aerona.engine.lore.items import regalia_holder
 from aerona.engine.lore.legends import foretold_return
@@ -101,6 +104,9 @@ async def legitimacy(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawB
         parts["a pacifist faith at war"] = -ctx.rules.doctrine.pacifist_legitimacy
     parts.update(await fortunes(ctx, book, realm, ruler))
     parts.update(await bearing(ctx, realm, ruler))
+    voice = round_half_up(await mean_approval(ctx, list(realm.members), ruler.id) * ctx.rules.communication.legitimacy_pct / PERCENT)
+    if voice:
+        parts["the people's approval" if voice > 0 else "the people's disapproval"] = voice
     return parts
 
 
@@ -233,6 +239,15 @@ async def fortunes(ctx: TickContext, book: RealmBook, realm: Realm, ruler: Entit
     return parts
 
 
+async def war_support(ctx: TickContext, realm: Realm) -> float:
+    warring = PublicOpinionRow.subject == OpinionSubject.WAR
+    enemies = await ctx.session.scalars(
+        select(PublicOpinionRow.subject_node_id).where(PublicOpinionRow.community_node_id.in_(list(realm.members)), warring).distinct()
+    )
+    found = [await mean_approval(ctx, list(realm.members), enemy) for enemy in enemies]
+    return sum(found) / len(found) if found else 0.0
+
+
 async def stability(ctx: TickContext, book: RealmBook, realm: Realm, legit: int) -> dict[str, int]:
     table = ctx.rules.legitimacy
     parts = {"legitimacy": legit}
@@ -242,9 +257,13 @@ async def stability(ctx: TickContext, book: RealmBook, realm: Realm, legit: int)
         select(func.max(WarSideRow.weariness)).where(WarSideRow.entity_id.in_([realm.entity.id, *realm.members]), WarSideRow.left_epoch.is_(None))
     )
     eased = profile.war_weariness - table.weariness_decay
-    profile.war_weariness = clamp_int(max(int(worn or 0), eased) if fighting else eased, 0, PERCENT)
+    support = round_half_up(await war_support(ctx, realm) * ctx.rules.communication.war_support_pct / PERCENT)
+    profile.war_weariness = clamp_int((max(int(worn or 0), eased) if fighting else eased) - support, 0, PERCENT)
     if profile.war_weariness:
         parts["war weariness"] = -round_half_up(profile.war_weariness * table.weariness_pct / PERCENT)
+    disapproval = min(0.0, await mean_approval(ctx, list(realm.members), realm.ruler_id))
+    if disapproval:
+        parts["the people's discontent"] = round_half_up(disapproval * ctx.rules.communication.stability_pct / PERCENT)
     unrest = []
     for member in book.members(realm):
         town = await ctx.session.get(SettlementProfileRow, member.id)

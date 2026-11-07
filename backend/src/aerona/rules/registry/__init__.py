@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 
+from aerona.rules.registry.affairs import AffairsRules
 from aerona.rules.registry.agents import AgentsRules
 from aerona.rules.registry.apocalypse import ApocalypseRules
 from aerona.rules.registry.archive import ArchiveRules
@@ -29,6 +30,7 @@ from aerona.rules.registry.chronicle_repeat import ChronicleRepeatRules
 from aerona.rules.registry.civilization import CivilizationRules
 from aerona.rules.registry.climate_effects import ClimateEffectsRules
 from aerona.rules.registry.climate_world_type import ClimateWorldTypeRules
+from aerona.rules.registry.communication import CommunicationRules
 from aerona.rules.registry.content import ContentRules
 from aerona.rules.registry.context import ContextRules
 from aerona.rules.registry.core_rules import CoreRulesRules
@@ -76,6 +78,7 @@ from aerona.rules.registry.epidemiology import EpidemiologyRules
 from aerona.rules.registry.epoch_flow import EpochFlowRules
 from aerona.rules.registry.espionage import EspionageRules
 from aerona.rules.registry.essence import EssenceRules
+from aerona.rules.registry.estates import CompanyRules, EstateRules, GuildRules, MovementRules, OrderRules
 from aerona.rules.registry.events import EventsRules
 from aerona.rules.registry.exploration import ExplorationRules
 from aerona.rules.registry.factions import BanditryRules, FactionsRules, IntrigueRules, MercenariesRules
@@ -113,7 +116,9 @@ from aerona.rules.registry.industry import (
 )
 from aerona.rules.registry.intervention_costs import InterventionCostsRules
 from aerona.rules.registry.intervention_effects import InterventionEffectsRules
+from aerona.rules.registry.intrigue import BeliefStateRules
 from aerona.rules.registry.items import EnchantmentsRules, ItemPowersRules
+from aerona.rules.registry.justice import EnactmentRules, TrialRules
 from aerona.rules.registry.knowledge import KnowledgeRules
 from aerona.rules.registry.language import LanguageRules
 from aerona.rules.registry.language_contact import LanguageContactRules
@@ -236,12 +241,14 @@ from aerona.rules.registry.society_depth import ConsumptionRules, RealmLoyaltyRu
 from aerona.rules.registry.son_relations import SonRelationsRules
 from aerona.rules.registry.son_tools import SonToolsRules
 from aerona.rules.registry.star_types import StarTypeRules
+from aerona.rules.registry.statecraft import StatecraftRules
 from aerona.rules.registry.stress import StressRules
 from aerona.rules.registry.strike import StrikeRules
 from aerona.rules.registry.structures import ConstructionRules, StructureFunctionsRules, UpkeepRules
 from aerona.rules.registry.summoning import SummoningRules
 from aerona.rules.registry.time import TimeRules
 from aerona.rules.registry.tissues import TissueRules
+from aerona.rules.registry.titles import TitleRules
 from aerona.rules.registry.trade import TradeRules
 from aerona.rules.registry.travel import TravelRules
 from aerona.rules.registry.travel_methods import TravelMethodsRules
@@ -345,6 +352,14 @@ class Rules:
     genetics: GeneticsRules = field(default_factory=GeneticsRules)
     gift: GiftRules = field(default_factory=GiftRules)
     households: HouseholdRules = field(default_factory=HouseholdRules)
+    belief_state: BeliefStateRules = field(default_factory=BeliefStateRules)
+    communication: CommunicationRules = field(default_factory=CommunicationRules)
+    titles: TitleRules = field(default_factory=TitleRules)
+    estates: EstateRules = field(default_factory=EstateRules)
+    movements: MovementRules = field(default_factory=MovementRules)
+    companies: CompanyRules = field(default_factory=CompanyRules)
+    holy_orders: OrderRules = field(default_factory=OrderRules)
+    guild_ranks: GuildRules = field(default_factory=GuildRules)
     elasticity: ElasticityRules = field(default_factory=ElasticityRules)
     arbitrage: ArbitrageRules = field(default_factory=ArbitrageRules)
     local_renown: LocalRenownRules = field(default_factory=LocalRenownRules)
@@ -363,6 +378,10 @@ class Rules:
     stress: StressRules = field(default_factory=StressRules)
     standing: StandingRules = field(default_factory=StandingRules)
     punishment: PunishmentRules = field(default_factory=PunishmentRules)
+    enactment: EnactmentRules = field(default_factory=EnactmentRules)
+    trials: TrialRules = field(default_factory=TrialRules)
+    statecraft: StatecraftRules = field(default_factory=StatecraftRules)
+    affairs: AffairsRules = field(default_factory=AffairsRules)
     equipment: EquipmentRules = field(default_factory=EquipmentRules)
     loyalty: LoyaltyRules = field(default_factory=LoyaltyRules)
     acts: ActsRules = field(default_factory=ActsRules)

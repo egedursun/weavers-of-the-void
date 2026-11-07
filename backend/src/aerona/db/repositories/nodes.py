@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlalchemy.orm.util import identity_key
 
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.base import Repository
@@ -23,6 +24,9 @@ NODE_TABLES: dict[NodeKind, type[NodeRow]] = {
 
 class NodeRepository(Repository):
     async def kind_of(self, node_id: int) -> NodeKind | None:
+        known = self.session.sync_session.identity_map.get(identity_key(NodeRow, node_id))
+        if isinstance(known, NodeRow):
+            return known.kind
         kind: NodeKind | None = await self.session.scalar(select(NodeRow.kind).where(NodeRow.id == node_id))
         return kind
 

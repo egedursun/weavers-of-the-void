@@ -42,6 +42,7 @@ export const MODIFIER_SOURCE: Record<string, Named> = {
   artwork: { label: 'Artwork', icon: Palette, tone: 'verdigris' },
   doctrine: { label: 'Doctrine', icon: BookOpenText, tone: 'info' },
   treaty: { label: 'Treaty', icon: Scale, tone: 'gold' },
+  title: { label: 'Title', icon: Crown, tone: 'gold' },
   structure: { label: 'Structure', icon: Landmark },
   wonder: { label: 'Wonder', icon: Crown, tone: 'gold' },
   terrain: { label: 'Terrain', icon: Mountain },

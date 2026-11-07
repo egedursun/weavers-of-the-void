@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
+from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, VassalageRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
@@ -205,6 +205,9 @@ async def endogamous(session: AsyncSession, node_id: int | None) -> bool:
 async def may_coin(session: AsyncSession, rules: Rules, issuer_id: int) -> bool:
     polity = await session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == issuer_id).limit(1))
     profile = await session.get(PolityProfileRow, polity) if polity is not None else None
+    subject = await session.get(VassalageRow, polity) if polity is not None else None
+    if subject is not None and not subject.coinage:
+        return False
     return profile is None or profile.tier >= rules.realm_tiers.coinage
 
 

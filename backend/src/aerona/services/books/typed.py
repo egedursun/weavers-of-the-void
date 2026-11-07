@@ -6,14 +6,16 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapper
-from sqlalchemy.sql.elements import KeyedColumnElement
+from sqlalchemy.sql.elements import ColumnElement, KeyedColumnElement
 
 from aerona.cartography.biomes import Biome
 from aerona.db.base import Base
 from aerona.db.profile_guard import LOCK_COLUMN, shape_of_table, table_name
+from aerona.db.tables.lore import MessageRow
+from aerona.domain.enums.agent import MessageIntent
 
 KEY_TEXT = re.compile(r"[a-z0-9]+(?:[_.:][a-z0-9]+)*")
 OWNER_TABLES = frozenset({"entities", "nodes", "sons", "worlds", "stars", "foreign_gods", "creator"})
@@ -34,7 +36,6 @@ SKIPPED_TABLES = frozenset(
         "images",
         "ledger_entries",
         "lexemes",
-        "messages",
         "scenarios",
         "scores",
         "son_powers",
@@ -55,6 +56,10 @@ ID_LISTS = frozenset(
         "barred_prey",
         "supply_line",
         "agent_ids",
+        "known_by",
+        "agents",
+        "discovered_by",
+        "broken_by",
         "seats",
         "tellers",
         "texts",
@@ -187,8 +192,25 @@ REFERENCE_LABELS: dict[str, Callable[[Any, dict[int, str]], str]] = {
     "sieges": lambda row, names: f"the siege of {_named(names, row.besieged_entity_id)}",
     "war_aims": lambda row, names: f"{words(str(getattr(row.kind, 'value', row.kind))).lower()} {_named(names, row.target_entity_id)}".strip(),
     "oaths": lambda row, names: f"the {words(str(getattr(row.kind, 'value', row.kind))).lower()} oath of {_named(names, row.swearer_entity_id)}",
+    "law_proposals": lambda row, names: (
+        f"the {words(str(row.kind.value)).lower()} proposal of epoch {row.proposed_epoch} in {_named(names, row.polity_entity_id)}"
+    ),
+    "crises": lambda row, names: (
+        f"the crisis of epoch {row.opened_epoch} between {_named(names, row.demander_entity_id)} and {_named(names, row.target_entity_id)}"
+    ),
+    "resolutions": lambda row, names: f"the {words(str(row.kind.value)).lower()} resolution of epoch {row.proposed_epoch}",
+    "crime_cases": lambda row, names: f"the {row.crime.value} case of epoch {row.opened_epoch} against {_named(names, row.accused_entity_id) or 'no one'}",
 }
 NAMED_TABLES = frozenset({"entities", "nodes", "sons", "worlds", "stars", "foreign_gods", "creator"})
+
+
+ROW_FILTERS: dict[str, ColumnElement[bool]] = {"messages": MessageRow.intent == MessageIntent.DISPATCH}
+
+
+def _rows(mapper: Mapper[Any], table: str) -> Select[Any]:
+    statement = select(mapper.class_).order_by(*_order(mapper))
+    found = ROW_FILTERS.get(table)
+    return statement.where(found) if found is not None else statement
 
 
 class TypedIndex:
@@ -237,7 +259,7 @@ class TypedIndex:
             if not columns:
                 continue
             grouped: dict[int, list[Any]] = defaultdict(list)
-            for row in await session.scalars(select(mapper.class_).order_by(*_order(mapper))):
+            for row in await session.scalars(_rows(mapper, table)):
                 key = getattr(row, owner)
                 if isinstance(key, int):
                     grouped[key].append(row)
@@ -249,7 +271,7 @@ class TypedIndex:
     async def load_records(self, session: AsyncSession, mapper: Mapper[Any]) -> None:
         columns = [column for column in mapper.local_table.columns if column.key not in SKIPPED_COLUMNS or column.primary_key]
         table = RecordTable(title_of(table_name(mapper)), [words(column.key) for column in columns])
-        for row in await session.scalars(select(mapper.class_).order_by(*_order(mapper))):
+        for row in await session.scalars(_rows(mapper, table_name(mapper))):
             table.rows.append([self.value(column, getattr(row, column.key)) for column in columns])
         filled = [index for index in range(len(columns)) if any(row[index] for row in table.rows)]
         if table.rows and filled:
