@@ -2,6 +2,7 @@ from pydantic import Field
 from sqlalchemy import update
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.body import ConditionRow
 from aerona.db.tables.mind import SkillRow, TraitRow
 from aerona.db.tables.mortal import KindVariantRow
@@ -63,7 +64,7 @@ async def variant_row(scope: PlayerScope, variant_id: int) -> KindVariantRow:
 @player_action("variant:create", ActionKind.OTHER)
 async def create_variant(scope: PlayerScope, command: CreateVariant) -> Effect:
     if command.base not in BASES[command.family]:
-        raise ValidationFailedError(f"{command.base} is not a {command.family.value}.")
+        raise ValidationFailedError(f"{command.base} is not {an(command.family.value)}.")
     row = KindVariantRow(
         family=command.family,
         base=command.base,

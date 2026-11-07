@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.worlds import SKY_EVENT_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.worlds import WorldRepository
@@ -221,7 +222,7 @@ async def _void_storm(ctx: TickContext, world: WorldRow, order: SkyOrder, by: st
 
 async def _star_event(ctx: TickContext, kind: SkyEventKind, star_id: int | None) -> str:
     if star_id is None:
-        raise ValidationFailedError(f"A {SKY_EVENT_LABELS[kind].lower()} needs a star.")
+        raise ValidationFailedError(f"{an(SKY_EVENT_LABELS[kind].lower(), capital=True)} needs a star.")
     star = await require_star(ctx.session, star_id)
     if kind is SkyEventKind.SUPERNOVA:
         return await supernova(ctx, star)

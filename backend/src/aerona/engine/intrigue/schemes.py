@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.catalog.intrigue import SCHEMES
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import an
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
@@ -428,7 +429,7 @@ async def execute(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target:
     tally.succeeded += 1
     await note(
         ctx,
-        f"A {spec.label.lower()} was carried out: {told}.",
+        f"{an(spec.label.lower(), capital=True)} was carried out: {told}.",
         key="intrigue.scheme_done",
         ids=[owner.id, *([target.id] if target else [])],
         kind=ChronicleKind.WORLD,

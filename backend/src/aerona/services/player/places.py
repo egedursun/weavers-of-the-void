@@ -5,6 +5,7 @@ from sqlalchemy import delete
 
 from aerona.catalog.place_terrain import kind_spec
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.interconnect import ModifierRow
@@ -135,7 +136,7 @@ async def create_place(scope: PlayerScope, command: CreatePlace) -> Effect:
         RecordSpec(
             entity_type=EntityType.PLACE,
             name=guards.clip(command.name, NAME_MAX),
-            body=f"A {spec.label.lower()} of {region.name}, brought forth by {creator.name}.",
+            body=f"{an(spec.label.lower(), capital=True)} of {region.name}, brought forth by {creator.name}.",
             stats=PlaceStats(danger=command.danger, fertility=command.fertility, mystery=command.mystery),
             power=scope.rules.geography.place_power,
             world_id=region.world_id,
@@ -149,7 +150,7 @@ async def create_place(scope: PlayerScope, command: CreatePlace) -> Effect:
     region_id = (await RegionAtlas.load(scope.session)).top_region(place.id)
     scope.session.add(new_place_environment(scope.rules, place, region_id, 1.0, command.kind))
     await scope.session.flush()
-    return Effect(f"{place.name}, a {spec.label.lower()}, rose in {region.name}.", place.id, created_ids=(place.id,))
+    return Effect(f"{place.name}, {an(spec.label.lower())}, rose in {region.name}.", place.id, created_ids=(place.id,))
 
 
 @player_action("place:edit", ActionKind.OTHER)
@@ -160,7 +161,7 @@ async def edit_place(scope: PlayerScope, command: EditPlace) -> Effect:
     if command.kind is not None:
         await write_kind(scope.session, scope.rules, place.id, command.kind)
         _lock(profile, KIND_LOCK, command.hold)
-        changed.append(f"is now a {kind_spec(command.kind).label.lower()}")
+        changed.append(f"is now {an(kind_spec(command.kind).label.lower())}")
     if command.sacredness is not None:
         profile.sacredness = command.sacredness
         _lock(profile, SACREDNESS_LOCK, command.hold)

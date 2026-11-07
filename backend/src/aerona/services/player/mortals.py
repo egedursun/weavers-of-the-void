@@ -5,6 +5,7 @@ from sqlalchemy import delete
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ItemProfileRow
@@ -345,9 +346,9 @@ async def equip(scope: PlayerScope, command: Equip) -> Effect:
         else:
             profile = await scope.session.get(ItemProfileRow, target.id)
             if target.entity_type is not EntityType.ITEM or profile is None or profile.item_class not in SLOT_CLASSES[command.slot]:
-                raise ValidationFailedError(f"That cannot be carried as a {label(command.slot.value)}.")
+                raise ValidationFailedError(f"That cannot be carried as {an(label(command.slot.value))}.")
             if not fits_slot(command.slot, profile):
-                raise ValidationFailedError(f"Only one rigid layer is worn per covering; a {label(command.slot.value)} must be soft.")
+                raise ValidationFailedError(f"Only one rigid layer is worn per covering; {an(label(command.slot.value))} must be soft.")
     setattr(row, column, command.item_id)
     row.locked = hold(row.locked, column, command.hold)
     action = "now carries something new as" if command.item_id is not None else "has nothing as"

@@ -1,6 +1,9 @@
+from aerona.core.grammar import an
+
+
 class PromptContextMismatchError(TypeError):
     def __init__(self, prompt_id: str, expected: str, given: str) -> None:
-        super().__init__(f"Prompt {prompt_id} needs a {expected} context, not {given}.")
+        super().__init__(f"Prompt {prompt_id} needs {an(expected)} context, not {given}.")
         self.prompt_id = prompt_id
 
 

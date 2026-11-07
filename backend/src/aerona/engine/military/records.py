@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapper, class_mapper
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.military import (
@@ -220,7 +221,7 @@ async def after_change(ctx: TickContext, kind: RecordKind, row: Any) -> None:
 async def create_record(ctx: TickContext, key: str, values: Values) -> Any:
     kind = kind_of(key)
     if not kind.creatable:
-        raise ValidationFailedError(f"A {kind.label.lower()} is created from its own action.")
+        raise ValidationFailedError(f"{an(kind.label.lower(), capital=True)} is created from its own action.")
     missing = [name for name in kind.required if values.get(name) is None]
     if missing:
         raise ValidationFailedError(f"{kind.label} needs {', '.join(item.replace('_', ' ') for item in missing)}.")
@@ -272,7 +273,7 @@ async def release_record(ctx: TickContext, key: str, record_id: int, names: list
     kind = kind_of(key)
     row = await fetch(ctx.session, kind, record_id)
     if not hasattr(row, "locked"):
-        raise ValidationFailedError(f"A {kind.label.lower()} keeps no holds.")
+        raise ValidationFailedError(f"{an(kind.label.lower(), capital=True)} keeps no holds.")
     row.locked = [item for item in (row.locked or []) if item not in set(names)] if names else []
     await ctx.session.flush()
     return row
@@ -281,7 +282,7 @@ async def release_record(ctx: TickContext, key: str, record_id: int, names: list
 async def delete_record(ctx: TickContext, key: str, record_id: int) -> int | None:
     kind = kind_of(key)
     if not kind.deletable:
-        raise ValidationFailedError(f"A {kind.label.lower()} cannot be struck out; retire it instead.")
+        raise ValidationFailedError(f"{an(kind.label.lower(), capital=True)} cannot be struck out; retire it instead.")
     row = await fetch(ctx.session, kind, record_id)
     scope = getattr(row, kind.scope) if kind.scope is not None else None
     await ctx.session.delete(row)

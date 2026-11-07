@@ -6,6 +6,7 @@ from aerona.catalog.ethics import ACT_LABELS
 from aerona.catalog.mind import MELEE_SKILLS, MEMORIES, TRAITS
 from aerona.catalog.mind_split import IDEAS, derived_axes
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import an
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -540,9 +541,9 @@ async def mind_skills(ctx: TickContext) -> None:
                 await note(ctx, f"With no calling left and no one to keep them, {mortal.name} begs at the gates.", key="skill.career_beggar", ids=[mortal.id])
         if is_notable(ctx.rules, mortal, await EntityRepository(ctx.session).flags(mortal.id)):
             text = (
-                f"{mortal.name} could no longer live as a {move.old.value} and became a {move.new.value}."
+                f"{mortal.name} could no longer live as {an(move.old.value)} and became {an(move.new.value)}."
                 if move.reason is CareerChange.INJURED
-                else f"{mortal.name} gave up the life of a {move.old.value} to become a {move.new.value}."
+                else f"{mortal.name} gave up the life of {an(move.old.value)} to become {an(move.new.value)}."
             )
             await note(ctx, text, key=f"skill.career_{move.reason.value}", ids=[mortal.id])
     await ctx.session.flush()

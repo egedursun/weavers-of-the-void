@@ -64,7 +64,7 @@ thread#{{ thread.id }} (Age {{ thread.age }}{% if thread.worlds %}, {{ thread.wo
 {%- endmacro %}
 {% macro economy_block(e) -%}
 {% if e.settlement %}{% set s = e.settlement %}
-Settlement: a {{ s.tier }}; treasury {{ s.treasury }}, tax {{ s.tax_rate }}%, order {{ s.order }}, crime {{ s.crime }}, unrest {{ s.unrest }}, sanitation {{ s.sanitation }}, fire risk {{ s.fire_risk }}, prestige {{ s.prestige }}, militia {{ s.militia }}{% if s.free_city %}, a free city{% endif %}{% if s.rationing %}, rationing bread{% endif %}
+Settlement: {{ s.tier | an }}; treasury {{ s.treasury }}, tax {{ s.tax_rate }}%, order {{ s.order }}, crime {{ s.crime }}, unrest {{ s.unrest }}, sanitation {{ s.sanitation }}, fire risk {{ s.fire_risk }}, prestige {{ s.prestige }}, militia {{ s.militia }}{% if s.free_city %}, a free city{% endif %}{% if s.rationing %}, rationing bread{% endif %}
 {% if s.districts %}Districts: {{ s.districts | join("; ") }}
 {% endif %}{% if s.infrastructure %}Works: {{ s.infrastructure | join(", ") }}
 {% endif %}{% endif %}

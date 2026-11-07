@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.entity_types import can_contain, entity_type_spec
+from aerona.core.grammar import an
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.repositories.names import NameRepository
@@ -141,14 +142,6 @@ class SweepResult:
     transferred: int
 
 
-VOWELS = "aeiou"
-
-
-def indefinite(noun: str) -> str:
-    article = "an" if noun[:1].lower() in VOWELS else "a"
-    return f"{article} {noun}"
-
-
 def sentence_case(text: str) -> str:
     return text[:1].upper() + text[1:]
 
@@ -159,7 +152,7 @@ def definite(name: str) -> str:
 
 def introduce(name: str, noun: str, location_name: str | None, body: str) -> str:
     place = f" in {location_name}" if location_name else ""
-    return f"{name}, {indefinite(noun)}{place}. {body}".strip()
+    return f"{name}, {an(noun)}{place}. {body}".strip()
 
 
 async def valid_location(session: AsyncSession, entity_type: EntityType, location_id: int | None) -> EntityRow | None:

@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import CustomKindRow, HolderCustomTechniqueRow
 from aerona.domain.enums.body import DamageType
@@ -94,7 +95,7 @@ def checked_params(catalog: CustomCatalog, params: Mapping[str, Any]) -> dict[st
     try:
         return PARAMS[catalog].model_validate(dict(params)).model_dump(mode="json", exclude_none=True)
     except ValidationError as error:
-        raise ValidationFailedError(f"Those are not the parameters of a {catalog.value.replace('_', ' ')}: {error.errors()[0]['msg']}.") from error
+        raise ValidationFailedError(f"Those are not the parameters of {an(catalog.value.replace('_', ' '))}: {error.errors()[0]['msg']}.") from error
 
 
 def checked_base(catalog: CustomCatalog, base: str) -> str:

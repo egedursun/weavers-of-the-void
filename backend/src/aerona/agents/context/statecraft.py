@@ -2,6 +2,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.intrigue import name_of
+from aerona.core.grammar import an
 from aerona.db.tables.affairs import CouncilSeatRow, CourtPositionRow, CourtRow, MandateRow, NobleDemandRow, ResolutionRow, TaxPolicyRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -54,7 +55,7 @@ async def statecraft_lines(session: AsyncSession, me: EntityRow) -> list[str]:
     for subject in await session.scalars(select(VassalageRow).where(or_(VassalageRow.vassal_entity_id == realm, VassalageRow.overlord_entity_id == realm))):
         kind = subject.kind.value.replace("_", " ")
         if subject.vassal_entity_id == realm:
-            found.append(f"your realm is a {kind} of {await name_of(session, subject.overlord_entity_id)}, wishing for liberty {subject.liberty}")
+            found.append(f"your realm is {an(kind)} of {await name_of(session, subject.overlord_entity_id)}, wishing for liberty {subject.liberty}")
         else:
             found.append(f"{await name_of(session, subject.vassal_entity_id)} is your {kind}, wishing for liberty {subject.liberty}")
     for sphere in await session.scalars(select(SphereRow).where(or_(SphereRow.power_entity_id == realm, SphereRow.client_entity_id == realm))):
@@ -88,7 +89,7 @@ async def affairs_lines(session: AsyncSession, me: EntityRow) -> list[str]:
     for mandate in await session.scalars(
         select(MandateRow).where(MandateRow.polity_entity_id == realm, MandateRow.state == MandateState.ACTIVE).order_by(MandateRow.id)
     ):
-        found.append(f"a {mandate.kind.value.replace('_', ' ')} mandate stands until epoch {mandate.until_epoch}")
+        found.append(f"{an(mandate.kind.value.replace('_', ' '))} mandate stands until epoch {mandate.until_epoch}")
     for seat in await session.scalars(select(CouncilSeatRow).where(CouncilSeatRow.polity_entity_id == realm).order_by(CouncilSeatRow.seats.desc())):
         found.append(f"{await name_of(session, seat.holder_node_id)} holds {seat.seats} council seats")
     court = await session.get(CourtRow, realm)
@@ -104,5 +105,5 @@ async def affairs_lines(session: AsyncSession, me: EntityRow) -> list[str]:
         select(ResolutionRow).where(ResolutionRow.assembly_entity_id.in_(joined), ResolutionRow.state == ResolutionState.PASSED).order_by(ResolutionRow.id)
     ):
         target = f" against {await name_of(session, resolution.target_node_id)}" if resolution.target_node_id is not None else ""
-        found.append(f"your assembly binds you to a {resolution.kind.value.replace('_', ' ')}{target} until epoch {resolution.until_epoch}")
+        found.append(f"your assembly binds you to {an(resolution.kind.value.replace('_', ' '))}{target} until epoch {resolution.until_epoch}")
     return found

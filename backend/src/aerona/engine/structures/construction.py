@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from aerona.catalog.structures import STRUCTURE_ENGINE_KINDS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
@@ -31,7 +32,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import add_flag, connect
-from aerona.engine.primitives.records import RecordSpec, indefinite, open_record
+from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.society import shift_stock
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat
 from aerona.engine.structures.profiles import aesthetic_for, durability_from, ensure_profile, fire_resistance_from, host_for, material_props, refresh
@@ -124,7 +125,7 @@ async def begin(ctx: TickContext, order: Commission) -> tuple[EntityRow, Constru
         RecordSpec(
             entity_type=EntityType.STRUCTURE,
             name=name,
-            body=f"{order.site.name} began to raise {indefinite(resolved.label.lower())}.",
+            body=f"{order.site.name} began to raise {an(resolved.label.lower())}.",
             stats=StructureStats(
                 splendor=0, function=clamp_int(rules.deep_life.structure_function_base + rng.die(rules.deep_life.structure_function_die), 0, PERCENT)
             ),
@@ -184,7 +185,7 @@ async def begin(ctx: TickContext, order: Commission) -> tuple[EntityRow, Constru
     await ctx.session.flush()
     await note(
         ctx,
-        f"{order.site.name} began to raise {work.name}, {indefinite(resolved.label.lower())}.",
+        f"{order.site.name} began to raise {work.name}, {an(resolved.label.lower())}.",
         key="structures.begun",
         ids=[order.site.id, work.id],
         kind=ChronicleKind.CONSTRUCTION,
@@ -346,7 +347,7 @@ async def finish(ctx: TickContext, construction: ConstructionRow, *, by_hand: bo
     hand = " at the Creator's word" if by_hand else ""
     await note(
         ctx,
-        f"{work.name} stands finished{hand}: {indefinite(resolved.label.lower())} for {site.name if site else 'its builders'}.",
+        f"{work.name} stands finished{hand}: {an(resolved.label.lower())} for {site.name if site else 'its builders'}.",
         key="structures.finished",
         ids=[*([site.id] if site else []), work.id],
         kind=ChronicleKind.CONSTRUCTION,

@@ -1,4 +1,5 @@
 from aerona.catalog.creatures import CREATURE_TRAITS
+from aerona.core.grammar import an
 from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.ecology import BeastTemper, Diet, DomesticationStage, SizeClass, Sociality, SpeciesUse
@@ -199,7 +200,7 @@ def diets() -> tuple[Raw, ...]:
         (
             f"diet_{diet.value}",
             "S3.2",
-            f"A {label(diet.value)} {DIET_TEXT[diet]}",
+            f"{an(label(diet.value), capital=True)} {DIET_TEXT[diet]}",
             ("ecology",),
             ECOLOGY,
             (SP, "region"),
@@ -215,7 +216,7 @@ def sizes() -> tuple[Raw, ...]:
         (
             f"size_{size.value}",
             "S3.2",
-            f"A {label(size.value)} kind lives, breeds, eats and yields by its size",
+            f"{an(label(size.value), capital=True)} kind lives, breeds, eats and yields by its size",
             ("ecology", "creatures"),
             ECOLOGY,
             (SP,),
@@ -259,7 +260,7 @@ def stages() -> tuple[Raw, ...]:
         (
             f"stage_{stage.value}",
             "S3.2",
-            f"A {label(stage.value)} kind moves along the path of taming",
+            f"{an(label(stage.value), capital=True)} kind moves along the path of taming",
             ("husbandry",),
             HERDS,
             (SP, "settlement", "people"),
@@ -345,7 +346,7 @@ def tempers() -> tuple[Raw, ...]:
         (
             f"temper_{temper.value}",
             "S3.3a",
-            f"A {label(temper.value)} beast {TEMPER_TEXT[temper]}",
+            f"{an(label(temper.value), capital=True)} beast {TEMPER_TEXT[temper]}",
             ("beast_cycles",),
             BEAST,
             ("beast", "settlement"),
@@ -977,7 +978,7 @@ def plans() -> tuple[Raw, ...]:
         (
             f"plan_{plan.value}",
             "S3.2",
-            f"A {label(plan.value)} kind {PLAN_TEXT[plan]}",
+            f"{an(label(plan.value), capital=True)} kind {PLAN_TEXT[plan]}",
             ("creatures", "ecology"),
             ECOLOGY,
             (SP,),

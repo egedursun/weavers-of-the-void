@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from aerona.catalog.society import SOCIAL_CLASSES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import an
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
@@ -63,7 +64,7 @@ from aerona.engine.primitives.queries import (
     living_son,
     spoken_language,
 )
-from aerona.engine.primitives.records import RecordSpec, indefinite, open_record, sentence_case
+from aerona.engine.primitives.records import RecordSpec, open_record, sentence_case
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import headcount, headcount_bounds, set_stats, stat
 from aerona.language.generator import NameKind
@@ -354,7 +355,7 @@ def notable_plan(rules: Rules, community: EntityRow, social_class: SocialClass, 
         name=f"{community.name} {role.suffix}",
         subtype=role.subtype,
         role=role.role,
-        body=f"{sentence_case(indefinite(role.subtype))} whose name is spoken arose {circle}.",
+        body=f"{sentence_case(an(role.subtype))} whose name is spoken arose {circle}.",
         biases={key: bias(rules) for key, bias in role.biases.items()},
         extra_lifespan=rules.deep_life.notable_warrior_lifespan_bonus if social_class is SocialClass.WARRIOR else 0,
     )
@@ -366,7 +367,7 @@ async def raise_notable(ctx: TickContext, community: EntityRow, social_class: So
     circle = from_among(community.name, SOCIAL_CLASSES[social_class].plural.lower())
     await note(
         ctx,
-        f"{sentence_case(indefinite(role.subtype))} whose name is spoken arose {circle}: {mortal.name}.",
+        f"{sentence_case(an(role.subtype))} whose name is spoken arose {circle}: {mortal.name}.",
         key="births.notable",
         ids=[community.id, mortal.id],
     )

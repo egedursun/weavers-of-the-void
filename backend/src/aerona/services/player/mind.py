@@ -5,6 +5,7 @@ from aerona.catalog.mind import MEMORIES, SKILLS, TRAITS, VALUE_LABELS
 from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import (
@@ -408,7 +409,7 @@ async def set_role(scope: PlayerScope, command: SetRole) -> Effect:
         raise ValidationFailedError("Only mortals follow a calling.")
     node.mortal_role = command.role
     await hold(scope, node, ROLE_LOCK, command.lock)
-    return Effect(f"{node.name} is now a {label(command.role.value)}.", target_node_id=node.id)
+    return Effect(f"{node.name} is now {an(label(command.role.value))}.", target_node_id=node.id)
 
 
 async def bodied_of(scope: PlayerScope, node_id: int) -> Bodied:

@@ -3,6 +3,7 @@ from enum import StrEnum
 
 from aerona.catalog.lore import ART_MESSAGES, IDEOLOGY_APPEAL, IDEOLOGY_VALUES, LEGEND_MORALS, RITE_TEMPLATES, TRADITIONS
 from aerona.catalog.techniques import BRANCH_GRAPH, TECHNIQUES
+from aerona.core.grammar import an
 from aerona.db.tables.culture import (
     ArtworkProfileRow,
     BookContentRow,
@@ -417,7 +418,7 @@ def tradition_kinds() -> tuple[Raw, ...]:
         (
             f"keep_{kind.value}",
             "S8.3",
-            f"A {label(kind.value)} works on those who keep it",
+            f"{an(label(kind.value), capital=True)} works on those who keep it",
             ("tradition_cycles",),
             LORE,
             ("tradition", "people", "settlement"),
@@ -598,7 +599,7 @@ def media() -> tuple[Raw, ...]:
         (
             f"medium_{medium.value}",
             "S7.4",
-            f"A {label(medium.value)} stirs {', '.join(label(axis.value) for axis in message)}",
+            f"{an(label(medium.value), capital=True)} stirs {', '.join(label(axis.value) for axis in message)}",
             ("artwork_cycles",),
             LORE,
             ("artwork", "people", "settlement"),

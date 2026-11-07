@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.civilization import TIER_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
@@ -78,12 +79,12 @@ async def apply_tier(ctx: TickContext, entity: EntityRow, new: int, *, forced: b
     entity.civ_tier = new
     repository = EntityRepository(ctx.session)
     if new > old and new >= T.KINGDOM:
-        await note(ctx, f"{entity.name} rose: now a {tier_name(new)}.", key="civilization.rose", ids=[entity.id])
-        await ctx.chronicle(ChronicleKind.CIVILIZATION, f"{entity.name} became a {tier_name(new)}.", template_key="civilization.tier", entity_ids=[entity.id])
+        await note(ctx, f"{entity.name} rose: now {an(tier_name(new))}.", key="civilization.rose", ids=[entity.id])
+        await ctx.chronicle(ChronicleKind.CIVILIZATION, f"{entity.name} became {an(tier_name(new))}.", template_key="civilization.tier", entity_ids=[entity.id])
         if new >= T.WORLD_EMPIRE:
             await repository.add_flag(entity.id, EntityFlag.EMPIRE, ctx.epoch)
     if new < old and old >= T.KINGDOM:
-        await note(ctx, f"{entity.name} declined: now a {tier_name(new)}.", key="civilization.declined", ids=[entity.id])
+        await note(ctx, f"{entity.name} declined: now {an(tier_name(new))}.", key="civilization.declined", ids=[entity.id])
     if new < T.WORLD_EMPIRE <= old:
         await repository.remove_flag(entity.id, EntityFlag.EMPIRE)
     return True

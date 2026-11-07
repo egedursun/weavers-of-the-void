@@ -28,6 +28,7 @@ from aerona.api.schemas.mind import LabelView
 from aerona.api.views.common import node_ref, node_refs
 from aerona.catalog.genetics import DWELLINGS, GIFT_STANCE_LABELS, HOUSEHOLD_DECISION_LABELS, HOUSEHOLD_ROLE_LABELS, LOCI, LOCUS_GROUP_LABELS
 from aerona.core.errors import NotFoundError
+from aerona.core.grammar import an
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
 from aerona.db.tables.households import DwellingFurnishingRow, DwellingRow, HouseholdAggregateRow, HouseholdMemberRow, HouseholdRow
@@ -176,7 +177,7 @@ async def lineage_view(services: ServicesDep, node_id: int = Path(ge=1)) -> Line
         if not (can_genome or can_pool or can_likeness):
             reason = GENOME_REASON.get(
                 node.kind,
-                f"A {kind_label(kind)} {BLOODLESS}",
+                f"{an(kind_label(kind), capital=True)} {BLOODLESS}",
             )
         return LineageView(
             node_id=node_id,
@@ -314,7 +315,7 @@ async def home_view(services: ServicesDep, node_id: int = Path(ge=1)) -> HomeVie
         if not (can_household or can_aggregates):
             reason = HOME_REASON.get(
                 node.kind,
-                f"A {kind_label(kind)} {HOMELESS}",
+                f"{an(kind_label(kind), capital=True)} {HOMELESS}",
             )
         nearby: list[HouseholdRow] = (
             list(

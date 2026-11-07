@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.affairs import (
     RATE_MAX,
     CouncilSeatRow,
@@ -275,7 +276,7 @@ async def issue_mandate(scope: PlayerScope, command: IssueMandate) -> Effect:
     if row is None:
         raise ValidationFailedError("Such a mandate already stands, or a god holds the realm.")
     await scope.session.flush()
-    return Effect(f"{found.name} issued a {command.kind.value.replace('_', ' ')} mandate.", target_node_id=found.id, values={"mandate_id": row.id})
+    return Effect(f"{found.name} issued {an(command.kind.value.replace('_', ' '))} mandate.", target_node_id=found.id, values={"mandate_id": row.id})
 
 
 @player_action("mandate:edit", ActionKind.EDIT_RECORD)

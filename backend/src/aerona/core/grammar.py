@@ -1,0 +1,37 @@
+from string import Formatter
+from typing import Any
+
+VOWELS = "aeiou"
+ARTICLE_SPECS = {"an": False, "An": True}
+
+
+VOWEL_NUMBER_PREFIXES = ("11", "18")
+VOWEL_NUMBER_LENGTHS = frozenset({2, 5, 8})
+
+
+def sounds_like_vowel(word: str) -> bool:
+    digits = len(word) - len(word.lstrip("0123456789"))
+    if digits:
+        return word.startswith("8") or (word.startswith(VOWEL_NUMBER_PREFIXES) and digits in VOWEL_NUMBER_LENGTHS)
+    return word[:1].lower() in VOWELS
+
+
+def an(noun: object, *, capital: bool = False) -> str:
+    word = str(noun)
+    article = "an" if sounds_like_vowel(word) else "a"
+    return f"{article.capitalize() if capital else article} {word}"
+
+
+class ArticleFormatter(Formatter):
+    def format_field(self, value: Any, format_spec: str) -> str:
+        if format_spec in ARTICLE_SPECS:
+            return an(str(value), capital=ARTICLE_SPECS[format_spec])
+        formatted: str = super().format_field(value, format_spec)
+        return formatted
+
+
+ARTICLES = ArticleFormatter()
+
+
+def fill(template: str, **fields: object) -> str:
+    return ARTICLES.format(template, **fields)

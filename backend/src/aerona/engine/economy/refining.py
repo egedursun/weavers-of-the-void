@@ -4,6 +4,7 @@ from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.materials import ARMOUR_MATERIALS, LUXURY_MATERIALS, TOOL_MATERIALS, WEAPON_MATERIALS
 from aerona.catalog.production import CHAIN_STEPS, SHIP_INPUTS, WORKSHOP_LABELS, ChainStep
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import an
 from aerona.db.tables.economy import ProductionRunRow, WorkshopDesignRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -301,7 +302,11 @@ async def build_workshops(ctx: TickContext, book: EconomyBook, community: Entity
         book.workshops.setdefault(community.id, {})[kind] = row
         tally.built += 1
         await note(
-            ctx, f"{community.name} raised a {WORKSHOP_LABELS[kind].lower()}.", key="refining.workshop_built", ids=[community.id], kind=ChronicleKind.PRODUCTION
+            ctx,
+            f"{community.name} raised {an(WORKSHOP_LABELS[kind].lower())}.",
+            key="refining.workshop_built",
+            ids=[community.id],
+            kind=ChronicleKind.PRODUCTION,
         )
         return
 

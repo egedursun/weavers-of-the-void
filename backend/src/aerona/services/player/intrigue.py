@@ -4,6 +4,7 @@ from sqlalchemy import select
 from aerona.catalog.intrigue import FAVOUR_LABELS, HOOK_DEMAND_LABELS, IDENTITY_LABELS, PHASE_LABELS, SCHEMES, SECRETS, belief_label
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import SCHEME_FIELDS, SECRET_FIELDS, BeliefRow, FavourRow, HookRow, IdentityRow, SchemeRow, SecretRow, TrueNameRow
 from aerona.db.tables.node import NodeRow
@@ -262,7 +263,7 @@ async def grant(scope: PlayerScope, command: GrantHook) -> Effect:
         raise ValidationFailedError(f"{holder.name} is held against change.")
     row.strength, row.source = command.strength, command.source
     await scope.session.flush()
-    return Effect(f"{holder.name} now holds a {command.strength.value} hook on {target.name}.", target_node_id=holder.id, values={"hook_id": row.id})
+    return Effect(f"{holder.name} now holds {an(command.strength.value)} hook on {target.name}.", target_node_id=holder.id, values={"hook_id": row.id})
 
 
 @player_action("hook:edit", ActionKind.EDIT_RECORD)
@@ -414,11 +415,11 @@ async def plot(scope: PlayerScope, command: BeginScheme) -> Effect:
         raise ValidationFailedError("The schemer must be a living record.")
     target = await scope.session.get(EntityRow, command.target_id) if command.target_id is not None else None
     if SCHEMES[command.kind].needs_target and target is None:
-        raise ValidationFailedError(f"A {SCHEMES[command.kind].label.lower()} needs a target.")
+        raise ValidationFailedError(f"{an(SCHEMES[command.kind].label.lower(), capital=True)} needs a target.")
     row = await begin_scheme(await manual_context(scope.session, "scheme.begin"), owner, command.kind, target)
     if row is None:
         raise ValidationFailedError("The schemer or the target is held against change.")
-    return Effect(f"{owner.name} began a {SCHEMES[command.kind].label.lower()}.", target_node_id=owner.id, values={"scheme_id": row.id})
+    return Effect(f"{owner.name} began {an(SCHEMES[command.kind].label.lower())}.", target_node_id=owner.id, values={"scheme_id": row.id})
 
 
 @player_action("scheme:edit", ActionKind.EDIT_RECORD)

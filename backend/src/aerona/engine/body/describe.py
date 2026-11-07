@@ -5,6 +5,7 @@ from aerona.catalog.body_plans import PLANS
 from aerona.catalog.effect_packages import PACKAGES
 from aerona.catalog.tissues import digits_phrase
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import an
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.entities import EntityRow
@@ -139,7 +140,7 @@ async def _bearer_lines(session: AsyncSession, rules: Rules, body: BodyRow, bear
         return (found.label if found else key.replace("_", " ")).lower()
 
     def worn(row: InjuryRow) -> str:
-        return f" (wears a {fitted[row.id].material.value.replace('_', ' ')} one)" if row.id in fitted else ""
+        return f" (wears {an(fitted[row.id].material.value.replace('_', ' '))} one)" if row.id in fitted else ""
 
     shown = [row for row in injuries if row.visible or private]
     groups = {

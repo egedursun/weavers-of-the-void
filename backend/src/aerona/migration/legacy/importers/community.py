@@ -2,6 +2,7 @@ from typing import Any
 
 from aerona.catalog.mind import MEMORIES, memory_for_event
 from aerona.constants.schema import KEY_MAX_LENGTH
+from aerona.core.grammar import an
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.domain.enums.entity import SOCIETY_TYPES
@@ -98,7 +99,7 @@ async def import_societies(context: MigrationContext) -> None:
         if payload is None:
             continue
         if entity.entity_type not in SOCIETY_TYPES:
-            context.report.place_failed("society", f"entity:{legacy_id}", f"a {entity.entity_type.value} cannot hold a society")
+            context.report.place_failed("society", f"entity:{legacy_id}", f"{an(entity.entity_type.value)} cannot hold a society")
             continue
         await save_society(context.session, entity.id, _merged(context, payload))
         context.report.convert("societies")

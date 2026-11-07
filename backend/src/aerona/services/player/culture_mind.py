@@ -3,6 +3,7 @@ from pydantic import Field
 from aerona.catalog.ethics import ACT_LABELS, STANCE_LABELS
 from aerona.catalog.preferences import PREFERENCE_LABELS, SPECIES_KINDS, STATIC_TARGETS, target_label
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import CultureHonourRow, PreferenceRow
 from aerona.domain.enums.action import ActionKind
@@ -66,10 +67,10 @@ async def set_preference(scope: PlayerScope, command: SetPreference) -> Effect:
         target = await scope.session.get(EntityRow, int(command.target)) if command.target.isdigit() else None
         wanted = EntityType.SPECIES if command.kind is PreferenceKind.CREATURE else EntityType.RESOURCE
         if target is None or target.entity_type is not wanted:
-            raise ValidationFailedError(f"A {PREFERENCE_LABELS[command.kind].lower()} must be a {wanted.value} of this world.")
+            raise ValidationFailedError(f"{an(PREFERENCE_LABELS[command.kind].lower(), capital=True)} must be {an(wanted.value)} of this world.")
         node = target.id
     elif command.target not in STATIC_TARGETS[command.kind]:
-        raise ValidationFailedError(f"That is not a {PREFERENCE_LABELS[command.kind].lower()}.")
+        raise ValidationFailedError(f"That is not {an(PREFERENCE_LABELS[command.kind].lower())}.")
     row = await write_pref(scope.session, holder.id, command.kind, command.target, command.strength, target_node_id=node)
     if row is None:
         raise ValidationFailedError(f"{holder.name} is held from changing.")

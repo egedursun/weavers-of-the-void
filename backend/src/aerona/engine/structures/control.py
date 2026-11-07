@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -116,11 +117,11 @@ async def commission(
         raise ValidationFailedError("Only a living settlement or people can raise a structure.")
     bounded("level", level, 1, STRUCTURE_LEVEL_MAX)
     if design is not None and (design.retired or design.base_kind is not kind):
-        raise ValidationFailedError(f"{design.name} is not a design for a {kind.value.replace('_', ' ')}.")
+        raise ValidationFailedError(f"{design.name} is not a design for {an(kind.value.replace('_', ' '))}.")
     resolved = resolve(kind, design)
     town = await ctx.session.get(SettlementProfileRow, site.id)
     if town is not None and not tier_allows(town.size_tier, resolved):
-        raise ValidationFailedError(f"{site.name} is too small for {resolved.label.lower()}: it needs to be a {resolved.min_tier.value} or larger.")
+        raise ValidationFailedError(f"{site.name} is too small for {resolved.label.lower()}: it needs to be {an(resolved.min_tier.value)} or larger.")
     if await free_slots(ctx, site) <= 0:
         raise ValidationFailedError(f"{site.name} has no room left for another structure; raze or let one fall first.")
     builder: EntityRow | SonRow | None = None

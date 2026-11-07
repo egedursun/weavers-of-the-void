@@ -4,6 +4,7 @@ from typing import Any
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.catalog.tenets import OPPOSED
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import fill
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.economy import WorldMaterialRow
@@ -222,7 +223,7 @@ async def raise_divine_structure(call: SonCall, args: CreationInput, created: En
         son_id=call.son.id,
         material=args.option("material"),
     )
-    return lines.STRUCTURE_RAISED.format(kind=kind.value.replace("_", " "), effect=profile.effect_pct)
+    return fill(lines.STRUCTURE_RAISED, kind=kind.value.replace("_", " "), effect=profile.effect_pct)
 
 
 async def seed_lore_kinds(call: SonCall, args: CreationInput, created: EntityRow) -> None:

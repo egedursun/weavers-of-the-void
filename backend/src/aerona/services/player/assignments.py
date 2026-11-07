@@ -9,6 +9,7 @@ from aerona.catalog.stats import max_essence, max_hp
 from aerona.constants.player import PERSONALITY_FIELD_MAX_LENGTH, SON_NAME_MAX_LENGTH, SON_PLAN_MAX_LENGTH
 from aerona.constants.schema import TITLE_MAX_LENGTH
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.repositories.names import NameRepository, normalize_name
@@ -346,7 +347,9 @@ async def move_entity(scope: PlayerScope, command: MoveEntity) -> Effect:
     spec = entity_type_spec(target.entity_type)
     if location.entity_type not in spec.containers:
         allowed = ", ".join(sorted(item.value for item in spec.containers)) or "nowhere"
-        raise ValidationFailedError(f"A {target.entity_type.value} cannot be placed inside a {location.entity_type.value}; possible: {allowed}.")
+        raise ValidationFailedError(
+            f"{an(target.entity_type.value, capital=True)} cannot be placed inside {an(location.entity_type.value)}; possible: {allowed}."
+        )
     epoch = await scope.epoch()
     await EntityRepository(scope.session).move(target, location.id, epoch)
     target.map_x = None
@@ -421,7 +424,7 @@ async def set_stat(scope: PlayerScope, command: SetStat) -> Effect:
         elif field is not None and key in type(target.stats).model_fields:
             low, high = field.bounds(scope.rules)
         else:
-            raise ValidationFailedError(f'There is no stat "{key}" for a {target.entity_type.value}.')
+            raise ValidationFailedError(f'There is no stat "{key}" for {an(target.entity_type.value)}.')
         old = stat(target, key)
         value = max(low, round(command.value))
         new = min(high, value) if high is not None else value

@@ -5,6 +5,7 @@ from sqlalchemy import delete, select
 
 from aerona.catalog.entity_types import can_contain, engine_kind_owner
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.repositories.base import Repository
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -252,9 +253,9 @@ class EntityRepository(Repository):
     @staticmethod
     def _validate_shape(draft: EntityDraft) -> None:
         if draft.stats.kind != draft.entity_type.value:
-            raise ValidationFailedError(f"Stats of a {draft.stats.kind} cannot describe a {draft.entity_type.value}.")
+            raise ValidationFailedError(f"Stats of {an(draft.stats.kind)} cannot describe {an(draft.entity_type.value)}.")
         if draft.engine_kind is not None and engine_kind_owner(draft.engine_kind) is not draft.entity_type:
-            raise ValidationFailedError(f"{draft.engine_kind.value} does not belong to a {draft.entity_type.value}.")
+            raise ValidationFailedError(f"{draft.engine_kind.value} does not belong to {an(draft.entity_type.value)}.")
         if not draft.description.strip():
             raise ValidationFailedError("A record needs a description.")
 
@@ -278,7 +279,7 @@ class EntityRepository(Repository):
         if location is None:
             raise NotFoundError("No such location.")
         if not can_contain(location.entity_type, entity_type):
-            raise ValidationFailedError(f"A {entity_type.value} cannot be placed inside a {location.entity_type.value}.")
+            raise ValidationFailedError(f"{an(entity_type.value, capital=True)} cannot be placed inside {an(location.entity_type.value)}.")
         return location
 
     async def _resolve_world(self, draft: EntityDraft, location: EntityRow | None) -> int:

@@ -3,6 +3,7 @@ from sqlalchemy import delete
 
 from aerona.catalog.estates import CAUSE_LABELS, ESTATE_NAMES, PRIVILEGE_LABELS
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import (
@@ -153,7 +154,7 @@ async def row_of[T](scope: PlayerScope, table: type[T], key: int, label: str) ->
 async def faction_kind(scope: PlayerScope, faction_id: int, kind: FactionKind) -> FactionProfileRow:
     profile = await scope.session.get(FactionProfileRow, faction_id)
     if profile is None or profile.kind is not kind:
-        raise ValidationFailedError(f"That faction is not a {kind.value.replace('_', ' ')}.")
+        raise ValidationFailedError(f"That faction is not {an(kind.value.replace('_', ' '))}.")
     return profile
 
 
@@ -234,7 +235,8 @@ async def edit_movement(scope: PlayerScope, command: EditMovement) -> Effect:
     row.locked = held(row.locked, touched, command.hold)
     await scope.session.flush()
     return Effect(
-        f"A {'party' if row.is_party else 'movement'} for {CAUSE_LABELS[row.cause].lower()}, {row.support}% behind it.", target_node_id=row.faction_entity_id
+        f"{an('party' if row.is_party else 'movement', capital=True)} for {CAUSE_LABELS[row.cause].lower()}, {row.support}% behind it.",
+        target_node_id=row.faction_entity_id,
     )
 
 

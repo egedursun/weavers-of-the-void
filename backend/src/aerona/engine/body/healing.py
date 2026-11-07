@@ -8,6 +8,7 @@ from aerona.catalog.anatomy import SIGHT_PARTS, Part
 from aerona.catalog.mind import HEALING_SKILLS
 from aerona.catalog.tissues import COUNTED_PARTS, DIGIT_LIMBS, FULL_COUNTS
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import an
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow, InjuryRow, ProsthesisRow
 from aerona.db.tables.culture import ItemProfileRow
@@ -580,7 +581,7 @@ async def fit_prosthesis(
             RecordSpec(
                 entity_type=EntityType.ITEM,
                 name=f"The {made.title()} {part.label.split()[-1].title()} of {bearer.name}" if relic else f"{made.capitalize()} {part.label.lower()}",
-                body=f"A {made} {part.label.lower()} made for {bearer.name}.",
+                body=f"{an(made, capital=True)} {part.label.lower()} made for {bearer.name}.",
                 stats=ItemStats(might=quality),
                 power=max(1, quality // table.relic_power_div),
                 location_id=bearer.location_id,
@@ -608,7 +609,7 @@ async def fit_prosthesis(
     maker_text = f" made by {maker.name}" if maker is not None else ""
     await note(
         ctx,
-        f"{bearer.name} was fitted with a {material.value.replace('_', ' ')} {part.label.lower()}{maker_text}.",
+        f"{bearer.name} was fitted with {an(material.value.replace('_', ' '))} {part.label.lower()}{maker_text}.",
         key="healing.prosthesis",
         ids=[bearer.id, *([item.id] if item else [])],
     )

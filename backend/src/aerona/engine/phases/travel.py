@@ -9,6 +9,7 @@ from aerona.catalog.travel import TRAVEL_METHODS
 from aerona.catalog.worlds import HARSH_ATMOSPHERES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.grammar import an
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
@@ -686,7 +687,7 @@ async def _found_colony(ctx: TickContext, arrival: Arrival) -> EntityRow | None:
         RecordSpec(
             name=derived or f"{traveller.name} Colony",
             entity_type=EntityType.SETTLEMENT,
-            body=f"{journey.population} travellers of {traveller.name} reached {arrival.target.name} and founded a {kind} in {arrival.region.name}.",
+            body=f"{journey.population} travellers of {traveller.name} reached {arrival.target.name} and founded {an(kind)} in {arrival.region.name}.",
             stats=SettlementStats(
                 population=journey.population,
                 prosperity=travel.colony_prosperity,
