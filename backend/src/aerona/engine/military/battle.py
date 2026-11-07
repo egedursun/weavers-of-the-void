@@ -25,6 +25,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import (
     ArmourType,
     BattlePhase,
+    CommandArea,
     CommanderTrait,
     Formation,
     MoraleState,
@@ -37,6 +38,7 @@ from aerona.domain.enums.military import (
 from aerona.domain.enums.mortal import HarshnessScale
 from aerona.engine.economy.materials import MaterialProps, from_spec
 from aerona.engine.environment.battleground import cover_missile_pct
+from aerona.engine.military.command import family_factor
 from aerona.engine.military.tables import counters, defender_cell, matchup, terrain_cell, unit_terrain, weather_cell
 from aerona.engine.primitives.harshness import harshness
 from aerona.rules.registry import Rules
@@ -178,6 +180,7 @@ class Side:
     salvaged: int = 0
     concealment: int = 0
     detection: int = 0
+    areas: dict[CommandArea, int] = field(default_factory=dict)
 
     @property
     def start(self) -> int:
@@ -222,6 +225,7 @@ class BattleResult:
     trapped_by: int | None = None
     feint: bool = False
     collapsed: int | None = None
+    standard_taken: int | None = None
 
 
 @dataclass(frozen=True)
@@ -233,6 +237,7 @@ class Field:
     bridge: bool = False
     ford: bool = False
     cover: PlaceCover | None = None
+    earthworks: int = 0
 
 
 MELEE_FIRST = (F.INFANTRY, F.EXOTIC, F.BEAST, F.MOUNTED, F.NAVAL, F.ENGINEER, F.MAGIC, F.MISSILE)
@@ -411,7 +416,7 @@ def modifier(rules: Rules, stack: Stack, side: Side, ground: Field, enemy: Side 
         height = 1 + (defender_cell(rules, ground.terrain) - 1) * rules.terrain_effects.defender_height_pct / PERCENT
         if weather in SNOW:
             height *= rules.battle_weather.snow_defender_pct / PERCENT
-    dug = 1 + side.profile.entrenchment / PERCENT * rules.logistics.entrench_defence_pct / PERCENT if side.defending else 1.0
+    dug = 1 + dug_in(side, ground) / PERCENT * rules.logistics.entrench_defence_pct / PERCENT if side.defending else 1.0
     learned = 1 + min(rules.battle_magic.learned_tactic_cap, side.learned.get(side.tactic, 0) * rules.battle_magic.learned_tactic_pct) / PERCENT
     return (
         quality
@@ -428,6 +433,7 @@ def modifier(rules: Rules, stack: Stack, side: Side, ground: Field, enemy: Side 
         * side.surprise
         * side.luck
         * learned
+        * family_factor(rules, side.areas, stack.spec.family)
         * organisation_factor(stack)
         * state_factor(rules, stack)
         * order_factor(rules, stack)
@@ -683,12 +689,18 @@ def charge(rules: Rules, streams: Streams, rider: Side, target: Side, ground: Fi
         for stack in rider.stacks
         if stack.engaged and stack.spec.family in CHARGE_FAMILIES and charges(stack)
     )
+    if target.defending:
+        impact *= 1 - rules.army_depth.earthworks_charge_pct * dug_in(target, ground) / PERCENT / PERCENT
     dealt = deal(target.stacks, impact * (1 - brace), rules, mode="charge")
     taken = deal([stack for stack in rider.stacks if stack.spec.family in CHARGE_FAMILIES], impact * brace / 2, rules)
     terror = sum(stack.row.count * stack.spec.terror for stack in rider.stacks if stack.alive) / max(1, rider.standing)
     if terror:
         frighten(rules, target, terror * rules.morale.terror_pct / PERCENT)
     return dealt, taken
+
+
+def dug_in(side: Side, ground: Field) -> int:
+    return max(side.profile.entrenchment, ground.earthworks)
 
 
 def charges(stack: Stack) -> bool:
@@ -835,7 +847,8 @@ def pursue(rules: Rules, winner: Side, loser: Side, ground: Field) -> int:
     span = min(1.0, 2 * riders / max(1, winner.standing))
     shelter = 0.5 if ground.terrain in SHELTER else 1.0
     fleeing = sum(stack.row.count for stack in loser.stacks)
-    losses = round(fleeing * rules.tactics.pursuit_pct / PERCENT * (0.3 + span) * shelter * harshness(rules, HarshnessScale.BATTLE_LOSS))
+    escape = 1 - rules.army_depth.command_area_pct * loser.areas.get(CommandArea.MANOEUVRE, 0) / PERCENT / PERCENT
+    losses = round(fleeing * rules.tactics.pursuit_pct / PERCENT * (0.3 + span) * shelter * escape * harshness(rules, HarshnessScale.BATTLE_LOSS))
     taken = 0
     for stack in sorted(loser.stacks, key=lambda item: -item.row.count):
         part = min(stack.row.count, round(losses * stack.row.count / max(1, fleeing)))

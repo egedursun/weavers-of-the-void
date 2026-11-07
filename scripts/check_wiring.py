@@ -247,6 +247,49 @@ def book_gaps(texts: dict[Path, str]) -> list[str]:
     return errors
 
 
+LABEL_MAP = re.compile(r"(?:export )?const (\w+): Record<string, [^=]+> = \{(.*?)\n\}", re.S)
+LABEL_KEY = re.compile(r"^  '?([a-z][a-z0-9_]*)'?\s*:", re.M)
+ENUM_VALUE = re.compile(r'^    [A-Z][A-Z0-9_]* = "([a-z0-9_]+)"', re.M)
+PARTIAL_SHARE = 0.6
+
+
+def enum_value_sets() -> list[frozenset[str]]:
+    found: list[frozenset[str]] = []
+    for path in ENUMS.rglob("*.py"):
+        for block in re.split(r"\nclass ", path.read_text(encoding="utf-8")):
+            values = frozenset(ENUM_VALUE.findall(block))
+            if len(values) >= 2:
+                found.append(values)
+    return found
+
+
+def picked_from(name: str, text: str) -> bool:
+    return bool(re.search(rf"table=\{{{name}\}}|\b(?:table|labelTable)\({name}\)|Object\.(?:entries|keys)\({name}\)", text))
+
+
+def label_gaps(text: str, frontend: str, enums: list[frozenset[str]]) -> list[tuple[str, list[str]]]:
+    found: list[tuple[str, list[str]]] = []
+    for match in LABEL_MAP.finditer(text):
+        name, keys = match.group(1), frozenset(LABEL_KEY.findall(match.group(2)))
+        if len(keys) < 3 or keys in enums or not picked_from(name, frontend):
+            continue
+        covering = [values for values in enums if keys < values and len(keys) >= len(values) * PARTIAL_SHARE]
+        if covering:
+            found.append((name, sorted(min(covering, key=len) - keys)))
+    return found
+
+
+def partial_choice_tables(frontend: str) -> list[str]:
+    enums = enum_value_sets()
+    return [
+        f"{path.relative_to(ROOT)}: {name} is offered as a choice but misses {', '.join(missing)}; "
+        "type it by its schema enum so every value can be picked, or exclude the values it means to leave out"
+        for path in sorted(FRONTEND.rglob("*"))
+        if frontend_source(path)
+        for name, missing in label_gaps(path.read_text(encoding="utf-8"), frontend, enums)
+    ]
+
+
 def main() -> int:
     texts = backend_texts()
     errors = [
@@ -257,6 +300,7 @@ def main() -> int:
         *uncontrolled_tables(texts),
         *pages_without_shared_sections(),
         *book_gaps(texts),
+        *partial_choice_tables(frontend_text()),
     ]
     for line in errors:
         print(f"ERROR {line}")

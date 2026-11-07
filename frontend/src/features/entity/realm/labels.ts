@@ -56,6 +56,7 @@ import {
   VolumeX,
   WandSparkles,
 } from 'lucide-react'
+import { type components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
 import { type Named, named, plain } from '../environment/labels'
 
@@ -303,11 +304,16 @@ export const TREATY_KINDS: Record<string, Named & { plural: string }> = {
   },
 }
 
-export const TREATY_STATUSES: Record<string, Named> = {
+export const TREATY_STATUSES: Record<
+  components['schemas']['TreatyStatus'],
+  Named
+> = {
   in_force: { label: 'In force', icon: CircleCheck, tone: 'success' },
   fulfilled: { label: 'Fulfilled', icon: BadgeCheck, tone: 'info' },
   expired: { label: 'Expired', icon: Hourglass, tone: 'muted' },
   broken: { label: 'Broken', icon: HeartCrack, tone: 'danger' },
+  proposed: { label: 'Proposed', icon: PenLine, tone: 'gold' },
+  rejected: { label: 'Rejected', icon: Ban, tone: 'muted' },
 }
 
 export const PARTY_ROLES: Record<string, Named> = {

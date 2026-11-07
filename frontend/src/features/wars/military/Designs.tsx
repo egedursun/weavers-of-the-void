@@ -16,9 +16,9 @@ import { Button } from '@/components/ui/button'
 import { EmptyState, Medallion, StatBar, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { humanize } from '@/features/entity/actions/schema'
-import { useUnitKinds } from './api'
 import { Held, RecordButtons, TextField } from './controls'
 import { SOCIAL_CLASS, type RecordRow, nameOf, useRecords } from './depth'
+import { useKindTable } from './kinds'
 import {
   ARMOUR,
   FAMILY,
@@ -85,21 +85,6 @@ const FLYING = {
   label: 'Takes wing',
   icon: Feather,
   tone: 'verdigris' as const,
-}
-
-function useKindTable() {
-  const kinds = useUnitKinds()
-  const table = Object.fromEntries(
-    (kinds.data ?? []).map((spec) => [
-      spec.kind,
-      {
-        label: spec.label,
-        icon: UNIT_ICON[spec.kind] ?? Swords,
-        tone: FAMILY[spec.family]?.tone ?? ('muted' as const),
-      },
-    ])
-  )
-  return { table, specs: kinds.data ?? [] }
 }
 
 function DesignFields({

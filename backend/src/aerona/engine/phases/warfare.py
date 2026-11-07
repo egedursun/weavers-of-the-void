@@ -28,7 +28,7 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.limits import PERCENT_MAX
-from aerona.domain.enums.military import CasualtyFate, DuelContext, DuelEnd, OutcomeClass, SackChoice, Stance, StarvationStage
+from aerona.domain.enums.military import CasualtyFate, CommandArea, DuelContext, DuelEnd, OutcomeClass, SackChoice, Stance, StarvationStage
 from aerona.domain.enums.mind import ActKind, MemoryKind, ThoughtKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.renown import ReputationAxis
@@ -78,17 +78,21 @@ from aerona.engine.military.aftermath import (
 from aerona.engine.military.aims import REGION_AIMS, advance, set_aims
 from aerona.engine.military.alliance import allied_armies, allies_on_side, march_with
 from aerona.engine.military.battle import BattleResult, Field
-from aerona.engine.military.campaign import home_news
+from aerona.engine.military.campaign import bridged, home_news
 from aerona.engine.military.causes import raiders
 from aerona.engine.military.clash import captives_taken, cautious, clash, earn_traits, learn_tactic, log_phases
+from aerona.engine.military.command import command_areas
 from aerona.engine.military.duels import bout, fighter, set_footing
+from aerona.engine.military.engineering import earthworks_of
 from aerona.engine.military.feuds import house_feud
 from aerona.engine.military.finance import pay_contracts
 from aerona.engine.military.logistics import March, campaign_season, in_contact, mark_front
+from aerona.engine.military.marshal import keep_templates
 from aerona.engine.military.naval import SeaFight, sea_battle, weather_the_storm
 from aerona.engine.military.occupation import announce_partisans, end_occupations, occupy, partisans, seeks_peace, weary
 from aerona.engine.military.siege import SiegeSeason, breach_bonus, open_siege, sack, siege_season, wall_defence
 from aerona.engine.military.siege_depth import sack_choice
+from aerona.engine.military.standards import capture_standard
 from aerona.engine.military.trials import settle_trial, trial_claims
 from aerona.engine.military.units import muster, profile_of, reconcile_sizes, resize, retire_stacks
 from aerona.engine.military.upkeep import drill_armies, hire_mercenaries, lost_trade, occupation_levies, occupation_revolts, war_taxes
@@ -309,6 +313,8 @@ async def backfill_army_sizes(ctx: TickContext) -> int:
 async def campaign_upkeep(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     ctx.count("armies_drilled", await drill_armies(ctx))
+    for key, value in (await keep_templates(ctx)).items():
+        ctx.count(f"templates_{key}", value)
     ctx.count("home_news", await home_news(ctx, atlas))
     ctx.count("wounded_recovered", await recover_wounded(ctx))
     for key, value in (await pay_contracts(ctx)).items():
@@ -401,15 +407,20 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
 
 
 @reads(
+    "army.experience",
+    "army.morale",
     "army.size",
     "cult.zeal",
+    "people.population",
     "people.wealth",
+    "settlement.population",
     "settlement.prosperity",
     "settlement.wealth",
     "table.applied_fixups",
     "table.armies",
     "table.army_officers",
     "table.army_profiles",
+    "table.army_templates",
     "table.army_units",
     "table.battles",
     "table.beast_profiles",
@@ -429,6 +440,9 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.feuds",
     "table.forced_weather",
     "table.goods",
+    "table.herds",
+    "table.holder_levels",
+    "table.holder_techniques",
     "table.house_members",
     "table.house_profiles",
     "table.injuries",
@@ -476,6 +490,7 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.armies",
     "table.army_officers",
     "table.army_profiles",
+    "table.army_templates",
     "table.army_units",
     "table.battle_casualties",
     "table.battle_stacks",
@@ -558,9 +573,10 @@ def war_locks(war: WarRow) -> list[str]:
 def battle_field(rules: Rules, ground: BattleGround) -> Field:
     region = ground.region
     river = region is not None and region.river_class in {RiverClass.RIVER, RiverClass.GREAT_RIVER}
-    bridge = river and region is not None and region.built >= rules.campaign_depth.bridge_built
+    bridge = river and bridged(rules, region)
     ford = river and region is not None and region.river_class is RiverClass.RIVER
-    return Field(ground.terrain, ground.weather.kind if ground.weather is not None else None, ground.night, river, bridge=bridge, ford=ford, cover=ground.cover)
+    weather = ground.weather.kind if ground.weather is not None else None
+    return Field(ground.terrain, weather, ground.night, river, bridge=bridge, ford=ford, cover=ground.cover, earthworks=earthworks_of(region))
 
 
 def _besieged(rules: Rules, defender: EntityRow) -> EntityRow | None:
@@ -599,6 +615,8 @@ async def _siege(
     owner = await ctx.session.get(ArmyRow, attacker_army.id)
     engines = await siege_engines(ctx, await living_entity(ctx.session, owner.owner_entity_id) if owner is not None else None, attacker_army)
     starving += engines * ctx.rules.materials.engine_breach_pct / PERCENT
+    areas = await command_areas(ctx.session, owner.commander_entity_id if owner is not None else None)
+    starving += ctx.rules.army_depth.command_area_pct / PERCENT * areas[CommandArea.SIEGE] / PERCENT
     starving += campaigns.breach_starving_bonus_pct / PERCENT * (siege.breaches + (siege.starvation in HUNGRY))
     starving += breach_bonus(ctx, siege)
     breach_chance = clamp_float(gap / campaigns.breach_diff_divisor + starving, campaigns.breach_min_pct / PERCENT, campaigns.breach_max_pct / PERCENT)
@@ -934,6 +952,7 @@ def _battle_row(
         trap_entity_id=result.trapped_by,
         feint=result.feint,
         salvaged=winner.salvaged if winner is not None else 0,
+        standard_entity_id=result.standard_taken,
     )
     ctx.session.add(row)
     return row
@@ -1049,6 +1068,16 @@ def _escalate(ctx: TickContext, war: WarRow, event: EntityRow, gap: float) -> No
     set_stats(event, severity=war.violence)
 
 
+async def _honours(
+    ctx: TickContext, war: WarRow, result: BattleResult, field: Field, armies: dict[int, tuple[EntityRow, ArmyRow]], *, attacker_id: int
+) -> None:
+    assert result.winner is not None
+    winner = result.winner.entity
+    await _toll(ctx, result, field, armies[winner.id][1].commander_entity_id)
+    await hail_victor(ctx, winner, armies[winner.id][1].commander_entity_id)
+    await capture_standard(ctx, war, result, attacker_id=attacker_id)
+
+
 async def _toll(ctx: TickContext, result: BattleResult, field: Field, commander_id: int | None) -> None:
     assert result.winner is not None and result.loser is not None
     for side in (result.winner, result.loser):
@@ -1107,8 +1136,7 @@ async def fight_battle(
     else:
         outcome = _battle_score(war, ctx.rules, result, attacker_id=attacker.id, gap=gap)
         summary = f"{winner.name} prevailed over {loser.name} ({result.outcome.value}; {result.winner.tactic.value.replace('_', ' ')})"
-    await _toll(ctx, result, field, armies[winner.id][1].commander_entity_id)
-    await hail_victor(ctx, winner, armies[winner.id][1].commander_entity_id)
+    await _honours(ctx, war, result, field, armies, attacker_id=attacker.id)
     _community_losses(ctx, winner, loser, result.loser.lost / max(1, result.loser.start))
     await change_relation(ctx, attacker.id, defender.id, -campaigns.battle_relation, MemoryKind.FOUGHT_US, note="battle")
     son_id = await _patron_effects(ctx, theatre, winner, loser)
@@ -1476,6 +1504,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.armies",
     "table.army_officers",
     "table.army_profiles",
+    "table.army_templates",
     "table.army_units",
     "table.beast_profiles",
     "table.beliefs",
@@ -1669,6 +1698,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.polity_regard",
     "table.polity_territories",
     "table.region_environment",
+    "table.relationships",
     "table.reputations",
     "table.settlement_infrastructure",
     "table.settlement_profiles",

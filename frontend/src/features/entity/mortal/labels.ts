@@ -44,6 +44,7 @@ import {
   Zap,
   Shirt,
 } from 'lucide-react'
+import { type components } from '@/api/generated/schema'
 import { type Named } from '../environment/labels'
 
 export type { Named }
@@ -238,7 +239,10 @@ export const CRIMES: Record<string, Named> = {
   desertion: { label: 'Desertion', icon: Wind, tone: 'warning' },
 }
 
-export const PUNISHMENTS: Record<string, Named> = {
+export const PUNISHMENTS: Record<
+  components['schemas']['aerona__domain__enums__mortal__PunishmentKind'],
+  Named
+> = {
   fine: { label: 'A fine', icon: Coins, tone: 'muted' },
   flogging: { label: 'Flogging', icon: Zap, tone: 'warning' },
   exile: { label: 'Exile', icon: Compass, tone: 'warning' },
@@ -247,6 +251,7 @@ export const PUNISHMENTS: Record<string, Named> = {
   tongue: { label: 'Loss of the tongue', icon: HeartCrack, tone: 'danger' },
   eyes: { label: 'Blinding', icon: Eye, tone: 'danger' },
   death: { label: 'Death', icon: Skull, tone: 'danger' },
+  public_shaming: { label: 'Public shaming', icon: Users, tone: 'warning' },
 }
 
 export const STANDING_FIELDS: Record<

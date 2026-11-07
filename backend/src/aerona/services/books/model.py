@@ -36,6 +36,7 @@ from aerona.domain.enums.war import WarSide, WarStatus
 from aerona.domain.models.records import EpochStatsData
 from aerona.engine.military.records import battle_field
 from aerona.rules.registry import Rules
+from aerona.services.books.command import add_command_areas
 from aerona.services.books.history import HandEpoch, creator_hand, ending_line, god_fate, son_fate
 from aerona.services.books.mapsvg import MapPicture, map_picture
 from aerona.services.books.typed import RecordTable, TypedIndex, TypedSection
@@ -376,6 +377,7 @@ class BookBuilder:
         for bond in await self.session.scalars(select(BondRow).where(BondRow.state.in_([BondState.ACTIVE, BondState.PAST])).order_by(BondRow.id)):
             self.bonds[bond.source_node_id].append(bond)
         self.typed = await TypedIndex.load(self.session, self.names)
+        await add_command_areas(self.session, self.typed)
 
     def bond_lines(self, node_id: int) -> tuple[list[str], list[str]]:
         active: list[str] = []

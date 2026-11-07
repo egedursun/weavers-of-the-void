@@ -27,6 +27,7 @@ from aerona.engine.economy.materials import node_material
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import techniques_of
+from aerona.engine.military.templates import blend, realm_template, weights_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -125,6 +126,10 @@ async def composition(ctx: TickContext, community: EntityRow, size: int, knowled
         plan[kind] = plan.get(kind, 0.0) + table.style_share_pct / PERCENT / (index + 1) / sum(1 / (i + 1) for i in range(len(styled)))
     for kind, share in (await extras(ctx, community, knowledge, society)).items():
         add(plan, kind, share)
+    template = await realm_template(ctx, community.id)
+    if template is not None:
+        drawn = {kind: weight for kind, weight in weights_of(template).items() if allowed(UNITS[kind], community.id, knowledge, techniques)}
+        plan = blend(ctx.rules, plan, drawn)
     biology, culture = await profiles_of(ctx.session, community)
     plan = kin_army(ctx.rules, biology, culture, plan, beasts=await herd_uses(ctx, community.id), mount_needs=MOUNT_NEEDS)
     rest = max(0.0, 1 - sum(plan.values()))

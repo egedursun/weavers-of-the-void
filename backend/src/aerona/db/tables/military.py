@@ -5,7 +5,7 @@ from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.db.profile_guard import register_profile_table
-from aerona.domain.enums.demography import CohortCondition
+from aerona.domain.enums.demography import CohortCondition, MartialStyle
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.military import (
     AgentStatus,
@@ -434,3 +434,19 @@ register_profile_table("captive_cohorts", "captor_entity_id")
 register_profile_table("spy_networks", "owner_entity_id")
 register_profile_table("spy_agents", "id")
 register_profile_table("feuds", "first_entity_id")
+
+
+class ArmyTemplateRow(Base):
+    __tablename__ = "army_templates"
+    __table_args__ = (at_least("created_epoch", 0), Index("ix_army_templates_polity", "polity_entity_id"))
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    polity_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
+    doctrine: Mapped[MartialStyle] = mapped_column(enum_type(MartialStyle, "doctrine"), default=MartialStyle.SHIELDWALL)
+    composition: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
+    active: Mapped[bool] = mapped_column(default=True)
+    obsolete: Mapped[bool] = mapped_column(default=False)
+    created_epoch: Mapped[int] = mapped_column(default=0)
+    upgraded_epoch: Mapped[int | None]
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)

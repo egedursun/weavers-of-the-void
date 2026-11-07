@@ -33,13 +33,14 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.stats import stat
 from aerona.engine.structures.describe import structure_lines
 from aerona.prompts.contexts.mortal import HomeLine
+from aerona.rules.registry import Rules
 
 
 def words(value: str) -> str:
     return value.replace("_", " ")
 
 
-async def home_for(session: AsyncSession, me: EntityRow) -> HomeLine | None:
+async def home_for(session: AsyncSession, me: EntityRow, rules: Rules) -> HomeLine | None:
     home = me if me.entity_type in SOCIETY_TYPES else await community_of(session, me)
     if home is None or home.entity_type not in SOCIETY_TYPES:
         return None
@@ -62,7 +63,7 @@ async def home_for(session: AsyncSession, me: EntityRow) -> HomeLine | None:
         f"{row.kind.value.replace('_', ' ')} oath{' before a god' if row.witness_son_id else ''}"
         for row in await session.scalars(select(OathRow).where(OathRow.swearer_entity_id == me.id, OathRow.status == OathStatus.SWORN))
     ]
-    wars, command, occupied, captives = await war_lines(session, me, home, region)
+    wars, command, occupied, captives = await war_lines(session, rules, me, home, region)
     tenets, judgement, zeal = await faith_lines(session, home)
     lore = await lore_lines(session, me, home, realm_id, house_id)
     state = await statecraft(session, me, home, realm_id)
@@ -193,7 +194,7 @@ async def people_facts(session: AsyncSession, entity: EntityRow) -> list[str]:
     return [f"Folk and customs: {', '.join(lines)}"] if lines else []
 
 
-async def war_lines(session: AsyncSession, me: EntityRow, home: EntityRow, region: int | None) -> tuple[list[str], str, str, int]:
+async def war_lines(session: AsyncSession, rules: Rules, me: EntityRow, home: EntityRow, region: int | None) -> tuple[list[str], str, str, int]:
     wars: list[str] = []
     for side in await session.scalars(select(WarSideRow).where(WarSideRow.entity_id == home.id, WarSideRow.left_epoch.is_(None))):
         war = await session.get(WarRow, side.war_id)
@@ -204,13 +205,15 @@ async def war_lines(session: AsyncSession, me: EntityRow, home: EntityRow, regio
         aims = [words(row.kind.value) for row in rows]
         line = f"{event.name if event is not None else 'a war'} (weariness {side.weariness}, cause {words(war.cause.value)}"
         wars.append(line + (f", aims: {', '.join(aims)})" if aims else ")"))
-        wars.extend(await war_sheet(session, war, home.id))
+        wars.extend(await war_sheet(session, rules, war, home.id))
     wars.extend(await intrigue_sheet(session, home.id))
     wars.extend(await fleet_sheet(session, home.id))
     army_id = await session.scalar(select(ArmyRow.entity_id).where(ArmyRow.commander_entity_id == me.id, ArmyRow.disbanded_epoch.is_(None)).limit(1))
     army = await session.get(EntityRow, army_id) if army_id is not None else None
     traits = [words(trait.value) for trait in await session.scalars(select(CommanderTraitRow.trait).where(CommanderTraitRow.mortal_entity_id == me.id))]
-    command = (await army_sheet(session, army.id) if army is not None else "") + (f" (known as {', '.join(traits)})" if army is not None and traits else "")
+    command = (await army_sheet(session, rules, army.id) if army is not None else "") + (
+        f" (known as {', '.join(traits)})" if army is not None and traits else ""
+    )
     occupation = await session.get(OccupationRow, region) if region is not None else None
     occupier = await session.get(EntityRow, occupation.occupier_entity_id) if occupation is not None and occupation.occupier_entity_id != home.id else None
     holding = select(func.coalesce(func.sum(CaptiveCohortRow.count), 0)).where(CaptiveCohortRow.captor_entity_id == home.id)

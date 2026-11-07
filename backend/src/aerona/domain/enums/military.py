@@ -129,6 +129,14 @@ class CommanderTrait(StrEnum):
     BRUTAL = "brutal"
 
 
+class CommandArea(StrEnum):
+    FIRE = "fire"
+    SHOCK = "shock"
+    MANOEUVRE = "manoeuvre"
+    SIEGE = "siege"
+    LOGISTICS = "logistics"
+
+
 class SiegeAction(StrEnum):
     BLOCKADE = "blockade"
     BOMBARD = "bombard"

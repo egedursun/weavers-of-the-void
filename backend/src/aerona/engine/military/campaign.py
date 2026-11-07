@@ -13,6 +13,8 @@ from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow
+from aerona.db.write_guard import held
+from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EntityStatus
@@ -21,8 +23,10 @@ from aerona.domain.enums.military import ArmyRole, CommanderTrait, MutinyOutcome
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.war import SiegeStatus
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import add_scar
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.military.clash import traits_of
 from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.mind.book import values_for
@@ -42,14 +46,18 @@ RUTHLESS = frozenset({CommanderTrait.BRUTAL})
 CALM_STANCES = frozenset({Stance.GARRISON, Stance.ENTRENCH})
 
 
-def step_cost(rules: Rules, region: RegionEnvironmentRow | None, season: WorldSeasonRow | None) -> int:
+def bridged(rules: Rules, region: RegionEnvironmentRow | None) -> bool:
+    return region is not None and region.built >= rules.campaign_depth.bridge_built and region.scars.get(ScarKind.BRIDGE_DOWN.value, 0) <= 0
+
+
+def step_cost(rules: Rules, region: RegionEnvironmentRow | None, season: WorldSeasonRow | None, *, pontoon: bool = False) -> int:
     table = rules.campaign_depth
     if region is None:
         return PERCENT
     passability = max(rules.logistics.passability_floor, region.passability.get(MovementMode.ON_FOOT.value, PERCENT))
     cost = PERCENT * max(1.0, table.passability_full / passability)
     if region.river_class in {RiverClass.RIVER, RiverClass.GREAT_RIVER}:
-        if region.built < table.bridge_built:
+        if not bridged(rules, region) and not pontoon:
             cost = cost * PERCENT / max(1, table.ford_march_pct)
         if season is not None and season.growth >= table.flood_growth:
             cost = cost * PERCENT / max(1, table.flood_march_pct)
@@ -68,7 +76,9 @@ def march_budget(rules: Rules, base_regions: int, *, weather: WeatherKind | None
 
 
 def on_road(region: RegionEnvironmentRow | None, rules: Rules) -> bool:
-    return region is not None and region.built >= rules.campaign_depth.bridge_built
+    if region is None:
+        return False
+    return region.built >= rules.campaign_depth.bridge_built or region.scars.get(ScarKind.MILITARY_ROAD.value, 0) >= rules.army_depth.road_at
 
 
 def feed_mounts(rules: Rules, profile: ArmyProfileRow, rows: Sequence[ArmyUnitRow], foraged: bool) -> bool:
@@ -228,7 +238,26 @@ async def drill(ctx: TickContext, owner: EntityRow, profile: ArmyProfileRow, row
     for row in rows:
         if "experience" not in (row.locked or []):
             row.experience = clamp_int(row.experience + round_half_up(table.drill_experience * profile.drill / PERCENT), 0, PERCENT)
+        if "discipline" not in (row.locked or []) and row.discipline < profile.drill:
+            row.discipline = min(profile.drill, row.discipline + ctx.rules.army_depth.drill_discipline)
+    await spar(ctx, profile.army_entity_id)
     return True
+
+
+async def spar(ctx: TickContext, army_id: int) -> int:
+    officers = select(ArmyOfficerRow.mortal_entity_id).where(ArmyOfficerRow.army_entity_id == army_id, ArmyOfficerRow.until_epoch.is_(None))
+    commander = await ctx.session.scalar(select(ArmyRow.commander_entity_id).where(ArmyRow.entity_id == army_id))
+    hurt = 0
+    for mortal_id in sorted({*await ctx.session.scalars(officers), *([commander] if commander is not None else [])}):
+        mortal = await living_entity(ctx.session, mortal_id)
+        if mortal is None or held(mortal_id):
+            continue
+        if not ctx.rng(f"sparring.{army_id}.{mortal_id}.{ctx.epoch}").chance(ctx.rules.army_depth.sparring_injury_pct):
+            continue
+        harm = Harm(ctx.rules.army_depth.sparring_hp, HarmCause.ACCIDENT, "hurt sparring at drill", damage_type=DamageType.BLUNT)
+        if (await apply_hits(ctx, mortal, harm, lethal=False)).outcome is not None:
+            hurt += 1
+    return hurt
 
 
 async def kin_of(ctx: TickContext, community_id: int) -> set[int]:

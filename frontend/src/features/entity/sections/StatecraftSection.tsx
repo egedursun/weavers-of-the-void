@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Lock, Plus, Trash2, Unlock, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { type components } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -57,7 +58,10 @@ import {
 const SPAN = 100
 const WORKING = 'Working on it.'
 const REALMS = ['polity']
-const ENDINGS: Record<string, string> = {
+const ENDINGS: Record<
+  Exclude<components['schemas']['CrisisState'], 'escalating'>,
+  string
+> = {
   backed_down: 'The demander backs down',
   conceded: 'The target concedes',
   war: 'It comes to war',

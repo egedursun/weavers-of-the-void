@@ -56,6 +56,7 @@ import {
   PawPrint,
   Pickaxe,
   RotateCcw,
+  Route,
   Rows3,
   Sailboat,
   Scale,
@@ -88,10 +89,13 @@ import {
   Zap,
   type LucideIcon,
 } from 'lucide-react'
+import { type components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
 import { type Named, named } from '@/features/entity/environment/labels'
 
 export { named, type Named }
+
+type Schemas = components['schemas']
 
 export const PERCENT = 100
 export const WORKING = 'Working…'
@@ -111,7 +115,7 @@ export const STANCE: Record<string, Named> = {
   retreat: { label: 'Retreating', icon: Undo2, tone: 'muted' },
 }
 
-export const DOCTRINE: Record<string, Named> = {
+export const DOCTRINE: Record<Schemas['MartialStyle'], Named> = {
   shieldwall: { label: 'Shield wall', icon: Shield, tone: 'info' },
   horse_archer: { label: 'Horse archers', icon: BowArrow, tone: 'warning' },
   skirmisher: { label: 'Skirmishers', icon: Crosshair, tone: 'gold' },
@@ -168,7 +172,7 @@ export const FATE: Record<string, Named> = {
   released: { label: 'Released', icon: LockOpen, tone: 'success' },
 }
 
-export const TRAIT: Record<string, Named> = {
+export const TRAIT: Record<Schemas['CommanderTrait'], Named> = {
   aggressive_assaulter: {
     label: 'Aggressive assaulter',
     icon: Swords,
@@ -525,7 +529,7 @@ export function cardGrid(count: number): string {
     : 'grid min-w-0 grid-cols-1 gap-3 @2xl/mil:grid-cols-2 @6xl/mil:grid-cols-3'
 }
 
-export const FORMATION: Record<string, Named> = {
+export const FORMATION: Record<Schemas['Formation'], Named> = {
   line: { label: 'Line', icon: Rows3, tone: 'gold' },
   column: { label: 'Column', icon: Columns3, tone: 'muted' },
   wedge: { label: 'Wedge', icon: Triangle, tone: 'warning' },
@@ -534,7 +538,7 @@ export const FORMATION: Record<string, Named> = {
   shieldwall: { label: 'Shield wall', icon: BrickWall, tone: 'gold' },
 }
 
-export const MORALE_STATE: Record<string, Named> = {
+export const MORALE_STATE: Record<Schemas['MoraleState'], Named> = {
   steady: { label: 'Steady', icon: Smile, tone: 'success' },
   shaken: { label: 'Shaken', icon: Meh, tone: 'warning' },
   wavering: { label: 'Wavering', icon: Frown, tone: 'warning' },
@@ -543,7 +547,15 @@ export const MORALE_STATE: Record<string, Named> = {
   rallied: { label: 'Rallied', icon: RotateCcw, tone: 'gold' },
 }
 
-export const TARGET_CLASS: Record<string, Named> = {
+export const TARGET_CLASS: Record<Schemas['TargetClass'], Named> = {
   soft: { label: 'Soft target', icon: Feather, tone: 'muted' },
   hard: { label: 'Hard target', icon: ShieldHalf, tone: 'gold' },
+}
+
+export const COMMAND_AREA: Record<Schemas['CommandArea'], Named> = {
+  fire: { label: 'Fire', icon: Crosshair, tone: 'info' },
+  shock: { label: 'Shock', icon: Swords, tone: 'danger' },
+  manoeuvre: { label: 'Manoeuvre', icon: Route, tone: 'gold' },
+  siege: { label: 'Siege', icon: Castle, tone: 'warning' },
+  logistics: { label: 'Logistics', icon: Wheat, tone: 'success' },
 }

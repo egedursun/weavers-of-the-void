@@ -19470,6 +19470,11 @@ export interface components {
                         stacks: components["schemas"]["StackView"][];
                         movements: components["schemas"]["MovementView"][];
                         commander_traits: components["schemas"]["CommanderTrait"][];
+                        command_areas: {
+                [key: string]: number;
+            };
+            best_area: components["schemas"]["CommandArea"] | null;
+            works: components["schemas"]["ArmyWorksView"];
         };
                 ArmyCommandInput: {
                         army_id: number;
@@ -19523,6 +19528,19 @@ export interface components {
             commander: components["schemas"]["NodeRef"] | null;
                         raised_epoch: number;
                         disbanded_epoch: number | null;
+        };
+                ArmyWorksView: {
+                        supply_low: number;
+                        supply_high: number;
+                        eaten_out: boolean;
+                        sappers: number;
+                        engineers: boolean;
+                        earthworks: number;
+                        military_road: number;
+                        bridge_down: number;
+                        river: boolean;
+                        road: boolean;
+                        patrolling: boolean;
         };
                 ArtCanoniseInput: {
                         artwork_id: number;
@@ -19783,6 +19801,7 @@ export interface components {
             trap_by: components["schemas"]["NodeRef"] | null;
                         feint: boolean;
                         salvaged: number;
+            standard_taken?: components["schemas"]["NodeRef"] | null;
                         phases: components["schemas"]["BattlePhaseView"][];
         };
                 BattleStackView: {
@@ -20909,6 +20928,7 @@ export interface components {
                         veterans: number;
                         updated_epoch: number;
         };
+                CommandArea: "fire" | "shock" | "manoeuvre" | "siege" | "logistics";
                 CommanderTrait: "aggressive_assaulter" | "defensive_genius" | "cavalry_master" | "winter_campaigner" | "hill_fighter" | "siege_expert" | "reckless" | "cautious" | "inspiring" | "brutal";
                 CommanderTraitInput: {
                         mortal_id: number;
@@ -29779,7 +29799,7 @@ export interface components {
                         form: string;
                         text: string;
         };
-                ScarKind: "battlefield" | "plague_ground" | "salted_earth" | "burned" | "crater" | "haunted" | "blighted" | "leak_wound" | "plundered";
+                ScarKind: "battlefield" | "plague_ground" | "salted_earth" | "burned" | "crater" | "haunted" | "blighted" | "leak_wound" | "plundered" | "earthworks" | "military_road" | "bridge_down";
                 ScenarioHistory: {
                         id: number;
             status: components["schemas"]["ScenarioStatus"];
@@ -69738,6 +69758,7 @@ export const climateAffinityValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const climateEraValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ClimateEra"]> = ["temperate", "drought", "rain", "ice_age", "scorching"];
 export const coastKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CoastKind"]> = ["none", "cliff", "beach", "harbour_site", "reef"];
 export const cohortConditionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CohortCondition"]> = ["none", "veteran", "sick", "enslaved", "captive", "maimed"];
+export const commandAreaValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommandArea"]> = ["fire", "shock", "manoeuvre", "siege", "logistics"];
 export const commanderTraitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommanderTrait"]> = ["aggressive_assaulter", "defensive_genius", "cavalry_master", "winter_campaigner", "hill_fighter", "siege_expert", "reckless", "cautious", "inspiring", "brutal"];
 export const commodityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Commodity"]> = ["food", "ore", "goods"];
 export const commodityFamilyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CommodityFamily"]> = ["subsistence", "industrial", "strategic", "luxury"];
@@ -70086,7 +70107,7 @@ export const routeStateValues: ReadonlyArray<FlattenedDeepRequired<components>["
 export const rulesChangedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RulesChangedEvent"]["kind"]> = ["rules.changed"];
 export const rumourChannelValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RumourChannel"]> = ["witness", "route", "pilgrimage", "journey", "spy", "planted"];
 export const sacredClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SacredClass"]> = ["profane", "notable", "holy"];
-export const scarKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ScarKind"]> = ["battlefield", "plague_ground", "salted_earth", "burned", "crater", "haunted", "blighted", "leak_wound", "plundered"];
+export const scarKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ScarKind"]> = ["battlefield", "plague_ground", "salted_earth", "burned", "crater", "haunted", "blighted", "leak_wound", "plundered", "earthworks", "military_road", "bridge_down"];
 export const scenarioKeyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ScenarioKey"]> = ["doom_far", "one_faith", "lost_star", "many_worlds", "long_peace", "cosmic_power", "loyal_pantheon", "new_horizons"];
 export const scenarioStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ScenarioStatus"]> = ["running", "completed", "failed", "abandoned"];
 export const schemeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SchemeKind"]> = ["rite", "descent", "bargain"];

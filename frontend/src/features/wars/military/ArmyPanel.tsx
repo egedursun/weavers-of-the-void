@@ -58,6 +58,7 @@ import {
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { StackArms } from './ArmyDepth'
+import { ArmyWorks, CommanderAreas } from './ArmyWorks'
 import { type ArmyCard, type Stack, soldiersOf, useUnitKinds } from './api'
 import { EntityPicker } from './controls'
 import {
@@ -821,6 +822,7 @@ export function ArmyPanel({
               <TableTag key={trait} table={TRAIT} value={trait} />
             ))}
       </div>
+      <CommanderAreas army={army} />
       <div className='grid min-w-0 grid-cols-2 gap-2 @2xl/mil:grid-cols-4'>
         <MiniStat
           icon={Users}
@@ -877,6 +879,7 @@ export function ArmyPanel({
           tone={percentTone(army.disease, true)}
         />
       </div>
+      <ArmyWorks army={army} />
       {army.supply_line.length > 0 && (
         <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
           <Route

@@ -1828,7 +1828,11 @@ ECONOMY_ACTIONS = (
     _sync(Meta("commander:trait", "Give or take a battle trait", G.WARFARE), military.commander_trait, military.CommanderTraitOrder, free, ("S5.1",)),
     _sync(Meta("spy:edit_network", "Edit or roll up a spy network", G.WARFARE), military.edit_network, military.EditNetwork, free, ("S5.10",)),
     _sync(
-        Meta("military:create", "Create a military record: unit design, stack, officer, contract, siege, aim, captives, spy network or agent, feud", G.WARFARE),
+        Meta(
+            "military:create",
+            "Create a military record: design, stack, officer, contract, siege, aim, captives, spy network or agent, feud, army template",
+            G.WARFARE,
+        ),
         military_depth.create,
         military_depth.RecordCreate,
         free,

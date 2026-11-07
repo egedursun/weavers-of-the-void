@@ -644,11 +644,11 @@ async def regalia_holder(ctx: TickContext, polity_id: int, ruler_id: int) -> tup
     return held, lost
 
 
-async def standard_of(ctx: TickContext, owner_ids: list[int]) -> int:
+async def standard_item(ctx: TickContext, owner_ids: list[int]) -> int | None:
     if not owner_ids:
-        return 0
+        return None
     owned = select(BondRow.target_node_id).where(BondRow.source_node_id.in_(owner_ids), BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE)
-    found = await ctx.session.scalar(
+    return await ctx.session.scalar(
         select(ItemProfileRow.item_entity_id)
         .where(
             ItemProfileRow.item_entity_id.in_(owned),
@@ -656,9 +656,13 @@ async def standard_of(ctx: TickContext, owner_ids: list[int]) -> int:
             ItemProfileRow.symbol.is_(True),
             ItemProfileRow.condition >= ctx.rules.item_wear.broken,
         )
+        .order_by(ItemProfileRow.item_entity_id)
         .limit(1)
     )
-    return ctx.rules.item_renown.standard_morale if found is not None else 0
+
+
+async def standard_of(ctx: TickContext, owner_ids: list[int]) -> int:
+    return ctx.rules.item_renown.standard_morale if await standard_item(ctx, owner_ids) is not None else 0
 
 
 def is_book(row: ItemProfileRow) -> bool:

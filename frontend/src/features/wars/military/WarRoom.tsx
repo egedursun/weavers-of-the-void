@@ -1200,6 +1200,19 @@ function BattleField({ battle }: { battle: BattleReport }) {
         </Plain>
       ),
     })
+  if (battle.standard_taken)
+    marks.push({
+      key: 'standard',
+      node: (
+        <Badge size='sm' variant='warning'>
+          <Flag />
+          <EntityLink kind='entity' id={String(battle.standard_taken.id)}>
+            {battle.standard_taken.name}
+          </EntityLink>
+          taken as a trophy
+        </Badge>
+      ),
+    })
   if (marks.length === 0) return null
   return (
     <div className='flex min-w-0 flex-wrap items-center gap-1.5'>

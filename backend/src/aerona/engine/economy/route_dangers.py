@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES
 from aerona.constants.units import PERCENT
@@ -11,11 +12,14 @@ from aerona.core.total import partial
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.military import ArmyProfileRow
+from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.economy import CommodityKind, TradeLoss, TradeMode
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.environment import TerrainKind, WeatherEffect
+from aerona.domain.enums.military import Stance
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.environment.weather import Weather
@@ -23,6 +27,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
 
+PATROLS = frozenset({Stance.GARRISON, Stance.ENTRENCH})
 BANDIT_KINDS = frozenset({EngineKind.REBELS, EngineKind.VOID_PIRATES})
 CARAVAN_TERRAIN = frozenset({TerrainKind.DESERT, TerrainKind.STEPPE})
 PASS_TERRAIN = frozenset({TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS})
@@ -95,6 +100,7 @@ class Dangers:
 @dataclass
 class Lairs:
     beasts: dict[int, list[tuple[EntityRow, BeastProfileRow]]] = field(default_factory=dict)
+    patrolled: frozenset[int] = frozenset()
 
     @classmethod
     async def load(cls, ctx: TickContext, book: EconomyBook) -> "Lairs":
@@ -109,7 +115,21 @@ class Lairs:
             for region in regions - {None}:
                 if region is not None:
                     found[region].append((beast, profile))
-        return cls(dict(found))
+        return cls(dict(found), await patrolled_regions(ctx))
+
+
+async def patrolled_regions(ctx: TickContext) -> frozenset[int]:
+    return await patrolled_regions_of(ctx.session)
+
+
+async def patrolled_regions_of(session: AsyncSession) -> frozenset[int]:
+    standing = select(ArmyRow.entity_id).where(ArmyRow.disbanded_epoch.is_(None))
+    rows = await session.scalars(
+        select(ArmyProfileRow.region_entity_id).where(
+            ArmyProfileRow.army_entity_id.in_(standing), ArmyProfileRow.stance.in_(list(PATROLS)), ArmyProfileRow.region_entity_id.is_not(None)
+        )
+    )
+    return frozenset(region for region in rows if region is not None)
 
 
 def split(lost: int, parts: dict[TradeLoss, int], mode: TradeMode) -> dict[TradeLoss, int]:
@@ -138,12 +158,19 @@ def bandits_on(book: EconomyBook, path: list[int]) -> EntityRow | None:
     return min(found, key=lambda entity: entity.id) if found else None
 
 
-def bandit_danger(rules: Rules, book: EconomyBook, path: list[int]) -> tuple[int, int | None]:
+def patrol_share(rules: Rules, path: list[int], patrolled: frozenset[int]) -> float:
+    if not path or not patrolled:
+        return 0.0
+    return rules.army_depth.patrol_pct / PERCENT * sum(1 for region in path if region in patrolled) / len(path)
+
+
+def bandit_danger(rules: Rules, book: EconomyBook, path: list[int], patrolled: frozenset[int] = frozenset()) -> tuple[int, int | None]:
     table = rules.route_dangers
     dangers = [stat(book.entities[region], "danger") or 0 for region in path if region in book.entities]
     wild = sum(dangers) / len(dangers) if dangers else 0.0
     band = bandits_on(book, path)
     value = wild * table.bandit_region_pct / PERCENT + (table.bandit_band_danger if band is not None else 0)
+    value *= 1 - patrol_share(rules, path, patrolled)
     return clamp_int(round_half_up(value), 0, PERCENT), band.id if band is not None else None
 
 
@@ -182,7 +209,7 @@ def weather_danger(ctx: TickContext, book: EconomyBook, mode: TradeMode, path: l
 
 
 def dangers_of(ctx: TickContext, book: EconomyBook, mode: TradeMode, path: list[int], lairs: Lairs, *, route_id: int, world_id: int | None) -> Dangers:
-    bandits, band = bandit_danger(ctx.rules, book, path)
+    bandits, band = bandit_danger(ctx.rules, book, path, lairs.patrolled)
     beasts, beast = beast_danger(ctx.rules, path, lairs)
     weather = weather_danger(ctx, book, mode, path, route_id=route_id, world_id=world_id)
     if mode is TradeMode.SEA:

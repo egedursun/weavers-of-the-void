@@ -84,6 +84,7 @@ import {
   Wheat,
   Zap,
 } from 'lucide-react'
+import { type components } from '@/api/generated/schema'
 import { type Named, named, plain } from '../environment/labels'
 
 export { named, plain }
@@ -280,67 +281,74 @@ export const SKILL_SOURCES: Record<string, string> = {
   player: 'Set by the Creator',
 }
 
-export const MEMORY_ICONS: Record<string, Named> = {
-  harmed_me: { label: 'Harmed us', icon: Swords, tone: 'danger' },
-  killed_kin: { label: 'Killed our kin', icon: Skull, tone: 'danger' },
-  saved_me: { label: 'Saved us', icon: HandHeart, tone: 'success' },
-  betrayed_me: { label: 'Betrayed us', icon: HeartCrack, tone: 'danger' },
-  kept_oath: { label: 'Kept an oath', icon: Handshake, tone: 'success' },
-  broke_oath: { label: 'Broke an oath', icon: UserX, tone: 'danger' },
-  maimed_me: { label: 'Maimed us', icon: Swords, tone: 'danger' },
-  humiliated_me: {
-    label: 'Humiliated us',
-    icon: TrendingDown,
-    tone: 'warning',
-  },
-  gifted_me: { label: 'Gave us gifts', icon: Gift, tone: 'success' },
-  converted_me: { label: 'Converted us', icon: Church, tone: 'info' },
-  conquered_us: { label: 'Conquered us', icon: Crown, tone: 'danger' },
-  freed_us: { label: 'Freed us', icon: Sparkles, tone: 'success' },
-  famine_aid: { label: 'Fed us in famine', icon: Wheat, tone: 'success' },
-  desecrated_holy: {
-    label: 'Desecrated our holy places',
-    icon: Flame,
-    tone: 'danger',
-  },
-  married_into: {
-    label: 'Married into our blood',
-    icon: Heart,
-    tone: 'success',
-  },
-  fought_us: { label: 'Fought us', icon: Swords, tone: 'warning' },
-  traded_with: { label: 'Traded with us', icon: Coins, tone: 'success' },
-  allied_with: { label: 'Stood with us', icon: Shield, tone: 'success' },
-  made_peace: {
-    label: 'Made peace with us',
-    icon: HeartHandshake,
-    tone: 'success',
-  },
-  demanded_tribute: {
-    label: 'Took tribute from us',
-    icon: Coins,
-    tone: 'warning',
-  },
-  cheated_us: { label: 'Cheated us', icon: Drama, tone: 'danger' },
-  spied_on_us: { label: 'Spied on us', icon: Eye, tone: 'warning' },
-  envied: { label: 'Outshone us', icon: Trophy, tone: 'warning' },
-  failed_to_heal: {
-    label: 'Failed to heal our own',
-    icon: Stethoscope,
-    tone: 'warning',
-  },
-  taught_me: { label: 'Taught us', icon: GraduationCap, tone: 'success' },
-  held_captive: { label: 'Held our own captive', icon: Lock, tone: 'danger' },
-  lamented: { label: 'Is mourned in our laments', icon: Frown, tone: 'muted' },
-  divine_will: { label: 'The gods willed it', icon: Sparkles, tone: 'gold' },
-  goodwill: { label: 'Showed us goodwill', icon: Smile, tone: 'success' },
-  ill_will: { label: 'Showed us ill will', icon: Frown, tone: 'warning' },
-  long_history: {
-    label: 'Long shared history',
-    icon: Hourglass,
-    tone: 'muted',
-  },
-}
+export const MEMORY_ICONS: Record<components['schemas']['MemoryKind'], Named> =
+  {
+    harmed_me: { label: 'Harmed us', icon: Swords, tone: 'danger' },
+    killed_kin: { label: 'Killed our kin', icon: Skull, tone: 'danger' },
+    saved_me: { label: 'Saved us', icon: HandHeart, tone: 'success' },
+    betrayed_me: { label: 'Betrayed us', icon: HeartCrack, tone: 'danger' },
+    kept_oath: { label: 'Kept an oath', icon: Handshake, tone: 'success' },
+    broke_oath: { label: 'Broke an oath', icon: UserX, tone: 'danger' },
+    maimed_me: { label: 'Maimed us', icon: Swords, tone: 'danger' },
+    humiliated_me: {
+      label: 'Humiliated us',
+      icon: TrendingDown,
+      tone: 'warning',
+    },
+    gifted_me: { label: 'Gave us gifts', icon: Gift, tone: 'success' },
+    converted_me: { label: 'Converted us', icon: Church, tone: 'info' },
+    conquered_us: { label: 'Conquered us', icon: Crown, tone: 'danger' },
+    freed_us: { label: 'Freed us', icon: Sparkles, tone: 'success' },
+    famine_aid: { label: 'Fed us in famine', icon: Wheat, tone: 'success' },
+    desecrated_holy: {
+      label: 'Desecrated our holy places',
+      icon: Flame,
+      tone: 'danger',
+    },
+    married_into: {
+      label: 'Married into our blood',
+      icon: Heart,
+      tone: 'success',
+    },
+    fought_us: { label: 'Fought us', icon: Swords, tone: 'warning' },
+    traded_with: { label: 'Traded with us', icon: Coins, tone: 'success' },
+    allied_with: { label: 'Stood with us', icon: Shield, tone: 'success' },
+    made_peace: {
+      label: 'Made peace with us',
+      icon: HeartHandshake,
+      tone: 'success',
+    },
+    demanded_tribute: {
+      label: 'Took tribute from us',
+      icon: Coins,
+      tone: 'warning',
+    },
+    cheated_us: { label: 'Cheated us', icon: Drama, tone: 'danger' },
+    spied_on_us: { label: 'Spied on us', icon: Eye, tone: 'warning' },
+    envied: { label: 'Outshone us', icon: Trophy, tone: 'warning' },
+    failed_to_heal: {
+      label: 'Failed to heal our own',
+      icon: Stethoscope,
+      tone: 'warning',
+    },
+    taught_me: { label: 'Taught us', icon: GraduationCap, tone: 'success' },
+    held_captive: { label: 'Held our own captive', icon: Lock, tone: 'danger' },
+    lamented: {
+      label: 'Is mourned in our laments',
+      icon: Frown,
+      tone: 'muted',
+    },
+    divine_will: { label: 'The gods willed it', icon: Sparkles, tone: 'gold' },
+    goodwill: { label: 'Showed us goodwill', icon: Smile, tone: 'success' },
+    ill_will: { label: 'Showed us ill will', icon: Frown, tone: 'warning' },
+    long_history: {
+      label: 'Long shared history',
+      icon: Hourglass,
+      tone: 'muted',
+    },
+    dreads: { label: 'Dreaded by us', icon: ShieldAlert, tone: 'warning' },
+    formative: { label: 'Shaped who we are', icon: Star, tone: 'info' },
+  }
 
 export const OPINION_NEGATIVE: Record<string, string> = {
   trust: 'Distrust',

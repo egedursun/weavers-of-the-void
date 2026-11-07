@@ -1,6 +1,7 @@
 import {
   Anchor,
   Bird,
+  Bomb,
   Biohazard,
   Bug,
   Castle,
@@ -29,6 +30,7 @@ import {
   MountainSnow,
   Pickaxe,
   Rabbit,
+  Route,
   Sailboat,
   Shovel,
   Skull,
@@ -49,6 +51,7 @@ import {
   Wind,
   type LucideIcon,
 } from 'lucide-react'
+import { type components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
 
 export type Named = { label: string; icon: LucideIcon; tone?: KpiTone }
@@ -162,7 +165,7 @@ export const WEATHER_EFFECTS: Record<string, string> = {
   growth: 'Crop growth',
 }
 
-export const SCARS: Record<string, Named> = {
+export const SCARS: Record<components['schemas']['ScarKind'], Named> = {
   battlefield: { label: 'Battlefield', icon: Swords, tone: 'danger' },
   plague_ground: { label: 'Plague ground', icon: Biohazard, tone: 'danger' },
   salted_earth: { label: 'Salted earth', icon: Hexagon, tone: 'warning' },
@@ -171,6 +174,10 @@ export const SCARS: Record<string, Named> = {
   haunted: { label: 'Haunted ground', icon: Ghost, tone: 'verdigris' },
   blighted: { label: 'Blight', icon: Bug, tone: 'danger' },
   leak_wound: { label: 'Leak wound', icon: Eclipse, tone: 'danger' },
+  plundered: { label: 'Plundered', icon: Wheat, tone: 'warning' },
+  earthworks: { label: 'Earthworks', icon: Shovel, tone: 'verdigris' },
+  military_road: { label: 'Military road', icon: Route, tone: 'gold' },
+  bridge_down: { label: 'Bridge down', icon: Bomb, tone: 'danger' },
 }
 
 export const MODES: Record<string, Named> = {
@@ -263,7 +270,7 @@ export const SEASONALITY_ICON = SunSnow
 
 export function fieldLabel(key: string): string {
   if (key.startsWith('scar.'))
-    return `${SCARS[key.slice('scar.'.length)]?.label ?? key} scar`
+    return `${named(SCARS, key.slice('scar.'.length)).label} scar`
   if (key.startsWith('seam.'))
     return `${MINERALS[key.slice('seam.'.length)] ?? 'Mineral'} seam`
   if (key.startsWith('passability.'))

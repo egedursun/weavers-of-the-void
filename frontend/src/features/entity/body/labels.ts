@@ -64,6 +64,7 @@ import {
   Zap,
   Brain,
 } from 'lucide-react'
+import { type components } from '@/api/generated/schema'
 import { type Named, named, plain } from '../environment/labels'
 
 export { named, plain }
@@ -230,7 +231,7 @@ export const DAMAGE: Record<string, string> = {
   holy: 'Holy',
 }
 
-export const CAUSES: Record<string, string> = {
+export const CAUSES: Record<components['schemas']['HarmCause'], string> = {
   battle: 'Battle',
   duel: 'Duel',
   punishment: 'Punishment',
@@ -247,6 +248,8 @@ export const CAUSES: Record<string, string> = {
   sacrifice: 'Sacrifice',
   age: 'Age',
   player: 'Your hand',
+  exposure: 'Exposure',
+  ritual: 'A rite',
 }
 
 export const CONDITIONS: Record<string, Named> = {

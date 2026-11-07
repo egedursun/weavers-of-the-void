@@ -139,6 +139,7 @@ class BattleRow(Base):
     trap_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     feint: Mapped[bool] = mapped_column(default=False)
     salvaged: Mapped[int] = mapped_column(default=0)
+    standard_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
 
 
 class CaptiveRow(Base):

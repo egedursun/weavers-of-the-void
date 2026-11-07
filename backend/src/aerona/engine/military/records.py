@@ -15,6 +15,7 @@ from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.military import (
     ArmyOfficerRow,
     ArmyProfileRow,
+    ArmyTemplateRow,
     ArmyUnitRow,
     CaptiveCohortRow,
     FeudRow,
@@ -28,12 +29,14 @@ from aerona.db.tables.military import (
 )
 from aerona.db.tables.warfare import BattleRow, CaptiveRow, SiegeRow, WarRow
 from aerona.domain.enums.economy import MaterialSlot
+from aerona.domain.enums.military import UnitKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.materials import key_parts, set_node_material
 from aerona.engine.military.units import stacks_of, sync
 from aerona.engine.polity.control import lock
 from aerona.engine.primitives.queries import living_entity
 
+UNIT_KINDS = frozenset(kind.value for kind in UnitKind)
 INTEGER, NUMBER, FLAG, CHOICE, TEXT, IDS, WORDS = "integer", "number", "flag", "choice", "text", "ids", "words"
 Scalar = int | float | str | bool | None
 Values = Mapping[str, Any]
@@ -70,6 +73,7 @@ KINDS: dict[str, RecordKind] = {
         RecordKind("spy_network", SpyNetworkRow, "Spy network", "owner_entity_id", ("owner_entity_id", "target_entity_id")),
         RecordKind("spy_agent", SpyAgentRow, "Spy agent", "network_id", ("network_id",)),
         RecordKind("feud", FeudRow, "Feud", "first_entity_id", ("first_entity_id", "second_entity_id")),
+        RecordKind("army_template", ArmyTemplateRow, "Army template", "polity_entity_id", ("polity_entity_id", "name")),
         RecordKind("vessel", VesselProfileRow, "Vessel", "entity_id", (), creatable=False, deletable=False),
     )
 }
@@ -216,6 +220,20 @@ async def after_change(ctx: TickContext, kind: RecordKind, row: Any) -> None:
             sync(army, await stacks_of(ctx.session, army.id), ctx.rules)
     if kind.key == "siege" and row.status.value != "ongoing" and row.ended_epoch is None:
         row.ended_epoch = ctx.epoch
+    if kind.key == "army_template":
+        row.composition = mix_of(row.composition)
+
+
+def mix_of(value: object) -> dict[str, int]:
+    if not isinstance(value, dict):
+        raise ValidationFailedError("A template's composition maps each kind of soldier to its share.")
+    unknown = sorted(str(key) for key in value if str(key) not in UNIT_KINDS)
+    if unknown:
+        raise ValidationFailedError(f"{', '.join(unknown)} is not a kind of soldier.")
+    shares = {str(key): share for key, share in value.items()}
+    if any(isinstance(share, bool) or not isinstance(share, int) or share < 0 for share in shares.values()):
+        raise ValidationFailedError("Each share of a template is a whole number of at least 0.")
+    return {key: share for key, share in sorted(shares.items()) if share > 0}
 
 
 async def create_record(ctx: TickContext, key: str, values: Values) -> Any:
@@ -310,4 +328,6 @@ def battle_field(battle: BattleRow, names: dict[int, str]) -> str:
         notes.append(f"{names.get(battle.command_collapsed_entity_id, '?')} lost its commander")
     if battle.salvaged:
         notes.append(f"{battle.salvaged:,} arms salvaged")
+    if battle.standard_entity_id is not None:
+        notes.append(f"standard {names.get(battle.standard_entity_id, '?')} taken")
     return "; ".join(notes)

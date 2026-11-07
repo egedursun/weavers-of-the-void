@@ -8,6 +8,7 @@ import {
   Brain,
   CloudFog,
   Coins,
+  ClipboardList,
   Crown,
   Drama,
   Feather,
@@ -153,6 +154,7 @@ export const RECORD_ICON: Record<string, LucideIcon> = {
   spy_agent: Drama,
   feud: Flame,
   vessel: Ship,
+  army_template: ClipboardList,
 }
 
 export const HULL: Record<string, Named> = {

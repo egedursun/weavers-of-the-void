@@ -15,11 +15,11 @@ from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ItemClass, Technique
-from aerona.domain.enums.environment import MovementMode, WeatherKind
+from aerona.domain.enums.environment import MovementMode, ScarKind, WeatherKind
 from aerona.domain.enums.military import MoraleState, MutinyOutcome, Stance
 from aerona.engine.context import TickContext
-from aerona.engine.environment.book import EnvironmentBook
-from aerona.engine.environment.perils import danger_toll, navigate
+from aerona.engine.environment.book import EnvironmentBook, add_scar
+from aerona.engine.environment.perils import Wandering, danger_toll, navigate
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import has_technique
 from aerona.engine.military.campaign import (
@@ -34,7 +34,6 @@ from aerona.engine.military.campaign import (
     mutiny_pressure,
     on_road,
     plunder,
-    plundered_share,
     quartermaster,
     raid_supply,
     retreat,
@@ -45,12 +44,15 @@ from aerona.engine.military.campaign import (
     straggle,
     summer,
 )
+from aerona.engine.military.command import command_areas, thrift
+from aerona.engine.military.engineering import engineer, engineers, leave_earthworks, supply_limit
 from aerona.engine.military.finance import war_credit
 from aerona.engine.military.units import rearm, stacks_of, sync, take
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.levies import demobilise
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.relations.book import ensure_relation, shift
 from aerona.rules.registry import Rules
 
 HUNDRED = 100
@@ -70,6 +72,8 @@ class Season:
     unfed_mounts: bool = False
     mutiny: MutinyOutcome | None = None
     rejoined: int = 0
+    eaten_out: bool = False
+    works: str | None = None
 
 
 @dataclass(frozen=True)
@@ -97,6 +101,7 @@ def step_towards(
     supplied: bool = False,
     weather: WeatherKind | None = None,
     season: WorldSeasonRow | None = None,
+    pontoon: bool = False,
 ) -> int:
     profile = march.profile
     if march.goal is None or profile.region_entity_id is None or profile.region_entity_id == march.goal:
@@ -110,7 +115,7 @@ def step_towards(
     moved = 0
     for region_id in path[1:]:
         region = ground.regions.get(region_id)
-        cost = step_cost(rules, region, season)
+        cost = step_cost(rules, region, season, pontoon=pontoon)
         if not passable(rules, region) or cost > budget:
             break
         budget -= cost
@@ -149,10 +154,12 @@ def regroup(rules: Rules, rows: list[ArmyUnitRow], profile: ArmyProfileRow) -> i
     return returned
 
 
-def entrench(rules: Rules, profile: ArmyProfileRow) -> None:
+def entrench(rules: Rules, profile: ArmyProfileRow, left: RegionEnvironmentRow | None = None) -> None:
     if profile.stance in {Stance.ENTRENCH, Stance.GARRISON, Stance.BESIEGE}:
         profile.entrenchment = clamp_int(profile.entrenchment + rules.logistics.entrench_gain, 0, PERCENT)
     else:
+        if left is not None and not held(left.entity_id):
+            leave_earthworks(rules, profile, left)
         profile.entrenchment = 0
 
 
@@ -163,18 +170,26 @@ def supply_line(atlas: RegionAtlas, owner: EntityRow, profile: ArmyProfileRow) -
     return atlas.region_path(home, profile.region_entity_id) or []
 
 
-def feed(ctx: TickContext, march: March, region: RegionEnvironmentRow | None, home: int | None, log: Season, *, season: WorldSeasonRow | None = None) -> int:
+def feed(
+    ctx: TickContext,
+    march: March,
+    region: RegionEnvironmentRow | None,
+    home: int | None,
+    log: Season,
+    *,
+    season: WorldSeasonRow | None = None,
+    thrift: float = 1.0,
+) -> int:
     table = ctx.rules.logistics
     profile = march.profile
     size = stat(march.army, "size") or 0
     if home is not None and profile.region_entity_id == home:
         profile.supply_days = table.supply_days
         return 0
-    profile.supply_days = max(0, profile.supply_days - table.season_days)
+    profile.supply_days = max(0, profile.supply_days - round_half_up(table.season_days * thrift))
     if region is None:
         return 0
-    growth = (season.growth if season is not None else PERCENT // 2) * ctx.rules.campaign_depth.forage_season_pct / PERCENT / (PERCENT // 2)
-    fed = max(1, round_half_up(region.farmed * table.supply_per_farmed * (1 - plundered_share(region)) * min(2.0, growth)))
+    fed = supply_limit(ctx.rules, region, season)
     if profile.stance in {Stance.FORAGE, Stance.MARCH, Stance.BESIEGE, Stance.RAID}:
         profile.supply_days = min(table.supply_days, profile.supply_days + round_half_up(table.forage_days * min(1.0, fed / max(1, size))))
         region.harvest_pct = clamp_int(region.harvest_pct - table.forage_scar, 0, PERCENT)
@@ -183,9 +198,28 @@ def feed(ctx: TickContext, march: March, region: RegionEnvironmentRow | None, ho
             plunder(ctx.rules, region)
     if size <= fed:
         return 0
+    log.eaten_out = True
     lost = round_half_up(size * table.over_supply_attrition_pct / PERCENT * log2(size / fed))
     log.dead += lost
     return lost
+
+
+async def eat_out(ctx: TickContext, atlas: RegionAtlas, march: March, region: RegionEnvironmentRow | None) -> int:
+    if region is None:
+        return 0
+    table = ctx.rules.army_depth
+    if not held(region.entity_id):
+        add_scar(region, ScarKind.PLUNDERED, table.oversupply_scar)
+    soured = 0
+    for community_id in atlas.communities_in(region.entity_id):
+        if community_id == march.owner.id or held(community_id):
+            continue
+        view = await ensure_relation(ctx.session, community_id, march.owner.id, ctx.epoch)
+        if view is None:
+            continue
+        shift(ctx.rules, view, ctx.epoch, friendship=-table.oversupply_resentment)
+        soured += 1
+    return soured
 
 
 def raid_line(ctx: TickContext, march: March, line: list[int], log: Season) -> None:
@@ -308,6 +342,39 @@ async def plan_stance(ctx: TickContext, march: March, enemy: March | None) -> No
     profile.stance = await choose_stance(ctx, march.owner, row, profile, attacking=march.attacking, at_goal=at_goal, outnumbered=outnumbered)
 
 
+async def advance(
+    ctx: TickContext,
+    atlas: RegionAtlas,
+    ground: EnvironmentBook,
+    march: March,
+    *,
+    rows: list[ArmyUnitRow],
+    log: Season,
+    left: RegionEnvironmentRow | None,
+    weather: WeatherKind | None,
+    season_row: WorldSeasonRow | None,
+    enemy: March | None,
+) -> Wandering:
+    profile = march.profile
+    origin = profile.region_entity_id
+    charted = await holds_map(ctx, march.owner.id)
+    supplied = await has_technique(ctx.session, march.owner.id, Technique.LOGISTICS)
+    await plan_stance(ctx, march, enemy)
+    if profile.stance is Stance.RETREAT:
+        log.works = engineer(ctx.rules, profile, rows, left) if left is not None and not held(left.entity_id) else None
+        log.moved = retreat(ctx.rules, atlas, march.owner, profile)
+    elif "region_id" not in profile.locked and profile.stance not in RESTING:
+        pontoon = engineers(ctx.rules, rows)
+        log.moved = step_towards(ctx.rules, atlas, ground, march, charted=charted, supplied=supplied, weather=weather, season=season_row, pontoon=pontoon)
+    if enemy is not None:
+        log.raided = raid_supply(ctx.rules, profile, enemy.profile) > 0 or log.raided
+    wandering = await navigate(ctx, march.army, march.owner, profile.region_entity_id, origin, charted=charted)
+    if wandering.lost and "region_id" not in profile.locked:
+        profile.region_entity_id = origin
+        log.moved = 0
+    return wandering
+
+
 async def campaign_season(
     ctx: TickContext,
     atlas: RegionAtlas,
@@ -323,23 +390,16 @@ async def campaign_season(
     rows = await stacks_of(ctx.session, march.army.id)
     profile = march.profile
     origin = profile.region_entity_id
-    charted = await holds_map(ctx, march.owner.id)
-    supplied = await has_technique(ctx.session, march.owner.id, Technique.LOGISTICS)
-    await plan_stance(ctx, march, enemy)
-    if profile.stance is Stance.RETREAT:
-        log.moved = retreat(ctx.rules, atlas, march.owner, profile)
-    elif "region_id" not in profile.locked and profile.stance not in RESTING:
-        log.moved = step_towards(ctx.rules, atlas, ground, march, charted=charted, supplied=supplied, weather=weather, season=season_row)
-    if enemy is not None:
-        log.raided = raid_supply(ctx.rules, profile, enemy.profile) > 0 or log.raided
-    wandering = await navigate(ctx, march.army, march.owner, profile.region_entity_id, origin, charted=charted)
-    if wandering.lost and "region_id" not in profile.locked:
-        profile.region_entity_id = origin
-        log.moved = 0
+    command = await ctx.session.get(ArmyRow, march.army.id)
+    areas = await command_areas(ctx.session, command.commander_entity_id if command is not None else None)
+    left = ground.regions.get(origin) if origin is not None else None
+    wandering = await advance(ctx, atlas, ground, march, rows=rows, log=log, left=left, weather=weather, season_row=season_row, enemy=enemy)
     tire(ctx.rules, rows, profile)
     log.rejoined = regroup(ctx.rules, rows, profile)
-    entrench(ctx.rules, profile)
+    entrench(ctx.rules, profile, left if log.moved else None)
     region = ground.regions.get(profile.region_entity_id) if profile.region_entity_id is not None else None
+    if profile.stance is not Stance.RETREAT and region is not None and not held(region.entity_id):
+        log.works = engineer(ctx.rules, profile, rows, region)
     home = atlas.top_region(march.owner.id)
     if not march.attacking and enemy is not None and region is not None and profile.region_entity_id == home:
         army_row = await ctx.session.get(ArmyRow, march.army.id)
@@ -352,7 +412,11 @@ async def campaign_season(
     sanitation = await sanitation_of(ctx, march.owner)
     fever = summer(season_row, ground.seasons_of(march.owner.world_id))
     peril = await danger_toll(ctx, march.army, rows, profile.region_entity_id)
-    dead = feed(ctx, march, region, home, log, season=season_row) + camp_sickness(ctx, march, region, sanitation=sanitation, fever=fever)
+    dead = feed(ctx, march, region, home, log, season=season_row, thrift=thrift(ctx.rules, areas)) + camp_sickness(
+        ctx, march, region, sanitation=sanitation, fever=fever
+    )
+    if log.eaten_out:
+        await eat_out(ctx, atlas, march, region)
     dead += wandering.dead + peril.dead
     log.unfed_mounts = not feed_mounts(ctx.rules, profile, rows, log.foraged)
     await rearm(ctx, march.army, march.owner, rows)
@@ -385,6 +449,8 @@ async def campaign_season(
                     ("mutiny", log.mutiny is not None),
                     ("lost", wandering.lost),
                     ("ambushed", peril.ambushed),
+                    ("eaten out", log.eaten_out),
+                    (log.works or "", log.works is not None),
                 )
                 if hit
             )

@@ -1,4 +1,5 @@
 from collections import Counter
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 
 from sqlalchemy import delete, func, select
@@ -9,6 +10,7 @@ from aerona.catalog.place_terrain import height_of, kind_spec
 from aerona.catalog.weather import WEATHER
 from aerona.constants.cartography import BIOME_COUNT
 from aerona.constants.units import PERCENT
+from aerona.core.total import total
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
@@ -495,19 +497,27 @@ async def environment_survey(ctx: TickContext) -> None:
     await run_backfills(ctx)
 
 
+SCAR_DECAY: Mapping[ScarKind, Callable[[Rules], int]] = total(
+    ScarKind,
+    {
+        ScarKind.BATTLEFIELD: lambda rules: rules.scars.battlefield_decay,
+        ScarKind.PLAGUE_GROUND: lambda rules: rules.scars.plague_ground_decay,
+        ScarKind.SALTED_EARTH: lambda rules: rules.scars.salted_earth_decay,
+        ScarKind.BURNED: lambda rules: rules.scars.burned_decay,
+        ScarKind.CRATER: lambda rules: rules.scars.crater_decay,
+        ScarKind.HAUNTED: lambda rules: rules.scars.haunted_decay,
+        ScarKind.BLIGHTED: lambda rules: rules.scars.blighted_decay,
+        ScarKind.LEAK_WOUND: lambda rules: rules.scars.leak_wound_decay,
+        ScarKind.PLUNDERED: lambda rules: rules.campaign_depth.plunder_heal,
+        ScarKind.EARTHWORKS: lambda rules: rules.army_depth.earthworks_decay,
+        ScarKind.MILITARY_ROAD: lambda rules: rules.army_depth.road_decay,
+        ScarKind.BRIDGE_DOWN: lambda rules: rules.army_depth.bridge_down_decay,
+    },
+)
+
+
 def decay_scars(rules: Rules, env: RegionEnvironmentRow) -> None:
-    settings = rules.scars
-    decay = {
-        ScarKind.BATTLEFIELD: settings.battlefield_decay,
-        ScarKind.PLAGUE_GROUND: settings.plague_ground_decay,
-        ScarKind.SALTED_EARTH: settings.salted_earth_decay,
-        ScarKind.BURNED: settings.burned_decay,
-        ScarKind.CRATER: settings.crater_decay,
-        ScarKind.HAUNTED: settings.haunted_decay,
-        ScarKind.BLIGHTED: settings.blighted_decay,
-        ScarKind.LEAK_WOUND: settings.leak_wound_decay,
-        ScarKind.PLUNDERED: rules.campaign_depth.plunder_heal,
-    }
+    decay = {kind: worn(rules) for kind, worn in SCAR_DECAY.items()}
     kept = {
         key: depth if f"scar.{key}" in env.locked else depth - decay[ScarKind(key)]
         for key, depth in env.scars.items()

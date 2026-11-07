@@ -1,16 +1,24 @@
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.command import AREAS
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, FeudRow, MercenaryContractRow, SpyNetworkRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, SiegeRow, WarRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.military import ContractStatus, FeudStatus, MoraleState, VesselStatus
 from aerona.domain.enums.war import SiegeStatus
+from aerona.engine.military.campaign import on_road
+from aerona.engine.military.command import best_area, command_areas
+from aerona.engine.military.engineering import earthworks_of, engineers, sappers, supply_limit
 from aerona.engine.military.records import battle_field
+from aerona.engine.military.templates import realm_template_of
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import stat
+from aerona.rules.registry import Rules
 
 TOP_STACKS = 3
 
@@ -19,7 +27,7 @@ def words(value: str) -> str:
     return value.replace("_", " ")
 
 
-async def army_sheet(session: AsyncSession, army_id: int) -> str:
+async def army_sheet(session: AsyncSession, rules: Rules, army_id: int) -> str:
     army = await session.get(EntityRow, army_id)
     profile = await session.get(ArmyProfileRow, army_id)
     if army is None or profile is None:
@@ -35,7 +43,34 @@ async def army_sheet(session: AsyncSession, army_id: int) -> str:
     return (
         f"{army.name}: {stat(army, 'size') or 0} soldiers ({makeup}), morale {stat(army, 'morale') or 0}, cohesion {profile.cohesion}, "
         f"{profile.supply_days} days of food, stance {words(profile.stance.value)}{order_line(stacks)}{tail}"
+        f"{await works_line(session, rules, army_id, profile, stacks)}"
     )
+
+
+async def works_line(session: AsyncSession, rules: Rules, army_id: int, profile: ArmyProfileRow, stacks: list[ArmyUnitRow]) -> str:
+    army = await session.get(EntityRow, army_id)
+    row = await session.get(ArmyRow, army_id)
+    region = await session.get(RegionEnvironmentRow, profile.region_entity_id) if profile.region_entity_id is not None else None
+    parts: list[str] = []
+    limit = supply_limit(rules, region, None)
+    size = (stat(army, "size") or 0) if army is not None else 0
+    parts.append(f"the land feeds about {limit}" + (", too few for it" if size > limit else ""))
+    earthworks = earthworks_of(region)
+    if earthworks:
+        parts.append(f"earthworks {earthworks} here")
+    if region is not None and on_road(region, rules):
+        parts.append("on a road")
+    if region is not None and region.scars.get(ScarKind.BRIDGE_DOWN.value, 0) > 0:
+        parts.append("the bridge here is down")
+    if engineers(rules, stacks):
+        parts.append(f"{sappers(stacks)} sappers")
+    best = best_area(await command_areas(session, row.commander_entity_id if row is not None else None))
+    if best is not None:
+        parts.append(f"commander leads best at {AREAS[best].label.lower()}")
+    template = await realm_template_of(session, row.owner_entity_id) if row is not None else None
+    if template is not None:
+        parts.append(f"realm template {template.name}" + (" (outdated)" if template.obsolete else ""))
+    return "; " + ", ".join(parts)
 
 
 def order_line(stacks: list[ArmyUnitRow]) -> str:
@@ -56,10 +91,10 @@ def order_line(stacks: list[ArmyUnitRow]) -> str:
     return ", " + ", ".join(parts)
 
 
-async def war_sheet(session: AsyncSession, war: WarRow, side_id: int) -> list[str]:
+async def war_sheet(session: AsyncSession, rules: Rules, war: WarRow, side_id: int) -> list[str]:
     lines: list[str] = []
     for row in await session.scalars(select(ArmyRow).where(ArmyRow.war_id == war.id, ArmyRow.owner_entity_id == side_id, ArmyRow.disbanded_epoch.is_(None))):
-        sheet = await army_sheet(session, row.entity_id)
+        sheet = await army_sheet(session, rules, row.entity_id)
         if sheet:
             lines.append(sheet)
     for siege in await session.scalars(select(SiegeRow).where(SiegeRow.war_id == war.id, SiegeRow.status == SiegeStatus.ONGOING)):
@@ -85,7 +120,9 @@ async def war_sheet(session: AsyncSession, war: WarRow, side_id: int) -> list[st
 
 
 async def field_names(session: AsyncSession, battle: BattleRow) -> list[EntityRow]:
-    ids = [item for item in (battle.planned_entity_id, battle.trap_entity_id, battle.command_collapsed_entity_id) if item is not None]
+    ids = [
+        item for item in (battle.planned_entity_id, battle.trap_entity_id, battle.command_collapsed_entity_id, battle.standard_entity_id) if item is not None
+    ]
     return list(await session.scalars(select(EntityRow).where(EntityRow.id.in_(ids)))) if ids else []
 
 

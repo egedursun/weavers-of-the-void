@@ -5,6 +5,7 @@ from aerona.cartography.biomes import Biome
 from aerona.catalog.climate import climate_profile
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
+from aerona.core.total import total
 from aerona.domain.enums.environment import (
     CoastKind,
     MovementMode,
@@ -121,18 +122,23 @@ SOIL_FERTILITY: dict[SoilKind, Callable[[Rules], int]] = {
     SoilKind.BONE: lambda rules: rules.environment.soil_bone,
 }
 
-SCAR_FERTILITY: dict[ScarKind, Callable[[Rules], int]] = {
-    ScarKind.BATTLEFIELD: lambda rules: rules.scars.battlefield_fertility_pct,
-    ScarKind.PLAGUE_GROUND: lambda rules: rules.scars.plague_ground_fertility_pct,
-    ScarKind.SALTED_EARTH: lambda rules: rules.scars.salted_earth_fertility_pct,
-    ScarKind.BURNED: lambda rules: rules.scars.burned_fertility_pct,
-    ScarKind.CRATER: lambda rules: rules.scars.crater_fertility_pct,
-    ScarKind.HAUNTED: lambda rules: rules.scars.haunted_fertility_pct,
-    ScarKind.BLIGHTED: lambda rules: rules.scars.blighted_fertility_pct,
-    ScarKind.LEAK_WOUND: lambda rules: rules.scars.leak_wound_fertility_pct,
-    ScarKind.PLUNDERED: lambda rules: rules.campaign_depth.plunder_harvest_pct,
-}
-
+SCAR_FERTILITY: Mapping[ScarKind, Callable[[Rules], int]] = total(
+    ScarKind,
+    {
+        ScarKind.BATTLEFIELD: lambda rules: rules.scars.battlefield_fertility_pct,
+        ScarKind.PLAGUE_GROUND: lambda rules: rules.scars.plague_ground_fertility_pct,
+        ScarKind.SALTED_EARTH: lambda rules: rules.scars.salted_earth_fertility_pct,
+        ScarKind.BURNED: lambda rules: rules.scars.burned_fertility_pct,
+        ScarKind.CRATER: lambda rules: rules.scars.crater_fertility_pct,
+        ScarKind.HAUNTED: lambda rules: rules.scars.haunted_fertility_pct,
+        ScarKind.BLIGHTED: lambda rules: rules.scars.blighted_fertility_pct,
+        ScarKind.LEAK_WOUND: lambda rules: rules.scars.leak_wound_fertility_pct,
+        ScarKind.PLUNDERED: lambda rules: rules.campaign_depth.plunder_harvest_pct,
+        ScarKind.EARTHWORKS: lambda rules: rules.army_depth.earthworks_fertility_pct,
+        ScarKind.MILITARY_ROAD: lambda rules: rules.army_depth.road_fertility_pct,
+        ScarKind.BRIDGE_DOWN: lambda rules: rules.army_depth.bridge_down_fertility_pct,
+    },
+)
 RIVER_IRRIGATION: dict[RiverClass, Callable[[Rules], int]] = {
     RiverClass.NONE: lambda rules: 0,
     RiverClass.STREAM: lambda rules: rules.environment.stream_irrigation_pct,

@@ -4,6 +4,7 @@ from aerona.rules.registry.affairs import AffairsRules
 from aerona.rules.registry.agents import AgentsRules
 from aerona.rules.registry.apocalypse import ApocalypseRules
 from aerona.rules.registry.archive import ArchiveRules
+from aerona.rules.registry.army_depth import ArmyDepthRules
 from aerona.rules.registry.ascension import AscensionRules
 from aerona.rules.registry.awakening import AwakeningRules
 from aerona.rules.registry.backup import BackupRules
@@ -360,6 +361,7 @@ class Rules:
     movements: MovementRules = field(default_factory=MovementRules)
     companies: CompanyRules = field(default_factory=CompanyRules)
     battle_depth: BattleDepthRules = field(default_factory=BattleDepthRules)
+    army_depth: ArmyDepthRules = field(default_factory=ArmyDepthRules)
     holy_orders: OrderRules = field(default_factory=OrderRules)
     guild_ranks: GuildRules = field(default_factory=GuildRules)
     elasticity: ElasticityRules = field(default_factory=ElasticityRules)

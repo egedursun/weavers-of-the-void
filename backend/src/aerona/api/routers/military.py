@@ -9,6 +9,7 @@ from aerona.api.routers.wars import require_war, summaries
 from aerona.api.schemas.military import (
     AimView,
     ArmyCard,
+    ArmyWorksView,
     BattlePhaseView,
     BattleReportView,
     CaptiveCohortView,
@@ -29,6 +30,7 @@ from aerona.catalog.battle_depth import FORMATIONS, MORALE_LABELS
 from aerona.catalog.units import UNITS, weapon_of
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.military import (
     ArmyMovementRow,
     ArmyProfileRow,
@@ -43,8 +45,13 @@ from aerona.db.tables.military import (
 )
 from aerona.db.tables.warfare import ArmyRow, BattleRow, SiegeRow, WarSideRow
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.military import CommanderTrait, Stance
+from aerona.engine.economy.route_dangers import PATROLS, patrolled_regions_of
 from aerona.engine.military.battle import class_of
+from aerona.engine.military.campaign import on_road
+from aerona.engine.military.command import best_area, command_areas
+from aerona.engine.military.engineering import RIVERS, earthworks_of, engineers, sappers, supply_limit
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
 
@@ -77,11 +84,16 @@ async def army_cards(session: AsyncSession, rows: list[ArmyRow], rules: Rules) -
         wanted.update(item for item in (profile.region_entity_id, profile.target_entity_id, profile.blockade_entity_id, *profile.supply_line) if item)
     wanted.update(item for move in moves for item in (move.from_region_id, move.to_region_id) if item)
     refs = await node_refs(session, wanted)
+    regions = {region.entity_id: region for region in await session.scalars(select(RegionEnvironmentRow).where(RegionEnvironmentRow.entity_id.in_(wanted)))}
+    worlds = {region.world_id for region in regions.values()}
+    seasons = list(await session.scalars(select(WorldSeasonRow).where(WorldSeasonRow.world_id.in_(worlds))))
+    patrolled = await patrolled_regions_of(session)
     cards: list[ArmyCard] = []
     for row in rows:
         blank = ArmyProfileRow(army_entity_id=row.entity_id, stance=Stance.MARCH, doctrine="shieldwall", supply_line=[], locked=[])
         profile = profiles.get(row.entity_id) or blank
         army = armies.get(row.entity_id)
+        areas = await command_areas(session, row.commander_entity_id)
         cards.append(
             ArmyCard(
                 army=ref(refs, row.entity_id),
@@ -108,9 +120,45 @@ async def army_cards(session: AsyncSession, rows: list[ArmyRow], rules: Rules) -
                 stacks=[stack_view(stack, rules) for stack in stacks if stack.army_entity_id == row.entity_id],
                 movements=[movement_view(move, refs) for move in moves if move.army_entity_id == row.entity_id],
                 commander_traits=await traits_of(session, row.commander_entity_id),
+                command_areas=areas,
+                best_area=best_area(areas),
+                works=works_view(
+                    rules,
+                    regions.get(profile.region_entity_id or 0),
+                    [season for season in seasons if army is not None and season.world_id == army.world_id],
+                    [stack for stack in stacks if stack.army_entity_id == row.entity_id],
+                    size=(stat(army, "size") or 0) if army is not None else 0,
+                    patrolling=profile.region_entity_id in patrolled and profile.stance in PATROLS,
+                ),
             )
         )
     return cards
+
+
+def works_view(
+    rules: Rules,
+    region: RegionEnvironmentRow | None,
+    seasons: list[WorldSeasonRow],
+    stacks: list[ArmyUnitRow],
+    *,
+    size: int,
+    patrolling: bool,
+) -> ArmyWorksView:
+    limits = [supply_limit(rules, region, season) for season in seasons] or [supply_limit(rules, region, None)]
+    scars = region.scars if region is not None else {}
+    return ArmyWorksView(
+        supply_low=min(limits),
+        supply_high=max(limits),
+        eaten_out=size > min(limits),
+        sappers=sappers(stacks),
+        engineers=engineers(rules, stacks),
+        earthworks=earthworks_of(region),
+        military_road=scars.get(ScarKind.MILITARY_ROAD.value, 0),
+        bridge_down=scars.get(ScarKind.BRIDGE_DOWN.value, 0),
+        river=region is not None and region.river_class in RIVERS,
+        road=on_road(region, rules),
+        patrolling=patrolling,
+    )
 
 
 def stack_view(row: ArmyUnitRow, rules: Rules) -> StackView:
@@ -175,6 +223,7 @@ async def battle_reports(session: AsyncSession, rows: list[BattleRow]) -> list[B
             row.command_collapsed_entity_id,
             row.planned_entity_id,
             row.trap_entity_id,
+            row.standard_entity_id,
         )
         if item
     ]
@@ -210,6 +259,7 @@ async def battle_reports(session: AsyncSession, rows: list[BattleRow]) -> list[B
             trap_by=ref(refs, row.trap_entity_id),
             feint=row.feint,
             salvaged=row.salvaged,
+            standard_taken=ref(refs, row.standard_entity_id),
             phases=[
                 BattlePhaseView(
                     position=phase.position,

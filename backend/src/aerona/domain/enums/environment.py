@@ -74,6 +74,9 @@ class ScarKind(StrEnum):
     BLIGHTED = "blighted"
     LEAK_WOUND = "leak_wound"
     PLUNDERED = "plundered"
+    EARTHWORKS = "earthworks"
+    MILITARY_ROAD = "military_road"
+    BRIDGE_DOWN = "bridge_down"
 
 
 class MovementMode(StrEnum):

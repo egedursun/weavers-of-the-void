@@ -146,7 +146,7 @@ async def heard_rumours(scope: Scope, me: EntityRow) -> list[HeardRumour]:
 
 
 async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
-    home = await home_for(scope.session, me)
+    home = await home_for(scope.session, me, scope.rules)
     if home is None:
         return None
     bits = await lineage_lines(scope.session, scope.rules, me)

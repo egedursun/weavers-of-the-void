@@ -45,6 +45,7 @@ from aerona.engine.lore.items import standard_of
 from aerona.engine.lore.language import barrier
 from aerona.engine.military.aftermath import flaring_items
 from aerona.engine.military.battle import BattleResult, Field, Side, Stack, make_stacks, resolve
+from aerona.engine.military.command import command_areas
 from aerona.engine.military.units import design_spec, muster, profile_of, sync
 from aerona.engine.mind.book import effect_of, scaled_by, values_for
 from aerona.engine.mind.split import MIDPOINT, attribute
@@ -260,6 +261,7 @@ async def side_of(
         babel=-parts["babel"],
         wits=await wits_of(ctx, commander),
         initiative_officers=await bold_officers(ctx, [item.id for item, _ in armies]),
+        areas=await command_areas(ctx.session, commander),
     )
 
 

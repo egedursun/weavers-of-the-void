@@ -1,8 +1,10 @@
-import { Anchor, Swords } from 'lucide-react'
+import { Anchor, ClipboardList, Swords } from 'lucide-react'
+import { Muted } from '@/components/typography'
 import { UnitDesigns } from './Designs'
 import { FoundNetwork } from './Intrigue'
 import { DeclareWar, RaiseArmy } from './Orders'
 import { MercenaryContracts, NamedPrisoners } from './Retinue'
+import { ArmyTemplates } from './Templates'
 import { Vendettas } from './Vendettas'
 import { LayDownVessel } from './VesselCard'
 import { Panel } from './parts'
@@ -44,6 +46,23 @@ export function MilitaryDepth({
         </Panel>
       )}
       {community && <UnitDesigns ownerId={entityId} blocked={blocked} />}
+      {kind === 'polity' ? (
+        <ArmyTemplates polityId={entityId} blocked={blocked} />
+      ) : (
+        community && (
+          <Panel
+            title='Army templates'
+            icon={ClipboardList}
+            tone='muted'
+            hint='Templates are kept by a realm; open the realm it belongs to'
+          >
+            <Muted variant='caption'>
+              Its armies fill from the template its realm uses, so the realm's
+              marshal keeps them, not this community.
+            </Muted>
+          </Panel>
+        )
+      )}
       {community && (
         <MercenaryContracts employerId={entityId} blocked={blocked} />
       )}

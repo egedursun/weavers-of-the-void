@@ -38,7 +38,7 @@ if echo "$STAGED" | grep -qE '^backend/(src|tests)/.*\.py$|^backend/pyproject\.t
   PROVING="$PROVING $("$PYTHON" scripts/covering_tests.py | tr '\n' ' ')"
 fi
 if [ -n "$PROVING" ]; then
-  run proving sh -c "cd backend && .venv/bin/pytest -q -p no:cacheprovider -n auto --dist worksteal $PROVING"
+  run proving sh -c "cd backend && .venv/bin/pytest -q -p no:cacheprovider -n auto --dist worksteal --durations=15 $PROVING"
 fi
 
 FRONT=$(echo "$STAGED" | grep -E '^frontend/.*\.(ts|tsx)$' | grep -v '^frontend/src/api/generated/' | sed 's#^frontend/##' || true)
@@ -54,6 +54,9 @@ for name in $JOBS; do
   status=$(cat "$LOGS/$name.status" 2>/dev/null || echo 1)
   if [ "$status" = "0" ]; then
     echo "pre-commit: $name ok ($(tail -n 1 "$LOGS/$name.log"))"
+    if [ "$name" = "proving" ]; then
+      sed -n '/slowest/,/^$/p' "$LOGS/$name.log" | head -n 17
+    fi
   else
     echo "pre-commit: $name FAILED"
     cat "$LOGS/$name.log"

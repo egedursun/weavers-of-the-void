@@ -726,23 +726,28 @@ function RegionEnvironmentSection({ regionId }: { regionId: number }) {
           </Card>
           <div className='grid min-w-0 grid-cols-1 gap-3 @xl/env:grid-cols-2'>
             <Card title='Scars' icon={Shield}>
-              {Object.keys(ground.scars).length === 0 ? (
-                <Muted>The land is unscarred.</Muted>
-              ) : (
-                Object.entries(ground.scars).map(([key, depth]) => {
-                  const scar = named(SCARS, key)
-                  return (
-                    <StatBar
-                      key={key}
-                      label={scar.label}
-                      value={depth}
-                      max={PERCENT}
-                      icon={scar.icon}
-                      tone='destructive'
-                    />
-                  )
-                })
-              )}
+              <div
+                data-surface='RegionScars'
+                className='flex min-w-0 flex-col gap-2'
+              >
+                {Object.keys(ground.scars).length === 0 ? (
+                  <Muted>The land is unscarred.</Muted>
+                ) : (
+                  Object.entries(ground.scars).map(([key, depth]) => {
+                    const scar = named(SCARS, key)
+                    return (
+                      <StatBar
+                        key={key}
+                        label={scar.label}
+                        value={depth}
+                        max={PERCENT}
+                        icon={scar.icon}
+                        tone='destructive'
+                      />
+                    )
+                  })
+                )}
+              </div>
             </Card>
             <Card title='Ley lines' icon={Waypoints}>
               <LeyLines ground={ground} blocked={reason()} />

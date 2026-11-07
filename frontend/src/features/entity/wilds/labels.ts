@@ -70,6 +70,7 @@ import {
   WheatOff,
   type LucideIcon,
 } from 'lucide-react'
+import { type components } from '@/api/generated/schema'
 import { type ProgressTone } from '@/components/ui/progress'
 import { type KpiTone } from '@/components/domain'
 import { type Named, named, plain } from '../environment/labels'
@@ -277,7 +278,7 @@ export const TEMPER: Record<string, Named & { hint: string }> = {
   },
 }
 
-export const TRAIT: Record<string, Named> = {
+export const TRAIT: Record<components['schemas']['CreatureTrait'], Named> = {
   flying: { label: 'Flies', icon: Bird, tone: 'info' },
   venomous: { label: 'Venomous', icon: Syringe, tone: 'danger' },
   soul_eater: { label: 'Eats souls', icon: Ghost, tone: 'danger' },
@@ -312,6 +313,8 @@ export const TRAIT: Record<string, Named> = {
   crop_pest: { label: 'Crop pest', icon: WheatOff, tone: 'warning' },
   plague_bearer: { label: 'Plague bearer', icon: Biohazard, tone: 'danger' },
   sacred_animal: { label: 'Sacred', icon: Sparkles, tone: 'gold' },
+  horned: { label: 'Horned', icon: Mountain, tone: 'warning' },
+  tailed: { label: 'Tailed', icon: Footprints, tone: 'muted' },
 }
 
 export const MATERIAL: Record<string, string> = {

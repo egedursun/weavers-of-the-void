@@ -8,6 +8,7 @@ from aerona.engine.polity.titles import TitleTally, tend_titles
 @reads(
     "cult.followers",
     "table.bonds",
+    "table.claims",
     "table.de_jure_links",
     "table.epoch_year_cursors",
     "table.item_profiles",

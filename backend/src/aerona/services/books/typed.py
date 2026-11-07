@@ -90,7 +90,12 @@ def _debts(value: dict[str, Any]) -> str:
     return ", ".join(f"household {key} is owed {amount}" for key, amount in value.items())
 
 
-COLUMN_FORMATS: dict[str, Callable[[dict[str, Any]], str]] = {"genes": _pairs, "frequencies": _shares, "debts": _debts}
+def _mix(value: dict[str, Any]) -> str:
+    whole = sum(int(share) for share in value.values() if isinstance(share, int)) or 1
+    return ", ".join(f"{words(str(key))} {share} ({round(int(share) * 100 / whole)}{PERCENT_SIGN})" for key, share in value.items() if isinstance(share, int))
+
+
+COLUMN_FORMATS: dict[str, Callable[[dict[str, Any]], str]] = {"genes": _pairs, "frequencies": _shares, "debts": _debts, "composition": _mix}
 ORDER_COLUMNS = ("epoch", "since_epoch", "started_epoch", "slot", "position", "rank", "id")
 
 

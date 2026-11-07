@@ -7,6 +7,7 @@ from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.military import (
     ArmourType,
     CaptiveFate,
+    CommandArea,
     CommanderTrait,
     DefenderAction,
     Formation,
@@ -86,6 +87,20 @@ class MovementView(ApiModel):
     note: str | None
 
 
+class ArmyWorksView(ApiModel):
+    supply_low: int
+    supply_high: int
+    eaten_out: bool
+    sappers: int
+    engineers: bool
+    earthworks: int
+    military_road: int
+    bridge_down: int
+    river: bool
+    road: bool
+    patrolling: bool
+
+
 class ArmyCard(ApiModel):
     army: NodeRef | None
     owner: NodeRef | None
@@ -111,6 +126,9 @@ class ArmyCard(ApiModel):
     stacks: list[StackView]
     movements: list[MovementView]
     commander_traits: list[CommanderTrait]
+    command_areas: dict[CommandArea, int]
+    best_area: CommandArea | None
+    works: ArmyWorksView
 
 
 class BattlePhaseView(ApiModel):
@@ -152,6 +170,7 @@ class BattleReportView(ApiModel):
     trap_by: NodeRef | None
     feint: bool
     salvaged: int
+    standard_taken: NodeRef | None = None
     phases: list[BattlePhaseView]
 
 
