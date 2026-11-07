@@ -856,7 +856,7 @@ CORE_MECHANICS = (
         phases=("trade_flow", "economy_survey"),
         surface=Surface(drawer=ROUTE_SECTION, layer="map-layer-trade"),
         backfill="economy_survey: every trade bond between communities becomes an open route",
-        templates=("trade_route.formed", "trade_route.shipwreck", "market.credit", "market.famine_grain"),
+        templates=("trade_route.formed", "trade_route.shipwreck", "trade_route.orphaned", "market.credit", "market.famine_grain"),
         fields=("capacity", "danger", "length", "mode", "status", "traffic_epochs", "last_traffic_epoch", "founded_epoch", "volume", "lost"),
         tables=(TradeRouteProfileRow.__tablename__, TradeRouteRegionRow.__tablename__, TradeFlowRow.__tablename__),
         targets=("trade_route", "people", "settlement", "region", "faction"),

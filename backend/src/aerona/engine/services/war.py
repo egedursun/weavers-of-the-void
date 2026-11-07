@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.constants.warfare import ARMY_NAME_TEMPLATE, LOG_FLOOR, WAR_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
+from aerona.db.read_memo import memoized
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.worlds import WorldRepository
@@ -147,9 +148,14 @@ async def grant_truce(ctx: TickContext, first: int, second: int, reason: str) ->
     return True
 
 
-async def war_sides(session: AsyncSession, war_id: int) -> list[WarSideRow]:
+@memoized(WarSideRow)
+async def standing_sides(session: AsyncSession, war_id: int) -> tuple[WarSideRow, ...]:
     statement = select(WarSideRow).where(WarSideRow.war_id == war_id, WarSideRow.left_epoch.is_(None)).order_by(WarSideRow.side, WarSideRow.entity_id)
-    return list(await session.scalars(statement))
+    return tuple(await session.scalars(statement))
+
+
+async def war_sides(session: AsyncSession, war_id: int) -> list[WarSideRow]:
+    return list(await standing_sides(session, war_id))
 
 
 async def sides_of(session: AsyncSession, war: WarRow) -> tuple[int, int] | None:

@@ -8,7 +8,20 @@ from aerona.engine.economy.money import MoneyTally, collect, lend
 from aerona.engine.economy.realm_credit import collect_from_realms, lend_to_realms
 from aerona.engine.economy.route_backfill import route_backfill
 from aerona.engine.economy.route_dangers import Lairs
-from aerona.engine.economy.routes import RouteTally, assess, carry, contacts, controllers, enemies_of, found_route, load_routes, set_tolls, upkeep
+from aerona.engine.economy.routes import (
+    RouteTally,
+    assess,
+    carry,
+    close_orphan,
+    contacts,
+    controllers,
+    enemies_of,
+    found_route,
+    load_routes,
+    orphaned,
+    set_tolls,
+    upkeep,
+)
 from aerona.engine.economy.stocks import sync_aggregates
 from aerona.engine.economy.toll_polities import Realms
 from aerona.engine.environment.dangers import weighted_dangers
@@ -224,6 +237,9 @@ async def trade_flow(ctx: TickContext) -> None:
     enemies = await enemies_of(ctx)
     lairs = await Lairs.load(ctx, book)
     for route in routes:
+        if orphaned(book, route):
+            await close_orphan(ctx, route, tally)
+            continue
         tally.dangers[route.entity.id] = assess(ctx, book, route, lairs)
         await set_tolls(ctx, book, route, masters, realms=realms, grants=grants)
         await carry(ctx, book, route, quotes, tally, policies=policies)

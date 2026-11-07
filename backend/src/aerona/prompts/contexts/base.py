@@ -1,9 +1,18 @@
-from pydantic import BaseModel, ConfigDict, InstanceOf
+from typing import Annotated, Any
+
+from pydantic import BaseModel, ConfigDict, GetCoreSchemaHandler
+from pydantic_core import core_schema
 
 from aerona.domain.enums.world import LoreLanguage
 from aerona.rules.registry import Rules
 
-RulesSnapshot = InstanceOf[Rules]
+
+class OpaqueRules:
+    def __get_pydantic_core_schema__(self, source: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
+        return core_schema.is_instance_schema(Rules, serialization=core_schema.plain_serializer_function_ser_schema(lambda _: None))
+
+
+RulesSnapshot = Annotated[Rules, OpaqueRules()]
 
 
 class ContextItem(BaseModel):

@@ -5,6 +5,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.key_index import index_spec, keyed_rows
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.military import ArmyOfficerRow
 from aerona.db.tables.mind import SkillRow
@@ -62,7 +63,14 @@ def mood_of(profile: MortalProfileRow | None) -> int:
     return MOODS.get(profile.mood, 0) if profile is not None and profile.mood is not None else 0
 
 
+RELATION_PAIRS = index_spec(RelationshipRow, "holder_node_id", "subject_node_id")
+
+
 async def relation(session: AsyncSession, holder_id: int, subject_id: int) -> RelationshipRow | None:
+    pairs = await keyed_rows(session, RELATION_PAIRS)
+    if pairs is not None:
+        found = pairs.rows.get((holder_id, subject_id))
+        return found[0] if found else None
     return await session.scalar(select(RelationshipRow).where(RelationshipRow.holder_node_id == holder_id, RelationshipRow.subject_node_id == subject_id))
 
 
@@ -77,11 +85,21 @@ async def ensure_relation(session: AsyncSession, holder_id: int, subject_id: int
     return row
 
 
+RELATION_HOLDERS = index_spec(RelationshipRow, "holder_node_id")
+RELATION_SUBJECTS = index_spec(RelationshipRow, "subject_node_id")
+
+
 async def relations_of(session: AsyncSession, holder_id: int) -> list[RelationshipRow]:
+    held_rows = await keyed_rows(session, RELATION_HOLDERS)
+    if held_rows is not None:
+        return sorted(held_rows.rows.get((holder_id,), []), key=lambda row: row.id)
     return list(await session.scalars(select(RelationshipRow).where(RelationshipRow.holder_node_id == holder_id).order_by(RelationshipRow.id)))
 
 
 async def relations_about(session: AsyncSession, subject_id: int) -> list[RelationshipRow]:
+    about = await keyed_rows(session, RELATION_SUBJECTS)
+    if about is not None:
+        return sorted(about.rows.get((subject_id,), []), key=lambda row: row.id)
     return list(await session.scalars(select(RelationshipRow).where(RelationshipRow.subject_node_id == subject_id).order_by(RelationshipRow.id)))
 
 
