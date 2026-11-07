@@ -2,6 +2,7 @@ from collections import defaultdict
 
 from sqlalchemy import select
 
+from aerona.catalog.civics import GOVERNMENT_GATES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
@@ -16,6 +17,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import PolityStats
 from aerona.engine.body.customs import culture_of
 from aerona.engine.context import TickContext
+from aerona.engine.lore.civics import holders_know
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.primitives.faith import living_patron
@@ -120,7 +122,10 @@ async def government_for(ctx: TickContext, core: EntityRow, members: list[Entity
         (imperial, GovernmentKind.EMPIRE),
         (tier <= table.chiefdom_tier, GovernmentKind.CHIEFDOM),
     )
-    return next((kind for matched, kind in ladder if matched), GovernmentKind.MONARCHY)
+    for matched, kind in ladder:
+        if matched and await holders_know(ctx.session, [core.id], GOVERNMENT_GATES.get(kind)):
+            return kind
+    return GovernmentKind.MONARCHY
 
 
 async def found_polity(ctx: TickContext, book: RealmBook, core: EntityRow) -> Realm:

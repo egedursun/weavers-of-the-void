@@ -34,6 +34,7 @@ class OfficeKind(StrEnum):
     AMBASSADOR = "ambassador"
     HERALD = "herald"
     CHAPLAIN = "chaplain"
+    COURT_SCHOLAR = "court_scholar"
 
 
 class OfficePower(StrEnum):
@@ -48,6 +49,7 @@ class OfficePower(StrEnum):
     EMBASSY = "embassy"
     PROCLAIM = "proclaim"
     PREACH = "preach"
+    RESEARCH = "research"
 
 
 class RegionalStanding(StrEnum):
@@ -226,6 +228,7 @@ class ClauseKind(StrEnum):
     NON_AGGRESSION = "non_aggression"
     ROUTE_CONTROL = "route_control"
     RESOURCE_DEMAND = "resource_demand"
+    RESEARCH_AGREEMENT = "research_agreement"
 
 
 class PartyRole(StrEnum):

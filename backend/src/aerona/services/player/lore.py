@@ -2,10 +2,10 @@ from pydantic import Field
 
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.body import DamageType
-from aerona.domain.enums.culture import CustomCatalog, IdeologyTenet, MagicSchool, RiteEffectKind, SpeakerKind, SummonForm, Technique
+from aerona.domain.enums.culture import BoostTrigger, CustomCatalog, IdeologyTenet, MagicSchool, RiteEffectKind, SpeakerKind, SummonForm, Technique
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.society import KnowledgeBranch
-from aerona.engine.lore import control, kinds, learning_control
+from aerona.engine.lore import control, kinds, learning_control, research_control
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 
@@ -70,6 +70,37 @@ class HolderTechnique(Command):
     technique: Technique
     held: bool = True
     secret: bool = False
+
+
+class ResearchFocus(Command):
+    holder_id: int
+    technique: Technique | None = None
+    options: list[Technique] | None = None
+    hold: bool = True
+
+
+class Institution(Command):
+    community_id: int
+    technique: Technique
+    present: bool = True
+    values: dict[str, int | bool] = Field(default_factory=dict)
+    release: list[str] = Field(default_factory=list)
+
+
+class GrantBoost(Command):
+    holder_id: int
+    technique: Technique
+    trigger: BoostTrigger
+    progress: int
+
+
+class EditBoost(Command):
+    boost_id: int
+    values: dict[str, int | str] = Field(default_factory=dict)
+
+
+class BoostTarget(Command):
+    boost_id: int
 
 
 class EditHolder(Command):
@@ -203,6 +234,43 @@ async def set_technique(scope: PlayerScope, command: HolderTechnique) -> Effect:
     row = await control.set_technique(ctx, command.holder_id, command.technique, held=command.held, secret=command.secret)
     label = command.technique.value.replace("_", " ")
     return Effect(f"They know {label}." if row is not None else f"They forget {label}.", command.holder_id)
+
+
+@player_action("research:focus", ActionKind.EDIT_RECORD)
+async def set_focus(scope: PlayerScope, command: ResearchFocus) -> Effect:
+    ctx = await scope.context("research_focus")
+    row = await research_control.set_focus(ctx, command.holder_id, command.technique, command.options, hold=command.hold)
+    if row is None:
+        return Effect("Their scholars are free to choose their own work.", command.holder_id)
+    return Effect(f"Their scholars turn to {row.technique.value.replace('_', ' ')}.", command.holder_id)
+
+
+@player_action("research:institution", ActionKind.EDIT_RECORD)
+async def set_institution(scope: PlayerScope, command: Institution) -> Effect:
+    ctx = await scope.context("research_institution")
+    row = await research_control.set_institution(ctx, command.community_id, command.technique, command.values, command.release, present=command.present)
+    label = command.technique.value.replace("_", " ")
+    if row is None:
+        return Effect(f"{label.capitalize()} is gone from there.", command.community_id)
+    return Effect(f"{label.capitalize()} is {'embraced' if row.embraced else 'known but refused'} there.", command.community_id)
+
+
+@player_action("research:boost", ActionKind.EDIT_RECORD)
+async def grant_boost(scope: PlayerScope, command: GrantBoost) -> Effect:
+    row = await research_control.grant_boost(await scope.context("research_boost"), command.holder_id, command.technique, command.trigger, command.progress)
+    return Effect(f"A boost pushes their {row.technique.value.replace('_', ' ')} {row.progress}% closer.", command.holder_id)
+
+
+@player_action("research:boost_edit", ActionKind.EDIT_RECORD)
+async def edit_boost(scope: PlayerScope, command: EditBoost) -> Effect:
+    row = await research_control.edit_boost(await scope.context("research_boost_edit"), command.boost_id, command.values)
+    return Effect("The boost is rewritten.", row.holder_entity_id)
+
+
+@player_action("research:boost_remove", ActionKind.EDIT_RECORD)
+async def remove_boost(scope: PlayerScope, command: BoostTarget) -> Effect:
+    await research_control.remove_boost(await scope.context("research_boost_remove"), command.boost_id)
+    return Effect("The boost is struck from the record.")
 
 
 @player_action("creed:tenet", ActionKind.EDIT_RECORD)

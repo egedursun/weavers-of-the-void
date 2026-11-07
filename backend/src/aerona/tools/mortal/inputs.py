@@ -18,7 +18,7 @@ from aerona.constants.tool_inputs import (
     SAYING_MIN,
     SUBTYPE_MAX,
 )
-from aerona.domain.enums.culture import CalendarSlot, LegendArchetype, ProphecyConsequence, ProphecyPredicate, TraditionKind
+from aerona.domain.enums.culture import CalendarSlot, LegendArchetype, ProphecyConsequence, ProphecyPredicate, Technique, TraditionKind
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, LegendCategory
 from aerona.domain.enums.material import MaterialKind
@@ -177,6 +177,10 @@ class DevelopKnowledgeInput(ToolInput):
 class LearnInput(ToolInput):
     knowledge_id: int
     from_id: int
+
+
+class ChooseResearchInput(ToolInput):
+    technique: Technique
 
 
 class DiplomacyInput(ToolInput):

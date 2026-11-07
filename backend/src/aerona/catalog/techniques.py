@@ -25,6 +25,7 @@ class TechniqueSpec:
     label: str
     effect: str
     gate: Gate = Gate()
+    institution: bool = False
 
 
 BRANCH_GRAPH = MappingProxyType(
@@ -47,6 +48,7 @@ BRANCH_GRAPH = MappingProxyType(
         B.IMMORTALITY: Gate(all_of=((B.MEDICINE, 3), (B.MAGIC, 2))),
         B.BIOMANCY: Gate(all_of=((B.MAGIC, 2), (B.MEDICINE, 2), (B.AGRICULTURE, 2))),
         B.FORBIDDEN: Gate(all_of=((B.MAGIC, 3),)),
+        B.CIVICS: Gate(),
     }
 )
 
@@ -104,9 +106,33 @@ TECHNIQUES = MappingProxyType(
                 "Astrolabes and sundials measure the heavens.",
                 Gate(all_of=((B.METALLURGY, 1),)),
             ),
+            TechniqueSpec(T.CARTOGRAPHY, B.SEAFARING, 2, "Cartography", "Lands and coasts are drawn true on maps.", Gate(all_of=((B.WRITING, 1),))),
+            TechniqueSpec(T.ORAL_LAW, B.CIVICS, 1, "Oral law", "Customs are recited and judged by elders."),
+            TechniqueSpec(T.WRITTEN_LAW, B.CIVICS, 2, "Written law", "Laws are written down and read aloud.", Gate(all_of=((B.WRITING, 1),))),
+            TechniqueSpec(T.CODIFIED_LAW, B.CIVICS, 3, "Codified law", "The laws are gathered into one code.", Gate(all_of=((B.WRITING, 2),))),
+            TechniqueSpec(T.BUREAUCRACY, B.CIVICS, 3, "Bureaucracy", "Clerks and offices run the realm.", Gate(all_of=((B.WRITING, 2),)), institution=True),
+            TechniqueSpec(T.CENSUS, B.CIVICS, 2, "Census", "Heads and hearths are counted."),
+            TechniqueSpec(T.POSTAL_SERVICE, B.CIVICS, 3, "Postal service", "Riders carry letters along set roads."),
+            TechniqueSpec(T.DIPLOMATIC_CORPS, B.CIVICS, 3, "Diplomatic corps", "Envoys are trained and kept abroad."),
+            TechniqueSpec(T.STANDING_ARMY_ADMIN, B.CIVICS, 3, "Standing army administration", "Soldiers are paid and kept.", Gate(all_of=((B.WARFARE, 1),))),
+            TechniqueSpec(T.DOUBLE_ENTRY, B.CIVICS, 3, "Double entry", "Every sum is booked twice and balanced.", Gate(all_of=((B.TRADE, 2),))),
+            TechniqueSpec(T.JOINT_STOCK, B.CIVICS, 4, "Joint stock", "Many share the cost and gain of a venture.", Gate(all_of=((B.TRADE, 3),))),
+            TechniqueSpec(T.INSURANCE, B.CIVICS, 4, "Insurance", "Losses at sea and on the road are shared.", Gate(all_of=((B.TRADE, 3),))),
+            TechniqueSpec(T.GUILDS, B.CIVICS, 1, "Guilds", "Crafts bind themselves into sworn bodies."),
+            TechniqueSpec(T.UNIVERSITIES, B.CIVICS, 3, "Universities", "Scholars gather to teach.", Gate(all_of=((B.WRITING, 2),)), institution=True),
+            TechniqueSpec(T.HOSPITALS, B.CIVICS, 3, "Hospitals", "The sick are tended in houses built for them.", Gate(all_of=((B.MEDICINE, 1),))),
+            TechniqueSpec(T.PRINTING_PRESS, B.CIVICS, 4, "Printing houses", "Presses turn out books.", Gate(all_of=((B.WRITING, 4),)), institution=True),
+            TechniqueSpec(T.ORGANISED_CLERGY, B.CIVICS, 1, "Organised clergy", "Priests are ranked and ordained."),
+            TechniqueSpec(T.MONASTICISM, B.CIVICS, 2, "Monasticism", "Communities withdraw to pray, copy and work."),
+            TechniqueSpec(T.THEOLOGY_SCHOOLS, B.CIVICS, 3, "Schools of theology", "Doctrine is taught and argued.", Gate(all_of=((B.WRITING, 1),))),
+            TechniqueSpec(T.LOGIC, B.CIVICS, 1, "Logic", "Arguments are tested by rule."),
+            TechniqueSpec(T.NATURAL_PHILOSOPHY, B.CIVICS, 2, "Natural philosophy", "The workings of the world are reasoned out."),
+            TechniqueSpec(T.EMPIRICISM, B.CIVICS, 3, "Empiricism", "What is claimed is tried and observed.", Gate(all_of=((B.ASTRONOMY, 1),))),
+            TechniqueSpec(T.HUMANIST_IDEALS, B.CIVICS, 4, "Humanist ideals", "The worth of each person is honoured.", Gate(all_of=((B.WRITING, 3),))),
         )
     }
 )
+INSTITUTIONS = frozenset(technique for technique, spec in TECHNIQUES.items() if spec.institution) | {T.BANKING}
 
 UNIT_TECHNIQUES = MappingProxyType(
     {
@@ -144,5 +170,10 @@ BRANCH_SKILLS: MappingProxyType[KnowledgeBranch, tuple[SkillKind, ...]] = Mappin
         KnowledgeBranch.SHIPBUILDING: (SkillKind.SHIPWRIGHT, SkillKind.CARPENTRY),
         KnowledgeBranch.GATE_LORE: (SkillKind.LORE, SkillKind.SPELLCRAFT),
         KnowledgeBranch.PATHFINDING: (SkillKind.TRACKING, SkillKind.NAVIGATION),
+        KnowledgeBranch.CIVICS: (SkillKind.LAW, SkillKind.LORE),
+        KnowledgeBranch.VOID_LIVING: (SkillKind.NAVIGATION, SkillKind.MEDICINE),
+        KnowledgeBranch.IMMORTALITY: (SkillKind.MEDICINE, SkillKind.ALCHEMY),
+        KnowledgeBranch.BIOMANCY: (SkillKind.MEDICINE, SkillKind.ALCHEMY),
+        KnowledgeBranch.FORBIDDEN: (SkillKind.SPELLCRAFT, SkillKind.LORE),
     }
 )

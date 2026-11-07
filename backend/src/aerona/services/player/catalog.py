@@ -1962,6 +1962,11 @@ LORE_ACTIONS = (
     ),
     _sync(Meta("research:level", "Set a people's level in a branch of knowledge", G.SOCIETY), lore.set_level, lore.HolderLevel, free, ("S8.4",)),
     _sync(Meta("research:technique", "Give or take a technique", G.SOCIETY), lore.set_technique, lore.HolderTechnique, free, ("S8.4",)),
+    _sync(Meta("research:focus", "Choose what a people's scholars work on", G.SOCIETY), lore.set_focus, lore.ResearchFocus, free, ("S8.4",)),
+    _sync(Meta("research:institution", "Found, shape or remove an institution", G.SOCIETY), lore.set_institution, lore.Institution, free, ("S8.4",)),
+    _sync(Meta("research:boost", "Grant a boost toward a technique", G.SOCIETY), lore.grant_boost, lore.GrantBoost, free, ("S8.4",)),
+    _sync(Meta("research:boost_edit", "Rewrite a research boost", G.SOCIETY), lore.edit_boost, lore.EditBoost, free, ("S8.4",)),
+    _sync(Meta("research:boost_remove", "Strike a research boost", G.SOCIETY), lore.remove_boost, lore.BoostTarget, free, ("S8.4",)),
     _sync(
         Meta("research:holder", "Set a people's standing in a branch", G.SOCIETY),
         lore.edit_holder,

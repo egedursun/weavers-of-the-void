@@ -54,6 +54,7 @@ from aerona.engine.interconnect.catalog_places import PLACE_BEHAVIOURS, PLACE_ME
 from aerona.engine.interconnect.catalog_realm import BEHAVIOURS as REALM_BEHAVIOURS
 from aerona.engine.interconnect.catalog_realm import REALM_MECHANICS
 from aerona.engine.interconnect.catalog_region import REGION_MECHANICS
+from aerona.engine.interconnect.catalog_research import RESEARCH_MECHANICS
 from aerona.engine.interconnect.catalog_routes import ROUTE_MECHANICS
 from aerona.engine.interconnect.catalog_rumours import RUMOUR_MECHANICS
 from aerona.engine.interconnect.catalog_society import BEHAVIOURS as SOCIETY_BEHAVIOURS
@@ -961,6 +962,7 @@ BUILT_IN = (
     *BATTLE_DEPTH_MECHANICS,
     *ARMY_DEPTH_MECHANICS,
     *WAR_CONDUCT_MECHANICS,
+    *RESEARCH_MECHANICS,
     *FAITH_MECHANICS,
     *LORE_MECHANICS,
     *RUMOUR_MECHANICS,

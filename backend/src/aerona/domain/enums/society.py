@@ -39,6 +39,7 @@ class KnowledgeBranch(StrEnum):
     IMMORTALITY = "immortality"
     BIOMANCY = "biomancy"
     FORBIDDEN = "forbidden"
+    CIVICS = "civics"
 
 
 COSMIC_BRANCHES = frozenset(

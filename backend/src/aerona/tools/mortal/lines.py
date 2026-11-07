@@ -17,6 +17,7 @@ KNOWLEDGE = Line("tools.mortal.knowledge", "{me} developed new knowledge: {name}
 LEARNED = Line("tools.mortal.learned", "{me} learned {knowledge} from {teacher}.")
 KNOWLEDGE_DEEPENED = Line("tools.mortal.knowledge_deepened", "{me} deepened the knowledge of {name} ({branch}, level {level}).")
 KNOWLEDGE_FOUND = Line("tools.mortal.knowledge_found", "{me} reached the knowledge of {name} by its own road ({branch}).")
+RESEARCH_CHOSEN = Line("tools.mortal.research_chosen", "{me} set the scholars of {place} to work on {technique}.")
 DIPLOMACY = Line("tools.mortal.diplomacy", "{me} offered {offer} to {target}: {outcome}.")
 HUNT = Line("tools.mortal.hunt", "{me} set out to hunt {species}: {goal}")
 SEIZED = Line("tools.mortal.seized", "{me} seized {item}{owner}: {goal}")

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import {
   Book,
   BookOpen,
+  Building2,
   CircleCheck,
   EyeOff,
   GitBranch,
@@ -46,6 +47,7 @@ import {
   RowEditor,
   RowEditors,
 } from './LoreFields'
+import { ResearchDesk } from './ResearchDesk'
 import { type LearningCard, useLearning } from './api'
 import { KPI_GRID, MAX_LEVEL, PERCENT, branchOf, busyOf } from './model'
 
@@ -187,6 +189,19 @@ function TechniqueTile({
           {`Tier ${tierNumeral(row.level)}`}
         </Badge>
       </div>
+      {row.institution && (
+        <Badge size='sm' variant='outline' className='self-start'>
+          <Building2 aria-hidden='true' />
+          Institution
+        </Badge>
+      )}
+      {!row.known && row.progress > 0 && (
+        <Progress
+          value={row.progress}
+          size='sm'
+          aria-label={`${row.label} research progress`}
+        />
+      )}
       <div className='mt-auto flex min-w-0 flex-wrap items-center gap-2'>
         {row.known ? (
           <>
@@ -537,6 +552,7 @@ function Body({
           </ul>
         )}
       </LoreCard>
+      <ResearchDesk card={card} blocked={blocked} />
       <div data-surface='TechGraph' className='flex min-w-0 flex-col gap-3'>
         <div className='flex min-w-0 items-center gap-2'>
           <Label variant='overline' className='flex-1'>
@@ -583,7 +599,7 @@ export function LearningSection({
     <Section
       id='section-learning'
       title='Learning'
-      description='Levels of knowledge, the techniques they open, and the books that keep them.'
+      description='Levels of knowledge, what their scholars research, the institutions and techniques they open, and the books that keep them.'
       icon={GraduationCap}
     >
       {view.isPending && <LoadingBlock label='Reading what they know' />}

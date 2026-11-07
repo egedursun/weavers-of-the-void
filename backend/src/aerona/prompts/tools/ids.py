@@ -135,6 +135,7 @@ class MortalToolId(StrEnum):
     PRAY_TO_CREATOR = "pray_to_creator"
     DEVELOP_KNOWLEDGE = "develop_knowledge"
     LEARN_KNOWLEDGE = "learn_knowledge"
+    CHOOSE_RESEARCH = "choose_research"
     DIPLOMACY = "diplomacy"
     GO_ON_ADVENTURE = "go_on_adventure"
     FIND_ROUTE = "find_route"

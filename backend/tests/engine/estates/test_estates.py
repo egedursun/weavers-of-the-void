@@ -1,9 +1,11 @@
 from sqlalchemy import select
 
+from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import EstatePrivilegeRow, EstateProfileRow, MovementProfileRow, MovementSupportRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faction import EstatePrivilege, FactionKind, FactionRank, MovementCause
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
@@ -49,6 +51,9 @@ async def test_classes_gather_as_estates_and_privileges_spare_them_taxes_and_cou
     profile = await realm.session.get(FactionProfileRow, nobles.faction_entity_id)
     assert profile is not None and profile.kind is FactionKind.ESTATE and str(polity.id) in profile.influence_over
     assert await grant(ctx, nobles, EstatePrivilege.TAX_EXEMPTION)
+    assert not await grant(ctx, nobles, EstatePrivilege.JUDICIAL_IMMUNITY)
+    realm.session.add(HolderTechniqueRow(holder_entity_id=polity.id, technique=Technique.CODIFIED_LAW, since_epoch=1, secret=False))
+    await realm.session.flush()
     assert await grant(ctx, nobles, EstatePrivilege.JUDICIAL_IMMUNITY)
     assert await realm.session.get(EstatePrivilegeRow, (nobles.faction_entity_id, EstatePrivilege.TAX_EXEMPTION)) is not None
     assert await exempt_share(ctx, town.id) >= 0

@@ -2,6 +2,7 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.catalog.civics import LAW_GATES
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import LawProfileRow, OfficeRow
@@ -12,6 +13,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.justice import TrialKind
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind
+from aerona.engine.lore.civics import realm_allows, unlearned
 from aerona.engine.mortal.justice import CRIME_TEXT
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.enactment import COUNCIL, law_title, pending_kind, propose
@@ -52,7 +54,14 @@ async def seat_of(call: MortalCall) -> Realm | None:
     return book.realms.get(polity) if polity is not None else None
 
 
+async def law_known(call: MortalCall, realm: Realm, kind: LawKind) -> None:
+    needed = LAW_GATES.get(kind)
+    if not await realm_allows(call.session, realm, needed):
+        fail(MortalResult.PROPOSAL_REFUSED, why=f"the realm has not yet learned {unlearned(needed)}, which such a law needs")
+
+
 async def bring_law(call: MortalCall, realm: Realm, kind: LawKind, params: dict[str, int | str | bool]) -> str:
+    await law_known(call, realm, kind)
     if await pending_kind(call.tick, realm.entity.id, kind) is not None:
         fail(MortalResult.PROPOSAL_REFUSED, why="a proposal of that kind is already under debate")
     current = next((row for row in (await laws_of(call, realm)) if row.kind is kind), None)

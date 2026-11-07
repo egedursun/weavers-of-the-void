@@ -523,6 +523,7 @@ export const BRANCH_TONE: Record<Schemas['KnowledgeBranch'], KpiTone> = {
   immortality: 'verdigris',
   biomancy: 'verdigris',
   forbidden: 'danger',
+  civics: 'gold',
 }
 
 const BRANCH_LABEL: Partial<Record<Schemas['KnowledgeBranch'], string>> = {

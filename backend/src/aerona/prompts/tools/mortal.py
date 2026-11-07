@@ -326,6 +326,11 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "from_id": "Who teaches it: a community or mortal that knows it and that you trade with, are allied to, rule, or share a region with",
         },
     ),
+    T.CHOOSE_RESEARCH: ToolText(
+        "You choose which technique your community's scholars work on next, from the ones within reach. The chosen technique advances at full pace, the others slowly. "
+        "Your current research and its choices are in your context. Free.",
+        {"technique": "The technique to research; one of the choices within your reach"},
+    ),
     T.DIPLOMACY: ToolText(
         "Diplomacy with another community: alliance (stands with you in war), peace (tries to end enmity), tribute (demands wealth from the weak) or marriage (unites the "
         "lineages). 1 action.",

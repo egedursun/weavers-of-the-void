@@ -16,7 +16,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.lore import ideology, legends, prophecy, research, rites, traditions
+from aerona.engine.lore import ideology, legends, prophecy, research, research_depth, rites, traditions
 from aerona.engine.lore.backfill import backfill_typed_kinds
 from aerona.engine.lore.calendar_rites import RiteCalendar, found_sleep_customs
 from aerona.engine.lore.language import SACRED_STAT, derive_registers, learn_second, prestige_parts, remeasure, speakers, standing_of, tongues_of
@@ -473,20 +473,52 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "settlement.population",
     "table.bonds",
     "table.book_contents",
+    "table.captive_cohorts",
+    "table.community_societies",
+    "table.community_stocks",
+    "table.crime_cases",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.institutions",
     "table.item_profiles",
     "table.knowledge_holders",
+    "table.loans",
+    "table.offices",
+    "table.outbreaks",
     "table.people_culture",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.production_runs",
+    "table.research_boosts",
+    "table.research_focus",
+    "table.research_progress",
+    "table.sieges",
+    "table.skills",
+    "table.sky_events",
+    "table.treaty_clauses",
+    "table.treaty_parties",
+    "table.treaty_profiles",
+)
+@writes(
+    "knowledge.spread",
+    "table.bonds",
+    "table.book_contents",
+    "table.entities",
+    "table.holder_levels",
+    "table.holder_techniques",
+    "table.research_boosts",
+    "table.research_focus",
     "table.research_progress",
 )
-@writes("knowledge.spread", "table.bonds", "table.book_contents", "table.entities", "table.holder_levels", "table.holder_techniques", "table.research_progress")
 async def research_cycles(ctx: TickContext) -> None:
     ctx.count("holders_seeded", await research.ensure_holders(ctx))
     for key, value in (await research.practise(ctx)).items():
         ctx.count(f"research_{key}", value)
-    ctx.count("techniques_adopted", await research.adopt_techniques(ctx))
+    for key, value in (await research_depth.research_depth(ctx)).items():
+        ctx.count(f"research_{key}", value)
+    ctx.count("techniques_adopted", await research_depth.adopt_techniques(ctx))
     ctx.count("techniques_diffused", await research.diffuse_techniques(ctx))
+    ctx.count("societies_changed_by_techniques", await research_depth.changes_of_adoption(ctx))
     ctx.count("books_filled", await research.fill_books(ctx))
     ctx.count("books_read", await research.read_books(ctx))
     ctx.count("knowledge_spread_measured", await research.spread_of(ctx))

@@ -38,6 +38,7 @@ from aerona.engine.polity.revenue import RevenueTally, tend_revenue
     "table.estate_profiles",
     "table.faction_memberships",
     "table.faction_profiles",
+    "table.holder_techniques",
     "table.household_members",
     "table.ideology_tenets",
     "table.law_jurisdictions",

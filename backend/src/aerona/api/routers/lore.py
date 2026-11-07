@@ -10,15 +10,20 @@ from aerona.api.schemas.lore import (
     AdherentView,
     ArtworkCard,
     BookPage,
+    BoostView,
     BranchSpec,
+    CapabilitySpecView,
+    CapabilityView,
     CastingView,
     CustomKinds,
     CustomKindView,
     CustomTechniqueView,
     DeedView,
     EnchantmentView,
+    FocusView,
     GateNeed,
     IdeologyCard,
+    InstitutionView,
     ItemCard,
     LearningCard,
     LevelView,
@@ -33,12 +38,14 @@ from aerona.api.schemas.lore import (
     TechniqueView,
     TongueAtlas,
     TongueRank,
+    TriggerSpecView,
 )
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
 from aerona.api.views.culture_cards import language_card, legend_card, registers_of_languages, tradition_card
+from aerona.catalog.civics import CAPABILITIES, TRIGGERS
 from aerona.catalog.rumours import is_alarm, is_atrocity
-from aerona.catalog.techniques import BRANCH_GRAPH, TECHNIQUES, Gate
+from aerona.catalog.techniques import BRANCH_GRAPH, INSTITUTIONS, TECHNIQUES, Gate
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import (
@@ -53,12 +60,16 @@ from aerona.db.tables.culture import (
     IdeologyCustomTenetRow,
     IdeologyProfileRow,
     IdeologyTenetRow,
+    InstitutionRow,
     ItemEnchantmentRow,
     ItemHistoryRow,
     ItemProfileRow,
     LanguageIntelligibilityRow,
     LanguageStandingRow,
     ProphecyConditionRow,
+    ResearchBoostRow,
+    ResearchFocusRow,
+    ResearchProgressRow,
     RiteEffectRow,
     RiteProfileRow,
     RumourRow,
@@ -72,6 +83,7 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.economy.materials import MaterialBook, node_material
 from aerona.engine.lore.kinds import kinds_in
 from aerona.engine.lore.research import gate_open
+from aerona.engine.lore.research_depth import capabilities_of
 from aerona.engine.lore.rumours import heard_by
 from aerona.engine.primitives.knowledge import raw_level
 
@@ -306,9 +318,33 @@ async def tech_graph() -> TechGraph:
     for spec in TECHNIQUES.values():
         every, some = needs(spec.gate)
         techniques.append(
-            TechniqueSpecView(technique=spec.technique, branch=spec.branch, level=spec.level, label=spec.label, effect=spec.effect, all_of=every, any_of=some)
+            TechniqueSpecView(
+                technique=spec.technique,
+                branch=spec.branch,
+                level=spec.level,
+                label=spec.label,
+                effect=spec.effect,
+                all_of=every,
+                any_of=some,
+                institution=spec.technique in INSTITUTIONS,
+            )
         )
-    return TechGraph(branches=branches, techniques=techniques)
+    return TechGraph(
+        branches=branches,
+        techniques=techniques,
+        triggers=[TriggerSpecView(trigger=trigger, label=spec.label, techniques=list(spec.techniques)) for trigger, spec in TRIGGERS.items()],
+        capabilities=[
+            CapabilitySpecView(
+                capability=capability,
+                label=spec.label,
+                effect=spec.effect,
+                branches=[GateNeed(branch=branch, level=level) for branch, level in spec.branches],
+                all_of=list(spec.all_of),
+                any_of=list(spec.any_of),
+            )
+            for capability, spec in CAPABILITIES.items()
+        ],
+    )
 
 
 @router.get("/entities/{entity_id}/learning", response_model=LearningCard)
@@ -328,6 +364,14 @@ async def learning(entity_id: Id, services: ServicesDep) -> LearningCard:
         ):
             if record.knowledge_branch is not None:
                 frontiers[record.knowledge_branch] = max(frontiers.get(record.knowledge_branch, 0), raw_level(record.stats))
+        progress = {
+            item.technique: item.progress
+            for item in await session.scalars(select(ResearchProgressRow).where(ResearchProgressRow.holder_entity_id == entity_id))
+        }
+        focus = await session.get(ResearchFocusRow, entity_id)
+        founded = await session.scalars(select(InstitutionRow).where(InstitutionRow.community_entity_id == entity_id).order_by(InstitutionRow.technique))
+        boosts = await session.scalars(select(ResearchBoostRow).where(ResearchBoostRow.holder_entity_id == entity_id).order_by(ResearchBoostRow.id))
+        able = set(await capabilities_of(session, entity_id))
         customs = await session.execute(
             select(CustomKindRow, HolderCustomTechniqueRow.secret)
             .join(HolderCustomTechniqueRow, HolderCustomTechniqueRow.kind_id == CustomKindRow.id)
@@ -358,8 +402,35 @@ async def learning(entity_id: Id, services: ServicesDep) -> LearningCard:
                     known=spec.technique in held,
                     secret=spec.technique in held and held[spec.technique].secret,
                     reachable=levels.get(spec.branch, 0) >= spec.level and gate_open(spec.gate, levels),
+                    institution=spec.technique in INSTITUTIONS,
+                    progress=progress.get(spec.technique, 0),
                 )
                 for spec in TECHNIQUES.values()
+            ],
+            focus=FocusView(
+                technique=focus.technique,
+                chooser=focus.chooser,
+                options=[Technique(item) for item in focus.options if item in Technique._value2member_map_],
+                epoch=focus.epoch,
+                locked=focus.locked,
+            )
+            if focus is not None
+            else None,
+            institutions=[
+                InstitutionView(
+                    technique=item.technique,
+                    origin=item.origin,
+                    embraced=item.embraced,
+                    since_epoch=item.since_epoch,
+                    refused_epochs=item.refused_epochs,
+                    locked=item.locked,
+                )
+                for item in founded
+            ],
+            boosts=[BoostView(id=item.id, technique=item.technique, trigger=item.trigger, progress=item.progress, epoch=item.epoch) for item in boosts],
+            capabilities=[
+                CapabilityView(capability=capability, label=spec.label, effect=spec.effect, held=capability in able)
+                for capability, spec in CAPABILITIES.items()
             ],
             books=[refs[item] for item in books if item in refs],
             custom_techniques=[

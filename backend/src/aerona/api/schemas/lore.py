@@ -4,7 +4,9 @@ from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.culture import (
     ArtMedium,
     BacklashKind,
+    BoostTrigger,
     CalendarSlot,
+    Capability,
     CurseKind,
     CustomCatalog,
     IdeologyTenet,
@@ -17,6 +19,7 @@ from aerona.domain.enums.culture import (
     ProphecyConsequence,
     ProphecyPredicate,
     ProphecyState,
+    ResearchChooser,
     RiteEffectKind,
     RumourChannel,
     SpeakerKind,
@@ -286,6 +289,40 @@ class TechniqueView(ApiModel):
     known: bool
     secret: bool
     reachable: bool
+    institution: bool
+    progress: int
+
+
+class FocusView(ApiModel):
+    technique: Technique
+    chooser: ResearchChooser
+    options: list[Technique]
+    epoch: int
+    locked: list[str]
+
+
+class InstitutionView(ApiModel):
+    technique: Technique
+    origin: bool
+    embraced: bool
+    since_epoch: int
+    refused_epochs: int
+    locked: list[str]
+
+
+class BoostView(ApiModel):
+    id: int
+    technique: Technique
+    trigger: BoostTrigger
+    progress: int
+    epoch: int
+
+
+class CapabilityView(ApiModel):
+    capability: Capability
+    label: str
+    effect: str
+    held: bool
 
 
 class LearningCard(ApiModel):
@@ -294,6 +331,10 @@ class LearningCard(ApiModel):
     techniques: list[TechniqueView]
     books: list[NodeRef]
     custom_techniques: list[CustomTechniqueView]
+    focus: FocusView | None
+    institutions: list[InstitutionView]
+    boosts: list[BoostView]
+    capabilities: list[CapabilityView]
 
 
 class GateNeed(ApiModel):
@@ -315,11 +356,29 @@ class TechniqueSpecView(ApiModel):
     effect: str
     all_of: list[GateNeed]
     any_of: list[GateNeed]
+    institution: bool
+
+
+class TriggerSpecView(ApiModel):
+    trigger: BoostTrigger
+    label: str
+    techniques: list[Technique]
+
+
+class CapabilitySpecView(ApiModel):
+    capability: Capability
+    label: str
+    effect: str
+    branches: list[GateNeed]
+    all_of: list[Technique]
+    any_of: list[Technique]
 
 
 class TechGraph(ApiModel):
     branches: list[BranchSpec]
     techniques: list[TechniqueSpecView]
+    triggers: list[TriggerSpecView]
+    capabilities: list[CapabilitySpecView]
 
 
 class TongueRank(ApiModel):

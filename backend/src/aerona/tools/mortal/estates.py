@@ -1,5 +1,6 @@
 from typing import Any
 
+from aerona.catalog.civics import PRIVILEGE_GATES
 from aerona.catalog.estates import ESTATE_NAMES, PRIVILEGE_LABELS
 from aerona.db.tables.estates import EstateProfileRow
 from aerona.domain.enums.action import ActionKind
@@ -7,6 +8,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.faction import EstatePrivilege
 from aerona.engine.factions.estates import grant, revoke
+from aerona.engine.lore.civics import realm_allows, unlearned
 from aerona.engine.polity.book import RealmBook
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -35,6 +37,9 @@ async def bargain_with_estate(call: MortalCall, args: BargainInput) -> str:
         fail(MortalResult.ESTATE_REFUSED, why="you do not rule the realm of that estate")
     if PRIVILEGES in (row.locked or []):
         fail(MortalResult.ESTATE_REFUSED, why="a god holds its privileges")
+    needed = PRIVILEGE_GATES.get(args.privilege)
+    if args.grant and not await realm_allows(call.session, realm, needed):
+        fail(MortalResult.ESTATE_REFUSED, why=f"the realm has not yet learned {unlearned(needed)}, which that privilege needs")
     done = await grant(call.tick, row, args.privilege) if args.grant else await revoke(call.tick, row, args.privilege)
     if not done:
         fail(MortalResult.ESTATE_REFUSED, why="it already has that privilege" if args.grant else "it does not hold that privilege, or it is held")

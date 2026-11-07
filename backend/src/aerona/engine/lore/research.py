@@ -4,12 +4,12 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.structures import RESEARCH_HOUSES
-from aerona.catalog.techniques import BRANCH_GRAPH, BRANCH_SKILLS, TECHNIQUES, Gate
+from aerona.catalog.techniques import BRANCH_SKILLS, TECHNIQUES, Gate
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.culture import BookContentRow, HolderLevelRow, HolderTechniqueRow, ItemProfileRow, ResearchProgressRow
+from aerona.db.tables.culture import BookContentRow, HolderLevelRow, HolderTechniqueRow, ItemProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
@@ -23,6 +23,7 @@ from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.lore.kinds import custom_bases
+from aerona.engine.lore.learning import institution_factor, patron_factor
 from aerona.engine.primitives.knowledge import raw_level
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount, set_stats, stat
@@ -30,7 +31,6 @@ from aerona.engine.structures.readers import working
 from aerona.rules.registry import Rules
 
 THOUSAND = 1000
-ORDERS = frozenset({EntityType.CULT, EntityType.FACTION})
 SCHOLARLY = (SkillKind.LORE, SkillKind.THEOLOGY, SkillKind.WRITING, SkillKind.ASTRONOMY, SkillKind.MEDICINE, SkillKind.LAW, SkillKind.ALCHEMY)
 Levels = dict[int, dict[KnowledgeBranch, int]]
 
@@ -131,7 +131,9 @@ async def research_factor(ctx: TickContext, community: EntityRow, branch: Knowle
         * (1 + await institutions(ctx.session, community.id) * table.institution_pct / PERCENT)
         * (1 + literacy * table.literacy_pct / PERCENT)
         * (1 + await contact(ctx.session, community.id, branch, level, levels) * table.contact_pct / PERCENT)
-        * (1 + max(await scholar_levels(ctx.session, community.id), default=0.0) / PERCENT * table.scholar_pct / PERCENT)
+        * (1 + max(await scholar_levels(ctx.session, ctx.rules, community.id, branch), default=0.0) / PERCENT * table.scholar_pct / PERCENT)
+        * await institution_factor(ctx.session, ctx.rules, community.id)
+        * await patron_factor(ctx.session, ctx.rules, community.id)
     )
 
 
@@ -149,14 +151,19 @@ async def books_of(session: AsyncSession, holder_id: int) -> set[int]:
     return set(await session.scalars(select(BookContentRow.knowledge_entity_id).where(BookContentRow.book_entity_id.in_(owned))))
 
 
-async def scholar_levels(session: AsyncSession, community_id: int) -> list[float]:
+async def scholar_levels(session: AsyncSession, rules: Rules, community_id: int, branch: KnowledgeBranch) -> list[float]:
     mortals = select(EntityRow.id).where(
         EntityRow.location_id == community_id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
     )
-    rows = await session.execute(select(SkillRow.holder_node_id, SkillRow.level).where(SkillRow.holder_node_id.in_(mortals), SkillRow.skill.in_(SCHOLARLY)))
-    best: dict[int, int] = {}
-    for holder, level in rows:
-        best[holder] = max(best.get(holder, 0), int(level))
+    field = set(BRANCH_SKILLS.get(branch, ()))
+    skills = list({*SCHOLARLY, *field})
+    expertise = 1 + rules.research_depth.expertise_pct / PERCENT
+    rows = await session.execute(
+        select(SkillRow.holder_node_id, SkillRow.skill, SkillRow.level).where(SkillRow.holder_node_id.in_(mortals), SkillRow.skill.in_(skills))
+    )
+    best: dict[int, float] = {}
+    for holder, skill, level in rows:
+        best[holder] = max(best.get(holder, 0.0), int(level) * (expertise if skill in field else 1.0))
     if not best:
         return []
     bodies = {row.node_id: row.scholarship for row in await session.scalars(select(BodyRow).where(BodyRow.node_id.in_(list(best))))}
@@ -215,45 +222,6 @@ async def forget(ctx: TickContext, holder_id: int, knowledge_id: int) -> None:
     )
     for bond in list(bonds):
         await repository.deactivate(bond, ctx.epoch, "the last masters died")
-
-
-async def advanced(ctx: TickContext, holder_id: int, technique: Technique) -> bool:
-    row = await ctx.session.get(ResearchProgressRow, (holder_id, technique))
-    if row is None:
-        row = ResearchProgressRow(holder_entity_id=holder_id, technique=technique, progress=0, updated_epoch=ctx.epoch)
-        ctx.session.add(row)
-    row.progress = clamp_int(row.progress + ctx.rules.tech_graph.adopt_chance, 0, PERCENT)
-    row.updated_epoch = ctx.epoch
-    if row.progress < PERCENT:
-        return False
-    await ctx.session.delete(row)
-    return True
-
-
-async def adopt_techniques(ctx: TickContext) -> int:
-    table = ctx.rules.tech_graph
-    levels = await holder_levels(ctx.session)
-    adopted = 0
-    for holder_id in sorted(levels):
-        if adopted >= table.cap:
-            break
-        known = await techniques_of(ctx.session, holder_id)
-        holder = await ctx.session.get(EntityRow, holder_id)
-        if holder is None or holder.status is not EntityStatus.CANON or held(holder_id):
-            continue
-        for technique, spec in TECHNIQUES.items():
-            if technique in known or levels[holder_id].get(spec.branch, 0) < spec.level or not gate_open(spec.gate, levels[holder_id]):
-                continue
-            if not gate_open(BRANCH_GRAPH[spec.branch], levels[holder_id]) and spec.level > 1:
-                continue
-            rng = ctx.rng(f"technique.{holder_id}.{technique.value}.{ctx.epoch}")
-            if not await advanced(ctx, holder_id, technique):
-                continue
-            secret = holder.entity_type in ORDERS and rng.chance(table.secret_pct)
-            ctx.session.add(HolderTechniqueRow(holder_entity_id=holder_id, technique=technique, since_epoch=ctx.epoch, secret=secret))
-            known.add(technique)
-            adopted += 1
-    return adopted
 
 
 async def diffuse_techniques(ctx: TickContext) -> int:

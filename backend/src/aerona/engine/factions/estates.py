@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.civics import PRIVILEGE_GATES
 from aerona.catalog.estates import ESTATE_CLASSES, ESTATE_LAWS, ESTATE_NAMES, PRIVILEGE_WISHES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
@@ -17,6 +18,7 @@ from aerona.domain.enums.polity import LegitimacyBasis
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
+from aerona.engine.lore.civics import polity_allows
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.enactment import propose
@@ -109,6 +111,8 @@ async def tend_estate(ctx: TickContext, realm: Realm, row: EstateProfileRow, sha
 
 async def grant(ctx: TickContext, row: EstateProfileRow, privilege: EstatePrivilege) -> bool:
     if await ctx.session.get(EstatePrivilegeRow, (row.faction_entity_id, privilege)) is not None:
+        return False
+    if not await polity_allows(ctx.session, row.polity_entity_id, PRIVILEGE_GATES.get(privilege)):
         return False
     ctx.session.add(EstatePrivilegeRow(estate_entity_id=row.faction_entity_id, privilege=privilege, granted_epoch=ctx.epoch))
     await ctx.session.flush()

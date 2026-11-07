@@ -95,6 +95,7 @@ async def region_of(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) 
 )
 @writes(
     "mortal.hp",
+    "mortal.strength",
     "table.bodies",
     "table.bonds",
     "table.chronicle",

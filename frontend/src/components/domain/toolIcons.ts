@@ -108,6 +108,7 @@ import {
   Zap,
   Shovel,
   Trophy,
+  Layers,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 
@@ -195,6 +196,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   inspire_knowledge: Lightbulb,
   develop_knowledge: Lightbulb,
   learn_knowledge: GraduationCap,
+  choose_research: Layers,
   teach_knowledge: GraduationCap,
   utter_prophecy: Eye,
   prophesy: Eye,

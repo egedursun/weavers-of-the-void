@@ -167,4 +167,5 @@ class DistrictRules:
     spymaster_tier: int = rule(3, 0, 4, G, "Size tier the capital needs before a realm seats a spymaster")
     herald_tier: int = rule(2, 0, 4, G, "Size tier the capital needs before a realm seats a herald")
     chaplain_tier: int = rule(2, 0, 4, G, "Size tier the capital needs before a realm seats a court chaplain")
+    court_scholar_tier: int = rule(2, 0, 4, G, "Size tier the capital needs before a realm seats a court scholar")
     governor_tier: int = rule(1, 0, 4, G, "Size tier a region's largest settlement needs before the realm sends it a governor")

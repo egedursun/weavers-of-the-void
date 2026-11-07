@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.db.tables.affairs import CouncilSeatRow, CourtPositionRow, CourtRow, ElectionRow, MandateRow, PolicyApprovalRow, ResolutionRow, TaxPolicyRow
+from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import EstateProfileRow
 from aerona.db.tables.factions import FactionProfileRow
@@ -11,6 +12,7 @@ from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society_depth import PolityLoyaltyRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.faction import FactionKind
@@ -98,6 +100,11 @@ async def test_farmed_taxes_and_greed_breed_corruption_and_a_poll_tax_fills_the_
     ctx = context(realm.session, tuned(affairs={"corruption_drift_pct": 100}))
     polity, _, _ = await realm_of(realm, "Garrow")
     realm.session.add(TaxPolicyRow(polity_entity_id=polity.id, kind=TaxKind.POLL, rate=20, farmed=True, locked=[]))
+    await realm.session.flush()
+    await tend_revenue(context(realm.session, ctx.rules, epoch=1), RevenueTally())
+    unknown = await realm.session.get(TaxPolicyRow, (polity.id, TaxKind.POLL))
+    assert unknown is not None and unknown.take == 0
+    realm.session.add(HolderTechniqueRow(holder_entity_id=polity.id, technique=Technique.CENSUS, since_epoch=1, secret=False))
     await realm.session.flush()
     tally = RevenueTally()
     await tend_revenue(ctx, tally)

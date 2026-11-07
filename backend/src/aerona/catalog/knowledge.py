@@ -33,6 +33,7 @@ KNOWLEDGE_BRANCHES: dict[KnowledgeBranch, KeyedText[KnowledgeBranch]] = {
         KeyedText(B.IMMORTALITY, "Pursuit of Immortality", "Their mortals reach for immortality, and the gods see them as a threat."),
         KeyedText(B.BIOMANCY, "Biomancy", "Combines and alters living things: merges species into chimeras and steers mutations."),
         KeyedText(B.FORBIDDEN, "Forbidden Knowledge", "Great power in war and magic, at the price of sanity and a leak into their world."),
+        KeyedText(B.CIVICS, "Civics", "Their laws, offices, faith and thought grow into institutions that shape how the realm is run."),
     )
 }
 

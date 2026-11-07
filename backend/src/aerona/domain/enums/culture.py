@@ -84,6 +84,50 @@ class Technique(StrEnum):
     NECROMANCY = "necromancy"
     ALCHEMY = "alchemy"
     ASTRONOMY_INSTRUMENTS = "astronomy_instruments"
+    CARTOGRAPHY = "cartography"
+    ORAL_LAW = "oral_law"
+    WRITTEN_LAW = "written_law"
+    CODIFIED_LAW = "codified_law"
+    BUREAUCRACY = "bureaucracy"
+    CENSUS = "census"
+    POSTAL_SERVICE = "postal_service"
+    DIPLOMATIC_CORPS = "diplomatic_corps"
+    STANDING_ARMY_ADMIN = "standing_army_admin"
+    DOUBLE_ENTRY = "double_entry"
+    JOINT_STOCK = "joint_stock"
+    INSURANCE = "insurance"
+    GUILDS = "guilds"
+    UNIVERSITIES = "universities"
+    HOSPITALS = "hospitals"
+    PRINTING_PRESS = "printing_press"
+    ORGANISED_CLERGY = "organised_clergy"
+    MONASTICISM = "monasticism"
+    THEOLOGY_SCHOOLS = "theology_schools"
+    LOGIC = "logic"
+    NATURAL_PHILOSOPHY = "natural_philosophy"
+    EMPIRICISM = "empiricism"
+    HUMANIST_IDEALS = "humanist_ideals"
+
+
+class ResearchChooser(StrEnum):
+    SCHOLARS = "scholars"
+    AGENT = "agent"
+    GOD = "god"
+
+
+class BoostTrigger(StrEnum):
+    COASTAL_FISHING = "coastal_fishing"
+    SURVIVED_SIEGE = "survived_siege"
+    SURVIVED_EPIDEMIC = "survived_epidemic"
+    ECLIPSE_OBSERVED = "eclipse_observed"
+    GREAT_TRIAL = "great_trial"
+    GREAT_DEBT = "great_debt"
+    STEPPE_HORSES_AT_WAR = "steppe_horses_at_war"
+
+
+class Capability(StrEnum):
+    BLUE_WATER_NAVIGATION = "blue_water_navigation"
+    UNIVERSITY = "university"
 
 
 class IdeologyTenet(StrEnum):

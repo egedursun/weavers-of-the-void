@@ -91,6 +91,16 @@ class OwnedResource(ContextItem):
     yields: str = ""
 
 
+class ResearchLine(ContextItem):
+    community: str
+    current: str = ""
+    chooser: str = ""
+    choices: list[str] = Field(default_factory=list)
+    institutions: list[str] = Field(default_factory=list)
+    boosts: list[str] = Field(default_factory=list)
+    capabilities: list[str] = Field(default_factory=list)
+
+
 class StoresLine(ContextItem):
     community: str
     materials: list[str] = Field(default_factory=list)
@@ -189,6 +199,7 @@ class MortalContextContext(RulesContext):
     resources: list[OwnedResource] = Field(default_factory=list)
     items: list[NamedRecord] = Field(default_factory=list)
     stores: StoresLine | None = None
+    research: ResearchLine | None = None
     home: HomeLine | None = None
     mentions: list[ChronicleRow] = Field(default_factory=list)
     rumours: list[HeardRumour] = Field(default_factory=list)

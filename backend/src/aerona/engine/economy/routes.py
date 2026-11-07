@@ -21,7 +21,7 @@ from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.culture import Capability, Technique
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeLoss, TradeMode, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, LegendCategory
 from aerona.domain.enums.environment import CoastKind, RiverClass
@@ -43,6 +43,7 @@ from aerona.engine.economy.toll_polities import Realms, fund_polity
 from aerona.engine.environment.profile import Works
 from aerona.engine.finance.policy import PolicyBook, PolicyTally, Terms, smuggle
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.lore.research_depth import capable_among
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.notes import note
 from aerona.engine.polity.accords import clause_pairs
@@ -894,6 +895,7 @@ async def contacts(
     statement = select(BondRow.source_node_id, BondRow.target_node_id).where(BondRow.kind == BondKind.TRADES_WITH, BondRow.state == BondState.ACTIVE)
     trading = {frozenset((first, second)) for first, second in await ctx.session.execute(statement)}
     candidates: list[tuple[int, int, int, EntityRow, EntityRow, list[int]]] = []
+    navigators = await capable_among(ctx.session, [market.id for market in markets], Capability.BLUE_WATER_NAVIGATION)
     for index, first in enumerate(markets):
         for second in markets[index + 1 :]:
             pair = frozenset((first.id, second.id))
@@ -901,7 +903,7 @@ async def contacts(
                 continue
             start, goal = book.ground.atlas.top_region(first.id), book.ground.atlas.top_region(second.id)
             hops = book.ground.atlas.region_hops(start, goal)
-            if hops is None or (pair not in trading and hops > lanes.contact_hops):
+            if hops is None or (pair not in trading and hops > contact_reach(ctx, book, navigators, (first.id, start), (second.id, goal))):
                 continue
             path = book.ground.atlas.region_path(start, goal)
             if path is None or not _worth_carrying(ctx, quotes.get(first.id), quotes.get(second.id)):
@@ -917,6 +919,14 @@ async def contacts(
         meeting[second.id] += 1
         found.append((first, second, path))
     return found
+
+
+def contact_reach(ctx: TickContext, book: EconomyBook, navigators: set[int], *ends: tuple[int, int | None]) -> int:
+    reach = ctx.rules.trade_routes.contact_hops
+    coastal = all(region is not None and (land := book.ground.regions.get(region)) is not None and land.coast_kind is not CoastKind.NONE for _, region in ends)
+    if coastal and any(market in navigators for market, _ in ends):
+        return reach + ctx.rules.research_depth.capability_reach
+    return reach
 
 
 async def closed_pairs(ctx: TickContext) -> set[frozenset[int]]:

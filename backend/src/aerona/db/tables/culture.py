@@ -9,6 +9,7 @@ from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.culture import (
     ArtMedium,
     BacklashKind,
+    BoostTrigger,
     CalendarSlot,
     CurseKind,
     CustomCatalog,
@@ -22,6 +23,7 @@ from aerona.domain.enums.culture import (
     ProphecyConsequence,
     ProphecyPredicate,
     ProphecyState,
+    ResearchChooser,
     RiteEffectKind,
     RumourChannel,
     SpeakerKind,
@@ -423,3 +425,40 @@ register_profile_table(LanguageIntelligibilityRow.__tablename__, "first_entity_i
 register_profile_table(SpeakerCohortRow.__tablename__, "community_entity_id")
 register_profile_table(LanguageRegisterRow.__tablename__, "holder_entity_id")
 register_profile_table(TraditionParticipationRow.__tablename__, "community_entity_id")
+
+
+class ResearchFocusRow(Base):
+    __tablename__ = "research_focus"
+    __table_args__ = (at_least("epoch", 0),)
+
+    holder_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    technique: Mapped[Technique] = mapped_column(enum_type(Technique, "technique"))
+    chooser: Mapped[ResearchChooser] = mapped_column(enum_type(ResearchChooser, "chooser"), default=ResearchChooser.SCHOLARS)
+    options: Mapped[list[str]] = mapped_column(JSON, default=list)
+    epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class InstitutionRow(Base):
+    __tablename__ = "institutions"
+    __table_args__ = (at_least("since_epoch", 0), at_least("refused_epochs", 0), Index("ix_institutions_community", "community_entity_id"))
+
+    technique: Mapped[Technique] = mapped_column(enum_type(Technique, "technique"), primary_key=True)
+    community_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    origin: Mapped[bool] = mapped_column(default=False)
+    embraced: Mapped[bool] = mapped_column(default=False)
+    since_epoch: Mapped[int] = mapped_column(default=0)
+    refused_epochs: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class ResearchBoostRow(Base):
+    __tablename__ = "research_boosts"
+    __table_args__ = (at_least("epoch", 0), Index("ix_research_boosts_holder", "holder_entity_id", "epoch"))
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    holder_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
+    technique: Mapped[Technique] = mapped_column(enum_type(Technique, "technique"))
+    trigger: Mapped[BoostTrigger] = mapped_column(enum_type(BoostTrigger, "trigger"))
+    progress: Mapped[int] = mapped_column(default=0)
+    epoch: Mapped[int] = mapped_column(default=0)

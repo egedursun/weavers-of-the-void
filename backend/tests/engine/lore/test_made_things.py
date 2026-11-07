@@ -193,6 +193,8 @@ async def test_a_school_is_founded_from_chosen_tenets_and_can_be_suppressed(real
     town = await settlement(realm, "Ashford")
     sage = await mortal(realm, "Tem", location_id=town.id)
     ctx = context(realm.session, RULES)
+    realm.session.add(HolderTechniqueRow(holder_entity_id=town.id, technique=Technique.LOGIC, since_epoch=1, secret=False))
+    await realm.session.flush()
     creed = await ideology.found_school(ctx, sage, [IdeologyTenet.RATIONALISM], "The Lamp")
     await realm.session.flush()
     row = await realm.session.get_one(IdeologyAdherentRow, (creed.id, town.id))

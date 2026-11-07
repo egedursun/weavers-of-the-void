@@ -231,6 +231,7 @@ from aerona.rules.registry.religion import ReligionRules
 from aerona.rules.registry.remembrance import RemembranceRules
 from aerona.rules.registry.renown import ClaimRules, CurrencyRules, LocalRenownRules, LoreTradeRules
 from aerona.rules.registry.reputation import ReputationRules
+from aerona.rules.registry.research_depth import ResearchDepthRules
 from aerona.rules.registry.routes import ChokepointsRules, RouteDangersRules, RouteSeasonsRules, SentientPactsRules, SonRoutesRules
 from aerona.rules.registry.rumours import RumoursRules
 from aerona.rules.registry.seasonal import SeasonalRules
@@ -364,6 +365,7 @@ class Rules:
     battle_depth: BattleDepthRules = field(default_factory=BattleDepthRules)
     army_depth: ArmyDepthRules = field(default_factory=ArmyDepthRules)
     war_conduct: WarConductRules = field(default_factory=WarConductRules)
+    research_depth: ResearchDepthRules = field(default_factory=ResearchDepthRules)
     holy_orders: OrderRules = field(default_factory=OrderRules)
     guild_ranks: GuildRules = field(default_factory=GuildRules)
     elasticity: ElasticityRules = field(default_factory=ElasticityRules)

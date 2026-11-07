@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.civics import LAW_GATES
 from aerona.catalog.laws import LAW_PARAMS, LAW_TITLES, defaults_for
 from aerona.constants.units import PERCENT
 from aerona.db.tables.affairs import CouncilSeatRow
@@ -21,6 +22,7 @@ from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, O
 from aerona.engine.communication.opinion import mean_approval
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.favours import hook_on, owe, use_hook
+from aerona.engine.lore.civics import realm_allows
 from aerona.engine.mind.book import Values, values_for
 from aerona.engine.mortal.standing import add_renown
 from aerona.engine.notes import note
@@ -95,6 +97,8 @@ async def propose(
     law_id: int | None = None,
 ) -> LawProposalRow | None:
     if held(realm.entity.id) or (champion_id is not None and held(champion_id)):
+        return None
+    if not await realm_allows(ctx.session, realm, LAW_GATES.get(kind)):
         return None
     if await pending_kind(ctx, realm.entity.id, kind) is not None or len(await debating(ctx, realm.entity.id)) >= ctx.rules.enactment.open_cap:
         return None

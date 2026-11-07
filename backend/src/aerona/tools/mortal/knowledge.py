@@ -1,13 +1,18 @@
 from typing import Any
 
 from aerona.catalog.mind import LEARNED_SKILLS
+from aerona.catalog.techniques import TECHNIQUES
 from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.tables.culture import ResearchFocusRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.culture import ResearchChooser
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.engine.lore.research_depth import research_choices, research_home
 from aerona.engine.phases.knowledge_levels import DevelopmentKind, development_for, empty_branch_hint, empty_branches, shift_level
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.knowledge import knowledge_level
@@ -18,7 +23,7 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action, no_cost
 from aerona.tools.framework.validation import fail
 from aerona.tools.mortal import lines
-from aerona.tools.mortal.inputs import DevelopKnowledgeInput, LearnInput
+from aerona.tools.mortal.inputs import ChooseResearchInput, DevelopKnowledgeInput, LearnInput
 from aerona.tools.mortal.support import MortalCreation, craft_of, create_record, name_free, practised, require_lore, same_region
 
 LEARNING_BONDS = (BondKind.TRADES_WITH, BondKind.ALLY, BondKind.RULES)
@@ -160,6 +165,40 @@ async def learn_knowledge(call: MortalCall, args: LearnInput) -> str:
     return result(MortalResult.LEARNED, knowledge=knowledge.name, teacher=teacher.name)
 
 
+async def choose_research(call: MortalCall, args: ChooseResearchInput) -> str:
+    await require_lore(call)
+    holder = await research_home(call.session, call.me)
+    if holder is None or held(holder.id):
+        fail(MortalResult.RESEARCH_NO_HOLDER)
+    row = await call.session.get(ResearchFocusRow, holder.id)
+    choices = await research_choices(call.session, holder.id)
+    if not choices:
+        fail(MortalResult.RESEARCH_NO_OPTIONS)
+    if args.technique not in choices:
+        fail(
+            MortalResult.RESEARCH_NOT_OFFERED,
+            technique=TECHNIQUES[args.technique].label,
+            options=", ".join(f"{item.value} ({TECHNIQUES[item].label})" for item in choices),
+        )
+    if row is None:
+        row = ResearchFocusRow(holder_entity_id=holder.id, technique=args.technique, chooser=ResearchChooser.AGENT, options=[], epoch=call.epoch, locked=[])
+        call.session.add(row)
+    if "technique" in row.locked:
+        fail(MortalResult.RESEARCH_NOT_OFFERED, technique=TECHNIQUES[args.technique].label, options=TECHNIQUES[row.technique].label)
+    row.technique, row.chooser, row.epoch = args.technique, ResearchChooser.AGENT, call.epoch
+    row.options = [item.value for item in choices]
+    call.target(holder.id)
+    await call.chronicle(
+        ChronicleKind.KNOWLEDGE,
+        lines.RESEARCH_CHOSEN,
+        entity_ids=[call.me.id, holder.id],
+        me=call.me.name,
+        place=holder.name,
+        technique=TECHNIQUES[args.technique].label,
+    )
+    return result(MortalResult.RESEARCH_CHOSEN, technique=TECHNIQUES[args.technique].label)
+
+
 def specs() -> list[ToolSpec[MortalCall, Any]]:
     mortal = AgentKind.MORTAL
     return [
@@ -167,4 +206,5 @@ def specs() -> list[ToolSpec[MortalCall, Any]]:
             MortalToolId.DEVELOP_KNOWLEDGE, mortal, DevelopKnowledgeInput, ToolMeta(ActionKind.DEVELOP_KNOWLEDGE, mortal_standard_action), develop_knowledge
         ),
         ToolSpec(MortalToolId.LEARN_KNOWLEDGE, mortal, LearnInput, ToolMeta(ActionKind.LEARN, no_cost), learn_knowledge),
+        ToolSpec(MortalToolId.CHOOSE_RESEARCH, mortal, ChooseResearchInput, ToolMeta(ActionKind.DEVELOP_KNOWLEDGE, no_cost), choose_research),
     ]

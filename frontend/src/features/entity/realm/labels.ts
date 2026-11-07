@@ -55,6 +55,7 @@ import {
   Vote,
   VolumeX,
   WandSparkles,
+  GraduationCap,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -127,6 +128,7 @@ export const OFFICES: Record<string, Named> = {
   ambassador: { label: 'Ambassador', icon: Handshake, tone: 'info' },
   herald: { label: 'Herald', icon: Megaphone, tone: 'warning' },
   chaplain: { label: 'Court chaplain', icon: Church, tone: 'verdigris' },
+  court_scholar: { label: 'Court scholar', icon: GraduationCap, tone: 'info' },
 }
 
 export const LAW_AREAS: Record<string, Named> = {
@@ -350,6 +352,11 @@ export const CLAUSES: Record<string, Named> = {
     label: 'Tribute to a living resource',
     icon: Gem,
     tone: 'verdigris',
+  },
+  research_agreement: {
+    label: 'Shared research',
+    icon: GraduationCap,
+    tone: 'info',
   },
 }
 

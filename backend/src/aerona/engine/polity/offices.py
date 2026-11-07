@@ -3,6 +3,7 @@ from types import MappingProxyType
 
 from sqlalchemy import delete, select
 
+from aerona.catalog.civics import OFFICE_GATES
 from aerona.constants.units import PERCENT
 from aerona.core.total import partial
 from aerona.db.tables.body import InjuryRow
@@ -31,6 +32,7 @@ from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.causes import succession_incident
 from aerona.engine.intrigue.favours import owe
+from aerona.engine.lore.civics import realm_allows
 from aerona.engine.military.causes import press_claim_war
 from aerona.engine.military.support import new_side
 from aerona.engine.mind.book import traits_of
@@ -65,10 +67,20 @@ OFFICE_SKILLS = partial(
         OfficeKind.HERALD: ((S.ORATORY, S.ETIQUETTE), "charisma"),
         OfficeKind.CHAPLAIN: ((S.THEOLOGY, S.ORATORY), "wisdom"),
         OfficeKind.REGENT: ((S.LEADERSHIP, S.LAW), "charisma"),
+        OfficeKind.COURT_SCHOLAR: ((S.LORE, S.WRITING, S.ASTRONOMY), "intellect"),
     },
     without={OfficeKind.HEIR_DESIGNATE, OfficeKind.RULER},
 )
-COUNCIL = (OfficeKind.CHANCELLOR, OfficeKind.MARSHAL, OfficeKind.TREASURER, OfficeKind.HIGH_JUDGE, OfficeKind.SPYMASTER, OfficeKind.HERALD, OfficeKind.CHAPLAIN)
+COUNCIL = (
+    OfficeKind.CHANCELLOR,
+    OfficeKind.MARSHAL,
+    OfficeKind.TREASURER,
+    OfficeKind.HIGH_JUDGE,
+    OfficeKind.SPYMASTER,
+    OfficeKind.HERALD,
+    OfficeKind.CHAPLAIN,
+    OfficeKind.COURT_SCHOLAR,
+)
 W = OfficePower
 DEFAULT_POWERS: Mapping[OfficeKind, tuple[OfficePower, ...]] = MappingProxyType(
     {
@@ -84,6 +96,7 @@ DEFAULT_POWERS: Mapping[OfficeKind, tuple[OfficePower, ...]] = MappingProxyType(
         OfficeKind.AMBASSADOR: (W.EMBASSY,),
         OfficeKind.HERALD: (W.PROCLAIM,),
         OfficeKind.CHAPLAIN: (W.PREACH,),
+        OfficeKind.COURT_SCHOLAR: (W.RESEARCH,),
     }
 )
 POWER_SKILLS: Mapping[OfficePower, OfficeKind] = MappingProxyType(
@@ -99,6 +112,7 @@ POWER_SKILLS: Mapping[OfficePower, OfficeKind] = MappingProxyType(
         W.EMBASSY: OfficeKind.AMBASSADOR,
         W.PROCLAIM: OfficeKind.HERALD,
         W.PREACH: OfficeKind.CHAPLAIN,
+        W.RESEARCH: OfficeKind.COURT_SCHOLAR,
     }
 )
 POWER_VALUES = frozenset(item.value for item in OfficePower)
@@ -215,6 +229,8 @@ async def staff(ctx: TickContext, book: RealmBook, realm: Realm, held: set[int])
             await appoint(ctx, realm, seat, None, by_id=realm.ruler_id, reason="the embassy was recalled")
     for kind, region, target in wanted_offices(book, realm, embassies, ctx.rules, await towns(ctx.session)):
         office = next((row for row in realm.offices if row.kind is kind and row.region_entity_id == region and row.target_entity_id == target), None)
+        if office is None and not await realm_allows(ctx.session, realm, OFFICE_GATES.get(kind)):
+            continue
         if office is None:
             office = OfficeRow(
                 polity_entity_id=realm.entity.id,

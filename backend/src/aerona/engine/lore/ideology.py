@@ -1,7 +1,9 @@
 from sqlalchemy import select
 
+from aerona.catalog.civics import TENET_GATES
 from aerona.catalog.lore import IDEOLOGY_APPEAL, IDEOLOGY_VALUES, VALUE_IDEOLOGY
 from aerona.constants.units import PERCENT
+from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import IdeologyAdherentRow, IdeologyProfileRow, IdeologyTenetRow
 from aerona.db.tables.entities import EntityRow
@@ -20,6 +22,7 @@ from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import IdeologyStats, ItemStats
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import patron_node
+from aerona.engine.lore.civics import holders_know
 from aerona.engine.lore.items import profile_of
 from aerona.engine.lore.research import institutions
 from aerona.engine.mind.book import stored_values, values_for, write_values
@@ -53,13 +56,23 @@ async def tenets_of(ctx: TickContext, ideology_id: int) -> set[IdeologyTenet]:
 async def found(ctx: TickContext, founder: EntityRow) -> EntityRow | None:
     values = await values_for(ctx.session, founder.id)
     tenets = [high if values.get(axis, 0) >= SEED_VALUE else low for axis, (high, low) in VALUE_IDEOLOGY.items() if abs(values.get(axis, 0)) >= SEED_VALUE]
-    if not tenets:
+    taught = await teachable(ctx, founder, list(dict.fromkeys(tenets)))
+    if not taught:
         return None
-    return await found_school(ctx, founder, list(dict.fromkeys(tenets))[: ctx.rules.ideologies.founding_tenets])
+    return await found_school(ctx, founder, taught[: ctx.rules.ideologies.founding_tenets])
+
+
+async def teachable(ctx: TickContext, founder: EntityRow, tenets: list[IdeologyTenet]) -> list[IdeologyTenet]:
+    homes = [founder.id, *([founder.location_id] if founder.location_id is not None else [])]
+    return [tenet for tenet in tenets if await holders_know(ctx.session, homes, TENET_GATES.get(tenet))]
 
 
 async def found_school(ctx: TickContext, founder: EntityRow, tenets: list[IdeologyTenet], name: str | None = None) -> EntityRow:
-    tenets = list(dict.fromkeys(tenets))
+    asked = list(dict.fromkeys(tenets))
+    tenets = await teachable(ctx, founder, asked)
+    if not tenets:
+        needs = ", ".join(sorted({TENET_GATES[tenet].value.replace("_", " ") for tenet in asked if tenet in TENET_GATES}))
+        raise ValidationFailedError(f"No one around {founder.name} has yet learned what such a creed needs: {needs}.")
     name = (name or "").strip() or f"The {tenets[0].value.replace('_', ' ').title()} of {founder.name}"
     creed = await create_record(
         ctx,

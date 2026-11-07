@@ -441,6 +441,7 @@ export const BRANCH_LABEL: Record<KnowledgeBranch, string> = {
   immortality: 'Immortality',
   biomancy: 'Biomancy',
   forbidden: 'Forbidden lore',
+  civics: 'Civics',
 }
 
 export function branch(kind: KnowledgeBranch): Named {

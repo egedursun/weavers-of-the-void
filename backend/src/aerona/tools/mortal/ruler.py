@@ -2,6 +2,7 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.catalog.civics import OFFICE_GATES
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OfficeRow
@@ -10,6 +11,7 @@ from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.polity import DecisionRule, LawKind, LegitimacyBasis, OfficeKind
+from aerona.engine.lore.civics import realm_allows, unlearned
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook, enact
 from aerona.engine.polity.offices import appoint
@@ -20,7 +22,7 @@ from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_acti
 from aerona.tools.framework.validation import fail
 from aerona.tools.mortal import lines
 from aerona.tools.mortal.inputs import AppointOfficerInput, EnactLawInput, SetTaxInput
-from aerona.tools.mortal.justice import bring_law
+from aerona.tools.mortal.justice import bring_law, law_known
 
 THRONES = (OfficeKind.RULER, OfficeKind.REGENT)
 TAX_CAP = 50
@@ -45,6 +47,7 @@ async def enact_law(call: MortalCall, args: EnactLawInput) -> str:
         text = await bring_law(call, realm, args.kind, args.params or {})
         await call.bump(TurnCounter.LAWS_ENACTED)
         return text
+    await law_known(call, realm, args.kind)
     try:
         law = await enact(call.tick, realm.entity, args.kind, args.params or {}, by_id=call.me.id, basis=LegitimacyBasis.DECREE, name=args.name)
     except ValidationFailedError as error:
@@ -69,6 +72,9 @@ async def appoint_officer(call: MortalCall, args: AppointOfficerInput) -> str:
     if args.mortal_id is not None and (holder is None or holder.entity_type is not EntityType.MORTAL or holder.status is not EntityStatus.CANON):
         fail(MortalResult.OFFICE_NOT_APPOINTED)
     office = next((row for row in realm.offices if row.kind is args.office), None)
+    needed = OFFICE_GATES.get(args.office)
+    if office is None and not await realm_allows(call.session, realm, needed):
+        fail(MortalResult.OFFICE_UNLEARNED, office=args.office.value.replace("_", " "), needs=unlearned(needed))
     if office is None:
         office = OfficeRow(polity_entity_id=realm.entity.id, kind=args.office, since_epoch=call.epoch, powers=[], locked=[])
         call.session.add(office)

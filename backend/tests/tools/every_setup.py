@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmos import CosmosRow
-from aerona.db.tables.culture import HolderTechniqueRow, RiteProfileRow
+from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, RiteProfileRow
 from aerona.db.tables.economy import MarketPriceRow, TradeRouteProfileRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import LeyLineRow, WorldSeasonRow
@@ -218,6 +218,12 @@ async def technique(session: AsyncSession, realm: Realm) -> Ids:
     return {}
 
 
+async def knows_written_law(session: AsyncSession, realm: Realm) -> Ids:
+    session.add(HolderTechniqueRow(holder_entity_id=realm.mortal_id, technique=Technique.WRITTEN_LAW))
+    await session.flush()
+    return {}
+
+
 async def market(session: AsyncSession, realm: Realm) -> Ids:
     session.add(MarketPriceRow(market_entity_id=realm.people_id, commodity=CommodityKind.GRAIN, epoch=EPOCH, price=10, supply=500, demand=100))
     session.add(WorkshopRow(community_entity_id=realm.people_id, kind=WorkshopKind.MARKET, built_epoch=1, owner_node_id=realm.faction_id))
@@ -239,6 +245,16 @@ async def folk_knows(session: AsyncSession, realm: Realm, branch: KnowledgeBranc
     lore = await make_entity(session, name, EntityType.KNOWLEDGE, world_id=realm.cosmos.world_id, knowledge_branch=branch)
     await connect(session, realm.people_id, lore.id, BondKind.KNOWS)
     return {"lore": lore.id}
+
+
+async def lawgivers(session: AsyncSession, realm: Realm) -> Ids:
+    session.add(
+        HolderLevelRow(
+            holder_entity_id=realm.people_id, branch=KnowledgeBranch.CIVICS, level=1, practitioners=1, progress=0, secret=False, updated_epoch=1, locked=[]
+        )
+    )
+    await session.flush()
+    return {}
 
 
 async def seafarers(session: AsyncSession, realm: Realm) -> Ids:

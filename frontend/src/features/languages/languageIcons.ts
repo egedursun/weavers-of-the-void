@@ -23,6 +23,7 @@ import {
   Puzzle,
   Route,
   Sailboat,
+  Scale,
   Shapes,
   Ship,
   Skull,
@@ -59,6 +60,7 @@ export const BRANCH_ICON: Record<KnowledgeBranch, LucideIcon> = {
   immortality: InfinityIcon,
   biomancy: Dna,
   forbidden: Skull,
+  civics: Scale,
 }
 
 export const COSMIC_BRANCHES: readonly KnowledgeBranch[] = [

@@ -23,6 +23,7 @@ import {
   Sparkles,
   Trash2,
   UserCog,
+  GraduationCap,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -133,6 +134,12 @@ const OFFICE_POWERS: Record<string, Named & { hint: string }> = {
     icon: Church,
     tone: 'verdigris',
     hint: 'Carries the realm’s faith into its lands',
+  },
+  research: {
+    label: 'Research',
+    icon: GraduationCap,
+    tone: 'info',
+    hint: 'Keeps the realm’s scholars at their work and is paid a stipend for it',
   },
 }
 const LAW_HOLDS: Record<string, Named & { hint: string }> = {

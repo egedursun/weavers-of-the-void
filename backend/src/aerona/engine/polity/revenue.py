@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.civics import TAX_GATES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.affairs import TaxPolicyRow
 from aerona.db.tables.culture import IdeologyTenetRow
@@ -16,6 +17,7 @@ from aerona.domain.enums.settlement import DistrictKind, TreasuryEntry
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.statecraft import TaxKind
 from aerona.engine.context import TickContext
+from aerona.engine.lore.civics import realm_allows
 from aerona.engine.mind.book import traits_of
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.governance import spend
@@ -149,7 +151,8 @@ async def levy(ctx: TickContext, book: RealmBook, realm: Realm, row: TaxPolicyRo
         order = [town.public_order for member in realm.members if (town := await ctx.session.get(SettlementProfileRow, member)) is not None]
         mean_order = sum(order) / len(order) if order else PERCENT / 2
         row.efficiency = clamp_int((min(PERCENT, realm.profile.administration) + mean_order + PERCENT - realm.profile.corruption) / 3, 0, PERCENT)
-    take = await base_of(ctx, book, realm, row.kind) * row.rate / RATE_UNIT * row.efficiency / PERCENT
+    rate = row.rate if "rate" in row.locked or await realm_allows(ctx.session, realm, TAX_GATES.get(row.kind)) else 0
+    take = await base_of(ctx, book, realm, row.kind) * rate / RATE_UNIT * row.efficiency / PERCENT
     if row.farmed:
         take *= 1 + table.farm_take_pct / PERCENT
         tally.farmed += 1
