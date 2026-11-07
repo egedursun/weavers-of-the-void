@@ -132,6 +132,13 @@ class BattleRow(Base):
     tactic_factors: Mapped[dict[str, float]] = mapped_column(JSON, default=dict)
     morale: Mapped[dict[str, dict[str, int]]] = mapped_column(JSON, default=dict)
     magic: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
+    width: Mapped[int] = mapped_column(default=0)
+    reserves_committed: Mapped[int] = mapped_column(default=0)
+    command_collapsed_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    planned_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    trap_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    feint: Mapped[bool] = mapped_column(default=False)
+    salvaged: Mapped[int] = mapped_column(default=0)
 
 
 class CaptiveRow(Base):

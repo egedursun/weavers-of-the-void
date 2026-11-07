@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import {
+  ArrowRightLeft,
   Biohazard,
   BrickWall,
   CalendarDays,
@@ -7,14 +8,19 @@ import {
   ChevronUp,
   Crown,
   Droplets,
+  EyeOff,
   Flag,
   Crosshair,
+  Hammer,
+  Layers,
   Lock,
   Map as MapIcon,
   MapPin,
   Megaphone,
   Moon,
+  Ruler,
   Save,
+  ScrollText,
   Shield,
   Skull,
   Swords,
@@ -1128,6 +1134,85 @@ export function CohortCard({
   )
 }
 
+function BattleField({ battle }: { battle: BattleReport }) {
+  const marks: { key: string; node: ReactNode }[] = []
+  if (battle.width > 0)
+    marks.push({
+      key: 'width',
+      node: (
+        <Plain icon={Ruler}>{`Front of ${formatInteger(battle.width)}`}</Plain>
+      ),
+    })
+  if (battle.reserves_committed > 0)
+    marks.push({
+      key: 'reserves',
+      node: (
+        <Plain icon={Layers}>
+          {`${formatInteger(battle.reserves_committed)} reserves committed`}
+        </Plain>
+      ),
+    })
+  if (battle.planned_by)
+    marks.push({
+      key: 'planned',
+      node: (
+        <Badge size='sm' variant='success'>
+          <ScrollText />
+          {`${battle.planned_by.name} planned the attack`}
+        </Badge>
+      ),
+    })
+  if (battle.trap_by)
+    marks.push({
+      key: 'trap',
+      node: (
+        <Badge size='sm' variant='warning'>
+          <EyeOff />
+          {`${battle.trap_by.name} sprang a trap`}
+        </Badge>
+      ),
+    })
+  if (battle.feint)
+    marks.push({
+      key: 'feint',
+      node: (
+        <Badge size='sm' variant='warning'>
+          <ArrowRightLeft />A feint pinned the reserves
+        </Badge>
+      ),
+    })
+  if (battle.command_collapsed)
+    marks.push({
+      key: 'collapse',
+      node: (
+        <Badge size='sm' variant='destructive'>
+          <Skull />
+          {`${battle.command_collapsed.name} lost its commander`}
+        </Badge>
+      ),
+    })
+  if (battle.salvaged > 0)
+    marks.push({
+      key: 'salvage',
+      node: (
+        <Plain icon={Hammer}>
+          {`${formatInteger(battle.salvaged)} arms salvaged`}
+        </Plain>
+      ),
+    })
+  if (marks.length === 0) return null
+  return (
+    <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+      <Label>The field</Label>
+      {marks.map((mark) => (
+        <span key={mark.key} className='flex min-w-0'>
+          {mark.node}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 function PhaseChip({ phase }: { phase: BattleReport['phases'][number] }) {
   const item = named(PHASE, phase.phase)
   const fallen = phase.attacker_losses + phase.defender_losses
@@ -1311,6 +1396,7 @@ function BattleItem({ battle, last }: { battle: BattleReport; last: boolean }) {
             <TableTag table={TACTIC} value={battle.tactics_defender} />
           </div>
         )}
+        <BattleField battle={battle} />
         {battle.phases.length > 0 && (
           <ol
             aria-label='Phases'

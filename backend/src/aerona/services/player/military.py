@@ -22,6 +22,7 @@ class CommandArmy(Command):
 class EditStack(Command):
     unit_id: int
     values: dict[str, int | str | bool | None] = Field(default_factory=dict)
+    release: list[str] = Field(default_factory=list)
 
 
 class AddStack(Command):
@@ -114,7 +115,7 @@ async def command_army(scope: PlayerScope, command: CommandArmy) -> Effect:
 
 @player_action("army:edit_stack", ActionKind.EDIT_RECORD)
 async def edit_stack(scope: PlayerScope, command: EditStack) -> Effect:
-    row = await control.edit_stack(await scope.context("army_stack"), command.unit_id, command.values)
+    row = await control.edit_stack(await scope.context("army_stack"), command.unit_id, command.values, release=command.release)
     return Effect(f"The {row.kind.value.replace('_', ' ')} now number {row.count}.", row.army_entity_id)
 
 

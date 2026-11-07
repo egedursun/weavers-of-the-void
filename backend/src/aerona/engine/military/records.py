@@ -292,3 +292,22 @@ async def delete_record(ctx: TickContext, key: str, record_id: int) -> int | Non
         if army is not None:
             sync(army, await stacks_of(ctx.session, army.id), ctx.rules)
     return scope if isinstance(scope, int) else None
+
+
+def battle_field(battle: BattleRow, names: dict[int, str]) -> str:
+    notes: list[str] = []
+    if battle.width:
+        notes.append(f"front of {battle.width:,}")
+    if battle.reserves_committed:
+        notes.append(f"{battle.reserves_committed:,} reserves committed")
+    if battle.planned_entity_id is not None:
+        notes.append(f"planned by {names.get(battle.planned_entity_id, '?')}")
+    if battle.trap_entity_id is not None:
+        notes.append(f"trap sprung by {names.get(battle.trap_entity_id, '?')}")
+    if battle.feint:
+        notes.append("a feint pinned the reserves")
+    if battle.command_collapsed_entity_id is not None:
+        notes.append(f"{names.get(battle.command_collapsed_entity_id, '?')} lost its commander")
+    if battle.salvaged:
+        notes.append(f"{battle.salvaged:,} arms salvaged")
+    return "; ".join(notes)

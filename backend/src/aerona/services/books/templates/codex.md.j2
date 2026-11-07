@@ -595,10 +595,10 @@ Battles **{{ war.war.battles }}** · Momentum **{{ war.war.score }}**{% if war.w
 
 
 {% if war.battles %}
-| Epoch | Battle | Victor | Defeated | Outcome |
-|---|---|---|---|---|
+| Epoch | Battle | Victor | Defeated | Outcome | The field |
+|---|---|---|---|---|---|
 {% for battle in war.battles %}
-| {{ battle.epoch }} | {{ (battle.name or ("Battle " ~ battle.sequence)) | cell }}{% if battle.place %} at {{ battle.place | cell }}{% endif %} | {{ battle.winner | cell }} | {{ battle.loser | cell }} | {{ battle.outcome }} |
+| {{ battle.epoch }} | {{ (battle.name or ("Battle " ~ battle.sequence)) | cell }}{% if battle.place %} at {{ battle.place | cell }}{% endif %} | {{ battle.winner | cell }} | {{ battle.loser | cell }} | {{ battle.outcome }} | {{ (battle.field or "—") | cell }} |
 {% endfor %}
 
 {% endif %}

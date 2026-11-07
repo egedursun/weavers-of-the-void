@@ -89,16 +89,20 @@ class Tactic(StrEnum):
     SKIRMISH_HARASS = "skirmish_harass"
     RIVER_DEFENCE = "river_defence"
     SIEGE_ASSAULT = "siege_assault"
+    FEINT = "feint"
 
 
 class BattlePhase(StrEnum):
     SCOUTING = "scouting"
     PLAN = "plan"
+    COMMAND = "command"
     MISSILE = "missile"
     CHARGE = "charge"
     MELEE = "melee"
+    RESERVES = "reserves"
     RITES = "rites"
     PURSUIT = "pursuit"
+    SALVAGE = "salvage"
     AFTERMATH = "aftermath"
 
 
@@ -342,3 +346,35 @@ class VesselStatus(StrEnum):
     DAMAGED = "damaged"
     WRECKED = "wrecked"
     GHOST = "ghost"
+
+
+class MoraleState(StrEnum):
+    STEADY = "steady"
+    SHAKEN = "shaken"
+    WAVERING = "wavering"
+    ROUTING = "routing"
+    BROKEN = "broken"
+    RALLIED = "rallied"
+
+
+class Formation(StrEnum):
+    LINE = "line"
+    COLUMN = "column"
+    WEDGE = "wedge"
+    SQUARE = "square"
+    LOOSE = "loose"
+    SHIELDWALL = "shieldwall"
+
+
+class CasualtyClass(StrEnum):
+    KILLED = "killed"
+    WOUNDED_WALKING = "wounded_walking"
+    WOUNDED_STRETCHER = "wounded_stretcher"
+    CAPTURED = "captured"
+    MISSING = "missing"
+    DESERTED = "deserted"
+
+
+class TargetClass(StrEnum):
+    SOFT = "soft"
+    HARD = "hard"

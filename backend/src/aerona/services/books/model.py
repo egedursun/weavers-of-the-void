@@ -34,6 +34,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.son import Passion, SonStatus, Stat
 from aerona.domain.enums.war import WarSide, WarStatus
 from aerona.domain.models.records import EpochStatsData
+from aerona.engine.military.records import battle_field
 from aerona.rules.registry import Rules
 from aerona.services.books.history import HandEpoch, creator_hand, ending_line, god_fate, son_fate
 from aerona.services.books.mapsvg import MapPicture, map_picture
@@ -199,6 +200,7 @@ class BattleLine:
     loser: str
     outcome: str
     place: str | None
+    field: str = ""
 
 
 @dataclass
@@ -684,6 +686,7 @@ class BookBuilder:
                             self.names.get(battle.loser_entity_id, "?"),
                             humanize(battle.outcome.value),
                             named(battle.place_entity_id),
+                            battle_field(battle, self.names),
                         )
                         for battle in battles[war.id]
                     ],

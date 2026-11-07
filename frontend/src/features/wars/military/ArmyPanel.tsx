@@ -5,6 +5,7 @@ import {
   Biohazard,
   ChevronRight,
   Coins,
+  Crosshair,
   Crown,
   Flag,
   Flame,
@@ -16,18 +17,26 @@ import {
   Lock,
   MapPin,
   Medal,
+  Network,
   Package,
   Plus,
+  Repeat,
   Route,
+  Rows3,
+  Ruler,
   Save,
   Shield,
   Shovel,
+  Swords,
   Target,
+  Telescope,
   Trash2,
   Unlock,
+  UserMinus,
   Users,
   Wheat,
   Wrench,
+  Zap,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -55,9 +64,12 @@ import {
   ARMOUR,
   DOCTRINE,
   FAMILY,
+  FORMATION,
+  MORALE_STATE,
   PERCENT,
   SHIELD,
   STANCE,
+  TARGET_CLASS,
   TRAIT,
   UNIT_ICON,
   WEAPON,
@@ -89,6 +101,7 @@ const PROFILE_NUMBERS = [
   'entrenchment',
   'loot',
   'baggage',
+  'contact_seasons',
 ] as const
 const PERCENT_PROFILE = new Set(['cohesion', 'disease', 'entrenchment'])
 const STACK_NUMBERS = [
@@ -99,8 +112,12 @@ const STACK_NUMBERS = [
   'fatigue',
   'wounded',
   'condition',
+  'organisation',
+  'discipline',
+  'ammunition',
+  'missing',
 ] as const
-const UNBOUNDED_STACK = new Set(['count', 'wounded'])
+const UNBOUNDED_STACK = new Set(['count', 'wounded', 'ammunition', 'missing'])
 const NUMBER_ICON: Record<string, typeof Users> = {
   supply_days: Wheat,
   war_chest: Coins,
@@ -116,6 +133,11 @@ const NUMBER_ICON: Record<string, typeof Users> = {
   fatigue: Hourglass,
   wounded: Bandage,
   condition: Wrench,
+  organisation: Network,
+  discipline: Swords,
+  ammunition: Crosshair,
+  missing: UserMinus,
+  contact_seasons: Telescope,
 }
 const ARMOUR_MAX = 6
 const SHIELD_MAX = 3
@@ -146,6 +168,16 @@ function StackEditor({
   const [armour, setArmour] = useState<string>(stack.armour)
   const [shield, setShield] = useState<string>(stack.shield)
   const [helmet, setHelmet] = useState(stack.helmet)
+  const [formation, setFormation] = useState<string>(stack.formation)
+  const [moraleState, setMoraleState] = useState<string>(stack.morale_state)
+  const release = useGodAction({
+    run: (key: string) =>
+      unwrap(
+        api.POST('/api/actions/army:edit_stack', {
+          body: { unit_id: stack.id, values: {}, release: [key] },
+        })
+      ),
+  })
   const save = useGodAction({
     run: () =>
       unwrap(
@@ -165,6 +197,8 @@ function StackEditor({
               armour,
               shield,
               helmet,
+              formation,
+              morale_state: moraleState,
             },
           },
         })
@@ -178,11 +212,16 @@ function StackEditor({
         })
       ),
   })
-  const busy = busyOf(blocked, save.isPending, remove.isPending)
+  const busy = busyOf(
+    blocked,
+    save.isPending,
+    remove.isPending,
+    release.isPending
+  )
   return (
     <Adjust
       title={`Shape the ${stack.label.toLowerCase()}`}
-      note='Set numbers, morale and gear. The stack keeps them until the next battle or march changes them.'
+      note='Set numbers, morale, order and gear. Every value you set is held against battles and marches until you release it.'
     >
       <div className='grid min-w-0 grid-cols-1 gap-2 @sm/stack:grid-cols-2'>
         {STACK_NUMBERS.map((key) => (
@@ -213,6 +252,22 @@ function StackEditor({
           blocked={busy}
           onPick={setShield}
         />
+        <ChoiceField
+          label='Formation'
+          icon={Rows3}
+          value={formation}
+          table={FORMATION}
+          blocked={busy}
+          onPick={setFormation}
+        />
+        <ChoiceField
+          label='Morale state'
+          icon={Flame}
+          value={moraleState}
+          table={MORALE_STATE}
+          blocked={busy}
+          onPick={setMoraleState}
+        />
         <ToggleField
           item={{ label: 'Helmets', icon: HardHat, tone: 'gold' }}
           checked={helmet}
@@ -220,6 +275,30 @@ function StackEditor({
           onChange={setHelmet}
         />
       </div>
+      {stack.locked.length > 0 ? (
+        <div className='flex min-w-0 flex-col gap-1'>
+          <Label>Held against the world</Label>
+          <div className='flex min-w-0 flex-wrap gap-1'>
+            {stack.locked.map((key) => (
+              <Button
+                key={key}
+                size='sm'
+                variant='outline'
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() => release.mutate(key)}
+              >
+                <Unlock />
+                {`Release ${fieldLabel(key).toLowerCase()}`}
+              </Button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <Muted variant='caption'>
+          Nothing is held yet: battles and marches change every value freely.
+        </Muted>
+      )}
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
           size='sm'
@@ -325,6 +404,42 @@ function StackCard({
           max={PERCENT}
           tone={percentTone(stack.fatigue, true)}
         />
+        <StatBar
+          label='Organisation'
+          icon={Network}
+          value={stack.organisation}
+          max={PERCENT}
+          tone={percentTone(stack.organisation)}
+        />
+        <StatBar
+          label='Discipline'
+          icon={Swords}
+          value={stack.discipline}
+          max={PERCENT}
+          tone='info'
+        />
+      </div>
+      <div className='flex min-w-0 flex-wrap items-center gap-1'>
+        <TableTag table={MORALE_STATE} value={stack.morale_state} />
+        <TableTag table={FORMATION} value={stack.formation} />
+        <TableTag table={TARGET_CLASS} value={stack.target_class} />
+        {stack.volleys > 0 && (
+          <Plain icon={Crosshair}>
+            {`${formatInteger(stack.ammunition)} volleys left`}
+          </Plain>
+        )}
+        {stack.missing > 0 && (
+          <Badge size='sm' variant='warning'>
+            <UserMinus />
+            {`${formatInteger(stack.missing)} stragglers`}
+          </Badge>
+        )}
+      </div>
+      <div className='grid min-w-0 grid-cols-2 gap-2 @xs/stack:grid-cols-4'>
+        <MiniStat label='Reach' value={stack.reach} icon={Ruler} />
+        <MiniStat label='Volleys' value={stack.volleys} icon={Repeat} />
+        <MiniStat label='Accuracy' value={stack.accuracy} icon={Target} />
+        <MiniStat label='Piercing' value={stack.piercing} icon={Zap} />
       </div>
       <div className='grid min-w-0 grid-cols-1 gap-2 rounded-lg border bg-muted/20 p-2 @xs/stack:grid-cols-2'>
         <div className='flex min-w-0 items-center gap-2'>

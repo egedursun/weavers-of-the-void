@@ -17,12 +17,15 @@ from aerona.domain.enums.military import (
     ContractStatus,
     FeudParty,
     FeudStatus,
+    Formation,
+    MoraleState,
     PeaceTermKind,
     ShieldType,
     SpyCover,
     SpyOwnerKind,
     Stance,
     Tactic,
+    TargetClass,
     UnitFamily,
     UnitKind,
     WarAimKind,
@@ -40,6 +43,10 @@ class ArmyUnitRow(Base):
         between("morale", PERCENT_MIN, PERCENT_MAX),
         between("fatigue", PERCENT_MIN, PERCENT_MAX),
         between("condition", PERCENT_MIN, PERCENT_MAX),
+        between("organisation", PERCENT_MIN, PERCENT_MAX),
+        between("discipline", PERCENT_MIN, PERCENT_MAX),
+        at_least("ammunition", 0),
+        at_least("missing", 0),
         Index("ix_army_units_army", "army_entity_id"),
     )
 
@@ -62,6 +69,12 @@ class ArmyUnitRow(Base):
     origin_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     design_id: Mapped[int | None] = mapped_column(ForeignKey("unit_designs.id", ondelete="SET NULL"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+    organisation: Mapped[int] = mapped_column(default=100)
+    discipline: Mapped[int] = mapped_column(default=30)
+    ammunition: Mapped[int] = mapped_column(default=0)
+    morale_state: Mapped[MoraleState] = mapped_column(enum_type(MoraleState, "morale_state"), default=MoraleState.STEADY)
+    formation: Mapped[Formation] = mapped_column(enum_type(Formation, "formation"), default=Formation.LINE)
+    missing: Mapped[int] = mapped_column(default=0)
 
 
 class UnitDesignRow(Base):
@@ -98,6 +111,10 @@ class UnitDesignRow(Base):
     created_epoch: Mapped[int] = mapped_column(default=0)
     retired: Mapped[bool] = mapped_column(default=False)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+    reach: Mapped[int] = mapped_column(default=0)
+    volleys: Mapped[int] = mapped_column(default=0)
+    accuracy: Mapped[int] = mapped_column(default=40)
+    piercing: Mapped[int] = mapped_column(default=20)
 
 
 class ArmyProfileRow(Base):
@@ -133,6 +150,7 @@ class ArmyProfileRow(Base):
     fodder_days: Mapped[int] = mapped_column(default=90)
     mutiny: Mapped[int] = mapped_column(default=0)
     battle_region_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    contact_seasons: Mapped[int] = mapped_column(default=0)
 
 
 class ArmyOfficerRow(Base):
@@ -198,6 +216,18 @@ class BattleStackRow(Base):
     lost: Mapped[int] = mapped_column(default=0)
     wounded: Mapped[int] = mapped_column(default=0)
     routed: Mapped[bool] = mapped_column(default=False)
+    killed: Mapped[int] = mapped_column(default=0)
+    walking: Mapped[int] = mapped_column(default=0)
+    stretcher: Mapped[int] = mapped_column(default=0)
+    captured: Mapped[int] = mapped_column(default=0)
+    missing: Mapped[int] = mapped_column(default=0)
+    deserted: Mapped[int] = mapped_column(default=0)
+    reserve: Mapped[bool] = mapped_column(default=False)
+    organisation: Mapped[int] = mapped_column(default=0)
+    ammunition_spent: Mapped[int] = mapped_column(default=0)
+    formation: Mapped[Formation | None] = mapped_column(enum_type(Formation, "formation"))
+    morale_state: Mapped[MoraleState | None] = mapped_column(enum_type(MoraleState, "morale_state"))
+    target_class: Mapped[TargetClass | None] = mapped_column(enum_type(TargetClass, "target_class"))
 
 
 class BattleCasualtyRow(Base):

@@ -6,8 +6,11 @@ from aerona.domain.enums.military import (
     CasualtyFate,
     FeudParty,
     FeudStatus,
+    Formation,
     HullClass,
+    MoraleState,
     PeaceTermKind,
+    TargetClass,
     UnitKind,
     VesselArmament,
     VesselStatus,
@@ -57,6 +60,18 @@ class BattleStackView(ApiModel):
     lost: int
     wounded: int
     routed: bool
+    killed: int
+    walking: int
+    stretcher: int
+    captured: int
+    missing: int
+    deserted: int
+    reserve: bool
+    organisation: int
+    ammunition_spent: int
+    formation: Formation | None
+    morale_state: MoraleState | None
+    target_class: TargetClass | None
 
 
 class CasualtyView(ApiModel):

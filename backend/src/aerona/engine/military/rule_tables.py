@@ -135,6 +135,9 @@ def tactic_matchup(table: TacticMatchupRules) -> dict[tuple[str, str], int]:
         ("river_defence", "flank_cavalry"): table.river_defence_vs_flank_cavalry_pct,
         ("river_defence", "frontal_assault"): table.river_defence_vs_frontal_assault_pct,
         ("siege_assault", "hold_line"): table.siege_assault_vs_hold_line_pct,
+        ("frontal_assault", "feint"): table.frontal_assault_vs_feint_pct,
+        ("feint", "hold_line"): table.feint_vs_hold_line_pct,
+        ("feint", "river_defence"): table.feint_vs_river_defence_pct,
     }
 
 

@@ -19,16 +19,20 @@ import {
   Church,
   Cloud,
   Coins,
+  Columns3,
   Crosshair,
   Crown,
   Disc3,
   Eclipse,
   Eye,
+  Feather,
   Fence,
   Flag,
   Flame,
   Footprints,
+  Frown,
   Ghost,
+  Grid3x3,
   Hammer,
   HandCoins,
   HandFist,
@@ -41,16 +45,18 @@ import {
   LandPlot,
   Layers,
   Link,
-  LockOpen,
   Lock,
-  type LucideIcon,
+  LockOpen,
   Medal,
   Megaphone,
+  Meh,
   Merge,
   Moon,
   Mountain,
-  Pickaxe,
   PawPrint,
+  Pickaxe,
+  RotateCcw,
+  Rows3,
   Sailboat,
   Scale,
   ScrollText,
@@ -65,18 +71,22 @@ import {
   Signpost,
   Skull,
   Slash,
+  Smile,
   Snowflake,
   Sparkles,
   Sword,
   Swords,
   ThumbsDown,
+  Triangle,
   Trophy,
   Undo2,
   VenetianMask,
   WandSparkles,
   Waves,
   Wheat,
+  Wind,
   Zap,
+  type LucideIcon,
 } from 'lucide-react'
 import { type KpiTone } from '@/components/domain'
 import { type Named, named } from '@/features/entity/environment/labels'
@@ -345,16 +355,20 @@ export const TACTIC: Record<string, Named> = {
   skirmish_harass: { label: 'Skirmish and harass', icon: Crosshair },
   river_defence: { label: 'River defence', icon: Waves },
   siege_assault: { label: 'Storm the walls', icon: ChessRook },
+  feint: { label: 'Feint', icon: ArrowRightLeft },
 }
 
 export const PHASE: Record<string, Named> = {
   scouting: { label: 'Scouting', icon: Binoculars, tone: 'info' },
   plan: { label: 'Battle plans', icon: ScrollText, tone: 'gold' },
+  command: { label: 'Orders', icon: Megaphone, tone: 'gold' },
   missile: { label: 'Volleys', icon: BowArrow, tone: 'warning' },
   charge: { label: 'Charge', icon: ChessKnight, tone: 'warning' },
   melee: { label: 'Melee', icon: Swords, tone: 'danger' },
+  reserves: { label: 'Reserves', icon: Layers, tone: 'info' },
   rites: { label: 'Rites', icon: Sparkles, tone: 'verdigris' },
   pursuit: { label: 'Pursuit', icon: Footprints, tone: 'danger' },
+  salvage: { label: 'Salvage', icon: Hammer, tone: 'success' },
   aftermath: { label: 'Aftermath', icon: Skull, tone: 'muted' },
 }
 
@@ -367,6 +381,11 @@ export const PHASE_DETAIL: Record<string, string> = {
 }
 
 export const FIELD: Record<string, string> = {
+  organisation: 'Organisation',
+  discipline: 'Discipline',
+  ammunition: 'Volleys carried',
+  missing: 'Stragglers',
+  contact_seasons: 'Seasons in contact',
   supply_days: 'Supplies (days)',
   war_chest: 'War chest',
   cohesion: 'Cohesion',
@@ -504,4 +523,27 @@ export function cardGrid(count: number): string {
   return count === 1
     ? 'grid min-w-0 grid-cols-1 gap-3'
     : 'grid min-w-0 grid-cols-1 gap-3 @2xl/mil:grid-cols-2 @6xl/mil:grid-cols-3'
+}
+
+export const FORMATION: Record<string, Named> = {
+  line: { label: 'Line', icon: Rows3, tone: 'gold' },
+  column: { label: 'Column', icon: Columns3, tone: 'muted' },
+  wedge: { label: 'Wedge', icon: Triangle, tone: 'warning' },
+  square: { label: 'Square', icon: Grid3x3, tone: 'info' },
+  loose: { label: 'Loose order', icon: Feather, tone: 'verdigris' },
+  shieldwall: { label: 'Shield wall', icon: BrickWall, tone: 'gold' },
+}
+
+export const MORALE_STATE: Record<string, Named> = {
+  steady: { label: 'Steady', icon: Smile, tone: 'success' },
+  shaken: { label: 'Shaken', icon: Meh, tone: 'warning' },
+  wavering: { label: 'Wavering', icon: Frown, tone: 'warning' },
+  routing: { label: 'Routing', icon: Wind, tone: 'danger' },
+  broken: { label: 'Broken', icon: Skull, tone: 'danger' },
+  rallied: { label: 'Rallied', icon: RotateCcw, tone: 'gold' },
+}
+
+export const TARGET_CLASS: Record<string, Named> = {
+  soft: { label: 'Soft target', icon: Feather, tone: 'muted' },
+  hard: { label: 'Hard target', icon: ShieldHalf, tone: 'gold' },
 }

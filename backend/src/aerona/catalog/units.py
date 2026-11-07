@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
+from aerona.catalog.battle_depth import WEAPON_PROFILES, WeaponProfile
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.military import ArmourType, ShieldType, Tactic, UnitFamily, UnitKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
@@ -32,6 +33,7 @@ class UnitSpec:
     terror: int = 0
     terrain: dict[TerrainKind, float] = field(default_factory=dict)
     flying: bool = False
+    profile: WeaponProfile | None = None
 
 
 UNITS: MappingProxyType[UnitKind, UnitSpec] = MappingProxyType(
@@ -228,7 +230,7 @@ OMEN_WEATHER = frozenset({W.STORM, W.ECLIPSE_DARK, W.MAGIC_STORM, W.AURORA})
 TACTIC_COUNTERS: MappingProxyType[Tactic, frozenset[Tactic]] = MappingProxyType(
     {
         Tactic.HOLD_LINE: frozenset({Tactic.FRONTAL_ASSAULT, Tactic.WEDGE}),
-        Tactic.FRONTAL_ASSAULT: frozenset({Tactic.SKIRMISH_HARASS, Tactic.MISSILE_ATTRITION}),
+        Tactic.FRONTAL_ASSAULT: frozenset({Tactic.SKIRMISH_HARASS, Tactic.MISSILE_ATTRITION, Tactic.FEINT}),
         Tactic.DOUBLE_ENVELOPMENT: frozenset({Tactic.FRONTAL_ASSAULT, Tactic.WEDGE, Tactic.HOLD_LINE}),
         Tactic.FEIGNED_RETREAT: frozenset({Tactic.FRONTAL_ASSAULT, Tactic.WEDGE}),
         Tactic.FLANK_CAVALRY: frozenset({Tactic.HOLD_LINE, Tactic.MISSILE_ATTRITION, Tactic.SHIELD_WALL}),
@@ -240,6 +242,7 @@ TACTIC_COUNTERS: MappingProxyType[Tactic, frozenset[Tactic]] = MappingProxyType(
         Tactic.SKIRMISH_HARASS: frozenset({Tactic.HOLD_LINE, Tactic.SHIELD_WALL}),
         Tactic.RIVER_DEFENCE: frozenset({Tactic.FRONTAL_ASSAULT, Tactic.FLANK_CAVALRY}),
         Tactic.SIEGE_ASSAULT: frozenset({Tactic.HOLD_LINE}),
+        Tactic.FEINT: frozenset({Tactic.HOLD_LINE, Tactic.RIVER_DEFENCE}),
     }
 )
 TACTIC_TERRAIN: MappingProxyType[Tactic, frozenset[TerrainKind]] = MappingProxyType(
@@ -271,9 +274,9 @@ STYLE_TACTICS = MappingProxyType(
     {
         "shieldwall": (Tactic.SHIELD_WALL, Tactic.HOLD_LINE, Tactic.FRONTAL_ASSAULT),
         "horse_archer": (Tactic.FEIGNED_RETREAT, Tactic.SKIRMISH_HARASS, Tactic.FLANK_CAVALRY),
-        "skirmisher": (Tactic.SKIRMISH_HARASS, Tactic.AMBUSH, Tactic.MISSILE_ATTRITION),
+        "skirmisher": (Tactic.SKIRMISH_HARASS, Tactic.AMBUSH, Tactic.MISSILE_ATTRITION, Tactic.FEINT),
         "chariot": (Tactic.FLANK_CAVALRY, Tactic.FRONTAL_ASSAULT),
-        "phalanx": (Tactic.HOLD_LINE, Tactic.FRONTAL_ASSAULT, Tactic.DOUBLE_ENVELOPMENT),
+        "phalanx": (Tactic.HOLD_LINE, Tactic.FRONTAL_ASSAULT, Tactic.DOUBLE_ENVELOPMENT, Tactic.FEINT),
         "berserker": (Tactic.FRONTAL_ASSAULT, Tactic.WEDGE, Tactic.NIGHT_RAID),
         "naval_raider": (Tactic.NIGHT_RAID, Tactic.AMBUSH, Tactic.FRONTAL_ASSAULT),
         "siege_engineer": (Tactic.SIEGE_ASSAULT, Tactic.MISSILE_ATTRITION, Tactic.HOLD_LINE),
@@ -281,3 +284,7 @@ STYLE_TACTICS = MappingProxyType(
         "beast_war": (Tactic.WEDGE, Tactic.AMBUSH, Tactic.FLANK_CAVALRY),
     }
 )
+
+
+def weapon_of(spec: UnitSpec) -> WeaponProfile:
+    return spec.profile if spec.profile is not None else WEAPON_PROFILES[spec.kind]

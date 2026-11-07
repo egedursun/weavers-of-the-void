@@ -94,31 +94,31 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | G1R.4.25 | gap | Light-delay of news between worlds | §1R.4 | → F21 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.4.26 | gap | Rogue planets and wandering bodies | §1R.4 | → S10.9 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.4.27 | gap | Aurorae, eclipses, transits computed from geometry | §1R.4 | → S10.9 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.5.1 | gap | Organisation versus strength: units lose cohesion before they lose men | §1R.5 | → S5.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.5.2 | gap | Morale state ladder (steady, shaken, wavering, routing, broken, rallied) and suppression | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.5.3 | gap | Frontage and combat width set by terrain; formations and facing | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.5.4 | gap | Reserves, second lines, reinforcement during battle | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.5.5 | gap | Command and control: span of control, order delay, misunderstood orders, initiative | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.5.6 | gap | Spotting, line of sight, elevation, concealment | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.5.7 | gap | Ammunition per stack and resupply | §1R.5 | → S5.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.5.8 | gap | Fatigue and stamina within battle; forced marches | §1R.5 | → S5.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.5.1 | gap | Organisation versus strength: units lose cohesion before they lose men | §1R.5 | → S5.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.5.2 | gap | Morale state ladder (steady, shaken, wavering, routing, broken, rallied) and suppression | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.5.3 | gap | Frontage and combat width set by terrain; formations and facing | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.5.4 | gap | Reserves, second lines, reinforcement during battle | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.5.5 | gap | Command and control: span of control, order delay, misunderstood orders, initiative | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.5.6 | gap | Spotting, line of sight, elevation, concealment | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.5.7 | gap | Ammunition per stack and resupply | §1R.5 | → S5.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.5.8 | gap | Fatigue and stamina within battle; forced marches | §1R.5 | → S5.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.5.9 | gap | Supply limit per region (how many soldiers the land can feed) | §1R.5 | → S5.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.5.10 | gap | Zones of control, forts controlling movement, encirclement | §1R.5 | → S5.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.5.11 | gap | Entrenchment and field fortifications built over seasons | §1R.5 | → S5.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.5.12 | gap | Planning bonus for prepared attacks | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.5.12 | gap | Planning bonus for prepared attacks | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.5.13 | gap | Armour penetration versus armour value; hard and soft targets | §1R.5 | → F23, S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.5.14 | gap | Leader skills by area (fire, shock, manoeuvre, siege) and battle-earned traits | §1R.5 | → S5.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.5.15 | gap | Death of a general shocks morale; standards captured | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.5.16 | gap | Casualty classes: killed, wounded, captured, missing, deserted | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.5.17 | gap | Field surgeons and evacuation change wounded survival | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.5.16 | gap | Casualty classes: killed, wounded, captured, missing, deserted | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.5.17 | gap | Field surgeons and evacuation change wounded survival | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.5.18 | gap | Combat engineering: pontoons, roads, demolitions | §1R.5 | → S5.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.5.19 | gap | Discipline as a separate stat from experience | §1R.5 | → S5.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.5.20 | gap | Weapon range, rate of fire, accuracy | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.5.21 | gap | Deception: feints, false camps, misinformation | §1R.5 | → S5.3/RP2, F22 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.5.19 | gap | Discipline as a separate stat from experience | §1R.5 | → S5.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.5.20 | gap | Weapon range, rate of fire, accuracy | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.5.21 | gap | Deception: feints, false camps, misinformation | §1R.5 | → S5.3/RP2, F22 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.5.22 | gap | Siege phases with garrison, artillery breach, blockade by sea | §1R.5 | → S5.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.5.23 | gap | Naval: ship classes, weather gauge, boarding, naval supremacy for crossings, amphibious landing penalty | §1R.5 | → S5.5/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.5.24 | gap | Air superiority over regions (here: flying mounts and skyships) | §1R.5 | → S5.5/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.5.25 | gap | Equipment capture and battlefield salvage | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.5.25 | gap | Equipment capture and battlefield salvage | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.5.26 | gap | Production lines for war materiel with efficiency growth | §1R.5 | → S5.8/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.5.27 | gap | War support and home-front stability | §1R.5 | → S5.8/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.5.28 | gap | Peace conference where each demand costs war score | §1R.5 | → S5.8/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
@@ -126,8 +126,8 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | G1R.5.30 | gap | Coalitions against aggressive expansion | §1R.5 | → S4.6/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.5.31 | gap | Division templates (standard compositions) | §1R.5 | → S5.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.5.32 | gap | Directional blocking and couched charges in single combat; mounted momentum | §1R.5 | → S5.6/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.5.33 | gap | Terrain micro-features (ditches, walls, woods edges) | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.5.34 | gap | Time of day and night fighting | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.5.33 | gap | Terrain micro-features (ditches, walls, woods edges) | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.5.34 | gap | Time of day and night fighting | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.5.35 | gap | Psychological warfare: terror, propaganda, atrocity backlash | §1R.5 | → S5.8/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.6.1 | gap | Alternative production methods for the same good | §1R.6 | → F24 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.6.2 | gap | Wages per job and standard of living per class | §1R.6 | → S4.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
@@ -486,7 +486,7 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | S5.1/RP6 | reference-pass | S-J | §5.1 reference pass 6 | — | — | — | — | — | — | — | — | planned |
 | S5.2 | section | Terrain, weather and season in battle | §5.2 | engine/military/{tables,rule_tables}.py, environment/battleground.py | campaigns | war:battle_at, tactic | BattleDepth | military context | war.battle.* | defaults equal old values | tests/engine/warfare/test_battle_depth.py | done |
 | S5.3 | section | Battle resolution (phased) | §5.3 | engine/military/{battle,clash,aftermath}.py | campaigns | war:battle_at, army tactic | BattleDepth, battle timeline | military context | war.battle.* | n/a | tests/engine/warfare/test_battle_depth.py | done |
-| S5.3/RP2 | reference-pass | R3 | §5.3 reference pass 2 | — | — | — | — | — | — | — | — | planned |
+| S5.3/RP2 | reference-pass | R3 | §5.3 reference pass 2 | domain/enums/military.py (MoraleState, Formation, CasualtyClass, TargetClass, Tactic.FEINT, BattlePhase COMMAND, RESERVES and SALVAGE); catalog/battle_depth.py (weapon profiles, base discipline, formations, terrain widths); rules battle_depth; army_units organisation, discipline, ammunition, morale_state, formation and missing; unit_designs reach, volleys, accuracy and piercing; battles width, reserves_committed, command_collapsed_entity_id, planned_entity_id, trap_entity_id, feint and salvaged; battle_stacks killed, walking, stretcher, captured, missing, deserted, reserve, organisation, ammunition_spent, formation, morale_state and target_class; engine/military/battle.py, clash.py, aftermath.py, logistics.py | battles: only the stacks within the battlefield's width (from terrain, narrowed by fog) fight; the rest wait in reserve and enter as the front breaks or when a skilled commander commits them; a feint can pin the defender's reserves; each stack keeps organisation, lost to casualties and shock and spared by discipline, and routs when it has none; morale runs steady, shaken, wavering, routing and broken, with leadership, a standard and priests rallying routed stacks; heavy volleys pin stacks so they cannot charge; formations change what a stack deals and takes (squares turn charges, loose order shrugs volleys, wedges strike harder); a commander directs as many stacks as tactics skill allows, halved at night, and the rest act late, misread orders across a language barrier or charge on a bold officer's initiative; a commander struck down takes harm and the side loses its orders; cover, night and fog hide stacks from scouts and height and hidden stacks spring as a trap; an attacker in contact for a season with a confident belief about the enemy plans its first phases; a deceitful commander's planted deserters blind the enemy; weapons carry reach, volleys, accuracy and piercing; volleys run out and are restocked from the baggage; hard targets shrug off what cannot pierce; losses split into killed, walking and stretcher wounded, captured, stragglers who rejoin next season and deserters from broken stacks, with surgeons and medicine saving stretcher cases; the victor salvages arms, mending its gear and lifting its worst-armed stack, and takes routed siege engines; organisation recovers with rest and supply and forced marches cost it | army:edit_stack (organisation, discipline, ammunition, stragglers, formation, morale state, held and released), army:edit (seasons in contact), record_row levers for unit designs; son tool design_unit with reach, volleys, accuracy and piercing | ArmyPanel stack cards (organisation and discipline bars, morale, formation and target tags, volleys, stragglers, weapon profile) and stack editor with releases; WarRoom battle card field marks; BattleDepth stacks with casualty classes, reserve, formation, morale, target class and volleys loosed | army sheets give organisation, shaken stacks, volleys and stragglers; the last battle line gives its field | phases COMMAND, RESERVES, SALVAGE | migration ebc535139834: stacks get the discipline, formation and volleys of their kind | tests/engine/warfare/test_battle_depth_rp2.py; tests/engine/warfare/test_battle_depth.py; tests/engine/warfare/test_campaign_seasons.py | done |
 | S5.3/RP4 | reference-pass | R32 | §5.3 reference pass 4 | — | — | — | — | — | — | — | — | planned |
 | S5.4 | section | Sieges (multi-season) | §5.4 | engine/military/{siege,siege_depth}.py | campaigns | siege:start, siege edits | WarOrders, siege works cards | military context; lay_siege | war.sack.*, war.siege.relieved | wall material on open | tests/engine/warfare/* | done |
 | S5.4/RP2 | reference-pass | R3 | §5.4 reference pass 2 | — | — | — | — | — | — | — | — | planned |

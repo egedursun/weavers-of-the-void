@@ -3,6 +3,7 @@ from collections.abc import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.battle_depth import BASE_DISCIPLINE, WeaponProfile, formation_for
 from aerona.catalog.techniques import UNIT_TECHNIQUES
 from aerona.catalog.units import FAMILY_WEAPONS, KIND_WEAPONS, STYLE_UNITS, UNITS, UnitSpec
 from aerona.constants.units import PERCENT
@@ -16,7 +17,7 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialSlot
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.environment import CoastKind, ScarKind
-from aerona.domain.enums.military import ArmourType, ShieldType, Stance, UnitKind
+from aerona.domain.enums.military import ArmourType, MoraleState, ShieldType, Stance, UnitKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -202,6 +203,17 @@ async def profile_of(ctx: TickContext, army: EntityRow, owner: EntityRow | None)
     return profile
 
 
+def drill_fields(rules: Rules, spec: UnitSpec) -> dict[str, object]:
+    return {
+        "organisation": PERCENT,
+        "discipline": BASE_DISCIPLINE[spec.kind],
+        "ammunition": rules.battle_depth.volleys_carried if spec.missile > 0 else 0,
+        "formation": formation_for(spec.kind, spec.family),
+        "morale_state": MoraleState.STEADY,
+        "missing": 0,
+    }
+
+
 def design_spec(row: UnitDesignRow) -> UnitSpec:
     base = UNITS[row.base_kind]
     return UnitSpec(
@@ -224,6 +236,7 @@ def design_spec(row: UnitDesignRow) -> UnitSpec:
         terror=row.terror,
         terrain=dict(base.terrain),
         flying=row.flying,
+        profile=WeaponProfile(row.reach, row.volleys, row.accuracy, row.piercing),
     )
 
 
@@ -302,6 +315,7 @@ async def muster(ctx: TickContext, army: EntityRow, owner: EntityRow | None, kno
             origin_entity_id=owner.id,
             design_id=design.id if design is not None else None,
             locked=[],
+            **drill_fields(ctx.rules, spec),
         )
         ctx.session.add(row)
         rows.append(row)

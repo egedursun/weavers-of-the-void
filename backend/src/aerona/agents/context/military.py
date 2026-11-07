@@ -6,8 +6,9 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, FeudRow, MercenaryContractRow, SpyNetworkRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, SiegeRow, WarRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.military import ContractStatus, FeudStatus, VesselStatus
+from aerona.domain.enums.military import ContractStatus, FeudStatus, MoraleState, VesselStatus
 from aerona.domain.enums.war import SiegeStatus
+from aerona.engine.military.records import battle_field
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import stat
 
@@ -33,8 +34,26 @@ async def army_sheet(session: AsyncSession, army_id: int) -> str:
     tail = "; sworn for pay" if hired is not None else ""
     return (
         f"{army.name}: {stat(army, 'size') or 0} soldiers ({makeup}), morale {stat(army, 'morale') or 0}, cohesion {profile.cohesion}, "
-        f"{profile.supply_days} days of food, stance {words(profile.stance.value)}{tail}"
+        f"{profile.supply_days} days of food, stance {words(profile.stance.value)}{order_line(stacks)}{tail}"
     )
+
+
+def order_line(stacks: list[ArmyUnitRow]) -> str:
+    soldiers = sum(row.count for row in stacks)
+    if soldiers <= 0:
+        return ""
+    organisation = round(sum(row.organisation * row.count for row in stacks) / soldiers)
+    shaken = sorted({words(row.morale_state.value) for row in stacks if row.morale_state is not MoraleState.STEADY})
+    volleys = sum(row.ammunition for row in stacks if row.ammunition > 0)
+    missing = sum(row.missing for row in stacks)
+    parts = [f"organisation {organisation}"]
+    if shaken:
+        parts.append(f"some stacks {', '.join(shaken)}")
+    if volleys:
+        parts.append(f"{volleys} volleys in hand")
+    if missing:
+        parts.append(f"{missing} stragglers")
+    return ", " + ", ".join(parts)
 
 
 async def war_sheet(session: AsyncSession, war: WarRow, side_id: int) -> list[str]:
@@ -60,8 +79,14 @@ async def war_sheet(session: AsyncSession, war: WarRow, side_id: int) -> list[st
         outcome = words(last.outcome_class.value) if last.outcome_class else words(last.outcome.value)
         plan = f"; {tactics}" if tactics else ""
         name = winner.name if winner else "one side"
-        lines.append(f"last battle: {name} won ({outcome}{plan}), losses {last.winner_losses}/{last.loser_losses}")
+        field = battle_field(last, {row.id: row.name for row in await field_names(session, last)})
+        lines.append(f"last battle: {name} won ({outcome}{plan}), losses {last.winner_losses}/{last.loser_losses}{'; ' + field if field else ''}")
     return lines
+
+
+async def field_names(session: AsyncSession, battle: BattleRow) -> list[EntityRow]:
+    ids = [item for item in (battle.planned_entity_id, battle.trap_entity_id, battle.command_collapsed_entity_id) if item is not None]
+    return list(await session.scalars(select(EntityRow).where(EntityRow.id.in_(ids)))) if ids else []
 
 
 async def intrigue_sheet(session: AsyncSession, community_id: int) -> list[str]:

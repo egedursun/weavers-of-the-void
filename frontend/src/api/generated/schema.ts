@@ -19465,6 +19465,7 @@ export interface components {
                         entrenchment: number;
                         forced_march: boolean;
                         baggage: number;
+                        contact_seasons: number;
                         locked: string[];
                         stacks: components["schemas"]["StackView"][];
                         movements: components["schemas"]["MovementView"][];
@@ -19491,6 +19492,7 @@ export interface components {
                         values?: {
                 [key: string]: number | string | boolean | null;
             };
+                        release?: string[];
         };
                 ArmyOption: {
                         id: number;
@@ -19774,6 +19776,13 @@ export interface components {
             };
                         winner_losses: number;
                         loser_losses: number;
+                        width: number;
+                        reserves_committed: number;
+            command_collapsed: components["schemas"]["NodeRef"] | null;
+            planned_by: components["schemas"]["NodeRef"] | null;
+            trap_by: components["schemas"]["NodeRef"] | null;
+                        feint: boolean;
+                        salvaged: number;
                         phases: components["schemas"]["BattlePhaseView"][];
         };
                 BattleStackView: {
@@ -19785,6 +19794,18 @@ export interface components {
                         lost: number;
                         wounded: number;
                         routed: boolean;
+                        killed: number;
+                        walking: number;
+                        stretcher: number;
+                        captured: number;
+                        missing: number;
+                        deserted: number;
+                        reserve: boolean;
+                        organisation: number;
+                        ammunition_spent: number;
+            formation: components["schemas"]["Formation"] | null;
+            morale_state: components["schemas"]["MoraleState"] | null;
+            target_class: components["schemas"]["TargetClass"] | null;
         };
                 BattleView: {
                         id: number;
@@ -23638,6 +23659,7 @@ export interface components {
                         name: string;
                         share: number;
         };
+                Formation: "line" | "column" | "wedge" | "square" | "loose" | "shieldwall";
                 FormativeView: {
                         id: number;
                         label: string;
@@ -26702,6 +26724,7 @@ export interface components {
                         loneliness: number;
             label: components["schemas"]["CreatorMoodLabel"];
         };
+                MoraleState: "steady" | "shaken" | "wavering" | "routing" | "broken" | "rallied";
                 MortalAbilityInput: {
                         mortal_id: number;
             ability: components["schemas"]["Ability"];
@@ -31092,6 +31115,20 @@ export interface components {
                         fatigue: number;
                         wounded: number;
                         condition: number;
+                        organisation: number;
+                        discipline: number;
+                        ammunition: number;
+                        missing: number;
+            morale_state: components["schemas"]["MoraleState"];
+                        morale_label: string;
+            formation: components["schemas"]["Formation"];
+                        formation_label: string;
+            target_class: components["schemas"]["TargetClass"];
+                        reach: number;
+                        volleys: number;
+                        accuracy: number;
+                        piercing: number;
+                        locked: string[];
         };
                 StaffScale: "none" | "few" | "some" | "many";
                 StageView: {
@@ -31516,7 +31553,8 @@ export interface components {
             payload: components["schemas"]["TextPayload"];
                         at: string;
         };
-                Tactic: "hold_line" | "frontal_assault" | "double_envelopment" | "feigned_retreat" | "flank_cavalry" | "missile_attrition" | "shield_wall" | "wedge" | "night_raid" | "ambush" | "skirmish_harass" | "river_defence" | "siege_assault";
+                Tactic: "hold_line" | "frontal_assault" | "double_envelopment" | "feigned_retreat" | "flank_cavalry" | "missile_attrition" | "shield_wall" | "wedge" | "night_raid" | "ambush" | "skirmish_harass" | "river_defence" | "siege_assault" | "feint";
+                TargetClass: "soft" | "hard";
                 TargetKind: "entity" | "foreign_god";
                 TaskInfo: {
             task: components["schemas"]["MaintenanceTask"];
@@ -69827,6 +69865,7 @@ export const foodLinkValues: ReadonlyArray<FlattenedDeepRequired<components>["sc
 export const foreignGodDeepenedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodDeepenedEvent"]["kind"]> = ["foreign_god.deepened"];
 export const foreignGodPowerEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodPowerEffect"]> = ["shield", "caller", "thief", "destroyer", "fertile", "reviving", "deathless", "sharp_tongued"];
 export const foreignGodStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodStatus"]> = ["awake", "asleep", "defeated", "dead"];
+export const formationValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Formation"]> = ["line", "column", "wedge", "square", "loose", "shieldwall"];
 export const funeralCustomValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FuneralCustom"]> = ["burial", "cremation", "sky_burial", "sea_burial", "entombment", "ancestor_shrine", "endocannibalism", "reanimation", "soul_binding"];
 export const funeralRiteValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FuneralRite"]> = ["burial", "burning", "exposure", "nameless", "none"];
 export const genesisFinishedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GenesisFinishedEvent"]["kind"]> = ["genesis.finished"];
@@ -69955,6 +69994,7 @@ export const mobilityEventValues: ReadonlyArray<FlattenedDeepRequired<components
 export const modifierOpValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ModifierOp"]> = ["add", "multiply"];
 export const modifierSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ModifierSource"]> = ["injury", "condition", "trait", "law", "tradition", "artwork", "doctrine", "treaty", "structure", "wonder", "terrain", "weather", "season", "natural_law", "god_power", "blessing", "perk", "curse", "dominion", "phenomenon", "god_death", "player", "suppression", "pin"];
 export const moodStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MoodState"]> = ["elated", "content", "fine", "uneasy", "unhappy", "miserable", "broken"];
+export const moraleStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MoraleState"]> = ["steady", "shaken", "wavering", "routing", "broken", "rallied"];
 export const mortalRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalRole"]> = ["ruler", "hero", "warrior", "knight", "hunter", "chosen", "seer", "priest", "sage", "healer", "artisan", "merchant", "scribe", "farmer", "explorer", "captain", "bandit", "saint", "apprentice", "commoner"];
 export const mortalSexValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalSex"]> = ["female", "male", "other"];
 export const mortalStatsKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["MortalStats"]["kind"]> = ["mortal"];
@@ -70111,7 +70151,8 @@ export const summarySectionValues: ReadonlyArray<FlattenedDeepRequired<component
 export const summonFormValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SummonForm"]> = ["spirit", "beast", "undead"];
 export const systemErrorEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SystemErrorEvent"]["kind"]> = ["system.error"];
 export const systemNoteEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SystemNoteEvent"]["kind"]> = ["system.note"];
-export const tacticValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Tactic"]> = ["hold_line", "frontal_assault", "double_envelopment", "feigned_retreat", "flank_cavalry", "missile_attrition", "shield_wall", "wedge", "night_raid", "ambush", "skirmish_harass", "river_defence", "siege_assault"];
+export const tacticValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Tactic"]> = ["hold_line", "frontal_assault", "double_envelopment", "feigned_retreat", "flank_cavalry", "missile_attrition", "shield_wall", "wedge", "night_raid", "ambush", "skirmish_harass", "river_defence", "siege_assault", "feint"];
+export const targetClassValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TargetClass"]> = ["soft", "hard"];
 export const targetKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TargetKind"]> = ["entity", "foreign_god"];
 export const taxKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TaxKind"]> = ["land", "poll", "trade", "consumption", "tithe"];
 export const techniqueValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Technique"]> = ["phalanx_drill", "horse_archery", "siegecraft", "fortification", "logistics", "herbalism", "surgery", "amputation", "prosthetics", "quarantine", "inoculation", "irrigation", "crop_rotation", "terracing", "plough", "selective_breeding", "bronze", "iron", "steel", "skysteel", "arch", "dome", "aqueduct", "fortress", "alphabet", "paper", "printing", "cryptography", "calendar", "navigation_stars", "eclipse_prediction", "sailing", "shipwrighting", "coinage", "banking", "warding", "summoning", "sky_sailing", "necromancy", "alchemy", "astronomy_instruments"];

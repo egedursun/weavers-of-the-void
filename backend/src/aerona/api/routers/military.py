@@ -25,7 +25,8 @@ from aerona.api.schemas.military import (
 )
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
-from aerona.catalog.units import UNITS
+from aerona.catalog.battle_depth import FORMATIONS, MORALE_LABELS
+from aerona.catalog.units import UNITS, weapon_of
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import (
@@ -43,7 +44,9 @@ from aerona.db.tables.military import (
 from aerona.db.tables.warfare import ArmyRow, BattleRow, SiegeRow, WarSideRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.military import CommanderTrait, Stance
+from aerona.engine.military.battle import class_of
 from aerona.engine.primitives.stats import stat
+from aerona.rules.registry import Rules
 
 router = APIRouter(tags=["military"])
 Id = Annotated[int, Path(ge=1)]
@@ -60,7 +63,7 @@ async def traits_of(session: AsyncSession, mortal_id: int | None) -> list[Comman
     return sorted(await session.scalars(select(CommanderTraitRow.trait).where(CommanderTraitRow.mortal_entity_id == mortal_id)))
 
 
-async def army_cards(session: AsyncSession, rows: list[ArmyRow]) -> list[ArmyCard]:
+async def army_cards(session: AsyncSession, rows: list[ArmyRow], rules: Rules) -> list[ArmyCard]:
     ids = [row.entity_id for row in rows]
     if not ids:
         return []
@@ -100,8 +103,9 @@ async def army_cards(session: AsyncSession, rows: list[ArmyRow]) -> list[ArmyCar
                 entrenchment=profile.entrenchment or 0,
                 forced_march=bool(profile.forced_march),
                 baggage=profile.baggage or 0,
+                contact_seasons=profile.contact_seasons or 0,
                 locked=list(profile.locked or []),
-                stacks=[stack_view(stack) for stack in stacks if stack.army_entity_id == row.entity_id],
+                stacks=[stack_view(stack, rules) for stack in stacks if stack.army_entity_id == row.entity_id],
                 movements=[movement_view(move, refs) for move in moves if move.army_entity_id == row.entity_id],
                 commander_traits=await traits_of(session, row.commander_entity_id),
             )
@@ -109,8 +113,9 @@ async def army_cards(session: AsyncSession, rows: list[ArmyRow]) -> list[ArmyCar
     return cards
 
 
-def stack_view(row: ArmyUnitRow) -> StackView:
+def stack_view(row: ArmyUnitRow, rules: Rules) -> StackView:
     spec = UNITS[row.kind]
+    weapon = weapon_of(spec)
     return StackView(
         id=row.id,
         kind=row.kind,
@@ -127,6 +132,20 @@ def stack_view(row: ArmyUnitRow) -> StackView:
         fatigue=row.fatigue,
         wounded=row.wounded,
         condition=row.condition,
+        organisation=row.organisation,
+        discipline=row.discipline,
+        ammunition=row.ammunition,
+        missing=row.missing,
+        morale_state=row.morale_state,
+        morale_label=MORALE_LABELS[row.morale_state],
+        formation=row.formation,
+        formation_label=FORMATIONS[row.formation].label,
+        target_class=class_of(rules, spec, row),
+        reach=weapon.reach,
+        volleys=weapon.volleys,
+        accuracy=weapon.accuracy,
+        piercing=weapon.piercing,
+        locked=list(row.locked or []),
     )
 
 
@@ -145,7 +164,20 @@ def movement_view(row: ArmyMovementRow, refs: Refs) -> MovementView:
 
 async def battle_reports(session: AsyncSession, rows: list[BattleRow]) -> list[BattleReportView]:
     phases = list(await session.scalars(select(BattlePhaseRow).where(BattlePhaseRow.battle_id.in_([row.id for row in rows])).order_by(BattlePhaseRow.position)))
-    linked = [item for row in rows for item in (row.record_entity_id, row.place_entity_id, row.winner_entity_id, row.loser_entity_id) if item]
+    linked = [
+        item
+        for row in rows
+        for item in (
+            row.record_entity_id,
+            row.place_entity_id,
+            row.winner_entity_id,
+            row.loser_entity_id,
+            row.command_collapsed_entity_id,
+            row.planned_entity_id,
+            row.trap_entity_id,
+        )
+        if item
+    ]
     refs = await node_refs(session, linked)
     return [
         BattleReportView(
@@ -171,6 +203,13 @@ async def battle_reports(session: AsyncSession, rows: list[BattleRow]) -> list[B
             casualties_by_kind=dict(row.casualties_by_kind or {}),
             winner_losses=row.winner_losses,
             loser_losses=row.loser_losses,
+            width=row.width,
+            reserves_committed=row.reserves_committed,
+            command_collapsed=ref(refs, row.command_collapsed_entity_id),
+            planned_by=ref(refs, row.planned_entity_id),
+            trap_by=ref(refs, row.trap_entity_id),
+            feint=row.feint,
+            salvaged=row.salvaged,
             phases=[
                 BattlePhaseView(
                     position=phase.position,
@@ -320,7 +359,7 @@ async def war_room(services: ServicesDep, war_id: Id) -> WarRoomView:
             war=(await summaries(session, [war]))[0],
             weariness=[SideWeariness(entity=ref(refs, row.entity_id), side=row.side, weariness=row.weariness) for row in sides],
             aims=[aim_view(row, refs) for row in aims],
-            armies=await army_cards(session, armies),
+            armies=await army_cards(session, armies, services.rules.current),
             sieges=[siege_view(row, refs) for row in sieges],
             fronts=[front_view(row, refs) for row in fronts],
             occupations=[occupation_view(row, refs) for row in occupations],
@@ -344,7 +383,7 @@ async def army_card(services: ServicesDep, entity_id: Id) -> ArmyCard:
         row = await session.get(ArmyRow, entity_id)
         if row is None:
             raise NotFoundError("No such army.")
-        return (await army_cards(session, [row]))[0]
+        return (await army_cards(session, [row], services.rules.current))[0]
 
 
 @router.get("/entities/{entity_id}/military", response_model=MilitaryOverview)
@@ -372,7 +411,7 @@ async def military_overview(services: ServicesDep, entity_id: Id) -> MilitaryOve
             ],
         )
         return MilitaryOverview(
-            armies=await army_cards(session, armies),
+            armies=await army_cards(session, armies, services.rules.current),
             captives_held=[cohort_view(row, refs) for row in cohorts if row.captor_entity_id == entity_id],
             captives_lost=[cohort_view(row, refs) for row in cohorts if row.origin_entity_id == entity_id],
             networks=[network_view(row, refs) for row in networks if row.owner_entity_id == entity_id],

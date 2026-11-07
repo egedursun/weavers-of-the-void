@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
+from aerona.catalog.battle_depth import BASE_DISCIPLINE, FORMATIONS, TERRAIN_WIDTH, VOLLEYS_CARRIED, FormationSpec, WeaponProfile, formation_for
 from aerona.catalog.materials import MATERIALS
 from aerona.catalog.units import (
     AMBUSH_TERRAIN,
@@ -13,6 +14,7 @@ from aerona.catalog.units import (
     UNITS,
     WEAPON_EDGE,
     UnitSpec,
+    weapon_of,
 )
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
@@ -20,7 +22,18 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
 from aerona.domain.enums.environment import PlaceCover, TerrainKind, WeatherKind
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.military import ArmourType, BattlePhase, CommanderTrait, OutcomeClass, Tactic, UnitFamily, UnitKind
+from aerona.domain.enums.military import (
+    ArmourType,
+    BattlePhase,
+    CommanderTrait,
+    Formation,
+    MoraleState,
+    OutcomeClass,
+    Tactic,
+    TargetClass,
+    UnitFamily,
+    UnitKind,
+)
 from aerona.domain.enums.mortal import HarshnessScale
 from aerona.engine.economy.materials import MaterialProps, from_spec
 from aerona.engine.environment.battleground import cover_missile_pct
@@ -61,6 +74,14 @@ TRAIT_TACTICS: dict[CommanderTrait, tuple[Tactic, ...]] = {
 Streams = Callable[[str], SeededRandom]
 
 
+def armour_value(spec: UnitSpec, row: ArmyUnitRow) -> int:
+    return spec.defence + ARMOUR_DEFENCE[row.armour] + SHIELD_DEFENCE[row.shield] + (HELMET if row.helmet else 0)
+
+
+def class_of(rules: Rules, spec: UnitSpec, row: ArmyUnitRow) -> TargetClass:
+    return TargetClass.HARD if armour_value(spec, row) >= rules.battle_depth.hard_defence else TargetClass.SOFT
+
+
 @dataclass
 class Stack:
     row: ArmyUnitRow
@@ -70,14 +91,39 @@ class Stack:
     lost: int = 0
     hardness: int = NORMAL
     raised: bool = False
+    reserve: bool = False
+    suppressed: bool = False
+    delayed: bool = False
+    misread: bool = False
+    initiative: bool = False
+    hidden: bool = False
+    spent: int = 0
+    killed: int = 0
+    walking: int = 0
+    stretcher: int = 0
+    captured: int = 0
+    missing: int = 0
+    deserted: int = 0
 
     @property
     def alive(self) -> bool:
         return self.row.count > 0 and not self.routed
 
     @property
+    def engaged(self) -> bool:
+        return self.alive and not self.reserve
+
+    @property
+    def weapon(self) -> WeaponProfile:
+        return weapon_of(self.spec)
+
+    @property
+    def formation(self) -> FormationSpec:
+        return FORMATIONS[self.row.formation]
+
+    @property
     def armour(self) -> int:
-        return self.spec.defence + ARMOUR_DEFENCE[self.row.armour] + SHIELD_DEFENCE[self.row.shield] + (HELMET if self.row.helmet else 0)
+        return armour_value(self.spec, self.row)
 
     @property
     def flying(self) -> bool:
@@ -117,6 +163,21 @@ class Side:
     terror_dealt: int = 0
     medicine: int = 0
     priests_healing: bool = True
+    width: int = 0
+    reserves_committed: int = 0
+    span: int = 0
+    commander_struck: bool = False
+    planned: bool = False
+    trap: bool = False
+    feint_pinned: bool = False
+    deceiver: bool = False
+    standard: bool = False
+    babel: int = 0
+    wits: int = NORMAL
+    initiative_officers: int = 0
+    salvaged: int = 0
+    concealment: int = 0
+    detection: int = 0
 
     @property
     def start(self) -> int:
@@ -157,6 +218,10 @@ class BattleResult:
     maimed: dict[int, int]
     by_kind: dict[str, int]
     factors: dict[str, float] = field(default_factory=dict)
+    planned_by: int | None = None
+    trapped_by: int | None = None
+    feint: bool = False
+    collapsed: int | None = None
 
 
 @dataclass(frozen=True)
@@ -168,6 +233,117 @@ class Field:
     bridge: bool = False
     ford: bool = False
     cover: PlaceCover | None = None
+
+
+MELEE_FIRST = (F.INFANTRY, F.EXOTIC, F.BEAST, F.MOUNTED, F.NAVAL, F.ENGINEER, F.MAGIC, F.MISSILE)
+
+
+def target_class(rules: Rules, stack: Stack) -> TargetClass:
+    return class_of(rules, stack.spec, stack.row)
+
+
+def morale_state(rules: Rules, stack: Stack) -> MoraleState:
+    table = rules.battle_depth
+    morale = stack.row.morale
+    if stack.routed:
+        return MoraleState.BROKEN if morale < table.broken_below else MoraleState.ROUTING
+    if stack.row.morale_state is MoraleState.RALLIED and morale >= rules.morale.rout_morale:
+        return MoraleState.RALLIED
+    if morale < rules.morale.rout_morale:
+        return MoraleState.ROUTING
+    if morale < table.wavering_below:
+        return MoraleState.WAVERING
+    if morale < table.shaken_below:
+        return MoraleState.SHAKEN
+    return MoraleState.STEADY
+
+
+def settle(rules: Rules, stack: Stack) -> MoraleState:
+    if stack.row.count > 0 and stack.row.morale < rules.morale.rout_morale:
+        stack.routed = True
+    stack.row.morale_state = morale_state(rules, stack)
+    return stack.row.morale_state
+
+
+def state_factor(rules: Rules, stack: Stack) -> float:
+    table = rules.battle_depth
+    state = stack.row.morale_state
+    if state is MoraleState.SHAKEN:
+        return table.shaken_pct / PERCENT
+    if state is MoraleState.WAVERING:
+        return table.wavering_pct / PERCENT
+    return 1.0
+
+
+def organisation_factor(stack: Stack) -> float:
+    return 0.4 + 0.6 * stack.row.organisation / PERCENT
+
+
+def disorganise(rules: Rules, stack: Stack, amount: float) -> None:
+    table = rules.battle_depth
+    guard = 1 - stack.row.discipline / PERCENT * table.discipline_guard_pct / PERCENT
+    loss = amount * guard * stack.formation.organisation_loss_pct / PERCENT
+    stack.row.organisation = max(0, round(stack.row.organisation - loss))
+    if stack.row.count > 0 and stack.row.organisation <= table.disorganised_at:
+        stack.routed = True
+        stack.row.morale_state = MoraleState.ROUTING
+
+
+def order_factor(rules: Rules, stack: Stack) -> float:
+    table = rules.battle_depth
+    if stack.initiative:
+        return table.initiative_strength_pct / PERCENT
+    if stack.misread:
+        return table.misread_strength_pct / PERCENT
+    if stack.delayed:
+        return table.delayed_pct / PERCENT
+    return 1.0
+
+
+def piercing_of(attackers: list[Stack]) -> float:
+    armed = [stack for stack in attackers if stack.alive]
+    total = sum(stack.row.count for stack in armed)
+    return sum(stack.row.count * stack.weapon.piercing for stack in armed) / total if total else 0.0
+
+
+def hard_guard(rules: Rules, target: Stack, attackers: list[Stack] | None) -> float:
+    if target_class(rules, target) is TargetClass.SOFT:
+        return 1.0
+    pierce = piercing_of(attackers) / PERCENT if attackers else 0.0
+    return 1 - rules.battle_depth.hard_guard_pct / PERCENT * (1 - pierce)
+
+
+def battle_width(rules: Rules, ground: Field, fog: bool) -> int:
+    width = TERRAIN_WIDTH[ground.terrain or TerrainKind.PLAIN] * rules.battle_depth.width_scale
+    return round(width * (rules.battle_depth.fog_width_pct / PERCENT if fog or ground.weather is WeatherKind.FOG else 1.0))
+
+
+def deploy(rules: Rules, side: Side, ground: Field) -> None:
+    side.width = battle_width(rules, ground, side.fog)
+    filled = 0
+    order = sorted(side.stacks, key=lambda stack: (stack.hidden, MELEE_FIRST.index(stack.spec.family), -stack.row.count, stack.row.id))
+    for stack in order:
+        if not stack.alive:
+            continue
+        stack.reserve = stack.hidden or filled >= side.width
+        if not stack.reserve:
+            filled += stack.row.count
+
+
+def front_room(side: Side) -> int:
+    return side.width - sum(stack.row.count for stack in side.stacks if stack.engaged)
+
+
+def refill(side: Side, *, everyone: bool = False) -> int:
+    committed = 0
+    waiting = sorted((stack for stack in side.stacks if stack.alive and stack.reserve and not stack.hidden), key=lambda stack: (-stack.row.count, stack.row.id))
+    for stack in waiting:
+        if not everyone and front_room(side) <= 0:
+            break
+        stack.reserve = False
+        committed += stack.row.count
+    side.reserves_committed += committed
+    return committed
 
 
 def weather_now(side: Side, enemy: Side, ground: Field) -> WeatherKind | None:
@@ -252,6 +428,10 @@ def modifier(rules: Rules, stack: Stack, side: Side, ground: Field, enemy: Side 
         * side.surprise
         * side.luck
         * learned
+        * organisation_factor(stack)
+        * state_factor(rules, stack)
+        * order_factor(rules, stack)
+        * (1 + rules.battle_depth.planning_pct / PERCENT if side.planned else 1.0)
     )
 
 
@@ -354,20 +534,33 @@ def penetration(rules: Rules, attackers: list[Stack], target: Stack) -> float:
     return min(1.0, weighted / total) * rules.battle_magic.weapon_vs_armour_pct / PERCENT if total else 0.0
 
 
-def deal(targets: list[Stack], damage: float, rules: Rules, *, attackers: list[Stack] | None = None) -> int:
-    alive = [stack for stack in targets if stack.alive]
+def taken_pct(stack: Stack, mode: str) -> float:
+    spec = stack.formation
+    if mode == "missile":
+        return spec.missile_taken_pct / PERCENT
+    if mode == "charge":
+        return spec.charge_taken_pct / PERCENT
+    return PERCENT / max(1, spec.defence_pct)
+
+
+def deal(targets: list[Stack], damage: float, rules: Rules, *, attackers: list[Stack] | None = None, mode: str = "melee") -> int:
+    alive = [stack for stack in targets if stack.engaged] or [stack for stack in targets if stack.alive]
     total = sum(stack.row.count for stack in alive)
     if total <= 0 or damage <= 0:
         return 0
     killed = 0
+    harsh = harshness(rules, HarshnessScale.BATTLE_LOSS)
     for stack in alive:
         share = stack.row.count / total
         armour = stack.armour * (1 - penetration(rules, attackers, stack) if attackers else 1)
-        harsh = harshness(rules, HarshnessScale.BATTLE_LOSS)
-        losses = min(stack.row.count, int(damage * share * rules.tactics.loss_scale_pct / PERCENT * NORMAL / max(10, armour) * harsh))
+        dealt = damage * share * taken_pct(stack, mode) * hard_guard(rules, stack, attackers)
+        before = stack.row.count
+        losses = min(stack.row.count, int(dealt * rules.tactics.loss_scale_pct / PERCENT * NORMAL / max(10, armour) * harsh))
         stack.row.count -= losses
         stack.lost += losses
         killed += losses
+        if losses and before:
+            disorganise(rules, stack, losses / max(1, stack.start) * rules.battle_depth.organisation_loss_pct)
     return killed
 
 
@@ -375,29 +568,73 @@ def resist(rules: Rules, side: Side, shock: float) -> float:
     return shock * max(0.0, 1 - side.willpower / PERCENT * rules.battle_magic.willpower_pct / PERCENT)
 
 
-def shaken(rules: Rules, side: Side) -> None:
+def shaken(rules: Rules, side: Side, streams: Streams | None = None, *, phase: str = "check") -> None:
     routs = 0
     for stack in side.stacks:
         if not stack.alive or stack.start <= 0:
             continue
         share = stack.lost / stack.start
         stack.row.morale = max(0, round(stack.row.morale - share * PERCENT * 0.8))
-        if stack.row.morale < rules.morale.rout_morale:
-            stack.routed = True
+        if settle(rules, stack) is MoraleState.ROUTING:
             routs += 1
     if routs:
         for stack in side.stacks:
             if stack.alive:
                 stack.row.morale = max(0, stack.row.morale - round(resist(rules, side, rules.morale.rout_contagion * routs)))
-                if stack.row.morale < rules.morale.rout_morale:
-                    stack.routed = True
+                settle(rules, stack)
+    if streams is not None:
+        rally(rules, streams, side, phase)
+    for stack in side.stacks:
+        if stack.routed:
+            settle(rules, stack)
 
 
-def missiles(rules: Rules, streams: Streams, shooter: Side, target: Side, ground: Field, *, families: frozenset[UnitFamily]) -> int:
+def rally(rules: Rules, streams: Streams, side: Side, phase: str) -> int:
+    table = rules.battle_depth
+    lift = min(1.0, side.leadership / PERCENT + (0.25 if side.standard else 0.0) + (0.25 if side.count_of(UnitKind.PRIESTS) else 0.0))
+    rallied = 0
+    for stack in side.stacks:
+        if not stack.routed or stack.row.count <= 0 or stack.row.morale_state is MoraleState.BROKEN or stack.row.organisation <= table.disorganised_at:
+            continue
+        if streams(f"rally.{phase}.{stack.row.id}").chance(table.rally_chance * lift):
+            stack.routed = False
+            stack.row.morale = max(stack.row.morale, table.rally_morale)
+            stack.row.morale_state = MoraleState.RALLIED
+            rallied += 1
+    return rallied
+
+
+def enemy_reach(side: Side) -> int:
+    return max((stack.weapon.reach for stack in side.stacks if stack.engaged and stack.spec.missile > 0), default=0)
+
+
+def volley(rules: Rules, stack: Stack, enemy: Side, *, engaged: bool) -> float:
+    if stack.row.ammunition <= 0:
+        return 0.0
+    rate = max(1, stack.weapon.volleys)
+    fired = 1 if engaged else min(rate, stack.row.ammunition)
+    stack.row.ammunition -= fired
+    stack.spent += fired
+    reach = 1 + max(0, stack.weapon.reach - enemy_reach(enemy)) * rules.battle_depth.reach_pct / PERCENT
+    close = rules.battle_depth.engaged_missile_pct / PERCENT if engaged else 1.0
+    return fired / rate * stack.weapon.accuracy / NORMAL * reach * close
+
+
+def suppress(rules: Rules, target: Side, before: dict[int, int]) -> int:
+    pinned = 0
+    for stack in target.stacks:
+        start = before.get(id(stack), 0)
+        if start and stack.alive and (start - stack.row.count) * PERCENT >= start * rules.battle_depth.suppression_pct:
+            stack.suppressed = True
+            pinned += 1
+    return pinned
+
+
+def missiles(rules: Rules, streams: Streams, shooter: Side, target: Side, ground: Field, *, families: frozenset[UnitFamily], engaged: bool = False) -> int:
     coastal = ground.terrain is TerrainKind.COAST
     damage = 0.0
     for stack in shooter.stacks:
-        if not stack.alive or stack.spec.missile <= 0:
+        if not stack.engaged or stack.spec.missile <= 0:
             continue
         if stack.spec.family in families:
             share = 1.0
@@ -405,12 +642,25 @@ def missiles(rules: Rules, streams: Streams, shooter: Side, target: Side, ground
             share = rules.battle_terrain.coastal_fleet_support_pct / PERCENT
         else:
             continue
+        shot = volley(rules, stack, target, engaged=engaged)
+        if shot <= 0:
+            continue
         damage += (
-            stack.row.count * stack.spec.missile / PERCENT * modifier(rules, stack, shooter, ground, target) * share * fortune(rules, streams, "missile", stack)
+            stack.row.count
+            * stack.spec.missile
+            / PERCENT
+            * modifier(rules, stack, shooter, ground, target)
+            * share
+            * shot
+            * fortune(rules, streams, "missile", stack)
         )
     if target.defending:
         damage *= cover_missile_pct(rules, ground.cover) / PERCENT
-    return deal(target.stacks, damage, rules, attackers=shooter.stacks)
+    before = {id(stack): stack.row.count for stack in target.stacks}
+    killed = deal(target.stacks, damage, rules, attackers=shooter.stacks, mode="missile")
+    if not engaged:
+        suppress(rules, target, before)
+    return killed
 
 
 def charge(rules: Rules, streams: Streams, rider: Side, target: Side, ground: Field) -> tuple[int, int]:
@@ -427,11 +677,13 @@ def charge(rules: Rules, streams: Streams, rider: Side, target: Side, ground: Fi
         * stack.spec.speed
         / (PERCENT * NORMAL)
         * modifier(rules, stack, rider, ground, target)
+        * stack.formation.charge_pct
+        / PERCENT
         * fortune(rules, streams, "charge", stack)
         for stack in rider.stacks
-        if stack.alive and stack.spec.family in CHARGE_FAMILIES
+        if stack.engaged and stack.spec.family in CHARGE_FAMILIES and charges(stack)
     )
-    dealt = deal(target.stacks, impact * (1 - brace), rules)
+    dealt = deal(target.stacks, impact * (1 - brace), rules, mode="charge")
     taken = deal([stack for stack in rider.stacks if stack.spec.family in CHARGE_FAMILIES], impact * brace / 2, rules)
     terror = sum(stack.row.count * stack.spec.terror for stack in rider.stacks if stack.alive) / max(1, rider.standing)
     if terror:
@@ -439,11 +691,16 @@ def charge(rules: Rules, streams: Streams, rider: Side, target: Side, ground: Fi
     return dealt, taken
 
 
+def charges(stack: Stack) -> bool:
+    return not stack.suppressed and stack.row.morale_state not in (MoraleState.WAVERING, MoraleState.ROUTING, MoraleState.BROKEN)
+
+
 def frighten(rules: Rules, target: Side, shock: float) -> int:
     felt = resist(rules, target, shock)
     for stack in target.stacks:
         if stack.alive:
             stack.row.morale = max(0, round(stack.row.morale - felt * (1 - stack.row.morale / (2 * PERCENT))))
+            disorganise(rules, stack, felt * rules.battle_depth.shock_organisation_pct / PERCENT)
     return round(felt)
 
 
@@ -455,20 +712,45 @@ def reach(rules: Rules, striker: Side, target: Side) -> float:
     return 1 - aloft * (1 - rules.naval.sky_counter_pct / PERCENT)
 
 
+def spring_trap(rules: Rules, side: Side, enemy: Side) -> list[Stack]:
+    if not side.trap:
+        return []
+    sprung = [stack for stack in side.stacks if stack.alive and stack.hidden]
+    for stack in sprung:
+        stack.hidden = False
+        stack.reserve = False
+    if sprung:
+        frighten(rules, enemy, rules.battle_depth.trap_shock)
+    side.trap = False
+    return sprung
+
+
+def melee_power(rules: Rules, streams: Streams, sides: tuple[Side, Side], ground: Field, *, index: int, sprung: list[Stack]) -> float:
+    side, enemy = sides
+    trap = rules.battle_depth.trap_strength_pct / PERCENT
+    return sum(
+        stack.row.count
+        * stack.spec.melee
+        / PERCENT
+        * modifier(rules, stack, side, ground, enemy)
+        * (trap if stack in sprung else 1.0)
+        * fortune(rules, streams, f"melee{index}", stack)
+        for stack in side.stacks
+        if stack.engaged
+    )
+
+
 def melee_round(rules: Rules, streams: Streams, first: Side, second: Side, ground: Field, *, index: int) -> tuple[int, int]:
-    power_first = sum(
-        stack.row.count * stack.spec.melee / PERCENT * modifier(rules, stack, first, ground, second) * fortune(rules, streams, f"melee{index}", stack)
-        for stack in first.stacks
-        if stack.alive
-    )
-    power_second = sum(
-        stack.row.count * stack.spec.melee / PERCENT * modifier(rules, stack, second, ground, first) * fortune(rules, streams, f"melee{index}", stack)
-        for stack in second.stacks
-        if stack.alive
-    )
+    sprung_first, sprung_second = spring_trap(rules, first, second), spring_trap(rules, second, first)
+    close_first = missiles(rules, streams, first, second, ground, families=MISSILE_FAMILIES - {F.MAGIC}, engaged=True)
+    close_second = missiles(rules, streams, second, first, ground, families=MISSILE_FAMILIES - {F.MAGIC}, engaged=True)
+    power_first = melee_power(rules, streams, (first, second), ground, index=index, sprung=sprung_first)
+    power_second = melee_power(rules, streams, (second, first), ground, index=index, sprung=sprung_second)
     to_second = deal(second.stacks, power_first * reach(rules, first, second), rules, attackers=first.stacks)
     to_first = deal(first.stacks, power_second * reach(rules, second, first), rules, attackers=second.stacks)
-    return to_first, to_second
+    for stack in (*first.stacks, *second.stacks):
+        stack.suppressed = False
+    return to_first + close_second, to_second + close_first
 
 
 def frontage(rules: Rules, ground: Field) -> float:
@@ -481,10 +763,16 @@ def swift_speed(side: Side) -> float:
     return sum(stack.row.count * stack.spec.speed for stack in swift) / total if total else 0.0
 
 
-def outflank(rules: Rules, first: Side, second: Side, ground: Field) -> PhaseLog | None:
+def anchored(rules: Rules, streams: Streams, line: Side, ground: Field) -> bool:
+    return line.defending and ground.cover is PlaceCover.HEAVY and streams(f"anchor.{line.entity.id}").chance(rules.battle_depth.anchored_flank_pct)
+
+
+def outflank(rules: Rules, first: Side, second: Side, ground: Field, streams: Streams | None = None) -> PhaseLog | None:
     table = rules.battle_magic
     room = frontage(rules, ground)
     for flanker, line in ((first, second), (second, first)):
+        if streams is not None and anchored(rules, streams, line, ground):
+            continue
         wide = flanker.standing * room > line.standing
         swift = swift_speed(flanker) - swift_speed(line) >= table.flank_speed_lead
         if wide and swift and not flanker.flanking:
@@ -575,12 +863,114 @@ def classify(rules: Rules, winner: Side, loser: Side, ratio: float) -> OutcomeCl
     return OutcomeClass.VICTORY
 
 
+ELEVATED = frozenset({TerrainKind.HILLS, TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS})
+HIDDEN_SHARE_MAX = 0.4
+
+
+def concealment(rules: Rules, side: Side, ground: Field) -> int:
+    table = rules.battle_depth
+    value = table.cover_concealment if ground.cover is PlaceCover.HEAVY else 0
+    value += table.night_concealment if ground.night else 0
+    value += table.fog_concealment if side.fog or ground.weather is WeatherKind.FOG else 0
+    standing = max(1, side.standing)
+    loose = sum(stack.row.count for stack in side.stacks if stack.alive and stack.row.formation is Formation.LOOSE) / standing
+    return value + round(loose * table.loose_concealment)
+
+
+def detection(rules: Rules, side: Side, ground: Field) -> int:
+    standing = max(1, side.standing)
+    eyes = sum(stack.row.count for stack in side.stacks if stack.alive and stack.row.kind in SCOUTS) / standing * PERCENT * 2
+    elevated = rules.battle_depth.elevation_detection if side.defending and ground.terrain in ELEVATED else 0
+    return max(0, min(PERCENT, round(eyes + side.skill / 2 + side.intel / 2 + elevated)))
+
+
+def hide(side: Side) -> int:
+    edge = side.concealment - side.detection
+    if edge <= 0 or len([stack for stack in side.stacks if stack.alive]) < 2:
+        return 0
+    share = min(HIDDEN_SHARE_MAX, edge / PERCENT)
+    target = side.standing * share
+    hidden = 0
+    for stack in sorted((item for item in side.stacks if item.alive), key=lambda item: (item.row.count, item.row.id)):
+        if hidden + stack.row.count > target:
+            break
+        stack.hidden = True
+        hidden += stack.row.count
+    side.trap = hidden > 0
+    return hidden
+
+
+def spot(rules: Rules, attacker: Side, defender: Side, ground: Field) -> dict[str, int | str]:
+    for side, enemy in ((attacker, defender), (defender, attacker)):
+        if side.deceiver:
+            enemy.intel = max(0, enemy.intel - rules.battle_depth.deserter_intel)
+    for side, enemy in ((attacker, defender), (defender, attacker)):
+        side.concealment = concealment(rules, side, ground)
+        side.detection = detection(rules, enemy, ground)
+    hidden_a, hidden_d = hide(attacker), hide(defender)
+    return {
+        "attacker_hidden": hidden_a,
+        "defender_hidden": hidden_d,
+        "attacker_concealment": attacker.concealment,
+        "defender_concealment": defender.concealment,
+    }
+
+
+def command(rules: Rules, streams: Streams, side: Side, ground: Field) -> dict[str, int]:
+    table = rules.battle_depth
+    capacity = table.command_capacity_base + side.skill * (PERCENT - table.command_capacity_base) / PERCENT
+    span = 0 if side.commander_struck else max(1, round(capacity / table.command_capacity_divisor))
+    if ground.night:
+        span = max(0, round(span * table.night_span_pct / PERCENT)) if not side.commander_struck else 0
+    side.span = span
+    misread = initiative = 0
+    for index, stack in enumerate(sorted((item for item in side.stacks if item.alive), key=lambda item: (-item.row.count, item.row.id))):
+        stack.delayed = index >= span
+        stack.misread = stack.initiative = False
+        if not stack.delayed:
+            continue
+        rng = streams(f"orders.{side.entity.id}.{stack.row.id}")
+        chance = table.misread_pct * max(0.0, 2 - side.wits / NORMAL) + (table.babel_misread_pct if side.babel > 0 else 0)
+        if rng.chance(min(PERCENT, round(chance))):
+            stack.misread = True
+            misread += 1
+        elif side.initiative_officers and rng.chance(table.initiative_pct):
+            stack.initiative = True
+            initiative += 1
+    return {"span": span, "delayed": sum(1 for stack in side.stacks if stack.alive and stack.delayed), "misread": misread, "initiative": initiative}
+
+
+def collapse(rules: Rules, streams: Streams, side: Side, phase: str) -> bool:
+    if side.commander_struck or not (broken(side) or side.lost * 2 >= side.start):
+        return False
+    if not streams(f"struck.{phase}.{side.entity.id}").chance(rules.battle_depth.commander_struck_pct):
+        return False
+    side.commander_struck = True
+    side.span = 0
+    for stack in side.stacks:
+        stack.delayed = stack.alive
+        stack.initiative = False
+    frighten(rules, side, rules.battle_depth.collapse_morale)
+    return True
+
+
+def commit_reserves(rules: Rules, streams: Streams, side: Side, index: int) -> int:
+    if side.feint_pinned:
+        return 0
+    committed = refill(side)
+    skill = rules.battle_depth.reserve_commit_pct * side.skill / PERCENT
+    if not side.commander_struck and streams(f"reserve.{index}.{side.entity.id}").chance(round(skill)):
+        committed += refill(side, everyone=True)
+    return committed
+
+
 def opening(rules: Rules, streams: Streams, attacker: Side, defender: Side, ground: Field) -> tuple[Side | None, list[PhaseLog]]:
     table = rules.tactics
     eyes_a, eyes_d = scouting(attacker), scouting(defender)
     lead = attacker if eyes_a > eyes_d else defender
     other = defender if lead is attacker else attacker
     margin = abs(eyes_a - eyes_d) / max(1.0, eyes_a, eyes_d) * PERCENT
+    seen = spot(rules, attacker, defender, ground)
     refused = False
     if margin >= table.scouting_margin:
         if strength(rules, lead, ground) < strength(rules, other, ground) * REFUSE_RATIO:
@@ -590,7 +980,7 @@ def opening(rules: Rules, streams: Streams, attacker: Side, defender: Side, grou
             if ground.terrain in AMBUSH_TERRAIN or ground.cover is PlaceCover.HEAVY or ground.weather is WeatherKind.FOG or ground.night:
                 lead.surprise = rules.weather_battle_effects.fog_ambush_pct / PERCENT
     summary = f"{lead.entity.name} saw further" + (" and refused battle" if refused else " and chose the ground")
-    phases = [PhaseLog(BattlePhase.SCOUTING, 0, 0, summary, {"margin": round(margin), "ground": lead.entity.name})]
+    phases = [PhaseLog(BattlePhase.SCOUTING, 0, 0, summary, {"margin": round(margin), "ground": lead.entity.name, **seen})]
     if refused:
         return lead, phases
     attacker.tactic = choose_tactic(rules, streams("plan.attacker"), attacker, defender.profile.doctrine, ground)
@@ -613,29 +1003,59 @@ def opening(rules: Rules, streams: Streams, attacker: Side, defender: Side, grou
     return None, phases
 
 
+def night_fire(rules: Rules, side: Side) -> None:
+    for stack in side.stacks:
+        if stack.engaged:
+            stack.row.organisation = max(0, stack.row.organisation - rules.battle_depth.friendly_fire_organisation)
+
+
+def feint(rules: Rules, streams: Streams, attacker: Side, defender: Side) -> bool:
+    if attacker.tactic is not Tactic.FEINT or not any(stack.alive and stack.reserve for stack in defender.stacks):
+        return False
+    defender.feint_pinned = streams(f"feint.{attacker.entity.id}").chance(rules.battle_depth.feint_reserve_pct)
+    return defender.feint_pinned
+
+
 def fighting(rules: Rules, streams: Streams, attacker: Side, defender: Side, ground: Field) -> list[PhaseLog]:
     fog = [side.entity.name for side, enemy in ((attacker, defender), (defender, attacker)) if call_fog(rules, streams, side, enemy)]
+    for side in (attacker, defender):
+        deploy(rules, side, ground)
+        if ground.night:
+            night_fire(rules, side)
+    orders: dict[str, int | str] = {f"attacker_{key}": value for key, value in command(rules, streams, attacker, ground).items()}
+    orders.update({f"defender_{key}": value for key, value in command(rules, streams, defender, ground).items()})
+    orders["width"] = attacker.width
+    orders["feint"] = attacker.entity.name if feint(rules, streams, attacker, defender) else ""
+    phases = [PhaseLog(BattlePhase.COMMAND, 0, 0, "orders went down the line", orders)]
     ranged = MISSILE_FAMILIES - {F.MAGIC}
     to_d, to_a = missiles(rules, streams, attacker, defender, ground, families=ranged), missiles(rules, streams, defender, attacker, ground, families=ranged)
-    phases = [PhaseLog(BattlePhase.MISSILE, to_a, to_d, "the volleys flew" + (" into a called fog" if fog else ""), {"fog": ", ".join(fog)})]
+    pinned: dict[str, int | str] = {"fog": ", ".join(fog), "pinned": sum(1 for stack in (*attacker.stacks, *defender.stacks) if stack.suppressed)}
+    phases.append(PhaseLog(BattlePhase.MISSILE, to_a, to_d, "the volleys flew" + (" into a called fog" if fog else ""), pinned))
     attacker.surprise = defender.surprise = 1.0
-    flank = outflank(rules, attacker, defender, ground)
+    flank = outflank(rules, attacker, defender, ground, streams)
     if flank is not None:
         phases.append(flank)
     dealt_a, taken_a = charge(rules, streams, attacker, defender, ground)
     dealt_d, taken_d = charge(rules, streams, defender, attacker, ground)
     phases.append(PhaseLog(BattlePhase.CHARGE, taken_a + dealt_d, dealt_a + taken_d, "the horse and the beasts struck"))
-    shaken(rules, attacker)
-    shaken(rules, defender)
+    shaken(rules, attacker, streams, phase="charge")
+    shaken(rules, defender, streams, phase="charge")
     for index in range(rules.tactics.melee_rounds):
         lost_a, lost_d = melee_round(rules, streams, attacker, defender, ground, index=index)
-        shaken(rules, attacker)
-        shaken(rules, defender)
+        attacker.planned = defender.planned = False
+        shaken(rules, attacker, streams, phase=f"melee{index}")
+        shaken(rules, defender, streams, phase=f"melee{index}")
         phases.append(PhaseLog(BattlePhase.MELEE, lost_a, lost_d, f"melee, round {index + 1}"))
+        struck = [side.entity.name for side in (attacker, defender) if collapse(rules, streams, side, f"melee{index}")]
+        committed = {side.entity.name: commit_reserves(rules, streams, side, index) for side in (attacker, defender)}
+        if any(committed.values()) or struck:
+            details: dict[str, int | str] = {name: soldiers for name, soldiers in committed.items()}
+            details["commander_fell"] = ", ".join(struck)
+            phases.append(PhaseLog(BattlePhase.RESERVES, 0, 0, "the reserves came up" if any(committed.values()) else "a commander fell", details))
         if broken(attacker) or broken(defender):
             break
     burn_a, burn_d = backlash(rules, attacker, ground), backlash(rules, defender, ground)
-    terror = {"attacker_terror": terror_rite(rules, attacker, defender), "defender_terror": terror_rite(rules, defender, attacker)}
+    terror: dict[str, int | str] = {"attacker_terror": terror_rite(rules, attacker, defender), "defender_terror": terror_rite(rules, defender, attacker)}
     magic_a, magic_d = rites(rules, streams, attacker, defender, ground), rites(rules, streams, defender, attacker, ground)
     phases.append(PhaseLog(BattlePhase.RITES, magic_d + burn_a, magic_a + burn_d, "rites and prayers", {**terror, "backlash": burn_a + burn_d}))
     return phases
@@ -649,14 +1069,52 @@ def victor(rules: Rules, attacker: Side, defender: Side, ground: Field) -> tuple
     return winner, loser, max(power_a, power_d), max(1.0, min(power_a, power_d))
 
 
-def treat(rules: Rules, side: Side, wounded: int) -> int:
+def treat(rules: Rules, side: Side, walking: int, stretcher: int) -> int:
     magic = rules.battle_magic
-    healed = min(wounded, side.count_of(UnitKind.PRIESTS) * magic.heal_per_priest) if side.priests_healing else 0
-    rest = wounded - healed
+    healed = min(stretcher, side.count_of(UnitKind.PRIESTS) * magic.heal_per_priest) if side.priests_healing else 0
+    rest = stretcher - healed
     saved = round(rest * min(PERCENT, side.medicine) / PERCENT * magic.medicine_pct / PERCENT)
     dying = round((rest - saved) * magic.untreated_death_pct / PERCENT)
     side.healed = healed
-    return max(0, wounded - dying)
+    return max(0, walking + stretcher - dying)
+
+
+def classify_losses(rules: Rules, side: Side) -> tuple[int, int]:
+    table, depth = rules.tactics, rules.battle_depth
+    captives = side.captives
+    total_lost = max(1, side.lost)
+    walking = stretcher = 0
+    for stack in side.stacks:
+        stack.missing = round(stack.lost * depth.missing_pct / PERCENT) if stack.routed else 0
+        stack.captured = min(stack.lost - stack.missing, round(captives * stack.lost / total_lost))
+        hurt = min(stack.lost - stack.missing - stack.captured, round(stack.lost * table.wounded_pct / PERCENT))
+        stack.walking = round(hurt * depth.walking_pct / PERCENT)
+        stack.stretcher = hurt - stack.walking
+        stack.killed = max(0, stack.lost - stack.missing - stack.captured - hurt)
+        stack.row.missing += stack.missing
+        stack.row.wounded += hurt
+        if stack.row.morale_state is MoraleState.BROKEN and stack.row.count > 0:
+            stack.deserted = round(stack.row.count * depth.deserted_pct / PERCENT)
+            stack.row.count -= stack.deserted
+        walking += stack.walking
+        stretcher += stack.stretcher
+    return walking, stretcher
+
+
+def salvage(rules: Rules, winner: Side, loser: Side) -> int:
+    table = rules.battle_depth
+    arms = loser.lost
+    if arms <= 0:
+        return 0
+    share = min(1.0, arms / max(1, winner.standing))
+    for stack in winner.stacks:
+        if stack.row.count > 0:
+            stack.row.condition = min(PERCENT, stack.row.condition + round(table.salvage_condition * share))
+    worst = min((stack for stack in winner.stacks if stack.row.count > 0), key=lambda stack: (stack.row.quality, stack.row.id), default=None)
+    if worst is not None:
+        worst.row.quality = min(PERCENT, worst.row.quality + round(table.salvage_quality * share))
+    winner.salvaged = arms
+    return arms
 
 
 def raise_dead(rules: Rules, side: Side, fallen: int) -> int:
@@ -668,24 +1126,24 @@ def raise_dead(rules: Rules, side: Side, fallen: int) -> int:
 
 
 def aftermath(rules: Rules, winner: Side, loser: Side, gap: float) -> tuple[dict[int, int], dict[int, int], dict[str, int]]:
-    table, campaigns = rules.tactics, rules.campaigns
+    campaigns = rules.campaigns
     wounded: dict[int, int] = {}
     maimed: dict[int, int] = {}
     by_kind: dict[str, int] = {}
     fallen = winner.lost + loser.lost
     for side in (winner, loser):
-        hurt = round(side.lost * table.wounded_pct / PERCENT)
-        wounded[side.entity.id] = treat(rules, side, hurt)
+        walking, stretcher = classify_losses(rules, side)
+        wounded[side.entity.id] = treat(rules, side, walking, stretcher)
         maimed[side.entity.id] = round(side.lost * rules.maimed.return_pct / PERCENT)
         raise_dead(rules, side, fallen)
         gained = campaigns.winner_experience_gain if side is winner else campaigns.loser_experience_gain
         for stack in side.stacks:
             by_kind[stack.row.kind.value] = by_kind.get(stack.row.kind.value, 0) + stack.lost
-            stack.row.wounded += round(stack.lost * table.wounded_pct / PERCENT)
             stack.row.experience = min(PERCENT, stack.row.experience + gained)
             stack.row.condition = max(0, stack.row.condition - rules.battle_magic.wear_per_battle)
             if stack.routed:
                 stack.row.morale = max(stack.row.morale, rules.morale.rout_morale // 2)
+    salvage(rules, winner, loser)
     for stack in winner.stacks:
         stack.row.morale = min(PERCENT, stack.row.morale + campaigns.winner_morale_gain)
     beaten = campaigns.loser_morale_loss + round(gap / campaigns.loser_morale_diff_divisor)
@@ -696,7 +1154,9 @@ def aftermath(rules: Rules, winner: Side, loser: Side, gap: float) -> tuple[dict
 
 def resolve(rules: Rules, streams: Streams, attacker: Side, defender: Side, ground: Field) -> BattleResult:
     cast_luck(rules, streams, attacker, defender)
+    planned_by = next((side.entity.id for side in (attacker, defender) if side.planned), None)
     refuser, phases = opening(rules, streams, attacker, defender, ground)
+    trapped_by = next((side.entity.id for side in (attacker, defender) if side.trap), None)
     if refuser is not None:
         holder = defender if refuser is attacker else attacker
         return BattleResult(attacker, defender, holder, refuser, True, OutcomeClass.REFUSED, 0.0, phases, {}, {}, {})
@@ -715,8 +1175,14 @@ def resolve(rules: Rules, streams: Streams, attacker: Side, defender: Side, grou
         "maimed": sum(maimed.values()),
         "healed": attacker.healed + defender.healed,
         "raised": attacker.raised_dead + defender.raised_dead,
+        "missing": sum(stack.missing for stack in (*attacker.stacks, *defender.stacks)),
+        "deserted": sum(stack.deserted for stack in (*attacker.stacks, *defender.stacks)),
+        "captured": sum(stack.captured for stack in (*attacker.stacks, *defender.stacks)),
     }
+    phases.append(PhaseLog(BattlePhase.SALVAGE, 0, 0, f"{winner.entity.name} stripped the field", {"arms": winner.salvaged}))
     phases.append(PhaseLog(BattlePhase.AFTERMATH, attacker.lost, defender.lost, outcome.value, dict(summary)))
+    for stack in (*attacker.stacks, *defender.stacks):
+        settle(rules, stack)
     factors = {
         "attacker": round(attacker.tactic_factor, 3),
         "defender": round(defender.tactic_factor, 3),
@@ -724,8 +1190,45 @@ def resolve(rules: Rules, streams: Streams, attacker: Side, defender: Side, grou
         "attacker_luck": round(attacker.luck, 3),
         "defender_luck": round(defender.luck, 3),
         "defender_flank": float(defender.flanking),
+        "attacker_span": float(attacker.span),
+        "defender_span": float(defender.span),
+        "attacker_concealment": float(attacker.concealment),
+        "defender_concealment": float(defender.concealment),
     }
-    return BattleResult(attacker, defender, winner, loser, False, outcome, gap, phases, wounded, maimed, by_kind, factors)
+    collapsed = next((side.entity.id for side in (attacker, defender) if side.commander_struck), None)
+    return BattleResult(
+        attacker,
+        defender,
+        winner,
+        loser,
+        False,
+        outcome,
+        gap,
+        phases,
+        wounded,
+        maimed,
+        by_kind,
+        factors,
+        planned_by=planned_by,
+        trapped_by=trapped_by,
+        feint=defender.feint_pinned,
+        collapsed=collapsed,
+    )
+
+
+def ready(row: ArmyUnitRow, spec: UnitSpec) -> None:
+    if row.organisation is None:
+        row.organisation = PERCENT
+    if row.discipline is None:
+        row.discipline = BASE_DISCIPLINE[spec.kind]
+    if row.ammunition is None:
+        row.ammunition = VOLLEYS_CARRIED if spec.missile > 0 else 0
+    if row.formation is None:
+        row.formation = formation_for(spec.kind, spec.family)
+    if row.morale_state is None:
+        row.morale_state = MoraleState.STEADY
+    if row.missing is None:
+        row.missing = 0
 
 
 def make_stacks(rows: list[ArmyUnitRow], specs: dict[int, UnitSpec] | None = None, hardness: dict[str, int] | None = None) -> list[Stack]:
@@ -734,5 +1237,6 @@ def make_stacks(rows: list[ArmyUnitRow], specs: dict[int, UnitSpec] | None = Non
         if row.count <= 0:
             continue
         spec = (specs or {}).get(row.design_id or 0) or UNITS[row.kind]
+        ready(row, spec)
         found.append(Stack(row, spec, row.count, hardness=(hardness or {}).get(row.material or "", NORMAL)))
     return found

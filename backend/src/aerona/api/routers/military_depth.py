@@ -120,6 +120,18 @@ async def battle_depth(services: ServicesDep, battle_id: Id) -> BattleDepthView:
                     lost=row.lost,
                     wounded=row.wounded,
                     routed=row.routed,
+                    killed=row.killed,
+                    walking=row.walking,
+                    stretcher=row.stretcher,
+                    captured=row.captured,
+                    missing=row.missing,
+                    deserted=row.deserted,
+                    reserve=row.reserve,
+                    organisation=row.organisation,
+                    ammunition_spent=row.ammunition_spent,
+                    formation=row.formation,
+                    morale_state=row.morale_state,
+                    target_class=row.target_class,
                 )
                 for row in stacks
             ],

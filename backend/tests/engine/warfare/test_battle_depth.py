@@ -115,7 +115,8 @@ def test_willpower_blunts_terror_and_medicine_saves_the_wounded() -> None:
     healers = side("Healers", [unit(UnitKind.PRIESTS, 10, ident=3)])
     healers.medicine = 100
     plain = side("Plain", [unit(UnitKind.LEVY, 10, ident=4)])
-    assert treat(RULES, healers, 100) > treat(RULES, plain, 100)
+    assert treat(RULES, healers, 40, 60) > treat(RULES, plain, 40, 60)
+    assert treat(RULES, plain, 40, 0) == 40
 
 
 def test_war_mages_call_fog_and_necromancers_raise_the_fallen() -> None:

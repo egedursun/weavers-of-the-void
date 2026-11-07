@@ -141,3 +141,6 @@ class TacticMatchupRules:
     river_defence_vs_flank_cavalry_pct: int = rule(125, 100, 300, W, "Strength of river defence against flank cavalry (%)")
     river_defence_vs_frontal_assault_pct: int = rule(125, 100, 300, W, "Strength of river defence against frontal assault (%)")
     siege_assault_vs_hold_line_pct: int = rule(125, 100, 300, W, "Strength of siege assault against hold line (%)")
+    frontal_assault_vs_feint_pct: int = rule(125, 100, 300, W, "Strength of frontal assault against feint (%)")
+    feint_vs_hold_line_pct: int = rule(120, 100, 300, W, "Strength of feint against hold line (%)")
+    feint_vs_river_defence_pct: int = rule(120, 100, 300, W, "Strength of feint against river defence (%)")

@@ -10,11 +10,23 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, CaptiveCohortRow, CommanderTraitRow, OccupationRow, SpyNetworkRow, WarAimRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow, WarRow, WarSideRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.military import ArmourType, CaptiveFate, CommanderTrait, ShieldType, SpyCover, Stance, StarvationStage, UnitKind, WarAimKind
+from aerona.domain.enums.military import (
+    ArmourType,
+    CaptiveFate,
+    CommanderTrait,
+    Formation,
+    MoraleState,
+    ShieldType,
+    SpyCover,
+    Stance,
+    StarvationStage,
+    UnitKind,
+    WarAimKind,
+)
 from aerona.domain.enums.war import SiegeStatus, WarEnding, WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.military.captivity import settle_into
-from aerona.engine.military.units import profile_of, stacks_of, sync
+from aerona.engine.military.units import drill_fields, profile_of, stacks_of, sync
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.control import lock
 from aerona.engine.polity.treaties import allies_called
@@ -28,10 +40,17 @@ from aerona.engine.services.war_resolution import WarSettlement, end_war
 
 Values = Mapping[str, int | str | bool | None]
 PERCENT_FIELDS = frozenset({"cohesion", "disease", "entrenchment"})
-POSITIVE_FIELDS = frozenset({"supply_days", "war_chest", "loot", "baggage"})
+POSITIVE_FIELDS = frozenset({"supply_days", "war_chest", "loot", "baggage", "contact_seasons"})
 LINK_FIELDS = {"region_id": "region_entity_id", "target_id": "target_entity_id", "blockade_id": "blockade_entity_id"}
-STACK_PERCENT = frozenset({"quality", "experience", "morale", "fatigue", "condition"})
-STACK_CHOICES: dict[str, Callable[[str], Any]] = {"kind": UnitKind, "armour": ArmourType, "shield": ShieldType}
+STACK_PERCENT = frozenset({"quality", "experience", "morale", "fatigue", "condition", "organisation", "discipline"})
+STACK_POSITIVE = frozenset({"count", "wounded", "ammunition", "missing"})
+STACK_CHOICES: dict[str, Callable[[str], Any]] = {
+    "kind": UnitKind,
+    "armour": ArmourType,
+    "shield": ShieldType,
+    "formation": Formation,
+    "morale_state": MoraleState,
+}
 SIEGE_PERCENT = frozenset({"disease_inside", "disease_outside"})
 SIEGE_POSITIVE = frozenset({"supplies", "water", "breaches", "sallies", "rounds"})
 SIEGE_CHOICES: dict[str, Callable[[str], Any]] = {"starvation": StarvationStage, "status": SiegeStatus}
@@ -99,12 +118,12 @@ async def stack(ctx: TickContext, unit_id: int) -> ArmyUnitRow:
     return row
 
 
-async def edit_stack(ctx: TickContext, unit_id: int, values: Values) -> ArmyUnitRow:
+async def edit_stack(ctx: TickContext, unit_id: int, values: Values, *, release: list[str] | None = None) -> ArmyUnitRow:
     row = await stack(ctx, unit_id)
     for key, value in values.items():
         if key in STACK_PERCENT:
             setattr(row, key, percent(key, value))
-        elif key in {"count", "wounded"}:
+        elif key in STACK_POSITIVE:
             setattr(row, key, positive(key, value))
         elif key in STACK_CHOICES:
             setattr(row, key, choice(key, STACK_CHOICES[key], value))
@@ -112,6 +131,9 @@ async def edit_stack(ctx: TickContext, unit_id: int, values: Values) -> ArmyUnit
             row.helmet = bool(value)
         else:
             raise ValidationFailedError(f"Unknown stack field: {key}.")
+        row.locked = lock(row.locked, key)
+    for key in release or []:
+        row.locked = [item for item in row.locked if item != key]
     await resync(ctx, row.army_entity_id)
     return row
 
@@ -134,6 +156,7 @@ async def add_stack(ctx: TickContext, army_id: int, kind: UnitKind, count: int) 
         wounded=0,
         condition=PERCENT,
         social_class=spec.social_class,
+        **drill_fields(ctx.rules, spec),
     )
     ctx.session.add(row)
     await ctx.session.flush()

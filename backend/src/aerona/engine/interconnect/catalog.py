@@ -28,6 +28,7 @@ from aerona.db.tables.society import CommunityRelationRow
 from aerona.domain.enums.body import ConditionKind, InjuryKind
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.interconnect.catalog_affairs import AFFAIRS_MECHANICS
+from aerona.engine.interconnect.catalog_battle_depth import BATTLE_DEPTH_MECHANICS
 from aerona.engine.interconnect.catalog_communication import COMMUNICATION_MECHANICS
 from aerona.engine.interconnect.catalog_couplings import COUPLING_MECHANICS
 from aerona.engine.interconnect.catalog_economy import ECONOMY_DEPTH_MECHANICS
@@ -955,6 +956,7 @@ BUILT_IN = (
     *REALM_MECHANICS,
     *MILITARY_MECHANICS,
     *MILITARY_DEPTH_MECHANICS,
+    *BATTLE_DEPTH_MECHANICS,
     *FAITH_MECHANICS,
     *LORE_MECHANICS,
     *RUMOUR_MECHANICS,

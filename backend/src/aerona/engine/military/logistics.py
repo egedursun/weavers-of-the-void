@@ -3,6 +3,7 @@ from math import log2
 
 from sqlalchemy import select
 
+from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ItemProfileRow
@@ -11,10 +12,11 @@ from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.military import ArmyMovementRow, ArmyProfileRow, ArmyUnitRow, CampaignFrontRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, PolityTreasuryRow
 from aerona.db.tables.warfare import ArmyRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ItemClass, Technique
 from aerona.domain.enums.environment import MovementMode, WeatherKind
-from aerona.domain.enums.military import MutinyOutcome, Stance
+from aerona.domain.enums.military import MoraleState, MutinyOutcome, Stance
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.perils import danger_toll, navigate
@@ -67,6 +69,7 @@ class Season:
     scorched: bool = False
     unfed_mounts: bool = False
     mutiny: MutinyOutcome | None = None
+    rejoined: int = 0
 
 
 @dataclass(frozen=True)
@@ -122,6 +125,28 @@ def tire(rules: Rules, rows: list[ArmyUnitRow], profile: ArmyProfileRow) -> None
             row.fatigue = clamp_int(row.fatigue + rules.logistics.forced_fatigue, 0, PERCENT)
         elif profile.stance in RESTING:
             row.fatigue = clamp_int(row.fatigue - rules.logistics.rest_fatigue, 0, PERCENT)
+
+
+def regroup(rules: Rules, rows: list[ArmyUnitRow], profile: ArmyProfileRow) -> int:
+    table = rules.battle_depth
+    rested = table.organisation_rest if profile.stance in RESTING else round(table.organisation_rest * table.march_rest_pct / PERCENT)
+    if profile.supply_days <= 0:
+        rested = 0
+    returned = 0
+    for row in rows:
+        if "organisation" not in row.locked:
+            loss = table.forced_march_organisation if profile.forced_march and profile.stance is Stance.MARCH else 0
+            row.organisation = clamp_int(row.organisation + rested - loss, 0, PERCENT)
+        if "ammunition" not in row.locked and UNITS[row.kind].missile > 0 and profile.baggage > 0:
+            row.ammunition = min(table.volleys_carried, row.ammunition + table.resupply_volleys)
+        if row.missing > 0 and "missing" not in row.locked:
+            back = round_half_up(row.missing * table.rejoin_pct / PERCENT)
+            row.count += back
+            returned += back
+            row.missing = 0
+        if "morale_state" not in row.locked:
+            row.morale_state = MoraleState.STEADY if row.morale >= rules.morale.rout_morale else MoraleState.WAVERING
+    return returned
 
 
 def entrench(rules: Rules, profile: ArmyProfileRow) -> None:
@@ -312,6 +337,7 @@ async def campaign_season(
         profile.region_entity_id = origin
         log.moved = 0
     tire(ctx.rules, rows, profile)
+    log.rejoined = regroup(ctx.rules, rows, profile)
     entrench(ctx.rules, profile)
     region = ground.regions.get(profile.region_entity_id) if profile.region_entity_id is not None else None
     home = atlas.top_region(march.owner.id)
@@ -386,4 +412,7 @@ async def mark_front(ctx: TickContext, war_id: int, first: ArmyProfileRow, secon
         ctx.session.add(row)
         await ctx.session.flush()
     row.last_epoch = ctx.epoch
+    for profile in (first, second):
+        if not held(profile.army_entity_id) and "contact_seasons" not in profile.locked:
+            profile.contact_seasons += 1
     return row

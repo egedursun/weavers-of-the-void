@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.entities import EntityRow
@@ -19,7 +20,8 @@ from aerona.engine.demography.cohorts import cohorts_of, row_for
 from aerona.engine.environment.book import add_scar
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
-from aerona.engine.military.battle import BattleResult, Side
+from aerona.engine.military.battle import BattleResult, Side, target_class
+from aerona.engine.military.units import drill_fields
 from aerona.engine.primitives.levies import levies_from
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
@@ -44,8 +46,20 @@ def record_stacks(ctx: TickContext, battle: BattleRow, result: BattleResult) -> 
                     label=stack.spec.label,
                     start=stack.start,
                     lost=stack.lost,
-                    wounded=round_half_up(stack.lost * ctx.rules.tactics.wounded_pct / PERCENT),
+                    wounded=stack.walking + stack.stretcher,
                     routed=stack.routed,
+                    killed=stack.killed,
+                    walking=stack.walking,
+                    stretcher=stack.stretcher,
+                    captured=stack.captured,
+                    missing=stack.missing,
+                    deserted=stack.deserted,
+                    reserve=stack.reserve,
+                    organisation=stack.row.organisation,
+                    ammunition_spent=stack.spent,
+                    formation=stack.row.formation,
+                    morale_state=stack.row.morale_state,
+                    target_class=target_class(ctx.rules, stack),
                 )
             )
             made += 1
@@ -140,6 +154,7 @@ async def raise_the_dead(ctx: TickContext, side: Side) -> int:
             condition=PERCENT,
             origin_entity_id=side.entity.id,
             locked=[],
+            **drill_fields(ctx.rules, UNITS[UnitKind.GHOST_HOST]),
         )
         ctx.session.add(found)
     with flowing(FlowCategory.CREATION):

@@ -886,6 +886,10 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "armour": "none, hide, padded, mail, scale, plate or enchanted",
             "shield": "none, small, large or tower",
             "terror": "Fear it strikes, 0 to 100",
+            "reach": "How far its weapons reach, 0 (hand to hand) to 5 (siege range); leave empty to keep the base unit's",
+            "volleys": "Volleys it looses in one phase of battle, 0 to 6; leave empty to keep the base unit's",
+            "accuracy": "How true its blows and shots land, 0 to 100; leave empty to keep the base unit's",
+            "piercing": "How well its weapons pierce hard armour, 0 to 100; leave empty to keep the base unit's",
         },
     ),
     T.PLANT_SPIES: ToolText(

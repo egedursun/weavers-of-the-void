@@ -2,6 +2,7 @@ from typing import Annotated, Any
 
 from pydantic import Field
 
+from aerona.catalog.battle_depth import WEAPON_PROFILES
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import ArmyRow
@@ -83,6 +84,10 @@ class DesignUnitInput(ToolInput):
     armour: ArmourType = ArmourType.NONE
     shield: ShieldType = ShieldType.NONE
     terror: Percent = 0
+    reach: Annotated[int, Field(ge=0, le=5)] | None = None
+    volleys: Annotated[int, Field(ge=0, le=6)] | None = None
+    accuracy: Percent | None = None
+    piercing: Percent | None = None
 
 
 class PlantSpiesInput(ToolInput):
@@ -207,6 +212,10 @@ async def design_unit(call: SonCall, args: DesignUnitInput) -> str:
         "shield": args.shield.value,
         "terror": args.terror,
         "owner_entity_id": owner.id,
+        "reach": args.reach if args.reach is not None else WEAPON_PROFILES[args.base_kind].reach,
+        "volleys": args.volleys if args.volleys is not None else WEAPON_PROFILES[args.base_kind].volleys,
+        "accuracy": args.accuracy if args.accuracy is not None else WEAPON_PROFILES[args.base_kind].accuracy,
+        "piercing": args.piercing if args.piercing is not None else WEAPON_PROFILES[args.base_kind].piercing,
     }
     design = await create_record(call.tick, "unit_design", values)
     pay(call, call.rules.son_military.design_cost, owner.id)

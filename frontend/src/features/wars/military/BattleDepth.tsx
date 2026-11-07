@@ -1,4 +1,14 @@
-import { Flag, Skull, Swords } from 'lucide-react'
+import {
+  Bandage,
+  Crosshair,
+  Flag,
+  HeartCrack,
+  Link as Chain,
+  Skull,
+  Swords,
+  UserMinus,
+  UserX,
+} from 'lucide-react'
 import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { EntityLink, MiniStat, StatBar, Paged } from '@/components/domain'
@@ -10,7 +20,22 @@ import {
   nameOf,
   useBattleDepth,
 } from './depth'
-import { Tag } from './parts'
+import { FORMATION, MORALE_STATE, PERCENT, TARGET_CLASS } from './labels'
+import { Plain, TableTag, Tag } from './parts'
+
+const CASUALTY_PARTS = [
+  { key: 'killed', label: 'Killed', icon: Skull, tone: 'danger' },
+  { key: 'walking', label: 'Walking wounded', icon: Bandage, tone: 'warning' },
+  {
+    key: 'stretcher',
+    label: 'Stretcher cases',
+    icon: HeartCrack,
+    tone: 'danger',
+  },
+  { key: 'captured', label: 'Captured', icon: Chain, tone: 'warning' },
+  { key: 'missing', label: 'Stragglers', icon: UserMinus, tone: 'muted' },
+  { key: 'deserted', label: 'Deserted', icon: UserX, tone: 'muted' },
+] as const
 
 function Signed({ value }: { value: number }) {
   return (
@@ -145,6 +170,33 @@ export function BattleDepthPanel({
                         Routed
                       </Badge>
                     )}
+                    {stack.reserve && (
+                      <Badge size='sm' variant='secondary'>
+                        Held in reserve
+                      </Badge>
+                    )}
+                  </div>
+                  <div className='flex min-w-0 flex-wrap gap-1'>
+                    {stack.formation && (
+                      <TableTag table={FORMATION} value={stack.formation} />
+                    )}
+                    {stack.morale_state && (
+                      <TableTag
+                        table={MORALE_STATE}
+                        value={stack.morale_state}
+                      />
+                    )}
+                    {stack.target_class && (
+                      <TableTag
+                        table={TARGET_CLASS}
+                        value={stack.target_class}
+                      />
+                    )}
+                    {stack.ammunition_spent > 0 && (
+                      <Plain icon={Crosshair}>
+                        {`${stack.ammunition_spent} volleys loosed`}
+                      </Plain>
+                    )}
                   </div>
                   <StatBar
                     label={`Lost of ${formatInteger(stack.start)}`}
@@ -152,6 +204,27 @@ export function BattleDepthPanel({
                     max={Math.max(1, stack.start)}
                     tone='destructive'
                   />
+                  <StatBar
+                    label='Organisation left'
+                    value={stack.organisation}
+                    max={PERCENT}
+                    tone='info'
+                  />
+                  {stack.lost > 0 && (
+                    <div className='grid min-w-0 grid-cols-2 gap-1 @md/mil:grid-cols-3'>
+                      {CASUALTY_PARTS.filter((part) => stack[part.key] > 0).map(
+                        (part) => (
+                          <MiniStat
+                            key={part.key}
+                            icon={part.icon}
+                            label={part.label}
+                            value={formatInteger(stack[part.key])}
+                            tone={part.tone}
+                          />
+                        )
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </Paged>

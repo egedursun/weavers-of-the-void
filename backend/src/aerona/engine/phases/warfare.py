@@ -927,6 +927,13 @@ def _battle_row(
         tactic_factors=dict(result.factors),
         morale=morale_sheet(result),
         magic=magic_sheet(result),
+        width=result.attacker.width,
+        reserves_committed=result.attacker.reserves_committed + result.defender.reserves_committed,
+        command_collapsed_entity_id=result.collapsed,
+        planned_entity_id=result.planned_by,
+        trap_entity_id=result.trapped_by,
+        feint=result.feint,
+        salvaged=winner.salvaged if winner is not None else 0,
     )
     ctx.session.add(row)
     return row
@@ -1471,6 +1478,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.army_profiles",
     "table.army_units",
     "table.beast_profiles",
+    "table.beliefs",
     "table.bodies",
     "table.bonds",
     "table.calendars",

@@ -9,6 +9,7 @@ from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import (
     ArmyOfficerRow,
+    ArmyProfileRow,
     BattlePhaseRow,
     CaptiveCohortRow,
     CommanderTraitRow,
@@ -19,14 +20,17 @@ from aerona.db.tables.military import (
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.warfare import ArmyRow
+from aerona.db.write_guard import held
+from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.military import ArmyRole, CaptiveFate, CommanderTrait, OutcomeClass, Tactic, UnitFamily
-from aerona.domain.enums.mind import SkillKind, TraitEffect, ValueAxis
+from aerona.domain.enums.military import ArmyRole, CaptiveFate, CommanderTrait, OutcomeClass, Tactic, UnitFamily, UnitKind
+from aerona.domain.enums.mind import Attribute, SkillKind, TraitEffect, ValueAxis
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.book import perception_of
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.demography.biology import battle_edge, profiles_of
 from aerona.engine.ecology.beasts import beast_dread, mounted_edge
@@ -34,13 +38,16 @@ from aerona.engine.economy.materials import MaterialBook
 from aerona.engine.economy.sanctity import holy_strike
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.faith.souls import ancestral_site, guardians_of
+from aerona.engine.intrigue.beliefs import beliefs_of
 from aerona.engine.intrigue.sources import cowardice
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.items import standard_of
 from aerona.engine.lore.language import barrier
 from aerona.engine.military.aftermath import flaring_items
 from aerona.engine.military.battle import BattleResult, Field, Side, Stack, make_stacks, resolve
 from aerona.engine.military.units import design_spec, muster, profile_of, sync
 from aerona.engine.mind.book import effect_of, scaled_by, values_for
+from aerona.engine.mind.split import MIDPOINT, attribute
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int
@@ -153,6 +160,46 @@ async def surgeon_skill(ctx: TickContext, army_ids: list[int]) -> int:
     return max([await skill_level(ctx, row.mortal_entity_id, SkillKind.MEDICINE) for row in rows] or [0])
 
 
+AGGRESSIVE = frozenset({CommanderTrait.RECKLESS, CommanderTrait.AGGRESSIVE_ASSAULTER})
+
+
+async def standard_borne(ctx: TickContext, army_ids: list[int]) -> bool:
+    found = await ctx.session.scalar(
+        select(ArmyOfficerRow.id)
+        .where(ArmyOfficerRow.army_entity_id.in_(army_ids), ArmyOfficerRow.role == ArmyRole.STANDARD_BEARER, ArmyOfficerRow.until_epoch.is_(None))
+        .limit(1)
+    )
+    return found is not None
+
+
+async def bold_officers(ctx: TickContext, army_ids: list[int]) -> int:
+    rows = await ctx.session.scalars(
+        select(ArmyOfficerRow.mortal_entity_id).where(
+            ArmyOfficerRow.army_entity_id.in_(army_ids), ArmyOfficerRow.role == ArmyRole.SUB_COMMANDER, ArmyOfficerRow.until_epoch.is_(None)
+        )
+    )
+    bold = 0
+    for mortal_id in list(rows):
+        if AGGRESSIVE & await traits_of(ctx, mortal_id):
+            bold += 1
+    return bold
+
+
+async def wits_of(ctx: TickContext, commander_id: int | None) -> int:
+    commander = await living_entity(ctx.session, commander_id) if commander_id is not None else None
+    if commander is None or commander.entity_type is not EntityType.MORTAL:
+        return MIDPOINT
+    return await attribute(ctx.session, ctx.rules, commander, Attribute.ANALYTICAL_ABILITY)
+
+
+async def planned(ctx: TickContext, profile: ArmyProfileRow, community: EntityRow, enemy: EntityRow) -> bool:
+    table = ctx.rules.battle_depth
+    if profile.contact_seasons < table.planning_seasons:
+        return False
+    known = await beliefs_of(ctx.session, community.id)
+    return any(subject == enemy.id and row.confidence >= table.planning_confidence for (subject, _attribute), row in known.items())
+
+
 async def side_of(
     ctx: TickContext,
     community: EntityRow,
@@ -207,6 +254,12 @@ async def side_of(
         wing_bonus=await sub_commander_bonus(ctx, [item.id for item, _ in armies]),
         medicine=clamp_int(medicine, 0, PERCENT),
         watch=await watchfulness(ctx, row.commander_entity_id),
+        planned=not defending and await planned(ctx, profile, community, enemy),
+        deceiver=await skill_level(ctx, commander, SkillKind.DECEPTION) >= table.battle_depth.deceiver_skill,
+        standard=await standard_borne(ctx, [item.id for item, _ in armies]),
+        babel=-parts["babel"],
+        wits=await wits_of(ctx, commander),
+        initiative_officers=await bold_officers(ctx, [item.id for item, _ in armies]),
     )
 
 
@@ -282,7 +335,33 @@ async def clash(
     for side in (first, second):
         for army, _ in armies[side.entity.id]:
             sync(army, [stack.row for stack in side.stacks if stack.row.army_entity_id == army.id], ctx.rules)
+            profile = await ctx.session.get(ArmyProfileRow, army.id)
+            if profile is not None and not held(army.id):
+                profile.contact_seasons = 0
+        if side.commander_struck:
+            await strike_commander(ctx, armies[side.entity.id][0][1].commander_entity_id)
+    if result.winner is not None and result.loser is not None and not result.refused:
+        await take_engines(ctx, result.winner, result.loser)
     return result
+
+
+async def strike_commander(ctx: TickContext, commander_id: int | None) -> bool:
+    commander = await living_entity(ctx.session, commander_id) if commander_id is not None else None
+    if commander is None or commander.entity_type is not EntityType.MORTAL or held(commander.id):
+        return False
+    harm = Harm(ctx.rules.battle_depth.struck_hp, HarmCause.BATTLE, "struck down leading the battle", damage_type=DamageType.CUT)
+    return (await apply_hits(ctx, commander, harm, lethal=False)) is not None
+
+
+async def take_engines(ctx: TickContext, winner: Side, loser: Side) -> int:
+    taken = 0
+    for stack in loser.stacks:
+        if stack.row.kind is not UnitKind.SIEGE_ENGINES or stack.row.count <= 0 or not stack.routed or held(stack.row.army_entity_id):
+            continue
+        stack.row.army_entity_id = winner.army.id
+        taken += stack.row.count
+        winner.salvaged += stack.row.count
+    return taken
 
 
 def stacks_by_army(side: Side) -> dict[int, list[Stack]]:

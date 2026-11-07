@@ -9,6 +9,8 @@ from aerona.domain.enums.military import (
     CaptiveFate,
     CommanderTrait,
     DefenderAction,
+    Formation,
+    MoraleState,
     OutcomeClass,
     ShieldType,
     SiegeAction,
@@ -16,6 +18,7 @@ from aerona.domain.enums.military import (
     Stance,
     StarvationStage,
     Tactic,
+    TargetClass,
     UnitFamily,
     UnitKind,
     WarAimKind,
@@ -56,6 +59,20 @@ class StackView(ApiModel):
     fatigue: int
     wounded: int
     condition: int
+    organisation: int
+    discipline: int
+    ammunition: int
+    missing: int
+    morale_state: MoraleState
+    morale_label: str
+    formation: Formation
+    formation_label: str
+    target_class: TargetClass
+    reach: int
+    volleys: int
+    accuracy: int
+    piercing: int
+    locked: list[str]
 
 
 class MovementView(ApiModel):
@@ -89,6 +106,7 @@ class ArmyCard(ApiModel):
     entrenchment: int
     forced_march: bool
     baggage: int
+    contact_seasons: int
     locked: list[str]
     stacks: list[StackView]
     movements: list[MovementView]
@@ -127,6 +145,13 @@ class BattleReportView(ApiModel):
     casualties_by_kind: dict[str, int]
     winner_losses: int
     loser_losses: int
+    width: int
+    reserves_committed: int
+    command_collapsed: NodeRef | None
+    planned_by: NodeRef | None
+    trap_by: NodeRef | None
+    feint: bool
+    salvaged: int
     phases: list[BattlePhaseView]
 
 
