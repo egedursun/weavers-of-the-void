@@ -76,11 +76,12 @@ These rules are enforced mechanically, and they bind Claude as much as anyone.
     - Append-only histories and tables the engine wipes and rebuilds wholesale are outputs, not authored state.
   - `backend/tests/engine/core/test_god_control.py` whenever engine or db code changes (rule 6). It runs every engine step, found automatically, twice. First with every node held: nothing tied to a node may be created, changed or deleted. Then forced on one node: it must run cleanly. A new step that acts on a held node fails the commit. Skip held nodes with `held()` or `unheld()` from `aerona.db.write_guard` where the step chooses whom to act on. Field updates on held rows are already reverted for every node-linked table.
   - `scripts/check_deprecated_apis.py` on every commit (rule 8). It finds every retired SQLAlchemy, pydantic, FastAPI, Starlette, httpx and Alembic API, such as `Result.tuples()`, and fails on any use of one in source, tests or scripts.
+  - `scripts/check_import_cycles.py` on every commit (rule 8). It fails on any circle of module-level imports, so every module imports on its own.
   - The proving gate on every backend change (rule 8):
     - `tests/tools/test_every_tool.py`: every son and mortal tool runs to success.
     - `tests/tools/test_catalogue.py`: every tool field the model sees is described.
     - A full epoch with a scripted model, and an engine-only epoch.
     - Every test file that imports a changed function, class or constant, or a changed test helper. `scripts/covering_tests.py` lists them from the staged diff.
   - ruff, mypy (with deprecated calls as errors) and import layers for backend changes.
-  - tsc, eslint and prettier for frontend changes (rule 5).
+  - tsc, eslint and prettier for frontend changes (rule 5), and the vitest files that cover the change: every test in the folder of a changed file and every test that imports it. `scripts/covering_frontend_tests.py` lists them from the staged diff.
 - **Never bypass a check.** No `--no-verify`, no allowlists, and no downgrading an error to a warning. A failing check means the work is not done: fix what it found, in the same task.

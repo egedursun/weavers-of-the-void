@@ -16,6 +16,7 @@ from aerona.db.tables.ecology import (
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.ecology import SIZE_ORDER, STAGE_ORDER, BeastTemper, DomesticationStage, SizeClass, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
@@ -25,6 +26,7 @@ from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.models.entity_stats import SpeciesStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
+from aerona.engine.ecology.biochemistry import can_live_on
 from aerona.engine.ecology.profiles import profile_of
 from aerona.engine.economy.stocks import GoodsLedger, holding
 from aerona.engine.notes import note
@@ -37,7 +39,7 @@ S = DomesticationStage
 KEPT = frozenset({S.HERDED, S.DOMESTICATED, S.BREED})
 HOUSED = frozenset({S.DOMESTICATED, S.BREED})
 TEN = 10
-HERD_PRODUCTS = frozenset({"wool", "milk"})
+HERD_PRODUCTS = frozenset({"wool", "milk", "eggs"})
 
 
 async def keeper_of(ctx: TickContext, tamer: EntityRow) -> EntityRow | None:
@@ -332,3 +334,34 @@ async def draught(ctx: TickContext, community_id: int) -> float:
 
 async def guarded(ctx: TickContext, community_id: int) -> float:
     return 1 - ctx.rules.domestication.guard_pct / PERCENT if await kept_for(ctx, community_id, SpeciesUse.GUARD) > 0 else 1.0
+
+
+async def carry_herds(ctx: TickContext, source_id: int, colony: EntityRow) -> tuple[int, int]:
+    carried = left = 0
+    if held(source_id) or held(colony.id):
+        return carried, left
+    for herd in list(
+        await ctx.session.scalars(select(HerdRow).where(HerdRow.community_entity_id == source_id, HerdRow.head > 0).order_by(HerdRow.species_entity_id))
+    ):
+        head = round_half_up(herd.head * ctx.rules.domestication.colony_herd_pct / PERCENT)
+        if head <= 0:
+            continue
+        if not await can_live_on(ctx.session, herd.species_entity_id, colony.world_id):
+            left += 1
+            continue
+        if "head" not in herd.locked:
+            herd.head -= head
+        ctx.session.add(
+            HerdRow(
+                community_entity_id=colony.id,
+                species_entity_id=herd.species_entity_id,
+                head=head,
+                stage=herd.stage,
+                since_epoch=ctx.epoch,
+                fed_epochs=0,
+                locked=[],
+            )
+        )
+        carried += 1
+    await ctx.session.flush()
+    return carried, left

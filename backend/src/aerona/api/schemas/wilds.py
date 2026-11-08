@@ -1,7 +1,21 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.body import BodyPlan
-from aerona.domain.enums.ecology import BeastTemper, Diet, DomesticationStage, FoodLink, RangeTrend, SizeClass, Sociality, SpeciesUse
+from aerona.domain.enums.ecology import (
+    BeastTemper,
+    Biochemistry,
+    Cultivation,
+    Diet,
+    DomesticationStage,
+    FoodLink,
+    GrowthCycle,
+    PlantYield,
+    RangeTrend,
+    SizeClass,
+    Sociality,
+    SpeciesClass,
+    SpeciesUse,
+)
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import CreatureTrait
@@ -87,9 +101,34 @@ class HerdView(ApiModel):
     locked: list[str]
 
 
+class PlantView(ApiModel):
+    growth_cycle: GrowthCycle
+    growing_seasons: int
+    soil_need: int
+    cultivation: Cultivation
+    cultivar_of: NodeRef | None
+    since_epoch: int
+    locked: list[str]
+
+
+class SownView(ApiModel):
+    region: NodeRef | None
+    share: int
+    fit: int
+    since_epoch: int
+    locked: list[str]
+
+
 class SpeciesCard(ApiModel):
     species_id: int
     world_id: int | None
+    species_class: SpeciesClass
+    biochemistry: Biochemistry
+    bearable: bool
+    plant: PlantView | None
+    sown_in: list[SownView]
+    pests: list[NodeRef]
+    pest_of: list[NodeRef]
     body_plan: BodyPlan
     size_class: SizeClass
     lifespan_years: int
@@ -198,3 +237,35 @@ class FoodWeb(ApiModel):
     region_id: int
     nodes: list[WebNode]
     links: list[WebLink]
+
+
+class CropView(ApiModel):
+    plant: NodeRef | None
+    share: int
+    fit: int
+    cultivation: Cultivation | None
+    products: list[PlantYield]
+    pests: list[NodeRef]
+    since_epoch: int
+    locked: list[str]
+
+
+class RegionCrops(ApiModel):
+    region_id: int
+    world_id: int | None
+    harvest_pct: int
+    crop_cap: int
+    crops: list[CropView]
+
+
+class LifeKind(ApiModel):
+    biochemistry: Biochemistry
+    label: str
+    borne: bool
+    anywhere: bool
+    kinds: int
+
+
+class WorldLife(ApiModel):
+    world_id: int
+    kinds: list[LifeKind]

@@ -18,6 +18,7 @@ from tests.tools.every_setup import (
     ley_line,
     named_spirit,
     outsider,
+    plant,
     seasons,
     second_mortal,
     second_region,
@@ -98,6 +99,10 @@ def faction(realm: Realm, _ids: Ids) -> int:
 
 def cult(realm: Realm, _ids: Ids) -> int:
     return realm.cult_id
+
+
+def plant_kind(_realm: Realm, ids: Ids) -> int:
+    return ids["plant"]
 
 
 def species(realm: Realm, _ids: Ids) -> int:
@@ -248,6 +253,7 @@ SON_CASES: dict[str, Case] = {
     "sanctify_place": Case(plain(place_id=place, reason=REASON)),
     "raise_nexus": Case(plain(place_id=place, reason=REASON), surveyed),
     "reshape_land": Case(plain(region_id=region, act="green", reason=REASON), surveyed),
+    "sow_crop": Case(plain(region_id=region, plant_id=plant_kind), plant),
     "sanctify_region": Case(plain(region_id=region, reason=REASON), surveyed),
     "curse_region": Case(plain(region_id=region, strength=20, reason=REASON), surveyed),
     "redirect_river": Case(plain(from_region_id=region, to_region_id=created("region"), reason=REASON), combined(second_region, surveyed)),

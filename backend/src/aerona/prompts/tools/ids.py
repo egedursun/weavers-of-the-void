@@ -54,6 +54,7 @@ class SonToolId(StrEnum):
     TEACH_KNOWLEDGE = "teach_knowledge"
     ADVANCE_KNOWLEDGE = "advance_knowledge"
     REVEAL_TRUTH = "reveal_truth"
+    SOW_CROP = "sow_crop"
     INCITE_WAR = "incite_war"
     TRANSFORM = "transform"
     DESTROY = "destroy"

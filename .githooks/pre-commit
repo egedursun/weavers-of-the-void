@@ -22,6 +22,7 @@ run wiring "$PYTHON" scripts/check_wiring.py
 run control "$PYTHON" scripts/check_control.py
 run deprecated_apis "$PYTHON" scripts/check_deprecated_apis.py
 run transfers "$PYTHON" scripts/check_transfers.py
+run import_cycles "$PYTHON" scripts/check_import_cycles.py
 
 if echo "$STAGED" | grep -qE '^(backend/|scripts/).*\.py$'; then
   run static sh -c 'cd backend && .venv/bin/ruff check src && .venv/bin/ruff format --check src && .venv/bin/mypy src/aerona && .venv/bin/lint-imports'
@@ -45,6 +46,10 @@ FRONT=$(echo "$STAGED" | grep -E '^frontend/.*\.(ts|tsx)$' | grep -v '^frontend/
 if [ -n "$FRONT" ]; then
   echo "$FRONT" > "$LOGS/front.list"
   run frontend sh -c "cd frontend && npx tsc -b && xargs npx eslint --no-warn-ignored < '$LOGS/front.list' && xargs npx prettier --check < '$LOGS/front.list'"
+  "$PYTHON" scripts/covering_frontend_tests.py > "$LOGS/front_tests.list"
+  if [ -s "$LOGS/front_tests.list" ]; then
+    run frontend_tests sh -c "cd frontend && xargs npx vitest run < '$LOGS/front_tests.list'"
+  fi
 fi
 
 echo "pre-commit: running$JOBS in parallel"

@@ -5,11 +5,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.repositories.worlds import WorldDraft, WorldRepository
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow, SpeciesYieldRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.flora import PlantProfileRow, RegionCropRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sons import SonRow
+from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.ecology import Cultivation, Diet, SpeciesClass
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.society import KnowledgeBranch
@@ -132,6 +137,20 @@ async def frontier(session: AsyncSession, home: CoreWorld, index: int) -> Fronti
         world_id=world.id,
         location_id=regions[3].id,
     )
+    crop = await entity(
+        session,
+        f"{name} Crop",
+        EntityType.SPECIES,
+        SpeciesStats(hp=5, strength=5, agility=5, intelligence=5, danger=0),
+        world_id=world.id,
+        location_id=regions[0].id,
+    )
+    session.add(SpeciesProfileRow(species_entity_id=crop.id, species_class=SpeciesClass.PLANT, body_plan=BodyPlan.ARBOREAL, diet=Diet.PHOTOSYNTHETIC))
+    session.add(PlantProfileRow(species_entity_id=crop.id, cultivation=Cultivation.CULTIVATED, since_epoch=1))
+    session.add(SpeciesYieldRow(species_entity_id=crop.id, product="grain", commodity=CommodityKind.GRAIN, rate=2))
+    session.add(SpeciesYieldRow(species_entity_id=crop.id, product="fibre", commodity=CommodityKind.FIBRE, rate=1))
+    session.add(SpeciesRangeRow(species_entity_id=crop.id, region_entity_id=regions[0].id, abundance=40))
+    session.add(RegionCropRow(region_entity_id=regions[0].id, plant_entity_id=crop.id, share=60, since_epoch=1))
     await entity(
         session,
         f"{name} Ore",

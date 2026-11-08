@@ -1430,6 +1430,14 @@
     "golem": "golem",
     "tanrı cesedi": "god_corpse"
   },
+  "species_classes": {
+    "bitki": "plant",
+    "ağaç": "plant",
+    "flora": "plant",
+    "mantar": "fungus",
+    "haşere": "vermin",
+    "zararlı": "vermin"
+  },
   "mortal_roles": {
     "subtypes": {
       "kral": "ruler",

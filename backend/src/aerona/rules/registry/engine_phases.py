@@ -297,6 +297,7 @@ class EnginePhasesRules:
     artwork_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: artwork cycles")
     rumour_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: rumour cycles")
     husbandry: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: husbandry")
+    flora_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: flora cycles")
     beast_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: beast cycles")
     region_survey: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: region survey")
     danger_harm: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: danger harm")

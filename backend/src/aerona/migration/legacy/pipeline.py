@@ -138,6 +138,7 @@ async def migrate_into(
         session.add_all(override_rows(overrides))
         await session.flush()
         await finalize.run_repairs(context)
+        await finalize.type_species(context)
         await finalize.regenerate_maps(context)
         await finalize.check_constraints(context)
         await finalize.count_tables(context)

@@ -197,8 +197,8 @@ async def federations(ctx: TickContext) -> EntityRow | None:
 
 
 async def reveal_previous_creation(ctx: TickContext, world: WorldRow) -> EntityRow | None:
-    regions = await canon(ctx.session, [EntityType.REGION], world.id)
-    if not regions:
+    regions = unheld(await canon(ctx.session, [EntityType.REGION], world.id))
+    if not regions or held(world.id):
         return None
     civ = ctx.rules.civilization
     rng = ctx.rng(f"previous_creation.{world.id}")

@@ -88,6 +88,7 @@ from aerona.rules.registry.factions import BanditryRules, FactionsRules, Intrigu
 from aerona.rules.registry.faith import FaithRules
 from aerona.rules.registry.fate import FateRules
 from aerona.rules.registry.finance import AccessRules, ArbitrageRules, CreditRules, ElasticityRules, SpeculationRules, TradePolicyRules
+from aerona.rules.registry.flora import FloraRules
 from aerona.rules.registry.folk import BiologyRules, CustomsRules
 from aerona.rules.registry.folk_belief import FolkBeliefRules
 from aerona.rules.registry.foreign_gods import ForeignGodsRules
@@ -370,6 +371,7 @@ class Rules:
     research_depth: ResearchDepthRules = field(default_factory=ResearchDepthRules)
     discovery: DiscoveryRules = field(default_factory=DiscoveryRules)
     theories: TheoriesRules = field(default_factory=TheoriesRules)
+    flora: FloraRules = field(default_factory=FloraRules)
     art_forms: ArtFormsRules = field(default_factory=ArtFormsRules)
     name_meanings: NameMeaningsRules = field(default_factory=NameMeaningsRules)
     holy_orders: OrderRules = field(default_factory=OrderRules)

@@ -7,20 +7,24 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, RiteProfileRow
+from aerona.db.tables.ecology import SpeciesProfileRow
 from aerona.db.tables.economy import MarketPriceRow, TradeRouteProfileRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import LeyLineRow, WorldSeasonRow
 from aerona.db.tables.estates import EstateProfileRow
 from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.flora import PlantProfileRow
 from aerona.db.tables.intrigue import HookRow, TrueNameRow
 from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow
 from aerona.db.tables.sons import SonRelationRow, SonRow
 from aerona.db.tables.statecraft import CrisisRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleProfileRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
+from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.ecology import Diet, SpeciesClass
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import CivilizationTier, EntityFlag, EntityType
 from aerona.domain.enums.faction import FactionKind
@@ -85,6 +89,13 @@ async def faithful_spirit(session: AsyncSession, realm: Realm) -> Ids:
     ids = await spirit(session, realm)
     await connect(session, ids["spirit"], realm.son_id, BondKind.WORSHIPS)
     return ids
+
+
+async def plant(session: AsyncSession, realm: Realm) -> Ids:
+    crop = await make_entity(session, "Field Sedge", EntityType.SPECIES, world_id=realm.cosmos.world_id, location_id=realm.cosmos.region_id)
+    session.add(SpeciesProfileRow(species_entity_id=crop.id, species_class=SpeciesClass.PLANT, body_plan=BodyPlan.ARBOREAL, diet=Diet.PHOTOSYNTHETIC))
+    session.add(PlantProfileRow(species_entity_id=crop.id))
+    return {"plant": crop.id}
 
 
 async def item(session: AsyncSession, realm: Realm) -> Ids:

@@ -44,6 +44,7 @@ from aerona.services.player import (
     fate_controls,
     feelings,
     finance,
+    flora,
     foreign_gods,
     foundations,
     genetics,
@@ -2105,6 +2106,11 @@ WILDS_ACTIONS = (
     _sync(Meta("beast:create", "Call forth a new named beast", G.CREATURES), wilds.create_beast, wilds.CreateBeast, free, ("S3.3a",)),
     _sync(Meta("beast:slay", "Slay a named beast", G.CREATURES), wilds.slay, wilds.Slay, free, ("S3.3a",)),
     _sync(Meta("beast:treasure", "Lay an item in a beast's hoard or take it out", G.CREATURES), wilds.move_treasure, wilds.Treasure, free, ("S3.3a",)),
+    _sync(Meta("plant:edit", "Edit a plant's growth, soil and cultivation", G.CREATURES), flora.edit_plant, flora.EditPlant, free, ("S3.2/RP2",)),
+    _sync(Meta("crop:set", "Sow a crop in a land or set its share of the fields", G.CREATURES), flora.set_crop, flora.SetCrop, free, ("S3.2/RP2",)),
+    _sync(Meta("crop:drop", "Clear a crop from a land's fields", G.CREATURES), flora.drop_crop, flora.CropTarget, free, ("S3.2/RP2",)),
+    _sync(Meta("crop_pest:set", "Set or clear a pest that feeds on a crop", G.CREATURES), flora.set_crop_pest, flora.CropPest, free, ("S3.2/RP2",)),
+    _sync(Meta("world:life", "Set which kinds of life a world can bear", G.WORLDS), flora.set_world_life, flora.WorldLife, free, ("S3.2/RP2",)),
 )
 
 REGION_ACTIONS = (

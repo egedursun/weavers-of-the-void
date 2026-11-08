@@ -371,6 +371,11 @@ STEP_PROCESS: MappingProxyType[str, ProcessKind] = MappingProxyType(
         "butcher": P.BUTCHERY,
         "cheese": P.DAIRY,
         "press_fruit": P.PRESSING,
+        "weave_wool": P.WEAVING,
+        "weave_fibre": P.WEAVING,
+        "dye_cloth": P.WEAVING,
+        "brew_base": P.BREWING,
+        "herbal_remedies": P.DISTILLING,
     }
 )
 EXTRACTION_PROCESS: MappingProxyType[ExtractionKind, ProcessKind] = MappingProxyType(
@@ -418,6 +423,8 @@ PERISHABLE: MappingProxyType[CommodityKind, str] = MappingProxyType(
         CommodityKind.FRUIT: "fruit_pct",
         CommodityKind.CHEESE: "cheese_pct",
         CommodityKind.TUBERS: "tubers_pct",
+        CommodityKind.EGGS: "eggs_pct",
+        CommodityKind.HERBS: "herbs_pct",
     }
 )
 FUEL_FAMILY: tuple[CommodityKind, ...] = (CommodityKind.FUEL, CommodityKind.COAL, CommodityKind.PEAT, CommodityKind.DUNG, CommodityKind.TIMBER)

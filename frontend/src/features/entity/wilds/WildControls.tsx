@@ -548,7 +548,7 @@ export function KeepingControls({ id, card, blocked }: Blocked) {
           <Input
             id={`keeping-name-${id}`}
             value={name}
-            placeholder='Grave-guarding, falconry…'
+            placeholder='Name the way of keeping'
             onChange={(event) => setName(event.target.value)}
           />
         </div>

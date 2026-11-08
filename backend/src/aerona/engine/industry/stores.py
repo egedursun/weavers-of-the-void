@@ -4,12 +4,12 @@ from sqlalchemy import func, select
 
 from aerona.catalog.methods import FUEL_FAMILY, FUEL_HEAT, METHODS, PERISHABLE, default_method
 from aerona.constants.units import PERCENT
-from aerona.db.tables.ecology import HerdRow, SpeciesProfileRow, SpeciesRangeRow
+from aerona.db.tables.ecology import HerdRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow
 from aerona.db.tables.economy import CommunityStockRow, ProductionRunRow
 from aerona.db.tables.entities import EntityRow, EntityTraitRow
 from aerona.db.tables.industry import CommunityIndustryRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.ecology import Diet, SizeClass
+from aerona.domain.enums.ecology import Diet, SizeClass, SpeciesClass, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.industry import EnergyKind, ProcessKind, QualityTier
 from aerona.domain.enums.society import CreatureTrait, SocialClass
@@ -27,7 +27,7 @@ TENTH = 10
 THOUSAND = 1000
 HUNTER_DIETS = (Diet.CARNIVORE, Diet.OMNIVORE)
 HUNTER_SIZES = (SizeClass.TINY, SizeClass.SMALL)
-DRINK_STEPS = ("brew", "press_fruit")
+DRINK_STEPS = ("brew", "press_fruit", "brew_base")
 STORED_GRAINS = frozenset({CommodityKind.GRAIN, CommodityKind.TUBERS})
 LIGHT_STEP = "lighting"
 
@@ -44,7 +44,9 @@ class StoreTally:
 async def vermin_in(ctx: TickContext, region_id: int | None) -> bool:
     if region_id is None:
         return False
-    pests = select(EntityTraitRow.entity_id).where(EntityTraitRow.trait == CreatureTrait.CROP_PEST)
+    traited = select(EntityTraitRow.entity_id).where(EntityTraitRow.trait == CreatureTrait.CROP_PEST)
+    vermin = select(SpeciesProfileRow.species_entity_id).where(SpeciesProfileRow.species_class == SpeciesClass.VERMIN)
+    pests = traited.union(vermin)
     found = await ctx.session.scalar(
         select(SpeciesRangeRow.species_entity_id)
         .where(SpeciesRangeRow.region_entity_id == region_id, SpeciesRangeRow.abundance > 0, SpeciesRangeRow.species_entity_id.in_(pests))
@@ -54,7 +56,8 @@ async def vermin_in(ctx: TickContext, region_id: int | None) -> bool:
 
 
 async def pest_hunters(ctx: TickContext, community_id: int) -> bool:
-    hunters = select(SpeciesProfileRow.species_entity_id).where(SpeciesProfileRow.diet.in_(HUNTER_DIETS), SpeciesProfileRow.size_class.in_(HUNTER_SIZES))
+    sized = select(SpeciesProfileRow.species_entity_id).where(SpeciesProfileRow.diet.in_(HUNTER_DIETS), SpeciesProfileRow.size_class.in_(HUNTER_SIZES))
+    hunters = sized.union(select(SpeciesUseRow.species_entity_id).where(SpeciesUseRow.use == SpeciesUse.PEST_CONTROL))
     found = await ctx.session.scalar(
         select(HerdRow.species_entity_id).where(HerdRow.community_entity_id == community_id, HerdRow.head > 0, HerdRow.species_entity_id.in_(hunters)).limit(1)
     )

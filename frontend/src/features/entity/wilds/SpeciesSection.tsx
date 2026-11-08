@@ -21,6 +21,7 @@ import {
   Plus,
   ShieldAlert,
   Sparkles,
+  Sprout,
   Sun,
   Thermometer,
   Trash2,
@@ -70,6 +71,7 @@ import { COMMODITY } from '../economy/labels'
 import { TERRAIN } from '../environment/labels'
 import { PERCENT, busyOf } from '../lore/model'
 import { MindPicker } from '../mind/parts'
+import { FloraCard, FloraControls } from './FloraPanels'
 import {
   CustomUseBadges,
   FoodLinkControls,
@@ -1245,7 +1247,7 @@ function YieldControls({ id, card, blocked }: Blocked) {
             <Input
               id={`yield-product-${id}`}
               value={product}
-              placeholder='Meat, wool, horn…'
+              placeholder='What it gives'
               onChange={(event) => setProduct(event.target.value)}
             />
           </div>
@@ -1551,6 +1553,10 @@ function SpeciesControls({ id, card, blocked }: Blocked) {
             <Sparkles />
             Keeping
           </TabsTrigger>
+          <TabsTrigger value='growth'>
+            <Sprout />
+            Growth
+          </TabsTrigger>
         </TabsList>
         <TabsContent value='nature'>
           <NatureControls id={id} card={card} blocked={blocked} />
@@ -1573,6 +1579,9 @@ function SpeciesControls({ id, card, blocked }: Blocked) {
         <TabsContent value='keeping'>
           <KeepingControls id={id} card={card} blocked={blocked} />
         </TabsContent>
+        <TabsContent value='growth'>
+          <FloraControls id={id} card={card} blocked={blocked} />
+        </TabsContent>
       </Tabs>
     </AdjustPanel>
   )
@@ -1594,6 +1603,7 @@ function Body({ id, card, blocked }: Blocked) {
         <Traits card={card} />
         <FoodChain card={card} />
         <UsesAndYields card={card} />
+        <FloraCard card={card} />
       </div>
       <Ranges card={card} />
       <SpeciesControls id={id} card={card} blocked={blocked} />

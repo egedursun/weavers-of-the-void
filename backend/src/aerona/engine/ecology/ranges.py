@@ -12,13 +12,14 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.disease import OutbreakStatus
-from aerona.domain.enums.ecology import GRAZERS, HUNTERS, SIZE_ORDER, DomesticationStage, RangeTrend, Sociality
+from aerona.domain.enums.ecology import GRAZERS, HUNTERS, SIZE_ORDER, Biochemistry, DomesticationStage, RangeTrend, Sociality
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
+from aerona.engine.ecology.biochemistry import bearable, tolerated
 from aerona.engine.ecology.profiles import profile_of
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.faith.book import FaithBook
@@ -46,6 +47,10 @@ class Wilds:
     traits: dict[int, set[CreatureTrait]] = field(default_factory=dict)
     sick: dict[int, set[int]] = field(default_factory=lambda: defaultdict(set))
     sacred: dict[int, set[int]] = field(default_factory=lambda: defaultdict(set))
+    life: dict[int, tuple[Biochemistry, ...]] = field(default_factory=dict)
+
+    def allowed(self, land: RegionEnvironmentRow | None) -> tuple[Biochemistry, ...] | None:
+        return self.life.get(land.world_id) if land is not None and land.world_id is not None else None
 
     def in_region(self, region_id: int) -> dict[int, SpeciesRangeRow]:
         return {species_id: rows[region_id] for species_id, rows in self.ranges.items() if region_id in rows}
@@ -68,6 +73,8 @@ async def load_wilds(ctx: TickContext, species: list[EntityRow], invasive: set[i
         if item.id in invasive:
             for region in wilds.ranges[item.id]:
                 wilds.invasive[region] += 1
+    for world_id in sorted({land.world_id for land in lands.values() if land.world_id is not None}):
+        wilds.life[world_id] = await tolerated(ctx.session, world_id)
     await sacred_and_sick(ctx, wilds)
     return wilds
 
@@ -121,9 +128,13 @@ def terrain_fit(rules: Rules, profile: SpeciesProfileRow, land: RegionEnvironmen
     return fit
 
 
-def fit_of(rules: Rules, profile: SpeciesProfileRow, land: RegionEnvironmentRow | None, traits: set[CreatureTrait]) -> float:
+def fit_of(
+    rules: Rules, profile: SpeciesProfileRow, land: RegionEnvironmentRow | None, traits: set[CreatureTrait], allowed: tuple[Biochemistry, ...] | None = None
+) -> float:
     if land is None:
         return rules.habitat.terrain_default / PERCENT
+    if allowed is not None and not bearable(profile.biochemistry, allowed):
+        return 0.0
     table = rules.habitat
     fit = terrain_fit(rules, profile, land, traits)
     beyond = max(0, profile.temperature_min - table.temperature_slack - land.temperature, land.temperature - profile.temperature_max - table.temperature_slack)
@@ -252,7 +263,7 @@ def plan(
     profile = wilds.profiles[species.id]
     traits = wilds.traits.get(species.id, set())
     land = wilds.lands.get(region)
-    fit = fit_of(rules, profile, land, traits)
+    fit = fit_of(rules, profile, land, traits, wilds.allowed(land))
     if "fit" not in row.locked:
         row.fit = clamp_int(round_half_up(fit * PERCENT), 0, PERCENT * 2)
     prey = [wilds.ranges[item][region].abundance for item in prey_of.get(species.id, []) if region in wilds.ranges.get(item, {})]
@@ -343,7 +354,10 @@ async def spread(ctx: TickContext, wilds: Wilds, species: list[EntityRow]) -> in
                     continue
                 if wilds.atlas.is_water(neighbour) and not traits & {T.AQUATIC, T.FLYING}:
                     continue
-                if fit_of(ctx.rules, wilds.profiles[item.id], wilds.lands.get(neighbour), traits) * PERCENT < table.spread_fit:
+                if (
+                    fit_of(ctx.rules, wilds.profiles[item.id], wilds.lands.get(neighbour), traits, wilds.allowed(wilds.lands.get(neighbour))) * PERCENT
+                    < table.spread_fit
+                ):
                     continue
                 fresh = SpeciesRangeRow(
                     species_entity_id=item.id,
@@ -375,7 +389,13 @@ async def migrate(ctx: TickContext, wilds: Wilds, species: list[EntityRow]) -> i
             options = [region for region in (wilds.atlas.neighbour_regions(home) if home is not None else []) if region in wilds.regions]
             if home is None or not options:
                 continue
-            best = max(options, key=lambda region: (fit_of(ctx.rules, profile, wilds.lands.get(region), wilds.traits.get(item.id, set())), -region))
+            best = max(
+                options,
+                key=lambda region: (
+                    fit_of(ctx.rules, profile, wilds.lands.get(region), wilds.traits.get(item.id, set()), wilds.allowed(wilds.lands.get(region))),
+                    -region,
+                ),
+            )
             profile.migration_path = [home, best]
         path = [region for region in profile.migration_path if region in wilds.regions]
         if len(path) < 2:

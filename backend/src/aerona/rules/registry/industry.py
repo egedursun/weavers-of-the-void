@@ -86,6 +86,8 @@ class StoreRules:
     fruit_pct: int = rule(25, 0, 100, G, "Share of unpreserved fruit that spoils each sampled year (%)")
     cheese_pct: int = rule(3, 0, 100, G, "Share of unpreserved cheese that spoils each sampled year (%)")
     tubers_pct: int = rule(5, 0, 100, G, "Share of unpreserved tubers that spoil each sampled year (%)")
+    eggs_pct: int = rule(40, 0, 100, G, "Share of unpreserved eggs that spoil each sampled year (%)")
+    herbs_pct: int = rule(15, 0, 100, G, "Share of unpreserved herbs that spoil each sampled year (%)")
     vermin_pct: int = rule(60, 0, 400, G, "How much crop pests in the land raise the spoilage of stored grain (%)")
     granary_pct: int = rule(15, 0, 100, G, "How much each level of a granary lowers spoilage (%)")
     hunters_pct: int = rule(40, 0, 100, G, "How much tame pest hunters lower the spoilage of stored grain (%)")

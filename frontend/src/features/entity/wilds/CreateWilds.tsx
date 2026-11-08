@@ -2,11 +2,15 @@ import { type ReactNode, useId, useState } from 'react'
 import { Dna, Footprints, Plus, Sparkles, Wand2 } from 'lucide-react'
 import {
   beastTemperValues,
+  biochemistryValues,
   bodyPlanValues,
   creatureTraitValues,
   dietValues,
+  growthCycleValues,
+  plantYieldValues,
   sizeClassValues,
   socialityValues,
+  speciesClassValues,
   yieldProductValues,
 } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
@@ -29,9 +33,13 @@ import { PLANS } from '../body/labels'
 import { busyOf } from '../lore/model'
 import { useWildAction } from './api'
 import {
+  BIOCHEMISTRY,
   DIET,
+  GROWTH_CYCLE,
   type Named,
+  PLANT_YIELD,
   SIZE,
+  SPECIES_CLASS,
   SOCIALITY,
   TEMPER,
   TRAIT,
@@ -250,6 +258,11 @@ export function CreateSpeciesDialog({ regionId }: { regionId?: number }) {
   const [nocturnal, setNocturnal] = useState(false)
   const [migratory, setMigratory] = useState(false)
   const [products, setProducts] = useState<string[]>([])
+  const [kind, setKind] = useState('animal')
+  const [life, setLife] = useState<string[]>([])
+  const [cycle, setCycle] = useState('annual')
+  const [harvest, setHarvest] = useState<string[]>([])
+  const grown = kind === 'plant' || kind === 'fungus'
   const [traits, setTraits] = useState<string[]>([])
   const [stats, setStats] = useState<Record<string, string>>({})
   const shownStats = { ...sizedDefaults(SPECIES_BASE, size), ...stats }
@@ -267,7 +280,11 @@ export function CreateSpeciesDialog({ regionId }: { regionId?: number }) {
       sociality: social,
       nocturnal,
       migratory,
-      products,
+      products: grown ? [] : products,
+      species_class: kind,
+      biochemistry: life[0] ?? null,
+      growth_cycle: grown ? cycle : null,
+      plant_yields: grown ? harvest : [],
       traits,
       power: Math.min(POWER_MAX, Math.max(1, Math.round(Number(power) || 1))),
       ...numbers(SPECIES_STATS, shownStats),
@@ -309,7 +326,7 @@ export function CreateSpeciesDialog({ regionId }: { regionId?: number }) {
                 <Input
                   id={id}
                   value={name}
-                  placeholder='Ashwing, Glimmerdeer…'
+                  placeholder='Its name'
                   onChange={(event) => setName(event.target.value)}
                 />
               )}
@@ -334,6 +351,42 @@ export function CreateSpeciesDialog({ regionId }: { regionId?: number }) {
               />
             )}
           </Field>
+          <ChoiceGrid
+            label='Kind of life'
+            values={speciesClassValues}
+            table={SPECIES_CLASS}
+            chosen={[kind]}
+            onPick={setKind}
+          />
+          <ChoiceGrid
+            label='What its life is built on (its world decides if you leave it)'
+            values={biochemistryValues}
+            table={BIOCHEMISTRY}
+            chosen={life}
+            onPick={(value) =>
+              setLife((before) => (before[0] === value ? [] : [value]))
+            }
+          />
+          {grown && (
+            <>
+              <ChoiceGrid
+                label='How it grows'
+                values={growthCycleValues}
+                table={GROWTH_CYCLE}
+                chosen={[cycle]}
+                onPick={setCycle}
+              />
+              <ChoiceGrid
+                label='What its harvest gives (its growth decides if you leave it)'
+                values={plantYieldValues}
+                table={PLANT_YIELD}
+                chosen={harvest}
+                onPick={(value) =>
+                  setHarvest((before) => toggled(before, value))
+                }
+              />
+            </>
+          )}
           <ChoiceGrid
             label='Body'
             values={bodyPlanValues.filter(
@@ -376,15 +429,19 @@ export function CreateSpeciesDialog({ regionId }: { regionId?: number }) {
               onChange={setMigratory}
             />
           </div>
-          <ChoiceGrid
-            label='Yields beyond meat, hide and bone'
-            values={yieldProductValues.filter(
-              (value) => !['meat', 'hide', 'bone'].includes(value)
-            )}
-            table={PRODUCTS}
-            chosen={products}
-            onPick={(value) => setProducts((before) => toggled(before, value))}
-          />
+          {!grown && (
+            <ChoiceGrid
+              label='Yields beyond meat, hide and bone'
+              values={yieldProductValues.filter(
+                (value) => !['meat', 'hide', 'bone'].includes(value)
+              )}
+              table={PRODUCTS}
+              chosen={products}
+              onPick={(value) =>
+                setProducts((before) => toggled(before, value))
+              }
+            />
+          )}
           <ChoiceGrid
             label='Traits'
             values={creatureTraitValues.filter(
@@ -499,7 +556,7 @@ export function CreateBeastDialog({
                 <Input
                   id={id}
                   value={name}
-                  placeholder='Vharrun the Ash-Maw…'
+                  placeholder='Its name'
                   onChange={(event) => setName(event.target.value)}
                 />
               )}

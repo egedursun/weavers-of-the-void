@@ -192,6 +192,7 @@ def build_world(fixture: LegacyFixture) -> dict[str, int]:
         },
         {"id": 21, "name": "Beast", "entity_type": "species", "tags": [fixture.tag("trait", fixture.enum("creature_trait", "flying")), "mystery:thing"]},
         {"id": 22, "name": "Gone", "entity_type": "mortal", "status": "rejected", "location_id": 14},
+        {"id": 23, "name": "Sedge", "entity_type": "species", "subtype": "bitki", "location_id": 10},
     ]
     for row in rows:
         legacy_type = fixture.enum("entity_type", row.pop("entity_type"))

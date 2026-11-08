@@ -109,6 +109,7 @@ from aerona.db.tables.faith import (
     SpiritProfileRow,
 )
 from aerona.db.tables.finance import CreditProfileRow, EconomicIndicatorRow, SpeculationRow, TradePolicyRow
+from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow, WorldBiochemistryRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
 from aerona.db.tables.households import DwellingFurnishingRow, DwellingRow, HouseholdAggregateRow, HouseholdMemberRow, HouseholdRow
@@ -1182,6 +1183,28 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("invent_art_form",),
         ("art_forms.invented", "art_forms.fused", "art_forms.lost", "tools.mortal.art_form_invented"),
         ("research_cycles",),
+    ),
+    ComplianceRow(
+        "S3.2/RP2",
+        (PlantProfileRow.__tablename__, RegionCropRow.__tablename__, CropPestRow.__tablename__, WorldBiochemistryRow.__tablename__),
+        ("flora_cycles", "harvest", "society_economy"),
+        (
+            "plant:edit",
+            "crop:set",
+            "crop:drop",
+            "crop_pest:set",
+            "world:life",
+            "species:edit",
+            "species:create",
+            "record_row:create",
+            "record_row:edit",
+            "record_row:delete",
+        ),
+        ("SpeciesFlora", "FloraControls", "RegionCrops", "WorldLife"),
+        ("mortal_context",),
+        ("sow_crop", "create_species"),
+        ("flora.sown", "flora.cultivar", "tools.son.sow_crop", "travel.herds_lost"),
+        ("flora_cycles",),
     ),
     ComplianceRow(
         "S8.1/RP2",

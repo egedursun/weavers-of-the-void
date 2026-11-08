@@ -22,6 +22,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.communication import DispatchContent, Medium
 from aerona.domain.enums.disease import OutbreakStatus
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind, WeatherKind
 from aerona.domain.enums.intrigue import FavourOrigin, HookDemand, HookSource, IdentityReason, IntrigueSecret, PlotKind, SchemePhase
@@ -34,6 +35,7 @@ from aerona.domain.enums.statecraft import CourtPosition
 from aerona.domain.enums.war import CaptiveStatus, SiegeStatus
 from aerona.engine.communication.post import FORGER, send
 from aerona.engine.context import TickContext
+from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.environment.book import add_scar
 from aerona.engine.environment.local import weather_here
 from aerona.engine.intrigue.favours import owe
@@ -383,8 +385,11 @@ async def coup(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: En
 async def poison_well(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     if target.entity_type not in {EntityType.SETTLEMENT, EntityType.PEOPLE}:
         return "there was no well to poison"
-    set_stats(target, population=max(1, round_half_up((stat(target, "population") or 0) * (PERCENT - POISON_PCT) / PERCENT)))
-    return f"the wells of {target.name} were poisoned"
+    home = await living_entity(ctx.session, owner.location_id) if owner.entity_type is EntityType.MORTAL else owner
+    brought = home is not None and await GoodsLedger(ctx.session, ctx.epoch).take_units(home.id, CommodityKind.POISON, 1, GoodsFlow.CONSUMPTION) > 0
+    loss = POISON_PCT + (ctx.rules.flora.poison_well_pct if brought else 0)
+    set_stats(target, population=max(1, round_half_up((stat(target, "population") or 0) * (PERCENT - loss) / PERCENT)))
+    return f"the wells of {target.name} were poisoned" + (" with poison brought from stores" if brought else "")
 
 
 async def frame(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:

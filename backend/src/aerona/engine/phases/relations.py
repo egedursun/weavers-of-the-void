@@ -212,7 +212,15 @@ async def relations_pecking(ctx: TickContext) -> None:
 
 
 @reads(
+    "mortal.agility",
     "mortal.charisma",
+    "mortal.creativity",
+    "mortal.endurance",
+    "mortal.intellect",
+    "mortal.perception",
+    "mortal.strength",
+    "mortal.willpower",
+    "mortal.wisdom",
     "table.bonds",
     "table.captives",
     "table.deed_claims",

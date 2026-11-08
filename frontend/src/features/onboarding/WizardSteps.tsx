@@ -312,7 +312,7 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
             <Input
               id={id}
               maxLength={TONE_MAX}
-              placeholder='Any tone you like: hopeful, epic, whimsical, grim, pastoral, mythic…'
+              placeholder='Any tone you like'
               value={draft.tone}
               onChange={(event) => update({ tone: event.target.value })}
             />

@@ -1,6 +1,8 @@
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.beasts import champions, deify, fallen, lair_cycle, living_beasts
+from aerona.engine.ecology.biochemistry import seed_world_life
 from aerona.engine.ecology.domestication import husbandry
+from aerona.engine.ecology.flora import CropBook, blight, breed_cultivars, flora_backfill, gather_wild, link_pests, plant_backfill, sow
 from aerona.engine.ecology.profiles import typed_nature_backfill
 from aerona.engine.ecology.totems import adopt_totems, hunt_gods
 from aerona.engine.interconnect.annotations import reads, writes
@@ -113,6 +115,40 @@ async def beast_cycles(ctx: TickContext) -> None:
         await note(ctx, f"{told}.", key="beasts.fallen", ids=[])
 
 
-HUSBANDRY_PHASES = (Phase("husbandry", husbandry_cycles),)
+@reads(
+    "people.population",
+    "settlement.population",
+    "table.applied_fixups",
+    "table.crop_pests",
+    "table.entity_traits",
+    "table.outbreaks",
+    "table.plant_profiles",
+    "table.region_crops",
+    "table.region_environment",
+    "table.species_hosts",
+    "table.species_profiles",
+    "table.species_ranges",
+    "table.species_yields",
+    "table.world_biochemistries",
+    "table.world_seasons",
+)
+@writes("table.applied_fixups", "table.region_crops", "table.world_biochemistries")
+async def flora_cycles(ctx: TickContext) -> None:
+    ctx.count("world_life", await seed_world_life(ctx.session))
+    for key, value in (await flora_backfill(ctx)).items():
+        ctx.count(f"backfill_{key}", value)
+    ctx.count("plant_profiles", await plant_backfill(ctx))
+    atlas = await RegionAtlas.load(ctx.session)
+    book = await CropBook.load(ctx.session, ctx.rules)
+    for key, value in (await gather_wild(ctx, book, atlas)).items():
+        ctx.count(key, value)
+    for key, value in (await sow(ctx, book, atlas)).items():
+        ctx.count(key, value)
+    ctx.count("cultivars", await breed_cultivars(ctx, book, atlas))
+    ctx.count("pests_linked", await link_pests(ctx, book))
+    ctx.count("crops_blighted", await blight(ctx, book))
+
+
+HUSBANDRY_PHASES = (Phase("husbandry", husbandry_cycles), Phase("flora_cycles", flora_cycles))
 BEAST_PHASES = (Phase("beast_cycles", beast_cycles),)
 PHASES = HUSBANDRY_PHASES + BEAST_PHASES

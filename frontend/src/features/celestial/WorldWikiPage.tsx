@@ -54,6 +54,7 @@ import {
 } from '@/features/cosmos/model/labels'
 import { WorldEraSection } from '@/features/entity/lore/EraSection'
 import { ThingSections } from '@/features/entity/sections/ThingSections'
+import { WorldLifeSection } from '@/features/entity/wilds/FloraPanels'
 import { GoldenAgeSection } from '@/features/foundations/GoldenAgeCard'
 import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverlay'
 import { RecordGallery } from '@/features/pantheon/RecordGallery'
@@ -430,6 +431,7 @@ export function WorldWikiView({ worldId }: { worldId: number }) {
       <WorldSeasonsSection worldId={data.world.id} />
       <GoldenAgeSection worldId={data.world.id} />
       <WorldEraSection worldId={data.world.id} />
+      <WorldLifeSection worldId={data.world.id} />
       <CelestialDepthSection
         kind='world'
         id={data.world.id}

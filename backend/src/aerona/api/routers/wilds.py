@@ -9,26 +9,34 @@ from aerona.api.schemas.wilds import (
     BeastCard,
     BeastTributeView,
     BeastWound,
+    CropView,
     CustomUseView,
     FoodWeb,
     HerdView,
     HostView,
+    LifeKind,
+    PlantView,
     RangeCell,
     RangeView,
+    RegionCrops,
+    SownView,
     SpeciesCard,
     SpeciesRangeMap,
     TotemView,
     UseKindView,
     WebLink,
     WebNode,
+    WorldLife,
     WoundView,
     YieldView,
 )
 from aerona.api.views.common import node_refs
+from aerona.catalog.flora import BIOCHEMISTRY_LABELS, PRODUCT_BY_NAME
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.body import BodyRow, InjuryRow
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.ecology import (
     BeastProfileRow,
@@ -43,15 +51,18 @@ from aerona.db.tables.ecology import (
 )
 from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow, EntityTraitRow
+from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import TreatyClauseRow, TreatyProfileRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.ecology import FoodLink
+from aerona.domain.enums.ecology import UNBOUND_BIOCHEMISTRY, Biochemistry, FoodLink, PlantYield
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClauseKind, TreatyStatus
 from aerona.engine.ecology.beasts import RIDEABLE, reach_of, rest_chance, tame_chance, wake_chance, wound_harm
+from aerona.engine.ecology.biochemistry import bearable, tolerated
+from aerona.engine.ecology.flora import CropBook
 from aerona.engine.primitives.stats import stat
 
 router = APIRouter(tags=["wilds"])
@@ -110,7 +121,17 @@ async def species_card(entity_id: Id, services: ServicesDep) -> SpeciesCard:
             )
         )
         species = await session.get(EntityRow, entity_id)
+        plant = await session.get(PlantProfileRow, entity_id)
+        sown = list(await session.scalars(select(RegionCropRow).where(RegionCropRow.plant_entity_id == entity_id).order_by(RegionCropRow.share.desc())))
+        pests = list(await session.scalars(select(CropPestRow.pest_entity_id).where(CropPestRow.plant_entity_id == entity_id)))
+        pest_of = list(await session.scalars(select(CropPestRow.plant_entity_id).where(CropPestRow.pest_entity_id == entity_id)))
+        crops = await CropBook.load(session, await world_rules(services, session)) if sown else None
+        allowed = await tolerated(session, species.world_id if species is not None else None)
         ids = [
+            *(item.region_entity_id for item in sown),
+            *pests,
+            *pest_of,
+            *([plant.cultivar_of_id] if plant is not None and plant.cultivar_of_id is not None else []),
             *(item.region_entity_id for item in ranges),
             *(item.disease_entity_id for item in hosts),
             *(item.community_entity_id for item in herds),
@@ -128,6 +149,32 @@ async def species_card(entity_id: Id, services: ServicesDep) -> SpeciesCard:
         return SpeciesCard(
             species_id=entity_id,
             world_id=species.world_id if species is not None else None,
+            species_class=row.species_class,
+            biochemistry=row.biochemistry,
+            bearable=bearable(row.biochemistry, allowed) or species is None or species.world_id is None,
+            plant=PlantView(
+                growth_cycle=plant.growth_cycle,
+                growing_seasons=plant.growing_seasons,
+                soil_need=plant.soil_need,
+                cultivation=plant.cultivation,
+                cultivar_of=ref(refs, plant.cultivar_of_id),
+                since_epoch=plant.since_epoch,
+                locked=plant.locked,
+            )
+            if plant is not None
+            else None,
+            sown_in=[
+                SownView(
+                    region=ref(refs, item.region_entity_id),
+                    share=item.share,
+                    fit=round(crops.fit(entity_id, item.region_entity_id) * PERCENT) if crops is not None else 0,
+                    since_epoch=item.since_epoch,
+                    locked=item.locked,
+                )
+                for item in sown
+            ],
+            pests=listed(refs, pests),
+            pest_of=listed(refs, pest_of),
             body_plan=row.body_plan,
             size_class=row.size_class,
             lifespan_years=row.lifespan_years,
@@ -412,3 +459,64 @@ async def totem(entity_id: Id, services: ServicesDep) -> TotemView:
         tradition_id, species_id = found
         refs = await node_refs(session, [item for item in (tradition_id, species_id) if item is not None])
         return TotemView(people_id=entity_id, species=ref(refs, species_id), tradition=ref(refs, tradition_id))
+
+
+@router.get("/regions/{region_id}/crops", response_model=RegionCrops)
+async def region_crops(region_id: Id, services: ServicesDep) -> RegionCrops:
+    async with reader(services) as session:
+        region = await session.get(EntityRow, region_id)
+        if region is None or region.entity_type is not EntityType.REGION:
+            raise NotFoundError("No such region.")
+        rules = await world_rules(services, session)
+        book = await CropBook.load(session, rules)
+        rows = book.crops.get(region_id, [])
+        hosts: dict[int, list[int]] = {}
+        for plant_id, pest_id in await session.execute(
+            select(CropPestRow.plant_entity_id, CropPestRow.pest_entity_id).where(CropPestRow.plant_entity_id.in_([row.plant_entity_id for row in rows]))
+        ):
+            hosts.setdefault(plant_id, []).append(pest_id)
+        refs = await node_refs(session, [*(row.plant_entity_id for row in rows), *(pest for pests in hosts.values() for pest in pests)])
+        crops = [
+            CropView(
+                plant=ref(refs, row.plant_entity_id),
+                share=row.share,
+                fit=round(book.fit(row.plant_entity_id, region_id) * PERCENT),
+                cultivation=book.plants[row.plant_entity_id].cultivation if row.plant_entity_id in book.plants else None,
+                products=[PlantYield(item.product) for item in book.yields.get(row.plant_entity_id, []) if item.product in PRODUCT_BY_NAME],
+                pests=listed(refs, hosts.get(row.plant_entity_id, [])),
+                since_epoch=row.since_epoch,
+                locked=row.locked,
+            )
+            for row in sorted(rows, key=lambda item: (-item.share, item.plant_entity_id))
+        ]
+        return RegionCrops(
+            region_id=region_id, world_id=region.world_id, harvest_pct=round(book.factor(region_id) * PERCENT), crop_cap=rules.flora.crop_cap, crops=crops
+        )
+
+
+@router.get("/worlds/{world_id}/life", response_model=WorldLife)
+async def world_life(world_id: Id, services: ServicesDep) -> WorldLife:
+    async with reader(services) as session:
+        if await session.get(WorldRow, world_id) is None:
+            raise NotFoundError("No such world.")
+        borne = await tolerated(session, world_id)
+        counts: dict[Biochemistry, int] = {}
+        for kind in await session.scalars(
+            select(SpeciesProfileRow.biochemistry)
+            .join(EntityRow, EntityRow.id == SpeciesProfileRow.species_entity_id)
+            .where(EntityRow.world_id == world_id, EntityRow.status == EntityStatus.CANON)
+        ):
+            counts[kind] = counts.get(kind, 0) + 1
+        return WorldLife(
+            world_id=world_id,
+            kinds=[
+                LifeKind(
+                    biochemistry=kind,
+                    label=BIOCHEMISTRY_LABELS[kind],
+                    borne=kind in borne,
+                    anywhere=kind in UNBOUND_BIOCHEMISTRY,
+                    kinds=counts.get(kind, 0),
+                )
+                for kind in Biochemistry
+            ],
+        )

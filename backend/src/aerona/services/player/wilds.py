@@ -5,7 +5,19 @@ from pydantic import Field
 from aerona.constants.schema import NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.body import BodyPlan
-from aerona.domain.enums.ecology import BeastTemper, Diet, FoodLink, SizeClass, Sociality, SpeciesUse, YieldProduct
+from aerona.domain.enums.ecology import (
+    BeastTemper,
+    Biochemistry,
+    Diet,
+    FoodLink,
+    GrowthCycle,
+    PlantYield,
+    SizeClass,
+    Sociality,
+    SpeciesClass,
+    SpeciesUse,
+    YieldProduct,
+)
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import CreatureTrait
@@ -120,6 +132,10 @@ class CreateSpecies(Command):
     nocturnal: bool | None = None
     migratory: bool | None = None
     products: list[YieldProduct] = Field(default_factory=list)
+    species_class: SpeciesClass | None = None
+    biochemistry: Biochemistry | None = None
+    growth_cycle: GrowthCycle | None = None
+    plant_yields: list[PlantYield] = Field(default_factory=list)
     traits: list[CreatureTrait] = Field(default_factory=list)
     hp: Annotated[int, Field(ge=1)] | None = None
     strength: Percent | None = None
@@ -320,6 +336,10 @@ async def create_species(scope: PlayerScope, command: CreateSpecies) -> Effect:
             nocturnal=command.nocturnal,
             migratory=command.migratory,
             products=tuple(dict.fromkeys(command.products)),
+            species_class=command.species_class,
+            biochemistry=command.biochemistry,
+            growth_cycle=command.growth_cycle,
+            plant_yields=tuple(dict.fromkeys(command.plant_yields)),
         ),
         stats=SpeciesStats(
             hp=command.hp,

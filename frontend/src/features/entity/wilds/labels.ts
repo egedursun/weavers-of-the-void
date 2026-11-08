@@ -1,7 +1,9 @@
 import {
   Angry,
+  Axe,
   Baby,
   Beef,
+  Beer,
   Biohazard,
   Bird,
   Blend,
@@ -22,9 +24,11 @@ import {
   Fence,
   Fish,
   Flame,
+  FlaskConical,
   Footprints,
   Gem,
   Ghost,
+  Grape,
   Hand,
   HandHeart,
   HeartPulse,
@@ -34,6 +38,7 @@ import {
   House,
   Infinity as InfinityIcon,
   Leaf,
+  LeafyGreen,
   Link2,
   Lock,
   Minus,
@@ -42,23 +47,29 @@ import {
   MountainSnow,
   Network,
   Nut,
+  Palette,
   PawPrint,
   Rabbit,
   Radar,
+  Rat,
   Repeat,
   ScanEye,
   Shield,
   ShieldHalf,
   Shovel,
   Shrimp,
+  Shrub,
+  Skull,
   Snowflake,
   Sparkles,
+  Spline,
   Split,
   Sprout,
   Sun,
   Swords,
   Syringe,
   Tractor,
+  TreePine,
   Trees,
   TrendingDown,
   TrendingUp,
@@ -67,6 +78,7 @@ import {
   Utensils,
   WandSparkles,
   Waves,
+  Wheat,
   WheatOff,
   type LucideIcon,
 } from 'lucide-react'
@@ -221,6 +233,145 @@ export const USE: Record<string, Named> = {
   companion: { label: 'Companion', icon: HandHeart, tone: 'success' },
   sacrifice: { label: 'Sacrifice', icon: Flame, tone: 'gold' },
   magic: { label: 'Magic', icon: WandSparkles, tone: 'verdigris' },
+  pest_control: { label: 'Pest hunter', icon: Rat, tone: 'success' },
+}
+
+export const SPECIES_CLASS: Record<string, Named & { hint: string }> = {
+  animal: {
+    label: 'Animal',
+    icon: PawPrint,
+    tone: 'info',
+    hint: 'Lives, hunts or grazes and can be herded',
+  },
+  plant: {
+    label: 'Plant',
+    icon: Sprout,
+    tone: 'success',
+    hint: 'Grows from the ground; it is gathered, sown and harvested',
+  },
+  fungus: {
+    label: 'Fungus',
+    icon: Shrub,
+    tone: 'verdigris',
+    hint: 'Grows without light; it is gathered and sown like a plant',
+  },
+  vermin: {
+    label: 'Vermin',
+    icon: Rat,
+    tone: 'warning',
+    hint: 'Spoils stores, eats crops and spreads sickness',
+  },
+}
+
+export const BIOCHEMISTRY: Record<string, Named & { hint: string }> = {
+  carbon_water: {
+    label: 'Carbon and water',
+    icon: Droplets,
+    tone: 'info',
+    hint: 'Life built on carbon in water',
+  },
+  carbon_ammonia: {
+    label: 'Carbon and ammonia',
+    icon: Snowflake,
+    tone: 'verdigris',
+    hint: 'Life built on carbon in ammonia',
+  },
+  silicon: {
+    label: 'Silicon',
+    icon: Mountain,
+    tone: 'warning',
+    hint: 'Life built on silicon',
+  },
+  crystal: {
+    label: 'Crystal',
+    icon: Gem,
+    tone: 'gold',
+    hint: 'Life that grows as crystal',
+  },
+  void: {
+    label: 'Void',
+    icon: Eclipse,
+    tone: 'muted',
+    hint: 'Life of the void; it lives on any world',
+  },
+  spirit: {
+    label: 'Spirit',
+    icon: Ghost,
+    tone: 'gold',
+    hint: 'Life of spirit; it lives on any world',
+  },
+}
+
+export const GROWTH_CYCLE: Record<string, Named & { hint: string }> = {
+  annual: {
+    label: 'Annual',
+    icon: Sprout,
+    tone: 'success',
+    hint: 'Sown and harvested within a year',
+  },
+  perennial: {
+    label: 'Perennial',
+    icon: Repeat,
+    tone: 'verdigris',
+    hint: 'Lives on from year to year',
+  },
+  tree: {
+    label: 'Tree',
+    icon: TreePine,
+    tone: 'gold',
+    hint: 'Grows for years before it bears',
+  },
+}
+
+export const CULTIVATION: Record<
+  string,
+  Named & { step: number; hint: string }
+> = {
+  wild: {
+    label: 'Wild',
+    icon: Trees,
+    tone: 'muted',
+    step: 0,
+    hint: 'No one tends it',
+  },
+  gathered: {
+    label: 'Gathered',
+    icon: Hand,
+    tone: 'info',
+    step: 1,
+    hint: 'Foragers gather it where it grows',
+  },
+  cultivated: {
+    label: 'Cultivated',
+    icon: Wheat,
+    tone: 'success',
+    step: 2,
+    hint: 'Sown in fields',
+  },
+  cultivar: {
+    label: 'Cultivar',
+    icon: Dna,
+    tone: 'gold',
+    step: 3,
+    hint: 'Bred by farmers for a better harvest',
+  },
+}
+
+export const PLANT_YIELD: Record<string, Named> = {
+  grain: { label: 'Grain', icon: Wheat, tone: 'gold' },
+  tuber: { label: 'Tubers', icon: Nut, tone: 'warning' },
+  fruit: { label: 'Fruit', icon: Grape, tone: 'success' },
+  fibre: { label: 'Fibre', icon: Spline, tone: 'info' },
+  dye: { label: 'Dye', icon: Palette, tone: 'verdigris' },
+  timber: { label: 'Timber', icon: Axe, tone: 'warning' },
+  herb: { label: 'Herbs', icon: LeafyGreen, tone: 'success' },
+  brew_base: { label: 'Brew base', icon: Beer, tone: 'gold' },
+  reagent: {
+    label: 'Alchemical reagent',
+    icon: FlaskConical,
+    tone: 'verdigris',
+  },
+  poison: { label: 'Poison', icon: Skull, tone: 'danger' },
 }
 
 export const TREND: Record<string, Named & { badge: BadgeTone }> = {
@@ -424,6 +575,13 @@ export const FIELD_LABELS: Record<string, string> = {
   hunted: 'Hunting pressure',
   head: 'Head count',
   fed_epochs: 'Epochs fed',
+  species_class: 'Kind of life',
+  biochemistry: 'What its life is built on',
+  growth_cycle: 'Growth cycle',
+  growing_seasons: 'Growing seasons needed',
+  soil_need: 'Soil it needs',
+  cultivation: 'Cultivation',
+  share: 'Share of the fields',
 }
 
 export function fieldLabel(key: string): string {

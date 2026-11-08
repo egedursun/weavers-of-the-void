@@ -76,6 +76,15 @@ PATTERNS = (
         prose_only=True,
     ),
     Pattern(
+        "example placeholder",
+        re.compile(
+            r"placeholder=['\"](?:[^'\":]*:\s*)?(?:(?!(?:a|an|the|its|their|your|one)\b)[a-z][\w'-]*(?: [\w'-]+)?, )+"
+            r"(?!(?:a|an|the|its|their|your|one)\b)[a-z][\w'-]*(?: [\w'-]+)?…['\"]|"
+            r"(?-i:placeholder=['\"][A-Z][\w'-]* (?:the|of) [A-Z][\w'-]*…['\"])",
+            re.IGNORECASE,
+        ),
+    ),
+    Pattern(
         MEDIUM_RULE,
         re.compile(
             r"\b(photo-?realistic|photoreal|camera and lens|never a cartoon|wildlife photography|documentary style|astrophotography)\b",

@@ -8,6 +8,13 @@ export const KIND = { id: 7, kind: 'entity', name: 'Sand Crawler' }
 export const SPECIES = {
   species_id: 7,
   world_id: 1,
+  species_class: 'animal',
+  biochemistry: 'carbon_water',
+  bearable: true,
+  plant: null,
+  sown_in: [],
+  pests: [],
+  pest_of: [],
   body_plan: 'quadruped',
   size_class: 'small',
   lifespan_years: 6,
@@ -132,4 +139,87 @@ export function serveBasics() {
   })
   onApi('GET', '/api/names', [])
   onApi('GET', '/api/sons', [])
+}
+
+export const FIELD = { id: 31, kind: 'entity', name: 'Barley Downs' }
+export const MOTH = { id: 41, kind: 'entity', name: 'Grain Moth' }
+
+export const PLANT = {
+  ...SPECIES,
+  species_id: 8,
+  species_class: 'plant',
+  diet: 'photosynthetic',
+  body_plan: 'arboreal',
+  uses: [],
+  yields: [
+    {
+      product: 'grain',
+      commodity: 'grain',
+      material: null,
+      world_material_id: null,
+      world_material: null,
+      rate: 2,
+    },
+  ],
+  herds: [],
+  hunts: [],
+  traits: [],
+  locked: [],
+  plant: {
+    growth_cycle: 'annual',
+    growing_seasons: 1,
+    soil_need: 30,
+    cultivation: 'cultivated',
+    cultivar_of: null,
+    since_epoch: 3,
+    locked: [],
+  },
+  sown_in: [{ region: FIELD, share: 60, fit: 82, since_epoch: 3, locked: [] }],
+  pests: [MOTH],
+}
+
+export const CROPS = {
+  region_id: 31,
+  world_id: 1,
+  harvest_pct: 91,
+  crop_cap: 6,
+  crops: [
+    {
+      plant: { id: 8, kind: 'entity', name: 'Downs Barley' },
+      share: 60,
+      fit: 82,
+      cultivation: 'cultivated',
+      products: ['grain', 'fibre'],
+      pests: [MOTH],
+      since_epoch: 3,
+      locked: ['share'],
+    },
+  ],
+}
+
+export const LIFE = {
+  world_id: 1,
+  kinds: [
+    {
+      biochemistry: 'carbon_water',
+      label: 'Carbon and water',
+      borne: true,
+      anywhere: false,
+      kinds: 3,
+    },
+    {
+      biochemistry: 'silicon',
+      label: 'Silicon',
+      borne: false,
+      anywhere: false,
+      kinds: 0,
+    },
+    {
+      biochemistry: 'spirit',
+      label: 'Spirit',
+      borne: false,
+      anywhere: true,
+      kinds: 1,
+    },
+  ],
 }

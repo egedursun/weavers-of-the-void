@@ -1,10 +1,11 @@
 from aerona.catalog.creatures import CREATURE_TRAITS
 from aerona.core.grammar import an
 from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow
+from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow, WorldBiochemistryRow
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.ecology import BeastTemper, Diet, DomesticationStage, SizeClass, Sociality, SpeciesUse
 from aerona.engine.ecology.extinction import CRAFTS
-from aerona.engine.ecology.profiles import BONE, CHITIN, DRAGONBONE, FEATHERS, HIDE, IVORY, MEAT, MILK, REAGENTS, SILK, VENOM, WOOL
+from aerona.engine.ecology.profiles import BONE, CHITIN, DRAGONBONE, EGGS, FEATHERS, HIDE, IVORY, MEAT, MILK, REAGENTS, SILK, VENOM, WOOL
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Mechanic, Subsystem, Surface
 
 ECOLOGY = "section-ecology"
@@ -17,7 +18,77 @@ SP = "species"
 S = Subsystem
 LANDS = (SP, "region", "settlement", "people")
 
+CROPS = "section-crops"
+WORLD_LIFE = "section-world-life"
 WILDS_MECHANICS = (
+    Mechanic(
+        key="flora_crops",
+        spec_item="S3.2/RP2",
+        title="Plants and fungi are gathered, sown and bred into cultivars; how a land's crops fit its warmth, rain, soil and seasons sets its harvest",
+        subsystem=S.ECOLOGY,
+        phases=("flora_cycles", "harvest", "society_economy"),
+        surface=Surface(drawer=CROPS),
+        backfill="flora_cycles: kinds that grow from the ground become plants with a growth cycle, and gathered plants are sown",
+        templates=("flora.sown", "flora.cultivar", "tools.son.sow_crop"),
+        fields=("share", "growth_cycle", "growing_seasons", "soil_need", "cultivation", "species_class"),
+        tables=(PlantProfileRow.__tablename__, RegionCropRow.__tablename__),
+        tools=("sow_crop", "create_species"),
+        targets=(SP, "region"),
+        couplings=(
+            Coupling(S.ENVIRONMENT, "warmth, rain, soil and growing seasons set how well a crop fits a land", EdgeKind.MODIFIER, "flora.crop_weight_pct"),
+            Coupling(S.ECONOMY, "a crop's harvest gives food and goods by what the plant yields", EdgeKind.FLOW, "flora.side_yield_pct"),
+            Coupling(S.KNOWLEDGE, "agriculture lets a people sow what it gathers", EdgeKind.TRIGGER, "flora.cultivate_level"),
+            Coupling(S.SOCIAL, "a master farmer breeds a cultivar", EdgeKind.TRIGGER, "flora.cultivar_skill"),
+            Coupling(S.INTRIGUE, "poison from stores makes a poisoned well deadlier", EdgeKind.MODIFIER, "flora.poison_well_pct"),
+        ),
+    ),
+    Mechanic(
+        key="crop_pests",
+        spec_item="S3.2/RP2",
+        title="Pests take to the crops sown in their land and strip the harvest where their hosts grow; a raging sickness of a crop blights its fields",
+        subsystem=S.ECOLOGY,
+        phases=("flora_cycles", "ecology"),
+        surface=Surface(drawer=CROPS),
+        backfill="flora_cycles: pests take to the crops sown in their land",
+        tables=(CropPestRow.__tablename__,),
+        targets=(SP, "region"),
+        couplings=(
+            Coupling(S.ECONOMY, "pests strip the harvest of their host crops", EdgeKind.MODIFIER, "flora.pest_loss"),
+            Coupling(S.BODY, "a sickness of a crop blights its fields", EdgeKind.MODIFIER, "flora.blight_loss"),
+        ),
+    ),
+    Mechanic(
+        key="life_chemistry",
+        spec_item="S3.2/RP2",
+        title="Each kind's life is built on a chemistry; it lives, spreads, stows away and is carried by colonists only to worlds that bear that life",
+        subsystem=S.COSMOS,
+        phases=("flora_cycles", "ecology", "travel"),
+        surface=Surface(drawer=WORLD_LIFE),
+        backfill="flora_cycles: each world bears the life its sky and kind allow",
+        templates=("travel.herds_lost",),
+        fields=("biochemistry",),
+        tables=(WorldBiochemistryRow.__tablename__,),
+        targets=(SP, "world"),
+        couplings=(
+            Coupling(S.ECOLOGY, "a kind cannot range on a world that does not bear its life", EdgeKind.MODIFIER, "habitat.spread_fit"),
+            Coupling(S.DEMOGRAPHY, "colonists carry only the herds their new world bears", EdgeKind.FLOW, "domestication.colony_herd_pct"),
+        ),
+    ),
+    Mechanic(
+        key="vermin",
+        spec_item="S3.2/RP2",
+        title="Vermin spoil stores, eat crops and spread sickness; communities that keep pest hunters spoil less",
+        subsystem=S.ECOLOGY,
+        phases=("ecology", "industry_aftermath"),
+        surface=Surface(drawer=ECOLOGY, layer=WILD_LAYER),
+        backfill="flora_cycles: small crop pests become vermin and small hunters keep them down",
+        fields=("species_class",),
+        targets=(SP, "settlement", "people"),
+        couplings=(
+            Coupling(S.ECONOMY, "vermin spoil stored food", EdgeKind.MODIFIER, "stores.vermin_pct"),
+            Coupling(S.ECONOMY, "pest hunters keep the stores", EdgeKind.MODIFIER, "stores.hunters_pct"),
+        ),
+    ),
     Mechanic(
         key="species_ranges",
         spec_item="S3.2",
@@ -280,6 +351,7 @@ USE_RULES = {
     SpeciesUse.COMPANION: "domestication.companion_calm",
     SpeciesUse.SACRIFICE: "domestication.sacred_per_head",
     SpeciesUse.MAGIC: "domestication.reagents_per_head",
+    SpeciesUse.PEST_CONTROL: "stores.hunters_pct",
 }
 
 
@@ -311,7 +383,7 @@ def products() -> tuple[Raw, ...]:
             ("yields", item.product.replace(" ", "_")),
             (S.ECONOMY, None, "goods"),
         )
-        for item in (MEAT, HIDE, BONE, IVORY, CHITIN, VENOM, SILK, WOOL, MILK, FEATHERS, REAGENTS, DRAGONBONE)
+        for item in (MEAT, HIDE, BONE, IVORY, CHITIN, VENOM, SILK, WOOL, MILK, FEATHERS, REAGENTS, DRAGONBONE, EGGS)
     )
 
 

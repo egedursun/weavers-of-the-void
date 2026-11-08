@@ -350,6 +350,7 @@ async def decline_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     "table.polity_members",
     "table.region_environment",
     "table.skills",
+    "table.war_sides",
     "table.world_maps",
 )
 @writes(

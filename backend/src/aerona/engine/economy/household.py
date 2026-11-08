@@ -17,6 +17,7 @@ from aerona.domain.enums.industry import ProcessKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.engine.context import TickContext
+from aerona.engine.ecology.flora import split_fields
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.extraction import tools_factor
 from aerona.engine.economy.stocks import DEFAULT_QUALITY, aggregate_need, epoch_need, goods_of, holdings, nourishment_need
@@ -41,6 +42,7 @@ EATING_ORDER = (
     CommodityKind.TUBERS,
     CommodityKind.GRAIN,
     CommodityKind.FRUIT,
+    CommodityKind.EGGS,
     CommodityKind.MILK,
 )
 TENTH = 10
@@ -96,12 +98,9 @@ async def harvest_goods(ctx: TickContext, book: EconomyBook, community: EntityRo
     chain = ctx.rules.food_chain
     herds = round_half_up(land * mix.pasture) - fodder
     milk = round_half_up(herds * chain.milk_pct / PERCENT)
-    tuber_share, fruit_share = field_shares(ctx, book, community)
     fields = land * mix.grain
     split = {
-        CommodityKind.GRAIN: round_half_up(fields * (1 - tuber_share - fruit_share)),
-        CommodityKind.TUBERS: round_half_up(fields * tuber_share),
-        CommodityKind.FRUIT: round_half_up(fields * fruit_share),
+        **field_goods(ctx, book, community, fields),
         CommodityKind.LIVESTOCK: herds - milk,
         CommodityKind.MILK: milk,
         CommodityKind.DUNG: round_half_up(herds * chain.dung_per_10 / TENTH),
@@ -117,7 +116,7 @@ async def harvest_goods(ctx: TickContext, book: EconomyBook, community: EntityRo
             community_entity_id=community.id,
             step=HARVEST_STEP,
             output=CommodityKind.GRAIN,
-            quantity=max(0, split[CommodityKind.GRAIN] + split[CommodityKind.LIVESTOCK]),
+            quantity=max(0, split.get(CommodityKind.GRAIN, 0) + split[CommodityKind.LIVESTOCK]),
             quality=DEFAULT_QUALITY + farming.quality_bonus,
             inputs={},
             workers=farmers,
@@ -125,6 +124,19 @@ async def harvest_goods(ctx: TickContext, book: EconomyBook, community: EntityRo
         )
     )
     return split
+
+
+def field_goods(ctx: TickContext, book: EconomyBook, community: EntityRow, fields: float) -> dict[CommodityKind, int]:
+    region = book.ground.region_of(community.id)
+    crops = book.crops.fields(region.entity_id) if book.crops is not None and region is not None else []
+    if crops:
+        return {kind: round_half_up(amount) for kind, amount in split_fields(ctx.rules, fields, crops).items()}
+    tuber_share, fruit_share = field_shares(ctx, book, community)
+    return {
+        CommodityKind.GRAIN: round_half_up(fields * (1 - tuber_share - fruit_share)),
+        CommodityKind.TUBERS: round_half_up(fields * tuber_share),
+        CommodityKind.FRUIT: round_half_up(fields * fruit_share),
+    }
 
 
 def field_shares(ctx: TickContext, book: EconomyBook, community: EntityRow) -> tuple[float, float]:

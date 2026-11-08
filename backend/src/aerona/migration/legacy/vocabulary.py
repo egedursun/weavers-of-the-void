@@ -78,6 +78,7 @@ class Vocabulary(BaseModel):
     enums: dict[str, dict[str, str]]
     engine_kinds: dict[str, dict[str, str]]
     engine_kind_tags: dict[str, str]
+    species_classes: dict[str, str] = Field(default_factory=dict)
     mortal_roles: MortalRoleVocabulary
     tags: TagVocabulary
     bond_roles: dict[str, dict[str, str]]

@@ -6,7 +6,17 @@ from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.db.profile_guard import register_profile_table
 from aerona.domain.enums.body import BodyPlan
-from aerona.domain.enums.ecology import BeastTemper, Diet, DomesticationStage, RangeTrend, SizeClass, Sociality, SpeciesUse
+from aerona.domain.enums.ecology import (
+    BeastTemper,
+    Biochemistry,
+    Diet,
+    DomesticationStage,
+    RangeTrend,
+    SizeClass,
+    Sociality,
+    SpeciesClass,
+    SpeciesUse,
+)
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.material import MaterialKind
@@ -29,6 +39,8 @@ class SpeciesProfileRow(Base):
     )
 
     species_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    species_class: Mapped[SpeciesClass] = mapped_column(enum_type(SpeciesClass, "species_class"), default=SpeciesClass.ANIMAL)
+    biochemistry: Mapped[Biochemistry] = mapped_column(enum_type(Biochemistry, "biochemistry"), default=Biochemistry.CARBON_WATER)
     body_plan: Mapped[BodyPlan] = mapped_column(enum_type(BodyPlan, "body_plan"), default=BodyPlan.QUADRUPED)
     size_class: Mapped[SizeClass] = mapped_column(enum_type(SizeClass, "size_class"), default=SizeClass.MEDIUM)
     lifespan_years: Mapped[int] = mapped_column(default=10)

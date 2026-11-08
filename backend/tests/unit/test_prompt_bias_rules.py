@@ -46,3 +46,14 @@ def test_a_steering_example_list_is_caught_without_a_lead_in() -> None:
 
 def test_no_model_facing_text_carries_bias() -> None:
     assert checker().scan() == []
+
+
+def test_example_names_and_lists_in_placeholders_are_caught() -> None:
+    module = checker()
+    form = REPOSITORY_ROOT / "frontend/src/features/sample.tsx"
+    assert "example placeholder" in rules_hit(module, form, "placeholder='Ashwing, Glimmerdeer…'")
+    assert "example placeholder" in rules_hit(module, form, "placeholder='Vharrun the Ash-Maw…'")
+    assert "example placeholder" in rules_hit(module, form, "placeholder='Any tone you like: hopeful, epic, grim…'")
+    assert "example placeholder" not in rules_hit(module, form, "placeholder='Choose a realm, cult or people…'")
+    assert "example placeholder" not in rules_hit(module, form, "placeholder='Describe what you reveal: a being, a place, an event…'")
+    assert "example placeholder" not in rules_hit(module, form, "placeholder='Choose the patron…'")

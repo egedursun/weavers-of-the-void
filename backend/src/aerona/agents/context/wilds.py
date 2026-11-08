@@ -4,7 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesYieldRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.ecology import SpeciesClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.stats import stat
@@ -12,6 +14,19 @@ from aerona.engine.primitives.stats import stat
 
 def words(value: str) -> str:
     return value.replace("_", " ")
+
+
+async def crop_lines(session: AsyncSession, region: int | None) -> list[str]:
+    if region is None:
+        return []
+    rows = await session.execute(
+        select(EntityRow.name, RegionCropRow.share, PlantProfileRow.cultivation)
+        .join(RegionCropRow, RegionCropRow.plant_entity_id == EntityRow.id)
+        .outerjoin(PlantProfileRow, PlantProfileRow.species_entity_id == EntityRow.id)
+        .where(RegionCropRow.region_entity_id == region, EntityRow.status == EntityStatus.CANON)
+        .order_by(RegionCropRow.share.desc(), EntityRow.name)
+    )
+    return [f"{name} ({share}% of the fields{', ' + words(cultivation.value) if cultivation is not None else ''})" for name, share, cultivation in rows]
 
 
 async def wild_lines(session: AsyncSession, home: EntityRow, region: int | None) -> tuple[list[str], list[str], list[str]]:
@@ -52,7 +67,17 @@ async def species_nature(session: AsyncSession, species: EntityRow) -> list[str]
     row = await session.get(SpeciesProfileRow, species.id)
     if row is None:
         return []
-    habits = ", ".join([words(row.size_class.value), words(row.body_plan.value), words(row.diet.value), words(row.sociality.value), *flags_of(row)])
+    habits = ", ".join(
+        [
+            words(row.species_class.value),
+            f"{words(row.biochemistry.value)} life",
+            words(row.size_class.value),
+            words(row.body_plan.value),
+            words(row.diet.value),
+            words(row.sociality.value),
+            *flags_of(row),
+        ]
+    )
     products = ", ".join(
         await session.scalars(select(SpeciesYieldRow.product).where(SpeciesYieldRow.species_entity_id == species.id).order_by(SpeciesYieldRow.product))
     )
@@ -72,6 +97,45 @@ async def species_nature(session: AsyncSession, species: EntityRow) -> list[str]
         lines.append(f"hunts: {', '.join(prey)}")
     if sacred is not None:
         lines.append(f"sacred to {sacred.name}")
+    return lines + await plant_lines(session, species, row)
+
+
+async def plant_lines(session: AsyncSession, species: EntityRow, row: SpeciesProfileRow) -> list[str]:
+    plant = await session.get(PlantProfileRow, species.id)
+    lines: list[str] = []
+    if plant is not None:
+        cycle, cultivation = words(plant.growth_cycle.value), words(plant.cultivation.value)
+        lines.append(f"grows: {cycle}, needs {plant.growing_seasons} growing seasons and soil of {plant.soil_need}; {cultivation}")
+    sown = list(
+        await session.scalars(
+            select(EntityRow.name)
+            .join(RegionCropRow, RegionCropRow.region_entity_id == EntityRow.id)
+            .where(RegionCropRow.plant_entity_id == species.id)
+            .order_by(EntityRow.name)
+        )
+    )
+    if sown:
+        lines.append(f"sown in: {', '.join(sown)}")
+    pests = list(
+        await session.scalars(
+            select(EntityRow.name)
+            .join(CropPestRow, CropPestRow.pest_entity_id == EntityRow.id)
+            .where(CropPestRow.plant_entity_id == species.id)
+            .order_by(EntityRow.name)
+        )
+    )
+    if pests:
+        lines.append(f"its pests: {', '.join(pests)}")
+    hosts = list(
+        await session.scalars(
+            select(EntityRow.name)
+            .join(CropPestRow, CropPestRow.plant_entity_id == EntityRow.id)
+            .where(CropPestRow.pest_entity_id == species.id)
+            .order_by(EntityRow.name)
+        )
+    )
+    if hosts or row.species_class is SpeciesClass.VERMIN:
+        lines.append(f"a pest of: {', '.join(hosts) or 'stores and fields'}")
     return lines
 
 
@@ -102,4 +166,7 @@ async def nature_lines(session: AsyncSession, entity: EntityRow) -> list[str]:
         return await species_nature(session, entity)
     if entity.entity_type is EntityType.BEAST:
         return await beast_nature(session, entity)
+    if entity.entity_type is EntityType.REGION:
+        crops = await crop_lines(session, entity.id)
+        return [f"its fields grow: {', '.join(crops)}"] if crops else []
     return []

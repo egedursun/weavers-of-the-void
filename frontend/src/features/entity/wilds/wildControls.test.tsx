@@ -166,7 +166,7 @@ describe('wilds controls', () => {
       lair_id: LAND.id,
       size_class: 'huge',
       temper: 'sleeping',
-      strength: 80,
+      strength: 81,
     })
   })
 

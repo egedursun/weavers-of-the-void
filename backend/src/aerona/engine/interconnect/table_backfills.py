@@ -1,6 +1,8 @@
 from aerona.engine.interconnect.registry import Mechanic
 
 TABLE_BACKFILLS: dict[tuple[str, str], str] = {
+    ("flora_crops", "plant_profiles"): "existing mechanic: flora_cycles gives every plant and fungus its growth the first epoch after the wave",
+    ("crop_pests", "crop_pests"): "none: pests take to the crops sown in their land from the next epoch",
     ("name_meanings", "name_exonyms"): "none: foreign names arise as names gain their meanings from the next epoch",
     ("name_meanings", "epithets"): "none: renowned mortals earn epithets from the next epoch",
     (

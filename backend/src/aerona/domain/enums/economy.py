@@ -37,6 +37,13 @@ class CommodityKind(StrEnum):
     COAL = "coal"
     PEAT = "peat"
     DUNG = "dung"
+    FIBRE = "fibre"
+    DYE = "dye"
+    HERBS = "herbs"
+    BREW_BASE = "brew_base"
+    POISON = "poison"
+    EGGS = "eggs"
+    WOOL = "wool"
 
 
 class MaterialFamily(StrEnum):

@@ -54,7 +54,7 @@ async def test_round_trip_counts(migrated: tuple[MigrationReport, Query, Path]) 
     report, run, _ = migrated
     assert report.succeeded
     assert run("SELECT lore_language, epoch, epoch_start_year FROM cosmos") == [("turkish", 5, 200)]
-    assert run("SELECT COUNT(*) FROM entities") == [(13,)]
+    assert run("SELECT COUNT(*) FROM entities") == [(14,)]
     assert run("SELECT COUNT(*) FROM sons") == [(2,)]
     assert run("SELECT COUNT(*) FROM chronicle") == [(4,)]
     assert run("SELECT COUNT(*) FROM chronicle WHERE visible = 0") == [(1,)]
@@ -93,6 +93,9 @@ async def test_typed_state_is_converted(migrated: tuple[MigrationReport, Query, 
     assert run("SELECT knowledge_branch FROM entities WHERE knowledge_branch IS NOT NULL") == [("writing",)]
     assert run("SELECT flag FROM entity_flags") == [("lost",)]
     assert run("SELECT trait FROM entity_traits") == [("flying",)]
+    assert run("SELECT p.species_class FROM species_profiles p JOIN nodes n ON n.id = p.species_entity_id WHERE n.name = 'Sedge'") == [("plant",)]
+    assert run("SELECT COUNT(*) FROM plant_profiles") == [(1,)]
+    assert report.repairs["species_classes"] == 1
     assert run("SELECT writing_system, json_extract(signature, '$.consonants') FROM language_profiles") == [("alphabet", "lmn")]
     assert run("SELECT namespace, key, value FROM rule_overrides") == [("balance", "apocalypse_threshold", 500.0)]
     assert {rule.status for rule in report.rules} == {"applied", "unmapped"}

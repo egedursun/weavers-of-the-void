@@ -285,6 +285,10 @@ def species_spec(args: CreationInput) -> SpeciesSpec:
         nocturnal=args.option("nocturnal"),
         migratory=args.option("migratory"),
         products=tuple(dict.fromkeys(args.option("products") or [])),
+        species_class=args.option("species_class"),
+        biochemistry=args.option("biochemistry"),
+        growth_cycle=args.option("growth_cycle"),
+        plant_yields=tuple(dict.fromkeys(args.option("plant_yields") or [])),
     )
 
 

@@ -111,6 +111,7 @@ async def _spread_language(ctx: TickContext, source: EntityRow, target: EntityRo
 
 @reads(
     "knowledge.spread",
+    "table.bodies",
     "table.bonds",
     "table.book_contents",
     "table.epoch_year_cursors",

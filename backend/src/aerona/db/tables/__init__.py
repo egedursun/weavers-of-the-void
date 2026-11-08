@@ -150,6 +150,7 @@ from aerona.db.tables.faith import (
     SpiritProfileRow,
 )
 from aerona.db.tables.finance import CreditProfileRow, EconomicIndicatorRow, SpeculationRow, TradePolicyRow
+from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow, WorldBiochemistryRow
 from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow, GodConflictRow, OuterBargainRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
@@ -349,6 +350,7 @@ __all__ = [
     "CrimeCaseRow",
     "CrisisBackerRow",
     "CrisisRow",
+    "CropPestRow",
     "CultDoctrineRow",
     "CultHoldingRow",
     "CultOfficeRow",
@@ -502,6 +504,7 @@ __all__ = [
     "PlaceEnvironmentRow",
     "PlaceProfileRow",
     "PlaceSecretRow",
+    "PlantProfileRow",
     "PolicyApprovalRow",
     "PolityEraRow",
     "PolityLoyaltyRow",
@@ -519,6 +522,7 @@ __all__ = [
     "ProsthesisRow",
     "PublicOpinionRow",
     "QuarantineRow",
+    "RegionCropRow",
     "RegionDangerRow",
     "RegionEnvironmentRow",
     "RegionGeomorphRow",
@@ -616,6 +620,7 @@ __all__ = [
     "WarSideRow",
     "WorkshopDesignRow",
     "WorkshopRow",
+    "WorldBiochemistryRow",
     "WorldEraRow",
     "WorldLeakItemRow",
     "WorldMapRow",

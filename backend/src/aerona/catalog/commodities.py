@@ -53,6 +53,13 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
             CommoditySpec(C.COAL, "Coal", F.INDUSTRIAL, Commodity.GOODS, 90, consumption=lambda rules: rules.consumption.coal_per_1000),
             CommoditySpec(C.PEAT, "Peat", F.SUBSISTENCE, Commodity.GOODS, 45, consumption=lambda rules: rules.consumption.peat_per_1000),
             CommoditySpec(C.DUNG, "Dung", F.SUBSISTENCE, Commodity.GOODS, 20, consumption=lambda rules: rules.consumption.dung_per_1000),
+            CommoditySpec(C.EGGS, "Eggs", F.SUBSISTENCE, Commodity.FOOD, 80, 8, consumption=lambda rules: rules.consumption.eggs_per_1000),
+            CommoditySpec(C.WOOL, "Wool", F.SUBSISTENCE, Commodity.GOODS, 90, consumption=lambda rules: rules.consumption.wool_per_1000),
+            CommoditySpec(C.FIBRE, "Plant fibre", F.SUBSISTENCE, Commodity.GOODS, 60, consumption=lambda rules: rules.consumption.fibre_per_1000),
+            CommoditySpec(C.DYE, "Dye", F.LUXURY, Commodity.GOODS, 150, consumption=lambda rules: rules.consumption.dye_per_1000),
+            CommoditySpec(C.HERBS, "Herbs", F.SUBSISTENCE, Commodity.GOODS, 70, consumption=lambda rules: rules.consumption.herbs_per_1000),
+            CommoditySpec(C.BREW_BASE, "Brew base", F.SUBSISTENCE, Commodity.GOODS, 65, consumption=lambda rules: rules.consumption.brew_base_per_1000),
+            CommoditySpec(C.POISON, "Poison", F.STRATEGIC, Commodity.GOODS, 180, consumption=lambda rules: rules.consumption.poison_per_1000),
             CommoditySpec(
                 C.ORE,
                 "Ore",

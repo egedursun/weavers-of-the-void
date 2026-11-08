@@ -53,6 +53,11 @@ CHAIN_STEPS: tuple[ChainStep, ...] = (
     ChainStep("knap_tools", "Knapping stone tools", None, ((C.STONE, 1),), C.TOOLS, 1, S.MASONRY, keeps_material=C.STONE),
     ChainStep("gather_fuel", "Gathering firewood", None, ((C.TIMBER, 1),), C.FUEL, 1, S.FORAGING),
     ChainStep("spin", "Spinning and sewing at home", None, ((C.LIVESTOCK, 1),), C.CLOTH, 1, S.WEAVING, material=MaterialKind.HIDE),
+    ChainStep("weave_wool", "Weaving wool", W.WEAVERY, ((C.WOOL, 2),), C.CLOTH, 2, S.WEAVING, material=MaterialKind.CLOTH, quality_gain=10),
+    ChainStep("weave_fibre", "Weaving plant fibre", W.WEAVERY, ((C.FIBRE, 2),), C.CLOTH, 2, S.WEAVING, material=MaterialKind.CLOTH),
+    ChainStep("dye_cloth", "Dyeing cloth", W.WEAVERY, ((C.CLOTH, 1), (C.DYE, 1)), C.LUXURIES, 1, S.WEAVING, B.AGRICULTURE, 1, quality_gain=20),
+    ChainStep("brew_base", "Brewing from a brew base", W.BREWERY, ((C.BREW_BASE, 2),), C.LUXURIES, 1, S.ALCHEMY, B.AGRICULTURE, 1),
+    ChainStep("herbal_remedies", "Making remedies from herbs", None, ((C.HERBS, 2),), C.MEDICINE, 1, S.ALCHEMY, B.MEDICINE, 1),
 )
 STEPS: MappingProxyType[str, ChainStep] = MappingProxyType({step.key: step for step in CHAIN_STEPS})
 SHIP_INPUTS: tuple[tuple[CommodityKind, int], ...] = ((C.TIMBER, 4), (C.CLOTH, 1))

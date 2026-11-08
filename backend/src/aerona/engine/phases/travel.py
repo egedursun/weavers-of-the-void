@@ -53,6 +53,7 @@ from aerona.engine.cosmos.routes import (
     world_name,
 )
 from aerona.engine.ecology.beasts import mount_of
+from aerona.engine.ecology.domestication import carry_herds
 from aerona.engine.economy.materials import VesselRig, hull_guard, hull_wear, rig_of, wind_guard
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.dangers import harm_of
@@ -724,6 +725,11 @@ async def _bind_colony(ctx: TickContext, arrival: Arrival, colony: EntityRow) ->
         if patron is not None:
             await bonds.connect(BondDraft(colony.id, patron, BondKind.WORSHIPS, ctx.epoch, "the god of the homeland"))
     await bind_language_and_faith(ctx, colony, source=None if arrival.journey.memory_lost else traveller)
+    carried, left = await carry_herds(ctx, traveller.id, colony)
+    if left:
+        await note(ctx, f"Of the herds {traveller.name} brought, {left} could not live on that world and were lost.", key="travel.herds_lost", ids=[colony.id])
+    if carried:
+        ctx.count("herds_carried", carried)
 
 
 async def _contact(ctx: TickContext, arrival: Arrival, native: EntityRow) -> str:

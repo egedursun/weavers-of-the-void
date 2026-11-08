@@ -111,6 +111,7 @@ import {
   HerdsSection,
 } from './wilds/BeastSection'
 import { WildsCreateBar } from './wilds/CreateWilds'
+import { RegionCropsSection } from './wilds/FloraPanels'
 import { SpeciesSection } from './wilds/SpeciesSection'
 import { TotemSection } from './wilds/TotemSection'
 
@@ -160,6 +161,7 @@ const SECTION_LINKS = [
   { id: 'section-chronicle', label: 'Chronicle' },
   { id: 'section-environment', label: 'Environment' },
   { id: 'section-land-shape', label: 'Land' },
+  { id: 'section-crops', label: 'Crops' },
   { id: 'section-event', label: 'Event' },
   { id: 'section-events-here', label: 'Events here' },
   { id: 'section-body', label: 'Body' },
@@ -288,6 +290,7 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
   if (entity.entity_type !== 'region' && entity.entity_type !== 'place')
     present.delete('section-environment')
   if (entity.entity_type !== 'region') present.delete('section-land-shape')
+  if (entity.entity_type !== 'region') present.delete('section-crops')
   if (entity.entity_type !== 'event') present.delete('section-event')
   const eventful =
     entity.entity_type === 'region' ||
@@ -407,6 +410,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         )}
         {entity.entity_type === 'region' && (
           <LandShapeSection regionId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'region' && (
+          <RegionCropsSection regionId={entity.id} readOnlyReason={readOnly} />
         )}
         {entity.entity_type === 'event' && (
           <EventSection eventId={entity.id} readOnlyReason={readOnly} />

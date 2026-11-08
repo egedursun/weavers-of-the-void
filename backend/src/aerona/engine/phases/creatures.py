@@ -30,6 +30,7 @@ from aerona.engine.cosmos.fauna import (
 )
 from aerona.engine.cosmos.resources import set_mechanics, travel_resource
 from aerona.engine.cosmos.sanity import sanity_of, shift_sanity
+from aerona.engine.ecology.biochemistry import can_live_on
 from aerona.engine.ecology.foodweb import derive_links
 from aerona.engine.ecology.profiles import assign_traits
 from aerona.engine.ecology.ranges import adapt_subspecies
@@ -426,6 +427,7 @@ async def invasive_pressure(ctx: TickContext) -> None:
     "species.intelligence",
     "species.might",
     "species.strength",
+    "table.applied_fixups",
     "table.bodies",
     "table.bonds",
     "table.entity_flags",
@@ -438,6 +440,7 @@ async def invasive_pressure(ctx: TickContext) -> None:
     "table.species_profiles",
     "table.species_ranges",
     "table.species_yields",
+    "table.world_biochemistries",
     "table.world_maps",
 )
 @writes(
@@ -730,6 +733,8 @@ async def introduce_species(session: AsyncSession, rules: Rules, species_id: int
     region = await session.get(EntityRow, region_id)
     if region is None or region.entity_type is not EntityType.REGION or region.status is not EntityStatus.CANON:
         raise NotFoundError("No such region.")
+    if not await can_live_on(session, species.id, region.world_id):
+        raise ValidationFailedError(f"{species.name} cannot live there: that world does not bear its kind of life.")
     carried = await open_record(
         session,
         ctx.epoch,

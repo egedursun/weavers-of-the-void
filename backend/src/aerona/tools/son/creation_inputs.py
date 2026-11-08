@@ -19,7 +19,7 @@ from aerona.constants.tool_inputs import (
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ArtMedium, CalendarSlot, ItemClass, LegendArchetype, ProphecyConsequence, ProphecyPredicate, TraditionKind
-from aerona.domain.enums.ecology import BeastTemper, Diet, SizeClass, Sociality, YieldProduct
+from aerona.domain.enums.ecology import BeastTemper, Biochemistry, Diet, GrowthCycle, PlantYield, SizeClass, Sociality, SpeciesClass, YieldProduct
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, EntityType, LegendCategory
 from aerona.domain.enums.faction import FactionKind
@@ -100,6 +100,10 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
             "nocturnal": (bool | None, None),
             "migratory": (bool | None, None),
             "products": (list[YieldProduct] | None, None),
+            "species_class": (SpeciesClass | None, None),
+            "biochemistry": (Biochemistry | None, None),
+            "growth_cycle": (GrowthCycle | None, None),
+            "plant_yields": (list[PlantYield] | None, None),
         },
         EntityType.BEAST: {
             "species_id": (int | None, None),

@@ -9,6 +9,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.domain import DEATH_DOMAINS, Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, HERO_ROLES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
@@ -278,7 +279,7 @@ async def peace_oath(ctx: TickContext, scene: WarScene) -> EntityRow:
 
 async def remember_war(ctx: TickContext, war: WarRow, form: MemorialForm | None = None) -> WarMemory:
     scene = await war_scene(ctx, war)
-    if scene is None:
+    if scene is None or held(war.event_entity_id, *(side.id for side in scene.sides)):
         return WarMemory([], None, None, [])
     choice = form or (MemorialForm.EPIC if scene.victor is not None else MemorialForm.TRADITION)
     rich_victor = is_rich(ctx, scene.victor) and seat_of(scene.victor) is not None

@@ -32,6 +32,7 @@ from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.star_types import star_heat
+from aerona.engine.ecology.flora import CropBook
 from aerona.engine.environment.battles import backfill_battle_ground
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.geomorph import course_of, desert_rainfall, desert_terrain, shapes_by_region
@@ -797,7 +798,9 @@ async def calendar_regions(ctx: TickContext, book: EnvironmentBook) -> set[int]:
     return regions
 
 
-def year_harvest(rules: Rules, *, growth: int, weather_growth: int, farming: float, agriculture: float, planned: bool, blight: int, soil: int) -> int:
+def year_harvest(
+    rules: Rules, *, growth: int, weather_growth: int, farming: float, agriculture: float, planned: bool, blight: int, soil: int, crops: float = 1.0
+) -> int:
     settings = rules.harvest
     value = (
         PERCENT
@@ -808,6 +811,7 @@ def year_harvest(rules: Rules, *, growth: int, weather_growth: int, farming: flo
         * (1 + farming * (agriculture - 1))
         * (1 + (settings.calendar_planning_pct / PERCENT if planned else 0))
         * (1 - min(PERCENT, blight) * rules.scars.blighted_fertility_pct / PERCENT / PERCENT)
+        * max(0.0, crops)
     )
     return clamp_int(value, 0, settings.harvest_max_pct)
 
@@ -878,6 +882,7 @@ class HarvestSeason:
     planned: set[int]
     growing: WorldSeasonRow | None
     years: list[SampledYear]
+    crops: CropBook
     worst_weather: tuple[int, YearHarvest, RegionEnvironmentRow] | None = None
     best_plenty: tuple[YearHarvest, RegionEnvironmentRow] | None = None
 
@@ -888,6 +893,7 @@ def region_years(ctx: TickContext, season: HarvestSeason, env: RegionEnvironment
     farming = load.agriculture / load.population if load.population else 0.0
     agriculture = max((season.knowledge.effect(rules, community.id, KnowledgeBranch.AGRICULTURE) for community in load.communities), default=1.0) or 1.0
     growth = season.growing.growth if season.growing is not None else rules.harvest.normal_growth
+    crops = season.crops.factor(env.entity_id)
     results: list[YearHarvest] = []
     for sampled in season.years:
         weather = season.book.weather(ctx.environment.world_seed, ctx.epoch, env, season.growing, f"year.{sampled.offset}")
@@ -900,6 +906,7 @@ def region_years(ctx: TickContext, season: HarvestSeason, env: RegionEnvironment
             planned=env.entity_id in season.planned,
             blight=env.scars.get(ScarKind.BLIGHTED.value, 0),
             soil=env.soil_fertility,
+            crops=crops,
         )
         results.append(YearHarvest(sampled.offset, sampled.year, value, weather.kind))
         severity = -weather.effect(WeatherEffect.GROWTH) - weather.effect(WeatherEffect.MORALE)
@@ -968,14 +975,20 @@ async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason)
 @reads(
     "people.population",
     "settlement.population",
+    "table.applied_fixups",
     "table.bonds",
     "table.calendars",
     "table.epoch_year_cursors",
     "table.forced_weather",
     "table.holder_levels",
     "table.place_environment",
+    "table.plant_profiles",
+    "table.region_crops",
     "table.region_environment",
     "table.sky_events",
+    "table.species_profiles",
+    "table.species_yields",
+    "table.world_biochemistries",
     "table.world_maps",
     "table.world_seasons",
 )
@@ -995,6 +1008,7 @@ async def harvest(ctx: TickContext) -> None:
     knowledge = await KnowledgeMap.load(ctx.session)
     loads = capacity.build_loads(await canon(ctx.session, LAND_COMMUNITY_TYPES))
     planned = await calendar_regions(ctx, book)
+    crops = await CropBook.load(ctx.session, rules, book.regions)
     notable = 0
     for world in book.worlds.values():
         if frozen(world.id):
@@ -1003,7 +1017,7 @@ async def harvest(ctx: TickContext) -> None:
         if not regions:
             continue
         years = world_years(ctx.environment, world.id, "harvest")
-        season = HarvestSeason(book, loads, knowledge, planned, book.growing_season(world.id), years)
+        season = HarvestSeason(book, loads, knowledge, planned, book.growing_season(world.id), years, crops)
         for env in regions:
             notable += await region_harvest(ctx, world, season, env)
         notable += await weather_year(ctx, world, season)

@@ -13,6 +13,7 @@ from aerona.engine.polity.revenue import RevenueTally, tend_revenue
 @reads(
     "law.justice",
     "mortal.charisma",
+    "mortal.hp",
     "mortal.intellect",
     "mortal.strength",
     "mortal.wisdom",
@@ -78,6 +79,7 @@ from aerona.engine.polity.revenue import RevenueTally, tend_revenue
     "table.world_maps",
 )
 @writes(
+    "mortal.hp",
     "settlement.piety",
     "table.army_profiles",
     "table.chronicle",

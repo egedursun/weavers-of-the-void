@@ -87,6 +87,10 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "nocturnal": "True if it wakes at night; night kinds escape hunters more often",
         "migratory": "True if its herds move between lands with the seasons",
         "products": "What it yields beyond meat, hide and bone, if anything: {{ yield_products | join(', ') }}; silk and venom feed crafts, dragonbone feeds forges",
+        "species_class": "What kind of life it is: {{ species_classes | join(', ') }}; plants and fungi are gathered, sown and harvested, vermin spoil stores",
+        "biochemistry": "What its life is built on: {{ biochemistries | join(', ') }}; it lives only on worlds that bear that kind of life, though void and spirit life live anywhere",
+        "growth_cycle": "For a plant or fungus, how it grows: {{ growth_cycles | join(', ') }}",
+        "plant_yields": "For a plant or fungus, what its harvest gives: {{ plant_yields | join(', ') }}",
     },
     EntityType.BEAST: {
         "species_id": "The kind it is the greatest of (species id), if any; it takes that kind's body, yields and lifespan",
@@ -500,6 +504,11 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "name": "The name of a new theory, if you set one out",
             "claim": "What the new theory holds, in one or two sentences, if you set one out",
         },
+    ),
+    T.SOW_CROP: ToolText(
+        "You have a plant or fungus sown in a land's fields: it becomes a crop there, takes a share of the fields and from then on grows or fails as the land, "
+        "its seasons and its soil suit it. Its harvest gives what the plant yields. Cost: {{ rules.flora.sow_cost }} essence; 1 action.",
+        {"region_id": "The land whose fields it is sown in", "plant_id": "The plant or fungus kind (species id) to sow"},
     ),
     T.INCITE_WAR: ToolText(
         "You sow the seed of enmity between two communities (faction, people or settlement). If it takes hold, war may break out between them; the world's flow resolves "

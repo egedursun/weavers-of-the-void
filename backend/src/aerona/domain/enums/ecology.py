@@ -56,6 +56,7 @@ class SpeciesUse(StrEnum):
     COMPANION = "companion"
     SACRIFICE = "sacrifice"
     MAGIC = "magic"
+    PEST_CONTROL = "pest_control"
 
 
 class RangeTrend(StrEnum):
@@ -86,9 +87,62 @@ class YieldProduct(StrEnum):
     FEATHERS = "feathers"
     MAGIC_REAGENTS = "magic_reagents"
     DRAGONBONE = "dragonbone"
+    EGGS = "eggs"
 
 
 class FoodLink(StrEnum):
     PINNED = "pinned"
     BARRED = "barred"
     DERIVED = "derived"
+
+
+class SpeciesClass(StrEnum):
+    ANIMAL = "animal"
+    PLANT = "plant"
+    FUNGUS = "fungus"
+    VERMIN = "vermin"
+
+
+GROWN = frozenset({SpeciesClass.PLANT, SpeciesClass.FUNGUS})
+
+
+class Biochemistry(StrEnum):
+    CARBON_WATER = "carbon_water"
+    CARBON_AMMONIA = "carbon_ammonia"
+    SILICON = "silicon"
+    CRYSTAL = "crystal"
+    VOID = "void"
+    SPIRIT = "spirit"
+
+
+UNBOUND_BIOCHEMISTRY = frozenset({Biochemistry.VOID, Biochemistry.SPIRIT})
+
+
+class GrowthCycle(StrEnum):
+    ANNUAL = "annual"
+    PERENNIAL = "perennial"
+    TREE = "tree"
+
+
+class Cultivation(StrEnum):
+    WILD = "wild"
+    GATHERED = "gathered"
+    CULTIVATED = "cultivated"
+    CULTIVAR = "cultivar"
+
+
+CULTIVATION_ORDER = tuple(Cultivation)
+SOWN = frozenset({Cultivation.CULTIVATED, Cultivation.CULTIVAR})
+
+
+class PlantYield(StrEnum):
+    GRAIN = "grain"
+    TUBER = "tuber"
+    FIBRE = "fibre"
+    DYE = "dye"
+    TIMBER = "timber"
+    FRUIT = "fruit"
+    HERB = "herb"
+    BREW_BASE = "brew_base"
+    REAGENT = "reagent"
+    POISON = "poison"

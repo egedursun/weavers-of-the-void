@@ -188,6 +188,10 @@ class SonResult(StrEnum):
         "The scholars of {{ place }} now hold #{{ id }} {{ name }} as their account of {{ domain }}, and it is true.{% if gained %} {{ gained }}{% endif %}"
     )
     NOT_A_THEORY = "That is not a theory."
+    CROP_SOWN = "#{{ id }} {{ name }} is now sown on {{ share }}% of the fields of {{ place }}.{% if gained %} {{ gained }}{% endif %}"
+    NOT_A_PLANT = "That is not a plant or a fungus."
+    SOW_PLACE = "Choose a living land where it will be sown."
+    CROP_FULL = "{{ place }} already sows {{ count }} crops; clear one from its fields first."
     REVEAL_PLACE = "Choose a living people or settlement whose scholars will hear it."
     KNOWLEDGE_CEILING = "{{ name }} is already at the highest level you can raise it to ({{ ceiling }}); no action spent."
     BRANCH_FULL = "This world already holds {{ existing }} in the {{ branch }} branch; deepen one with advance_knowledge instead of opening a new record{{ hint }}. No action spent."

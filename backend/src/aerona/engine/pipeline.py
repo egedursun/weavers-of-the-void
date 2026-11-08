@@ -290,6 +290,7 @@ SUB_ENGINE_STAGE = stage(
     "creatures",
     "ecology",
     "husbandry",
+    "flora_cycles",
     "beast_cycles",
     "pantheon",
     "native_faith",

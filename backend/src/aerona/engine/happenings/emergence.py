@@ -11,6 +11,7 @@ from aerona.db.tables.faith import HeresyRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.settlement import SettlementProfileRow, SettlementTreasuryRow
 from aerona.db.tables.warfare import BattleRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EngineKind, EntityStatus, EntityType
@@ -107,7 +108,7 @@ async def festivals(ctx: TickContext, atlas: RegionAtlas) -> int:
     made = 0
     for town_id in list(rows):
         town = await ctx.session.get(EntityRow, town_id)
-        if town is None or town.status is not EntityStatus.CANON or stat_or(town, "population", 0) < table.festival_population:
+        if town is None or town.status is not EntityStatus.CANON or stat_or(town, "population", 0) < table.festival_population or held(town.id):
             continue
         name = tag(ctx, f"the Great Festival of {town.name}")
         if name.casefold() in known or made >= table.emergent_cap:
@@ -142,7 +143,7 @@ async def coronations(ctx: TickContext, atlas: RegionAtlas) -> int:
         realm = await ctx.session.get(EntityRow, bond.target_node_id)
         if ruler is None or realm is None or ruler.entity_type not in RULER_TYPES or realm.entity_type not in REALM_TYPES:
             continue
-        if ruler.status is not EntityStatus.CANON or realm.power_level < table.coronation_realm_power:
+        if ruler.status is not EntityStatus.CANON or realm.power_level < table.coronation_realm_power or held(ruler.id, realm.id):
             continue
         name = tag(ctx, f"the Coronation of {ruler.name}")
         if name.casefold() in known or made >= table.emergent_cap:
@@ -176,7 +177,13 @@ async def weddings(ctx: TickContext, atlas: RegionAtlas) -> int:
     for first_id, second_id in pairs:
         first = await ctx.session.get(EntityRow, first_id)
         second = await ctx.session.get(EntityRow, second_id)
-        if first is None or second is None or first.entity_type not in COMMUNITY_TYPES or second.entity_type not in COMMUNITY_TYPES:
+        if (
+            first is None
+            or second is None
+            or first.entity_type not in COMMUNITY_TYPES
+            or second.entity_type not in COMMUNITY_TYPES
+            or held(first.id, second.id)
+        ):
             continue
         name = tag(ctx, f"the Wedding of {first.name} and {second.name}")
         if name.casefold() in known or made >= table.emergent_cap:
@@ -212,7 +219,7 @@ async def massacres(ctx: TickContext, atlas: RegionAtlas) -> int:
         winner = await ctx.session.get(EntityRow, battle.winner_entity_id)
         place = await ctx.session.get(EntityRow, battle.place_entity_id) if battle.place_entity_id is not None else None
         where = place or loser
-        if loser is None or where is None:
+        if loser is None or where is None or held(loser.id, where.id, battle.winner_entity_id):
             continue
         name = tag(ctx, f"the Massacre at {where.name}")
         if name.casefold() in known or made >= table.emergent_cap:
@@ -248,7 +255,7 @@ async def riots(ctx: TickContext, atlas: RegionAtlas) -> int:
     made = 0
     for profile in list(towns):
         town = await ctx.session.get(EntityRow, profile.settlement_entity_id)
-        if town is None or town.status is not EntityStatus.CANON or made >= table.emergent_cap:
+        if town is None or town.status is not EntityStatus.CANON or made >= table.emergent_cap or held(town.id):
             continue
         if await recent_at(ctx, EngineKind.RIOT, town.id, max(1, table.riot_cooldown_epochs)):
             continue
@@ -279,7 +286,7 @@ async def schism_councils(ctx: TickContext, atlas: RegionAtlas) -> int:
     for heresy in list(heresies):
         sect = await ctx.session.get(EntityRow, heresy.heresy_entity_id)
         parent = await ctx.session.get(EntityRow, heresy.parent_entity_id)
-        if sect is None or parent is None or made >= table.emergent_cap:
+        if sect is None or parent is None or made >= table.emergent_cap or held(sect.id, parent.id, parent.location_id):
             continue
         where = await ctx.session.get(EntityRow, parent.location_id) if parent.location_id is not None else None
         name = tag(ctx, f"the Council of {sect.name}")
@@ -314,7 +321,7 @@ async def eclipse_watches(ctx: TickContext, atlas: RegionAtlas) -> int:
     known = await born_names(ctx, EngineKind.ECLIPSE_WATCH)
     made = 0
     for world_id in sorted({row.world_id for row in eclipses if row.world_id is not None}):
-        towns = [town for town in await _communities(ctx, world_id) if town.entity_type is EntityType.SETTLEMENT]
+        towns = [town for town in await _communities(ctx, world_id) if town.entity_type is EntityType.SETTLEMENT and not held(town.id)]
         host = max(towns, key=lambda town: (stat_or(town, "population", 0), -town.id), default=None)
         if host is None or made >= table.emergent_cap:
             continue

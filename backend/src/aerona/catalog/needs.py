@@ -43,6 +43,13 @@ SHORTFALL_EFFECTS: Mapping[CommodityKind, ShortfallEffect] = MappingProxyType(
         C.COAL: E.COLD,
         C.PEAT: E.COLD,
         C.DUNG: E.COLD,
+        C.EGGS: E.HUNGER,
+        C.WOOL: E.COLD,
+        C.FIBRE: E.COLD,
+        C.DYE: E.STATUS,
+        C.HERBS: E.SICKNESS,
+        C.BREW_BASE: E.STATUS,
+        C.POISON: E.INSECURITY,
     }
 )
 
@@ -125,8 +132,8 @@ CLASS_INCOME: Mapping[SocialClass, int] = MappingProxyType(
 
 JOB_GOODS: Mapping[Job, tuple[CommodityKind, ...]] = MappingProxyType(
     {
-        J.FARMING: (C.GRAIN, C.BREAD, C.FRUIT, C.TUBERS),
-        J.HERDING: (C.LIVESTOCK, C.FODDER, C.MOUNTS, C.MEAT, C.MILK, C.CHEESE, C.DUNG),
+        J.FARMING: (C.GRAIN, C.BREAD, C.FRUIT, C.TUBERS, C.FIBRE, C.DYE, C.HERBS, C.BREW_BASE, C.POISON),
+        J.HERDING: (C.LIVESTOCK, C.FODDER, C.MOUNTS, C.MEAT, C.MILK, C.CHEESE, C.DUNG, C.EGGS, C.WOOL),
         J.FISHING: (C.FISH,),
         J.MINING: (C.ORE, C.STONE, C.COAL, C.PEAT),
         J.CRAFTING: (C.TOOLS, C.CLOTH, C.WEAPONS, C.ARMOUR, C.FUEL, C.MEDICINE),

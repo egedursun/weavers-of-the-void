@@ -213,6 +213,7 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
     "table.species_profiles",
     "table.species_ranges",
     "table.species_yields",
+    "table.world_biochemistries",
     "table.world_maps",
 )
 @writes(

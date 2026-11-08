@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.flora import DEFAULT_YIELDS, PLANT_PRODUCTS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow
@@ -11,9 +12,23 @@ from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesUseRow, SpeciesYieldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.flora import PlantProfileRow
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.ecology import GRAZERS, SIZE_ORDER, Diet, SizeClass, Sociality, SpeciesUse, YieldProduct
+from aerona.domain.enums.ecology import (
+    GRAZERS,
+    GROWN,
+    SIZE_ORDER,
+    Biochemistry,
+    Diet,
+    GrowthCycle,
+    PlantYield,
+    SizeClass,
+    Sociality,
+    SpeciesClass,
+    SpeciesUse,
+    YieldProduct,
+)
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityFlag
 from aerona.domain.enums.environment import TerrainKind
@@ -21,6 +36,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
+from aerona.engine.ecology.biochemistry import tolerated
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import has_flag
@@ -61,8 +77,9 @@ IVORY = Product("ivory", CommodityKind.LUXURIES, MaterialKind.IVORY, 1)
 CHITIN = Product("chitin", CommodityKind.ARMOUR, MaterialKind.CHITIN, 1)
 VENOM = Product("venom", CommodityKind.MEDICINE, None, 1)
 SILK = Product("silk", CommodityKind.CLOTH, MaterialKind.CLOTH, 1)
-WOOL = Product("wool", CommodityKind.CLOTH, MaterialKind.CLOTH, 1)
-MILK = Product("milk", CommodityKind.LIVESTOCK, None, 1)
+WOOL = Product("wool", CommodityKind.WOOL, None, 1)
+MILK = Product("milk", CommodityKind.MILK, None, 1)
+EGGS = Product("eggs", CommodityKind.EGGS, None, 1)
 FEATHERS = Product("feathers", CommodityKind.LUXURIES, None, 1)
 REAGENTS = Product("magic reagents", CommodityKind.MAGICAL_REAGENTS, None, 1)
 DRAGONBONE = Product("dragonbone", CommodityKind.WEAPONS, MaterialKind.DRAGONBONE, 1)
@@ -79,7 +96,12 @@ PRODUCTS = {
     YieldProduct.FEATHERS: FEATHERS,
     YieldProduct.MAGIC_REAGENTS: REAGENTS,
     YieldProduct.DRAGONBONE: DRAGONBONE,
+    YieldProduct.EGGS: EGGS,
 }
+PLANT_PLANS = {SpeciesClass.PLANT: P.ARBOREAL, SpeciesClass.FUNGUS: P.AMORPHOUS}
+PLANT_DIETS = {SpeciesClass.PLANT: Diet.PHOTOSYNTHETIC, SpeciesClass.FUNGUS: Diet.SCAVENGER}
+PEST_HUNTERS = frozenset({Diet.CARNIVORE, Diet.OMNIVORE})
+LAYERS = frozenset({P.AVIAN, P.SERPENTINE, P.AQUATIC, P.INSECTOID})
 
 
 @dataclass(frozen=True)
@@ -91,6 +113,10 @@ class SpeciesSpec:
     nocturnal: bool | None = None
     migratory: bool | None = None
     products: tuple[YieldProduct, ...] = ()
+    species_class: SpeciesClass | None = None
+    biochemistry: Biochemistry | None = None
+    growth_cycle: GrowthCycle | None = None
+    plant_yields: tuple[PlantYield, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -101,6 +127,8 @@ class Nature:
     sociality: Sociality
     nocturnal: bool
     migratory: bool
+    species_class: SpeciesClass = SpeciesClass.ANIMAL
+    biochemistry: Biochemistry = Biochemistry.CARBON_WATER
 
 
 async def parent_profile(session: AsyncSession, species_id: int) -> SpeciesProfileRow | None:
@@ -161,15 +189,45 @@ def sociality_of(diet: Diet, traits: set[CreatureTrait], parent: SpeciesProfileR
     return Sociality.HERD if diet in GRAZERS else Sociality.SOLITARY
 
 
-async def nature_of(session: AsyncSession, species: EntityRow, traits: set[CreatureTrait], megafauna: bool, spec: SpeciesSpec) -> Nature:
+def class_of(spec: SpeciesSpec, traits: set[CreatureTrait], parent: SpeciesProfileRow | None) -> SpeciesClass:
+    if spec.species_class is not None:
+        return spec.species_class
+    if parent is not None:
+        return parent.species_class
+    if spec.diet is Diet.PHOTOSYNTHETIC or spec.body_plan is P.ARBOREAL:
+        return SpeciesClass.PLANT
+    if T.CROP_PEST in traits and (spec.size_class is None or spec.size_class in SHELLED):
+        return SpeciesClass.VERMIN
+    return SpeciesClass.ANIMAL
+
+
+def biochemistry_of(spec: SpeciesSpec, plan: BodyPlan, diet: Diet, parent: SpeciesProfileRow | None, native: tuple[Biochemistry, ...]) -> Biochemistry:
+    if spec.biochemistry is not None:
+        return spec.biochemistry
+    if parent is not None:
+        return parent.biochemistry
+    if diet is Diet.VOID:
+        return Biochemistry.VOID
+    if diet is Diet.SOUL or plan is P.INCORPOREAL:
+        return Biochemistry.SPIRIT
+    if diet is Diet.MINERAL or plan is P.CONSTRUCT:
+        return Biochemistry.SILICON
+    return Biochemistry.CARBON_WATER if not native or Biochemistry.CARBON_WATER in native else native[0]
+
+
+async def nature_of(
+    session: AsyncSession, species: EntityRow, traits: set[CreatureTrait], megafauna: bool, spec: SpeciesSpec, *, native: tuple[Biochemistry, ...] = ()
+) -> Nature:
     parent = await parent_profile(session, species.id)
-    plan = spec.body_plan or await plan_of(session, species.id, traits, megafauna, parent)
+    kind = class_of(spec, traits, parent)
+    grown = kind in GROWN
+    plan = spec.body_plan or (PLANT_PLANS[kind] if grown and parent is None else await plan_of(session, species.id, traits, megafauna, parent))
     size = spec.size_class or size_of(species, plan, megafauna, parent)
-    diet = spec.diet or diet_of(species, traits, plan, parent)
+    diet = spec.diet or (PLANT_DIETS[kind] if grown and parent is None else diet_of(species, traits, plan, parent))
     sociality = spec.sociality or sociality_of(diet, traits, parent)
     nocturnal = spec.nocturnal if spec.nocturnal is not None else parent.nocturnal if parent is not None else T.ECHOLOCATION in traits
     migratory = spec.migratory if spec.migratory is not None else parent.migratory if parent is not None else False
-    return Nature(plan, size, diet, sociality, nocturnal, migratory)
+    return Nature(plan, size, diet, sociality, nocturnal, migratory, kind, biochemistry_of(spec, plan, diet, parent, native))
 
 
 def yields_of(nature: Nature, traits: set[CreatureTrait], might: int, mighty: int, extra: tuple[YieldProduct, ...]) -> list[Product]:
@@ -185,6 +243,8 @@ def yields_of(nature: Nature, traits: set[CreatureTrait], might: int, mighty: in
         found.extend((WOOL, MILK))
     if T.FLYING in traits or plan in FLYERS:
         found.append(FEATHERS)
+    if plan in LAYERS and size in KEPT_SIZES and diet not in UNEATEN:
+        found.append(EGGS)
     if might >= mighty:
         found.append(REAGENTS)
     found.extend(PRODUCTS[item] for item in extra)
@@ -208,7 +268,26 @@ def uses_of(nature: Nature, tameability: int, traits: set[CreatureTrait], might:
         found.add(SpeciesUse.COMPANION)
     if might >= mighty:
         found.add(SpeciesUse.MAGIC)
+    if diet in PEST_HUNTERS and size in SHELLED:
+        found.add(SpeciesUse.PEST_CONTROL)
     return found
+
+
+def plant_uses(might: int, mighty: int) -> set[SpeciesUse]:
+    return {SpeciesUse.MAGIC} if might >= mighty else set()
+
+
+def plant_products(nature: Nature, cycle: GrowthCycle, chosen: tuple[PlantYield, ...]) -> list[Product]:
+    wanted = chosen or DEFAULT_YIELDS[(nature.species_class, cycle)]
+    return [Product(item.value, PLANT_PRODUCTS[item].commodity, PLANT_PRODUCTS[item].material, PLANT_PRODUCTS[item].rate) for item in dict.fromkeys(wanted)]
+
+
+def cycle_of(spec: SpeciesSpec, nature: Nature, lifespan: int) -> GrowthCycle:
+    if spec.growth_cycle is not None:
+        return spec.growth_cycle
+    if nature.plan is P.ARBOREAL and nature.size in GREAT | {Z.LARGE}:
+        return GrowthCycle.TREE
+    return GrowthCycle.PERENNIAL if lifespan > 1 else GrowthCycle.ANNUAL
 
 
 async def home_land(session: AsyncSession, species: EntityRow) -> RegionEnvironmentRow | None:
@@ -232,7 +311,7 @@ async def profile_of(ctx: TickContext, species: EntityRow, spec: SpeciesSpec | N
     chosen = spec or SpeciesSpec()
     traits = await traits_of(ctx.session, species.id)
     megafauna = await has_flag(ctx.session, species.id, EntityFlag.MEGAFAUNA)
-    nature = await nature_of(ctx.session, species, traits, megafauna, chosen)
+    nature = await nature_of(ctx.session, species, traits, megafauna, chosen, native=await tolerated(ctx.session, species.world_id))
     size, diet = nature.size, nature.diet
     land = await home_land(ctx.session, species)
     danger = stat(species, "danger") or 0
@@ -256,6 +335,8 @@ async def profile_of(ctx: TickContext, species: EntityRow, spec: SpeciesSpec | N
     elevation = land.elevation_mean if land is not None else 0
     row = SpeciesProfileRow(
         species_entity_id=species.id,
+        species_class=nature.species_class,
+        biochemistry=nature.biochemistry,
         body_plan=nature.plan,
         size_class=size,
         lifespan_years=max(1, lifespan),
@@ -286,13 +367,41 @@ async def profile_of(ctx: TickContext, species: EntityRow, spec: SpeciesSpec | N
         locked=[],
     )
     ctx.session.add(row)
-    extra = tuple(dict.fromkeys((*chosen.products, *await inherited_products(ctx.session, species.id))))
-    for item in yields_of(nature, traits, might, table.mighty, extra):
+    if nature.species_class in GROWN:
+        cycle = cycle_of(chosen, nature, row.lifespan_years)
+        add_plant_profile(ctx, species.id, cycle)
+        products = plant_products(nature, cycle, chosen.plant_yields)
+        kept = plant_uses(might, table.mighty)
+    else:
+        extra = tuple(dict.fromkeys((*chosen.products, *await inherited_products(ctx.session, species.id))))
+        products = yields_of(nature, traits, might, table.mighty, extra)
+        kept = uses_of(nature, tameability, traits, might, table.mighty)
+    for item in products:
         ctx.session.add(SpeciesYieldRow(species_entity_id=species.id, product=item.product, commodity=item.commodity, material=item.material, rate=item.rate))
-    for use in uses_of(nature, tameability, traits, might, table.mighty):
+    for use in kept:
         ctx.session.add(SpeciesUseRow(species_entity_id=species.id, use=use))
     await ctx.session.flush()
     return row
+
+
+CYCLE_SEASONS = {
+    GrowthCycle.ANNUAL: lambda rules: rules.flora.annual_seasons,
+    GrowthCycle.PERENNIAL: lambda rules: rules.flora.perennial_seasons,
+    GrowthCycle.TREE: lambda rules: rules.flora.tree_seasons,
+}
+
+
+def add_plant_profile(ctx: TickContext, species_id: int, cycle: GrowthCycle) -> PlantProfileRow:
+    plant = PlantProfileRow(
+        species_entity_id=species_id,
+        growth_cycle=cycle,
+        growing_seasons=CYCLE_SEASONS[cycle](ctx.rules),
+        soil_need=ctx.rules.flora.soil_need,
+        since_epoch=ctx.epoch,
+        locked=[],
+    )
+    ctx.session.add(plant)
+    return plant
 
 
 def traits_from_nature(profile: SpeciesProfileRow) -> list[CreatureTrait]:

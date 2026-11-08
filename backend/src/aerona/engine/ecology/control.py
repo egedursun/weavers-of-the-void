@@ -36,8 +36,8 @@ from aerona.engine.ecology.beasts import fall, hand_over, owned_items, profile_b
 from aerona.engine.ecology.domestication import offspring
 from aerona.engine.ecology.profiles import SpeciesSpec, profile_of
 from aerona.engine.ecology.totems import drop_totem, found_totem
-from aerona.engine.lore.control import bounds, coerce
 from aerona.engine.polity.control import lock
+from aerona.engine.primitives.edits import bounds, coerce
 from aerona.engine.primitives.queries import close, connect, directed_bond, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import stat

@@ -352,7 +352,7 @@ export function DesignForge({
         <TextField
           label='Design name'
           value={name}
-          placeholder='Bellows forge, terraced mill…'
+          placeholder='Name the design'
           onChange={setName}
         />
       </div>

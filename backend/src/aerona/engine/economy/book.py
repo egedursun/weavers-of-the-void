@@ -25,6 +25,7 @@ from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.polity import ClauseKind, TreatyStatus
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
+from aerona.engine.ecology.flora import CropBook
 from aerona.engine.economy.materials import MaterialBook
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -59,6 +60,7 @@ class EconomyBook:
     industry: dict[int, CommunityIndustryRow] = field(default_factory=dict)
     pollution: dict[int, RegionPollutionRow] = field(default_factory=dict)
     magic_heat_pct: int = 0
+    crops: CropBook | None = None
 
     @classmethod
     async def load(cls, ctx: TickContext) -> "EconomyBook":
@@ -124,6 +126,7 @@ class EconomyBook:
             self.methods.setdefault(method.community_node_id, {})[method.process] = method
         self.industry = {row.community_node_id: row for row in await ctx.session.scalars(select(CommunityIndustryRow))}
         self.pollution = {row.region_node_id: row for row in await ctx.session.scalars(select(RegionPollutionRow))}
+        self.crops = await CropBook.load(ctx.session, ctx.rules, self.ground.regions)
 
     def home_of(self, entity: EntityRow, homes: dict[int, int]) -> int | None:
         if entity.entity_type in SOCIETY_TYPES:

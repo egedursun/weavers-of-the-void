@@ -75,6 +75,7 @@ class DomesticationRules:
     growth_pct: int = rule(10, 0, 100, G, "Growth of a fed herd each epoch (%)")
     starve_pct: int = rule(15, 0, 100, G, "Loss of an unfed herd each epoch (%)")
     starting_head: int = rule(10, 1, 10000, G, "Head of a herd when a community first keeps a tamed beast")
+    colony_herd_pct: int = rule(20, 0, 100, G, "Share of each herd colonists carry to a new world, where the beasts can live there (%)")
     livestock_per_head: int = rule(1, 0, 100, G, "Livestock a food herd yields for every ten head")
     mounts_per_head: int = rule(1, 0, 100, G, "Mounts a mount herd yields for every ten head")
     tame_drift: int = rule(10, 0, 100, G, "Aggression and danger a domesticated kind loses against its wild parent")

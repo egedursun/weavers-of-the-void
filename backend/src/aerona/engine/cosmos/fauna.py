@@ -14,6 +14,7 @@ from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, Ent
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.models.entity_stats import SpeciesStats
 from aerona.engine.context import TickContext
+from aerona.engine.ecology.biochemistry import can_live_on
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.stats import stat, stat_or
@@ -96,7 +97,9 @@ async def stowaway(ctx: TickContext, origin_world_id: int, region: EntityRow) ->
         EntityRow.world_id == origin_world_id, EntityRow.entity_type == EntityType.SPECIES, EntityRow.status == EntityStatus.CANON
     )
     candidates = [
-        species for species in await ctx.session.scalars(statement.order_by(EntityRow.id)) if stat_or(species, DANGER_KEY, 0) < creatures.stowaway_danger_cap
+        species
+        for species in await ctx.session.scalars(statement.order_by(EntityRow.id))
+        if stat_or(species, DANGER_KEY, 0) < creatures.stowaway_danger_cap and await can_live_on(ctx.session, species.id, region.world_id)
     ]
     rng = ctx.rng("stowaway")
     if not candidates or not rng.chance(creatures.stowaway_chance):

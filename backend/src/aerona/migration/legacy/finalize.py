@@ -3,12 +3,16 @@ from sqlalchemy import func, select, text
 from aerona.db.base import Base
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.ecology import SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NameRegistryRow, NodeRow
-from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.ecology import SpeciesClass
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.world import LoreLanguage
 from aerona.engine.cosmos.maps import store_world_map
+from aerona.engine.ecology.profiles import SpeciesSpec, profile_of
 from aerona.engine.primitives.canon_facts import seed_if_empty
+from aerona.engine.primitives.manual import manual_context
 from aerona.events.bus import EventBus
 from aerona.migration.legacy.context import MigrationContext
 from aerona.migration.legacy.errors import MigrationError
@@ -45,6 +49,19 @@ async def run_repairs(context: MigrationContext) -> None:
         counters[SKIPPED_FOR_LORE_LANGUAGE] = 1
     await session.flush()
     context.report.repairs.update(counters)
+
+
+async def type_species(context: MigrationContext) -> None:
+    classes = {word.casefold(): SpeciesClass(kind) for word, kind in context.vocabulary.species_classes.items()}
+    ctx = await manual_context(context.session, "legacy_species", context.rules)
+    typed = 0
+    for species in list(await context.session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.SPECIES).order_by(EntityRow.id))):
+        kind = classes.get((species.subtype or "").strip().casefold())
+        if kind is None or await context.session.get(SpeciesProfileRow, species.id) is not None:
+            continue
+        await profile_of(ctx, species, SpeciesSpec(species_class=kind))
+        typed += 1
+    context.report.repairs["species_classes"] = typed
 
 
 async def regenerate_maps(context: MigrationContext) -> None:
