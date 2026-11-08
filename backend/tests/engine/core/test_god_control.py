@@ -126,8 +126,7 @@ def eager(rules: Rules) -> Rules:
 async def run_watched(database: Database, phase_name: str, only: int) -> tuple[Counter[str], str | None]:
     phase = next(item for item in all_phases() if item.name == phase_name)
     environment = await current_environment(database)
-    if only == BLOCK_EVERY_NODE:
-        environment = replace(environment, rules=eager(environment.rules))
+    environment = replace(environment, rules=eager(environment.rules))
     watcher = Watcher()
     listeners: list[tuple[str, Callable[..., Any]]] = [
         ("transient_to_pending", watcher.pending),
