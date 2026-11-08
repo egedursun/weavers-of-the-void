@@ -933,7 +933,7 @@ EXTRA: tuple[Raw, ...] = (
     (
         "trade_barrier",
         "S8.1",
-        "Caravans carry less between strangers",
+        "Traders carry less between strangers",
         ("trade_flow",),
         LORE,
         ("language", "trade_route"),

@@ -289,7 +289,7 @@ export function LanguagePanel({
         <RegisterList rows={card.registers} surface='LanguageRegisters' />
         <Muted variant='caption'>
           Treaties are read in the court's tongue, preachers are heard in the
-          liturgy, caravans bargain in the market tongue.
+          liturgy, traders bargain in the market tongue.
         </Muted>
       </LoreCard>
       <LoreAdjust

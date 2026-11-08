@@ -108,12 +108,12 @@ SWALLOWED_TEXT: dict[JourneyEventKind, str] = {
     JourneyEventKind.MEMORY_LOSS: "the river took every memory; forgetting who they were, they melted into its water",
     JourneyEventKind.PIRATES: "void pirates left no one alive",
     JourneyEventKind.VOID_STORM: "a void storm swallowed them",
-    JourneyEventKind.CREATURE: "a cosmic creature swallowed the caravan",
+    JourneyEventKind.CREATURE: "a cosmic creature swallowed the travellers",
 }
 COMMON_EVENTS = (JourneyEventKind.PIRATES, JourneyEventKind.VOID_STORM, JourneyEventKind.CREATURE, JourneyEventKind.LOST_WAY)
 METHOD_EVENTS = {M.SWALLOWED: JourneyEventKind.SWALLOWED, M.DREAM_JOURNEY: JourneyEventKind.DREAM_NOT_RETURNED, M.RIVER_OF_DEAD: JourneyEventKind.MEMORY_LOSS}
 INTENT_SENT = {
-    JourneyIntent.COLONY: "a colony caravan",
+    JourneyIntent.COLONY: "a colony expedition",
     JourneyIntent.EXPLORATION: "an exploration expedition",
     JourneyIntent.TRADE: "a trade expedition",
     JourneyIntent.CONQUEST: "a conquest fleet",
@@ -466,16 +466,16 @@ async def _lost_caravan(ctx: TickContext, journey: JourneyRow, traveller: Entity
         ctx.session,
         ctx.epoch,
         RecordSpec(
-            name=f"{traveller.name} Lost Caravan",
+            name=f"{traveller.name} Lost Journey",
             entity_type=EntityType.LEGEND,
             body=f"{journey.population} travellers of {traveller.name} set out for {target}; {how}. Their names are spoken at home every year.",
             stats=LegendStats(spread=travel.lost_caravan_legend_spread),
             power=travel.lost_caravan_legend_power,
             world_id=journey.origin_world_id,
-            subtype="lost caravan",
+            subtype="lost journey",
         ),
     )
-    await connect(ctx.session, legend.id, traveller.id, BondKind.TELLS_OF, ctx.epoch, description="the lost caravan")
+    await connect(ctx.session, legend.id, traveller.id, BondKind.TELLS_OF, ctx.epoch, description="the lost journey")
     return legend
 
 

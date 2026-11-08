@@ -45,7 +45,7 @@ class RouteSeasonsRules:
     flood_rain_shift: int = rule(15, 0, 100, G, "Rise of a season's rain over the year's at which rivers flood")
     sky_season_pct: int = rule(30, 0, 100, G, "Cargo kept back on a sky lane in its stormiest season (%)")
     freeze_temperature: int = rule(25, 0, 100, G, "Temperature of a season below which rivers freeze and passes fill with snow")
-    burning_temperature: int = rule(75, 0, 100, G, "Temperature of a season above which caravans rest through the heat")
+    burning_temperature: int = rule(75, 0, 100, G, "Temperature of a season above which traffic on a caravan way rests through the heat")
 
 
 @dataclass(frozen=True)

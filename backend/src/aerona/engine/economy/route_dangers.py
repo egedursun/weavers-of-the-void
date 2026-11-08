@@ -275,7 +275,7 @@ async def feed_beast(ctx: TickContext, book: EconomyBook, route: EntityRow, comm
     if units >= table.beast_note_units:
         await ctx.chronicle(
             ChronicleKind.DISASTER,
-            f"{beast.name} fell on the caravans of {route.name} and dragged {units} loads of {COMMODITIES[commodity].label.lower()} to its lair.",
+            f"{beast.name} fell on the traffic of {route.name} and dragged {units} loads of {COMMODITIES[commodity].label.lower()} to its lair.",
             template_key="trade_route.beast_raid",
             entity_ids=[route.id, beast.id],
         )

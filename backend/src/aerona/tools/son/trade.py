@@ -23,7 +23,7 @@ from aerona.tools.framework.validation import fail, require_canon, require_type
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 ROUTE_OPENED = Line("tools.son.trade_route_opened", "{son} laid {route} between {first} and {second}: {reason}")
-ROUTE_CLOSED = Line("tools.son.trade_route_closed", "{son} closed {route}; no caravan passes between {first} and {second}: {reason}")
+ROUTE_CLOSED = Line("tools.son.trade_route_closed", "{son} closed {route}; no goods pass between {first} and {second}: {reason}")
 
 
 class OpenTradeRouteInput(ToolInput):

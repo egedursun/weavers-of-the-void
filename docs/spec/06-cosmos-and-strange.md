@@ -728,7 +728,7 @@ fold→pathfinding, dream→magic, dead_river→none.
 | sefer_kalabalik_esik | crowded_population_threshold | 20000 | 0 | 10000000 | Population counted as crowded |
 | sefer_yoksul | expedition_poor_pct | 8 | 0 | 100 | Pressure from poverty (%) |
 | sefer_yoksul_esik | poor_prosperity_threshold | 25 | 0 | 100 | Prosperity counted as poor |
-| koloni_pay | colony_population_share_pct | 10 | 0 | 100 | Colony caravan's population share (%) |
+| koloni_pay | colony_population_share_pct | 10 | 0 | 100 | Colony expedition's population share (%) |
 | kayip_sans | lost_swallows_pct | 50 | 0 | 100 | A "lost" road event swallows the journey (%) |
 | koloni_istila_sans | colony_seen_as_invader_pct | 35 | 0 | 100 | Natives see the colony as invaders (%) |
 | temas_ticaret_sans | first_contact_trade_pct | 50 | 0 | 100 | First contact turns into trade (%) |
@@ -821,7 +821,7 @@ method `duration`/`danger` tunables (§1.9.4).
   - `target_empty` = no canon people/settlement on target. Intent = `colony` if target_empty or `chance(colony_intent)`;
     else `exploration` if `chance(exploration_intent)`; else `trade`.
   - `start_journey({traveller, route, intent, population: colony ? round(pop × colony_share/100) : 0})`; note
-    "{community} sent {a colony caravan | an exploration expedition | a trade expedition} to {target}[ by way of {method}]."
+    "{community} sent {a colony expedition | an exploration expedition | a trade expedition} to {target}[ by way of {method}]."
     Errors → skip. Stop when `expeditions_max_per_epoch` reached.
 
 **D. Bridge collapse**: every active bridge route with a builder son: if the son is missing or not `active` (asleep or

@@ -308,7 +308,7 @@ BEHAVIOURS = (
     (
         "disease_vectors",
         "S3.4",
-        "Each vector has its own road: water by rivers and filth, air by crowds and cold, touch by caravans, bite by hosts, spirit by magic",
+        "Each vector has its own road: water by rivers and filth, air by crowds and cold, touch by traders and travellers, bite by hosts, spirit by magic",
         ("natural_disasters", "epidemics"),
         OUTBREAK_LAYER,
         (E, *COMMUNITIES, "region", "species"),

@@ -645,7 +645,7 @@ async def _plague_spread(ctx: TickContext) -> int:
             spread += 1
             await note(
                 ctx,
-                f"{plague.name} jumped to {partner.name}; merchants, tribute caravans and governors carried the disease too.",
+                f"{plague.name} jumped to {partner.name}; merchants, tribute bearers and governors carried the disease too.",
                 key="disasters.plague_spread",
                 ids=[plague.id, partner.id],
                 feed=FeedCategory.DISASTER,

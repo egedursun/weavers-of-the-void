@@ -1591,7 +1591,7 @@ BEHAVIOURS: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tu
         ("volume", "culture"),
         Subsystem.CULTURE,
         "trade_routes.culture_per_epoch",
-        "caravans carry customs",
+        "traders carry customs",
     ),
     (
         "route_words",
@@ -1608,7 +1608,7 @@ BEHAVIOURS: tuple[tuple[str, str, str, tuple[str, ...], str, tuple[str, ...], tu
     (
         "route_missions",
         "S6.4",
-        "Missionaries travel with the caravans",
+        "Missionaries travel with the traders",
         ("religion_spread",),
         ROUTE_SECTION,
         (TR, *COMMUNITIES),
@@ -1751,7 +1751,7 @@ ROUTE_DIFFUSION = Mechanic(
     couplings=(
         Coupling(Subsystem.KNOWLEDGE, "busy routes carry knowledge", EdgeKind.MODIFIER, "trade_routes.diffusion_pct"),
         Coupling(Subsystem.LANGUAGE, "merchants borrow words along the way", EdgeKind.MODIFIER),
-        Coupling(Subsystem.FAITH, "missionaries travel with the caravans", EdgeKind.TRIGGER, "trade_routes.missionary_pct"),
+        Coupling(Subsystem.FAITH, "missionaries travel with the traders", EdgeKind.TRIGGER, "trade_routes.missionary_pct"),
         Coupling(Subsystem.DEMOGRAPHY, "plague follows the busiest roads", EdgeKind.FLOW),
     ),
 )

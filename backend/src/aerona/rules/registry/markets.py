@@ -72,7 +72,7 @@ class TradeRoutesRules:
         100, 0, 500, G, "How strongly route traffic carries knowledge, culture, words, faith and disease (% of the old bond weight per busy route)"
     )
     missionary_pct: int = rule(
-        4, 0, 100, G, "Chance missionaries travelling with a route's caravans win over the community at the other end, before the route's weight (%)"
+        4, 0, 100, G, "Chance missionaries travelling with a route's traders win over the community at the other end, before the route's weight (%)"
     )
     blockade_merchant_loss: int = rule(12, 0, 100, G, "Merchant satisfaction lost at either end of a blockaded route")
     blockade_peace_push: int = rule(8, 0, 100, G, "Peace chance a merchant guild adds when a war blockades its routes (%)")

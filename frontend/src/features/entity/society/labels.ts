@@ -315,7 +315,7 @@ export const VECTOR_SPEC: Record<DiseaseVector, Spec> = {
     label: 'Touch',
     icon: Hand,
     tone: 'warning',
-    hint: 'Rides with caravans, armies and travellers; weak without contact',
+    hint: 'Passes with traders, armies and travellers; weak without contact',
   },
   bite: {
     label: 'Bites of beasts',

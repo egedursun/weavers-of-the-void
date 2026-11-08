@@ -325,7 +325,7 @@ def conversion_sources(rules: Rules, community: EntityRow, world: SpreadWorld, s
         if god is None or god.id == old or partner is None:
             continue
         pull = fraction(rules.trade_routes.missionary_pct) * weight * (1 + fraction(rules.religion.conversion_seeker_bonus_pct) if seeker else 1)
-        sources.append(ConversionSource(god.id, pull, f"from missionaries who came with the caravans of {partner.name}", partner.id))
+        sources.append(ConversionSource(god.id, pull, f"from missionaries who came with the traders of {partner.name}", partner.id))
     return sources
 
 

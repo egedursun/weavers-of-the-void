@@ -78,6 +78,10 @@ PATTERNS = (
         prose_only=True,
     ),
     Pattern(
+        "assumed carrier",
+        re.compile(r"\b(caravans|no caravan|the caravan)\b(?! way)", re.IGNORECASE),
+    ),
+    Pattern(
         "example placeholder",
         re.compile(
             r"placeholder=['\"](?:[^'\":]*:\s*)?(?:(?!(?:a|an|the|its|their|your|one)\b)[a-z][\w'-]*(?: [\w'-]+)?, )+"

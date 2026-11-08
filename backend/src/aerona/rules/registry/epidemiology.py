@@ -59,7 +59,7 @@ class EpidemiologyRules:
     water_sanitation_pct: int = rule(180, 0, 500, G, "Weight of sanitation against a waterborne disease (%)")
     water_river_pct: int = rule(160, 0, 500, G, "Spread of a waterborne disease along great rivers and through wetlands (%)")
     water_dry_pct: int = rule(60, 0, 500, G, "Spread of a waterborne disease in a land without rivers or marsh (%)")
-    touch_contact_pct: int = rule(160, 0, 500, G, "Spread of a touch-borne disease carried by caravans, armies and travellers (%)")
+    touch_contact_pct: int = rule(160, 0, 500, G, "Spread of a touch-borne disease carried by traders, armies and travellers (%)")
     touch_still_pct: int = rule(70, 0, 500, G, "Spread of a touch-borne disease to neighbours without trade or march (%)")
     bite_host_pct: int = rule(200, 0, 1000, G, "Spread of a bite-borne disease where its host is most abundant (%)")
     bite_hostless_pct: int = rule(10, 0, 100, G, "Spread of a bite-borne disease where none of its hosts live (%)")

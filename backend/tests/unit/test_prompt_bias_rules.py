@@ -70,3 +70,15 @@ def test_gendered_fellowships_are_caught_in_prose_and_in_named_values() -> None:
     ):
         assert "gendered default" in rules_hit(module, PROMPT, text), text
     assert "gendered default" not in rules_hit(module, PROMPT, "Companions in arms swear sworn kinship.")
+
+
+def test_text_that_assumes_every_route_runs_by_caravan_is_caught() -> None:
+    module = checker()
+    for text in (
+        "{son} closed {route}; no caravan passes between {first} and {second}",
+        "the beast fell on the caravans of the road",
+        "a cosmic creature swallowed the caravan",
+    ):
+        assert "assumed carrier" in rules_hit(module, PROMPT, text), text
+    assert "assumed carrier" not in rules_hit(module, PROMPT, "How hard foul weather bears on the caravan way (%)")
+    assert "assumed carrier" not in rules_hit(module, PROMPT, "How goods travel: road, river, sea, caravan or sky")

@@ -582,7 +582,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {
             "target_id": "The region or community it first strikes",
             "name": "The sickness's name in the world's language",
-            "vector": "How it passes on: air (crowds and cold), water (rivers, marsh, poor sanitation), touch (caravans and armies), "
+            "vector": "How it passes on: air (crowds and cold), water (rivers, marsh, poor sanitation), touch (traders, armies and travellers), "
             "bite (needs its host beast), spirit (magic, ley lines, the impious), void (void-scarred lands), curse (bound to you while you live)",
             "target_functions": "The body functions it strikes; survivors may keep a lasting weakness there",
             "virulence": "How readily it spreads, 1 to 100",
@@ -832,7 +832,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.CLOSE_TRADE_ROUTE: ToolText(
-        "You close a trade route: no caravan passes, and merchants found no new way between its two markets until a god opens it again. "
+        "You close a trade route: no goods pass, and merchants found no new way between its two markets until a god opens it again. "
         "{{ rules.son_routes.close_cost }} essence, {{ rules.son_routes.close_ap }} action.",
         {"route_id": "The trade route to close", "reason": "Why you close it"},
     ),

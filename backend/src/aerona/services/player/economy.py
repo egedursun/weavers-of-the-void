@@ -167,7 +167,7 @@ async def open_route(scope: PlayerScope, command: OpenRoute) -> Effect:
 @player_action("trade_route:close", ActionKind.OTHER)
 async def close_route(scope: PlayerScope, command: RouteTarget) -> Effect:
     route = await control.close_route(await scope.context("route_close"), command.route_id)
-    return Effect(f"{route.name} is closed; no caravan passes until you open it.", route.id)
+    return Effect(f"{route.name} is closed; no goods pass until you open it.", route.id)
 
 
 @player_action("trade_route:toll", ActionKind.OTHER)

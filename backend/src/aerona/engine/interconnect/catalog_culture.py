@@ -19,7 +19,7 @@ CULTURE_RAW: tuple[Raw, ...] = (
     (
         "trade_register",
         "S8.1",
-        "Caravans bargain in the tongue of the market, the lingua franca where it is known",
+        "Traders bargain in the tongue of the market, the lingua franca where it is known",
         ("trade_flow", "language_cycles"),
         LORE,
         ("language", "settlement", "people"),

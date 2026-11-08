@@ -101,8 +101,8 @@ class TravelRules:
     raid_loss_chance: int = rule(
         10, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "A pirate, storm or creature road event swallows the whole expedition (%; vessel armor lowers it)"
     )
-    lost_caravan_legend_power: int = rule(3, 1, 12, RuleGroup.COSMOS_AND_TRAVEL, "Power level of the legend of a caravan lost without a vessel")
-    lost_caravan_legend_spread: int = rule(30, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Spread of the legend of a caravan lost without a vessel")
+    lost_caravan_legend_power: int = rule(3, 1, 12, RuleGroup.COSMOS_AND_TRAVEL, "Power level of the legend of travellers lost without a vessel")
+    lost_caravan_legend_spread: int = rule(30, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Spread of the legend of travellers lost without a vessel")
     pilgrimage_intent_chance: int = rule(
         35, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "A spontaneous expedition to a world holding its god's holy site or holy world becomes a pilgrimage (%)"
     )

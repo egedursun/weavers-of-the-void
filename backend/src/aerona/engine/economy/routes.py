@@ -711,7 +711,7 @@ async def _pass_into_legend(ctx: TickContext, route: Route) -> None:
         RecordSpec(
             entity_type=EntityType.LEGEND,
             name=f"Tales of {route.entity.name}",
-            body=f"Travellers tell of {route.entity.name}, the way every caravan takes.",
+            body=f"Travellers tell of {route.entity.name}.",
             stats=LegendStats(spread=stat(route.entity, "renown") or 0),
             power=3,
             location_id=route.path[0] if route.path else None,
@@ -722,7 +722,7 @@ async def _pass_into_legend(ctx: TickContext, route: Route) -> None:
     await BondRepository(ctx.session).connect(BondDraft(legend.id, route.entity.id, BondKind.TELLS_OF, ctx.epoch, "the famous road"))
     await ctx.chronicle(
         ChronicleKind.CULTURE,
-        f"{route.entity.name} passed into legend: songs follow its caravans.",
+        f"{route.entity.name} passed into legend.",
         template_key="trade_route.legend",
         entity_ids=[route.entity.id, legend.id],
     )
@@ -754,7 +754,7 @@ async def _blockade(ctx: TickContext, book: EconomyBook, route: Route, blocker: 
             row.satisfaction_merchant = clamp_int(row.satisfaction_merchant - ctx.rules.trade_routes.blockade_merchant_loss, 0, PERCENT)
     await ctx.chronicle(
         ChronicleKind.WAR,
-        f"{blocker.name} closed {route.entity.name}; no caravan passes.",
+        f"{blocker.name} closed {route.entity.name}; no goods pass.",
         template_key="trade_route.blockade",
         entity_ids=[route.entity.id, blocker.id, *route.ends],
     )
@@ -813,7 +813,7 @@ async def close_orphan(ctx: TickContext, route: Route, tally: RouteTally) -> Non
     tally.decayed += 1
     await ctx.chronicle(
         ChronicleKind.TRADE,
-        f"{route.entity.name} lost a market at one end and no caravan takes it any more.",
+        f"{route.entity.name} lost a market at one end and no trader takes it any more.",
         template_key="trade_route.orphaned",
         entity_ids=[route.entity.id],
     )

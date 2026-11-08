@@ -53,7 +53,7 @@ export const REGISTERS: Record<RegisterKind, LoreNamed> = {
     label: 'Market',
     icon: Store,
     tone: 'warning',
-    hint: 'The tongue of bargains: caravans trade in it.',
+    hint: 'The tongue of bargains: traders use it.',
   },
 }
 
