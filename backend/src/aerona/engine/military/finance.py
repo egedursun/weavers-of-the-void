@@ -14,6 +14,7 @@ from aerona.domain.enums.military import ContractStatus
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import give_coin, take_coin, wealth_points
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
@@ -44,7 +45,8 @@ async def lender_for(ctx: TickContext, owner: EntityRow) -> EntityRow | None:
         )
         .order_by(EntityRow.id)
     )
-    guilds = [guild for guild in await ctx.session.scalars(statement) if (stat(guild, "wealth") or 0) >= ctx.rules.war_finance.war_loan_principal // 2]
+    lent = wealth_points(ctx.rules, ctx.rules.war_finance.war_loan_principal // 2)
+    guilds = [guild for guild in await ctx.session.scalars(statement) if (stat(guild, "wealth") or 0) >= lent]
     return max(guilds, key=lambda guild: (stat(guild, "wealth") or 0, -guild.id), default=None)
 
 
@@ -70,7 +72,7 @@ async def war_credit(ctx: TickContext, owner: EntityRow, realm: PolityProfileRow
                     war_id=war.id if war is not None else None,
                 )
             )
-            shift_stat(lender, "wealth", -table.war_loan_principal // 2)
+            shift_stat(lender, "wealth", -wealth_points(ctx.rules, table.war_loan_principal // 2))
             realm.war_chest += table.war_loan_principal
             await ctx.chronicle(
                 ChronicleKind.DEBT,
@@ -120,11 +122,10 @@ async def pay_contracts(ctx: TickContext) -> dict[str, int]:
         if "seasons_left" not in row.locked:
             row.seasons_left = max(0, row.seasons_left - ctx.rules.campaigns.seasons_per_war_epoch)
         pay = row.pay_per_season * max(1, ctx.rules.campaigns.seasons_per_war_epoch)
-        if (stat(employer, "wealth") or 0) >= pay:
-            shift_stat(employer, "wealth", -pay)
+        if await take_coin(ctx.session, ctx.rules, employer, pay):
             company = await living_entity(ctx.session, row.company_entity_id)
             if company is not None:
-                shift_stat(company, "wealth", pay)
+                give_coin(ctx.rules, company, pay)
             row.unpaid_seasons = 0
             row.status = ContractStatus.ACTIVE
             found["paid"] += 1

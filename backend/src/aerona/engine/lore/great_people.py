@@ -24,6 +24,7 @@ from aerona.domain.enums.mind import SkillSource
 from aerona.domain.enums.structure import ConstructionState
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import give_coin
 from aerona.engine.lore.learning import realm_of
 from aerona.engine.lore.research import holder_levels
 from aerona.engine.lore.research_depth import open_techniques
@@ -251,7 +252,7 @@ async def monopoly(ctx: TickContext, community: EntityRow) -> bool:
     if profile is not None and "treasury" not in profile.locked:
         profile.treasury += ctx.rules.discovery.great_wealth
         return True
-    shift_stat(community, "wealth", ctx.rules.discovery.great_wealth)
+    give_coin(ctx.rules, community, ctx.rules.discovery.great_wealth)
     return True
 
 

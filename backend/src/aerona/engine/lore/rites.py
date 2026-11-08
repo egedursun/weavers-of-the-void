@@ -734,7 +734,7 @@ async def possessed_near(ctx: TickContext, place_id: int | None) -> EntityRow | 
     if place_id is None:
         return None
     hosts = select(PossessionRow.host_entity_id)
-    statement = select(EntityRow).where(EntityRow.location_id == place_id, EntityRow.status == EntityStatus.CANON, EntityRow.id.in_(hosts))
+    statement = select(EntityRow).where(await present_among(ctx.session, [place_id]), EntityRow.status == EntityStatus.CANON, EntityRow.id.in_(hosts))
     return await ctx.session.scalar(statement.order_by(EntityRow.id).limit(1))
 
 

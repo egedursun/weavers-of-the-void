@@ -22,6 +22,7 @@ from aerona.domain.models.entity_stats import (
     RegionStats,
     SettlementStats,
     StructureStats,
+    VesselStats,
 )
 from aerona.engine.context import TickContext, TickEnvironment
 from aerona.engine.stats import TickStats
@@ -37,6 +38,7 @@ STAT_MODELS: dict[EntityType, type[Any]] = {
     EntityType.REGION: RegionStats,
     EntityType.KNOWLEDGE: KnowledgeStats,
     EntityType.STRUCTURE: StructureStats,
+    EntityType.VESSEL: VesselStats,
 }
 
 

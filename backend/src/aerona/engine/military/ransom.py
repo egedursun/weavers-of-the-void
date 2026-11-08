@@ -10,6 +10,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import wealth_points
 from aerona.engine.mind.memories import remember
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
@@ -62,8 +63,8 @@ async def draw_ransom(ctx: TickContext, payer: EntityRow, amount: int, *, captiv
     if realm is not None and realm.treasury >= amount:
         realm.treasury -= amount
         return amount
-    if (stat(payer, "wealth") or 0) >= amount:
-        shift_stat(payer, "wealth", -amount)
+    if (stat(payer, "wealth") or 0) >= wealth_points(ctx.rules, amount):
+        shift_stat(payer, "wealth", -wealth_points(ctx.rules, amount))
         return amount
     return 0
 

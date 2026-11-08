@@ -33,7 +33,7 @@ LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = MappingProxyType(
     {
         LawKind.SUCCESSION_RULE: {
             "rule": pick(*(item.value for item in SuccessionRule)),
-            "gender": pick(*(item.value for item in GenderRule), default=GenderRule.MALE_PREFERENCE.value),
+            "gender": pick(*(item.value for item in GenderRule), default=GenderRule.ANY.value),
             "wholeness_required": Param(False),
             "min_age": Param(16, 0, 200),
         },

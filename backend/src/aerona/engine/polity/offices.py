@@ -323,7 +323,7 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
         return []
     polity = realm.entity.id
     rule = SuccessionRule(str(laws.param(polity, LawKind.SUCCESSION_RULE, "rule") or SuccessionRule.PRIMOGENITURE.value))
-    gender = GenderRule(str(laws.param(polity, LawKind.SUCCESSION_RULE, "gender") or GenderRule.MALE_PREFERENCE.value))
+    gender = GenderRule(str(laws.param(polity, LawKind.SUCCESSION_RULE, "gender") or GenderRule.ANY.value))
     wholeness = bool(laws.param(polity, LawKind.SUCCESSION_RULE, "wholeness_required"))
     min_age = int(laws.param(polity, LawKind.SUCCESSION_RULE, "min_age") or 0)
     children, grandchildren, siblings = await kin(ctx, ruler)
@@ -470,6 +470,9 @@ async def regency(ctx: TickContext, realm: Realm, held: set[int]) -> str | None:
 
 async def usurp(ctx: TickContext, realm: Realm, usurper: EntityRow, ruler: EntityRow) -> None:
     await seize_throne(ctx, realm, usurper, f"the regent for the child {ruler.name} took the crown")
+    office = next((row for row in realm.offices if row.kind is OfficeKind.REGENT), None)
+    if office is not None and office.holder_entity_id is not None:
+        await appoint(ctx, realm, office, None, by_id=usurper.id, reason="the regent took the crown")
 
 
 async def house_of(ctx: TickContext, mortal_id: int | None) -> HouseProfileRow | None:

@@ -219,7 +219,8 @@ async def dues(ctx: TickContext, factions: FactionBook) -> None:
         faction = factions.entities[faction_id]
         members = factions.members[faction_id]
         if "treasury" not in profile.locked:
-            profile.treasury += len(members) * table.dues_per_member + (stat(faction, "wealth") or 0) // 10 * table.wealth_dues
+            profile.treasury += len(members) * table.dues_per_member
+            profile.treasury += (stat(faction, "wealth") or 0) // 10 * table.wealth_dues
         if "scale" not in profile.locked:
             reach = len(profile.influence_over)
             profile.scale = (

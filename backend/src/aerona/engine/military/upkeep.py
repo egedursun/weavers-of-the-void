@@ -9,6 +9,7 @@ from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.military import ContractStatus, Stance
 from aerona.domain.enums.war import WarCause, WarStatus
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import coin_of
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.military.campaign import bring_home_loot, drill
 from aerona.engine.military.finance import mercenary_pay
@@ -74,7 +75,7 @@ async def hire_mercenaries(ctx: TickContext) -> int:
                 continue
             soldiers = await company_size(ctx, strength, company)
             pay = mercenary_pay(table.mercenary_pay_per_100, soldiers)
-            if (stat(employer, "wealth") or 0) < pay * 2:
+            if await coin_of(ctx.session, ctx.rules, employer) < pay * 2:
                 continue
             await hire(ctx, strength, sides, employer=employer, company=company, war=item.war, pay=pay)
             companies.remove(company)

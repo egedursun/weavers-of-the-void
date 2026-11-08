@@ -36,6 +36,7 @@ from aerona.domain.enums.war import SiegeStatus
 from aerona.domain.enums.world import SkyEventKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import wealth_points
 from aerona.engine.economy.stocks import holding
 from aerona.engine.faith.book import patron_node
 from aerona.engine.gods.queries import community_of
@@ -436,8 +437,8 @@ async def embrace(ctx: TickContext, row: InstitutionRow) -> bool:
         row.embraced = True
         return True
     community = await ctx.session.get(EntityRow, row.community_entity_id)
-    if profile is None and community is not None and (stat(community, "wealth") or 0) >= cost:
-        shift_stat(community, "wealth", -cost)
+    if profile is None and community is not None and (stat(community, "wealth") or 0) >= wealth_points(ctx.rules, cost):
+        shift_stat(community, "wealth", -wealth_points(ctx.rules, cost))
         row.embraced = True
         return True
     return False

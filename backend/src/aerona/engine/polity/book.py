@@ -17,7 +17,7 @@ SEXES = ("female", "male")
 def sex_of(mortal: EntityRow) -> str:
     stats = mortal.stats
     if not isinstance(stats, MortalStats):
-        return "male"
+        return SEXES[(mortal.id * 2654435761) % 2]
     if stats.sex is None:
         mortal.stats = stats.model_copy(update={"sex": SEXES[(mortal.id * 2654435761) % 2]})
         return str(mortal.stats.sex)
