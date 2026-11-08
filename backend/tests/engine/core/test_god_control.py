@@ -10,26 +10,33 @@ from sqlalchemy.orm import ORMExecuteState, Session, object_mapper
 
 from aerona.db.base import Base
 from aerona.db.profile_guard import owned_shape, owner_ids, profile_mapper
+from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.session import Database
 from aerona.db.tables.culture import IdeologyAdherentRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.faith import SpiritProfileRow
 from aerona.db.tables.military import SpyNetworkRow
-from aerona.domain.enums.culture import IdeologyTenet
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.culture import CurseKind, IdeologyTenet
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import SpiritAlignment
 from aerona.domain.enums.intrigue import PlotKind
-from aerona.domain.models.entity_stats import SpiritStats
+from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.models.entity_stats import FactionStats, ItemStats, PeopleStats, SpiritStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
 from aerona.engine.disease.control import DiseaseDesign, create_disease
 from aerona.engine.interconnect.guards import run_guarded
 from aerona.engine.intrigue.schemes import begin_scheme
+from aerona.engine.lore import items
 from aerona.engine.lore.control import create_lore
 from aerona.engine.phases.native_faith import syncretize
 from aerona.engine.pipeline import all_phases, current_environment, simulate
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import take_captive
 from aerona.rules.model import RULE_METADATA_KEY, rule_meta
 from aerona.rules.registry import Rules
@@ -167,6 +174,13 @@ async def stir(session: AsyncSession, cosmos: RichCosmos) -> None:
     session.add(SpiritProfileRow(spirit_entity_id=spirit.id, alignment=SpiritAlignment.VENGEFUL, imprint={}, traits=[], deeds={}, locked=[]))
     design = DiseaseDesign(name=None, values={"virulence": 60, "lethality": 20, "stigma": 90}, hold=False)
     await create_disease(ctx, home.regions[0].id, design, son_id=None)
+    relic = await entity(session, "Stirring Ring", EntityType.ITEM, ItemStats(damage=5, protection=0, might=5, curse=90), world_id=home.world.id)
+    await BondRepository(session).connect(BondDraft(plotter.id, relic.id, BondKind.OWNS, 1, None))
+    (await items.profile_of(ctx, relic)).curse = CurseKind.BETRAYAL
+    company = await entity(session, "Stirring Lances", EntityType.FACTION, FactionStats(strength=60), world_id=home.world.id)
+    session.add(FactionProfileRow(faction_entity_id=company.id, kind=FactionKind.MERCENARY_COMPANY, influence_over={}, loyalty=5, locked=[]))
+    other = await entity(session, "Stirring Folk", EntityType.PEOPLE, PeopleStats(population=3000), world_id=home.world.id, location_id=home.regions[0].id)
+    await change_relation(ctx, home.people.id, other.id, -90, MemoryKind.ILL_WILL)
     await session.flush()
 
 

@@ -329,7 +329,7 @@ async def tend(ctx: TickContext, book: HouseBook, realms: RealmBook) -> dict[str
     offices = {office.holder_entity_id: office for realm in realms.realms.values() for office in realm.offices if office.holder_entity_id is not None}
     for house_id, house in list(book.houses.items()):
         profile = book.profiles.get(house_id)
-        if profile is None:
+        if profile is None or held(house_id):
             continue
         alive = await living(ctx, {member for member in book.members[house_id] if member in book.house_of and book.house_of[member] == house_id})
         if not alive:

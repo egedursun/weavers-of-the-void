@@ -174,6 +174,8 @@ async def cohorts(ctx: TickContext) -> int:
         await cohort(ctx, community_id, language_id, SpeakerKind.NATIVE, PERCENT - max([0, *seconds]) // 2)
         touched += 1
     for culture in list(await ctx.session.scalars(select(PeopleCultureRow).where(PeopleCultureRow.liturgical_language_id.is_not(None)))):
+        if frozen(culture.people_entity_id, culture.liturgical_language_id):
+            continue
         society = await ctx.session.get(CommunitySocietyRow, culture.people_entity_id)
         priests = round_half_up((society.share_priest + society.share_monastic) * PERCENT) if society is not None else PERCENT // 10
         await cohort(ctx, culture.people_entity_id, culture.liturgical_language_id or 0, SpeakerKind.LITURGICAL, max(1, priests))
