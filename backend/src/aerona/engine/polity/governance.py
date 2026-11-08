@@ -21,6 +21,7 @@ from aerona.db.tables.polity import LawProfileRow, PolityTreasuryRow
 from aerona.db.tables.settlement import SettlementProfileRow, SettlementTreasuryRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import MarriageCustom
@@ -392,12 +393,12 @@ async def cult_laws(ctx: TickContext, laws: LawBook) -> int:
     for cult in await ctx.session.scalars(
         select(EntityRow).where(EntityRow.entity_type == EntityType.CULT, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
     ):
-        if not ctx.rng(f"cult_law.{cult.id}.{ctx.epoch}").chance(table.cult_law_chance):
+        if held(cult.id) or not ctx.rng(f"cult_law.{cult.id}.{ctx.epoch}").chance(table.cult_law_chance):
             continue
         tenets = set(await ctx.session.scalars(select(CultTenetRow.tenet).where(CultTenetRow.cult_entity_id == cult.id)))
-        held = {laws.profiles[law_id].kind for law_id in laws.by_node.get(cult.id, []) if law_id in laws.profiles}
+        in_force = {laws.profiles[law_id].kind for law_id in laws.by_node.get(cult.id, []) if law_id in laws.profiles}
         for tenet, (kind, params) in CULT_LAWS.items():
-            if tenet in tenets and kind not in held:
+            if tenet in tenets and kind not in in_force:
                 law = await enact(ctx, cult, kind, dict(params), by_id=cult.id, basis=LegitimacyBasis.DIVINE)
                 laws.laws[law.id] = law
                 profile = await ctx.session.get(LawProfileRow, law.id)

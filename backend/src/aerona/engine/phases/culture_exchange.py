@@ -246,6 +246,8 @@ async def _pass_god(ctx: TickContext, source: EntityRow, target: EntityRow, rate
 
 
 async def cultural_contact(ctx: TickContext, source: EntityRow, target: EntityRow, *, first_contact: bool = False) -> int:
+    if frozen(source.id, target.id):
+        return 0
     rates = contact_rates(ctx, first_contact)
     items: list[str] = []
     if ctx.rng(f"contact_word.{source.id}.{target.id}").chance(rates.loanword):

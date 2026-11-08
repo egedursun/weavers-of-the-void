@@ -11,6 +11,7 @@ from aerona.db.tables.faith import AfterlifeStratumRow, CultDoctrineRow, Possess
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import free_rows
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import ConditionKind
 from aerona.domain.enums.bond import BondKind, BondState
@@ -303,6 +304,7 @@ async def possess(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow
             EntityRow.status == EntityStatus.CANON,
             await present_among(ctx.session, [spirit.location_id]),
             EntityRow.id.not_in(taken),
+            free_rows(EntityRow.id),
         )
         .order_by(EntityRow.id)
         .limit(1)

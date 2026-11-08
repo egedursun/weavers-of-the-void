@@ -1,3 +1,4 @@
+from aerona.db.write_guard import held
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.anatomy import ensure_anatomy
 from aerona.engine.ecology.beasts import champions, deify, fallen, lair_cycle, living_beasts
@@ -111,6 +112,8 @@ async def beast_cycles(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     ctx.count("monsters_emerged", await emerge_from_deep(ctx, atlas))
     for beast, row in await living_beasts(ctx):
+        if held(beast.id):
+            continue
         worshipped = await deify(ctx, atlas, beast, row)
         if worshipped:
             ctx.count("beasts_worshipped")

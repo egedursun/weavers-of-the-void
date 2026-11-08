@@ -14,6 +14,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.society import ArchiveHoldingRow, SoulRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
@@ -299,7 +300,8 @@ async def planetary_consciousness(ctx: TickContext) -> None:
 
 async def raise_archive(ctx: TickContext) -> EntityRow | None:
     beyond = ctx.rules.beyond
-    regions = [region for world in await WorldRepository(ctx.session).reachable_worlds() for region in await canon(ctx.session, [EntityType.REGION], world.id)]
+    worlds = [world for world in await WorldRepository(ctx.session).reachable_worlds() if not held(world.id)]
+    regions = [region for world in worlds for region in unheld(await canon(ctx.session, [EntityType.REGION], world.id))]
     if not regions:
         return None
     region = max(regions, key=lambda item: (stat_or(item, "magic", 0), -item.id))
@@ -334,7 +336,7 @@ async def read_archive(ctx: TickContext, archive: EntityRow, community: EntityRo
     lost = await flags_by_entity(ctx.session, EntityFlag.LOST)
     knowledge = await KnowledgeMap.load(ctx.session)
     known_ids = {bond.target_node_id for bond in await BondRepository(ctx.session).outgoing(community.id, BondKind.KNOWS)}
-    techs = [item for item in await canon(ctx.session, [EntityType.KNOWLEDGE]) if item.id not in lost and item.id not in known_ids]
+    techs = [item for item in unheld(await canon(ctx.session, [EntityType.KNOWLEDGE])) if item.id not in lost and item.id not in known_ids]
     if not techs or not knowledge.knows(community.id, KnowledgeBranch.WRITING):
         return None
     tech = techs[0]
@@ -362,7 +364,7 @@ async def cosmic_archive(ctx: TickContext) -> None:
         archive = await raise_archive(ctx)
     if archive is not None:
         knowledge = await KnowledgeMap.load(ctx.session)
-        readers = [item for item in await canon(ctx.session, COMMUNITY_TYPES, archive.world_id) if knowledge.knows(item.id, KnowledgeBranch.WRITING)]
+        readers = [item for item in unheld(await canon(ctx.session, COMMUNITY_TYPES, archive.world_id)) if knowledge.knows(item.id, KnowledgeBranch.WRITING)]
         for community in readers[: beyond.archive_seekers_cap]:
             if rng.chance(beyond.archive_knowledge_chance):
                 await read_archive(ctx, archive, community)
@@ -438,7 +440,11 @@ async def void_storm(ctx: TickContext) -> str | None:
         return None
     forgotten = set(await ctx.session.scalars(select(WorldRow.id).where(WorldRow.discovery == Discovery.FORGOTTEN)))
     statement = select(RouteRow).where(RouteRow.active.is_(True), RouteRow.method != TravelMethod.DIVINE_BRIDGE).order_by(RouteRow.id)
-    routes = [route for route in await ctx.session.scalars(statement) if route.world_a_id not in forgotten and route.world_b_id not in forgotten]
+    routes = [
+        route
+        for route in await ctx.session.scalars(statement)
+        if route.world_a_id not in forgotten and route.world_b_id not in forgotten and not held(route.world_a_id, route.world_b_id)
+    ]
     route = rng.pick_or_none(routes)
     if route is None:
         return None

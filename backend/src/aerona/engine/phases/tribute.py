@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from aerona.db.tables.warfare import TributeRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import TreatyKind, TreatyStatus
@@ -91,6 +92,8 @@ async def tribute(ctx: TickContext) -> None:
             await end_tribute(ctx, row, TributeStatus.ENDED, "duplicate tribute")
             continue
         seen.add(pair)
+        if held(*pair):
+            continue
         payer, receiver = await living_entity(ctx.session, row.payer_entity_id), await living_entity(ctx.session, row.receiver_entity_id)
         pact = await treaty_between(ctx.session, row.payer_entity_id, row.receiver_entity_id, [TreatyKind.TRIBUTE, TreatyKind.VASSALAGE])
         if payer is None or receiver is None or pact is None:

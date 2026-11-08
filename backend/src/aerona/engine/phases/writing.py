@@ -1,4 +1,5 @@
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import WritingSystem
 from aerona.domain.enums.entity import EntityType
@@ -46,13 +47,13 @@ async def writing_systems(ctx: TickContext) -> None:
     rules = ctx.rules
     rng = ctx.rng()
     knowledge = await KnowledgeMap.load(ctx.session)
-    for language in await canon(ctx.session, [EntityType.LANGUAGE]):
+    for language in unheld(await canon(ctx.session, [EntityType.LANGUAGE])):
         if await has_script(ctx.session, language.id):
             continue
         writer: EntityRow | None = None
         for bond in await active_bonds(ctx.session, [BondKind.SPEAKS], targets=[language.id]):
             speaker = await living_entity(ctx.session, bond.source_node_id)
-            if speaker is not None and knowledge.knows(speaker.id, KnowledgeBranch.WRITING):
+            if speaker is not None and not held(speaker.id) and knowledge.knows(speaker.id, KnowledgeBranch.WRITING):
                 writer = speaker
                 break
         if writer is None or not rng.chance(rules.deep_world.script_chance):

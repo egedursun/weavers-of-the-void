@@ -4,12 +4,13 @@ from enum import StrEnum
 from sqlalchemy import select
 
 from aerona.core.errors import ValidationFailedError
+from aerona.core.grammar import an
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
-from aerona.db.write_guard import held
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.domain import DEATH_DOMAINS, Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, HERO_ROLES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
@@ -207,7 +208,7 @@ async def war_monument(ctx: TickContext, scene: WarScene) -> EntityRow | None:
         MemorialForm.MONUMENT,
         f"{scene.name} Monument",
         "victory monument",
-        f"{by}; the names of the victors and the count of the fallen are carved on it.",
+        f"{by}.",
         location_id=seat,
         world_id=scene.event.world_id,
     )
@@ -219,13 +220,13 @@ async def war_monument(ctx: TickContext, scene: WarScene) -> EntityRow | None:
 
 async def war_epic(ctx: TickContext, scene: WarScene) -> EntityRow:
     builder = scene.builder
-    bards = f"The bards of {builder.name}" if builder is not None else "Bards"
+    makers = builder.name if builder is not None else "Its victors"
     epic = await memorial(
         ctx,
         MemorialForm.EPIC,
         f"{scene.name} Epic",
         "epic",
-        f"{bards} sang a long epic of {scene.name}.",
+        f"{makers} made an epic of {scene.name}.",
         location_id=seat_of(builder),
         world_id=scene.event.world_id,
     )
@@ -243,7 +244,7 @@ async def war_lament(ctx: TickContext, scene: WarScene) -> EntityRow:
         MemorialForm.LAMENT,
         f"{scene.name} Lament",
         "lament",
-        f"{mourner.name if mourner is not None else 'The defeated'} mourned the defeat of {scene.name} and all it lost; every singing renews the grudge.",
+        f"{mourner.name if mourner is not None else 'The defeated'} mourned the defeat of {scene.name} and all it lost.",
         location_id=seat_of(mourner),
         world_id=scene.event.world_id,
     )
@@ -262,7 +263,7 @@ async def peace_oath(ctx: TickContext, scene: WarScene) -> EntityRow:
         MemorialForm.TRADITION,
         f"{scene.name} Peace Oath",
         "peace oath",
-        f"When {scene.name} ended with no victor, {names} began to lay down their arms on the same day every year and mourn their dead together.",
+        f"When {scene.name} ended with no victor, {names} swore to keep the peace and remember their dead together.",
         location_id=None,
         world_id=scene.event.world_id,
     )
@@ -328,7 +329,7 @@ async def remember_disaster(ctx: TickContext, event: EntityRow, form: MemorialFo
             MemorialForm.MONUMENT,
             f"{name} Monument",
             "memorial",
-            f"{keeper.name} raised a stone for those it lost in {name}.",
+            f"{keeper.name} raised a monument to those it lost in {name}.",
             location_id=seat_of(keeper),
             world_id=event.world_id,
         )
@@ -341,7 +342,7 @@ async def remember_disaster(ctx: TickContext, event: EntityRow, form: MemorialFo
             MemorialForm.TRADITION,
             f"{name} Remembrance",
             "day of remembrance",
-            f"Every year on the day of {name}, {keeper.name} lights no fire and counts the names of its dead.",
+            f"Each year on the day of {name}, {keeper.name} remembers its dead.",
             location_id=None,
             world_id=event.world_id,
         )
@@ -354,7 +355,7 @@ async def remember_disaster(ctx: TickContext, event: EntityRow, form: MemorialFo
         MemorialForm.TALE,
         f"{name} Tale",
         "disaster tale",
-        f"{name} was told and retold until it became a warning: why the sky and the earth grew angry, who was saved and who was not.",
+        f"{name} was told and retold: what happened, who was saved and who was not.",
         location_id=None,
         world_id=event.world_id,
     )
@@ -382,7 +383,8 @@ def is_hero(mortal: EntityRow, flags: set[EntityFlag]) -> bool:
 
 async def remember_dead(ctx: TickContext, mortal: EntityRow, form: MemorialForm | None = None) -> list[int]:
     settings = ctx.rules.remembrance
-    home = await home_of(ctx, mortal)
+    found = await home_of(ctx, mortal)
+    home = found if found is not None and not held(found.id) else None
     killed = bool(await BondRepository(ctx.session).incoming(mortal.id, BondKind.KILLED, active_only=False))
     rng = ctx.rng(seed_of("hero_memory", mortal.id))
     choice = form
@@ -397,19 +399,19 @@ async def remember_dead(ctx: TickContext, mortal: EntityRow, form: MemorialForm 
             MemorialForm.MONUMENT,
             f"{mortal.name} Tomb",
             "tomb",
-            f"{home.name} built a stone tomb for {mortal.name}; travellers stop before it and say the name.",
+            f"{home.name} raised a tomb for {mortal.name}.",
             location_id=seat_of(home),
             world_id=mortal.world_id,
         )
         await connect(ctx.session, home.id, record.id, BondKind.BUILT, ctx.epoch, description=f"in memory of {mortal.name}")
     elif choice in (MemorialForm.LAMENT, MemorialForm.EPIC):
-        singers = f"the women of {home.name}" if home is not None else "the bards"
+        makers = f"the people of {home.name}" if home is not None else "those who knew them"
         record = await memorial(
             ctx,
             choice,
             f"{mortal.name} {'Lament' if choice is MemorialForm.LAMENT else 'Epic'}",
             choice.value,
-            f"After {mortal.name} died, {singers} made a song for them.",
+            f"After {mortal.name} died, {makers} made {an(choice.value)} for them.",
             location_id=seat_of(home),
             world_id=mortal.world_id,
         )
@@ -422,7 +424,7 @@ async def remember_dead(ctx: TickContext, mortal: EntityRow, form: MemorialForm 
             MemorialForm.TALE,
             f"{mortal.name} Saga",
             "hero's saga",
-            f"After {mortal.name} died, their deeds began to be told {among}, larger with every telling.",
+            f"After {mortal.name} died, their deeds began to be told {among}.",
             location_id=None,
             world_id=mortal.world_id,
         )
@@ -456,7 +458,7 @@ async def wars_remembered(ctx: TickContext, budget: int) -> int:
         event = await ctx.session.get(EntityRow, war.event_entity_id)
         war_name = plain_name(event.name) if event is not None else "the war"
         if memory.victor is not None:
-            mourned = f"; {memory.loser.name} sang a lament for its defeat" if memory.loser is not None else ""
+            mourned = f"; {memory.loser.name} made a lament for its defeat" if memory.loser is not None else ""
             text = f"{memory.victor.name} remembered the victory of {war_name}{mourned}: {await _named(ctx, memory.ids)}."
         else:
             text = f"{' and '.join(side.name for side in memory.sides)} swore a peace oath in memory of {war_name}."
@@ -499,7 +501,7 @@ async def heroes_remembered(ctx: TickContext, budget: int) -> int:
         .order_by(EntityRow.id)
     )
     flagged = {flag: await flags_by_entity(ctx.session, flag) for flag in HERO_FLAGS}
-    for mortal in list(dead):
+    for mortal in unheld(list(dead)):
         if made >= budget:
             break
         flags = {flag for flag, holders in flagged.items() if mortal.id in holders}
@@ -564,7 +566,7 @@ async def plague_faith(ctx: TickContext) -> int:
                 god = current.name if current is not None else "the sky"
                 await note(
                     ctx,
-                    f"While the dead of {name} were buried, {community.name} turned away from {god}; the temples emptied.",
+                    f"During {name}, {community.name} turned away from {god}.",
                     key="remembrance.plague_estranged",
                     ids=[plague.id, community.id],
                     son_id=current.id if current is not None else None,

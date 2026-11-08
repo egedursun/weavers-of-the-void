@@ -12,6 +12,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import LegendProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import SpiritProfileRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import LegendArchetype
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
@@ -126,8 +127,8 @@ async def hauntings(ctx: TickContext) -> None:
     effects = rules.world_effects
     rng = ctx.rng()
     atlas = await RegionAtlas.load(ctx.session)
-    settlements = await canon(ctx.session, [EntityType.SETTLEMENT])
-    for spirit in await canon(ctx.session, [EntityType.SPIRIT]):
+    settlements = unheld(await canon(ctx.session, [EntityType.SETTLEMENT]))
+    for spirit in unheld(await canon(ctx.session, [EntityType.SPIRIT])):
         unrest = stat(spirit, "unrest") or 0
         if unrest < rules.apocalypse.restless_threshold:
             continue
@@ -142,9 +143,7 @@ async def hauntings(ctx: TickContext) -> None:
             haunted, prosperity=clamp_int((prosperity if prosperity is not None else effects.unknown_prosperity) - effects.haunt_prosperity_loss, 0, PERCENT)
         )
         set_stats(spirit, unrest=clamp_int(unrest - effects.haunt_unrest_drop, 0, PERCENT))
-        await note(
-            ctx, f"{spirit.name} haunted {haunted.name}; no one goes out into the streets at night.", key="spirits.haunting", ids=[spirit.id, haunted.id]
-        )
+        await note(ctx, f"{spirit.name} haunted {haunted.name}.", key="spirits.haunting", ids=[spirit.id, haunted.id])
         legend, born = await ghost_legend(ctx, spirit, haunted)
         if born:
             await note(
@@ -183,7 +182,7 @@ async def ghost_legend(ctx: TickContext, spirit: EntityRow, haunted: EntityRow) 
             name=f"The Haunting of {haunted.name}"[:200],
             entity_type=EntityType.LEGEND,
             stats=LegendStats(spread=table.haunt_legend_credence),
-            body=f"The people of {haunted.name} tell how {spirit.name} walks their streets at night.",
+            body=f"The people of {haunted.name} tell how {spirit.name} haunts them.",
             power=max(1, spirit.power_level),
             world_id=haunted.world_id,
             location_id=haunted.id,

@@ -399,7 +399,7 @@ async def lend(ctx: TickContext, lender: EntityRow, borrower: EntityRow, amount:
 
 async def _loan_candidate(ctx: TickContext) -> tuple[EntityRow, EntityRow] | None:
     civ = ctx.rules.civilization
-    communities = [item for item in await canon(ctx.session, COMMUNITY_TYPES) if wealth_key(item) is not None]
+    communities = [item for item in unheld(await canon(ctx.session, COMMUNITY_TYPES)) if wealth_key(item) is not None]
     lenders = sorted(
         (item for item in communities if (wealth_of(item) or 0) >= civ.loan_lender_min and may(ctx.rules, item, TierCapability.LOAN)),
         key=lambda item: (-(wealth_of(item) or 0), item.id),
@@ -596,6 +596,8 @@ async def spontaneous_treaty(ctx: TickContext) -> None:
             continue
         for first in await _top_communities(ctx, route.world_a_id):
             for second in await _top_communities(ctx, route.world_b_id):
+                if held(first.id, second.id):
+                    continue
                 offer = await _offer_for(ctx, first, second, method_label(route.method))
                 if offer is not None and (best is None or offer.relation > best.relation):
                     best = offer

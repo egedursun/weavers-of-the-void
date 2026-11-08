@@ -1,6 +1,7 @@
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
@@ -201,7 +202,7 @@ async def cursed_items(ctx: TickContext) -> None:
             continue
         owners = await active_bonds(ctx.session, [BondKind.OWNS], targets=[item.id])
         owner = await living_entity(ctx.session, owners[0].source_node_id) if owners else None
-        if owner is None:
+        if owner is None or held(owner.id, item.id):
             continue
         hp_damage = round_half_up(curse / effects.item_curse_hp_divisor)
         stat_damage = round_half_up(curse / effects.item_curse_stat_divisor)

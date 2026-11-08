@@ -9,6 +9,7 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.economy import CurrencyRow, ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import CommodityKind
@@ -166,6 +167,8 @@ async def _yields(ctx: TickContext, resource_ids: set[int], wanted: list[Commodi
 
 
 async def _seize(ctx: TickContext, hungry: EntityRow, holder: EntityRow, resource: EntityRow) -> bool:
+    if held(hungry.id, holder.id, resource.id):
+        return False
     pressed = 1 + await owners_starved(ctx.session, hungry.id) * ctx.rules.ownership.war_owner_pct / PERCENT
     if not ctx.rng(f"seize.{hungry.id}.{holder.id}.{ctx.epoch}").chance(ctx.rules.trade.rivalry_war_chance * pressed):
         return False
@@ -173,7 +176,7 @@ async def _seize(ctx: TickContext, hungry: EntityRow, holder: EntityRow, resourc
         return False
     await note(
         ctx,
-        f"{hungry.name} went to war against {holder.name} to seize {resource.name}, which its smiths and stables could not do without.",
+        f"{hungry.name} went to war against {holder.name} to seize {resource.name}, which it could not do without.",
         key="trade.seize_resource",
         ids=[hungry.id, holder.id, resource.id],
         feed=FeedCategory.WAR,
@@ -183,7 +186,7 @@ async def _seize(ctx: TickContext, hungry: EntityRow, holder: EntityRow, resourc
 
 
 async def _barter(ctx: TickContext, first: EntityRow, second: EntityRow, entities: Mapping[int, EntityRow], goods: tuple[set[int], set[int]]) -> bool:
-    if not ctx.rng("barter").chance(ctx.rules.trade.barter_chance):
+    if held(first.id, second.id) or not ctx.rng("barter").chance(ctx.rules.trade.barter_chance):
         return False
     offered = ", ".join(entities[item].name for item in sorted(goods[0]))
     wanted = ", ".join(entities[item].name for item in sorted(goods[1]))

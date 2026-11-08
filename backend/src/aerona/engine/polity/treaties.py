@@ -278,7 +278,7 @@ async def misread_breach(ctx: TickContext, profile: TreatyProfileRow, clause: Tr
         return False
     obligor = await living_entity(ctx.session, clause.obligor_node_id)
     beneficiary = await living_entity(ctx.session, clause.beneficiary_node_id)
-    if obligor is None or beneficiary is None:
+    if obligor is None or beneficiary is None or held(obligor.id, beneficiary.id):
         return False
     label = clause.kind.value.replace("_", " ")
     await note(

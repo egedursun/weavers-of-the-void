@@ -10,6 +10,7 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import HouseMemberRow, TreatyClauseRow, TreatyProfileRow
 from aerona.db.tables.warfare import WarSideRow
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import CurseKind, ItemClass, ItemDeed
 from aerona.domain.enums.domain import Domain
@@ -148,9 +149,9 @@ async def profile_beast(ctx: TickContext, beast: EntityRow, species: EntityRow |
 async def champions(ctx: TickContext) -> int:
     table = ctx.rules.beasts
     risen = 0
-    held = set(await ctx.session.scalars(select(BeastProfileRow.species_entity_id).where(BeastProfileRow.species_entity_id.is_not(None))))
-    for species in await canon(ctx.session, [EntityType.SPECIES]):
-        if risen >= table.promotion_cap or species.id in held:
+    profiled = set(await ctx.session.scalars(select(BeastProfileRow.species_entity_id).where(BeastProfileRow.species_entity_id.is_not(None))))
+    for species in unheld(await canon(ctx.session, [EntityType.SPECIES])):
+        if risen >= table.promotion_cap or species.id in profiled:
             continue
         kind = await ctx.session.get(SpeciesProfileRow, species.id)
         huge = kind is not None and SIZE_ORDER.index(kind.size_class) >= GREAT
@@ -161,6 +162,8 @@ async def champions(ctx: TickContext) -> int:
             select(SpeciesRangeRow.region_entity_id).where(SpeciesRangeRow.species_entity_id == species.id).order_by(SpeciesRangeRow.abundance.desc()).limit(1)
         )
         region = await living_entity(ctx.session, home) if home is not None else None
+        if region is not None and held(region.id):
+            continue
         beast = await create_record(
             ctx,
             RecordSpec(
@@ -175,7 +178,7 @@ async def champions(ctx: TickContext) -> int:
                     renown=PERCENT // 5,
                     terror=PERCENT // 10,
                 ),
-                body=f"The greatest of its kind, the terror or the guardian of {region.name if region is not None else 'its lands'}.",
+                body=f"The greatest of its kind in {region.name if region is not None else 'its lands'}.",
                 power=max(species.power_level, 3),
                 world_id=species.world_id,
                 location_id=region.id if region is not None else species.location_id,
@@ -183,7 +186,7 @@ async def champions(ctx: TickContext) -> int:
         )
         await profile_beast(ctx, beast, species)
         await connect(ctx.session, beast.id, species.id, BondKind.DESCENDS_FROM, ctx.epoch, description="the greatest of its kind")
-        await note(ctx, f"{beast.name} rose among the {species.name}, and the land learned its name.", key="beasts.risen", ids=[beast.id, species.id])
+        await note(ctx, f"{beast.name} rose among the {species.name}.", key="beasts.risen", ids=[beast.id, species.id])
         risen += 1
     return risen
 

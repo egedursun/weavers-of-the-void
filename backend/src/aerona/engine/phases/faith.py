@@ -313,6 +313,8 @@ async def soul_cycles(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     eaten_here = await soul_eaters(ctx, atlas)
     for profile, spirit in await profiles(ctx):
+        if held(spirit.id):
+            continue
         ctx.count(f"spirits_{await tend(ctx, profile, spirit)}")
         region = atlas.top_region(spirit.id)
         fate = await gnaw(ctx, profile, spirit, eaten_here.get(region, [])) if region is not None else None
@@ -329,8 +331,8 @@ async def soul_cycles(ctx: TickContext) -> None:
         if host is not None:
             ctx.count("possessions")
             await note(ctx, f"{spirit.name} took hold of {host.name}.", key="afterlife.possession", ids=[spirit.id, host.id])
-    held, exorcised = await possessions(ctx)
-    ctx.count("possessed", held)
+    possessed, exorcised = await possessions(ctx)
+    ctx.count("possessed", possessed)
     ctx.count("exorcised", exorcised)
     ctx.count("realm_essence", await realm_essence(ctx))
 

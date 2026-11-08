@@ -11,6 +11,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import LegendaryQuestRow, ThreadRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind, LegendaryQuestKind, LegendaryQuestOutcome, ThreadStatus
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.limits import PERCENT_MAX
@@ -98,6 +99,8 @@ async def quest_target(session: AsyncSession, kind: LegendaryQuestKind) -> Quest
 async def open_quest(ctx: TickContext, kind: LegendaryQuestKind, by: str, opened_by: ActorKind) -> LegendaryQuestRow:
     target = await quest_target(ctx.session, kind)
     name = QUEST_NAMES[kind]
+    if opened_by is ActorKind.FATE and held(target.entity_id, target.star_id):
+        raise ValidationFailedError(f"{name} would turn on a held thing.")
     thread = ThreadRow(
         epoch=ctx.epoch,
         text=f"LEGENDARY QUEST — {name}: {target.text} Those who succeed will enter the epic of the cosmos; if it fails the price will be heavy.",

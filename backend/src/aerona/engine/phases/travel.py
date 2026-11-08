@@ -18,6 +18,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.civilization import TierCapability
@@ -188,7 +189,7 @@ async def _announce_hidden(ctx: TickContext, route: RouteRow, knower: bool, sage
             await mark_world_discovered(ctx, world, f"the hidden route to it ({method_label(route.method)}) was revealed")
 
 
-async def _road_knowledge(ctx: TickContext, community: EntityRow, route: RouteRow, branch: KnowledgeBranch) -> EntityRow:
+async def _route_knowledge(ctx: TickContext, community: EntityRow, route: RouteRow, branch: KnowledgeBranch) -> EntityRow:
     existing = [item for item in await canon(ctx.session, [EntityType.KNOWLEDGE], community.world_id) if item.knowledge_branch is branch]
     if existing:
         return existing[0]
@@ -216,7 +217,9 @@ async def teach_route(ctx: TickContext, community: EntityRow, route: RouteRow) -
     branch = TRAVEL_METHODS[route.method].required_branch
     if branch is None or await knows(ctx.session, community.id, branch):
         return None
-    knowledge = await _road_knowledge(ctx, community, route, branch)
+    knowledge = await _route_knowledge(ctx, community, route, branch)
+    if held(knowledge.id):
+        return None
     await connect(ctx.session, community.id, knowledge.id, BondKind.KNOWS, ctx.epoch, description="learned while trying to understand the route")
     other = await world_name(ctx.session, other_end(route, community.world_id)) if touches(route, community.world_id) else "other worlds"
     await note(
@@ -241,7 +244,7 @@ async def route_knowledge(ctx: TickContext) -> int:
         if branch is None:
             continue
         for world_id in (route.world_a_id, route.world_b_id):
-            candidates = [item for item in await canon(ctx.session, COMMUNITY_TYPES, world_id) if not knowledge.knows(item.id, branch)]
+            candidates = [item for item in unheld(await canon(ctx.session, COMMUNITY_TYPES, world_id)) if not knowledge.knows(item.id, branch)]
             if not candidates:
                 continue
             community = max(candidates, key=lambda item: (stat_or(item, "craft", 0) + stat_or(item, "magic", 0), -item.id))

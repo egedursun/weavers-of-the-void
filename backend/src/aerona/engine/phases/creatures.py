@@ -11,6 +11,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import CommodityKind
@@ -488,7 +489,7 @@ async def creature_migration(ctx: TickContext) -> int:
     atlas = await RegionAtlas.load(ctx.session)
     rng = ctx.rng("creature_migration")
     moved = 0
-    for species in await _species(ctx):
+    for species in unheld(await _species(ctx)):
         if moved >= creatures.creature_migration_cap or species_danger(ctx.rules, species) < creatures.creature_migration_min_danger:
             continue
         chance = creatures.creature_migration_chance * (2 if CreatureTrait.FISSIPAROUS in await traits_of(ctx.session, species.id) else 1)
@@ -500,7 +501,7 @@ async def creature_migration(ctx: TickContext) -> int:
         if not targets:
             continue
         target = await ctx.session.get(EntityRow, targets[0])
-        if target is None or target.status is not EntityStatus.CANON:
+        if target is None or target.status is not EntityStatus.CANON or held(target.id):
             continue
         await BondRepository(ctx.session).connect(BondDraft(species.id, target.id, BondKind.LIVES_IN, ctx.epoch, f"Epoch {ctx.epoch} migration"))
         source = await ctx.session.get(EntityRow, home) if home is not None else None

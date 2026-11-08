@@ -7,6 +7,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, RegionEnvironmentRow
 from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.db.tables.warfare import BattleRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -222,7 +223,7 @@ async def place_secrets(ctx: TickContext) -> None:
     revealed = released = 0
     for secret in secrets:
         place = await ctx.session.get(EntityRow, secret.place_entity_id)
-        if place is None or place.status is not EntityStatus.CANON:
+        if place is None or place.status is not EntityStatus.CANON or held(place.id):
             continue
         region_id = atlas.top_region(place.id)
         region = regions.get(region_id) if region_id is not None else None
@@ -233,7 +234,7 @@ async def place_secrets(ctx: TickContext) -> None:
             found = await search(ctx, secret, place, searchers.get(region_id, []) if region_id is not None else [])
             if found is None and ctx.rng(f"dig.{secret.id}").chance(miner_chance(ctx.rules, mined, secret.strength)):
                 found = (await miner_of(ctx, atlas, region_id) or place, DiscoveryMode.MINER)
-            if found is not None:
+            if found is not None and not held(found[0].id):
                 finder, mode = found
                 await reveal(ctx, secret, mode, finder if finder.id != place.id else None, region)
                 revealed += 1

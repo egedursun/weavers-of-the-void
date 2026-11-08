@@ -15,6 +15,7 @@ from aerona.db.tables.faith import CultDoctrineRow
 from aerona.db.tables.mind import PressureRow
 from aerona.db.tables.routes import JourneyRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.culture import LanguageRegister
@@ -177,7 +178,7 @@ async def schisms(ctx: TickContext) -> None:
     sons = list(faith.sons.values())
     rng = ctx.rng("schism")
     split = 0
-    for cult in cults:
+    for cult in unheld(cults):
         if split >= settings.schism_cap:
             break
         heretical = await drifted(ctx, cult.id)
@@ -188,7 +189,7 @@ async def schisms(ctx: TickContext) -> None:
             continue
         old_patron = faith.patron(cult.id)
         candidate = schism_candidate(sons, old_patron, cult.world_id)
-        if candidate is None:
+        if candidate is None or held(candidate.id):
             continue
         sect = await split_cult(ctx, cult, candidate, old_patron)
         await record_heresy(ctx, sect, cult.id)

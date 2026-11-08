@@ -15,6 +15,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held as frozen
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
@@ -170,13 +171,13 @@ async def deepen_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     loads = await DiseaseLoads.load(ctx.session)
     sick = await endemic_regions(ctx.session)
     levels = await holder_levels(ctx.session)
-    for community in scene.communities:
+    for community in unheld(scene.communities):
         if deepened >= table.deepen_cap:
             break
         options = [
             scene.knowledge[item]
             for item in scene.held.get(community.id, [])
-            if item not in scene.lost and knowledge_level(ctx.rules, scene.knowledge[item]) < table.level_cap
+            if item not in scene.lost and not frozen(item) and knowledge_level(ctx.rules, scene.knowledge[item]) < table.level_cap
         ]
         if not options or stat_or(community, PROSPERITY_KEY, table.deepen_min_prosperity) < table.deepen_min_prosperity:
             continue
@@ -188,9 +189,9 @@ async def deepen_round(ctx: TickContext, scene: KnowledgeScene) -> int:
             options = healing
         chosen = rng.pick(options)
         branch = chosen.knowledge_branch
-        held = levels.get(community.id, {}).get(branch, knowledge_level(ctx.rules, chosen)) if branch is not None else 0
+        known = levels.get(community.id, {}).get(branch, knowledge_level(ctx.rules, chosen)) if branch is not None else 0
         if branch is not None:
-            chance *= await research_factor(ctx, community, branch, held, levels)
+            chance *= await research_factor(ctx, community, branch, known, levels)
         if branch is None or not await progressed(ctx, community.id, branch, chance, levels):
             continue
         reached = await raise_holder(ctx, community.id, branch, table.level_cap)

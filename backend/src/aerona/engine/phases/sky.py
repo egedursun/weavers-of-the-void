@@ -15,6 +15,7 @@ from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import ThreadLinkRow, ThreadRow
 from aerona.db.tables.routes import RouteRow
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory, ThreadLinkRole, ThreadStatus
 from aerona.domain.enums.culture import Technique
@@ -330,6 +331,9 @@ async def spontaneous_sky_event(ctx: TickContext) -> SkyEventResult | None:
             return None
         star = rng.weighted(candidates, [star_event_weight(ctx.rules, kind, star) for star in candidates])
         order = SkyOrder(star_id=star.id)
+    world = await _resolve_world(ctx, order)
+    if held(world.id if world is not None else None, order.star_id):
+        return None
     try:
         return await sky_event(ctx, kind, order)
     except ValidationFailedError:
@@ -417,6 +421,8 @@ async def time_echo(ctx: TickContext, thread_id: int | None = None) -> EntityRow
     if thread is None:
         return None
     place = await _thread_place(ctx.session, thread.id)
+    if thread_id is None and (place is None or held(place.id)):
+        return None
     if place is not None and rng.chance(ctx.rules.sky.time_traveler_share_pct):
         return await _time_traveller(ctx, thread, place)
     return await _echo_prophecy(ctx, thread)
@@ -425,7 +431,7 @@ async def time_echo(ctx: TickContext, thread_id: int | None = None) -> EntityRow
 async def two_timed_hero(ctx: TickContext) -> EntityRow | None:
     tagged = await flags_by_entity(ctx.session, EntityFlag.TWO_TIMED)
     minimum = ctx.rules.sky.two_timed_min_charisma
-    for mortal in await canon(ctx.session, [EntityType.MORTAL]):
+    for mortal in unheld(await canon(ctx.session, [EntityType.MORTAL])):
         if mortal.id in tagged or stat_or(mortal, CHARISMA_KEY, 0) < minimum:
             continue
         await EntityRepository(ctx.session).add_flag(mortal.id, EntityFlag.TWO_TIMED, ctx.epoch)

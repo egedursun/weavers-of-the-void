@@ -16,6 +16,7 @@ from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.society import AddictionRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
@@ -584,15 +585,15 @@ async def _markets(ctx: TickContext, routes: list[RouteRow]) -> None:
     rng = ctx.rng("markets")
     markets = await faction_kind(ctx.session, EngineKind.WANDERING_MARKET)
     if len(markets) < economy.market_max and routes and rng.chance(economy.market_found_chance):
-        regions = await open_regions(ctx.session)
+        regions = unheld(await open_regions(ctx.session))
         if regions:
             markets.append(await found_faction(ctx, EngineKind.WANDERING_MARKET, rng.pick(regions)))
     bonds = BondRepository(ctx.session)
-    for market in markets:
+    for market in unheld(markets):
         linked = {
             route.world_b_id if route.world_a_id == market.world_id else route.world_a_id for route in await passable_routes(ctx.session, market.world_id)
         }
-        targets = [region for world_id in sorted(linked) for region in await open_regions(ctx.session, world_id)]
+        targets = [region for world_id in sorted(linked) for region in unheld(await open_regions(ctx.session, world_id))]
         if targets and rng.chance(economy.market_move_chance):
             await move_market(ctx, market, rng.pick(targets))
         statement = select(EntityRow).where(

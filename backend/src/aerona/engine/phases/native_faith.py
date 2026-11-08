@@ -10,6 +10,7 @@ from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.society import ReverenceRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import AGENT_TYPES, EntityFlag, EntityStatus, EntityType
@@ -93,10 +94,12 @@ async def turn_natives(ctx: TickContext, god: ForeignGodRow, struck: set[int]) -
     colonies = await flags_by_entity(ctx.session, EntityFlag.COLONY)
     godless = await flags_by_entity(ctx.session, EntityFlag.GODLESS)
     turned = 0
+    if held(god.id):
+        return 0
     for native in await canon(ctx.session, NATIVE_TYPES, god.world_id):
         if turned >= table.turn_cap:
             break
-        if native.id in colonies or await holds_god(ctx.session, native.id, god.id):
+        if held(native.id) or native.id in colonies or await holds_god(ctx.session, native.id, god.id):
             continue
         patron = await patron_son(ctx.session, native)
         lost = faded(patron)
@@ -152,9 +155,9 @@ async def return_one(ctx: TickContext, believer: EntityRow, god: ForeignGodRow) 
 async def return_to_pantheon(ctx: TickContext, gods: list[ForeignGodRow]) -> int:
     table = ctx.rules.native_faith
     returned = 0
-    for god in gods:
+    for god in unheld(gods):
         believers = [*await worshippers(ctx.session, god.id), *await reverers(ctx.session, god.id)]
-        for believer in believers:
+        for believer in unheld(believers):
             if returned >= table.return_cap:
                 return returned
             multiplier = 1 if awake(god) else table.return_defeated_mult_pct / PERCENT

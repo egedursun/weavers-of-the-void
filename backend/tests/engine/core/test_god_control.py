@@ -1,6 +1,7 @@
 import traceback
 from collections import Counter
 from collections.abc import Callable
+from dataclasses import fields, replace
 from typing import Any
 
 from sqlalchemy import event, inspect, select
@@ -14,9 +15,13 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.guards import run_guarded
 from aerona.engine.pipeline import all_phases, current_environment, simulate
+from aerona.rules.model import RULE_METADATA_KEY, rule_meta
+from aerona.rules.registry import Rules
 from tests.engine.integration.factories import seed_rich_cosmos
 
 BLOCK_EVERY_NODE = -1
+CERTAIN = 100
+DATACLASS_FIELDS = "__dataclass_fields__"
 WARM_EPOCHS = 2
 ENGINE_MARK = "/aerona/engine/"
 HELPER_MARKS = ("/engine/notes.py", "/engine/context.py", "/engine/primitives/", "/engine/interconnect/guards.py")
@@ -72,9 +77,27 @@ class Watcher:
         return result
 
 
+def eager(rules: Rules) -> Rules:
+    changes: dict[str, Any] = {}
+    for space in fields(rules):
+        table: Any = getattr(rules, space.name)
+        if not hasattr(table, DATACLASS_FIELDS):
+            continue
+        sure = {
+            definition.name: min(CERTAIN, rule_meta(definition).maximum)
+            for definition in fields(table)
+            if RULE_METADATA_KEY in definition.metadata and (definition.name.endswith("_chance") or rule_meta(definition).label.startswith("Chance"))
+        }
+        if sure:
+            changes[space.name] = replace(table, **sure)
+    return replace(rules, **changes)
+
+
 async def run_watched(database: Database, phase_name: str, only: int) -> tuple[Counter[str], str | None]:
     phase = next(item for item in all_phases() if item.name == phase_name)
     environment = await current_environment(database)
+    if only == BLOCK_EVERY_NODE:
+        environment = replace(environment, rules=eager(environment.rules))
     watcher = Watcher()
     listeners: list[tuple[str, Callable[..., Any]]] = [
         ("transient_to_pending", watcher.pending),
