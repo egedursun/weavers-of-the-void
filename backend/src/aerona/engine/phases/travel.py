@@ -206,7 +206,7 @@ async def _road_knowledge(ctx: TickContext, community: EntityRow, route: RouteRo
             power=travel.route_knowledge_power,
             world_id=community.world_id,
             location_id=community.location_id,
-            subtype="road knowledge",
+            subtype="route knowledge",
             knowledge_branch=branch,
         ),
     )
@@ -221,7 +221,7 @@ async def teach_route(ctx: TickContext, community: EntityRow, route: RouteRow) -
     other = await world_name(ctx.session, other_end(route, community.world_id)) if touches(route, community.world_id) else "other worlds"
     await note(
         ctx,
-        f"{community.name} learned the secret of {method_label(route.method)}; the road to {other} is now open to them.",
+        f"{community.name} learned the secret of {method_label(route.method)}; the way to {other} is now open to them.",
         key="travel.route_knowledge",
         ids=[community.id, knowledge.id],
     )
@@ -506,7 +506,7 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
         travellers = f" ({journey.population} travellers)" if journey.population else ""
         await note(
             ctx,
-            f"{traveller.name}'s expedition to {target} was lost on the road: {how}{travellers}{suffix}.",
+            f"{traveller.name}'s expedition to {target} was lost on the way: {how}{travellers}{suffix}.",
             key="travel.vanished",
             ids=[traveller.id, *([ghost.id] if ghost is not None else []), *([caravan.id] if caravan is not None else [])],
             feed=None,
@@ -529,27 +529,26 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
     return True
 
 
+LOST_REASONS: dict[RouteState, str] = {
+    RouteState.FORGOTTEN: "the world at the end of the route was forgotten",
+    RouteState.COLLAPSED: "the divine bridge collapsed",
+    RouteState.SEALED: "the route was sealed",
+    RouteState.SNAPPED: "the light sail snapped",
+}
+
+
 async def _closed_route(ctx: TickContext, journey: JourneyRow, traveller: EntityRow, route: RouteRow, scene: JourneyScene) -> None:
     status = scene.book.status(route)
     target = await world_name(ctx.session, journey.destination_world_id)
-    if status.state is RouteState.SEVERED:
+    if status.opens_epoch is not None and status.state is not RouteState.FORGOTTEN:
         if journey.status is not JourneyStatus.WAITING:
             journey.status = JourneyStatus.WAITING
-            add_event(
-                journey,
-                ctx.epoch,
-                JourneyEventKind.VOID_STORM,
-                f"the route snapped; the expedition is waiting for it to reopen (Epoch {status.opens_epoch})",
-            )
-            resume = f"it will continue when the route reopens at the start of Epoch {status.opens_epoch}"
-            text = f"{traveller.name}'s expedition to {target} waits at the mouth of the broken road; {resume}."
+            kind = JourneyEventKind.VOID_STORM if status.state is RouteState.SEVERED else JourneyEventKind.OTHER
+            add_event(journey, ctx.epoch, kind, f"the route closed; the expedition is waiting for it to reopen (Epoch {status.opens_epoch})")
+            text = f"{traveller.name}'s expedition to {target} waits for the route to reopen; it will continue at the start of Epoch {status.opens_epoch}."
             await note(ctx, text, key="travel.waiting", ids=[traveller.id])
         return
-    reason = {
-        RouteState.FORGOTTEN: "the world at the end of the route was forgotten",
-        RouteState.COLLAPSED: "the divine bridge collapsed",
-        RouteState.SEALED: "the route was sealed",
-    }.get(status.state, "the route collapsed")
+    reason = LOST_REASONS.get(status.state, "the route collapsed")
     add_event(journey, ctx.epoch, JourneyEventKind.OTHER, f"{reason}; travellers were left in the void")
     journey.status = JourneyStatus.LOST
     journey.end_epoch = ctx.epoch

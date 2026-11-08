@@ -62,7 +62,7 @@ INFLUENCE_KEY = "influence"
 PROSPERITY_KEY = "prosperity"
 PIETY_KEY = "piety"
 POPULATION_KEY = "population"
-COSMIC_SEARCH_HOW = "watching the sky and following old roads"
+COSMIC_SEARCH_HOW = "searching with all they knew"
 
 
 class Reason(StrEnum):
@@ -75,11 +75,11 @@ class Reason(StrEnum):
 
 
 PHRASES: dict[Reason, tuple[str, ...]] = {
-    Reason.NARROW: ("when their homeland grew too small", "when their fields no longer fed the crowd", "when they no longer fit their lands"),
-    Reason.HUNGER: ("when their granaries emptied", "when hunger came to the door", "when famine struck"),
-    Reason.POVERTY: ("when poverty pressed", "when their purse tightened", "when poverty engulfed the homeland"),
+    Reason.NARROW: ("when their homeland grew too small", "when their lands grew crowded", "when they no longer fit their lands"),
+    Reason.HUNGER: ("when their food ran short", "when hunger came", "when famine struck"),
+    Reason.POVERTY: ("when poverty pressed", "when they grew poor", "when poverty spread through the homeland"),
     Reason.EXPLORER: ("led by {name}", "following {name}", "when {name} went ahead of them"),
-    Reason.KNOWLEDGE: ("trusting their road knowledge", "with old road knowledge", "finding their way by the stars"),
+    Reason.KNOWLEDGE: ("trusting what they knew of travel", "with old knowledge of the way", "guided by their learning"),
     Reason.SPIRIT: ("unable to stay still", "giving in to curiosity", "with the curiosity within"),
 }
 NEED_REASONS = (Reason.NARROW, Reason.HUNGER, Reason.POVERTY)

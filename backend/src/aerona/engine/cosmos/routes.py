@@ -455,7 +455,7 @@ def vessel_fit(rules: Rules, vehicle: EntityRow | None, duration: int, carried: 
             notes.append(f"the range of {vehicle.name} falls short; it must rest on the way")
         elif reach >= travel.vessel_long_range and duration > 1:
             extra = -1
-            notes.append(f"the long range of {vehicle.name} shortens the road")
+            notes.append(f"the long range of {vehicle.name} shortens the journey")
     if travel.vessel_passengers_per_crew and crew and carried > crew * travel.vessel_passengers_per_crew:
         carried = crew * travel.vessel_passengers_per_crew
         notes.append(f"{vehicle.name} could carry only {carried} travellers")
@@ -512,7 +512,7 @@ async def start_journey(ctx: TickContext, spec: JourneySpec) -> JourneyRow:
 async def recall_journey(ctx: TickContext, journey_id: int, by: str) -> str:
     journey = await ctx.session.get(JourneyRow, journey_id)
     if journey is None or journey.status not in LIVE_JOURNEYS:
-        raise ValidationFailedError("No such expedition on the road.")
+        raise ValidationFailedError("No such expedition under way.")
     traveller = await ctx.session.get(EntityRow, journey.traveller_entity_id)
     if traveller is not None and journey.population > 0:
         put_stat(ctx.rules, traveller, headcount_key(traveller), headcount(traveller) + journey.population)
@@ -675,7 +675,7 @@ async def sever_route(
     hidden_word = "hidden " if was_hidden else ""
     text = f"{opener}{verb} the {hidden_word}route between {first} and {second}; it reopens at the start of Epoch {ctx.epoch + span}"
     if lost or waiting:
-        text += f"; of the {lost + waiting} expeditions on the road, {lost} were lost, {waiting} survived and wait for it to reopen"
+        text += f"; of the {lost + waiting} expeditions under way, {lost} were lost, {waiting} survived and wait for it to reopen"
     text += "."
     if revealed:
         text += " As the route snapped, light leaking through the crack betrayed it: it is no longer hidden; it can be used again once the storm calms."

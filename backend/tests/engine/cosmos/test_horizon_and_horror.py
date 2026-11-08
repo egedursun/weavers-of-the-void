@@ -48,7 +48,7 @@ from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, make
 
 def test_exploration_sentence_never_shows_measures() -> None:
     text = exploration_sentence([Reason.NARROW, Reason.HUNGER, Reason.EXPLORER, Reason.KNOWLEDGE], 0, "Iska")
-    assert text == "when their homeland grew too small and when their granaries emptied led by Iska trusting their road knowledge"
+    assert text == "when their homeland grew too small and when their food ran short led by Iska trusting what they knew of travel"
 
 
 async def test_land_measure_counts_crowding(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
