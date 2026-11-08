@@ -7,10 +7,12 @@ from typing import get_args
 import pytest
 
 from aerona.db.session import Database
+from aerona.domain.enums.entity import EntityType
+from aerona.engine.lore import control
 from aerona.rules.registry import Rules
 from aerona.services.player.catalog import ACTIONS, action, run_ledgered
 from aerona.services.player.scope import PlayerScope
-from tests.services.player.every_lever import BRANCH_LEVERS, LEVERS, Lever, payload_for
+from tests.services.player.every_lever import BRANCH_LEVERS, LEVERS, LORE_LEVERS, Lever, Pick, payload_for
 
 SYNC_ACTIONS = sorted(spec.id for spec in ACTIONS if spec.sync is not None)
 
@@ -75,5 +77,20 @@ async def test_every_branch_of_a_god_lever_runs_to_success(lever_template: Path,
     lever = BRANCH_LEVERS.get((action_id, value), LEVERS.get(action_id, Lever()))
     try:
         await run(database, action_id, replace(lever, values={**lever.values, field_name: value}))
+    finally:
+        await database.dispose()
+
+
+LORE_KINDS = sorted(kind.value for kind in control.PROFILES)
+
+
+@pytest.mark.parametrize("kind", LORE_KINDS)
+async def test_every_kind_of_lore_record_can_be_edited(lever_template: Path, tmp_path: Path, kind: str) -> None:
+    path = tmp_path / "lore.db"
+    shutil.copyfile(lever_template, path)
+    database = Database(f"sqlite+aiosqlite:///{path}")
+    lever = LORE_LEVERS.get(kind, Lever(values={"entity_id": Pick(EntityType(kind))}))
+    try:
+        await run(database, "lore:edit", lever)
     finally:
         await database.dispose()

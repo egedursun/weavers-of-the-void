@@ -1411,3 +1411,16 @@ BRANCH_LEVERS: Mapping[tuple[str, str], Lever] = {
     ("route", "reveal"): Lever(values={"route_id": Pick("route")}, setup=hidden_route),
     ("route", "stitch"): after(("route", {"route_id": Pick("route"), "action": "sever", "duration": 3}), route_id=Pick("route")),
 }
+
+
+ART_FORM = ("lore:create", {"entity_type": "art_form", "name": "Reed Song", "world_id": Pick("world"), "values": {"discipline": "music"}})
+LORE_LEVERS: Mapping[str, Lever] = {
+    kind.value: after(step, entity_id=Newest(kind))
+    for kind, step in (
+        (EntityType.ART_FORM, ART_FORM),
+        (EntityType.IDEOLOGY, IDEOLOGY),
+        (EntityType.PROPHECY, PROPHECY),
+        (EntityType.RITE, RITE),
+        (EntityType.THEORY, THEORY),
+    )
+}

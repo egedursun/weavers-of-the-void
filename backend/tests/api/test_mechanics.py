@@ -1,6 +1,6 @@
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.models.entity_stats import MortalStats
-from aerona.engine.interconnect.edges import GENERIC_CARRIERS, all_edges
+from aerona.engine.interconnect.explorer import affects_by_writer
 from tests.api.conftest import ApiWorld, seeded
 from tests.engine.core.factories import entity
 
@@ -19,9 +19,9 @@ async def test_a_fresh_mortal_shows_why_each_value_is_what_it_is(api: ApiWorld) 
     assert (hp["base"], hp["value"]) == (80, 85)
     assert [item["key"] for item in view["modifiers"]] == ["hp"]
     assert view["acting"]
+    reach = affects_by_writer()
     for acting in view["acting"]:
-        reached = {str(edge.target) for edge in all_edges() if edge.writer == acting["key"] and edge.carrier not in GENERIC_CARRIERS}
-        assert set(acting["affects"]) <= reached
+        assert set(acting["affects"]) <= {str(target) for target in reach.get(acting["key"], frozenset())}
     assert any(acting["affects"] for acting in view["acting"])
 
 

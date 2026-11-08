@@ -30,7 +30,7 @@ from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.modifier import ModifierSource
 from aerona.engine.interconnect.catalog import REGISTERED
 from aerona.engine.interconnect.edges import mechanic_reads, mechanic_writes
-from aerona.engine.interconnect.explorer import affects_by_writer, mechanic_links, subsystem_links
+from aerona.engine.interconnect.explorer import affects_by_writer, links_of, subsystem_links
 from aerona.engine.interconnect.incidents import causality_graph, chain_to, last_incident
 from aerona.engine.interconnect.registry import Subsystem
 from aerona.engine.interconnect.sources import SOURCE_SUBSYSTEMS, reason_text
@@ -292,6 +292,6 @@ async def mechanic_detail(key: str = Path(min_length=1, max_length=120)) -> Mech
                 kind=link.kind,
                 carriers=list(link.carriers),
             )
-            for link in mechanic_links().get(key, ())
+            for link in links_of(key)
         ],
     )
