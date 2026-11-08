@@ -7,13 +7,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import FINGER_COUNT, Anatomy, anatomy_of
 from aerona.catalog.body_plans import BUILD_RANK, HEIGHT_RANK, PLANS, WHOLE_PLANS
+from aerona.catalog.creature_anatomy import MONSTER_PLANS
 from aerona.catalog.mind import SKILLS, TRAITS
 from aerona.catalog.tissues import FULL_COUNTS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow, ProsthesisRow
-from aerona.db.tables.ecology import SpeciesProfileRow
+from aerona.db.tables.ecology import BeastProfileRow, SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow, EntityTagRow, EntityTraitRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import SkillRow, TraitRow
@@ -169,9 +170,24 @@ async def species_of(session: AsyncSession, mortal: EntityRow) -> EntityRow | No
     return None
 
 
+def wild_plan(beast_id: int) -> BodyPlan:
+    return SeededRandom.for_epoch(beast_id, 0, "monster_plan").pick(list(MONSTER_PLANS))
+
+
+async def beast_plan(session: AsyncSession, beast: EntityRow) -> tuple[BodyPlan, list[str]]:
+    profile = await session.get(BeastProfileRow, beast.id)
+    species = await session.get(EntityRow, profile.species_entity_id) if profile is not None and profile.species_entity_id is not None else None
+    if species is None:
+        return wild_plan(beast.id), []
+    known = await ensure_species_body(session, species)
+    return known.plan, list(known.traits)
+
+
 async def plan_for(session: AsyncSession, bearer: Bearer) -> tuple[BodyPlan, list[str]]:
     if not isinstance(bearer, EntityRow):
         return BodyPlan.DIVINE_MANIFEST, []
+    if bearer.entity_type is EntityType.BEAST:
+        return await beast_plan(session, bearer)
     species = await species_of(session, bearer)
     if species is None:
         return BodyPlan.HUMANOID, []

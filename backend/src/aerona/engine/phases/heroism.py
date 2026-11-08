@@ -26,7 +26,9 @@ from aerona.engine.body.book import effective, strike_style
 from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.ecology.anatomy import body_might
 from aerona.engine.ecology.beasts import rob_hoard, wound_harm
+from aerona.engine.ecology.pets import hunts_beside, pet_of
 from aerona.engine.ecology.totems import totem_of
 from aerona.engine.economy.money import inject_hoard
 from aerona.engine.economy.sanctity import holy_strike
@@ -139,6 +141,9 @@ async def hero_power(ctx: TickContext, hero: EntityRow, patron: SonRow | None, r
     total += await weapon_power(ctx.session, ctx.rules, hero.id, hunt.weapon_mult)
     if EntityFlag.WIZARD in flags:
         total += round_half_up(intellect / hunt.sorcerer_intellect_divisor)
+    pet = await pet_of(ctx, hero.id)
+    if pet is not None and await hunts_beside(ctx, pet):
+        total += ctx.rules.husbandry.pet_hero_bonus
     return total
 
 
@@ -149,7 +154,7 @@ async def monster_power(ctx: TickContext, monster: EntityRow, roll: int) -> floa
     total += roll * hunt.die_mult + await species_trait_bonus(ctx.session, ctx.rules, monster.id)
     if EntityFlag.MEGAFAUNA in flags:
         total += hunt.megafauna_bonus
-    return total
+    return total * await body_might(ctx.session, ctx.rules, monster.id)
 
 
 async def _reward_weapon(ctx: TickContext, hero: EntityRow, monster: EntityRow) -> None:
@@ -506,6 +511,7 @@ async def sworn_hunts(ctx: TickContext) -> None:
     "table.community_stocks",
     "table.conditions",
     "table.cosmos",
+    "table.creature_anatomy",
     "table.culture_ethics",
     "table.culture_values",
     "table.deed_claims",

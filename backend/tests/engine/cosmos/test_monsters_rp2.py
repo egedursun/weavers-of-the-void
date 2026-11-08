@@ -1,19 +1,24 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.anatomy import anatomy_of
+from aerona.catalog.creature_anatomy import MONSTER_PLANS, MONSTER_SIZES
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.anatomy import CreatureAnatomyRow
+from aerona.db.tables.body import BodyRow, ConditionRow
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import RiteProfileRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import ArmyRow, CaptiveRow, SiegeRow
 from aerona.domain.enums.affliction import PackageKind
-from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.body import MADNESS_CONDITIONS, BodyPlan, ConditionKind, DamageType, TissueKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import MagicSchool, MagicSource
 from aerona.domain.enums.ecology import (
@@ -23,6 +28,7 @@ from aerona.domain.enums.ecology import (
     Biochemistry,
     BreathKind,
     Diet,
+    GazeKind,
     Habitat,
     SizeClass,
     SpeciesClass,
@@ -38,11 +44,23 @@ from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.domain.models.entity_stats import BeastStats, MortalStats, ResourceStats, RiteStats, SettlementStats, SpeciesStats
+from aerona.engine.body.book import ensure_body, wild_plan
+from aerona.engine.body.tissues import PLAIN, Hardness, hardness_of, skin_kept, tissue_hit
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import has_beast_mount
-from aerona.engine.ecology.anatomy import armour_of, ensure_anatomy, generate, harm_factor, repelled
+from aerona.engine.ecology.anatomy import (
+    BEAST_BODIES_FIXUP,
+    armour_of,
+    body_might,
+    ensure_anatomy,
+    fit_beast_bodies,
+    generate,
+    harm_factor,
+    known_plan,
+    repelled,
+)
 from aerona.engine.ecology.anatomy_control import edit_anatomy, reroll_anatomy
-from aerona.engine.ecology.beast_acts import carry_off, free_captives, triggered, void_trophy
+from aerona.engine.ecology.beast_acts import carry_off, free_captives, gaze_strike, triggered, void_trophy
 from aerona.engine.ecology.beasts import profile_beast, raid
 from aerona.engine.ecology.monsters import emerge_from_deep, roam_void
 from aerona.engine.ecology.necromancy import necromancy
@@ -149,6 +167,9 @@ async def test_sleepers_wake_to_deep_mining_or_desecration_and_the_deep_lets_mon
     assert emerged is not None
     body = await ctx.session.get(CreatureAnatomyRow, emerged.id)
     assert body is not None and body.habitat is Habitat.DEEP and body.awakening is AwakeningTrigger.DEEP_MINING
+    profile = await ctx.session.get(BeastProfileRow, emerged.id)
+    assert profile is not None and profile.size_class in MONSTER_SIZES
+    assert await known_plan(ctx.session, emerged.id) in MONSTER_PLANS
 
 
 async def test_an_abductor_carries_people_off_and_its_death_frees_them(ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
@@ -219,3 +240,71 @@ async def test_the_god_shapes_and_reshapes_a_body(ctx: TickContext, cosmos: Cosm
     fresh = await reroll_anatomy(ctx, horror.id)
     assert fresh.locked == [] and fresh.node_id == horror.id
     assert horror.status is EntityStatus.CANON
+
+
+def test_stone_skin_and_metal_bones_are_the_layers_a_blade_must_pass(rules: Rules) -> None:
+    head = anatomy_of(BodyPlan.QUADRUPED).parts[0]
+    flesh = tissue_hit(rules, BodyPlan.QUADRUPED, head, DamageType.CUT, 3)
+    stone = tissue_hit(rules, BodyPlan.QUADRUPED, head, DamageType.CUT, 3, hardness=Hardness(TissueMaterial.STONE))
+    metal = tissue_hit(rules, BodyPlan.QUADRUPED, head, DamageType.CUT, 3, hardness=Hardness(None, TissueMaterial.METAL))
+    assert flesh.bone and flesh.organ
+    assert stone.deepest is TissueKind.MUSCLE and not stone.bone
+    assert metal.deepest is TissueKind.MUSCLE and not metal.bone
+    hard = anatomy(1, skin=TissueMaterial.STONE, bone=TissueMaterial.STONE)
+    assert hardness_of(hard) == Hardness(TissueMaterial.STONE, TissueMaterial.STONE) and hardness_of(None) == PLAIN
+    assert skin_kept(rules, hard) < skin_kept(rules, anatomy(2, skin=TissueMaterial.FLESH)) == 1.0 == skin_kept(rules, None)
+
+
+async def test_a_beast_is_wounded_through_the_body_of_its_kind_and_a_lone_monster_through_its_own(ctx: TickContext, cosmos: Cosmos) -> None:
+    region = await make_region(ctx.session, "Plan Vale", cosmos.home.id)
+    eel = await make_entity(ctx.session, "Vale Eel", EntityType.SPECIES, SpeciesStats(hp=20), world_id=cosmos.home.id, location_id=region.id)
+    await profile_of(ctx, eel, SpeciesSpec(body_plan=BodyPlan.SERPENTINE))
+    kin = await make_entity(ctx.session, "Old Eel", EntityType.BEAST, BeastStats(hp=60), world_id=cosmos.home.id, location_id=region.id)
+    await profile_beast(ctx, kin, eel)
+    body = await ensure_body(ctx.session, ctx.rules, kin, ctx.epoch)
+    assert body.plan is BodyPlan.SERPENTINE
+    lone, _ = await beast(ctx, cosmos, region.id, "Lone Horror")
+    assert (await ensure_body(ctx.session, ctx.rules, lone, ctx.epoch)).plan is wild_plan(lone.id) in MONSTER_PLANS
+    assert await known_plan(ctx.session, lone.id) is wild_plan(lone.id)
+
+
+async def test_old_beasts_given_a_human_body_are_given_the_body_of_their_kind_once(ctx: TickContext, cosmos: Cosmos) -> None:
+    region = await make_region(ctx.session, "Mend Vale", cosmos.home.id)
+    crab = await make_entity(ctx.session, "Vale Crab", EntityType.SPECIES, SpeciesStats(hp=20), world_id=cosmos.home.id, location_id=region.id)
+    await profile_of(ctx, crab, SpeciesSpec(body_plan=BodyPlan.INSECTOID))
+    old = await make_entity(ctx.session, "Old Crab", EntityType.BEAST, BeastStats(hp=60), world_id=cosmos.home.id, location_id=region.id)
+    await profile_beast(ctx, old, crab)
+    ctx.session.add(BodyRow(node_id=old.id, plan=BodyPlan.HUMANOID, traits=[], fingers=10, hp_max=60, updated_epoch=1, locked=[]))
+    await ctx.session.flush()
+    assert await fit_beast_bodies(ctx.session) == 1
+    fixed = await ctx.session.get(BodyRow, old.id)
+    assert fixed is not None and fixed.plan is BodyPlan.INSECTOID
+    assert await ctx.session.get(AppliedFixupRow, BEAST_BODIES_FIXUP) is not None
+    fixed.plan = BodyPlan.HUMANOID
+    assert await fit_beast_bodies(ctx.session) == 0
+
+
+async def test_each_gaze_strikes_a_raided_town_its_own_way(ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
+    region = await make_region(ctx.session, "Gaze Vale", cosmos.home.id)
+    hold = await town(ctx.session, cosmos, region.id)
+    folk = [await mortal(ctx.session, cosmos, hold.id, name) for name in ("Ari", "Bel")]
+    horror, _ = await beast(ctx, cosmos, region.id, "Gazer")
+    assert await gaze_strike(ctx, horror, hold, None) == 1.0
+    assert await gaze_strike(ctx, horror, hold, anatomy(horror.id, gaze=GazeKind.SLEEP)) == 1 + rules.creature_anatomy.sleep_raid_pct / 100
+    assert await gaze_strike(ctx, horror, hold, anatomy(horror.id, gaze=GazeKind.TERROR)) == 1.0
+    for person in folk:
+        profile = await ctx.session.get(MortalProfileRow, person.id)
+        assert profile is not None and profile.stress > 0
+    await gaze_strike(ctx, horror, hold, anatomy(horror.id, gaze=GazeKind.PETRIFY))
+    await gaze_strike(ctx, horror, hold, anatomy(horror.id, gaze=GazeKind.MADNESS))
+    kinds = set(await ctx.session.scalars(select(ConditionRow.kind).where(ConditionRow.bearer_node_id.in_([person.id for person in folk]))))
+    assert ConditionKind.WITHERED_LIMB in kinds and kinds & set(MADNESS_CONDITIONS)
+
+
+async def test_a_monsters_body_counts_against_heroes(ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
+    region = await make_region(ctx.session, "Might Vale", cosmos.home.id)
+    horror, _ = await beast(ctx, cosmos, region.id, "Iron Wyrm")
+    assert await body_might(ctx.session, rules, horror.id) == 1.0
+    ctx.session.add(anatomy(horror.id, skin=TissueMaterial.METAL, bone=TissueMaterial.METAL, breath=BreathKind.FIRE, limbs=4, heads=1))
+    await ctx.session.flush()
+    assert await body_might(ctx.session, rules, horror.id) > 1.0

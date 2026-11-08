@@ -9,16 +9,19 @@ from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.warfare import CaptiveRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import PackageKind, Transmission
-from aerona.domain.enums.ecology import AwakeningTrigger, Habitat, Temperament
+from aerona.domain.enums.body import MADNESS_CONDITIONS, ConditionKind, HarmCause
+from aerona.domain.enums.ecology import AwakeningTrigger, GazeKind, Habitat, Temperament
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind, ThoughtKind
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.body.afflictions import afflict
+from aerona.engine.body.conditions import gain_condition
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.mind.thoughts import think
+from aerona.engine.mortal.standing import add_stress
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import set_stats, stat
@@ -105,20 +108,39 @@ async def void_trophy(ctx: TickContext, beast: EntityRow, slayer: EntityRow) -> 
     )
 
 
-async def terror_gaze(ctx: TickContext, beast: EntityRow) -> None:
-    anatomy = await ctx.session.get(CreatureAnatomyRow, beast.id)
-    if anatomy is not None and anatomy.gaze is not None:
-        terror = stat(beast, "terror") or 0
-        set_stats(beast, terror=clamp_int(terror + ctx.rules.creature_anatomy.gaze_terror, 0, PERCENT))
-
-
-async def bite_someone(ctx: TickContext, beast: EntityRow, town: EntityRow, package: PackageKind) -> bool:
-    victims = await ctx.session.scalars(
+async def townsfolk(ctx: TickContext, town: EntityRow) -> list[EntityRow]:
+    found = await ctx.session.scalars(
         select(EntityRow)
         .where(EntityRow.location_id == town.id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
         .order_by(EntityRow.id)
     )
-    living = [victim for victim in victims if not held(victim.id)]
+    return [mortal for mortal in found if not held(mortal.id)]
+
+
+async def gaze_strike(ctx: TickContext, beast: EntityRow, town: EntityRow, anatomy: CreatureAnatomyRow | None) -> float:
+    if anatomy is None or anatomy.gaze is None:
+        return 1.0
+    table = ctx.rules.creature_anatomy
+    set_stats(beast, terror=clamp_int((stat(beast, "terror") or 0) + table.gaze_terror, 0, PERCENT))
+    if anatomy.gaze is GazeKind.SLEEP:
+        return 1 + table.sleep_raid_pct / PERCENT
+    people = await townsfolk(ctx, town)
+    if not people:
+        return 1.0
+    rng = ctx.rng(f"gaze.{beast.id}.{town.id}.{ctx.epoch}")
+    if anatomy.gaze is GazeKind.TERROR:
+        for mortal in people:
+            await add_stress(ctx.session, mortal.id, table.terror_stress, ctx.epoch)
+    elif anatomy.gaze is GazeKind.PETRIFY:
+        victim = rng.pick(people)
+        await gain_condition(ctx, victim, ConditionKind.WITHERED_LIMB, HarmCause.MONSTER, severity=table.petrify_severity, source_node_id=beast.id)
+    elif anatomy.gaze is GazeKind.MADNESS:
+        await gain_condition(ctx, rng.pick(people), rng.pick(list(MADNESS_CONDITIONS)), HarmCause.MONSTER, source_node_id=beast.id)
+    return 1.0
+
+
+async def bite_someone(ctx: TickContext, beast: EntityRow, town: EntityRow, package: PackageKind) -> bool:
+    living = await townsfolk(ctx, town)
     if not living:
         return False
     victim = ctx.rng(f"bite.{beast.id}.{town.id}.{ctx.epoch}").pick(living)

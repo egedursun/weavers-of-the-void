@@ -426,23 +426,27 @@ export function ShapeControls({
           hint='The moment the world remembers it rising'
           held={view.locked.includes('origin_incident_id')}
         >
-          {view.incidents.length === 0 ? (
+          {view.incidents.length === 0 && (
             <Muted variant='caption'>No event names it yet.</Muted>
-          ) : (
-            <IconPicker
-              label='Rose in'
-              value={
-                view.origin_incident_id !== null
-                  ? String(view.origin_incident_id)
-                  : String(view.incidents[0].id)
-              }
-              table={incidents}
-              blocked={busy}
-              onPick={(value) =>
-                edit.mutate({ values: { origin_incident_id: Number(value) } })
-              }
-            />
           )}
+          <IconPicker
+            label='Rose in'
+            value={
+              view.origin_incident_id !== null
+                ? String(view.origin_incident_id)
+                : view.incidents.length > 0
+                  ? String(view.incidents[0].id)
+                  : ''
+            }
+            table={incidents}
+            blocked={
+              busy ??
+              (view.incidents.length === 0 ? 'No event names it yet' : null)
+            }
+            onPick={(value) =>
+              edit.mutate({ values: { origin_incident_id: Number(value) } })
+            }
+          />
         </EditorTile>
       </EditorGroup>
       <HeldStrip

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from aerona.domain.enums.body import BodyPlan
-from aerona.domain.enums.ecology import Biochemistry, BreathKind, TissueMaterial
+from aerona.domain.enums.ecology import Biochemistry, BreathKind, SizeClass, TissueMaterial
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import CreatureTrait
 
@@ -16,6 +16,8 @@ class TissueSpec:
     label: str
     armour_pct: int
     harm_pct: int
+    shear_yield: int
+    impact_yield: int
 
 
 PLAN_LIMBS: MappingProxyType[BodyPlan, int] = MappingProxyType(
@@ -57,26 +59,39 @@ TRAIT_SKIN: MappingProxyType[CreatureTrait, TissueMaterial] = MappingProxyType({
 TRAIT_BREATH: MappingProxyType[CreatureTrait, BreathKind] = MappingProxyType(
     {CreatureTrait.FIRE_BREATHING: BreathKind.FIRE, CreatureTrait.COLD_BREATHING: BreathKind.FROST}
 )
+MONSTER_PLANS: tuple[BodyPlan, ...] = (
+    P.QUADRUPED,
+    P.SERPENTINE,
+    P.AVIAN,
+    P.INSECTOID,
+    P.AQUATIC,
+    P.AMORPHOUS,
+    P.ARBOREAL,
+    P.HUMANOID,
+    P.COLOSSAL,
+    P.CONSTRUCT,
+)
+MONSTER_SIZES: tuple[SizeClass, ...] = (SizeClass.LARGE, SizeClass.HUGE, SizeClass.COLOSSAL)
 EXOTIC_TISSUES: tuple[TissueMaterial, ...] = (T.CRYSTAL, T.FIRE, T.STEAM, T.METAL)
 HOARDED: tuple[MaterialKind, ...] = (MaterialKind.GOLD, MaterialKind.SILVER, MaterialKind.GEMS, MaterialKind.AMBER, MaterialKind.IVORY, MaterialKind.CRYSTAL)
 TISSUES: MappingProxyType[TissueMaterial, TissueSpec] = MappingProxyType(
     {
         spec.material: spec
         for spec in (
-            TissueSpec(T.FLESH, "Flesh", 0, 0),
-            TissueSpec(T.HIDE, "Hide", 10, 0),
-            TissueSpec(T.SCALE, "Scale", 20, 0),
-            TissueSpec(T.CHITIN, "Chitin", 25, 0),
-            TissueSpec(T.FEATHER, "Feather", 5, 0),
-            TissueSpec(T.BONE, "Bone", 15, 0),
-            TissueSpec(T.WOOD, "Wood", 20, 0),
-            TissueSpec(T.STONE, "Stone", 40, 5),
-            TissueSpec(T.CRYSTAL, "Crystal", 35, 10),
-            TissueSpec(T.METAL, "Metal", 50, 10),
-            TissueSpec(T.ICE, "Ice", 25, 5),
-            TissueSpec(T.FIRE, "Fire", 15, 25),
-            TissueSpec(T.STEAM, "Steam", 30, 15),
-            TissueSpec(T.VOID_STUFF, "Void", 45, 15),
+            TissueSpec(T.FLESH, "Flesh", 0, 0, 4, 10),
+            TissueSpec(T.HIDE, "Hide", 10, 0, 10, 16),
+            TissueSpec(T.SCALE, "Scale", 20, 0, 22, 28),
+            TissueSpec(T.CHITIN, "Chitin", 25, 0, 40, 45),
+            TissueSpec(T.FEATHER, "Feather", 5, 0, 3, 8),
+            TissueSpec(T.BONE, "Bone", 15, 0, 25, 30),
+            TissueSpec(T.WOOD, "Wood", 20, 0, 15, 35),
+            TissueSpec(T.STONE, "Stone", 40, 5, 45, 60),
+            TissueSpec(T.CRYSTAL, "Crystal", 35, 10, 50, 35),
+            TissueSpec(T.METAL, "Metal", 50, 10, 60, 55),
+            TissueSpec(T.ICE, "Ice", 25, 5, 20, 25),
+            TissueSpec(T.FIRE, "Fire", 15, 25, 5, 5),
+            TissueSpec(T.STEAM, "Steam", 30, 15, 3, 3),
+            TissueSpec(T.VOID_STUFF, "Void", 45, 15, 55, 55),
         )
     }
 )

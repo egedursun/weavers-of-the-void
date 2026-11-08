@@ -18,7 +18,7 @@ from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
 from aerona.domain.enums.ecology import Biochemistry, Cultivation, Diet, DomesticationStage, GrowthCycle, PlantYield, SizeClass, SpeciesClass, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind, TemperatureBand, TerrainKind
+from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind, TemperatureBand, TerrainKind, WeatherEffect, WeatherKind
 from aerona.domain.enums.mind import SkillKind, SkillSource
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.enums.world import Atmosphere, WorldType
@@ -29,8 +29,10 @@ from aerona.engine.ecology.domestication import carry_herds
 from aerona.engine.ecology.flora import (
     CropBook,
     CropField,
+    CropYear,
     blight,
     breed_cultivars,
+    crop_year,
     flora_backfill,
     gather_wild,
     link_pests,
@@ -41,6 +43,7 @@ from aerona.engine.ecology.flora_control import edit_plant, set_crop, set_crop_p
 from aerona.engine.ecology.pests import crop_loss
 from aerona.engine.ecology.profiles import SpeciesSpec, profile_of
 from aerona.engine.economy.stocks import GoodsLedger, holding
+from aerona.engine.environment.weather import Weather
 from aerona.engine.industry.stores import pest_hunters, vermin_in
 from aerona.engine.intrigue.schemes import poison_well
 from aerona.engine.phases.creatures import introduce_species
@@ -334,3 +337,24 @@ async def test_a_poisoned_well_kills_more_when_the_schemer_brings_poison_from_st
     assert "brought from stores" in await poison_well(ctx, scheme, plotters, second)
     assert await holding(ctx.session, plotters.id, CommodityKind.POISON) == 1
     assert (second.stats.population or 0) < (first.stats.population or 0)
+
+
+async def test_a_cold_or_wet_year_hurts_a_tender_crop_and_spares_a_hardy_one(ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
+    vale = await make_region(ctx.session, "Frost Vale", cosmos.home.id)
+    await land(ctx.session, vale.id, cosmos.home.id, temperature=50, moisture=40)
+    tender = await plant(ctx, cosmos, "Sun Melon", vale.id, PlantYield.FRUIT)
+    hardy = await plant(ctx, cosmos, "Frost Rye", vale.id, PlantYield.GRAIN)
+    for crop, low, high in ((tender, 45, 80), (hardy, 5, 60)):
+        profile = await ctx.session.get(SpeciesProfileRow, crop.id)
+        assert profile is not None
+        profile.temperature_min, profile.temperature_max, profile.water_need = low, high, 40
+    ctx.session.add(RegionCropRow(region_entity_id=vale.id, plant_entity_id=tender.id, share=100, since_epoch=1, locked=[]))
+    await ctx.session.flush()
+    book = await CropBook.load(ctx.session, rules)
+    blizzard = Weather(WeatherKind.BLIZZARD, "Blizzard", {**dict.fromkeys(WeatherEffect, 0), WeatherEffect.COLD: 100})
+    cold = crop_year(rules, blizzard)
+    assert cold.degrees == -rules.flora.weather_degrees and cold.moisture == 0
+    assert book.fit(tender.id, vale.id, cold) < book.fit(tender.id, vale.id)
+    assert book.fit(hardy.id, vale.id, cold) == pytest.approx(book.fit(hardy.id, vale.id))
+    assert book.factor(vale.id, cold) < book.factor(vale.id)
+    assert book.fit(hardy.id, vale.id, CropYear(moisture=60)) < book.fit(hardy.id, vale.id)

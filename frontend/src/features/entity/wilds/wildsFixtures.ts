@@ -268,4 +268,5 @@ export const PETS = {
     },
   ],
   kinds: [KIND],
+  other_kinds: [KIN],
 }

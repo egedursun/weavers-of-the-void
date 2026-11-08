@@ -92,6 +92,7 @@ import {
   Sun,
   Sword,
   Swords,
+  Target,
   Telescope,
   Tent,
   Trash2,
@@ -301,6 +302,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   reveal_truth: Eye,
   sow_crop: Sprout,
   keep_pet: PawPrint,
+  train_herd: Target,
 }
 
 export const TOOL_FALLBACK_ICON: LucideIcon = Wrench

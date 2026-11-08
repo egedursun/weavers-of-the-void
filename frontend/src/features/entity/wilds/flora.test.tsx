@@ -41,6 +41,27 @@ describe('flora panels', () => {
     })
   })
 
+  it('sets out how a grown kind grows and offers sowing before the world has', async () => {
+    serveBasics()
+    onApi('GET', '/api/entities/8/ecology', { ...PLANT, plant: null })
+    onApi('POST', '/api/actions/plant:edit', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<SpeciesSection speciesId={8} />)
+    await screen.getByRole('button', { name: 'Adjust' }).click()
+    await screen.getByRole('tab', { name: 'Growth' }).click()
+    await expect
+      .element(screen.getByRole('button', { name: 'Sow' }))
+      .toBeInTheDocument()
+    await screen.getByRole('button', { name: 'Set out how it grows' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/plant:edit'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/plant:edit')[0].body).toEqual({
+      species_id: 8,
+      values: {},
+      release: [],
+    })
+  })
+
   it('lists a land’s crops and lets a held share drift again', async () => {
     serveBasics()
     onApi('GET', '/api/regions/31/crops', CROPS)

@@ -493,52 +493,72 @@ export function FloraControls({ id, card, blocked }: Blocked) {
           life.
         </Muted>
       </Group>
-      {grown && plant ? (
+      {grown ? (
         <>
           <Group title='How it grows' icon={Wheat}>
-            <div className='grid min-w-0 grid-cols-1 gap-3 @md/wild:grid-cols-2'>
-              <MindPicker
-                label={fieldLabel('growth_cycle')}
-                value={plant.growth_cycle}
-                table={tableOf(growthCycleValues, GROWTH_CYCLE)}
-                blocked={busy}
-                onPick={(value) =>
-                  plantEdit.mutate({ values: { growth_cycle: value } })
-                }
-              />
-              <MindPicker
-                label={fieldLabel('cultivation')}
-                value={plant.cultivation}
-                table={tableOf(cultivationValues, CULTIVATION)}
-                blocked={busy}
-                onPick={(value) =>
-                  plantEdit.mutate({ values: { cultivation: value } })
-                }
-              />
-              <NumberSetter
-                key={`seasons-${plant.growing_seasons}`}
-                label={fieldLabel('growing_seasons')}
-                value={plant.growing_seasons}
-                min={1}
-                max={12}
-                blocked={busy}
-                onSave={(next) =>
-                  plantEdit.mutate({ values: { growing_seasons: next } })
-                }
-              />
-              <NumberSetter
-                key={`soil-${plant.soil_need}`}
-                label={fieldLabel('soil_need')}
-                value={plant.soil_need}
-                min={0}
-                max={PERCENT}
-                blocked={busy}
-                onSave={(next) =>
-                  plantEdit.mutate({ values: { soil_need: next } })
-                }
-              />
-            </div>
-            {plant.locked.length > 0 && (
+            {!plant ? (
+              <div className='flex min-w-0 flex-col gap-2'>
+                <Muted variant='caption'>
+                  The world sets out how it grows in the next epoch, or you can
+                  set it out now and shape it.
+                </Muted>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  className='self-start'
+                  disabled={busy !== null}
+                  disabledReason={busy ?? undefined}
+                  onClick={() => plantEdit.mutate({ values: {} })}
+                >
+                  <Sprout />
+                  Set out how it grows
+                </Button>
+              </div>
+            ) : (
+              <div className='grid min-w-0 grid-cols-1 gap-3 @md/wild:grid-cols-2'>
+                <MindPicker
+                  label={fieldLabel('growth_cycle')}
+                  value={plant.growth_cycle}
+                  table={tableOf(growthCycleValues, GROWTH_CYCLE)}
+                  blocked={busy}
+                  onPick={(value) =>
+                    plantEdit.mutate({ values: { growth_cycle: value } })
+                  }
+                />
+                <MindPicker
+                  label={fieldLabel('cultivation')}
+                  value={plant.cultivation}
+                  table={tableOf(cultivationValues, CULTIVATION)}
+                  blocked={busy}
+                  onPick={(value) =>
+                    plantEdit.mutate({ values: { cultivation: value } })
+                  }
+                />
+                <NumberSetter
+                  key={`seasons-${plant.growing_seasons}`}
+                  label={fieldLabel('growing_seasons')}
+                  value={plant.growing_seasons}
+                  min={1}
+                  max={12}
+                  blocked={busy}
+                  onSave={(next) =>
+                    plantEdit.mutate({ values: { growing_seasons: next } })
+                  }
+                />
+                <NumberSetter
+                  key={`soil-${plant.soil_need}`}
+                  label={fieldLabel('soil_need')}
+                  value={plant.soil_need}
+                  min={0}
+                  max={PERCENT}
+                  blocked={busy}
+                  onSave={(next) =>
+                    plantEdit.mutate({ values: { soil_need: next } })
+                  }
+                />
+              </div>
+            )}
+            {plant && plant.locked.length > 0 && (
               <Button
                 size='sm'
                 variant='ghost'
@@ -669,9 +689,8 @@ export function FloraControls({ id, card, blocked }: Blocked) {
         </>
       ) : (
         <Muted variant='caption'>
-          {grown
-            ? 'The world sets out how it grows after the next epoch; then you can shape it here.'
-            : 'Only plants and fungi are sown in fields; set its kind of life to plant or fungus to sow it.'}
+          Only plants and fungi are sown in fields; set its kind of life to
+          plant or fungus to sow it.
         </Muted>
       )}
     </div>

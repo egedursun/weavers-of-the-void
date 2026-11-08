@@ -1,5 +1,6 @@
 from sqlalchemy import or_, select
 
+from aerona.catalog.creature_anatomy import MONSTER_SIZES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.ecology import BeastProfileRow
@@ -7,7 +8,7 @@ from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.ecology import AwakeningTrigger, BeastTemper, Habitat, SizeClass
+from aerona.domain.enums.ecology import AwakeningTrigger, BeastTemper, Habitat
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.models.entity_stats import BeastStats
 from aerona.engine.context import TickContext
@@ -49,7 +50,7 @@ async def emerge_from_deep(ctx: TickContext, atlas: RegionAtlas) -> int:
                 subtype="monster of the deep",
             ),
         )
-        row = await profile_beast(ctx, beast, None, size=SizeClass.HUGE)
+        row = await profile_beast(ctx, beast, None, size=ctx.rng(f"emerge_size.{resource_id}.{ctx.epoch}").pick(list(MONSTER_SIZES)))
         row.temper, row.woke_epoch = BeastTemper.HUNGRY, ctx.epoch
         anatomy = await beast_anatomy(ctx, beast, row, deep=True)
         anatomy.awakening = AwakeningTrigger.DEEP_MINING

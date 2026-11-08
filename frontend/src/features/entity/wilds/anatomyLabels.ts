@@ -65,11 +65,31 @@ export const BITE: Record<string, Named> = {
   void_taint: { label: 'Void taint', icon: Eclipse, tone: 'muted' },
 }
 
-export const GAZE: Record<string, Named> = {
-  terror: { label: 'Terror', icon: Eye, tone: 'danger' },
-  petrify: { label: 'Turns to stone', icon: Mountain, tone: 'muted' },
-  sleep: { label: 'Sleep', icon: MoonStar, tone: 'info' },
-  madness: { label: 'Madness', icon: Brain, tone: 'verdigris' },
+export const GAZE: Record<string, Named & { hint: string }> = {
+  terror: {
+    label: 'Terror',
+    icon: Eye,
+    tone: 'danger',
+    hint: 'Lays stress on every mortal of a town it raids',
+  },
+  petrify: {
+    label: 'Turns to stone',
+    icon: Mountain,
+    tone: 'muted',
+    hint: 'Turns a limb of someone in a town it raids to stone',
+  },
+  sleep: {
+    label: 'Sleep',
+    icon: MoonStar,
+    tone: 'info',
+    hint: 'Lulls the watch, so its raids cut deeper',
+  },
+  madness: {
+    label: 'Madness',
+    icon: Brain,
+    tone: 'verdigris',
+    hint: 'Drives someone in a town it raids mad',
+  },
 }
 
 export const TEMPERAMENT_KIND: Record<string, Named & { hint: string }> = {

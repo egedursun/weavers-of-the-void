@@ -450,6 +450,7 @@ async def seek_reader(ctx: TickContext, scholar: EntityRow) -> EntityRow | None:
     "table.body_customs",
     "table.bonds",
     "table.conditions",
+    "table.creature_anatomy",
     "table.cult_tenets",
     "table.culture_values",
     "table.entity_flags",

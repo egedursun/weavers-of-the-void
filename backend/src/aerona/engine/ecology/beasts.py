@@ -1,6 +1,5 @@
 from sqlalchemy import func, select
 
-from aerona.catalog.creature_anatomy import PLAN_LIMBS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.bonds import BondRow
@@ -25,8 +24,8 @@ from aerona.domain.models.entity_stats import BeastStats, ItemStats, LegendStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
-from aerona.engine.ecology.anatomy import anatomy_of, harm_factor, repelled
-from aerona.engine.ecology.beast_acts import bite_someone, carry_off, free_captives, is_abductor, terror_gaze, triggered, void_trophy
+from aerona.engine.ecology.anatomy import anatomy_of, harm_factor, plan_limbs, repelled
+from aerona.engine.ecology.beast_acts import bite_someone, carry_off, free_captives, gaze_strike, is_abductor, triggered, void_trophy
 from aerona.engine.ecology.foodweb import raid_herds
 from aerona.engine.ecology.profiles import profile_of
 from aerona.engine.economy.materials import set_node_material
@@ -275,8 +274,8 @@ async def seize_treasure(ctx: TickContext, beast: EntityRow, town: EntityRow) ->
 async def raid(ctx: TickContext, beast: EntityRow, row: BeastProfileRow, town: EntityRow) -> str:
     table = ctx.rules.beasts
     anatomy = await anatomy_of(ctx.session, beast.id)
-    kind = await ctx.session.get(SpeciesProfileRow, row.species_entity_id) if row.species_entity_id is not None else None
-    scale = size_factor(ctx.rules, row) * harm_factor(ctx.rules, anatomy, PLAN_LIMBS[kind.body_plan] if kind is not None else anatomy.limbs if anatomy else 0)
+    scale = size_factor(ctx.rules, row) * harm_factor(ctx.rules, anatomy, await plan_limbs(ctx.session, beast.id))
+    scale *= await gaze_strike(ctx, beast, town, anatomy)
     herds = await raid_herds(ctx, beast, town)
     if stat(town, "population") is not None:
         shift_stat(town, "population", -round_half_up((stat(town, "population") or 0) * table.raid_population_pct * scale / PERCENT))
@@ -292,7 +291,6 @@ async def raid(ctx: TickContext, beast: EntityRow, row: BeastProfileRow, town: E
             break
     if anatomy is not None and anatomy.bite is not None:
         await bite_someone(ctx, beast, town, anatomy.bite)
-    await terror_gaze(ctx, beast)
     treasure = await seize_treasure(ctx, beast, town)
     row.raids += 1
     set_stats(

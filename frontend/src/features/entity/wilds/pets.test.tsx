@@ -38,6 +38,32 @@ describe('pets and herd training', () => {
     })
   })
 
+  it('gives a pet of any animal kind even when their people keep none', async () => {
+    serveBasics()
+    onApi('GET', '/api/entities/60/pets', {
+      ...PETS,
+      pets: [],
+      kinds: [],
+    })
+    onApi('POST', '/api/actions/pet:give', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<PetsSection mortalId={60} />)
+    await expect
+      .element(screen.getByRole('button', { name: 'Make it their pet' }))
+      .toBeDisabled()
+    await screen
+      .getByRole('combobox', { name: 'A new pet of any animal kind' })
+      .click()
+    await screen.getByRole('option', { name: 'Dune Hare' }).click()
+    await screen.getByRole('button', { name: 'Give the pet' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/pet:give'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/pet:give')[0].body).toEqual({
+      owner_id: 60,
+      species_id: 40,
+    })
+  })
+
   it('trains a herd for war', async () => {
     serveBasics()
     onApi('GET', '/api/entities/50/herds', [

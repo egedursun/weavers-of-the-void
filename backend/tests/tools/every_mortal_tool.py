@@ -8,6 +8,7 @@ from tests.tools.every_setup import (
     council_office,
     created,
     foreign_crisis,
+    herd_handler,
     hooked_mortal,
     item,
     knows_biomancy,
@@ -104,6 +105,7 @@ MORTAL_CASES: dict[str, Case] = {
     "launch_expedition": folk(plain(route_id=route), seafarers, prelude=(Step("build_ship", plain(name="Road Barge", description=TEXT[:200]), by_people),)),
     "tame_species": folk(plain(species_id=species, how="with salt and patience")),
     "keep_pet": named(plain(species_id=species), pet_herd),
+    "train_herd": named(plain(species_id=species, training="war"), herd_handler),
     "merge_species": named(
         plain(a_id=species, b_id=created("species"), name="Lamp Hare", goal="a guide for night roads"), combined(second_species, knows_biomancy)
     ),

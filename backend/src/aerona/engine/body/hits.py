@@ -8,7 +8,7 @@ from aerona.core.random import SeededRandom
 from aerona.db.tables.body import SEVERITY_MAX, SEVERITY_MIN
 from aerona.domain.enums.body import BodyFunction, BodyRegion, DamageType, HarmCause, InjuryKind, StrikeStyle
 from aerona.engine.body.strike import EDGED, Layer, Scorch, Wielding, heat_of, resolve, strike_of
-from aerona.engine.body.tissues import TissueHit, tissue_hit
+from aerona.engine.body.tissues import PLAIN, Hardness, TissueHit, tissue_hit
 from aerona.rules.registry import Rules
 from aerona.rules.registry.body import InjuryRules
 
@@ -261,7 +261,15 @@ def physical(damage_type: DamageType) -> bool:
 
 
 def hits_for(
-    rules: Rules, anatomy: Anatomy, harm: Harm, armour: Armour, rng: SeededRandom, *, wielding: Wielding | None = None, layers: tuple[Layer, ...] = ()
+    rules: Rules,
+    anatomy: Anatomy,
+    harm: Harm,
+    armour: Armour,
+    rng: SeededRandom,
+    *,
+    wielding: Wielding | None = None,
+    layers: tuple[Layer, ...] = (),
+    hardness: Hardness = PLAIN,
 ) -> list[Hit]:
     table = rules.injury
     if harm.damage <= 0:
@@ -303,6 +311,6 @@ def hits_for(
             hits.append(Hit(damage_type, chosen, SEVERITY_MIN, InjuryKind.BRUISE, soaked, absorbed=True, scorched=scorched))
             continue
         kind = harm.kind or kind_for(table, damage_type, chosen, severity, harm.cause)
-        reached = tissue_hit(rules, anatomy.plan, chosen, damage_type, severity, attack=attack)
+        reached = tissue_hit(rules, anatomy.plan, chosen, damage_type, severity, attack=attack, hardness=hardness)
         hits.append(Hit(damage_type, chosen, severity, kind, magnitude, scorched=scorched, tissue=reached))
     return hits

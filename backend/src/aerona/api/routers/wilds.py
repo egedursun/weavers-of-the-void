@@ -34,7 +34,6 @@ from aerona.api.schemas.wilds import (
     YieldView,
 )
 from aerona.api.views.common import node_refs
-from aerona.catalog.creature_anatomy import PLAN_LIMBS
 from aerona.catalog.flora import BIOCHEMISTRY_LABELS, PRODUCT_BY_NAME
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
@@ -65,11 +64,11 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClauseKind, TreatyStatus
-from aerona.engine.ecology.anatomy import armour_of, harm_factor
+from aerona.engine.ecology.anatomy import armour_of, harm_factor, plan_limbs
 from aerona.engine.ecology.beasts import RIDEABLE, reach_of, rest_chance, tame_chance, wake_chance, wound_harm
 from aerona.engine.ecology.biochemistry import bearable, tolerated
 from aerona.engine.ecology.flora import CropBook
-from aerona.engine.ecology.pets import hunting_kinds
+from aerona.engine.ecology.pets import animal_kind_ids, hunting_kinds
 from aerona.engine.ecology.pets import pet_kind_ids as pet_kinds_of
 from aerona.engine.primitives.stats import stat
 
@@ -556,8 +555,9 @@ async def mortal_pets(entity_id: Id, services: ServicesDep) -> MortalPets:
             )
         )
         kinds = await pet_kinds_of(session, mortal.location_id)
+        animals = [kind for kind in await animal_kind_ids(session) if kind not in kinds]
         kept = [row.species_entity_id for _, row in rows if row.species_entity_id is not None]
-        refs = await node_refs(session, [*(bond.source_node_id for bond, _ in rows), *kept, *kinds])
+        refs = await node_refs(session, [*(bond.source_node_id for bond, _ in rows), *kept, *kinds, *animals])
         hunting = await hunting_kinds(session, kept)
         return MortalPets(
             mortal_id=entity_id,
@@ -574,6 +574,7 @@ async def mortal_pets(entity_id: Id, services: ServicesDep) -> MortalPets:
                 for bond, row in rows
             ],
             kinds=listed(refs, kinds),
+            other_kinds=listed(refs, animals),
         )
 
 
@@ -584,7 +585,7 @@ async def creature_anatomy(node_id: Id, services: ServicesDep) -> AnatomyView | 
         if row is None:
             return None
         rules = await world_rules(services, session)
-        plan = await session.scalar(select(SpeciesProfileRow.body_plan).where(SpeciesProfileRow.species_entity_id == node_id))
+        limbs = await plan_limbs(session, node_id)
         return AnatomyView(
             node_id=node_id,
             limbs=row.limbs,
@@ -602,7 +603,7 @@ async def creature_anatomy(node_id: Id, services: ServicesDep) -> AnatomyView | 
             awakening=row.awakening,
             habitat=row.habitat,
             armour_pct=armour_of(row),
-            harm_pct=round((harm_factor(rules, row, PLAN_LIMBS[plan] if plan is not None else row.limbs) - 1) * PERCENT),
+            harm_pct=round((harm_factor(rules, row, limbs) - 1) * PERCENT),
             generated_epoch=row.generated_epoch,
             locked=row.locked,
         )

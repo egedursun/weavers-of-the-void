@@ -20,13 +20,16 @@ import {
   Section,
   StatBar,
 } from '@/components/domain'
-import { Muted } from '@/components/typography'
+import { Label, Muted } from '@/components/typography'
+import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { useGodGate } from '@/features/pantheon/gate'
 import { busyOf } from '../lore/model'
 import { MindPicker } from '../mind/parts'
 import { petKeys, useWildAction } from './api'
 import { SIZE, named } from './labels'
-import { Name } from './parts'
+import { Group, Name } from './parts'
+
+const BEASTS = ['beast'] as const
 
 function usePets(mortalId: number) {
   return useQuery({
@@ -56,13 +59,39 @@ export function PetsSection({
     beast_id: beast,
     owner_id: null,
   }))
+  const keep = useWildAction<number>('pet:set', (picked) => ({
+    beast_id: picked,
+    owner_id: mortalId,
+  }))
   const [kind, setKind] = useState('')
+  const [beast, setBeast] = useState<number | null>(null)
   const { reason } = useGodGate()
   const busy = busyOf(
     readOnlyReason ?? reason(),
-    give.isPending || free.isPending
+    give.isPending || free.isPending || keep.isPending
   )
   const data = view.data
+  const kindTable = data
+    ? Object.fromEntries([
+        ...data.kinds.map((item) => [
+          String(item.id),
+          `${item.name} (their people keep it)`,
+        ]),
+        ...data.other_kinds.map((item) => [String(item.id), item.name]),
+      ])
+    : {}
+  const kindCount = Object.keys(kindTable).length
+  const kept = (data?.pets.length ?? 0) > 0
+  const kindProblem = kept
+    ? 'They already keep a pet; set it free first'
+    : kind === ''
+      ? 'Choose a kind'
+      : null
+  const beastProblem = kept
+    ? 'They already keep a pet; set it free first'
+    : beast === null
+      ? 'Choose a beast'
+      : null
   return (
     <Section
       id='section-pets'
@@ -144,42 +173,70 @@ export function PetsSection({
               </Paged>
             </ul>
           )}
-          {data.kinds.length > 0 ? (
-            <div className='flex min-w-0 flex-wrap items-end gap-2'>
-              <MindPicker
-                label='Give them a pet of a kind their people keep'
-                value={kind}
-                table={Object.fromEntries(
-                  data.kinds.map((item) => [String(item.id), item.name])
+          <Group title='Give them a companion' icon={HandHeart}>
+            {data.pets.length > 0 && (
+              <Muted variant='caption'>
+                They already keep a pet; set it free first to give another.
+              </Muted>
+            )}
+            <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'>
+              <div className='flex min-w-0 flex-col gap-2'>
+                {kindCount === 0 ? (
+                  <Muted variant='caption'>
+                    No animal kind lives in the cosmos yet; make one in the
+                    Wilds and you can give it.
+                  </Muted>
+                ) : (
+                  <MindPicker
+                    label='A new pet of any animal kind'
+                    value={kind}
+                    table={kindTable}
+                    blocked={busy}
+                    placeholder='Choose a kind'
+                    onPick={setKind}
+                  />
                 )}
-                blocked={busy}
-                placeholder='Choose a kind'
-                onPick={setKind}
-              />
-              <Button
-                size='sm'
-                variant='outline'
-                disabled={busy !== null || kind === '' || data.pets.length > 0}
-                disabledReason={
-                  busy ??
-                  (data.pets.length > 0
-                    ? 'They already keep a pet; set it free first'
-                    : kind === ''
-                      ? 'Choose a kind'
-                      : undefined)
-                }
-                onClick={() => give.mutate(Number(kind))}
-              >
-                <HandHeart />
-                Give the pet
-              </Button>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  className='self-start'
+                  disabled={(busy ?? kindProblem) !== null}
+                  disabledReason={busy ?? kindProblem ?? undefined}
+                  onClick={() => give.mutate(Number(kind))}
+                >
+                  <HandHeart />
+                  Give the pet
+                </Button>
+              </div>
+              <div className='flex min-w-0 flex-col gap-2'>
+                <Label>A beast that already lives</Label>
+                <EntityPicker
+                  types={BEASTS}
+                  value={beast}
+                  onChange={setBeast}
+                  placeholder='Choose a beast…'
+                />
+                <Button
+                  size='sm'
+                  variant='outline'
+                  className='self-start'
+                  disabled={(busy ?? beastProblem) !== null}
+                  disabledReason={busy ?? beastProblem ?? undefined}
+                  onClick={() => beast !== null && keep.mutate(beast)}
+                >
+                  <PawPrint />
+                  Make it their pet
+                </Button>
+              </div>
             </div>
-          ) : (
-            <Muted variant='caption'>
-              Their people keep no small tame kind to take a pet from; a herd of
-              a companion, guard, war or pest-hunting kind would give them one.
-            </Muted>
-          )}
+            {data.kinds.length === 0 && kindCount > 0 && (
+              <Muted variant='caption'>
+                Their people keep no small tame kind of their own, so they will
+                not take a pet by themselves; any kind you give is theirs all
+                the same.
+              </Muted>
+            )}
+          </Group>
         </div>
       )}
     </Section>

@@ -4,7 +4,9 @@ from sqlalchemy import select
 
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.ecology import HerdRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.body import HarmCause
@@ -15,8 +17,10 @@ from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.hits import Harm
 from aerona.engine.cosmos.fauna import merge_species as merge
+from aerona.engine.ecology.domestication import KEPT, drill
 from aerona.engine.ecology.pets import pet_kinds, pet_of, take_pet
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.mind.book import skill_level
 from aerona.engine.phases.afterlife import soul_bind
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.society import class_shares
@@ -27,7 +31,7 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action, no_cost
 from aerona.tools.framework.validation import fail, state_reason
 from aerona.tools.mortal import lines
-from aerona.tools.mortal.inputs import BindSpiritInput, ChimeraInput, KeepPetInput, RuinsInput, TameInput
+from aerona.tools.mortal.inputs import BindSpiritInput, ChimeraInput, KeepPetInput, RuinsInput, TameInput, TrainHerdInput
 from aerona.tools.mortal.support import first_stat, i_know, name_free, near, practised, same_region, wits_of
 
 PERCENT = 100
@@ -209,12 +213,35 @@ async def keep_pet(call: MortalCall, args: KeepPetInput) -> str:
     return result(MortalResult.PET_TAKEN, id=pet.id, name=pet.name)
 
 
+async def train_herd(call: MortalCall, args: TrainHerdInput) -> str:
+    session, rules = call.session, call.rules
+    herd = await session.get(HerdRow, (call.me.location_id, args.species_id)) if call.me.location_id is not None else None
+    if call.me.entity_type is not EntityType.MORTAL or herd is None or herd.head <= 0 or herd.stage not in KEPT:
+        fail(MortalResult.HERD_NONE)
+    if held(herd.community_entity_id) or "training" in herd.locked or "trained" in herd.locked:
+        fail(MortalResult.HERD_HELD)
+    skill = await skill_level(session, call.me.id, SkillKind.BEAST_HANDLING)
+    if skill < rules.husbandry.train_skill:
+        fail(MortalResult.HERD_UNSKILLED, need=rules.husbandry.train_skill, have=skill)
+    herd.training = args.training
+    gained = drill(rules, herd, skill)
+    await practised(call, (SkillKind.BEAST_HANDLING,), call.rules.skills.hunt_xp)
+    kind = await session.get(EntityRow, args.species_id)
+    name = kind.name if kind is not None else f"#{args.species_id}"
+    call.target(args.species_id)
+    await call.chronicle(
+        ChronicleKind.CIVILIZATION, lines.HERD_TRAINED, entity_ids=[call.me.id, args.species_id], me=call.me.name, name=name, training=args.training.value
+    )
+    return result(MortalResult.HERD_TRAINED, id=args.species_id, name=name, training=args.training.value, gained=gained, trained=herd.trained, head=herd.head)
+
+
 def specs() -> list[ToolSpec[MortalCall, Any]]:
     mortal = AgentKind.MORTAL
     standard = mortal_standard_action
     return [
         ToolSpec(MortalToolId.TAME_SPECIES, mortal, TameInput, ToolMeta(ActionKind.TAME, standard), tame_species),
         ToolSpec(MortalToolId.KEEP_PET, mortal, KeepPetInput, ToolMeta(ActionKind.TAME, no_cost), keep_pet),
+        ToolSpec(MortalToolId.TRAIN_HERD, mortal, TrainHerdInput, ToolMeta(ActionKind.TAME, standard), train_herd),
         ToolSpec(MortalToolId.MERGE_SPECIES, mortal, ChimeraInput, ToolMeta(ActionKind.WEAVE_CHIMERA, standard), merge_species),
         ToolSpec(MortalToolId.BIND_SPIRIT, mortal, BindSpiritInput, ToolMeta(ActionKind.BIND_SPIRIT, standard), bind_spirit),
         ToolSpec(MortalToolId.SEARCH_RUINS, mortal, RuinsInput, ToolMeta(ActionKind.SEARCH_RUINS, standard), search_ruins),

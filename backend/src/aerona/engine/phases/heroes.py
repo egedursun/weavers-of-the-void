@@ -385,6 +385,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.community_societies",
     "table.conditions",
     "table.cosmos",
+    "table.creature_anatomy",
     "table.cult_tenets",
     "table.culture_ethics",
     "table.culture_values",

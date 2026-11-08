@@ -5,6 +5,8 @@ from aerona.catalog.creature_anatomy import EXOTIC_TISSUES, HOARDED, LIFE_SKIN, 
 from aerona.constants.units import PERCENT
 from aerona.core.random import RandomKey, SeededRandom
 from aerona.db.tables.anatomy import CreatureAnatomyRow
+from aerona.db.tables.body import BodyRow
+from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.ecology import BeastProfileRow, SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -20,15 +22,15 @@ from aerona.domain.enums.ecology import (
     BreathKind,
     GazeKind,
     Habitat,
-    SizeClass,
     Temperament,
     TissueMaterial,
 )
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.enums.structure import StructureKind
+from aerona.engine.body.book import beast_plan, wild_plan
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.economy.stocks import holding
@@ -37,6 +39,13 @@ from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
 
 T = CreatureTrait
+BEAST_BODIES_FIXUP = "creature_anatomy.beast_bodies"
+GAZE_VERBS = {
+    GazeKind.TERROR: "terrifies a town it raids",
+    GazeKind.PETRIFY: "turns a limb to stone",
+    GazeKind.SLEEP: "puts the watch to sleep",
+    GazeKind.MADNESS: "drives a mortal mad",
+}
 FLYERS = frozenset({BodyPlan.AVIAN})
 HOLY_KINDS = frozenset({StructureKind.TEMPLE, StructureKind.SHRINE, StructureKind.MONASTERY})
 BONE_OF = {TissueMaterial.STONE: TissueMaterial.STONE, TissueMaterial.CRYSTAL: TissueMaterial.CRYSTAL, TissueMaterial.METAL: TissueMaterial.METAL}
@@ -149,10 +158,50 @@ async def species_anatomy(ctx: TickContext, species: EntityRow, profile: Species
     return row
 
 
+async def known_plan(session: AsyncSession, node_id: int) -> BodyPlan:
+    body = await session.get(BodyRow, node_id)
+    if body is not None:
+        return body.plan
+    profile = await session.get(SpeciesProfileRow, node_id)
+    if profile is not None:
+        return profile.body_plan
+    beast = await session.get(BeastProfileRow, node_id)
+    if beast is None or beast.species_entity_id is None:
+        return wild_plan(node_id)
+    return await known_plan(session, beast.species_entity_id)
+
+
+async def plan_limbs(session: AsyncSession, node_id: int) -> int:
+    return PLAN_LIMBS[await known_plan(session, node_id)]
+
+
+async def fit_beast_bodies(session: AsyncSession) -> int:
+    if await session.get(AppliedFixupRow, BEAST_BODIES_FIXUP) is not None:
+        return 0
+    bodies = await session.execute(
+        select(EntityRow, BodyRow).join(BodyRow, BodyRow.node_id == EntityRow.id).where(EntityRow.entity_type == EntityType.BEAST).order_by(EntityRow.id)
+    )
+    fitted = waiting = 0
+    for beast, body in list(bodies):
+        if body.plan is not BodyPlan.HUMANOID:
+            continue
+        if held(beast.id):
+            waiting += 1
+            continue
+        plan, traits = await beast_plan(session, beast)
+        if plan is not body.plan:
+            body.plan, body.traits = plan, traits
+            fitted += 1
+    if not waiting:
+        session.add(AppliedFixupRow(key=BEAST_BODIES_FIXUP, result={"fitted": fitted}))
+    await session.flush()
+    return fitted
+
+
 async def beast_anatomy(ctx: TickContext, beast: EntityRow, row: BeastProfileRow, *, deep: bool = False) -> CreatureAnatomyRow:
     kind = await ctx.session.get(SpeciesProfileRow, row.species_entity_id) if row.species_entity_id is not None else None
     traits = await traits_of(ctx.session, row.species_entity_id) if row.species_entity_id is not None else set()
-    plan = kind.body_plan if kind is not None else BodyPlan.COLOSSAL if row.size_class in {SizeClass.HUGE, SizeClass.COLOSSAL} else BodyPlan.QUADRUPED
+    plan = await known_plan(ctx.session, beast.id)
     biochemistry = kind.biochemistry if kind is not None else Biochemistry.CARBON_WATER
     anatomy = generate(
         ctx.rules,
@@ -176,6 +225,7 @@ async def beast_anatomy(ctx: TickContext, beast: EntityRow, row: BeastProfileRow
 
 
 async def ensure_anatomy(ctx: TickContext) -> int:
+    await fit_beast_bodies(ctx.session)
     known = set(await ctx.session.scalars(select(CreatureAnatomyRow.node_id)))
     made = 0
     for profile in list(await ctx.session.scalars(select(SpeciesProfileRow).where(SpeciesProfileRow.species_class.not_in(list(GROWN))))):
@@ -212,6 +262,14 @@ def armour_of(anatomy: CreatureAnatomyRow | None) -> int:
     return TISSUES[anatomy.skin].armour_pct if anatomy is not None else 0
 
 
+async def body_might(session: AsyncSession, rules: Rules, node_id: int) -> float:
+    anatomy = await anatomy_of(session, node_id)
+    if anatomy is None:
+        return 1.0
+    guard = 1 + armour_of(anatomy) * rules.creature_anatomy.armour_power_pct / PERCENT / PERCENT
+    return harm_factor(rules, anatomy, await plan_limbs(session, node_id)) * guard
+
+
 async def repelled(ctx: TickContext, atlas: RegionAtlas, town: EntityRow, aversion: Aversion | None) -> bool:
     if aversion is None:
         return False
@@ -245,7 +303,7 @@ async def anatomy_lines(session: AsyncSession, node_id: int) -> list[str]:
     weapons = [
         f"breathes {words(row.breath.value)}" if row.breath else "",
         f"its bite carries {words(row.bite.value)}" if row.bite else "",
-        f"its gaze brings {words(row.gaze.value)}" if row.gaze else "",
+        f"its gaze {GAZE_VERBS[row.gaze]}" if row.gaze else "",
     ]
     if any(weapons):
         lines.append(f"attacks: {'; '.join(item for item in weapons if item)}")

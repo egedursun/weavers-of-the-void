@@ -1,9 +1,12 @@
 from dataclasses import dataclass
 
 from aerona.catalog.anatomy import Part
+from aerona.catalog.creature_anatomy import TISSUES as MATERIALS
 from aerona.catalog.tissues import MAJOR_VESSELS, TISSUES, covering_of, stack_of
 from aerona.constants.units import PERCENT
+from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.domain.enums.body import BodyPlan, DamageType, NerveDamage, TissueKind
+from aerona.domain.enums.ecology import TissueMaterial
 from aerona.rules.registry import Rules
 
 T = TissueKind
@@ -22,13 +25,42 @@ class TissueHit:
     organ: bool = False
 
 
+@dataclass(frozen=True)
+class Hardness:
+    skin: TissueMaterial | None = None
+    bone: TissueMaterial | None = None
+
+    def guard(self, tissue: TissueKind, layer: int, *, edged: bool) -> int:
+        material = self.skin if layer == 0 else self.bone if tissue is T.BONE else None
+        if material is not None:
+            spec = MATERIALS[material]
+            return spec.shear_yield if edged else spec.impact_yield
+        base = TISSUES[tissue]
+        return base.shear_yield if edged else base.impact_yield
+
+
+PLAIN = Hardness()
+
+
+def hardness_of(creature: CreatureAnatomyRow | None) -> Hardness:
+    return Hardness(creature.skin, creature.bone) if creature is not None else PLAIN
+
+
+def skin_kept(rules: Rules, creature: CreatureAnatomyRow | None) -> float:
+    if creature is None:
+        return 1.0
+    return max(0.0, 1 - MATERIALS[creature.skin].armour_pct * rules.creature_anatomy.skin_damage_pct / PERCENT / PERCENT)
+
+
 def bleed_rate(rules: Rules, part: Part, severity: int) -> int:
     table = rules.tissues
     base = table.major_bleed if part.key in MAJOR_VESSELS else table.minor_bleed
     return min(PERCENT, round(base * (1 + max(0, severity - 1) * table.bleed_severity_pct / PERCENT)))
 
 
-def tissue_hit(rules: Rules, plan: BodyPlan, part: Part, damage_type: DamageType, severity: int, *, attack: float | None = None) -> TissueHit:
+def tissue_hit(
+    rules: Rules, plan: BodyPlan, part: Part, damage_type: DamageType, severity: int, *, attack: float | None = None, hardness: Hardness = PLAIN
+) -> TissueHit:
     if damage_type in SEARING:
         return TissueHit(covering_of(plan))
     if damage_type not in STRIKING:
@@ -37,9 +69,8 @@ def tissue_hit(rules: Rules, plan: BodyPlan, part: Part, damage_type: DamageType
     edged = damage_type in CUTTING
     force = attack if attack is not None else severity * table.depth_per_severity
     reached: list[TissueKind] = []
-    for tissue in stack_of(plan, part.key, part.region):
-        spec = TISSUES[tissue]
-        guard = spec.shear_yield if edged else spec.impact_yield
+    for layer, tissue in enumerate(stack_of(plan, part.key, part.region)):
+        guard = hardness.guard(tissue, layer, edged=edged)
         if force < guard:
             break
         reached.append(tissue)

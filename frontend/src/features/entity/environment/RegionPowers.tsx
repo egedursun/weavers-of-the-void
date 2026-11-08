@@ -106,48 +106,52 @@ export function ForgeLey({
           </Button>
         </div>
       ))}
-      {ground.neighbours.length === 0 ? (
+      {ground.neighbours.length === 0 && (
         <Muted>No neighbouring land to join a line to.</Muted>
-      ) : (
-        <div className='flex min-w-0 flex-wrap items-end gap-3'>
-          <div className='min-w-48 flex-1'>
-            <MindPicker
-              label='Join to'
-              value={other}
-              table={choices}
-              blocked={busy}
-              placeholder='Choose a neighbour'
-              onPick={setOther}
-            />
-          </div>
-          <div className='w-24'>
-            <FormRow label='Strength'>
-              {(id) => (
-                <Input
-                  id={id}
-                  type='number'
-                  min={0}
-                  max={MAX_PERCENT}
-                  value={strength}
-                  className='w-24'
-                  onChange={(event) => setStrength(event.target.value)}
-                />
-              )}
-            </FormRow>
-          </div>
-          <Button
-            size='sm'
-            disabled={busy !== null || other === ''}
-            disabledReason={
-              busy ?? (other === '' ? 'Choose a neighbour' : undefined)
-            }
-            onClick={() => forge.mutate(undefined)}
-          >
-            <Plus />
-            Forge a ley line
-          </Button>
-        </div>
       )}
+      <div className='flex min-w-0 flex-wrap items-end gap-3'>
+        <div className='min-w-48 flex-1'>
+          <MindPicker
+            label='Join to'
+            value={other}
+            table={choices}
+            blocked={busy}
+            placeholder='Choose a neighbour'
+            onPick={setOther}
+          />
+        </div>
+        <div className='w-24'>
+          <FormRow label='Strength'>
+            {(id) => (
+              <Input
+                id={id}
+                type='number'
+                min={0}
+                max={MAX_PERCENT}
+                value={strength}
+                className='w-24'
+                onChange={(event) => setStrength(event.target.value)}
+              />
+            )}
+          </FormRow>
+        </div>
+        <Button
+          size='sm'
+          disabled={busy !== null || other === ''}
+          disabledReason={
+            busy ??
+            (ground.neighbours.length === 0
+              ? 'No neighbouring land to join a line to'
+              : other === ''
+                ? 'Choose a neighbour'
+                : undefined)
+          }
+          onClick={() => forge.mutate(undefined)}
+        >
+          <Plus />
+          Forge a ley line
+        </Button>
+      </div>
     </div>
   )
 }

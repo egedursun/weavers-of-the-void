@@ -1,8 +1,8 @@
 from aerona.core.errors import NotFoundError, ValidationFailedError
-from aerona.db.tables.ecology import BeastProfileRow
+from aerona.db.tables.ecology import BeastProfileRow, SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.ecology import BeastTemper
+from aerona.domain.enums.ecology import GROWN, BeastTemper
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.pets import pet_of, take_pet
@@ -40,6 +40,9 @@ async def give_pet(ctx: TickContext, owner_id: int, species_id: int) -> EntityRo
     species = await living_entity(ctx.session, species_id)
     if species is None or species.entity_type is not EntityType.SPECIES:
         raise NotFoundError("No such living kind.")
+    profile = await ctx.session.get(SpeciesProfileRow, species.id)
+    if profile is not None and profile.species_class in GROWN:
+        raise ValidationFailedError(f"{species.name} is grown, not kept; only an animal kind can be a pet.")
     if await pet_of(ctx, owner.id) is not None:
         raise ValidationFailedError(f"{owner.name} already keeps a pet; set it free first.")
     pet = await take_pet(ctx, owner, species)

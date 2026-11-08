@@ -82,6 +82,7 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
     "table.community_societies",
     "table.community_stocks",
     "table.cosmos",
+    "table.creature_anatomy",
     "table.culture_ethics",
     "table.culture_values",
     "table.designated_heirs",

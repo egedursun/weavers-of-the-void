@@ -15,6 +15,7 @@ from aerona.db.tables.estates import EstateProfileRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.flora import PlantProfileRow
 from aerona.db.tables.intrigue import HookRow, TrueNameRow
+from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow
 from aerona.db.tables.sons import SonRelationRow, SonRow
 from aerona.db.tables.statecraft import CrisisRow
@@ -29,6 +30,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import CivilizationTier, EntityFlag, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.intrigue import HookSource, HookStrength
+from aerona.domain.enums.mind import SkillKind, SkillSource
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.son import SonStatus
@@ -105,6 +107,18 @@ async def pet_herd(session: AsyncSession, realm: Realm) -> Ids:
     session.add(
         HerdRow(
             community_entity_id=mortal.location_id, species_entity_id=realm.species_id, head=12, stage=DomesticationStage.HERDED, since_epoch=1, fed_epochs=0
+        )
+    )
+    return {}
+
+
+async def herd_handler(session: AsyncSession, realm: Realm) -> Ids:
+    mortal = await session.get(EntityRow, realm.mortal_id)
+    assert mortal is not None and mortal.location_id is not None
+    session.add(SkillRow(holder_node_id=mortal.id, skill=SkillKind.BEAST_HANDLING, level=60, peak=60, last_used_epoch=1, source=SkillSource.PRACTICE))
+    session.add(
+        HerdRow(
+            community_entity_id=mortal.location_id, species_entity_id=realm.species_id, head=20, stage=DomesticationStage.HERDED, since_epoch=1, fed_epochs=0
         )
     )
     return {}

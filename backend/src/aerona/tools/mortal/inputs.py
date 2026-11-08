@@ -20,6 +20,7 @@ from aerona.constants.tool_inputs import (
 )
 from aerona.domain.enums.culture import CalendarSlot, LegendArchetype, ProphecyConsequence, ProphecyPredicate, Technique, TraditionKind
 from aerona.domain.enums.discovery import ArtDiscipline, TheoryDomain
+from aerona.domain.enums.ecology import HerdTraining
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, LegendCategory
 from aerona.domain.enums.material import MaterialKind
@@ -249,6 +250,11 @@ class TameInput(ToolInput):
 
 class KeepPetInput(ToolInput):
     species_id: int | None = None
+
+
+class TrainHerdInput(ToolInput):
+    species_id: int
+    training: HerdTraining
 
 
 class ChimeraInput(ToolInput):

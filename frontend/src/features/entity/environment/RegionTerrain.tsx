@@ -779,55 +779,64 @@ function KnowledgeCard({
           title='Reveal or hide this land'
           note='Draw this region onto a realm’s maps or tear it out. What you set is held until you release it.'
         >
-          {view.realms.length === 0 ? (
+          {view.realms.length === 0 && (
             <Muted>No realm stands on this world.</Muted>
-          ) : (
-            <div className='flex min-w-0 flex-wrap items-end gap-3'>
-              <div className='min-w-48 flex-1'>
-                <MindPicker
-                  label='Realm'
-                  value={realm}
-                  table={realms}
-                  blocked={blocked}
-                  placeholder='Choose a realm'
-                  onPick={setRealm}
-                />
-              </div>
-              <div className='w-28'>
-                <NumberField
-                  label='Known'
-                  value={level}
-                  min={0}
-                  max={PERCENT}
-                  disabled={blocked !== null}
-                  onChange={setLevel}
-                />
-              </div>
-              <Button
-                size='sm'
-                disabled={blocked !== null || realm === ''}
-                disabledReason={
-                  blocked ?? (realm === '' ? 'Choose a realm first' : undefined)
-                }
-                onClick={() => chart.mutate(percent(level))}
-              >
-                <Eye />
-                Reveal
-              </Button>
-              <Button
-                size='sm'
-                variant='outline'
-                disabled={blocked !== null || realm === ''}
-                disabledReason={
-                  blocked ?? (realm === '' ? 'Choose a realm first' : undefined)
-                }
-                onClick={() => chart.mutate(0)}
-              >
-                <Undo2 />
-                Forget
-              </Button>
-            </div>
           )}
+          <div className='flex min-w-0 flex-wrap items-end gap-3'>
+            <div className='min-w-48 flex-1'>
+              <MindPicker
+                label='Realm'
+                value={realm}
+                table={realms}
+                blocked={blocked}
+                placeholder='Choose a realm'
+                onPick={setRealm}
+              />
+            </div>
+            <div className='w-28'>
+              <NumberField
+                label='Known'
+                value={level}
+                min={0}
+                max={PERCENT}
+                disabled={blocked !== null}
+                onChange={setLevel}
+              />
+            </div>
+            <Button
+              size='sm'
+              disabled={blocked !== null || realm === ''}
+              disabledReason={
+                blocked ??
+                (view.realms.length === 0
+                  ? 'No realm stands on this world'
+                  : realm === ''
+                    ? 'Choose a realm first'
+                    : undefined)
+              }
+              onClick={() => chart.mutate(percent(level))}
+            >
+              <Eye />
+              Reveal
+            </Button>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={blocked !== null || realm === ''}
+              disabledReason={
+                blocked ??
+                (view.realms.length === 0
+                  ? 'No realm stands on this world'
+                  : realm === ''
+                    ? 'Choose a realm first'
+                    : undefined)
+              }
+              onClick={() => chart.mutate(0)}
+            >
+              <Undo2 />
+              Forget
+            </Button>
+          </div>
         </AdjustPanel>
       </Card>
     </div>
@@ -918,36 +927,46 @@ function RiverCard({ regionId, view }: { regionId: number; view: Terrain }) {
           title='Turn the river'
           note='Send this land’s river into a neighbouring region. The old valley dries to a stream or a dry bed and its places may lose their water; the new one gains it.'
         >
-          {dry || view.river_neighbours.length === 0 ? (
+          {(dry || view.river_neighbours.length === 0) && (
             <Muted>
               There is no river here to turn, or no land to turn it into.
             </Muted>
-          ) : (
-            <div className='flex min-w-0 flex-wrap items-end gap-3'>
-              <div className='min-w-48 flex-1'>
-                <MindPicker
-                  label='Into'
-                  value={target}
-                  table={choices}
-                  blocked={blocked}
-                  placeholder='Choose a neighbour'
-                  onPick={setTarget}
-                />
-              </div>
-              <Button
-                size='sm'
-                disabled={blocked !== null || target === ''}
-                disabledReason={
-                  blocked ??
-                  (target === '' ? 'Choose a neighbour first' : undefined)
-                }
-                onClick={() => redirect.mutate()}
-              >
-                <Footprints />
-                Turn it
-              </Button>
-            </div>
           )}
+          <div className='flex min-w-0 flex-wrap items-end gap-3'>
+            <div className='min-w-48 flex-1'>
+              <MindPicker
+                label='Into'
+                value={target}
+                table={choices}
+                blocked={blocked}
+                placeholder='Choose a neighbour'
+                onPick={setTarget}
+              />
+            </div>
+            <Button
+              size='sm'
+              disabled={
+                blocked !== null ||
+                dry ||
+                view.river_neighbours.length === 0 ||
+                target === ''
+              }
+              disabledReason={
+                blocked ??
+                (dry
+                  ? 'There is no river here to turn'
+                  : view.river_neighbours.length === 0
+                    ? 'There is no land to turn it into'
+                    : target === ''
+                      ? 'Choose a neighbour first'
+                      : undefined)
+              }
+              onClick={() => redirect.mutate()}
+            >
+              <Footprints />
+              Turn it
+            </Button>
+          </div>
         </AdjustPanel>
       </Card>
     </div>

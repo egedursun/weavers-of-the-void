@@ -21,4 +21,5 @@ class HusbandryRules:
     pet_chance: int = rule(3, 0, 100, G, "Chance each epoch a mortal of a community keeping small tame kinds takes one as a pet (%)")
     pet_cap: int = rule(4, 0, 1000, G, "Most pets taken across the cosmos in an epoch")
     pet_grief_strength: int = rule(40, 0, 100, G, "How hard an owner grieves a pet that died")
+    pet_hero_bonus: int = rule(8, 0, 100, G, "Strength a hound, falcon or other hunting pet adds to its owner in a hunt for a beast")
     pet_hunt_xp: int = rule(6, 0, 100, G, "Hunting practice an owner gains each epoch from a pet that hunts at their side")

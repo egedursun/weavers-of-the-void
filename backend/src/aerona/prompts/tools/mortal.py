@@ -419,6 +419,11 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "it sharpens your hunting; when it dies you mourn it. Free.",
         {"species_id": "The kind it is of, from those your people keep; leave empty to take any"},
     ),
+    T.TRAIN_HERD: ToolText(
+        "You train a herd your people keep, for war, for the hunt or for guarding, with your own beast handling (at least "
+        "{{ rules.husbandry.train_skill }}). Trained war beasts join your people's armies, hunters bring home more and guards keep raiders off. 1 action.",
+        {"species_id": "The kind of the herd, from those your people keep", "training": "What you train it for"},
+    ),
     T.MERGE_SPECIES: ToolText(
         "With biomancy you merge two creature species in your world, near you (at most {{ rules.creatures.chimera_merge_distance }} steps), into a single chimera (requires "
         "biomancy knowledge). The chimera carries the traits of both species; but it may get out of control. 1 action.",

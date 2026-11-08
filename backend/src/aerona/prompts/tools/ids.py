@@ -141,6 +141,7 @@ class MortalToolId(StrEnum):
     PROPOSE_THEORY = "propose_theory"
     INVENT_ART_FORM = "invent_art_form"
     KEEP_PET = "keep_pet"
+    TRAIN_HERD = "train_herd"
     DIPLOMACY = "diplomacy"
     GO_ON_ADVENTURE = "go_on_adventure"
     FIND_ROUTE = "find_route"

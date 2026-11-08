@@ -9,7 +9,7 @@ from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow, EntityTraitRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.ecology import KEPT_STAGES, BeastTemper, SpeciesUse
+from aerona.domain.enums.ecology import GROWN, KEPT_STAGES, BeastTemper, SpeciesUse
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind, ThoughtKind
 from aerona.domain.enums.society import CreatureTrait
@@ -53,6 +53,16 @@ async def pet_kind_ids(session: AsyncSession, community_id: int | None) -> list[
         HerdRow.community_entity_id == community_id, HerdRow.head > 0, HerdRow.stage.in_(list(KEPT_STAGES)), HerdRow.species_entity_id.in_(uses)
     )
     return list(await session.scalars(kept.order_by(HerdRow.species_entity_id)))
+
+
+async def animal_kind_ids(session: AsyncSession) -> list[int]:
+    statement = (
+        select(SpeciesProfileRow.species_entity_id)
+        .join(EntityRow, EntityRow.id == SpeciesProfileRow.species_entity_id)
+        .where(EntityRow.status == EntityStatus.CANON, SpeciesProfileRow.species_class.not_in(list(GROWN)))
+        .order_by(EntityRow.name, EntityRow.id)
+    )
+    return list(await session.scalars(statement))
 
 
 async def pet_kinds(ctx: TickContext, community_id: int) -> list[EntityRow]:

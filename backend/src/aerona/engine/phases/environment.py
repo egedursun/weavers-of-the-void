@@ -33,7 +33,7 @@ from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.star_types import star_heat
 from aerona.engine.ecology.domestication import grazing_heads
-from aerona.engine.ecology.flora import CropBook
+from aerona.engine.ecology.flora import CropBook, crop_year
 from aerona.engine.environment.battles import backfill_battle_ground
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.geomorph import course_of, desert_rainfall, desert_terrain, shapes_by_region
@@ -897,10 +897,10 @@ def region_years(ctx: TickContext, season: HarvestSeason, env: RegionEnvironment
     farming = load.agriculture / load.population if load.population else 0.0
     agriculture = max((season.knowledge.effect(rules, community.id, KnowledgeBranch.AGRICULTURE) for community in load.communities), default=1.0) or 1.0
     growth = season.growing.growth if season.growing is not None else rules.harvest.normal_growth
-    crops = season.crops.factor(env.entity_id)
     results: list[YearHarvest] = []
     for sampled in season.years:
         weather = season.book.weather(ctx.environment.world_seed, ctx.epoch, env, season.growing, f"year.{sampled.offset}")
+        crops = season.crops.factor(env.entity_id, crop_year(rules, weather))
         value = year_harvest(
             rules,
             growth=growth,

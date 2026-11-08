@@ -202,14 +202,14 @@ export function AnatomyCard({
                 max: PERCENT,
                 label: 'Armour from its body',
               }}
-              hint='How much harm its skin turns aside'
+              hint='How much of each wound its skin turns aside; its skin and bones are the outer and inner layers a blade must pass'
             />
             <KpiTile
               label='Harm it adds to its raids'
               value={`+${row.harm_pct}%`}
               icon={Swords}
               tone='danger'
-              hint='From its breath, its heads, its limbs and the stuff it is made of'
+              hint='From its breath, its heads, its limbs and the stuff it is made of; it also counts against heroes'
             />
           </div>
           <TileGrid>
@@ -224,7 +224,12 @@ export function AnatomyCard({
               <Tile spec={named(BREATH, row.breath)} caption='Breath' />
             )}
             {row.bite && <Tile spec={named(BITE, row.bite)} caption='Bite' />}
-            {row.gaze && <Tile spec={named(GAZE, row.gaze)} caption='Gaze' />}
+            {row.gaze && (
+              <Tile
+                spec={named(GAZE, row.gaze)}
+                caption={GAZE[row.gaze]?.hint ?? 'Gaze'}
+              />
+            )}
             {row.hoards && (
               <Tile
                 spec={{

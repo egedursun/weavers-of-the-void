@@ -21,11 +21,13 @@ from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.ecology import GROWN, SOWN, Biochemistry, Cultivation, Diet, PlantYield, SpeciesClass, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.environment import WeatherEffect
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.biochemistry import bearable, tolerated
 from aerona.engine.ecology.profiles import PEST_HUNTERS, SHELLED, Nature, SpeciesSpec, add_plant_profile, cycle_of, plant_products, profile_of
+from aerona.engine.environment.weather import Weather
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -46,15 +48,39 @@ class CropField:
     products: tuple[tuple[PlantProduct, int], ...]
 
 
+@dataclass(frozen=True)
+class CropYear:
+    degrees: int = 0
+    moisture: int = 0
+
+
+AVERAGE_YEAR = CropYear()
+
+
+def crop_year(rules: Rules, weather: Weather) -> CropYear:
+    table = rules.flora
+    heat = weather.effect(WeatherEffect.HEAT) - weather.effect(WeatherEffect.COLD)
+    return CropYear(round(heat * table.weather_degrees / PERCENT), round(weather.effect(WeatherEffect.WET) * table.weather_moisture_pct / PERCENT))
+
+
 def crop_fit(
-    rules: Rules, profile: SpeciesProfileRow, plant: PlantProfileRow, land: RegionEnvironmentRow, *, seasons: int | None, allowed: tuple[Biochemistry, ...]
+    rules: Rules,
+    profile: SpeciesProfileRow,
+    plant: PlantProfileRow,
+    land: RegionEnvironmentRow,
+    *,
+    seasons: int | None,
+    allowed: tuple[Biochemistry, ...],
+    year: CropYear = AVERAGE_YEAR,
 ) -> float:
     if not bearable(profile.biochemistry, allowed):
         return 0.0
     table = rules.flora
-    over = max(0, land.temperature - profile.temperature_max - table.temperature_slack, profile.temperature_min - land.temperature - table.temperature_slack)
+    warmth = land.temperature + year.degrees
+    moisture = min(PERCENT, land.moisture + year.moisture)
+    over = max(0, warmth - profile.temperature_max - table.temperature_slack, profile.temperature_min - warmth - table.temperature_slack)
     heat = max(0.0, 1 - over * table.temperature_penalty_pct / PERCENT)
-    water = max(0.0, 1 - abs(land.moisture - profile.water_need) / PERCENT * table.water_penalty_pct / PERCENT)
+    water = max(0.0, 1 - abs(moisture - profile.water_need) / PERCENT * table.water_penalty_pct / PERCENT)
     lack = max(0, plant.soil_need - land.soil_fertility)
     soil = max(0.0, 1 - lack / max(1, plant.soil_need) * table.soil_penalty_pct / PERCENT)
     short = max(0, plant.growing_seasons - seasons) if seasons is not None else 0
@@ -95,7 +121,7 @@ class CropBook:
             book.life[world_id] = await tolerated(session, world_id)
         return book
 
-    def fit(self, plant_id: int, region_id: int) -> float:
+    def fit(self, plant_id: int, region_id: int, year: CropYear = AVERAGE_YEAR) -> float:
         land, profile, plant = self.lands.get(region_id), self.profiles.get(plant_id), self.plants.get(plant_id)
         if land is None or profile is None or plant is None:
             return 0.0
@@ -107,14 +133,15 @@ class CropBook:
             land,
             seasons=self.seasons.get(world) if world is not None else None,
             allowed=self.life.get(world, tuple(Biochemistry)) if world is not None else tuple(Biochemistry),
+            year=year,
         )
 
-    def factor(self, region_id: int) -> float:
+    def factor(self, region_id: int, year: CropYear = AVERAGE_YEAR) -> float:
         rows = [row for row in self.crops.get(region_id, []) if row.share > 0]
         total = sum(row.share for row in rows)
         if total <= 0:
             return 1.0
-        weighted = sum(row.share * self.fit(row.plant_entity_id, region_id) for row in rows) / total
+        weighted = sum(row.share * self.fit(row.plant_entity_id, region_id, year) for row in rows) / total
         return 1 - self.rules.flora.crop_weight_pct / PERCENT * (1 - weighted)
 
     def fields(self, region_id: int) -> list[CropField]:

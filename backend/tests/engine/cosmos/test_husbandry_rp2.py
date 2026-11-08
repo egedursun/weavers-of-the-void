@@ -9,7 +9,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.industry import CommunityMethodRow
 from aerona.db.tables.mind import GriefRow, SkillRow, ThoughtRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.ecology import BeastTemper, Diet, DomesticationStage, HerdTraining, SizeClass, SpeciesUse
+from aerona.domain.enums.ecology import BeastTemper, Diet, DomesticationStage, HerdTraining, SizeClass, SpeciesClass, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.industry import MethodKind, ProcessKind
@@ -18,9 +18,10 @@ from aerona.domain.models.entity_stats import MortalStats, SettlementStats, Spec
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.domestication import feed, grazing_heads, guarded, produce, train, trained_effect, trained_heads
 from aerona.engine.ecology.pet_control import give_pet, set_pet
-from aerona.engine.ecology.pets import adopt_pets, tend_pets
+from aerona.engine.ecology.pets import adopt_pets, animal_kind_ids, tend_pets
 from aerona.engine.ecology.profiles import SpeciesSpec, profile_of
 from aerona.engine.economy.stocks import GoodsLedger, holding
+from aerona.engine.phases.heroism import hero_power
 from aerona.rules.registry import Rules
 from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, tick, tuned
 
@@ -104,7 +105,7 @@ async def test_master_handlers_train_herds_for_war_hunting_and_guarding(ctx: Tic
     assert await trained_heads(ctx.session, hold, HerdTraining.GUARD) == row.trained
     assert trained_effect(rules, row.trained) > 0
     assert await guarded(ctx, hold) < before
-    row.training = None
+    row.training, row.locked = None, ["training"]
     assert await train(ctx, row) == 0
 
 
@@ -153,3 +154,52 @@ async def test_the_god_gives_and_frees_pets(ctx: TickContext, cosmos: Cosmos) ->
         await ctx.session.scalars(select(BondRow).where(BondRow.source_node_id == pet.id, BondRow.kind == BondKind.PET_OF, BondRow.state == BondState.ACTIVE))
     )
     assert len(bonds) == 1
+
+
+async def test_master_handlers_choose_what_a_herd_is_trained_for(ctx: TickContext, cosmos: Cosmos) -> None:
+    region = await make_region(ctx.session, "Drill Moor", cosmos.home.id)
+    hold = await town(ctx.session, cosmos, region.id)
+    warhorse = await kind(ctx, cosmos, region.id, "Moor Charger", SpeciesSpec(size_class=SizeClass.LARGE, diet=Diet.HERBIVORE), SpeciesUse.WAR)
+    wolf = await kind(ctx, cosmos, region.id, "Moor Wolf", SpeciesSpec(size_class=SizeClass.MEDIUM, diet=Diet.CARNIVORE))
+    sheep = await kind(ctx, cosmos, region.id, "Moor Sheep", SpeciesSpec(size_class=SizeClass.MEDIUM, diet=Diet.HERBIVORE), SpeciesUse.FOOD)
+    held_wolf = await kind(ctx, cosmos, region.id, "Held Wolf", SpeciesSpec(size_class=SizeClass.MEDIUM, diet=Diet.CARNIVORE))
+    for row in list(await ctx.session.scalars(select(SpeciesUseRow).where(SpeciesUseRow.species_entity_id.in_([wolf, sheep, held_wolf])))):
+        await ctx.session.delete(row)
+    herds = {name: herd(hold, species) for name, species in (("war", warhorse), ("hunt", wolf), ("none", sheep), ("held", held_wolf))}
+    herds["held"].locked = ["training"]
+    ctx.session.add_all(herds.values())
+    handler = await make_entity(ctx.session, "Rook", EntityType.MORTAL, MortalStats(hp=30, age=30, lifespan=70), world_id=cosmos.home.id, location_id=hold)
+    ctx.session.add(SkillRow(holder_node_id=handler.id, skill=SkillKind.BEAST_HANDLING, level=80, peak=80, last_used_epoch=1, source=SkillSource.PRACTICE))
+    await ctx.session.flush()
+    for row in herds.values():
+        await train(ctx, row)
+    assert herds["war"].training is HerdTraining.WAR and herds["war"].trained > 0
+    assert herds["hunt"].training is HerdTraining.HUNTING and herds["hunt"].trained > 0
+    assert herds["none"].training is None and herds["none"].trained == 0
+    assert herds["held"].training is None
+
+
+async def test_the_god_gives_any_animal_kind_as_a_pet_but_never_a_plant(ctx: TickContext, cosmos: Cosmos) -> None:
+    region = await make_region(ctx.session, "Orchard Vale", cosmos.home.id)
+    hold = await town(ctx.session, cosmos, region.id)
+    owner = await make_entity(ctx.session, "Ivo", EntityType.MORTAL, MortalStats(hp=30, age=30, lifespan=70), world_id=cosmos.home.id, location_id=hold)
+    otter = await kind(ctx, cosmos, region.id, "River Otter", SpeciesSpec(size_class=SizeClass.SMALL, diet=Diet.CARNIVORE))
+    apple = await kind(ctx, cosmos, region.id, "Vale Apple", SpeciesSpec(species_class=SpeciesClass.PLANT))
+    animals = await animal_kind_ids(ctx.session)
+    assert otter in animals and apple not in animals
+    with pytest.raises(ValidationFailedError):
+        await give_pet(ctx, owner.id, apple)
+    pet = await give_pet(ctx, owner.id, otter)
+    assert pet.entity_type is EntityType.BEAST
+
+
+async def test_a_hound_at_its_owners_side_counts_in_a_hunt_for_a_beast(ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
+    region = await make_region(ctx.session, "Chase Vale", cosmos.home.id)
+    hold = await town(ctx.session, cosmos, region.id)
+    hound = await kind(ctx, cosmos, region.id, "Chase Hound", SpeciesSpec(size_class=SizeClass.MEDIUM, diet=Diet.CARNIVORE), SpeciesUse.GUARD)
+    hero = await make_entity(
+        ctx.session, "Asa", EntityType.MORTAL, MortalStats(hp=30, age=30, lifespan=70, strength=50), world_id=cosmos.home.id, location_id=hold
+    )
+    alone = await hero_power(ctx, hero, None, 3)
+    await give_pet(ctx, hero.id, hound)
+    assert await hero_power(ctx, hero, None, 3) == pytest.approx(alone + rules.husbandry.pet_hero_bonus)

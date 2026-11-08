@@ -297,6 +297,7 @@ class MortalPets(ApiModel):
     mortal_id: int
     pets: list[PetView]
     kinds: list[NodeRef]
+    other_kinds: list[NodeRef]
 
 
 class AnatomyView(ApiModel):

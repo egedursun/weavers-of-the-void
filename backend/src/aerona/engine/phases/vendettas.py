@@ -236,6 +236,7 @@ async def honour_duels(ctx: TickContext) -> int:
     "table.community_societies",
     "table.community_stocks",
     "table.conditions",
+    "table.creature_anatomy",
     "table.cult_tenets",
     "table.culture_ethics",
     "table.culture_values",

@@ -1558,6 +1558,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.community_stocks",
     "table.conditions",
     "table.cosmos",
+    "table.creature_anatomy",
     "table.cult_tenets",
     "table.culture_ethics",
     "table.culture_values",

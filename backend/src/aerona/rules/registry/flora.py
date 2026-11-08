@@ -16,6 +16,8 @@ class FloraRules:
     temperature_slack: int = rule(4, 0, 50, G, "Degrees outside its band a crop bears before it suffers")
     temperature_penalty_pct: int = rule(6, 0, 100, G, "Crop fit lost for each degree beyond a plant's temperature band (%)")
     water_penalty_pct: int = rule(60, 0, 200, G, "Crop fit lost when the rain is as far as can be from a plant's water need (%)")
+    weather_degrees: int = rule(12, 0, 60, G, "Degrees a year at the full cold or heat of its weather moves a land's warmth for its crops")
+    weather_moisture_pct: int = rule(40, 0, 100, G, "Wetness a year at the full wet of its weather adds to a land's moisture for its crops (%)")
     soil_penalty_pct: int = rule(70, 0, 200, G, "Crop fit lost on soil with no fertility at all against a plant's need (%)")
     season_penalty_pct: int = rule(40, 0, 100, G, "Crop fit lost for each growing season short of a plant's need (%)")
     crop_weight_pct: int = rule(50, 0, 100, G, "Harvest lost when every crop sown in a land fits it not at all (%)")

@@ -20,7 +20,7 @@ from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.ecology import GRAZERS, SIZE_ORDER, STAGE_ORDER, BeastTemper, DomesticationStage, HerdTraining, SizeClass, SpeciesUse
+from aerona.domain.enums.ecology import GRAZERS, SIZE_ORDER, STAGE_ORDER, BeastTemper, Diet, DomesticationStage, HerdTraining, SizeClass, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
@@ -42,6 +42,7 @@ from aerona.rules.registry import Rules
 
 S = DomesticationStage
 KEPT = frozenset({S.HERDED, S.DOMESTICATED, S.BREED})
+HUNTING_DIETS = frozenset({Diet.CARNIVORE, Diet.OMNIVORE})
 HOUSED = frozenset({S.DOMESTICATED, S.BREED})
 TEN = 10
 PRODUCT_PROCESS = {product: process for process, product in HERD_PROCESSES.items()}
@@ -367,16 +368,33 @@ async def guarded(ctx: TickContext, community_id: int) -> float:
     return max(0.0, 1 - (kept + drilled) / PERCENT)
 
 
+def drill(rules: Rules, herd: HerdRow, skill: int) -> int:
+    gained = max(0, round_half_up((herd.head - herd.trained) * rules.husbandry.train_pct / PERCENT * skill / PERCENT))
+    herd.trained = min(herd.head, herd.trained + gained)
+    return gained
+
+
+async def training_for(ctx: TickContext, herd: HerdRow) -> HerdTraining | None:
+    uses = set(await ctx.session.scalars(select(SpeciesUseRow.use).where(SpeciesUseRow.species_entity_id == herd.species_entity_id)))
+    if SpeciesUse.WAR in uses:
+        return HerdTraining.WAR
+    if SpeciesUse.GUARD in uses:
+        return HerdTraining.GUARD
+    profile = await ctx.session.get(SpeciesProfileRow, herd.species_entity_id)
+    return HerdTraining.HUNTING if profile is not None and profile.diet in HUNTING_DIETS else None
+
+
 async def train(ctx: TickContext, herd: HerdRow) -> int:
-    table = ctx.rules.husbandry
-    if herd.training is None or "trained" in herd.locked or herd.stage not in KEPT or held(herd.community_entity_id):
+    if herd.stage not in KEPT or held(herd.community_entity_id):
         return 0
     skill = await master_herder(ctx, herd.community_entity_id)
-    if skill < table.train_skill:
+    if skill < ctx.rules.husbandry.train_skill:
         return 0
-    gained = round_half_up((herd.head - herd.trained) * table.train_pct / PERCENT * skill / PERCENT)
-    herd.trained = min(herd.head, herd.trained + max(0, gained))
-    return max(0, gained)
+    if herd.training is None and "training" not in herd.locked:
+        herd.training = await training_for(ctx, herd)
+    if herd.training is None or "trained" in herd.locked:
+        return 0
+    return drill(ctx.rules, herd, skill)
 
 
 async def carry_herds(ctx: TickContext, source_id: int, colony: EntityRow) -> tuple[int, int]:

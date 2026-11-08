@@ -49,6 +49,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.body_customs",
     "table.bonds",
     "table.conditions",
+    "table.creature_anatomy",
     "table.cult_tenets",
     "table.culture_values",
     "table.deed_claims",

@@ -28,7 +28,12 @@ class CreatureAnatomyRules:
     breath_harm_pct: int = rule(30, 0, 300, G, "Harm a breath attack adds to a creature's raids (%)")
     head_harm_pct: int = rule(20, 0, 300, G, "Harm each head beyond the first adds to a creature's raids (%)")
     limb_harm_pct: int = rule(5, 0, 100, G, "Harm each limb beyond its plan adds to a creature's raids (%)")
+    skin_damage_pct: int = rule(100, 0, 300, G, "Weight of the armour of a creature's skin against the harm of each wound it takes (%)")
+    armour_power_pct: int = rule(50, 0, 300, G, "Weight of the armour of a creature's skin in its fights with heroes (%)")
     gaze_terror: int = rule(10, 0, 100, G, "Terror a gaze attack adds to a creature each time it raids")
+    terror_stress: int = rule(8, 0, 100, G, "Stress a terrifying gaze lays on each mortal of a town it raids")
+    sleep_raid_pct: int = rule(40, 0, 300, G, "Harm a raid does beyond its due while a sleeping gaze holds the town's watch (%)")
+    petrify_severity: int = rule(3, 1, 5, G, "Severity of the limb a petrifying gaze turns to stone")
     hoard_take: int = rule(3, 0, 1000, G, "Units of its favoured material a hoarding creature carries off from a raid")
     noise_population: int = rule(5000, 0, 10000000, G, "Population at which a town is loud enough to keep off a creature that hates noise")
 
