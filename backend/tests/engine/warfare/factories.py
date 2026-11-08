@@ -21,6 +21,7 @@ from aerona.domain.models.entity_stats import (
     PeopleStats,
     RegionStats,
     SettlementStats,
+    SpeciesStats,
     StructureStats,
     VesselStats,
 )
@@ -39,6 +40,7 @@ STAT_MODELS: dict[EntityType, type[Any]] = {
     EntityType.KNOWLEDGE: KnowledgeStats,
     EntityType.STRUCTURE: StructureStats,
     EntityType.VESSEL: VesselStats,
+    EntityType.SPECIES: SpeciesStats,
 }
 
 

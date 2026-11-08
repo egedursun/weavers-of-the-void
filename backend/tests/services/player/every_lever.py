@@ -24,7 +24,7 @@ from aerona.db.tables.epochs import DeferredStepRow, EpochRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lore import HistorianViewRow, MessageRow
 from aerona.db.tables.military import OccupationRow
-from aerona.db.tables.routes import HorizonIntuitionRow
+from aerona.db.tables.routes import HorizonIntuitionRow, RouteRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.agent import MessageIntent
@@ -777,6 +777,17 @@ LEVERS: dict[str, Lever] = {
     ),
     "horror:cult": given(entity_id=Pick(TOWN)),
     "household:edit": given(wealth=60),
+    "household:debt": after(
+        ("household:found", {"head_id": Pick(MORTAL, 2)}),
+        ("household:found", {"head_id": Pick(MORTAL, 3)}),
+        household_id=Newest("household"),
+        lender_household_id=Pick("household"),
+        amount=5,
+    ),
+    **{
+        name: after(("favour:owe", {"owed_by_id": Pick(MORTAL), "owed_to_id": Pick(MORTAL, 1), "magnitude": 20, "origin": "gift"}), favour_id=Newest("favour"))
+        for name in ("favour:call", "favour:edit", "favour:delete")
+    },
     "household:hold": given(fields=["wealth"]),
     "household_aggregate:edit": given(community_id=Pick(TOWN), wealth=60),
     **{
@@ -1381,4 +1392,22 @@ LEVERS: dict[str, Lever] = {
     ),
     **{name: after(PROPHECY, prophecy_id=Newest(EntityType.PROPHECY)) for name in ("prophecy:forget", "prophecy:fulfil", "prophecy:resolve")},
     "body:prosthesis": after(("body:maim", {"bearer_id": Pick(MORTAL), "part": "left_arm", "severity": 5, "lethal": False}), material="wood", quality=40),
+}
+
+
+async def hidden_route(session: AsyncSession) -> None:
+    route = await session.scalar(select(RouteRow).order_by(RouteRow.id).limit(1))
+    assert route is not None
+    route.known = False
+
+
+BRANCH_LEVERS: Mapping[tuple[str, str], Lever] = {
+    ("intervene", "disaster"): given(entity_id=Pick(TOWN), disaster="flood"),
+    ("intervene", "teach_knowledge"): after(
+        ("knowledge:set", {"entity_id": Pick(EntityType.PEOPLE), "knowledge_id": Pick(EntityType.KNOWLEDGE), "known": False}),
+        entity_id=Pick(EntityType.PEOPLE),
+        knowledge_id=Pick(EntityType.KNOWLEDGE),
+    ),
+    ("route", "reveal"): Lever(values={"route_id": Pick("route")}, setup=hidden_route),
+    ("route", "stitch"): after(("route", {"route_id": Pick("route"), "action": "sever", "duration": 3}), route_id=Pick("route")),
 }

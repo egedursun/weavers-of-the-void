@@ -103,12 +103,15 @@ async def client(settings: Settings) -> AsyncIterator[AsyncClient]:
 
 
 LEVER_CACHE = Path(tempfile.gettempdir()) / "aerona-levers"
+ENGINE_SOURCE = Path(__file__).resolve().parents[1] / "src" / "aerona"
 
 
 def template_digest(schema_template: Path) -> str:
     digest = hashlib.sha256(schema_template.name.encode())
     for module in (factories, every_lever):
         digest.update(Path(module.__file__ or "").read_bytes())
+    for path in sorted(ENGINE_SOURCE.rglob("*.py")):
+        digest.update(path.read_bytes())
     return digest.hexdigest()[:24]
 
 
