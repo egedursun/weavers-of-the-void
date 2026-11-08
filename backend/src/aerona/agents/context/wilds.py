@@ -169,7 +169,7 @@ async def nature_lines(session: AsyncSession, entity: EntityRow) -> list[str]:
         return [*await beast_nature(session, entity), *await anatomy_lines(session, entity.id)]
     if entity.entity_type is EntityType.REGION:
         crops = await crop_lines(session, entity.id)
-        return [f"its fields grow: {', '.join(crops)}"] if crops else []
+        return [f"crops grown here: {', '.join(crops)}"] if crops else []
     return []
 
 
