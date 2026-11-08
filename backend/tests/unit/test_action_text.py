@@ -1,6 +1,8 @@
 from aerona.catalog.policy import serfdom
+from aerona.constants.schema import LEDGER_SUMMARY_MAX_LENGTH
 from aerona.core.action_text import ELLIPSIS, readable_summary
 from aerona.domain.enums.society import SocialClass
+from aerona.migration.legacy.ledger_history import _summary
 from aerona.prompts.filters import signed
 
 
@@ -28,3 +30,10 @@ def test_truncated_arguments_are_still_read() -> None:
 def test_signed_numbers_and_serfdom_shifts() -> None:
     assert (signed(3), signed(0), signed(-2)) == ("+3", "0", "-2")
     assert serfdom({"allowed": True})[SocialClass.SERF_OR_SLAVE] < 0 < serfdom({})[SocialClass.SERF_OR_SLAVE]
+
+
+def test_old_ledger_summaries_are_squeezed_read_and_cut_to_the_ledger_limit() -> None:
+    assert _summary(None) is None and _summary("") is None
+    assert _summary("raised   a\n temple") == "raised a temple"
+    long = _summary("x " * LEDGER_SUMMARY_MAX_LENGTH)
+    assert long is not None and len(long) == LEDGER_SUMMARY_MAX_LENGTH and long.endswith(ELLIPSIS)
