@@ -17,6 +17,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.faith import SpiritProfileRow
 from aerona.db.tables.military import SpyNetworkRow
+from aerona.db.tables.warfare import SiegeRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import CurseKind, IdeologyTenet
 from aerona.domain.enums.domain import Domain
@@ -37,8 +38,11 @@ from aerona.engine.lore.control import create_lore
 from aerona.engine.phases.native_faith import syncretize
 from aerona.engine.pipeline import all_phases, current_environment, simulate
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.services.community_relations import change_relation
-from aerona.engine.services.war import take_captive
+from aerona.engine.services.sides import SideIndex
+from aerona.engine.services.war import open_war, raise_army, take_captive
+from aerona.engine.services.war_geography import Neighbourhood
 from aerona.rules.model import RULE_METADATA_KEY, rule_meta
 from aerona.rules.registry import Rules
 from tests.engine.core.factories import entity, mortal, settlement
@@ -188,6 +192,11 @@ async def stir(session: AsyncSession, cosmos: RichCosmos) -> None:
     species = await entity(session, "Stirring Wyrm Kin", EntityType.SPECIES, SpeciesStats(danger=90), world_id=home.world.id, location_id=home.regions[0].id)
     beast = await entity(session, "Stirring Wyrm", EntityType.BEAST, BeastStats(danger=90, hp=200), world_id=home.world.id, location_id=home.regions[0].id)
     await profile_beast(ctx, beast, species)
+    rival = await settlement(session, "Stirring Rival", home, home.regions[1], population=8000)
+    war = await open_war(ctx, town, rival)
+    strength = await MilitaryStrength.load(session, ctx.rules)
+    await raise_army(ctx, strength, await SideIndex.load(session, await Neighbourhood.load(session, ctx.rules)), town, war)
+    session.add(SiegeRow(war_id=war.id, besieged_entity_id=rival.id, besieger_entity_id=town.id, started_epoch=ctx.epoch))
     await session.flush()
 
 
