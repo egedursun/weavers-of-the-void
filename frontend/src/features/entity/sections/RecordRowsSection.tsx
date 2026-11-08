@@ -8,6 +8,7 @@ import {
   Coins,
   Database,
   Globe2,
+  GraduationCap,
   ImageIcon,
   Tag,
   HeartPulse,
@@ -95,6 +96,21 @@ const WORKING = 'Working on it.'
 const ROWS_SHOWN = 25
 const NONE = '__none__'
 const LOOKS: { words: string[]; look: Look }[] = [
+  {
+    words: [
+      'research',
+      'institution',
+      'great_',
+      'polity_era',
+      'world_era',
+      'era_deed',
+      'blueprint',
+      'artifact_stud',
+      'banned_work',
+      'holder_',
+    ],
+    look: { icon: GraduationCap, tone: 'info', family: 'Knowledge' },
+  },
   {
     words: ['bod', 'injur', 'condition', 'prosthes', 'afflict', 'maimed'],
     look: { icon: HeartPulse, tone: 'danger', family: 'Body' },

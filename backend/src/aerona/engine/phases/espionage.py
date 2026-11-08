@@ -24,6 +24,7 @@ from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.lore.blueprints import steal_design
 from aerona.engine.lore.research import steal_technique
 from aerona.engine.military.feuds import house_feud
 from aerona.engine.military.spycraft import (
@@ -134,6 +135,11 @@ async def _stealable(ctx: TickContext, spymaster: EntityRow, target: EntityRow) 
 
 async def steal(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
     secret = await steal_technique(ctx, spymaster.location_id or spymaster.id, target.id)
+    design = await steal_design(ctx, spymaster.location_id or spymaster.id, target.id)
+    if design is not None:
+        await _note(
+            ctx, f"The agents of {spymaster.name} carried off {design.name.lower()} from {target.name}.", "espionage.stole_design", (spymaster.id, target.id)
+        )
     if secret is not None:
         text = f"The agents of {spymaster.name} carried off the secret of {secret.value.replace('_', ' ')} from {target.name}."
         await _note(ctx, text, "espionage.stole_technique", (spymaster.id, target.id))

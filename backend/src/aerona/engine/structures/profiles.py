@@ -179,7 +179,8 @@ def effect_of(rules: Rules, structure: EntityRow, profile: StructureProfileRow, 
         return 0
     base = stat_or(structure, "function", rules.deep_life.structure_function_base) * resolved.function_pct / PERCENT
     ley = 1 + rules.structure_functions.ley_bonus_pct / PERCENT if profile.on_ley_line and resolved.ley else 1.0
-    return clamp_int(base * profile.staff_pct / PERCENT * condition_factor(rules, profile.condition) * ley, 0, PERCENT)
+    dated = 1 - rules.discovery.obsolete_pct / PERCENT if profile.obsolete_since is not None else 1.0
+    return clamp_int(base * profile.staff_pct / PERCENT * condition_factor(rules, profile.condition) * ley * dated, 0, PERCENT)
 
 
 def standing_state(rules: Rules, profile: StructureProfileRow) -> ConstructionState:

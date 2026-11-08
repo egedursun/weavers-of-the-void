@@ -28,6 +28,7 @@ from aerona.domain.enums.travel import JourneyStatus
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.context import TickContext
 from aerona.engine.lore.language import barrier
+from aerona.engine.lore.printing import printed
 from aerona.engine.mind.memories import remember
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
@@ -218,6 +219,8 @@ async def fidelity_after(ctx: TickContext, atlas: RegionAtlas, fidelity: int, *,
     hops = atlas.hops(source, target)
     understood = await barrier(ctx.session, ctx.rules, source, target, ctx.epoch)
     garble = ctx.rules.belief.distortion_rate * (1 - await written(ctx, target))
+    if await printed(ctx.session, target):
+        garble *= 1 - ctx.rules.discovery.printed_rumour_pct / PERCENT
     loss = (
         table.hop_loss
         + table.distance_loss * min(UNKNOWN_FAR, hops if hops is not None else UNKNOWN_FAR)

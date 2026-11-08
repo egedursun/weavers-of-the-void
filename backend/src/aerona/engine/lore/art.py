@@ -23,6 +23,7 @@ from aerona.domain.models.entity_stats import ArtworkStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.lore.language import speakers
+from aerona.engine.lore.printing import banned_for, scribe_pace
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import stored_values, write_values
 from aerona.engine.mind.memories import remember
@@ -287,7 +288,9 @@ async def art_year(ctx: TickContext, artwork: EntityRow) -> dict[str, int]:
     if row.medium in VERBAL_MEDIA and (stat(artwork, "renown") or 0) >= PERCENT // HALF and "copies" not in row.locked:
         printed = await has_technique(ctx.session, artwork.location_id, Technique.PRINTING)
         gain = ctx.rules.art.copies_gain + (ctx.rules.technique_effects.printing_copies if printed else 0)
-        row.copies += max(0, round_half_up(gain * craft_weight(row) * canon_weight(ctx, row)))
+        pace = await scribe_pace(ctx.session, ctx.rules, artwork.location_id)
+        if not await banned_for(ctx.session, artwork.location_id, artwork.id):
+            row.copies += max(0, round_half_up(gain * pace * craft_weight(row) * canon_weight(ctx, row)))
     row.updated_epoch = ctx.epoch
     return counts
 

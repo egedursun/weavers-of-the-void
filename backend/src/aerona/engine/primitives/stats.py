@@ -14,6 +14,9 @@ POPULATION_KEY = "population"
 FOLLOWERS_KEY = "followers"
 
 
+COUNT_KEYS = frozenset({POPULATION_KEY, FOLLOWERS_KEY, "size"})
+
+
 def has_stat(entity: EntityRow, key: str) -> bool:
     return key in type(entity.stats).model_fields
 
@@ -116,13 +119,15 @@ def headcount_bounds(rules: Rules, entity: EntityRow) -> tuple[int, int]:
     return limits.population_floor, limits.settlement_population_cap
 
 
-def shift_stat(entity: EntityRow, key: str, delta: float, default: int | None = None, *, low: int = 0, high: int = PERCENT) -> int | None:
+def shift_stat(entity: EntityRow, key: str, delta: float, default: int | None = None, *, low: int = 0, high: int | None = None) -> int | None:
     current = stat(entity, key)
     if current is None:
         if default is None or not has_stat(entity, key):
             return None
         current = default
-    updated = max(low, min(high, round_half_up(current + delta)))
+    ceiling = high if high is not None else (model_bounds(entity, key)[1] if key in COUNT_KEYS else PERCENT)
+    shifted = max(low, round_half_up(current + delta))
+    updated = shifted if ceiling is None else min(ceiling, shifted)
     set_stats(entity, **{key: updated})
     return updated
 

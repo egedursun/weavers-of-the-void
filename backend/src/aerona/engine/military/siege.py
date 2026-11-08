@@ -8,6 +8,7 @@ from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.warfare import SiegeRow, WarRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.discovery import BlueprintKind
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.military import DefenderAction, SackChoice, SiegeAction, StarvationStage, UnitKind
 from aerona.domain.enums.mind import MemoryKind
@@ -19,6 +20,7 @@ from aerona.engine.environment.book import region_environment, scar_region
 from aerona.engine.happenings.emergence import record_sack
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.art import smash
+from aerona.engine.lore.blueprints import design_factor
 from aerona.engine.military.logistics import March, desert, dishearten
 from aerona.engine.military.siege_depth import (
     bombard_factor,
@@ -197,7 +199,9 @@ async def siege_season(ctx: TickContext, war: WarRow, besieged: EntityRow, march
     siege.rounds += 1
     atlas = await RegionAtlas.load(ctx.session)
     walls = await ctx.session.get(SettlementInfrastructureRow, besieged.id)
-    engines = await siege_engines(ctx, march.owner, march.army)
+    engines = await siege_engines(ctx, march.owner, march.army) * await design_factor(
+        ctx.session, ctx.rules, march.owner.id, BlueprintKind.SIEGE_ENGINE, UnitKind.SIEGE_ENGINES.value
+    )
     defence = defender_choice(ctx, siege, garrison, stat(march.army, "size") or 0, walls)
     await starve(ctx, siege, besieged, defence is DefenderAction.RATION or siege.starvation is not StarvationStage.NONE)
     action = await action_for(ctx, siege, march, engines)

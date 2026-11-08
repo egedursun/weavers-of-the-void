@@ -27,11 +27,12 @@ from aerona.engine.economy.household import burn_substitutes, field_shares
 from aerona.engine.economy.refining import lit as lit_factor
 from aerona.engine.industry.energy import draw, gauge, industry_row, survival_heat, unmet_pct
 from aerona.engine.industry.fuels import lay_coal_seams
-from aerona.engine.industry.methods import MethodTally, adopt, allowed, choose_methods, feed, owner_reveres, profit, reveres_nature
+from aerona.engine.industry.methods import MethodTally, adopt, allowed, choose_methods, feed, outdated, owner_reveres, profit, reveres_nature
 from aerona.engine.industry.owners import ProfitTally, barred_works, buy, tend_profits
 from aerona.engine.industry.pollution import PollutionTally, disease_extra, fertility_factor, fish_factor, tend_pollution, void_scar
 from aerona.engine.industry.quality import premium, tier_of
 from aerona.engine.industry.stores import StoreTally, kindle, preserve, spoil, wear_tools
+from aerona.engine.primitives.stats import set_stats
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, context, make, settlement
 from tests.engine.society.factories import tuned as tuned_rules
@@ -98,9 +99,16 @@ async def test_a_place_takes_up_a_better_method_displaces_artisans_and_stirs_its
     row = await gauge(ctx, book, town, leys=Counter())
     assert row.heat > 0 and row.water > 0 and row.muscle > 0
     await adopt(ctx, book, town, METHODS[MethodKind.BLOOMERY], MethodTally())
+    set_stats(town, wealth=0)
+    await choose_methods(ctx, book, town, MethodTally())
+    dated = book.methods[town.id][ProcessKind.SMELTING]
+    assert dated.method is MethodKind.BLOOMERY and dated.obsolete_since == ctx.epoch
+    assert outdated(book, ctx.rules, town.id, ProcessKind.SMELTING) == 1 - ctx.rules.discovery.obsolete_pct / 100
+    set_stats(town, wealth=ctx.rules.discovery.refit_cost * 10)
     tally = MethodTally()
     await choose_methods(ctx, book, town, tally)
     chosen = book.methods[town.id][ProcessKind.SMELTING]
+    assert chosen.obsolete_since is None
     assert chosen.method is MethodKind.BLAST_FURNACE and chosen.displaced > 0 and tally.changed >= 1
     assert book.labour[town.id][Job.IDLE].workers == chosen.displaced
     goal = await realm.session.scalar(select(FactionGoalRow).where(FactionGoalRow.faction_entity_id == guild.id))
@@ -344,6 +352,7 @@ async def test_a_place_never_chooses_a_method_it_cannot_run_for_want_of_power_or
     assert book.methods[town.id][ProcessKind.FARMING].method is not MethodKind.DIVINE_HARVEST
     realm.session.add(CommunityStockRow(community_entity_id=town.id, commodity=CommodityKind.INCENSE, quantity=5000, quality=50))
     row.divine = 5000
+    set_stats(town, wealth=ctx.rules.discovery.refit_cost * 10)
     await realm.session.flush()
     await choose_methods(ctx, book, town, MethodTally())
     assert book.methods[town.id][ProcessKind.FARMING].method is MethodKind.DIVINE_HARVEST

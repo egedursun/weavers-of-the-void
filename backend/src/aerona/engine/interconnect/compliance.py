@@ -45,6 +45,17 @@ from aerona.db.tables.culture import (
     TraditionProfileRow,
 )
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleBiologyRow, PeopleCultureRow
+from aerona.db.tables.discovery import (
+    ArtifactStudyRow,
+    BannedWorkRow,
+    BlueprintRow,
+    EraDeedRow,
+    GreatPersonRow,
+    GreatPointsRow,
+    PolityEraRow,
+    ResearchIncidentRow,
+    WorldEraRow,
+)
 from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, EndemicDiseaseRow, ImmunityRow, OutbreakRow, QuarantineRow
 from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesHostRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow, SpeciesYieldRow
 from aerona.db.tables.economy import (
@@ -1099,6 +1110,46 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("mortal_context",),
         ("choose_research",),
         ("research.boosted", "research.institution_born", "research.institution_embraced", "tools.mortal.research_chosen"),
+        ("research_cycles",),
+    ),
+    ComplianceRow(
+        "S8.4/RP2 discoveries",
+        (
+            GreatPointsRow.__tablename__,
+            GreatPersonRow.__tablename__,
+            PolityEraRow.__tablename__,
+            EraDeedRow.__tablename__,
+            WorldEraRow.__tablename__,
+            ResearchIncidentRow.__tablename__,
+            ArtifactStudyRow.__tablename__,
+            BannedWorkRow.__tablename__,
+            BlueprintRow.__tablename__,
+        ),
+        ("research_cycles",),
+        (
+            "discovery:raise_great",
+            "discovery:era",
+            "discovery:world_era",
+            "discovery:incident",
+            "discovery:design",
+            "discovery:ban",
+            "record_row:create",
+            "record_row:edit",
+            "record_row:delete",
+        ),
+        ("GreatPeople", "EraPanel", "WorldEra", "ResearchIncidents", "ArtifactStudies", "Blueprints", "BannedWorks"),
+        ("mortal_context",),
+        (),
+        (
+            "discovery.great_person",
+            "discovery.breakthrough",
+            "discovery.world_era",
+            "discovery.work_banned",
+            "discovery.reverse_engineered",
+            "discovery.design_drawn",
+            "discovery.refitted",
+            "espionage.stole_design",
+        ),
         ("research_cycles",),
     ),
     ComplianceRow(

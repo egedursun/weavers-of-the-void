@@ -22,7 +22,7 @@ from aerona.engine.economy.extraction import tools_factor
 from aerona.engine.economy.stocks import DEFAULT_QUALITY, aggregate_need, epoch_need, goods_of, holdings, nourishment_need
 from aerona.engine.environment.profile import CropMix, crop_mix
 from aerona.engine.industry.energy import scale_by_energy
-from aerona.engine.industry.methods import feed, method_for
+from aerona.engine.industry.methods import feed, method_for, outdated
 from aerona.engine.industry.pollution import fish_factor, region_id_of
 from aerona.engine.mind.preferences import demand_factor, market_fit
 from aerona.engine.primitives.numbers import round_half_up
@@ -86,8 +86,10 @@ async def harvest_goods(ctx: TickContext, book: EconomyBook, community: EntityRo
     fishing = method_for(book, community.id, ProcessKind.FISHING)
     crews = round_half_up(farmers * ctx.rules.energy.extraction_per_100_workers / PERCENT)
     land = units * farming.output_pct / PERCENT * scale_by_energy(book, community.id, farming.energy, farming.energy_need * crews)
+    land *= outdated(book, ctx.rules, community.id, ProcessKind.FARMING)
     land *= await feed(ctx, community.id, farming, crews)
     sea = units * fishing.output_pct / PERCENT * fish_factor(ctx.rules, book.pollution.get(region_id_of(book, community.id) or -1))
+    sea *= outdated(book, ctx.rules, community.id, ProcessKind.FISHING)
     if mix.fish > 0:
         sea *= scale_by_energy(book, community.id, fishing.energy, round_half_up(fishing.energy_need * crews * mix.fish))
     fodder = round_half_up(land * mix.pasture * table.fodder_share_pct / PERCENT)

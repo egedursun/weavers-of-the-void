@@ -41,7 +41,9 @@ from aerona.engine.intrigue.beliefs import BeliefView, price_key
 from aerona.engine.mind.book import values_for
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.primitives.transfers import move_amount
+from aerona.rules.registry import Rules
 
 TENTH = 10
 CELLAR_LEVEL = 2
@@ -82,6 +84,19 @@ async def reveres_nature(ctx: TickContext, community_id: int) -> bool:
 
 def process_of_step(step_key: str) -> ProcessKind | None:
     return STEP_PROCESS.get(step_key)
+
+
+def outdated(book: EconomyBook, rules: Rules, community_id: int, process: ProcessKind) -> float:
+    row = book.methods.get(community_id, {}).get(process)
+    return 1 - rules.discovery.obsolete_pct / PERCENT if row is not None and row.obsolete_since is not None else 1.0
+
+
+def refit(ctx: TickContext, community: EntityRow) -> bool:
+    cost = ctx.rules.discovery.refit_cost
+    if (stat(community, "wealth") or 0) < cost:
+        return False
+    shift_stat(community, "wealth", -cost)
+    return True
 
 
 def process_of_kind(kind: ExtractionKind) -> ProcessKind | None:
@@ -317,4 +332,10 @@ async def choose_methods(ctx: TickContext, book: EconomyBook, community: EntityR
         best = min(options, key=lambda spec: (-worth[spec.kind], spec.kind.value))
         if current is not None and current in options and worth[best.kind] <= worth[current.kind] * margin:
             continue
-        await adopt(ctx, book, community, best, tally)
+        if row is not None and current is not None and current is not best and not refit(ctx, community):
+            if row.obsolete_since is None and "obsolete_since" not in row.locked:
+                row.obsolete_since = ctx.epoch
+            continue
+        adopted = await adopt(ctx, book, community, best, tally)
+        if "obsolete_since" not in adopted.locked:
+            adopted.obsolete_since = None

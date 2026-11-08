@@ -106,6 +106,8 @@ def lethality_factor(book: DiseaseBook, disease_id: int, communities: list[Entit
             factor *= table.cure_lethality_pct / PERCENT
         ward = book.hospital_strength.get(book.atlas.top_region(community.id) or -1, 0.0)
         factor *= 1 - ward * (1 - table.hospital_lethality_pct / PERCENT)
+        if community.id in book.tended:
+            factor *= 1 - book.rules.technique_effects.hospitals_pct / PERCENT
         weight += people * factor
         total += people
     blended = weight / total if total else 1.0

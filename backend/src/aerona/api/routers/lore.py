@@ -5,10 +5,12 @@ from fastapi import APIRouter, Path, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.api.dependencies import ServicesDep, reader
+from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.lore import (
     AdherentView,
     ArtworkCard,
+    BannedWorkView,
+    BlueprintView,
     BookPage,
     BoostView,
     BranchSpec,
@@ -20,32 +22,41 @@ from aerona.api.schemas.lore import (
     CustomTechniqueView,
     DeedView,
     EnchantmentView,
+    EraDeedView,
     FocusView,
     GateNeed,
+    GreatPersonView,
+    GreatPointsView,
     IdeologyCard,
+    IncidentView,
     InstitutionView,
     ItemCard,
     LearningCard,
     LevelView,
     LoreCard,
     ProphecyCard,
+    RealmEraView,
     RiteCard,
     RiteEffectView,
     RumourBoard,
     RumourView,
+    StudyView,
     TechGraph,
     TechniqueSpecView,
     TechniqueView,
     TongueAtlas,
     TongueRank,
     TriggerSpecView,
+    WorldEraView,
 )
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
 from aerona.api.views.culture_cards import language_card, legend_card, registers_of_languages, tradition_card
 from aerona.catalog.civics import CAPABILITIES, TRIGGERS
+from aerona.catalog.discovery import AGES, BLUEPRINT_KINDS, BLUEPRINT_SOURCES, DEEDS, FIELDS, INCIDENTS, era_name
 from aerona.catalog.rumours import is_alarm, is_atrocity
 from aerona.catalog.techniques import BRANCH_GRAPH, INSTITUTIONS, TECHNIQUES, Gate
+from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import (
@@ -74,13 +85,27 @@ from aerona.db.tables.culture import (
     RiteProfileRow,
     RumourRow,
 )
+from aerona.db.tables.discovery import (
+    ArtifactStudyRow,
+    BannedWorkRow,
+    BlueprintRow,
+    EraDeedRow,
+    GreatPersonRow,
+    GreatPointsRow,
+    PolityEraRow,
+    ResearchIncidentRow,
+    WorldEraRow,
+)
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import CustomCatalog, Technique
+from aerona.domain.enums.discovery import AgeKind
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.economy.materials import MaterialBook, node_material
+from aerona.engine.lore.eras import leaders_share
+from aerona.engine.lore.great_people import great_threshold
 from aerona.engine.lore.kinds import kinds_in
 from aerona.engine.lore.research import gate_open
 from aerona.engine.lore.research_depth import capabilities_of
@@ -372,6 +397,21 @@ async def learning(entity_id: Id, services: ServicesDep) -> LearningCard:
         founded = await session.scalars(select(InstitutionRow).where(InstitutionRow.community_entity_id == entity_id).order_by(InstitutionRow.technique))
         boosts = await session.scalars(select(ResearchBoostRow).where(ResearchBoostRow.holder_entity_id == entity_id).order_by(ResearchBoostRow.id))
         able = set(await capabilities_of(session, entity_id))
+        holder_row = await session.get(EntityRow, entity_id)
+        needed = await great_threshold(session, await world_rules(services, session), holder_row.world_id if holder_row is not None else None)
+        points = list(await session.scalars(select(GreatPointsRow).where(GreatPointsRow.holder_entity_id == entity_id).order_by(GreatPointsRow.field)))
+        greats = list(await session.scalars(select(GreatPersonRow).where(GreatPersonRow.holder_entity_id == entity_id).order_by(GreatPersonRow.promoted_epoch)))
+        incidents = list(
+            await session.scalars(
+                select(ResearchIncidentRow).where(ResearchIncidentRow.holder_entity_id == entity_id).order_by(ResearchIncidentRow.epoch.desc())
+            )
+        )
+        studies = list(await session.scalars(select(ArtifactStudyRow).where(ArtifactStudyRow.holder_entity_id == entity_id).order_by(ArtifactStudyRow.epoch)))
+        designs = list(await session.scalars(select(BlueprintRow).where(BlueprintRow.holder_node_id == entity_id).order_by(BlueprintRow.id)))
+        linked = await node_refs(
+            session,
+            [row.mortal_entity_id for row in greats] + [row.item_entity_id for row in studies] + [node for row in designs for node in row.licensed_to or []],
+        )
         customs = await session.execute(
             select(CustomKindRow, HolderCustomTechniqueRow.secret)
             .join(HolderCustomTechniqueRow, HolderCustomTechniqueRow.kind_id == CustomKindRow.id)
@@ -432,10 +472,120 @@ async def learning(entity_id: Id, services: ServicesDep) -> LearningCard:
                 CapabilityView(capability=capability, label=spec.label, effect=spec.effect, held=capability in able)
                 for capability, spec in CAPABILITIES.items()
             ],
+            great_points=[
+                GreatPointsView(field=row.field, label=FIELDS[row.field].label, points=row.points, threshold=needed, locked=row.locked) for row in points
+            ],
+            great_people=[
+                GreatPersonView(
+                    mortal=linked[row.mortal_entity_id],
+                    field=row.field,
+                    label=FIELDS[row.field].label,
+                    deed=FIELDS[row.field].deed,
+                    promoted_epoch=row.promoted_epoch,
+                    deed_done=row.deed_done,
+                    deed_epoch=row.deed_epoch,
+                    locked=row.locked,
+                )
+                for row in greats
+                if row.mortal_entity_id in linked
+            ],
+            incidents=[
+                IncidentView(
+                    id=row.id,
+                    kind=row.kind,
+                    label=INCIDENTS[row.kind],
+                    technique=row.technique,
+                    branch=row.branch,
+                    severity=row.severity,
+                    dead=row.dead,
+                    epoch=row.epoch,
+                )
+                for row in incidents
+            ],
+            studies=[
+                StudyView(item=linked[row.item_entity_id], technique=row.technique, progress=row.progress, epoch=row.epoch, locked=row.locked)
+                for row in studies
+                if row.item_entity_id in linked
+            ],
+            designs=[
+                BlueprintView(
+                    id=row.id,
+                    name=row.name,
+                    kind=row.kind,
+                    kind_label=BLUEPRINT_KINDS[row.kind],
+                    subject=row.subject,
+                    source=row.source,
+                    source_label=BLUEPRINT_SOURCES[row.source],
+                    quality=row.quality,
+                    licensed_to=[linked[node] for node in row.licensed_to or [] if node in linked],
+                    since_epoch=row.since_epoch,
+                    locked=row.locked,
+                )
+                for row in designs
+            ],
             books=[refs[item] for item in books if item in refs],
             custom_techniques=[
                 CustomTechniqueView(kind_id=kind.id, name=kind.name, base=Technique(kind.base), secret=secret) for kind, secret in customs.all()
             ],
+        )
+
+
+@router.get("/polities/{polity_id}/era", response_model=RealmEraView)
+async def realm_era(polity_id: Id, services: ServicesDep) -> RealmEraView:
+    async with reader(services) as session:
+        table = (await world_rules(services, session)).discovery
+        row = await session.get(PolityEraRow, polity_id)
+        deeds = list(
+            await session.scalars(select(EraDeedRow).where(EraDeedRow.polity_entity_id == polity_id).order_by(EraDeedRow.epoch.desc(), EraDeedRow.id.desc()))
+        )
+        banned = list(await session.scalars(select(BannedWorkRow).where(BannedWorkRow.polity_entity_id == polity_id).order_by(BannedWorkRow.since_epoch)))
+        refs = await node_refs(session, [deed.subject_node_id for deed in deeds if deed.subject_node_id is not None] + [item.work_entity_id for item in banned])
+        age = row.age if row is not None else AgeKind.NORMAL
+        return RealmEraView(
+            polity_id=polity_id,
+            score=row.score if row is not None else 0,
+            age=age,
+            age_label=AGES[age],
+            since_epoch=row.since_epoch if row is not None else 0,
+            lowest=row.lowest if row is not None else 0,
+            golden_at=table.golden_at,
+            dark_at=table.dark_at,
+            locked=row.locked if row is not None else [],
+            deeds=[
+                EraDeedView(
+                    id=deed.id,
+                    deed=deed.deed,
+                    label=DEEDS[deed.deed],
+                    points=deed.points,
+                    epoch=deed.epoch,
+                    subject=refs.get(deed.subject_node_id) if deed.subject_node_id is not None else None,
+                )
+                for deed in deeds
+            ],
+            banned=[
+                BannedWorkView(work=refs[item.work_entity_id], since_epoch=item.since_epoch, locked=item.locked)
+                for item in banned
+                if item.work_entity_id in refs
+            ],
+        )
+
+
+@router.get("/worlds/{world_id}/era", response_model=WorldEraView)
+async def world_era(world_id: Id, services: ServicesDep) -> WorldEraView:
+    async with reader(services) as session:
+        table = (await world_rules(services, session)).discovery
+        row = await session.get(WorldEraRow, world_id)
+        era = row.era if row is not None else 1
+        top = max(spec.level for spec in TECHNIQUES.values())
+        share = await leaders_share(session, world_id, era + 1, table.era_leaders) if era < top else 1.0
+        return WorldEraView(
+            world_id=world_id,
+            era=era,
+            name=era_name(era),
+            top=top,
+            since_epoch=row.since_epoch if row is not None else 0,
+            next_share=round(share * PERCENT),
+            locked=row.locked if row is not None else [],
         )
 
 

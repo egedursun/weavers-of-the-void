@@ -37,6 +37,7 @@ import { Label, Muted, Stat, Text } from '@/components/typography'
 import { tierNumeral } from '@/features/languages/languageIcons'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { DiscoveryDesk } from './Discoveries'
 import { LearningShaping } from './LearningControls'
 import {
   AdjustBlock,
@@ -553,6 +554,7 @@ function Body({
         )}
       </LoreCard>
       <ResearchDesk card={card} blocked={blocked} />
+      <DiscoveryDesk card={card} blocked={blocked} />
       <div data-surface='TechGraph' className='flex min-w-0 flex-col gap-3'>
         <div className='flex min-w-0 items-center gap-2'>
           <Label variant='overline' className='flex-1'>

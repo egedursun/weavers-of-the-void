@@ -7,10 +7,13 @@ from aerona.db.tables.communication import CipherRow, SignalLinkRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import WorldSeasonRow
 from aerona.db.tables.lore import MessageRow
+from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.communication import DispatchContent, DispatchState, Medium, SignalState
+from aerona.domain.enums.culture import Technique
 from aerona.engine.context import TickContext
+from aerona.engine.lore.civics import holders_know
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import spoken_language
 
@@ -57,6 +60,13 @@ async def signalled(ctx: TickContext, owner_id: int) -> bool:
     return found is not None
 
 
+async def posted(ctx: TickContext, owner_id: int) -> bool:
+    owner = await ctx.session.get(EntityRow, owner_id)
+    holders = [owner_id, *([owner.location_id] if owner is not None and owner.location_id is not None else [])]
+    realm = await ctx.session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id.in_(holders)).limit(1))
+    return await holders_know(ctx.session, [*holders, *([realm] if realm is not None else [])], Technique.POSTAL_SERVICE)
+
+
 async def delay(ctx: TickContext, atlas: RegionAtlas, origin_id: int, recipient_id: int, *, medium: Medium, owner_id: int) -> int:
     if medium in INSTANT:
         return 0
@@ -66,7 +76,10 @@ async def delay(ctx: TickContext, atlas: RegionAtlas, origin_id: int, recipient_
     if origin is None or target is None or origin.world_id != target.world_id:
         return table.interworld_epochs
     hops = atlas.region_hops(atlas.top_region(origin.id), atlas.top_region(target.id)) or 0
-    epochs = -(-hops // int(getattr(table, SPEED_RULES[medium])))
+    speed = int(getattr(table, SPEED_RULES[medium]))
+    if medium is Medium.LETTER and await posted(ctx, owner_id):
+        speed += ctx.rules.technique_effects.postal_hops
+    epochs = -(-hops // speed)
     if medium in OVERLAND and await winter(ctx, origin.world_id):
         epochs = -(-epochs * (PERCENT + table.winter_delay_pct) // PERCENT)
     if await signalled(ctx, owner_id):

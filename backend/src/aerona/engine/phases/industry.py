@@ -19,7 +19,9 @@ NOTE_CAP = 6
 
 @reads(
     "people.population",
+    "people.wealth",
     "settlement.population",
+    "settlement.wealth",
     "table.army_profiles",
     "table.beliefs",
     "table.bonds",
@@ -63,12 +65,14 @@ NOTE_CAP = 6
     "trade_route.danger",
 )
 @writes(
+    "people.wealth",
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_industry",
     "table.community_labour",
     "table.community_methods",
     "table.community_stocks",
+    "table.entities",
     "table.epoch_year_cursors",
     "table.faction_goals",
     "table.goods_flows",

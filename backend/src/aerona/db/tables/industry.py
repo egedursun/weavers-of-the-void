@@ -24,6 +24,7 @@ class CommunityMethodRow(Base):
     method: Mapped[MethodKind] = mapped_column(enum_type(MethodKind, "method"))
     adopted_epoch: Mapped[int]
     displaced: Mapped[int] = mapped_column(default=0)
+    obsolete_since: Mapped[int | None]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

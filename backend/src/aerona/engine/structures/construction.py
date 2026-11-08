@@ -16,6 +16,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.demography import Job
+from aerona.domain.enums.discovery import BlueprintKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialFamily
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
@@ -27,6 +28,7 @@ from aerona.domain.models.entity_stats import LegendStats, StructureStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.materials import sanctity_splendour
 from aerona.engine.economy.stocks import goods_of
+from aerona.engine.lore.blueprints import design_factor
 from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.naming import Namer, seed_of
@@ -256,7 +258,8 @@ async def advance(ctx: TickContext, construction: ConstructionRow, *, active: in
     if "progress" in construction.locked:
         return 0
     workers = await builders_at(ctx, site.id, active)
-    wanted = round_half_up(workers * table.worker_output * await engineering(ctx, site.id, profile, knowledge))
+    planned = await design_factor(ctx.session, ctx.rules, site.id, BlueprintKind.STRUCTURE, construction.kind.value)
+    wanted = round_half_up(workers * table.worker_output * await engineering(ctx, site.id, profile, knowledge) * planned)
     props = await material_props(ctx.session, work)
     commodity = material_commodity(props.family if props is not None else None)
     needed = round_half_up(wanted * table.materials_per_100_work / PERCENT)

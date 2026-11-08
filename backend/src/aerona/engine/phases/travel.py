@@ -56,6 +56,7 @@ from aerona.engine.ecology.beasts import mount_of
 from aerona.engine.economy.materials import VesselRig, hull_guard, hull_wear, rig_of, wind_guard
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.dangers import harm_of
+from aerona.engine.environment.knowledge import polity_of, well_charted
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.items import wayfinder
 from aerona.engine.mind.book import pressures_of
@@ -485,7 +486,11 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
     danger = destination.danger if destination is not None else 0
     wind = scene.departure_wind(ctx, journey, traveller)
     rig = await rig_of(ctx.session, vehicle)
-    home = await harm_of(ctx.session, ctx.rules, scene.ground.atlas.top_region(traveller.id), DangerHarm.TRAVELLERS)
+    region = scene.ground.atlas.top_region(traveller.id)
+    home = await harm_of(ctx.session, ctx.rules, region, DangerHarm.TRAVELLERS)
+    realm = await polity_of(ctx.session, traveller.id) or await polity_of(ctx.session, traveller.location_id)
+    if await well_charted(ctx.session, ctx.rules, realm, region):
+        home = round(home * (PERCENT - ctx.rules.discovery.charted_journey_pct) / PERCENT)
     if not scene.rng.probability(road_risk(ctx.rules, route, scene.knowledge.branches(traveller.id), vehicle, danger, wind=wind, rig=rig, region_danger=home)):
         return True
     kind = METHOD_EVENTS.get(route.method) or scene.rng.pick(COMMON_EVENTS)

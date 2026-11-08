@@ -78,6 +78,7 @@ class DiseaseBook:
     bands: dict[int, dict[AgeBand, int]] = field(default_factory=dict)
     sanitation: dict[int, int] = field(default_factory=dict)
     inoculated: set[int] = field(default_factory=set)
+    tended: set[int] = field(default_factory=set)
     hosts: dict[int, set[int]] = field(default_factory=dict)
     ranges: dict[tuple[int, int], int] = field(default_factory=dict)
     ley: set[int] = field(default_factory=set)
@@ -118,6 +119,7 @@ class DiseaseBook:
                 totals[region] += people
         book.sanitation = {region: round_half_up(weighted[region] / totals[region]) for region in totals}
         book.inoculated = set(await session.scalars(select(HolderTechniqueRow.holder_entity_id).where(HolderTechniqueRow.technique == Technique.INOCULATION)))
+        book.tended = set(await session.scalars(select(HolderTechniqueRow.holder_entity_id).where(HolderTechniqueRow.technique == Technique.HOSPITALS)))
         await book.load_hosts(session)
         for line in await session.scalars(select(LeyLineRow).where(LeyLineRow.severed.is_(False))):
             book.ley |= {line.region_a_id, line.region_b_id}

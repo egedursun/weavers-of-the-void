@@ -28,6 +28,7 @@ from aerona.domain.enums.culture import (
     TraditionEffectKind,
     TraditionKind,
 )
+from aerona.domain.enums.discovery import AgeKind, BlueprintKind, BlueprintSource, EraDeed, GreatField, ResearchIncident
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import KnowledgeBranch
 
@@ -318,6 +319,97 @@ class BoostView(ApiModel):
     epoch: int
 
 
+class GreatPointsView(ApiModel):
+    field: GreatField
+    label: str
+    points: int
+    threshold: int
+    locked: list[str]
+
+
+class GreatPersonView(ApiModel):
+    mortal: NodeRef
+    field: GreatField
+    label: str
+    deed: str
+    promoted_epoch: int
+    deed_done: bool
+    deed_epoch: int | None
+    locked: list[str]
+
+
+class IncidentView(ApiModel):
+    id: int
+    kind: ResearchIncident
+    label: str
+    technique: Technique | None
+    branch: KnowledgeBranch | None
+    severity: int
+    dead: int
+    epoch: int
+
+
+class StudyView(ApiModel):
+    item: NodeRef
+    technique: Technique
+    progress: int
+    epoch: int
+    locked: list[str]
+
+
+class BlueprintView(ApiModel):
+    id: int
+    name: str
+    kind: BlueprintKind
+    kind_label: str
+    subject: str
+    source: BlueprintSource
+    source_label: str
+    quality: int
+    licensed_to: list[NodeRef]
+    since_epoch: int
+    locked: list[str]
+
+
+class EraDeedView(ApiModel):
+    id: int
+    deed: EraDeed
+    label: str
+    points: int
+    epoch: int
+    subject: NodeRef | None
+
+
+class BannedWorkView(ApiModel):
+    work: NodeRef
+    since_epoch: int
+    locked: list[str]
+
+
+class RealmEraView(ApiModel):
+    polity_id: int
+    score: int
+    age: AgeKind
+    age_label: str
+    since_epoch: int
+    lowest: int
+    golden_at: int
+    dark_at: int
+    locked: list[str]
+    deeds: list[EraDeedView]
+    banned: list[BannedWorkView]
+
+
+class WorldEraView(ApiModel):
+    world_id: int
+    era: int
+    name: str
+    top: int
+    since_epoch: int
+    next_share: int
+    locked: list[str]
+
+
 class CapabilityView(ApiModel):
     capability: Capability
     label: str
@@ -335,6 +427,11 @@ class LearningCard(ApiModel):
     institutions: list[InstitutionView]
     boosts: list[BoostView]
     capabilities: list[CapabilityView]
+    great_points: list[GreatPointsView]
+    great_people: list[GreatPersonView]
+    incidents: list[IncidentView]
+    studies: list[StudyView]
+    designs: list[BlueprintView]
 
 
 class GateNeed(ApiModel):

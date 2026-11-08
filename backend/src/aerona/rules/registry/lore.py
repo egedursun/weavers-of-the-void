@@ -252,6 +252,17 @@ class TechniqueEffectsRules:
     navigation_pct: int = rule(25, 0, 200, C, "Sea route capacity gained by steering by the stars (%)")
     instruments_pct: int = rule(10, 0, 200, C, "Sea route capacity gained by astrolabes (%)")
     eclipse_calm_pct: int = rule(50, 0, 100, C, "Dread of an eclipse spared a people who foretold it (%)")
+    oral_law_evidence: int = rule(10, 0, 100, C, "Evidence an investigation gains where elders recite and judge by oral law")
+    corruption_cut_pct: int = rule(30, 0, 100, C, "Corruption a realm with a bureaucracy is spared (%)")
+    postal_hops: int = rule(2, 0, 50, C, "Regions more a letter crosses in an epoch along a postal service")
+    joint_stock_pct: int = rule(15, 0, 200, C, "Trade route capacity gained when its merchants pool their ventures (%)")
+    insurance_pct: int = rule(40, 0, 100, C, "Goods lost on a dangerous road that insurance makes good (%)")
+    hospitals_pct: int = rule(20, 0, 100, C, "Deaths from sickness spared a people with hospitals (%)")
+    monastic_pct: int = rule(40, 0, 200, C, "Weight books gain in carrying knowledge where monks copy and keep them (%)")
+    theology_pct: int = rule(30, 0, 200, C, "Zeal preaching gains where schools of theology teach the doctrine (%)")
+    philosophy_pct: int = rule(15, 0, 200, C, "Research in the natural branches gained from natural philosophy (%)")
+    empiricism_pct: int = rule(15, 0, 200, C, "Research in every branch gained from empiricism (%)")
+    press_literacy_pct: int = rule(30, 0, 200, C, "Literacy a school can raise gained where printing houses turn out books (%)")
 
 
 @dataclass(frozen=True)

@@ -6,11 +6,13 @@ from aerona.catalog.vessels import HULLS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.discovery import BlueprintKind
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import HullClass, VesselArmament, VesselStatus
 from aerona.domain.enums.travel import VehicleKind
 from aerona.engine.economy.materials import set_node_material
+from aerona.engine.lore.blueprints import design_factor
 from aerona.engine.military.rule_tables import hull_values
 from aerona.engine.primitives.stats import set_stats
 from aerona.rules.registry import Rules
@@ -38,7 +40,8 @@ async def commission(session: AsyncSession, rules: Rules, vessel: EntityRow, ord
     row.hull_class = hull
     row.armament = [item.value for item in (order.armament if order.armament is not None else spec.armament)][: max(spec.slots, 0) or None]
     values = hull_values(rules.seafaring)
-    row.seaworthiness = values[(hull.value, "seaworthiness")]
+    designed = await design_factor(session, rules, order.home_port_id or vessel.location_id, BlueprintKind.VESSEL, hull.value)
+    row.seaworthiness = min(PERCENT, round(values[(hull.value, "seaworthiness")] * designed))
     row.crew = order.crew if order.crew is not None else spec.crew
     row.cargo_capacity = min(values[(hull.value, "cargo")], row.crew * rules.seafaring.crew_per_cargo)
     row.condition = PERCENT

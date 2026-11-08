@@ -290,6 +290,30 @@ def partial_choice_tables(frontend: str) -> list[str]:
     ]
 
 
+def enum_members(text: str, name: str) -> list[str]:
+    block = text[text.index(f"class {name}(") :]
+    block = block[: block.find("\n\n\n") if "\n\n\n" in block else len(block)]
+    return re.findall(r"^    ([A-Z][A-Z0-9_]*) = ", block, re.MULTILINE)
+
+
+def idle_techniques(texts: dict[Path, str]) -> list[str]:
+    catalog = BACKEND / "catalog/techniques.py"
+    readers = []
+    for path, text in texts.items():
+        if path.is_relative_to(ENUMS):
+            continue
+        if path == catalog:
+            text = text[text.index("UNIT_TECHNIQUES") :] if "UNIT_TECHNIQUES" in text else ""
+        readers.append(text)
+    joined = "\n".join(readers)
+    members = enum_members((ENUMS / "culture.py").read_text(encoding="utf-8"), "Technique")
+    return [
+        f"technique {member.lower()} has no engine effect: nothing outside its catalog entry reads Technique.{member}"
+        for member in members
+        if not re.search(rf"\b(?:Technique|T)\.{member}\b", joined)
+    ]
+
+
 def main() -> int:
     texts = backend_texts()
     errors = [
@@ -301,6 +325,7 @@ def main() -> int:
         *pages_without_shared_sections(),
         *book_gaps(texts),
         *partial_choice_tables(frontend_text()),
+        *idle_techniques(texts),
     ]
     for line in errors:
         print(f"ERROR {line}")

@@ -16,7 +16,22 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.lore import ideology, legends, prophecy, research, research_depth, rites, traditions
+from aerona.engine.lore import (
+    blueprints,
+    dangers,
+    eras,
+    great_people,
+    ideology,
+    legends,
+    obsolescence,
+    printing,
+    prophecy,
+    research,
+    research_depth,
+    reverse,
+    rites,
+    traditions,
+)
 from aerona.engine.lore.backfill import backfill_typed_kinds
 from aerona.engine.lore.calendar_rites import RiteCalendar, found_sleep_customs
 from aerona.engine.lore.language import SACRED_STAT, derive_registers, learn_second, prestige_parts, remeasure, speakers, standing_of, tongues_of
@@ -471,21 +486,30 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "cult.followers",
     "people.population",
     "settlement.population",
+    "settlement.prosperity",
+    "table.blueprints",
     "table.bonds",
     "table.book_contents",
     "table.captive_cohorts",
     "table.community_societies",
     "table.community_stocks",
     "table.crime_cases",
+    "table.entity_flags",
+    "table.era_deeds",
+    "table.great_people",
+    "table.great_person_points",
     "table.holder_levels",
     "table.holder_techniques",
     "table.institutions",
     "table.item_profiles",
     "table.knowledge_holders",
+    "table.law_jurisdictions",
+    "table.law_profiles",
     "table.loans",
     "table.offices",
     "table.outbreaks",
     "table.people_culture",
+    "table.polity_eras",
     "table.polity_members",
     "table.polity_profiles",
     "table.production_runs",
@@ -495,20 +519,37 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.sieges",
     "table.skills",
     "table.sky_events",
+    "table.structure_profiles",
     "table.treaty_clauses",
     "table.treaty_parties",
     "table.treaty_profiles",
+    "table.vessel_profiles",
+    "table.war_sides",
+    "table.wars",
+    "table.world_eras",
 )
 @writes(
     "knowledge.spread",
+    "settlement.population",
+    "settlement.prosperity",
     "table.bonds",
     "table.book_contents",
+    "table.chronicle",
+    "table.chronicle_entities",
     "table.entities",
+    "table.epoch_year_cursors",
+    "table.era_deeds",
+    "table.great_person_points",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.incident_participants",
+    "table.incidents",
+    "table.polity_eras",
     "table.research_boosts",
     "table.research_focus",
+    "table.research_incidents",
     "table.research_progress",
+    "table.world_eras",
 )
 async def research_cycles(ctx: TickContext) -> None:
     ctx.count("holders_seeded", await research.ensure_holders(ctx))
@@ -519,6 +560,10 @@ async def research_cycles(ctx: TickContext) -> None:
     ctx.count("techniques_adopted", await research_depth.adopt_techniques(ctx))
     ctx.count("techniques_diffused", await research.diffuse_techniques(ctx))
     ctx.count("societies_changed_by_techniques", await research_depth.changes_of_adoption(ctx))
+    for step in (reverse.reverse_engineer, dangers.dangers, great_people.great_people, eras.eras, blueprints.blueprints, obsolescence.obsolescence):
+        for key, value in (await step(ctx)).items():
+            ctx.count(key, value)
+    ctx.count("works_banned", await printing.censor(ctx))
     ctx.count("books_filled", await research.fill_books(ctx))
     ctx.count("books_read", await research.read_books(ctx))
     ctx.count("knowledge_spread_measured", await research.spread_of(ctx))

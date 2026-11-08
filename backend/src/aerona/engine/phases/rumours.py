@@ -15,6 +15,7 @@ register_profile_table("rumours", "carrier_entity_id")
     "table.bonds",
     "table.chronicle",
     "table.epoch_year_cursors",
+    "table.holder_techniques",
     "table.incident_participants",
     "table.incidents",
     "table.journeys",

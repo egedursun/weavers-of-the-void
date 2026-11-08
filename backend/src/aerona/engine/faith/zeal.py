@@ -11,6 +11,7 @@ from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import BattleRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityFlag, EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
@@ -20,6 +21,7 @@ from aerona.domain.enums.world import SkyEventKind
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import Church, FaithBook
 from aerona.engine.faith.doctrine import clergy_of, liturgy_reach
+from aerona.engine.lore.civics import holders_know
 from aerona.engine.mind.book import traits_of
 from aerona.engine.mind.memories import remember
 from aerona.engine.polity.laws import LawBook
@@ -188,7 +190,9 @@ async def zeal_parts(ctx: TickContext, church: Church, book: FaithBook, *, laws:
         parts["holy victories"] = won * table.holy_victory
     if doctrine is not None and doctrine.clergy_quality:
         preaching = round_half_up(doctrine.clergy_quality * table.preaching_pct / PERCENT / TENTH * HALF)
-        parts["preaching"] = round_half_up(preaching * await liturgy_reach(ctx, church) / PERCENT)
+        schooled = await holders_know(ctx.session, [member.id for member in church.members], Technique.THEOLOGY_SCHOOLS)
+        taught = 1 + ctx.rules.technique_effects.theology_pct / PERCENT if schooled else 1
+        parts["preaching"] = round_half_up(preaching * await liturgy_reach(ctx, church) / PERCENT * taught)
     if await crisis(ctx, church, atlas):
         parts["plague and hunger"] = table.crisis
     omens = await doom_omens(ctx, church)

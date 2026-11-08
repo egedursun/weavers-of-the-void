@@ -26,7 +26,7 @@ from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of, lots_of
 from aerona.engine.environment.years import world_years
 from aerona.engine.industry.energy import scale_by_energy
-from aerona.engine.industry.methods import feed, method_for, process_of_kind
+from aerona.engine.industry.methods import feed, method_for, outdated, process_of_kind
 from aerona.engine.industry.pollution import fish_factor
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -194,7 +194,7 @@ async def method_factor(ctx: TickContext, book: EconomyBook, community_id: int, 
     spec = method_for(book, community_id, process)
     crews = round_half_up(workers * ctx.rules.energy.extraction_per_100_workers / PERCENT)
     powered = scale_by_energy(book, community_id, spec.energy, spec.energy_need * crews)
-    return spec.output_pct / PERCENT * powered * await feed(ctx, community_id, spec, crews)
+    return spec.output_pct / PERCENT * powered * await feed(ctx, community_id, spec, crews) * outdated(book, ctx.rules, community_id, process)
 
 
 def knowledge_gate(rules: Rules, book: EconomyBook, profile: ResourceProfileRow, community_id: int) -> float:

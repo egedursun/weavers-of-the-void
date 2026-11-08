@@ -24,6 +24,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.faith.book import patron_node
 from aerona.engine.lore.civics import holders_know
 from aerona.engine.lore.items import profile_of
+from aerona.engine.lore.printing import banned_for, printed, read_in_secret
 from aerona.engine.lore.research import institutions
 from aerona.engine.mind.book import stored_values, values_for, write_values
 from aerona.engine.mind.memories import remember
@@ -205,8 +206,11 @@ async def spread(ctx: TickContext, creed: EntityRow, profile: IdeologyProfileRow
         if community is None or community.entity_type not in COMMUNITY_TYPES:
             continue
         society = await ctx.session.get(CommunitySocietyRow, target)
+        if await banned_for(ctx.session, target, creed.id) and not await read_in_secret(ctx, target, creed.id):
+            continue
         schooled = 1 + table.school_pct / PERCENT if await institutions(ctx.session, target) else 1.0
-        chance = table.spread_chance * (1 + appeal_for(profile, society, table.discontent_pct)) * schooled
+        presses = 1 + ctx.rules.discovery.printed_creed_pct / PERCENT if await printed(ctx.session, source) else 1.0
+        chance = table.spread_chance * (1 + appeal_for(profile, society, table.discontent_pct)) * schooled * presses
         if ctx.rng(f"creed_spread.{creed.id}.{target}.{ctx.epoch}").chance(chance):
             row = IdeologyAdherentRow(
                 ideology_entity_id=creed.id, adherent_entity_id=target, strength=held[source].strength // 2, state=False, since_epoch=ctx.epoch

@@ -85,6 +85,7 @@ class StructureProfileRow(Base):
     upkeep_goods: Mapped[int] = mapped_column(default=0)
     unpaid_epochs: Mapped[int] = mapped_column(default=0)
     built_epoch: Mapped[int | None]
+    obsolete_since: Mapped[int | None]
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

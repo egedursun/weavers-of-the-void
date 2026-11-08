@@ -6,13 +6,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.culture import ItemProfileRow
+from aerona.db.tables.culture import HolderTechniqueRow, ItemProfileRow
+from aerona.db.tables.economy import TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.polity import PolityMemberRow, PolityTerritoryRow
+from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, PolityTerritoryRow
 from aerona.db.tables.region import PolityMapKnowledgeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.culture import ItemClass
+from aerona.domain.enums.culture import ItemClass, Technique
+from aerona.domain.enums.economy import TradeRouteStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
@@ -112,7 +114,42 @@ async def _floors(session: AsyncSession, rules: Rules, atlas: RegionAtlas) -> tu
         if finder_polity is not None:
             floors.lift(finder_polity, atlas.top_region(land), rules.terrain.knowledge_discovered)
     await _maps(session, rules, atlas, floors)
+    await _trade_roads(session, rules, atlas, floors)
     return floors.levels, floors.owned
+
+
+async def _trade_roads(session: AsyncSession, rules: Rules, atlas: RegionAtlas, floors: Floors) -> None:
+    routes = await session.execute(
+        select(TradeRouteProfileRow.first_market_id, TradeRouteProfileRow.second_market_id).where(TradeRouteProfileRow.status == TradeRouteStatus.OPEN)
+    )
+    for first, second in routes.all():
+        path = atlas.region_path(atlas.top_region(first), atlas.top_region(second)) or []
+        for market in (first, second):
+            polity = floors.polity_for(market)
+            if polity is not None:
+                for region_id in path:
+                    floors.lift(polity, region_id, rules.discovery.trade_charting)
+
+
+async def cartographers(session: AsyncSession) -> set[int]:
+    holders = set(await session.scalars(select(HolderTechniqueRow.holder_entity_id).where(HolderTechniqueRow.technique == Technique.CARTOGRAPHY)))
+    found = {holder for holder in holders if await session.get(PolityProfileRow, holder) is not None}
+    for polity, member in await session.execute(select(PolityMemberRow.polity_entity_id, PolityMemberRow.member_entity_id)):
+        if member in holders:
+            found.add(polity)
+    return found
+
+
+async def well_charted(session: AsyncSession, rules: Rules, polity_id: int | None, region_id: int | None) -> bool:
+    level = await knowledge_of(session, polity_id, region_id)
+    return level is not None and level >= rules.discovery.charted_level
+
+
+async def charted_share(session: AsyncSession, rules: Rules, polity_id: int, regions: set[int]) -> float:
+    if not regions:
+        return 0.0
+    charted = [region for region in regions if await well_charted(session, rules, polity_id, region)]
+    return len(charted) / len(regions)
 
 
 async def _frontiers(session: AsyncSession, atlas: RegionAtlas, owned: dict[int, set[int]]) -> dict[int, set[int]]:
@@ -145,6 +182,8 @@ async def chart(session: AsyncSession, rules: Rules, atlas: RegionAtlas, epoch: 
     table = rules.terrain
     floors, owned = await _floors(session, rules, atlas)
     frontier = await _frontiers(session, atlas, owned)
+    mapmakers = await cartographers(session)
+    boost = 1 + rules.discovery.cartography_pct / PERCENT
     rows = {(row.polity_entity_id, row.region_entity_id): row for row in await session.scalars(select(PolityMapKnowledgeRow))}
     pairs = (
         set(rows)
@@ -158,7 +197,10 @@ async def chart(session: AsyncSession, rules: Rules, atlas: RegionAtlas, epoch: 
             continue
         floor = floors.get(polity_id, {}).get(region_id, 0)
         previous = row.level if row is not None else 0
-        drift = table.knowledge_explore_gain if region_id in frontier.get(polity_id, set()) else -table.knowledge_decay
+        charting = polity_id in mapmakers
+        gain = round(table.knowledge_explore_gain * boost) if charting else table.knowledge_explore_gain
+        fade = round(table.knowledge_decay / boost) if charting else table.knowledge_decay
+        drift = gain if region_id in frontier.get(polity_id, set()) else -fade
         level = clamp_int(max(floor, previous + drift), 0, PERCENT)
         if row is None:
             if level <= 0:

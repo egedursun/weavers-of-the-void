@@ -17,12 +17,14 @@ from aerona.domain.enums.statecraft import SubjectKind
 from aerona.domain.enums.titles import TitleRank, TitleTenure
 from aerona.domain.models.entity_stats import TitleStats
 from aerona.engine.context import TickContext
+from aerona.engine.environment.knowledge import charted_share
 from aerona.engine.mortal.kin import children_of
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.formation import found_polity
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.naming import seed_of
+from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats
@@ -269,13 +271,15 @@ async def press_claims(ctx: TickContext, book: RealmBook, tally: TitleTally) -> 
                 select(ClaimRow.id).where(ClaimRow.claimant_entity_id == ruler, ClaimRow.title_entity_id == title.title_entity_id).limit(1)
             )
             if exists is None:
+                charted = await charted_share(ctx.session, ctx.rules, realm.entity.id, await de_jure_lands(ctx, title.title_entity_id))
+                drawn = 1 + ctx.rules.discovery.charted_claim_pct / PERCENT if charted * 2 >= 1 else 1
                 ctx.session.add(
                     ClaimRow(
                         claimant_entity_id=ruler,
                         polity_entity_id=title.polity_entity_id,
                         title_entity_id=title.title_entity_id,
                         basis=ClaimBasis.DE_JURE,
-                        strength=table.claim_strength,
+                        strength=min(PERCENT, round_half_up(table.claim_strength * drawn)),
                         since_epoch=ctx.epoch,
                         locked=[],
                     )

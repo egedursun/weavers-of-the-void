@@ -99,6 +99,10 @@ class ResearchLine(ContextItem):
     institutions: list[str] = Field(default_factory=list)
     boosts: list[str] = Field(default_factory=list)
     capabilities: list[str] = Field(default_factory=list)
+    great_people: list[str] = Field(default_factory=list)
+    age: str = ""
+    incidents: list[str] = Field(default_factory=list)
+    designs: list[str] = Field(default_factory=list)
 
 
 class StoresLine(ContextItem):

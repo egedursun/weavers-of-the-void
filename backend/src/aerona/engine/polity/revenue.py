@@ -11,7 +11,7 @@ from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.culture import IdeologyTenet
+from aerona.domain.enums.culture import IdeologyTenet, Technique
 from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.settlement import DistrictKind, TreasuryEntry
 from aerona.domain.enums.society import SocialClass
@@ -92,6 +92,8 @@ async def breed_corruption(ctx: TickContext, laws: LawBook, realm: Realm, polici
         + sum(table.farm_corruption for row in policies.values() if row.farmed and row.rate > 0)
         - (table.creed_corruption if tenets & CLEAN_CREEDS else 0)
     )
+    if await realm_allows(ctx.session, realm, Technique.BUREAUCRACY):
+        aim = aim * (PERCENT - ctx.rules.technique_effects.corruption_cut_pct) / PERCENT
     aim = clamp_int(aim, 0, PERCENT)
     realm.profile.corruption = clamp_int(
         realm.profile.corruption + round_half_up((aim - realm.profile.corruption) * table.corruption_drift_pct / PERCENT), 0, PERCENT

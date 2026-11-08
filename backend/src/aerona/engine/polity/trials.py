@@ -14,6 +14,7 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.intrigue import HookDemand, IntrigueSecret
 from aerona.domain.enums.justice import CaseStage, Deposition, TrialKind, Verdict
@@ -28,6 +29,7 @@ from aerona.engine.intrigue.favours import hook_on, use_hook
 from aerona.engine.intrigue.identities import EXPOSURE
 from aerona.engine.intrigue.secrets import learn
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.lore.civics import holders_know
 from aerona.engine.mind.book import skill_level, traits_of, values_for
 from aerona.engine.mind.ethics import culture_of, ethic_reading, honour_of
 from aerona.engine.mind.hooks import judged
@@ -146,6 +148,9 @@ async def weigh(ctx: TickContext, case: CrimeCaseRow, culprit_id: int, investiga
     found = round_half_up(skill * table.skill_evidence_pct / PERCENT) + testimony_weight(ctx, await witnesses_of(ctx, case.id))
     if await known_secret(ctx, investigator.id if investigator is not None else None, culprit_id, case.crime):
         found += table.secret_evidence
+    courts = [court for court in (case.settlement_entity_id, case.polity_entity_id) if court is not None]
+    if await holders_know(ctx.session, courts, Technique.ORAL_LAW):
+        found += ctx.rules.technique_effects.oral_law_evidence
     return clamp_int(found, 0, PERCENT)
 
 

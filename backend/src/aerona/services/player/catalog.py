@@ -31,6 +31,7 @@ from aerona.services.player import (
     curation,
     death,
     diplomacy,
+    discovery,
     disease,
     divine,
     economy,
@@ -1967,6 +1968,20 @@ LORE_ACTIONS = (
     _sync(Meta("research:boost", "Grant a boost toward a technique", G.SOCIETY), lore.grant_boost, lore.GrantBoost, free, ("S8.4",)),
     _sync(Meta("research:boost_edit", "Rewrite a research boost", G.SOCIETY), lore.edit_boost, lore.EditBoost, free, ("S8.4",)),
     _sync(Meta("research:boost_remove", "Strike a research boost", G.SOCIETY), lore.remove_boost, lore.BoostTarget, free, ("S8.4",)),
+    _sync(Meta("discovery:raise_great", "Raise a mortal as a great person", G.SOCIETY), discovery.raise_great, discovery.RaiseGreat, free, ("S8.4",)),
+    _sync(Meta("discovery:era", "Set a realm's era score and age", G.SOCIETY), discovery.set_era, discovery.SetEra, free, ("S8.4",)),
+    _sync(Meta("discovery:world_era", "Set the era of a world", G.SOCIETY), discovery.set_world_era, discovery.SetWorldEra, free, ("S8.4",)),
+    _sync(
+        Meta("discovery:incident", "Strike a community with a research incident", G.SOCIETY), discovery.cause_incident, discovery.CauseIncident, free, ("S8.4",)
+    ),
+    _sync(
+        Meta("discovery:design", "Grant a design of a ship, engine, building or pattern", G.SOCIETY),
+        discovery.grant_design,
+        discovery.GrantDesign,
+        free,
+        ("S8.4",),
+    ),
+    _sync(Meta("discovery:ban", "Ban or allow a work in a realm", G.SOCIETY), discovery.ban_work, discovery.BanWork, free, ("S8.4",)),
     _sync(
         Meta("research:holder", "Set a people's standing in a branch", G.SOCIETY),
         lore.edit_holder,

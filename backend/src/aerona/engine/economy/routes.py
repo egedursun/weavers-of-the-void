@@ -210,9 +210,11 @@ def capacity_of(ctx: TickContext, book: EconomyBook, route: Route, works: dict[i
 async def spoken_capacity(ctx: TickContext, book: EconomyBook, route: Route, works: dict[int, Works]) -> int:
     first, second = route.ends
     capacity = capacity_of(ctx, book, route, works) * await trade_barrier(ctx.session, ctx.rules, first, second, ctx.epoch)
+    held = book.techniques.get(first, set()) | book.techniques.get(second, set())
+    if Technique.JOINT_STOCK in held:
+        capacity *= 1 + ctx.rules.technique_effects.joint_stock_pct / PERCENT
     if route.profile.mode is TradeMode.SEA:
         table = ctx.rules.technique_effects
-        held = book.techniques.get(first, set()) | book.techniques.get(second, set())
         capacity *= (
             1 + (table.navigation_pct * (Technique.NAVIGATION_STARS in held) + table.instruments_pct * (Technique.ASTRONOMY_INSTRUMENTS in held)) / PERCENT
         )
@@ -476,9 +478,9 @@ def lane_for(
     return Lane(left.commodity, seller_id, buyer_id, landed, volume, famine, terms) if volume > 0 else None
 
 
-async def haul(ctx: TickContext, route: Route, lane: Lane) -> Haul:
+async def haul(ctx: TickContext, route: Route, lane: Lane, *, insured: bool = False) -> Haul:
     ledger = goods_of(ctx.session, ctx.epoch)
-    danger = stat(route.entity, "danger") or 0
+    danger = (stat(route.entity, "danger") or 0) * ((PERCENT - ctx.rules.technique_effects.insurance_pct) / PERCENT if insured else 1)
     taken = await ledger.take(
         lane.seller_id, lane.commodity, lane.volume, GoodsFlow.TRADE, exclude=lane.terms.banned.kinds, exclude_worlds=lane.terms.banned.worlds
     )
@@ -623,7 +625,8 @@ async def carry(
             if policies is not None:
                 moved += await run_contraband(ctx, book, route, pair, policies, room=capacity - moved, season=season, tally=tally)
             continue
-        done = await haul(ctx, route, lane)
+        insured = Technique.INSURANCE in book.techniques.get(lane.seller_id, set()) | book.techniques.get(lane.buyer_id, set())
+        done = await haul(ctx, route, lane, insured=insured)
         if done.sent <= 0:
             continue
         lost = done.sent - done.delivered

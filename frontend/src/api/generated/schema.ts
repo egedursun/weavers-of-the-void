@@ -5631,6 +5631,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/polities/{polity_id}/era": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+                get: operations["realm_era_api_polities__polity_id__era_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/worlds/{world_id}/era": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+                get: operations["world_era_api_worlds__world_id__era_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/worlds/{world_id}/tongues": {
         parameters: {
             query?: never;
@@ -6937,6 +6969,102 @@ export interface paths {
         get?: never;
         put?: never;
                 post: operations["action_research_boost_remove_api_actions_research_boost_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/discovery:raise_great": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+                post: operations["action_discovery_raise_great_api_actions_discovery_raise_great_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/discovery:era": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+                post: operations["action_discovery_era_api_actions_discovery_era_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/discovery:world_era": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+                post: operations["action_discovery_world_era_api_actions_discovery_world_era_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/discovery:incident": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+                post: operations["action_discovery_incident_api_actions_discovery_incident_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/discovery:design": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+                post: operations["action_discovery_design_api_actions_discovery_design_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/actions/discovery:ban": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+                post: operations["action_discovery_ban_api_actions_discovery_ban_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -19382,6 +19510,7 @@ export interface components {
                         remove: boolean;
         };
                 AgeBand: "child" | "adult" | "elder";
+                AgeKind: "normal" | "golden" | "dark" | "heroic";
                 AgentKind: "son" | "mortal";
                 AgentRetryEvent: {
                         id: number;
@@ -19848,6 +19977,11 @@ export interface components {
                         kind: string;
                         share: number;
         };
+                BannedWorkView: {
+            work: components["schemas"]["NodeRef"];
+                        since_epoch: number;
+                        locked: string[];
+        };
                 BatchDeepenLogEvent: {
                         id: number;
                         kind: "batch_deepen.log";
@@ -20147,6 +20281,21 @@ export interface components {
                         name: string;
             reason: components["schemas"]["ToolBlock"];
             minimum_rarity: components["schemas"]["Rarity"] | null;
+        };
+                BlueprintKind: "vessel" | "siege_engine" | "structure" | "artifact_pattern";
+                BlueprintSource: "drawn" | "stolen" | "traded" | "licensed" | "granted";
+                BlueprintView: {
+                        id: number;
+                        name: string;
+            kind: components["schemas"]["BlueprintKind"];
+                        kind_label: string;
+                        subject: string;
+            source: components["schemas"]["BlueprintSource"];
+                        source_label: string;
+                        quality: number;
+                        licensed_to: components["schemas"]["NodeRef"][];
+                        since_epoch: number;
+                        locked: string[];
         };
                 BodyBuild: "slight" | "average" | "heavy" | "giant";
                 BodyCohortInput: {
@@ -22055,11 +22204,39 @@ export interface components {
         };
                 Disaster: "earthquake" | "flood" | "plague" | "drought" | "storm" | "eruption" | "volcanic_quake";
                 Discovery: "known" | "legend" | "unknown" | "forgotten";
+                DiscoveryBanInput: {
+                        polity_id: number;
+                        work_id: number;
+                        banned: boolean;
+        };
+                DiscoveryDesignInput: {
+                        holder_id: number;
+            kind: components["schemas"]["BlueprintKind"];
+                        subject: string;
+                        quality: number;
+                        name?: string | null;
+        };
                 DiscoveryEnded: {
                         ok: boolean;
             guest: components["schemas"]["GuestWorld"] | null;
         };
+                DiscoveryEraInput: {
+                        polity_id: number;
+                        score?: number | null;
+            age?: components["schemas"]["AgeKind"] | null;
+                        hold: boolean;
+        };
+                DiscoveryIncidentInput: {
+                        holder_id: number;
+            kind: components["schemas"]["ResearchIncident"];
+            technique?: components["schemas"]["Technique"] | null;
+        };
                 DiscoveryMode: "explorer" | "seer" | "miner" | "mystery" | "player" | "son";
+                DiscoveryRaiseGreatInput: {
+                        mortal_id: number;
+            field: components["schemas"]["GreatField"];
+                        deed: boolean;
+        };
                 DiscoveryStatus: {
                         active: boolean;
             guest: components["schemas"]["GuestWorld"] | null;
@@ -22075,6 +22252,11 @@ export interface components {
                         regions: number;
                         places: number;
                         communities: number;
+        };
+                DiscoveryWorldEraInput: {
+                        world_id: number;
+                        era: number;
+                        hold: boolean;
         };
                 DiseaseCreateInput: {
                         region_id: number;
@@ -23053,6 +23235,15 @@ export interface components {
             [key: string]: unknown;
         };
                 EquipmentSlot: "wielded_main" | "wielded_off" | "armour_body" | "armour_head" | "armour_under" | "armour_cover" | "mount" | "focus";
+                EraDeed: "first_technique" | "first_institution" | "great_victory" | "wonder" | "great_person" | "defeat" | "famine";
+                EraDeedView: {
+                        id: number;
+            deed: components["schemas"]["EraDeed"];
+                        label: string;
+                        points: number;
+                        epoch: number;
+            subject: components["schemas"]["NodeRef"] | null;
+        };
                 ErrorCode: "invalid" | "not_found" | "conflict" | "busy" | "read_only" | "insufficient" | "forbidden" | "too_large" | "unavailable" | "internal";
                 ErrorPayload: {
                         epoch?: number | null;
@@ -24079,6 +24270,24 @@ export interface components {
                         target_route_id: number | null;
                         target_entity_id: number | null;
         };
+                GreatField: "scholar" | "artist" | "general" | "prophet" | "engineer" | "merchant" | "explorer";
+                GreatPersonView: {
+            mortal: components["schemas"]["NodeRef"];
+            field: components["schemas"]["GreatField"];
+                        label: string;
+                        deed: string;
+                        promoted_epoch: number;
+                        deed_done: boolean;
+                        deed_epoch: number | null;
+                        locked: string[];
+        };
+                GreatPointsView: {
+            field: components["schemas"]["GreatField"];
+                        label: string;
+                        points: number;
+                        threshold: number;
+                        locked: string[];
+        };
                 GriefEditInput: {
                         grief_id: number;
             stage?: components["schemas"]["GriefStage"] | null;
@@ -24825,6 +25034,16 @@ export interface components {
         };
                 IncidentUnlinkCauseInput: {
                         incident_id: number;
+        };
+                IncidentView: {
+                        id: number;
+            kind: components["schemas"]["ResearchIncident"];
+                        label: string;
+            technique: components["schemas"]["Technique"] | null;
+            branch: components["schemas"]["KnowledgeBranch"] | null;
+                        severity: number;
+                        dead: number;
+                        epoch: number;
         };
                 IncitedWarView: {
                         war_id: number;
@@ -25627,6 +25846,11 @@ export interface components {
                         institutions: components["schemas"]["InstitutionView"][];
                         boosts: components["schemas"]["BoostView"][];
                         capabilities: components["schemas"]["CapabilityView"][];
+                        great_points: components["schemas"]["GreatPointsView"][];
+                        great_people: components["schemas"]["GreatPersonView"][];
+                        incidents: components["schemas"]["IncidentView"][];
+                        studies: components["schemas"]["StudyView"][];
+                        designs: components["schemas"]["BlueprintView"][];
         };
                 LedgerEntry: {
                         id: number;
@@ -28863,6 +29087,19 @@ export interface components {
                         id: number;
                         name: string;
         };
+                RealmEraView: {
+                        polity_id: number;
+                        score: number;
+            age: components["schemas"]["AgeKind"];
+                        age_label: string;
+                        since_epoch: number;
+                        lowest: number;
+                        golden_at: number;
+                        dark_at: number;
+                        locked: string[];
+                        deeds: components["schemas"]["EraDeedView"][];
+                        banned: components["schemas"]["BannedWorkView"][];
+        };
                 RealmLink: {
                         polity_id: number | null;
         };
@@ -29463,6 +29700,7 @@ export interface components {
             };
                         release?: string[];
         };
+                ResearchIncident: "leak" | "released_beast" | "plague" | "backlash" | "fire" | "explosion" | "poisoning" | "summoning_gone_wrong";
                 ResearchInstitutionInput: {
                         community_id: number;
             technique: components["schemas"]["Technique"];
@@ -31725,6 +31963,13 @@ export interface components {
             breakdown: components["schemas"]["FunctionBreakdownView"];
             construction: components["schemas"]["ConstructionView"] | null;
         };
+                StudyView: {
+            item: components["schemas"]["NodeRef"];
+            technique: components["schemas"]["Technique"];
+                        progress: number;
+                        epoch: number;
+                        locked: string[];
+        };
                 SubjectKind: "vassal" | "tributary" | "march" | "personal_union" | "client" | "colony" | "protectorate";
                 SubjectView: {
             vassal: components["schemas"]["NodeRef"];
@@ -33397,6 +33642,15 @@ export interface components {
                 WorldEpochStarInput: {
                         world_id: number;
                         entity_id?: number | null;
+        };
+                WorldEraView: {
+                        world_id: number;
+                        era: number;
+                        name: string;
+                        top: number;
+                        since_epoch: number;
+                        next_share: number;
+                        locked: string[];
         };
                 WorldGoldenAgeInput: {
                         world_id: number;
@@ -44087,6 +44341,64 @@ export interface operations {
             };
         };
     };
+    realm_era_api_polities__polity_id__era_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                polity_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+                        200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RealmEraView"];
+                };
+            };
+                        422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    world_era_api_worlds__world_id__era_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                world_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+                        200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorldEraView"];
+                };
+            };
+                        422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     tongues_api_worlds__world_id__tongues_get: {
         parameters: {
             query?: never;
@@ -46555,6 +46867,192 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ResearchBoostRemoveInput"];
+            };
+        };
+        responses: {
+                        200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+                        422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_discovery_raise_great_api_actions_discovery_raise_great_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiscoveryRaiseGreatInput"];
+            };
+        };
+        responses: {
+                        200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+                        422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_discovery_era_api_actions_discovery_era_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiscoveryEraInput"];
+            };
+        };
+        responses: {
+                        200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+                        422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_discovery_world_era_api_actions_discovery_world_era_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiscoveryWorldEraInput"];
+            };
+        };
+        responses: {
+                        200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+                        422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_discovery_incident_api_actions_discovery_incident_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiscoveryIncidentInput"];
+            };
+        };
+        responses: {
+                        200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+                        422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_discovery_design_api_actions_discovery_design_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiscoveryDesignInput"];
+            };
+        };
+        responses: {
+                        200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionResponse"];
+                };
+            };
+                        422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    action_discovery_ban_api_actions_discovery_ban_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiscoveryBanInput"];
             };
         };
         responses: {
@@ -70137,6 +70635,7 @@ export const actorKindValues: ReadonlyArray<FlattenedDeepRequired<components>["s
 export const aestheticValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Aesthetic"]> = ["austere", "ornate", "geometric", "natural", "macabre", "celestial"];
 export const afterlifeStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AfterlifeState"]> = ["wandering", "judged", "in_realm", "reborn", "consumed", "released"];
 export const ageBandValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgeBand"]> = ["child", "adult", "elder"];
+export const ageKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgeKind"]> = ["normal", "golden", "dark", "heroic"];
 export const agentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentKind"]> = ["son", "mortal"];
 export const agentRetryEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentRetryEvent"]["kind"]> = ["agent.retry"];
 export const agentStreamEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AgentStreamEvent"]["kind"]> = ["agent.stream"];
@@ -70165,6 +70664,8 @@ export const beliefSourceValues: ReadonlyArray<FlattenedDeepRequired<components>
 export const bindingKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BindingKind"]> = ["none", "place", "item", "structure", "beast", "person"];
 export const biomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Biome"]> = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 export const blessingKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BlessingKind"]> = ["essence", "hp", "stat", "existence"];
+export const blueprintKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BlueprintKind"]> = ["vessel", "siege_engine", "structure", "artifact_pattern"];
+export const blueprintSourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BlueprintSource"]> = ["drawn", "stolen", "traded", "licensed", "granted"];
 export const bodyBuildValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyBuild"]> = ["slight", "average", "heavy", "giant"];
 export const bodyFunctionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyFunction"]> = ["grasp", "fine_manipulation", "locomotion", "sight", "hearing", "speech", "breath", "vital", "cognition", "reproduction", "flight", "venom", "horn", "tail", "presence"];
 export const bodyPartValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BodyPart"]> = ["aura", "core", "eye", "face", "fingers", "gills", "groin", "gut", "head", "heart", "horn", "jaw", "left_antenna", "left_arm", "left_branch", "left_ear", "left_eye", "left_fin", "left_foot", "left_foreleg", "left_hand", "left_hindleg", "left_leg", "left_midleg", "left_wing", "lungs", "neck", "nose", "pseudopods", "right_antenna", "right_arm", "right_branch", "right_ear", "right_eye", "right_fin", "right_foot", "right_foreleg", "right_hand", "right_hindleg", "right_leg", "right_midleg", "right_wing", "roots", "tail", "teeth", "toes", "tongue", "torso", "venom_gland", "wings"];
@@ -70297,6 +70798,7 @@ export const epochStepStatusValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const epochStopRequestedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochStopRequestedEvent"]["kind"]> = ["epoch.stop_requested"];
 export const epochStoppedEventKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EpochStoppedEvent"]["kind"]> = ["epoch.stopped"];
 export const equipmentSlotValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EquipmentSlot"]> = ["wielded_main", "wielded_off", "armour_body", "armour_head", "armour_under", "armour_cover", "mount", "focus"];
+export const eraDeedValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EraDeed"]> = ["first_technique", "first_institution", "great_victory", "wonder", "great_person", "defeat", "famine"];
 export const errorCodeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ErrorCode"]> = ["invalid", "not_found", "conflict", "busy", "read_only", "insufficient", "forbidden", "too_large", "unavailable", "internal"];
 export const estatePrivilegeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EstatePrivilege"]> = ["tax_exemption", "monopoly", "council_seat", "arms", "judicial_immunity"];
 export const ethicalStanceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["EthicalStance"]> = ["required", "admirable", "acceptable", "frowned_upon", "shameful", "unthinkable"];
@@ -70341,6 +70843,7 @@ export const genesisTemplateValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const giftStanceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GiftStance"]> = ["honoured", "feared", "persecuted", "taxed"];
 export const governmentKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GovernmentKind"]> = ["chiefdom", "monarchy", "theocracy", "oligarchy", "republic", "tribal_confederation", "empire", "hive_council", "god_kingdom", "occupation"];
 export const gravityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Gravity"]> = ["low", "normal", "high"];
+export const greatFieldValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GreatField"]> = ["scholar", "artist", "general", "prophet", "engineer", "merchant", "explorer"];
 export const griefStageValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GriefStage"]> = ["shock", "mourning", "acceptance", "complicated"];
 export const groupKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GroupKind"]> = ["household", "court", "circle", "warband", "crew"];
 export const handednessValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Handedness"]> = ["right", "left", "both"];
@@ -70540,6 +71043,7 @@ export const relationTypeValues: ReadonlyArray<FlattenedDeepRequired<components>
 export const reputationAxisValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ReputationAxis"]> = ["heroism", "honour", "cruelty", "piety", "generosity", "wisdom", "trickery", "skill_renown", "troublemaker"];
 export const reputationLabelValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ReputationLabel"]> = ["forgotten", "hated", "respected", "feared", "loved", "distant", "acknowledged"];
 export const researchChooserValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ResearchChooser"]> = ["scholars", "agent", "god"];
+export const researchIncidentValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ResearchIncident"]> = ["leak", "released_beast", "plague", "backlash", "fire", "explosion", "poisoning", "summoning_gone_wrong"];
 export const resolutionKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ResolutionKind"]> = ["route_security", "embargo", "void_ban", "sanction"];
 export const resolutionStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ResolutionState"]> = ["proposed", "passed", "rejected", "lapsed"];
 export const resourceMechanicValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ResourceMechanic"]> = ["decaying", "addictive", "sentient", "depletion_price", "fixed", "sacred"];

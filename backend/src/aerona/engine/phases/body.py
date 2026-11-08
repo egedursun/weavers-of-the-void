@@ -576,7 +576,7 @@ async def _recruit(ctx: TickContext) -> None:
     "table.nodes",
     "table.tradition_profiles",
 )
-@writes("people.prosperity", "table.body_customs", "table.entities", "table.maimed_cohorts")
+@writes("people.prosperity", "settlement.prosperity", "table.body_customs", "table.entities", "table.maimed_cohorts")
 async def body_society(ctx: TickContext) -> None:
     await tend_cohorts(ctx)
     await _wholeness(ctx)

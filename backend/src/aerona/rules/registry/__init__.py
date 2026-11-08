@@ -51,6 +51,7 @@ from aerona.rules.registry.deep_world import DeepWorldRules
 from aerona.rules.registry.demography import CohortsRules, DemographyRules, LabourRules, MobilityRules, PeopleRules
 from aerona.rules.registry.diplomacy import DiplomacyRules
 from aerona.rules.registry.disasters import DisastersRules
+from aerona.rules.registry.discovery import DiscoveryRules
 from aerona.rules.registry.doctrine import (
     AfterlifeRules,
     DoctrineRules,
@@ -366,6 +367,7 @@ class Rules:
     army_depth: ArmyDepthRules = field(default_factory=ArmyDepthRules)
     war_conduct: WarConductRules = field(default_factory=WarConductRules)
     research_depth: ResearchDepthRules = field(default_factory=ResearchDepthRules)
+    discovery: DiscoveryRules = field(default_factory=DiscoveryRules)
     holy_orders: OrderRules = field(default_factory=OrderRules)
     guild_ranks: GuildRules = field(default_factory=GuildRules)
     elasticity: ElasticityRules = field(default_factory=ElasticityRules)

@@ -11,13 +11,15 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import CultureValueRow, SkillRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.communication import Medium
 from aerona.domain.enums.culture import BoostTrigger, Capability, IdeologyTenet, ResearchChooser, Technique
 from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import SkillKind, SkillSource, ValueAxis
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
-from aerona.engine.lore import ideology, research_control, research_depth
+from aerona.engine.communication import post
+from aerona.engine.lore import ideology, research, research_control, research_depth
 from aerona.engine.lore.learning import institution_factor
 from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.primitives.distance import RegionAtlas
@@ -216,3 +218,31 @@ async def test_the_god_sets_focus_institutions_and_boosts(session: AsyncSession,
     assert edited.progress == 12 and edited.trigger is BoostTrigger.GREAT_DEBT
     await research_control.remove_boost(ctx, boost.id)
     assert await session.get(ResearchBoostRow, boost.id) is None
+
+
+async def test_civic_thought_quickens_research(session: AsyncSession, realm: Realm) -> None:
+    ctx = make_ctx(session)
+    people = await folk(session, realm, "Quill Folk")
+    assert await research.thought_factor(ctx, people.id, B.ASTRONOMY) == 1
+    session.add_all(
+        [
+            HolderTechniqueRow(holder_entity_id=people.id, technique=Technique.NATURAL_PHILOSOPHY, since_epoch=1, secret=False),
+            HolderTechniqueRow(holder_entity_id=people.id, technique=Technique.EMPIRICISM, since_epoch=1, secret=False),
+        ]
+    )
+    await session.flush()
+    table = RULES.technique_effects
+    assert await research.thought_factor(ctx, people.id, B.ASTRONOMY) == 1 + (table.philosophy_pct + table.empiricism_pct) / 100
+    assert await research.thought_factor(ctx, people.id, B.CIVICS) == 1 + table.empiricism_pct / 100
+
+
+async def test_a_postal_service_speeds_letters(session: AsyncSession, realm: Realm) -> None:
+    ctx = make_ctx(session)
+    sender = await folk(session, realm, "Post Folk")
+    far = await make(session, "Far Post Folk", EntityType.PEOPLE, realm.world.id, location_id=realm.far_region.id, population=4000)
+    atlas = await RegionAtlas.load(session)
+    slow = await post.delay(ctx, atlas, sender.id, far.id, medium=Medium.LETTER, owner_id=sender.id)
+    session.add(HolderTechniqueRow(holder_entity_id=sender.id, technique=Technique.POSTAL_SERVICE, since_epoch=1, secret=False))
+    await session.flush()
+    assert await post.posted(ctx, sender.id)
+    assert await post.delay(ctx, atlas, sender.id, far.id, medium=Medium.LETTER, owner_id=sender.id) <= slow

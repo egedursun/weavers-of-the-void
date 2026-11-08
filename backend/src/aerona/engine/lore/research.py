@@ -22,8 +22,10 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
+from aerona.engine.lore.eras import era_factor
 from aerona.engine.lore.kinds import custom_bases
 from aerona.engine.lore.learning import institution_factor, patron_factor
+from aerona.engine.lore.printing import banned_for, read_in_secret
 from aerona.engine.primitives.knowledge import raw_level
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount, set_stats, stat
@@ -31,6 +33,9 @@ from aerona.engine.structures.readers import working
 from aerona.rules.registry import Rules
 
 THOUSAND = 1000
+NATURAL_BRANCHES = frozenset(
+    {KnowledgeBranch.ASTRONOMY, KnowledgeBranch.MEDICINE, KnowledgeBranch.AGRICULTURE, KnowledgeBranch.METALLURGY, KnowledgeBranch.SEAFARING}
+)
 SCHOLARLY = (SkillKind.LORE, SkillKind.THEOLOGY, SkillKind.WRITING, SkillKind.ASTRONOMY, SkillKind.MEDICINE, SkillKind.LAW, SkillKind.ALCHEMY)
 Levels = dict[int, dict[KnowledgeBranch, int]]
 
@@ -134,7 +139,17 @@ async def research_factor(ctx: TickContext, community: EntityRow, branch: Knowle
         * (1 + max(await scholar_levels(ctx.session, ctx.rules, community.id, branch), default=0.0) / PERCENT * table.scholar_pct / PERCENT)
         * await institution_factor(ctx.session, ctx.rules, community.id)
         * await patron_factor(ctx.session, ctx.rules, community.id)
+        * await thought_factor(ctx, community.id, branch)
+        * await era_factor(ctx.session, ctx.rules, community.id)
     )
+
+
+async def thought_factor(ctx: TickContext, community_id: int, branch: KnowledgeBranch) -> float:
+    table = ctx.rules.technique_effects
+    known = await techniques_of(ctx.session, community_id)
+    natural = table.philosophy_pct if branch in NATURAL_BRANCHES and Technique.NATURAL_PHILOSOPHY in known else 0
+    tried = table.empiricism_pct if Technique.EMPIRICISM in known else 0
+    return 1 + (natural + tried) / PERCENT
 
 
 async def raise_holder(ctx: TickContext, holder_id: int, branch: KnowledgeBranch, cap: int) -> int | None:
@@ -297,11 +312,14 @@ async def read_books(ctx: TickContext) -> int:
         if reader is None or record is None or record.knowledge_branch is None:
             continue
         holder = reader.location_id if reader.entity_type is EntityType.MORTAL else reader.id
+        if await banned_for(ctx.session, holder, book) and not await read_in_secret(ctx, reader.id, book):
+            continue
         row = await ctx.session.get(HolderLevelRow, (holder, record.knowledge_branch)) if holder is not None else None
         if row is None or "progress" in row.locked or row.level >= raw_level(record.stats):
             continue
         paper = ctx.rules.technique_effects.paper_pct if await has_technique(ctx.session, holder, Technique.PAPER) else 0
-        row.progress = clamp_int(row.progress + round_half_up(table.book_progress * fidelity / PERCENT * (1 + paper / PERCENT)), 0, PERCENT)
+        monks = ctx.rules.technique_effects.monastic_pct if await has_technique(ctx.session, holder, Technique.MONASTICISM) else 0
+        row.progress = clamp_int(row.progress + round_half_up(table.book_progress * fidelity / PERCENT * (1 + (paper + monks) / PERCENT)), 0, PERCENT)
         taught += 1
     return taught
 

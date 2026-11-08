@@ -40,6 +40,7 @@ import { DoctrineSection } from './faith/Doctrine'
 import { EventSection } from './happenings/EventCard'
 import { EventsHereSection } from './happenings/EventsHere'
 import { LandShapeSection } from './happenings/LandShape'
+import { EraSection } from './lore/EraSection'
 import { LearningSection } from './lore/LearningSection'
 import { LoreSection } from './lore/LoreSection'
 import { isLoreKind } from './lore/model'
@@ -510,6 +511,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         )}
         {(isCommunity(ctx.type) || entity.entity_type === 'polity') && (
           <RumoursSection communityId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'polity' && (
+          <EraSection polityId={entity.id} readOnlyReason={readOnly} />
         )}
         {entity.entity_type === 'species' && (
           <SpeciesSection speciesId={entity.id} readOnlyReason={readOnly} />
