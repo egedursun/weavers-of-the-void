@@ -28,7 +28,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.phases.warfare import Theatre, duel
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import move_stat, shift_stat, stat
 from aerona.engine.records import death_path
 from aerona.engine.services.community_relations import change_relation, end_blood_feud, open_feud, relation, start_blood_feud
 from aerona.engine.services.war import declare_war
@@ -81,8 +81,7 @@ async def mediate(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> str
 
 async def wergild(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> str | None:
     price = ctx.rules.treaties.wergild_value
-    shift_stat(enemy, "wealth", -price // 10)
-    shift_stat(avenger, "wealth", price // 10)
+    move_stat(enemy, avenger, "wealth", price // 10)
     await end_blood_feud(ctx.session, avenger.id, enemy.id, epoch=ctx.epoch)
     await change_relation(ctx, avenger.id, enemy.id, price // 3, MemoryKind.GIFTED_ME, note="wergild")
     return f"{enemy.name} paid {avenger.name} wergild and the blood feud was laid to rest."

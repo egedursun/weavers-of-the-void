@@ -53,7 +53,7 @@ from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.society import move_stock
-from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.primitives.stats import move_stat, shift_stat
 from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.relations.persuasion import envoy_sways
@@ -355,8 +355,7 @@ async def pay_tribute(ctx: TickContext, profile: TreatyProfileRow, clause: Treat
     if shift_stat(payer, "prosperity", -amount) is not None:
         add_prosperity(ctx.rules, receiver, amount)
         paid = True
-    if shift_stat(payer, "wealth", -amount) is not None:
-        shift_stat(receiver, "wealth", amount)
+    if move_stat(payer, receiver, "wealth", amount):
         paid = True
     commodity = str(clause.params.get("commodity", Commodity.GOODS.value))
     payer_society = await ctx.session.get(CommunitySocietyRow, payer.id)

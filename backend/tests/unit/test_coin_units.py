@@ -42,7 +42,40 @@ def test_treasury_spent_as_wealth_points_is_flagged() -> None:
     assert [(item.line, item.field) for item in module.mixed_units({Path("module.py"): ENGINE}, fields)] == [(3, "pay")]
 
 
+CARRIED = """
+def drained(realm, owner):
+    taken = min(realm.treasury, 50)
+    realm.treasury -= taken
+    shift_stat(owner, "wealth", taken)
+
+
+async def ransomed(ctx, home, captor):
+    cost = await pay_from_treasury(ctx, home, 20)
+    add_prosperity(ctx.rules, captor, cost)
+
+
+async def received(ctx, realm, owner):
+    taken = min(realm.treasury, 50)
+    await receive_coin(ctx.session, ctx.rules, owner, taken)
+
+
+def recorded(session, town, profile):
+    session.add(HistoryRow(wealth=stat(town, "wealth"), treasury=profile.treasury))
+
+
+def bridged(profile, faction, table):
+    profile.treasury += stat(faction, "wealth") // 10 * table.dues
+"""
+
+
+def test_treasury_carried_through_a_name_or_a_treasury_call_into_points_is_flagged() -> None:
+    module = checker()
+    found = module.mixed_units({Path("module.py"): CARRIED}, module.treasury_fields([RULES]), module.bridge_fields([RULES]))
+    assert [(item.line, item.field) for item in found] == [(5, "taken"), (10, "cost")]
+
+
 def test_the_engine_converts_every_treasury_amount_it_spends_as_wealth() -> None:
     module = checker()
-    fields = module.treasury_fields([path.read_text(encoding="utf-8") for path in sorted(module.RULES.rglob("*.py"))])
-    assert module.mixed_units({path: path.read_text(encoding="utf-8") for path in sorted(module.ENGINE.rglob("*.py"))}, fields) == []
+    texts = [path.read_text(encoding="utf-8") for path in sorted(module.RULES.rglob("*.py"))]
+    files = {path: path.read_text(encoding="utf-8") for path in sorted(module.ENGINE.rglob("*.py"))}
+    assert module.mixed_units(files, module.treasury_fields(texts), module.bridge_fields(texts)) == []

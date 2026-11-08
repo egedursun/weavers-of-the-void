@@ -30,7 +30,7 @@ from aerona.engine.primitives.faith import change_religion
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
-from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.primitives.stats import move_stat
 from aerona.engine.services.war import held_captive, take_captive
 
 A = WarAimKind
@@ -236,8 +236,7 @@ async def reparation_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: 
         return None
     amount = int(aim.params.get("amount", peace.reparations))
     epochs = int(aim.params.get("epochs", 0))
-    shift_stat(loser, "wealth", -amount)
-    shift_stat(victor, "wealth", amount)
+    move_stat(loser, victor, "wealth", amount)
     params: dict[str, int | str | bool] = {"amount": amount, "epochs": epochs} if epochs else {"amount": amount}
     return f"{loser.name} paid {amount} in reparations", Clause(ClauseKind.TRIBUTE, loser.id, victor.id, params)
 

@@ -45,3 +45,13 @@ async def take_coin(session: AsyncSession, rules: Rules, payer: EntityRow, amoun
 def give_coin(rules: Rules, payee: EntityRow, amount: int) -> None:
     if amount > 0 and stat(payee, "wealth") is not None:
         shift_stat(payee, "wealth", wealth_points(rules, amount))
+
+
+async def receive_coin(session: AsyncSession, rules: Rules, payee: EntityRow, amount: int) -> None:
+    if amount <= 0:
+        return
+    realm = await realm_purse(session, payee)
+    if realm is not None and TREASURY_LOCK not in realm.locked:
+        realm.treasury += amount
+        return
+    give_coin(rules, payee, amount)

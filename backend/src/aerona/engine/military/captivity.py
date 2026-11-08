@@ -10,6 +10,7 @@ from aerona.domain.enums.military import CaptiveFate, SpyCover
 from aerona.domain.enums.mind import ActKind, ValueAxis
 from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import receive_coin
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.finance.contraband import traffic
 from aerona.engine.gods.progress import cap_gained_essence
@@ -22,7 +23,7 @@ from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.levies import levies_from
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, shift_stat, stat
+from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, stat
 from aerona.engine.primitives.strength import patron_bonus
 
 HUNDRED = 100
@@ -69,7 +70,7 @@ async def ransom(ctx: TickContext, row: CaptiveCohortRow, captor: EntityRow, hom
     cost = await pay_from_treasury(ctx, home, cohort_ransom(ctx, row))
     if cost <= 0:
         return 0
-    shift_stat(captor, "wealth", cost)
+    await receive_coin(ctx.session, ctx.rules, captor, cost)
     return settle_into(ctx, home, row.count)
 
 

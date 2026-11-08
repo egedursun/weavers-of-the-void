@@ -17,7 +17,7 @@ from aerona.engine.lore.research_depth import trade_partners
 from aerona.engine.lore.theories import faiths_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import move_stat, stat
 
 
 async def holders_of(session: AsyncSession, work: EntityRow) -> set[int]:
@@ -80,8 +80,7 @@ async def smuggle(ctx: TickContext) -> dict[str, int]:
             price = table.black_market_price
             if seller is None or held(seller.id) or (stat(buyer, "wealth") or 0) < price:
                 continue
-            shift_stat(buyer, "wealth", -price)
-            shift_stat(seller, "wealth", price)
+            move_stat(buyer, seller, "wealth", price)
             await deliver(ctx, work, buyer)
             shaken += await stir_heresy(ctx, buyer)
             smuggled += 1

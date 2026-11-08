@@ -15,6 +15,7 @@ from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.body.book import effective
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import receive_coin, wealth_points
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.taboos import forbidden
@@ -30,7 +31,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.polity.oaths import break_on
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import shift_stat, stat_or
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.records import death_path
 from aerona.engine.services.community_relations import change_relation, relation, start_blood_feud
 from aerona.engine.services.war import release_captive
@@ -56,8 +57,8 @@ async def pay_ransom(ctx: TickContext, row: CaptiveRow, captive: EntityRow, capt
     cost = await pay_from_treasury(ctx, home, await named_ransom(ctx, captive), captive=captive)
     if cost <= 0 and not decreed:
         return
-    shift_stat(captor, "wealth", cost)
-    add_prosperity(ctx.rules, captor, cost)
+    await receive_coin(ctx.session, ctx.rules, captor, cost)
+    add_prosperity(ctx.rules, captor, wealth_points(ctx.rules, cost))
     await change_relation(ctx, home.id, captor.id, ctx.rules.campaigns.ransom_relation, MemoryKind.FREED_US, note="ransom")
     await judged(ctx, captor.id, home.id, ActKind.RANSOM, note=captive.name)
     await release_captive(ctx, row, CaptiveStatus.RANSOMED, cost)

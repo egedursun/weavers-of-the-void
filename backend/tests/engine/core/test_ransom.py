@@ -13,6 +13,8 @@ from aerona.domain.enums.polity import DecisionRule, GovernmentKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import HouseStats, PolityStats
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import wealth_points
+from aerona.engine.military.captivity import ransom
 from aerona.engine.military.ransom import (
     carry_language,
     cohort_ransom,
@@ -23,9 +25,11 @@ from aerona.engine.military.ransom import (
     release_by_opinion,
     ward_returns,
 )
+from aerona.engine.phases.prisoners import pay_ransom
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.services.community_relations import change_relation, relation
+from aerona.engine.services.war import take_captive
 from tests.engine.core.factories import CoreWorld, entity, mortal, settlement, tuned_rules
 
 
@@ -33,8 +37,8 @@ def cohort(count: int, social_class: SocialClass, **values: object) -> CaptiveCo
     return CaptiveCohortRow(captor_entity_id=0, count=count, social_class=social_class, fate=CaptiveFate.HELD, since_epoch=1, **values)
 
 
-async def kingdom(session: AsyncSession, world: CoreWorld, town: EntityRow, treasury: int = 0) -> PolityProfileRow:
-    polity = await entity(session, "Kingdom of Vale", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+async def kingdom(session: AsyncSession, world: CoreWorld, town: EntityRow, treasury: int = 0, name: str = "Kingdom of Vale") -> PolityProfileRow:
+    polity = await entity(session, name, EntityType.POLITY, PolityStats(), world_id=world.world.id)
     profile = PolityProfileRow(
         polity_entity_id=polity.id,
         government=next(iter(GovernmentKind)),
@@ -134,3 +138,50 @@ async def test_a_noble_captive_may_be_wed_into_the_captors_house(session: AsyncS
     spouse = await marry_captive(ctx, row, captive, court)
     assert spouse is not None and row.married_entity_id == spouse.id and row.loyalty > 0
     assert await marry_captive(ctx, row, captive, court) is None
+
+
+async def test_a_cohort_ransom_fills_the_captors_treasury_in_coin(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "ransom")
+    home = await settlement(session, "Brookhold", world, world.regions[0])
+    payer = await kingdom(session, world, home, treasury=10000)
+    captor = await settlement(session, "Stonegate", world, world.regions[1])
+    keeper = await kingdom(session, world, captor, name="Kingdom of Stone")
+    set_stats(captor, wealth=10)
+    row = cohort(100, SocialClass.FARMER)
+    row.captor_entity_id = captor.id
+    session.add(row)
+    await session.flush()
+    price = cohort_ransom(ctx, row)
+    assert await ransom(ctx, row, captor, home) > 0
+    assert payer.treasury == 10000 - price and keeper.treasury == price
+    assert stat(captor, "wealth") == 10
+
+
+async def test_a_captor_without_a_realm_takes_the_ransom_as_wealth_points(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "ransom")
+    home = await settlement(session, "Brookhold", world, world.regions[0])
+    await kingdom(session, world, home, treasury=10000)
+    set_stats(world.people, wealth=10)
+    row = cohort(100, SocialClass.FARMER)
+    row.captor_entity_id = world.people.id
+    session.add(row)
+    await session.flush()
+    price = cohort_ransom(ctx, row)
+    await ransom(ctx, row, world.people, home)
+    assert stat(world.people, "wealth") == 10 + wealth_points(ctx.rules, price)
+
+
+async def test_a_named_ransom_pays_the_captors_realm_and_lifts_prosperity_by_points(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "ransom")
+    home = await settlement(session, "Brookhold", world, world.regions[0])
+    payer = await kingdom(session, world, home, treasury=10000)
+    captor = await settlement(session, "Stonegate", world, world.regions[1])
+    keeper = await kingdom(session, world, captor, name="Kingdom of Stone")
+    set_stats(captor, wealth=10, prosperity=40)
+    prisoner = await mortal(session, "Hale", world, home.id)
+    held = await take_captive(ctx, captor, prisoner, None, description="taken in a raid", home_id=home.id)
+    price = await named_ransom(ctx, prisoner)
+    await pay_ransom(ctx, held, prisoner, captor, home)
+    assert payer.treasury == 10000 - price and keeper.treasury == price
+    assert stat(captor, "wealth") == 10
+    assert 40 <= (stat(captor, "prosperity") or 0) <= 40 + wealth_points(ctx.rules, price)

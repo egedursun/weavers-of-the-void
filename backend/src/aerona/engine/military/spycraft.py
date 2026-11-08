@@ -9,6 +9,7 @@ from aerona.db.tables.military import SpyAgentRow, SpyNetworkRow, WarAimRow
 from aerona.db.tables.polity import ClaimRow, HouseMemberRow, OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.warfare import WarSideRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -18,12 +19,14 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClaimBasis, OfficeKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import TREASURY_LOCK, receive_coin
 from aerona.engine.environment.book import region_environment, scar_region
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.mortal.profile import ensure_profile, is_held
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import held_captive, take_captive
 
@@ -144,10 +147,14 @@ async def plant_claimant(ctx: TickContext, owner: EntityRow, target: EntityRow) 
         select(OfficeRow.holder_entity_id).where(OfficeRow.polity_entity_id == realm_id, OfficeRow.kind == OfficeKind.RULER).limit(1)
     )
     existing = set(await ctx.session.scalars(select(ClaimRow.claimant_entity_id).where(ClaimRow.polity_entity_id == realm_id, ClaimRow.ended_epoch.is_(None))))
+    members = list(await ctx.session.scalars(select(PolityMemberRow.member_entity_id).where(PolityMemberRow.polity_entity_id == realm_id)))
     nobles = await ctx.session.scalars(
-        select(HouseMemberRow.mortal_entity_id).join(EntityRow, EntityRow.id == HouseMemberRow.mortal_entity_id).where(EntityRow.status == EntityStatus.CANON)
+        select(HouseMemberRow.mortal_entity_id)
+        .join(EntityRow, EntityRow.id == HouseMemberRow.mortal_entity_id)
+        .where(EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, members))
+        .order_by(EntityRow.importance.desc(), EntityRow.id)
     )
-    pick = next((mortal_id for mortal_id in nobles if mortal_id != ruler and mortal_id not in existing), None)
+    pick = next((mortal_id for mortal_id in nobles if mortal_id != ruler and mortal_id not in existing and not held(mortal_id)), None)
     claimant = await living_entity(ctx.session, pick)
     if claimant is None:
         return None
@@ -199,9 +206,10 @@ async def blackmail_office(ctx: TickContext, owner: EntityRow, target: EntityRow
     table = ctx.rules.espionage
     realm = await ctx.session.get(PolityProfileRow, realm_id)
     if office.kind is OfficeKind.TREASURER and realm is not None:
-        drained = min(realm.treasury, table.blackmail_wealth * 10)
-        realm.treasury -= drained
-        shift_stat(owner, "wealth", drained)
+        if TREASURY_LOCK not in realm.locked:
+            drained = min(realm.treasury, table.blackmail_wealth * ctx.rules.taxation.wealth_per_treasury)
+            realm.treasury -= drained
+            await receive_coin(ctx.session, ctx.rules, owner, drained)
     elif office.kind is OfficeKind.SPYMASTER:
         for row in await ctx.session.scalars(select(SpyNetworkRow).where(SpyNetworkRow.owner_entity_id == owner.id)):
             row.exposure = 0
@@ -211,8 +219,11 @@ async def blackmail_office(ctx: TickContext, owner: EntityRow, target: EntityRow
     elif office.kind in {OfficeKind.CHANCELLOR, OfficeKind.AMBASSADOR}:
         await change_relation(ctx, target.id, owner.id, table.blackmail_relation, MemoryKind.GOODWILL, note=f"{holder.name} spoke for them")
     else:
-        shift_stat(holder, "wealth", -table.blackmail_wealth)
-        shift_stat(owner, "wealth", table.blackmail_wealth)
+        record, _ = await ensure_profile(ctx.session, holder.id, ctx.epoch)
+        room = PERCENT - stat_or(owner, "wealth", PERCENT)
+        paid = 0 if is_held(record, "wealth") else min(record.wealth, table.blackmail_wealth, room)
+        record.wealth -= paid
+        shift_stat(owner, "wealth", paid)
     return f"{owner.name} held the secrets of {holder.name}, {office.kind.value.replace('_', ' ')} of {target.name}, and bent them to its will"
 
 

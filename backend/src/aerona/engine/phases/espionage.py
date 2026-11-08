@@ -52,7 +52,7 @@ from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon, living_entity
 from aerona.engine.primitives.society import shift_stock
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import move_stat, shift_stat, stat
 from aerona.engine.records import death_path
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import declare_war, has_truce, uprising_target
@@ -247,8 +247,7 @@ async def blackmail(ctx: TickContext, spymaster: EntityRow, target: EntityRow, n
     network.intel = clamp_int(network.intel - rules.intel_gain, 0, PERCENT)
     bent = await blackmail_office(ctx, spymaster, target, network)
     if bent is None:
-        shift_stat(target, "wealth", -rules.blackmail_wealth)
-        shift_stat(spymaster, "wealth", rules.blackmail_wealth)
+        move_stat(target, spymaster, "wealth", rules.blackmail_wealth)
     text = (bent + ".") if bent is not None else f"{spymaster.name} held the secrets of {target.name}'s rulers over them and was paid to keep quiet."
     await _note(ctx, text, "espionage.blackmail", (spymaster.id, target.id))
     return text

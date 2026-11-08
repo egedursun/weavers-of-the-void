@@ -24,7 +24,7 @@ from aerona.engine.lore.research import has_technique
 from aerona.engine.lore.research_depth import trade_partners
 from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import move_stat, stat, stat_or
 from aerona.rules.registry import Rules
 
 PATTERN_QUALITY = 70
@@ -162,11 +162,9 @@ async def copy_design(ctx: TickContext, row: BlueprintRow, buyer_id: int, source
 
 
 def pay(payer: EntityRow, payee: EntityRow, amount: int) -> bool:
-    if held(payer.id) or held(payee.id) or (stat(payer, "wealth") or 0) < amount:
+    if held(payer.id) or held(payee.id) or (stat(payer, "wealth") or 0) < amount or PERCENT - stat_or(payee, "wealth", PERCENT) < amount:
         return False
-    shift_stat(payer, "wealth", -amount)
-    shift_stat(payee, "wealth", amount)
-    return True
+    return move_stat(payer, payee, "wealth", amount) == amount
 
 
 async def trade_designs(ctx: TickContext) -> dict[str, int]:

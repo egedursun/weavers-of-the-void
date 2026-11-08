@@ -132,6 +132,19 @@ def shift_stat(entity: EntityRow, key: str, delta: float, default: int | None = 
     return updated
 
 
+def move_stat(payer: EntityRow, payee: EntityRow, key: str, amount: float) -> int:
+    have, room = stat(payer, key), stat(payee, key)
+    if have is None or room is None or amount <= 0:
+        return 0
+    ceiling = model_bounds(payee, key)[1] if key in COUNT_KEYS else PERCENT
+    moved = min(round_half_up(amount), have, ceiling - room if ceiling is not None else round_half_up(amount))
+    if moved <= 0:
+        return 0
+    set_stats(payer, **{key: have - moved})
+    set_stats(payee, **{key: room + moved})
+    return moved
+
+
 def stat_bounds(rules: Rules, entity: EntityRow, key: str) -> tuple[int, int]:
     spec = ENTITY_TYPES[entity.entity_type].stat(key)
     if spec is None:
