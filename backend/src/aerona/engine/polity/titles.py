@@ -36,7 +36,6 @@ LIEGE = "de_jure_liege_entity_id"
 DRIFT = "drift"
 RANK = "rank"
 EQUAL_SPLIT = "equal"
-PRESTIGE = "prestige"
 RANK_ORDER = (TitleRank.LORDSHIP, TitleRank.COUNTY, TitleRank.DUCHY, TitleRank.KINGDOM, TitleRank.EMPIRE)
 POWER = 3
 

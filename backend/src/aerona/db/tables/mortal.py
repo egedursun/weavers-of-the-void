@@ -21,7 +21,6 @@ PROFILE_PERCENTS = (
     "loyalty_community",
     "loyalty_god",
 )
-PROFILE_LOCKS = ("life", "health", "stress", "standing", "loyalty", "career", "education", "equipment", "kin")
 
 
 class MortalProfileRow(Base):

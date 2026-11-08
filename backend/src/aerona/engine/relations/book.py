@@ -45,7 +45,6 @@ BOND_OF = {
     R.BEST_FRIEND: BondKind.COMPANION,
     R.CLOSE_FRIEND: BondKind.COMPANION,
 }
-FIELDS = ("friendship", "romance", "familiarity", "rivalry")
 
 
 @dataclass

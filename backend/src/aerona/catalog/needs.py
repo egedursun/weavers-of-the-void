@@ -53,19 +53,6 @@ SHORTFALL_EFFECTS: Mapping[CommodityKind, ShortfallEffect] = MappingProxyType(
     }
 )
 
-EFFECT_CLASSES: Mapping[ShortfallEffect, frozenset[SocialClass]] = MappingProxyType(
-    {
-        E.HUNGER: frozenset(SocialClass),
-        E.HERDS: frozenset({S.FARMER, S.SERF_OR_SLAVE, S.NOBLE}),
-        E.COLD: frozenset(SocialClass),
-        E.SICKNESS: frozenset(SocialClass),
-        E.IMPIETY: frozenset({S.PRIEST, S.MONASTIC}),
-        E.STATUS: frozenset({S.NOBLE, S.MERCHANT}),
-        E.TOIL: frozenset({S.ARTISAN, S.FARMER, S.SERF_OR_SLAVE}),
-        E.INSECURITY: frozenset({S.WARRIOR, S.NOBLE}),
-        E.ARCANE: frozenset({S.SCRIBE, S.MONASTIC}),
-    }
-)
 
 EFFECT_BASKET: Mapping[ShortfallEffect, Mapping[SocialClass, int]] = MappingProxyType(
     {

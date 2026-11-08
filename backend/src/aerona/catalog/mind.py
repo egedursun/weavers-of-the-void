@@ -8,7 +8,6 @@ from aerona.domain.enums.entity import EngineKind, MortalRole
 from aerona.domain.enums.mind import (
     ActKind,
     MemoryKind,
-    NeedKind,
     OpinionComponent,
     PressureKind,
     Profession,
@@ -29,7 +28,6 @@ M = MemoryKind
 OC = OpinionComponent
 A = ActKind
 P = PressureKind
-N = NeedKind
 
 VALUE_LABELS = MappingProxyType(
     {

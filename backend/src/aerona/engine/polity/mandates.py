@@ -34,7 +34,6 @@ from aerona.engine.services.war import ongoing_wars
 
 GRAIN = CommodityKind.GRAIN
 WANTS = tuple(NobleWant)
-HARSH = frozenset({MandateKind.CURFEW, MandateKind.EXPORT_BAN})
 MANDATE_REASON = "a mandate of the realm"
 STATE = "state"
 LEGITIMACY = "legitimacy"

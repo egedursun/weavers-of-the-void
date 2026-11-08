@@ -4,7 +4,6 @@ from aerona.rules.groups import RuleGroup
 from aerona.rules.model import rule
 
 E = RuleGroup.ECONOMY
-G = RuleGroup.POPULATION_AND_GROWTH
 P = RuleGroup.CIVILIZATION
 
 

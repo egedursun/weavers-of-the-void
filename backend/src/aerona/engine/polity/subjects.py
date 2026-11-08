@@ -96,7 +96,8 @@ async def bargain(ctx: TickContext, book: RealmBook, strength: MilitaryStrength,
     mine, theirs = await power_of(ctx, strength, vassal), await power_of(ctx, strength, overlord)
     if mine * PERCENT >= theirs * table.back_down_ratio_pct:
         row.tribute_pct = row.tribute_pct // 2
-        row.liberty = clamp_int(row.liberty - table.renegotiate_loyalty, 0, PERCENT)
+        if LIBERTY not in row.locked:
+            row.liberty = clamp_int(row.liberty - table.renegotiate_loyalty, 0, PERCENT)
         tally.renegotiated += 1
         text = f"{overlord.entity.name} eased the terms of {vassal.entity.name}, halving what it owes."
     else:

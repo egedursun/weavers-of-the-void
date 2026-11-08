@@ -20,7 +20,6 @@ from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.folk import present_among
 
 RECENT_EPOCHS = 2
-CRUEL = 60
 TREASON_KINDS = frozenset({FactionKind.REBELS, FactionKind.SECRET_SOCIETY})
 
 

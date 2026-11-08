@@ -22,7 +22,6 @@ from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import declare_war
 
-STRENGTH = "strength"
 STANDING = "standing"
 
 

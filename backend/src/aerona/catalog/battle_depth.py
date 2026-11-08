@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from aerona.core.total import total
 from aerona.domain.enums.environment import TerrainKind
-from aerona.domain.enums.military import CasualtyClass, Formation, MoraleState, TargetClass, UnitFamily, UnitKind
+from aerona.domain.enums.military import Formation, MoraleState, UnitFamily, UnitKind
 
 VOLLEYS_CARRIED = 9
 K = UnitKind
@@ -175,20 +175,6 @@ MORALE_LABELS = total(
         MoraleState.RALLIED: "Rallied",
     },
 )
-
-CASUALTY_LABELS = total(
-    CasualtyClass,
-    {
-        CasualtyClass.KILLED: "Killed",
-        CasualtyClass.WOUNDED_WALKING: "Walking wounded",
-        CasualtyClass.WOUNDED_STRETCHER: "Stretcher cases",
-        CasualtyClass.CAPTURED: "Captured",
-        CasualtyClass.MISSING: "Missing",
-        CasualtyClass.DESERTED: "Deserted",
-    },
-)
-
-TARGET_LABELS = total(TargetClass, {TargetClass.SOFT: "Soft target", TargetClass.HARD: "Hard target"})
 
 
 def formation_for(kind: UnitKind, family: UnitFamily) -> Formation:

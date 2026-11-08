@@ -44,7 +44,6 @@ from aerona.engine.structures.workshops import link_workshop
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
 
-STONE_FAMILIES = frozenset({MaterialFamily.STONE, MaterialFamily.METAL})
 LEGEND_POWER = 3
 
 

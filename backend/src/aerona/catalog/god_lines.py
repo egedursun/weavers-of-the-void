@@ -212,9 +212,6 @@ SENTIENT_DEMANDS = (
     ("a settlement of their enemy", None, 0),
     ("the entire harvest of a year", "grain", 400),
 )
-ECONOMY_SENTIENT_BARGAINED = Line(
-    "gods.economy.sentient_bargained", "{resource} demanded {demand} from {owner}; {negotiator} talked it down to half, and {owner} paid."
-)
 ECONOMY_SENTIENT_PACT = Line(
     "gods.economy.sentient_pact", "{negotiator} struck a pact with {resource} for {owner}: {demand}, owed on a set term, in return for its gifts."
 )

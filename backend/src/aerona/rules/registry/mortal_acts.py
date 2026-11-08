@@ -4,7 +4,6 @@ from aerona.rules.groups import RuleGroup
 from aerona.rules.model import rule
 
 G = RuleGroup.MIND
-M = RuleGroup.MORTALS
 P = RuleGroup.POLITY
 
 

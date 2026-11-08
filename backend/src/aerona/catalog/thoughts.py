@@ -17,7 +17,6 @@ from aerona.domain.enums.mind import (
 )
 
 E = Emotion
-F = Facet
 T = ThoughtKind
 N = NeedKind
 G = NeedGroup

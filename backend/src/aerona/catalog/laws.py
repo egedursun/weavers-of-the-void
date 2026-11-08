@@ -109,7 +109,6 @@ def law_terms_guide() -> str:
 PENALTY_CRUELTY = MappingProxyType(
     {"fine": 0, "wergild": 5, "pillory": 15, "exile": 25, "flogging": 35, "hand": 60, "tongue": 65, "blinding": 80, "death": 100}
 )
-PENALTY_HARM = MappingProxyType({"fine": 0, "wergild": 0, "pillory": 0, "exile": 0, "flogging": 15, "hand": 40, "tongue": 30, "blinding": 45, "death": 1000})
 LAW_TITLES = MappingProxyType(
     {
         LawKind.SUCCESSION_RULE: "the Law of the Throne",

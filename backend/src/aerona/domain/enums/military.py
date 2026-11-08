@@ -374,15 +374,6 @@ class Formation(StrEnum):
     SHIELDWALL = "shieldwall"
 
 
-class CasualtyClass(StrEnum):
-    KILLED = "killed"
-    WOUNDED_WALKING = "wounded_walking"
-    WOUNDED_STRETCHER = "wounded_stretcher"
-    CAPTURED = "captured"
-    MISSING = "missing"
-    DESERTED = "deserted"
-
-
 class TargetClass(StrEnum):
     SOFT = "soft"
     HARD = "hard"

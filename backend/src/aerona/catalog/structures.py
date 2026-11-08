@@ -131,19 +131,6 @@ STRUCTURE_ENGINE_KINDS: MappingProxyType[StructureKind, EngineKind] = MappingPro
 WORKSHOP_STRUCTURES: MappingProxyType[WorkshopKind, StructureKind] = MappingProxyType(
     {item.workshop: item.kind for item in STRUCTURES.values() if item.workshop is not None}
 )
-GROUP_LABELS: MappingProxyType[StructureGroup, str] = MappingProxyType(
-    {
-        G.FAITH: "Faith",
-        G.KNOWLEDGE: "Knowledge",
-        G.DEFENCE: "Defence",
-        G.CIVIC: "Civic",
-        G.COMMERCE: "Commerce",
-        G.PRODUCTION: "Production",
-        G.INFRASTRUCTURE: "Infrastructure",
-        G.MEMORY: "Memory and wonders",
-        G.COSMIC: "Cosmic",
-    }
-)
 KNOWLEDGE_KEEPERS = frozenset({K.LIBRARY, K.SCHOOL, K.OBSERVATORY, K.ACADEMY, K.MONASTERY, K.COSMIC_ARCHIVE})
 BOOK_HOUSES = frozenset({K.LIBRARY, K.SCHOOL, K.ACADEMY, K.MONASTERY})
 RESEARCH_HOUSES = frozenset({K.LIBRARY, K.SCHOOL, K.OBSERVATORY, K.ACADEMY})

@@ -81,6 +81,12 @@ def references(files: dict[Path, str], users: dict[Path, str]) -> set[tuple[str,
     return used
 
 
+def constants(node: ast.stmt) -> list[str]:
+    targets = node.targets if isinstance(node, ast.Assign) else [node.target] if isinstance(node, ast.AnnAssign) else []
+    names = [item for target in targets for item in (target.elts if isinstance(target, ast.Tuple) else [target])]
+    return [item.id for item in names if isinstance(item, ast.Name) and item.id.isupper() and item.id != "__all__"]
+
+
 def unreferenced(files: dict[Path, str], users: dict[Path, str]) -> list[Orphan]:
     used = references(files, users)
     found: list[Orphan] = []
@@ -89,6 +95,7 @@ def unreferenced(files: dict[Path, str], users: dict[Path, str]) -> list[Orphan]
         for node in ast.parse(text).body:
             if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and not node.decorator_list and (module, node.name) not in used:
                 found.append(Orphan(path, node.lineno, node.name))
+            found.extend(Orphan(path, node.lineno, name) for name in constants(node) if (module, name) not in used)
     return found
 
 

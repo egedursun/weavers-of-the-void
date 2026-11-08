@@ -146,9 +146,6 @@ UNITS: MappingProxyType[UnitKind, UnitSpec] = MappingProxyType(
 ARMOUR_DEFENCE = MappingProxyType(
     {ArmourType.NONE: 0, ArmourType.HIDE: 8, ArmourType.PADDED: 12, ArmourType.MAIL: 22, ArmourType.SCALE: 26, ArmourType.PLATE: 35, ArmourType.ENCHANTED: 45}
 )
-ARMOUR_WEIGHT = MappingProxyType(
-    {ArmourType.NONE: 0, ArmourType.HIDE: 1, ArmourType.PADDED: 1, ArmourType.MAIL: 2, ArmourType.SCALE: 3, ArmourType.PLATE: 4, ArmourType.ENCHANTED: 1}
-)
 SHIELD_DEFENCE = MappingProxyType({ShieldType.NONE: 0, ShieldType.SMALL: 6, ShieldType.LARGE: 12, ShieldType.TOWER: 18})
 
 TERRAIN_EFFECTS: MappingProxyType[TerrainKind, dict[UnitFamily, float]] = MappingProxyType(

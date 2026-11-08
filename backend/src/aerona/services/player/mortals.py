@@ -49,7 +49,6 @@ CHOICE_FIELDS: dict[str, type[LifeStage] | type[CareerPath] | type[DeathCause] |
     "profession": Profession,
 }
 NODE_FIELDS = ("polity_id", "death_place_id")
-PROFILE_FIELDS = (*PERCENT_FIELDS, *NULLABLE_PERCENT, *CHOICE_FIELDS, *NODE_FIELDS)
 PIN_REASON = "player.pin"
 FORCED_NOTE = "a marriage forced upon them"
 Value = int | str | None

@@ -24,7 +24,6 @@ from aerona.jobs.manager import ITEMS_KEY as JOB_ITEMS_KEY
 from aerona.rules.registry import Rules
 from aerona.services.names import find_named_records, mentions_name
 
-ELLIPSIS = "…"
 PROPHECY_PREFIX = "prophecy"
 LEGENDARY_BIRTH = re.compile(r"\b(?:legendary|mythic|divine)\b", re.IGNORECASE)
 EPOCH_FINISHED_TITLE = "Epoch {epoch} has ended"

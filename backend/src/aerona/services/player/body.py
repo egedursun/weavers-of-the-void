@@ -75,7 +75,6 @@ INJURY_FIELDS = (
     "nerve",
     "misdiagnosed",
 )
-FLAG_CUSTOMS = ("wholeness_required", "seer_eye", "scar_festivals", "pension")
 
 
 class BearerTarget(Command):

@@ -37,7 +37,7 @@ from aerona.engine.polity.control import lock
 from aerona.engine.primitives.queries import living_entity
 
 UNIT_KINDS = frozenset(kind.value for kind in UnitKind)
-INTEGER, NUMBER, FLAG, CHOICE, TEXT, IDS, WORDS = "integer", "number", "flag", "choice", "text", "ids", "words"
+INTEGER, NUMBER, FLAG, CHOICE, TEXT, WORDS = "integer", "number", "flag", "choice", "text", "words"
 Scalar = int | float | str | bool | None
 Values = Mapping[str, Any]
 

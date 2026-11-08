@@ -1,7 +1,5 @@
 from aerona.catalog.god_lines import Line
 
-LEVEL_UP = Line("tools.son.level_up", "{son} grew stronger and rose to rank {level}.")
-POWER_AWOKE = Line("tools.son.power_awoke", "A new power awoke within {son}: {power}.")
 ANCHOR = Line("tools.son.anchor", "{son} bound their existence to {entity}: {reason}")
 BIND_MORTALS = Line("tools.son.bind_mortals", "{son} bound {first} and {second} ({binding}): {reason}")
 PLANT_IDEA = Line("tools.son.plant_idea", "{son} planted {idea} in the mind of {mortal}: {reason}")
@@ -73,12 +71,7 @@ SHAPE_WEATHER = Line("tools.son.shape_weather", "{son} held {weather} over {regi
 RAISE_DISTRICT = Line("tools.son.raise_district", "{son} raised {district:an} in {town}: {reason}")
 DESIGN_DISTRICT = Line("tools.son.design_district", "{son} devised the {design}, a new kind of {base} for the cities of the world.")
 REORDER_SEASONS = Line("tools.son.reorder_seasons", "{son} turned the year of {world}: its seasons now run {order}.")
-SEAL = Line("tools.son.seal", "{son} sealed the road between {first} and {second}; the two worlds' leakage decreased.")
 STITCH = Line("tools.son.stitch", "{son} sealed the leak of the {world} world ({how}); leakage {old} to {new}.")
-OUTER_BARGAIN = Line("tools.son.outer_bargain", "{son} bargained with the nameless thing. Their siblings saw another shadow over them.")
-SPIRIT_BOUND = Line("tools.son.spirit_bound", "{son} bound {spirit} to {target}{golem}.")
-WORLD_BORN = Line("tools.son.world_born", "{son} gave birth to the world {world}.")
-CHILD_BORN = Line("tools.son.child_born", "{son} gave birth to {child}.")
 
 MESSAGE_PHRASES = {
     "friendship": "spoke warmly",

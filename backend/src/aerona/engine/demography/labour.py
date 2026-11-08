@@ -62,7 +62,6 @@ CLASS_JOBS = partial(
     },
     without={SocialClass.OUTCAST, SocialClass.WARRIOR},
 )
-FOOD_JOBS = (J.FARMING, J.HERDING, J.FISHING)
 BOUND_JOBS = frozenset({J.FARMING, J.HERDING, J.MINING, J.BUILDING})
 
 

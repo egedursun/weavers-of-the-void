@@ -18,7 +18,3 @@ class ActorKind(StrEnum):
     FATE = "fate"
     ENGINE = "engine"
     SYSTEM = "system"
-
-
-GOD_NODE_KINDS = frozenset({NodeKind.SON, NodeKind.CREATOR, NodeKind.FOREIGN_GOD})
-NAMED_NODE_KINDS = frozenset(NodeKind)

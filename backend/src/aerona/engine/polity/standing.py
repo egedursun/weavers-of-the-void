@@ -52,7 +52,6 @@ from aerona.rules.registry import Rules
 RECENT_EPOCHS = 3
 HEIRLOOM_CLASSES = frozenset({ItemClass.PROSTHESIS, ItemClass.HOLY_RELIC})
 TEN = 10
-TWENTY = 20
 
 
 async def war_record(ctx: TickContext, realm: Realm) -> tuple[int, int, bool]:

@@ -53,7 +53,6 @@ from aerona.tools.son.war import known_god
 PERCENT = 100
 SEASON_DOMAINS = frozenset({Domain.SKY, Domain.STORM, Domain.TIME, Domain.SUN, Domain.MOON, Domain.HARVEST, Domain.ICE, Domain.PLANTS})
 INHABITANTS = (EntityType.PEOPLE, EntityType.SETTLEMENT)
-BINDABLE = frozenset({EntityType.ITEM, EntityType.VESSEL, EntityType.STRUCTURE})
 
 
 class TalkIntent(StrEnum):

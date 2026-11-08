@@ -66,3 +66,16 @@ def test_a_function_whose_name_is_only_shared_by_variables_is_an_orphan(tmp_path
     module.SOURCE = package
     files = {path: path.read_text(encoding="utf-8") for path in (owner, other)}
     assert [item.name for item in module.unreferenced(files, {})] == ["claim", "use"]
+
+
+def test_a_constant_in_a_tuple_assignment_that_nothing_reads_is_an_orphan(tmp_path: Path) -> None:
+    module = checker()
+    package = tmp_path / "aerona"
+    package.mkdir()
+    table = package / "table.py"
+    table.write_text('USED, SPARE = "used", "spare"\n\n\ndef read():\n    return USED\n', encoding="utf-8")
+    reader = package / "reader.py"
+    reader.write_text("from aerona.table import read\n\nVALUE = read()\nprint(VALUE)\n", encoding="utf-8")
+    module.SOURCE = package
+    files = {path: path.read_text(encoding="utf-8") for path in (table, reader)}
+    assert [item.name for item in module.unreferenced(files, {})] == ["SPARE"]

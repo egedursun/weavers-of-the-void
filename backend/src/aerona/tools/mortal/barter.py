@@ -21,7 +21,6 @@ from aerona.tools.mortal import lines
 from aerona.tools.mortal.inputs import BarterInput, LendInput, RepayInput
 from aerona.tools.mortal.support import enemies, is_community, near, require_target
 
-PERCENT = 100
 TRADABLE = frozenset({EntityType.RESOURCE, EntityType.ITEM, EntityType.VESSEL, EntityType.STRUCTURE})
 VALUE_KEYS = ("might", "damage", "protection", "splendor", "speed")
 JOIN = ", "

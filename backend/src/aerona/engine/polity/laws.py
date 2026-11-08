@@ -25,7 +25,6 @@ from aerona.engine.primitives.records import RecordSpec, create_record, retire_i
 from aerona.engine.primitives.stats import set_stats, stat_or
 
 ParamValue = int | str | bool
-LEAN = 25
 KIND_FIXUP = "law_kinds_from_text"
 CULT_FIRST = frozenset({LawKind.BURIAL_LAW, LawKind.MARRIAGE_LAW, LawKind.RITE_RESTRICTIONS, LawKind.WORSHIP_BAN, LawKind.MAGIC_BAN, LawKind.TITHE})
 KIND_VALUES: Mapping[LawKind, Mapping[ValueAxis, int]] = {

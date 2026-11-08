@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import openapiTS, { astToString } from 'openapi-typescript'
+import prettier from 'prettier'
 
 const BACKEND_DIR = path.resolve(import.meta.dirname, '../../backend')
 const OUTPUT_DIR = path.resolve(import.meta.dirname, '../src/api/generated')
@@ -16,5 +17,7 @@ const withoutComments = astToString(ast)
   .filter((line) => !line.trim().startsWith('//'))
   .filter((line) => line.trim() !== '')
   .join('\n')
-writeFileSync(path.join(OUTPUT_DIR, 'schema.ts'), `${withoutComments}\n`)
+const target = path.join(OUTPUT_DIR, 'schema.ts')
+const options = (await prettier.resolveConfig(target)) ?? {}
+writeFileSync(target, await prettier.format(`${withoutComments}\n`, { ...options, filepath: target }))
 console.log('api types generated')
