@@ -2,7 +2,6 @@ from collections import defaultdict
 
 from sqlalchemy import select
 
-from aerona.catalog.diseases import TRADITION_NAMES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.disease import EndemicDiseaseRow, ImmunityRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
@@ -19,7 +18,7 @@ from aerona.domain.models.entity_stats import TraditionStats
 from aerona.engine.context import TickContext
 from aerona.engine.demography.biology import kin_lethality
 from aerona.engine.disease.book import DiseaseBook
-from aerona.engine.disease.emergence import WET, new_strain
+from aerona.engine.disease.emergence import WET, new_strain, plain
 from aerona.engine.disease.origin import caused_by_origin, mark_strain_origin, origin_line
 from aerona.engine.disease.outbreaks import QUARANTINE_LOCK, STATUS_LOCK, lethality_factor, spread_factor, tally
 from aerona.engine.military.units import resize
@@ -128,14 +127,13 @@ async def plague_tradition(ctx: TickContext, book: DiseaseBook, outbreak: Outbre
     disease = book.diseases.get(outbreak.disease_entity_id)
     if disease is None:
         return
-    name = ctx.rng(f"plague_tradition.{outbreak.id}").pick(TRADITION_NAMES)
     profile = book.profiles.get(disease.id)
     origin = await origin_line(ctx, profile)
     tradition = await create_record(
         ctx,
         RecordSpec(
             entity_type=EntityType.TRADITION,
-            name=f"{name} of {community.name}",
+            name=f"the {community.name} observance of {plain(disease.name)}",
             body=f"Kept by {community.name} in memory of the {outbreak.dead} who died of {disease.name}{origin}.",
             stats=TraditionStats(spread=20, rigidity=40),
             power=2,

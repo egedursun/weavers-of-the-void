@@ -3,7 +3,7 @@ from collections.abc import Callable
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.diseases import CLIMATE_WORDS, STRAIN_WORDS, VECTOR_FUNCTIONS, VECTOR_NOUNS, VECTOR_STIGMA
+from aerona.catalog.diseases import VECTOR_FUNCTIONS, VECTOR_LABELS, VECTOR_STIGMA
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.disease import DiseaseProfileRow
@@ -59,11 +59,9 @@ def vector_of(rng: SeededRandom, ground: RegionEnvironmentRow | None, *, host: E
     return rng.pick([DiseaseVector.AIR, DiseaseVector.AIR, DiseaseVector.TOUCH, DiseaseVector.WATER])
 
 
-def name_of(rng: SeededRandom, vector: DiseaseVector, affinity: ClimateAffinity, region: EntityRow | None) -> str:
-    noun = rng.pick(VECTOR_NOUNS[vector])
-    word = rng.pick(CLIMATE_WORDS[affinity])
-    place = f" of {region.name}" if region is not None and rng.chance(50) else ""
-    return f"the {word} {noun}{place}"
+def name_of(vector: DiseaseVector, region: EntityRow | None) -> str:
+    place = f" of {region.name}" if region is not None else ""
+    return f"the {VECTOR_LABELS[vector]} sickness{place}"
 
 
 def fresh_profile(ctx: TickContext, rng: SeededRandom, ground: RegionEnvironmentRow | None, *, host: EntityRow | None, cursed: bool) -> DiseaseProfileRow:
@@ -191,7 +189,7 @@ async def new_disease(
     profile = fresh_profile(ctx, rng, ground, host=host, cursed=cursed)
     if shape is not None:
         shape(profile)
-    title = name or name_of(rng, profile.vector, profile.climate_affinity, region)
+    title = name or name_of(profile.vector, region)
     disease = await birth_disease(ctx, book, profile, region=region, path=path, name=title, son_id=son_id, quiet=quiet)
     ctx.count("disease_hosts", await link_hosts(ctx, disease, region.id, host))
     return disease
@@ -203,7 +201,8 @@ async def new_strain(ctx: TickContext, book: DiseaseBook, parent: EntityRow, reg
         return None
     rng = ctx.rng(f"disease.strain.{parent.id}.{ctx.epoch}")
     child = strain_profile(ctx, rng, profile)
-    name = f"the {rng.pick(STRAIN_WORDS)} {plain(parent.name)}"
+    kin = sum(1 for row in book.profiles.values() if row.parent_disease_id == parent.id)
+    name = f"{plain(parent.name)}, strain {kin + 2}"
     return await birth_disease(ctx, book, child, region=region, path=SpreadPath.MUTATION, name=name, son_id=parent.creator_son_id, quiet=True)
 
 

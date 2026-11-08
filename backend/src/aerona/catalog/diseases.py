@@ -1,25 +1,16 @@
 from types import MappingProxyType
 
-from aerona.domain.enums.disease import ClimateAffinity, DiseaseTarget, DiseaseVector
+from aerona.domain.enums.disease import DiseaseTarget, DiseaseVector
 
-VECTOR_NOUNS = MappingProxyType(
+VECTOR_LABELS = MappingProxyType(
     {
-        DiseaseVector.AIR: ("cough", "breathing sickness", "grey lung", "choking fever"),
-        DiseaseVector.WATER: ("flux", "bloody flux", "river sickness", "marsh fever"),
-        DiseaseVector.TOUCH: ("pox", "rot", "weeping sores", "blight of the skin"),
-        DiseaseVector.BITE: ("ague", "shaking fever", "swamp fever", "bite sickness"),
-        DiseaseVector.SPIRIT: ("dreaming sickness", "soul fever", "hollowing", "ghost cough"),
-        DiseaseVector.VOID: ("void blight", "starless rot", "unmaking", "pale emptiness"),
-        DiseaseVector.CURSE: ("curse sickness", "black sending", "god-blight", "withering doom"),
-    }
-)
-CLIMATE_WORDS = MappingProxyType(
-    {
-        ClimateAffinity.WARM: ("red", "burning", "summer"),
-        ClimateAffinity.WET: ("wet", "green", "marsh"),
-        ClimateAffinity.COLD: ("white", "winter", "frost"),
-        ClimateAffinity.DRY: ("dust", "yellow", "thirsting"),
-        ClimateAffinity.ANY: ("great", "grey", "creeping"),
+        DiseaseVector.AIR: "airborne",
+        DiseaseVector.WATER: "waterborne",
+        DiseaseVector.TOUCH: "contact",
+        DiseaseVector.BITE: "bite-borne",
+        DiseaseVector.SPIRIT: "spirit-borne",
+        DiseaseVector.VOID: "void-borne",
+        DiseaseVector.CURSE: "cursed",
     }
 )
 VECTOR_FUNCTIONS = MappingProxyType(
@@ -44,5 +35,3 @@ VECTOR_STIGMA = MappingProxyType(
         DiseaseVector.CURSE: 90,
     }
 )
-STRAIN_WORDS = ("new", "second", "black", "swift", "returning", "hidden")
-TRADITION_NAMES = ("the Survivors' Feast", "the Bell of the Dead", "the Smoke Walk", "the Night of Masks", "the Pit Vigil", "the Mourners' Fast")
