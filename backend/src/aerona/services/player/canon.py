@@ -24,7 +24,7 @@ from aerona.db.tables.epochs import EpochRow
 from aerona.db.tables.lore import CanonFactRow, FolkBeliefRow, LexemeRow, ThreadRow
 from aerona.db.tables.meta import ImageRow, MapNoteRow
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.bond import DERIVED_BOND_KINDS, BondKind, BondState
+from aerona.domain.enums.bond import DERIVED_BOND_KINDS, BondKind, BondRole, BondState
 from aerona.domain.enums.chronicle import ThreadStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.node import NodeKind
@@ -435,13 +435,20 @@ async def remove_map_note(scope: PlayerScope, command: MapNoteTarget) -> Effect:
     return Effect("The map note was removed.", world_id)
 
 
+async def already_held(bonds: BondRepository, bond: BondRow, source: int, target: int) -> bool:
+    if await bonds.active_between(source, target, [bond.kind]):
+        return True
+    located = bond.kind is BondKind.INSIDE and bond.role is not BondRole.SPIRIT_BINDING
+    return located and any(held.id != bond.id and held.role is not BondRole.SPIRIT_BINDING for held in await bonds.outgoing(source, BondKind.INSIDE))
+
+
 async def _repoint_bonds(scope: PlayerScope, main: EntityRow, other: EntityRow, epoch: int) -> int:
     moved = 0
     bonds = BondRepository(scope.session)
     for bond in list(await scope.session.scalars(select(BondRow).where(or_(BondRow.source_node_id == other.id, BondRow.target_node_id == other.id)))):
         source = main.id if bond.source_node_id == other.id else bond.source_node_id
         target = main.id if bond.target_node_id == other.id else bond.target_node_id
-        if source == target or (bond.state is BondState.ACTIVE and await bonds.active_between(source, target, [bond.kind])):
+        if source == target or (bond.state is BondState.ACTIVE and await already_held(bonds, bond, source, target)):
             await bonds.deactivate(bond, epoch, "merged")
             continue
         bond.source_node_id = source

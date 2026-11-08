@@ -9,7 +9,7 @@ from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.statecraft import SubjectKind
-from aerona.domain.enums.war import WarCause
+from aerona.domain.enums.war import REVOLT_CAUSES, WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
@@ -21,7 +21,6 @@ from aerona.engine.primitives.strength import MilitaryStrength
 TRIBUTE_KINDS = frozenset({SubjectKind.VASSAL, SubjectKind.TRIBUTARY, SubjectKind.COLONY})
 LEVY_KINDS = frozenset({SubjectKind.VASSAL, SubjectKind.MARCH, SubjectKind.COLONY})
 PROTECTED_KINDS = frozenset({SubjectKind.CLIENT, SubjectKind.PROTECTORATE})
-FREE_CAUSES = frozenset({WarCause.INDEPENDENCE, WarCause.TRIBUTE_REVOLT, WarCause.UPRISING, WarCause.LIBERATION})
 LIBERTY = "liberty"
 LOYALTY = "loyalty"
 TRIBUTE = "tribute_pct"
@@ -67,7 +66,7 @@ def protected_by(book: RealmBook, realm: Realm) -> Realm | None:
 
 
 async def forbidden_war(ctx: TickContext, first_id: int, second_id: int, cause: WarCause) -> bool:
-    if cause in FREE_CAUSES:
+    if cause in REVOLT_CAUSES:
         return False
     book = await RealmBook.load(ctx.session)
     realm, foe = book.realm_for(first_id), book.realm_for(second_id)

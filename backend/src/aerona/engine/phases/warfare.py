@@ -248,7 +248,7 @@ async def redirect_uprisings(ctx: TickContext) -> int:
         ]
         ruled.sort(key=lambda target: (target.id != rebels.location_id, target.location_id != rebels.location_id))
         target = ruled[0] if ruled else None
-        if target is None or await can_open_war(ctx.session, ctx.rules, rebels.id, target.id, ctx.epoch, world_cap=False) is not None:
+        if target is None or await can_open_war(ctx.session, ctx.rules, rebels.id, target.id, ctx.epoch, world_cap=False, cause=WarCause.UPRISING) is not None:
             continue
         await declare_war(ctx, rebels.id, target.id, bond.description or "uprising", cause=WarCause.UPRISING, world_cap=False, since_epoch=bond.epoch)
         redirected += 1

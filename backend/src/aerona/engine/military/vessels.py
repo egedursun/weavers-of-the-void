@@ -223,10 +223,11 @@ async def repair(ctx: TickContext, row: VesselProfileRow, tally: SeaTally) -> in
     owner = await living_entity(ctx.session, port)
     if yard is None or owner is None:
         return 0
-    gain = min(PERCENT - row.condition, table.repair_per_epoch * yard.level)
-    cost = gain * table.repair_cost
-    if (stat(owner, "wealth") or 0) < cost:
+    affordable = (stat(owner, "wealth") or 0) // table.repair_cost if table.repair_cost else PERCENT
+    gain = min(PERCENT - row.condition, table.repair_per_epoch * yard.level, affordable)
+    if gain <= 0:
         return 0
+    cost = gain * table.repair_cost
     shift_stat(owner, "wealth", -cost)
     row.condition = clamp_int(row.condition + gain, 0, PERCENT)
     row.status = VesselStatus.DOCKED

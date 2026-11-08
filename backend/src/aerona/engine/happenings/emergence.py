@@ -67,7 +67,7 @@ async def record_fire(ctx: TickContext, town: EntityRow, dead: int) -> EntityRow
             feed=FeedCategory.DISASTER,
         ),
         atlas,
-        incident_id=incident_for(town.id, ctx.epoch),
+        incident_id=incident_for(ctx.session, town.id, ctx.epoch),
     )
     await record_casualties(ctx, event.id, town, dead, category=FlowCategory.DISASTER, phase=EventPhase.ONSET)
     await onset(ctx, event, town, atlas)

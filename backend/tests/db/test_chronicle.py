@@ -1,7 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.random import SeededRandom
-from aerona.db.repositories.chronicle import ChronicleClock, ChronicleDraft, ChronicleRepository
+from aerona.db.repositories.chronicle import ChronicleClock, ChronicleDraft, ChronicleRepository, incident_for
+from aerona.db.session import Database
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory, NotificationCategory
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.models.calendar import YearWindow, chronicle_year, epoch_end_year, epoch_start_year
@@ -80,3 +81,13 @@ async def test_world_filter_follows_records_then_son_then_main_world(session: As
     assert main_lines == {home.row.id, unbound.row.id}
     assert far_lines == {far.row.id, spoken.row.id}
     assert mixed.row.id not in main_lines | far_lines
+
+
+async def test_the_last_incident_belongs_to_its_session_and_a_rollback_forgets_it(session: AsyncSession, database: Database, world_id: int) -> None:
+    region = await make_entity(session, "Marsh", EntityType.REGION, world_id=world_id)
+    written = await ChronicleRepository(session).append(ChronicleDraft(3, ChronicleKind.WAR, "The marsh rose.", (region.id,)))
+    assert incident_for(session, region.id, 3) == written.incident_id
+    async with database.read() as other:
+        assert incident_for(other, region.id, 3) is None
+    await session.rollback()
+    assert incident_for(session, region.id, 3) is None

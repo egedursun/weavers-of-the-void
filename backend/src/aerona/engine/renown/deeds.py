@@ -73,7 +73,7 @@ async def record_deed(
         return found
     deed = DeedRow(
         doer_node_id=doer_id,
-        incident_id=incident_for(doer_id, ctx.epoch),
+        incident_id=incident_for(ctx.session, doer_id, ctx.epoch),
         act=act,
         axis=axis,
         skill=skill,

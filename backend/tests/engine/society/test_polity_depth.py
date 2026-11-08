@@ -5,6 +5,7 @@ from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow, OathRow, PolityMemberRow
 from aerona.db.tables.settlement import SettlementProfileRow, SettlementTreasuryRow
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.mind import MemoryKind
@@ -12,7 +13,9 @@ from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import OathKind, OathStatus, OfficeKind
 from aerona.domain.enums.settlement import SizeTier, TreasuryEntry
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.war import REVOLT_CAUSES
 from aerona.domain.models.entity_stats import FactionStats
+from aerona.engine.phases.warfare import incite_uprising
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.formation import found_polity, set_ruler, sync_members
 from aerona.engine.polity.governance import collect
@@ -21,7 +24,8 @@ from aerona.engine.polity.justice import offenders
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.oaths import break_oath, lapse, swear
 from aerona.engine.polity.standing import legitimacy, secede
-from aerona.engine.primitives.queries import has_flag
+from aerona.engine.primitives.queries import connect, has_flag
+from aerona.engine.services.war import WarBlock, can_open_war
 from tests.engine.society.factories import Realm, context, make, mortal, settlement
 
 
@@ -127,3 +131,14 @@ async def test_a_town_that_breaks_away_leaves_the_realm_as_its_enemy(realm: Real
     await realm.session.flush()
     assert rebel.id not in state.members
     assert await realm.session.scalar(select(PolityMemberRow).where(PolityMemberRow.member_entity_id == rebel.id)) is None
+
+
+async def test_a_subject_may_rise_against_its_ruler_but_not_wage_an_ordinary_war_on_it(realm: Realm) -> None:
+    ctx = context(realm.session)
+    lord = await settlement(realm, "Highcrown")
+    subject = await settlement(realm, "Lowmarch")
+    await connect(realm.session, lord.id, subject.id, BondKind.RULES, 1)
+    assert await can_open_war(realm.session, ctx.rules, subject.id, lord.id, ctx.epoch, world_cap=False) is WarBlock.SUBJECT
+    for cause in REVOLT_CAUSES:
+        assert await can_open_war(realm.session, ctx.rules, subject.id, lord.id, ctx.epoch, world_cap=False, cause=cause) is None
+    assert await incite_uprising(ctx, subject.id)

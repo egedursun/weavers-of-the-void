@@ -27,6 +27,26 @@ class FactionKind(StrEnum):
     HOLY_ORDER = "holy_order"
 
 
+class FoundableFaction(StrEnum):
+    MERCHANT_GUILD = "merchant_guild"
+    CRAFT_GUILD = "craft_guild"
+    PRIESTHOOD = "priesthood"
+    WARRIOR_ORDER = "warrior_order"
+    NOBLE_COUNCIL = "noble_council"
+    PEASANT_LEAGUE = "peasant_league"
+    REBELS = "rebels"
+    BANDITS = "bandits"
+    PIRATES = "pirates"
+    ASSASSINS = "assassins"
+    SCHOLARS_ACADEMY = "scholars_academy"
+    SECRET_SOCIETY = "secret_society"
+    MERCENARY_COMPANY = "mercenary_company"
+    INTERWORLD_FEDERATION = "interworld_federation"
+    WANDERING_MARKET = "wandering_market"
+    VOID_PIRATES = "void_pirates"
+    SOCIAL_CIRCLE = "social_circle"
+
+
 class FactionScale(StrEnum):
     BAND = "band"
     COMPANY = "company"

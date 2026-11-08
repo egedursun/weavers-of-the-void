@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
+from sqlalchemy import select
+
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.base import Base
@@ -40,6 +42,7 @@ from aerona.engine.lore.language import standing_of
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.control import lock
 from aerona.engine.primitives.edits import bounds, coerce
+from aerona.engine.primitives.knowledge import knows
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, close, connect, living_entity
 
@@ -222,9 +225,23 @@ async def set_level(ctx: TickContext, holder_id: int, branch: KnowledgeBranch, l
     if row is None:
         row = HolderLevelRow(holder_entity_id=holder_id, branch=branch, level=0, practitioners=0, progress=0, secret=False, updated_epoch=ctx.epoch, locked=[])
         ctx.session.add(row)
+    if level > 0 and not await knows(ctx.session, holder_id, branch):
+        await learn_branch(ctx, holder_id, branch)
     row.level, row.locked = level, lock(row.locked, "level")
     await ctx.session.flush()
     return row
+
+
+async def learn_branch(ctx: TickContext, holder_id: int, branch: KnowledgeBranch) -> None:
+    holder = await ctx.session.get(EntityRow, holder_id)
+    records = select(EntityRow.id).where(
+        EntityRow.entity_type == EntityType.KNOWLEDGE, EntityRow.status == EntityStatus.CANON, EntityRow.knowledge_branch == branch
+    )
+    local = await ctx.session.scalar(records.where(EntityRow.world_id == (holder.world_id if holder is not None else None)).order_by(EntityRow.id).limit(1))
+    record = local if local is not None else await ctx.session.scalar(records.order_by(EntityRow.id).limit(1))
+    if record is None:
+        raise ValidationFailedError(f"No knowledge of {branch.value.replace('_', ' ')} exists yet; make the knowledge first, then set its level.")
+    await connect(ctx.session, holder_id, record, BondKind.KNOWS, ctx.epoch, description="taught by the Creator")
 
 
 async def set_technique(ctx: TickContext, holder_id: int, technique: Technique, *, held: bool, secret: bool) -> HolderTechniqueRow | None:

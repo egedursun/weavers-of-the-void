@@ -23,7 +23,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, 
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
 from aerona.domain.enums.society import Commodity, KnowledgeBranch
-from aerona.domain.enums.war import CaptiveStatus, TributeStatus, WarCause, WarSide, WarStatus
+from aerona.domain.enums.war import REVOLT_CAUSES, CaptiveStatus, TributeStatus, WarCause, WarSide, WarStatus
 from aerona.domain.models.entity_stats import ArmyStats, EventStats
 from aerona.engine.body.book import effective
 from aerona.engine.communication.post import herald_war
@@ -224,13 +224,13 @@ async def _party_block(session: AsyncSession, first_id: int, second_id: int) -> 
     return None
 
 
-async def _bond_block(session: AsyncSession, rules: Rules, first_id: int, second_id: int, epoch: int) -> WarBlock | None:
+async def _bond_block(session: AsyncSession, rules: Rules, first_id: int, second_id: int, epoch: int, *, cause: WarCause | None) -> WarBlock | None:
     bonds = BondRepository(session)
     if await bonds.exists_between(first_id, second_id, BondKind.ENEMY):
         return WarBlock.ALREADY_ENEMIES
     if await has_truce(session, rules, first_id, second_id, epoch):
         return WarBlock.TRUCE
-    if await bonds.active_between(first_id, second_id, SUBJECT_BOND_KINDS):
+    if cause not in REVOLT_CAUSES and await bonds.active_between(first_id, second_id, SUBJECT_BOND_KINDS):
         return WarBlock.SUBJECT
     return None
 
@@ -247,11 +247,19 @@ async def _cap_block(session: AsyncSession, rules: Rules, first_id: int, second_
 
 
 async def can_open_war(
-    session: AsyncSession, rules: Rules, first_id: int, second_id: int, epoch: int, *, world_cap: bool = True, community_cap: bool = False
+    session: AsyncSession,
+    rules: Rules,
+    first_id: int,
+    second_id: int,
+    epoch: int,
+    *,
+    world_cap: bool = True,
+    community_cap: bool = False,
+    cause: WarCause | None = None,
 ) -> WarBlock | None:
     return (
         await _party_block(session, first_id, second_id)
-        or await _bond_block(session, rules, first_id, second_id, epoch)
+        or await _bond_block(session, rules, first_id, second_id, epoch, cause=cause)
         or await _cap_block(session, rules, first_id, second_id, world_cap=world_cap, community_cap=community_cap)
     )
 
@@ -272,7 +280,7 @@ async def declare_war(
     counters = ctx.environment.stats.counters
     if world_cap and counters[DECLARATIONS_COUNTER] >= ctx.rules.diplomacy.declarations_cap:
         return False
-    if await can_open_war(ctx.session, ctx.rules, first_id, second_id, ctx.epoch, world_cap=world_cap, community_cap=community_cap) is not None:
+    if await can_open_war(ctx.session, ctx.rules, first_id, second_id, ctx.epoch, world_cap=world_cap, community_cap=community_cap, cause=cause) is not None:
         return False
     if await forbidden_war(ctx, first_id, second_id, cause):
         return False

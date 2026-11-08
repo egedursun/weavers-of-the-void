@@ -8,6 +8,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.renown import DeedClaimRow, DeedRow, LoreTradeRow, ReputationRow, RulerCurrencyRow
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.mind import ActKind, SkillKind
 from aerona.domain.enums.renown import ClaimKind, ClaimStatus, Currency, LoreKind, ReputationAxis
@@ -270,6 +271,12 @@ async def remove_claim(scope: PlayerScope, command: DeedClaimTarget) -> Effect:
 @player_action("lore_trade:make", ActionKind.OTHER)
 async def trade_lore(scope: PlayerScope, command: TradeLore) -> Effect:
     seller, buyer = await living(scope, command.seller_id), await living(scope, command.buyer_id)
+    if seller.id == buyer.id:
+        raise ValidationFailedError(f"{seller.name} cannot trade lore with themselves.")
+    if command.kind is LoreKind.TECHNIQUE and command.key not in {technique.value for technique in Technique}:
+        raise ValidationFailedError(f"'{command.key}' is not a technique that can be traded.")
+    if command.kind is not LoreKind.TECHNIQUE and command.subject_id is None:
+        raise ValidationFailedError("Choose the site, region or prophecy the lore is about.")
     if command.subject_id is not None:
         await node(scope, command.subject_id)
     ctx = await scope.context("lore_trade:make")

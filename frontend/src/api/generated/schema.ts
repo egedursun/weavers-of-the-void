@@ -23921,7 +23921,7 @@ export interface components {
         };
                 FactionFoundInput: {
                         community_id: number;
-            kind: components["schemas"]["FactionKind"];
+            kind: components["schemas"]["FoundableFaction"];
         };
                 FactionFundInput: {
                         faction_id: number;
@@ -24444,6 +24444,7 @@ export interface components {
                         epoch: number;
             subject: components["schemas"]["NodeRef"] | null;
         };
+                FoundableFaction: "merchant_guild" | "craft_guild" | "priesthood" | "warrior_order" | "noble_council" | "peasant_league" | "rebels" | "bandits" | "pirates" | "assassins" | "scholars_academy" | "secret_society" | "mercenary_company" | "interworld_federation" | "wandering_market" | "void_pirates" | "social_circle";
                 FoundationHoldInput: {
             kind: components["schemas"]["HoldKind"];
                         node_id: number;
@@ -71974,6 +71975,7 @@ export const foreignGodDeepenedEventKindValues: ReadonlyArray<FlattenedDeepRequi
 export const foreignGodPowerEffectValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodPowerEffect"]> = ["shield", "caller", "thief", "destroyer", "fertile", "reviving", "deathless", "sharp_tongued"];
 export const foreignGodStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ForeignGodStatus"]> = ["awake", "asleep", "defeated", "dead"];
 export const formationValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Formation"]> = ["line", "column", "wedge", "square", "loose", "shieldwall"];
+export const foundableFactionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FoundableFaction"]> = ["merchant_guild", "craft_guild", "priesthood", "warrior_order", "noble_council", "peasant_league", "rebels", "bandits", "pirates", "assassins", "scholars_academy", "secret_society", "mercenary_company", "interworld_federation", "wandering_market", "void_pirates", "social_circle"];
 export const funeralCustomValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FuneralCustom"]> = ["burial", "cremation", "sky_burial", "sea_burial", "entombment", "ancestor_shrine", "endocannibalism", "reanimation", "soul_binding"];
 export const funeralRiteValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FuneralRite"]> = ["burial", "burning", "exposure", "nameless", "none"];
 export const gazeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GazeKind"]> = ["terror", "petrify", "sleep", "madness"];

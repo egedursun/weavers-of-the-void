@@ -6,7 +6,7 @@ from sqlalchemy.orm.attributes import instance_state
 from sqlalchemy.orm.util import identity_key
 
 from aerona.catalog.bonds import EVENT_BOND_KINDS, UNORDERED_PAIR_KINDS, bond_spec, endpoints_valid, should_swap
-from aerona.core.errors import NotFoundError
+from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.bond_index import bond_lookup
 from aerona.db.repositories.base import Repository
 from aerona.db.repositories.nodes import NodeRepository
@@ -57,6 +57,8 @@ ANCHORED_BOND_KINDS = frozenset({BondKind.OWES, BondKind.PURSUES, BondKind.HOLDS
 
 class BondRepository(Repository):
     async def connect(self, draft: BondDraft) -> BondRow:
+        if draft.source_node_id == draft.target_node_id:
+            raise ValidationFailedError("A record cannot be bound to itself; choose two different ones.")
         normalized = await self.normalize(draft)
         if normalized.kind not in EVENT_BOND_KINDS:
             existing = await self._find_duplicate(normalized)

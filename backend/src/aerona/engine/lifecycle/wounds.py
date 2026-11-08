@@ -170,7 +170,7 @@ async def _record(ctx: TickContext, bearer: Bearer, body: BodyRow, harm: Harm, h
             epoch=ctx.epoch,
             year=ctx.environment.window.start if ctx.environment.window is not None else None,
             visible=hit.part.visible,
-            incident_id=incident_for(bearer.id, ctx.epoch),
+            incident_id=incident_for(ctx.session, bearer.id, ctx.epoch),
             digits=taken,
         )
         ctx.session.add(row)
@@ -197,7 +197,7 @@ async def _announce(ctx: TickContext, bearer: Bearer, rows: list[InjuryRow]) -> 
         label = digits_phrase(row.digits) if row.digits else (part.label if part is not None else row.part).lower()
         await note(ctx, f"{wound_sentence(bearer.name, row.kind, label)}.", key=f"injury.{row.kind.value}", ids=[bearer.id])
     for row in grave:
-        row.incident_id = incident_for(bearer.id, ctx.epoch) or row.incident_id
+        row.incident_id = incident_for(ctx.session, bearer.id, ctx.epoch) or row.incident_id
 
 
 INJURY_PHRASES: dict[InjuryKind, str] = {

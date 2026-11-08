@@ -231,7 +231,7 @@ async def judged(ctx: TickContext, actor_id: int, victim_id: int, act: ActKind, 
     if act in ATROCITIES:
         moved += len(await horrified(ctx, actor_id, victim_id))
     await conscience(ctx, actor_id, act, victim_id)
-    incident = incident_for(actor_id, ctx.epoch) or incident_for(victim_id, ctx.epoch)
+    incident = incident_for(ctx.session, actor_id, ctx.epoch) or incident_for(ctx.session, victim_id, ctx.epoch)
     if incident is not None and seen:
         await ChronicleRepository(ctx.session).witness(incident, seen)
     return moved

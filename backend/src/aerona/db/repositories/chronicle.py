@@ -3,7 +3,9 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 
-from sqlalchemy import ColumnElement, case, exists, false, func, or_, select, true
+from sqlalchemy import ColumnElement, case, event, exists, false, func, or_, select, true
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from aerona.catalog.chronicle import chronicle_notification, is_visible
 from aerona.catalog.incident_roles import positional_role
@@ -52,7 +54,7 @@ class LastIncident:
     participants: frozenset[int]
 
 
-LAST_INCIDENT: ContextVar[LastIncident | None] = ContextVar("last_incident", default=None)
+LAST_INCIDENT = "last_incident"
 CAUSE_SCOPE: ContextVar[int | None] = ContextVar("cause_scope", default=None)
 
 
@@ -79,8 +81,8 @@ PARTICIPANT_WEIGHT = 5
 QUIET_ROLES = (IncidentRole.WITNESS, IncidentRole.PLACE)
 
 
-def incident_for(node_id: int, epoch: int) -> int | None:
-    last = LAST_INCIDENT.get()
+def incident_for(session: AsyncSession | Session, node_id: int, epoch: int) -> int | None:
+    last = session.info.get(LAST_INCIDENT)
     return last.incident_id if last is not None and last.epoch == epoch and node_id in last.participants else None
 
 
@@ -166,7 +168,7 @@ class ChronicleRepository(Repository):
             participants.append(IncidentParticipantRow(incident_id=incident.id, node_id=draft.place_entity_id, role=IncidentRole.PLACE, position=len(linked)))
         self.session.add_all(participants)
         await self.flush()
-        LAST_INCIDENT.set(LastIncident(incident.id, draft.epoch, frozenset(involved)))
+        self.session.info[LAST_INCIDENT] = LastIncident(incident.id, draft.epoch, frozenset(involved))
         return ChronicleWrite(row, chronicle_notification(draft.kind, draft.feed_category), incident.id)
 
     async def cause_of(self, involved: Sequence[int], epoch: int) -> int | None:
@@ -277,3 +279,10 @@ class ChronicleRepository(Repository):
             son_world: int | None = await self.session.scalar(select(SonRow.current_world_id).where(SonRow.id == son_id))
             return son_world
         return None
+
+
+def forget_incident(session: Session, *_: object) -> None:
+    session.info.pop(LAST_INCIDENT, None)
+
+
+event.listen(Session, "after_soft_rollback", forget_incident)

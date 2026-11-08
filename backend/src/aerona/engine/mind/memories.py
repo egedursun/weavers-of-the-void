@@ -92,7 +92,7 @@ async def remember(
         epoch=epoch,
         note=note,
         event_entity_id=event_id,
-        incident_id=incident_for(holder_id, epoch) or incident_for(subject_id, epoch) if inherited_from is None else None,
+        incident_id=incident_for(session, holder_id, epoch) or incident_for(session, subject_id, epoch) if inherited_from is None else None,
         inherited_from_node_id=inherited_from,
     )
     session.add(row)

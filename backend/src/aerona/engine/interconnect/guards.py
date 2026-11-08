@@ -139,7 +139,7 @@ async def phase_indexes(ctx: TickContext) -> tuple[GuardIndex, ModifierIndex]:
 
 
 async def run_guarded(phase: Phase, ctx: TickContext, *, only: int | None = None) -> None:
-    LAST_INCIDENT.set(None)
+    ctx.session.info.pop(LAST_INCIDENT, None)
     guard_index, index = await phase_indexes(ctx)
     state = GuardState(guard_index, mechanic_keys_for_phase(phase.name), phase.name, ctx.environment.stats.flows, only)
     with guarded(state), live_modifiers(index, ctx.epoch, ctx.rules):
