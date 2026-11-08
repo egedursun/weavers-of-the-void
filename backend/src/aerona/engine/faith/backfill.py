@@ -17,6 +17,7 @@ from aerona.engine.faith.judgement import default_criteria, judge, profile_for, 
 from aerona.engine.faith.works import bones_of, canonise, hold, saints
 from aerona.engine.mind.book import values_for
 from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.words import names_word
 
 PROFILES_FIXUP = "faith.spirit_profiles"
 CRITERIA_FIXUP = "faith.strata_criteria"
@@ -152,7 +153,7 @@ async def funeral_rites(ctx: TickContext) -> int:
     for row in rows:
         tradition = await ctx.session.get(EntityRow, row.tradition_entity_id)
         text = f"{tradition.name} {tradition.subtype or ''}".lower() if tradition is not None else ""
-        row.funeral_rite = next((rite for words, rite in FUNERAL_WORDS if any(word in text for word in words)), FuneralRite.BURIAL)
+        row.funeral_rite = next((rite for words, rite in FUNERAL_WORDS if names_word(text, words)), FuneralRite.BURIAL)
     return len(rows)
 
 

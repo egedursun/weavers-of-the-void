@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.db.tables.culture import RiteEffectRow, RiteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import PossessionRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.culture import MagicSchool, RiteEffectKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.engine.context import TickContext
@@ -41,12 +42,12 @@ async def priest_at(ctx: TickContext, place_id: int | None) -> EntityRow | None:
 
 async def possessions(ctx: TickContext) -> tuple[int, int]:
     table = ctx.rules.necromancy
-    held = await burden(ctx)
+    bound = await burden(ctx)
     realms: RealmBook | None = None
     exorcised = 0
-    for _, host, _ in held:
+    for _, host, _ in bound:
         priest = await priest_at(ctx, host.location_id)
-        if priest is None or not ctx.rng(f"exorcism.{host.id}.{ctx.epoch}").chance(table.exorcism_chance):
+        if priest is None or held(host.id, priest.id) or not ctx.rng(f"exorcism.{host.id}.{ctx.epoch}").chance(table.exorcism_chance):
             continue
         found = await exorcism_rite(ctx, host.world_id)
         if found is None and ctx.rng(f"exorcism.devise.{priest.id}.{ctx.epoch}").chance(ctx.rules.rites.invention_chance):
@@ -60,4 +61,4 @@ async def possessions(ctx: TickContext) -> tuple[int, int]:
             await note(
                 ctx, f"{priest.name} worked {found[0].name} over {host.name} and drove the spirit out.", key="afterlife.exorcism", ids=[priest.id, host.id]
             )
-    return len(held) - exorcised, exorcised
+    return len(bound) - exorcised, exorcised

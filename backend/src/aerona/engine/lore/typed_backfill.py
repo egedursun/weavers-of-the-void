@@ -12,6 +12,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.materials import set_node_material
 from aerona.engine.lore import art, items
+from aerona.engine.primitives.words import names_word
 
 ITEMS_FIXUP = "lore.typed_items"
 ARTWORKS_FIXUP = "lore.typed_artworks"
@@ -23,12 +24,12 @@ def legacy_text(entity: EntityRow) -> str:
 
 def legacy_class(entity: EntityRow) -> ItemClass | None:
     text = legacy_text(entity)
-    return next((item_class for item_class, words in ITEM_WORDS.items() if any(word in text for word in words)), None)
+    return next((item_class for item_class, words in ITEM_WORDS.items() if names_word(text, words)), None)
 
 
 def legacy_medium(entity: EntityRow) -> ArtMedium | None:
     text = legacy_text(entity)
-    return next((medium for medium, words in ART_WORDS.items() if any(word in text for word in words)), None)
+    return next((medium for medium, words in ART_WORDS.items() if names_word(text, words)), None)
 
 
 def legacy_material(entity: EntityRow) -> str | None:

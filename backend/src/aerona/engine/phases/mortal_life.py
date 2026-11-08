@@ -5,7 +5,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
-from aerona.db.write_guard import unheld
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.engine.body.customs import people_of
@@ -416,6 +416,8 @@ async def ethnic_relations(ctx: TickContext) -> None:
             if member.entity_type is EntityType.SETTLEMENT:
                 towns[people.id].append(member)
         for first, second in combinations(sorted(peoples), 2):
+            if held(realm.entity.id, first, second):
+                continue
             regard = await relation(ctx.session, ctx.rules, first, second)
             if regard >= table.harmony_above:
                 await change_relation(ctx, first, second, table.harmony_relation, MemoryKind.GOODWILL, note="neighbours under one crown")

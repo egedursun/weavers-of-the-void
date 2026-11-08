@@ -12,6 +12,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.primitives.words import names_word
 from aerona.engine.structures.profiles import design_of
 from aerona.engine.structures.spec import resolve
 
@@ -44,7 +45,7 @@ async def backfill_attunement(ctx: TickContext) -> int:
         if await ctx.session.get(StructureLeyRow, work.id) is not None:
             continue
         text = (work.subtype or "").lower()
-        row = await ley_row(ctx.session, work, attuned=work.engine_kind in LEY_WORK_KINDS or any(word in text for word in LEY_WORDS))
+        row = await ley_row(ctx.session, work, attuned=work.engine_kind in LEY_WORK_KINDS or names_word(text, LEY_WORDS))
         attuned += int(row.attuned)
     ctx.session.add(AppliedFixupRow(key=LEY_FIXUP, result={"attuned": attuned}))
     await ctx.session.flush()

@@ -21,6 +21,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import canon
+from aerona.engine.primitives.words import names_word
 from aerona.engine.structures.readers import Working, working
 from aerona.rules.registry import Rules
 
@@ -93,7 +94,7 @@ async def works_by_region(ctx: TickContext, book: EnvironmentBook) -> dict[int, 
 
 def _named(entity: EntityRow, words: tuple[str, ...]) -> bool:
     text = f"{entity.subtype or ''} {entity.name}".lower()
-    return any(word in text for word in words)
+    return names_word(text, words)
 
 
 async def _settlement_in(ctx: TickContext, atlas: RegionAtlas, region_id: int) -> EntityRow | None:

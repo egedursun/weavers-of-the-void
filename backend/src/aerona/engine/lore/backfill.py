@@ -6,6 +6,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.engine.context import TickContext
 from aerona.engine.lore import legends, traditions
 from aerona.engine.primitives.queries import canon
+from aerona.engine.primitives.words import names_word
 
 TYPED_KINDS_FIXUP = "lore.typed_kinds_backfill"
 A = LegendArchetype
@@ -46,7 +47,7 @@ TRADITION_WORDS = (
 
 def read_once[E](entity: EntityRow, table: tuple[tuple[tuple[str, ...], E], ...]) -> E | None:
     text = f"{entity.name} {entity.subtype or ''}".lower()
-    return next((found for words, found in table if any(word in text for word in words)), None)
+    return next((found for words, found in table if names_word(text, words)), None)
 
 
 async def backfill_legends(ctx: TickContext) -> dict[str, int]:
