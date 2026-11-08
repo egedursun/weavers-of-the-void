@@ -9,7 +9,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.creator import CreatorPassion
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.meta import LedgerOperation, ScenarioKey, ScenarioStatus
-from aerona.domain.enums.world import FateMode, SonDistribution
+from aerona.domain.enums.world import FateMode, ImageStyle, SonDistribution
 from aerona.rules.registry import Rules
 from aerona.services.player import catalog, cheats, creator, diplomacy, goals, settings
 from aerona.services.player.scope import Effect, PlayerScope, perform
@@ -57,6 +57,21 @@ async def test_settings_and_cheat(scope: PlayerScope, session: AsyncSession, wor
     assert world.creator.essence == before + 40 and outcome.essence_gained == 40
     with pytest.raises(ValidationFailedError):
         await cheats.cheat_essence(scope, cheats.CheatEssence(amount=rules.server.cheat_essence_max + 1))
+
+
+async def test_the_image_style_is_chosen_from_the_list_or_written_by_the_god(scope: PlayerScope, world: PlayerWorld) -> None:
+    painted = next(style for style in ImageStyle if style is not ImageStyle.CUSTOM)
+    told = await settings.update_settings(scope, settings.WorldSettings(image_style=painted))
+    assert world.cosmos.image_style is painted and "style" in told.message
+    with pytest.raises(ValidationFailedError):
+        await settings.update_settings(scope, settings.WorldSettings(image_style=ImageStyle.CUSTOM, image_style_custom="   "))
+    with pytest.raises(ValidationFailedError):
+        await settings.update_settings(scope, settings.WorldSettings(image_style=ImageStyle.CUSTOM, image_style_custom="x" * 10000))
+    custom = await settings.update_settings(scope, settings.WorldSettings(image_style=ImageStyle.CUSTOM, image_style_custom="  a look of my own  "))
+    assert world.cosmos.image_style is ImageStyle.CUSTOM and world.cosmos.image_style_custom == "a look of my own"
+    assert "a look of my own" in custom.message
+    with pytest.raises(ValidationFailedError):
+        await settings.update_settings(scope, settings.WorldSettings())
 
 
 async def test_seek_route_refuses_when_nothing(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:
