@@ -3609,7 +3609,7 @@ Old namespace `FIRSAT` · 25 rows · defined in `src/firsatlar.js`. Opportunity 
 | friendly_neighbor | dost_komsu | 45 | -100 | 100 | Opportunities | Loving neighbour: community relation at or above this |
 | monster_danger | canavar_tehlike | 50 | 0 | 100 | Opportunities | Dangerous creature: danger at or above this |
 | tense_neighbor | gergin_komsu | 20 | 0 | 100 | Opportunities | To a mortal "tense neighbour": community relation below minus this (with no hostility link) |
-| tension_first | gerilim_once | 1 | 0 | 1 | Opportunities | Tension lines (rivals, hostilities, wars, rebellion) are placed at the top of the opportunity list (1 on, 0 off) |
+| tension_first | gerilim_once | 0 | 0 | 1 | Opportunities | Tension lines (rivals, hostilities, wars, rebellion) are placed at the top of the opportunity list (1 on, 0 off) |
 | challenge_god_strength | meydan_guc | 110 | 0 | 1000 | Opportunities | Suggestion to challenge a god: strength + agility at or above this |
 
 ### PANTHEON

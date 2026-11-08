@@ -1664,7 +1664,7 @@ Visible set `vs` = canon entities; in a multi-world cosmos restricted to entitie
 | friendly_neighbour (dost_komsu) | 45 | -100 | 100 | Loving neighbour: community relationship ≥ this |
 | monster_danger (canavar_tehlike) | 50 | 0 | 100 | Dangerous creature: danger ≥ this |
 | tense_neighbour (gergin_komsu) | 20 | 0 | 100 | "Tense neighbour" to a mortal: community relationship below minus this (without an enmity bond) |
-| tension_first (gerilim_once) | 1 | 0 | 1 | Tension lines (rivals, enmities, wars, rebellion) go to the top of the list (1 on, 0 off) |
+| tension_first (gerilim_once) | 0 | 0 | 1 | Tension lines (rivals, enmities, wars, rebellion) go to the top of the list (1 on, 0 off) |
 | challenge_strength (meydan_guc) | 110 | 0 | 1000 | Suggest challenging a god: strength + agility ≥ this |
 
 ### 8.6 Cross-references

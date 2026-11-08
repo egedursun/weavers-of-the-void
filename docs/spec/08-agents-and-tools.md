@@ -3047,7 +3047,7 @@ Related rules owned by other modules but used here: `BAGLAM.olumlu_baglam` 12000
 | friendly_neighbour | dost_komsu | 45 | -100 | 100 | Loving neighbour: community relation ≥ this |
 | monster_danger | canavar_tehlike | 50 | 0 | 100 | Dangerous creature: danger ≥ this |
 | tense_neighbour | gergin_komsu | 20 | 0 | 100 | "Tense neighbour": relation below minus this (no enmity bond) |
-| tension_first | gerilim_once | 1 | 0 | 1 | Tension lines moved to top (1 on, 0 off) |
+| tension_first | gerilim_once | 0 | 0 | 1 | Tension lines moved to top (1 on, 0 off) |
 | defy_strength | meydan_guc | 110 | 0 | 1000 | Suggest defying a god when strength + agility ≥ this |
 
 **Tunables — `SIHIRBAZ` (Creation wizard).** `default_magic` (buyu) 50 [0–100]; `default_darkness` (karanlik) 50 [0–100];

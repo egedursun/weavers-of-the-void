@@ -36,7 +36,7 @@ class OpportunitiesRules:
         20, 0, 100, RuleGroup.OPPORTUNITIES, 'To a mortal "tense neighbour": community relation below minus this (with no hostility link)'
     )
     tension_first: int = rule(
-        1, 0, 1, RuleGroup.OPPORTUNITIES, "Tension lines (rivals, hostilities, wars, rebellion) are placed at the top of the opportunity list (1 on, 0 off)"
+        0, 0, 1, RuleGroup.OPPORTUNITIES, "Tension lines (rivals, hostilities, wars, rebellion) are placed at the top of the opportunity list (1 on, 0 off)"
     )
     challenge_god_strength: int = rule(110, 0, 1000, RuleGroup.OPPORTUNITIES, "Suggestion to challenge a god: strength + agility at or above this")
     untried_epochs: int = rule(4, 1, 100, RuleGroup.OPPORTUNITIES, "A tool unused for this many epochs gets a concrete suggestion")

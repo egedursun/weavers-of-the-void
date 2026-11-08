@@ -2221,7 +2221,7 @@ UI-only list (not sent to a model) returned by `GET /api/firsatlar`:
 | `friendly_neighbour` | `dost_komsu` | 45 | −100 | 100 | Opportunities | Loving neighbour: community relation at or above this |
 | `monster_danger` | `canavar_tehlike` | 50 | 0 | 100 | Opportunities | Dangerous creature: danger at or above this |
 | `tense_neighbour` | `gergin_komsu` | 20 | 0 | 100 | Opportunities | Mortal "tense neighbour": community relation below minus this (with no hostility bond) |
-| `tension_first` | `gerilim_once` | 1 | 0 | 1 | Opportunities | Tension lines (rivals, hostilities, wars, rebellion) go first in the list (1 on, 0 off) |
+| `tension_first` | `gerilim_once` | 0 | 0 | 1 | Opportunities | Tension lines (rivals, hostilities, wars, rebellion) go first in the list (1 on, 0 off) |
 | `challenge_strength` | `meydan_guc` | 110 | 0 | 1000 | Opportunities | Suggest defying a god: strength + agility at or above this |
 
 External tunables read (defined elsewhere): `BOS.firsat_bolge` (3), `BOS.ilk_halk_oz` (30), `BOS.ilk_halk_un` (10) in bosdunya.js; `KESIF.toprak_bedava` (1), `toprak_oz` (10), `toprak_un` (3), `kozmos_durgun` (8), `arac_tur` (1), `dar_topluluk` in ufuk.js; `OLUM.dagit_oto_iliski` (40), `dagit_bedel` (30), `kardes_ayin_bedel` (45), `kardes_inis_bedel` (70), `kardes_pazarlik_bedel` (25) in olum.js; `DERIN_YASAM.dirilis_adanmislik` (100) defined in derin.js; `DENGE.kiyamet_esik` (100).
