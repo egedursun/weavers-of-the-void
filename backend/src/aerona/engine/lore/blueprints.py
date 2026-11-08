@@ -14,9 +14,9 @@ from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.culture import ItemClass, Technique
 from aerona.domain.enums.discovery import BlueprintKind, BlueprintSource
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.structure import ConstructionState
 from aerona.engine.context import TickContext
@@ -27,11 +27,28 @@ from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.rules.registry import Rules
 
 PATTERN_QUALITY = 70
+BOOKS = (ItemClass.BOOK, ItemClass.SCROLL)
+
+
+async def books_of(session: AsyncSession, holder_id: int) -> set[int]:
+    keepers = select(EntityRow.id).where(EntityRow.location_id == holder_id, EntityRow.entity_type == EntityType.MORTAL)
+    owned = await session.scalars(
+        select(BondRow.target_node_id)
+        .join(ItemProfileRow, ItemProfileRow.item_entity_id == BondRow.target_node_id)
+        .where(
+            (BondRow.source_node_id == holder_id) | BondRow.source_node_id.in_(keepers),
+            BondRow.kind == BondKind.OWNS,
+            BondRow.state == BondState.ACTIVE,
+            ItemProfileRow.item_class.in_(list(BOOKS)),
+        )
+    )
+    return set(owned)
 
 
 async def designs_for(session: AsyncSession, holder_id: int, kind: BlueprintKind, subject: str) -> list[BlueprintRow]:
-    rows = await session.scalars(select(BlueprintRow).where(BlueprintRow.kind == kind, BlueprintRow.subject == subject))
-    return [row for row in rows if row.holder_node_id == holder_id or holder_id in (row.licensed_to or [])]
+    rows = list(await session.scalars(select(BlueprintRow).where(BlueprintRow.kind == kind, BlueprintRow.subject == subject)))
+    shelves = await books_of(session, holder_id) if any(row.book_entity_id is not None for row in rows) else set()
+    return [row for row in rows if row.holder_node_id == holder_id or holder_id in (row.licensed_to or []) or row.book_entity_id in shelves]
 
 
 async def design_factor(session: AsyncSession, rules: Rules, holder_id: int | None, kind: BlueprintKind, subject: str) -> float:
@@ -52,7 +69,9 @@ async def draw(ctx: TickContext, holder: EntityRow, kind: BlueprintKind, subject
     if held(holder.id) or await has_design(ctx.session, holder.id, kind, subject):
         return None
     label = subject.replace("_", " ")
+    shelf = sorted(await books_of(ctx.session, holder.id))
     row = BlueprintRow(
+        book_entity_id=shelf[0] if shelf else None,
         name=f"{BLUEPRINT_KINDS[kind]}: {label}",
         kind=kind,
         subject=subject,

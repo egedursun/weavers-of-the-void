@@ -236,10 +236,12 @@ async def conquest_spread(ctx: TickContext) -> int:
 async def master(ctx: TickContext) -> int:
     gain = ctx.rules.art_forms.mastery_gain
     grown = 0
+    difficulty = dict((await ctx.session.execute(select(ArtFormProfileRow.art_form_entity_id, ArtFormProfileRow.difficulty))).all())
     for row in list(await ctx.session.scalars(select(ArtFormPractitionerRow))):
         if "mastery" in row.locked or held(row.practitioner_entity_id) or row.mastery >= PERCENT:
             continue
-        row.mastery = clamp_int(row.mastery + gain, 0, PERCENT)
+        hard = difficulty.get(row.art_form_entity_id, 0)
+        row.mastery = clamp_int(row.mastery + max(1, round_half_up(gain * (PERCENT - hard / 2) / PERCENT)), 0, PERCENT)
         grown += 1
     return grown
 

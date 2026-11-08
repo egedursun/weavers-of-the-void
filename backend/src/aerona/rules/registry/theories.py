@@ -36,7 +36,7 @@ class ArtFormsRules:
     fusion_pct: int = rule(4, 0, 100, K, "Chance each epoch two forms of the same discipline meeting in one place fuse into a new one (%)")
     spread_pct: int = rule(8, 0, 100, K, "Chance each epoch a form passes to a trade partner or ally (%)")
     value_fit_pct: int = rule(50, 0, 200, K, "How much a receiving culture's taste for beauty and tradition weighs on taking up a form (%)")
-    mastery_gain: int = rule(4, 0, 100, K, "Mastery a practitioner gains each epoch")
+    mastery_gain: int = rule(4, 0, 100, K, "Mastery a practitioner gains each epoch in a form of no difficulty; harder forms are mastered more slowly")
     mastery_quality_pct: int = rule(20, 0, 100, K, "Quality an artwork gains from full mastery of its form (%)")
     prestige_renown_pct: int = rule(20, 0, 100, K, "Renown an artwork gains from full prestige of its form (%)")
     prestige_drift: int = rule(2, 0, 100, K, "Prestige a form gains or loses each epoch as its practitioners grow or fall")

@@ -6,11 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.theories import DOMAINS
 from aerona.constants.units import PERCENT
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import HolderLevelRow, InstitutionRow
 from aerona.db.tables.discovery import ParadigmShiftRow, TheoryAdherentRow, TheoryAnomalyRow, TheoryProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import CultureValueRow, SkillRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.discovery import AnomalyKind, TheoryDomain
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -21,6 +23,7 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import TheoryStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.lore.blueprints import books_of
 from aerona.engine.lore.research_depth import RESEARCHERS, living_researchers, trade_partners
 from aerona.engine.lore.truth import CONTRARY, ruling
 from aerona.engine.mind.ethics import church_of
@@ -62,6 +65,7 @@ async def create_theory(
         ),
     )
     rival = await ruling(ctx.session, founder.id, domain)
+    shelf = sorted(await books_of(ctx.session, founder.id))
     ctx.session.add(
         TheoryProfileRow(
             theory_entity_id=theory.id,
@@ -70,6 +74,7 @@ async def create_theory(
             correctness=clamp_int(correctness, 0, PERCENT),
             explanatory_power=ctx.rules.theories.found_strength,
             founder_entity_id=founder.id,
+            founding_book_id=shelf[0] if shelf else None,
             rival_entity_id=rival.theory_entity_id if rival is not None else None,
             endorsed_by=[],
             condemned_by=[],
@@ -136,6 +141,37 @@ async def spread_theories(ctx: TickContext) -> int:
                 await adhere(ctx, row.theory_entity_id, partner, max(1, row.strength // 2), profile.domain)
                 spread += 1
     return spread
+
+
+async def read_theories(ctx: TickContext) -> int:
+    taught = 0
+    written = await ctx.session.scalars(select(TheoryProfileRow).where(TheoryProfileRow.founding_book_id.is_not(None)))
+    for profile in list(written):
+        owners = await ctx.session.scalars(
+            select(BondRow.source_node_id).where(
+                BondRow.target_node_id == profile.founding_book_id, BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE
+            )
+        )
+        for owner_id in list(owners):
+            owner = await ctx.session.get(EntityRow, owner_id)
+            reader = owner.location_id if owner is not None and owner.entity_type is EntityType.MORTAL else owner_id
+            home = await ctx.session.get(EntityRow, reader) if reader is not None else None
+            if home is None or home.entity_type not in RESEARCHERS or held(home.id):
+                continue
+            if await ctx.session.get(TheoryAdherentRow, (profile.theory_entity_id, home.id)) is None:
+                await adhere(ctx, profile.theory_entity_id, home.id, ctx.rules.theories.found_strength // 2, profile.domain)
+                taught += 1
+    return taught
+
+
+async def abandon(ctx: TickContext) -> int:
+    dropped = 0
+    for row in list(await ctx.session.scalars(select(TheoryAdherentRow).where(TheoryAdherentRow.strength <= 0))):
+        if "strength" not in row.locked and not held(row.adherent_entity_id):
+            await ctx.session.delete(row)
+            dropped += 1
+    await ctx.session.flush()
+    return dropped
 
 
 async def faiths_of(session: AsyncSession, community: EntityRow) -> list[int]:
@@ -233,6 +269,13 @@ async def contests(ctx: TickContext) -> int:
             .join(TheoryProfileRow, TheoryProfileRow.theory_entity_id == TheoryAdherentRow.theory_entity_id)
             .where(TheoryAdherentRow.adherent_entity_id == community.id, TheoryAdherentRow.orthodox.is_(False), TheoryProfileRow.domain == profile.domain)
         )
+        named = await ctx.session.get(TheoryProfileRow, profile.rival_entity_id) if profile.rival_entity_id is not None else None
+        if named is not None and await ctx.session.get(TheoryAdherentRow, (named.theory_entity_id, community.id)) is None:
+            heard = await ctx.session.scalar(
+                select(TheoryAdherentRow.adherent_entity_id).where(TheoryAdherentRow.theory_entity_id == named.theory_entity_id).limit(1)
+            )
+            if heard is not None:
+                await adhere(ctx, named.theory_entity_id, community.id, 1, named.domain)
         incumbent = await contest_score(ctx, community, profile, ruling_now=True)
         best: tuple[float, TheoryAdherentRow] | None = None
         for rival_row, rival_profile in rivals.all():
@@ -352,6 +395,8 @@ async def theories(ctx: TickContext) -> dict[str, int]:
         "anomalies": await meet_anomalies(ctx),
         "paradigm_shifts": await contests(ctx),
         "theories_persecuted": await entangle(ctx),
+        "theories_read": await read_theories(ctx),
+        "theories_abandoned": await abandon(ctx),
     }
     await tally_adherents(ctx)
     return counts

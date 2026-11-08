@@ -99,7 +99,7 @@ export function EraSection({
     <Section
       id='section-era'
       title='Era and age'
-      description='The deeds that raise or sink the realm, the age they bring and the works it bans.'
+      description='The deeds that raise or sink the realm, the age they bring and the works it bans. Only realms keep an era score; a world shows its era on its own page.'
       icon={Hourglass}
     >
       {view.isPending && <LoadingBlock label='Weighing its deeds' />}

@@ -77,8 +77,16 @@ async def ruler_currencies(ctx: TickContext) -> None:
     count(ctx, "currency", tally)
 
 
-@reads("table.bonds", "table.faction_profiles", "table.holder_techniques", "table.polity_map_knowledge", "table.prophecy_conditions", "table.world_maps")
-@writes("table.faction_profiles", "table.holder_techniques", "table.lore_trades")
+@reads(
+    "table.bonds",
+    "table.faction_profiles",
+    "table.holder_techniques",
+    "table.polity_map_knowledge",
+    "table.prophecy_conditions",
+    "table.reputations",
+    "table.world_maps",
+)
+@writes("table.faction_profiles", "table.holder_techniques", "table.lore_trades", "table.reputations")
 async def lore_market(ctx: TickContext) -> None:
     tally = LoreTally()
     await market(ctx, tally)

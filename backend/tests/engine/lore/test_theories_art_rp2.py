@@ -3,7 +3,7 @@ from dataclasses import replace
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.db.tables.culture import ArtworkProfileRow, HolderLevelRow, LanguageIntelligibilityRow
+from aerona.db.tables.culture import ArtworkProfileRow, HolderLevelRow, ItemProfileRow, LanguageIntelligibilityRow
 from aerona.db.tables.discovery import (
     ArtFormPractitionerRow,
     ArtFormProfileRow,
@@ -22,14 +22,14 @@ from aerona.db.tables.polity import TreatyBreachRow
 from aerona.db.tables.renown import DeedRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import PartOfSpeech
-from aerona.domain.enums.culture import ArtMedium
+from aerona.domain.enums.culture import ArtMedium, ItemClass
 from aerona.domain.enums.discovery import AnomalyKind, ArtDiscipline, TheoryDomain
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
 from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.enums.society import KnowledgeBranch
-from aerona.domain.models.entity_stats import ArtworkStats, LanguageStats
+from aerona.domain.models.entity_stats import ArtworkStats, ItemStats, LanguageStats
 from aerona.engine.lore import art_forms, names, theories, theory_control
 from aerona.engine.lore.truth import branch_factor, ruling, theory_factor, truth_factor
 from aerona.engine.polity.accords import Clause, sign
@@ -183,3 +183,21 @@ async def test_a_treaty_between_tongues_that_share_nothing_is_misread(session: A
     assert await names.misreadings(ctx) == 1
     breach = await session.scalar(select(TreatyBreachRow).where(TreatyBreachRow.treaty_entity_id == treaty.id))
     assert breach is not None and breach.breaker_node_id is None
+
+
+async def test_a_theory_passes_with_its_founding_book_and_is_dropped_when_no_one_holds_it(session: AsyncSession, realm: Realm) -> None:
+    ctx = make_ctx(session)
+    home = await town(session, realm, "Scroll Town")
+    reader = await town(session, realm, "Reader Town")
+    book = await make_entity(session, "The Account Written", EntityType.ITEM, world_id=realm.world.id, stats=ItemStats())
+    session.add(ItemProfileRow(item_entity_id=book.id, item_class=ItemClass.BOOK, condition=100, locked=[]))
+    await bond(session, home.id, book.id, BondKind.OWNS)
+    theory = await theories.create_theory(ctx, home, TheoryDomain.HISTORY, "The Long Memory", "The past repeats.", correctness=60)
+    profile = await session.get_one(TheoryProfileRow, theory.id)
+    assert profile.founding_book_id == book.id
+    await bond(session, reader.id, book.id, BondKind.OWNS)
+    assert await theories.read_theories(ctx) == 1
+    held_row = await session.get_one(TheoryAdherentRow, (theory.id, reader.id))
+    held_row.strength = 0
+    assert await theories.abandon(ctx) == 1
+    assert await session.get(TheoryAdherentRow, (theory.id, reader.id)) is None

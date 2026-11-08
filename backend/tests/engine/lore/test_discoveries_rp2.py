@@ -1,10 +1,11 @@
 from dataclasses import replace
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import NotFoundError
+from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, IdeologyAdherentRow, ItemProfileRow, ResearchProgressRow
 from aerona.db.tables.discovery import (
     ArtifactStudyRow,
@@ -285,3 +286,37 @@ async def test_smugglers_sell_a_banned_creed_across_the_border(session: AsyncSes
     assert counts["works_smuggled"] == 1
     assert await session.get(IdeologyAdherentRow, (creed.id, inside.id)) is not None
     assert stat(inside, "wealth") == 50 - ctx.rules.discovery.black_market_price
+
+
+async def test_a_design_kept_in_a_book_serves_whoever_owns_the_book(session: AsyncSession, realm: Realm) -> None:
+    ctx = make_ctx(session)
+    maker = await town(session, realm, "Plan Town")
+    buyer = await town(session, realm, "Book Town")
+    book = await make_entity(session, "Book of Plans", EntityType.ITEM, world_id=realm.world.id, stats=ItemStats())
+    session.add(ItemProfileRow(item_entity_id=book.id, item_class=ItemClass.BOOK, condition=100, locked=[]))
+    await connect(session, maker.id, book.id, BondKind.OWNS)
+    await session.flush()
+    design = await blueprints.draw(ctx, maker, BlueprintKind.STRUCTURE, StructureKind.TEMPLE.value)
+    assert design is not None and design.book_entity_id == book.id
+    assert await blueprints.designs_for(session, buyer.id, BlueprintKind.STRUCTURE, StructureKind.TEMPLE.value) == []
+    await connect(session, buyer.id, book.id, BondKind.OWNS)
+    assert await blueprints.designs_for(session, buyer.id, BlueprintKind.STRUCTURE, StructureKind.TEMPLE.value) == [design]
+
+
+async def test_a_poisoning_wounds_the_scholars_at_work(session: AsyncSession, realm: Realm) -> None:
+    ctx = make_ctx(session)
+    home = await town(session, realm, "Still Town")
+    sage = await scholar(session, home, "Mira Coe", SkillKind.ALCHEMY, 70)
+    assert await dangers.scholars_of(ctx, home.id) == [sage]
+    await dangers.strike(ctx, home, ResearchIncident.POISONING, technique=Technique.ALCHEMY)
+    wounds = await session.scalar(select(func.count()).select_from(InjuryRow).where(InjuryRow.bearer_node_id == sage.id))
+    assert int(wounds or 0) >= 1
+
+
+async def test_a_technique_of_an_era_the_world_has_entered_comes_faster(session: AsyncSession, realm: Realm) -> None:
+    ctx = make_ctx(session)
+    home = await town(session, realm, "Age Town")
+    assert await research_depth.era_known(ctx, home.id, Technique.IRON) == 1.0
+    await discovery_control.set_world_era(ctx, realm.world.id, 2, hold=True)
+    assert await research_depth.era_known(ctx, home.id, Technique.IRON) == 1 + ctx.rules.research_depth.era_known_pct / 100
+    assert await research_depth.era_known(ctx, home.id, Technique.STEEL) == 1.0

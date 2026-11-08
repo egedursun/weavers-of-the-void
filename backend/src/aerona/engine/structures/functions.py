@@ -8,7 +8,6 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import HERO_ROLES, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch
@@ -17,7 +16,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.wounds import apply_hits
-from aerona.engine.lore.research import has_technique
+from aerona.engine.lore.printing import printed
 from aerona.engine.mind.hooks import practised
 from aerona.engine.notes import note
 from aerona.engine.phases.knowledge_levels import known_records, shift_level
@@ -122,7 +121,7 @@ async def school(ctx: TickContext, item: Working, host: EntityRow, tally: Tally)
     people = host if host.entity_type is EntityType.PEOPLE else await people_of(ctx.session, host)
     culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
     if culture is not None and "literacy" not in culture.locked:
-        pressed = await has_technique(ctx.session, host.id, Technique.PRINTING_PRESS)
+        pressed = await printed(ctx.session, host.id)
         reach = table.school_literacy_pct + (
             round_half_up(table.school_literacy_pct * ctx.rules.technique_effects.press_literacy_pct / PERCENT) if pressed else 0
         )

@@ -7,19 +7,23 @@ from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, Researc
 from aerona.db.tables.discovery import ResearchIncidentRow
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.mind import SkillRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.discovery import ResearchIncident
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.disease.control import loose
 from aerona.engine.ecology.control import spawn_beast
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.learning import realm_of
-from aerona.engine.lore.research import has_technique
+from aerona.engine.lore.research import SCHOLARLY, has_technique
 from aerona.engine.lore.research_depth import add_progress, neighbours
 from aerona.engine.lore.rites import phenomenon
 from aerona.engine.mind.ethics import BAD, culture_of, ethics_of
@@ -32,6 +36,31 @@ from aerona.engine.renown.currencies import ruler_of_realm
 from aerona.engine.services.community_relations import change_relation
 
 DANGEROUS = frozenset(DANGEROUS_TECHNIQUES)
+HARMS = {
+    ResearchIncident.FIRE: (HarmCause.ACCIDENT, DamageType.FIRE),
+    ResearchIncident.EXPLOSION: (HarmCause.ACCIDENT, DamageType.BLUNT),
+    ResearchIncident.POISONING: (HarmCause.POISON, DamageType.VENOM),
+    ResearchIncident.SUMMONING_GONE_WRONG: (HarmCause.MAGIC_BACKLASH, DamageType.MAGIC),
+}
+
+
+async def scholars_of(ctx: TickContext, holder_id: int) -> list[EntityRow]:
+    rows = await ctx.session.scalars(
+        select(EntityRow)
+        .join(SkillRow, SkillRow.holder_node_id == EntityRow.id)
+        .where(
+            EntityRow.location_id == holder_id,
+            EntityRow.entity_type == EntityType.MORTAL,
+            EntityRow.status == EntityStatus.CANON,
+            SkillRow.skill.in_(SCHOLARLY),
+        )
+        .order_by(SkillRow.level.desc(), EntityRow.id)
+    )
+    found: list[EntityRow] = []
+    for mortal in rows:
+        if mortal not in found and not held(mortal.id):
+            found.append(mortal)
+    return found[: ctx.rules.discovery.incident_victims]
 
 
 def is_dangerous(technique: Technique | None) -> bool:
@@ -57,6 +86,11 @@ async def strike(
         if row.dead:
             with flowing(FlowCategory.DISASTER):
                 shift_stat(holder, "population", -row.dead)
+    if kind in HARMS:
+        cause, damage = HARMS[kind]
+        for scholar in await scholars_of(ctx, holder.id):
+            harm = Harm(table.incident_hp * severity / PERCENT, cause, "died of what the work let loose", damage_type=damage)
+            await apply_hits(ctx, scholar, harm, lethal=False)
     if kind is ResearchIncident.LEAK and technique is not None:
         for other in sorted(await neighbours(ctx.session, atlas, holder.id))[:1]:
             if not held(other) and not await has_technique(ctx.session, other, technique):

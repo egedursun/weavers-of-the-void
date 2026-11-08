@@ -9,6 +9,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow
 from aerona.db.tables.culture import HolderTechniqueRow, InstitutionRow, ResearchBoostRow, ResearchFocusRow, ResearchProgressRow
+from aerona.db.tables.discovery import WorldEraRow
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.economy import LoanRow, ProductionRunRow
 from aerona.db.tables.entities import EntityRow
@@ -89,6 +90,14 @@ async def catch_up(ctx: TickContext, atlas: RegionAtlas, holder_id: int, techniq
     for other in sorted(await neighbours(ctx.session, atlas, holder_id)):
         known += int(await has_technique(ctx.session, other, technique))
     return 1 + min(table.catch_up_cap, known * table.catch_up_pct) / PERCENT
+
+
+async def era_known(ctx: TickContext, holder_id: int, technique: Technique) -> float:
+    holder = await ctx.session.get(EntityRow, holder_id)
+    era = await ctx.session.get(WorldEraRow, holder.world_id) if holder is not None and holder.world_id is not None else None
+    if era is None or TECHNIQUES[technique].level > era.era:
+        return 1.0
+    return 1 + ctx.rules.research_depth.era_known_pct / PERCENT
 
 
 async def capable(session: AsyncSession, holder_id: int, capability: Capability, levels: dict[KnowledgeBranch, int] | None = None) -> bool:
@@ -565,7 +574,10 @@ async def advanced(ctx: TickContext, atlas: RegionAtlas, holder_id: int, techniq
         row = ResearchProgressRow(holder_entity_id=holder_id, technique=technique, progress=0, updated_epoch=ctx.epoch)
         ctx.session.add(row)
     gain = (
-        ctx.rules.tech_graph.adopt_chance * await focus_factor(ctx.session, ctx.rules, holder_id, technique) * await catch_up(ctx, atlas, holder_id, technique)
+        ctx.rules.tech_graph.adopt_chance
+        * await focus_factor(ctx.session, ctx.rules, holder_id, technique)
+        * await catch_up(ctx, atlas, holder_id, technique)
+        * await era_known(ctx, holder_id, technique)
     )
     row.progress = clamp_int(row.progress + round_half_up(gain), 0, PERCENT)
     row.updated_epoch = ctx.epoch

@@ -124,6 +124,7 @@ RESEARCH_MECHANICS = (
             Coupling(S.WAR, "captives leak their homeland's techniques to their captors", E.FLOW, "research_depth.captive_leak"),
             Coupling(S.DEMOGRAPHY, "refugees bring their homeland's techniques to the place that shelters them", E.FLOW, "research_depth.refugee_leak"),
             Coupling(S.WAR, "an occupier learns from the libraries of the land it holds", E.FLOW, "research_depth.library_leak"),
+            Coupling(S.KNOWLEDGE, "techniques of an era the world has entered come faster", E.MODIFIER, "research_depth.era_known_pct"),
         ),
     ),
     Mechanic(
@@ -307,6 +308,7 @@ RESEARCH_MECHANICS = (
         targets=HOLDERS,
         couplings=(
             Coupling(S.BODY, "an incident kills and loosens sickness", E.TRIGGER, "discovery.incident_dead_pct"),
+            Coupling(S.BODY, "fires, explosions and poisonings wound the scholars at work", E.TRIGGER, "discovery.incident_hp"),
             Coupling(S.ECOLOGY, "a beast gets loose and the land grows dangerous", E.TRIGGER, "discovery.incident_danger"),
             Coupling(S.SOCIAL, "neighbours who hold the art shameful turn against its learner", E.FLOW, "discovery.ethics_relation"),
             Coupling(S.KNOWLEDGE, "risky research rolls accidents", E.TRIGGER, "discovery.accident_pct"),
@@ -382,6 +384,7 @@ RESEARCH_MECHANICS = (
         couplings=(
             Coupling(S.WAR, "a siege engine design batters walls harder", E.MODIFIER, "discovery.blueprint_pct"),
             Coupling(S.ECONOMY, "a building plan speeds construction; licences pay a fee each epoch", E.FLOW, "discovery.licence_fee"),
+            Coupling(S.CULTURE, "a design kept in a book serves whoever owns the book", E.FLOW, "discovery.blueprint_pct"),
             Coupling(S.INTRIGUE, "spies who steal a secret may carry off a design", E.TRIGGER, "discovery.blueprint_theft_pct"),
         ),
     ),
@@ -424,6 +427,7 @@ RESEARCH_MECHANICS = (
             Coupling(S.FAITH, "faiths endorse the accounts of their faithful and condemn rivals", E.FLOW, "theories.persecution_blow"),
             Coupling(S.LAW, "a scholar of a true theory a faith condemns may be tried for blasphemy", E.TRIGGER, "theories.heresy_trial_pct"),
             Coupling(S.GODS, "a son can reveal the truth", E.TRIGGER, "theories.reveal_cost"),
+            Coupling(S.CULTURE, "whoever owns a theory's founding book comes to hold it", E.FLOW, "theories.found_strength"),
         ),
     ),
     Mechanic(

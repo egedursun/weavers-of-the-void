@@ -44,6 +44,8 @@ class DiscoveryRules:
     accident_pct: int = rule(3, 0, 100, K, "Chance each epoch that research in a risky branch causes an accident (%)")
     incident_severity: int = rule(30, 1, 100, K, "Typical severity of a research incident")
     incident_dead_pct: int = rule(2, 0, 100, K, "Share of a community killed by a severe incident, at full severity (%)")
+    incident_hp: int = rule(30, 0, 200, K, "Harm a fire, explosion or poisoning deals each scholar caught in it, at full severity")
+    incident_victims: int = rule(2, 0, 20, K, "Most scholars of a community caught in one research incident")
     incident_prosperity: int = rule(8, 0, 100, K, "Prosperity a fire or explosion burns away at full severity")
     incident_danger: int = rule(10, 0, 100, K, "Danger a loose beast adds to its region at full severity")
     leak_progress: int = rule(25, 0, 99, K, "Progress toward a leaked technique a neighbour gains")

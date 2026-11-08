@@ -379,6 +379,29 @@ def unfilled_lines(texts: dict[Path, str]) -> list[str]:
     return problems
 
 
+INT_LIST = re.compile(r"^    ([a-z_]+): Mapped\[list\[int\]\]", re.MULTILINE)
+TYPED_BOOK = BACKEND / "services/books/typed.py"
+LIST_SETS = ("ID_LISTS", "INDEXED_LISTS", "REFERENCE_LISTS", "PAIRED_LISTS", "PERCENT_LISTS")
+
+
+def unlabelled_lists(texts: dict[Path, str]) -> list[str]:
+    book = texts[TYPED_BOOK]
+    known: set[str] = set()
+    for name in LIST_SETS:
+        found = re.search(rf"^{name}\b", book, re.MULTILINE)
+        start = found.start() if found is not None else -1
+        if start >= 0:
+            end = book.find("\n\n", start)
+            known |= set(re.findall(r'"([a-z_]+)"', book[start:end if end > 0 else len(book)]))
+    return [
+        f"{path.relative_to(ROOT)}: list column {column} renders as bare numbers in the book; name it in one of {', '.join(LIST_SETS)} in services/books/typed.py"
+        for path, text in texts.items()
+        if path.is_relative_to(TABLES)
+        for column in INT_LIST.findall(text)
+        if column not in known
+    ]
+
+
 def main() -> int:
     texts = backend_texts()
     errors = [
@@ -393,6 +416,7 @@ def main() -> int:
         *idle_techniques(texts),
         *bare_endings(texts),
         *unfilled_lines(texts),
+        *unlabelled_lists(texts),
     ]
     for line in errors:
         print(f"ERROR {line}")

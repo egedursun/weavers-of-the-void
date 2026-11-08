@@ -21,6 +21,7 @@ class ResearchDepthRules:
     catch_up_cap: int = rule(50, 0, 300, K, "Most a technique can be sped up by neighbours who know it (%)")
     refugee_leak: int = rule(8, 0, 99, K, "Progress toward each technique of their homeland that refugees bring to the place that shelters them")
     library_leak: int = rule(10, 0, 99, K, "Progress toward each technique kept in a conquered library that its occupier gains each epoch")
+    era_known_pct: int = rule(25, 0, 400, K, "How much faster a technique of an era the world has already entered is learned (%)")
     captive_leak: int = rule(5, 0, 100, K, "Progress a captor makes on a technique its captives' people know")
     origin_wealth: int = rule(60, 0, 100, K, "Prosperity a community needs to give birth to an institution")
     origin_trade: int = rule(2, 0, 50, K, "Trade partners a community needs to give birth to an institution")

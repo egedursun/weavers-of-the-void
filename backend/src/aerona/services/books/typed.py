@@ -67,8 +67,16 @@ ID_LISTS = frozenset(
         "translations",
         "immunities",
         "baseline_rebel_ids",
+        "licensed_to",
+        "endorsed_by",
+        "condemned_by",
+        "parent_ids",
+        "forbidden_by",
+        "regalia",
+        "content",
     }
 )
+PERCENT_LISTS = frozenset({"milestones"})
 REFERENCE_LISTS = {"revealed_aims": "war_aims"}
 PAIRED_LISTS = {"martial_record": ("won", "lost")}
 PERCENT_SIGN = "%"
@@ -327,6 +335,8 @@ class TypedIndex:
             return ", ".join(self.references.get(reference, {}).get(item) or f"{words(reference).lower()} {item}" for item in items)
         if column.key in ID_LISTS:
             return ", ".join(self.names.get(item, f"#{item}") for item in items)
+        if column.key in PERCENT_LISTS:
+            return ", ".join(f"{item}{PERCENT_SIGN}" for item in items)
         pair = PAIRED_LISTS.get(column.key)
         if pair is not None and len(items) == len(pair):
             return ", ".join(f"{item} {label}" for item, label in zip(items, pair, strict=True))
