@@ -1,5 +1,7 @@
+import io
 import re
 import sys
+import tokenize
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
@@ -28,8 +30,15 @@ def decorated(text: str, start: int) -> bool:
     return before.startswith("@") or before == ")"
 
 
+def names_in(text: str) -> list[str]:
+    try:
+        return [token.string for token in tokenize.generate_tokens(io.StringIO(text).readline) if token.type == tokenize.NAME]
+    except (tokenize.TokenError, SyntaxError):
+        return WORD.findall(text)
+
+
 def orphans(files: dict[Path, str], elsewhere: str) -> list[Orphan]:
-    used = Counter(WORD.findall("\n".join(files.values()))) + Counter(WORD.findall(elsewhere))
+    used = Counter(name for text in files.values() for name in names_in(text)) + Counter(names_in(elsewhere))
     found: list[Orphan] = []
     for path, text in files.items():
         for match in DEFINITION.finditer(text):

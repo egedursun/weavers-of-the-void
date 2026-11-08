@@ -25,7 +25,7 @@ from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.society import class_shares
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 
 C = SocialClass
 BURDENS: dict[TaxKind, frozenset[SocialClass]] = {
@@ -74,7 +74,7 @@ async def officers_greed(ctx: TickContext, realm: Realm) -> int:
 
 
 async def mean_justice(ctx: TickContext, laws: LawBook, realm: Realm) -> float:
-    justices = [stat(laws.laws[law_id], "justice") or PERCENT // 2 for law_id in laws.by_node.get(realm.entity.id, []) if law_id in laws.laws]
+    justices = [stat_or(laws.laws[law_id], "justice", PERCENT // 2) for law_id in laws.by_node.get(realm.entity.id, []) if law_id in laws.laws]
     return sum(justices) / len(justices) if justices else PERCENT / 2
 
 
@@ -117,7 +117,7 @@ async def base_of(ctx: TickContext, book: RealmBook, realm: Realm, kind: TaxKind
     total = 0.0
     for member in book.members(realm):
         shares = await class_shares(ctx.session, ctx.rules, member.id)
-        prosperity = stat(member, "prosperity") or PERCENT // 2
+        prosperity = stat_or(member, "prosperity", PERCENT // 2)
         if kind is TaxKind.POLL:
             total += (stat(member, "population") or 0) / 1000 * table.poll_take
         elif kind is TaxKind.CONSUMPTION:

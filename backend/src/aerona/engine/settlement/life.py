@@ -57,7 +57,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.society import supply_index
-from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat
+from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat, stat_or
 from aerona.engine.renown.currencies import realm_of_community, ruler_of_realm
 from aerona.engine.settlement.book import Town, ledger, tier_for
 from aerona.engine.settlement.districts import AdminParts, admin_parts, designs_for, unify_market, wound_district
@@ -146,7 +146,7 @@ async def administer(ctx: TickContext, town: Town, knowledge: KnowledgeMap, lite
 async def collect_taxes(ctx: TickContext, town: Town) -> int:
     table = ctx.rules.taxation
     people = stat(town.entity, "population") or 0
-    wealth = stat(town.entity, "wealth") or stat(town.entity, "prosperity") or 0
+    wealth = stat_or(town.entity, "wealth", stat(town.entity, "prosperity") or 0)
     taxable = people / PERCENT * table.per_capita_output * max(0.1, wealth / PERCENT) * (1 - logistics_waste(ctx.rules, town))
     taxable *= 1 - await exempt_share(ctx, town.entity.id)
     admin = town.profile.admin_capacity / PERCENT
@@ -450,7 +450,7 @@ async def keep_order(ctx: TickContext, town: Town, *, justice: float, bands: lis
     soldiers = profile.militia + ((stat(garrison, "size") or 0) if garrison is not None else 0)
     effects = town.effects(ctx.rules)
     policing = soldiers / PERCENT * table.policing_per_100 + effects.policing
-    wealth = stat(town.entity, "wealth") or stat(town.entity, "prosperity") or 0
+    wealth = stat_or(town.entity, "wealth", stat(town.entity, "prosperity") or 0)
     if "public_order" not in profile.locked:
         charter = ctx.rules.urban.charter_order if profile.charter_entity_id is not None else 0
         seat = effects.order
@@ -723,7 +723,7 @@ async def foreigners(ctx: TickContext, town: Town) -> int:
         weight = max(1, (stat(people, "population") or 0) // 20)
         shares[str(people.id)] = weight
         total += weight
-    population = stat(town.entity, "population") or 1
+    population = max(1, stat(town.entity, "population") or 0)
     keep(town.profile, "foreigners", {key: clamp_int(value * PERCENT / max(population, total * 5), 0, PERCENT) for key, value in shares.items()})
     return sum(town.profile.foreigners.values())
 

@@ -12,7 +12,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.node import ActorKind
-from aerona.domain.enums.son import SonDeathCause, SonStatus
+from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import Publisher
 from aerona.engine.gods.acts import kill_mortal_by_creator
 from aerona.engine.gods.devotion import (
@@ -24,7 +24,7 @@ from aerona.engine.gods.devotion import (
     sibling_scheme,
 )
 from aerona.engine.gods.essence import spend
-from aerona.engine.gods.god_death import FadingStatus, GodDeath, creator_kills_son, fading_status, god_death, resurrect_son
+from aerona.engine.gods.god_death import FadingStatus, GodDeath, creator_kills_son, fading_status, resurrect_son
 from aerona.engine.gods.mortality import KillChance, Killer, KillOutcome, attempt_kill, kill_chance, kill_cost
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_percent
@@ -64,14 +64,6 @@ async def kill_son(session: AsyncSession, rules: Rules, son_id: int, reason: str
     death = await creator_kills_son(ctx, son, reason.strip() or None)
     await record_action(ctx, ActionKind.KILL_SON, son_id, rules.death.creator_kill_son_cost)
     return death
-
-
-async def son_dies(session: AsyncSession, rules: Rules, son_id: int, cause: str, death_cause: SonDeathCause) -> GodDeath:
-    ctx = await manual_context(session, "son_dies", rules)
-    son = require(await session.get(SonRow, son_id), "son")
-    if son.status is SonStatus.DEAD:
-        raise ValidationFailedError(f"{son.name} is already dead.")
-    return await god_death(ctx, son, cause, death_cause)
 
 
 async def resurrect(session: AsyncSession, rules: Rules, son_id: int, publish: Publisher | None = None) -> SonRow:

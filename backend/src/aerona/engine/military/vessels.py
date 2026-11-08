@@ -29,7 +29,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.services.war import current_war
 from aerona.rules.registry import Rules
 
@@ -122,8 +122,8 @@ async def backfill_vessels(ctx: TickContext) -> int:
         base = fresh_profile(ctx.rules, vessel, hull, owner_id=owner.id if owner is not None else None, home_port=vessel.location_id)
         for column in ("hull_class", "armament", "seaworthiness", "cargo_capacity", "home_port_entity_id", "crew_community_entity_id"):
             setattr(row, column, getattr(base, column))
-        row.crew = stat(vessel, "crew") or base.crew
-        row.condition = clamp_int(stat(vessel, "armor") or PERCENT, 0, PERCENT)
+        row.crew = stat_or(vessel, "crew", base.crew)
+        row.condition = clamp_int(stat_or(vessel, "armor", PERCENT), 0, PERCENT)
         row.status = VesselStatus.DOCKED if vessel.status is EntityStatus.CANON else VesselStatus.WRECKED
         row.locked = []
         made += 1
@@ -194,7 +194,7 @@ async def weather_leg(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow
 
 async def strange_waters(ctx: TickContext, vessel: EntityRow, row: VesselProfileRow, tally: SeaTally) -> None:
     table = ctx.rules.seafaring
-    strangeness = stat(vessel, "strangeness") or HULLS[row.hull_class].strangeness
+    strangeness = stat_or(vessel, "strangeness", HULLS[row.hull_class].strangeness)
     if strangeness < table.strange_route:
         return
     hidden = await ctx.session.scalars(

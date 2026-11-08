@@ -28,7 +28,7 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import add_flag, canon, connect, flags_by_entity, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
-from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat
+from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat, stat_or
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.structures.profiles import ensure_profile
 
@@ -582,7 +582,7 @@ async def plague_faith(ctx: TickContext) -> int:
             for cult in cults:
                 if community.id in (cult.location_id, cult.id):
                     low, high = headcount_bounds(ctx.rules, cult)
-                    set_stats(cult, followers=clamp_int((stat(cult, "followers") or low) * (1 + settings.plague_followers_pct / 100), low, high))
+                    set_stats(cult, followers=clamp_int((stat_or(cult, "followers", low)) * (1 + settings.plague_followers_pct / 100), low, high))
             shaken += 1
     return shaken
 

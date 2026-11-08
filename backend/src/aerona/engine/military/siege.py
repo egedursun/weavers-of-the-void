@@ -47,7 +47,7 @@ from aerona.engine.military.siege_depth import (
 from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.settlement.districts import damage_districts
 
@@ -281,7 +281,7 @@ async def sack_city(
             await change_relation(ctx, besieged.id, victor.id, depth.infamy, MemoryKind.GOODWILL, note="spared the city")
         ctx.count("cities_spared")
         return report
-    wealth = stat(besieged, "wealth") or stat(besieged, "prosperity") or 0
+    wealth = stat_or(besieged, "wealth", stat(besieged, "prosperity") or 0)
     taken = min(wealth, table.sack_loot)
     for key in ("wealth", "prosperity"):
         if stat(besieged, key) is not None:

@@ -47,7 +47,7 @@ from aerona.engine.mortal.variants import strength, variants_by_id
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.modifiers import combine, live_contributions
 from aerona.engine.primitives.queries import active_bonds, living_entity
-from aerona.engine.primitives.stats import base_stat, clamp_to_field, stat
+from aerona.engine.primitives.stats import base_stat, clamp_to_field, stat, stat_or
 from aerona.rules.registry import Rules
 
 Bearer = EntityRow | SonRow | ForeignGodRow
@@ -73,13 +73,13 @@ TRAIT_PLANS: tuple[tuple[CreatureTrait, BodyPlan], ...] = (
 
 def bearer_stats(bearer: Bearer) -> BearerStats:
     if isinstance(bearer, EntityRow):
-        agility = stat(bearer, "agility") or DEFAULT_STAT
+        agility = stat_or(bearer, "agility", DEFAULT_STAT)
         return BearerStats(
-            strength=stat(bearer, "strength") or DEFAULT_STAT,
+            strength=stat_or(bearer, "strength", DEFAULT_STAT),
             agility=agility,
-            intellect=stat(bearer, "intellect") or DEFAULT_STAT,
-            charisma=stat(bearer, "charisma") or DEFAULT_STAT,
-            endurance=stat(bearer, "endurance") or agility,
+            intellect=stat_or(bearer, "intellect", DEFAULT_STAT),
+            charisma=stat_or(bearer, "charisma", DEFAULT_STAT),
+            endurance=stat_or(bearer, "endurance", agility),
             age=stat(bearer, "age"),
             lifespan=stat(bearer, "lifespan"),
         )
@@ -136,7 +136,7 @@ def mortal_frame(rules: Rules, bearer: EntityRow, plan: BodyPlan) -> tuple[Heigh
     if rng.chance(rules.anatomy.height_shift_chance):
         index = heights.index(height) + (1 if rng.chance(rules.anatomy.height_shift_up_pct) else -1)
         height = heights[max(0, min(len(heights) - 2, index))] if height is not HeightClass.GIANT else height
-    strength = stat(bearer, "strength") or DEFAULT_STAT
+    strength = stat_or(bearer, "strength", DEFAULT_STAT)
     build = spec.build
     if spec.build is not BodyBuild.GIANT:
         build = (
@@ -401,7 +401,7 @@ async def function_level(session: AsyncSession, rules: Rules, node_id: int | Non
 
 
 async def perception_of(session: AsyncSession, rules: Rules, mortal: EntityRow) -> float:
-    base = stat(mortal, "perception") or DEFAULT_STAT
+    base = stat_or(mortal, "perception", DEFAULT_STAT)
     body = await session.get(BodyRow, mortal.id)
     if body is None:
         return float(base)

@@ -137,7 +137,7 @@ async def carry_language(ctx: TickContext, row: CaptiveCohortRow, settled_in: En
     bonds = BondRepository(ctx.session)
     if await bonds.exists_between(settled_in.id, language.id, BondKind.SPEAKS):
         return False
-    share = row.count * PERCENT / max(1, stat(settled_in, "population") or 1) * ctx.rules.captive_depth.language_pct / PERCENT
+    share = row.count * PERCENT / max(1, stat(settled_in, "population") or 0) * ctx.rules.captive_depth.language_pct / PERCENT
     if share < 1:
         return False
     await bonds.connect(BondDraft(settled_in.id, language.id, BondKind.SPEAKS, ctx.epoch, "brought by captives"))

@@ -45,7 +45,7 @@ from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.services.casus_belli import press_casus_belli
 from aerona.engine.services.sides import SideIndex
@@ -401,14 +401,14 @@ def soldier_count(rules: Rules, strength: MilitaryStrength, community: EntityRow
     campaigns = rules.campaigns
     match community.entity_type:
         case EntityType.CULT:
-            followers = stat(community, "followers") or campaigns.cult_default_followers
+            followers = stat_or(community, "followers", campaigns.cult_default_followers)
             return round_half_up(followers * campaigns.cult_soldier_pct / PERCENT)
         case EntityType.FACTION:
-            power = stat(community, "strength") or campaigns.faction_default_strength
-            wealth = stat(community, "wealth") or campaigns.faction_default_wealth
+            power = stat_or(community, "strength", campaigns.faction_default_strength)
+            wealth = stat_or(community, "wealth", campaigns.faction_default_wealth)
             return round_half_up(power * campaigns.faction_soldiers_per_strength + wealth * campaigns.faction_soldiers_per_wealth)
         case _:
-            population = stat(community, "population") or campaigns.default_population
+            population = stat_or(community, "population", campaigns.default_population)
             share = max(campaigns.min_soldier_pct, strength.warrior_share(community)) / PERCENT
             return round_half_up(population * share)
 
@@ -459,7 +459,7 @@ async def raise_army(ctx: TickContext, strength: MilitaryStrength, sides: SideIn
     size = levy(ctx.rules, community, wanted)
     zeal_bonus = 0
     if community.entity_type is EntityType.CULT:
-        zeal_bonus = round_half_up((stat(community, "zeal") or campaigns.default_zealotry) / campaigns.holy_guard_zealotry_divisor)
+        zeal_bonus = round_half_up((stat_or(community, "zeal", campaigns.default_zealotry)) / campaigns.holy_guard_zealotry_divisor)
     morale = clamp_int(campaigns.army_morale_base + ctx.rng("army").die(campaigns.army_morale_die) + zeal_bonus, 0, PERCENT_MAX)
     metallurgy = campaigns.army_equipment_metallurgy if strength.knows(community.id, KnowledgeBranch.METALLURGY) else 0
     equipment = clamp_int(

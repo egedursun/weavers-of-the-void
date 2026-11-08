@@ -13,7 +13,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.book import effective
-from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.services.war import ARMY_KINDS, PEOPLES_ARMY, held_captive, ongoing_wars, war_event
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -53,7 +53,7 @@ def _floor(call: MortalCall, key: str | None) -> int:
 
 def _soldiers(call: MortalCall, key: str | None, percent: int | None) -> int:
     tools = call.rules.mortal_tools
-    base = stat_or(call.me, key, 0) if key is not None else round((stat(call.me, "strength") or tools.army_default_strength) * tools.army_strength_mult)
+    base = stat_or(call.me, key, 0) if key is not None else round((stat_or(call.me, "strength", tools.army_default_strength)) * tools.army_strength_mult)
     ceiling = base - _floor(call, key) if key is not None else call.rules.limits.army_soldier_cap
     wanted = round(base * max(1, min(tools.raise_army_max_pct, percent or tools.raise_army_default_pct)) / PERCENT)
     return max(0, min(wanted, ceiling, call.rules.limits.army_soldier_cap))
@@ -127,7 +127,7 @@ async def appoint_commander(call: MortalCall, args: CommanderInput) -> str:
         await bonds.deactivate(bond, call.epoch, mortal.name)
     await bonds.connect(BondDraft(mortal.id, army.id, BondKind.COMMANDS, call.epoch, lines.COMMANDS))
     row.commander_entity_id = mortal.id
-    morale = (stat(army, "morale") or tools.commander_default_morale) + round(
+    morale = (stat_or(army, "morale", tools.commander_default_morale)) + round(
         await effective(call.session, mortal, "charisma", tools.default_stat, Capacity.COMMAND, rules=call.rules) / tools.commander_charisma_divisor
     )
     set_stats(army, morale=max(0, min(PERCENT, morale)))

@@ -45,7 +45,6 @@ from aerona.engine.cosmos.routes import (
     connect_world,
     method_label,
     other_end,
-    reveal_hidden_route,
     sever_route,
     start_journey,
     stitch_route,
@@ -1014,10 +1013,6 @@ async def send_expedition(session: AsyncSession, rules: Rules, traveller_id: int
         ids=[traveller.id],
     )
     return journey
-
-
-async def reveal_route(session: AsyncSession, rules: Rules, route_id: int, by: str) -> str:
-    return await reveal_hidden_route(await manual_context(session, "reveal", rules, key=str(route_id)), route_id, by)
 
 
 async def teach_route_knowledge(session: AsyncSession, rules: Rules, community_id: int, route_id: int) -> EntityRow | None:

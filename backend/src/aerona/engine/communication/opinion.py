@@ -26,7 +26,7 @@ from aerona.engine.mind.book import values_for
 from aerona.engine.polity.laws import LawBook, discord
 from aerona.engine.primitives.faith import patron_node
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
 
 HALF = PERCENT // 2
 APPROVAL = "approval"
@@ -112,7 +112,7 @@ async def sermons(ctx: TickContext, community: EntityRow, god: int) -> float:
 async def ruler_target(ctx: TickContext, community: EntityRow, ruler_id: int, realm_id: int) -> float:
     town = await ctx.session.get(SettlementProfileRow, community.id)
     unrest = town.unrest if town is not None else HALF
-    prosperity = stat(community, "prosperity") or HALF
+    prosperity = stat_or(community, "prosperity", HALF)
     profile = await ctx.session.get(MortalProfileRow, ruler_id)
     fame = (profile.renown - profile.infamy) / 4 if profile is not None else 0
     herald = ctx.rules.communication.herald_approval if await has_office(ctx, realm_id, OfficeKind.HERALD) else 0
@@ -149,7 +149,7 @@ async def subjects_of(ctx: TickContext, community: EntityRow, realm_id: int | No
         found.append((creed.ideology_entity_id, OpinionSubject.IDEOLOGY, creed.strength - HALF / 2))
     god = await patron_node(ctx.session, community)
     if god is not None:
-        piety = stat(community, "piety") or HALF
+        piety = stat_or(community, "piety", HALF)
         found.append((god, OpinionSubject.GOD, piety - HALF + values.get(ValueAxis.PIETY, 0) / 4 + await sermons(ctx, community, god)))
     return found
 

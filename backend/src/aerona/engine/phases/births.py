@@ -66,7 +66,7 @@ from aerona.engine.primitives.queries import (
 )
 from aerona.engine.primitives.records import RecordSpec, open_record, sentence_case
 from aerona.engine.primitives.society import class_shares
-from aerona.engine.primitives.stats import headcount, headcount_bounds, set_stats, stat
+from aerona.engine.primitives.stats import headcount, headcount_bounds, set_stats, stat, stat_or
 from aerona.language.generator import NameKind
 from aerona.language.titles import from_among
 from aerona.rules.registry import Rules
@@ -750,7 +750,7 @@ async def spontaneous_births(ctx: TickContext) -> None:
 
 def inherited(rules: Rules, first: EntityRow, second: EntityRow, key: str) -> int:
     default = rules.world_effects.inheritance_default_stat
-    return (stat(first, key) or default) + (stat(second, key) or default)
+    return (stat_or(first, key, default)) + (stat_or(second, key, default))
 
 
 def child_sex(rules: Rules, rng: SeededRandom) -> MortalSex:
@@ -775,7 +775,7 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
         total = inherited(ctx.rules, first, second, key)
         return clamp_int(total / 2 + rng.integer(-deviation, deviation), 0, PERCENT)
 
-    lifespans = (stat(first, "lifespan") or effects.default_lifespan) + (stat(second, "lifespan") or effects.default_lifespan)
+    lifespans = (stat_or(first, "lifespan", effects.default_lifespan)) + (stat_or(second, "lifespan", effects.default_lifespan))
     child_namer = namer or Namer(ctx.session, ctx.rules)
     name = await child_namer.person([first], seed_of(first.id, second.id, ctx.epoch, CHILD_SUBTYPE, twin)) or await child_namer.person(
         [second], seed_of(second.id, first.id, ctx.epoch, CHILD_SUBTYPE, twin)
@@ -887,7 +887,7 @@ async def birth_risk(ctx: TickContext, bearer: EntityRow) -> float:
     medicine = tier_index(care.tier) * ctx.rules.healing.lethal_medicine_cut_pct / PERCENT
     profile, _ = await ensure_profile(ctx.session, bearer.id, ctx.epoch)
     start, end = fertility_window(
-        ctx.rules, await biology_of(ctx.session, bearer), sex_of_stats(bearer), stat(bearer, "lifespan") or ctx.rules.world_effects.default_lifespan
+        ctx.rules, await biology_of(ctx.session, bearer), sex_of_stats(bearer), stat_or(bearer, "lifespan", ctx.rules.world_effects.default_lifespan)
     )
     age = stat(bearer, "age") or 0
     late = age >= start + (end - start) * table.late_age_from_pct / PERCENT

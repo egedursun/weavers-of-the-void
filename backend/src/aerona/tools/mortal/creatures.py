@@ -62,11 +62,11 @@ async def tame_species(call: MortalCall, args: TameInput) -> str:
     skill = (
         first_stat(call.me, SKILL_CHAIN, tools.default_stat) + stat_or(call.me, "charisma", 0) / tools.tame_charisma_divisor + call.die(tools.tame_die, "tamer")
     )
-    danger = stat(species, "danger") or tools.tame_default_danger
+    danger = stat_or(species, "danger", tools.tame_default_danger)
     giant = tools.tame_megafauna_difficulty if await EntityRepository(call.session).has_flag(species.id, EntityFlag.MEGAFAUNA) else 0
     difficulty = (
         danger / (tools.tame_danger_divisor / PERCENT)
-        + (stat(species, "intelligence") or tools.tame_default_intelligence) / 2
+        + (stat_or(species, "intelligence", tools.tame_default_intelligence)) / 2
         + giant
         + call.die(tools.tame_difficulty_die, "beast")
     )

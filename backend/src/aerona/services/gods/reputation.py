@@ -18,7 +18,6 @@ from aerona.engine.gods.reputation import (
     creator_passions,
     drift_son,
     push_reputation,
-    refresh_reputation,
 )
 from aerona.engine.primitives.manual import manual_context
 from aerona.rules.registry import Rules
@@ -53,12 +52,6 @@ async def set_passions(session: AsyncSession, rules: Rules, passions: list[Creat
     await ctx.chronicle(ChronicleKind.CREATOR_HAND, line.render(creator=creator.name, passions=names), template_key=line.key)
     await record_action(ctx, ActionKind.SET_PASSIONS, creator.id)
     return PassionsView(tuple(cleaned), False)
-
-
-async def son_reputation(session: AsyncSession, rules: Rules, son_id: int) -> Reputation:
-    ctx = await manual_context(session, "son_reputation", rules)
-    son = require(await session.get(SonRow, son_id), "son")
-    return await refresh_reputation(session, rules, son, ctx.epoch)
 
 
 async def nudge_reputation(session: AsyncSession, rules: Rules, son_id: int, delta: ReputationAxes) -> Reputation:

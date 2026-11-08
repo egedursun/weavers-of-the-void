@@ -21,14 +21,14 @@ from aerona.engine.happenings.profile import flow_of, footprint_of, record_casua
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import round_half_up
-from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat
+from aerona.engine.primitives.stats import headcount_bounds, set_stats, shift_stat, stat, stat_or
 from aerona.engine.services.community_relations import change_relation
 
 STARVING = {StarvationStage.FAMINE: 1.0, StarvationStage.TABOO_BROKEN: 2.0}
 
 
 def severity_scale(ctx: TickContext, event: EntityRow) -> float:
-    return (stat(event, "severity") or ctx.rules.events.severity_neutral) / max(1, ctx.rules.events.severity_neutral)
+    return (stat_or(event, "severity", ctx.rules.events.severity_neutral)) / max(1, ctx.rules.events.severity_neutral)
 
 
 async def struck_communities(ctx: TickContext, event: EntityRow, atlas: RegionAtlas) -> list[EntityRow]:
@@ -181,4 +181,4 @@ async def onset(ctx: TickContext, event: EntityRow, where: EntityRow, atlas: Reg
     elif kind is EngineKind.FAMINE:
         await famine_onset(ctx, event, atlas)
     elif kind is EngineKind.ERUPTION:
-        await erupted(ctx, where, stat(event, "severity") or table.severity_neutral)
+        await erupted(ctx, where, stat_or(event, "severity", table.severity_neutral))

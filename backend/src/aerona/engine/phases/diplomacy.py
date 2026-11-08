@@ -29,7 +29,7 @@ from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.laws import law_param
 from aerona.engine.polity.treaties import breach
 from aerona.engine.primitives.queries import BondIndex, active_bonds, canon, living_entity
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
 from aerona.engine.services.community_relations import (
     blood_feud_pairs,
     change_relation,
@@ -196,7 +196,7 @@ async def form_alliance(ctx: TickContext, first: EntityRow, second: EntityRow, s
 
 def _marriageable(ctx: TickContext, sides: SideIndex, community_id: int) -> list[EntityRow]:
     rules = ctx.rules.diplomacy
-    return [hero for hero in sides.heroes_of(community_id) if (stat(hero, MARRIAGE_AGE_FALLBACK_KEY) or rules.default_hero_age) >= rules.marriage_min_age]
+    return [hero for hero in sides.heroes_of(community_id) if (stat_or(hero, MARRIAGE_AGE_FALLBACK_KEY, rules.default_hero_age)) >= rules.marriage_min_age]
 
 
 def _weight(ctx: TickContext, entity: EntityRow) -> int:

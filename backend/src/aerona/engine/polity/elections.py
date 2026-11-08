@@ -72,7 +72,7 @@ async def count_votes(ctx: TickContext, book: RealmBook, realm: Realm, voters: f
     enfranchised = 0.0
     people = 0.0
     for member in book.members(realm):
-        weight = float(stat(member, "population") or 1)
+        weight = float(max(1, stat(member, "population") or 0))
         shares = await class_shares(ctx.session, ctx.rules, member.id)
         allowed = sum(share for social_class, share in shares.items() if social_class in voters) / PERCENT
         people += weight
@@ -106,7 +106,7 @@ async def sway(ctx: TickContext, book: RealmBook, realm: Realm, votes: dict[int,
             .limit(1)
         )
         for member in book.members(realm):
-            weight = float(stat(member, "population") or 1)
+            weight = float(max(1, stat(member, "population") or 0))
             shares = await class_shares(ctx.session, ctx.rules, member.id)
             allowed = sum(share for social_class, share in shares.items() if social_class in voters) / PERCENT
             approval = await approval_of(ctx, member.id, candidate)

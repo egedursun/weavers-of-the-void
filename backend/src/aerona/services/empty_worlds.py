@@ -7,7 +7,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.world import Discovery
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat_or
 from aerona.rules.registry import Rules
 
 LIVING_TYPES = (EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.MORTAL)
@@ -45,7 +45,7 @@ async def habitable_regions(session: AsyncSession, rules: Rules, world_id: int) 
     found = [
         HabitableRegion(region.id, region.name, region.subtype, fertility)
         for region in regions
-        if (fertility := stat(region, "fertility") or DEFAULT_FERTILITY) >= threshold
+        if (fertility := stat_or(region, "fertility", DEFAULT_FERTILITY)) >= threshold
     ]
     return sorted(found, key=lambda region: (-region.fertility, region.id))
 

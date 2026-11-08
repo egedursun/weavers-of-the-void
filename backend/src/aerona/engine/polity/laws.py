@@ -22,7 +22,7 @@ from aerona.domain.models.entity_stats import LawStats
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat_or
 
 ParamValue = int | str | bool
 LEAN = 25
@@ -79,7 +79,7 @@ async def attach_profile(
     basis: LegitimacyBasis | None = None,
 ) -> LawProfileRow:
     merged = validate(kind, params or {})
-    rigidity = stat(law, "rigidity") or 50
+    rigidity = stat_or(law, "rigidity", 50)
     profile = LawProfileRow(
         law_entity_id=law.id,
         kind=kind,

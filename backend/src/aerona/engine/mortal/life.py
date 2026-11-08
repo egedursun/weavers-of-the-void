@@ -13,7 +13,7 @@ from aerona.domain.enums.mortal import Ability, LifeStage, MortalSex
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
 from aerona.rules.registry import Rules
 
 SEXES = (MortalSex.FEMALE, MortalSex.MALE)
@@ -122,7 +122,7 @@ def seed_abilities(rules: Rules, mortal: EntityRow, rng: SeededRandom) -> dict[s
     for ability, (first, second) in ABILITY_SOURCES.items():
         if stat(mortal, ability.value) is not None:
             continue
-        mean = ((stat(mortal, first) or DEFAULT_ABILITY) + (stat(mortal, second) or DEFAULT_ABILITY)) / 2
+        mean = ((stat_or(mortal, first, DEFAULT_ABILITY)) + (stat_or(mortal, second, DEFAULT_ABILITY))) / 2
         values[ability.value] = clamp_int(mean + rng.integer(-deviation, deviation), 0, PERCENT)
     return values
 
@@ -131,7 +131,7 @@ def inherited_abilities(rules: Rules, first: EntityRow, second: EntityRow, rng: 
     deviation = rules.fertility.ability_deviation
     return {
         ability.value: clamp_int(
-            ((stat(first, ability.value) or DEFAULT_ABILITY) + (stat(second, ability.value) or DEFAULT_ABILITY)) / 2 + rng.integer(-deviation, deviation),
+            ((stat_or(first, ability.value, DEFAULT_ABILITY)) + (stat_or(second, ability.value, DEFAULT_ABILITY))) / 2 + rng.integer(-deviation, deviation),
             0,
             PERCENT,
         )
@@ -150,7 +150,7 @@ def held(profile: MortalProfileRow, column: str) -> bool:
 
 async def refresh_life(session: AsyncSession, rules: Rules, mortal: EntityRow, profile: MortalProfileRow) -> LifeStage:
     biology = await biology_of(session, mortal)
-    lifespan = stat(mortal, "lifespan") or rules.world_effects.default_lifespan
+    lifespan = stat_or(mortal, "lifespan", rules.world_effects.default_lifespan)
     age = stat(mortal, "age") or 0
     stage = stage_for(stage_bounds(rules, biology, lifespan), age)
     if not held(profile, "life_stage"):

@@ -18,7 +18,7 @@ from aerona.engine.mind.book import effect_of, scaled_by, values_for
 from aerona.engine.mind.inspiration import resolute
 from aerona.engine.mortal.profile import is_held
 from aerona.engine.primitives.numbers import round_half_up
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
 from aerona.engine.primitives.strength import equipment, weapon_power
 from aerona.engine.relations.passions import invoke
 from aerona.rules.registry import Rules
@@ -90,7 +90,7 @@ async def fighter(ctx: TickContext, hero: EntityRow, foe: EntityRow | None = Non
     return Fighter(
         entity=hero,
         power=base * (grip(blade) if blade is not None else 1.0) * magic * await mounted_power(ctx, hero.id) * holy,
-        hp=stat(hero, "hp") or campaigns.hero_default_hp,
+        hp=stat_or(hero, "hp", campaigns.hero_default_hp),
         armour=sum(stat(item, "protection") or 0 for item in items) + guard_of(held, broken) + await ward_magic(ctx.session, ctx.rules, held),
         reach=reach,
         honour=values.get(ValueAxis.HONOUR, 0),

@@ -26,7 +26,7 @@ from aerona.engine.primitives.ledger import LedgerKey, record
 from aerona.engine.primitives.modifiers import GROWTH_KEY, LIVE_MODIFIERS, virtual_value
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
-from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat
+from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat, stat_or
 
 
 async def total_population(ctx: TickContext) -> int:
@@ -60,7 +60,7 @@ async def grow_cult(ctx: TickContext, cult: EntityRow, load: RegionLoad, multipl
         + charisma / engine.cult_growth_charisma_divisor
     ) * multiplier
     ceiling = max(transition.cult_capacity_min, load.population * rules.deep_world.cult_population_share_pct / PERCENT)
-    before = stat(cult, "followers") or 1
+    before = max(1, stat(cult, "followers") or 0)
     rate = rate_base * (1 - load.followers / ceiling)
     if rate > 0 and patron is not None:
         rate *= faith_dominance(rules, patron.id, await faith_shares(ctx.session))
@@ -122,7 +122,7 @@ async def grow_community(
         mortality=mortality,
     )
     floor, cap = headcount_bounds(rules, community)
-    before = stat(community, "population") or floor
+    before = stat_or(community, "population", floor)
     change = await demographic_step(ctx, community, biology, pressures)
     low = before * (1 - engine.shrink_max_pct / PERCENT)
     high = before * (1 + engine.growth_max_pct / PERCENT)

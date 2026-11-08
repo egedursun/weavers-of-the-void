@@ -99,7 +99,7 @@ def lethality_factor(book: DiseaseBook, disease_id: int, communities: list[Entit
     weight = 0.0
     total = 0.0
     for community in communities:
-        people = max(1, stat(community, "population") or 1)
+        people = max(1, stat(community, "population") or 0)
         factor = 1 - book.immune_share(community.id, disease_id) * table.immunity_strength_pct / PERCENT
         if virgin(book, community, disease_id):
             factor *= table.virgin_soil_pct / PERCENT

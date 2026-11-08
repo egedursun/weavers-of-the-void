@@ -29,7 +29,7 @@ from aerona.engine.mind.thoughts import think
 from aerona.engine.mind.traits import teach_trait
 from aerona.engine.mortal.variants import learning, variants_by_id
 from aerona.engine.primitives.queries import active_bonds, living_entity
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
 from aerona.rules.registry import Rules
 
 SKILL_LOCK = "skills"
@@ -46,7 +46,7 @@ class CareerMove:
 
 def seed_level(rules: Rules, mortal: EntityRow, skill: SkillKind, base: int, rng: SeededRandom, *, attributes: Mapping[Attribute, int]) -> int:
     table = rules.skills
-    age = stat(mortal, "age") or table.adult_age
+    age = stat_or(mortal, "age", table.adult_age)
     lifespan = stat(mortal, "lifespan") or 0
     youth = min(1.0, age / table.adult_age) if table.adult_age else 1.0
     experience = min(table.seed_age_cap, max(0, age - table.adult_age) * table.seed_age_gain / PERCENT)

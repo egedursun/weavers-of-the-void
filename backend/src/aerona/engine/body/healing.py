@@ -65,7 +65,7 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon, connect, directed_bond
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.rules.registry import Rules
 from aerona.rules.registry.body import HealingRules, ProstheticsRules
 
@@ -561,7 +561,7 @@ async def fit_prosthesis(
     if quality is None:
         quality = (
             clamp_int(
-                (stat(maker, "intellect") or table.default_quality) * table.maker_intellect_pct / PERCENT
+                (stat_or(maker, "intellect", table.default_quality)) * table.maker_intellect_pct / PERCENT
                 + table.default_quality * (PERCENT - table.maker_intellect_pct) / PERCENT,
                 0,
                 PERCENT,

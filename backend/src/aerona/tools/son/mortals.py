@@ -24,7 +24,7 @@ from aerona.engine.mortal.kinship import betroth, foster, marry
 from aerona.engine.mortal.standing import add_infamy, add_renown, add_stress
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.relations.book import ensure_relation, shift
 from aerona.engine.relations.passions import kindle
 from aerona.engine.renown.book import acclaim
@@ -163,7 +163,7 @@ async def touch_mortal(call: SonCall, args: TouchInput) -> str:
         if args.ability is None:
             fail(SonResult.ABILITY_NEEDED)
         key = args.ability.value
-        set_stats(mortal, **{key: clamp_int((stat(mortal, key) or FULL // 2) + tools.touch_amount, 0, FULL)})
+        set_stats(mortal, **{key: clamp_int((stat_or(mortal, key, FULL // 2)) + tools.touch_amount, 0, FULL)})
     call.target(mortal.id)
     await call.chronicle(
         ChronicleKind.INTRIGUE,

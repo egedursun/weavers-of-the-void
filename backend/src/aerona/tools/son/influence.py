@@ -24,7 +24,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.dreams import DreamDraft, visit
 from aerona.engine.phases.society_support.knowledge import teach
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
 from aerona.tools.framework.call import SonCall
@@ -102,7 +102,7 @@ def shifted(rules: Any, entity: EntityRow, key: str, delta_points: float, percen
     if field is None:
         return None
     low, high = field.bounds(rules)
-    old = stat(entity, key) or low
+    old = stat_or(entity, key, low)
     raw = old + delta_points if high is not None and high <= PERCENT else old * (1 + percent / PERCENT)
     new = max(low, round(raw)) if high is None else max(low, min(high, round(raw)))
     set_stats(entity, **{key: new})
@@ -165,7 +165,7 @@ async def declare_chosen(call: SonCall, args: ChosenInput) -> str:
     require_essence(call, call.rules.costs.declare_chosen)
     lifespan_field = ENTITY_TYPES[EntityType.MORTAL].stat("lifespan")
     cap = lifespan_field.bounds(call.rules)[1] if lifespan_field is not None else None
-    lifespan = (stat(mortal, "lifespan") or tools.default_mortal_lifespan) + tools.chosen_lifespan
+    lifespan = (stat_or(mortal, "lifespan", tools.default_mortal_lifespan)) + tools.chosen_lifespan
     set_stats(
         mortal,
         strength=max(0, min(PERCENT, (stat(mortal, "strength") or 0) + tools.chosen_strength)),

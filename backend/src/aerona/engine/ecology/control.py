@@ -40,7 +40,7 @@ from aerona.engine.polity.control import lock
 from aerona.engine.primitives.edits import bounds, coerce
 from aerona.engine.primitives.queries import close, connect, directed_bond, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
 
 Values = Mapping[str, Any]
 
@@ -317,7 +317,7 @@ async def spawn_beast(ctx: TickContext, species_id: int) -> EntityRow:
             name=f"The Great {species.name}",
             entity_type=EntityType.BEAST,
             stats=BeastStats(
-                hp=(stat(species, "hp") or PERCENT) * 2,
+                hp=(stat_or(species, "hp", PERCENT)) * 2,
                 danger=stat(species, "danger"),
                 strength=stat(species, "strength"),
                 agility=stat(species, "agility"),
@@ -408,7 +408,7 @@ async def create_beast(ctx: TickContext, draft: NewBeast, *, world_id: int | Non
     world = lair.world_id if lair is not None else species.world_id if species is not None else world_id
     stats = draft.stats
     if stats.hp is None:
-        stats = stats.model_copy(update={"hp": (stat(species, "hp") or PERCENT) * 2 if species is not None else PERCENT * 2})
+        stats = stats.model_copy(update={"hp": (stat_or(species, "hp", PERCENT)) * 2 if species is not None else PERCENT * 2})
     beast = await create_record(
         ctx,
         RecordSpec(

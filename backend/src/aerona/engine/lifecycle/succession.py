@@ -20,7 +20,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, close, connect, living_entity, spoken_language
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.society import class_shares
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
 from aerona.language.titles import holder_title_of
 
 RULED_PRIMARY_TYPES = (EntityType.SETTLEMENT, EntityType.PEOPLE, EntityType.FACTION, EntityType.CULT, EntityType.REGION, EntityType.PLACE)
@@ -66,7 +66,7 @@ async def _spawn_heir(ctx: TickContext, dead: EntityRow, primary: EntityRow | No
         base = value if value is not None else effects.inheritance_default_stat
         return clamp_int(base + rng.integer(-deviation, deviation), 0, PERCENT)
 
-    lifespan_base = stat(dead, "lifespan") or effects.default_lifespan
+    lifespan_base = stat_or(dead, "lifespan", effects.default_lifespan)
     lifespan = clamp_int(
         lifespan_base + rng.integer(-effects.heir_lifespan_deviation, effects.heir_lifespan_deviation), effects.heir_min_lifespan, rules.deep_life.lifespan_cap
     )

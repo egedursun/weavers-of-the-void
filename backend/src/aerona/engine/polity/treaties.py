@@ -458,10 +458,6 @@ async def bridge_worlds(ctx: TickContext, profile: TreatyProfileRow) -> None:
             add_prosperity(ctx.rules, two, table.interworld_prosperity)
 
 
-async def tolls_waived(ctx: TickContext, first_id: int, second_id: int) -> bool:
-    return frozenset((first_id, second_id)) in await clause_pairs(ctx.session, ClauseKind.TOLLS_WAIVED)
-
-
 async def champion_for(ctx: TickContext, first_id: int, second_id: int) -> bool:
     return frozenset((first_id, second_id)) in await clause_pairs(ctx.session, ClauseKind.CHAMPION)
 

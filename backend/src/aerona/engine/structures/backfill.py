@@ -15,7 +15,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.structure import ConstructionState, StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.queries import flags_by_entity
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.structures.profiles import ensure_profile, refresh, standing_state
 from aerona.engine.structures.spec import resolve
 
@@ -74,7 +74,7 @@ async def type_structure(ctx: TickContext, structure: EntityRow, ruined: bool, *
         son_id=await dedicated_of(ctx, structure),
     )
     profile.built_epoch = structure.birth_epoch
-    profile.condition = stat(structure, "durability") or profile.condition
+    profile.condition = stat_or(structure, "durability", profile.condition)
     profile.construction_state = ConstructionState.RUINED if ruined else standing_state(ctx.rules, profile)
     await refresh(ctx.session, ctx.rules, structure, profile)
     return profile

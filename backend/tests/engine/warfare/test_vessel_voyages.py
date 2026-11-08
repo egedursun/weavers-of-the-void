@@ -13,6 +13,7 @@ from aerona.domain.enums.travel import TravelMethod
 from aerona.engine.context import TickContext
 from aerona.engine.military.vessels import (
     SeaTally,
+    backfill_vessels,
     batter_fleet,
     best_hull,
     fleet_bonus,
@@ -109,3 +110,14 @@ async def test_ships_fight_at_sea_and_fleets_share_the_battle(session: AsyncSess
     assert await batter_fleet(ctx, army.id, 1.0, region_id=None) == 1
     assert first[1].status is VesselStatus.WRECKED
     assert (await session.scalars(select(VesselProfileRow).where(VesselProfileRow.fleet_army_entity_id == army.id))).first() is not None
+
+
+async def test_a_hull_with_no_armour_left_is_backfilled_as_broken_not_whole(session: AsyncSession, world_id: int) -> None:
+    ctx = make_ctx(session)
+    wreckage = await make(session, "Hulk", EntityType.VESSEL, world_id, armor=0, crew=0)
+    sound = await make(session, "Gull", EntityType.VESSEL, world_id)
+    assert await backfill_vessels(ctx) == 2
+    broken = await session.get(VesselProfileRow, wreckage.id)
+    whole = await session.get(VesselProfileRow, sound.id)
+    assert broken is not None and broken.condition == 0 and broken.crew == 0
+    assert whole is not None and whole.condition == PERCENT and whole.crew > 0

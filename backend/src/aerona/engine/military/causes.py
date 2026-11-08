@@ -1,6 +1,5 @@
 from sqlalchemy import select
 
-from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import WarAimRow
 from aerona.db.tables.warfare import WarRow
@@ -14,7 +13,7 @@ from aerona.engine.mind.book import values_for
 from aerona.engine.mind.hooks import judged
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
 from aerona.engine.services.war import current_war, declare_war, ongoing_wars, open_war
 
 
@@ -55,17 +54,7 @@ async def press_claim_war(
     return await declared_war(ctx, claimant_id, holder_id, cause, text, aim=WarAimKind.PRESS_CLAIM, params=params)
 
 
-async def holy_war(ctx: TickContext, attacker_id: int, defender_id: int, *, god_id: int | None, reason: str) -> WarRow | None:
-    params: dict[str, int | str | bool] = {"god": god_id} if god_id is not None else {}
-    return await declared_war(ctx, attacker_id, defender_id, WarCause.HOLY_WAR, reason, aim=WarAimKind.CONVERT, params=params, open_now=False)
-
-
-async def raid_war(ctx: TickContext, raider_id: int, victim_id: int, reason: str) -> WarRow | None:
-    params: dict[str, int | str | bool] = {"amount": ctx.rules.siegecraft.sack_loot}
-    war = await declared_war(ctx, raider_id, victim_id, WarCause.RAID, reason, aim=WarAimKind.LOOT, params=params, open_now=False)
-    if war is not None:
-        await judged(ctx, raider_id, victim_id, ActKind.RAIDING)
-    return war
+NEAR_HOPS = frozenset({0, 1})
 
 
 async def raiders(ctx: TickContext) -> int:
@@ -85,21 +74,22 @@ async def raiders(ctx: TickContext) -> int:
         if martial < table.raid_martial:
             continue
         home = atlas.top_region(raider.id)
-        wealth = stat(raider, "wealth") or stat(raider, "prosperity") or 0
+        wealth = stat_or(raider, "wealth", stat(raider, "prosperity") or 0)
         seen = BeliefView(ctx.session, ctx.rules, raider.id)
         believed = {
-            other.id: await seen.of(other.id, "wealth", stat(other, "wealth") or stat(other, "prosperity") or 0)
+            other.id: await seen.of(other.id, "wealth", stat_or(other, "wealth", stat(other, "prosperity") or 0))
             for other in communities
             if other.id != raider.id
             and other.world_id == raider.world_id
             and other.id not in at_war
-            and (atlas.region_hops(home, atlas.top_region(other.id)) or PERCENT) <= 1
+            and (atlas.region_hops(home, atlas.top_region(other.id)) if home is not None else None) in NEAR_HOPS
         }
         victims = [other for other in communities if other.id in believed and believed[other.id] - wealth >= table.raid_wealth_gap]
         if not victims:
             continue
         victim = max(victims, key=lambda item: (believed[item.id], -item.id))
         if await declare_war(ctx, raider.id, victim.id, f"{raider.name} went raiding for the riches of {victim.name}", cause=WarCause.RAID, world_cap=False):
+            await judged(ctx, raider.id, victim.id, ActKind.RAIDING)
             raids += 1
         at_war.update({raider.id, victim.id})
     return raids

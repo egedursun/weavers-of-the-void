@@ -33,7 +33,7 @@ from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.rules.registry import Rules
 
 WEAK_CLAIM = 50
@@ -105,7 +105,7 @@ async def profile_of(ctx: TickContext, artwork: EntityRow, medium: ArtMedium | N
         author_entity_id=await author_of(ctx, artwork.id),
         subject_node_id=await subject_of(ctx, artwork.id),
         message={axis.value: value for axis, value in ART_MESSAGES[chosen].items()},
-        quality=clamp_int(stat(artwork, "renown") or PERCENT // HALF, 0, PERCENT),
+        quality=clamp_int(stat_or(artwork, "renown", PERCENT // HALF), 0, PERCENT),
         copies=1,
         language_entity_id=await spoken(ctx, artwork.location_id) if chosen in VERBAL_MEDIA else None,
         translations=[],

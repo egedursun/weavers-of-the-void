@@ -36,7 +36,7 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.primitives.folk import folk_of, present_among
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.queries import flags_by_entity, living_entity
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
 
 AFFLICTION_KEY = "afflictions"
 STAGE_HOLD = "stage"
@@ -267,7 +267,7 @@ async def moon_rampage(ctx: TickContext, bearer: EntityRow, row: AfflictionRow) 
     table = ctx.rules.effect_packages
     rng = ctx.rng(f"affliction.{row.id}.moon")
     moon = await first_moon(ctx, bearer.world_id)
-    brightness = (stat(moon, "brightness") or PERCENT // 2) if moon is not None else 0
+    brightness = (stat_or(moon, "brightness", PERCENT // 2)) if moon is not None else 0
     victims = await neighbours(ctx, bearer)
     if moon is None or not victims or not rng.chance(table.rampage_pct * brightness / PERCENT):
         return
@@ -408,7 +408,7 @@ async def traumatise(ctx: TickContext) -> int:
     )
     for memory in rows:
         holder = await living_entity(ctx.session, memory.holder_node_id)
-        if holder is None or holder.entity_type is not EntityType.MORTAL or (stat(holder, "willpower") or PERCENT // 2) >= table.trauma_willpower:
+        if holder is None or holder.entity_type is not EntityType.MORTAL or (stat_or(holder, "willpower", PERCENT // 2)) >= table.trauma_willpower:
             continue
         if await afflict(ctx, holder, PackageKind.TRAUMA, Transmission.EXPERIENCE, source_node_id=memory.subject_node_id) is not None:
             found += 1

@@ -40,7 +40,7 @@ from aerona.engine.ecology.biochemistry import tolerated
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import has_flag
-from aerona.engine.primitives.stats import shift_bounded, stat
+from aerona.engine.primitives.stats import shift_bounded, stat, stat_or
 
 T = CreatureTrait
 Z = SizeClass
@@ -163,7 +163,7 @@ def size_of(species: EntityRow, plan: BodyPlan, megafauna: bool, parent: Species
         return Z.COLOSSAL
     if megafauna:
         return Z.HUGE
-    strength = stat(species, "strength") or PERCENT // 2
+    strength = stat_or(species, "strength", PERCENT // 2)
     return SIZE_ORDER[clamp_int(strength // SIZE_STEP + 1, 1, 4)]
 
 

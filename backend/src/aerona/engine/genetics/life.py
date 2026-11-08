@@ -33,7 +33,7 @@ from aerona.engine.genetics.pools import seed_pool
 from aerona.engine.mind.preferences import fit, prefs_of
 from aerona.engine.mortal.kin import parents_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.rules.registry import Rules
 
 BEAUTY = "beauty"
@@ -59,7 +59,7 @@ async def people_pool(ctx: TickContext, mortal: EntityRow) -> AllelePoolRow | No
 
 
 def abilities_of(mortal: EntityRow) -> dict[str, int]:
-    return {ability.value: int(stat(mortal, ability.value) or DEFAULT_ABILITY) for ability in Ability}
+    return {ability.value: int(stat_or(mortal, ability.value, DEFAULT_ABILITY)) for ability in Ability}
 
 
 def marked(genes: dict[str, list[str]], locus: Locus, allele: str) -> None:

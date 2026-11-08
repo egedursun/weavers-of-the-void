@@ -22,7 +22,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 
 
 async def rival_of(ctx: TickContext, bearer: EntityRow) -> EntityRow | None:
@@ -100,7 +100,7 @@ async def afflict(ctx: TickContext, realms: RealmBook, item: EntityRow) -> str |
     if bearer is None:
         return None
     table = ctx.rules.item_curses
-    strength = stat(item, "curse") or PERCENT // 2
+    strength = stat_or(item, "curse", PERCENT // 2)
     mortal = bearer if bearer.entity_type is EntityType.MORTAL else None
     if row.curse is CurseKind.WASTING and mortal is not None:
         harm = Harm(

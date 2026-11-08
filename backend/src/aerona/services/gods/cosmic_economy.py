@@ -11,7 +11,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.engine.context import Publisher
-from aerona.engine.gods.economy import cosmic_economy, create_deposit, found_faction, monopoly, resource_mechanics, spend_cosmic_resource
+from aerona.engine.gods.economy import cosmic_economy, create_deposit, found_faction, monopoly, resource_mechanics
 from aerona.engine.gods.queries import cosmos_row
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_int
@@ -19,12 +19,6 @@ from aerona.rules.registry import Rules
 from aerona.services.gods.context import record_action, require
 
 DEPOSIT_PLACES = frozenset({EntityType.REGION, EntityType.PLACE})
-
-
-async def fold_space(session: AsyncSession, rules: Rules, traveller_id: int, amount: int | None = None) -> EntityRow | None:
-    ctx = await manual_context(session, "fold_space", rules)
-    traveller = require(await session.get(EntityRow, traveller_id), "record")
-    return await spend_cosmic_resource(ctx, traveller, amount)
 
 
 async def run_resource_mechanics(session: AsyncSession, rules: Rules, publish: Publisher | None = None) -> None:

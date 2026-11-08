@@ -40,6 +40,13 @@ def test_functions_and_constants_nothing_uses_are_found() -> None:
     assert [item.name for item in module.orphans({Path("module.py"): SOURCE}, "lonely() SPARE")] == []
 
 
+def test_a_name_that_only_appears_in_a_string_is_still_an_orphan() -> None:
+    module = checker()
+    spoken = 'LABELS = {"lonely": "Lonely"}\nNAMES = ("SPARE",)\nprint(LABELS, NAMES)\n'
+    found = module.orphans({Path("module.py"): SOURCE, Path("labels.py"): spoken}, "")
+    assert sorted(item.name for item in found) == ["SPARE", "lonely"]
+
+
 def test_every_function_and_constant_of_the_backend_is_used() -> None:
     module = checker()
     users = "\n".join(path.read_text(encoding="utf-8") for folder in module.USERS for path in sorted(folder.rglob("*.py")) if path.name != "check_orphans.py")

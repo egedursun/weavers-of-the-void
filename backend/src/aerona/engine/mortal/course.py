@@ -42,7 +42,7 @@ from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, connect, living_entity
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
 
 ROLE_CLASSES: dict[MortalRole, SocialClass] = {
     MortalRole.RULER: SocialClass.NOBLE,
@@ -156,13 +156,13 @@ async def live_one_epoch(ctx: TickContext, mortal: EntityRow) -> LifeStage:
     stage = await refresh_life(ctx.session, ctx.rules, mortal, profile)
     table = ctx.rules.aging
     if stage is LifeStage.YOUTH and not is_held(profile, "life_stage"):
-        grown = {key: clamp_int((stat(mortal, key) or FULL // 2) + table.youth_growth, 0, FULL) for key in ("strength", "agility", "endurance")}
+        grown = {key: clamp_int((stat_or(mortal, key, FULL // 2)) + table.youth_growth, 0, FULL) for key in ("strength", "agility", "endurance")}
         set_stats(mortal, **grown)
     if stage in (LifeStage.ELDER, LifeStage.ANCIENT):
         set_stats(
             mortal,
-            strength=clamp_int((stat(mortal, "strength") or FULL // 2) - table.elder_strength_decline, 0, FULL),
-            agility=clamp_int((stat(mortal, "agility") or FULL // 2) - table.elder_agility_decline, 0, FULL),
+            strength=clamp_int((stat_or(mortal, "strength", FULL // 2)) - table.elder_strength_decline, 0, FULL),
+            agility=clamp_int((stat_or(mortal, "agility", FULL // 2)) - table.elder_agility_decline, 0, FULL),
             endurance=clamp_int(ability(mortal, Ability.ENDURANCE) - table.elder_endurance_decline, 0, FULL),
             wisdom=clamp_int(ability(mortal, Ability.WISDOM) + table.elder_wisdom_gain, 0, FULL),
         )

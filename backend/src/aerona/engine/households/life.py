@@ -37,7 +37,7 @@ from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, connect
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
 from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.records import death_path
 
@@ -587,7 +587,7 @@ async def tend_aggregates(ctx: TickContext, tally: HouseholdTally) -> None:
             row = HouseholdAggregateRow(community_node_id=community_id, social_class=social_class, epoch=ctx.epoch, locked=[])
             ctx.session.add(row)
         locked = set(row.locked or [])
-        prosperity = stat(community, "prosperity") or PERCENT // 2
+        prosperity = stat_or(community, "prosperity", PERCENT // 2)
         kind = CLASS_DWELLING.get(social_class, DwellingKind.HUT) if community.entity_type is EntityType.SETTLEMENT else DwellingKind.TENT
         values = {
             "households": max(0, people // table.mean_size),

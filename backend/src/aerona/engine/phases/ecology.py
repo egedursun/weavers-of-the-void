@@ -27,7 +27,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, add_flag, canon, flags_by_entity, living_entity, remove_flag
 from aerona.engine.primitives.records import retire_in
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.rules.registry import Rules
 
 ABUNDANCE_KEY = "abundance"
@@ -158,7 +158,7 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
     wilds = await load_wilds(ctx, species, marks.invasive)
     habitat = await load_habitat(ctx, species, marks.invasive)
     initial = {
-        item.id: stat(item, ABUNDANCE_KEY) or initial_abundance(ctx.rules, await fertility_of(ctx, item, habitat), item.id in marks.megafauna)
+        item.id: stat_or(item, ABUNDANCE_KEY, initial_abundance(ctx.rules, await fertility_of(ctx, item, habitat), item.id in marks.megafauna))
         for item in species
     }
     ctx.count("ranges_seeded", await seed(ctx, wilds, species, initial))

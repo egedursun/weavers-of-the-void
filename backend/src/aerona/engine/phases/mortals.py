@@ -31,7 +31,7 @@ from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.physics import PhysicsTable
 from aerona.engine.primitives.queries import add_flag, canon
 from aerona.engine.primitives.records import append_sentence
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
 
 WOUND_DEATH = "succumbed to their wounds"
 
@@ -106,7 +106,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
         return
     rng = ctx.rng(seed_of("aging", mortal.id))
     first = mortal.birth_epoch == ctx.epoch
-    lifespan = stat(mortal, "lifespan") or effects.default_lifespan
+    lifespan = stat_or(mortal, "lifespan", effects.default_lifespan)
     age = stat(mortal, "age") or 0
     if first and age >= lifespan - effects.rejuvenate_years_left:
         age = round_half_up(lifespan * (effects.rejuvenate_age_min_pct / PERCENT + rng.random() * effects.rejuvenate_age_random_pct / PERCENT))

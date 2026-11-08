@@ -30,7 +30,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.polity.oaths import break_on
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.records import death_path
 from aerona.engine.services.community_relations import change_relation, relation, start_blood_feud
 from aerona.engine.services.war import release_captive
@@ -118,7 +118,7 @@ async def torture(ctx: TickContext, captive: EntityRow, captor: EntityRow, home:
 
 
 async def foster(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: EntityRow) -> bool:
-    if (stat(captive, "age") or ctx.rules.skills.adult_age) >= ctx.rules.skills.adult_age:
+    if (stat_or(captive, "age", ctx.rules.skills.adult_age)) >= ctx.rules.skills.adult_age:
         if row.status is CaptiveStatus.WARD:
             await ward_returns(ctx, row, captive, captor)
             await release_captive(ctx, row, CaptiveStatus.RELEASED)

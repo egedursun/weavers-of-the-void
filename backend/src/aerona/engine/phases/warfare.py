@@ -114,7 +114,7 @@ from aerona.engine.primitives.numbers import clamp_float, clamp_int, round_half_
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.society import shift_stock
-from aerona.engine.primitives.stats import set_stats, shift_stat, stat
+from aerona.engine.primitives.stats import set_stats, shift_stat, stat, stat_or
 from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.records import death_path
 from aerona.engine.renown.currencies import on_victory
@@ -661,7 +661,7 @@ async def _siege(
         war.score += sign * campaigns.breach_war_score
         siege.status, siege.ended_epoch = SiegeStatus.BREACHED, ctx.epoch
         return BattleOutcome.SIEGE_BREACHED, f"{besieger_name} breached the walls of {besieged.name}", siege
-    population = stat(besieged, "population") or campaigns.siege_default_population
+    population = stat_or(besieged, "population", campaigns.siege_default_population)
     remaining = clamp_int(
         population * campaigns.siege_population_kept_pct / PERCENT, ctx.rules.limits.population_floor, ctx.rules.limits.settlement_population_cap
     )

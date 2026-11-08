@@ -35,7 +35,7 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import class_shares
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.services.war import declare_war
 
 HALF = PERCENT // 2
@@ -116,7 +116,7 @@ async def independence(ctx: TickContext, ground: Ground) -> float:
 
 
 async def revival(ctx: TickContext, ground: Ground) -> float:
-    return max(0.0, HALF - (stat(ground.community, "piety") or HALF) + ground.values.get(ValueAxis.PIETY, 0) / 2)
+    return max(0.0, HALF - (stat_or(ground.community, "piety", HALF)) + ground.values.get(ValueAxis.PIETY, 0) / 2)
 
 
 async def land_reform(ctx: TickContext, ground: Ground) -> float:

@@ -41,7 +41,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon, close, connect, has_flag, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
-from aerona.engine.primitives.stats import set_stats, shift_stat, stat
+from aerona.engine.primitives.stats import set_stats, shift_stat, stat, stat_or
 from aerona.engine.renown.deeds import acclaim_deed
 from aerona.rules.registry import Rules
 
@@ -124,10 +124,10 @@ async def profile_beast(ctx: TickContext, beast: EntityRow, species: EntityRow |
     row = BeastProfileRow(
         beast_entity_id=beast.id,
         species_entity_id=species.id if species is not None else None,
-        endurance=clamp_int((stat(beast, "hp") or PERCENT) // 4, 0, PERCENT),
-        perception=clamp_int(stat(beast, "cunning") or PERCENT // 2, 0, PERCENT),
-        willpower=clamp_int(stat(beast, "danger") or PERCENT // 2, 0, PERCENT),
-        intelligence=clamp_int(stat(species, "intelligence") or stat(beast, "cunning") or 20, 0, PERCENT) if species is not None else 20,
+        endurance=clamp_int((stat_or(beast, "hp", PERCENT)) // 4, 0, PERCENT),
+        perception=clamp_int(stat_or(beast, "cunning", PERCENT // 2), 0, PERCENT),
+        willpower=clamp_int(stat_or(beast, "danger", PERCENT // 2), 0, PERCENT),
+        intelligence=clamp_int(stat_or(species, "intelligence", stat_or(beast, "cunning", 20)), 0, PERCENT) if species is not None else 20,
         age=0,
         lifespan=max(1, (kind.lifespan_years if kind is not None else 100) * 3),
         size_class=size or grown,
@@ -167,9 +167,9 @@ async def champions(ctx: TickContext) -> int:
                 name=f"The Great {species.name}" if region is None else f"The {species.name} of {region.name}",
                 entity_type=EntityType.BEAST,
                 stats=BeastStats(
-                    hp=(stat(species, "hp") or PERCENT) * 2,
+                    hp=(stat_or(species, "hp", PERCENT)) * 2,
                     danger=clamp_int((stat(species, "danger") or 0) + PERCENT // 10, 0, PERCENT),
-                    strength=clamp_int((stat(species, "strength") or PERCENT // 2) + PERCENT // 5, 0, PERCENT),
+                    strength=clamp_int((stat_or(species, "strength", PERCENT // 2)) + PERCENT // 5, 0, PERCENT),
                     agility=stat(species, "agility"),
                     cunning=stat(species, "intelligence"),
                     renown=PERCENT // 5,
