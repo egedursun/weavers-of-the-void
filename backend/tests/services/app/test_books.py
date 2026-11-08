@@ -1,3 +1,4 @@
+import re
 from dataclasses import replace
 
 import pytest
@@ -5,7 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.chronicle import ChronicleDraft, ChronicleRepository
-from aerona.db.tables.ledger import LedgerEntryRow
+from aerona.db.tables.epochs import EpochRunRow
+from aerona.db.tables.job import JobRow
+from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
 from aerona.db.tables.lore import LexemeRow, ThreadRow
 from aerona.db.tables.mind import AttributeRow, FacetRow
 from aerona.db.tables.rule_override import RuleOverrideRow
@@ -13,6 +16,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.mind import Attribute, Facet
 from aerona.domain.enums.node import ActorKind
 from aerona.rules.registry import Rules
@@ -151,3 +155,60 @@ async def test_every_record_reaches_the_book_and_the_codex(session: AsyncSession
         assert "Mind attributes" in text and "analytical ability" in text
         assert "Mind facets" in text and "curiosity" in text
         assert "Records of the Cosmos" in text and "Rule overrides" in text
+
+
+RAW_DUMP = re.compile(r"[A-Za-z] None\b|\[\]|\{|\}")
+
+
+async def test_records_and_the_ledger_never_dump_raw_rows(session: AsyncSession, rules: Rules, world: Cosmos) -> None:
+    hero = await make_entity(session, "Orrin", EntityType.MORTAL, world_id=world.world.id)
+    entry = LedgerEntryRow(
+        epoch=1,
+        actor_kind=ActorKind.CREATOR,
+        actor_node_id=world.creator.id,
+        actor_name=world.creator.name,
+        tool="entity:edit",
+        action_kind=ActionKind.MIRACLE,
+    )
+    session.add(entry)
+    session.add(EpochRunRow(epoch=1, engine_since_chronicle_id=hero.id, engine_notes=[]))
+    session.add(JobRow(id="job-1", kind="completion", status="succeeded", params={}, result={"failed": [], "items": [{"node": hero.id, "note": None}]}))
+    await session.flush()
+    session.add_all(
+        [
+            LedgerChangeRow(
+                entry_id=entry.id,
+                table_name="entities",
+                row_key=f'{{"id": {hero.id}}}',
+                operation=LedgerOperation.UPDATE,
+                before={"id": hero.id, "name": "Orrin", "importance": 1, "created_at": "2026-01-01 00:00:00"},
+                after={"id": hero.id, "name": "Orrin the Tall", "importance": 1, "created_at": "2026-01-01 00:00:00"},
+            ),
+            LedgerChangeRow(
+                entry_id=entry.id,
+                table_name="mind_attributes",
+                row_key=f'{{"node_id": {hero.id}}}',
+                operation=LedgerOperation.INSERT,
+                after={"node_id": hero.id, "attribute": "analytical_ability", "value": 71},
+            ),
+        ]
+    )
+    await session.flush()
+    book = await build_book(session, rules)
+    assert book is not None
+    assert "Ledger changes" not in [table.title for table in book.records]
+    renamed, added = book.ledger_changes[entry.id]
+    assert (renamed.verb, renamed.target, renamed.details) == ("Changed", "Orrin in entities", ["Name: Orrin → Orrin the Tall"])
+    assert (added.verb, added.target) == ("Created", "Orrin in mind attributes")
+    assert "Attribute: analytical ability" in added.details
+    runs = next(table for table in book.records if table.title == "Epoch runs")
+    assert "Orrin" not in [cell for row in runs.rows for cell in row]
+    jobs = next(table for table in book.records if table.title == "Jobs")
+    assert any("Items (" in cell and "Failed none" in cell for row in jobs.rows for cell in row)
+    for table in book.records:
+        for row in table.rows:
+            assert not [cell for cell in row if RAW_DUMP.search(cell)], table.title
+    page = render_book(book, rules).html
+    assert "Orrin → Orrin the Tall" in page
+    codex = await codex_markdown(session, rules, CodexLinks())
+    assert "**Changed** Orrin in entities — Name: Orrin → Orrin the Tall" in codex

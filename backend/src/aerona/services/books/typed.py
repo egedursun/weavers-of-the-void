@@ -1,12 +1,14 @@
+import json
 import re
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import Enum
 from typing import Any
 
-from sqlalchemy import Select, select
+from sqlalchemy import JSON, Boolean, Date, DateTime, Select, select
+from sqlalchemy import column as loose_column
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapper
 from sqlalchemy.sql.elements import ColumnElement, KeyedColumnElement
@@ -14,8 +16,10 @@ from sqlalchemy.sql.elements import ColumnElement, KeyedColumnElement
 from aerona.cartography.biomes import Biome
 from aerona.db.base import Base
 from aerona.db.profile_guard import LOCK_COLUMN, shape_of_table, table_name
+from aerona.db.tables.ledger import LedgerChangeRow
 from aerona.db.tables.lore import MessageRow
 from aerona.domain.enums.agent import MessageIntent
+from aerona.domain.enums.meta import LedgerOperation
 
 KEY_TEXT = re.compile(r"[a-z0-9]+(?:[_.:][a-z0-9]+)*")
 OWNER_TABLES = frozenset({"entities", "nodes", "sons", "worlds", "stars", "foreign_gods", "creator"})
@@ -34,6 +38,7 @@ SKIPPED_TABLES = frozenset(
         "epochs",
         "foreign_god_powers",
         "images",
+        "ledger_changes",
         "ledger_entries",
         "lexemes",
         "scenarios",
@@ -46,6 +51,7 @@ SKIPPED_TABLES = frozenset(
 )
 SKIPPED_COLUMNS = frozenset({"id", LOCK_COLUMN, "created_at", "updated_at"})
 ID_SUFFIXES = ("_entity_id", "_node_id", "_id")
+NODE_SUFFIXES = ("_entity_id", "_node_id")
 INDEXED_LISTS: dict[str, list[str]] = {"biome_mix": [biome.name.lower().replace("_", " ") for biome in Biome]}
 ID_LISTS = frozenset(
     {
@@ -80,6 +86,7 @@ PERCENT_LISTS = frozenset({"milestones"})
 REFERENCE_LISTS = {"revealed_aims": "war_aims"}
 PAIRED_LISTS = {"martial_record": ("won", "lost")}
 PERCENT_SIGN = "%"
+NOTHING = "none"
 
 
 def _pairs(value: dict[str, Any]) -> str:
@@ -139,6 +146,33 @@ class RecordTable:
     title: str
     headers: list[str]
     rows: list[list[str]] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class LedgerChange:
+    verb: str
+    target: str
+    details: list[str]
+
+
+CHANGE_VERBS = {LedgerOperation.INSERT: "Created", LedgerOperation.UPDATE: "Changed", LedgerOperation.DELETE: "Removed"}
+LABEL_COLUMNS = ("name", "title", "label", "word", "key")
+
+
+def _is_time(item: KeyedColumnElement[Any]) -> bool:
+    return isinstance(getattr(item.type, "impl", item.type), DateTime | Date)
+
+
+def _thaw(item: KeyedColumnElement[Any], raw: Any) -> Any:
+    kind = getattr(item.type, "impl", item.type)
+    if isinstance(kind, Boolean) and isinstance(raw, int):
+        return bool(raw)
+    if isinstance(kind, JSON) and isinstance(raw, str):
+        try:
+            return json.loads(raw)
+        except ValueError:
+            return raw
+    return raw
 
 
 def words(key: str) -> str:
@@ -306,7 +340,7 @@ class TypedIndex:
     def value(self, column: KeyedColumnElement[Any], value: Any) -> str:
         if value is None:
             return ""
-        if isinstance(value, int) and not isinstance(value, bool) and (column.foreign_keys or column.key.endswith(ID_SUFFIXES)):
+        if isinstance(value, int) and not isinstance(value, bool) and (column.foreign_keys or column.key.endswith(NODE_SUFFIXES)):
             return self.reference(column, value)
         plain = next((format_value(value) for kind, format_value in FORMATS if isinstance(value, kind)), None)
         if plain is not None:
@@ -318,10 +352,12 @@ class TypedIndex:
         special = COLUMN_FORMATS.get(column.key)
         if special is not None and isinstance(value, dict):
             return special(value)
+        if isinstance(value, list | tuple) and any(isinstance(item, dict) for item in value):
+            return "; ".join(f"({self.value(column, item) or NOTHING})" for item in value)
         if isinstance(value, list | tuple | set | frozenset):
             return self.sequence(column, list(value))
         if isinstance(value, dict):
-            return ", ".join(f"{self.key_text(str(key))} {self.value(column, item) or item}" for key, item in value.items())
+            return ", ".join(f"{self.key_text(str(key))} {self.value(column, item) or NOTHING}" for key, item in value.items())
         if hasattr(value, "model_dump"):
             return self.value(column, value.model_dump(exclude_none=True))
         return None
@@ -340,7 +376,50 @@ class TypedIndex:
         pair = PAIRED_LISTS.get(column.key)
         if pair is not None and len(items) == len(pair):
             return ", ".join(f"{item} {label}" for item, label in zip(items, pair, strict=True))
-        return ", ".join(self.value(column, item) or str(item) for item in items)
+        return ", ".join(self.value(column, item) or NOTHING for item in items)
+
+    def ledger_changes(self, changes: Iterable[LedgerChangeRow]) -> dict[int, list[LedgerChange]]:
+        mappers = {table_name(mapper): mapper for mapper in Base.registry.mappers}
+        found: dict[int, list[LedgerChange]] = defaultdict(list)
+        for change in changes:
+            found[change.entry_id].append(self.change(change, mappers.get(change.table_name)))
+        return found
+
+    def change(self, change: LedgerChangeRow, mapper: Mapper[Any] | None) -> LedgerChange:
+        before, after = change.before or {}, change.after or {}
+        present = {*before, *after}
+        known = [key for key in (mapper.local_table.columns.keys() if mapper is not None else []) if key in present]
+        ordered = known + sorted(present - set(known))
+        columns = {key: item for key in ordered if key not in SKIPPED_COLUMNS and not _is_time(item := self.column_of(mapper, key))}
+        shown = after or before
+        if change.operation is LedgerOperation.UPDATE:
+            details = [
+                f"{words(key)}: {self.value(item, _thaw(item, before.get(key))) or NOTHING} → {self.value(item, _thaw(item, after.get(key))) or NOTHING}"
+                for key, item in columns.items()
+                if before.get(key) != after.get(key)
+            ]
+        else:
+            details = [f"{words(key)}: {text}" for key, item in columns.items() if key in shown and (text := self.value(item, _thaw(item, shown[key])))]
+        return LedgerChange(CHANGE_VERBS[change.operation], self.change_target(change, shown, columns), details)
+
+    def change_target(self, change: LedgerChangeRow, shown: dict[str, Any], columns: dict[str, KeyedColumnElement[Any]]) -> str:
+        kind = title_of(change.table_name).lower()
+        own = shown.get("id")
+        label = self.names.get(own) if change.table_name in NAMED_TABLES and isinstance(own, int) else None
+        label = label or next((str(shown[key]) for key in LABEL_COLUMNS if shown.get(key)), None)
+        if label is None:
+            label = ", ".join(
+                text
+                for key, item in columns.items()
+                if key in shown and (_links_to_node(item) or key.endswith(NODE_SUFFIXES)) and (text := self.value(item, shown[key]))
+            )
+        return f"{label} in {kind}" if label else kind
+
+    @staticmethod
+    def column_of(mapper: Mapper[Any] | None, key: str) -> KeyedColumnElement[Any]:
+        if mapper is not None and key in mapper.local_table.columns:
+            return mapper.local_table.columns[key]
+        return loose_column(key)
 
     def key_text(self, key: str) -> str:
         if key.isdigit():

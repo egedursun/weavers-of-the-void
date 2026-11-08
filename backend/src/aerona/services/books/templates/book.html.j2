@@ -245,7 +245,7 @@
 {% if book.ledger %}
 <section class="chapter" id="ledger">
 {{ chapter_head("ledger", numeral("ledger"), "Fate's Ledger", "Every hand laid upon the world") }}
-<ul class="timeline">{% for entry in book.ledger %}<li><span class="when">Epoch {{ entry.epoch }}</span>{{ entry.actor_name }} · {{ entry.tool | replace("_", " ") | replace(":", " ") }}{% if entry.undone %} <span class="meta">undone</span>{% endif %}{% if entry.input_summary %} <span class="meta small">— {{ entry.input_summary | plain }}</span>{% endif %}</li>{% endfor %}</ul>
+<ul class="timeline">{% for entry in book.ledger %}<li><span class="when">Epoch {{ entry.epoch }}</span>{{ entry.actor_name }} · {{ entry.tool | replace("_", " ") | replace(":", " ") }}{% if entry.undone %} <span class="meta">undone</span>{% endif %}{% if entry.input_summary %} <span class="meta small">— {{ entry.input_summary | plain }}</span>{% endif %}{% set changes = book.ledger_changes.get(entry.id, []) %}{% if changes %}<ul class="changes">{% for change in changes %}<li><b>{{ change.verb }}</b> {{ change.target }}{% if change.details %}<span class="meta small"> — {{ change.details | join(" · ") }}</span>{% endif %}</li>{% endfor %}</ul>{% endif %}</li>{% endfor %}</ul>
 </section>
 {% endif %}
 

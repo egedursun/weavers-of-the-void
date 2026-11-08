@@ -733,7 +733,8 @@ Score **{{ book.scores[-1].total }}** · Achievements **{{ book.achievements | l
 
 {% for entry in book.ledger %}
 - **Epoch {{ entry.epoch }}.** {{ entry.actor_name }} · {{ entry.tool | replace("_", " ") | replace(":", " ") }}{% if entry.undone %} *(undone)*{% endif %}{% if entry.input_summary %} — {{ entry.input_summary | plain }}{% endif %}
-
+{% for change in book.ledger_changes.get(entry.id, []) %}  - **{{ change.verb }}** {{ change.target }}{% if change.details %} — {{ change.details | join(" · ") }}{% endif %}
+{% endfor %}
 {% endfor %}
 {% endif %}
 {% if book.records %}
