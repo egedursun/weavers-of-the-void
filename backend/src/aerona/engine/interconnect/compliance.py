@@ -12,6 +12,7 @@ from aerona.db.tables.affairs import (
     ResolutionVoteRow,
     TaxPolicyRow,
 )
+from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.body import ConditionRow, InjuryRow
 from aerona.db.tables.communication import CipherRow, PublicOpinionRow, SignalLinkRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -1205,6 +1206,17 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("sow_crop", "create_species"),
         ("flora.sown", "flora.cultivar", "tools.son.sow_crop", "travel.herds_lost"),
         ("flora_cycles",),
+    ),
+    ComplianceRow(
+        "S3.3a/RP2",
+        (CreatureAnatomyRow.__tablename__,),
+        ("beast_cycles", "pet_cycles", "necromancy_cycles"),
+        ("anatomy:edit", "anatomy:reroll", "pet:set", "pet:give", "beast:edit", "record_row:create", "record_row:edit", "record_row:delete"),
+        ("CreatureAnatomy", "MortalPets"),
+        ("mortal_context",),
+        ("raise_beast", "keep_pet"),
+        ("monsters.emerged", "monsters.void_roamed", "necromancy.tower", "necromancy.host", "necromancy.siege", "pets.taken", "tools.mortal.pet_taken"),
+        ("beast_cycles",),
     ),
     ComplianceRow(
         "S8.1/RP2",

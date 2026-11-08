@@ -95,7 +95,13 @@ describe('wilds sections', () => {
     expect(callsTo('POST', '/api/actions/herd:edit')[0].body).toEqual({
       community_id: 50,
       species_id: 7,
-      values: { head: 20, stage: 'tamed', fed_epochs: 1 },
+      values: {
+        head: 20,
+        stage: 'tamed',
+        fed_epochs: 1,
+        training: null,
+        trained: 0,
+      },
       release: [],
     })
   })

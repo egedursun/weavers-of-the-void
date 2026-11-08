@@ -19,7 +19,23 @@ from aerona.constants.tool_inputs import (
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ArtMedium, CalendarSlot, ItemClass, LegendArchetype, ProphecyConsequence, ProphecyPredicate, TraditionKind
-from aerona.domain.enums.ecology import BeastTemper, Biochemistry, Diet, GrowthCycle, PlantYield, SizeClass, Sociality, SpeciesClass, YieldProduct
+from aerona.domain.enums.ecology import (
+    AwakeningTrigger,
+    BeastTemper,
+    Biochemistry,
+    BreathKind,
+    Diet,
+    GazeKind,
+    GrowthCycle,
+    Habitat,
+    PlantYield,
+    SizeClass,
+    Sociality,
+    SpeciesClass,
+    Temperament,
+    TissueMaterial,
+    YieldProduct,
+)
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, EntityType, LegendCategory
 from aerona.domain.enums.faction import FactionKind
@@ -113,6 +129,12 @@ def _extra_fields(entity_type: EntityType) -> dict[str, Any]:
             "perception": (Annotated[int, Field(ge=0, le=100)] | None, None),
             "willpower": (Annotated[int, Field(ge=0, le=100)] | None, None),
             "intelligence": (Annotated[int, Field(ge=0, le=100)] | None, None),
+            "breath": (BreathKind | None, None),
+            "gaze": (GazeKind | None, None),
+            "temperament": (Temperament | None, None),
+            "habitat": (Habitat | None, None),
+            "awakening": (AwakeningTrigger | None, None),
+            "skin": (TissueMaterial | None, None),
         },
         EntityType.VESSEL: {
             "target_world_id": (int | None, None),

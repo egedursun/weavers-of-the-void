@@ -1,8 +1,12 @@
 from aerona.engine.context import TickContext
+from aerona.engine.ecology.anatomy import ensure_anatomy
 from aerona.engine.ecology.beasts import champions, deify, fallen, lair_cycle, living_beasts
 from aerona.engine.ecology.biochemistry import seed_world_life
 from aerona.engine.ecology.domestication import husbandry
 from aerona.engine.ecology.flora import CropBook, blight, breed_cultivars, flora_backfill, gather_wild, link_pests, plant_backfill, sow
+from aerona.engine.ecology.monsters import emerge_from_deep, roam_void
+from aerona.engine.ecology.necromancy import necromancy
+from aerona.engine.ecology.pets import adopt_pets, tend_pets
 from aerona.engine.ecology.profiles import typed_nature_backfill
 from aerona.engine.ecology.totems import adopt_totems, hunt_gods
 from aerona.engine.interconnect.annotations import reads, writes
@@ -59,11 +63,14 @@ async def husbandry_cycles(ctx: TickContext) -> None:
     "table.beast_profiles",
     "table.bonds",
     "table.community_societies",
+    "table.creature_anatomy",
     "table.currencies",
     "table.entity_flags",
+    "table.entity_traits",
     "table.house_members",
     "table.memories",
     "table.region_environment",
+    "table.resource_profiles",
     "table.species_profiles",
     "table.species_ranges",
     "table.species_yields",
@@ -84,6 +91,7 @@ async def husbandry_cycles(ctx: TickContext) -> None:
     "table.bonds",
     "table.chronicle",
     "table.community_stocks",
+    "table.creature_anatomy",
     "table.currencies",
     "table.entities",
     "table.item_history",
@@ -97,7 +105,9 @@ async def husbandry_cycles(ctx: TickContext) -> None:
 )
 async def beast_cycles(ctx: TickContext) -> None:
     ctx.count("beasts_risen", await champions(ctx))
+    ctx.count("anatomies", await ensure_anatomy(ctx))
     atlas = await RegionAtlas.load(ctx.session)
+    ctx.count("monsters_emerged", await emerge_from_deep(ctx, atlas))
     for beast, row in await living_beasts(ctx):
         worshipped = await deify(ctx, atlas, beast, row)
         if worshipped:
@@ -113,6 +123,7 @@ async def beast_cycles(ctx: TickContext) -> None:
     for told in await fallen(ctx):
         ctx.count("beasts_fallen")
         await note(ctx, f"{told}.", key="beasts.fallen", ids=[])
+    ctx.count("void_roamed", await roam_void(ctx, atlas))
 
 
 @reads(
@@ -150,5 +161,22 @@ async def flora_cycles(ctx: TickContext) -> None:
 
 
 HUSBANDRY_PHASES = (Phase("husbandry", husbandry_cycles), Phase("flora_cycles", flora_cycles))
-BEAST_PHASES = (Phase("beast_cycles", beast_cycles),)
+
+
+@reads("table.bonds", "table.herds")
+async def pet_cycles(ctx: TickContext) -> None:
+    ctx.count("pets_taken", await adopt_pets(ctx))
+    tally = await tend_pets(ctx)
+    for key in ("mourned", "orphaned", "comforted", "hunted"):
+        ctx.count(f"pets_{key}", getattr(tally, key))
+
+
+@reads("table.bonds")
+async def necromancy_cycles(ctx: TickContext) -> None:
+    tally = await necromancy(ctx)
+    for key in ("towers", "hosts", "sieges"):
+        ctx.count(f"necromancy_{key}", getattr(tally, key))
+
+
+BEAST_PHASES = (Phase("beast_cycles", beast_cycles), Phase("pet_cycles", pet_cycles), Phase("necromancy_cycles", necromancy_cycles))
 PHASES = HUSBANDRY_PHASES + BEAST_PHASES

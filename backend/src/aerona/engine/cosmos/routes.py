@@ -12,6 +12,7 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.ecology import BeastProfileRow
@@ -21,7 +22,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
-from aerona.domain.enums.ecology import BeastTemper, SizeClass
+from aerona.domain.enums.ecology import BeastTemper, Habitat, SizeClass
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
@@ -353,7 +354,11 @@ async def has_beast_mount(session: AsyncSession, traveller_id: int) -> bool:
             BeastProfileRow.bound_to_node_id == traveller_id,
             BeastProfileRow.temper == BeastTemper.TAMED,
             EntityRow.status == EntityStatus.CANON,
-            or_(BeastProfileRow.size_class.in_(GREAT_MOUNTS), BeastProfileRow.species_entity_id.in_(far)),
+            or_(
+                BeastProfileRow.size_class.in_(GREAT_MOUNTS),
+                BeastProfileRow.species_entity_id.in_(far),
+                BeastProfileRow.beast_entity_id.in_(select(CreatureAnatomyRow.node_id).where(CreatureAnatomyRow.habitat == Habitat.VOID)),
+            ),
         )
     )
     return await session.scalar(statement.limit(1)) is not None

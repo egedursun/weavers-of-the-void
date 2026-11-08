@@ -9,6 +9,7 @@ from aerona.db.tables.environment import LeyLineRow
 from aerona.db.tables.industry import ENERGY_COLUMNS, CommunityIndustryRow
 from aerona.db.tables.mind import SkillRow
 from aerona.domain.enums.demography import Job
+from aerona.domain.enums.ecology import SpeciesUse
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBand, WeatherEffect
@@ -16,6 +17,7 @@ from aerona.domain.enums.industry import EnergyKind
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
+from aerona.engine.ecology.domestication import kept_for
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import holdings
 from aerona.engine.primitives.numbers import round_half_up
@@ -94,7 +96,12 @@ async def supply_of(ctx: TickContext, book: EconomyBook, community: EntityRow, l
     region = book.ground.region_of(community.id)
     held = await holdings(ctx.session, community.id)
     beasts = held.get(CommodityKind.LIVESTOCK, 0) + held.get(CommodityKind.MOUNTS, 0)
-    muscle = workers_of(book, community) * table.muscle_per_100_workers / PERCENT + beasts * table.muscle_per_10_beasts / 10
+    draught = await kept_for(ctx, community.id, SpeciesUse.LABOUR)
+    muscle = (
+        workers_of(book, community) * table.muscle_per_100_workers / PERCENT
+        + beasts * table.muscle_per_10_beasts / 10
+        + draught * ctx.rules.husbandry.muscle_per_10_draught / 10
+    )
     water = river_energy(ctx.rules, region.river_class) if region is not None else 0
     wind: float = table.wind_base
     if region is not None:

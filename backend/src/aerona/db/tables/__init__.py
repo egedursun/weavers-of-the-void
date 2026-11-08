@@ -12,6 +12,7 @@ from aerona.db.tables.affairs import (
 )
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.agency import ActionRecordRow, AgentTurnRow, CreationRewardRow, EpochAgentRow, TurnCounterRow
+from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldMapRow, WorldRow
@@ -346,6 +347,7 @@ __all__ = [
     "CreationVerdictRow",
     "CreatorMoodInputRow",
     "CreatorRow",
+    "CreatureAnatomyRow",
     "CreditProfileRow",
     "CrimeCaseRow",
     "CrisisBackerRow",

@@ -71,6 +71,7 @@ import { COMMODITY } from '../economy/labels'
 import { TERRAIN } from '../environment/labels'
 import { PERCENT, busyOf } from '../lore/model'
 import { MindPicker } from '../mind/parts'
+import { AnatomyCard } from './AnatomySection'
 import { FloraCard, FloraControls } from './FloraPanels'
 import {
   CustomUseBadges,
@@ -1604,6 +1605,9 @@ function Body({ id, card, blocked }: Blocked) {
         <FoodChain card={card} />
         <UsesAndYields card={card} />
         <FloraCard card={card} />
+        {card.species_class !== 'plant' && card.species_class !== 'fungus' && (
+          <AnatomyCard nodeId={id} blocked={blocked} />
+        )}
       </div>
       <Ranges card={card} />
       <SpeciesControls id={id} card={card} blocked={blocked} />

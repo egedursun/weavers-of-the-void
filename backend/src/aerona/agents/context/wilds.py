@@ -8,6 +8,7 @@ from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.ecology import SpeciesClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.engine.ecology.anatomy import anatomy_lines
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.stats import stat
 
@@ -41,9 +42,9 @@ async def wild_lines(session: AsyncSession, home: EntityRow, region: int | None)
         )
         wild = [f"{name} ({words(diet.value)}, {abundance} strong)" for name, abundance, diet in rows]
     herds = [
-        f"{name} ({head} head, {words(stage.value)})"
-        for name, head, stage in await session.execute(
-            select(EntityRow.name, HerdRow.head, HerdRow.stage)
+        f"{name} ({head} head, {words(stage.value)}{f'; {trained} trained for {words(training.value)}' if training is not None and trained else ''})"
+        for name, head, stage, training, trained in await session.execute(
+            select(EntityRow.name, HerdRow.head, HerdRow.stage, HerdRow.training, HerdRow.trained)
             .join(EntityRow, EntityRow.id == HerdRow.species_entity_id)
             .where(HerdRow.community_entity_id == home.id)
         )
@@ -163,10 +164,21 @@ async def beast_nature(session: AsyncSession, beast: EntityRow) -> list[str]:
 
 async def nature_lines(session: AsyncSession, entity: EntityRow) -> list[str]:
     if entity.entity_type is EntityType.SPECIES:
-        return await species_nature(session, entity)
+        return [*await species_nature(session, entity), *await anatomy_lines(session, entity.id)]
     if entity.entity_type is EntityType.BEAST:
-        return await beast_nature(session, entity)
+        return [*await beast_nature(session, entity), *await anatomy_lines(session, entity.id)]
     if entity.entity_type is EntityType.REGION:
         crops = await crop_lines(session, entity.id)
         return [f"its fields grow: {', '.join(crops)}"] if crops else []
     return []
+
+
+async def pet_lines(session: AsyncSession, me: EntityRow) -> list[str]:
+    pets = await session.execute(
+        select(EntityRow.name, BeastProfileRow.size_class)
+        .join(BondRow, BondRow.source_node_id == EntityRow.id)
+        .join(BeastProfileRow, BeastProfileRow.beast_entity_id == EntityRow.id)
+        .where(BondRow.target_node_id == me.id, BondRow.kind == BondKind.PET_OF, BondRow.state == BondState.ACTIVE, EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.name)
+    )
+    return [f"{name} ({words(size.value)})" for name, size in pets]

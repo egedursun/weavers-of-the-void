@@ -1,6 +1,8 @@
 from sqlalchemy import func, select
 
+from aerona.catalog.creature_anatomy import PLAN_LIMBS
 from aerona.constants.units import PERCENT
+from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.ecology import BeastProfileRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesYieldRow
@@ -23,6 +25,8 @@ from aerona.domain.models.entity_stats import BeastStats, ItemStats, LegendStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
+from aerona.engine.ecology.anatomy import anatomy_of, harm_factor, repelled
+from aerona.engine.ecology.beast_acts import bite_someone, carry_off, free_captives, is_abductor, terror_gaze, triggered, void_trophy
 from aerona.engine.ecology.foodweb import raid_herds
 from aerona.engine.ecology.profiles import profile_of
 from aerona.engine.economy.materials import set_node_material
@@ -44,7 +48,7 @@ from aerona.rules.registry import Rules
 
 ACTIVE = frozenset({BeastTemper.HUNGRY, BeastTemper.TERRITORIAL, BeastTemper.ENRAGED})
 COMMODITY_KEYS = frozenset(item.value for item in CommodityKind)
-HELD = frozenset({BeastTemper.BOUND, BeastTemper.TAMED})
+HELD = frozenset({BeastTemper.BOUND, BeastTemper.TAMED, BeastTemper.COMPANION})
 HOARD_GOODS = (CommodityKind.LUXURIES, CommodityKind.LIVESTOCK, CommodityKind.GRAIN)
 GREAT = SIZE_ORDER.index(SizeClass.HUGE)
 RIDEABLE = frozenset({SizeClass.LARGE, SizeClass.HUGE, SizeClass.COLOSSAL})
@@ -270,16 +274,25 @@ async def seize_treasure(ctx: TickContext, beast: EntityRow, town: EntityRow) ->
 
 async def raid(ctx: TickContext, beast: EntityRow, row: BeastProfileRow, town: EntityRow) -> str:
     table = ctx.rules.beasts
-    scale = size_factor(ctx.rules, row)
+    anatomy = await anatomy_of(ctx.session, beast.id)
+    kind = await ctx.session.get(SpeciesProfileRow, row.species_entity_id) if row.species_entity_id is not None else None
+    scale = size_factor(ctx.rules, row) * harm_factor(ctx.rules, anatomy, PLAN_LIMBS[kind.body_plan] if kind is not None else anatomy.limbs if anatomy else 0)
     herds = await raid_herds(ctx, beast, town)
     if stat(town, "population") is not None:
         shift_stat(town, "population", -round_half_up((stat(town, "population") or 0) * table.raid_population_pct * scale / PERCENT))
     ledger = GoodsLedger(ctx.session, ctx.epoch)
+    if anatomy is not None and anatomy.hoards is not None:
+        taken = await ledger.take_units(town.id, CommodityKind.LUXURIES, ctx.rules.creature_anatomy.hoard_take, GoodsFlow.LOOT)
+        if taken:
+            stash(row, anatomy.hoards.value, taken)
     for commodity in HOARD_GOODS:
         taken = await ledger.take_units(town.id, commodity, round_half_up(table.raid_hoard * scale), GoodsFlow.LOOT)
         if taken:
             stash(row, commodity.value, taken)
             break
+    if anatomy is not None and anatomy.bite is not None:
+        await bite_someone(ctx, beast, town, anatomy.bite)
+    await terror_gaze(ctx, beast)
     treasure = await seize_treasure(ctx, beast, town)
     row.raids += 1
     set_stats(
@@ -375,8 +388,19 @@ async def pick_prey(ctx: TickContext, beast: EntityRow, near: list[EntityRow], d
     if defiant is not None:
         return defiant
     shunned = await slayer_towns(ctx) if rng.chance(ctx.rules.beasts.slayer_shun_pct) else set()
-    bold = [town for town in near if town.id not in shunned]
+    anatomy = await anatomy_of(ctx.session, beast.id)
+    atlas = await RegionAtlas.load(ctx.session)
+    bold = [town for town in near if town.id not in shunned and not await repelled(ctx, atlas, town, anatomy.hates if anatomy else None)]
     return rng.pick(bold) if bold else None
+
+
+async def woken(
+    ctx: TickContext, atlas: RegionAtlas, beast: EntityRow, row: BeastProfileRow, *, anatomy: CreatureAnatomyRow | None, region: int | None
+) -> bool:
+    if anatomy is not None and anatomy.awakening is not None:
+        return await triggered(ctx, atlas, anatomy, region)
+    rng = ctx.rng(f"lair.wake.{beast.id}.{ctx.epoch}")
+    return rng.chance(ctx.rules.beasts.wake_chance) or (await disturbed(ctx, beast, region) and rng.chance(wake_chance(ctx.rules, row)))
 
 
 async def lair_cycle(ctx: TickContext, atlas: RegionAtlas, beast: EntityRow, row: BeastProfileRow) -> str | None:
@@ -395,16 +419,19 @@ async def lair_cycle(ctx: TickContext, atlas: RegionAtlas, beast: EntityRow, row
         return None
     near = await towns_near(ctx, atlas, row)
     region = atlas.top_region(row.lair_place_id) if row.lair_place_id is not None else atlas.top_region(beast.id)
-    if row.temper is BeastTemper.SLEEPING and "temper" not in row.locked:
-        woke = rng.chance(table.wake_chance) or (await disturbed(ctx, beast, region) and rng.chance(wake_chance(ctx.rules, row)))
-        if woke:
-            row.temper, row.woke_epoch = BeastTemper.HUNGRY, ctx.epoch
+    anatomy = await anatomy_of(ctx.session, beast.id)
+    if row.temper is BeastTemper.SLEEPING and "temper" not in row.locked and await woken(ctx, atlas, beast, row, anatomy=anatomy, region=region):
+        row.temper, row.woke_epoch = BeastTemper.HUNGRY, ctx.epoch
     paid, defiant = await tribute(ctx, beast, row, near)
     if defiant is not None and "temper" not in row.locked:
         row.temper = BeastTemper.ENRAGED
     if row.temper not in ACTIVE or not near:
         await dread(ctx, beast, near, quiet=True)
         return f"tribute from {paid} towns" if paid else None
+    if is_abductor(anatomy):
+        taken = await carry_off(ctx, beast, row, near)
+        await dread(ctx, beast, near, quiet=taken is None)
+        return taken
     target = await avenger_target(ctx, beast, near)
     if target is not None and "temper" not in row.locked:
         row.temper = BeastTemper.ENRAGED
@@ -546,9 +573,11 @@ async def fall(ctx: TickContext, beast: EntityRow, row: BeastProfileRow) -> str:
     slayer = await slayer_of(ctx, beast.id)
     for profile, _ in await tribute_clauses(ctx, beast.id):
         await end_treaty(ctx, profile, TreatyStatus.FULFILLED, f"{beast.name} is dead")
+    ctx.count("captives_rescued", await free_captives(ctx, beast))
     if slayer is not None:
         await corpse(ctx, beast, row, slayer)
         await loot(ctx, row, slayer)
+        await void_trophy(ctx, beast, slayer)
         await acclaim_deed(ctx, slayer.id, ReputationAxis.HEROISM, ctx.rules.local_renown.act_magnitude * 2, place_id=slayer.location_id, token=True)
     treasures = await owned_items(ctx, [beast.id])
     if any(value > 0 for value in row.hoard.values()) or treasures:

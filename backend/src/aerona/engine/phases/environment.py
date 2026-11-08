@@ -32,6 +32,7 @@ from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.star_types import star_heat
+from aerona.engine.ecology.domestication import grazing_heads
 from aerona.engine.ecology.flora import CropBook
 from aerona.engine.environment.battles import backfill_battle_ground
 from aerona.engine.environment.book import EnvironmentBook
@@ -655,7 +656,7 @@ def drift(current: int, target: int, divisor: int) -> int:
     return clamp_int(current + (target - current) / max(1, divisor), 0, PERCENT)
 
 
-def work_land(rules: Rules, env: RegionEnvironmentRow, capacity: CapacityModel, load: RegionLoad, divisor: int) -> None:
+def work_land(rules: Rules, env: RegionEnvironmentRow, capacity: CapacityModel, load: RegionLoad, divisor: int, *, herds: int = 0) -> None:
     settings = rules.land_use
     community = load.communities[0]
     ceiling = max(1.0, capacity.capacity(load, community, capacity.effective_fertility(community)))
@@ -666,7 +667,8 @@ def work_land(rules: Rules, env: RegionEnvironmentRow, capacity: CapacityModel, 
     if "farmed" not in locked:
         env.farmed = drift(env.farmed, land_target(occupancy * farming * settings.farm_target_pct / PERCENT), divisor)
     if "grazed" not in locked:
-        env.grazed = drift(env.grazed, land_target(occupancy * (1 - farming) * settings.graze_target_pct / PERCENT), divisor)
+        pasture = occupancy * (1 - farming) * settings.graze_target_pct / PERCENT + herds / rules.husbandry.graze_head_per_pct
+        env.grazed = drift(env.grazed, land_target(pasture), divisor)
     if "built" not in locked:
         env.built = drift(env.built, land_target(settled / settings.built_population_per_pct), divisor)
     cleared = env.farmed + env.built * settings.cleared_built_pct / PERCENT + env.grazed * settings.cleared_grazed_pct / PERCENT
@@ -736,6 +738,7 @@ async def note_land(ctx: TickContext, env: RegionEnvironmentRow, before: LandMar
     "table.calendars",
     "table.epoch_year_cursors",
     "table.forced_weather",
+    "table.herds",
     "table.holder_levels",
     "table.place_environment",
     "table.region_environment",
@@ -750,6 +753,7 @@ async def land_use(ctx: TickContext) -> None:
     book = await EnvironmentBook.load(ctx.session, rules, ctx.epoch)
     capacity = await CapacityModel.load(ctx.session, rules)
     loads = capacity.build_loads(await canon(ctx.session, LAND_COMMUNITY_TYPES))
+    grazing = await grazing_heads(ctx.session)
     worked = rewilded = 0
     for region_id, env in book.regions.items():
         before = LandMark(env.erosion, env.farmed, env.soil_fertility, env.cleared)
@@ -760,7 +764,7 @@ async def land_use(ctx: TickContext) -> None:
                     setattr(env, key.value, max(0, getattr(env, key.value) - settings.rewild_rate))
             rewilded += 1
         else:
-            work_land(rules, env, capacity, load, settings.drift_divisor)
+            work_land(rules, env, capacity, load, settings.drift_divisor, herds=grazing.get(region_id, 0))
             worked += 1
         if "erosion" not in env.locked:
             env.erosion = (

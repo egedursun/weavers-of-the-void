@@ -37,6 +37,7 @@ NOTE_CAP = 6
     "table.faction_profiles",
     "table.forced_weather",
     "table.goods_flows",
+    "table.herds",
     "table.holder_levels",
     "table.holder_techniques",
     "table.ideology_adherents",

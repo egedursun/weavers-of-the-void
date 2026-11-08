@@ -157,6 +157,7 @@ class HomeLine(ContextItem):
     treasures: list[str] = Field(default_factory=list)
     wildlife: list[str] = Field(default_factory=list)
     crops: list[str] = Field(default_factory=list)
+    pets: list[str] = Field(default_factory=list)
     herds: list[str] = Field(default_factory=list)
     beasts: list[str] = Field(default_factory=list)
     needs: list[str] = Field(default_factory=list)

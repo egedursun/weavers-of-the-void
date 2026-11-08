@@ -7,6 +7,7 @@ import {
   Flame,
   Footprints,
   Gem,
+  HandHeart,
   HeartPulse,
   Hourglass,
   Link as LinkIcon,
@@ -16,6 +17,7 @@ import {
   ShieldAlert,
   Sun,
   Swords,
+  Target,
   TriangleAlert,
   Unlock,
   Wheat,
@@ -25,6 +27,7 @@ import { unwrap } from '@/api/errors'
 import {
   beastTemperValues,
   domesticationStageValues,
+  herdTrainingValues,
   sizeClassValues,
 } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
@@ -56,6 +59,7 @@ import { INJURIES, PLANS, STATES } from '../body/labels'
 import { COMMODITY } from '../economy/labels'
 import { PERCENT, busyOf } from '../lore/model'
 import { MindPicker } from '../mind/parts'
+import { AnatomyCard } from './AnatomySection'
 import {
   Abilities,
   SlayControl,
@@ -77,6 +81,7 @@ import {
   BEAST_ICON,
   DIET,
   HERDS_ICON,
+  HERD_TRAINING,
   MIGHT,
   SIZE,
   STAGE,
@@ -110,6 +115,8 @@ const MASTERS = [
   'army',
   'place',
 ] as const
+
+const NO_TRAINING = 'none'
 
 function pickTable(
   values: readonly string[],
@@ -240,6 +247,12 @@ function Domain({ card }: { card: BeastCard }) {
       label: 'Bound to',
       item: card.bound_to,
       empty: 'No master',
+    },
+    {
+      icon: HandHeart,
+      label: 'Companion of',
+      item: card.pet_of,
+      empty: 'No one keeps it as a pet',
     },
   ]
   return (
@@ -411,12 +424,22 @@ function BeastControls({ id, card, blocked }: Blocked) {
         })
       ),
   })
+  const [owner, setOwner] = useState<number | null>(null)
+  const keep = useGodAction<number | null>({
+    run: (node) =>
+      unwrap(
+        api.POST('/api/actions/pet:set', {
+          body: { beast_id: id, owner_id: node },
+        })
+      ),
+  })
   const busy = busyOf(
     blocked,
     edit.isPending,
     rouse.isPending,
     bind.isPending,
-    move.isPending
+    move.isPending,
+    keep.isPending
   )
   return (
     <AdjustPanel
@@ -540,6 +563,45 @@ function BeastControls({ id, card, blocked }: Blocked) {
             </div>
           </div>
         </Group>
+        <Group title='A mortal’s companion' icon={HandHeart}>
+          <Muted variant='caption'>
+            A pet stays at its owner’s side, comforts them and, if its kind
+            hunts or guards, sharpens their hunting; its owner mourns it when it
+            dies.
+          </Muted>
+          <div className='flex min-w-0 flex-wrap items-end gap-2'>
+            <EntityPicker
+              types={['mortal']}
+              value={owner}
+              onChange={setOwner}
+              placeholder='Give it to a mortal…'
+            />
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null || owner === null}
+              disabledReason={
+                busy ?? (owner === null ? 'Choose a mortal' : undefined)
+              }
+              onClick={() => keep.mutate(owner)}
+            >
+              <HandHeart />
+              Make it their pet
+            </Button>
+            {card.pet_of && (
+              <Button
+                size='sm'
+                variant='outline'
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() => keep.mutate(null)}
+              >
+                <Unlock />
+                Set it free
+              </Button>
+            )}
+          </div>
+        </Group>
         <Group title='Its hoard' icon={Coins}>
           <ShareEditor
             key={JSON.stringify(card.hoard)}
@@ -608,6 +670,7 @@ function Body({ id, card, blocked }: Blocked) {
         <Wounds card={card} />
         <Abilities card={card} />
         <Treasures card={card} />
+        <AnatomyCard nodeId={id} blocked={blocked} />
       </div>
       <BeastControls id={id} card={card} blocked={blocked} />
     </div>
@@ -657,6 +720,8 @@ function HerdCard({
   const [head, setHead] = useState(String(row.head))
   const [fed, setFed] = useState(String(row.fed_epochs))
   const [stage, setStage] = useState<string>(row.stage)
+  const [training, setTraining] = useState<string>(row.training ?? NO_TRAINING)
+  const [trained, setTrained] = useState(String(row.trained))
   const save = useGodAction<{
     values: Record<string, unknown>
     release?: string[]
@@ -699,7 +764,7 @@ function HerdCard({
           blocked={blocked}
         />
       </div>
-      <div className='grid min-w-0 grid-cols-2 gap-2'>
+      <div className='grid min-w-0 grid-cols-2 gap-2 @sm/herd:grid-cols-3'>
         <MiniStat
           icon={PawPrint}
           label='Head'
@@ -711,6 +776,16 @@ function HerdCard({
           label={row.fed_epochs === 1 ? 'Epoch fed' : 'Epochs fed'}
           value={row.fed_epochs}
           tone='gold'
+        />
+        <MiniStat
+          icon={row.training ? named(HERD_TRAINING, row.training).icon : Target}
+          label={
+            row.training
+              ? `Trained for ${named(HERD_TRAINING, row.training).label.toLowerCase()}`
+              : 'Not in training'
+          }
+          value={row.trained}
+          tone={row.training ? 'warning' : 'muted'}
         />
       </div>
       <StageTrack stage={row.stage} />
@@ -749,7 +824,30 @@ function HerdCard({
               disabled={busy !== null}
               onChange={setFed}
             />
+            <MindPicker
+              label='Trained for'
+              value={training}
+              table={{
+                [NO_TRAINING]: 'Not in training',
+                ...pickTable(herdTrainingValues, HERD_TRAINING),
+              }}
+              blocked={busy}
+              onPick={setTraining}
+            />
+            <NumberField
+              label='Head trained'
+              value={trained}
+              min={0}
+              max={whole(head)}
+              disabled={busy !== null}
+              onChange={setTrained}
+            />
           </div>
+          <Muted variant='caption'>
+            A master handler trains a share of the herd each epoch; trained war
+            beasts join its armies, hunting beasts add to the hunt and guard
+            beasts keep raiders away.
+          </Muted>
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
               size='sm'
@@ -762,6 +860,8 @@ function HerdCard({
                     head: whole(head),
                     stage,
                     fed_epochs: whole(fed),
+                    training: training === NO_TRAINING ? null : training,
+                    trained: Math.min(whole(trained), whole(head)),
                   },
                 })
               }

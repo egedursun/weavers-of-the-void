@@ -11,6 +11,7 @@ from aerona.domain.enums.ecology import (
     Biochemistry,
     Diet,
     DomesticationStage,
+    HerdTraining,
     RangeTrend,
     SizeClass,
     Sociality,
@@ -147,6 +148,8 @@ class HerdRow(Base):
     stage: Mapped[DomesticationStage] = mapped_column(enum_type(DomesticationStage, "stage"), default=DomesticationStage.TAMED)
     since_epoch: Mapped[int] = mapped_column(default=0)
     fed_epochs: Mapped[int] = mapped_column(default=0)
+    training: Mapped[HerdTraining | None] = mapped_column(enum_type(HerdTraining, "training"))
+    trained: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

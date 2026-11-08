@@ -300,6 +300,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   advance_knowledge: GraduationCap,
   reveal_truth: Eye,
   sow_crop: Sprout,
+  keep_pet: PawPrint,
 }
 
 export const TOOL_FALLBACK_ICON: LucideIcon = Wrench

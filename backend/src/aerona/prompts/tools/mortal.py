@@ -414,6 +414,11 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "Dangerous and intelligent species are hard. 1 action.",
         {"species_id": "The species' id", "how": "How you tame it"},
     ),
+    T.KEEP_PET: ToolText(
+        "You take one beast of a small tame kind your people keep as your own companion. It stays at your side, comforts you, and if its kind hunts or guards "
+        "it sharpens your hunting; when it dies you mourn it. Free.",
+        {"species_id": "The kind it is of, from those your people keep; leave empty to take any"},
+    ),
     T.MERGE_SPECIES: ToolText(
         "With biomancy you merge two creature species in your world, near you (at most {{ rules.creatures.chimera_merge_distance }} steps), into a single chimera (requires "
         "biomancy knowledge). The chimera carries the traits of both species; but it may get out of control. 1 action.",

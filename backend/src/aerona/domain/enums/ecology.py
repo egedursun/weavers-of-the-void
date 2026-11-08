@@ -45,6 +45,7 @@ class DomesticationStage(StrEnum):
 
 
 STAGE_ORDER = tuple(DomesticationStage)
+KEPT_STAGES = frozenset({DomesticationStage.HERDED, DomesticationStage.DOMESTICATED, DomesticationStage.BREED})
 
 
 class SpeciesUse(StrEnum):
@@ -72,6 +73,7 @@ class BeastTemper(StrEnum):
     ENRAGED = "enraged"
     BOUND = "bound"
     TAMED = "tamed"
+    COMPANION = "companion"
 
 
 class YieldProduct(StrEnum):
@@ -146,3 +148,71 @@ class PlantYield(StrEnum):
     BREW_BASE = "brew_base"
     REAGENT = "reagent"
     POISON = "poison"
+
+
+class HerdTraining(StrEnum):
+    WAR = "war"
+    HUNTING = "hunting"
+    GUARD = "guard"
+
+
+class TissueMaterial(StrEnum):
+    FLESH = "flesh"
+    HIDE = "hide"
+    SCALE = "scale"
+    CHITIN = "chitin"
+    FEATHER = "feather"
+    BONE = "bone"
+    WOOD = "wood"
+    STONE = "stone"
+    CRYSTAL = "crystal"
+    METAL = "metal"
+    ICE = "ice"
+    FIRE = "fire"
+    STEAM = "steam"
+    VOID_STUFF = "void_stuff"
+
+
+class BreathKind(StrEnum):
+    FIRE = "fire"
+    FROST = "frost"
+    VENOM_GAS = "venom_gas"
+    WEB = "web"
+    STEAM = "steam"
+
+
+class GazeKind(StrEnum):
+    TERROR = "terror"
+    PETRIFY = "petrify"
+    SLEEP = "sleep"
+    MADNESS = "madness"
+
+
+class Temperament(StrEnum):
+    PLACID = "placid"
+    SKITTISH = "skittish"
+    CURIOUS = "curious"
+    FIERCE = "fierce"
+    CUNNING = "cunning"
+    ABDUCTOR = "abductor"
+
+
+class Aversion(StrEnum):
+    FIRE = "fire"
+    IRON = "iron"
+    NOISE = "noise"
+    WATER = "water"
+    HOLY_GROUND = "holy_ground"
+
+
+class AwakeningTrigger(StrEnum):
+    DEEP_MINING = "deep_mining"
+    DESECRATION = "desecration"
+
+
+class Habitat(StrEnum):
+    LAND = "land"
+    WATER = "water"
+    SKY = "sky"
+    DEEP = "deep"
+    VOID = "void"

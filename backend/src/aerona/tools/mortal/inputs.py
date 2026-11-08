@@ -247,6 +247,10 @@ class TameInput(ToolInput):
     how: Reason
 
 
+class KeepPetInput(ToolInput):
+    species_id: int | None = None
+
+
 class ChimeraInput(ToolInput):
     a_id: int
     b_id: int

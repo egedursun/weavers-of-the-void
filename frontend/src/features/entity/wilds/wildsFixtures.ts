@@ -73,6 +73,8 @@ export const SPECIES = {
       stage: 'tamed',
       since_epoch: 50,
       fed_epochs: 1,
+      training: null,
+      trained: 0,
       locked: [],
     },
   ],
@@ -102,6 +104,7 @@ export const BEAST = {
   lair: LAND,
   temper: 'territorial',
   bound_to: null,
+  pet_of: null,
   hoard: { luxuries: 40 },
   raids: 7,
   woke_epoch: 44,
@@ -139,6 +142,30 @@ export function serveBasics() {
   })
   onApi('GET', '/api/names', [])
   onApi('GET', '/api/sons', [])
+  onApi('GET', '/api/nodes/7/anatomy', ANATOMY)
+  onApi('GET', '/api/nodes/9/anatomy', { ...ANATOMY, node_id: 9 })
+}
+
+export const ANATOMY = {
+  node_id: 7,
+  limbs: 6,
+  heads: 2,
+  wings: 0,
+  tails: 1,
+  skin: 'crystal',
+  bone: 'crystal',
+  breath: 'frost',
+  bite: null,
+  gaze: 'terror',
+  temperament: 'abductor',
+  hoards: 'gold',
+  hates: 'fire',
+  awakening: 'deep_mining',
+  habitat: 'deep',
+  armour_pct: 35,
+  harm_pct: 70,
+  generated_epoch: 3,
+  locked: [],
 }
 
 export const FIELD = { id: 31, kind: 'entity', name: 'Barley Downs' }
@@ -222,4 +249,23 @@ export const LIFE = {
       kinds: 1,
     },
   ],
+}
+
+export const OWNER = { id: 60, kind: 'entity', name: 'Tilla' }
+export const HOUND = { id: 61, kind: 'entity', name: 'Grey of Tilla' }
+
+export const PETS = {
+  mortal_id: 60,
+  pets: [
+    {
+      pet: HOUND,
+      species: KIND,
+      size_class: 'small',
+      age: 3,
+      lifespan: 6,
+      hunts: true,
+      since_epoch: 4,
+    },
+  ],
+  kinds: [KIND],
 }

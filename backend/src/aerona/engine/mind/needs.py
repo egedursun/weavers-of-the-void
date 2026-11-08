@@ -282,7 +282,7 @@ async def deeper_needs(
     kin = [relative for relative in await close_kin_of(session, mortal.id) if await living_entity(session, relative) is not None]
     loves = await partners_of(session, mortal.id) + [bond.target_node_id for bond in await active_bonds(session, [BondKind.LOVES], sources=[mortal.id])]
     companions = len(await active_bonds(session, [BondKind.COMPANION], sources=[mortal.id])) + len(
-        await active_bonds(session, [BondKind.COMPANION], targets=[mortal.id])
+        await active_bonds(session, [BondKind.COMPANION, BondKind.PET_OF], targets=[mortal.id])
     )
     warm = len(list(await session.scalars(select(MemoryRow.id).where(MemoryRow.holder_node_id == mortal.id, MemoryRow.magnitude > 0))))
     population = (stat(community, "population") if community is not None else None) or 0

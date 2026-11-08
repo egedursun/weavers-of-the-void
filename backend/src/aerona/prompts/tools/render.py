@@ -14,7 +14,23 @@ from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.culture import ArtMedium, IdeologyTenet, MagicSchool, MagicSource, ProphecyConsequence, ProphecyPredicate, RiteEffectKind
 from aerona.domain.enums.discovery import ArtDiscipline, TheoryDomain
-from aerona.domain.enums.ecology import BeastTemper, Biochemistry, Diet, GrowthCycle, PlantYield, SizeClass, Sociality, SpeciesClass, YieldProduct
+from aerona.domain.enums.ecology import (
+    AwakeningTrigger,
+    BeastTemper,
+    Biochemistry,
+    BreathKind,
+    Diet,
+    GazeKind,
+    GrowthCycle,
+    Habitat,
+    PlantYield,
+    SizeClass,
+    Sociality,
+    SpeciesClass,
+    Temperament,
+    TissueMaterial,
+    YieldProduct,
+)
 from aerona.domain.enums.economy import CommodityKind, MaterialFamily
 from aerona.domain.enums.entity import LIVING_CREATION_TYPES, EntityType, LegendCategory
 from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPath
@@ -107,6 +123,12 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "biochemistries": [kind.value for kind in Biochemistry],
         "growth_cycles": [kind.value for kind in GrowthCycle],
         "plant_yields": [kind.value for kind in PlantYield],
+        "breath_kinds": [kind.value for kind in BreathKind],
+        "gaze_kinds": [kind.value for kind in GazeKind],
+        "temperaments": [kind.value for kind in Temperament],
+        "habitats": [kind.value for kind in Habitat],
+        "awakening_triggers": [kind.value for kind in AwakeningTrigger],
+        "tissue_materials": [kind.value for kind in TissueMaterial],
         "tenets": "; ".join(f"{tenet} ({effect})" for tenet, effect in TENET_EFFECTS.items()),
         "funeral_rites": [rite.value for rite in FuneralRite],
         "judgements": [doctrine.value for doctrine in JudgementDoctrine],

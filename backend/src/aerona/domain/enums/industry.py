@@ -44,6 +44,9 @@ class ProcessKind(StrEnum):
     BUTCHERY = "butchery"
     DAIRY = "dairy"
     PRESSING = "pressing"
+    MILKING = "milking"
+    SHEARING = "shearing"
+    EGG_LAYING = "egg_laying"
 
 
 class MethodKind(StrEnum):
@@ -94,6 +97,12 @@ class MethodKind(StrEnum):
     CAVE_AGEING = "cave_ageing"
     TREADING = "treading"
     SCREW_PRESS = "screw_press"
+    HAND_MILKING = "hand_milking"
+    PENNED_MILKING = "penned_milking"
+    HAND_SHEARING = "hand_shearing"
+    IRON_SHEARS = "iron_shears"
+    GATHERED_EGGS = "gathered_eggs"
+    KEPT_FLOCKS = "kept_flocks"
 
 
 class OwnerClass(StrEnum):

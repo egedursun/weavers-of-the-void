@@ -15,6 +15,7 @@ from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.hits import Harm
 from aerona.engine.cosmos.fauna import merge_species as merge
+from aerona.engine.ecology.pets import pet_kinds, pet_of, take_pet
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.phases.afterlife import soul_bind
 from aerona.engine.phases.society_support.knowledge import teach
@@ -23,10 +24,10 @@ from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
 from aerona.tools.framework.call import MortalCall
-from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
+from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action, no_cost
 from aerona.tools.framework.validation import fail, state_reason
 from aerona.tools.mortal import lines
-from aerona.tools.mortal.inputs import BindSpiritInput, ChimeraInput, RuinsInput, TameInput
+from aerona.tools.mortal.inputs import BindSpiritInput, ChimeraInput, KeepPetInput, RuinsInput, TameInput
 from aerona.tools.mortal.support import first_stat, i_know, name_free, near, practised, same_region, wits_of
 
 PERCENT = 100
@@ -192,11 +193,28 @@ async def search_ruins(call: MortalCall, args: RuinsInput) -> str:
     return result(MortalResult.RUIN_NOTHING, ruin=ruin.name)
 
 
+async def keep_pet(call: MortalCall, args: KeepPetInput) -> str:
+    if call.me.entity_type is not EntityType.MORTAL or call.me.location_id is None:
+        fail(MortalResult.PET_NONE)
+    kept = await pet_of(call.tick, call.me.id)
+    if kept is not None:
+        fail(MortalResult.PET_ALREADY, id=kept.id, name=kept.name)
+    kinds = await pet_kinds(call.tick, call.me.location_id)
+    chosen = next((kind for kind in kinds if args.species_id is None or kind.id == args.species_id), None)
+    if chosen is None:
+        fail(MortalResult.PET_NONE)
+    pet = await take_pet(call.tick, call.me, chosen)
+    call.target(pet.id)
+    await call.chronicle(ChronicleKind.CIVILIZATION, lines.PET_TAKEN, entity_ids=[call.me.id, pet.id], me=call.me.name, name=pet.name)
+    return result(MortalResult.PET_TAKEN, id=pet.id, name=pet.name)
+
+
 def specs() -> list[ToolSpec[MortalCall, Any]]:
     mortal = AgentKind.MORTAL
     standard = mortal_standard_action
     return [
         ToolSpec(MortalToolId.TAME_SPECIES, mortal, TameInput, ToolMeta(ActionKind.TAME, standard), tame_species),
+        ToolSpec(MortalToolId.KEEP_PET, mortal, KeepPetInput, ToolMeta(ActionKind.TAME, no_cost), keep_pet),
         ToolSpec(MortalToolId.MERGE_SPECIES, mortal, ChimeraInput, ToolMeta(ActionKind.WEAVE_CHIMERA, standard), merge_species),
         ToolSpec(MortalToolId.BIND_SPIRIT, mortal, BindSpiritInput, ToolMeta(ActionKind.BIND_SPIRIT, standard), bind_spirit),
         ToolSpec(MortalToolId.SEARCH_RUINS, mortal, RuinsInput, ToolMeta(ActionKind.SEARCH_RUINS, standard), search_ruins),

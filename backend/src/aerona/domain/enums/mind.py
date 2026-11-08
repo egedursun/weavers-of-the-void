@@ -483,6 +483,8 @@ class ThoughtKind(StrEnum):
     MISSED_KIN = "missed_kin"
     AMONG_FRIENDS = "among_friends"
     FELT_LONELY = "felt_lonely"
+    LOST_PET = "lost_pet"
+    COMFORTED_BY_PET = "comforted_by_pet"
     LOVED = "loved"
     LONGED_FOR_LOVE = "longed_for_love"
     HAD_PEACE_AND_QUIET = "had_peace_and_quiet"

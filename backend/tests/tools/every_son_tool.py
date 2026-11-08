@@ -170,7 +170,7 @@ SON_CASES: dict[str, Case] = {
     "utter_prophecy": Case(creation("The Lantern Sign")),
     "start_event": Case(creation("The Lamp Fair", location_id=settlement)),
     "create_vessel": Case(creation("Road Barge", location_id=settlement)),
-    "raise_beast": Case(creation("Old Greyback", species_id=species, location_id=region)),
+    "raise_beast": Case(creation("Old Greyback", species_id=species, location_id=region, breath="frost", temperament="abductor", habitat="deep")),
     "decree_natural_law": Case(creation("Law of Lamps")),
     "harvest_resource": Case(plain(resource_id=resource)),
     "open_cosmic_bed": Case(plain(region_id=region, reason=REASON), travel_resource),

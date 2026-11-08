@@ -7,12 +7,12 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.disease import OutbreakRow
-from aerona.db.tables.ecology import SpeciesHostRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesYieldRow
+from aerona.db.tables.ecology import HerdRow, SpeciesHostRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesYieldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.disease import OutbreakStatus
-from aerona.domain.enums.ecology import GRAZERS, HUNTERS, SIZE_ORDER, Biochemistry, DomesticationStage, RangeTrend, Sociality
+from aerona.domain.enums.ecology import GRAZERS, HUNTERS, SIZE_ORDER, Biochemistry, DomesticationStage, HerdTraining, RangeTrend, Sociality
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
 from aerona.domain.enums.faith import TenetKind
@@ -48,6 +48,7 @@ class Wilds:
     sick: dict[int, set[int]] = field(default_factory=lambda: defaultdict(set))
     sacred: dict[int, set[int]] = field(default_factory=lambda: defaultdict(set))
     life: dict[int, tuple[Biochemistry, ...]] = field(default_factory=dict)
+    hunt_bonus: dict[int, float] = field(default_factory=dict)
 
     def allowed(self, land: RegionEnvironmentRow | None) -> tuple[Biochemistry, ...] | None:
         return self.life.get(land.world_id) if land is not None and land.world_id is not None else None
@@ -75,6 +76,11 @@ async def load_wilds(ctx: TickContext, species: list[EntityRow], invasive: set[i
                 wilds.invasive[region] += 1
     for world_id in sorted({land.world_id for land in lands.values() if land.world_id is not None}):
         wilds.life[world_id] = await tolerated(ctx.session, world_id)
+    trained: dict[int, int] = {}
+    for community_id, head in await ctx.session.execute(select(HerdRow.community_entity_id, HerdRow.trained).where(HerdRow.training == HerdTraining.HUNTING)):
+        trained[community_id] = trained.get(community_id, 0) + head
+    table = ctx.rules.husbandry
+    wilds.hunt_bonus = {key: 1 + table.hunt_pct / PERCENT * min(1.0, value / table.trained_full_head) for key, value in trained.items()}
     await sacred_and_sick(ctx, wilds)
     return wilds
 
@@ -437,7 +443,7 @@ async def harvest_hunt(ctx: TickContext, wilds: Wilds, species_id: int, region: 
     share = hunted / len(wilds.hunters[region])
     for community in wilds.hunters[region]:
         for item in products:
-            amount = round_half_up(share * item.rate)
+            amount = round_half_up(share * item.rate * wilds.hunt_bonus.get(community.id, 1.0))
             if amount > 0 and item.commodity is not None:
                 taken += await ledger.add(
                     community.id, item.commodity, amount, GoodsFlow.EXTRACTION, material=item.material, world_material_id=item.world_material_id

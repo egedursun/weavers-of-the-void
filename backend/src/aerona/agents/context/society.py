@@ -5,7 +5,7 @@ from aerona.agents.context.lore import lore_lines
 from aerona.agents.context.military import army_sheet, fleet_sheet, grievance_sheet, intrigue_sheet, war_sheet
 from aerona.agents.context.realm import statecraft
 from aerona.agents.context.society_depth import depth_lines
-from aerona.agents.context.wilds import crop_lines, wild_lines
+from aerona.agents.context.wilds import crop_lines, pet_lines, wild_lines
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import CohortRow, PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.disease import DiseaseProfileRow, EndemicDiseaseRow, OutbreakRow
@@ -69,6 +69,7 @@ async def home_for(session: AsyncSession, me: EntityRow, rules: Rules) -> HomeLi
     state = await statecraft(session, me, home, realm_id)
     wildlife, herds, beasts = await wild_lines(session, home, region)
     crops = await crop_lines(session, region)
+    pets = await pet_lines(session, me)
     depth = await depth_lines(session, home, social)
     return HomeLine(
         needs=depth.needs,
@@ -78,6 +79,7 @@ async def home_for(session: AsyncSession, me: EntityRow, rules: Rules) -> HomeLi
         wildlife=wildlife,
         herds=herds,
         crops=crops,
+        pets=pets,
         beasts=beasts,
         works=await structure_lines(session, home),
         tongues=lore.tongues,

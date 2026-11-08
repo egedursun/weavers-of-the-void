@@ -6,6 +6,7 @@ from aerona.catalog.commodities import COMMODITIES
 from aerona.catalog.methods import (
     ALWAYS_PRACTISED,
     EXTRACTION_PROCESS,
+    HERD_PROCESSES,
     METHODS,
     PROCESS_JOB,
     PROCESS_LABELS,
@@ -117,6 +118,8 @@ def local_price(book: EconomyBook, community_id: int, commodity: CommodityKind) 
 def practised(book: EconomyBook, community: EntityRow, process: ProcessKind) -> bool:
     if process in ALWAYS_PRACTISED:
         return True
+    if process in HERD_PROCESSES:
+        return HERD_PROCESSES[process] in book.herd_products.get(community.id, set())
     workshop = PROCESS_WORKSHOP.get(process)
     if workshop is not None and book.workshop(community.id, workshop) is not None:
         return True

@@ -1,6 +1,7 @@
 from aerona.catalog.god_lines import Line
 
 LANGUAGE_BORN = Line("tools.mortal.language_born", "{me} gave birth to its own language: {name}. Its first words: {words}.")
+PET_TAKEN = Line("tools.mortal.pet_taken", "{me} took {name} as a companion.")
 WORDS = Line("tools.mortal.words", "New words were born among {me} ({language}): {words}.")
 PRODUCED = Line("tools.mortal.produced", "{me}, using {resources}, produced {name} ({category}; {quality}).")
 BUILT = Line("tools.mortal.built", "{me} built {name} in {location}{subtype}{dedication}.")

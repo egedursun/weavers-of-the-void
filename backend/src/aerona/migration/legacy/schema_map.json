@@ -926,7 +926,8 @@
       "uygular": "practises",
       "esi": "spouse_of",
       "kan_kardesi": "sworn_kin",
-      "rivayet_eder": "tells"
+      "rivayet_eder": "tells",
+      "evcil_hayvani": "pet_of"
     },
     "dropped_bond_kind": {
       "bilirdi": "knew",

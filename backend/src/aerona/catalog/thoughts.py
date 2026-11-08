@@ -138,6 +138,8 @@ THOUGHTS: MappingProxyType[ThoughtKind, ThoughtSpec] = MappingProxyType(
         T.MISSED_KIN: th(E.LONGING, 30, "Missed their kin"),
         T.AMONG_FRIENDS: th(E.JOY, 25, "Was among friends"),
         T.FELT_LONELY: th(E.LONELINESS, 35, "Felt lonely"),
+        T.LOST_PET: th(E.GRIEF, 55, "Lost a beloved animal"),
+        T.COMFORTED_BY_PET: th(E.CONTENTMENT, 25, "Took comfort in an animal companion"),
         T.LOVED: th(E.LOVE, 30, "Felt loved"),
         T.LONGED_FOR_LOVE: th(E.LONGING, 30, "Longed for love"),
         T.HAD_PEACE_AND_QUIET: th(E.CONTENTMENT, 20, "Had peace and quiet"),

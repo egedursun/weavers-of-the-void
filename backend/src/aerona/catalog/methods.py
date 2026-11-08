@@ -313,6 +313,51 @@ METHODS: MappingProxyType[MethodKind, MethodSpec] = MappingProxyType(
                 labour_pct=120,
             ),
             m(M.TREADING, P.PRESSING, "Treading", "Fruit trodden underfoot in vats", E.MUSCLE, 1, tool_wear=0, labour_pct=130),
+            m(M.HAND_MILKING, P.MILKING, "Hand milking", "Each beast milked by hand where it grazes", E.MUSCLE, 1, tool_wear=0, labour_pct=130),
+            m(
+                M.PENNED_MILKING,
+                P.MILKING,
+                "Penned milking",
+                "Herds brought to pens and milked in turn",
+                E.MUSCLE,
+                1,
+                output_pct=125,
+                quality_bonus=5,
+                tool_wear=0,
+                branch=B.AGRICULTURE,
+                level=1,
+                labour_pct=80,
+            ),
+            m(M.HAND_SHEARING, P.SHEARING, "Hand shearing", "Fleece plucked and cut by hand", E.MUSCLE, 1, labour_pct=130),
+            m(
+                M.IRON_SHEARS,
+                P.SHEARING,
+                "Iron shears",
+                "Fleece cut close with sprung blades",
+                E.MUSCLE,
+                1,
+                output_pct=130,
+                quality_bonus=10,
+                tool_wear=2,
+                branch=B.METALLURGY,
+                level=1,
+                labour_pct=70,
+            ),
+            m(M.GATHERED_EGGS, P.EGG_LAYING, "Gathered eggs", "Eggs sought out wherever the flock lays", E.MUSCLE, 1, tool_wear=0, labour_pct=120),
+            m(
+                M.KEPT_FLOCKS,
+                P.EGG_LAYING,
+                "Kept flocks",
+                "Flocks kept in coops where they lay",
+                E.MUSCLE,
+                1,
+                output_pct=140,
+                quality_bonus=5,
+                tool_wear=0,
+                branch=B.AGRICULTURE,
+                level=1,
+                labour_pct=70,
+            ),
             m(
                 M.SCREW_PRESS,
                 P.PRESSING,
@@ -351,6 +396,9 @@ PROCESS_LABELS: MappingProxyType[ProcessKind, str] = MappingProxyType(
         P.BUTCHERY: "Butchery",
         P.DAIRY: "Dairy",
         P.PRESSING: "Pressing fruit",
+        P.MILKING: "Milking",
+        P.SHEARING: "Shearing",
+        P.EGG_LAYING: "Egg laying",
     }
 )
 STEP_PROCESS: MappingProxyType[str, ProcessKind] = MappingProxyType(
@@ -462,10 +510,21 @@ PROCESS_OUTPUT: MappingProxyType[ProcessKind, CommodityKind] = MappingProxyType(
         P.BUTCHERY: CommodityKind.MEAT,
         P.DAIRY: CommodityKind.CHEESE,
         P.PRESSING: CommodityKind.LUXURIES,
+        P.MILKING: CommodityKind.MILK,
+        P.SHEARING: CommodityKind.WOOL,
+        P.EGG_LAYING: CommodityKind.EGGS,
     }
 )
 PROCESS_JOB: MappingProxyType[ProcessKind, Job] = MappingProxyType(
-    {P.FARMING: Job.FARMING, P.FISHING: Job.FISHING, P.LOGGING: Job.BUILDING, P.MINING: Job.MINING}
+    {
+        P.FARMING: Job.FARMING,
+        P.FISHING: Job.FISHING,
+        P.LOGGING: Job.BUILDING,
+        P.MINING: Job.MINING,
+        P.MILKING: Job.HERDING,
+        P.SHEARING: Job.HERDING,
+        P.EGG_LAYING: Job.HERDING,
+    }
 )
 PROCESS_WORKSHOP: MappingProxyType[ProcessKind, WorkshopKind] = MappingProxyType(
     {
@@ -483,3 +542,4 @@ PROCESS_WORKSHOP: MappingProxyType[ProcessKind, WorkshopKind] = MappingProxyType
     }
 )
 ALWAYS_PRACTISED = frozenset({P.FARMING, P.WEAVING, P.PRESERVING, P.LIGHTING, P.BUTCHERY, P.DAIRY})
+HERD_PROCESSES: MappingProxyType[ProcessKind, str] = MappingProxyType({P.MILKING: "milk", P.SHEARING: "wool", P.EGG_LAYING: "eggs"})

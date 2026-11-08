@@ -100,6 +100,12 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "perception": "0-100: how easily disturbance wakes it and how little thieves take from its hoard",
         "willpower": "0-100: how hard it is to tame and how seldom it rests after a hunt",
         "intelligence": "0-100: at {{ rules.mortal_agents.creature_min_intelligence }} or more it speaks, bargains and acts by itself",
+        "breath": "A breath it attacks with, if any: {{ breath_kinds | join(', ') }}; it adds to the harm of its raids",
+        "gaze": "A gaze it attacks with, if any: {{ gaze_kinds | join(', ') }}; each raid makes it more dreaded",
+        "temperament": "Its temperament: {{ temperaments | join(', ') }}; an abductor carries people off to its lair instead of killing them",
+        "habitat": "Where it lives: {{ habitats | join(', ') }}; a creature of the void roams the roads between worlds",
+        "awakening": "If it sleeps until something wakes it: {{ awakening_triggers | join(', ') }}",
+        "skin": "What its body is made of: {{ tissue_materials | join(', ') }}; harder stuff turns harm aside",
     },
     EntityType.VESSEL: {
         "target_world_id": "If the gate, bridge or ship connects to another world, that world's id: a route is opened",

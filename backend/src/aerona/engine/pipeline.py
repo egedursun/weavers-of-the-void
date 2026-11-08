@@ -292,6 +292,8 @@ SUB_ENGINE_STAGE = stage(
     "husbandry",
     "flora_cycles",
     "beast_cycles",
+    "pet_cycles",
+    "necromancy_cycles",
     "pantheon",
     "native_faith",
     "death_engine",

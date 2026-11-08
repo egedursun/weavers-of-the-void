@@ -6,6 +6,7 @@ from sqlalchemy import select
 from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.records import NodeRef
 from aerona.api.schemas.wilds import (
+    AnatomyView,
     BeastCard,
     BeastTributeView,
     BeastWound,
@@ -15,6 +16,8 @@ from aerona.api.schemas.wilds import (
     HerdView,
     HostView,
     LifeKind,
+    MortalPets,
+    PetView,
     PlantView,
     RangeCell,
     RangeView,
@@ -31,9 +34,11 @@ from aerona.api.schemas.wilds import (
     YieldView,
 )
 from aerona.api.views.common import node_refs
+from aerona.catalog.creature_anatomy import PLAN_LIMBS
 from aerona.catalog.flora import BIOCHEMISTRY_LABELS, PRODUCT_BY_NAME
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
+from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.body import BodyRow, InjuryRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
@@ -60,9 +65,12 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClauseKind, TreatyStatus
+from aerona.engine.ecology.anatomy import armour_of, harm_factor
 from aerona.engine.ecology.beasts import RIDEABLE, reach_of, rest_chance, tame_chance, wake_chance, wound_harm
 from aerona.engine.ecology.biochemistry import bearable, tolerated
 from aerona.engine.ecology.flora import CropBook
+from aerona.engine.ecology.pets import hunting_kinds
+from aerona.engine.ecology.pets import pet_kind_ids as pet_kinds_of
 from aerona.engine.primitives.stats import stat
 
 router = APIRouter(tags=["wilds"])
@@ -235,6 +243,8 @@ async def species_card(entity_id: Id, services: ServicesDep) -> SpeciesCard:
                     stage=item.stage,
                     since_epoch=item.since_epoch,
                     fed_epochs=item.fed_epochs,
+                    training=item.training,
+                    trained=item.trained,
                     locked=item.locked,
                 )
                 for item in herds
@@ -294,8 +304,14 @@ async def beast_card(entity_id: Id, services: ServicesDep) -> BeastCard:
             )
         )
         clauses = [item for (item,) in tributes]
+        owners = list(
+            await session.scalars(
+                select(BondRow.target_node_id).where(BondRow.source_node_id == entity_id, BondRow.kind == BondKind.PET_OF, BondRow.state == BondState.ACTIVE)
+            )
+        )
         ids = [
             *(item for item in (row.species_entity_id, row.lair_place_id, row.bound_to_node_id) if item is not None),
+            *owners,
             *(item.subject_node_id for item in wounds),
             *treasures,
             *(item.treaty_entity_id for item in clauses),
@@ -317,6 +333,7 @@ async def beast_card(entity_id: Id, services: ServicesDep) -> BeastCard:
             lair=ref(refs, row.lair_place_id),
             temper=row.temper,
             bound_to=ref(refs, row.bound_to_node_id),
+            pet_of=ref(refs, owners[0]) if owners else None,
             hoard=row.hoard,
             raids=row.raids,
             woke_epoch=row.woke_epoch,
@@ -393,6 +410,8 @@ async def herds(entity_id: Id, services: ServicesDep) -> list[HerdView]:
                 stage=item.stage,
                 since_epoch=item.since_epoch,
                 fed_epochs=item.fed_epochs,
+                training=item.training,
+                trained=item.trained,
                 locked=item.locked,
             )
             for item in rows
@@ -519,4 +538,71 @@ async def world_life(world_id: Id, services: ServicesDep) -> WorldLife:
                 )
                 for kind in Biochemistry
             ],
+        )
+
+
+@router.get("/entities/{entity_id}/pets", response_model=MortalPets)
+async def mortal_pets(entity_id: Id, services: ServicesDep) -> MortalPets:
+    async with reader(services) as session:
+        mortal = await session.get(EntityRow, entity_id)
+        if mortal is None or mortal.entity_type is not EntityType.MORTAL:
+            raise NotFoundError("Only a mortal keeps pets.")
+        rows = list(
+            await session.execute(
+                select(BondRow, BeastProfileRow)
+                .join(BeastProfileRow, BeastProfileRow.beast_entity_id == BondRow.source_node_id)
+                .where(BondRow.target_node_id == entity_id, BondRow.kind == BondKind.PET_OF, BondRow.state == BondState.ACTIVE)
+                .order_by(BondRow.id)
+            )
+        )
+        kinds = await pet_kinds_of(session, mortal.location_id)
+        kept = [row.species_entity_id for _, row in rows if row.species_entity_id is not None]
+        refs = await node_refs(session, [*(bond.source_node_id for bond, _ in rows), *kept, *kinds])
+        hunting = await hunting_kinds(session, kept)
+        return MortalPets(
+            mortal_id=entity_id,
+            pets=[
+                PetView(
+                    pet=ref(refs, bond.source_node_id),
+                    species=ref(refs, row.species_entity_id),
+                    size_class=row.size_class,
+                    age=row.age,
+                    lifespan=row.lifespan,
+                    hunts=row.species_entity_id in hunting,
+                    since_epoch=bond.epoch,
+                )
+                for bond, row in rows
+            ],
+            kinds=listed(refs, kinds),
+        )
+
+
+@router.get("/nodes/{node_id}/anatomy", response_model=AnatomyView | None)
+async def creature_anatomy(node_id: Id, services: ServicesDep) -> AnatomyView | None:
+    async with reader(services) as session:
+        row = await session.get(CreatureAnatomyRow, node_id)
+        if row is None:
+            return None
+        rules = await world_rules(services, session)
+        plan = await session.scalar(select(SpeciesProfileRow.body_plan).where(SpeciesProfileRow.species_entity_id == node_id))
+        return AnatomyView(
+            node_id=node_id,
+            limbs=row.limbs,
+            heads=row.heads,
+            wings=row.wings,
+            tails=row.tails,
+            skin=row.skin,
+            bone=row.bone,
+            breath=row.breath,
+            bite=row.bite,
+            gaze=row.gaze,
+            temperament=row.temperament,
+            hoards=row.hoards,
+            hates=row.hates,
+            awakening=row.awakening,
+            habitat=row.habitat,
+            armour_pct=armour_of(row),
+            harm_pct=round((harm_factor(rules, row, PLAN_LIMBS[plan] if plan is not None else row.limbs) - 1) * PERCENT),
+            generated_epoch=row.generated_epoch,
+            locked=row.locked,
         )

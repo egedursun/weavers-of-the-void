@@ -14,6 +14,7 @@ from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, UnitDesignRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.ecology import HerdTraining
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialSlot
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.environment import CoastKind, ScarKind
@@ -22,7 +23,7 @@ from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.biology import kin_army, profiles_of
-from aerona.engine.ecology.domestication import herd_uses
+from aerona.engine.ecology.domestication import herd_uses, trained_effect, trained_heads
 from aerona.engine.economy.materials import node_material
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.interconnect.flows import FlowCategory, flowing
@@ -132,6 +133,9 @@ async def composition(ctx: TickContext, community: EntityRow, size: int, knowled
         plan = blend(ctx.rules, plan, drawn)
     biology, culture = await profiles_of(ctx.session, community)
     plan = kin_army(ctx.rules, biology, culture, plan, beasts=await herd_uses(ctx, community.id), mount_needs=MOUNT_NEEDS)
+    drilled = trained_effect(ctx.rules, await trained_heads(ctx.session, community.id, HerdTraining.WAR))
+    if drilled > 0:
+        add(plan, UnitKind.WAR_BEASTS, ctx.rules.husbandry.war_share_pct / PERCENT * drilled)
     rest = max(0.0, 1 - sum(plan.values()))
     plan[FALLBACK] = plan.get(FALLBACK, 0.0) + rest
     total = sum(plan.values()) or 1.0

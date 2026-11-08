@@ -427,6 +427,33 @@ export const TEMPER: Record<string, Named & { hint: string }> = {
     tone: 'success',
     hint: 'Ridden or kept by a master',
   },
+  companion: {
+    label: 'Companion',
+    icon: HandHeart,
+    tone: 'success',
+    hint: 'Kept at a mortal’s side as a pet',
+  },
+}
+
+export const HERD_TRAINING: Record<string, Named & { hint: string }> = {
+  war: {
+    label: 'War',
+    icon: Swords,
+    tone: 'danger',
+    hint: 'Trained beasts join the community’s armies',
+  },
+  hunting: {
+    label: 'Hunting',
+    icon: Crosshair,
+    tone: 'warning',
+    hint: 'Trained beasts bring home more from the hunt',
+  },
+  guard: {
+    label: 'Guard',
+    icon: Shield,
+    tone: 'info',
+    hint: 'Trained beasts keep raiders from the herds',
+  },
 }
 
 export const TRAIT: Record<components['schemas']['CreatureTrait'], Named> = {
@@ -582,6 +609,8 @@ export const FIELD_LABELS: Record<string, string> = {
   soil_need: 'Soil it needs',
   cultivation: 'Cultivation',
   share: 'Share of the fields',
+  training: 'Trained for',
+  trained: 'Head trained',
 }
 
 export function fieldLabel(key: string): string {

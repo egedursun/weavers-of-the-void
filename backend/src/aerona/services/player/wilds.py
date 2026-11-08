@@ -22,7 +22,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.models.entity_stats import BeastStats, SpeciesStats
-from aerona.engine.ecology import control
+from aerona.engine.ecology import anatomy_control, control, pet_control
 from aerona.engine.ecology.profiles import SpeciesSpec
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -212,6 +212,26 @@ class EditUseKind(Command):
 
 class UseKindTarget(Command):
     kind_id: int
+
+
+class EditAnatomy(Command):
+    node_id: int
+    values: Edit = Field(default_factory=dict)
+    release: list[str] = Field(default_factory=list)
+
+
+class AnatomyTarget(Command):
+    node_id: int
+
+
+class PetOwner(Command):
+    beast_id: int
+    owner_id: int | None = None
+
+
+class PetGift(Command):
+    owner_id: int
+    species_id: int
 
 
 class CustomUse(Command):
@@ -439,3 +459,27 @@ async def drop_use_kind(scope: PlayerScope, command: UseKindTarget) -> Effect:
 async def set_custom_use(scope: PlayerScope, command: CustomUse) -> Effect:
     row = await control.set_custom_use(await scope.context("species_custom_use"), command.species_id, command.kind_id, held=command.held)
     return Effect("It is kept that way." if row is not None else "It is no longer kept that way.", command.species_id)
+
+
+@player_action("pet:set", ActionKind.EDIT_RECORD)
+async def set_pet(scope: PlayerScope, command: PetOwner) -> Effect:
+    await pet_control.set_pet(await scope.context("pet_set"), command.beast_id, command.owner_id)
+    return Effect("The beast is now a companion." if command.owner_id is not None else "The beast is free of its owner.", command.beast_id)
+
+
+@player_action("pet:give", ActionKind.CREATE_ENTITY)
+async def give_pet(scope: PlayerScope, command: PetGift) -> Effect:
+    pet = await pet_control.give_pet(await scope.context("pet_give"), command.owner_id, command.species_id)
+    return Effect(f"{pet.name} now keeps them company.", pet.id, created_ids=(pet.id,))
+
+
+@player_action("anatomy:edit", ActionKind.EDIT_RECORD)
+async def edit_anatomy(scope: PlayerScope, command: EditAnatomy) -> Effect:
+    await anatomy_control.edit_anatomy(await scope.context("anatomy_edit"), command.node_id, command.values, release=command.release)
+    return Effect("The body is reshaped.", command.node_id)
+
+
+@player_action("anatomy:reroll", ActionKind.EDIT_RECORD)
+async def reroll_anatomy(scope: PlayerScope, command: AnatomyTarget) -> Effect:
+    await anatomy_control.reroll_anatomy(await scope.context("anatomy_reroll"), command.node_id)
+    return Effect("The world shapes the body anew.", command.node_id)

@@ -32,6 +32,7 @@ from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.domain.models.phonology import Phonology
 from aerona.engine.body.book import ensure_species_body
+from aerona.engine.ecology.anatomy import beast_anatomy
 from aerona.engine.ecology.beasts import profile_beast
 from aerona.engine.ecology.profiles import SpeciesSpec, profile_of
 from aerona.engine.gods.progress import power_ceiling
@@ -259,6 +260,7 @@ def _traits(call: SonCall, args: CreationInput) -> list[CreatureTrait]:
 
 
 BEAST_ABILITIES = ("endurance", "perception", "willpower", "intelligence")
+BEAST_BODY = ("breath", "gaze", "temperament", "habitat", "awakening", "skin")
 
 
 async def shape_beast(call: SonCall, args: CreationInput, created: EntityRow) -> None:
@@ -274,6 +276,11 @@ async def shape_beast(call: SonCall, args: CreationInput, created: EntityRow) ->
             setattr(row, key, value)
     if species is not None:
         await BondRepository(call.session).connect(BondDraft(created.id, species.id, BondKind.DESCENDS_FROM, call.epoch, "the greatest of its kind"))
+    shaped = {key: args.option(key) for key in BEAST_BODY if args.option(key) is not None}
+    if shaped:
+        anatomy = await beast_anatomy(call.tick, created, row)
+        for key, value in shaped.items():
+            setattr(anatomy, key, value)
 
 
 def species_spec(args: CreationInput) -> SpeciesSpec:

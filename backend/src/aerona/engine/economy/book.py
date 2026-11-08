@@ -8,6 +8,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.demography import LabourRow
+from aerona.db.tables.ecology import HerdRow, SpeciesYieldRow
 from aerona.db.tables.economy import ResourceProfileRow, ResourceWorkerRow, WorkshopDesignRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, RegionPollutionRow
@@ -18,6 +19,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import Job
+from aerona.domain.enums.ecology import KEPT_STAGES
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.industry import ProcessKind
@@ -61,6 +63,7 @@ class EconomyBook:
     pollution: dict[int, RegionPollutionRow] = field(default_factory=dict)
     magic_heat_pct: int = 0
     crops: CropBook | None = None
+    herd_products: dict[int, set[str]] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, ctx: TickContext) -> "EconomyBook":
@@ -127,6 +130,11 @@ class EconomyBook:
         self.industry = {row.community_node_id: row for row in await ctx.session.scalars(select(CommunityIndustryRow))}
         self.pollution = {row.region_node_id: row for row in await ctx.session.scalars(select(RegionPollutionRow))}
         self.crops = await CropBook.load(ctx.session, ctx.rules, self.ground.regions)
+        kept = select(HerdRow.community_entity_id, SpeciesYieldRow.product).join(
+            SpeciesYieldRow, SpeciesYieldRow.species_entity_id == HerdRow.species_entity_id
+        )
+        for community_id, product in await ctx.session.execute(kept.where(HerdRow.head > 0, HerdRow.stage.in_(list(KEPT_STAGES)))):
+            self.herd_products.setdefault(community_id, set()).add(product)
 
     def home_of(self, entity: EntityRow, homes: dict[int, int]) -> int | None:
         if entity.entity_type in SOCIETY_TYPES:

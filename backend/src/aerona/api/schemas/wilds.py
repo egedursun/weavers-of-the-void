@@ -1,20 +1,29 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
+from aerona.domain.enums.affliction import PackageKind
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.ecology import (
+    Aversion,
+    AwakeningTrigger,
     BeastTemper,
     Biochemistry,
+    BreathKind,
     Cultivation,
     Diet,
     DomesticationStage,
     FoodLink,
+    GazeKind,
     GrowthCycle,
+    Habitat,
+    HerdTraining,
     PlantYield,
     RangeTrend,
     SizeClass,
     Sociality,
     SpeciesClass,
     SpeciesUse,
+    Temperament,
+    TissueMaterial,
 )
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.material import MaterialKind
@@ -98,6 +107,8 @@ class HerdView(ApiModel):
     stage: DomesticationStage
     since_epoch: int
     fed_epochs: int
+    training: HerdTraining | None
+    trained: int
     locked: list[str]
 
 
@@ -200,6 +211,7 @@ class BeastCard(ApiModel):
     lair: NodeRef | None
     temper: BeastTemper
     bound_to: NodeRef | None
+    pet_of: NodeRef | None
     hoard: dict[str, int]
     raids: int
     woke_epoch: int | None
@@ -269,3 +281,41 @@ class LifeKind(ApiModel):
 class WorldLife(ApiModel):
     world_id: int
     kinds: list[LifeKind]
+
+
+class PetView(ApiModel):
+    pet: NodeRef | None
+    species: NodeRef | None
+    size_class: SizeClass
+    age: int
+    lifespan: int
+    hunts: bool
+    since_epoch: int
+
+
+class MortalPets(ApiModel):
+    mortal_id: int
+    pets: list[PetView]
+    kinds: list[NodeRef]
+
+
+class AnatomyView(ApiModel):
+    node_id: int
+    limbs: int
+    heads: int
+    wings: int
+    tails: int
+    skin: TissueMaterial
+    bone: TissueMaterial
+    breath: BreathKind | None
+    bite: PackageKind | None
+    gaze: GazeKind | None
+    temperament: Temperament
+    hoards: MaterialKind | None
+    hates: Aversion | None
+    awakening: AwakeningTrigger | None
+    habitat: Habitat
+    armour_pct: int
+    harm_pct: int
+    generated_epoch: int
+    locked: list[str]

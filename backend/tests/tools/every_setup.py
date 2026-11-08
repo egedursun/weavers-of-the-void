@@ -7,7 +7,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, RiteProfileRow
-from aerona.db.tables.ecology import SpeciesProfileRow
+from aerona.db.tables.ecology import HerdRow, SpeciesProfileRow, SpeciesUseRow
 from aerona.db.tables.economy import MarketPriceRow, TradeRouteProfileRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import LeyLineRow, WorldSeasonRow
@@ -24,7 +24,7 @@ from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.ecology import Diet, SpeciesClass
+from aerona.domain.enums.ecology import Diet, DomesticationStage, SpeciesClass, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import CivilizationTier, EntityFlag, EntityType
 from aerona.domain.enums.faction import FactionKind
@@ -96,6 +96,18 @@ async def plant(session: AsyncSession, realm: Realm) -> Ids:
     session.add(SpeciesProfileRow(species_entity_id=crop.id, species_class=SpeciesClass.PLANT, body_plan=BodyPlan.ARBOREAL, diet=Diet.PHOTOSYNTHETIC))
     session.add(PlantProfileRow(species_entity_id=crop.id))
     return {"plant": crop.id}
+
+
+async def pet_herd(session: AsyncSession, realm: Realm) -> Ids:
+    mortal = await session.get(EntityRow, realm.mortal_id)
+    assert mortal is not None and mortal.location_id is not None
+    session.add(SpeciesUseRow(species_entity_id=realm.species_id, use=SpeciesUse.COMPANION))
+    session.add(
+        HerdRow(
+            community_entity_id=mortal.location_id, species_entity_id=realm.species_id, head=12, stage=DomesticationStage.HERDED, since_epoch=1, fed_epochs=0
+        )
+    )
+    return {}
 
 
 async def item(session: AsyncSession, realm: Realm) -> Ids:

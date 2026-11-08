@@ -1,5 +1,7 @@
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.methods import HERD_PROCESSES
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
@@ -18,7 +20,7 @@ from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.ecology import SIZE_ORDER, STAGE_ORDER, BeastTemper, DomesticationStage, SizeClass, SpeciesUse
+from aerona.domain.enums.ecology import GRAZERS, SIZE_ORDER, STAGE_ORDER, BeastTemper, DomesticationStage, HerdTraining, SizeClass, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
@@ -28,18 +30,22 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.ecology.biochemistry import can_live_on
 from aerona.engine.ecology.profiles import profile_of
-from aerona.engine.economy.stocks import GoodsLedger, holding
+from aerona.engine.economy.stocks import DEFAULT_QUALITY, GoodsLedger, holding
+from aerona.engine.industry.chosen import method_of
 from aerona.engine.notes import note
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
+from aerona.rules.registry import Rules
 
 S = DomesticationStage
 KEPT = frozenset({S.HERDED, S.DOMESTICATED, S.BREED})
 HOUSED = frozenset({S.DOMESTICATED, S.BREED})
 TEN = 10
-HERD_PRODUCTS = frozenset({"wool", "milk", "eggs"})
+PRODUCT_PROCESS = {product: process for process, product in HERD_PROCESSES.items()}
+HERD_PRODUCTS = frozenset(PRODUCT_PROCESS)
 
 
 async def keeper_of(ctx: TickContext, tamer: EntityRow) -> EntityRow | None:
@@ -76,13 +82,22 @@ async def ensure_herds(ctx: TickContext) -> int:
     return opened
 
 
+async def fertility(ctx: TickContext, species_id: int) -> float:
+    table = ctx.rules.husbandry
+    profile = await ctx.session.get(SpeciesProfileRow, species_id)
+    if profile is None:
+        return 1.0
+    young = profile.breeding_seasons * profile.litter_size / table.litter_norm
+    return max(0.0, min(table.litter_growth_cap_pct / PERCENT, young))
+
+
 async def feed(ctx: TickContext, herd: HerdRow) -> bool:
     table = ctx.rules.domestication
     need = max(1, round_half_up(herd.head / TEN * table.fodder_per_head))
     eaten = await GoodsLedger(ctx.session, ctx.epoch).take_units(herd.community_entity_id, CommodityKind.FODDER, need, GoodsFlow.CONSUMPTION)
     fed = eaten >= need
     if "head" not in herd.locked:
-        change = table.growth_pct if fed else -table.starve_pct
+        change = table.growth_pct * await fertility(ctx, herd.species_entity_id) if fed else -table.starve_pct
         herd.head = max(0, round_half_up(herd.head * (1 + change / PERCENT)))
     herd.fed_epochs = herd.fed_epochs + 1 if fed else 0
     return fed
@@ -239,11 +254,13 @@ async def produce(ctx: TickContext, herd: HerdRow) -> int:
             town.unrest = clamp_int(town.unrest - table.companion_calm, 0, PERCENT)
     for item in await ctx.session.scalars(select(SpeciesYieldRow).where(SpeciesYieldRow.species_entity_id == herd.species_entity_id)):
         if item.product in HERD_PRODUCTS and item.commodity is not None:
+            spec = await method_of(ctx.session, herd.community_entity_id, PRODUCT_PROCESS[item.product])
             made += await ledger.add(
                 herd.community_entity_id,
                 item.commodity,
-                round_half_up(tens * item.rate),
+                round_half_up(tens * item.rate * spec.output_pct / PERCENT),
                 GoodsFlow.PRODUCTION,
+                quality=DEFAULT_QUALITY + spec.quality_bonus,
                 material=item.material,
                 world_material_id=item.world_material_id,
             )
@@ -281,6 +298,9 @@ async def husbandry(ctx: TickContext) -> dict[str, int]:
             counts["lost"] += 1
             continue
         counts["goods"] += await produce(ctx, herd)
+        if "trained" not in herd.locked:
+            herd.trained = min(herd.trained, herd.head)
+        counts["trained"] = counts.get("trained", 0) + await train(ctx, herd)
         text = await advance(ctx, herd, made)
         if text:
             counts["advanced"] += 1
@@ -332,8 +352,31 @@ async def draught(ctx: TickContext, community_id: int) -> float:
     return 1 + table.labour_pct / PERCENT * min(1.0, await kept_for(ctx, community_id, SpeciesUse.LABOUR) / table.labour_head)
 
 
+async def trained_heads(session: AsyncSession, community_id: int, training: HerdTraining) -> int:
+    heads = await session.scalars(select(HerdRow.trained).where(HerdRow.community_entity_id == community_id, HerdRow.training == training))
+    return sum(heads)
+
+
+def trained_effect(rules: Rules, trained: int) -> float:
+    return min(1.0, trained / rules.husbandry.trained_full_head)
+
+
 async def guarded(ctx: TickContext, community_id: int) -> float:
-    return 1 - ctx.rules.domestication.guard_pct / PERCENT if await kept_for(ctx, community_id, SpeciesUse.GUARD) > 0 else 1.0
+    kept = ctx.rules.domestication.guard_pct if await kept_for(ctx, community_id, SpeciesUse.GUARD) > 0 else 0
+    drilled = ctx.rules.husbandry.guard_pct * trained_effect(ctx.rules, await trained_heads(ctx.session, community_id, HerdTraining.GUARD))
+    return max(0.0, 1 - (kept + drilled) / PERCENT)
+
+
+async def train(ctx: TickContext, herd: HerdRow) -> int:
+    table = ctx.rules.husbandry
+    if herd.training is None or "trained" in herd.locked or herd.stage not in KEPT or held(herd.community_entity_id):
+        return 0
+    skill = await master_herder(ctx, herd.community_entity_id)
+    if skill < table.train_skill:
+        return 0
+    gained = round_half_up((herd.head - herd.trained) * table.train_pct / PERCENT * skill / PERCENT)
+    herd.trained = min(herd.head, herd.trained + max(0, gained))
+    return max(0, gained)
 
 
 async def carry_herds(ctx: TickContext, source_id: int, colony: EntityRow) -> tuple[int, int]:
@@ -365,3 +408,15 @@ async def carry_herds(ctx: TickContext, source_id: int, colony: EntityRow) -> tu
         carried += 1
     await ctx.session.flush()
     return carried, left
+
+
+async def grazing_heads(session: AsyncSession) -> dict[int, int]:
+    atlas = await RegionAtlas.load(session)
+    grazers = select(SpeciesProfileRow.species_entity_id).where(SpeciesProfileRow.diet.in_(list(GRAZERS)))
+    found: dict[int, int] = {}
+    rows = select(HerdRow.community_entity_id, HerdRow.head).where(HerdRow.head > 0, HerdRow.stage.in_(list(KEPT)), HerdRow.species_entity_id.in_(grazers))
+    for community_id, head in await session.execute(rows):
+        region = atlas.top_region(community_id)
+        if region is not None:
+            found[region] = found.get(region, 0) + head
+    return found

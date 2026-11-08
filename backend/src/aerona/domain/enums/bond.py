@@ -41,6 +41,7 @@ class BondKind(StrEnum):
     SPY_NETWORK = "spy_network"
     PURSUES = "pursues"
     COMPANION = "companion"
+    PET_OF = "pet_of"
     RIVAL = "rival"
     APPRENTICE_OF = "apprentice_of"
     COMMANDS = "commands"

@@ -103,6 +103,7 @@ from aerona.rules.registry.god_power import GodPowerRules
 from aerona.rules.registry.guide import GuideRules
 from aerona.rules.registry.harshness import HarshnessRules
 from aerona.rules.registry.heroes import HeroesRules
+from aerona.rules.registry.husbandry import HusbandryRules
 from aerona.rules.registry.image_gen import ImageGenRules
 from aerona.rules.registry.incitement import IncitementRules
 from aerona.rules.registry.industry import (
@@ -196,6 +197,7 @@ from aerona.rules.registry.mind import (
 )
 from aerona.rules.registry.model import ModelRules
 from aerona.rules.registry.modifiers import IncidentRules, ModifiersRules
+from aerona.rules.registry.monsters import CreatureAnatomyRules, MonstersRules
 from aerona.rules.registry.mortal_acts import ActsRules, EthnicRules, LoyaltyRules
 from aerona.rules.registry.mortal_agents import MortalAgentsRules
 from aerona.rules.registry.mortal_life import AgingRules, EducationRules, FertilityRules, KinshipRules
@@ -372,6 +374,9 @@ class Rules:
     discovery: DiscoveryRules = field(default_factory=DiscoveryRules)
     theories: TheoriesRules = field(default_factory=TheoriesRules)
     flora: FloraRules = field(default_factory=FloraRules)
+    husbandry: HusbandryRules = field(default_factory=HusbandryRules)
+    creature_anatomy: CreatureAnatomyRules = field(default_factory=CreatureAnatomyRules)
+    monsters: MonstersRules = field(default_factory=MonstersRules)
     art_forms: ArtFormsRules = field(default_factory=ArtFormsRules)
     name_meanings: NameMeaningsRules = field(default_factory=NameMeaningsRules)
     holy_orders: OrderRules = field(default_factory=OrderRules)

@@ -10,6 +10,14 @@ export type BeastCard = components['schemas']['BeastCard']
 export type FoodWeb = components['schemas']['FoodWeb']
 export type HerdView = components['schemas']['HerdView']
 
+export const anatomyKeys = {
+  node: (id: number) => [...loreKeys.entity(id), 'anatomy'] as const,
+}
+
+export const petKeys = {
+  mortal: (id: number) => [...loreKeys.entity(id), 'pets'] as const,
+}
+
 export const floraKeys = {
   crops: (id: number) => [...loreKeys.entity(id), 'crops'] as const,
   life: (id: number) => [...loreKeys.state, 'world-life', id] as const,
@@ -111,6 +119,10 @@ export type WildAction =
   | 'crop:drop'
   | 'crop_pest:set'
   | 'world:life'
+  | 'pet:set'
+  | 'pet:give'
+  | 'anatomy:edit'
+  | 'anatomy:reroll'
 
 export function runWild(name: WildAction, body: Record<string, unknown>) {
   return unwrap(
