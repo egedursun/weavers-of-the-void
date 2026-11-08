@@ -592,14 +592,14 @@ async def speciation(ctx: TickContext) -> int:
     rng = ctx.rng("speciation")
     atlas = await RegionAtlas.load(ctx.session)
     born = 0
-    for species in await _species(ctx):
+    for species in unheld(await _species(ctx)):
         if born >= creatures.speciation_cap:
             break
         row = await drifting_range(ctx, atlas, species)
         if row is None or not rng.chance(creatures.speciation_chance):
             continue
         region = await ctx.session.get(EntityRow, row.region_entity_id)
-        if region is None or region.status is not EntityStatus.CANON or region.entity_type is not EntityType.REGION:
+        if region is None or held(region.id) or region.status is not EntityStatus.CANON or region.entity_type is not EntityType.REGION:
             continue
         await _branch_subspecies(ctx, species, region)
         born += 1

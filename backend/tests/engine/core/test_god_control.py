@@ -25,10 +25,11 @@ from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import SpiritAlignment
 from aerona.domain.enums.intrigue import PlotKind
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.models.entity_stats import FactionStats, ItemStats, PeopleStats, SpiritStats
+from aerona.domain.models.entity_stats import BeastStats, FactionStats, ItemStats, PeopleStats, SpeciesStats, SpiritStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
 from aerona.engine.disease.control import DiseaseDesign, create_disease
+from aerona.engine.ecology.beasts import profile_beast
 from aerona.engine.interconnect.guards import run_guarded
 from aerona.engine.intrigue.schemes import begin_scheme
 from aerona.engine.lore import items
@@ -42,6 +43,7 @@ from aerona.rules.model import RULE_METADATA_KEY, rule_meta
 from aerona.rules.registry import Rules
 from tests.engine.core.factories import entity, mortal, settlement
 from tests.engine.integration.factories import RichCosmos, seed_rich_cosmos
+from tests.engine.lore.test_every_lore_kind import FIRST_VALUES
 
 BLOCK_EVERY_NODE = -1
 CERTAIN = 100
@@ -181,6 +183,11 @@ async def stir(session: AsyncSession, cosmos: RichCosmos) -> None:
     session.add(FactionProfileRow(faction_entity_id=company.id, kind=FactionKind.MERCENARY_COMPANY, influence_over={}, loyalty=5, locked=[]))
     other = await entity(session, "Stirring Folk", EntityType.PEOPLE, PeopleStats(population=3000), world_id=home.world.id, location_id=home.regions[0].id)
     await change_relation(ctx, home.people.id, other.id, -90, MemoryKind.ILL_WILL)
+    for kind, values in FIRST_VALUES.items():
+        await create_lore(ctx, kind, name=f"Stirring {kind.value}", description="", world_id=home.world.id, location_id=town.id, power=3, values=dict(values))
+    species = await entity(session, "Stirring Wyrm Kin", EntityType.SPECIES, SpeciesStats(danger=90), world_id=home.world.id, location_id=home.regions[0].id)
+    beast = await entity(session, "Stirring Wyrm", EntityType.BEAST, BeastStats(danger=90, hp=200), world_id=home.world.id, location_id=home.regions[0].id)
+    await profile_beast(ctx, beast, species)
     await session.flush()
 
 

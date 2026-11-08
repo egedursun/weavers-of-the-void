@@ -29,7 +29,7 @@ def test_every_creatable_lore_kind_has_a_seeder_and_a_case() -> None:
     assert set(SEEDERS) == set(CREATABLE) == set(FIRST_VALUES)
 
 
-@pytest.mark.parametrize("kind", sorted(FIRST_VALUES, key=lambda item: item.value))
+@pytest.mark.parametrize("kind", sorted(FIRST_VALUES))
 async def test_a_god_makes_every_kind_of_lore_and_opens_its_profile(realm: Realm, kind: EntityType) -> None:
     ctx = context(realm.session)
     made = await create_lore(
