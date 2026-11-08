@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -56,7 +57,12 @@ async def join_wars(ctx: TickContext, book: RealmBook) -> int:
                 if ally_id in present:
                     continue
                 ally = await living_entity(ctx.session, ally_id)
-                if ally is None or ally.status is not EntityStatus.CANON or ally.entity_type not in {EntityType.PEOPLE, EntityType.SETTLEMENT}:
+                if (
+                    ally is None
+                    or held(ally_id, row.entity_id)
+                    or ally.status is not EntityStatus.CANON
+                    or ally.entity_type not in {EntityType.PEOPLE, EntityType.SETTLEMENT}
+                ):
                     continue
                 if ally_id in called and not await answer_call(ctx, ally_id, row.entity_id):
                     await betrayed_call(ctx, ally_id, row.entity_id)

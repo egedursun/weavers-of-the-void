@@ -209,17 +209,17 @@ async def harvest_soul(ctx: TickContext, cult: EntityRow, soul: EntityRow) -> No
         scale_stat(ctx.rules, cult, FOLLOWERS_KEY, beyond.soul_harvest_follower_mult_pct / PERCENT, default=beyond.cult_default_followers)
     shift_bounded(ctx.rules, cult, INFLUENCE_KEY, beyond.soul_harvest_influence_gain, default=beyond.cult_default_influence)
     await EntityRepository(ctx.session).add_flag(cult.id, EntityFlag.SOUL_HARVESTER, ctx.epoch)
-    await note(ctx, f"{cult.name} harvested {soul.name}; the cult's power grew, the dead are restless.", key="beyond.soul_harvest", ids=[cult.id, soul.id])
+    await note(ctx, f"{cult.name} harvested {soul.name}; the cult's power grew.", key="beyond.soul_harvest", ids=[cult.id, soul.id])
 
 
 async def soul_harvest(ctx: TickContext) -> int:
     beyond = ctx.rules.beyond
     rng = ctx.rng("harvest")
     harvested = 0
-    for cult in await canon(ctx.session, [EntityType.CULT]):
+    for cult in unheld(await canon(ctx.session, [EntityType.CULT])):
         if stat_or(cult, ZEAL_KEY, 0) < beyond.soul_harvest_min_zealotry:
             continue
-        souls = await canon(ctx.session, [EntityType.SPIRIT], cult.world_id)
+        souls = unheld(await canon(ctx.session, [EntityType.SPIRIT], cult.world_id))
         if souls and rng.chance(beyond.soul_harvest_chance):
             await harvest_soul(ctx, cult, souls[0])
             harvested += 1

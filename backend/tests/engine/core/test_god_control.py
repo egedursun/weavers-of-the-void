@@ -5,19 +5,27 @@ from dataclasses import fields, replace
 from typing import Any
 
 from sqlalchemy import event, inspect, select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import ORMExecuteState, Session, object_mapper
 
 from aerona.db.base import Base
 from aerona.db.profile_guard import owned_shape, owner_ids, profile_mapper
 from aerona.db.session import Database
+from aerona.db.tables.culture import IdeologyAdherentRow
 from aerona.db.tables.entities import EntityRow
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
+from aerona.domain.enums.culture import IdeologyTenet
+from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
 from aerona.engine.interconnect.guards import run_guarded
+from aerona.engine.lore.control import create_lore
+from aerona.engine.phases.native_faith import syncretize
 from aerona.engine.pipeline import all_phases, current_environment, simulate
+from aerona.engine.primitives.manual import manual_context
 from aerona.rules.model import RULE_METADATA_KEY, rule_meta
 from aerona.rules.registry import Rules
-from tests.engine.integration.factories import seed_rich_cosmos
+from tests.engine.integration.factories import RichCosmos, seed_rich_cosmos
 
 BLOCK_EVERY_NODE = -1
 CERTAIN = 100
@@ -122,9 +130,30 @@ async def run_watched(database: Database, phase_name: str, only: int) -> tuple[C
     return watcher.changes, error
 
 
+async def stir(session: AsyncSession, cosmos: RichCosmos) -> None:
+    home = cosmos.home
+    ctx = await manual_context(session, "stir")
+    creed = await create_lore(
+        ctx,
+        EntityType.IDEOLOGY,
+        name="Stirring Creed",
+        description="",
+        world_id=home.world.id,
+        location_id=None,
+        power=3,
+        values={"tenets": [IdeologyTenet.EGALITARIANISM.value]},
+    )
+    communities = list(await session.scalars(select(EntityRow.id).where(EntityRow.entity_type.in_(list(COMMUNITY_TYPES)), EntityRow.world_id == home.world.id)))
+    for community_id in communities[:2]:
+        session.add(IdeologyAdherentRow(ideology_entity_id=creed.id, adherent_entity_id=community_id, strength=90))
+    god = await add_foreign_god(session, ctx.rules, ctx.rng(), ctx.epoch, NewForeignGod("Stirring Old God", home.world.id, (Domain.EARTH, None), power=40))
+    await syncretize(session, ctx.rules, home.people.id, god.id)
+    await session.flush()
+
+
 async def test_every_engine_step_obeys_a_hold_and_runs_when_forced_on_one_node(database: Database) -> None:
     async with database.write() as session:
-        await seed_rich_cosmos(session)
+        await stir(session, await seed_rich_cosmos(session))
     await simulate(database, WARM_EPOCHS)
     async with database.read() as session:
         target = await session.scalar(

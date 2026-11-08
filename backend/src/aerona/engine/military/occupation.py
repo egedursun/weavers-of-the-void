@@ -5,6 +5,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, OccupationRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.mind import MemoryKind, ValueAxis
 from aerona.domain.enums.war import WarStatus
@@ -83,6 +84,8 @@ async def partisans(ctx: TickContext) -> int:
 async def end_occupations(ctx: TickContext) -> int:
     ended = 0
     for row in list(await ctx.session.scalars(select(OccupationRow))):
+        if held(row.region_entity_id, row.occupier_entity_id):
+            continue
         war = await ctx.session.get(WarRow, row.war_id) if row.war_id is not None else None
         if war is None or war.status not in {WarStatus.ONGOING, WarStatus.MOBILIZING}:
             await ctx.session.delete(row)

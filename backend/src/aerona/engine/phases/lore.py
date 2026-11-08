@@ -312,7 +312,7 @@ async def language_cycles(ctx: TickContext) -> None:
 async def legend_cycles(ctx: TickContext) -> None:
     table = ctx.rules.belief
     ctx.count("typed_kinds_backfilled", await backfill_typed_kinds(ctx))
-    for legend in await canon(ctx.session, [EntityType.LEGEND]):
+    for legend in unheld(await canon(ctx.session, [EntityType.LEGEND])):
         row = await legends.profile_of(ctx, legend)
         if await legends.tell(ctx, legend, row):
             ctx.count("legends_drifted")

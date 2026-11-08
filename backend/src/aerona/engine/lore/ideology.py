@@ -11,7 +11,7 @@ from aerona.db.tables.faith import CultTenetRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRow
-from aerona.db.write_guard import unheld
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import IdeologyTenet, ItemClass
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
@@ -140,7 +140,7 @@ def appeal_for(profile: IdeologyProfileRow, society: CommunitySocietyRow | None,
     return total
 
 
-async def learned_paths(ctx: TickContext, creed: EntityRow, profile: IdeologyProfileRow, held: dict[int, IdeologyAdherentRow]) -> list[tuple[int, int]]:
+async def learned_paths(ctx: TickContext, creed: EntityRow, profile: IdeologyProfileRow, adherents: dict[int, IdeologyAdherentRow]) -> list[tuple[int, int]]:
     paths: list[tuple[int, int]] = []
     for book in profile.texts:
         owner = await ctx.session.scalar(
@@ -148,14 +148,14 @@ async def learned_paths(ctx: TickContext, creed: EntityRow, profile: IdeologyPro
         )
         reader = await living_entity(ctx.session, owner)
         home = reader.location_id if reader is not None and reader.entity_type is EntityType.MORTAL else owner
-        source = next(iter(held), None)
+        source = next(iter(adherents), None)
         if home is not None and source is not None:
             paths.append((source, home))
     scholars = select(IdeologyAdherentRow.adherent_entity_id).where(IdeologyAdherentRow.ideology_entity_id == creed.id)
     for mortal in await ctx.session.scalars(
         select(EntityRow).where(EntityRow.id.in_(scholars), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
     ):
-        if mortal.location_id is not None and mortal.id in held:
+        if mortal.location_id is not None and mortal.id in adherents:
             paths.append((mortal.id, mortal.location_id))
     return paths
 
@@ -189,21 +189,23 @@ async def write_text(ctx: TickContext, creed: EntityRow, profile: IdeologyProfil
 
 async def spread(ctx: TickContext, creed: EntityRow, profile: IdeologyProfileRow) -> int:
     table = ctx.rules.ideologies
-    held = {
+    adherents = {
         row.adherent_entity_id: row for row in await ctx.session.scalars(select(IdeologyAdherentRow).where(IdeologyAdherentRow.ideology_entity_id == creed.id))
     }
     gained = 0
     links = await ctx.session.execute(
         select(BondRow.source_node_id, BondRow.target_node_id).where(
-            BondRow.source_node_id.in_(list(held)), BondRow.kind.in_([BondKind.TRADES_WITH, BondKind.ALLY, BondKind.RULES]), BondRow.state == BondState.ACTIVE
+            BondRow.source_node_id.in_(list(adherents)),
+            BondRow.kind.in_([BondKind.TRADES_WITH, BondKind.ALLY, BondKind.RULES]),
+            BondRow.state == BondState.ACTIVE,
         )
     )
-    paths = [*links.all(), *await learned_paths(ctx, creed, profile, held)]
+    paths = [*links.all(), *await learned_paths(ctx, creed, profile, adherents)]
     for source, target in paths:
-        if target in held:
+        if target in adherents:
             continue
         community = await living_entity(ctx.session, target)
-        if community is None or community.entity_type not in COMMUNITY_TYPES:
+        if community is None or community.entity_type not in COMMUNITY_TYPES or held(community.id):
             continue
         society = await ctx.session.get(CommunitySocietyRow, target)
         if await banned_for(ctx.session, target, creed.id) and not await read_in_secret(ctx, target, creed.id):
@@ -213,15 +215,15 @@ async def spread(ctx: TickContext, creed: EntityRow, profile: IdeologyProfileRow
         chance = table.spread_chance * (1 + appeal_for(profile, society, table.discontent_pct)) * schooled * presses
         if ctx.rng(f"creed_spread.{creed.id}.{target}.{ctx.epoch}").chance(chance):
             row = IdeologyAdherentRow(
-                ideology_entity_id=creed.id, adherent_entity_id=target, strength=held[source].strength // 2, state=False, since_epoch=ctx.epoch
+                ideology_entity_id=creed.id, adherent_entity_id=target, strength=adherents[source].strength // 2, state=False, since_epoch=ctx.epoch
             )
             ctx.session.add(row)
-            held[target] = row
+            adherents[target] = row
             gained += 1
-    for row in held.values():
+    for row in adherents.values():
         society = await ctx.session.get(CommunitySocietyRow, row.adherent_entity_id)
         row.strength = clamp_int(row.strength + round_half_up(appeal_for(profile, society, table.discontent_pct) * table.value_pressure * 5), 0, PERCENT)
-    set_stats(creed, adherents=len(held))
+    set_stats(creed, adherents=len(adherents))
     return gained
 
 
@@ -369,7 +371,7 @@ async def revolution(ctx: TickContext, creed: EntityRow) -> str | None:
         select(IdeologyAdherentRow).where(IdeologyAdherentRow.ideology_entity_id == creed.id, IdeologyAdherentRow.strength >= table.adoption_strength // 2)
     ):
         society = await ctx.session.get(CommunitySocietyRow, row.adherent_entity_id)
-        if society is None:
+        if society is None or held(row.adherent_entity_id):
             continue
         unhappy = min(society.satisfaction(social_class) for social_class in (SocialClass.FARMER, SocialClass.SERF_OR_SLAVE, SocialClass.ARTISAN))
         realm_id = await ctx.session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == row.adherent_entity_id).limit(1))
@@ -384,7 +386,7 @@ async def revolution(ctx: TickContext, creed: EntityRow) -> str | None:
         if not ctx.rng(f"revolution.{creed.id}.{row.adherent_entity_id}.{ctx.epoch}").chance(table.revolution_chance):
             continue
         from_id, against = row.adherent_entity_id, realm.core_entity_id
-        if against is None or not await declare_war_for(ctx, from_id, against, creed.name):
+        if against is None or held(against) or not await declare_war_for(ctx, from_id, against, creed.name):
             continue
         rebels = await living_entity(ctx.session, from_id)
         return f"Moved by {creed.name}, {rebels.name if rebels else 'the people'} rose against their rulers to overturn the government."

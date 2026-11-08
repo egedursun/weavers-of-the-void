@@ -9,6 +9,7 @@ from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import SonStatus
@@ -43,7 +44,7 @@ async def _faithful_rites(ctx: TickContext, son: SonRow) -> None:
     state = await resurrection_state(ctx.session, ctx.rules, son, ctx.epoch)
     if state is None:
         return
-    for community in state.faithful:
+    for community in unheld(state.faithful):
         try:
             async with ctx.session.begin_nested():
                 if rng.chance(rules.sacrifice_chance) and community.entity_type in BLOOD_TYPES:
@@ -63,7 +64,7 @@ async def _sibling_moves(ctx: TickContext, son: SonRow, active: list[SonRow]) ->
     relations = SonRepository(ctx.session)
     has_foreign = bool(await awake_foreign_gods(ctx.session))
     for sibling in active:
-        if sibling.id == son.id or sibling.status is not SonStatus.ACTIVE:
+        if sibling.id == son.id or sibling.status is not SonStatus.ACTIVE or held(sibling.id, son.id):
             continue
         relation = await relations.relation(sibling.id, son.id)
         try:
@@ -88,13 +89,15 @@ async def _foreign_strikes(ctx: TickContext) -> None:
         return
     rng = ctx.rng("foreign_strike")
     creator = await creator_row(ctx.session)
-    for god in await awake_foreign_gods(ctx.session):
+    for god in unheld(await awake_foreign_gods(ctx.session)):
         if not rng.chance(rules.foreign_god_smite_chance):
             continue
         statement = select(EntityRow).where(
             EntityRow.world_id == god.world_id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
         )
-        mortals = [mortal for mortal in await ctx.session.scalars(statement.order_by(EntityRow.id)) if not await worships_node(ctx.session, mortal.id, god.id)]
+        mortals = [
+            mortal for mortal in unheld(await ctx.session.scalars(statement.order_by(EntityRow.id))) if not await worships_node(ctx.session, mortal.id, god.id)
+        ]
         if not mortals:
             continue
         target = max(mortals, key=lambda mortal: (trait_or(mortal, Trait.CHARISMA, 0), -mortal.id))

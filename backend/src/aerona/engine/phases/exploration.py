@@ -290,10 +290,10 @@ async def find_land(ctx: TickContext, search: LandSearch) -> LandResult | None:
     who = search.explorer.name if search.explorer else search.foreign_god.name if search.foreign_god else world.name
     name, derived = await _land_name(ctx, search, kind, who)
     if search.foreign_god is not None:
-        how = f"{search.foreign_god.name} raised it from the depths of the world {world.name}"
+        how = f"{search.foreign_god.name} raised it in the world {world.name}"
     else:
         how = f"{who}{', ' + search.reason if search.reason else ''} set out into unknown lands and found it"
-    where = f"a place inside {parent.name} no one had set foot in until that day" if parent is not None else "a new region not on the map"
+    where = f"a place inside {parent.name} unknown until that day" if parent is not None else "a new region not on the map"
     flags = (EntityFlag.DISCOVERY, EntityFlag.NAME_FROM_LANGUAGE) if derived else (EntityFlag.DISCOVERY,)
     land = await open_record(
         ctx.session,
@@ -683,7 +683,7 @@ async def foreign_god_land(ctx: TickContext, god_id: int | None = None) -> list[
     for god in await ctx.session.scalars(statement):
         if god_id is not None and god.id != god_id:
             continue
-        if god_id is None and not rng.chance(ctx.rules.exploration.foreign_god_raise_land_chance):
+        if god_id is None and (held(god.id, god.world_id) or not rng.chance(ctx.rules.exploration.foreign_god_raise_land_chance)):
             continue
         has_regions = bool(await canon(ctx.session, [EntityType.REGION], god.world_id))
         result = await find_land(ctx, LandSearch(god.world_id, foreign_god=god, kind=None if has_regions else EntityType.REGION, pioneers=False))
