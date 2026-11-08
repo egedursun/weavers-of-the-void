@@ -403,23 +403,52 @@ export function ChoicePicker({
   return (
     <div className='flex min-w-0 flex-col gap-1'>
       <Label>{label}</Label>
-      <Select value={value} onValueChange={onPick} disabled={blocked !== null}>
-        <SelectTrigger aria-label={label} className='w-full'>
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {Object.entries(table).map(([key, spec]) => {
-            const Icon = spec.icon
-            return (
-              <SelectItem key={key} value={key}>
-                <Icon aria-hidden='true' />
-                {spec.label}
-              </SelectItem>
-            )
-          })}
-        </SelectContent>
-      </Select>
+      <ChoiceSelect
+        label={label}
+        value={value}
+        table={table}
+        blocked={blocked}
+        placeholder={placeholder}
+        onPick={onPick}
+      />
     </div>
+  )
+}
+
+export function ChoiceSelect({
+  id,
+  label,
+  value,
+  table,
+  blocked,
+  placeholder,
+  onPick,
+}: {
+  id?: string
+  label: string
+  value: string
+  table: Record<string, LoreNamed>
+  blocked: string | null
+  placeholder?: string
+  onPick: (value: string) => void
+}) {
+  return (
+    <Select value={value} onValueChange={onPick} disabled={blocked !== null}>
+      <SelectTrigger id={id} aria-label={label} className='w-full'>
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {Object.entries(table).map(([key, spec]) => {
+          const Icon = spec.icon
+          return (
+            <SelectItem key={key} value={key}>
+              <Icon aria-hidden='true' />
+              {spec.label}
+            </SelectItem>
+          )
+        })}
+      </SelectContent>
+    </Select>
   )
 }
 

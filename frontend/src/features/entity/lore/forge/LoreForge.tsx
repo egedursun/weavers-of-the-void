@@ -28,7 +28,7 @@ import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { useWorldState } from '@/features/pantheon/api'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
-import { ChoicePicker, NamedChip } from '../LoreFields'
+import { ChoiceSelect, NamedChip } from '../LoreFields'
 import { MAX_POWER, busyOf } from '../model'
 import {
   FORGE_FIELDS,
@@ -114,14 +114,19 @@ function DraftField({
   const value = draft[field.key]
   if (field.kind === 'enum')
     return (
-      <ChoicePicker
-        label={field.label}
-        value={String(value ?? '')}
-        table={field.table}
-        blocked={blocked}
-        placeholder='Choose'
-        onPick={(next) => put(field.key, next)}
-      />
+      <FormRow label={field.label}>
+        {(id) => (
+          <ChoiceSelect
+            id={id}
+            label={field.label}
+            value={String(value ?? '')}
+            table={field.table}
+            blocked={blocked}
+            placeholder='Choose'
+            onPick={(next) => put(field.key, next)}
+          />
+        )}
+      </FormRow>
     )
   if (field.kind === 'multi')
     return (
