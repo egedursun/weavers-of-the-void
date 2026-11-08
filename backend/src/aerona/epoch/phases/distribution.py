@@ -106,7 +106,7 @@ async def patronless_moves(session: AsyncSession, rules: Rules, epoch: int, sons
         scored = [(len(set(son.domains) & wanted), await worship_count(session, son, son.current_world_id), son) for son in candidates]
         fit, _, chosen = sorted(scored, key=lambda item: (-item[0], item[1], item[2].id))[0]
         place = "where nobody lives" if peoples == 0 else "which has a people but no god"
-        life = " and will breathe life into it" if peoples == 0 else ""
+        life = " to bring life there" if peoples == 0 else ""
         reason = f" (its domains {DOMAIN_LABELS[chosen.domain_primary]}/{DOMAIN_LABELS[chosen.domain_secondary]} suit that world)" if fit else ""
         chosen.current_world_id = world.id
         moves.append(Move(chosen, world, f"{chosen.name} turned to the world {world.name} ({place}){life}{reason}."))
