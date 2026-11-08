@@ -1,0 +1,74 @@
+import re
+import shutil
+import tempfile
+from collections.abc import AsyncIterator, Mapping
+from pathlib import Path
+from typing import Any
+
+import pytest
+from asgi_lifespan import LifespanManager
+from httpx import ASGITransport, AsyncClient
+
+from aerona.constants.paths import DATABASE_FILENAME
+from aerona.main import create_app
+from aerona.prompts import PromptId
+from aerona.settings import Settings
+from tests.services.player.every_lever import kind_of, pick
+
+PARAM = re.compile(r"\{(\w+)(?::path)?\}")
+STREAMS = frozenset({"/api/events/stream", "/api/events"})
+FIXED: Mapping[str, Any] = {
+    "epoch": 1,
+    "file_name": "missing.png",
+    "job_id": "missing",
+    "key": "missing",
+    "kind": "missing",
+    "prompt_id": next(iter(PromptId)).value,
+}
+SECOND = frozenset({"other_id"})
+
+
+def get_paths() -> list[str]:
+    settings = Settings(data_dir=Path(tempfile.mkdtemp()) / "data", llm_enabled=False, image_worker_url="")
+    paths: dict[str, dict[str, Any]] = create_app(settings).openapi()["paths"]
+    return sorted(path for path, methods in paths.items() if "get" in methods and path.startswith("/api") and path not in STREAMS)
+
+
+GET_PATHS = get_paths()
+
+
+@pytest.fixture
+async def served(lever_template: Path, tmp_path: Path) -> AsyncIterator[tuple[AsyncClient, Any]]:
+    settings = Settings(data_dir=tmp_path / "data", llm_enabled=False, image_worker_url="")
+    settings.data_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(lever_template, settings.data_dir / DATABASE_FILENAME)
+    app = create_app(settings)
+    async with (
+        LifespanManager(app, startup_timeout=120, shutdown_timeout=120) as manager,
+        AsyncClient(transport=ASGITransport(app=manager.app), base_url="http://localhost") as http,
+    ):
+        yield http, app.state.services
+
+
+async def filled(services: Any, path: str) -> str:
+    values: dict[str, Any] = {}
+    async with services.database.read() as session:
+        for name in PARAM.findall(path):
+            if name in FIXED:
+                values[name] = FIXED[name]
+                continue
+            found = await pick(session, kind_of("mortal_id" if name in SECOND else name), 1 if name in SECOND else 0)
+            values[name] = found if found is not None else 0
+    return PARAM.sub(lambda match: str(values[match.group(1)]), path)
+
+
+async def test_every_read_endpoint_answers_without_a_server_error(served: tuple[AsyncClient, Any]) -> None:
+    http, services = served
+    broken: list[str] = []
+    for path in GET_PATHS:
+        url = await filled(services, path)
+        response = await http.get(url)
+        if response.status_code >= 500:
+            broken.append(f"{url}: {response.status_code} {response.text[:300]}")
+    assert broken == []
+    assert len(GET_PATHS) > 200

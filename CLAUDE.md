@@ -84,6 +84,8 @@ These rules are enforced mechanically, and they bind Claude as much as anyone.
   - The proving gate on every backend change (rule 8):
     - `tests/tools/test_every_tool.py`: every son and mortal tool runs to success.
     - `tests/services/player/test_every_lever.py`: every god lever in the action catalog runs to success through the real action runner. A new lever whose payload the harness cannot fill gets a case in `tests/services/player/every_lever.py`.
+    - `tests/services/player/test_every_job.py`: every god job (summoning, births, worlds, fate controls) runs to success with stand-in ports.
+    - `tests/api/test_every_endpoint.py`: every read endpoint answers a seeded, simulated world without a server error.
     - `tests/tools/test_catalogue.py`: every tool field the model sees is described.
     - A full epoch with a scripted model, and an engine-only epoch.
     - Every test file that imports a changed function, class or constant, or a changed test helper. `scripts/covering_tests.py` lists them from the staged diff.

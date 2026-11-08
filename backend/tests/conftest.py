@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import logging
 import os
@@ -13,8 +14,11 @@ from httpx import ASGITransport, AsyncClient
 from aerona.constants.media import MediaBackend
 from aerona.db.migrations import SCRIPT_LOCATION, upgrade_to_head_sync
 from aerona.db.session import Database
+from aerona.engine.pipeline import simulate
 from aerona.main import create_app
 from aerona.settings import Settings
+from tests.engine.integration import factories
+from tests.services.player import every_lever
 
 STARTUP_SECONDS = 120
 SCHEMA_CACHE = Path(tempfile.gettempdir()) / "aerona-schema"
@@ -96,3 +100,35 @@ async def client(settings: Settings) -> AsyncIterator[AsyncClient]:
         transport = ASGITransport(app=manager.app)
         async with AsyncClient(transport=transport, base_url="http://test") as http:
             yield http
+
+
+LEVER_CACHE = Path(tempfile.gettempdir()) / "aerona-levers"
+
+
+def template_digest(schema_template: Path) -> str:
+    digest = hashlib.sha256(schema_template.name.encode())
+    for module in (factories, every_lever):
+        digest.update(Path(module.__file__ or "").read_bytes())
+    return digest.hexdigest()[:24]
+
+
+async def seed(path: Path) -> None:
+    database = Database(f"sqlite+aiosqlite:///{path}")
+    try:
+        async with database.write() as session:
+            await factories.seed_rich_cosmos(session)
+        await simulate(database, 2)
+    finally:
+        await database.dispose()
+
+
+@pytest.fixture(scope="session")
+def lever_template(schema_template: Path) -> Path:
+    cached = LEVER_CACHE / f"{template_digest(schema_template)}.db"
+    if not cached.exists():
+        LEVER_CACHE.mkdir(parents=True, exist_ok=True)
+        building = LEVER_CACHE / f"{cached.stem}.{os.getpid()}.building"
+        shutil.copyfile(schema_template, building)
+        asyncio.run(seed(building))
+        os.replace(building, cached)
+    return cached
