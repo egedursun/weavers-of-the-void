@@ -454,9 +454,6 @@ class DanglingEndRepair:
                 continue
             self.counters.inside += await self.single(entity.id, location, BondKind.INSIDE, None)
 
-    async def _any_between(self, first: int, second: int) -> bool:
-        return self.index.any_between(first, second)
-
     async def events_to_places(self) -> None:
         for event in await self._living([EntityType.EVENT]):
             if event.location_id is None:

@@ -122,10 +122,11 @@ def idle_methods(files: dict[Path, str], users: dict[Path, str]) -> list[Orphan]
         for node in ast.walk(ast.parse(text)):
             if not isinstance(node, ast.ClassDef) or node.bases:
                 continue
+            local = attribute_names([text]) if any(item.name.startswith("_") for item in node.body if isinstance(item, ast.FunctionDef | ast.AsyncFunctionDef)) else set()
             for method in node.body:
                 if not isinstance(method, ast.FunctionDef | ast.AsyncFunctionDef) or method.name.startswith("__"):
                     continue
-                if method.name not in called:
+                if method.name not in (local if method.name.startswith("_") else called):
                     found.append(Orphan(path, method.lineno, f"{node.name}.{method.name}"))
     return found
 

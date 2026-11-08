@@ -96,3 +96,22 @@ def test_a_method_nothing_calls_is_an_orphan_but_a_template_call_counts(tmp_path
     (package / "page.html.j2").write_text("{{ index.drawn() }}", encoding="utf-8")
     module.SOURCE = package
     assert [item.name for item in module.idle_methods({index: index.read_text(encoding="utf-8")}, {})] == ["Index.idle"]
+
+
+def test_a_private_method_counts_as_used_only_in_its_own_file(tmp_path: Path) -> None:
+    module = checker()
+    package = tmp_path / "aerona"
+    package.mkdir()
+    first = package / "first.py"
+    first.write_text(
+        "class Repair:\n    def run(self):\n        return self._linked()\n\n    def _linked(self):\n        return 1\n\n    def _stale(self):\n        return 2\n",
+        encoding="utf-8",
+    )
+    second = package / "second.py"
+    second.write_text(
+        "class Other:\n    def _stale(self):\n        return 3\n\n    def go(self):\n        return self._stale()\n\n\ndef use(repair, other):\n    return repair.run(), other.go()\n",
+        encoding="utf-8",
+    )
+    module.SOURCE = package
+    files = {path: path.read_text(encoding="utf-8") for path in (first, second)}
+    assert [item.name for item in module.idle_methods(files, {})] == ["Repair._stale"]
