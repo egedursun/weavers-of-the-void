@@ -40,3 +40,14 @@ async def test_a_refused_trade_lists_the_partners_near_enough(database: Database
     text = await rejected(toolkit, "establish_trade", {"target_id": realm.mortal_id, "goods": "grain"})
     assert "Invalid partner." in text
     assert "Fitting ones near you:" in text or "Nothing fitting is near you." in text
+
+
+async def test_bartering_away_what_one_does_not_own_lists_what_one_does(database: Database) -> None:
+    realm = await seed_realm(database)
+    toolkit = await mortal_toolkit(database, realm.people_id)
+    text = await rejected(toolkit, "barter", {"target_id": realm.settlement_id, "give_ids": [realm.resource_id], "terms": "goods for goods"})
+    assert "What you own and can give:" in text
+    async with database.write() as session:
+        await connect(session, realm.people_id, realm.resource_id, BondKind.OWNS)
+    owned = await rejected(toolkit, "barter", {"target_id": realm.settlement_id, "give_ids": [realm.species_id], "terms": "goods for goods"})
+    assert f"#{realm.resource_id}" in owned
