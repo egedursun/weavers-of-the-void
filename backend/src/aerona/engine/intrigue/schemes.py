@@ -17,7 +17,7 @@ from aerona.db.tables.polity import ClaimRow, OfficeRow, PolityMemberRow, Polity
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.settlement import SettlementTreasuryRow
 from aerona.db.tables.warfare import CaptiveRow, SiegeRow
-from aerona.db.write_guard import held
+from aerona.db.write_guard import free_rows, held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.communication import DispatchContent, Medium
@@ -453,7 +453,7 @@ async def ecosabotage(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, tar
     )
     if town is not None and await report_crime(ctx, town.id, owner.id, CrimeKind.TREASON) is not None:
         ctx.count("sabotage_cases_opened")
-    return f"the land of {target.name} was {deed} in the night"
+    return f"the land of {target.name} was {deed}"
 
 
 async def learn_true_name(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
@@ -467,7 +467,16 @@ async def learn_true_name(ctx: TickContext, scheme: SchemeRow, owner: EntityRow,
 
 async def forge_letter(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
     realm = await realm_of(ctx, target.id) or target.id
-    rivals = select(PolityProfileRow.polity_entity_id).where(PolityProfileRow.polity_entity_id.not_in([realm, owner.id]))
+    rivals = (
+        select(PolityProfileRow.polity_entity_id)
+        .join(EntityRow, EntityRow.id == PolityProfileRow.polity_entity_id)
+        .where(
+            PolityProfileRow.polity_entity_id.not_in([realm, owner.id]),
+            EntityRow.status == EntityStatus.CANON,
+            EntityRow.world_id == target.world_id,
+            free_rows(PolityProfileRow.polity_entity_id),
+        )
+    )
     neighbour = await ctx.session.scalar(rivals.order_by(PolityProfileRow.polity_entity_id).limit(1))
     if neighbour is None:
         return "there was no one to deceive"

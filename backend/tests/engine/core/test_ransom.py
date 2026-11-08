@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.db.repositories.bonds import BondRepository
+from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import CaptiveCohortRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow, PolityMemberRow, PolityProfileRow
@@ -14,7 +14,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import HouseStats, PolityStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import wealth_points
-from aerona.engine.military.captivity import ransom
+from aerona.engine.military.captivity import ransom, sacrifice
 from aerona.engine.military.ransom import (
     carry_language,
     cohort_ransom,
@@ -185,3 +185,22 @@ async def test_a_named_ransom_pays_the_captors_realm_and_lifts_prosperity_by_poi
     assert payer.treasury == 10000 - price and keeper.treasury == price
     assert stat(captor, "wealth") == 10
     assert 40 <= (stat(captor, "prosperity") or 0) <= 40 + wealth_points(ctx.rules, price)
+
+
+async def test_captives_given_to_the_captors_god_feed_its_essence(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "sacrifice")
+    captor = await settlement(session, "Stonegate", world, world.regions[1])
+    await BondRepository(session).connect(BondDraft(captor.id, world.son.id, BondKind.WORSHIPS, 1, None))
+    world.son.essence = 10
+    row = cohort(200, SocialClass.FARMER)
+    row.captor_entity_id, row.origin_entity_id = captor.id, world.people.id
+    session.add(row)
+    await session.flush()
+    assert await sacrifice(ctx, row, captor) == 200
+    assert world.son.essence > 10
+    lone = await settlement(session, "Hollow", world, world.regions[0])
+    bare = cohort(100, SocialClass.FARMER)
+    bare.captor_entity_id = lone.id
+    session.add(bare)
+    await session.flush()
+    assert await sacrifice(ctx, bare, lone) == 100

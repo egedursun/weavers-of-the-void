@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -49,7 +50,7 @@ async def colony_in(ctx: TickContext, region: EntityRow, disease: EntityRow, fou
         RecordSpec(
             entity_type=EntityType.SETTLEMENT,
             name=f"the colony of the sick at {region.name}",
-            body=f"Huts outside the walls where {founder.name} sent those who caught {disease.name}.",
+            body=f"Where {founder.name} sent those who caught {disease.name}.",
             stats=SettlementStats(population=0, prosperity=5, defense=0, piety=50),
             power=1,
             location_id=region.id,
@@ -72,7 +73,7 @@ async def expel_sick(ctx: TickContext, book: DiseaseBook) -> int:
         if disease is None or profile is None or region is None or profile.stigma < STIGMATISED:
             continue
         for community in await region_communities(ctx, book, region.id):
-            if community.subtype == COLONY or community.entity_type is not EntityType.SETTLEMENT:
+            if community.subtype == COLONY or community.entity_type is not EntityType.SETTLEMENT or held(community.id):
                 continue
             if (await values_for(ctx, community)).get(ValueAxis.PURITY, 0) < table.stigma_purity:
                 continue
@@ -90,7 +91,7 @@ async def expel_sick(ctx: TickContext, book: DiseaseBook) -> int:
             moved += expelled
             await note(
                 ctx,
-                f"{community.name} drove {expelled} of its sick out of the gates to {colony.name}; the clean would not live beside {disease.name}.",
+                f"{community.name} sent {expelled} of its sick away to {colony.name} for fear of {disease.name}.",
                 key="disease.expelled",
                 ids=[community.id, colony.id, disease.id],
                 kind=ChronicleKind.WORLD,

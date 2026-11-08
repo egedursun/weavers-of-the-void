@@ -2047,7 +2047,7 @@ LORE_ACTIONS = (
         ("S8.3",),
     ),
     _sync(
-        Meta("lore:create", "Make a new language, legend, tradition, creed, rite, prophecy, item, artwork or knowledge", G.LANGUAGES),
+        Meta("lore:create", "Make a new language, legend, tradition, creed, rite, prophecy, item, artwork, knowledge, theory or art form", G.LANGUAGES),
         lore.create_lore,
         lore.CreateLore,
         free,

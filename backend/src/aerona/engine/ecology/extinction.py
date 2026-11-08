@@ -54,7 +54,7 @@ async def lost_crafts(ctx: TickContext, species: EntityRow) -> int:
         if lost:
             await note(
                 ctx,
-                f"With {species.name} gone, no {product} reaches the workshops; the craft that needed it fades.",
+                f"With {species.name} gone, no {product} is left; the craft that needed it fades.",
                 key="ecology.craft_lost",
                 ids=[species.id],
             )

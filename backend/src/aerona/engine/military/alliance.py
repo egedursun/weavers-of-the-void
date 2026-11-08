@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.warfare import ArmyRow, WarRow, WarSideRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.polity import ClauseKind
@@ -53,7 +54,7 @@ async def march_with(ctx: TickContext, war: WarRow, side_id: int, leader: ArmyPr
 async def betrayed_call(ctx: TickContext, ally_id: int, party_id: int) -> bool:
     ally = await living_entity(ctx.session, ally_id)
     party = await living_entity(ctx.session, party_id)
-    if ally is None or party is None:
+    if ally is None or party is None or held(ally_id, party_id):
         return False
     for profile in await in_force(ctx):
         for clause in await clauses_of(ctx, profile.treaty_entity_id):

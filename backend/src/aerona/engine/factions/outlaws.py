@@ -4,6 +4,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.polity import TreatyProfileRow
 from aerona.db.tables.warfare import WarSideRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.faction import ROBBER_KINDS, FactionActionKind, FactionKind
 from aerona.domain.enums.mind import MemoryKind
@@ -126,7 +127,7 @@ async def pay_companies(ctx: TickContext, factions: FactionBook, realms: RealmBo
     table = ctx.rules.mercenaries
     counts = {"paid": 0, "unpaid": 0, "defected": 0, "bandits": 0}
     for profile in list(factions.profiles.values()):
-        if profile.kind is not FactionKind.MERCENARY_COMPANY or profile.employer_entity_id is None:
+        if profile.kind is not FactionKind.MERCENARY_COMPANY or profile.employer_entity_id is None or held(profile.faction_entity_id):
             continue
         treaty = await ctx.session.get(TreatyProfileRow, profile.contract_entity_id) if profile.contract_entity_id is not None else None
         employer = realms.realms.get(profile.employer_entity_id)
@@ -179,7 +180,7 @@ async def defect(
     log(ctx, company.id, FactionActionKind.DEFECTED, target=employer.entity.id, note="turned bandit")
     await note(
         ctx,
-        f"Unpaid, {company.name} turned to robbery on the roads of {employer.entity.name}.",
+        f"Unpaid, {company.name} turned to banditry in {employer.entity.name}.",
         key="faction.turned_bandit",
         ids=[company.id, employer.entity.id],
         kind=ChronicleKind.WAR,
