@@ -102,6 +102,7 @@ def cause_mix(rules: InjuryRules, cause: HarmCause) -> dict[DamageType, int]:
         HarmCause.AGE: {DamageType.BLUNT: rules.age_blunt},
         HarmCause.PLAYER: {DamageType.CUT: rules.player_cut, DamageType.BLUNT: rules.player_blunt, DamageType.PIERCE: rules.player_pierce},
         HarmCause.EXPOSURE: {DamageType.COLD: rules.exposure_cold, DamageType.FIRE: rules.exposure_heat},
+        HarmCause.RITUAL: {DamageType.CUT: rules.ritual_cut, DamageType.FIRE: rules.ritual_fire},
     }
     return {kind: weight for kind, weight in mixes[cause].items() if weight > 0}
 

@@ -91,6 +91,8 @@ class InjuryRules:
     punishment_cut: int = rule(55, 0, 100, G, "Punishments: share of mutilation by blade")
     punishment_blunt: int = rule(30, 0, 100, G, "Punishments: share of beatings")
     punishment_fire: int = rule(15, 0, 100, G, "Punishments: share of branding")
+    ritual_cut: int = rule(70, 0, 100, G, "Rites of marking: share of marks cut into the body")
+    ritual_fire: int = rule(30, 0, 100, G, "Rites of marking: share of marks burned into the body")
     torture_cut: int = rule(35, 0, 100, G, "Torture: share of cuts")
     torture_blunt: int = rule(35, 0, 100, G, "Torture: share of breaking")
     torture_fire: int = rule(30, 0, 100, G, "Torture: share of burns")
