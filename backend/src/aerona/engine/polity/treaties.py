@@ -48,6 +48,7 @@ from aerona.engine.polity.oaths import break_oath
 from aerona.engine.polity.regard import on_breach
 from aerona.engine.polity.repute import shift_honour, shift_infamy
 from aerona.engine.polity.subjects import kind_for, pays_tribute, sends_levies
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import active_bonds, living_entity
@@ -325,7 +326,7 @@ async def keep_clause(ctx: TickContext, profile: TreatyProfileRow, clause: Treat
     elif clause.kind is ClauseKind.EXTRADITION and clause.beneficiary_node_id is not None and clause.obligor_node_id is not None:
         fugitives = await ctx.session.scalars(
             select(EntityRow).where(
-                EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == clause.obligor_node_id
+                EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [clause.obligor_node_id])
             )
         )
         for fugitive in fugitives:

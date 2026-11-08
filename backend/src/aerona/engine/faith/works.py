@@ -34,6 +34,7 @@ from aerona.engine.mind.book import pressures_of, values_for, write_pressures
 from aerona.engine.mind.memories import remember
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect
@@ -219,7 +220,7 @@ async def saints(ctx: TickContext, church: Church, *, since: int | None = None) 
     statement = select(EntityRow).where(
         EntityRow.entity_type == EntityType.MORTAL,
         EntityRow.status == EntityStatus.DEAD,
-        EntityRow.location_id.in_(homes),
+        await present_among(ctx.session, homes),
         EntityRow.mortal_role.in_(list(CLERGY_SAINTS)),
     )
     statement = statement.where(EntityRow.end_epoch == ctx.epoch) if since is None else statement.where(EntityRow.end_epoch >= since)

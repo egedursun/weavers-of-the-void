@@ -23,6 +23,7 @@ from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.standing import add_stress
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.services.war import held_captive, release_captive, take_captive
@@ -66,7 +67,7 @@ async def carry_off(ctx: TickContext, beast: EntityRow, row: BeastProfileRow, ne
             continue
         victims = await ctx.session.scalars(
             select(EntityRow)
-            .where(EntityRow.location_id == town.id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+            .where(await present_in(ctx.session, town), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
             .order_by(EntityRow.id)
         )
         for victim in list(victims):
@@ -111,7 +112,7 @@ async def void_trophy(ctx: TickContext, beast: EntityRow, slayer: EntityRow) -> 
 async def townsfolk(ctx: TickContext, town: EntityRow) -> list[EntityRow]:
     found = await ctx.session.scalars(
         select(EntityRow)
-        .where(EntityRow.location_id == town.id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+        .where(await present_in(ctx.session, town), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
         .order_by(EntityRow.id)
     )
     return [mortal for mortal in found if not held(mortal.id)]

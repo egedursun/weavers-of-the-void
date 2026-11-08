@@ -20,6 +20,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.ecology.domestication import kept_for
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import holdings
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import headcount
 from aerona.rules.registry import Rules
@@ -70,7 +71,7 @@ async def mages_of(ctx: TickContext, community_id: int) -> int:
     mortals = select(EntityRow.id).where(
         EntityRow.entity_type == EntityType.MORTAL,
         EntityRow.status == EntityStatus.CANON,
-        or_(EntityRow.affiliated_entity_id == community_id, EntityRow.location_id == community_id),
+        or_(EntityRow.affiliated_entity_id == community_id, await present_among(ctx.session, [community_id])),
     )
     found = await ctx.session.scalar(
         select(func.count(SkillRow.holder_node_id)).where(

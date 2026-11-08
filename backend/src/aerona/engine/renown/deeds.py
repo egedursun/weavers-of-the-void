@@ -21,6 +21,7 @@ from aerona.engine.mind.ethics import ethic_reading
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.split import facets_of
 from aerona.engine.notes import note
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
@@ -194,7 +195,7 @@ async def claim_falsely(ctx: TickContext, deed: DeedRow, tally: DeedTally) -> No
     near = await ctx.session.scalars(
         select(EntityRow)
         .where(
-            EntityRow.location_id == doer.location_id,
+            await present_among(ctx.session, [doer.location_id]),
             EntityRow.entity_type == EntityType.MORTAL,
             EntityRow.status == EntityStatus.CANON,
             EntityRow.id != doer.id,

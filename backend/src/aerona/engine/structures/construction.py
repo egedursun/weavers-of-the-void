@@ -30,6 +30,7 @@ from aerona.engine.economy.materials import sanctity_splendour
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.lore.blueprints import design_factor
 from aerona.engine.notes import note
+from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -99,7 +100,7 @@ async def best_architect(ctx: TickContext, site: EntityRow) -> EntityRow | None:
         .where(
             EntityRow.entity_type == EntityType.MORTAL,
             EntityRow.status == EntityStatus.CANON,
-            EntityRow.location_id == site.id,
+            await present_in(ctx.session, site),
             SkillRow.skill == SkillKind.ENGINEERING,
             SkillRow.subject_node_id.is_(None),
         )

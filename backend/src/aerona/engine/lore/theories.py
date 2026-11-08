@@ -29,6 +29,7 @@ from aerona.engine.lore.truth import CONTRARY, ruling
 from aerona.engine.mind.ethics import church_of
 from aerona.engine.notes import note
 from aerona.engine.polity.trials import report_crime
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats
@@ -326,7 +327,7 @@ async def try_heretic(ctx: TickContext, community_id: int, theory_id: int) -> bo
         select(EntityRow.id)
         .join(SkillRow, SkillRow.holder_node_id == EntityRow.id)
         .where(
-            EntityRow.location_id == community_id,
+            await present_among(ctx.session, [community_id]),
             EntityRow.entity_type == EntityType.MORTAL,
             EntityRow.status == EntityStatus.CANON,
             SkillRow.skill == SkillKind.LORE,

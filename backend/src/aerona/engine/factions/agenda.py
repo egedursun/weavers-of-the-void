@@ -39,6 +39,7 @@ from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.governance import consider
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.offices import seize_throne
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
@@ -556,7 +557,7 @@ async def recruit(move: Move) -> bool:
     social = CLASS_OF_KIND.get(profile.kind)
     held = {row.mortal_entity_id for row in factions.members[profile.faction_entity_id]}
     statement = select(EntityRow).where(
-        EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == profile.home_entity_id
+        EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [profile.home_entity_id])
     )
     if social is not None:
         statement = statement.where(EntityRow.social_class == social)

@@ -23,6 +23,7 @@ from aerona.engine.mind.book import skill_level, values_for
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.space import value_distance
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import shift_stat, stat
@@ -71,7 +72,7 @@ async def heretics(ctx: TickContext, church: Church) -> list[EntityRow]:
             .where(
                 EntityRow.entity_type == EntityType.MORTAL,
                 EntityRow.status == EntityStatus.CANON,
-                EntityRow.location_id.in_(homes),
+                await present_among(ctx.session, homes),
                 EntityRow.id.in_(members),
             )
             .order_by(EntityRow.id)
@@ -86,7 +87,7 @@ async def unbelievers(ctx: TickContext, church: Church) -> list[EntityRow]:
         return []
     mortals = await ctx.session.scalars(
         select(EntityRow)
-        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id.in_(homes))
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, homes))
         .order_by(EntityRow.id)
     )
     found = []

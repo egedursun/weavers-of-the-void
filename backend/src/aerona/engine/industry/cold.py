@@ -1,4 +1,4 @@
-from sqlalchemy import or_, select
+from sqlalchemy import select
 
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import unheld
@@ -7,6 +7,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.primitives.folk import folk_of
 from aerona.engine.primitives.naming import seed_of
 
 
@@ -19,7 +20,7 @@ async def frostbite(ctx: TickContext, community: EntityRow) -> int:
         .where(
             EntityRow.entity_type == EntityType.MORTAL,
             EntityRow.status == EntityStatus.CANON,
-            or_(EntityRow.affiliated_entity_id == community.id, EntityRow.location_id == community.id),
+            await folk_of(ctx.session, community),
         )
         .order_by(EntityRow.id)
     )

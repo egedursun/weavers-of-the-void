@@ -82,6 +82,7 @@ from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.governance import spend
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.modifiers import ModifierDraft, add_modifier
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import add_flag, connect, living_entity, remove_flag
@@ -437,12 +438,14 @@ async def pay(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> bool:
 
 
 async def victim_in(ctx: TickContext, place_id: int) -> EntityRow | None:
-    statement = select(EntityRow).where(EntityRow.location_id == place_id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+    statement = select(EntityRow).where(
+        await present_among(ctx.session, [place_id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
+    )
     return await ctx.session.scalar(statement.order_by(EntityRow.id).limit(1))
 
 
 async def wandering_near(ctx: TickContext, place_id: int) -> SpiritProfileRow | None:
-    mortals = select(EntityRow.id).where(EntityRow.location_id == place_id, EntityRow.entity_type == EntityType.MORTAL)
+    mortals = select(EntityRow.id).where(await present_among(ctx.session, [place_id]), EntityRow.entity_type == EntityType.MORTAL)
     statement = select(SpiritProfileRow).where(
         SpiritProfileRow.state == AfterlifeState.WANDERING, SpiritProfileRow.binding == BindingKind.NONE, SpiritProfileRow.origin_mortal_id.in_(mortals)
     )
@@ -478,7 +481,9 @@ async def do_damage(ctx: TickContext, work: Working) -> str | None:
 
 async def do_heal(ctx: TickContext, work: Working) -> str | None:
     place = work.caster.location_id or 0
-    mortals = select(EntityRow.id).where(EntityRow.location_id == place, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+    mortals = select(EntityRow.id).where(
+        await present_among(ctx.session, [place]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
+    )
     wounds = list(
         await ctx.session.scalars(
             select(InjuryRow)

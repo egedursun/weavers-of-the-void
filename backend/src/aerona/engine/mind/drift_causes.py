@@ -15,6 +15,7 @@ from aerona.domain.enums.society_depth import DriftCause
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import pressures_of
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.rules.registry import Rules
 
@@ -57,7 +58,7 @@ async def scholars_of(session: AsyncSession, community_id: int) -> list[int]:
         EntityRow.entity_type == EntityType.MORTAL,
         EntityRow.status == EntityStatus.CANON,
         EntityRow.mortal_role.in_(SCHOLAR_ROLES),
-        or_(EntityRow.location_id == community_id, EntityRow.affiliated_entity_id == community_id),
+        or_(await present_among(session, [community_id]), EntityRow.affiliated_entity_id == community_id),
     )
     return list(await session.scalars(statement.order_by(EntityRow.id)))
 

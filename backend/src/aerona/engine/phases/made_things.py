@@ -19,6 +19,7 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
@@ -30,7 +31,7 @@ async def rival_of(ctx: TickContext, bearer: EntityRow) -> EntityRow | None:
     rows = await ctx.session.scalars(
         select(EntityRow)
         .where(
-            EntityRow.location_id == bearer.location_id,
+            await present_among(ctx.session, [bearer.location_id]),
             EntityRow.entity_type == EntityType.MORTAL,
             EntityRow.status == EntityStatus.CANON,
             EntityRow.id != bearer.id,

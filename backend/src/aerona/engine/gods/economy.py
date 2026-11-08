@@ -36,6 +36,7 @@ from aerona.engine.gods.stats import Trait, add_trait, headcount_floor, headcoun
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.primitives.doom import advance_doom
 from aerona.engine.primitives.faith import patron_node
+from aerona.engine.primitives.folk import folk_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import top_region
@@ -207,7 +208,7 @@ async def best_negotiator(session: AsyncSession, owner: EntityRow) -> tuple[Enti
             SkillRow.subject_node_id.is_(None),
             EntityRow.status == EntityStatus.CANON,
             EntityRow.entity_type == EntityType.MORTAL,
-            or_(EntityRow.location_id == owner.id, EntityRow.id == owner.id),
+            or_(await folk_of(session, owner), EntityRow.id == owner.id),
         )
         .order_by(SkillRow.level.desc(), EntityRow.id)
         .limit(1)

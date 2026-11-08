@@ -27,6 +27,7 @@ from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.memories import remember
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.services.war import ongoing_wars
@@ -226,7 +227,7 @@ async def weigh_demands(ctx: TickContext, realm: Realm, tally: MandateTally) -> 
             EntityRow.entity_type == EntityType.MORTAL,
             EntityRow.status == EntityStatus.CANON,
             EntityRow.social_class == SocialClass.NOBLE,
-            EntityRow.location_id.in_(members),
+            await present_among(ctx.session, members),
         )
         .order_by(EntityRow.id)
     )

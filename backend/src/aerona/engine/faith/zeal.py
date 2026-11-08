@@ -26,6 +26,7 @@ from aerona.engine.mind.book import traits_of
 from aerona.engine.mind.memories import remember
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_stats, stat
 
@@ -125,7 +126,7 @@ async def martyrs(ctx: TickContext, church: Church) -> int:
     found = await ctx.session.scalar(
         select(func.count(EntityRow.id)).where(
             EntityRow.entity_type == EntityType.MORTAL,
-            EntityRow.location_id.in_(homes),
+            await present_among(ctx.session, homes),
             EntityRow.mortal_role.in_([MortalRole.PRIEST, MortalRole.SAINT]),
             EntityRow.end_epoch == ctx.epoch,
             EntityRow.id.in_(killed),

@@ -52,6 +52,7 @@ from aerona.engine.mortal.standing import add_infamy
 from aerona.engine.notes import note
 from aerona.engine.polity.trials import frame_case, report_crime
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.stats import set_stats, stat
@@ -138,7 +139,7 @@ async def hire(ctx: TickContext, scheme: SchemeRow, agents: list[int], wanted: i
         return []
     locals_ = await ctx.session.scalars(
         select(EntityRow.id)
-        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == owner.location_id)
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [owner.location_id]))
         .order_by(EntityRow.importance.desc(), EntityRow.id)
         .limit(HIRE_SEEK)
     )

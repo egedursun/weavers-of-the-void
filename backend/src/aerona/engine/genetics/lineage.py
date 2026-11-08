@@ -22,6 +22,7 @@ from aerona.engine.genetics.genome import genome_of, gifted_schools, phenotype
 from aerona.engine.genetics.life import TRAIT_ALLELES
 from aerona.engine.mind.preferences import rows_of, write_pref
 from aerona.engine.notes import note
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, connect
 from aerona.engine.primitives.stats import stat
@@ -140,7 +141,7 @@ async def examine_children(ctx: TickContext) -> int:
         members = {bond.source_node_id for bond in await active_bonds(ctx.session, [BondKind.MEMBER_OF], targets=[faction.id])}
         children = await ctx.session.scalars(
             select(EntityRow)
-            .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == home)
+            .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [home]))
             .order_by(EntityRow.id)
         )
         for child in children:

@@ -80,6 +80,7 @@ These rules are enforced mechanically, and they bind Claude as much as anyone.
   - `scripts/check_hidden_controls.py` on every commit (rules 5 and 6). It fails when a screen swaps a god control for a note because a list is empty. The control stays on screen and is disabled with its reason.
   - `scripts/check_label_maps.py` on every commit (rule 5). It fails when a frontend label map names nearly every value of an enum but leaves some out, so every value shows its own label and icon.
   - `scripts/check_orphans.py` on every commit (rule 3). It fails on any backend function or constant that nothing uses. Wire it in or delete it.
+  - `scripts/check_folk_queries.py` on every commit (rule 8). It fails when a query finds mortals by a raw `location_id` of a place. A people or a polity holds no mortal directly, so such a query finds nobody there. Use `present_among` or `folk_among` from `engine/primitives/folk.py`, which reach the settlements of a people and the members of a polity.
   - `scripts/spec_coverage.py check` on every commit. Every done row must name test files, tests, frontend tests and modules that exist.
   - The proving gate on every backend change (rule 8):
     - `tests/tools/test_every_tool.py`: every son and mortal tool runs to success.

@@ -33,6 +33,7 @@ from aerona.engine.mortal.standing import add_renown
 from aerona.engine.notes import note
 from aerona.engine.phases.births import NOTABLE_ROLES, raise_notable
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import folk_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.primitives.stats import shift_stat
@@ -126,7 +127,7 @@ async def candidate(ctx: TickContext, community: EntityRow, field: GreatField) -
         await ctx.session.scalars(
             select(EntityRow)
             .where(
-                EntityRow.location_id == community.id,
+                await folk_of(ctx.session, community),
                 EntityRow.entity_type == EntityType.MORTAL,
                 EntityRow.status == EntityStatus.CANON,
                 EntityRow.id.not_in(great),

@@ -10,6 +10,7 @@ from aerona.engine.faith.souls import burden
 from aerona.engine.lore.rites import cast, devise
 from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.queries import living_entity
 
 CLERGY = (MortalRole.PRIEST, MortalRole.SAINT, MortalRole.SEER)
@@ -30,7 +31,7 @@ async def priest_at(ctx: TickContext, place_id: int | None) -> EntityRow | None:
     if place_id is None:
         return None
     statement = select(EntityRow).where(
-        EntityRow.location_id == place_id,
+        await present_among(ctx.session, [place_id]),
         EntityRow.entity_type == EntityType.MORTAL,
         EntityRow.status == EntityStatus.CANON,
         EntityRow.mortal_role.in_(list(CLERGY)),

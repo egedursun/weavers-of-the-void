@@ -34,6 +34,7 @@ from aerona.engine.economy.stocks import DEFAULT_QUALITY, GoodsLedger, holding
 from aerona.engine.industry.chosen import method_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
@@ -163,7 +164,9 @@ async def offspring(ctx: TickContext, parent: EntityRow, keeper: EntityRow, *, s
 
 
 async def master_herder(ctx: TickContext, keeper_id: int) -> int:
-    mortals = select(EntityRow.id).where(EntityRow.location_id == keeper_id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+    mortals = select(EntityRow.id).where(
+        await present_among(ctx.session, [keeper_id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
+    )
     found = await ctx.session.scalar(
         select(SkillRow.level).where(SkillRow.holder_node_id.in_(mortals), SkillRow.skill == SkillKind.BEAST_HANDLING).order_by(SkillRow.level.desc()).limit(1)
     )

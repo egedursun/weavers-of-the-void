@@ -33,6 +33,7 @@ from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import clamp_value, needs_of, stored_values, write_needs, write_values
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember
+from aerona.engine.primitives.folk import folk_of, present_among
 from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.queries import flags_by_entity, living_entity
 from aerona.engine.primitives.stats import set_stats, stat
@@ -183,7 +184,7 @@ async def neighbours(ctx: TickContext, bearer: EntityRow) -> list[EntityRow]:
     rows = await ctx.session.scalars(
         select(EntityRow)
         .where(
-            EntityRow.location_id == bearer.location_id,
+            await present_among(ctx.session, [bearer.location_id]),
             EntityRow.entity_type == EntityType.MORTAL,
             EntityRow.status == EntityStatus.CANON,
             EntityRow.id != bearer.id,
@@ -351,7 +352,7 @@ async def desecrator_of(ctx: TickContext, node_id: int) -> EntityRow | None:
         return None
     soldier: EntityRow | None = await ctx.session.scalar(
         select(EntityRow)
-        .where(EntityRow.location_id == found.id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+        .where(await folk_of(ctx.session, found), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
         .order_by(EntityRow.id)
         .limit(1)
     )

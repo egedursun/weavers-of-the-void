@@ -27,6 +27,7 @@ from aerona.engine.mind.thoughts import need_importance, shift_mind, strength_of
 from aerona.engine.mortal.kin import partners_of
 from aerona.engine.mortal.standing import add_renown, add_stress
 from aerona.engine.notes import note
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.services.war import ongoing_wars
@@ -247,7 +248,7 @@ async def reader_for(ctx: TickContext, mortal: EntityRow) -> EntityRow | None:
         return None
     neighbours = await ctx.session.scalars(
         select(EntityRow)
-        .where(EntityRow.location_id == mortal.location_id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+        .where(await present_among(ctx.session, [mortal.location_id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
         .order_by(EntityRow.id)
     )
     for neighbour in neighbours:

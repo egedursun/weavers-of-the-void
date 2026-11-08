@@ -20,6 +20,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import region_environment, scar_region
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat
@@ -74,7 +75,7 @@ async def recruit(ctx: TickContext, network: SpyNetworkRow) -> SpyAgentRow | Non
     homes = {owner.id, owner.location_id or 0, network.side_entity_id or 0}
     candidates = await ctx.session.scalars(
         select(EntityRow)
-        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id.in_(homes))
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, homes))
         .order_by(EntityRow.id)
         .limit(50)
     )

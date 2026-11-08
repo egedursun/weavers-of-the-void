@@ -43,6 +43,7 @@ from aerona.engine.polity.formation import set_ruler
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.oaths import break_on, swear
 from aerona.engine.polity.repute import shift_infamy
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, bond_exists, close, connect, has_flag, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
@@ -148,7 +149,9 @@ async def subjects(ctx: TickContext, realm: Realm) -> list[EntityRow]:
     members = list(realm.members)
     if not members:
         return []
-    statement = select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id.in_(members))
+    statement = select(EntityRow).where(
+        EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, members)
+    )
     return list(await ctx.session.scalars(statement.order_by(EntityRow.id)))
 
 

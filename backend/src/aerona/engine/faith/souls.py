@@ -41,6 +41,7 @@ from aerona.engine.mind.book import add_trait, stored_values, values_for, write_
 from aerona.engine.mind.memories import remember
 from aerona.engine.phases.births import BirthPlan, born_mortal
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import folk_of, present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
@@ -300,7 +301,7 @@ async def possess(ctx: TickContext, profile: SpiritProfileRow, spirit: EntityRow
         .where(
             EntityRow.entity_type == EntityType.MORTAL,
             EntityRow.status == EntityStatus.CANON,
-            EntityRow.location_id == spirit.location_id,
+            await present_among(ctx.session, [spirit.location_id]),
             EntityRow.id.not_in(taken),
         )
         .order_by(EntityRow.id)
@@ -367,7 +368,7 @@ async def soul_near(ctx: TickContext, place_id: int | None, *, sealed: bool) -> 
     if place_id is None:
         return None
     here = select(EntityRow.id).where(EntityRow.location_id == place_id, EntityRow.status == EntityStatus.CANON)
-    mortals = select(EntityRow.id).where(EntityRow.location_id == place_id, EntityRow.entity_type == EntityType.MORTAL)
+    mortals = select(EntityRow.id).where(await present_among(ctx.session, [place_id]), EntityRow.entity_type == EntityType.MORTAL)
     statement = select(SpiritProfileRow).where(
         SpiritProfileRow.state.in_(list(LIVING_STATES)),
         SpiritProfileRow.sealed.is_(sealed),
@@ -494,7 +495,7 @@ async def fear_of_torment(ctx: TickContext, church: Church) -> int:
 
 
 async def guardians_of(ctx: TickContext, community_id: int) -> int:
-    mortals = select(EntityRow.id).where(EntityRow.location_id == community_id, EntityRow.entity_type == EntityType.MORTAL)
+    mortals = select(EntityRow.id).where(await present_among(ctx.session, [community_id]), EntityRow.entity_type == EntityType.MORTAL)
     rows = await ctx.session.scalars(
         select(SpiritProfileRow.spirit_entity_id).where(SpiritProfileRow.origin_mortal_id.in_(mortals), SpiritProfileRow.alignment == SpiritAlignment.GUARDIAN)
     )
@@ -509,7 +510,7 @@ async def ancestral_site(ctx: TickContext, community: EntityRow, place_id: int |
     atlas = await RegionAtlas.load(ctx.session)
     if atlas.top_region(community.id) is not None and atlas.top_region(community.id) == atlas.top_region(place_id):
         return True
-    mortals = select(EntityRow.id).where(EntityRow.location_id == community.id, EntityRow.entity_type == EntityType.MORTAL)
+    mortals = select(EntityRow.id).where(await folk_of(ctx.session, community), EntityRow.entity_type == EntityType.MORTAL)
     bound = await ctx.session.scalar(
         select(SpiritProfileRow.spirit_entity_id)
         .where(

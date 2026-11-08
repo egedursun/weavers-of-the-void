@@ -30,6 +30,7 @@ from aerona.engine.mind.ethics import BAD, culture_of, ethics_of
 from aerona.engine.notes import note
 from aerona.engine.polity.repute import shift_infamy
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.renown.currencies import ruler_of_realm
@@ -49,7 +50,7 @@ async def scholars_of(ctx: TickContext, holder_id: int) -> list[EntityRow]:
         select(EntityRow)
         .join(SkillRow, SkillRow.holder_node_id == EntityRow.id)
         .where(
-            EntityRow.location_id == holder_id,
+            await present_among(ctx.session, [holder_id]),
             EntityRow.entity_type == EntityType.MORTAL,
             EntityRow.status == EntityStatus.CANON,
             SkillRow.skill.in_(SCHOLARLY),

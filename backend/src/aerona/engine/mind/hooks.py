@@ -22,6 +22,7 @@ from aerona.engine.mind.memories import kin_of, remember
 from aerona.engine.mind.skills import practise, practise_any
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mind.traits import gain_trait
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.renown.currencies import on_act
 from aerona.engine.renown.deeds import deed_seen
 
@@ -208,7 +209,7 @@ async def horrified(ctx: TickContext, actor_id: int, victim_id: int) -> list[int
     if victim is None or victim.location_id is None:
         return []
     statement = select(EntityRow.id).where(
-        EntityRow.location_id == victim.location_id,
+        await present_among(ctx.session, [victim.location_id]),
         EntityRow.status == EntityStatus.CANON,
         EntityRow.entity_type == EntityType.MORTAL,
         EntityRow.id.not_in([actor_id, victim_id]),

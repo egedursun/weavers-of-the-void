@@ -15,6 +15,7 @@ from aerona.domain.enums.mind import ValueAxis
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.mind.book import values_for
+from aerona.engine.primitives.folk import folk_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.services.community_relations import open_feud
@@ -42,7 +43,7 @@ async def house_feud(ctx: TickContext, killer_id: int, victim_id: int, reason: s
 async def members(session: AsyncSession, entity: EntityRow) -> set[int]:
     if entity.entity_type is EntityType.HOUSE:
         return set(await session.scalars(select(HouseMemberRow.mortal_entity_id).where(HouseMemberRow.house_entity_id == entity.id)))
-    return set(await session.scalars(select(EntityRow.id).where(EntityRow.location_id == entity.id, EntityRow.entity_type == EntityType.MORTAL)))
+    return set(await session.scalars(select(EntityRow.id).where(await folk_of(session, entity), EntityRow.entity_type == EntityType.MORTAL)))
 
 
 async def intermarried(session: AsyncSession, first: EntityRow, second: EntityRow) -> bool:
@@ -60,13 +61,17 @@ async def intermarried(session: AsyncSession, first: EntityRow, second: EntityRo
     return await session.scalar(statement.limit(1)) is not None
 
 
-async def fronts(session: AsyncSession, entity_id: int) -> set[tuple[int, str]]:
-    rows = await session.execute(select(WarSideRow.war_id, WarSideRow.side).where(WarSideRow.entity_id == entity_id, WarSideRow.left_epoch.is_(None)))
-    return {(war_id, side.value) for war_id, side in rows.all()}
+async def foes(session: AsyncSession, entity_id: int) -> set[int]:
+    mine = select(WarSideRow.war_id, WarSideRow.side).where(WarSideRow.entity_id == entity_id, WarSideRow.left_epoch.is_(None)).subquery()
+    statement = (
+        select(WarSideRow.entity_id).join(mine, mine.c.war_id == WarSideRow.war_id).where(WarSideRow.side != mine.c.side, WarSideRow.left_epoch.is_(None))
+    )
+    return set(await session.scalars(statement))
 
 
 async def common_enemy(session: AsyncSession, first: EntityRow, second: EntityRow) -> bool:
-    return bool(await fronts(session, first.id) & await fronts(session, second.id))
+    shared = await foes(session, first.id) & await foes(session, second.id)
+    return bool(shared - {first.id, second.id})
 
 
 async def realm_party(session: AsyncSession, entity: EntityRow) -> int:

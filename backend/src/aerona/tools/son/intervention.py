@@ -35,6 +35,7 @@ from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.gods.interventions import MiracleEffect, MiracleOutcome, apply_miracle
 from aerona.engine.mind.thoughts import think
 from aerona.engine.phases.disasters import DISASTER_KINDS, after_strike, apply_disaster, joined_names, record_impact
+from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.renames import rewrite_name
 from aerona.engine.primitives.subtypes import normalized_subtype
 from aerona.prompts import SonToolId
@@ -113,7 +114,7 @@ async def miracle_witnesses(call: SonCall, target: EntityRow) -> list[int]:
     if target.entity_type is EntityType.MORTAL:
         return [target.id]
     statement = select(EntityRow.id).where(
-        EntityRow.location_id == target.id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
+        await present_in(call.session, target), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
     )
     return list(await call.session.scalars(statement.order_by(EntityRow.id)))
 

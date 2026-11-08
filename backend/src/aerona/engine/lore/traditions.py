@@ -39,6 +39,7 @@ from aerona.engine.mind.book import stored_values, values_for, write_values
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.space import value_distance
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import folk_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
@@ -252,7 +253,7 @@ async def feast(ctx: TickContext, community: EntityRow, row: TraditionProfileRow
 async def scar_youths(ctx: TickContext, community: EntityRow, tradition: EntityRow) -> int:
     youths = await ctx.session.scalars(
         select(EntityRow)
-        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == community.id)
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await folk_of(ctx.session, community))
         .order_by(EntityRow.id)
     )
     marked = 0
@@ -270,7 +271,7 @@ async def scar_youths(ctx: TickContext, community: EntityRow, tradition: EntityR
 
 
 async def placate(ctx: TickContext, community: EntityRow, amount: int) -> int:
-    mortals = select(EntityRow.id).where(EntityRow.location_id == community.id, EntityRow.entity_type == EntityType.MORTAL)
+    mortals = select(EntityRow.id).where(await folk_of(ctx.session, community), EntityRow.entity_type == EntityType.MORTAL)
     spirits = await ctx.session.scalars(select(SpiritProfileRow).where(SpiritProfileRow.origin_mortal_id.in_(mortals)))
     calmed = 0
     for profile in spirits:

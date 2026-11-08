@@ -22,6 +22,7 @@ from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.governance import spend
 from aerona.engine.polity.mandates import units_of
 from aerona.engine.polity.regard import shift_regard
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat
 
@@ -60,7 +61,7 @@ async def courtiers_of(ctx: TickContext, ruler: EntityRow, capital: int) -> list
             RelationshipRow.subject_node_id == ruler.id,
             EntityRow.entity_type == EntityType.MORTAL,
             EntityRow.status == EntityStatus.CANON,
-            EntityRow.location_id == capital,
+            await present_among(ctx.session, [capital]),
             EntityRow.id != ruler.id,
         )
         .order_by(EntityRow.id)
@@ -166,7 +167,7 @@ async def draw_talent(ctx: TickContext, realm: Realm, capital: int, grandeur: in
         return
     gifted = await ctx.session.scalar(
         select(EntityRow)
-        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id.in_(towns))
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, towns))
         .order_by(EntityRow.importance.desc(), EntityRow.id)
         .limit(1)
     )

@@ -24,6 +24,7 @@ from aerona.engine.faith.book import Church, FaithBook
 from aerona.engine.mind.book import skill_level, values_for
 from aerona.engine.phases.births import NOTABLE_ROLES, raise_notable
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat
@@ -206,7 +207,7 @@ async def clergy_of(ctx: TickContext, church: Church) -> list[EntityRow]:
             .where(
                 EntityRow.entity_type == EntityType.MORTAL,
                 EntityRow.status == EntityStatus.CANON,
-                EntityRow.location_id.in_(homes),
+                await present_among(ctx.session, homes),
                 EntityRow.mortal_role.in_(list(CLERGY_ROLES)),
             )
             .order_by(EntityRow.id)

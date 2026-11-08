@@ -18,6 +18,7 @@ from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.subjects import protected_by
 from aerona.engine.polity.treaties import allies_called, answer_call, champion_for
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat
 from aerona.engine.records import death_path
@@ -71,7 +72,7 @@ async def join_wars(ctx: TickContext, book: RealmBook) -> int:
 
 async def champion(ctx: TickContext, side: int) -> EntityRow | None:
     fighters = await ctx.session.scalars(
-        select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == side)
+        select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [side]))
     )
     return max(fighters, key=lambda mortal: ((stat(mortal, "strength") or 0) + (stat(mortal, "agility") or 0), -mortal.id), default=None)
 

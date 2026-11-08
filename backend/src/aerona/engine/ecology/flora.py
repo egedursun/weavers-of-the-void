@@ -30,6 +30,7 @@ from aerona.engine.ecology.profiles import PEST_HUNTERS, SHELLED, Nature, Specie
 from aerona.engine.environment.weather import Weather
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
@@ -298,7 +299,7 @@ async def sow(ctx: TickContext, book: CropBook, atlas: RegionAtlas) -> dict[str,
 
 async def master_farmer(session: AsyncSession, community_ids: list[int]) -> int:
     mortals = select(EntityRow.id).where(
-        EntityRow.location_id.in_(community_ids), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
+        await present_among(session, community_ids), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
     )
     found = await session.scalar(
         select(SkillRow.level).where(SkillRow.holder_node_id.in_(mortals), SkillRow.skill == SkillKind.FORAGING).order_by(SkillRow.level.desc()).limit(1)

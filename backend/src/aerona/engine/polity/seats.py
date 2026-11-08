@@ -18,6 +18,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.faith.doctrine import CLERGY_ROLES
 from aerona.engine.notes import note
 from aerona.engine.polity.titles import HOLDER, POWER, RANK, emblem_of, record_holder
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import stat
@@ -50,7 +51,7 @@ async def foremost_cleric(ctx: TickContext, cult: EntityRow) -> int | None:
         .where(
             EntityRow.entity_type == EntityType.MORTAL,
             EntityRow.status == EntityStatus.CANON,
-            EntityRow.location_id == cult.location_id,
+            await present_among(ctx.session, [cult.location_id]),
             EntityRow.mortal_role.in_(list(CLERGY_ROLES)),
         )
         .order_by(EntityRow.importance.desc(), EntityRow.id)

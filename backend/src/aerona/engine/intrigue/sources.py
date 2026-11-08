@@ -34,6 +34,7 @@ from aerona.engine.mind.book import best_skill
 from aerona.engine.mind.split import facets_of
 from aerona.engine.mortal.kin import partners_of
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import bond_exists, living_entity
@@ -111,7 +112,7 @@ async def masked_lives(ctx: TickContext, namer: Namer, tally: SourceTally) -> No
 async def watched_ids(ctx: TickContext, target_id: int) -> list[int]:
     rows = await ctx.session.scalars(
         select(EntityRow.id)
-        .where(EntityRow.location_id == target_id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+        .where(await present_among(ctx.session, [target_id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
         .order_by(EntityRow.id)
     )
     return [target_id, *rows]

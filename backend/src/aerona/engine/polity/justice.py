@@ -17,6 +17,7 @@ from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import patron_node
 from aerona.engine.polity.laws import LawBook
+from aerona.engine.primitives.folk import present_among
 
 RECENT_EPOCHS = 2
 CRUEL = 60
@@ -61,7 +62,7 @@ async def offenders(ctx: TickContext, town_id: int, laws: LawBook) -> dict[Crime
     mortals = list(
         await ctx.session.scalars(
             select(EntityRow)
-            .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == town_id)
+            .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [town_id]))
             .order_by(EntityRow.id)
         )
     )

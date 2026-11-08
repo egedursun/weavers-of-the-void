@@ -16,6 +16,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.mind.book import is_locked, mind_of, set_skill, skills_of
 from aerona.engine.mind.skills import SKILL_LOCK, level_cost, practise
 from aerona.engine.mortal.profile import is_held
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.queries import active_bonds
 from aerona.rules.registry import Rules
 
@@ -89,7 +90,10 @@ async def refresh_profession(session: AsyncSession, rules: Rules, mortal: Entity
 
 async def masters_of(ctx: TickContext, community_id: int, skills: tuple[SkillKind, ...], *, exclude: int) -> list[SkillRow]:
     mortals = select(EntityRow.id).where(
-        EntityRow.location_id == community_id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.id != exclude
+        await present_among(ctx.session, [community_id]),
+        EntityRow.entity_type == EntityType.MORTAL,
+        EntityRow.status == EntityStatus.CANON,
+        EntityRow.id != exclude,
     )
     rows = await ctx.session.scalars(
         select(SkillRow)

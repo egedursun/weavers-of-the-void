@@ -41,6 +41,7 @@ from aerona.engine.notes import note
 from aerona.engine.polity.justice import offenders
 from aerona.engine.polity.laws import LawBook, law_param
 from aerona.engine.polity.repute import shift_infamy
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat
@@ -90,7 +91,7 @@ async def investigator_for(ctx: TickContext, polity_id: int | None, town_id: int
 async def townsfolk(ctx: TickContext, town_id: int, *, besides: set[int]) -> list[EntityRow]:
     rows = await ctx.session.scalars(
         select(EntityRow)
-        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == town_id)
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [town_id]))
         .order_by(EntityRow.id)
     )
     return [row for row in rows if row.id not in besides]

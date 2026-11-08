@@ -39,6 +39,7 @@ from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.loyalty import loyalty_autonomy
 from aerona.engine.polity.oaths import break_on
 from aerona.engine.polity.repute import repute_of
+from aerona.engine.primitives.folk import folk_of
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.modifiers import combine, live_contributions
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -340,7 +341,7 @@ async def secede(ctx: TickContext, book: RealmBook, realm: Realm, member: Entity
         sworn = list(
             await ctx.session.scalars(
                 select(EntityRow.id).where(
-                    EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == member.id
+                    EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await folk_of(ctx.session, member)
                 )
             )
         )

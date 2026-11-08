@@ -30,6 +30,7 @@ from aerona.engine.polity.revolts import REVOLT_AIMS, seed_aims
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
+from aerona.engine.primitives.folk import folk_of
 from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up
 from aerona.engine.primitives.queries import canon, flags_by_entity, spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record
@@ -119,7 +120,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     sworn = list(
         await ctx.session.scalars(
             select(EntityRow.id).where(
-                EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == settlement.id
+                EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await folk_of(ctx.session, settlement)
             )
         )
     )

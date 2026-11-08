@@ -23,6 +23,7 @@ from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.rules.registry import Rules
@@ -131,7 +132,7 @@ async def strike(
         mortals = list(
             await ctx.session.scalars(
                 select(EntityRow)
-                .where(EntityRow.location_id == community.id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+                .where(await present_in(ctx.session, community), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
                 .order_by(EntityRow.id)
             )
         )

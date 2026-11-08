@@ -18,6 +18,7 @@ from aerona.engine.intrigue.secrets import keep_secret
 from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import best_skill
 from aerona.engine.notes import note
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 
@@ -36,7 +37,7 @@ async def best_cryptographer(ctx: TickContext, holder_id: int) -> tuple[int | No
     best: tuple[int | None, int] = (None, 0)
     mortals = await ctx.session.scalars(
         select(EntityRow.id)
-        .where(EntityRow.location_id == holder_id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+        .where(await present_among(ctx.session, [holder_id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
         .order_by(EntityRow.id)
     )
     for mortal in mortals:

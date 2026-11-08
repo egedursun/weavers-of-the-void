@@ -29,6 +29,7 @@ from aerona.engine.mind.book import stored_values, write_values
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.preferences import art_fit, favourite, paint
 from aerona.engine.notes import note
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire
@@ -211,7 +212,9 @@ async def commemorate(ctx: TickContext, row: ArtworkProfileRow) -> str | None:
 
 
 async def skilled(ctx: TickContext, place_id: int, skills: tuple[SkillKind, ...], level: int) -> int | None:
-    mortals = select(EntityRow.id).where(EntityRow.location_id == place_id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+    mortals = select(EntityRow.id).where(
+        await present_among(ctx.session, [place_id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
+    )
     return await ctx.session.scalar(
         select(SkillRow.holder_node_id)
         .where(SkillRow.holder_node_id.in_(mortals), SkillRow.skill.in_(list(skills)), SkillRow.level >= level)

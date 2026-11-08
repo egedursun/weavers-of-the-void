@@ -44,6 +44,7 @@ from aerona.engine.lore.research import gate_open, has_technique, holder_levels,
 from aerona.engine.notes import note
 from aerona.engine.polity.accords import parties_of
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.renown.currencies import bump, purse_of, ruler_of_realm
@@ -273,7 +274,7 @@ async def draw_options(ctx: TickContext, holder_id: int, levels: dict[KnowledgeB
 
 async def field_skill(session: AsyncSession, community_id: int, branch: KnowledgeBranch) -> int:
     mortals = select(EntityRow.id).where(
-        EntityRow.location_id == community_id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
+        await present_among(session, [community_id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
     )
     skills = list(BRANCH_SKILLS.get(branch, ()))
     if not skills:

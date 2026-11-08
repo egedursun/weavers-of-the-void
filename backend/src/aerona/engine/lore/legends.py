@@ -19,6 +19,7 @@ from aerona.engine.lore.kinds import ArchetypeParams, kind_of, params_of
 from aerona.engine.lore.language import standardisation_of
 from aerona.engine.mind.book import stored_values, values_for, write_values
 from aerona.engine.mind.memories import remember
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity, spoken_language
 from aerona.engine.primitives.stats import stat
@@ -86,7 +87,7 @@ async def bards_of(ctx: TickContext, communities: list[int]) -> list[int]:
     if not communities:
         return []
     mortals = select(EntityRow.id).where(
-        EntityRow.location_id.in_(communities), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
+        await present_among(ctx.session, communities), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
     )
     rows = await ctx.session.scalars(
         select(SkillRow.holder_node_id)

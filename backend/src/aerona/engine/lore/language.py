@@ -18,6 +18,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.primitives.stats import stat
@@ -107,7 +108,7 @@ async def intelligibility(session: AsyncSession, rules: Rules, first: int | None
 
 async def interpreter(session: AsyncSession, rules: Rules, *communities: int, tongues: set[int] | None = None) -> bool:
     mortals = select(EntityRow.id).where(
-        EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.location_id.in_(communities)
+        EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(session, communities)
     )
     subject = SkillRow.subject_node_id.is_(None) if not tongues else (SkillRow.subject_node_id.is_(None) | SkillRow.subject_node_id.in_(list(tongues)))
     found = await session.scalar(

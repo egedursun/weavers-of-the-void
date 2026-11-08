@@ -27,6 +27,7 @@ from aerona.engine.lore.kinds import custom_bases
 from aerona.engine.lore.learning import institution_factor, patron_factor
 from aerona.engine.lore.printing import banned_for, read_in_secret
 from aerona.engine.lore.truth import branch_factor
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.knowledge import raw_level
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount, set_stats, stat
@@ -170,7 +171,7 @@ async def books_of(session: AsyncSession, holder_id: int) -> set[int]:
 
 async def scholar_levels(session: AsyncSession, rules: Rules, community_id: int, branch: KnowledgeBranch) -> list[float]:
     mortals = select(EntityRow.id).where(
-        EntityRow.location_id == community_id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
+        await present_among(session, [community_id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
     )
     field = set(BRANCH_SKILLS.get(branch, ()))
     skills = list({*SCHOLARLY, *field})
@@ -189,7 +190,7 @@ async def scholar_levels(session: AsyncSession, rules: Rules, community_id: int,
 
 async def masters(session: AsyncSession, rules: Rules, community_id: int, branch: KnowledgeBranch | None = None) -> bool:
     mortals = select(EntityRow.id).where(
-        EntityRow.location_id == community_id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
+        await present_among(session, [community_id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
     )
     skilled = select(SkillRow.holder_node_id).where(SkillRow.holder_node_id.in_(mortals), SkillRow.level >= rules.research.master_skill)
     if branch is not None:

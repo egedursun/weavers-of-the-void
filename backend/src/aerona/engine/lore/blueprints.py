@@ -23,6 +23,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.lore.research import has_technique
 from aerona.engine.lore.research_depth import trade_partners
 from aerona.engine.notes import note
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.rules.registry import Rules
 
@@ -31,7 +32,7 @@ BOOKS = (ItemClass.BOOK, ItemClass.SCROLL)
 
 
 async def books_of(session: AsyncSession, holder_id: int) -> set[int]:
-    keepers = select(EntityRow.id).where(EntityRow.location_id == holder_id, EntityRow.entity_type == EntityType.MORTAL)
+    keepers = select(EntityRow.id).where(await present_among(session, [holder_id]), EntityRow.entity_type == EntityType.MORTAL)
     owned = await session.scalars(
         select(BondRow.target_node_id)
         .join(ItemProfileRow, ItemProfileRow.item_entity_id == BondRow.target_node_id)

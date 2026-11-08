@@ -19,6 +19,7 @@ from aerona.engine.demography.keys import DORMANT_KEY
 from aerona.engine.demography.promotion import MAIMED_KEY
 from aerona.engine.disease.sickness import SICK_KEY
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_among
 from aerona.rules.registry import Rules
 
 COMMUNITY_HOLDS = (SICK_KEY, MAIMED_KEY)
@@ -128,7 +129,7 @@ async def named_mortals(session: AsyncSession, community_id: int) -> list[NamedM
             .where(
                 EntityRow.entity_type == EntityType.MORTAL,
                 EntityRow.status == EntityStatus.CANON,
-                or_(EntityRow.location_id == community_id, EntityRow.id.in_(members)),
+                or_(await present_among(session, [community_id]), EntityRow.id.in_(members)),
             )
             .order_by(EntityRow.importance.desc(), EntityRow.id)
         )

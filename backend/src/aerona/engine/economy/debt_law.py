@@ -17,6 +17,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.demography.bound import move_people, sync_bound_share
 from aerona.engine.demography.cohorts import cohorts_of
 from aerona.engine.polity.laws import law_param
+from aerona.engine.primitives.folk import folk_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.services.war import take_captive
@@ -82,7 +83,7 @@ async def notable_of(ctx: TickContext, debtor: EntityRow) -> EntityRow | None:
         .where(
             EntityRow.entity_type == EntityType.MORTAL,
             EntityRow.status == EntityStatus.CANON,
-            (EntityRow.location_id == debtor.id) | (EntityRow.affiliated_entity_id == debtor.id),
+            await folk_of(ctx.session, debtor),
             EntityRow.id.not_in(held),
         )
         .order_by(EntityRow.importance.desc().nulls_last(), EntityRow.id)

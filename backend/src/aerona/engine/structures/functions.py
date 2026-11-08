@@ -21,6 +21,7 @@ from aerona.engine.mind.hooks import practised
 from aerona.engine.notes import note
 from aerona.engine.phases.knowledge_levels import known_records, shift_level
 from aerona.engine.primitives.faith import living_patron
+from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.knowledge import knowledge_level
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_stats, stat
@@ -108,7 +109,7 @@ async def residents(ctx: TickContext, host: EntityRow, roles: frozenset[MortalRo
         .where(
             EntityRow.entity_type == EntityType.MORTAL,
             EntityRow.status == EntityStatus.CANON,
-            EntityRow.location_id == host.id,
+            await present_in(ctx.session, host),
             EntityRow.mortal_role.in_(list(roles)),
         )
         .order_by(EntityRow.id)

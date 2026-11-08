@@ -34,6 +34,7 @@ from aerona.engine.mortal.kin import children_of, spouses_of
 from aerona.engine.mortal.kinship import marry
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import LawBook
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, connect
 from aerona.engine.primitives.stats import stat
@@ -399,7 +400,7 @@ async def apprentice(ctx: TickContext, household: HouseholdRow, members: list[Me
         .where(
             EntityRow.entity_type == EntityType.MORTAL,
             EntityRow.status == EntityStatus.CANON,
-            EntityRow.location_id == household.settlement_node_id,
+            await present_among(ctx.session, [household.settlement_node_id]),
             EntityRow.mortal_role.in_(list(CRAFT_MASTERS)),
             EntityRow.id != child.mortal.id,
         )

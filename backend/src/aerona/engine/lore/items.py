@@ -42,6 +42,7 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.mind.thoughts import mood_factor, mood_of, think
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, close, connect, flags_by_entity, living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
@@ -408,7 +409,7 @@ async def spirit_year(ctx: TickContext, item: EntityRow, row: ItemProfileRow, ow
 async def tools_of(ctx: TickContext, community_id: int | None) -> bool:
     if community_id is None:
         return False
-    mortals = select(EntityRow.id).where(EntityRow.location_id == community_id, EntityRow.entity_type == EntityType.MORTAL)
+    mortals = select(EntityRow.id).where(await present_among(ctx.session, [community_id]), EntityRow.entity_type == EntityType.MORTAL)
     owners = select(BondRow.target_node_id).where(
         (BondRow.source_node_id == community_id) | BondRow.source_node_id.in_(mortals), BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE
     )
@@ -725,7 +726,7 @@ async def smith_of(ctx: TickContext, community_id: int | None) -> tuple[EntityRo
     if community_id is None:
         return None
     mortals = select(EntityRow.id).where(
-        EntityRow.location_id == community_id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
+        await present_among(ctx.session, [community_id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON
     )
     found = (
         await ctx.session.execute(

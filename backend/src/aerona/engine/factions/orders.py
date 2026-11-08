@@ -22,6 +22,7 @@ from aerona.engine.military.support import new_side
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import patron_node
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, connect, living_entity
@@ -151,7 +152,7 @@ async def take_vows(ctx: TickContext, order: EntityRow, row: HolyOrderProfileRow
         .where(
             EntityRow.entity_type == EntityType.MORTAL,
             EntityRow.status == EntityStatus.CANON,
-            EntityRow.location_id == home,
+            await present_among(ctx.session, [home]),
             EntityRow.social_class.in_(tuple(VOWED)),
         )
         .order_by(EntityRow.id)

@@ -38,6 +38,7 @@ from aerona.engine.mortal.standing import add_renown
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.polity.oaths import swear
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, connect, living_entity
@@ -274,7 +275,7 @@ async def patronise(ctx: TickContext, mortal: EntityRow, profile: MortalProfileR
         return False
     if not ctx.rng(seed_of("patronage", mortal.id, ctx.epoch)).chance(ability(mortal, Ability.CREATIVITY)):
         return False
-    authors = select(EntityRow.id).where(EntityRow.location_id == mortal.location_id, EntityRow.entity_type == EntityType.MORTAL)
+    authors = select(EntityRow.id).where(await present_among(ctx.session, [mortal.location_id]), EntityRow.entity_type == EntityType.MORTAL)
     work = await ctx.session.scalar(
         select(ArtworkProfileRow).where(ArtworkProfileRow.author_entity_id.in_(authors), ArtworkProfileRow.patron_entity_id.is_(None)).limit(1)
     )
@@ -391,7 +392,7 @@ async def foster_orphan(ctx: TickContext, mortal: EntityRow, profile: MortalProf
     if any(parent is not None for parent in parents) or not ctx.rng(seed_of("foster", mortal.id, ctx.epoch)).chance(ctx.rules.kinship.foster_chance):
         return False
     statement = select(EntityRow).where(
-        EntityRow.location_id == mortal.location_id,
+        await present_among(ctx.session, [mortal.location_id]),
         EntityRow.entity_type == EntityType.MORTAL,
         EntityRow.status == EntityStatus.CANON,
         EntityRow.id != mortal.id,
