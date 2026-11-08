@@ -11,3 +11,25 @@ async def test_codex_and_book(api: ApiWorld) -> None:
     entry = await api.http.get("/api/book", params={"son_id": seeded(api).core.son.id})
     assert entry.status_code == 200
     assert (await api.http.get("/api/book", params={"entity_id": 999999})).status_code == 404
+
+
+async def test_the_book_serves_its_fonts_logo_and_print_status(api: ApiWorld) -> None:
+    font = await api.http.get("/api/book/fonts/alegreya-regular.ttf")
+    assert font.status_code == 200 and "immutable" in font.headers["cache-control"]
+    assert (await api.http.get("/api/book/fonts/no-such-font.ttf")).status_code == 404
+    assert (await api.http.get("/api/book/fonts/..%2Fsecret.ttf")).status_code in (404, 422)
+    logo = await api.http.get("/api/book/brand/logo.png")
+    assert logo.status_code == 200 and logo.headers["content-type"] == "image/png"
+    status = await api.http.get("/api/book/pdf")
+    assert status.status_code == 200 and status.json()["ready"] is False and status.json()["size"] is None
+
+
+async def test_a_language_previews_names_without_keeping_them(api: ApiWorld) -> None:
+    language = seeded(api).core.language
+    first = await api.http.post(f"/api/languages/{language.id}/sample-names", json={"count": 4, "salt": "a"})
+    assert first.status_code == 200, first.text
+    body = first.json()
+    assert body["language_id"] == language.id and len(body["names"]) == 4
+    again = await api.http.post(f"/api/languages/{language.id}/sample-names", json={"count": 4, "salt": "a"})
+    assert again.json()["names"] == body["names"]
+    assert (await api.http.post("/api/languages/999999/sample-names", json={})).status_code == 404
