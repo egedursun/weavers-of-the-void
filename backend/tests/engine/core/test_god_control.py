@@ -13,18 +13,27 @@ from aerona.db.profile_guard import owned_shape, owner_ids, profile_mapper
 from aerona.db.session import Database
 from aerona.db.tables.culture import IdeologyAdherentRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.faith import SpiritProfileRow
+from aerona.db.tables.military import SpyNetworkRow
 from aerona.domain.enums.culture import IdeologyTenet
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.faith import SpiritAlignment
+from aerona.domain.enums.intrigue import PlotKind
+from aerona.domain.models.entity_stats import SpiritStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
+from aerona.engine.disease.control import DiseaseDesign, create_disease
 from aerona.engine.interconnect.guards import run_guarded
+from aerona.engine.intrigue.schemes import begin_scheme
 from aerona.engine.lore.control import create_lore
 from aerona.engine.phases.native_faith import syncretize
 from aerona.engine.pipeline import all_phases, current_environment, simulate
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.services.war import take_captive
 from aerona.rules.model import RULE_METADATA_KEY, rule_meta
 from aerona.rules.registry import Rules
+from tests.engine.core.factories import entity, mortal, settlement
 from tests.engine.integration.factories import RichCosmos, seed_rich_cosmos
 
 BLOCK_EVERY_NODE = -1
@@ -148,6 +157,16 @@ async def stir(session: AsyncSession, cosmos: RichCosmos) -> None:
         session.add(IdeologyAdherentRow(ideology_entity_id=creed.id, adherent_entity_id=community_id, strength=90))
     god = await add_foreign_god(session, ctx.rules, ctx.rng(), ctx.epoch, NewForeignGod("Stirring Old God", home.world.id, (Domain.EARTH, None), power=40))
     await syncretize(session, ctx.rules, home.people.id, god.id)
+    town = await settlement(session, "Stirring Town", home, home.regions[0], population=12000)
+    plotter = await mortal(session, "Stirring Plotter", home, town.id)
+    mark = await mortal(session, "Stirring Mark", home, town.id)
+    await begin_scheme(ctx, plotter, PlotKind.SWAY, mark)
+    await take_captive(ctx, plotter, await mortal(session, "Stirring Captive", home, town.id), None, description="held", home_id=town.id)
+    session.add(SpyNetworkRow(owner_entity_id=town.id, target_entity_id=home.people.id, intel=90, since_epoch=1, locked=[]))
+    spirit = await entity(session, "Stirring Shade", EntityType.SPIRIT, SpiritStats(unrest=95), world_id=home.world.id, location_id=town.id)
+    session.add(SpiritProfileRow(spirit_entity_id=spirit.id, alignment=SpiritAlignment.VENGEFUL, imprint={}, traits=[], deeds={}, locked=[]))
+    design = DiseaseDesign(name=None, values={"virulence": 60, "lethality": 20, "stigma": 90}, hold=False)
+    await create_disease(ctx, home.regions[0].id, design, son_id=None)
     await session.flush()
 
 

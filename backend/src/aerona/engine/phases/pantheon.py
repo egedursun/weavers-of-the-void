@@ -19,6 +19,7 @@ from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
@@ -307,7 +308,7 @@ async def attract(ctx: TickContext, god: ForeignGodRow, natives: list[EntityRow]
     )
     rng = ctx.rng(f"attract.{god.id}")
     living = {son.id for son in await ctx.session.scalars(select(SonRow).where(SonRow.status != SonStatus.DEAD))}
-    unclaimed = [item for item in natives if not index.outgoing(item.id, BondKind.WORSHIPS) and item.creator_son_id not in living][
+    unclaimed = [item for item in unheld(natives) if not index.outgoing(item.id, BondKind.WORSHIPS) and item.creator_son_id not in living][
         : pantheon.foreign_attract_targets
     ]
     drawn = 0

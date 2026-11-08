@@ -10,6 +10,7 @@ from aerona.db.tables.military import SpyNetworkRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -274,9 +275,9 @@ OPERATIONS = {
 }
 SABOTAGE_LINES = {
     SabotageKind.GRANARY_FIRE: "the granaries burned",
-    SabotageKind.WALL_WEAKENING: "the walls were undermined by night",
+    SabotageKind.WALL_WEAKENING: "the walls were undermined",
     SabotageKind.POISON_WELLS: "the wells were poisoned",
-    SabotageKind.ARSON: "fires broke out and the sentries were poisoned",
+    SabotageKind.ARSON: "fires were set",
 }
 WAR_OPERATIONS = (SpyOperation.SABOTAGE, SpyOperation.ASSASSINATE, SpyOperation.INTEL)
 PEACE_OPERATIONS = (SpyOperation.STEAL_KNOWLEDGE, SpyOperation.BLACKMAIL, SpyOperation.COUNTERFEIT, SpyOperation.INCITE, SpyOperation.INTEL)
@@ -369,7 +370,7 @@ async def run_networks(ctx: TickContext) -> None:
         if spymaster is None or target is None:
             await ctx.session.delete(network)
             continue
-        if network.since_epoch == ctx.epoch:
+        if network.since_epoch == ctx.epoch or held(spymaster.id, target.id):
             continue
         guile = await deceit_drive(ctx.session, ctx.rules, spymaster.id)
         network.spymaster_entity_id = await spymaster_of(ctx, spymaster.id)

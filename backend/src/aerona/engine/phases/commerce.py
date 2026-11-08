@@ -1,4 +1,4 @@
-from aerona.db.write_guard import unheld
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.region import DangerHarm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
@@ -240,6 +240,8 @@ async def trade_flow(ctx: TickContext) -> None:
     quotes = {market.id: await quote_market(ctx, book, market) for market in nodes}
     policies = await PolicyBook.load(ctx, book)
     for first, second, path in await contacts(ctx, book, nodes, routes, quotes):
+        if held(first.id, second.id):
+            continue
         routes.append(await found_route(ctx, book, first, second, path, works=works))
         tally.founded += 1
     masters = await controllers(ctx, book, realms)
