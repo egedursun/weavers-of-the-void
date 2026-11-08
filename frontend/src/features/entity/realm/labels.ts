@@ -367,8 +367,8 @@ export const OATHS: Record<string, Named> = {
   pilgrimage: { label: 'Pilgrimage', icon: Footprints, tone: 'info' },
   protection: { label: 'Protection', icon: Shield, tone: 'success' },
   silence: { label: 'Silence', icon: VolumeX, tone: 'muted' },
-  blood_brotherhood: {
-    label: 'Blood brotherhood',
+  sworn_kinship: {
+    label: 'Sworn kinship',
     icon: Droplet,
     tone: 'danger',
   },

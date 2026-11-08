@@ -73,7 +73,7 @@ const HINTS: PlayerHints = {
 
 describe('relations', () => {
   it('labels relations by the rule bands', () => {
-    expect(relationLabel(80, rule)).toBe('Brotherhood')
+    expect(relationLabel(80, rule)).toBe('Kinship')
     expect(relationLabel(50, rule)).toBe('Close friendship')
     expect(relationLabel(20, rule)).toBe('Friendship')
     expect(relationLabel(0, rule)).toBe('Distance')

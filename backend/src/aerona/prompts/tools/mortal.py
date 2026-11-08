@@ -530,7 +530,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.SWEAR_OATH: ToolText(
-        "You swear an oath (fealty, vengeance, celibacy, pilgrimage, protection, silence, blood_brotherhood); keeping it wins honour, breaking it brings shame and a god's wrath. "
+        "You swear an oath (fealty, vengeance, celibacy, pilgrimage, protection, silence, sworn_kinship); keeping it wins honour, breaking it brings shame and a god's wrath. "
         "Free, {{ " + M + ".swear_oath_per_epoch }} per age.",
         {"kind": "The oath", "recipient_id": "To whom or against whom, if anyone (for a pilgrimage: the holy place)", "words": "The words of the oath"},
     ),

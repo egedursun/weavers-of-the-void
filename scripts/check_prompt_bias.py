@@ -16,6 +16,7 @@ STYLE_HOMES = (
 SKIPPED = (
     BACKEND / "db/alembic",
     BACKEND / "migration/legacy",
+    BACKEND / "rules/renames.py",
     BACKEND / "constants/agents.py",
     FRONTEND / "api/generated",
 )
@@ -40,7 +41,8 @@ PATTERNS = (
     Pattern(
         "gendered default",
         re.compile(
-            r"\b(he|him|his|himself|father|fathers|fatherly|brother|brothers|brotherly)\b",
+            r"\b(he|him|his|himself|father|fathers|fatherly|brother|brothers|brotherly)\b|"
+            r"(?<![A-Za-z])(brotherhoods?|brethren|fraternal|fraternity|sisterhoods?)(?![A-Za-z])",
             re.IGNORECASE,
         ),
     ),

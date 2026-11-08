@@ -418,8 +418,8 @@ async def swear_kinship(ctx: TickContext, mortal: EntityRow) -> bool:
             ctx.rules.kinship.sworn_kin_chance
         ):
             continue
-        await connect(ctx.session, mortal.id, friend.id, BondKind.SWORN_KIN, ctx.epoch, description="blood brotherhood")
-        await swear(ctx, mortal, OathKind.BLOOD_BROTHERHOOD, recipient_id=friend.id, note_text="sworn kin")
+        await connect(ctx.session, mortal.id, friend.id, BondKind.SWORN_KIN, ctx.epoch, description="sworn kinship")
+        await swear(ctx, mortal, OathKind.SWORN_KINSHIP, recipient_id=friend.id, note_text="sworn kin")
         await note(ctx, f"{mortal.name} and {friend.name} swore themselves kin by blood.", key="kin.sworn", ids=[mortal.id, friend.id])
         return True
     return False

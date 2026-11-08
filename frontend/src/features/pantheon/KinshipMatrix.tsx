@@ -116,7 +116,7 @@ function Cell({
   )
 }
 
-export function BrotherhoodMatrix({ state }: { state: WorldState }) {
+export function KinshipMatrix({ state }: { state: WorldState }) {
   const sons = useSons()
   const relations = useSonRelations()
   const alive = (sons.data ?? state.sons).filter(
@@ -139,14 +139,14 @@ export function BrotherhoodMatrix({ state }: { state: WorldState }) {
     )
   return (
     <Section
-      title='Brotherhood'
+      title='Kinship'
       description='How the sons stand with one another. Pick a cell to set it yourself.'
     >
       {alive.length < 2 ? (
         <EmptyState
           icon={Users}
           size='compact'
-          title='Brotherhood needs at least two sons'
+          title='Kinship needs at least two sons'
           description='Summon another son to see how they stand.'
         />
       ) : (

@@ -54,7 +54,7 @@ BLUEPRINTS = (
     FactionBlueprint(K.MERCHANT_GUILD, "merchant guild", "Guild", "merchants"),
     FactionBlueprint(K.CRAFT_GUILD, "craft guild", "Craft Guild", "artisans"),
     FactionBlueprint(K.PRIESTHOOD, "priests' council", "Priests' Council", "priests"),
-    FactionBlueprint(K.WARRIOR_ORDER, "warrior brotherhood", "Warrior Brotherhood", "warriors"),
+    FactionBlueprint(K.WARRIOR_ORDER, "warrior order", "Warrior Order", "warriors"),
     FactionBlueprint(K.NOBLE_COUNCIL, "noble council", "Council of Lords", "nobles"),
     FactionBlueprint(K.PEASANT_LEAGUE, "peasant league", "League", "farmers"),
     FactionBlueprint(K.REBELS, "rebel band", "Rebels", "malcontents"),
@@ -81,7 +81,7 @@ def base_stats(rules: Rules, kind: FactionKind) -> tuple[int, int, int]:
         return factions.guild_strength, factions.guild_wealth, factions.guild_sway
     if kind in {K.PRIESTHOOD, K.SCHOLARS_ACADEMY, K.SECRET_SOCIETY, K.NOBLE_COUNCIL, K.SOCIAL_CIRCLE}:
         return factions.council_strength, factions.council_wealth, factions.council_sway
-    return factions.brotherhood_strength, factions.brotherhood_wealth, factions.brotherhood_sway
+    return factions.order_strength, factions.order_wealth, factions.order_sway
 
 
 async def _note(ctx: TickContext, text: str, key: str, ids: tuple[int, ...]) -> None:
@@ -130,7 +130,7 @@ async def eligible_kinds(ctx: TickContext, community: EntityRow) -> list[Faction
         kinds.append(K.PRIESTHOOD)
     warriors = shares[SocialClass.WARRIOR]
     at_war = await ongoing_war_count(ctx.session, community.id) > 0
-    if warriors >= rules.brotherhood_min_warrior_pct or (at_war and warriors >= rules.brotherhood_at_war_min_warrior_pct):
+    if warriors >= rules.order_min_warrior_pct or (at_war and warriors >= rules.order_at_war_min_warrior_pct):
         kinds.append(K.WARRIOR_ORDER)
     if warriors >= rules.mercenary_min_warrior_pct and not at_war:
         kinds.append(K.MERCENARY_COMPANY)

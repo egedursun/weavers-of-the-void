@@ -177,7 +177,7 @@ class OathKind(StrEnum):
     PILGRIMAGE = "pilgrimage"
     PROTECTION = "protection"
     SILENCE = "silence"
-    BLOOD_BROTHERHOOD = "blood_brotherhood"
+    SWORN_KINSHIP = "sworn_kinship"
 
 
 class OathStatus(StrEnum):

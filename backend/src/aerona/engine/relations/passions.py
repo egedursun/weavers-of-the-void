@@ -27,7 +27,7 @@ from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.naming import seed_of
 
 PASSIONS_KEY = "passions"
-LOYAL_OATHS = frozenset({OathKind.FEALTY, OathKind.PROTECTION, OathKind.BLOOD_BROTHERHOOD})
+LOYAL_OATHS = frozenset({OathKind.FEALTY, OathKind.PROTECTION, OathKind.SWORN_KINSHIP})
 TENDER = frozenset({PassionKind.LOVE, PassionKind.LOYALTY, PassionKind.DEVOTION})
 Key = tuple[PassionKind, int]
 

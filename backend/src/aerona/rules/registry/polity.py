@@ -209,7 +209,7 @@ class OathsRules:
     fealty_on_office: int = rule(1, 0, 1, H, "Office holders swear fealty to the ruler (1 yes)")
     vengeance_chance: int = rule(30, 0, 100, H, "A mortal whose kin was slain swears vengeance (%)")
     protection_chance: int = rule(20, 0, 100, H, "A knight swears to protect their lord (%)")
-    brotherhood_chance: int = rule(10, 0, 100, H, "Companions in arms swear blood brotherhood (%)")
+    kinship_chance: int = rule(10, 0, 100, H, "Companions in arms swear sworn kinship (%)")
     deadline_epochs: int = rule(3, 1, 100, H, "Epochs a vengeance or pilgrimage oath gives the swearer")
     witness_chance: int = rule(40, 0, 100, H, "A god of oaths witnesses a sworn oath (%)")
     essence_per_kept: int = rule(2, 0, 1000, H, "Essence an oath god gains per oath kept in its sight")

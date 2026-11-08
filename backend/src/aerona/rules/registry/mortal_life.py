@@ -72,4 +72,4 @@ class KinshipRules:
     widowed_magnitude: int = rule(40, 0, 100, G, "How deeply a spouse remembers losing their partner")
     orphan_magnitude: int = rule(40, 0, 100, G, "How deeply a child remembers losing a parent")
     foster_chance: int = rule(30, 0, 100, G, "Chance an orphan is fostered by kin or a noble (%)")
-    sworn_kin_chance: int = rule(5, 0, 100, G, "Chance each epoch that companions swear blood brotherhood (%)")
+    sworn_kin_chance: int = rule(5, 0, 100, G, "Chance each epoch that companions swear sworn kinship (%)")

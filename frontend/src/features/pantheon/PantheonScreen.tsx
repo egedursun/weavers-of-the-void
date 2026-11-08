@@ -16,11 +16,11 @@ import { CouncilBlock } from '@/features/council/CouncilBlock'
 import { ForeignGodsSection } from '@/features/foreign-god/ForeignGodsSection'
 import { GoalsBlock } from '@/features/goals/GoalsBlock'
 import { sonHints } from '@/features/son/hints'
-import { BrotherhoodMatrix } from './BrotherhoodMatrix'
 import { CompareToggle } from './CompareCards'
 import { CompareSons } from './CompareSons'
 import { DistributionControl } from './DistributionControl'
 import { GodPanel } from './GodPanel'
+import { KinshipMatrix } from './KinshipMatrix'
 import { SonCard } from './SonCard'
 import { StoryThreads } from './StoryThreads'
 import { SummonButton } from './SummonButton'
@@ -168,7 +168,7 @@ export function PantheonScreen() {
           <GoalsBlock summary />
           <CouncilBlock />
           <StoryThreads />
-          <BrotherhoodMatrix state={state.data} />
+          <KinshipMatrix state={state.data} />
           <ForeignGodsSection />
           <InTheWorld state={state.data} />
         </>

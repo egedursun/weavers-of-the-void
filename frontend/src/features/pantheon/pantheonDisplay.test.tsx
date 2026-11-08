@@ -428,7 +428,7 @@ describe('council record', () => {
 })
 
 describe('pantheon screen', () => {
-  it('composes the god panel, epoch box, sons, compare, goals, council, threads, brotherhood and the world', async () => {
+  it('composes the god panel, epoch box, sons, compare, goals, council, kinship and the world', async () => {
     const { screen, server } = await renderScreen(
       <PantheonScreen />,
       godRoutes()

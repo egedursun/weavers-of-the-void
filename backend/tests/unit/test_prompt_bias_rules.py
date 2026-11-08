@@ -57,3 +57,16 @@ def test_example_names_and_lists_in_placeholders_are_caught() -> None:
     assert "example placeholder" not in rules_hit(module, form, "placeholder='Choose a realm, cult or people…'")
     assert "example placeholder" not in rules_hit(module, form, "placeholder='Describe what you reveal: a being, a place, an event…'")
     assert "example placeholder" not in rules_hit(module, form, "placeholder='Choose the patron…'")
+
+
+def test_gendered_fellowships_are_caught_in_prose_and_in_named_values() -> None:
+    module = checker()
+    for text in (
+        "Companions in arms swear blood brotherhood.",
+        "You swear an oath (fealty, blood_brotherhood).",
+        "the Warrior Brotherhood rises",
+        "a fraternal order",
+        "the sisterhood of the well",
+    ):
+        assert "gendered default" in rules_hit(module, PROMPT, text), text
+    assert "gendered default" not in rules_hit(module, PROMPT, "Companions in arms swear sworn kinship.")

@@ -187,7 +187,7 @@ async def lapse(ctx: TickContext) -> tuple[int, int]:
         if oath.deadline_epoch is not None and ctx.epoch > oath.deadline_epoch:
             await break_oath(ctx, oath, "the blood went unavenged" if oath.kind is OathKind.VENGEANCE else "the road was never walked")
             broken += 1
-        elif oath.kind in {OathKind.FEALTY, OathKind.PROTECTION, OathKind.BLOOD_BROTHERHOOD, OathKind.CELIBACY, OathKind.SILENCE}:
+        elif oath.kind in {OathKind.FEALTY, OathKind.PROTECTION, OathKind.SWORN_KINSHIP, OathKind.CELIBACY, OathKind.SILENCE}:
             await reward_witness(ctx, oath)
     return kept, broken
 
@@ -283,8 +283,8 @@ async def pledges(ctx: TickContext, rulers: dict[int, int]) -> int:
         companions.setdefault(mortal.location_id or -1, []).append(mortal)
     for group in companions.values():
         for first, second in pairwise(group):
-            if ctx.rng(f"brotherhood.{first.id}.{second.id}.{ctx.epoch}").chance(table.brotherhood_chance):
-                await swear(ctx, first, OathKind.BLOOD_BROTHERHOOD, recipient_id=second.id, note_text="companions in arms")
-                await swear(ctx, second, OathKind.BLOOD_BROTHERHOOD, recipient_id=first.id, note_text="companions in arms")
+            if ctx.rng(f"kinship.{first.id}.{second.id}.{ctx.epoch}").chance(table.kinship_chance):
+                await swear(ctx, first, OathKind.SWORN_KINSHIP, recipient_id=second.id, note_text="companions in arms")
+                await swear(ctx, second, OathKind.SWORN_KINSHIP, recipient_id=first.id, note_text="companions in arms")
                 made += 2
     return made

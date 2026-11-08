@@ -18,13 +18,11 @@ class FactionsRules:
     council_strength: int = rule(20, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Base strength of a priests' council")
     council_wealth: int = rule(30, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Base wealth of a priests' council")
     council_sway: int = rule(55, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Base sway of a priests' council")
-    brotherhood_min_warrior_pct: int = rule(
-        14, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Minimum warrior share of a community that founds a warrior brotherhood (%)"
-    )
-    brotherhood_at_war_min_warrior_pct: int = rule(11, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Minimum warrior share for a community at war (%)")
-    brotherhood_strength: int = rule(55, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Base strength of a warrior brotherhood")
-    brotherhood_wealth: int = rule(25, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Base wealth of a warrior brotherhood")
-    brotherhood_sway: int = rule(40, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Base sway of a warrior brotherhood")
+    order_min_warrior_pct: int = rule(14, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Minimum warrior share of a community that founds a warrior order (%)")
+    order_at_war_min_warrior_pct: int = rule(11, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Minimum warrior share for a community at war (%)")
+    order_strength: int = rule(55, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Base strength of a warrior order")
+    order_wealth: int = rule(25, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Base wealth of a warrior order")
+    order_sway: int = rule(40, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Base sway of a warrior order")
     revolt_disband_min_age: int = rule(2, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Age of an uprising before it can disband (epochs)")
     revolt_disband_note_cap: int = rule(2, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Maximum disbanded uprisings written to the chronicle per epoch")
     faction_min_population: int = rule(1000, 0, 100000000, RuleGroup.WAR_AND_DIPLOMACY, "Minimum population of a community able to spawn a faction")

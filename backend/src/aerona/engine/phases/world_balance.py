@@ -41,8 +41,8 @@ FACTION_KINDS: dict[SocialClass, tuple[str, str]] = {
     SocialClass.WARRIOR: ("warrior band", "Band"),
     SocialClass.FARMER: ("farmers' union", "Union"),
     SocialClass.NOBLE: ("council of lords", "Council"),
-    SocialClass.SERF_OR_SLAVE: ("brotherhood of the bound", "Brotherhood"),
-    SocialClass.OUTCAST: ("beggars' brotherhood", "Brotherhood"),
+    SocialClass.SERF_OR_SLAVE: ("fellowship of the bound", "Fellowship"),
+    SocialClass.OUTCAST: ("beggars' fellowship", "Fellowship"),
     SocialClass.MONASTIC: ("monastic order", "Order"),
 }
 TRADITIONS: dict[SocialClass, str] = {
