@@ -25,6 +25,12 @@ def column_keys(mapper: Mapper[Any]) -> tuple[str, ...]:
 
 
 class FastSession(AsyncSession):
+    async def delete(self, instance: object) -> None:
+        if instance in self.sync_session.new:
+            self.sync_session.expunge(instance)
+            return
+        await super().delete(instance)
+
     async def get[O](
         self,
         entity: _EntityBindKey[O],

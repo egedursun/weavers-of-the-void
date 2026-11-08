@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES
 from aerona.constants.units import PERCENT
-from aerona.core.total import partial
+from aerona.core.total import partial, total
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
@@ -34,7 +34,8 @@ PASS_TERRAIN = frozenset({TerrainKind.MOUNTAINS, TerrainKind.HIGH_PASS})
 DANGER_KEYS: MappingProxyType[TradeLoss, str] = MappingProxyType(
     {TradeLoss.BANDITS: "danger_bandits", TradeLoss.BEASTS: "danger_beasts", TradeLoss.WEATHER: "danger_weather", TradeLoss.SEA: "danger_sea"}
 )
-TEMPER_WEIGHT: MappingProxyType[BeastTemper, Callable[[Rules], int]] = MappingProxyType(
+TEMPER_WEIGHT: MappingProxyType[BeastTemper, Callable[[Rules], int]] = total(
+    BeastTemper,
     {
         BeastTemper.HUNGRY: lambda rules: rules.route_dangers.beast_hungry_pct,
         BeastTemper.TERRITORIAL: lambda rules: rules.route_dangers.beast_territorial_pct,
@@ -42,7 +43,8 @@ TEMPER_WEIGHT: MappingProxyType[BeastTemper, Callable[[Rules], int]] = MappingPr
         BeastTemper.SLEEPING: lambda rules: rules.route_dangers.beast_sleeping_pct,
         BeastTemper.BOUND: lambda rules: rules.route_dangers.beast_bound_pct,
         BeastTemper.TAMED: lambda rules: rules.route_dangers.beast_tamed_pct,
-    }
+        BeastTemper.COMPANION: lambda rules: rules.route_dangers.beast_tamed_pct,
+    },
 )
 EFFECT_WEIGHT: Mapping[WeatherEffect, Callable[[Rules], int]] = partial(
     WeatherEffect,

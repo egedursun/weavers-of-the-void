@@ -287,7 +287,8 @@ TENET_IDEAS: MappingProxyType[TenetKind, IdeaKind] = MappingProxyType(
 )
 
 KB = KnowledgeBranch
-BRANCH_IDEAS: MappingProxyType[KnowledgeBranch, IdeaKind] = MappingProxyType(
+BRANCH_IDEAS: MappingProxyType[KnowledgeBranch, IdeaKind] = total(
+    KB,
     {
         KB.AGRICULTURE: IK.REVERENCE_FOR_NATURE,
         KB.METALLURGY: IK.CRAFT_DEVOTION,
@@ -307,7 +308,8 @@ BRANCH_IDEAS: MappingProxyType[KnowledgeBranch, IdeaKind] = MappingProxyType(
         KB.IMMORTALITY: IK.MYSTICISM,
         KB.BIOMANCY: IK.RATIONALISM,
         KB.FORBIDDEN: IK.FREE_SPIRIT,
-    }
+        KB.CIVICS: IK.RULE_OF_LAW,
+    },
 )
 
 C = ConditionKind

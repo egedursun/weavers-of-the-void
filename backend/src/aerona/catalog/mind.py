@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from aerona.catalog.thoughts import NEEDS
+from aerona.core.total import total
 from aerona.domain.enums.body import Capacity, ConditionKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EngineKind, MortalRole
@@ -749,7 +750,8 @@ PROFESSIONS: MappingProxyType[Profession, ProfessionSpec] = MappingProxyType(
         Profession.COMMANDER: ProfessionSpec("Commander", (S.TACTICS, S.STRATEGY, S.LEADERSHIP, S.LOGISTICS), MortalRole.KNIGHT),
     }
 )
-BRANCH_SKILLS: MappingProxyType[KnowledgeBranch, SkillKind] = MappingProxyType(
+BRANCH_SKILLS: MappingProxyType[KnowledgeBranch, SkillKind] = total(
+    KnowledgeBranch,
     {
         KnowledgeBranch.AGRICULTURE: S.FORAGING,
         KnowledgeBranch.METALLURGY: S.SMITHING,
@@ -769,5 +771,6 @@ BRANCH_SKILLS: MappingProxyType[KnowledgeBranch, SkillKind] = MappingProxyType(
         KnowledgeBranch.IMMORTALITY: S.ALCHEMY,
         KnowledgeBranch.BIOMANCY: S.MEDICINE,
         KnowledgeBranch.FORBIDDEN: S.SPELLCRAFT,
-    }
+        KnowledgeBranch.CIVICS: S.LAW,
+    },
 )
