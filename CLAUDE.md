@@ -86,7 +86,7 @@ These rules are enforced mechanically, and they bind Claude as much as anyone.
   - `scripts/spec_coverage.py check` on every commit. Every done row must name test files, tests, frontend tests and modules that exist.
   - The proving gate on every backend change (rule 8):
     - `tests/tools/test_every_tool.py`: every son and mortal tool runs to success.
-    - `tests/services/player/test_every_lever.py`: every god lever in the action catalog runs to success through the real action runner. A new lever whose payload the harness cannot fill gets a case in `tests/services/player/every_lever.py`. A lever whose `action`, `mode`, `op` or `operation` field picks between branches runs once for every value of it; a branch that needs its own setup gets a case in `BRANCH_LEVERS`.
+    - `tests/services/player/test_every_lever.py`: every god lever in the action catalog runs to success through the real action runner. A new lever whose payload the harness cannot fill gets a case in `tests/services/player/every_lever.py`. A lever whose `action`, `mode`, `op` or `operation` field picks between branches runs once for every value of it; a branch that needs its own setup gets a case in `BRANCH_LEVERS`. Every editor lever that takes `values` runs with real values from `EDITS`, never an empty dict, so its edit path is proven.
     - `tests/services/player/test_every_job.py`: every god job (summoning, births, worlds, fate controls) runs to success with stand-in ports.
     - `tests/api/test_every_endpoint.py`: every read endpoint answers a seeded, simulated world without a server error.
     - `tests/tools/test_catalogue.py`: every tool field the model sees is described.

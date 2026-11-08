@@ -94,3 +94,9 @@ async def test_every_kind_of_lore_record_can_be_edited(lever_template: Path, tmp
         await run(database, "lore:edit", lever)
     finally:
         await database.dispose()
+
+
+def test_every_editor_lever_edits_real_values() -> None:
+    editors = sorted(spec.id for spec in ACTIONS if spec.sync is not None and "values" in spec.input_model.model_fields)
+    bare = [name for name in editors if not LEVERS.get(name, Lever()).values.get("values")]
+    assert bare == []

@@ -2,7 +2,7 @@ import enum
 import types
 import typing
 from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from pydantic import BaseModel
@@ -1393,6 +1393,56 @@ LEVERS: dict[str, Lever] = {
     **{name: after(PROPHECY, prophecy_id=Newest(EntityType.PROPHECY)) for name in ("prophecy:forget", "prophecy:fulfil", "prophecy:resolve")},
     "body:prosthesis": after(("body:maim", {"bearer_id": Pick(MORTAL), "part": "left_arm", "severity": 5, "lethal": False}), material="wood", quality=40),
 }
+
+EDITS: Mapping[str, Mapping[str, Any]] = {
+    "trade_route:edit": {"danger_bandits": 30, "capacity": 50, "length": 3, "chokepoint": True},
+    "structure:edit": {"condition": 80, "anchor": True, "splendor": 60},
+    "structure_design:edit": {"cost_pct": 110},
+    "species:edit": {"litter_size": 2},
+    "species:range": {"abundance": 40},
+    "herd:edit": {"head": 40},
+    "beast:edit": {"age": 10},
+    "use_kind:edit": {"output_pct": 120},
+    "anatomy:edit": {"limbs": 4},
+    "plant:edit": {"soil_need": 40, "growing_seasons": 2},
+    "lore:edit": {"credence": 40, "distortion": 10},
+    "research:institution": {"embraced": True},
+    "research:boost_edit": {"progress": 40, "epoch": 2},
+    "research:holder": {"level": 2},
+    "kind:edit": {"name": "Plain kind", "description": "A kind set by hand."},
+    "faction:edit": {"cohesion": 60, "treasury": 40},
+    "event:edit": {"severity": 40},
+    "ley:work": {"attuned": True},
+    "material:create": {"hardness": 50},
+    "workshop_design:create": {"output_pct": 110},
+    "workshop_design:edit": {"output_pct": 110},
+    "people:edit": {"cohesion": 60},
+    "people:found": {"cohesion": 60},
+    "class:standing": {"fed_pct": 70, "wealth": 30},
+    "disease:edit": {"lethality": 20, "incubation": 2},
+    "disease:create": {"lethality": 20},
+    "outbreak:edit": {"severity": 30},
+    "settlement:edit": {"crime": 20, "sewers": True},
+    "district:design": {"housing": 10},
+    "district:design_edit": {"housing": 10},
+    "polity:edit": {"legitimacy": 60, "stability": 55},
+    "house:edit": {"prestige": 40},
+    "army:edit": {"cohesion": 60, "loot": 5},
+    "army:edit_stack": {"morale": 60, "experience": 30},
+    "siege:edit": {"disease_inside": 10},
+    "war:edit_side": {"support": 70, "weariness": 20},
+    "spy:edit_network": {"intel": 40, "exposure": 10},
+    "military:edit": {"name": "Shieldwall"},
+    "cult:doctrine": {"orthodoxy": 60, "treasury": 10},
+    "cult:edit_heresy": {"distance": 30},
+    "relic:edit": {"sanctity": 60},
+    "soul:edit": {"veneration": 30},
+    "soul:possession": {"stress": 20},
+    "mind:values": {"honour": 40},
+    "mind:attributes": {"strength": 60},
+    "mind:facets": {"anxiety": 30},
+}
+LEVERS.update({name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in EDITS.items()})
 
 
 async def hidden_route(session: AsyncSession) -> None:
