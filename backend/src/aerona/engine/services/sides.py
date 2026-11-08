@@ -92,12 +92,6 @@ class SideIndex:
     def mark_captive(self, mortal_id: int) -> None:
         self._captives.add(mortal_id)
 
-    def mark_free(self, mortal_id: int) -> None:
-        self._captives.discard(mortal_id)
-
-    def reassign(self, mortal_id: int, community_id: int | None) -> None:
-        self._sides[mortal_id] = community_id
-
 
 async def heroes_of(session: AsyncSession, community_id: int, neighbourhood: Neighbourhood) -> list[EntityRow]:
     return (await SideIndex.load(session, neighbourhood)).heroes_of(community_id)

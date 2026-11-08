@@ -224,10 +224,6 @@ class MetricsService:
             result = await session.execute(delete(LlmCallRow).where(LlmCallRow.epoch <= int(top) - keep))
             return int(getattr(result, "rowcount", 0) or 0)
 
-    async def record_event(self, kind: EventKind, data: dict[str, Any]) -> None:
-        async with self._telemetry.sessions() as session, session.begin():
-            session.add(LiveEventRow(timestamp_ms=int(time.time() * MILLISECONDS), kind=kind.value, data=data))
-
     async def record_events(self, events: Sequence[Event], world_key: str | None) -> None:
         async with self._telemetry.sessions() as session, session.begin():
             for item in events:

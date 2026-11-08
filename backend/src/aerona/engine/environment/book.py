@@ -152,9 +152,6 @@ class EnvironmentBook:
         seen = [self.weather(world_seed, epoch, region, season, slot).factor(WeatherEffect.VISIBILITY) for region in regions]
         return max(0.0, min(1.0, sum(seen) / len(seen)))
 
-    def calendar_holders(self) -> dict[int, CalendarRow]:
-        return dict(self.calendars)
-
 
 def sail_factor(rules: Rules, wind: int) -> float:
     best = max(1, rules.weather.sail_best_wind)

@@ -96,8 +96,7 @@ class Toolkits:
             if son is None:
                 raise NotFoundError("No such son.")
             await start_turn(session, son_id, AgentKind.SON, epoch, action_points)
-            state = await world_state(session, son)
-            specs = [spec for spec in son_specs() if son_may_use(spec, son, world.rules, state, self._ports)]
+            specs = await self.son_specs_for(session, son)
             texts = {spec.name: tool_text(SonToolId(spec.name), world.rules, await son_text_context(session, world.rules, son, spec)) for spec in specs}
         settings = RuntimeSettings(world.rules, epoch, world.seed, world.language, son_id, self._publish)
         return TurnToolkit(SonToolRuntime(self._database, settings, specs, self._ports), texts)
@@ -109,8 +108,7 @@ class Toolkits:
             if mortal is None:
                 raise NotFoundError("No such mortal.")
             await start_turn(session, entity_id, AgentKind.MORTAL, epoch, action_points)
-            state = await mortal_state(session, world.rules, mortal)
-            specs: list[ToolSpec[Any, Any]] = [spec for spec in mortal_specs() if mortal_may_use(spec, mortal, world.rules, state, self._ports)]
+            specs = await self.mortal_specs_for(session, mortal)
             texts = {spec.name: tool_text(MortalToolId(spec.name), world.rules, mortal_text_context(spec)) for spec in specs}
         settings = RuntimeSettings(world.rules, epoch, world.seed, world.language, entity_id, self._publish)
         return TurnToolkit(MortalToolRuntime(self._database, settings, specs, self._ports), texts)

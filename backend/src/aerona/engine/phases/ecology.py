@@ -45,10 +45,6 @@ class Habitat:
     def region_of(self, species: EntityRow) -> int | None:
         return self.atlas.top_region(species.id)
 
-    def wildness(self, species: EntityRow) -> int | None:
-        region = self.region_of(species)
-        return self.wilds.get(region) if region is not None else None
-
 
 async def fertility_of(ctx: TickContext, species: EntityRow, habitat: Habitat) -> int:
     location = await living_entity(ctx.session, species.location_id)

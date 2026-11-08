@@ -38,10 +38,6 @@ class PassionColumns:
     wrath: Mapped[int]
     mercy: Mapped[int]
 
-    @property
-    def passion_block(self) -> PassionBlock:
-        return PassionBlock(**{passion.value: getattr(self, passion.value) for passion in Passion})
-
     def apply_passions(self, block: PassionBlock) -> None:
         for passion in Passion:
             setattr(self, passion.value, block.get(passion))

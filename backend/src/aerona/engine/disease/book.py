@@ -196,10 +196,6 @@ class DiseaseBook:
             return 0.0
         return min(1.0, max((self.ranges.get((species_id, region_id), 0) for species_id in self.hosts.get(disease_id, set())), default=0) / PERCENT)
 
-    def host_alive(self, disease_id: int) -> bool:
-        found = self.hosts.get(disease_id, set())
-        return any(key[0] in found for key in self.ranges)
-
     def hidden_share(self, disease_id: int) -> float:
         profile = self.profiles.get(disease_id)
         if profile is None:

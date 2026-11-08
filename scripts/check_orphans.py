@@ -13,6 +13,7 @@ USERS = (ROOT / "backend" / "tests", ROOT / "scripts", ROOT / "backend" / "src" 
 SKIPPED = frozenset({"alembic"})
 DEFINITION = re.compile(r"^(?:async )?def ([a-zA-Z]\w*)\(|^([A-Z][A-Z0-9_]+)\s*(?::[^=\n]+)?=", re.M)
 WORD = re.compile(r"\b\w+\b")
+TEMPLATE_ATTRIBUTE = re.compile(r"\.([a-zA-Z_]\w*)")
 
 
 @dataclass(frozen=True)
@@ -99,6 +100,36 @@ def unreferenced(files: dict[Path, str], users: dict[Path, str]) -> list[Orphan]
     return found
 
 
+def attribute_names(texts: list[str]) -> set[str]:
+    names: set[str] = set()
+    for text in texts:
+        for node in ast.walk(ast.parse(text)):
+            if isinstance(node, ast.Attribute):
+                names.add(node.attr)
+            elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+                names.add(node.value)
+    return names
+
+
+def template_names() -> set[str]:
+    return {name for path in sorted(SOURCE.rglob("*.j2")) for name in TEMPLATE_ATTRIBUTE.findall(path.read_text(encoding="utf-8"))}
+
+
+def idle_methods(files: dict[Path, str], users: dict[Path, str]) -> list[Orphan]:
+    called = attribute_names([*files.values(), *users.values()]) | template_names()
+    found: list[Orphan] = []
+    for path, text in files.items():
+        for node in ast.walk(ast.parse(text)):
+            if not isinstance(node, ast.ClassDef) or node.bases:
+                continue
+            for method in node.body:
+                if not isinstance(method, ast.FunctionDef | ast.AsyncFunctionDef) or method.name.startswith("__"):
+                    continue
+                if method.name not in called:
+                    found.append(Orphan(path, method.lineno, f"{node.name}.{method.name}"))
+    return found
+
+
 def main() -> int:
     elsewhere = "\n".join(path.read_text(encoding="utf-8") for folder in USERS for path in sorted(folder.rglob("*.py")) if path.name != Path(__file__).name)
     files = sources()
@@ -106,6 +137,7 @@ def main() -> int:
     found = orphans(files, elsewhere)
     seen = {(item.path, item.name) for item in found}
     found += [item for item in unreferenced(files, users) if (item.path, item.name) not in seen]
+    found += idle_methods(files, users)
     for item in found:
         print(f"{item.path.relative_to(ROOT)}:{item.line}: {item.name} is defined but never used; wire it or delete it")
     print(f"orphans: {len(found)}")

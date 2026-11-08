@@ -270,9 +270,6 @@ class BackupService:
         stat = path.stat()
         return BackupInfo(file=path.name, size=stat.st_size, modified=datetime.fromtimestamp(stat.st_mtime, UTC), label=label_of(path.name))
 
-    async def rotate(self) -> int:
-        return await asyncio.to_thread(self._rotate, self._rules())
-
     def _rotate(self, rules: Rules) -> int:
         policy = rules.backup
         epoch_seen = 0

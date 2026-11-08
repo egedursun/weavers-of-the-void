@@ -107,10 +107,6 @@ class Ledger:
         self._bus = bus
         self._journal: ActionLedger = journal or RowJournal()
 
-    @property
-    def journal(self) -> ActionLedger:
-        return self._journal
-
     @asynccontextmanager
     async def record(
         self,

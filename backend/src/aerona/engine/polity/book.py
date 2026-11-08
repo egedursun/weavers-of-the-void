@@ -95,7 +95,3 @@ class RealmBook:
 
     def members(self, realm: Realm) -> list[EntityRow]:
         return [self.entities[member_id] for member_id in realm.members if member_id in self.entities and self.entities[member_id].status is EntityStatus.CANON]
-
-    def same_realm(self, first: int, second: int) -> bool:
-        realm = self.member_of.get(first)
-        return realm is not None and realm == self.member_of.get(second)
