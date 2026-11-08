@@ -63,10 +63,6 @@ async def scholars_of(ctx: TickContext, holder_id: int) -> list[EntityRow]:
     return found[: ctx.rules.discovery.incident_victims]
 
 
-def is_dangerous(technique: Technique | None) -> bool:
-    return technique in DANGEROUS
-
-
 async def strike(
     ctx: TickContext, holder: EntityRow, kind: ResearchIncident, *, technique: Technique | None = None, branch: KnowledgeBranch | None = None
 ) -> ResearchIncidentRow:

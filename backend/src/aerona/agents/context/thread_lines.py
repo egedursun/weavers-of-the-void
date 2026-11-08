@@ -1,7 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 
 from aerona.agents.context.scope import Scope
 from aerona.db.tables.entities import EntityRow
@@ -86,7 +86,3 @@ async def thread_lines_context(scope: Scope, viewer: SonRow | None = None) -> Th
 async def thread_lines(scope: Scope, viewer: SonRow | None = None) -> str:
     context = await thread_lines_context(scope, viewer)
     return render(PromptId.THREAD_LINES, context) if context.threads or context.elsewhere else ""
-
-
-async def open_thread_count(scope: Scope) -> int:
-    return int(await scope.session.scalar(select(func.count()).select_from(ThreadRow).where(ThreadRow.status == ThreadStatus.OPEN)) or 0)

@@ -1,4 +1,3 @@
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.mortal import MortalEquipmentRow, MortalProfileRow
@@ -16,13 +15,6 @@ async def ensure_profile(session: AsyncSession, mortal_id: int, epoch: int) -> t
     session.add(row)
     await session.flush()
     return row, True
-
-
-async def profiles_for(session: AsyncSession, mortal_ids: list[int]) -> dict[int, MortalProfileRow]:
-    if not mortal_ids:
-        return {}
-    rows = await session.scalars(select(MortalProfileRow).where(MortalProfileRow.entity_id.in_(mortal_ids)))
-    return {row.entity_id: row for row in rows}
 
 
 async def ensure_equipment(session: AsyncSession, mortal_id: int) -> MortalEquipmentRow:

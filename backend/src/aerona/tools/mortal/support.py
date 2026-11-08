@@ -17,7 +17,7 @@ from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.entity import COMMUNITY_TYPES, CivilizationTier, EngineKind, EntityOrigin, EntityStatus, EntityType, LegendCategory
+from aerona.domain.enums.entity import COMMUNITY_TYPES, CivilizationTier, EngineKind, EntityOrigin, EntityType, LegendCategory
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
@@ -208,10 +208,6 @@ async def create_record(call: MortalCall, creation: MortalCreation) -> EntityRow
 
 async def enemies(call: MortalCall, first: int, second: int) -> bool:
     return bool(await BondRepository(call.session).active_between(first, second, [BondKind.ENEMY]))
-
-
-def is_canon(entity: EntityRow | None) -> bool:
-    return entity is not None and entity.status is EntityStatus.CANON
 
 
 async def civilization_tier(session: AsyncSession, actor: EntityRow) -> int:

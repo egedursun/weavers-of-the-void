@@ -50,13 +50,6 @@ async def living_entity(session: AsyncSession, entity_id: int | None) -> EntityR
     return found if found is not None and found.status is EntityStatus.CANON else None
 
 
-async def count_canon(session: AsyncSession, entity_type: EntityType | None = None) -> int:
-    statement = select(func.count()).select_from(EntityRow).where(EntityRow.status == EntityStatus.CANON)
-    if entity_type is not None:
-        statement = statement.where(EntityRow.entity_type == entity_type)
-    return int(await session.scalar(statement) or 0)
-
-
 async def count_communities(session: AsyncSession, world_id: int | None = None) -> int:
     statement = select(func.count()).select_from(EntityRow).where(EntityRow.status == EntityStatus.CANON, EntityRow.entity_type.in_(list(COMMUNITY_TYPES)))
     if world_id is not None:

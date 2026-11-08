@@ -17,17 +17,15 @@ from aerona.engine.context import Publisher
 from aerona.engine.gods.acts import kill_mortal_by_creator
 from aerona.engine.gods.devotion import (
     DevotionResult,
-    ResurrectionState,
     RiteKind,
     SchemeKind,
     resurrection_rite,
-    resurrection_state,
     scatter_bones,
     sibling_scheme,
 )
 from aerona.engine.gods.essence import spend
 from aerona.engine.gods.god_death import FadingStatus, GodDeath, creator_kills_son, fading_status, god_death, resurrect_son
-from aerona.engine.gods.mortality import KillChance, Killer, KillOutcome, attempt_kill, failed_kill_refund, kill_chance, kill_cost
+from aerona.engine.gods.mortality import KillChance, Killer, KillOutcome, attempt_kill, kill_chance, kill_cost
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import living_sons
@@ -48,24 +46,12 @@ async def kill_price(session: AsyncSession, rules: Rules, entity_id: int, son_id
     return KillPrice(await kill_cost(session, rules, victim), await kill_chance(session, rules, victim, killer), rules.death.creator_take_life_cost)
 
 
-def refund_for_failed_kill(rules: Rules, cost: int) -> int:
-    return failed_kill_refund(rules, cost)
-
-
 async def take_life(session: AsyncSession, rules: Rules, entity_id: int, how: str = "", publish: Publisher | None = None) -> KillOutcome:
     ctx = await manual_context(session, "take_life", rules, publish)
     victim = require(await session.get(EntityRow, entity_id), "record")
     outcome = await kill_mortal_by_creator(ctx, await require_creator(session), victim, how.strip()[: rules.god_actions.inspiration_max_chars])
     await record_action(ctx, ActionKind.TAKE_LIFE, entity_id, rules.death.creator_take_life_cost)
     return outcome
-
-
-async def son_takes_life(session: AsyncSession, rules: Rules, son_id: int, entity_id: int) -> KillOutcome:
-    ctx = await manual_context(session, "son_take_life", rules)
-    son = require(await session.get(SonRow, son_id), "son")
-    victim = require(await session.get(EntityRow, entity_id), "record")
-    creator = await require_creator(session)
-    return await attempt_kill(ctx, victim, Killer(ActorKind.SON, son.name, son.id, son.might), creator.name)
 
 
 async def kill_son(session: AsyncSession, rules: Rules, son_id: int, reason: str = "", publish: Publisher | None = None) -> GodDeath:
@@ -98,12 +84,6 @@ async def resurrect(session: AsyncSession, rules: Rules, son_id: int, publish: P
     await resurrect_son(ctx, son, god_lines.RESURRECTION_BY_CREATOR.format(creator=creator.name))
     await record_action(ctx, ActionKind.RESURRECT_SON, son_id, rules.balance.resurrection)
     return son
-
-
-async def son_resurrection(session: AsyncSession, rules: Rules, son_id: int) -> ResurrectionState | None:
-    ctx = await manual_context(session, "resurrection_state", rules)
-    son = require(await session.get(SonRow, son_id), "son")
-    return await resurrection_state(session, rules, son, ctx.epoch)
 
 
 async def fading_statuses(session: AsyncSession, rules: Rules) -> list[FadingStatus]:

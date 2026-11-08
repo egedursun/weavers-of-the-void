@@ -32,7 +32,6 @@ from aerona.engine.primitives.queries import has_flag
 from aerona.rules.registry import Rules
 
 NOTABLE_ROLES = frozenset(HERO_ROLES | {MortalRole.RULER})
-SHIELD_FLAGS = (EntityFlag.PROTECTED, EntityFlag.CHOSEN)
 UNKILLABLE_FLAGS = (EntityFlag.IMMORTAL,)
 
 

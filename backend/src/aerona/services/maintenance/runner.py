@@ -17,7 +17,6 @@ MAINTENANCE_GROUP = "maintenance"
 LLM_OFF = "{what} needs the language model, which is disabled or not connected."
 EPOCH_BUSY = "An epoch is running; wait for it to finish or stop it."
 BUSY = "Another maintenance task is already running."
-NOTHING_MISSING = "Nothing is missing."
 
 
 def group_of(task: MaintenanceTask) -> str:

@@ -15,7 +15,6 @@ class LegacyKind(StrEnum):
     BOND = "bond"
 
 
-NODE_KINDS = frozenset({LegacyKind.ENTITY, LegacyKind.SON, LegacyKind.CREATOR, LegacyKind.FOREIGN_GOD, LegacyKind.WORLD, LegacyKind.STAR})
 CREATOR_KEY = 0
 
 

@@ -20,7 +20,6 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.mind import MemoryKind, TraitEffect, TraitKind, ValueAxis, ValueHolder
 from aerona.domain.enums.society_depth import DriftCause
-from aerona.domain.enums.son import Passion
 from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import TOTAL_LOSS_KINDS
 from aerona.engine.context import TickContext
@@ -227,11 +226,6 @@ async def seed_values(session: AsyncSession, rules: Rules, node: Holder, rng: Se
     return await seeder(session, rules, node, rng)
 
 
-def son_passion(son: SonRow, passion: Passion) -> int:
-    value = getattr(son, passion.value, 0)
-    return value if isinstance(value, int) else 0
-
-
 async def ruler_values(session: AsyncSession, index: ValueIndex, community_id: int) -> Values | None:
     for bond in await active_bonds(session, [BondKind.RULES], targets=[community_id]):
         ruler = await living_entity(session, bond.source_node_id)
@@ -317,14 +311,6 @@ async def pressure_causes(ctx: TickContext, community: EntityRow, index: ValueIn
         for axis, value in pull_shift(current, conqueror, sign * table.conquest_pull_pct).items():
             add_shift(causes, DriftCause.CONQUEST, axis, value)
     return causes
-
-
-async def pressure_target(ctx: TickContext, community: EntityRow, index: ValueIndex, current: Values, plagued: set[int]) -> dict[ValueAxis, float]:
-    target: dict[ValueAxis, float] = {axis: float(current.get(axis, 0)) for axis in ValueAxis}
-    for shift in (await pressure_causes(ctx, community, index, current, plagued)).values():
-        for axis, value in shift.items():
-            target[axis] += value
-    return target
 
 
 async def drift_culture(ctx: TickContext, community: EntityRow, index: ValueIndex, plagued: set[int]) -> bool:

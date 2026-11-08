@@ -331,10 +331,6 @@ async def allocate(
     return found
 
 
-async def labour_of(session: AsyncSession, community_id: int) -> dict[Job, LabourRow]:
-    return {row.job: row for row in await session.scalars(select(LabourRow).where(LabourRow.community_entity_id == community_id))}
-
-
 def effective(rows: Mapping[Job, LabourRow], *jobs: Job) -> int | None:
     if not rows:
         return None

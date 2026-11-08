@@ -8,7 +8,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { RegionCropsSection, WorldLifeSection } from './FloraPanels'
 import { SpeciesSection } from './SpeciesSection'
-import { CROPS, LIFE, PLANT, serveBasics } from './wildsFixtures'
+import { CROPS, LIFE, MOTH, PLANT, serveBasics } from './wildsFixtures'
 
 vi.mock('@/api/client', async () => {
   const { createFakeClient } = await import('@/test-utils/fakeApi')
@@ -37,6 +37,34 @@ describe('flora panels', () => {
     expect(callsTo('POST', '/api/actions/plant:edit')[0].body).toEqual({
       species_id: 8,
       values: { soil_need: 20 },
+      release: [],
+    })
+  })
+
+  it('makes a cultivar a kind of its own again', async () => {
+    serveBasics()
+    onApi('GET', '/api/entities/8/ecology', {
+      ...PLANT,
+      plant: { ...PLANT.plant, cultivar_of: MOTH },
+    })
+    onApi('POST', '/api/actions/plant:edit', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<SpeciesSection speciesId={8} />)
+    await screen.getByRole('button', { name: 'Adjust' }).click()
+    await screen.getByRole('tab', { name: 'Growth' }).click()
+    await expect
+      .element(
+        screen.getByRole('button', { name: 'Set what it was bred from' })
+      )
+      .toBeDisabled()
+    await screen
+      .getByRole('button', { name: 'Make it a kind of its own' })
+      .click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/plant:edit'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/plant:edit')[0].body).toEqual({
+      species_id: 8,
+      values: { cultivar_of_id: null },
       release: [],
     })
   })

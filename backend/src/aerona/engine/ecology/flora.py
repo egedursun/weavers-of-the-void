@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.flora import PRODUCT_BY_NAME, PlantProduct
+from aerona.catalog.flora import PlantProduct, plant_product_of
 from aerona.constants.units import PERCENT
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import HolderLevelRow
@@ -18,7 +18,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.disease import OutbreakStatus
-from aerona.domain.enums.ecology import GROWN, SOWN, Biochemistry, Cultivation, Diet, PlantYield, SpeciesClass, SpeciesUse
+from aerona.domain.enums.ecology import GROWN, SOWN, Biochemistry, Cultivation, Diet, SpeciesClass, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherEffect
@@ -147,7 +147,11 @@ class CropBook:
     def fields(self, region_id: int) -> list[CropField]:
         found: list[CropField] = []
         for row in self.crops.get(region_id, []):
-            products = tuple((PRODUCT_BY_NAME[item.product], item.rate) for item in self.yields.get(row.plant_entity_id, []) if item.product in PRODUCT_BY_NAME)
+            products = tuple(
+                (matched, item.rate)
+                for item in self.yields.get(row.plant_entity_id, [])
+                if (matched := plant_product_of(item.product, item.commodity)) is not None
+            )
             if row.share > 0 and products:
                 found.append(CropField(row.plant_entity_id, row.share, products))
         return found
@@ -323,7 +327,9 @@ async def breed_cultivar(ctx: TickContext, book: CropBook, row: RegionCropRow, k
         ),
     )
     await connect(ctx.session, child.id, parent.id, BondKind.DESCENDS_FROM, ctx.epoch, description="bred by farmers")
-    products = tuple(PlantYield(item.product) for item in book.yields.get(parent.id, []) if item.product in PRODUCT_BY_NAME)
+    products = tuple(
+        dict.fromkeys(matched.product for item in book.yields.get(parent.id, []) if (matched := plant_product_of(item.product, item.commodity)) is not None)
+    )
     spec = SpeciesSpec(
         body_plan=profile.body_plan,
         size_class=profile.size_class,
@@ -480,7 +486,7 @@ def first_biochemistry(profile: SpeciesProfileRow) -> Biochemistry | None:
 async def reclass_plant(ctx: TickContext, profile: SpeciesProfileRow) -> None:
     profile.species_class = SpeciesClass.PLANT
     for item in list(await ctx.session.scalars(select(SpeciesYieldRow).where(SpeciesYieldRow.species_entity_id == profile.species_entity_id))):
-        if item.product not in PRODUCT_BY_NAME:
+        if plant_product_of(item.product, item.commodity) is None:
             await ctx.session.delete(item)
     nature = Nature(
         profile.body_plan,

@@ -5,7 +5,6 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import ValidationFailedError
-from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
@@ -117,17 +116,6 @@ async def create_cosmic_deposit(session: AsyncSession, rules: Rules, epoch: int,
     await set_mechanics(session, deposit, COSMIC_DEPOSIT_MECHANICS)
     await set_resource_yield(session, rules, deposit.id, CommodityKind.MAGICAL_REAGENTS)
     return deposit
-
-
-def economy_deposit(rules: Rules, rng: SeededRandom, region: EntityRow) -> DepositSpec:
-    economy = rules.economy
-    return DepositSpec(
-        region=region,
-        abundance=economy.deposit_abundance + rng.die(economy.deposit_abundance_die),
-        value=economy.deposit_value,
-        might=economy.deposit_might,
-        power_level=economy.deposit_power,
-    )
 
 
 async def define_cosmic_resource(session: AsyncSession, resource: TravelResource, replace: bool = False) -> TravelResource:

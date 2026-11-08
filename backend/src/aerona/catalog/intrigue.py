@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.intrigue import BeliefSource, FavourOrigin, HookDemand, HookSource, HookStrength, IdentityReason, IntrigueSecret, PlotKind, SchemePhase
+from aerona.domain.enums.intrigue import BeliefSource, FavourOrigin, HookDemand, HookSource, IdentityReason, IntrigueSecret, PlotKind, SchemePhase
 from aerona.domain.enums.mind import ActKind
 
 
@@ -81,7 +81,6 @@ PHASE_LABELS: dict[SchemePhase, str] = {
     SchemePhase.EXPOSED: "Exposed",
     SchemePhase.ABANDONED: "Abandoned",
 }
-HOOK_STRENGTH_LABELS: dict[HookStrength, str] = {HookStrength.WEAK: "Weak", HookStrength.STRONG: "Strong"}
 HOOK_SOURCE_LABELS: dict[HookSource, str] = {
     HookSource.SECRET: "A secret",
     HookSource.DEBT: "A debt",

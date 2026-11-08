@@ -254,11 +254,6 @@ async def adopt(ctx: TickContext, creed: EntityRow) -> int:
     return adopted
 
 
-async def state_tenets(ctx: TickContext, community_id: int) -> set[IdeologyTenet]:
-    creeds = select(IdeologyAdherentRow.ideology_entity_id).where(IdeologyAdherentRow.adherent_entity_id == community_id, IdeologyAdherentRow.state.is_(True))
-    return set(await ctx.session.scalars(select(IdeologyTenetRow.tenet).where(IdeologyTenetRow.ideology_entity_id.in_(creeds))))
-
-
 async def clash_with_faith(ctx: TickContext, creed: EntityRow) -> int:
     table = ctx.rules.ideologies
     tenets = await tenets_of(ctx, creed.id)

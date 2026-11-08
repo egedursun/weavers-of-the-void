@@ -6,7 +6,6 @@ from aerona.db.tables.bonds import BondRow
 from aerona.domain.enums.bond import BondKind, BondState
 
 KIN_STATES = (BondState.ACTIVE, BondState.PAST)
-MARITAL_KINDS = (BondKind.SPOUSE_OF, BondKind.CONCUBINE_OF)
 
 
 async def _ends(session: AsyncSession, kind: BondKind, *, source: int | None = None, target: int | None = None, past: bool = False) -> list[int]:

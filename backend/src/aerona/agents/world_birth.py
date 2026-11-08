@@ -29,9 +29,9 @@ from aerona.engine.cosmos.birth import BirthRequest, process_world_birth
 from aerona.engine.phases.exploration import begin_intuition, intuition_inspiration, pending_intuitions, settle_intuition
 from aerona.engine.primitives.manual import manual_context
 from aerona.events.kinds import EventKind
-from aerona.prompts import PromptId, render
+from aerona.prompts import PromptId
 from aerona.prompts.contexts.common import WorldItem
-from aerona.prompts.contexts.cosmos import ForeignGodBrief, InspirationKind, NewWorldContext, PlacementKind, StarLine, WorldInspirationContext
+from aerona.prompts.contexts.cosmos import ForeignGodBrief, NewWorldContext, PlacementKind, StarLine
 from aerona.prompts.schemas.cosmos import NewWorldOutput
 
 NAMED_TYPES = (EntityType.REGION, EntityType.PEOPLE, EntityType.LANGUAGE, EntityType.PLACE, EntityType.CELESTIAL)
@@ -242,7 +242,3 @@ async def mark_sensed_step(session: AsyncSession, intuition_id: int, world_id: i
         if step.payload.get("intuition_id") == intuition_id:
             step.status = DeferredStepStatus.DONE
             step.result_world_id = world_id
-
-
-def inspiration_text(kind: InspirationKind, mortal_name: str = "", method: str = "", world_number: int = 0) -> str:
-    return render(PromptId.WORLD_INSPIRATION, WorldInspirationContext(kind=kind, mortal_name=mortal_name, method=method, world_number=world_number))

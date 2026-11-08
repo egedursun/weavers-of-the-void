@@ -39,12 +39,6 @@ def can_take(rules_reach: int, hunter: SpeciesProfileRow, prey: SpeciesProfileRo
     return SIZE_ORDER.index(prey.size_class) <= SIZE_ORDER.index(hunter.size_class) + rules_reach
 
 
-async def diet_allows(ctx: TickContext, hunter: EntityRow, prey: EntityRow, ranges: dict[int, dict[int, int]]) -> bool:
-    if not set(ranges.get(hunter.id, {})) & set(ranges.get(prey.id, {})):
-        return False
-    return can_take(ctx.rules.food_web.size_reach, await profile_of(ctx, hunter), await profile_of(ctx, prey), await traits_of(ctx.session, prey.id))
-
-
 @dataclass
 class WebChange:
     formed: dict[int, list[int]] = field(default_factory=lambda: defaultdict(list))

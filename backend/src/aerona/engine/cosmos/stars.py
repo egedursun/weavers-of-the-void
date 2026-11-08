@@ -16,7 +16,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.limits import PERCENT_MAX
-from aerona.domain.enums.world import DARK_STAR_TYPES, EXTINGUISHED_STAR_TYPES, Discovery, SkyEventKind, StarType
+from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, Discovery, SkyEventKind, StarType
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import restore_sail_routes, scorch_sail_routes, snap_sail_routes
 from aerona.engine.cosmos.star_types import fitted_brightness, kindled_brightness
@@ -107,13 +107,6 @@ async def set_epoch_star(session: AsyncSession, world_id: int, entity_id: int | 
     world.epoch_star_entity_id = entity_id
     await session.flush()
     return world
-
-
-async def world_star_body(session: AsyncSession, world_id: int) -> EntityRow | None:
-    world = await session.get(WorldRow, world_id)
-    if world is None or world.epoch_star_entity_id is None:
-        return None
-    return await session.get(EntityRow, world.epoch_star_entity_id)
 
 
 def _add_leak(world: WorldRow, amount: int) -> None:
@@ -223,7 +216,3 @@ async def end_black_sun(session: AsyncSession, star_id: int, epoch: int) -> None
     statement = select(SkyEventRow).where(SkyEventRow.star_id == star_id, SkyEventRow.kind == SkyEventKind.BLACK_SUN, SkyEventRow.until_epoch.is_(None))
     for row in await session.scalars(statement):
         row.until_epoch = max(row.epoch, epoch)
-
-
-def is_dark(star: StarRow | None) -> bool:
-    return star is not None and star.star_type in DARK_STAR_TYPES

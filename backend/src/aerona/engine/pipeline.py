@@ -474,11 +474,6 @@ def disabled_by_rules(rules: Rules) -> frozenset[str]:
     return frozenset(name for name in PHASE_REGISTRY if name not in ESSENTIAL_PHASES and getattr(switches, name) == 0)
 
 
-def enabled_phases(phases: Sequence[Phase], rules: Rules) -> tuple[Phase, ...]:
-    disabled = disabled_by_rules(rules)
-    return tuple(phase for phase in phases if phase.name not in disabled)
-
-
 def after_transition(environment: TickEnvironment) -> TickEnvironment:
     return replace(environment, epoch=environment.epoch + 1, window=phase_window(environment.rules, EpochPhase.NOT_STARTED))
 

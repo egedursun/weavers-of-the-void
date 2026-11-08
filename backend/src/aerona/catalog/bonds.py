@@ -154,21 +154,6 @@ LINK_GROUP_LABELS: dict[LinkGroup, str] = {
     LinkGroup.LINEAGE: "Lineage, property and making",
     LinkGroup.KNOWLEDGE: "Knowledge, language and trade",
 }
-LINEAGE_KINDS = (
-    B.DESCENDS_FROM,
-    B.PARENT_OF,
-    B.SPOUSE_OF,
-    B.FOSTERED_BY,
-    B.RULES,
-    B.OWNS,
-    B.PRODUCED,
-    B.BUILT,
-    B.MIGRATED_TO,
-    B.MEMBER_OF,
-    B.APPRENTICE_OF,
-    B.COMMANDS,
-    B.PART_OF,
-)
 LINK_GROUP_KINDS: dict[LinkGroup, frozenset[str]] = {
     LinkGroup.CONFLICT: frozenset(
         kind.value for kind in (B.ENEMY, B.KILLED, B.CURSED, B.HUNTS, B.DESTROYED, B.CAUSED, B.PARTY_TO, B.BEAT, B.RIVAL, B.PURSUES, B.HOLDS_CAPTIVE)

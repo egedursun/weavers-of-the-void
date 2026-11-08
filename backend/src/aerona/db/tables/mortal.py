@@ -22,7 +22,6 @@ PROFILE_PERCENTS = (
     "loyalty_god",
 )
 PROFILE_LOCKS = ("life", "health", "stress", "standing", "loyalty", "career", "education", "equipment", "kin")
-EQUIPMENT_COLUMNS = ("wielded_main_id", "wielded_off_id", "armour_body_id", "armour_head_id", "mount_id", "focus_id")
 
 
 class MortalProfileRow(Base):

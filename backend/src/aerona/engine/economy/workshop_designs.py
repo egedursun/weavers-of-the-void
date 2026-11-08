@@ -1,15 +1,14 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import update
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.economy import WorkshopDesignRow, WorkshopRow
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.engine.context import TickContext
-from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.numbers import round_half_up
 
 DESIGN_FIELDS = ("output_pct", "capacity_pct", "store_pct", "quality_bonus")
 SCALE_MAX = 500
@@ -31,10 +30,6 @@ def workshop_store_units(workshop: WorkshopRow | None, design: WorkshopDesignRow
     if workshop is None:
         return 0
     return round_half_up(workshop.level * per_level * (design.store_pct / PERCENT if design is not None else 1.0))
-
-
-async def designs_by_id(session: AsyncSession) -> dict[int, WorkshopDesignRow]:
-    return {row.id: row for row in await session.scalars(select(WorkshopDesignRow).order_by(WorkshopDesignRow.id))}
 
 
 @dataclass(frozen=True)
@@ -118,7 +113,3 @@ async def assign_design(ctx: TickContext, workshop: WorkshopRow, design_id: int)
     if row.base_kind is not workshop.kind:
         raise ValidationFailedError("A design is built on the workshop kind it was drawn for.")
     workshop.design_id = row.id
-
-
-def clamp_quality(value: int) -> int:
-    return clamp_int(value, 0, PERCENT)

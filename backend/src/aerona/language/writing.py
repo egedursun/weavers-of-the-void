@@ -7,13 +7,6 @@ from aerona.rules.registry import Rules
 
 UnitRandom = Callable[[], float]
 
-WRITING_SYSTEM_DESCRIPTIONS: dict[WritingSystem, str] = {
-    WritingSystem.ALPHABET: "one sign per sound",
-    WritingSystem.SYLLABARY: "one sign per syllable",
-    WritingSystem.PICTOGRAPHIC: "signs born from pictures of objects",
-    WritingSystem.KNOT: "records kept with knots tied in cords",
-    WritingSystem.NOTCH: "notches carved into stone and bone",
-}
 
 WRITING_SYSTEM_PHRASES: dict[WritingSystem, str] = {
     WritingSystem.ALPHABET: "an alphabet",

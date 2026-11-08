@@ -1,14 +1,11 @@
-from collections.abc import Iterable
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.creatures import trait_war_bonus
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.entities import EntityRow, EntityTraitRow
+from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import CreatureTrait
@@ -31,10 +28,6 @@ BESTOWED = frozenset({CreatureTrait.SACRED_ANIMAL})
 
 async def traits_of(session: AsyncSession, entity_id: int) -> set[CreatureTrait]:
     return await EntityRepository(session).traits(entity_id)
-
-
-def trait_war(rules: Rules, traits: Iterable[CreatureTrait]) -> int:
-    return sum(trait_war_bonus(rules, trait) for trait in traits)
 
 
 async def common_child(session: AsyncSession, first: int, second: int) -> bool:
@@ -123,10 +116,6 @@ async def stowaway(ctx: TickContext, origin_world_id: int, region: EntityRow) ->
     )
     await BondRepository(ctx.session).connect(BondDraft(carried.id, source.id, BondKind.DESCENDS_FROM, ctx.epoch, "stowaway"))
     return carried
-
-
-async def species_by_trait(session: AsyncSession, trait: CreatureTrait) -> set[int]:
-    return set(await session.scalars(select(EntityTraitRow.entity_id).where(EntityTraitRow.trait == trait)))
 
 
 def species_danger(rules: Rules, species: EntityRow) -> int:

@@ -25,7 +25,7 @@ from aerona.domain.enums.ecology import Diet, SizeClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, TemperatureBand, TerrainKind
-from aerona.domain.enums.mind import SkillKind, ValueAxis
+from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.engine.body.customs import culture_of
 from aerona.engine.demography.biology import edible, record_of, staple_for
@@ -62,14 +62,6 @@ async def member_lifespan(session: AsyncSession, people: EntityRow) -> int:
     )
     found = await session.scalar(statement)
     return round_half_up(float(found)) if found else HUMAN_LIFESPAN
-
-
-def staple_of(region: RegionEnvironmentRow | None) -> CommodityKind:
-    if region is None:
-        return CommodityKind.GRAIN
-    if region.coast_kind is not CoastKind.NONE and region.farmed + region.grazed < LEAN:
-        return CommodityKind.FISH
-    return CommodityKind.LIVESTOCK if region.grazed > region.farmed else CommodityKind.GRAIN
 
 
 async def species_root(session: AsyncSession, people: EntityRow) -> EntityRow | None:
@@ -400,17 +392,3 @@ def tally_battle(row: PeopleCultureRow, *, won: bool) -> None:
     wins, losses = record_of(row, row.martial_style.value)
     record[row.martial_style.value] = [wins + (1 if won else 0), losses + (0 if won else 1)]
     row.martial_record = record
-
-
-SKILL_FOR_STYLE: dict[MartialStyle, SkillKind] = {
-    MartialStyle.SHIELDWALL: SkillKind.SHIELD,
-    MartialStyle.HORSE_ARCHER: SkillKind.RIDING,
-    MartialStyle.SKIRMISHER: SkillKind.THROWING,
-    MartialStyle.CHARIOT: SkillKind.RIDING,
-    MartialStyle.PHALANX: SkillKind.SPEAR,
-    MartialStyle.BERSERKER: SkillKind.AXE,
-    MartialStyle.NAVAL_RAIDER: SkillKind.NAVAL_COMBAT,
-    MartialStyle.SIEGE_ENGINEER: SkillKind.SIEGECRAFT,
-    MartialStyle.WAR_MAGIC: SkillKind.SPELLCRAFT,
-    MartialStyle.BEAST_WAR: SkillKind.BEAST_HANDLING,
-}

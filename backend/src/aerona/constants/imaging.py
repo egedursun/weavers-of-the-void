@@ -4,7 +4,6 @@ WORKER_JOB_PATH = "/jobs/{job_id}"
 WORKER_JOB_EVENTS_PATH = "/jobs/{job_id}/events"
 WORKER_JOB_IMAGE_PATH = "/jobs/{job_id}/image"
 WORKER_LAST_EVENT_ID_HEADER = "last-event-id"
-PNG_MEDIA_TYPE = "image/png"
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 WORKER_CONNECT_TIMEOUT_SECONDS = 5.0
 WORKER_REQUEST_TIMEOUT_SECONDS = 30.0

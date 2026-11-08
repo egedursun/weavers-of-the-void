@@ -225,7 +225,6 @@ KIND_WEAPONS = MappingProxyType(
     }
 )
 HEAVY_WEATHER = frozenset({W.HEAT_WAVE, W.SNOW, W.BLIZZARD})
-OMEN_WEATHER = frozenset({W.STORM, W.ECLIPSE_DARK, W.MAGIC_STORM, W.AURORA})
 
 TACTIC_COUNTERS: MappingProxyType[Tactic, frozenset[Tactic]] = MappingProxyType(
     {

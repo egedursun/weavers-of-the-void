@@ -99,11 +99,3 @@ async def faction_drive(session: AsyncSession, rules: Rules, community_id: int) 
     pressures = await pressures_of(session, community_id)
     push = max(pressures.get(PressureKind.POVERTY, 0), pressures.get(PressureKind.HUMILIATION, 0), pressures.get(PressureKind.STAGNATION, 0))
     return pressure_lift(push, rules.needs.faction_pressure_pct)
-
-
-async def strongest_pressure(session: AsyncSession, community_id: int) -> tuple[PressureKind | None, int]:
-    pressures = await pressures_of(session, community_id)
-    if not pressures:
-        return None, 0
-    kind = max(sorted(pressures), key=lambda item: pressures[item])
-    return kind, pressures[kind]

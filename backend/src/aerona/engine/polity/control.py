@@ -892,9 +892,6 @@ async def edit_loan(
     return loan
 
 
-HOUSE_NUMBERS = ("prestige",)
-
-
 async def edit_house(ctx: TickContext, house_id: int, values: Mapping[str, object], *, release: Sequence[str]) -> HouseProfileRow:
     profile = await ctx.session.get(HouseProfileRow, house_id)
     house = await ctx.session.get(EntityRow, house_id)

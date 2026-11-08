@@ -242,8 +242,3 @@ async def left_to_beg(ctx: TickContext, mortal: EntityRow) -> bool:
         return False
     mercy = (await values_for(ctx.session, people.id)).get(ValueAxis.MERCY, 0)
     return mercy < ctx.rules.careers.beggar_mercy_below
-
-
-async def holders_with(session: AsyncSession, skill: SkillKind, minimum: int) -> list[int]:
-    statement = select(SkillRow.holder_node_id).where(SkillRow.skill == skill, SkillRow.level >= minimum, SkillRow.subject_node_id.is_(None))
-    return list(await session.scalars(statement))

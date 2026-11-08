@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from aerona.domain.enums.son import ExistenceBand, ExistenceMode, Passion, SonResource, Stat, StatGroup
+from aerona.domain.enums.son import ExistenceBand, ExistenceMode, Passion, Stat, StatGroup
 from aerona.rules.registry import Rules
 
 PERCENT = 100
@@ -58,7 +58,6 @@ STATS: dict[Stat, StatSpec] = {
     )
 }
 
-STAT_GROUP_LABELS: dict[StatGroup, str] = {StatGroup.BODY: "Body", StatGroup.MIND: "Mind", StatGroup.SPIRIT: "Spirit"}
 
 PASSIONS: dict[Passion, LabelledKey[Passion]] = {
     item.key: item
@@ -70,16 +69,6 @@ PASSIONS: dict[Passion, LabelledKey[Passion]] = {
     )
 }
 
-RESOURCES: dict[SonResource, LabelledKey[SonResource]] = {
-    item.key: item
-    for item in (
-        LabelledKey(SonResource.HP, "HP", "When it reaches zero the son falls asleep for a while."),
-        LabelledKey(SonResource.ESSENCE, "Essence", "Fuel of creation, refilled each epoch by rarity and faith."),
-        LabelledKey(SonResource.FAITH, "Faith", "Flows from worshipping cults, peoples and settlements."),
-        LabelledKey(SonResource.FAME, "Renown", "Grows with creations, victories and fulfilled prophecies; fades slowly."),
-        LabelledKey(SonResource.XP, "Experience", "Raises the level; levels unlock powers."),
-    )
-}
 
 EXISTENCE_MODES: dict[ExistenceMode, str] = {
     ExistenceMode.CONCRETE: "Concrete",

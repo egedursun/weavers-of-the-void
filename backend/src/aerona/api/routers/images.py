@@ -27,7 +27,6 @@ router = APIRouter(tags=["images"])
 CAPTION_MAX_LENGTH = 120
 COVER_TOOL = "image:cover"
 CAPTION_TOOL = "image:caption"
-DELETE_TOOL = "image:delete"
 UPLOAD_TOOL = "image:upload"
 PROMPTS_GROUP = "prompts"
 UNSUPPORTED_TYPE = "Images must be PNG, JPEG or WEBP."

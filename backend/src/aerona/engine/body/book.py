@@ -71,12 +71,6 @@ TRAIT_PLANS: tuple[tuple[CreatureTrait, BodyPlan], ...] = (
 )
 
 
-def is_bearer(node: object) -> bool:
-    if isinstance(node, EntityRow):
-        return node.entity_type is EntityType.MORTAL
-    return isinstance(node, SonRow | ForeignGodRow)
-
-
 def bearer_stats(bearer: Bearer) -> BearerStats:
     if isinstance(bearer, EntityRow):
         agility = stat(bearer, "agility") or DEFAULT_STAT
@@ -99,10 +93,6 @@ def anatomy_for(body: BodyRow) -> Anatomy:
 async def species_traits(session: AsyncSession, species_id: int) -> set[CreatureTrait]:
     rows = await session.scalars(select(EntityTraitRow.trait).where(EntityTraitRow.entity_id == species_id))
     return set(rows)
-
-
-def plan_from_traits(traits: set[CreatureTrait]) -> BodyPlan:
-    return next((plan for trait, plan in TRAIT_PLANS if trait in traits), BodyPlan.QUADRUPED)
 
 
 def legacy_plan_from_words(text: str) -> BodyPlan | None:

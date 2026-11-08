@@ -105,10 +105,6 @@ def strip_meta_sentences(text: str | None) -> str:
     return "\n".join(lines).strip()
 
 
-def has_engine_prefix(text: str | None) -> bool:
-    return (text or "").strip().startswith(ENGINE_DESCRIPTION_PREFIXES)
-
-
 def without_engine_prefix(text: str | None) -> str:
     value = (text or "").strip()
     for prefix in ENGINE_DESCRIPTION_PREFIXES:
@@ -128,10 +124,6 @@ def replace_name(text: str | None, old: str, new: str, protected: tuple[str, ...
     for token, name in guards.items():
         replaced = replaced.replace(token, name)
     return replaced
-
-
-def summary_of(*parts: str | None, limit: int) -> str:
-    return " · ".join(part.strip() for part in parts if part and part.strip())[:limit]
 
 
 def epoch_mentions(text: str, last_epoch: int) -> int:

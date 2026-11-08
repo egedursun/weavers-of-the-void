@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.climate import ClimateProfile, climate_profile, climate_weights
@@ -211,10 +210,6 @@ async def impose_climate(ctx: TickContext, world_id: int, era: ClimateEra, epoch
     if state is None:
         raise NotFoundError("The world has no climate.")
     return state
-
-
-async def pending_orders(session: AsyncSession) -> list[ClimateOrderRow]:
-    return list(await session.scalars(select(ClimateOrderRow).order_by(ClimateOrderRow.world_id)))
 
 
 PHASES = (

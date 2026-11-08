@@ -80,6 +80,8 @@ const DAMAGE_ICON: Record<string, LoreNamed['icon']> = {
   cold: Snowflake,
   void: Skull,
   holy: Sparkles,
+  magic: Sparkles,
+  venom: Skull,
 }
 
 function named(

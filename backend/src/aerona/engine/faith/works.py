@@ -8,7 +8,7 @@ from aerona.db.tables.economy import GoodsFlowRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultDoctrineRow, CultHoldingRow, RelicRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
-from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
@@ -304,14 +304,6 @@ async def pilgrimage(ctx: TickContext, church: Church) -> tuple[int, int]:
     if church.doctrine is not None:
         credit(church.doctrine, income)
     return pilgrims, income
-
-
-async def temple_quarters(ctx: TickContext, church: Church) -> int:
-    homes = [member.id for member in church.members]
-    if not homes:
-        return 0
-    rows = await ctx.session.scalars(select(DistrictRow).where(DistrictRow.settlement_entity_id.in_(homes), DistrictRow.kind == DistrictKind.TEMPLE_QUARTER))
-    return sum(row.level for row in rows)
 
 
 async def pilgrim_plague(ctx: TickContext, church: Church, atlas: RegionAtlas) -> int:

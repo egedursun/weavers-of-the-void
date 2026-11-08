@@ -138,18 +138,6 @@ FEED_NOTIFICATIONS: dict[FeedCategory, NotificationCategory | None] = {
     FeedCategory.WORLD: None,
 }
 
-FEED_LABELS: dict[FeedCategory, str] = {
-    FeedCategory.VOYAGE: "Ships and voyages",
-    FeedCategory.GATE: "Gates and routes",
-    FeedCategory.LEAK: "Leakage and horror",
-    FeedCategory.WAR: "Wars",
-    FeedCategory.DISASTER: "Disasters",
-    FeedCategory.SKY: "Sky events",
-    FeedCategory.LIFE: "Birth and death",
-    FeedCategory.CIVILIZATION: "Civilization",
-    FeedCategory.WORLD: "The world",
-}
-
 
 def chronicle_notification(kind: ChronicleKind, feed: FeedCategory | None) -> NotificationCategory | None:
     if kind is ChronicleKind.WORLD:

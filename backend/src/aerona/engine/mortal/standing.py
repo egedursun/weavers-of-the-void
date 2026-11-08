@@ -8,8 +8,6 @@ from aerona.engine.mortal.profile import ensure_profile, is_held
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.rules.registry import Rules
 
-STANDING_COLUMNS = ("wealth", "renown", "honour", "infamy", "legitimacy", "stress", "health", "education")
-
 
 async def shift(session: AsyncSession, mortal_id: int, column: str, amount: float, epoch: int) -> MortalProfileRow:
     row, _ = await ensure_profile(session, mortal_id, epoch)
@@ -44,8 +42,3 @@ async def add_wealth(session: AsyncSession, mortal_id: int, amount: float, epoch
 
 async def add_stress(session: AsyncSession, mortal_id: int, amount: float, epoch: int) -> MortalProfileRow:
     return await shift(session, mortal_id, "stress", amount, epoch)
-
-
-async def renown_of(session: AsyncSession, mortal_id: int) -> int:
-    row = await session.get(MortalProfileRow, mortal_id)
-    return row.renown if row is not None else 0

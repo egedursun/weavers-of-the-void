@@ -7,7 +7,6 @@ from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.base import Base
 from aerona.db.tables.culture import (
-    ArtworkProfileRow,
     CastingRow,
     HolderLevelRow,
     HolderTechniqueRow,
@@ -17,14 +16,11 @@ from aerona.db.tables.culture import (
     ItemEnchantmentRow,
     ItemProfileRow,
     LanguageIntelligibilityRow,
-    LanguageStandingRow,
-    LegendProfileRow,
     ProphecyConditionRow,
     RiteEffectRow,
     RiteProfileRow,
     SpeakerCohortRow,
     TraditionParticipationRow,
-    TraditionProfileRow,
 )
 from aerona.db.tables.discovery import ArtFormProfileRow, TheoryProfileRow
 from aerona.db.tables.economy import WorldMaterialRow
@@ -442,15 +438,3 @@ async def set_participation(ctx: TickContext, tradition_id: int, community_id: i
     row.locked = lock(row.locked, "participation")
     await ctx.session.flush()
     return row
-
-
-PROFILE_ROWS = (
-    LanguageStandingRow,
-    LegendProfileRow,
-    TraditionProfileRow,
-    IdeologyProfileRow,
-    RiteProfileRow,
-    ProphecyConditionRow,
-    ItemProfileRow,
-    ArtworkProfileRow,
-)

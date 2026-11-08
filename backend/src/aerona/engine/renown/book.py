@@ -43,16 +43,6 @@ async def acclaim(
     return row
 
 
-async def reputations_of(session: AsyncSession, subject_id: int) -> list[ReputationRow]:
-    query = select(ReputationRow).where(ReputationRow.subject_node_id == subject_id).order_by(ReputationRow.value.desc(), ReputationRow.id)
-    return list(await session.scalars(query))
-
-
-async def views_held_by(session: AsyncSession, community_id: int) -> list[ReputationRow]:
-    query = select(ReputationRow).where(ReputationRow.community_node_id == community_id).order_by(ReputationRow.value.desc(), ReputationRow.id)
-    return list(await session.scalars(query))
-
-
 @memoized(ReputationRow)
 async def views_of(session: AsyncSession, community_id: int) -> tuple[ReputationRow, ...]:
     return tuple(await session.scalars(select(ReputationRow).where(ReputationRow.community_node_id == community_id).order_by(ReputationRow.id)))

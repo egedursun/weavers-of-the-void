@@ -4,6 +4,7 @@ import {
   BicepsFlexed,
   Cloud,
   Droplets,
+  Egg,
   Factory,
   Fish,
   Flame,
@@ -19,6 +20,7 @@ import {
   Milk,
   Mountain,
   Pickaxe,
+  Scissors,
   Shirt,
   Snowflake,
   Sparkles,
@@ -67,6 +69,9 @@ export const PROCESSES: Record<string, Named> = {
   butchery: { label: 'Butchery', icon: Beef, tone: 'danger' },
   dairy: { label: 'Dairy', icon: Milk, tone: 'info' },
   pressing: { label: 'Pressing fruit', icon: Grape, tone: 'gold' },
+  milking: { label: 'Milking', icon: Milk, tone: 'info' },
+  shearing: { label: 'Shearing', icon: Scissors, tone: 'verdigris' },
+  egg_laying: { label: 'Keeping laying birds', icon: Egg, tone: 'gold' },
 }
 
 export const POLLUTANTS: Record<string, Named> = {

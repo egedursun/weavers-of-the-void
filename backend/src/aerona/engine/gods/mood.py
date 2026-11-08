@@ -92,11 +92,6 @@ class MoodUpdate:
     breakdown: tuple[MoodBreakdownItem, ...]
 
 
-def start_mood(rules: Rules) -> MoodState:
-    creator = rules.creator
-    return MoodState(creator.start_contentment, creator.start_wrath, creator.start_attention, creator.start_loneliness)
-
-
 def mood_of(creator: CreatorRow) -> MoodState:
     return MoodState(creator.mood_contentment, creator.mood_anger, creator.mood_interest, creator.mood_loneliness, creator.mood_temperament or 0)
 

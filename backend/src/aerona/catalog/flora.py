@@ -39,6 +39,13 @@ PLANT_PRODUCTS: MappingProxyType[PlantYield, PlantProduct] = MappingProxyType(
     }
 )
 PRODUCT_BY_NAME: MappingProxyType[str, PlantProduct] = MappingProxyType({item.product.value: item for item in PLANT_PRODUCTS.values()})
+PRODUCT_BY_COMMODITY: MappingProxyType[CommodityKind, PlantProduct] = MappingProxyType({item.commodity: item for item in PLANT_PRODUCTS.values()})
+
+
+def plant_product_of(product: str, commodity: CommodityKind | None) -> PlantProduct | None:
+    return PRODUCT_BY_NAME.get(product) or (PRODUCT_BY_COMMODITY.get(commodity) if commodity is not None else None)
+
+
 DEFAULT_YIELDS: MappingProxyType[tuple[SpeciesClass, GrowthCycle], tuple[PlantYield, ...]] = MappingProxyType(
     {
         (SpeciesClass.PLANT, GrowthCycle.ANNUAL): (Y.GRAIN,),

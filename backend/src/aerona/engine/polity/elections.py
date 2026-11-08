@@ -201,7 +201,3 @@ async def tend_elections(ctx: TickContext, tally: ElectionTally) -> None:
     for realm in sorted(book.realms.values(), key=lambda item: item.entity.id):
         if not held(realm.entity.id) and electing(laws, realm):
             await elect(ctx, book, laws, realm, tally)
-
-
-async def seats_of(ctx: TickContext, realm_id: int) -> list[CouncilSeatRow]:
-    return list(await ctx.session.scalars(select(CouncilSeatRow).where(CouncilSeatRow.polity_entity_id == realm_id).order_by(CouncilSeatRow.holder_node_id)))

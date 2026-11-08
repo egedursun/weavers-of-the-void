@@ -24,7 +24,6 @@ from aerona.db.tables.mind import (
 )
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import write_blocked
-from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import NeedKind, PressureKind, SkillKind, SkillSource, TraitEffect, TraitKind, TraitSource, ValueAxis, ValueHolder
 from aerona.engine.body.book import factor
@@ -215,10 +214,6 @@ async def remove_trait(session: AsyncSession, node_id: int, trait: TraitKind) ->
 
 def trait_effect(traits: Iterable[TraitKind], effect: TraitEffect, scale_pct: int = PERCENT) -> int:
     return round(sum(TRAITS[trait].effects.get(effect, 0) for trait in traits) * scale_pct / PERCENT)
-
-
-def trait_capacity(traits: Iterable[TraitKind], capacity: Capacity, scale_pct: int = PERCENT) -> int:
-    return round(sum(TRAITS[trait].capacities.get(capacity, 0) for trait in traits) * scale_pct / PERCENT)
 
 
 async def effect_of(session: AsyncSession, node_id: int, effect: TraitEffect, scale_pct: int = PERCENT) -> int:

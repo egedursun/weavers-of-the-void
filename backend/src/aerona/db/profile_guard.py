@@ -42,18 +42,8 @@ def profile_key(table: str, column: str) -> str:
     return f"{table}{KEY_SEPARATOR}{column}"
 
 
-def split_profile_key(key: str) -> tuple[str, str] | None:
-    table, separator, column = key.partition(KEY_SEPARATOR)
-    return (table, column) if separator and table and column else None
-
-
 def register_profile_table(table: str, node_column: str) -> None:
     EXPLICIT_NODE_COLUMNS[table] = node_column
-    SHAPES.pop(table, None)
-
-
-def exempt_profile_table(table: str) -> None:
-    UNGUARDED_TABLES.add(table)
     SHAPES.pop(table, None)
 
 
@@ -120,11 +110,6 @@ def owner_ids(row: object, shape: OwnedShape) -> list[int]:
         if isinstance(value, int):
             found.append(value)
     return found
-
-
-def owner_blocked(row: object) -> bool:
-    shape = owned_shape(object_mapper(row))
-    return shape is not None and any(write_blocked(node_id, profile_key(shape.table, "*")) for node_id in owner_ids(row, shape))
 
 
 def held_columns(row: object) -> frozenset[str]:
@@ -198,7 +183,7 @@ def restore_held(row: object) -> list[str]:
 
 
 @event.listens_for(Session, "before_flush")
-def _hold_profile_columns(session: Session, flush_context: UOWTransaction, instances: object) -> None:
+def hold_profile_columns(session: Session, flush_context: UOWTransaction, instances: object) -> None:
     if WRITE_GUARD.get() is None:
         return
     for row in list(session.dirty):

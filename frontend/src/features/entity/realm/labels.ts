@@ -393,6 +393,8 @@ export const TREASURY_ENTRIES: Record<string, Named> = {
   fire: { label: 'Fire', icon: Building2, tone: 'danger' },
   plunder: { label: 'Plunder', icon: Swords, tone: 'danger' },
   grant: { label: 'Grant', icon: Gift, tone: 'gold' },
+  loan: { label: 'Loan', icon: Coins, tone: 'info' },
+  upkeep: { label: 'Upkeep', icon: Hammer, tone: 'muted' },
 }
 
 export const MEMBER_TYPES: Record<string, Named> = {

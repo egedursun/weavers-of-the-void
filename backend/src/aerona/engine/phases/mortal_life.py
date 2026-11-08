@@ -38,21 +38,6 @@ from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.services.community_relations import change_relation, relation
 
-MORTAL_STATS = (
-    "mortal.age",
-    "mortal.agility",
-    "mortal.beauty",
-    "mortal.charisma",
-    "mortal.creativity",
-    "mortal.endurance",
-    "mortal.intellect",
-    "mortal.lifespan",
-    "mortal.perception",
-    "mortal.strength",
-    "mortal.willpower",
-    "mortal.wisdom",
-)
-
 
 async def living_mortals(ctx: TickContext) -> list[EntityRow]:
     sleeping = await dormant_ids(ctx)

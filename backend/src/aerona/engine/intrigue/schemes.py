@@ -493,7 +493,6 @@ STRIKES: dict[PlotKind, Callable[[TickContext, SchemeRow, EntityRow, EntityRow],
     PlotKind.LEARN_TRUE_NAME: learn_true_name,
     PlotKind.FORGE_LETTER: forge_letter,
 }
-SELF_SECRETS = frozenset({PlotKind.SEDUCE, PlotKind.FABRICATE_HOOK, PlotKind.FRAME, PlotKind.CONVERT_SECRETLY, PlotKind.ECOSABOTAGE})
 
 
 async def strike(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow | None) -> str:

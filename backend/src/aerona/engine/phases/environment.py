@@ -84,7 +84,6 @@ from aerona.engine.structures.readers import regions_of
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
 
-GEOGRAPHY_FIELDS = ("biome_mix", "elevation_mean", "roughness", "latitude", "moisture", "base_forest", "base_wetland", "river_class", "coast_kind")
 HIGHLAND_BIOMES = (Biome.DRY_HILLS, Biome.WET_HILLS, Biome.MOUNTAINS, Biome.PEAKS)
 EXTREME_WEATHER = frozenset(
     {

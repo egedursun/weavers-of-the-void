@@ -46,10 +46,3 @@ async def stored_regions(session: AsyncSession) -> dict[int, list[RegionRecord]]
         for row in rows:
             STORED[(database, row[0])] = (tuple(row[1:-1]), decode_regions(row[-1]))
     return {world_id: list(STORED[(database, world_id)][1]) for world_id in versions}
-
-
-async def stored_world_regions(session: AsyncSession, world_id: int) -> list[RegionRecord] | None:
-    rows = list(await session.execute(select(_regions_column()).where(WorldMapRow.world_id == world_id)))
-    if not rows:
-        return None
-    return decode_regions(rows[0][0])

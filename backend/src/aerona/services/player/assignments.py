@@ -90,7 +90,6 @@ ASSIGNABLE_FLAGS = frozenset(
 )
 WORSHIPPER_TYPES = frozenset(COMMUNITY_TYPES | {EntityType.MORTAL})
 SELECTABLE_AGENT_TYPES = frozenset(AGENT_TYPES - {EntityType.ARMY})
-EXTRA_STATS = ("sanity", "devotion")
 PERSONALITY_FIELDS = ("appearance", "temperament", "obsession", "fear", "speech_style", "secret")
 ASCENSION_SUBTYPE = "ascension myth"
 

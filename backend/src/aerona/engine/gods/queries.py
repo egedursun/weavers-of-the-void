@@ -10,11 +10,9 @@ from aerona.db.tables.cosmos import CosmosRow, CreatorRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
-from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.son import SonStatus
-from aerona.domain.enums.war import WarStatus
 from aerona.domain.enums.world import Discovery
 
 THINKING_TYPES = frozenset(COMMUNITY_TYPES | {EntityType.MORTAL})
@@ -65,16 +63,6 @@ async def worlds(session: AsyncSession, include_forgotten: bool = True) -> list[
 
 async def world_count(session: AsyncSession) -> int:
     return int(await session.scalar(select(func.count(WorldRow.id))) or 0)
-
-
-async def ongoing_wars_of(session: AsyncSession, entity_id: int) -> list[WarRow]:
-    statement = (
-        select(WarRow)
-        .join(WarSideRow, WarSideRow.war_id == WarRow.id)
-        .where(WarRow.status == WarStatus.ONGOING, WarSideRow.entity_id == entity_id, WarSideRow.left_epoch.is_(None))
-        .order_by(WarRow.id)
-    )
-    return list(dict.fromkeys(await session.scalars(statement)))
 
 
 async def worship_targets(session: AsyncSession, entity_id: int) -> list[int]:

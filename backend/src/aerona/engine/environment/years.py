@@ -39,7 +39,3 @@ def world_years(environment: TickEnvironment, world_id: int, system: str) -> lis
         granted = max(1, grant_sub_steps(environment, len(years)))
         environment.stats.grants[key] = granted
     return years[:granted]
-
-
-def season_of_year(year: SampledYear, count: int) -> int:
-    return year.year % count if count > 0 else 0

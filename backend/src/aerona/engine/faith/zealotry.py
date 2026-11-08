@@ -246,10 +246,6 @@ async def quarrel_with(ctx: TickContext, church: Church, doctrine: CultDoctrineR
     return FaithLine(f"{quarrel}; neither yielded.", "faith.investiture_standoff", ids)
 
 
-async def heresy_parents(ctx: TickContext) -> set[int]:
-    return set(await ctx.session.scalars(select(HeresyRow.parent_entity_id)))
-
-
 async def monastery_keeps(ctx: TickContext, community_id: int) -> bool:
     return (
         await ctx.session.scalar(

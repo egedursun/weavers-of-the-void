@@ -10,11 +10,9 @@ from aerona.constants.timeouts import SQLITE_BUSY_TIMEOUT_MS
 from aerona.db.activity import install_activity_capture
 from aerona.db.bond_index import drop_lookup
 from aerona.db.fast_session import FastSession
-from aerona.db.flush_batch import align_updates
+from aerona.db.flush_batch import install_flush_batching
 from aerona.db.inline_sqlite import inline_engine
 from aerona.db.read_memo import KEEP_KEY, forget_all
-
-FLUSH_HOOKS = (align_updates,)
 
 
 class Database:
@@ -25,6 +23,7 @@ class Database:
         self.generation = 0
         event.listen(self.engine.sync_engine, "connect", self._configure_connection)
         install_activity_capture()
+        install_flush_batching()
 
     @staticmethod
     def _configure_connection(connection: Any, _record: Any) -> None:

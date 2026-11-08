@@ -70,10 +70,6 @@ def kind_label(kind: EntityType | None) -> str:
     return kind.value.replace("_", " ") if kind is not None else "thing"
 
 
-def gift_label(school: MagicSchool) -> str:
-    return school.value.replace("elemental_", "").replace("_", " ").capitalize()
-
-
 def class_label(social_class: SocialClass) -> str:
     return social_class.value.replace("_", " ").capitalize()
 

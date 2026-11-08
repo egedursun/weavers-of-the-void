@@ -36,4 +36,21 @@ describe('creature anatomy', () => {
       release: [],
     })
   })
+
+  it('sets what a monster hoards above all else', async () => {
+    serveBasics()
+    onApi('GET', '/api/entities/9/beast', BEAST)
+    onApi('POST', '/api/actions/anatomy:edit', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<BeastSection beastId={9} />)
+    await screen.getByRole('combobox', { name: 'Hoards' }).click()
+    await screen.getByRole('option', { name: 'Silver' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/anatomy:edit'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/anatomy:edit')[0].body).toEqual({
+      node_id: 9,
+      values: { hoards: 'silver' },
+      release: [],
+    })
+  })
 })

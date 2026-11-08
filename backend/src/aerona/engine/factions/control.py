@@ -1,7 +1,5 @@
 from collections.abc import Mapping, Sequence
 
-from sqlalchemy import select
-
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.entities import EntityRow
@@ -179,7 +177,3 @@ async def hire_company(ctx: TickContext, faction_id: int, polity_id: int | None,
     await contract(ctx, await FactionBook.load(ctx.session), profile, realm, pay=pay, epochs=epochs)
     await ctx.session.flush()
     return profile
-
-
-async def faction_members(ctx: TickContext, faction_id: int) -> list[FactionMembershipRow]:
-    return list(await ctx.session.scalars(select(FactionMembershipRow).where(FactionMembershipRow.faction_entity_id == faction_id)))

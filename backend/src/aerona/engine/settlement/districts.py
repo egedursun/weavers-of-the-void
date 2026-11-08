@@ -151,13 +151,6 @@ async def designs_for(session: AsyncSession, districts: Sequence[DistrictRow]) -
     return {row.id: row for row in await session.scalars(select(DistrictDesignRow).where(DistrictDesignRow.id.in_(ids)))}
 
 
-def levels_of(districts: Sequence[DistrictRow]) -> dict[DistrictKind, int]:
-    levels: dict[DistrictKind, int] = {}
-    for district in districts:
-        levels[district.kind] = levels.get(district.kind, 0) + district.level
-    return levels
-
-
 def admin_parts(rules: Rules, *, literacy: int, scribe_share: float, writing: int, palace_pct: int) -> AdminParts:
     table = rules.taxation
     extra = rules.districts

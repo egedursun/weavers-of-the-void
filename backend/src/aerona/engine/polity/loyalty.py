@@ -27,7 +27,6 @@ from aerona.rules.registry import Rules
 
 RECENT_EPOCHS = 3
 MIDDLE = PERCENT // 2
-HELD_KEYS = ("grievances", "benefits", "loyalty")
 
 
 async def member_values(ctx: TickContext, member: EntityRow) -> Values:

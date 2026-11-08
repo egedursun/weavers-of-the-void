@@ -25,7 +25,6 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.relations.book import ensure_relation, shift
 
-CIRCLES_KEY = "circles"
 VALUE_SPAN = 100
 Interest = tuple[PreferenceKind | None, str | None, ValueAxis | None]
 
@@ -210,15 +209,3 @@ async def tend_circles(ctx: TickContext, place: EntityRow, mortals: list[EntityR
             continue
         await bind(ctx, circle, members, tally)
         await pull(ctx, circle, members, tally)
-
-
-async def circle_members(session: AsyncSession, mortal_ids: list[int]) -> dict[int, set[int]]:
-    rows = await session.execute(
-        select(FactionMembershipRow.mortal_entity_id, FactionMembershipRow.faction_entity_id).where(
-            FactionMembershipRow.mortal_entity_id.in_(mortal_ids), FactionMembershipRow.faction_entity_id.in_(select(SocialCircleRow.faction_entity_id))
-        )
-    )
-    found: dict[int, set[int]] = defaultdict(set)
-    for mortal_id, faction_id in rows.all():
-        found[mortal_id].add(faction_id)
-    return found

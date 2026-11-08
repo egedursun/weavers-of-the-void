@@ -173,10 +173,6 @@ async def practised(ctx: TickContext, node_id: int, skill: SkillKind, xp_rule: i
     await practise(ctx.session, ctx.rules, node_id, skill, xp_rule, epoch=ctx.epoch)
 
 
-async def practised_any(ctx: TickContext, node_id: int, skills: Iterable[SkillKind], xp_rule: int) -> None:
-    await practise_any(ctx.session, ctx.rules, node_id, skills, xp_rule, epoch=ctx.epoch)
-
-
 async def witnessed(
     ctx: TickContext, holder_id: int, subject_id: int, act: ActKind, *, base: int, note: str | None = None, victim_id: int | None = None
 ) -> int:

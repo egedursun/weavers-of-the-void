@@ -829,9 +829,4 @@ async def run_exploration_phase(session: AsyncSession, rules: Rules) -> None:
     await exploration_phase(await manual_context(session, "exploration", rules))
 
 
-async def pioneers_for(session: AsyncSession, rules: Rules, explorer_id: int, land_id: int) -> EntityRow | None:
-    ctx = await manual_context(session, "pioneers", rules, key=f"{explorer_id}:{land_id}")
-    return await pioneers(ctx, await _living(session, explorer_id), await _living(session, land_id))
-
-
 PHASES = (Phase("exploration", exploration_phase),)

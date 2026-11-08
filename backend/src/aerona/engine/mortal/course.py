@@ -72,7 +72,6 @@ DEATH_FLAGS: dict[EntityFlag, DeathCause] = {
 SCHOOL_KINDS = frozenset({EngineKind.SCHOOL, EngineKind.LIBRARY})
 TEMPLE_KINDS = frozenset({EngineKind.TEMPLE})
 PLURAL_CUSTOMS = ("polygyny", "polyandry", "group")
-STANDING_FIXUP = "mortal.standing_backfill"
 DEATH_FIXUP = "mortal.death_causes"
 FULL = PERCENT
 

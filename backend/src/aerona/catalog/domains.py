@@ -1,4 +1,4 @@
-from aerona.domain.enums.domain import DEATH_DOMAINS, Domain
+from aerona.domain.enums.domain import Domain
 
 DOMAIN_LABELS: dict[Domain, str] = {domain: domain.value.replace("_", " ").title() for domain in Domain}
 
@@ -11,7 +11,3 @@ def match_domain(value: str) -> Domain | None:
         if folded in (domain.value, DOMAIN_LABELS[domain].casefold()):
             return domain
     return next((domain for domain in Domain if folded in domain.value or domain.value in folded), None)
-
-
-def is_death_domain(domain: Domain) -> bool:
-    return domain in DEATH_DOMAINS

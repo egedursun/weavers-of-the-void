@@ -42,20 +42,6 @@ class KnowledgeBranch(StrEnum):
     CIVICS = "civics"
 
 
-COSMIC_BRANCHES = frozenset(
-    {
-        KnowledgeBranch.SKY_NAVIGATION,
-        KnowledgeBranch.SHIPBUILDING,
-        KnowledgeBranch.GATE_LORE,
-        KnowledgeBranch.PATHFINDING,
-        KnowledgeBranch.VOID_LIVING,
-        KnowledgeBranch.IMMORTALITY,
-        KnowledgeBranch.BIOMANCY,
-        KnowledgeBranch.FORBIDDEN,
-    }
-)
-
-
 class NaturalLaw(StrEnum):
     NONE = "none"
     IMMORTALITY = "immortality"

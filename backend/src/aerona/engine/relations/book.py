@@ -1,7 +1,7 @@
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 
-from sqlalchemy import or_, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
@@ -269,14 +269,3 @@ async def refresh_kinds(session: AsyncSession, rules: Rules, holder_id: int, epo
             await sync_bonds(session, row, before, after, epoch)
             changes.append((row, before, after))
     return changes
-
-
-async def pairs_known(session: AsyncSession, ids: Iterable[int]) -> list[RelationshipRow]:
-    group = list(ids)
-    return list(
-        await session.scalars(
-            select(RelationshipRow).where(
-                or_(RelationshipRow.holder_node_id.in_(group), RelationshipRow.subject_node_id.in_(group)),
-            )
-        )
-    )

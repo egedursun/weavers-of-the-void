@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.domain.enums.action import ActionKind, ActionPolarity
-from aerona.domain.enums.creator import CreatorMoodLabel, CreatorPassion
+from aerona.domain.enums.creator import CreatorPassion
 
 A = ActionKind
 P = CreatorPassion
@@ -94,15 +94,6 @@ ACTION_POLARITY: dict[ActionKind, ActionPolarity] = {
         kind: ActionPolarity.STERN
         for kind in (A.LIGHTNING, A.CHAIN, A.EXILE_SON, A.SUPPRESS_REBELLION, A.CURSE, A.DRAIN_ESSENCE, A.DEVOUR, A.DEMOTE, A.KILL_SON, A.ABSOLUTE_COMMAND)
     },
-}
-
-MOOD_LABELS: dict[CreatorMoodLabel, str] = {
-    CreatorMoodLabel.ANGRY: "angry",
-    CreatorMoodLabel.DISTANT: "distant and silent",
-    CreatorMoodLabel.LONELY: "lonely",
-    CreatorMoodLabel.CONTENT: "content",
-    CreatorMoodLabel.UNEASY: "uneasy",
-    CreatorMoodLabel.SERENE: "serene",
 }
 
 

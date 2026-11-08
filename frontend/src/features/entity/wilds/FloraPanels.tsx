@@ -457,6 +457,13 @@ export function FloraControls({ id, card, blocked }: Blocked) {
   const clear = useCropDrop()
   const pest = useCropPest()
   const [pestId, setPestId] = useState<number | null>(null)
+  const [parentId, setParentId] = useState<number | null>(null)
+  const parentProblem =
+    parentId === null
+      ? 'Choose the plant it was bred from'
+      : parentId === id
+        ? 'A plant cannot be bred from itself'
+        : null
   const pending =
     save.isPending ||
     plantEdit.isPending ||
@@ -556,6 +563,49 @@ export function FloraControls({ id, card, blocked }: Blocked) {
                     plantEdit.mutate({ values: { soil_need: next } })
                   }
                 />
+              </div>
+            )}
+            {plant && (
+              <div className='flex min-w-0 flex-wrap items-end gap-2'>
+                <div className='min-w-48 flex-1'>
+                  <EntityPicker
+                    types={SPECIES_TYPES}
+                    value={parentId}
+                    onChange={setParentId}
+                    placeholder={
+                      plant.cultivar_of
+                        ? `Bred from ${plant.cultivar_of.name}`
+                        : 'The plant it was bred from…'
+                    }
+                  />
+                </div>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  disabled={(busy ?? parentProblem) !== null}
+                  disabledReason={busy ?? parentProblem ?? undefined}
+                  onClick={() => {
+                    plantEdit.mutate({ values: { cultivar_of_id: parentId } })
+                    setParentId(null)
+                  }}
+                >
+                  <Sprout />
+                  Set what it was bred from
+                </Button>
+                {plant.cultivar_of && (
+                  <Button
+                    size='sm'
+                    variant='ghost'
+                    disabled={busy !== null}
+                    disabledReason={busy ?? undefined}
+                    onClick={() =>
+                      plantEdit.mutate({ values: { cultivar_of_id: null } })
+                    }
+                  >
+                    <Trash2 />
+                    Make it a kind of its own
+                  </Button>
+                )}
               </div>
             )}
             {plant && plant.locked.length > 0 && (

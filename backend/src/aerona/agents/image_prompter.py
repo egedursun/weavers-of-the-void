@@ -29,10 +29,6 @@ from aerona.prompts.schemas.narrative import CosmosImagePromptsOutput, EntityIma
 PROMPTABLE_STATUSES = (EntityStatus.CANON, EntityStatus.DEAD, EntityStatus.FULFILLED)
 
 
-def star_description(star: StarRow) -> str:
-    return " ".join(part for part in (STAR_TYPES[star.star_type].description, star.description) if part)
-
-
 def ambience(world: WorldRow | None) -> WorldAmbience | None:
     if world is None or world.world_type is WorldType.ORDINARY:
         return None

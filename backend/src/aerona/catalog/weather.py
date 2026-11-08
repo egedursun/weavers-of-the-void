@@ -292,7 +292,3 @@ WEATHER: dict[WeatherKind, WeatherSpec] = {
         ),
     )
 }
-
-
-def weather_effect(rules: Rules, kind: WeatherKind, effect: WeatherEffect) -> int:
-    return WEATHER[kind].effects(rules)[effect]

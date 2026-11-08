@@ -313,7 +313,3 @@ async def worshipper_count(session: AsyncSession, son_id: int) -> int:
         )
     )
     return len(set(await session.scalars(statement)))
-
-
-async def is_god_node(session: AsyncSession, node_id: int) -> bool:
-    return await NodeRepository(session).kind_of(node_id) in GOD_NODE_KINDS

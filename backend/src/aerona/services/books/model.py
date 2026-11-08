@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.achievements import ACHIEVEMENTS
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.entity_types import entity_type_spec
-from aerona.catalog.knowledge import KNOWLEDGE_BRANCHES, NATURAL_LAWS
+from aerona.catalog.knowledge import KNOWLEDGE_BRANCHES
 from aerona.catalog.powers import POWERS, power_unlock_levels
 from aerona.catalog.rarities import RARITY_LABELS, entity_rarity
 from aerona.catalog.scenarios import SCENARIOS
@@ -829,7 +829,3 @@ async def entry_chronicle(session: AsyncSession, *, son_id: int | None, entity_i
         statement = statement.where(ChronicleRow.son_id == son_id)
     rows = await session.scalars(statement.order_by(ChronicleRow.id))
     return [ChronicleLine(row.kind.value.replace("_", " "), row.year, clean_lore(row.text), row.son_id) for row in rows]
-
-
-def natural_law_label(entity: EntityRow) -> str | None:
-    return NATURAL_LAWS[entity.natural_law].label if entity.natural_law is not None else None

@@ -385,10 +385,6 @@ async def renown_fleet(ctx: TickContext, army_id: int) -> None:
             row.renown += ctx.rules.seafaring.renown_per_victory
 
 
-async def at_war_with(ctx: TickContext, first: int, second: int) -> bool:
-    return await current_war(ctx.session, first, second) is not None
-
-
 async def muster_fleet(ctx: TickContext, army: EntityRow, owner: EntityRow) -> int:
     from_owner = select(VesselProfileRow).where(
         VesselProfileRow.kind == VehicleKind.SHIP, VesselProfileRow.status.in_([VesselStatus.DOCKED, VesselStatus.AFLOAT])

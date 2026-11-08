@@ -46,4 +46,3 @@ VECTOR_STIGMA = MappingProxyType(
 )
 STRAIN_WORDS = ("new", "second", "black", "swift", "returning", "hidden")
 TRADITION_NAMES = ("the Survivors' Feast", "the Bell of the Dead", "the Smoke Walk", "the Night of Masks", "the Pit Vigil", "the Mourners' Fast")
-LAW_NAMES = ("the Sealing of the Gates", "the Forty Days", "the Ward of the Sick", "the Order of the Bells")

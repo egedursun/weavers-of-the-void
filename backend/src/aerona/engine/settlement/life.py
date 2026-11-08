@@ -65,7 +65,6 @@ from aerona.engine.settlement.storage import design_for, settlement_store, stora
 from aerona.rules.registry import Rules
 
 FOOD_INDEX = 100
-DAYS = 365
 SIEGE_DISEASE = 50
 DRY_OFF_PCT = 30
 HALF = 2

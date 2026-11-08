@@ -45,7 +45,7 @@ from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.items import standard_of
 from aerona.engine.lore.language import barrier
 from aerona.engine.military.aftermath import flaring_items
-from aerona.engine.military.battle import BattleResult, Field, Side, Stack, make_stacks, resolve
+from aerona.engine.military.battle import BattleResult, Field, Side, make_stacks, resolve
 from aerona.engine.military.command import command_areas
 from aerona.engine.military.units import design_spec, muster, profile_of, sync
 from aerona.engine.mind.book import effect_of, scaled_by, values_for
@@ -384,13 +384,6 @@ async def take_engines(ctx: TickContext, winner: Side, loser: Side) -> int:
         taken += stack.row.count
         winner.salvaged += stack.row.count
     return taken
-
-
-def stacks_by_army(side: Side) -> dict[int, list[Stack]]:
-    found: dict[int, list[Stack]] = {}
-    for stack in side.stacks:
-        found.setdefault(stack.row.army_entity_id, []).append(stack)
-    return found
 
 
 def captives_taken(ctx: TickContext, result: BattleResult, war_id: int) -> int:

@@ -81,7 +81,6 @@ from aerona.rules.registry import Rules
 
 THINKING_TYPES = frozenset(COMMUNITY_TYPES | {EntityType.MORTAL})
 LIVING_LAND_TYPES = (EntityType.PEOPLE, EntityType.SETTLEMENT)
-ORGANIZATION_TYPES = (EntityType.CULT, EntityType.FACTION)
 LANGUAGE_HOLDER_TYPES = (EntityType.PEOPLE, EntityType.FACTION, EntityType.CULT)
 SETTLED_TYPES = (EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.MORTAL)
 

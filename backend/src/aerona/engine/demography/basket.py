@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified, instance_state
 
 from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
-from aerona.catalog.needs import EFFECT_CLASSES, SERVE_ORDER, SHORTFALL_EFFECTS, basket_weight
+from aerona.catalog.needs import SERVE_ORDER, SHORTFALL_EFFECTS, basket_weight
 from aerona.constants.units import PERCENT
 from aerona.db.fast_session import rows_by_prefix
 from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
@@ -367,10 +367,6 @@ async def apply_shortfalls(ctx: TickContext, community: EntityRow, basket: Baske
         elif effect in (E.HUNGER, E.STATUS, E.ARCANE):
             done[effect] = short
     return done
-
-
-def classes_hit(effect: ShortfallEffect) -> frozenset[SocialClass]:
-    return EFFECT_CLASSES[effect]
 
 
 async def effect_shortfalls(session: AsyncSession, community_id: int) -> dict[ShortfallEffect, int]:

@@ -17,6 +17,7 @@ import {
   breathKindValues,
   gazeKindValues,
   habitatValues,
+  materialKindValues,
   temperamentValues,
   tissueMaterialValues,
 } from '@/api/generated/schema'
@@ -318,6 +319,21 @@ export function AnatomyCard({
                 table={tableOf(gazeKindValues, GAZE, 'No gaze')}
                 blocked={busy}
                 onPick={(value) => set('gaze', value)}
+              />
+              <MindPicker
+                label='Hoards'
+                value={row.hoards ?? NONE}
+                table={{
+                  [NONE]: 'Nothing above all else',
+                  ...Object.fromEntries(
+                    materialKindValues.map((key) => [
+                      key,
+                      MATERIAL[key] ?? titled(key),
+                    ])
+                  ),
+                }}
+                blocked={busy}
+                onPick={(value) => set('hoards', value)}
               />
               <MindPicker
                 label='Shuns'

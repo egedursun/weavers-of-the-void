@@ -2,15 +2,9 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.rarities import build_rarity_table
 from aerona.db.tables.agency import AgentTurnRow, TurnCounterRow
-from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.agent import AgentKind, TurnCounter
-from aerona.domain.enums.limits import MAX_STARS
-from aerona.domain.enums.son import PowerEffect
 from aerona.domain.models.turn import LongJobTrace, PendingJob, TurnContext
-from aerona.engine.primitives.faith import has_unlocked_power
-from aerona.rules.registry import Rules
 
 
 class TurnState:
@@ -119,20 +113,3 @@ async def bump_counter(session: AsyncSession, node_id: int, epoch: int, counter:
     row.value = max(0, row.value + amount)
     await session.flush()
     return row.value
-
-
-async def son_action_points(session: AsyncSession, rules: Rules, son: SonRow) -> int:
-    core = rules.core_rules
-    points = build_rarity_table(rules)[son.rarity].action_points
-    if await has_unlocked_power(session, rules, son, PowerEffect.TIRELESS):
-        points += core.tireless_extra_action
-    if son.stars >= MAX_STARS:
-        points += core.max_star_extra_action
-    if son.existence < core.existence_solid:
-        points -= core.faded_action_loss
-    floor = 0 if son.existence < core.existence_faded else core.min_actions
-    return max(floor, points)
-
-
-def mortal_action_points(rules: Rules) -> int:
-    return rules.mortal_agents.action_points

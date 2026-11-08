@@ -36,6 +36,14 @@ TYPE_SECTIONS = {"title": "S4.11", "art_form": "S7.5", "art form": "S7.5", "theo
 SUMMARY_HEADING = re.compile(r"totals|convergence|count", re.IGNORECASE)
 SHARED_ROW = re.compile(r"\(with (\d{2})\)")
 COVERED_ROW = re.compile(r"^\| \d{2} \| [^|]+ \| ● \|")
+BACKEND = ROOT / "backend"
+PACKAGE = BACKEND / "src" / "aerona"
+FRONTEND = ROOT / "frontend" / "src"
+TEST_PATH = re.compile(r"\btests/[\w/]+\.py\b")
+TEST_CASE = re.compile(r"\b(tests/[\w/]+\.py)::(\w+)")
+FRONT_TEST = re.compile(r"\b(\w+\.test\.tsx?)\b")
+MODULE_PATH = re.compile(r"\b(?:engine|db|services|catalog|rules|agents|tools|api|domain|prompts|epoch|language)/[\w/]*(?:\{[^}]*\})?[\w/]*\.py\b")
+BRACES = re.compile(r"(.*)\{([^}]*)\}(.*)")
 REFERENCE = re.compile(r"\b(F\d+(?:\.\d+)?|\d+\.\d+[a-z]?|J\.\d+[a-z]?|I\.\d+)(?: (?:RP|reference pass)(?: ?(\d+))?)?\b")
 
 
@@ -227,6 +235,26 @@ def render(items: list[Item], existing: dict[str, Row]) -> str:
     return "\n".join(lines)
 
 
+def expanded(path: str) -> list[str]:
+    match = BRACES.match(path)
+    return [f"{match.group(1)}{part.strip()}{match.group(3)}" for part in match.group(2).split(",")] if match else [path]
+
+
+def front_tests() -> set[str]:
+    return {path.name for path in FRONTEND.rglob("*.test.ts*")}
+
+
+def reference_problems(key: str, row: Row, front: set[str]) -> list[str]:
+    problems = [f"row {key} names a test file that does not exist: {path}" for path in TEST_PATH.findall(row.get("Test")) if not (BACKEND / path).exists()]
+    for path, name in TEST_CASE.findall(row.get("Test")):
+        if (BACKEND / path).exists() and f"def {name}(" not in (BACKEND / path).read_text(encoding="utf-8"):
+            problems.append(f"row {key} names a test that does not exist: {path}::{name}")
+    problems += [f"row {key} names a frontend test that does not exist: {name}" for name in FRONT_TEST.findall(row.get("Test")) if name not in front]
+    for module in MODULE_PATH.findall(row.get("Module")):
+        problems += [f"row {key} names a module that does not exist: {path}" for path in expanded(module) if not (PACKAGE / path).exists()]
+    return problems
+
+
 def check(items: list[Item], rows: dict[str, Row]) -> list[str]:
     problems: list[str] = []
     keys = {item.key for item in items}
@@ -246,6 +274,10 @@ def check(items: list[Item], rows: dict[str, Row]) -> list[str]:
             empty = [column for column in WORK_COLUMNS if row.get(column) in EMPTY]
             if empty:
                 problems.append(f"row {key} is done but has empty columns: {', '.join(empty)}")
+    front = front_tests()
+    for key, row in rows.items():
+        if row.get("Status") == "done":
+            problems += reference_problems(key, row, front)
     by_key = {item.key: item for item in items}
     for key, row in rows.items():
         item = by_key.get(key)

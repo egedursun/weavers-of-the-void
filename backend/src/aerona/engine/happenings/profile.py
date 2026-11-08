@@ -1,7 +1,7 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
@@ -188,10 +188,6 @@ async def casualties_of(session: AsyncSession, event_id: int) -> list[EventCasua
 
 async def toll_of(session: AsyncSession, event_id: int) -> int:
     return sum(row.count for row in await casualties_of(session, event_id))
-
-
-async def clear_casualties(session: AsyncSession, event_id: int) -> None:
-    await session.execute(delete(EventCasualtyRow).where(EventCasualtyRow.event_entity_id == event_id))
 
 
 async def first_incident(session: AsyncSession, event: EntityRow) -> IncidentRow | None:

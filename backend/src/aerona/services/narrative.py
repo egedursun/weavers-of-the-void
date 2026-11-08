@@ -1,5 +1,4 @@
 import re
-from collections.abc import Iterable
 from enum import StrEnum
 from typing import Any
 
@@ -81,7 +80,6 @@ META_SENTENCE = re.compile(
 MORTAL_AS_SON = re.compile(r"\b(is|was) (an?|the) ((?:[\w-]+ ){0,3})son\b(?! of)", re.IGNORECASE)
 MORTAL_WORD = "mortal"
 
-ENUM_KEY = re.compile(r"\b[a-z]+(?:_[a-z]+)+\b")
 
 RULER_TITLES: dict[EntityType, str] = {
     EntityType.LAW: "Keeper",
@@ -217,12 +215,6 @@ def clean_lore_value(value: Any) -> Any:
     return value
 
 
-def has_leak(text: str | None) -> bool:
-    if not text:
-        return False
-    return clean_lore(text) != text.strip()
-
-
 def ending_kind(entity_type: EntityType, destroyed: bool) -> EndingKind:
     if destroyed:
         return EndingKind.VANISHED
@@ -252,15 +244,6 @@ def append_ending(description: str, sentence: str) -> str:
 
 def mentions_epoch(description: str, epoch: int) -> bool:
     return EPOCH_MENTION.format(epoch=epoch) in description
-
-
-def enum_label(value: StrEnum | str) -> str:
-    return str(value).replace("_", " ")
-
-
-def leaked_enum_keys(text: str, keys: Iterable[str]) -> list[str]:
-    known = set(keys)
-    return [match for match in ENUM_KEY.findall(text) if match in known]
 
 
 def ruler_title(ruled_type: EntityType) -> str:

@@ -275,6 +275,29 @@ export const CAUSE: Record<string, Named> = {
   ideology: { label: 'Ideology', icon: Brain, tone: 'info' },
   vendetta: { label: 'Vendetta', icon: Flame, tone: 'danger' },
   hostility: { label: 'Old hostility', icon: Swords, tone: 'muted' },
+  uprising: { label: 'Uprising', icon: Flag, tone: 'danger' },
+  tribute_revolt: { label: 'Tribute revolt', icon: Coins, tone: 'warning' },
+  incited: { label: 'Incited', icon: Drama, tone: 'warning' },
+  betrayal: { label: 'Betrayal', icon: Skull, tone: 'danger' },
+  conquest_journey: {
+    label: 'Conquest across worlds',
+    icon: Rocket,
+    tone: 'danger',
+  },
+  foreign_god: { label: 'A foreign god', icon: Ghost, tone: 'verdigris' },
+  grudge: { label: 'Grudge', icon: Flame, tone: 'warning' },
+  divine_grudge: {
+    label: 'A grudge of the gods',
+    icon: Sparkles,
+    tone: 'danger',
+  },
+  rivalry: { label: 'Rivalry', icon: Target, tone: 'warning' },
+  debt: { label: 'Unpaid debt', icon: Banknote, tone: 'gold' },
+  espionage: { label: 'Espionage', icon: KeySquare, tone: 'muted' },
+  sabotage: { label: 'Sabotage', icon: Factory, tone: 'danger' },
+  envy: { label: 'Envy', icon: Gem, tone: 'warning' },
+  schism: { label: 'Schism', icon: Scale, tone: 'verdigris' },
+  beast: { label: 'A beast', icon: Bone, tone: 'danger' },
 }
 
 export function nameOf(table: Record<string, Named>, key: string): Named {
@@ -344,9 +367,16 @@ export const WALL_MATERIAL: Record<string, Named> = {
 }
 
 const GOVERNMENTS: Record<string, string> = {
-  republic: 'a republic',
+  chiefdom: 'a chiefdom',
   monarchy: 'a monarchy',
   theocracy: 'a theocracy',
+  oligarchy: 'an oligarchy',
+  republic: 'a republic',
+  tribal_confederation: 'a tribal confederation',
+  empire: 'an empire',
+  hive_council: 'a hive council',
+  god_kingdom: 'a kingdom of its god',
+  occupation: 'an occupied land',
 }
 
 export function aimParamText(

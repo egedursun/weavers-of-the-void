@@ -34,7 +34,7 @@ from aerona.api.schemas.wilds import (
     YieldView,
 )
 from aerona.api.views.common import node_refs
-from aerona.catalog.flora import BIOCHEMISTRY_LABELS, PRODUCT_BY_NAME
+from aerona.catalog.flora import BIOCHEMISTRY_LABELS, plant_product_of
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.anatomy import CreatureAnatomyRow
@@ -59,7 +59,7 @@ from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import TreatyClauseRow, TreatyProfileRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.ecology import UNBOUND_BIOCHEMISTRY, Biochemistry, FoodLink, PlantYield
+from aerona.domain.enums.ecology import UNBOUND_BIOCHEMISTRY, Biochemistry, FoodLink
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
@@ -500,7 +500,13 @@ async def region_crops(region_id: Id, services: ServicesDep) -> RegionCrops:
                 share=row.share,
                 fit=round(book.fit(row.plant_entity_id, region_id) * PERCENT),
                 cultivation=book.plants[row.plant_entity_id].cultivation if row.plant_entity_id in book.plants else None,
-                products=[PlantYield(item.product) for item in book.yields.get(row.plant_entity_id, []) if item.product in PRODUCT_BY_NAME],
+                products=list(
+                    dict.fromkeys(
+                        matched.product
+                        for item in book.yields.get(row.plant_entity_id, [])
+                        if (matched := plant_product_of(item.product, item.commodity)) is not None
+                    )
+                ),
                 pests=listed(refs, hosts.get(row.plant_entity_id, [])),
                 since_epoch=row.since_epoch,
                 locked=row.locked,

@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Any
 
 from sqlalchemy import CheckConstraint
 from sqlalchemy import Enum as SqlEnum
@@ -33,7 +32,3 @@ def nullable_between(column: str, low: int, high: int) -> CheckConstraint:
 
 def max_length(column: str, limit: int) -> CheckConstraint:
     return CheckConstraint(f"{column} IS NULL OR length({column}) <= {limit}", name=f"{column}_length")
-
-
-def table_args(*items: Any) -> tuple[Any, ...]:
-    return tuple(items)

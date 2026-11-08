@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from aerona.domain.enums.society import Commodity, CommunityRelationLabel, SocialClass
+from aerona.domain.enums.society import CommunityRelationLabel, SocialClass
 from aerona.domain.enums.son import SonRelationLabel
 from aerona.rules.registry import Rules
 
@@ -27,20 +27,6 @@ SOCIAL_CLASSES: dict[SocialClass, SocialClassSpec] = {
         SocialClassSpec(SocialClass.MONASTIC, "Monastic", "Monastics"),
     )
 }
-
-COMMODITY_LABELS: dict[Commodity, str] = {Commodity.FOOD: "Food", Commodity.ORE: "Ore", Commodity.GOODS: "Goods"}
-
-COMMUNITY_RELATION_LABELS: dict[CommunityRelationLabel, str] = {
-    CommunityRelationLabel.BLOOD_ENEMY: "blood enemy",
-    CommunityRelationLabel.ENEMY: "enemy",
-    CommunityRelationLabel.COLD: "cold",
-    CommunityRelationLabel.NEUTRAL: "neutral",
-    CommunityRelationLabel.FRIEND: "friend",
-    CommunityRelationLabel.CLOSE_FRIEND: "close friend",
-    CommunityRelationLabel.SIBLING: "sibling",
-}
-
-SON_RELATION_LABELS: dict[SonRelationLabel, str] = {label: label.value for label in SonRelationLabel}
 
 
 def community_relation_label(rules: Rules, value: int) -> CommunityRelationLabel:

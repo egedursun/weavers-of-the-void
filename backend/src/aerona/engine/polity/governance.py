@@ -62,7 +62,6 @@ from aerona.engine.settlement.life import add_district
 CREED_SCALE = 10
 LEAN = 25
 BASELINE_LAWS = frozenset({LawKind.SUCCESSION_RULE, LawKind.SLAVERY, LawKind.RELIGIOUS_TOLERANCE, LawKind.TAX_RATE, LawKind.PENAL_CODE})
-COUNCIL_KINDS = 5
 SWAY_SCALE = 10
 COUNCIL_OFFICES = frozenset(
     {OfficeKind.CHANCELLOR, OfficeKind.MARSHAL, OfficeKind.TREASURER, OfficeKind.HIGH_JUDGE, OfficeKind.SPYMASTER, OfficeKind.REGENT, OfficeKind.CHAPLAIN}

@@ -76,12 +76,7 @@ REORDER_SEASONS = Line("tools.son.reorder_seasons", "{son} turned the year of {w
 SEAL = Line("tools.son.seal", "{son} sealed the road between {first} and {second}; the two worlds' leakage decreased.")
 STITCH = Line("tools.son.stitch", "{son} sealed the leak of the {world} world ({how}); leakage {old} to {new}.")
 OUTER_BARGAIN = Line("tools.son.outer_bargain", "{son} bargained with the nameless thing. Their siblings saw another shadow over them.")
-OUTER_THREAD = Line(
-    "tools.son.outer_thread",
-    "{son} bargained with the thing outside ({request}). Nobody knows what they gave in return; but one day it will be paid.",
-)
 SPIRIT_BOUND = Line("tools.son.spirit_bound", "{son} bound {spirit} to {target}{golem}.")
-GOLEM_SUFFIX = "; the stone began to walk"
 WORLD_BORN = Line("tools.son.world_born", "{son} gave birth to the world {world}.")
 CHILD_BORN = Line("tools.son.child_born", "{son} gave birth to {child}.")
 
@@ -135,7 +130,6 @@ TRANSFORM_NOTE = "{description}\n\n(Transformed in Age {epoch} by {son}. Previou
 TRANSFORM_BOND = "transformed: {reason}"
 RENAMED = "; its name is now {new}"
 DESTROY_NOTE = "Age {epoch}: {son} destroyed it; {reason}"
-TREATY_BOND = "interworld treaty ({son}): {terms}"
 SEALED = Line("tools.son.sealed", "{son} sealed {treaty}.")
 BLOODLINE = Line("tools.son.bloodline", "{son} marked the blood of {house}: {trait}.")
 TREATY_EVENT = "interworld treaty"

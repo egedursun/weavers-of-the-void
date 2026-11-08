@@ -297,12 +297,6 @@ async def deeds(ctx: TickContext, item: EntityRow, row: ItemProfileRow, owner: i
     return count
 
 
-async def enchantment_strength(ctx: TickContext, item_id: int) -> int:
-    return int(
-        await ctx.session.scalar(select(func.coalesce(func.sum(ItemEnchantmentRow.strength), 0)).where(ItemEnchantmentRow.item_entity_id == item_id)) or 0
-    )
-
-
 def worth(ctx: TickContext, row: ItemProfileRow, props: MaterialProps | None, enchanted: int) -> int:
     table = ctx.rules.item_powers
     material = (props.base_value if props is not None else 0) * table.value_material_pct / PERCENT

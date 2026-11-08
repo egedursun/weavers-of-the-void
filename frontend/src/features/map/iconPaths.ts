@@ -1,6 +1,7 @@
 import { createElement } from 'react'
 import { createRoot } from 'react-dom/client'
 import {
+  BookOpen,
   Bone,
   BrickWall,
   Building,
@@ -14,6 +15,7 @@ import {
   Home,
   Landmark,
   type LucideIcon,
+  Star,
   Sun,
   Swords,
   Zap,
@@ -47,6 +49,8 @@ const KIND_ICON: Record<string, LucideIcon> = {
   creator: Sun,
   foreign_god: Ghost,
   world: Globe2,
+  star: Star,
+  entity: BookOpen,
 }
 
 function number(element: Element, name: string): number {

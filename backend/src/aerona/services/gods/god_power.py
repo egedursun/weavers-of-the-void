@@ -121,11 +121,6 @@ async def drain_foreign_god(session: AsyncSession, rules: Rules, god_id: int) ->
     return result
 
 
-async def foreign_kill_price(session: AsyncSession, rules: Rules, god_id: int) -> int:
-    ctx = await manual_context(session, "foreign_price", rules)
-    return await acts.foreign_kill_cost(ctx, await _foreign(session, god_id))
-
-
 async def kill_foreign_god(session: AsyncSession, rules: Rules, god_id: int, reason: str = "", devour: bool = False) -> acts.GainResult:
     ctx = await manual_context(session, "kill_foreign", rules)
     god = await _foreign(session, god_id)

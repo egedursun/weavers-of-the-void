@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from sqlalchemy import or_, select
+from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.communication import CipherRow
@@ -280,16 +280,6 @@ async def tend_dispatches(ctx: TickContext, tally: DispatchTally) -> None:
         await waylay(ctx, row, tally)
         if row.state is DispatchState.UNDER_WAY and (row.arrival_epoch or 0) <= ctx.epoch:
             await deliver(ctx, row, tally)
-
-
-async def dispatches_of(ctx: TickContext, node_id: int) -> list[MessageRow]:
-    return list(
-        await ctx.session.scalars(
-            select(MessageRow)
-            .where(MessageRow.intent == MessageIntent.DISPATCH, or_(MessageRow.sender_node_id == node_id, MessageRow.recipient_node_id == node_id))
-            .order_by(MessageRow.id)
-        )
-    )
 
 
 async def finest_good(ctx: TickContext, realm_id: int) -> str | None:

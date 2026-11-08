@@ -9,8 +9,6 @@ from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.society import SocialClass
 
 HOUSEHOLD_FIELDS = ("wealth", "income", "expenses", "servants", "dependents", "burden")
-DWELLING_FIELDS = ("kind", "quality", "rooms", "district_id")
-AGGREGATE_FIELDS = ("households", "mean_size", "dwelling_kind", "quality", "wealth")
 
 
 class HouseholdRow(Base):

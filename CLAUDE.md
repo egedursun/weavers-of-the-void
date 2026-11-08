@@ -78,6 +78,9 @@ These rules are enforced mechanically, and they bind Claude as much as anyone.
   - `scripts/check_deprecated_apis.py` on every commit (rule 8). It finds every retired SQLAlchemy, pydantic, FastAPI, Starlette, httpx and Alembic API, such as `Result.tuples()`, and fails on any use of one in source, tests or scripts.
   - `scripts/check_import_cycles.py` on every commit (rule 8). It fails on any circle of module-level imports, so every module imports on its own.
   - `scripts/check_hidden_controls.py` on every commit (rules 5 and 6). It fails when a screen swaps a god control for a note because a list is empty. The control stays on screen and is disabled with its reason.
+  - `scripts/check_label_maps.py` on every commit (rule 5). It fails when a frontend label map names nearly every value of an enum but leaves some out, so every value shows its own label and icon.
+  - `scripts/check_orphans.py` on every commit (rule 3). It fails on any backend function or constant that nothing uses. Wire it in or delete it.
+  - `scripts/spec_coverage.py check` on every commit. Every done row must name test files, tests, frontend tests and modules that exist.
   - The proving gate on every backend change (rule 8):
     - `tests/tools/test_every_tool.py`: every son and mortal tool runs to success.
     - `tests/tools/test_catalogue.py`: every tool field the model sees is described.

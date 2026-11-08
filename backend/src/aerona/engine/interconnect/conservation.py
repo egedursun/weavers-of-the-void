@@ -47,13 +47,6 @@ def totals_by_phase(flows: Flows) -> dict[tuple[str, str], int]:
     return dict(totals)
 
 
-def totals_by_category(flows: Flows) -> dict[tuple[str, str], int]:
-    totals: Counter[tuple[str, str]] = Counter()
-    for (_, key, _, category), delta in flows.items():
-        totals[(category, key)] += delta
-    return dict(totals)
-
-
 def transfer_imbalance(flows: Flows) -> dict[tuple[str, str, str], int]:
     totals: Counter[tuple[str, str, str]] = Counter()
     for (phase, key, _, category), delta in flows.items():

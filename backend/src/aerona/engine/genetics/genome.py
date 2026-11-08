@@ -9,7 +9,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.body import InjuryRow
-from aerona.db.tables.genetics import AllelePoolRow, GenomeRow
+from aerona.db.tables.genetics import GenomeRow
 from aerona.domain.enums.body import LASTING_INJURY_STATES, InjuryKind, InjuryState
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.genetics import SCHOOL_OF_LOCUS, Locus
@@ -128,10 +128,6 @@ def score_of(genes: Mapping[str, list[str]], locus: Locus) -> int:
 
 async def genome_of(session: AsyncSession, holder_id: int | None) -> GenomeRow | None:
     return await session.get(GenomeRow, holder_id) if holder_id is not None else None
-
-
-async def pool_of(session: AsyncSession, people_id: int | None) -> AllelePoolRow | None:
-    return await session.get(AllelePoolRow, people_id) if people_id is not None else None
 
 
 async def consanguinity(session: AsyncSession, rules: Rules, first_id: int, second_id: int) -> int:

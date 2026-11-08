@@ -1,5 +1,5 @@
 import json
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -51,21 +51,6 @@ DOMAIN_SEPARATOR = "/"
 POPULATION_KEY = "population"
 FOLLOWERS_KEY = "followers"
 F = ForeignGodPowerEffect
-
-POWER_AMOUNTS: dict[ForeignGodPowerEffect, Callable[[Rules], int]] = {
-    F.SHIELD: lambda rules: rules.foreign_gods.power_shield,
-    F.CALLER: lambda rules: rules.foreign_gods.power_caller,
-    F.THIEF: lambda rules: rules.foreign_gods.power_thief,
-    F.DESTROYER: lambda rules: rules.foreign_gods.power_destroyer,
-    F.FERTILE: lambda rules: rules.foreign_gods.power_bountiful,
-    F.REVIVING: lambda rules: rules.foreign_gods.power_reviving,
-    F.SHARP_TONGUED: lambda rules: rules.foreign_gods.power_sharp_tongue,
-}
-
-
-def power_amount(rules: Rules, effect: ForeignGodPowerEffect) -> int | None:
-    reader = POWER_AMOUNTS.get(effect)
-    return reader(rules) if reader is not None else None
 
 
 def god_seed(name: str, world_id: int, epoch: int) -> str:

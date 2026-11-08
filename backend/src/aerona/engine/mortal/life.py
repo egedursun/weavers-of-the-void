@@ -170,9 +170,5 @@ def ability(mortal: EntityRow, key: Ability) -> int:
     return value if value is not None else DEFAULT_ABILITY
 
 
-def ability_factor(mortal: EntityRow, key: Ability, weight_pct: int) -> float:
-    return 1 + (ability(mortal, key) - DEFAULT_ABILITY) / PERCENT * weight_pct / PERCENT
-
-
 def adult(stage: LifeStage) -> bool:
     return stage in (LifeStage.ADULT, LifeStage.ELDER)

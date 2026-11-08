@@ -24,6 +24,7 @@ const KIND_ICON: Record<string, LucideIcon> = {
   foreign_god: DRAWER_KIND_ICON['foreign-god'],
   world: DRAWER_KIND_ICON.world,
   star: DRAWER_KIND_ICON.star,
+  entity: DRAWER_KIND_ICON.entity,
 }
 
 const KIND_LABEL: Record<string, string> = {
@@ -32,6 +33,7 @@ const KIND_LABEL: Record<string, string> = {
   foreign_god: 'Foreign gods',
   world: 'Worlds',
   star: 'Stars',
+  entity: 'Records',
 }
 
 export function categoryOf(item: ImageListView): string {

@@ -358,3 +358,19 @@ async def test_a_cold_or_wet_year_hurts_a_tender_crop_and_spares_a_hardy_one(ctx
     assert book.fit(hardy.id, vale.id, cold) == pytest.approx(book.fit(hardy.id, vale.id))
     assert book.factor(vale.id, cold) < book.factor(vale.id)
     assert book.fit(hardy.id, vale.id, CropYear(moisture=60)) < book.fit(hardy.id, vale.id)
+
+
+async def test_a_yield_the_god_names_freely_still_fills_the_fields_by_its_goods(ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
+    vale = await make_region(ctx.session, "Barley Vale", cosmos.home.id)
+    await land(ctx.session, vale.id, cosmos.home.id)
+    crop = await plant(ctx, cosmos, "Vale Barley", vale.id, PlantYield.GRAIN)
+    for item in list(await ctx.session.scalars(select(SpeciesYieldRow).where(SpeciesYieldRow.species_entity_id == crop.id))):
+        await ctx.session.delete(item)
+    ctx.session.add(SpeciesYieldRow(species_entity_id=crop.id, product="barley", commodity=CommodityKind.GRAIN, rate=2))
+    ctx.session.add(SpeciesYieldRow(species_entity_id=crop.id, product="song", commodity=None, rate=1))
+    ctx.session.add(RegionCropRow(region_entity_id=vale.id, plant_entity_id=crop.id, share=100, since_epoch=1, locked=[]))
+    await ctx.session.flush()
+    book = await CropBook.load(ctx.session, rules)
+    fields = book.fields(vale.id)
+    assert [(product.commodity, rate) for crop_field in fields for product, rate in crop_field.products] == [(CommodityKind.GRAIN, 2)]
+    assert split_fields(rules, 10.0, fields)[CommodityKind.GRAIN] == pytest.approx(10.0)

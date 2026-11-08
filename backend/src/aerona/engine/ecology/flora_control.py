@@ -29,6 +29,8 @@ async def plant_of(ctx: TickContext, species_id: int) -> PlantProfileRow:
 async def edit_plant(ctx: TickContext, species_id: int, values: Values, *, release: list[str]) -> PlantProfileRow:
     row = await plant_of(ctx, species_id)
     if values.get("cultivar_of_id") is not None:
+        if int(values["cultivar_of_id"]) == species_id:
+            raise ValidationFailedError("A plant cannot be bred from itself.")
         await plant_of(ctx, int(values["cultivar_of_id"]))
     patch(row, values, release)
     await ctx.session.flush()

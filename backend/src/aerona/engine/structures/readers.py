@@ -9,7 +9,6 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.structures import StructureProfileRow
-from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.structure import STANDING_STATES, StructureKind
 from aerona.engine.primitives.distance import RegionAtlas
@@ -99,12 +98,6 @@ async def workshop_output(session: AsyncSession, rules: Rules, workshop: Worksho
     if profile.effect_pct <= 0:
         return 0.0
     return 1 + profile.effect_pct / PERCENT * output_bonus(rules, profile.kind) / PERCENT
-
-
-async def linked_workshop(session: AsyncSession, community_id: int, kind: WorkshopKind) -> WorkshopRow | None:
-    return await session.scalar(
-        select(WorkshopRow).where(WorkshopRow.community_entity_id == community_id, WorkshopRow.kind == kind).order_by(WorkshopRow.id).limit(1)
-    )
 
 
 async def palace_legitimacy(session: AsyncSession, rules: Rules, seats: Iterable[int | None]) -> int:

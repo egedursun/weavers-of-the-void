@@ -85,10 +85,6 @@ def label_of(file_name: str) -> str:
     return match.group(1) if match else MANUAL_LABEL
 
 
-def epoch_label(epoch: int) -> str:
-    return f"{EPOCH_LABEL_PREFIX}{epoch}"
-
-
 def backup_file_name(label: str, now: datetime) -> str:
     stamp = now.strftime(BACKUP_TIMESTAMP_FORMAT) + f"-{now.microsecond // 1000:0{MILLISECONDS_DIGITS}d}"
     suffix = "".join(secrets.choice(RANDOM_ALPHABET) for _ in range(BACKUP_RANDOM_LENGTH))

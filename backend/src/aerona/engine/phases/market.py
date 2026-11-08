@@ -31,12 +31,10 @@ from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import declare_war, impose_tribute
 from aerona.rules.registry import Rules
 
-TRADING_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
 WEALTH_KEY = "wealth"
 PROSPERITY_KEY = "prosperity"
 ABUNDANCE_KEY = "abundance"
 VALUE_KEY = "value"
-NEUTRAL_PRICE = PERCENT
 DOUBLE = 2
 
 

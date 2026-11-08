@@ -49,21 +49,7 @@ async def require_canon(session: AsyncSession, entity_id: int | None) -> EntityR
     return entity
 
 
-async def require_present(session: AsyncSession, entity_id: int, statuses: Collection[EntityStatus]) -> EntityRow:
-    entity = await session.get(EntityRow, entity_id)
-    if entity is None or entity.status not in statuses:
-        raise RejectionError(state_reason(entity, entity_id) or "")
-    return entity
-
-
 def require_type(entity: EntityRow, types: Collection[EntityType], template: StrEnum, **values: object) -> EntityRow:
     if entity.entity_type not in types:
         fail(template, **values)
     return entity
-
-
-def first_non_canon(*entities: EntityRow | None) -> str | None:
-    for entity in entities:
-        if entity is not None and entity.status is not EntityStatus.CANON:
-            return state_reason(entity, entity.id)
-    return None

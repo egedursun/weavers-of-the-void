@@ -290,12 +290,6 @@ async def declare_war(
     return True
 
 
-async def require_war_block_free(ctx: TickContext, first_id: int, second_id: int, community_cap: bool) -> None:
-    block = await can_open_war(ctx.session, ctx.rules, first_id, second_id, ctx.epoch, community_cap=community_cap)
-    if block is not None:
-        raise ConflictError(f"No war can open between these two: {block.value.replace('_', ' ')}.")
-
-
 async def hostility_reason(session: AsyncSession, first: int, second: int) -> str | None:
     bonds = await BondRepository(session).active_between(first, second, [BondKind.ENEMY])
     described = [bond.description for bond in sorted(bonds, key=lambda bond: bond.id, reverse=True) if bond.description]

@@ -11,7 +11,7 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.material import MINERAL_KINDS, MaterialKind
-from aerona.domain.enums.society import Commodity, KnowledgeBranch
+from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.rules.registry import Rules
@@ -19,7 +19,6 @@ from aerona.rules.registry import Rules
 C = CommodityKind
 M = MaterialKind
 RENEWABLE = frozenset({C.TIMBER, C.FISH, C.LIVESTOCK, C.GRAIN, C.FODDER, C.MOUNTS, C.MAGICAL_REAGENTS, C.INCENSE})
-LEGACY_YIELD: MappingProxyType[Commodity, CommodityKind] = MappingProxyType({Commodity.FOOD: C.GRAIN, Commodity.ORE: C.ORE, Commodity.GOODS: C.TIMBER})
 BYPRODUCTS: MappingProxyType[MaterialKind, tuple[MaterialKind, int]] = MappingProxyType({M.LEAD: (M.SILVER, 10), M.COPPER: (M.GOLD, 3), M.IRON: (M.SULFUR, 5)})
 REQUIRED: MappingProxyType[CommodityKind, tuple[KnowledgeBranch, int]] = MappingProxyType(
     {C.FISH: (KnowledgeBranch.SEAFARING, 0), C.MOUNTS: (KnowledgeBranch.AGRICULTURE, 1), C.MAGICAL_REAGENTS: (KnowledgeBranch.MAGIC, 1)}

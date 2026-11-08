@@ -38,7 +38,6 @@ from aerona.rules.registry import Rules
 
 BEAUTY = "beauty"
 RECOGNISABILITY = "recognisability"
-INBREEDING = "inbreeding"
 GENES = "genes"
 MARKS = "marks"
 TRAIT_ALLELES: dict[HouseTrait, tuple[Locus, str]] = {

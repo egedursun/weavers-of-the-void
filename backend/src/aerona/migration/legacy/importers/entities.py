@@ -35,7 +35,6 @@ TIER_MAX = max(CivilizationTier)
 CLAMPED_STAT = "clamped stat"
 LOCATION_DROPPED = "location dropped"
 ORIGIN_CHANGED = "origin changed"
-DERIVED_FLAG = "derived by legacy pattern"
 
 
 @dataclass(frozen=True)

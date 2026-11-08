@@ -25,6 +25,7 @@ const STATUS_TONE: Record<
   string,
   'destructive' | 'secondary' | 'warning' | 'success'
 > = {
+  canon: 'success',
   rejected: 'warning',
   destroyed: 'destructive',
   dead: 'secondary',

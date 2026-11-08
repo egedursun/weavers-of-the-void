@@ -111,6 +111,8 @@ const NODE_KIND_LABEL: Record<string, string> = {
   creator: 'Creator',
   foreign_god: 'Foreign god',
   world: 'World',
+  star: 'Star',
+  entity: 'Record',
 }
 
 export function capitalized(text: string): string {

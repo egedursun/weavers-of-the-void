@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.travel import TravelMethod
-from aerona.domain.enums.world import Atmosphere, Discovery, Gravity, HorrorEventKind, SkyEventKind, WorldType
+from aerona.domain.enums.world import Atmosphere, Discovery, Gravity, SkyEventKind, WorldType
 
 W = WorldType
 
@@ -599,14 +599,5 @@ SKY_EVENT_LABELS: dict[SkyEventKind, str] = {
     SkyEventKind.FLARE: "Stellar flare",
 }
 
-HORROR_EVENT_LABELS: dict[HorrorEventKind, str] = {
-    HorrorEventKind.STARS_ALIGN: "The stars align",
-    HorrorEventKind.EYE_IN_THE_SKY: "An eye in the sky",
-    HorrorEventKind.WAVE_OF_SILENCE: "A wave of silence",
-    HorrorEventKind.REVERSE_RAIN: "Rain falling upward",
-    HorrorEventKind.VISIT_OF_THE_VOID: "Visit of the Void",
-    HorrorEventKind.THE_DIMMING: "The dimming of the star",
-    HorrorEventKind.WHISPERS_FROM_BEYOND: "Whispers from beyond",
-}
 
 HARSH_ATMOSPHERES = frozenset({Atmosphere.NONE, Atmosphere.TOXIC})

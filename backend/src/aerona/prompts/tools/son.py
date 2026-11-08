@@ -192,7 +192,6 @@ CREATION_TOOLS: dict[SonToolId, EntityType] = {
     SonToolId(spec.creation_tool): entity_type for entity_type, spec in ENTITY_TYPES.items() if spec.creation_tool is not None
 }
 
-STATUS_FREE = "Free."
 ESSENCE_GIFT_CAP = "{{ rules.son_tools.gift_max_essence }}"
 
 SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {

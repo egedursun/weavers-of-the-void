@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.mind import MEMORIES
 from aerona.constants.units import PERCENT
 from aerona.db.key_index import index_spec, keyed_rows
-from aerona.db.read_memo import table_names
 from aerona.db.repositories.chronicle import incident_for
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import MemoryRow
@@ -23,9 +22,6 @@ from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.rules.registry import Rules
 
 MEMORY_LOCK = "memories"
-
-
-MEMORY_TABLES = table_names((MemoryRow,))
 
 
 @dataclass(frozen=True)
@@ -102,13 +98,6 @@ async def remember(
     session.add(row)
     await session.flush()
     return row
-
-
-async def remember_both(
-    session: AsyncSession, rules: Rules, first: int, second: int, *, kind: MemoryKind, magnitude: float, epoch: int, note: str | None = None
-) -> None:
-    await remember(session, rules, holder_id=first, subject_id=second, kind=kind, magnitude=magnitude, epoch=epoch, note=note)
-    await remember(session, rules, holder_id=second, subject_id=first, kind=kind, magnitude=magnitude, epoch=epoch, note=note)
 
 
 MEMORY_PAIRS = index_spec(MemoryRow, "holder_node_id", "subject_node_id")

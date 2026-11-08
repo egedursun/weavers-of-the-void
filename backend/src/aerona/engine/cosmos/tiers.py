@@ -4,13 +4,12 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.civilization import capabilities_at, unlocked
+from aerona.catalog.civilization import unlocked
 from aerona.constants.units import PERCENT
-from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmic_state import CivilizationTierLockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import TributeRow
-from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.entity import CivilizationTier, EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.war import TributeStatus
@@ -29,10 +28,6 @@ def tier_of(entity: EntityRow) -> int:
 
 def may(rules: Rules, entity: EntityRow, capability: TierCapability) -> bool:
     return entity.entity_type is EntityType.MORTAL or unlocked(rules, tier_of(entity), capability)
-
-
-def tier_capabilities(rules: Rules, entity: EntityRow) -> list[TierCapability]:
-    return capabilities_at(rules, tier_of(entity))
 
 
 @dataclass
@@ -197,8 +192,3 @@ def planned_tiers(scene: TierScene, candidates: list[EntityRow]) -> tuple[dict[i
 async def tier_lock(session: AsyncSession, entity_id: int) -> int | None:
     row = await session.get(CivilizationTierLockRow, entity_id)
     return row.tier if row is not None else None
-
-
-async def active_bond_targets(session: AsyncSession, source: int, kind: BondKind) -> list[int]:
-    statement = select(BondRow.target_node_id).where(BondRow.source_node_id == source, BondRow.kind == kind, BondRow.state == BondState.ACTIVE)
-    return list(await session.scalars(statement))

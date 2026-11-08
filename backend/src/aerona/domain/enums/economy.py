@@ -170,18 +170,4 @@ class GoodsFlow(StrEnum):
     OFFERING = "offering"
 
 
-GOODS_TRANSFERS = frozenset({GoodsFlow.TRADE, GoodsFlow.TRIBUTE, GoodsFlow.AID, GoodsFlow.LOOT})
 GOODS_SOURCES = frozenset({GoodsFlow.EXTRACTION, GoodsFlow.HARVEST, GoodsFlow.PRODUCTION, GoodsFlow.SEED})
-GOODS_SINKS = frozenset(
-    {
-        GoodsFlow.INPUT,
-        GoodsFlow.OFFERING,
-        GoodsFlow.CONSUMPTION,
-        GoodsFlow.LOSS,
-        GoodsFlow.SIEGE,
-        GoodsFlow.WAR,
-        GoodsFlow.CONSTRUCTION,
-        GoodsFlow.OVERFLOW,
-        GoodsFlow.DECAY,
-    }
-)

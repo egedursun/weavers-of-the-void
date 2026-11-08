@@ -24,6 +24,9 @@ run deprecated_apis "$PYTHON" scripts/check_deprecated_apis.py
 run transfers "$PYTHON" scripts/check_transfers.py
 run import_cycles "$PYTHON" scripts/check_import_cycles.py
 run hidden_controls "$PYTHON" scripts/check_hidden_controls.py
+run label_maps "$PYTHON" scripts/check_label_maps.py
+run orphans "$PYTHON" scripts/check_orphans.py
+run spec_coverage "$PYTHON" scripts/spec_coverage.py check
 
 if echo "$STAGED" | grep -qE '^(backend/|scripts/).*\.py$'; then
   run static sh -c 'cd backend && .venv/bin/ruff check src && .venv/bin/ruff format --check src && .venv/bin/mypy src/aerona && .venv/bin/lint-imports'

@@ -4,7 +4,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.bonds import bond_spec
-from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
@@ -165,25 +165,12 @@ async def resolve_all_friend_and_foe(session: AsyncSession, rules: Rules) -> int
     return resolved
 
 
-async def close_bond(session: AsyncSession, bond_id: int, epoch: int, reason: str | None = None) -> BondRow:
-    bond = await session.get(BondRow, bond_id)
-    if bond is None:
-        raise NotFoundError("No such bond.")
-    if bond.state is not BondState.ACTIVE:
-        return bond
-    return await BondRepository(session).deactivate(bond, epoch, reason)
-
-
 async def move_entity(session: AsyncSession, entity_id: int, location_id: int | None, epoch: int) -> EntityRow:
     repository = EntityRepository(session)
     entity = await repository.require_entity(entity_id)
     if location_id is not None:
         await repository.require_entity(location_id)
     return await repository.move(entity, location_id, epoch)
-
-
-async def hand_over_contents(session: AsyncSession, place: EntityRow, epoch: int) -> int:
-    return await EntityRepository(session).transfer_contents(place, epoch)
 
 
 async def flip_reversed(session: AsyncSession) -> int:

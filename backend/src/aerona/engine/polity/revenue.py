@@ -39,7 +39,6 @@ DEFAULT_RATES: dict[TaxKind, int] = {TaxKind.LAND: 5, TaxKind.POLL: 0, TaxKind.T
 CLEAN_CREEDS = frozenset({IdeologyTenet.LEGALISM, IdeologyTenet.ASCETICISM})
 RATE_UNIT = 10
 CORRUPTION = "corruption"
-RATE = "rate"
 EFFICIENCY = "efficiency"
 TAKE = "take"
 

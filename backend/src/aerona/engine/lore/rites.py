@@ -112,7 +112,6 @@ MADDENING = frozenset({S.MIND, S.ILLUSION, S.DIVINATION})
 DARK_SCHOOLS = frozenset({S.BLOOD, S.VOID})
 DARK_SOURCES = frozenset({MagicSource.BLOOD, MagicSource.VOID})
 DEFAULT_SCHOOLS = (S.DIVINATION, S.EARTH, S.LIFE)
-SPIRIT_STATS = "spirit"
 ROW_FIXUP = "lore.rite_profiles"
 PHENOMENON_KEY = "region.danger"
 

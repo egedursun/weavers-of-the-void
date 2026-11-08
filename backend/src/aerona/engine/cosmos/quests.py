@@ -231,15 +231,5 @@ async def abandon_quest(ctx: TickContext, thread_id: int, by: str) -> str:
     return text
 
 
-async def open_quest_count(session: AsyncSession) -> int:
-    statement = (
-        select(func.count())
-        .select_from(LegendaryQuestRow)
-        .join(ThreadRow, ThreadRow.id == LegendaryQuestRow.thread_id)
-        .where(ThreadRow.status == ThreadStatus.OPEN)
-    )
-    return int(await session.scalar(statement) or 0)
-
-
 async def worlds_known(session: AsyncSession) -> int:
     return int(await session.scalar(select(func.count()).select_from(WorldRow).where(WorldRow.discovery != Discovery.FORGOTTEN)) or 0)

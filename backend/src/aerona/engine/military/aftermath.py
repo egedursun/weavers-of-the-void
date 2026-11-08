@@ -6,7 +6,7 @@ from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, BattleCasualtyRow, BattleStackRow
-from aerona.db.tables.warfare import ArmyRow, BattleRow
+from aerona.db.tables.warfare import BattleRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.demography import AgeBand, CohortCondition
@@ -24,7 +24,6 @@ from aerona.engine.military.battle import BattleResult, Side, target_class
 from aerona.engine.military.units import drill_fields
 from aerona.engine.primitives.levies import levies_from
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, shift_stat, stat
 from aerona.engine.primitives.strength import equipment
 from aerona.engine.primitives.transfers import move_amount
@@ -225,11 +224,6 @@ async def flaring_items(ctx: TickContext, weather: WeatherKind | None, side: Sid
         if ctx.rng(f"flare.{hero.id}.{ctx.epoch}").chance(table.item_flare_risk):
             await apply_hits(ctx, hero, Harm(table.item_flare_hp, HarmCause.BATTLE, "burned by a flaring relic in a magic storm"), lethal=False)
     return flared
-
-
-async def owner_army(ctx: TickContext, army_id: int) -> EntityRow | None:
-    row = await ctx.session.get(ArmyRow, army_id)
-    return await living_entity(ctx.session, row.owner_entity_id) if row is not None else None
 
 
 async def cohesion_after(ctx: TickContext, result: BattleResult) -> None:

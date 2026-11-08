@@ -44,7 +44,6 @@ MOUNTED = frozenset({UnitFamily.MOUNTED, UnitFamily.BEAST})
 AGGRESSIVE = frozenset({CommanderTrait.AGGRESSIVE_ASSAULTER, CommanderTrait.RECKLESS, CommanderTrait.BRUTAL, CommanderTrait.SIEGE_EXPERT})
 CAREFUL = frozenset({CommanderTrait.CAUTIOUS, CommanderTrait.DEFENSIVE_GENIUS})
 RUTHLESS = frozenset({CommanderTrait.BRUTAL})
-CALM_STANCES = frozenset({Stance.GARRISON, Stance.ENTRENCH})
 
 
 def bridged(rules: Rules, region: RegionEnvironmentRow | None) -> bool:

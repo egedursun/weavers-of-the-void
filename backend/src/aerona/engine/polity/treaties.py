@@ -35,7 +35,6 @@ from aerona.engine.polity.accords import (
     Clause,
     accept,
     clause_pairs,
-    derive_bond,
     end_treaty,
     parties_of,
     reject,
@@ -462,10 +461,6 @@ async def tolls_waived(ctx: TickContext, first_id: int, second_id: int) -> bool:
     return frozenset((first_id, second_id)) in await clause_pairs(ctx.session, ClauseKind.TOLLS_WAIVED)
 
 
-async def faith_free(ctx: TickContext, first_id: int, second_id: int) -> bool:
-    return frozenset((first_id, second_id)) in await clause_pairs(ctx.session, ClauseKind.RELIGIOUS_FREEDOM)
-
-
 async def champion_for(ctx: TickContext, first_id: int, second_id: int) -> bool:
     return frozenset((first_id, second_id)) in await clause_pairs(ctx.session, ClauseKind.CHAMPION)
 
@@ -608,10 +603,6 @@ async def sign_derived(
         else [(first, PartyRole.SIGNATORY), (second, PartyRole.SIGNATORY)]
     )
     return await sign(ctx, kind, roles, clauses=clauses or [], until=until)
-
-
-async def treaty_bond(ctx: TickContext, treaty: EntityRow, kind: TreatyKind, ends: tuple[int, int], until: int | None) -> BondRow | None:
-    return await derive_bond(ctx, treaty, kind, ends, until)
 
 
 async def answer_proposals(ctx: TickContext) -> dict[str, int]:

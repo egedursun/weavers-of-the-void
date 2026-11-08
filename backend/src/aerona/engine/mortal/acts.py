@@ -493,15 +493,6 @@ async def choose_path(ctx: TickContext, mortal: EntityRow, profile: MortalProfil
     return best
 
 
-async def ruler_favour(ctx: TickContext, ruler_id: int | None, mortal_id: int) -> float:
-    if ruler_id is None:
-        return 0.0
-    rows = await ctx.session.scalars(
-        select(MemoryRow).where(MemoryRow.holder_node_id == ruler_id, MemoryRow.subject_node_id == mortal_id, MemoryRow.kind == MemoryKind.GIFTED_ME)
-    )
-    return float(sum(strength_of(row, ctx.epoch) for row in rows))
-
-
 async def bribe(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) -> bool:
     table = ctx.rules.standing
     if profile.career is not CareerPath.OFFICE or profile.wealth < table.bribe_cost or TraitKind.HONEST in await traits_of(ctx.session, mortal.id):

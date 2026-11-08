@@ -3,7 +3,7 @@ from collections.abc import Awaitable, Callable, Mapping, Sequence
 from pydantic import ValidationError
 from sqlalchemy import delete, select
 
-from aerona.catalog.tenets import DOMAIN_TENETS, OPPOSED, STRATUM_NAMES, VALUE_TENETS
+from aerona.catalog.tenets import DOMAIN_TENETS, OPPOSED, VALUE_TENETS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from aerona.db.tables.entities import EntityRow
@@ -689,7 +689,3 @@ async def unmake_stratum(ctx: TickContext, row: AfterlifeStratumRow) -> None:
         soul.stratum_id, soul.state = None, AfterlifeState.JUDGED if soul.state is AfterlifeState.IN_REALM else soul.state
     await ctx.session.delete(row)
     await ctx.session.flush()
-
-
-def default_name(kind: StratumKind, realm: EntityRow) -> str:
-    return f"{STRATUM_NAMES[kind]} of {realm.name}"[:200]

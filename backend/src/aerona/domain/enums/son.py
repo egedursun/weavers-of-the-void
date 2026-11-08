@@ -33,14 +33,6 @@ class Passion(StrEnum):
     MERCY = "mercy"
 
 
-class SonResource(StrEnum):
-    HP = "hp"
-    ESSENCE = "essence"
-    FAITH = "faith"
-    FAME = "fame"
-    XP = "xp"
-
-
 class ExistenceMode(StrEnum):
     CONCRETE = "concrete"
     SEMI_CONCRETE = "semi_concrete"

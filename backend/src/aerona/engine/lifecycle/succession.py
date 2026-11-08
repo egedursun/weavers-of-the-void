@@ -9,7 +9,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.entity import EntityFlag, EntityType, MortalRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.context import TickContext
@@ -26,7 +26,6 @@ from aerona.language.titles import holder_title_of
 RULED_PRIMARY_TYPES = (EntityType.SETTLEMENT, EntityType.PEOPLE, EntityType.FACTION, EntityType.CULT, EntityType.REGION, EntityType.PLACE)
 REGNAL_SUFFIX = re.compile(r"\s+[IVXLCDM]+$")
 HEIR_SUBTYPE = "heir"
-INHERITED_STATS = ("strength", "agility", "intellect", "charisma")
 
 
 def dynasty_root(name: str) -> str:
@@ -166,7 +165,3 @@ async def designate_heir(ctx: TickContext, ruler_id: int, heir_id: int) -> Desig
             designate.holder_entity_id = heir.id
     await ctx.session.flush()
     return row
-
-
-def is_alive(entity: EntityRow) -> bool:
-    return entity.status is EntityStatus.CANON

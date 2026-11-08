@@ -61,7 +61,6 @@ CHAIN_STEPS: tuple[ChainStep, ...] = (
 )
 STEPS: MappingProxyType[str, ChainStep] = MappingProxyType({step.key: step for step in CHAIN_STEPS})
 SHIP_INPUTS: tuple[tuple[CommodityKind, int], ...] = ((C.TIMBER, 4), (C.CLOTH, 1))
-MINT_INPUT = C.ORE
 
 
 @dataclass(frozen=True)

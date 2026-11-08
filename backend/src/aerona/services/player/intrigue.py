@@ -21,7 +21,6 @@ from aerona.engine.primitives.naming import Namer
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 SPAN = 100
-IDENTITY_FIELDS = ("false_name", "cover_role", "community_node_id", "exposure")
 
 
 class KeepSecret(Command):

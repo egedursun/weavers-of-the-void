@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.orm.base import instance_state
 
-from aerona.db.profile_guard import restore_held
+from aerona.db.profile_guard import hold_profile_columns
 from aerona.db.read_memo import KEEP_KEY
 
 
@@ -35,5 +35,10 @@ def align_updates(sync: Session, *_: object) -> None:
                     flag_modified(state.obj(), key)
 
 
-ALIGNED_AFTER = (restore_held,)
-event.listen(Session, "before_flush", align_updates)
+def install_flush_batching() -> None:
+    for hook in (hold_profile_columns, align_updates):
+        if not event.contains(Session, "before_flush", hook):
+            event.listen(Session, "before_flush", hook)
+
+
+install_flush_batching()

@@ -10,7 +10,6 @@ from aerona.engine.military.campaign import bridged, on_road, plundered_share
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.rules.registry import Rules
 
-DIGGING = frozenset({Stance.ENTRENCH, Stance.GARRISON, Stance.BESIEGE})
 LAYING = frozenset({Stance.MARCH, Stance.ENTRENCH, Stance.GARRISON, Stance.BESIEGE})
 RIVERS = frozenset({RiverClass.RIVER, RiverClass.GREAT_RIVER})
 

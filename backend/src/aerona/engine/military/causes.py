@@ -60,19 +60,6 @@ async def holy_war(ctx: TickContext, attacker_id: int, defender_id: int, *, god_
     return await declared_war(ctx, attacker_id, defender_id, WarCause.HOLY_WAR, reason, aim=WarAimKind.CONVERT, params=params, open_now=False)
 
 
-async def independence_war(ctx: TickContext, rebel_id: int, ruler_id: int, reason: str) -> WarRow | None:
-    return await declared_war(ctx, rebel_id, ruler_id, WarCause.INDEPENDENCE, reason, aim=WarAimKind.LIBERATE, params={"freed": rebel_id}, open_now=False)
-
-
-async def liberation_war(ctx: TickContext, rebel_id: int, occupier_id: int, reason: str) -> WarRow | None:
-    return await declared_war(ctx, rebel_id, occupier_id, WarCause.LIBERATION, reason, aim=WarAimKind.LIBERATE, params={"freed": rebel_id}, open_now=False)
-
-
-async def punitive_war(ctx: TickContext, avenger_id: int, offender_id: int, reason: str, *, memory_id: int | None = None) -> WarRow | None:
-    params: dict[str, int | str | bool] = {"memory": memory_id} if memory_id is not None else {}
-    return await declared_war(ctx, avenger_id, offender_id, WarCause.PUNITIVE, reason, aim=WarAimKind.REVENGE, params=params, open_now=False)
-
-
 async def raid_war(ctx: TickContext, raider_id: int, victim_id: int, reason: str) -> WarRow | None:
     params: dict[str, int | str | bool] = {"amount": ctx.rules.siegecraft.sack_loot}
     war = await declared_war(ctx, raider_id, victim_id, WarCause.RAID, reason, aim=WarAimKind.LOOT, params=params, open_now=False)

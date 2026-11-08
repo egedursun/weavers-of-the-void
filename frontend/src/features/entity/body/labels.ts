@@ -65,6 +65,7 @@ import {
   Brain,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
+import { MATERIAL_LABEL } from '../economy/labels'
 import { type Named, named, plain } from '../environment/labels'
 
 export { named, plain }
@@ -342,23 +343,7 @@ export const MAIMED: Record<string, Named> = {
   broken_minded: { label: 'Broken in mind', icon: Brain, tone: 'verdigris' },
 }
 
-export const MATERIALS: Record<string, string> = {
-  wood: 'Wood',
-  bone: 'Bone',
-  ivory: 'Ivory',
-  copper: 'Copper',
-  bronze: 'Bronze',
-  iron: 'Iron',
-  steel: 'Steel',
-  silver: 'Silver',
-  gold: 'Gold',
-  glass: 'Glass',
-  crystal: 'Crystal',
-  star_metal: 'Star metal',
-  living_wood: 'Living wood',
-  dragonbone: 'Dragonbone',
-  skysteel: 'Skysteel',
-}
+export const MATERIALS: Record<string, string> = MATERIAL_LABEL
 
 export const REGIONS: Record<string, string> = {
   head: 'Head',

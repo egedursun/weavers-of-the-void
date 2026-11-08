@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from aerona.domain.enums.foreign_god import ForeignGodPowerEffect, ForeignGodStatus
+from aerona.domain.enums.foreign_god import ForeignGodPowerEffect
 
 F = ForeignGodPowerEffect
 
@@ -24,11 +24,4 @@ FOREIGN_GOD_POWERS: dict[ForeignGodPowerEffect, ForeignGodPowerSpec] = {
         ForeignGodPowerSpec(F.DEATHLESS, "Deathless", "Never dies even in a crushing defeat; it is only defeated."),
         ForeignGodPowerSpec(F.SHARP_TONGUED, "Sharp-tongued", "Sons who parley with it are at a disadvantage."),
     )
-}
-
-FOREIGN_GOD_STATUS_LABELS: dict[ForeignGodStatus, str] = {
-    ForeignGodStatus.AWAKE: "Awake",
-    ForeignGodStatus.ASLEEP: "Asleep",
-    ForeignGodStatus.DEFEATED: "Defeated",
-    ForeignGodStatus.DEAD: "Dead",
 }

@@ -27,10 +27,6 @@ async def is_held(session: AsyncSession, node_id: int, key: str, epoch: int) -> 
     return found is not None
 
 
-async def held_keys(session: AsyncSession, node_id: int, keys: tuple[str, ...], epoch: int) -> frozenset[str]:
-    return frozenset([key for key in keys if await is_held(session, node_id, key, epoch)])
-
-
 async def set_held(session: AsyncSession, node_id: int, key: str, epoch: int, held: bool) -> bool:
     result = await session.execute(
         delete(ModifierRow).where(ModifierRow.target_node_id == node_id, ModifierRow.target_key == key, ModifierRow.source_kind == ModifierSource.PIN)

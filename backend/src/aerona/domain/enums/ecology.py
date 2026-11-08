@@ -133,7 +133,6 @@ class Cultivation(StrEnum):
     CULTIVAR = "cultivar"
 
 
-CULTIVATION_ORDER = tuple(Cultivation)
 SOWN = frozenset({Cultivation.CULTIVATED, Cultivation.CULTIVAR})
 
 

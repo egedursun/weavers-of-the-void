@@ -198,7 +198,6 @@ SCATTER = Line("gods.death.scatter", "{sibling} scattered {son}'s bones ({cost} 
 SCATTER_NOTE = "scattered their bones"
 SCATTER_ENEMY = "scattered {son}'s bones"
 SCHEME_RELATION_NOTE = "schemed for their return"
-KILL_SON_NOTE = "killed by the creator"
 
 ECONOMY_ADDICTED = Line("gods.economy.addicted", "{owner} can no longer do without {resource}.")
 ECONOMY_SENTIENT_PAID = Line("gods.economy.sentient_paid", "{resource} demanded {demand} from {owner}; {owner} paid the price.")

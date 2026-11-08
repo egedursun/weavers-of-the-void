@@ -13,7 +13,6 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.son import ExistenceBand, PowerEffect, SonStatus
@@ -60,11 +59,6 @@ async def epoch_star(ctx: TickContext, son: SonRow) -> EntityRow | None:
         if star is not None and star.domain is not None:
             return star
     return None
-
-
-async def star_domains(ctx: TickContext, son: SonRow) -> set[Domain]:
-    star = await epoch_star(ctx, son)
-    return {star.domain} if star is not None and star.domain is not None else set()
 
 
 def star_bonus(rules: Rules, star: EntityRow) -> int:

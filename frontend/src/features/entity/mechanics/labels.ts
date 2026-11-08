@@ -55,6 +55,7 @@ export const MODIFIER_SOURCE: Record<string, Named> = {
   dominion: { label: 'Dominion', icon: Shield },
   phenomenon: { label: 'Phenomenon', icon: Wand2, tone: 'warning' },
   god_death: { label: 'Dead god', icon: Flame, tone: 'danger' },
+  perk: { label: 'Gift of a god', icon: Sparkles, tone: 'gold' },
   pin: { label: 'Pin', icon: Lock },
   suppression: { label: 'Held back', icon: Pause },
 }

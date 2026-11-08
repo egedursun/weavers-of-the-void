@@ -182,10 +182,6 @@ def virtual_value(node_id: int, key: str) -> float:
     return combine(VIRTUAL_KEYS[key], live_contributions(node_id, key)).value
 
 
-def live_sources(node_id: int, key: str) -> frozenset[ModifierSource]:
-    return frozenset(item.source_kind for item in live_contributions(node_id, key))
-
-
 def row_of(draft: ModifierDraft, *, held: bool = False) -> ModifierRow:
     return ModifierRow(
         target_node_id=draft.target_node_id,
