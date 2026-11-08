@@ -3,10 +3,14 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
+from aerona.db.columns import column_bounds
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.polity import PolityProfileRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.models.entity_stats import MortalStats, PeopleStats
 from aerona.engine.primitives.stats import move_stat, stat
+from aerona.engine.primitives.transfers import move_amount
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 
@@ -66,3 +70,15 @@ def test_moving_a_stat_never_creates_or_destroys_it() -> None:
 def test_the_engine_moves_every_paired_amount_through_a_helper() -> None:
     module = checker()
     assert [finding for path in sorted(module.SOURCE.rglob("*.py")) for finding in module.scan(path)] == []
+
+
+def test_moving_an_amount_never_pushes_either_side_past_its_bounds() -> None:
+    payer = MortalProfileRow(entity_id=1, wealth=50, locked=[])
+    full = MortalProfileRow(entity_id=2, wealth=95, locked=[])
+    assert not move_amount(payer, full, "wealth", 10)
+    assert payer.wealth == 50 and full.wealth == 95
+    poor = MortalProfileRow(entity_id=3, wealth=4, locked=[])
+    assert not move_amount(poor, payer, "wealth", 10)
+    assert poor.wealth == 4 and payer.wealth == 50
+    assert move_amount(payer, full, "wealth", 5) and payer.wealth == 45 and full.wealth == 100
+    assert column_bounds(PolityProfileRow.__table__)["debt"] == (0, None)
