@@ -36,6 +36,8 @@ class EntityType(StrEnum):
     IDEOLOGY = "ideology"
     RITE = "rite"
     BEAST = "beast"
+    THEORY = "theory"
+    ART_FORM = "art_form"
 
 
 class EntityStatus(StrEnum):

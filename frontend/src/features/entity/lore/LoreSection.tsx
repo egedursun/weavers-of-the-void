@@ -3,6 +3,7 @@ import { EmptyState, Section, LoadingBlock } from '@/components/domain'
 import { useGodGate } from '@/features/pantheon/gate'
 import { type LoreCard as LoreCardData, useLore } from './api'
 import { LORE_KIND, type LoreKind } from './model'
+import { ArtFormPanel } from './panels/ArtFormPanel'
 import { ArtworkPanel } from './panels/ArtworkPanel'
 import { IdeologyPanel } from './panels/IdeologyPanel'
 import { ItemPanel } from './panels/ItemPanel'
@@ -10,6 +11,7 @@ import { LanguagePanel } from './panels/LanguagePanel'
 import { LegendPanel } from './panels/LegendPanel'
 import { ProphecyPanel } from './panels/ProphecyPanel'
 import { RitePanel } from './panels/RitePanel'
+import { TheoryPanel } from './panels/TheoryPanel'
 import { TraditionPanel } from './panels/TraditionPanel'
 
 function Body({
@@ -34,6 +36,10 @@ function Body({
   if (card.item) return <ItemPanel id={id} card={card.item} blocked={blocked} />
   if (card.artwork)
     return <ArtworkPanel id={id} card={card.artwork} blocked={blocked} />
+  if (card.theory)
+    return <TheoryPanel id={id} card={card.theory} blocked={blocked} />
+  if (card.art_form)
+    return <ArtFormPanel id={id} card={card.art_form} blocked={blocked} />
   return (
     <EmptyState
       icon={BadgeCheck}

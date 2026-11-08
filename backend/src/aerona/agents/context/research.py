@@ -4,9 +4,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.civics import CAPABILITIES, TRIGGERS
 from aerona.catalog.discovery import AGES, FIELDS, INCIDENTS
 from aerona.catalog.techniques import TECHNIQUES
+from aerona.catalog.theories import DISCIPLINES, DOMAINS
 from aerona.core.total import total
 from aerona.db.tables.culture import InstitutionRow, ResearchBoostRow, ResearchFocusRow
-from aerona.db.tables.discovery import BlueprintRow, GreatPersonRow, PolityEraRow, ResearchIncidentRow
+from aerona.db.tables.discovery import (
+    ArtFormPractitionerRow,
+    ArtFormProfileRow,
+    BlueprintRow,
+    EpithetRow,
+    GreatPersonRow,
+    PolityEraRow,
+    ResearchIncidentRow,
+    TheoryAdherentRow,
+    TheoryProfileRow,
+)
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.culture import ResearchChooser
 from aerona.domain.enums.entity import EntityStatus
@@ -51,7 +62,37 @@ async def research_for(session: AsyncSession, me: EntityRow) -> ResearchLine | N
             )
         ],
         designs=[row.name for row in await session.scalars(select(BlueprintRow).where(BlueprintRow.holder_node_id == home.id).order_by(BlueprintRow.id))],
+        theories=await theory_lines(session, home.id),
+        art_forms=await form_lines(session, home.id),
+        epithet=await epithet_of(session, me.id),
     )
+
+
+async def theory_lines(session: AsyncSession, home_id: int) -> list[str]:
+    rows = await session.execute(
+        select(EntityRow.id, EntityRow.name, TheoryProfileRow.domain, TheoryAdherentRow.orthodox)
+        .join(TheoryProfileRow, TheoryProfileRow.theory_entity_id == EntityRow.id)
+        .join(TheoryAdherentRow, TheoryAdherentRow.theory_entity_id == EntityRow.id)
+        .where(TheoryAdherentRow.adherent_entity_id == home_id, EntityRow.status == EntityStatus.CANON)
+        .order_by(TheoryAdherentRow.orthodox.desc(), EntityRow.id)
+    )
+    return [f"#{ident} {name} ({DOMAINS[domain].label.lower()}{', the ruling account' if ruling else ''})" for ident, name, domain, ruling in rows.all()]
+
+
+async def form_lines(session: AsyncSession, home_id: int) -> list[str]:
+    rows = await session.execute(
+        select(EntityRow.id, EntityRow.name, ArtFormProfileRow.discipline, ArtFormPractitionerRow.mastery)
+        .join(ArtFormProfileRow, ArtFormProfileRow.art_form_entity_id == EntityRow.id)
+        .join(ArtFormPractitionerRow, ArtFormPractitionerRow.art_form_entity_id == EntityRow.id)
+        .where(ArtFormPractitionerRow.practitioner_entity_id == home_id, EntityRow.status == EntityStatus.CANON)
+        .order_by(ArtFormPractitionerRow.mastery.desc(), EntityRow.id)
+    )
+    return [f"#{ident} {name} ({DISCIPLINES[discipline].label.lower()}, mastery {mastery})" for ident, name, discipline, mastery in rows.all()]
+
+
+async def epithet_of(session: AsyncSession, mortal_id: int) -> str:
+    row = await session.get(EpithetRow, mortal_id)
+    return f"{row.epithet} ({row.gloss})" if row is not None else ""
 
 
 async def great_lines(session: AsyncSession, home_id: int) -> list[str]:

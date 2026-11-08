@@ -489,6 +489,18 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "Cost: {{ rules.knowledge.son_advance_cost }} essence; 1 action.",
         {"knowledge_id": "The knowledge entity", "how": "One sentence on how the knowledge deepened"},
     ),
+    T.REVEAL_TRUTH: ToolText(
+        "You make a people's scholars hold a true account of one field: an existing theory you name becomes true and their ruling account, or a new one you set "
+        "out is born true. Faiths that held the account it overturns think less of you; the scholars think more. "
+        "Cost: {{ rules.theories.reveal_cost }} essence; 1 action.",
+        {
+            "community_id": "The people or settlement whose scholars hear it",
+            "theory_id": "An existing theory to make true, if any",
+            "domain": "The field it explains: {{ theory_domains }}",
+            "name": "The name of a new theory, if you set one out",
+            "claim": "What the new theory holds, in one or two sentences, if you set one out",
+        },
+    ),
     T.INCITE_WAR: ToolText(
         "You sow the seed of enmity between two communities (faction, people or settlement). If it takes hold, war may break out between them; the world's flow resolves "
         "the war. {{ rules.costs.incite_war }} essence, 1 action.",

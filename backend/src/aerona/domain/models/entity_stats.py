@@ -245,6 +245,18 @@ class IdeologyStats(ValueObject):
     appeal: Percent | None = None
 
 
+class TheoryStats(ValueObject):
+    kind: Literal["theory"] = "theory"
+    adherents: Count | None = None
+    explanatory: Percent | None = None
+
+
+class ArtFormStats(ValueObject):
+    kind: Literal["art_form"] = "art_form"
+    practitioners: Count | None = None
+    prestige: Percent | None = None
+
+
 class BeastStats(ValueObject):
     kind: Literal["beast"] = "beast"
     hp: Count | None = None
@@ -296,6 +308,8 @@ EntityStats = Annotated[
     | IdeologyStats
     | RiteStats
     | BeastStats
+    | TheoryStats
+    | ArtFormStats
     | NaturalLawStats,
     Field(discriminator="kind"),
 ]

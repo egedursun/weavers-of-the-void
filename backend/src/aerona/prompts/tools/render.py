@@ -8,10 +8,12 @@ from aerona.catalog.interventions import DISASTERS, MIRACLES
 from aerona.catalog.stars import STAR_TYPES
 from aerona.catalog.structures import STRUCTURES
 from aerona.catalog.tenets import TENET_EFFECTS
+from aerona.catalog.theories import DISCIPLINES
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.culture import ArtMedium, IdeologyTenet, MagicSchool, MagicSource, ProphecyConsequence, ProphecyPredicate, RiteEffectKind
+from aerona.domain.enums.discovery import ArtDiscipline, TheoryDomain
 from aerona.domain.enums.ecology import BeastTemper, Diet, SizeClass, Sociality, YieldProduct
 from aerona.domain.enums.economy import CommodityKind, MaterialFamily
 from aerona.domain.enums.entity import LIVING_CREATION_TYPES, EntityType, LegendCategory
@@ -73,6 +75,9 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "natural_laws": natural_laws(),
         "resource_mechanics": resource_mechanics(),
         "knowledge_branches": knowledge_branches(),
+        "theory_domains": ", ".join(domain.value for domain in TheoryDomain),
+        "art_disciplines": ", ".join(discipline.value for discipline in ArtDiscipline),
+        "art_structures": "; ".join(f"{discipline.value}: {', '.join(spec.structure)}" for discipline, spec in DISCIPLINES.items()),
         "body_plans": "; ".join(f"{plan} ({spec.label})" for plan, spec in PLANS.items() if plan is not BodyPlan.DIVINE_MANIFEST),
         "creature_traits": "; ".join(f"{trait} ({spec.effect})" for trait, spec in CREATURE_TRAITS.items()),
         "world_types": ", ".join(f"{kind} ({spec.label})" for kind, spec in WORLD_TYPES.items()),

@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.lore import (
     AdherentView,
+    AnomalyView,
+    ArtFormCard,
     ArtworkCard,
     BannedWorkView,
     BlueprintView,
@@ -22,7 +24,9 @@ from aerona.api.schemas.lore import (
     CustomTechniqueView,
     DeedView,
     EnchantmentView,
+    EpithetView,
     EraDeedView,
+    ExonymView,
     FocusView,
     GateNeed,
     GreatPersonView,
@@ -34,16 +38,22 @@ from aerona.api.schemas.lore import (
     LearningCard,
     LevelView,
     LoreCard,
+    NameCard,
+    NameView,
+    PractitionerView,
     ProphecyCard,
     RealmEraView,
     RiteCard,
     RiteEffectView,
     RumourBoard,
     RumourView,
+    ShiftView,
     StudyView,
     TechGraph,
     TechniqueSpecView,
     TechniqueView,
+    TheoryAdherentView,
+    TheoryCard,
     TongueAtlas,
     TongueRank,
     TriggerSpecView,
@@ -56,6 +66,7 @@ from aerona.catalog.civics import CAPABILITIES, TRIGGERS
 from aerona.catalog.discovery import AGES, BLUEPRINT_KINDS, BLUEPRINT_SOURCES, DEEDS, FIELDS, INCIDENTS, era_name
 from aerona.catalog.rumours import is_alarm, is_atrocity
 from aerona.catalog.techniques import BRANCH_GRAPH, INSTITUTIONS, TECHNIQUES, Gate
+from aerona.catalog.theories import ANOMALIES, DISCIPLINES, DOMAINS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.bonds import BondRow
@@ -86,14 +97,23 @@ from aerona.db.tables.culture import (
     RumourRow,
 )
 from aerona.db.tables.discovery import (
+    ArtFormPractitionerRow,
+    ArtFormProfileRow,
     ArtifactStudyRow,
     BannedWorkRow,
     BlueprintRow,
+    EpithetRow,
     EraDeedRow,
     GreatPersonRow,
     GreatPointsRow,
+    NameExonymRow,
+    NameMeaningRow,
+    ParadigmShiftRow,
     PolityEraRow,
     ResearchIncidentRow,
+    TheoryAdherentRow,
+    TheoryAnomalyRow,
+    TheoryProfileRow,
     WorldEraRow,
 )
 from aerona.db.tables.entities import EntityRow
@@ -110,7 +130,9 @@ from aerona.engine.lore.kinds import kinds_in
 from aerona.engine.lore.research import gate_open
 from aerona.engine.lore.research_depth import capabilities_of
 from aerona.engine.lore.rumours import heard_by
+from aerona.engine.lore.theories import weight_against
 from aerona.engine.primitives.knowledge import raw_level
+from aerona.rules.registry import Rules
 
 router = APIRouter(tags=["lore"])
 Id = Annotated[int, Path(ge=1)]
@@ -149,6 +171,126 @@ async def ideology_card(session: AsyncSession, entity_id: int) -> IdeologyCard |
         ],
         texts=[refs[item] for item in row.texts if item in refs],
         custom_tenets=customs,
+        locked=row.locked,
+    )
+
+
+async def theory_card(session: AsyncSession, entity_id: int) -> TheoryCard | None:
+    row = await session.get(TheoryProfileRow, entity_id)
+    if row is None:
+        return None
+    adherents = list(
+        await session.scalars(
+            select(TheoryAdherentRow)
+            .where(TheoryAdherentRow.theory_entity_id == entity_id)
+            .order_by(TheoryAdherentRow.orthodox.desc(), TheoryAdherentRow.strength.desc())
+        )
+    )
+    anomalies = list(
+        await session.scalars(
+            select(TheoryAnomalyRow).where(TheoryAnomalyRow.theory_entity_id == entity_id).order_by(TheoryAnomalyRow.epoch.desc(), TheoryAnomalyRow.id.desc())
+        )
+    )
+    shifts = list(
+        await session.scalars(
+            select(ParadigmShiftRow)
+            .where((ParadigmShiftRow.old_theory_id == entity_id) | (ParadigmShiftRow.new_theory_id == entity_id))
+            .order_by(ParadigmShiftRow.epoch.desc(), ParadigmShiftRow.id.desc())
+        )
+    )
+    ids = [
+        *(item.adherent_entity_id for item in adherents),
+        *(item.witness_entity_id for item in anomalies if item.witness_entity_id is not None),
+        *(node for item in shifts for node in (item.community_entity_id, item.old_theory_id, item.new_theory_id) if node is not None),
+        *row.endorsed_by,
+        *row.condemned_by,
+        *(node for node in (row.founder_entity_id, row.founding_book_id, row.rival_entity_id) if node is not None),
+    ]
+    refs = await node_refs(session, ids)
+    rules = Rules()
+    pressure = await weight_against(session, rules, entity_id, max((item.epoch for item in anomalies), default=0))
+    return TheoryCard(
+        domain=row.domain,
+        domain_label=DOMAINS[row.domain].label,
+        subject=DOMAINS[row.domain].subject,
+        claim=row.claim,
+        correctness=row.correctness,
+        explanatory_power=row.explanatory_power,
+        pressure=pressure,
+        founder=ref(refs, row.founder_entity_id),
+        founding_book=ref(refs, row.founding_book_id),
+        rival=ref(refs, row.rival_entity_id),
+        endorsed_by=[refs[item] for item in row.endorsed_by if item in refs],
+        condemned_by=[refs[item] for item in row.condemned_by if item in refs],
+        revealed_by_son_id=row.revealed_by_son_id,
+        adherents=[
+            TheoryAdherentView(
+                holder=refs[item.adherent_entity_id], strength=item.strength, orthodox=item.orthodox, since_epoch=item.since_epoch, locked=item.locked
+            )
+            for item in adherents
+            if item.adherent_entity_id in refs
+        ],
+        anomalies=[
+            AnomalyView(id=item.id, kind=item.kind, label=ANOMALIES[item.kind], weight=item.weight, epoch=item.epoch, witness=ref(refs, item.witness_entity_id))
+            for item in anomalies
+        ],
+        shifts=[
+            ShiftView(
+                id=item.id,
+                community=ref(refs, item.community_entity_id),
+                old=ref(refs, item.old_theory_id),
+                new=ref(refs, item.new_theory_id),
+                epoch=item.epoch,
+            )
+            for item in shifts
+        ],
+        locked=row.locked,
+    )
+
+
+async def art_form_card(session: AsyncSession, entity_id: int) -> ArtFormCard | None:
+    row = await session.get(ArtFormProfileRow, entity_id)
+    if row is None:
+        return None
+    practitioners = list(
+        await session.scalars(
+            select(ArtFormPractitionerRow).where(ArtFormPractitionerRow.art_form_entity_id == entity_id).order_by(ArtFormPractitionerRow.mastery.desc())
+        )
+    )
+    artworks = list(await session.scalars(select(ArtworkProfileRow.artwork_entity_id).where(ArtworkProfileRow.art_form_entity_id == entity_id)))
+    banned = list(await session.scalars(select(BannedWorkRow.polity_entity_id).where(BannedWorkRow.work_entity_id == entity_id)))
+    children = [item.art_form_entity_id for item in await session.scalars(select(ArtFormProfileRow)) if entity_id in (item.parent_ids or [])]
+    ids = [
+        *(item.practitioner_entity_id for item in practitioners),
+        *artworks,
+        *banned,
+        *row.parent_ids,
+        *children,
+        *(node for node in (row.origin_culture_id, row.founder_entity_id, row.language_entity_id) if node is not None),
+    ]
+    refs = await node_refs(session, ids)
+    return ArtFormCard(
+        discipline=row.discipline,
+        discipline_label=DISCIPLINES[row.discipline].label,
+        structure=row.structure,
+        parts=list(DISCIPLINES[row.discipline].structure),
+        origin=ref(refs, row.origin_culture_id),
+        founder=ref(refs, row.founder_entity_id),
+        language=ref(refs, row.language_entity_id),
+        difficulty=row.difficulty,
+        prestige=row.prestige,
+        sacred=row.sacred,
+        notation=row.notation,
+        occasions=row.occasions,
+        parents=[refs[item] for item in row.parent_ids if item in refs],
+        children=[refs[item] for item in children if item in refs],
+        practitioners=[
+            PractitionerView(holder=refs[item.practitioner_entity_id], mastery=item.mastery, since_epoch=item.since_epoch, locked=item.locked)
+            for item in practitioners
+            if item.practitioner_entity_id in refs
+        ],
+        artworks=[refs[item] for item in artworks if item in refs],
+        banned_in=[refs[item] for item in banned if item in refs],
         locked=row.locked,
     )
 
@@ -313,6 +455,8 @@ CARDS: dict[EntityType, tuple[str, Callable[[AsyncSession, int], Awaitable[objec
     EntityType.PROPHECY: ("prophecy", prophecy_card),
     EntityType.ITEM: ("item", item_card),
     EntityType.ARTWORK: ("artwork", artwork_card),
+    EntityType.THEORY: ("theory", theory_card),
+    EntityType.ART_FORM: ("art_form", art_form_card),
 }
 
 
@@ -527,6 +671,51 @@ async def learning(entity_id: Id, services: ServicesDep) -> LearningCard:
             custom_techniques=[
                 CustomTechniqueView(kind_id=kind.id, name=kind.name, base=Technique(kind.base), secret=secret) for kind, secret in customs.all()
             ],
+        )
+
+
+@router.get("/nodes/{node_id}/name", response_model=NameCard)
+async def name_card(node_id: Id, services: ServicesDep) -> NameCard:
+    async with reader(services) as session:
+        meaning = await session.get(NameMeaningRow, node_id)
+        exonyms = list(await session.scalars(select(NameExonymRow).where(NameExonymRow.node_id == node_id).order_by(NameExonymRow.language_entity_id)))
+        epithet = await session.get(EpithetRow, node_id)
+        languages = [item.language_entity_id for item in exonyms] + [
+            node for node in (meaning.language_entity_id if meaning else None, epithet.language_entity_id if epithet else None) if node is not None
+        ]
+        refs = await node_refs(session, languages)
+        own = (await node_refs(session, [node_id])).get(node_id)
+        entity = await session.get(EntityRow, node_id)
+        return NameCard(
+            node_id=node_id,
+            current_name=own.name if own is not None else "",
+            epithets_allowed=entity is not None,
+            meaning=NameView(
+                node_id=node_id,
+                name=meaning.name,
+                language=ref(refs, meaning.language_entity_id),
+                gloss=meaning.gloss,
+                morphemes=meaning.morphemes,
+                epoch=meaning.epoch,
+                locked=meaning.locked,
+            )
+            if meaning is not None
+            else None,
+            exonyms=[
+                ExonymView(language=refs[item.language_entity_id], form=item.form, gloss=item.gloss, epoch=item.epoch, locked=item.locked)
+                for item in exonyms
+                if item.language_entity_id in refs
+            ],
+            epithet=EpithetView(
+                epithet=epithet.epithet,
+                gloss=epithet.gloss,
+                deed=epithet.deed,
+                language=ref(refs, epithet.language_entity_id),
+                epoch=epithet.epoch,
+                locked=epithet.locked,
+            )
+            if epithet is not None
+            else None,
         )
 
 

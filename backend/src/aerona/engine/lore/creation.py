@@ -4,6 +4,7 @@ from typing import Any
 from pydantic import TypeAdapter
 
 from aerona.catalog.lore import ART_MESSAGES, IDEOLOGY_APPEAL, IDEOLOGY_VALUES, ITEM_CLASSES, LEGEND_MORALS, RITE_TEMPLATES, TRADITIONS
+from aerona.catalog.theories import DISCIPLINES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import an
@@ -18,6 +19,7 @@ from aerona.db.tables.culture import (
     RiteProfileRow,
     TraditionProfileRow,
 )
+from aerona.db.tables.discovery import ArtFormProfileRow, TheoryProfileRow
 from aerona.db.tables.economy import NodeMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.culture import (
@@ -34,6 +36,7 @@ from aerona.domain.enums.culture import (
     ProphecyPredicate,
     TraditionKind,
 )
+from aerona.domain.enums.discovery import ArtDiscipline, TheoryDomain
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
@@ -44,7 +47,7 @@ from aerona.engine.economy.materials import slot_key
 from aerona.engine.lore.language import standing_of
 from aerona.engine.lore.prophecy import Foretelling, typed_condition
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.queries import living_entity, spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record
 
 STATS: TypeAdapter[EntityStats] = TypeAdapter(EntityStats)
@@ -59,6 +62,8 @@ CREATABLE = frozenset(
         EntityType.ITEM,
         EntityType.ARTWORK,
         EntityType.KNOWLEDGE,
+        EntityType.THEORY,
+        EntityType.ART_FORM,
     }
 )
 Values = dict[str, Any]
@@ -235,6 +240,52 @@ async def seed_knowledge(ctx: TickContext, entity: EntityRow, values: Values) ->
     return None
 
 
+async def seed_theory(ctx: TickContext, entity: EntityRow, values: Values) -> Base:
+    domain = take(values, "domain", TheoryDomain)
+    claim = values.pop("claim", None)
+    truth = values.pop("correctness", None)
+    row = TheoryProfileRow(
+        theory_entity_id=entity.id,
+        domain=domain,
+        claim=str(claim) if claim else entity.description,
+        correctness=truth if isinstance(truth, int) and not isinstance(truth, bool) else ctx.rng(f"theory.truth.{entity.id}").integer(0, PERCENT),
+        explanatory_power=ctx.rules.theories.found_strength,
+        founder_entity_id=entity.maker_entity_id,
+        endorsed_by=[],
+        condemned_by=[],
+        updated_epoch=ctx.epoch,
+        locked=[],
+    )
+    ctx.session.add(row)
+    return row
+
+
+async def seed_art_form(ctx: TickContext, entity: EntityRow, values: Values) -> Base:
+    discipline = take(values, "discipline", ArtDiscipline)
+    raw = values.pop("structure", None) or {}
+    allowed = set(DISCIPLINES[discipline].structure)
+    structure = {str(key): value for key, value in raw.items() if str(key) in allowed and isinstance(value, str | int)} if isinstance(raw, dict) else {}
+    tongue = await spoken_language(ctx.session, entity.location_id) if entity.location_id is not None else None
+    row = ArtFormProfileRow(
+        art_form_entity_id=entity.id,
+        discipline=discipline,
+        structure=structure,
+        origin_culture_id=entity.location_id,
+        founder_entity_id=entity.maker_entity_id,
+        language_entity_id=tongue.id if tongue is not None and DISCIPLINES[discipline].verbal else None,
+        difficulty=PERCENT * 2 // 5,
+        prestige=PERCENT * 3 // 10,
+        sacred=False,
+        notation=False,
+        occasions=[],
+        parent_ids=[],
+        updated_epoch=ctx.epoch,
+        locked=[],
+    )
+    ctx.session.add(row)
+    return row
+
+
 SEEDERS: dict[EntityType, Seeder] = {
     EntityType.LANGUAGE: seed_language,
     EntityType.LEGEND: seed_legend,
@@ -245,6 +296,8 @@ SEEDERS: dict[EntityType, Seeder] = {
     EntityType.ITEM: seed_item,
     EntityType.ARTWORK: seed_artwork,
     EntityType.KNOWLEDGE: seed_knowledge,
+    EntityType.THEORY: seed_theory,
+    EntityType.ART_FORM: seed_art_form,
 }
 
 

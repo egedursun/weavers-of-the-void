@@ -19,6 +19,8 @@ class ResearchDepthRules:
     great_debt: int = rule(400, 0, 1000000, K, "Principal a loan needs to count as a great debt")
     catch_up_pct: int = rule(10, 0, 100, K, "Faster a technique is learned for each neighbour that knows it (%)")
     catch_up_cap: int = rule(50, 0, 300, K, "Most a technique can be sped up by neighbours who know it (%)")
+    refugee_leak: int = rule(8, 0, 99, K, "Progress toward each technique of their homeland that refugees bring to the place that shelters them")
+    library_leak: int = rule(10, 0, 99, K, "Progress toward each technique kept in a conquered library that its occupier gains each epoch")
     captive_leak: int = rule(5, 0, 100, K, "Progress a captor makes on a technique its captives' people know")
     origin_wealth: int = rule(60, 0, 100, K, "Prosperity a community needs to give birth to an institution")
     origin_trade: int = rule(2, 0, 50, K, "Trade partners a community needs to give birth to an institution")

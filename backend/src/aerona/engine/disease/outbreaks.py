@@ -20,6 +20,7 @@ from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.emergence import COLD_BANDS, DRY, WARM_BANDS, WET, new_disease
 from aerona.engine.disease.vectors import Spot, crowd_weight, host_factor, sanitation_weight, vector_factor
 from aerona.engine.gods.progress import cap_gained_essence
+from aerona.engine.lore.truth import truth_factor
 from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int
@@ -106,6 +107,8 @@ def lethality_factor(book: DiseaseBook, disease_id: int, communities: list[Entit
             factor *= table.cure_lethality_pct / PERCENT
         ward = book.hospital_strength.get(book.atlas.top_region(community.id) or -1, 0.0)
         factor *= 1 - ward * (1 - table.hospital_lethality_pct / PERCENT)
+        if community.id in book.medicine:
+            factor *= 2 - truth_factor(book.rules, book.medicine[community.id])
         if community.id in book.tended:
             factor *= 1 - book.rules.technique_effects.hospitals_pct / PERCENT
         weight += people * factor

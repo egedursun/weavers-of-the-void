@@ -55,6 +55,8 @@ class DiscoveryRules:
     printed_rumour_pct: int = rule(30, 0, 100, K, "Distortion rumours are spared where printing is known (%)")
     printed_creed_pct: int = rule(30, 0, 200, K, "Spread creeds gain where printing is known (%)")
     ban_reading_pct: int = rule(20, 0, 100, K, "Chance a banned work is still read in secret each epoch (%)")
+    black_market_price: int = rule(5, 0, 100, K, "Wealth a community pays smugglers for a banned work brought in from abroad")
+    heresy_pct: int = rule(3, 0, 100, K, "Orthodoxy a faith loses each time a banned work reaches its faithful")
     ban_strictness: int = rule(50, 0, 100, K, "Censorship strictness at which a realm bans works of the forbidden arts and rival creeds")
     trade_charting: int = rule(15, 0, 100, K, "Map knowledge a realm holds of every region its trade roads cross")
     cartography_pct: int = rule(50, 0, 200, K, "How much faster explorers chart land and how much slower maps fade with cartography (%)")

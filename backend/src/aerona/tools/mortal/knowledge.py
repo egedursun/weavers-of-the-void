@@ -2,6 +2,8 @@ from typing import Any
 
 from aerona.catalog.mind import LEARNED_SKILLS
 from aerona.catalog.techniques import TECHNIQUES
+from aerona.catalog.theories import DISCIPLINES, DOMAINS
+from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.culture import ResearchFocusRow
 from aerona.db.tables.entities import EntityRow
@@ -11,8 +13,11 @@ from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import ResearchChooser
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.engine.lore.art_forms import found_form
 from aerona.engine.lore.research_depth import research_choices, research_home
+from aerona.engine.lore.theories import create_theory
+from aerona.engine.mind.book import best_skill
 from aerona.engine.phases.knowledge_levels import DevelopmentKind, development_for, empty_branch_hint, empty_branches, shift_level
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.knowledge import knowledge_level
@@ -23,7 +28,7 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action, no_cost
 from aerona.tools.framework.validation import fail
 from aerona.tools.mortal import lines
-from aerona.tools.mortal.inputs import ChooseResearchInput, DevelopKnowledgeInput, LearnInput
+from aerona.tools.mortal.inputs import ChooseResearchInput, DevelopKnowledgeInput, InventArtFormInput, LearnInput, ProposeTheoryInput
 from aerona.tools.mortal.support import MortalCreation, craft_of, create_record, name_free, practised, require_lore, same_region
 
 LEARNING_BONDS = (BondKind.TRADES_WITH, BondKind.ALLY, BondKind.RULES)
@@ -199,6 +204,45 @@ async def choose_research(call: MortalCall, args: ChooseResearchInput) -> str:
     return result(MortalResult.RESEARCH_CHOSEN, technique=TECHNIQUES[args.technique].label)
 
 
+async def research_home_or_fail(call: MortalCall) -> EntityRow:
+    home = await research_home(call.session, call.me)
+    if home is None or held(home.id):
+        fail(MortalResult.RESEARCH_NO_HOLDER)
+    return home
+
+
+async def propose_theory(call: MortalCall, args: ProposeTheoryInput) -> str:
+    home = await research_home_or_fail(call)
+    await name_free(call, args.name)
+    truth = call.tick.rng(f"theory.truth.{home.id}.{args.name}.{call.epoch}").integer(0, PERCENT)
+    theory = await create_theory(call.tick, home, args.domain, args.name, args.claim, correctness=truth)
+    call.target(theory.id)
+    domain = DOMAINS[args.domain].label.lower()
+    await call.chronicle(ChronicleKind.KNOWLEDGE, lines.THEORY_PROPOSED, entity_ids=[call.me.id, theory.id], me=call.me.name, name=theory.name, domain=domain)
+    return result(MortalResult.THEORY_PROPOSED, id=theory.id, name=theory.name, domain=domain)
+
+
+async def invent_art_form(call: MortalCall, args: InventArtFormInput) -> str:
+    spec = DISCIPLINES[args.discipline]
+    founder = call.me if call.me.entity_type is EntityType.MORTAL else None
+    home = call.me if founder is None else await call.session.get(EntityRow, call.me.location_id) if call.me.location_id is not None else None
+    if home is None or home.entity_type not in COMMUNITY_TYPES:
+        fail(MortalResult.RESEARCH_NO_HOLDER)
+    if founder is not None:
+        level = await best_skill(call.session, founder.id, list(spec.skills))
+        needed = call.rules.art_forms.invent_skill
+        if level < needed:
+            fail(MortalResult.ART_SKILL_LOW, level=level, needed=needed)
+    await name_free(call, args.name)
+    shape = {key: value for key, value in (args.structure or {}).items() if key in spec.structure}
+    form = await found_form(call.tick, home, args.discipline, args.name, founder=founder, parents=[], structure=dict(shape))
+    form.description = args.description
+    call.target(form.id)
+    label = spec.label.lower()
+    await call.chronicle(ChronicleKind.CULTURE, lines.ART_FORM_INVENTED, entity_ids=[call.me.id, form.id], me=call.me.name, name=form.name, discipline=label)
+    return result(MortalResult.ART_FORM_INVENTED, id=form.id, name=form.name, discipline=label)
+
+
 def specs() -> list[ToolSpec[MortalCall, Any]]:
     mortal = AgentKind.MORTAL
     return [
@@ -206,5 +250,7 @@ def specs() -> list[ToolSpec[MortalCall, Any]]:
             MortalToolId.DEVELOP_KNOWLEDGE, mortal, DevelopKnowledgeInput, ToolMeta(ActionKind.DEVELOP_KNOWLEDGE, mortal_standard_action), develop_knowledge
         ),
         ToolSpec(MortalToolId.LEARN_KNOWLEDGE, mortal, LearnInput, ToolMeta(ActionKind.LEARN, no_cost), learn_knowledge),
+        ToolSpec(MortalToolId.PROPOSE_THEORY, mortal, ProposeTheoryInput, ToolMeta(ActionKind.DEVELOP_KNOWLEDGE, no_cost), propose_theory),
+        ToolSpec(MortalToolId.INVENT_ART_FORM, mortal, InventArtFormInput, ToolMeta(ActionKind.CREATE_ENTITY, no_cost), invent_art_form),
         ToolSpec(MortalToolId.CHOOSE_RESEARCH, mortal, ChooseResearchInput, ToolMeta(ActionKind.DEVELOP_KNOWLEDGE, no_cost), choose_research),
     ]

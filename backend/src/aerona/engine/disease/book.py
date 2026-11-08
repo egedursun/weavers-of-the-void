@@ -23,10 +23,12 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import AgeBand
+from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.structure import STANDING_STATES, UNFINISHED_STATES, StructureKind
+from aerona.engine.lore.truth import ruling_truths
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import stat
@@ -79,6 +81,7 @@ class DiseaseBook:
     sanitation: dict[int, int] = field(default_factory=dict)
     inoculated: set[int] = field(default_factory=set)
     tended: set[int] = field(default_factory=set)
+    medicine: dict[int, int] = field(default_factory=dict)
     hosts: dict[int, set[int]] = field(default_factory=dict)
     ranges: dict[tuple[int, int], int] = field(default_factory=dict)
     ley: set[int] = field(default_factory=set)
@@ -119,6 +122,7 @@ class DiseaseBook:
                 totals[region] += people
         book.sanitation = {region: round_half_up(weighted[region] / totals[region]) for region in totals}
         book.inoculated = set(await session.scalars(select(HolderTechniqueRow.holder_entity_id).where(HolderTechniqueRow.technique == Technique.INOCULATION)))
+        book.medicine = await ruling_truths(session, TheoryDomain.MEDICINE)
         book.tended = set(await session.scalars(select(HolderTechniqueRow.holder_entity_id).where(HolderTechniqueRow.technique == Technique.HOSPITALS)))
         await book.load_hosts(session)
         for line in await session.scalars(select(LeyLineRow).where(LeyLineRow.severed.is_(False))):

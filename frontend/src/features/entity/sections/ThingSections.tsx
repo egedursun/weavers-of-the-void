@@ -12,6 +12,7 @@ import { IntrigueSection } from './IntrigueSection'
 import { JusticeSection } from './JusticeSection'
 import { LineageSection } from './LineageSection'
 import { MindSplitSection } from './MindSplitSection'
+import { NameSection } from './NameSection'
 import { RecordRowsSection } from './RecordRowsSection'
 import { RenownSection } from './RenownSection'
 import { StatecraftSection } from './StatecraftSection'
@@ -35,6 +36,7 @@ export function ThingSections({
         statKeys={statKeys}
         readOnlyReason={readOnlyReason}
       />
+      <NameSection nodeId={nodeId} />
       <MindSplitSection nodeId={nodeId} />
       <FeelingsSection nodeId={nodeId} />
       <TastesSection nodeId={nodeId} />

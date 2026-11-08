@@ -331,6 +331,24 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "Your current research and its choices are in your context. Free.",
         {"technique": "The technique to research; one of the choices within your reach"},
     ),
+    T.PROPOSE_THEORY: ToolText(
+        "You set out a theory: your community's account of one field. Whether it is true is hidden; a true one helps the work it guides and a false one meets "
+        "anomalies until a rival overturns it. Free.",
+        {
+            "domain": "The field it explains: {{ theory_domains }}",
+            "name": NAME_FIELD,
+            "claim": "What it holds, in one or two sentences",
+        },
+    ),
+    T.INVENT_ART_FORM: ToolText(
+        "You invent an art form others can take up, practise and master. A named mortal needs a fitting skill of at least {{ rules.art_forms.invent_skill }}. Free.",
+        {
+            "discipline": "Its discipline: {{ art_disciplines }}",
+            "name": NAME_FIELD,
+            "description": "What it is and how it is practised",
+            "structure": "Its shape, keyed by the discipline's parts: {{ art_structures }}; each value a short phrase",
+        },
+    ),
     T.DIPLOMACY: ToolText(
         "Diplomacy with another community: alliance (stands with you in war), peace (tries to end enmity), tribute (demands wealth from the weak) or marriage (unites the "
         "lineages). 1 action.",

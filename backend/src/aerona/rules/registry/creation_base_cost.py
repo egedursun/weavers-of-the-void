@@ -39,4 +39,6 @@ class CreationBaseCostRules:
     ideology: int = rule(20, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of founding an ideology")
     beast: int = rule(30, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of loosing a named beast")
     rite: int = rule(15, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of revealing a rite")
+    theory: int = rule(15, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of revealing a theory")
+    art_form: int = rule(15, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of inspiring an art form")
     natural_law: int = rule(30, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of decreeing a natural law")

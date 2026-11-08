@@ -3,12 +3,16 @@ from typing import Annotated, Any
 from pydantic import Field
 
 from aerona.catalog.gates import Gate
-from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
+from aerona.catalog.theories import DOMAINS
+from aerona.constants.tool_inputs import DESCRIPTION_MAX, DESCRIPTION_MIN, NAME_MAX, NAME_MIN, REASON_MAX, REASON_MIN
+from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.discovery import TheoryDomain
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.engine.gods.progress import power_ceiling
+from aerona.engine.lore.theories import Revelation, reveal
 from aerona.engine.phases.knowledge_levels import shift_level
 from aerona.engine.primitives.knowledge import knowledge_level
 from aerona.prompts import SonToolId
@@ -48,6 +52,50 @@ async def advance_knowledge(call: SonCall, args: AdvanceInput) -> str:
     return result(SonResult.KNOWLEDGE_ADVANCED, name=knowledge.name, level=level, gained=gained)
 
 
+class RevealInput(ToolInput):
+    community_id: int
+    domain: TheoryDomain
+    theory_id: int | None = None
+    name: Annotated[str, Field(min_length=NAME_MIN, max_length=NAME_MAX)] | None = None
+    claim: Annotated[str, Field(min_length=DESCRIPTION_MIN, max_length=DESCRIPTION_MAX)] | None = None
+
+
+async def reveal_truth(call: SonCall, args: RevealInput) -> str:
+    table = call.rules.theories
+    community = await require_canon(call.session, args.community_id)
+    require_type(community, set(COMMUNITY_TYPES), SonResult.REVEAL_PLACE)
+    await ensure_in_reach(call, community)
+    if args.theory_id is not None:
+        theory = await require_canon(call.session, args.theory_id)
+        require_type(theory, {EntityType.THEORY}, SonResult.NOT_A_THEORY)
+    if call.son.essence < table.reveal_cost:
+        fail(SonResult.TEACH_ESSENCE, cost=table.reveal_cost)
+    domain_label = DOMAINS[args.domain].label.lower()
+    told = Revelation(
+        son_id=call.son.id,
+        theory_id=args.theory_id,
+        domain=args.domain,
+        name=args.name or f"The true account of {domain_label}",
+        claim=args.claim or f"What is true of {DOMAINS[args.domain].subject}.",
+    )
+    profile = await reveal(call.tick, community, told)
+    theory_row = await call.session.get_one(EntityRow, profile.theory_entity_id)
+    call.spend_essence(table.reveal_cost)
+    call.target(theory_row.id)
+    gained = await grant(call, call.son, call.rules.son_tools.knowledge_xp, call.rules.son_tools.knowledge_renown)
+    domain = DOMAINS[profile.domain].label.lower()
+    await call.chronicle(
+        ChronicleKind.KNOWLEDGE,
+        lines.REVEAL_TRUTH,
+        entity_ids=[community.id, theory_row.id],
+        son=call.son.name,
+        place=community.name,
+        name=theory_row.name,
+        domain=domain,
+    )
+    return result(SonResult.TRUTH_REVEALED, place=community.name, id=theory_row.id, name=theory_row.name, domain=domain, gained=gained)
+
+
 def specs() -> list[ToolSpec[SonCall, Any]]:
     return [
         ToolSpec(
@@ -61,5 +109,17 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
                 rarity_gate=gate(Gate.INFLUENCE_TOOLS),
             ),
             advance_knowledge,
-        )
+        ),
+        ToolSpec(
+            SonToolId.REVEAL_TRUTH,
+            AgentKind.SON,
+            RevealInput,
+            ToolMeta(
+                ActionKind.ADVANCE_KNOWLEDGE,
+                son_standard_action,
+                essence_cost=lambda rules: rules.theories.reveal_cost,
+                rarity_gate=gate(Gate.INFLUENCE_TOOLS),
+            ),
+            reveal_truth,
+        ),
     ]

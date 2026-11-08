@@ -14,7 +14,7 @@ from aerona.db.tables.economy import LoanRow, ProductionRunRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.justice import CrimeCaseRow
-from aerona.db.tables.military import CaptiveCohortRow
+from aerona.db.tables.military import CaptiveCohortRow, OccupationRow
 from aerona.db.tables.mind import CultureValueRow, SkillRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow, TreatyClauseRow, TreatyProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -52,6 +52,7 @@ from aerona.rules.registry import Rules
 TRADE_KINDS = (BondKind.TRADES_WITH, BondKind.ALLY)
 FIELD_SKILL_FLOOR = 0
 SECRETIVE = frozenset({EntityType.CULT, EntityType.FACTION})
+LIBRARIES = (StructureKind.LIBRARY, StructureKind.ACADEMY, StructureKind.SCHOOL)
 RESEARCHERS = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.CULT, EntityType.FACTION})
 
 
@@ -319,6 +320,32 @@ async def captive_leaks(ctx: TickContext, tally: DepthTally) -> None:
             tally.add("captive_leaks")
 
 
+async def migrant_leaks(ctx: TickContext, tally: DepthTally) -> None:
+    fled = await ctx.session.execute(
+        select(BondRow.source_node_id, BondRow.target_node_id).where(BondRow.kind == BondKind.MIGRATED_TO, BondRow.epoch >= ctx.epoch - 1).order_by(BondRow.id)
+    )
+    for origin, host in fled.all():
+        if held(host):
+            continue
+        mine = await techniques_of(ctx.session, host)
+        for technique in sorted(await techniques_of(ctx.session, origin) - mine):
+            await add_progress(ctx, host, technique, ctx.rules.research_depth.refugee_leak)
+            tally.add("refugee_leaks")
+
+
+async def library_leaks(ctx: TickContext, tally: DepthTally) -> None:
+    atlas = await RegionAtlas.load(ctx.session)
+    keepers = {item.profile.host_entity_id for item in await working(ctx.session, LIBRARIES) if item.profile.host_entity_id is not None}
+    for occupation in list(await ctx.session.scalars(select(OccupationRow).order_by(OccupationRow.region_entity_id))):
+        if held(occupation.occupier_entity_id):
+            continue
+        mine = await techniques_of(ctx.session, occupation.occupier_entity_id)
+        for community in sorted(set(atlas.communities_in(occupation.region_entity_id)) & keepers):
+            for technique in sorted(await techniques_of(ctx.session, community) - mine):
+                await add_progress(ctx, occupation.occupier_entity_id, technique, ctx.rules.research_depth.library_leak)
+                tally.add("library_leaks")
+
+
 async def origin_ready(ctx: TickContext, community: EntityRow, technique: Technique) -> bool:
     table = ctx.rules.research_depth
     if not await has_technique(ctx.session, community.id, technique):
@@ -515,6 +542,8 @@ async def research_depth(ctx: TickContext) -> dict[str, int]:
     tally = DepthTally()
     await deeds_push_research(ctx, tally)
     await captive_leaks(ctx, tally)
+    await migrant_leaks(ctx, tally)
+    await library_leaks(ctx, tally)
     await seal_agreements(ctx, tally)
     await share_agreements(ctx, tally)
     await institutions_round(ctx, tally)

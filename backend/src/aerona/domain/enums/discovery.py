@@ -39,6 +39,36 @@ class ResearchIncident(StrEnum):
     SUMMONING_GONE_WRONG = "summoning_gone_wrong"
 
 
+class TheoryDomain(StrEnum):
+    MEDICINE = "medicine"
+    COSMOLOGY = "cosmology"
+    MATTER = "matter"
+    LIFE = "life"
+    MIND = "mind"
+    MAGIC = "magic"
+    HISTORY = "history"
+    SOCIETY = "society"
+
+
+class AnomalyKind(StrEnum):
+    FAILED_PREDICTION = "failed_prediction"
+    CONTRARY_CURE = "contrary_cure"
+    OBSERVATION = "observation"
+    DIVINE_SIGN = "divine_sign"
+
+
+class ArtDiscipline(StrEnum):
+    MUSIC = "music"
+    POETRY = "poetry"
+    DANCE = "dance"
+    THEATRE = "theatre"
+    PAINTING = "painting"
+    SCULPTURE = "sculpture"
+    ARCHITECTURE_STYLE = "architecture_style"
+    TEXTILE = "textile"
+    CALLIGRAPHY = "calligraphy"
+
+
 class BlueprintKind(StrEnum):
     VESSEL = "vessel"
     SIEGE_ENGINE = "siege_engine"

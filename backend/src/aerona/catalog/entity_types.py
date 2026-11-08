@@ -533,6 +533,34 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             ("egalitarian creed", "doctrine of divine right", "school of reason", "mercantile creed", "godless creed"),
         ),
         EntityTypeSpec(
+            EntityType.THEORY,
+            "Theory",
+            "Theories",
+            "theory",
+            None,
+            frozenset(),
+            False,
+            (
+                StatField("adherents", "Adherents", lambda rules: 0, lambda rules: 100000),
+                StatField("explanatory", "Explanatory power"),
+            ),
+            ("account of sickness", "account of the heavens", "account of matter", "account of the mind", "account of the past"),
+        ),
+        EntityTypeSpec(
+            EntityType.ART_FORM,
+            "Art form",
+            "Art forms",
+            "art form",
+            None,
+            frozenset(),
+            False,
+            (
+                StatField("practitioners", "Practitioners", lambda rules: 0, lambda rules: 100000),
+                StatField("prestige", "Prestige"),
+            ),
+            ("form of music", "form of verse", "form of dance", "school of painting", "style of building"),
+        ),
+        EntityTypeSpec(
             EntityType.RITE,
             "Rite",
             "Rites",
@@ -614,6 +642,8 @@ CREATION_BASE_COST_RULES: dict[EntityType, RuleBound] = {
     EntityType.IDEOLOGY: lambda rules: rules.creation_base_cost.ideology,
     EntityType.BEAST: lambda rules: rules.creation_base_cost.beast,
     EntityType.RITE: lambda rules: rules.creation_base_cost.rite,
+    EntityType.THEORY: lambda rules: rules.creation_base_cost.theory,
+    EntityType.ART_FORM: lambda rules: rules.creation_base_cost.art_form,
 }
 
 

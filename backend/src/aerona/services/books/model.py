@@ -74,6 +74,8 @@ ENCYCLOPEDIA_ORDER: tuple[EntityType, ...] = (
     EntityType.NATURAL_LAW,
     EntityType.LAW,
     EntityType.KNOWLEDGE,
+    EntityType.THEORY,
+    EntityType.ART_FORM,
     EntityType.TRADITION,
     EntityType.LEGEND,
     EntityType.PROPHECY,

@@ -701,7 +701,9 @@
       "ideoloji": "ideology",
       "ayin": "rite",
       "canavar": "beast",
-      "unvan": "title"
+      "unvan": "title",
+      "kuram": "theory",
+      "sanat_bicimi": "art_form"
     },
     "entity_status": {
       "kanon": "canon",
@@ -2117,6 +2119,14 @@
     "title": {
       "prestij": "prestige",
       "toprak": "territory"
+    },
+    "theory": {
+      "taraftar": "adherents",
+      "aciklama_gucu": "explanatory"
+    },
+    "art_form": {
+      "icracilar": "practitioners",
+      "itibar": "prestige"
     }
   },
   "entity_extra_stats": {

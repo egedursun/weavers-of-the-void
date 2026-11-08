@@ -1,31 +1,45 @@
 from aerona.db.tables.affairs import TaxPolicyRow
 from aerona.db.tables.celestial import SkyEventRow
 from aerona.db.tables.culture import (
+    ArtworkProfileRow,
     HolderLevelRow,
     HolderTechniqueRow,
+    IdeologyAdherentRow,
     IdeologyTenetRow,
     InstitutionRow,
     ResearchBoostRow,
     ResearchFocusRow,
     ResearchProgressRow,
+    TraditionParticipationRow,
 )
 from aerona.db.tables.discovery import (
+    ArtFormPractitionerRow,
+    ArtFormProfileRow,
     ArtifactStudyRow,
     BannedWorkRow,
     BlueprintRow,
+    EpithetRow,
     EraDeedRow,
     GreatPersonRow,
     GreatPointsRow,
+    NameExonymRow,
+    NameMeaningRow,
+    ParadigmShiftRow,
     PolityEraRow,
     ResearchIncidentRow,
+    TheoryAdherentRow,
+    TheoryAnomalyRow,
+    TheoryProfileRow,
     WorldEraRow,
 )
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.economy import LoanRow, ProductionRunRow, TradeRouteProfileRow
 from aerona.db.tables.estates import EstateProfileRow
+from aerona.db.tables.faith import CultDoctrineRow
 from aerona.db.tables.industry import CommunityMethodRow
 from aerona.db.tables.justice import CrimeCaseRow
-from aerona.db.tables.military import CaptiveCohortRow
+from aerona.db.tables.lore import LexemeRow
+from aerona.db.tables.military import CaptiveCohortRow, OccupationRow
 from aerona.db.tables.mind import CultureValueRow, SkillRow
 from aerona.db.tables.polity import LawProfileRow, OfficeRow, PolityProfileRow, TreatyClauseRow
 from aerona.db.tables.region import PolityMapKnowledgeRow
@@ -102,12 +116,14 @@ RESEARCH_MECHANICS = (
         surface=Surface(drawer=LEARNING),
         backfill="computed",
         fields=("progress",),
-        tables=(ResearchProgressRow.__tablename__, CaptiveCohortRow.__tablename__, HolderTechniqueRow.__tablename__),
+        tables=(ResearchProgressRow.__tablename__, CaptiveCohortRow.__tablename__, HolderTechniqueRow.__tablename__, OccupationRow.__tablename__),
         exposure=Exposure.CONTEXT,
         targets=HOLDERS,
         couplings=(
             Coupling(S.ECONOMY, "each neighbour or trade partner that knows it speeds it", E.MODIFIER, "research_depth.catch_up_pct"),
             Coupling(S.WAR, "captives leak their homeland's techniques to their captors", E.FLOW, "research_depth.captive_leak"),
+            Coupling(S.DEMOGRAPHY, "refugees bring their homeland's techniques to the place that shelters them", E.FLOW, "research_depth.refugee_leak"),
+            Coupling(S.WAR, "an occupier learns from the libraries of the land it holds", E.FLOW, "research_depth.library_leak"),
         ),
     ),
     Mechanic(
@@ -319,15 +335,17 @@ RESEARCH_MECHANICS = (
         phases=CYCLES,
         surface=Surface(drawer="BannedWorks"),
         backfill="none",
-        templates=("discovery.work_banned",),
+        templates=("discovery.work_banned", "discovery.smuggled"),
         fields=("copies", "since_epoch"),
-        tables=(BannedWorkRow.__tablename__,),
+        tables=(BannedWorkRow.__tablename__, CultDoctrineRow.__tablename__, IdeologyAdherentRow.__tablename__),
         exposure=Exposure.CONTEXT,
         targets=("polity", "book", "ideology", "artwork"),
         couplings=(
             Coupling(S.CULTURE, "without printing copies follow the scribes", E.MODIFIER, "discovery.copy_scribes_pct"),
             Coupling(S.COMMUNICATION, "printing spares rumours their distortion", E.MODIFIER, "discovery.printed_rumour_pct"),
             Coupling(S.POLITY, "printing speeds creeds; banned creeds and books spread only in secret", E.MODIFIER, "discovery.ban_reading_pct"),
+            Coupling(S.ECONOMY, "smugglers sell banned works across the border", E.FLOW, "discovery.black_market_price"),
+            Coupling(S.FAITH, "a banned work that reaches the faithful wears down orthodoxy", E.FLOW, "discovery.heresy_pct"),
         ),
     ),
     Mechanic(
@@ -382,6 +400,78 @@ RESEARCH_MECHANICS = (
         couplings=(
             Coupling(S.ECONOMY, "an outdated method or building yields less", E.MODIFIER, "discovery.obsolete_pct"),
             Coupling(S.ECONOMY, "refitting costs wealth", E.FLOW, "discovery.refit_cost"),
+        ),
+    ),
+    Mechanic(
+        key="theories",
+        spec_item="S8.4b",
+        title="Peoples hold theories of each field; a true ruling theory helps the work it guides, a false one meets anomalies until a rival overturns it",
+        subsystem=S.KNOWLEDGE,
+        phases=CYCLES,
+        surface=Surface(drawer="TheoryCard"),
+        backfill="none: scholars set out theories from the next epoch",
+        templates=("theories.founded", "theories.paradigm_shift"),
+        fields=("domain", "claim", "correctness", "explanatory_power", "orthodox", "strength", "endorsed_by", "condemned_by"),
+        tables=(TheoryProfileRow.__tablename__, TheoryAdherentRow.__tablename__, TheoryAnomalyRow.__tablename__, ParadigmShiftRow.__tablename__),
+        exposure=Exposure.TOOL,
+        tools=("propose_theory", "reveal_truth"),
+        targets=("theory", *HOLDERS, "cult"),
+        couplings=(
+            Coupling(S.BODY, "a true account of medicine spares the sick and a false one kills more", E.MODIFIER, "theories.effect_pct"),
+            Coupling(S.ECONOMY, "a true account of the heavens carries more ships", E.MODIFIER, "theories.effect_pct"),
+            Coupling(S.MAGIC, "a true account of magic steadies rites", E.MODIFIER, "theories.effect_pct"),
+            Coupling(S.KNOWLEDGE, "research in a field follows the truth of its ruling account", E.MODIFIER, "theories.effect_pct"),
+            Coupling(S.FAITH, "faiths endorse the accounts of their faithful and condemn rivals", E.FLOW, "theories.persecution_blow"),
+            Coupling(S.LAW, "a scholar of a true theory a faith condemns may be tried for blasphemy", E.TRIGGER, "theories.heresy_trial_pct"),
+            Coupling(S.GODS, "a son can reveal the truth", E.TRIGGER, "theories.reveal_cost"),
+        ),
+    ),
+    Mechanic(
+        key="art_forms",
+        spec_item="S7.5",
+        title="Art forms are invented and fused, spread by trade, mastered, lent to artworks, hallowed in rites and lost when no one keeps them",
+        subsystem=S.CULTURE,
+        phases=CYCLES,
+        surface=Surface(drawer="ArtFormCard"),
+        backfill="none: art forms arise from the next epoch",
+        templates=("art_forms.invented", "art_forms.fused", "art_forms.lost"),
+        fields=("discipline", "structure", "prestige", "difficulty", "sacred", "notation", "mastery", "art_form_entity_id"),
+        tables=(
+            ArtFormProfileRow.__tablename__,
+            ArtFormPractitionerRow.__tablename__,
+            ArtworkProfileRow.__tablename__,
+            TraditionParticipationRow.__tablename__,
+        ),
+        exposure=Exposure.TOOL,
+        tools=("invent_art_form",),
+        targets=("art_form", *HOLDERS, "mortal", "artwork"),
+        couplings=(
+            Coupling(S.CULTURE, "an artwork made in a mastered form is finer and borrows the form's prestige", E.MODIFIER, "art_forms.mastery_quality_pct"),
+            Coupling(S.LANGUAGE, "a verbal form loses mastery in a tongue unlike its own", E.MODIFIER, "art_forms.translation_pct"),
+            Coupling(S.FAITH, "a sacred form strengthens the traditions of those who practise it", E.MODIFIER, "art_forms.sacred_tradition_pct"),
+            Coupling(S.POLITY, "banning a people's own form humiliates it", E.FLOW, "art_forms.suppression_resistance"),
+            Coupling(S.MIND, "inspiration, a plague or a lost war at home stirs invention", E.TRIGGER, "art_forms.stirred_pct"),
+            Coupling(S.WAR, "conquest carries forms both ways", E.FLOW, "art_forms.spread_pct"),
+            Coupling(S.KNOWLEDGE, "a form written down spreads faster and is never lost", E.MODIFIER, "art_forms.notation_pct"),
+        ),
+    ),
+    Mechanic(
+        key="name_meanings",
+        spec_item="S8.1/RP2",
+        title="Names carry meanings from their tongue's words, take foreign forms among neighbours, renowned mortals earn epithets and treaties can be misread",
+        subsystem=S.LANGUAGE,
+        phases=("language_cycles",),
+        surface=Surface(drawer="NameMeaning"),
+        backfill="language_cycles: names already given gain their meanings over the next epochs",
+        templates=("names.epithet",),
+        fields=("gloss", "morphemes", "form", "epithet"),
+        tables=(NameMeaningRow.__tablename__, NameExonymRow.__tablename__, EpithetRow.__tablename__, LexemeRow.__tablename__),
+        exposure=Exposure.CONTEXT,
+        targets=("mortal", *HOLDERS, "region", "settlement", "language"),
+        couplings=(
+            Coupling(S.LANGUAGE, "names are split into their tongue's words or coin new ones", E.FLOW, "name_meanings.named_per_epoch"),
+            Coupling(S.SOCIAL, "renown earns an epithet", E.TRIGGER, "name_meanings.epithet_renown"),
+            Coupling(S.LAW, "a treaty between tongues that share little may be misread", E.TRIGGER, "name_meanings.misread_pct"),
         ),
     ),
 )

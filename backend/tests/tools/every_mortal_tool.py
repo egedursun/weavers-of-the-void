@@ -92,6 +92,8 @@ MORTAL_CASES: dict[str, Case] = {
     "develop_knowledge": folk(plain(name="Lampwork", description=TEXT[:200])),
     "learn_knowledge": folk(plain(knowledge_id=knowledge, from_id=mortal)),
     "choose_research": folk(plain(technique=Technique.ORAL_LAW.value), lawgivers),
+    "propose_theory": folk(plain(domain="medicine", name="The Account of Fevers", claim=TEXT[:200])),
+    "invent_art_form": folk(plain(discipline="music", name="Rivermode", description=TEXT[:200], structure={"rhythm": "slow, in threes"})),
     "go_on_adventure": named(plain(target_id=species, goal="track the dusk hounds")),
     "challenge_god": named(plain(son_id=lambda realm, _ids: realm.son_id, reason=REASON)),
     "adopt": named(plain(child_id=created("mortal"), reason=REASON), second_mortal),

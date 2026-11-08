@@ -28,7 +28,17 @@ from aerona.domain.enums.culture import (
     TraditionEffectKind,
     TraditionKind,
 )
-from aerona.domain.enums.discovery import AgeKind, BlueprintKind, BlueprintSource, EraDeed, GreatField, ResearchIncident
+from aerona.domain.enums.discovery import (
+    AgeKind,
+    AnomalyKind,
+    ArtDiscipline,
+    BlueprintKind,
+    BlueprintSource,
+    EraDeed,
+    GreatField,
+    ResearchIncident,
+    TheoryDomain,
+)
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import KnowledgeBranch
 
@@ -136,6 +146,115 @@ class IdeologyCard(ApiModel):
     locked: list[str]
     texts: list[NodeRef]
     custom_tenets: list[int]
+
+
+class TheoryAdherentView(ApiModel):
+    holder: NodeRef
+    strength: int
+    orthodox: bool
+    since_epoch: int
+    locked: list[str]
+
+
+class AnomalyView(ApiModel):
+    id: int
+    kind: AnomalyKind
+    label: str
+    weight: int
+    epoch: int
+    witness: NodeRef | None
+
+
+class ShiftView(ApiModel):
+    id: int
+    community: NodeRef | None
+    old: NodeRef | None
+    new: NodeRef | None
+    epoch: int
+
+
+class TheoryCard(ApiModel):
+    domain: TheoryDomain
+    domain_label: str
+    subject: str
+    claim: str
+    correctness: int
+    explanatory_power: int
+    pressure: int
+    founder: NodeRef | None
+    founding_book: NodeRef | None
+    rival: NodeRef | None
+    endorsed_by: list[NodeRef]
+    condemned_by: list[NodeRef]
+    revealed_by_son_id: int | None
+    adherents: list[TheoryAdherentView]
+    anomalies: list[AnomalyView]
+    shifts: list[ShiftView]
+    locked: list[str]
+
+
+class PractitionerView(ApiModel):
+    holder: NodeRef
+    mastery: int
+    since_epoch: int
+    locked: list[str]
+
+
+class ArtFormCard(ApiModel):
+    discipline: ArtDiscipline
+    discipline_label: str
+    structure: dict[str, str | int]
+    parts: list[str]
+    origin: NodeRef | None
+    founder: NodeRef | None
+    language: NodeRef | None
+    difficulty: int
+    prestige: int
+    sacred: bool
+    notation: bool
+    occasions: list[str]
+    parents: list[NodeRef]
+    children: list[NodeRef]
+    practitioners: list[PractitionerView]
+    artworks: list[NodeRef]
+    banned_in: list[NodeRef]
+    locked: list[str]
+
+
+class NameView(ApiModel):
+    node_id: int
+    name: str
+    language: NodeRef | None
+    gloss: str
+    morphemes: list[str]
+    epoch: int
+    locked: list[str]
+
+
+class ExonymView(ApiModel):
+    language: NodeRef
+    form: str
+    gloss: str
+    epoch: int
+    locked: list[str]
+
+
+class EpithetView(ApiModel):
+    epithet: str
+    gloss: str
+    deed: str
+    language: NodeRef | None
+    epoch: int
+    locked: list[str]
+
+
+class NameCard(ApiModel):
+    node_id: int
+    current_name: str
+    epithets_allowed: bool
+    meaning: NameView | None
+    exonyms: list[ExonymView]
+    epithet: EpithetView | None
 
 
 class RiteEffectView(ApiModel):
@@ -268,6 +387,8 @@ class LoreCard(ApiModel):
     prophecy: ProphecyCard | None = None
     item: ItemCard | None = None
     artwork: ArtworkCard | None = None
+    theory: TheoryCard | None = None
+    art_form: ArtFormCard | None = None
 
 
 class LevelView(ApiModel):

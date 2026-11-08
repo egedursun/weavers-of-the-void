@@ -314,6 +314,71 @@ def idle_techniques(texts: dict[Path, str]) -> list[str]:
     ]
 
 
+ENDING = re.compile(r"\.status = EntityStatus\.(?:DESTROYED|DEAD)\b|\.status = EntityStatus\.DESTROYED if")
+ENDING_HOME = BACKEND / "engine/primitives/records.py"
+
+
+def bare_endings(texts: dict[Path, str]) -> list[str]:
+    found: list[str] = []
+    for path, text in texts.items():
+        if path == ENDING_HOME:
+            continue
+        for number, line in enumerate(text.splitlines(), start=1):
+            if ENDING.search(line) and "end_epoch" not in text.splitlines()[number - 2]:
+                found.append(f"{path.relative_to(ROOT)}:{number} ends a record without its end epoch; use retire() or set end_epoch on the line before")
+    return found
+
+
+PLACEHOLDER = re.compile(r"(?<!\{)\{([a-z_][a-z0-9_]*)(?:[:!][^}]*)?\}(?!\})")
+
+
+def lines_in(tree: ast.Module) -> dict[str, set[str]]:
+    found: dict[str, set[str]] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.Assign) or len(node.targets) != 1 or not isinstance(node.targets[0], ast.Name):
+            continue
+        call = node.value
+        if isinstance(call, ast.Call) and isinstance(call.func, ast.Name) and call.func.id == "Line" and len(call.args) == 2:
+            body = call.args[1]
+            if isinstance(body, ast.Constant) and isinstance(body.value, str):
+                found[node.targets[0].id] = set(PLACEHOLDER.findall(body.value))
+    return found
+
+
+def module_of(path: Path) -> str:
+    return ".".join(path.relative_to(BACKEND.parent).with_suffix("").parts)
+
+
+def visible_lines(tree: ast.Module, own: dict[str, set[str]], by_module: dict[str, dict[str, set[str]]]) -> dict[str, set[str]]:
+    visible = dict(own)
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom) and node.module in by_module:
+            for alias in node.names:
+                if alias.name in by_module[node.module]:
+                    visible[alias.asname or alias.name] = by_module[node.module][alias.name]
+    return visible
+
+
+def unfilled_lines(texts: dict[Path, str]) -> list[str]:
+    trees = {path: ast.parse(text) for path, text in texts.items()}
+    by_module = {module_of(path): lines_in(tree) for path, tree in trees.items()}
+    problems: list[str] = []
+    for path, tree in trees.items():
+        lines = visible_lines(tree, by_module[module_of(path)], by_module)
+        if not lines:
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call) or any(keyword.arg is None for keyword in node.keywords):
+                continue
+            given = {keyword.arg for keyword in node.keywords}
+            for argument in node.args:
+                if isinstance(argument, ast.Name) and argument.id in lines and given:
+                    missing = sorted(lines[argument.id] - given)
+                    if missing:
+                        problems.append(f"{path.relative_to(ROOT)}:{node.lineno} fills {argument.id} without {', '.join(missing)}")
+    return problems
+
+
 def main() -> int:
     texts = backend_texts()
     errors = [
@@ -326,6 +391,8 @@ def main() -> int:
         *book_gaps(texts),
         *partial_choice_tables(frontend_text()),
         *idle_techniques(texts),
+        *bare_endings(texts),
+        *unfilled_lines(texts),
     ]
     for line in errors:
         print(f"ERROR {line}")

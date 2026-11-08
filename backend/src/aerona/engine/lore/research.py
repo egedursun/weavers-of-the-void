@@ -26,6 +26,7 @@ from aerona.engine.lore.eras import era_factor
 from aerona.engine.lore.kinds import custom_bases
 from aerona.engine.lore.learning import institution_factor, patron_factor
 from aerona.engine.lore.printing import banned_for, read_in_secret
+from aerona.engine.lore.truth import branch_factor
 from aerona.engine.primitives.knowledge import raw_level
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount, set_stats, stat
@@ -141,6 +142,7 @@ async def research_factor(ctx: TickContext, community: EntityRow, branch: Knowle
         * await patron_factor(ctx.session, ctx.rules, community.id)
         * await thought_factor(ctx, community.id, branch)
         * await era_factor(ctx.session, ctx.rules, community.id)
+        * await branch_factor(ctx.session, ctx.rules, community.id, branch)
     )
 
 

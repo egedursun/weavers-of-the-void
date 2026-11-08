@@ -259,7 +259,7 @@ async def close_thread(scope: PlayerScope, command: CloseThread) -> Effect:
     await close_story(scope.session, thread, command.how.strip() or THREAD_DEFAULT_CLOSING, await scope.epoch())
     creator = await scope.creator()
     ctx = await scope.context("thread_close")
-    message = await hand(ctx, creator, THREAD_CLOSED, thread=thread.id, how=thread.closing_text)
+    message = await hand(ctx, creator, THREAD_CLOSED, story=thread.id, how=thread.closing_text)
     return Effect(message, values={"thread_id": thread.id})
 
 
@@ -282,7 +282,7 @@ async def advance_thread(scope: PlayerScope, command: AdvanceThread) -> Effect:
     entity = await guards.entity(scope.session, command.entity_id)
     if not await advance_story(scope.session, thread, entity.id, await scope.epoch()):
         raise ValidationFailedError(f"{entity.name} already moved this story forward.")
-    message = await hand(await scope.context("thread_advance"), await scope.creator(), THREAD_ADVANCED, thread=thread.id, entity=entity.name)
+    message = await hand(await scope.context("thread_advance"), await scope.creator(), THREAD_ADVANCED, story=thread.id, entity=entity.name)
     return Effect(message, entity.id, values={"thread_id": thread.id, "progress": thread.progress})
 
 

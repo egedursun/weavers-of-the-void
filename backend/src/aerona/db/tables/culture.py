@@ -391,6 +391,7 @@ class ArtworkProfileRow(Base):
     translations: Mapped[list[int]] = mapped_column(JSON, default=list)
     propaganda: Mapped[bool] = mapped_column(default=False)
     canon: Mapped[bool] = mapped_column(default=False)
+    art_form_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

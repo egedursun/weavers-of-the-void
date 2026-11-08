@@ -44,6 +44,8 @@ import {
   Wheat,
   Wind,
   Zap,
+  Atom,
+  Music,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 
@@ -87,6 +89,8 @@ export const ENTITY_TYPE_ICON: Record<Schemas['EntityType'], LucideIcon> = {
   ideology: Lightbulb,
   beast: Footprints,
   rite: Wand2,
+  theory: Atom,
+  art_form: Music,
 }
 
 export const STAT_ICON: Record<Schemas['Stat'], LucideIcon> = {

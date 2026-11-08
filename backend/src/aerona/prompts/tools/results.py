@@ -184,6 +184,11 @@ class SonResult(StrEnum):
     ALREADY_KNOWS = "{{ name }} already knows this."
     TAUGHT = "{{ name }} now knows {{ knowledge }}.{% if level %} {{ level }}{% endif %}"
     KNOWLEDGE_ADVANCED = "{{ name }} now stands at level {{ level }}.{% if gained %} {{ gained }}{% endif %}"
+    TRUTH_REVEALED = (
+        "The scholars of {{ place }} now hold #{{ id }} {{ name }} as their account of {{ domain }}, and it is true.{% if gained %} {{ gained }}{% endif %}"
+    )
+    NOT_A_THEORY = "That is not a theory."
+    REVEAL_PLACE = "Choose a living people or settlement whose scholars will hear it."
     KNOWLEDGE_CEILING = "{{ name }} is already at the highest level you can raise it to ({{ ceiling }}); no action spent."
     BRANCH_FULL = "This world already holds {{ existing }} in the {{ branch }} branch; deepen one with advance_knowledge instead of opening a new record{{ hint }}. No action spent."
     MIRACLE_DONE = "The miracle happened.{% if notes %} {{ notes }}.{% endif %}{% if level %} {{ level }}{% endif %}"
@@ -445,6 +450,9 @@ class MortalResult(StrEnum):
     RESEARCH_NO_HOLDER = "No community of learning is yours to steer: act for your people, or be a learned mortal living in a community."
     RESEARCH_NO_OPTIONS = "There is nothing within your reach to research now; raise a branch of knowledge first."
     RESEARCH_NOT_OFFERED = "Your scholars cannot take up {{ technique }} now. Within reach: {{ options }}."
+    THEORY_PROPOSED = "#{{ id }} {{ name }} is set out as an account of {{ domain }}; whether it is true, only the world will show."
+    ART_FORM_INVENTED = "#{{ id }} {{ name }} is now {{ discipline | an }} that others may take up."
+    ART_SKILL_LOW = "Inventing an art form takes a skill of at least {{ needed }}; your best fitting skill is {{ level }}."
     RESEARCH_CHOSEN = "Your scholars turn to {{ technique }}: it advances at full pace while the rest move slowly."
     TOO_FAR = "Too far."
     NO_ALLIANCE_WITH_ENEMY = "No alliance with your enemy; first peace."

@@ -182,6 +182,7 @@ SON_CASES: dict[str, Case] = {
     "send_dream": Case(plain(target_id=mortal, dream="A road of lamps leading to the high pass.")),
     "teach_knowledge": Case(plain(target_id=people, knowledge_id=knowledge, how="by lamplight at the gates")),
     "advance_knowledge": Case(plain(knowledge_id=knowledge, how="by lamplight at the gates")),
+    "reveal_truth": Case(plain(community_id=people, domain="cosmology", name="The Turning Sky", claim=TEXT[:200])),
     "miracle": Case(plain(entity_id=people, how="the lamps burned through the night")),
     "send_disaster": Case(plain(target_id=region, name="The Long Flood", description="The river rose over the low fields.", reason=REASON)),
     "transform": Case(plain(entity_id=faction, new_description=TEXT, reason=REASON)),

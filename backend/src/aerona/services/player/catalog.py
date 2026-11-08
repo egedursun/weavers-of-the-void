@@ -95,6 +95,7 @@ from aerona.services.player import (
     son_tools,
     statecraft,
     structures,
+    theories,
     titles,
     urban,
     variants,
@@ -1982,6 +1983,10 @@ LORE_ACTIONS = (
         ("S8.4",),
     ),
     _sync(Meta("discovery:ban", "Ban or allow a work in a realm", G.SOCIETY), discovery.ban_work, discovery.BanWork, free, ("S8.4",)),
+    _sync(Meta("theory:adherent", "Make a community or mortal hold a theory", G.SOCIETY), theories.set_adherent, theories.TheoryAdherent, free, ("S8.4b",)),
+    _sync(Meta("theory:anomaly", "Lay an anomaly against a theory", G.SOCIETY), theories.add_anomaly, theories.TheoryAnomaly, free, ("S8.4b",)),
+    _sync(Meta("theory:reveal", "Make the truth of a theory known", G.SOCIETY), theories.reveal_truth, theories.RevealTruth, free, ("S8.4b",)),
+    _sync(Meta("art_form:practitioner", "Spread an art form or set its mastery", G.SOCIETY), theories.set_practitioner, theories.Practitioner, free, ("S7.5",)),
     _sync(
         Meta("research:holder", "Set a people's standing in a branch", G.SOCIETY),
         lore.edit_holder,

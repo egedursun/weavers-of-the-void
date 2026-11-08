@@ -109,6 +109,8 @@ import {
   Shovel,
   Trophy,
   Layers,
+  Atom,
+  Music,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 
@@ -197,6 +199,8 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   develop_knowledge: Lightbulb,
   learn_knowledge: GraduationCap,
   choose_research: Layers,
+  propose_theory: Atom,
+  invent_art_form: Music,
   teach_knowledge: GraduationCap,
   utter_prophecy: Eye,
   prophesy: Eye,
@@ -293,6 +297,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   lend: HandCoins,
   repay_debt: Receipt,
   advance_knowledge: GraduationCap,
+  reveal_truth: Eye,
 }
 
 export const TOOL_FALLBACK_ICON: LucideIcon = Wrench

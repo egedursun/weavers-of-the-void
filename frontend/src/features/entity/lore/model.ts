@@ -96,6 +96,7 @@ import {
   Lock,
   LockOpen,
   Shirt,
+  Atom,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -130,6 +131,8 @@ export const LORE_KINDS = [
   'prophecy',
   'item',
   'artwork',
+  'theory',
+  'art_form',
 ] as const
 export type LoreKind = (typeof LORE_KINDS)[number]
 
@@ -142,6 +145,8 @@ export const LORE_KIND: Record<LoreKind, LoreNamed> = {
   prophecy: { label: 'Prophecy', icon: ScrollText, tone: 'warning' },
   item: { label: 'Item', icon: Gem, tone: 'gold' },
   artwork: { label: 'Artwork', icon: Paintbrush, tone: 'info' },
+  theory: { label: 'Theory', icon: Atom, tone: 'info' },
+  art_form: { label: 'Art form', icon: Music, tone: 'verdigris' },
 }
 
 export const ARCHETYPES: Record<Schemas['LegendArchetype'], LoreNamed> = {

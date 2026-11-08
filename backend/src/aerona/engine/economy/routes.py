@@ -22,6 +22,7 @@ from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Capability, Technique
+from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeLoss, TradeMode, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, LegendCategory
 from aerona.domain.enums.environment import CoastKind, RiverClass
@@ -44,6 +45,7 @@ from aerona.engine.environment.profile import Works
 from aerona.engine.finance.policy import PolicyBook, PolicyTally, Terms, smuggle
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research_depth import capable_among
+from aerona.engine.lore.truth import theory_factor
 from aerona.engine.mind.drives import greed_drive
 from aerona.engine.notes import note
 from aerona.engine.polity.accords import clause_pairs
@@ -215,6 +217,7 @@ async def spoken_capacity(ctx: TickContext, book: EconomyBook, route: Route, wor
         capacity *= 1 + ctx.rules.technique_effects.joint_stock_pct / PERCENT
     if route.profile.mode is TradeMode.SEA:
         table = ctx.rules.technique_effects
+        capacity *= max([await theory_factor(ctx.session, ctx.rules, end, TheoryDomain.COSMOLOGY) for end in (first, second)])
         capacity *= (
             1 + (table.navigation_pct * (Technique.NAVIGATION_STARS in held) + table.instruments_pct * (Technique.ASTRONOMY_INSTRUMENTS in held)) / PERCENT
         )

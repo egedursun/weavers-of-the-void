@@ -1,4 +1,20 @@
 import {
+  Brain,
+  CircleAlert,
+  Eye,
+  Feather,
+  Footprints,
+  HeartPulse,
+  Landmark,
+  Leaf,
+  Microscope,
+  Music,
+  Orbit,
+  Paintbrush,
+  PenTool,
+  Shirt,
+  Theater,
+  Users,
   Biohazard,
   Bomb,
   Building2,
@@ -77,4 +93,50 @@ export const AGE_LOOK: Record<Schemas['AgeKind'], LoreNamed> = {
   golden: { label: 'A golden age', icon: Sun, tone: 'gold' },
   dark: { label: 'A dark age', icon: Moon, tone: 'danger' },
   heroic: { label: 'A heroic age', icon: Trophy, tone: 'success' },
+}
+
+export const THEORY_DOMAINS: Record<Schemas['TheoryDomain'], LoreNamed> = {
+  medicine: { label: 'Medicine', icon: HeartPulse, tone: 'success' },
+  cosmology: { label: 'Cosmology', icon: Orbit, tone: 'info' },
+  matter: { label: 'Matter', icon: Gem, tone: 'gold' },
+  life: { label: 'Life', icon: Leaf, tone: 'success' },
+  mind: { label: 'Mind', icon: Brain, tone: 'verdigris' },
+  magic: { label: 'Magic', icon: Sparkles, tone: 'verdigris' },
+  history: { label: 'History', icon: Landmark, tone: 'gold' },
+  society: { label: 'Society', icon: Users, tone: 'info' },
+}
+
+export const ANOMALY_KINDS: Record<Schemas['AnomalyKind'], LoreNamed> = {
+  failed_prediction: {
+    label: 'A prediction failed',
+    icon: CircleAlert,
+    tone: 'warning',
+  },
+  contrary_cure: {
+    label: 'A cure worked against it',
+    icon: HeartPulse,
+    tone: 'warning',
+  },
+  observation: {
+    label: 'An observation it cannot explain',
+    icon: Microscope,
+    tone: 'info',
+  },
+  divine_sign: { label: 'A god showed otherwise', icon: Eye, tone: 'gold' },
+}
+
+export const ART_DISCIPLINES: Record<Schemas['ArtDiscipline'], LoreNamed> = {
+  music: { label: 'Music', icon: Music, tone: 'verdigris' },
+  poetry: { label: 'Poetry', icon: Feather, tone: 'gold' },
+  dance: { label: 'Dance', icon: Footprints, tone: 'info' },
+  theatre: { label: 'Theatre', icon: Theater, tone: 'warning' },
+  painting: { label: 'Painting', icon: Paintbrush, tone: 'info' },
+  sculpture: { label: 'Sculpture', icon: Gem, tone: 'gold' },
+  architecture_style: {
+    label: 'Style of building',
+    icon: Building2,
+    tone: 'gold',
+  },
+  textile: { label: 'Textile', icon: Shirt, tone: 'verdigris' },
+  calligraphy: { label: 'Calligraphy', icon: PenTool, tone: 'info' },
 }

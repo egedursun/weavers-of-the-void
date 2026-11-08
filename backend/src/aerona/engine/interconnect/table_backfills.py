@@ -1,6 +1,8 @@
 from aerona.engine.interconnect.registry import Mechanic
 
 TABLE_BACKFILLS: dict[tuple[str, str], str] = {
+    ("name_meanings", "name_exonyms"): "none: foreign names arise as names gain their meanings from the next epoch",
+    ("name_meanings", "epithets"): "none: renowned mortals earn epithets from the next epoch",
     (
         "community_opinion",
         "community_relations",

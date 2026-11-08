@@ -25,30 +25,30 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | G1R.3.1 | gap | Layered geology per region (soil, sedimentary, igneous, metamorphic layers), specific stone types | §1R.3 | → S6.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.3.2 | gap | Aquifers, cavern layers, an underground sea of magma, a deep underworld | §1R.3 | → S6.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.3.3 | gap | Hydrology: rivers with flow, brooks, lakes, salinity, flooding of low ground | §1R.3 | → S6.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.4 | gap | Temperature physics: melting, boiling, ignition points; fire spread by material | §1R.3 | → F23 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.3.4 | gap | Temperature physics: melting, boiling, ignition points; fire spread by material | §1R.3 | → F23 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.3.5 | gap | Plants as species with seasons, soil needs and products (fibre, dye, brew, herb, alchemy) | §1R.3 | → S3.2/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.3.6 | gap | Good/evil and savagery alignment of regions (haunted, reanimating, blessed lands) | §1R.3 | → S6.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.7 | gap | Syndromes: a generic effect system carried by materials, creatures, gases, bites and interactions | §1R.3 | → F30 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.3.7 | gap | Syndromes: a generic effect system carried by materials, creatures, gases, bites and interactions | §1R.3 | → F30 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.3.8 | gap | Procedurally generated monsters (random anatomy, materials, breath, temperament) | §1R.3 | → S3.3a/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.3.9 | gap | Night creatures, werebeast and vampire curses spread by bite or desecration | §1R.3 | → F30, S3.3a/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.10 | gap | Tissue layers (skin, fat, muscle, bone, nerve, artery), bleeding, motor and sensory nerve loss, internal organs, teeth and digits | §1R.3 | → F23 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.11 | gap | Pain, nausea, dizziness, unconsciousness, exhaustion, bleeding out | §1R.3 | → F23 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.3.10 | gap | Tissue layers (skin, fat, muscle, bone, nerve, artery), bleeding, motor and sensory nerve loss, internal organs, teeth and digits | §1R.3 | → F23 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.3.11 | gap | Pain, nausea, dizziness, unconsciousness, exhaustion, bleeding out | §1R.3 | → F23 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.3.12 | gap | Per-attack physics: momentum, contact area, edge, material yield, layered armour | §1R.3 | → F23, S5.6/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.3.13 | gap | Wrestling: grabs, throws, chokes, joint locks; dodging, parrying, blocking | §1R.3 | → S5.6/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.14 | gap | 19 physical and mental attributes | §1R.3 | → F13 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.15 | gap | About 50 personality facets independent of beliefs | §1R.3 | → F13 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.16 | gap | Beliefs/values (about 30) | §1R.3 | → F13 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.17 | gap | Thoughts and emotions with intensity; short- and long-term memories that change personality over time | §1R.3 | → F14 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.18 | gap | About 30 individual needs (pray, fight, learn, craft, be with family, drink) | §1R.3 | → F14 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.19 | gap | Life dreams (create a masterwork, rule, raise a family) | §1R.3 | → F17 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.20 | gap | Preferences: liked materials, foods, creatures, colours, shapes, art forms | §1R.3 | → F15 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.21 | gap | Friendships, grudges, lovers, acquaintances with strength and history | §1R.3 | → F18 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.3.14 | gap | 19 physical and mental attributes | §1R.3 | → F13 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.3.15 | gap | About 50 personality facets independent of beliefs | §1R.3 | → F13 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.3.16 | gap | Beliefs/values (about 30) | §1R.3 | → F13 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.3.17 | gap | Thoughts and emotions with intensity; short- and long-term memories that change personality over time | §1R.3 | → F14 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.3.18 | gap | About 30 individual needs (pray, fight, learn, craft, be with family, drink) | §1R.3 | → F14 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.3.19 | gap | Life dreams (create a masterwork, rule, raise a family) | §1R.3 | → F17 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.3.20 | gap | Preferences: liked materials, foods, creatures, colours, shapes, art forms | §1R.3 | → F15 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.3.21 | gap | Friendships, grudges, lovers, acquaintances with strength and history | §1R.3 | → F18 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.3.22 | gap | Skill rust from disuse, learning by demonstration and sparring, teaching | §1R.3 | → F6/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.3.23 | gap | Quality grades, decorations (encrusted, studded), engravings that depict historical events, maker's marks | §1R.3 | → S7.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.3.24 | gap | Strange moods: compulsions to make an artifact; failure leads to madness | §1R.3 | → F17, S7.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.25 | gap | Musical, poetic and dance forms generated per culture | §1R.3 | → S7.5 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.3.25 | gap | Musical, poetic and dance forms generated per culture | §1R.3 | → S7.5 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.3.26 | gap | Performance troupes, scholars writing books on specific topics | §1R.3 | → S7.4/RP2, S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.27 | gap | Ethics per civilisation (killing, theft, slavery, torture, eating sapients…) with levels | §1R.3 | → F16 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.3.27 | gap | Ethics per civilisation (killing, theft, slavery, torture, eating sapients…) with levels | §1R.3 | → F16 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.3.28 | gap | Food preparation, brewing, spoilage, vermin in stores, alcohol need | §1R.3 | → S6.3/RP2, F24 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.3.29 | gap | Hospital work: diagnosis, setting bones, suturing, dressing, crutches, traction | §1R.3 | → F23, S7.2/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.3.30 | gap | Justice: crimes with witnesses, investigations, interrogation, sentences | §1R.3 | → S4.5/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
@@ -62,11 +62,11 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | G1R.3.38 | gap | Deity spheres (about 130) with compatible and precluded pairs | §1R.3 | → S9.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.3.39 | gap | Desecration curses from gods | §1R.3 | → S9.1/RP2, F30 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.3.40 | gap | Ghosts of the unburied with types, put to rest by memorials | §1R.3 | → S3.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.41 | gap | Per-site reputation of a character (hero, monster slayer, troublemaker) | §1R.3 | → F19 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.3.41 | gap | Per-site reputation of a character (hero, monster slayer, troublemaker) | §1R.3 | → F19 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.3.42 | gap | Sites with structure: towers, vaults, lairs, hamlets, monasteries, camps, with ownership history | §1R.3 | → S6.2/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.3.43 | gap | Cave-ins and structural support in mines | §1R.3 | → S6.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
-| G1R.3.44 | gap | Sleep, fatigue, thirst, cleanliness (as aggregates at epoch scale) | §1R.3 | → F14 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.3.45 | gap | Language translation of names: every name has a meaning in its language | §1R.3 | → S8.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.3.44 | gap | Sleep, fatigue, thirst, cleanliness (as aggregates at epoch scale) | §1R.3 | → F14 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.3.45 | gap | Language translation of names: every name has a meaning in its language | §1R.3 | → S8.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.4.1 | gap | Orbital elements: semi-major axis, eccentricity, inclination, period, resonance | §1R.4 | → S10.9 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.4.2 | gap | Year length, seasons and insolation derived from orbit, star mass and luminosity | §1R.4 | → S10.9 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.4.3 | gap | Planet mass, radius, density, composition (iron, rock, ice, gas fractions) | §1R.4 | → S10.9 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
@@ -106,7 +106,7 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | G1R.5.10 | gap | Zones of control, forts controlling movement, encirclement | §1R.5 | → S5.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.5.11 | gap | Entrenchment and field fortifications built over seasons | §1R.5 | → S5.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.5.12 | gap | Planning bonus for prepared attacks | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
-| G1R.5.13 | gap | Armour penetration versus armour value; hard and soft targets | §1R.5 | → F23, S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.5.13 | gap | Armour penetration versus armour value; hard and soft targets | §1R.5 | → F23, S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.5.14 | gap | Leader skills by area (fire, shock, manoeuvre, siege) and battle-earned traits | §1R.5 | → S5.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.5.15 | gap | Death of a general shocks morale; standards captured | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.5.16 | gap | Casualty classes: killed, wounded, captured, missing, deserted | §1R.5 | → S5.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
@@ -152,35 +152,35 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | G1R.6.21 | gap | Price elasticity and demand by income | §1R.6 | → S6.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.6.22 | gap | State granaries and famine relief policy | §1R.6 | → S4.6/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.6.23 | gap | Item destruction as a sink | §1R.6 | → F28 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
-| G1R.6.24 | gap | Blueprints and designs as tradable knowledge | §1R.6 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.6.24 | gap | Blueprints and designs as tradable knowledge | §1R.6 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.6.25 | gap | Survival economy under extreme cold or scarcity (heat as a resource) | §1R.6 | → F24, S4.2/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.6.26 | gap | Logistics throughput limits inside a settlement (hauling capacity) | §1R.6 | → S4.2/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.6.27 | gap | Chartered companies with shares and monopolies abroad | §1R.6 | → S4.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.6.28 | gap | Regional price differences driving arbitrage by merchant agents | §1R.6 | → S6.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.6.29 | gap | Tool wear in production | §1R.6 | → F24 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.6.30 | gap | Supply shocks propagating through chains with visible bottlenecks | §1R.6 | → S6.3/RP2, J.9 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.1 | gap | Separate civic/social tree (governance, law, philosophy, religion innovations) | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.2 | gap | Boosts by doing (eureka and inspiration triggers) | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.3 | gap | Eras and era scores (golden and dark ages per realm by deeds) | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.4 | gap | Great people generated from accumulated points by field | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.5 | gap | Catch-up discount when neighbours know a technique | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.6 | gap | Card-draw research options | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.7 | gap | Dangerous techniques with world consequences | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.8 | gap | Obsolescence and upgrading of units and buildings | §1R.7 | → S8.4/RP2, S5.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.9 | gap | Specialised researchers with expertise | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.7.1 | gap | Separate civic/social tree (governance, law, philosophy, religion innovations) | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.7.2 | gap | Boosts by doing (eureka and inspiration triggers) | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.7.3 | gap | Eras and era scores (golden and dark ages per realm by deeds) | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.7.4 | gap | Great people generated from accumulated points by field | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.7.5 | gap | Catch-up discount when neighbours know a technique | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.7.6 | gap | Card-draw research options | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.7.7 | gap | Dangerous techniques with world consequences | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.7.8 | gap | Obsolescence and upgrading of units and buildings | §1R.7 | → S8.4/RP2, S5.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.7.9 | gap | Specialised researchers with expertise | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.7.10 | gap | Unique projects and wonders gated by techniques | §1R.7 | → S7.2/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.11 | gap | Institutions that spread geographically from an origin and change the cost of everything | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.7.11 | gap | Institutions that spread geographically from an origin and change the cost of everything | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.7.12 | gap | Cultural innovations per culture | §1R.7 | → S4.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.13 | gap | Wrong theories and paradigm shifts | §1R.7 | → S8.4b | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.14 | gap | Reverse engineering of found artifacts | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.15 | gap | Experiment accidents | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.16 | gap | Patronage of scholars by rulers | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.17 | gap | Printing and copying economics of knowledge | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.18 | gap | Censorship and forbidden books | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.7.13 | gap | Wrong theories and paradigm shifts | §1R.7 | → S8.4b | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.7.14 | gap | Reverse engineering of found artifacts | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.7.15 | gap | Experiment accidents | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.7.16 | gap | Patronage of scholars by rulers | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.7.17 | gap | Printing and copying economics of knowledge | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.7.18 | gap | Censorship and forbidden books | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.7.19 | gap | Research agreements and shared research between realms | §1R.7 | → S8.4/RP2, S5.13/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.20 | gap | Tech-driven social change (social engineering choices) | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.21 | gap | Knowledge of geography as a tree branch (cartography quality) | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.7.22 | gap | Era-locked capabilities that require several branches together | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.7.20 | gap | Tech-driven social change (social engineering choices) | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.7.21 | gap | Knowledge of geography as a tree branch (cartography quality) | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.7.22 | gap | Era-locked capabilities that require several branches together | §1R.7 | → S8.4/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.8.1 | gap | Title hierarchy (barony → county → duchy → kingdom → empire) with de jure territory | §1R.8 | → S4.11 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.8.2 | gap | Schemes with agents, phases, success odds and discovery | §1R.8 | → F20 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.8.3 | gap | Secrets and hooks (strong and weak leverage) | §1R.8 | → F20 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
@@ -190,15 +190,15 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | G1R.8.7 | gap | Diplomatic capacity (number of relations a realm can maintain) | §1R.8 | → S4.6/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.8.8 | gap | Crises with escalation, backers and swing parties | §1R.8 | → S4.6/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.8.9 | gap | Casus belli and claim fabrication | §1R.8 | → S5.8/RP2, F20 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
-| G1R.8.10 | gap | Estates and interest groups with privileges and loyalty | §1R.8 | → S4.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.8.10 | gap | Estates and interest groups with privileges and loyalty | §1R.8 | → S4.3/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.8.11 | gap | Elections, assemblies, political parties and movements | §1R.8 | → S4.6/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.8.12 | gap | Law enactment as a process with progress, obstruction and chance | §1R.8 | → S4.5/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.8.13 | gap | Council offices with tasks | §1R.8 | → S4.6/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
-| G1R.8.14 | gap | Lifestyle focuses and perks | §1R.8 | → F17 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.8.15 | gap | Prestige, piety, dread and tyranny as currencies | §1R.8 | → F19 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.8.14 | gap | Lifestyle focuses and perks | §1R.8 | → F17 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.8.15 | gap | Prestige, piety, dread and tyranny as currencies | §1R.8 | → F19 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.8.16 | gap | Negotiable vassal contracts | §1R.8 | → S4.6/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.8.17 | gap | Personal unions and inheritance of foreign titles | §1R.8 | → S4.11 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
-| G1R.8.18 | gap | Rivals and nemeses designated | §1R.8 | → F18 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.8.18 | gap | Rivals and nemeses designated | §1R.8 | → F18 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.8.19 | gap | Public opinion and media (criers, broadsheets, propaganda, censorship) | §1R.8 | → F21 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.8.20 | gap | Correspondence with delay, interception, forgery, misreading | §1R.8 | → F21 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.8.21 | gap | Lying and bad-faith treaties; a reputation for honesty | §1R.8 | → F21, S5.13/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
@@ -216,18 +216,18 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | G1R.8.33 | gap | Court with courtiers, positions and grandeur | §1R.8 | → S4.6/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.8.34 | gap | Inheritance partition splitting realms | §1R.8 | → S4.11 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.8.35 | gap | Religious authority over rulers (investiture, excommunication) | §1R.8 | → S4.4 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
-| G1R.9.1 | gap | Typed emotions and moods with sources and durations | §1R.9 | → F14 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.9.2 | gap | Aspirations and life goals with milestones | §1R.9 | → F17 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.9.3 | gap | Short-term wants and fears | §1R.9 | → F17 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.9.4 | gap | Two-axis relationships (friendship, romance) with types (best friend, crush, ex, enemy) | §1R.9 | → F18 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.9.5 | gap | Social interactions with outcomes (befriend, flirt, insult, comfort, argue, gossip) | §1R.9 | → F18 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.9.1 | gap | Typed emotions and moods with sources and durations | §1R.9 | → F14 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.9.2 | gap | Aspirations and life goals with milestones | §1R.9 | → F17 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.9.3 | gap | Short-term wants and fears | §1R.9 | → F17 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.9.4 | gap | Two-axis relationships (friendship, romance) with types (best friend, crush, ex, enemy) | §1R.9 | → F18 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.9.5 | gap | Social interactions with outcomes (befriend, flirt, insult, comfort, argue, gossip) | §1R.9 | → F18 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.9.6 | gap | Appearance and genetics (inherited looks, heritable conditions) | §1R.9 | → F26 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
-| G1R.9.7 | gap | Likes and dislikes | §1R.9 | → F15 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.9.7 | gap | Likes and dislikes | §1R.9 | → F15 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.9.8 | gap | Households with shared funds, dwellings and dependents | §1R.9 | → F29 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.9.9 | gap | Home quality and environment affecting mood | §1R.9 | → F29 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
-| G1R.9.10 | gap | Leisure, hobbies, a fun need | §1R.9 | → F14, F17 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.9.11 | gap | Clubs and social circles | §1R.9 | → F18 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.9.12 | gap | Reputation (good or bad) in a community | §1R.9 | → F19 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.9.10 | gap | Leisure, hobbies, a fun need | §1R.9 | → F14, F17 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.9.11 | gap | Clubs and social circles | §1R.9 | → F18 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.9.12 | gap | Reputation (good or bad) in a community | §1R.9 | → F19 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.9.13 | gap | Career ladders with performance and income | §1R.9 | → S3.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.9.14 | gap | Pregnancy with duration and complications | §1R.9 | → S3.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.9.15 | gap | Affairs, jealousy, divorce | §1R.9 | → F18, F20 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
@@ -235,13 +235,13 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | G1R.9.17 | gap | Storyteller pacing of events | §1R.9 | → F27 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.9.18 | gap | Ideology precepts that shape daily life | §1R.9 | → S4.4 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.9.19 | gap | Mental breaks of many kinds | §1R.9 | → S3.1 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
-| G1R.9.20 | gap | Inspirations (positive breaks producing great work) | §1R.9 | → F14, F17 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.9.20 | gap | Inspirations (positive breaks producing great work) | §1R.9 | → F14, F17 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.9.21 | gap | Childhood development stages with milestones and upbringing quality | §1R.9 | → S3.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.9.22 | gap | Old age wisdom and mentoring roles | §1R.9 | → S3.1/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.9.23 | gap | Social roles in family (head, dependent, carer) | §1R.9 | → F29 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
-| G1R.9.24 | gap | Grief and mourning processes | §1R.9 | → F14 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.9.25 | gap | Addiction and recovery at the individual level | §1R.9 | → F30 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.9.26 | gap | Daily-life lifestyle quality (sleep, hygiene, comfort) as an aggregate | §1R.9 | → F14 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.9.24 | gap | Grief and mourning processes | §1R.9 | → F14 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.9.25 | gap | Addiction and recovery at the individual level | §1R.9 | → F30 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
+| G1R.9.26 | gap | Daily-life lifestyle quality (sleep, hygiene, comfort) as an aggregate | §1R.9 | → F14 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | G1R.9.27 | gap | Personal events (birthdays, anniversaries, coming of age) feeding memories | §1R.9 | → F25 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.9.28 | gap | Pets and companionship | §1R.9 | → S3.2/RP2, S3.3a/RP2 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.12.1 | gap | Spatial dominion: each god's presence as a field per region, spreading from temples, prophets and holy sites, contested  | §1R.12 | → F31 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
@@ -322,7 +322,7 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | G1R.40.C6 | gap | A3 | §1R.40 | → S10.6/RP10 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.40.C7 | gap | A3 | §1R.40 | → F48/RP10 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
 | G1R.40.C8 | gap | A4 (catalogue hygiene) | §1R.40 | → J.16b | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
-| G1R.40.C9 | gap | A4 (systemic) | §1R.40 | → J.16c | n/a | n/a | n/a | n/a | n/a | n/a | n/a | planned |
+| G1R.40.C9 | gap | A4 (systemic) | §1R.40 | → J.16c | n/a | n/a | n/a | n/a | n/a | n/a | n/a | done |
 | F1 | foundation | Time: seasons, sampled years and campaign turns | §F1 | engine/environment/years.py, disease/seasons.py, markets.swing_of, campaign seasons | growth, settlement_life, economy, epidemics, markets, campaigns | year:*, seasons:* | SeasonCalendarPanel, market swing chart | geography_lines | season.*, settlement.fire_wind | environment.battle_ground | tests/engine/environment/test_couplings.py, test_calendar.py | done |
 | F1/RP3 | reference-pass | dating systems and calendars per culture | §F1 reference pass 3 | — | — | — | — | — | — | — | — | planned |
 | F2 | foundation | Environment substrate | §F2 | engine/environment/* | environment_survey, environment phases | environment:*, place:*, region:* | EntityEnvironment, RegionTerrain, map layers | geography_lines | environment.* | environment_survey | tests/engine/environment/* | done |
@@ -545,10 +545,10 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | S7.4/RP2 | reference-pass | R1, R7 | §7.4 reference pass 2 | — | — | — | — | — | — | — | — | planned |
 | S7.4/RP4 | reference-pass | R36 | §7.4 reference pass 4 | — | — | — | — | — | — | — | — | planned |
 | S7.4/RP5 | reference-pass | S-A OCM 52 | §7.4 reference pass 5 | — | — | — | — | — | — | — | — | planned |
-| S7.5 | section | Art form (new type) | §7.5 | deferred to W9+ per J.10 (art forms) | — | — | — | — | — | — | — | planned |
+| S7.5 | section | Art form (new type) | §7.5 | EntityType.ART_FORM, ArtFormStats; tables art_form_profiles, art_form_practitioners, artwork_profiles.art_form_entity_id; rules art_forms; catalog/theories.py (DISCIPLINES); engine/lore/art_forms.py, theory_control.py | research_cycles: skilled mortals invent forms, more so when inspired or after a plague or a lost war; forms of one discipline meeting in a place fuse; forms spread by trade (faster when written down) and by conquest, by the receiving culture's taste; verbal forms lose mastery across tongues; practitioners gain mastery; artworks made in a form gain quality and renown; sacred forms and forms made for an occasion strengthen traditions; forms with no practitioners and no notation are lost; banning a people's own form humiliates it | lore:create, lore:edit (discipline, structure, prestige, difficulty, sacred, notation, occasions), art_form:practitioner (spread, mastery, drop), discovery:ban, record_row:* | ArtFormCard: shape, lineage, practitioners, artworks, bans, occasions and shaping panel; LoreForge creates art forms | invent_art_form mortal tool; mortal context lists the forms a people practises | art_forms.invented, art_forms.fused, art_forms.lost, tools.mortal.art_form_invented | migration e6776762e09f; research_cycles from the next epoch | tests/engine/lore/test_theories_art_rp2.py; tests/tools/test_every_tool.py | done |
 | S7.5/RP8 | reference-pass | B3 | §7.5 reference pass 8 | — | — | — | — | — | — | — | — | planned |
 | S8.1 | section | Language | §8.1 | engine/lore/language.py | language_cycles, treaty_cycles, trade_flow, religion_spread | language:register, release_* | LanguagePanel, TongueAtlas registers | mortal_context | treaty.misread_breach | language_cycles | tests/engine/lore/test_language.py | done |
-| S8.1/RP2 | reference-pass | R1, R6 | §8.1 reference pass 2 | — | — | — | — | — | — | — | — | planned |
+| S8.1/RP2 | reference-pass | R1, R6 | §8.1 reference pass 2 | tables name_meanings, name_exonyms, epithets; rules name_meanings; engine/lore/names.py; poetry forms read their tongue through art_form_profiles.language_entity_id | language_cycles: names are split into their tongue's words or coin new words from the bearer's land, class or kind; neighbouring tongues give names foreign forms from their own words; renowned mortals earn epithets from their greatest deed in their own tongue; treaties between court tongues that share little are misread into breaches; verbal art forms lose mastery in unlike tongues | record_row:create, record_row:edit and record_row:delete for meanings, foreign names and epithets | NameMeaning section in ThingSections for every kind of node (meaning, foreign names, epithet, with editing) | mortal context gives a mortal's epithet | names.epithet | migration e6776762e09f; language_cycles gives meanings to existing names over the next epochs | tests/engine/lore/test_theories_art_rp2.py | done |
 | S8.1/RP3 | reference-pass | R11 | §8.1 reference pass 3 | — | — | — | — | — | — | — | — | planned |
 | S8.1/RP8 | reference-pass | B1 | §8.1 reference pass 8 | — | — | — | — | — | — | — | — | planned |
 | S8.1/RP9 | reference-pass | A2 | §8.1 reference pass 9 | — | — | — | — | — | — | — | — | planned |
@@ -558,10 +558,10 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | S8.3 | section | Tradition | §8.3 | engine/lore/{traditions,taboos}.py | tradition_cycles, campaigns, vendetta_cycles | tradition:effect/reseed/participation | TraditionPanel | found_tradition (typed) | lore.taboo_broken, lore.guest_killing, lore.commemoration* | lore.typed_kinds_backfill | tests/engine/lore/test_traditions.py | done |
 | S8.3/RP2 | reference-pass | R7 | §8.3 reference pass 2 | — | — | — | — | — | — | — | — | planned |
 | S8.4 | section | Knowledge | §8.4 | engine/lore/research.py, phases/knowledge_levels.py, culture_exchange, doom, mood | research_cycles, knowledge_levels, knowledge_diffusion | research:*, item:content, kind:* | LearningSection, KindForge, map marks | mortal_context, son knowledge_pairs | knowledge.deepened | research_cycles | tests/engine/lore/test_made_things.py | done |
-| S8.4/RP2 | reference-pass | R1, R4, R5 | §8.4 reference pass 2 | — | — | — | — | — | — | — | — | planned |
+| S8.4/RP2 | reference-pass | R1, R4, R5 | §8.4 reference pass 2 | KnowledgeBranch.CIVICS and the civic techniques (catalog/techniques.py, catalog/civics.py); domain/enums/culture.py (ResearchChooser, BoostTrigger, Capability), domain/enums/discovery.py; tables research_focus, institutions, research_boosts, great_person_points, great_people, polity_eras, era_deeds, world_eras, research_incidents, artifact_studies, banned_works, blueprints, community_methods.obsolete_since, structure_profiles.obsolete_since; rules research_depth, discovery, technique_effects; engine/lore/research_depth.py, learning.py, civics.py, great_people.py, eras.py, dangers.py, reverse.py, printing.py, smuggling.py, blueprints.py, obsolescence.py; engine/environment/knowledge.py (cartography); gates in polity/formation.py, offices.py, revenue.py, enactment.py, factions/estates.py, lore/ideology.py | research_cycles: scholars draw choices and pick a focus; deeds boost techniques; neighbours, captives, refugees and conquered libraries speed or leak them; institutions are born, spread and are embraced or refused; court scholars are paid; trade pacts grow research agreements; adopted techniques shift values and classes; points raise great people who do one deed; deeds give realms era scores and golden, dark and heroic ages and worlds enter new eras; dangerous arts and risky research bring incidents and ethics backlash; owned made things are taken apart; strict censorship bans works that smugglers then sell and that wear down orthodoxy; designs are drawn, sold, licensed and stolen; outdated buildings are dated and refitted; industry_methods: outdated methods lose output until refitted; region_survey: trade roads and cartography chart land; travel and titles read well-charted land; civics gate governments, offices, laws, taxes, privileges and tenets | research:focus, research:institution, research:boost, research:boost_edit, research:boost_remove, discovery:raise_great, discovery:era, discovery:world_era, discovery:incident, discovery:design, discovery:ban, record_row:create/edit/delete for every new table | Learning section: ResearchDesk (focus and drawn choices, institutions, boosts, capabilities) and DiscoveryDesk (great people, mishaps, things taken apart, designs); EraPanel in the realm drawer with banned works; WorldEra on the world page; technique tree shows institutions and progress | choose_research mortal tool; mortal context YOUR SCHOLARS line (focus, choices, institutions, boosts, capabilities, great people, age, mishaps, designs) | research.boosted, research.institution_born, research.institution_embraced, discovery.great_person, discovery.breakthrough, discovery.age_*, discovery.world_era, discovery.incident_*, discovery.reverse_engineered, discovery.work_banned, discovery.smuggled, discovery.design_drawn, discovery.refitted, espionage.stole_design | migrations 808e16b8c9ee, 5e02eb948261; research_cycles from the next epoch | tests/engine/lore/test_research_depth_rp2.py, test_discoveries_rp2.py; tests/engine/industry/test_industry.py; tests/tools/test_every_tool.py | done |
 | S8.4/RP4 | reference-pass | R37 | §8.4 reference pass 4 | — | — | — | — | — | — | — | — | planned |
 | S8.4/RP5 | reference-pass | S-A OCM 80 | §8.4 reference pass 5 | — | — | — | — | — | — | — | — | planned |
-| S8.4b | section | Theory (new type) | §8.4b | deferred to W9+ per J.10 (theories) | — | — | — | — | — | — | — | planned |
+| S8.4b | section | Theory (new type) | §8.4b | EntityType.THEORY, TheoryStats; tables theory_profiles, theory_adherents, theory_anomalies, paradigm_shifts; rules theories; catalog/theories.py (DOMAINS, ANOMALIES); engine/lore/theories.py, truth.py, theory_control.py; effects in research.py, disease/outbreaks.py, economy/routes.py, lore/rites.py | research_cycles: learned scholars set out theories; theories spread by trade; false ruling theories meet anomalies and true ones gain explanatory power; when anomalies outweigh it a paradigm contest by evidence, institutions, faith and tradition may overturn it; faiths endorse and condemn, persecute and try scholars of condemned true theories; ruling theories set medicine, sea capacity, rite backlash and research by field | lore:create, lore:edit (domain, claim, correctness, explanatory power, endorsed and condemned faiths), theory:adherent, theory:anomaly, theory:reveal, record_row:* for anomalies and shifts | TheoryCard: what they believe beside what is true, holders with ruling accounts, faiths, timeline of anomalies and paradigm shifts, shaping panel; LoreForge creates theories | propose_theory mortal tool, reveal_truth son tool; mortal context lists the theories a people holds | theories.founded, theories.paradigm_shift, tools.mortal.theory_proposed, tools.son.reveal_truth | migration e6776762e09f; research_cycles from the next epoch | tests/engine/lore/test_theories_art_rp2.py; tests/tools/test_every_tool.py | done |
 | S8.5 | section | Ideology (new type) | §8.5 | engine/lore/ideology.py, learning_control.py | ideology_cycles | creed:* | IdeologyPanel | son GodlessCreeds line; found_school | lore.creed, lore.revolution, lore.godless_* | ideology_cycles | tests/engine/lore/test_made_things.py | done |
 | S8.5/RP2 | reference-pass | R6, R5 | §8.5 reference pass 2 | — | — | — | — | — | — | — | — | planned |
 | S8.6 | section | Rite and magic (new type `rite`) | §8.6 | engine/lore/rites.py, phases/magic.py | rite_cycles, wizards | rite:*, item:enchant | RitePanel, RiteDesigner | design_rite, cast_rite | magic.* | lore.rite_profiles | tests/engine/lore/test_made_things.py | done |
@@ -763,7 +763,7 @@ Run `python scripts/spec_coverage.py write` after editing the spec, and `python 
 | W5+ | wave | F29 households and dwellings; F26 genetics; F28 conservation ledger (land in W0 as a test harness, completed here) | Part J | F26 genetics, looks, beauty and family likeness with F26/RP8 the magical gift; F29 households, roles, purses, care, choices, dwellings and the anonymous households of cohorts; F28 already complete; cross-wave terms owed to W5+ by F13, F14, F16, F30 and S4.2/RP2 landed | see F26, F26/RP8, F29 | see F26, F26/RP8, F29 | section-blood, section-home | see F26, F29 | see F26, F29 | genetics_survey, household_survey; migration 18f9896a5251 | tests/engine/genetics/test_genetics.py; tests/engine/households/test_households.py; tests/services/player/test_lineage_levers.py | done |
 | W6+ | wave | 4.11 titles; F20 schemes, secrets, hooks, favours, identities; F21 communication and public opinion; F22 belief state; e | Part J | F20, F20/RP3 and F20/RP8 secrets, hooks, favours, identities, schemes and true names; F21 and F21/RP3 dispatches, envoys, ciphers, signals and public opinion; F22 belief state; S4.11 titles and de jure lands; S4.3/RP2 estates, movements, parties, companies, holy orders and guilds; S4.5/RP2 enactment as a process and the justice process; S4.6/RP2 threat, coalitions, capacity, crises, spheres, subjects, council tasks, elections, corruption, tax types, mandates and demands, the policy network, the fundamental law, interworld assemblies, separatism and the court; cross-wave terms owed to W6+ by F14/RP4, F15, F16/RP4, F24, F26, F30 and S6.4/RP2 landed | see F20, F21, F22, S4.11, S4.3/RP2, S4.5/RP2, S4.6/RP2 | see F20, F21, F22, S4.11, S4.3/RP2, S4.5/RP2, S4.6/RP2 | section-intrigue, section-correspondence, section-titles, section-estates, section-justice, section-statecraft, section-affairs | see F20, F21, S4.11, S4.3/RP2, S4.5/RP2, S4.6/RP2 | see F20, F21, S4.11, S4.3/RP2, S4.5/RP2, S4.6/RP2 | intrigue_survey, intrigue, correspondence, public_opinion, titles, estates, legislature, trials, statecraft, affairs; migrations 5c2e8a1f9d47, 7a3d1c9e2b40, 9b4e2f6a1c83, c3f1a7d9e5b2, d8a2c6e4f1b7, e5f9b3a7c2d1 | see F20, F21, F22, S4.11, S4.3/RP2, S4.5/RP2, S4.6/RP2 | done |
 | W7+ | wave | Organisation, discipline, ammunition, frontage and reserves, the morale ladder, command and control, spotting, penetrati | Part J | S5.3/RP2 frontage, reserves, formations, the morale ladder, command and control, spotting, planning, penetration, weapon profiles, casualty classes, surgeons, salvage, night battles and deception; S5.1/RP2 organisation, discipline, ammunition from weapon stores, fatigue, supply limits, field works, combat engineering, commander areas, templates, drill, patrols and standards; S5.8/RP2 casus belli, war-score peace, war support, the peace movement, psychological warfare and war production | see S5.1/RP2, S5.3/RP2, S5.8/RP2 | see S5.1/RP2, S5.3/RP2, S5.8/RP2 | ArmyPanel, ArmyWorks, CommanderAreas, ArmyTemplates, WarRoom, WarCause, WarSupport, CasusBelli, WarProduction, BattleDepth, PeaceTreaty, RegionScars | see S5.1/RP2, S5.3/RP2, S5.8/RP2 | see S5.1/RP2, S5.3/RP2, S5.8/RP2 | campaigns, war_upkeep, trade_flow, refining, estates; migrations ebc535139834, adc3f030249b, fbe28f7f70df | see S5.1/RP2, S5.3/RP2, S5.8/RP2 | done |
-| W9+ | wave | Civic tree, institutions, boosts, catch-up, card draws, great people, era scores, dangerous techniques and accidents, re | Part J | — | — | — | — | — | — | — | — | planned |
+| W9+ | wave | Civic tree, institutions, boosts, catch-up, card draws, great people, era scores, dangerous techniques and accidents, re | Part J | S8.4/RP2 civic tree, institutions, boosts, catch-up, card draws, great people, eras, dangerous techniques and accidents, reverse engineering, printing and censorship, cartography, blueprints and obsolescence; S8.4b theories; S7.5 art forms; S8.1/RP2 name meanings, diplomatic language and poetry phonology | see S8.4/RP2, S8.4b, S7.5, S8.1/RP2 | see S8.4/RP2, S8.4b, S7.5, S8.1/RP2 | ResearchDesk, DiscoveryDesk, EraPanel, WorldEra, TheoryCard, ArtFormCard, NameMeaning | see S8.4/RP2, S8.4b, S7.5, S8.1/RP2 | see S8.4/RP2, S8.4b, S7.5, S8.1/RP2 | research_cycles, language_cycles, industry_methods, region_survey; migrations 808e16b8c9ee, 5e02eb948261, e6776762e09f | see S8.4/RP2, S8.4b, S7.5, S8.1/RP2 | done |
 | W10+ | wave | Flora, husbandry, vermin, procedural beasts, night creatures, pets | Part J | — | — | — | — | — | — | — | — | planned |
 | W12+ | wave | 10.9 cosmic physics (derived), star systems, cosmic features, impacts, terraforming, survey levels, life classes | Part J | — | — | — | — | — | — | — | — | planned |
 | W13 | wave | F25 gatherings, F27 storyteller, event collections, excavations and sites with rooms | Part J | — | — | — | — | — | — | — | — | planned |

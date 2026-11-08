@@ -37,6 +37,7 @@ from aerona.domain.enums.culture import (
     SummonForm,
     Technique,
 )
+from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
@@ -71,6 +72,7 @@ from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.intel import gain_intel
 from aerona.engine.lore.kinds import RiteEffectParams, kind_of, params_of
 from aerona.engine.lore.research import has_technique
+from aerona.engine.lore.truth import theory_factor
 from aerona.engine.military.control import add_stack
 from aerona.engine.mind.book import set_skill, values_for
 from aerona.engine.mind.hooks import judged
@@ -876,7 +878,8 @@ async def cast(
     steadiness, strength = gift_factors(ctx.rules, await ctx.session.get(GenomeRow, caster.id), row.school)
     strength *= await name_power(ctx, caster.id, target)
     await practise_subject(ctx.session, ctx.rules, caster.id, SkillKind.SPELLCRAFT, subject_id=rite.id, xp=ctx.rules.skills.spellcraft_xp, epoch=ctx.epoch)
-    if rng.chance(row.backlash_chance * steadiness * (1 - mastery / PERCENT * ctx.rules.skills.school_backlash_pct / PERCENT)):
+    understood = await theory_factor(ctx.session, ctx.rules, caster.location_id or caster.id, TheoryDomain.MAGIC)
+    if rng.chance(row.backlash_chance * steadiness * (1 - mastery / PERCENT * ctx.rules.skills.school_backlash_pct / PERCENT) / understood):
         casting.succeeded, casting.backlash = False, await backlash(ctx, caster, row)
         casting.effect = f"the rite turned on {caster.name} ({casting.backlash.value})"
     else:

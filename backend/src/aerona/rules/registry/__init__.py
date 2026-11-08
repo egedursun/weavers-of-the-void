@@ -250,6 +250,7 @@ from aerona.rules.registry.stress import StressRules
 from aerona.rules.registry.strike import StrikeRules
 from aerona.rules.registry.structures import ConstructionRules, StructureFunctionsRules, UpkeepRules
 from aerona.rules.registry.summoning import SummoningRules
+from aerona.rules.registry.theories import ArtFormsRules, NameMeaningsRules, TheoriesRules
 from aerona.rules.registry.time import TimeRules
 from aerona.rules.registry.tissues import TissueRules
 from aerona.rules.registry.titles import TitleRules
@@ -368,6 +369,9 @@ class Rules:
     war_conduct: WarConductRules = field(default_factory=WarConductRules)
     research_depth: ResearchDepthRules = field(default_factory=ResearchDepthRules)
     discovery: DiscoveryRules = field(default_factory=DiscoveryRules)
+    theories: TheoriesRules = field(default_factory=TheoriesRules)
+    art_forms: ArtFormsRules = field(default_factory=ArtFormsRules)
+    name_meanings: NameMeaningsRules = field(default_factory=NameMeaningsRules)
     holy_orders: OrderRules = field(default_factory=OrderRules)
     guild_ranks: GuildRules = field(default_factory=GuildRules)
     elasticity: ElasticityRules = field(default_factory=ElasticityRules)

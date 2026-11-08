@@ -17,12 +17,14 @@ from aerona.domain.enums.polity import LawKind
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore import (
+    art_forms,
     blueprints,
     dangers,
     eras,
     great_people,
     ideology,
     legends,
+    names,
     obsolescence,
     printing,
     prophecy,
@@ -30,6 +32,8 @@ from aerona.engine.lore import (
     research_depth,
     reverse,
     rites,
+    smuggling,
+    theories,
     traditions,
 )
 from aerona.engine.lore.backfill import backfill_typed_kinds
@@ -210,12 +214,19 @@ async def scribes(ctx: TickContext) -> tuple[int, int]:
     "table.language_standing",
     "table.language_standings",
     "table.lexemes",
+    "table.mortal_profiles",
+    "table.name_exonyms",
+    "table.name_meanings",
     "table.offices",
     "table.people_culture",
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
+    "table.region_environment",
+    "table.skills",
     "table.speaker_cohorts",
+    "table.treaty_parties",
+    "table.treaty_profiles",
     "table.vassalages",
     "table.world_maps",
 )
@@ -225,10 +236,15 @@ async def scribes(ctx: TickContext) -> tuple[int, int]:
     "table.language_registers",
     "table.language_standing",
     "table.language_standings",
+    "table.lexemes",
+    "table.name_exonyms",
+    "table.name_meanings",
     "table.settlement_profiles",
     "table.speaker_cohorts",
 )
 async def language_cycles(ctx: TickContext) -> None:
+    for key, value in (await names.names(ctx)).items():
+        ctx.count(key, value)
     liturgical = set(await ctx.session.scalars(select(PeopleCultureRow.liturgical_language_id).where(PeopleCultureRow.liturgical_language_id.is_not(None))))
     standings = [
         await stand(ctx, language, {int(item) for item in liturgical if item is not None}) for language in await canon(ctx.session, [EntityType.LANGUAGE])
@@ -487,6 +503,10 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "people.population",
     "settlement.population",
     "settlement.prosperity",
+    "table.art_form_practitioners",
+    "table.art_form_profiles",
+    "table.artwork_profiles",
+    "table.banned_works",
     "table.blueprints",
     "table.bonds",
     "table.book_contents",
@@ -506,6 +526,7 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.loans",
+    "table.occupations",
     "table.offices",
     "table.outbreaks",
     "table.people_culture",
@@ -520,6 +541,8 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.skills",
     "table.sky_events",
     "table.structure_profiles",
+    "table.theory_adherents",
+    "table.theory_profiles",
     "table.treaty_clauses",
     "table.treaty_parties",
     "table.treaty_profiles",
@@ -560,7 +583,17 @@ async def research_cycles(ctx: TickContext) -> None:
     ctx.count("techniques_adopted", await research_depth.adopt_techniques(ctx))
     ctx.count("techniques_diffused", await research.diffuse_techniques(ctx))
     ctx.count("societies_changed_by_techniques", await research_depth.changes_of_adoption(ctx))
-    for step in (reverse.reverse_engineer, dangers.dangers, great_people.great_people, eras.eras, blueprints.blueprints, obsolescence.obsolescence):
+    for step in (
+        reverse.reverse_engineer,
+        dangers.dangers,
+        great_people.great_people,
+        eras.eras,
+        blueprints.blueprints,
+        obsolescence.obsolescence,
+        theories.theories,
+        art_forms.art_forms,
+        smuggling.smuggle,
+    ):
         for key, value in (await step(ctx)).items():
             ctx.count(key, value)
     ctx.count("works_banned", await printing.censor(ctx))

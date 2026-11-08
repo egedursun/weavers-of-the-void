@@ -103,6 +103,9 @@ class ResearchLine(ContextItem):
     age: str = ""
     incidents: list[str] = Field(default_factory=list)
     designs: list[str] = Field(default_factory=list)
+    theories: list[str] = Field(default_factory=list)
+    art_forms: list[str] = Field(default_factory=list)
+    epithet: str = ""
 
 
 class StoresLine(ContextItem):

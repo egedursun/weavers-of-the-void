@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import NotFoundError
-from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, ItemProfileRow, ResearchProgressRow
+from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, IdeologyAdherentRow, ItemProfileRow, ResearchProgressRow
 from aerona.db.tables.discovery import (
     ArtifactStudyRow,
     BannedWorkRow,
@@ -18,6 +18,7 @@ from aerona.db.tables.discovery import (
     WorldEraRow,
 )
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.military import OccupationRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.structures import StructureProfileRow
@@ -29,12 +30,12 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import SkillKind, SkillSource
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.structure import ConstructionState, StructureKind
-from aerona.domain.models.entity_stats import ItemStats, PolityStats, StructureStats
-from aerona.engine.lore import blueprints, dangers, discovery_control, eras, great_people, obsolescence, printing, reverse
+from aerona.domain.models.entity_stats import IdeologyStats, ItemStats, PolityStats, StructureStats
+from aerona.engine.lore import blueprints, dangers, discovery_control, eras, great_people, obsolescence, printing, research_depth, reverse, smuggling
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm
-from tests.engine.warfare.factories import make, make_ctx, society
+from tests.engine.warfare.factories import bond, make, make_ctx, society
 from tests.tools.factories import connect, make_entity
 
 RULES = Rules()
@@ -240,3 +241,47 @@ async def test_shifting_a_headcount_never_clips_it_to_a_percentage(session: Asyn
     assert stat(home, "population") == 4000
     assert shift_stat(home, "population", -100) == 3900
     assert shift_stat(home, "prosperity", 500) == 100
+
+
+async def test_refugees_and_conquered_libraries_carry_techniques(session: AsyncSession, realm: Realm) -> None:
+    ctx = make_ctx(session)
+    homeland = await town(session, realm, "Old Town")
+    shelter = await town(session, realm, "New Town")
+    session.add(HolderTechniqueRow(holder_entity_id=homeland.id, technique=Technique.PAPER, since_epoch=1, secret=False))
+    await bond(session, homeland.id, shelter.id, BondKind.MIGRATED_TO, epoch=ctx.epoch)
+    library = await make_entity(session, "Old Library", EntityType.STRUCTURE, world_id=realm.world.id, location_id=homeland.id, stats=StructureStats())
+    session.add(
+        StructureProfileRow(
+            structure_entity_id=library.id,
+            kind=StructureKind.LIBRARY,
+            host_entity_id=homeland.id,
+            construction_state=ConstructionState.COMPLETE,
+            effect_pct=50,
+            locked=[],
+        )
+    )
+    occupier = await make(session, "Iron Folk", EntityType.PEOPLE, realm.world.id, location_id=realm.far_region.id, population=4000)
+    session.add(OccupationRow(region_entity_id=realm.region.id, occupier_entity_id=occupier.id, since_epoch=1, locked=[]))
+    await session.flush()
+    tally = research_depth.DepthTally()
+    await research_depth.migrant_leaks(ctx, tally)
+    await research_depth.library_leaks(ctx, tally)
+    sheltered = await session.get(ResearchProgressRow, (shelter.id, Technique.PAPER))
+    conquered = await session.get(ResearchProgressRow, (occupier.id, Technique.PAPER))
+    assert sheltered is not None and sheltered.progress == ctx.rules.research_depth.refugee_leak
+    assert conquered is not None and conquered.progress == ctx.rules.research_depth.library_leak
+
+
+async def test_smugglers_sell_a_banned_creed_across_the_border(session: AsyncSession, realm: Realm) -> None:
+    ctx = make_ctx(session, tuned(ban_reading_pct=100))
+    inside = await town(session, realm, "Inner Town")
+    outside = await town(session, realm, "Outer Town")
+    polity = await kingdom(session, realm, inside)
+    creed = await make_entity(session, "The Open Word", EntityType.IDEOLOGY, world_id=realm.world.id, stats=IdeologyStats())
+    session.add(IdeologyAdherentRow(ideology_entity_id=creed.id, adherent_entity_id=outside.id, strength=60, state=False, since_epoch=1))
+    await connect(session, inside.id, outside.id, BondKind.TRADES_WITH)
+    await discovery_control.set_ban(ctx, polity.id, creed.id, banned=True)
+    counts = await smuggling.smuggle(ctx)
+    assert counts["works_smuggled"] == 1
+    assert await session.get(IdeologyAdherentRow, (creed.id, inside.id)) is not None
+    assert stat(inside, "wealth") == 50 - ctx.rules.discovery.black_market_price

@@ -18,6 +18,7 @@ import {
   traditionKindValues,
 } from '@/api/generated/schema'
 import { ACTS } from '../cultureLabels'
+import { ART_DISCIPLINES, THEORY_DOMAINS } from '../discoveryLabels'
 import {
   ARCHETYPES,
   ITEM_CLASSES,
@@ -106,6 +107,32 @@ export function isForgeKind(
 
 export const FORGE_FIELDS: Record<ForgeKind, ForgeField[]> = {
   language: [],
+  theory: [
+    {
+      key: 'domain',
+      label: 'Field it explains',
+      kind: 'enum',
+      table: THEORY_DOMAINS,
+      required: true,
+    },
+    {
+      key: 'correctness',
+      label: 'How true it is',
+      kind: 'number',
+      min: 0,
+      max: PERCENT,
+      initial: 50,
+    },
+  ],
+  art_form: [
+    {
+      key: 'discipline',
+      label: 'Discipline',
+      kind: 'enum',
+      table: ART_DISCIPLINES,
+      required: true,
+    },
+  ],
   legend: [
     {
       key: 'archetype',

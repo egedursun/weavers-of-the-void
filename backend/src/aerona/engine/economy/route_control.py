@@ -89,7 +89,9 @@ async def set_status(ctx: TickContext, route: Route, value: Value) -> None:
     route.profile.closed_by_player = status is TradeRouteStatus.CLOSED
     if status is not TradeRouteStatus.CLOSED:
         route.profile.closed_by_son_id = None
-    route.entity.status = EntityStatus.DESTROYED if status is TradeRouteStatus.DECAYED else EntityStatus.CANON
+    decayed = status is TradeRouteStatus.DECAYED
+    route.entity.end_epoch = (route.entity.end_epoch or ctx.epoch) if decayed else None
+    route.entity.status = EntityStatus.DESTROYED if decayed else EntityStatus.CANON
 
 
 async def set_controller(ctx: TickContext, route: Route, value: Value) -> None:

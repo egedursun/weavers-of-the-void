@@ -19,6 +19,7 @@ from aerona.constants.tool_inputs import (
     SUBTYPE_MAX,
 )
 from aerona.domain.enums.culture import CalendarSlot, LegendArchetype, ProphecyConsequence, ProphecyPredicate, Technique, TraditionKind
+from aerona.domain.enums.discovery import ArtDiscipline, TheoryDomain
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, LegendCategory
 from aerona.domain.enums.material import MaterialKind
@@ -181,6 +182,19 @@ class LearnInput(ToolInput):
 
 class ChooseResearchInput(ToolInput):
     technique: Technique
+
+
+class ProposeTheoryInput(ToolInput):
+    domain: TheoryDomain
+    name: Name
+    claim: Description
+
+
+class InventArtFormInput(ToolInput):
+    discipline: ArtDiscipline
+    name: Name
+    description: Description
+    structure: dict[str, Annotated[str, Field(max_length=SUBTYPE_MAX)]] | None = None
 
 
 class DiplomacyInput(ToolInput):

@@ -14,7 +14,7 @@ from aerona.db.tables.military import WarAimRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow, PolityTerritoryRow, PolityTreasuryRow
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeLoss, TradeMode, TradeRouteStatus
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.military import WarAimKind
 from aerona.domain.enums.polity import ClauseKind, DecisionRule, GovernmentKind, PartyRole, TreatyKind
@@ -315,3 +315,16 @@ async def test_beasts_carry_cargo_to_their_hoard(session: AsyncSession, world: C
     losses = list(await session.scalars(select(TradeRouteLossRow).where(TradeRouteLossRow.route_entity_id == road.id)))
     assert losses and any(loss.cause is TradeLoss.BEASTS and loss.culprit_entity_id == beast.id for loss in losses)
     assert profile.hoard.get(CommodityKind.GRAIN.value, 0) > 0
+
+
+async def test_a_route_the_god_lets_decay_ends_with_its_epoch_and_can_reopen(session: AsyncSession, world: CoreWorld) -> None:
+    rules = Rules()
+    first, second = await markets(session, world, rules)
+    ctx = await manual_context(session, "test", rules)
+    road = await open_route(ctx, route_id=None, first_id=first.id, second_id=second.id)
+    await edit_route(ctx, road.id, {"status": "decayed"}, released=())
+    await session.flush()
+    assert road.status is EntityStatus.DESTROYED and road.end_epoch is not None
+    await edit_route(ctx, road.id, {"status": "open"}, released=())
+    await session.flush()
+    assert road.status is EntityStatus.CANON and road.end_epoch is None

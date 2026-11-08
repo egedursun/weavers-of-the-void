@@ -30,6 +30,7 @@ from aerona.db.tables.culture import (
     TraditionParticipationRow,
     TraditionProfileRow,
 )
+from aerona.db.tables.discovery import ArtFormProfileRow, TheoryProfileRow
 from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.body import DamageType
@@ -78,6 +79,20 @@ async def ensure_ideology(ctx: TickContext, entity: EntityRow) -> Base:
     return row
 
 
+async def ensure_theory(ctx: TickContext, entity: EntityRow) -> Base:
+    row = await ctx.session.get(TheoryProfileRow, entity.id)
+    if row is None:
+        raise NotFoundError("That theory has no account yet.")
+    return row
+
+
+async def ensure_art_form(ctx: TickContext, entity: EntityRow) -> Base:
+    row = await ctx.session.get(ArtFormProfileRow, entity.id)
+    if row is None:
+        raise NotFoundError("That art form has no shape yet.")
+    return row
+
+
 PROFILES: dict[EntityType, Callable[[TickContext, EntityRow], Awaitable[Base]]] = {
     EntityType.LANGUAGE: ensure_language,
     EntityType.LEGEND: legends.profile_of,
@@ -87,6 +102,8 @@ PROFILES: dict[EntityType, Callable[[TickContext, EntityRow], Awaitable[Base]]] 
     EntityType.PROPHECY: ensure_prophecy,
     EntityType.ITEM: items.profile_of,
     EntityType.ARTWORK: art.profile_of,
+    EntityType.THEORY: ensure_theory,
+    EntityType.ART_FORM: ensure_art_form,
 }
 
 
