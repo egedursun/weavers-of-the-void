@@ -76,3 +76,12 @@ async def test_entity_insight_shows_life_lineage_and_prerequisites(api: ApiWorld
     assert [item["id"] for item in child["ancestors"]] == [sage.id]
     knowledge = {item["knowledge"]["id"]: item for item in (await api.http.get("/api/knowledge")).json()}
     assert [item["id"] for item in knowledge[lore[1].id]["prerequisites"]] == [lore[0].id]
+
+
+async def test_the_atlas_can_hide_what_history_has_archived(api: ApiWorld) -> None:
+    town = seeded(api).core.extra["town"].id
+    everything = (await api.http.get("/api/entities", params={"limit": 200})).json()
+    assert (await api.http.put(f"/api/entities/{town}/archive", json={"mode": "history"})).status_code == 200
+    shown = (await api.http.get("/api/entities", params={"limit": 200, "hide_archived": True})).json()
+    assert town in {item["id"] for item in everything["items"]}
+    assert town not in {item["id"] for item in shown["items"]} and shown["total"] < everything["total"]
