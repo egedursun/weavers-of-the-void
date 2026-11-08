@@ -44,10 +44,6 @@ def saturating(value: float, half: float, cap: float) -> float:
     return cap * value / (value + max(1.0, half))
 
 
-def share(value: float, percent: float) -> float:
-    return value * percent / PERCENT
-
-
 def decay_weight(keep_pct: float, age: int) -> float:
     return float((keep_pct / PERCENT) ** max(0, age))
 

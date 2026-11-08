@@ -310,37 +310,6 @@ class RouteView:
     controller_name: str | None
 
 
-async def route_views(session: AsyncSession, rules: Rules, epoch: int, world_id: int | None = None, *, include_all: bool = False) -> list[RouteView]:
-    book = await RouteBook.load(session, rules, epoch)
-    chosen = book.routes if include_all else book.open_known()
-    views: list[RouteView] = []
-    for route in chosen:
-        if world_id is not None and not touches(route, world_id):
-            continue
-        controller = await session.get(EntityRow, route.controller_entity_id) if route.controller_entity_id is not None else None
-        views.append(
-            RouteView(
-                route,
-                book.status(route),
-                method_label(route.method),
-                await world_name(session, route.world_a_id),
-                await world_name(session, route.world_b_id),
-                controller.name if controller is not None else None,
-            )
-        )
-    return views
-
-
-async def route_lines(session: AsyncSession, rules: Rules, epoch: int, world_id: int | None = None) -> list[str]:
-    lines: list[str] = []
-    for view in await route_views(session, rules, epoch, world_id):
-        controlled = f", controlled by {view.controller_name}" if view.controller_name else ""
-        route = view.route
-        detail = f"{route.duration_epochs} epochs, danger {route.danger}{controlled}"
-        lines.append(f"- route#{route.id}: {view.first_name} \u2194 {view.second_name}, {view.method_name} ({detail})")
-    return lines
-
-
 FAR_MOUNT_TRAITS = (CreatureTrait.FLYING, CreatureTrait.AQUATIC)
 GREAT_MOUNTS = (SizeClass.HUGE, SizeClass.COLOSSAL)
 

@@ -9,7 +9,7 @@ from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.military import ArmyOfficerRow, ArmyProfileRow, ArmyUnitRow, OccupationRow
-from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow
+from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow
@@ -17,7 +17,6 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
-from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.environment import MovementMode, RiverClass, ScarKind, WeatherKind
 from aerona.domain.enums.military import ArmyRole, CommanderTrait, MutinyOutcome, Stance, UnitFamily
 from aerona.domain.enums.mind import ValueAxis
@@ -418,15 +417,6 @@ def straggle(rules: Rules, rows: Sequence[ArmyUnitRow], profile: ArmyProfileRow)
 def carry(rules: Rules, profile: ArmyProfileRow, size: int) -> None:
     if "baggage" not in profile.locked:
         profile.baggage = round_half_up(size * rules.campaign_depth.baggage_per_100 / PERCENT) + profile.loot
-
-
-async def realm_of(ctx: TickContext, owner_id: int) -> PolityProfileRow | None:
-    polity_id = await ctx.session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == owner_id).limit(1))
-    return await ctx.session.get(PolityProfileRow, polity_id) if polity_id is not None else None
-
-
-def alive(entity: EntityRow | None) -> bool:
-    return entity is not None and entity.status is EntityStatus.CANON
 
 
 def size_of(army: EntityRow) -> int:

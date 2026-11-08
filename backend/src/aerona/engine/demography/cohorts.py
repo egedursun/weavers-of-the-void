@@ -206,16 +206,6 @@ async def settle_moved(ctx: TickContext, moved: Counter[tuple[int, str]]) -> Non
 AFTER_PHASE.append(settle_moved)
 
 
-def counts(rows: Mapping[CohortKey, CohortRow]) -> dict[str, int]:
-    found: Counter[str] = Counter()
-    for (age, sex, social_class, condition), row in rows.items():
-        found[f"age.{age.value}"] += row.count
-        found[f"sex.{sex.value}"] += row.count
-        found[f"class.{social_class.value}"] += row.count
-        found[f"condition.{condition.value}"] += row.count
-    return dict(found)
-
-
 def age_cohorts(session: AsyncSession, community: EntityRow, rows: dict[CohortKey, CohortRow], spans: tuple[int, int], epoch: int) -> None:
     maturity, adult_span = spans
     moves: list[tuple[CohortKey, CohortKey, int]] = []

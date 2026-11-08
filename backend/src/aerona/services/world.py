@@ -4,22 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.core.errors import InsufficientResourcesError, ValidationFailedError
 from aerona.db.base import Base
 from aerona.db.repositories.cosmos import CosmosRepository
-from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
-from aerona.domain.enums.world import LoreLanguage
 
 PRESERVED_TABLES = frozenset({"jobs", "rule_overrides"})
 NOT_ENOUGH_ESSENCE = "Not enough essence: {rule} costs {amount}, the Creator has {have}."
 NEGATIVE_AMOUNT = "An essence amount cannot be negative."
-
-
-async def require_world(session: AsyncSession) -> CosmosRow:
-    return await CosmosRepository(session).require_cosmos()
-
-
-async def lore_language(session: AsyncSession) -> LoreLanguage:
-    return (await require_world(session)).lore_language
 
 
 async def spend_essence(session: AsyncSession, amount: int, rule: str) -> int:

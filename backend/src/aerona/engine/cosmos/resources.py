@@ -5,7 +5,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import ValidationFailedError
-from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmic_state import ResourceMechanicRow
@@ -132,7 +132,3 @@ async def define_cosmic_resource(session: AsyncSession, resource: TravelResource
 async def travel_resource(session: AsyncSession) -> TravelResource | None:
     cosmos = await CosmosRepository(session).get()
     return cosmos.travel_resource if cosmos is not None else None
-
-
-async def claim(session: AsyncSession, owner: EntityRow, resource: EntityRow, epoch: int, reason: str) -> BondRow:
-    return await BondRepository(session).connect(BondDraft(owner.id, resource.id, BondKind.OWNS, epoch, reason))

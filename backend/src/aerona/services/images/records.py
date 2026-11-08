@@ -32,7 +32,6 @@ from aerona.domain.enums.world import ImageStyle
 from aerona.media.keys import original_key
 from aerona.media.store import MediaStore
 from aerona.services.images.collection import MediaCollector
-from aerona.services.lore_ports import ImagePromptWriter
 
 UPLOAD_MAX_BYTES = 30 * 1024 * 1024
 CAPTION_MAX_LENGTH = min(120, TITLE_MAX_LENGTH)
@@ -393,19 +392,6 @@ async def clear_file_name_captions(session: AsyncSession) -> int:
     return cleared
 
 
-async def write_missing_prompts(session: AsyncSession, writer: ImagePromptWriter, batch: int, rounds: int) -> int:
-    written = 0
-    for _ in range(rounds):
-        targets = [target.node_id for target in await missing_prompt_targets(session, batch)]
-        if not targets:
-            break
-        count = await writer.write_batch(targets)
-        written += count
-        if count == 0:
-            break
-    return written
-
-
 async def missing_prompt_targets(session: AsyncSession, limit: int) -> list[ImageTarget]:
     found: list[ImageTarget] = []
     for kind in TARGET_ORDER:
@@ -418,8 +404,3 @@ async def missing_prompt_targets(session: AsyncSession, limit: int) -> list[Imag
             if len(found) >= limit:
                 return found
     return found
-
-
-async def write_prompt(session: AsyncSession, writer: ImagePromptWriter, node_id: int) -> str | None:
-    await resolve_target(session, node_id)
-    return await writer.write_prompt(node_id)

@@ -97,9 +97,5 @@ ACTION_POLARITY: dict[ActionKind, ActionPolarity] = {
 }
 
 
-def passions_of(action: ActionKind) -> frozenset[CreatorPassion]:
-    return ACTION_PASSIONS.get(action, frozenset())
-
-
 def polarity_of(action: ActionKind) -> ActionPolarity:
     return ACTION_POLARITY.get(action, ActionPolarity.NEUTRAL)

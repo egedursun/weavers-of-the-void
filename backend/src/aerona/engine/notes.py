@@ -64,10 +64,6 @@ async def tick_rows(session: AsyncSession, epoch: int, since_id: int) -> list[Ch
     return list(await session.scalars(statement))
 
 
-async def engine_notes(session: AsyncSession, epoch: int, since_id: int) -> list[str]:
-    return [row.text for row in await tick_rows(session, epoch, since_id)]
-
-
 def _hide(row: ChronicleRow) -> None:
     row.kind = ChronicleKind.ENGINE_RAW
     row.visible = False

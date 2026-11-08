@@ -190,7 +190,3 @@ SPECIES_GROUNDS: MappingProxyType[CommodityKind, str] = MappingProxyType(
         CommodityKind.CLOTH: "Silk Grounds",
     }
 )
-
-
-def material_label(kind: MaterialKind) -> str:
-    return MATERIALS[kind].label

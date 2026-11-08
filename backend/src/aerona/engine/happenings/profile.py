@@ -65,11 +65,6 @@ def year_at(ctx: TickContext, epoch: int, stream: str) -> int:
     return epoch_start_year(max(1, epoch), years) + ctx.rng(stream).die(years) - 1
 
 
-def epoch_end_year(ctx: TickContext, epoch: int) -> int:
-    years = ctx.rules.time.years_per_epoch
-    return epoch_start_year(max(1, epoch), years) + years - 1
-
-
 async def seasons_of(session: AsyncSession, world_id: int | None) -> list[WorldSeasonRow]:
     if world_id is None:
         return []

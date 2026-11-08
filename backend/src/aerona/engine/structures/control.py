@@ -34,7 +34,7 @@ from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.structures.construction import Commission, abandon, begin, construction_of, finish
 from aerona.engine.structures.damage import harm
 from aerona.engine.structures.profiles import fire_resistance_from, lock, material_props, refresh, staff_rows
-from aerona.engine.structures.spec import build_cost, resolve, slots_for, tier_allows
+from aerona.engine.structures.spec import resolve, slots_for, tier_allows
 
 PROFILE_NUMBERS: dict[str, tuple[int, int]] = {
     "level": (1, STRUCTURE_LEVEL_MAX),
@@ -379,7 +379,3 @@ async def refresh_designed(ctx: TickContext, design_id: int) -> None:
         work = await ctx.session.get(EntityRow, profile.structure_entity_id)
         if work is not None:
             await refresh(ctx.session, ctx.rules, work, profile)
-
-
-async def estimate(ctx: TickContext, kind: StructureKind, level: int, design: StructureDesignRow | None) -> int:
-    return build_cost(ctx.rules, resolve(kind, design), level)

@@ -737,14 +737,6 @@ async def reclaim_colony(session: AsyncSession, rules: Rules, mother_id: int, co
     await repository.add_flag(colony.id, EntityFlag.COLONY, ctx.epoch)
 
 
-async def found_federation(session: AsyncSession, rules: Rules, member_ids: list[int]) -> EntityRow:
-    if len(set(member_ids)) < 2:
-        raise ValidationFailedError("A federation needs at least two members.")
-    ctx = await manual_context(session, "federation", rules, key=":".join(str(item) for item in member_ids))
-    members = [await _living(session, item) for item in dict.fromkeys(member_ids)]
-    return await found_federation_of(ctx, members)
-
-
 async def order_previous_creation(session: AsyncSession, rules: Rules, world_id: int) -> EntityRow:
     ctx = await manual_context(session, "previous_creation", rules, key=str(world_id))
     world = await session.get(WorldRow, world_id)

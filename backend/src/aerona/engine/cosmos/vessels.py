@@ -9,11 +9,6 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.travel import VehicleKind
 
 
-async def vessel_kind(session: AsyncSession, entity_id: int) -> VehicleKind | None:
-    row = await session.get(VesselProfileRow, entity_id)
-    return row.kind if row is not None else None
-
-
 async def set_vessel_kind(session: AsyncSession, entity_id: int, kind: VehicleKind) -> None:
     row = await session.get(VesselProfileRow, entity_id)
     if row is None:

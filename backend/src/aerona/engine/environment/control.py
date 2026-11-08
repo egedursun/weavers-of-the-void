@@ -198,10 +198,6 @@ def unlock_place_field(ground: PlaceEnvironmentRow, field: str) -> bool:
     return True
 
 
-def held(ground: RegionEnvironmentRow, field: str) -> bool:
-    return field in ground.locked
-
-
 def hold(ground: RegionEnvironmentRow, field: str, lock: bool) -> None:
     locked = set(ground.locked)
     if lock:

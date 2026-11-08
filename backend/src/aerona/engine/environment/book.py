@@ -162,10 +162,6 @@ def sail_factor(rules: Rules, wind: int) -> float:
     return 1 + rules.weather.sail_speed_pct / PERCENT * (sail * 2 - 1)
 
 
-def scar_depth(region: RegionEnvironmentRow | None, kind: ScarKind) -> int:
-    return region.scars.get(kind.value, 0) if region is not None else 0
-
-
 def add_scar(region: RegionEnvironmentRow, kind: ScarKind, depth: int) -> int:
     if f"scar.{kind.value}" in region.locked:
         return region.scars.get(kind.value, 0)

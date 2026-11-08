@@ -8,12 +8,10 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CosmosRow, CreatorRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
-from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.son import SonStatus
-from aerona.domain.enums.world import Discovery
 
 THINKING_TYPES = frozenset(COMMUNITY_TYPES | {EntityType.MORTAL})
 
@@ -48,17 +46,6 @@ async def sons(session: AsyncSession, statuses: Iterable[SonStatus] | None = Non
 
 async def active_sons(session: AsyncSession) -> list[SonRow]:
     return await sons(session, [SonStatus.ACTIVE])
-
-
-async def foreign_gods(session: AsyncSession) -> list[ForeignGodRow]:
-    return list(await session.scalars(select(ForeignGodRow).order_by(ForeignGodRow.id)))
-
-
-async def worlds(session: AsyncSession, include_forgotten: bool = True) -> list[WorldRow]:
-    statement = select(WorldRow)
-    if not include_forgotten:
-        statement = statement.where(WorldRow.discovery != Discovery.FORGOTTEN)
-    return list(await session.scalars(statement.order_by(WorldRow.id)))
 
 
 async def world_count(session: AsyncSession) -> int:

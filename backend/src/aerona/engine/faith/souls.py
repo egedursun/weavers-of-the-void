@@ -522,7 +522,3 @@ async def ancestral_site(ctx: TickContext, community: EntityRow, place_id: int |
         .limit(1)
     )
     return bound is not None
-
-
-async def doctrine_of(ctx: TickContext, cult_id: int) -> CultDoctrineRow | None:
-    return await ctx.session.get(CultDoctrineRow, cult_id)

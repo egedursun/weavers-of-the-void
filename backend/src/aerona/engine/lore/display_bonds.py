@@ -84,10 +84,6 @@ DERIVERS: dict[BondKind, Deriver] = {
 }
 
 
-def register(kind: BondKind, deriver: Deriver) -> None:
-    DERIVERS[kind] = deriver
-
-
 async def derived_bonds(session: AsyncSession, node_id: int) -> list[DerivedBond]:
     found: list[DerivedBond] = []
     for kind in sorted(DERIVERS):

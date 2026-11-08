@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.bonds import bond_spec
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
-from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -163,14 +162,6 @@ async def resolve_all_friend_and_foe(session: AsyncSession, rules: Rules) -> int
         if await BondRepository(session).active_between(first, second, FRIENDLY_KINDS):
             resolved += await resolve_friend_and_foe(session, rules, first, second)
     return resolved
-
-
-async def move_entity(session: AsyncSession, entity_id: int, location_id: int | None, epoch: int) -> EntityRow:
-    repository = EntityRepository(session)
-    entity = await repository.require_entity(entity_id)
-    if location_id is not None:
-        await repository.require_entity(location_id)
-    return await repository.move(entity, location_id, epoch)
 
 
 async def flip_reversed(session: AsyncSession) -> int:

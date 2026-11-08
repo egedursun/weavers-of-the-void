@@ -8,11 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.settlement import DESIGN_PARAMETERS, DistrictDesignRow, DistrictRow, SettlementProfileRow
+from aerona.db.tables.settlement import DESIGN_PARAMETERS, DistrictDesignRow, DistrictRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.polity import OfficeKind
-from aerona.domain.enums.settlement import TIER_ORDER, BuildMaterial, DistrictHarm, DistrictKind
+from aerona.domain.enums.settlement import BuildMaterial, DistrictHarm, DistrictKind
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -278,8 +278,3 @@ async def close_market(session: AsyncSession, settlement_id: int) -> None:
     workshop = await market_workshop(session, settlement_id)
     if workshop is not None:
         await session.delete(workshop)
-
-
-async def seat_tier(session: AsyncSession, settlement_id: int | None) -> int:
-    profile = await session.get(SettlementProfileRow, settlement_id) if settlement_id is not None else None
-    return TIER_ORDER.index(profile.size_tier) if profile is not None else 0

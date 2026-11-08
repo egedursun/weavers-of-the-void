@@ -273,9 +273,5 @@ async def profiles_at(session: AsyncSession, host_id: int) -> list[StructureProf
     )
 
 
-def held(profile: StructureProfileRow, key: str) -> bool:
-    return key in profile.locked
-
-
 def lock(locked: list[str], key: str) -> list[str]:
     return locked if key in locked else [*locked, key]

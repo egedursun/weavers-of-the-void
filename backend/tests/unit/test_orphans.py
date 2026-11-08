@@ -51,3 +51,18 @@ def test_every_function_and_constant_of_the_backend_is_used() -> None:
     module = checker()
     users = "\n".join(path.read_text(encoding="utf-8") for folder in module.USERS for path in sorted(folder.rglob("*.py")) if path.name != "check_orphans.py")
     assert module.orphans(module.sources(), users) == []
+    readers = {path: path.read_text(encoding="utf-8") for folder in module.USERS for path in sorted(folder.rglob("*.py")) if path.name != "check_orphans.py"}
+    assert module.unreferenced(module.sources(), readers) == []
+
+
+def test_a_function_whose_name_is_only_shared_by_variables_is_an_orphan(tmp_path: Path) -> None:
+    module = checker()
+    package = tmp_path / "aerona"
+    package.mkdir()
+    owner = package / "owners.py"
+    owner.write_text("def claim(owner):\n    return owner\n\n\ndef keep(owner):\n    return owner\n", encoding="utf-8")
+    other = package / "users.py"
+    other.write_text("from aerona.owners import keep\n\n\ndef use(claim):\n    return keep(claim)\n", encoding="utf-8")
+    module.SOURCE = package
+    files = {path: path.read_text(encoding="utf-8") for path in (owner, other)}
+    assert [item.name for item in module.unreferenced(files, {})] == ["claim", "use"]

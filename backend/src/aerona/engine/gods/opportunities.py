@@ -19,7 +19,7 @@ from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ThreadLinkRole, ThreadStatus
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityType
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarStatus
@@ -27,7 +27,7 @@ from aerona.domain.enums.world import Discovery
 from aerona.engine.gods.behaviour_hints import SonHints, son_behaviour_lines
 from aerona.engine.gods.devotion import resurrection_state
 from aerona.engine.gods.mortality import kill_chance, kill_cost
-from aerona.engine.gods.queries import cosmos_row, creator_row, worshippers_of
+from aerona.engine.gods.queries import cosmos_row, creator_row
 from aerona.engine.gods.stats import Trait, trait_or
 from aerona.engine.gods.world_view import WorldView, load_world_view
 from aerona.engine.phases.knowledge_levels import empty_branches
@@ -534,7 +534,3 @@ async def creator_hints(session: AsyncSession, rules: Rules, epoch: int) -> Crea
         stale_threads=len(stale),
         essence=creator.essence if creator is not None else 0,
     )
-
-
-async def worshipper_count(session: AsyncSession, son_id: int) -> int:
-    return len([entity for entity in await worshippers_of(session, son_id) if entity.status is EntityStatus.CANON])

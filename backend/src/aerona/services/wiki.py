@@ -6,7 +6,7 @@ from enum import StrEnum
 from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.constants.schema import MAP_NOTE_COLOR_MAX_LENGTH, MAP_NOTE_MAX_LENGTH, PRIVATE_NOTE_MAX_LENGTH
+from aerona.constants.schema import MAP_NOTE_COLOR_MAX_LENGTH, MAP_NOTE_MAX_LENGTH
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.nodes import NodeRepository
@@ -402,16 +402,6 @@ async def set_favorite(session: AsyncSession, entity_id: int, favorite: bool) ->
     if entity is None:
         raise NotFoundError("No such record.")
     entity.favorite = favorite
-    await session.flush()
-    return entity
-
-
-async def set_private_note(session: AsyncSession, entity_id: int, text: str | None) -> EntityRow:
-    entity = await session.get(EntityRow, entity_id)
-    if entity is None:
-        raise NotFoundError("No such record.")
-    cleaned = (text or "").strip()[:PRIVATE_NOTE_MAX_LENGTH]
-    entity.private_note = cleaned or None
     await session.flush()
     return entity
 

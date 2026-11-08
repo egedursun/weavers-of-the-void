@@ -77,15 +77,6 @@ async def start_turn(session: AsyncSession, node_id: int, kind: AgentKind, epoch
     return TurnStart(action_points, False)
 
 
-async def finish_turn(session: AsyncSession, node_id: int) -> None:
-    row = await session.get(AgentTurnRow, node_id)
-    if row is None:
-        return
-    row.finished = True
-    row.action_points_left = None
-    await session.flush()
-
-
 async def load_turn(session: AsyncSession, node_id: int, kind: AgentKind, epoch: int) -> TurnState:
     row = await session.get(AgentTurnRow, node_id)
     if row is None or row.epoch != epoch:

@@ -1,4 +1,4 @@
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from aerona.catalog.anatomy import Anatomy
@@ -171,11 +171,3 @@ def function_percents(rules: Rules, state: BodyState) -> dict[BodyFunction, int]
 
 def perception_factor(rules: CapacityRules, hearing: int, sight: int) -> float:
     return blend(hearing / PERCENT, rules.perception_hearing) * blend(sight / PERCENT, rules.perception_sight)
-
-
-def healthy(rules: Rules, stats: BearerStats, anatomy: Anatomy, counts: Mapping[str, int]) -> dict[Capacity, int]:
-    return capacities(rules, stats, BodyState(anatomy, (), counts, 0))
-
-
-def summary(values: dict[Capacity, int], keys: Iterable[Capacity] = tuple(Capacity)) -> dict[str, int]:
-    return {capacity.value: values[capacity] for capacity in keys}

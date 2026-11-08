@@ -268,14 +268,6 @@ async def wear(ctx: TickContext, book: MaterialBook, item: EntityRow, row: ItemP
     return before >= ctx.rules.item_wear.broken > row.condition
 
 
-async def material_of(ctx: TickContext, item: EntityRow, book: MaterialBook | None = None) -> MaterialProps | None:
-    node = await node_material(ctx.session, item.id, MaterialSlot.BODY)
-    if node is None:
-        return None
-    materials = book if book is not None else await MaterialBook.load(ctx.session)
-    return materials.props(item.world_id, node.material, node.world_material_id)
-
-
 async def fought_this_epoch(ctx: TickContext, owner: int | None) -> bool:
     if owner is None:
         return False

@@ -1,7 +1,5 @@
 from typing import Any
 
-from pydantic import ValidationError
-
 from aerona.domain.enums.agent import CouncilVote
 from aerona.domain.enums.creator import CreatorPassion
 from aerona.domain.enums.meta import ScoreComponent
@@ -220,10 +218,3 @@ def score_breakdown(vocabulary: Vocabulary, payload: Any) -> tuple[ScoreBreakdow
             continue
         parts[component] = number
     return ScoreBreakdown(parts=parts), unknown
-
-
-def safe[T](build: Any, *arguments: Any) -> tuple[T | None, str | None]:
-    try:
-        return build(*arguments), None
-    except (ValidationError, ValueError, TypeError) as error:
-        return None, str(error).splitlines()[0]

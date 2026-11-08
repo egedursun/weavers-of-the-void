@@ -413,14 +413,6 @@ def traits_from_nature(profile: SpeciesProfileRow) -> list[CreatureTrait]:
     return list(dict.fromkeys(found))
 
 
-async def uses(session: AsyncSession, species_id: int) -> set[SpeciesUse]:
-    return set(await session.scalars(select(SpeciesUseRow.use).where(SpeciesUseRow.species_entity_id == species_id)))
-
-
-async def yields(session: AsyncSession, species_id: int) -> list[SpeciesYieldRow]:
-    return list(await session.scalars(select(SpeciesYieldRow).where(SpeciesYieldRow.species_entity_id == species_id).order_by(SpeciesYieldRow.product)))
-
-
 async def assign_traits(ctx: TickContext, species: EntityRow) -> list[CreatureTrait]:
     repository = EntityRepository(ctx.session)
     if await repository.traits(species.id):

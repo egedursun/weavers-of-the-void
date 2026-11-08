@@ -352,7 +352,3 @@ async def update_needs(ctx: TickContext, mortal: EntityRow, values: Values, trai
         lost = " and ".join(NEED_LABELS[need].lower() for need in sorted(fallen))
         await note(ctx, f"{mortal.name} has lost all {lost}.", key="need.despair", ids=[mortal.id])
     return True
-
-
-def unmet(needs: dict[NeedKind, int]) -> int:
-    return max((FULL - value for value in needs.values()), default=0)

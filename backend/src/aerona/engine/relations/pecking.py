@@ -175,7 +175,3 @@ async def tend_pecking(ctx: TickContext, tally: PeckingTally) -> None:
             continue
         tally.groups += 1
         await order(ctx, group_id, kind, living, tally)
-
-
-async def rank_of(session: AsyncSession, member_id: int) -> list[GroupRankRow]:
-    return list(await session.scalars(select(GroupRankRow).where(GroupRankRow.member_node_id == member_id).order_by(GroupRankRow.group_node_id)))

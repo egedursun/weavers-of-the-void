@@ -4,7 +4,6 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.climate import CLIMATES
-from aerona.catalog.entity_types import entity_type_spec
 from aerona.catalog.knowledge import RESOURCE_MECHANICS
 from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.travel import TRAVEL_METHODS
@@ -309,7 +308,3 @@ async def cosmic_chronicle(session: AsyncSession, rules: Rules, last: int | None
         row = await session.get(EpochRow, epoch)
         result.append(CosmicEpoch(epoch, row.name if row else None, row.summary if row else None, worlds))
     return result
-
-
-def type_label(entity_type: EntityType) -> str:
-    return entity_type_spec(entity_type).label

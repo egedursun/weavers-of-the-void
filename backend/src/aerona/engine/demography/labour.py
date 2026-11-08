@@ -331,12 +331,6 @@ async def allocate(
     return found
 
 
-def effective(rows: Mapping[Job, LabourRow], *jobs: Job) -> int | None:
-    if not rows:
-        return None
-    return sum(round_half_up(rows[job].workers * rows[job].output_pct / PERCENT) for job in jobs if job in rows)
-
-
 async def mobilisation(session: AsyncSession, rules: Rules, community: EntityRow, *, harvest_share: float) -> float:
     table = rules.peoples
     people = await people_of(session, community)

@@ -635,10 +635,6 @@ async def beyond_phase(ctx: TickContext) -> None:
     await ctx.session.flush()
 
 
-async def bind_soul(session: AsyncSession, rules: Rules, soul_id: int, target_id: int, by: str, *, binder_id: int | None = None) -> EntityRow:
-    return await soul_bind(await manual_context(session, "soul_bind", rules, key=f"{soul_id}:{target_id}"), soul_id, target_id, by, binder_id)
-
-
 async def force_soul_descent(session: AsyncSession, rules: Rules, mortal_id: int) -> EntityRow:
     ctx = await manual_context(session, "descent", rules, key=str(mortal_id))
     mortal = await session.get(EntityRow, mortal_id)

@@ -336,11 +336,6 @@ async def profiles_of(session: AsyncSession, community: EntityRow) -> tuple[Peop
     return await session.get(PeopleBiologyRow, people.id), await session.get(PeopleCultureRow, people.id)
 
 
-async def diet_of(session: AsyncSession, community: EntityRow) -> FolkDiet:
-    biology, _ = await profiles_of(session, community)
-    return biology.diet if biology is not None else FolkDiet.OMNIVORE
-
-
 async def kin_lethality(session: AsyncSession, rules: Rules, community: EntityRow, disease_id: int) -> float:
     biology, culture = await profiles_of(session, community)
     if biology is None and culture is None:

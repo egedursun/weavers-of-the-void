@@ -398,10 +398,6 @@ async def cult_of(ctx: TickContext, seer: EntityRow) -> EntityRow | None:
     return await living_entity(ctx.session, cult_id)
 
 
-async def scorn(ctx: TickContext, holder: int, subject: int, size: int, why: str, *, kind: MemoryKind = MemoryKind.ILL_WILL) -> None:
-    await remember(ctx.session, ctx.rules, holder_id=holder, subject_id=subject, kind=kind, magnitude=size, epoch=ctx.epoch, note=why)
-
-
 async def mock_seer(ctx: TickContext, row: ProphecyConditionRow) -> bool:
     seer = await living_entity(ctx.session, row.seer_entity_id)
     if seer is None:

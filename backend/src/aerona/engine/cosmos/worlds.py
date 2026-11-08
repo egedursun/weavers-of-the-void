@@ -124,11 +124,6 @@ async def forget_world(ctx: TickContext, world_id: int, by: str) -> str:
     return text
 
 
-async def set_discovery(session: AsyncSession, world_id: int, discovery: Discovery) -> list[RouteRow]:
-    world = await require_world(session, world_id)
-    return await WorldRepository(session).set_discovery(world, discovery)
-
-
 @dataclass(frozen=True)
 class WorldCounts:
     regions: int = 0

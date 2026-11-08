@@ -290,11 +290,6 @@ async def pressures_of(session: AsyncSession, entity_id: int) -> dict[PressureKi
     return {row.pressure: row.value for row in rows}
 
 
-async def pressure(session: AsyncSession, entity_id: int, kind: PressureKind) -> int:
-    row = await session.get(PressureRow, (entity_id, kind))
-    return row.value if row is not None else 0
-
-
 async def write_needs(session: AsyncSession, node_id: int, needs: dict[NeedKind, int]) -> None:
     if write_blocked(node_id, NEEDS_KEY):
         return

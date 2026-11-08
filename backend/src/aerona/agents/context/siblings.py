@@ -4,7 +4,6 @@ from aerona.agents.context.scope import Scope
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.rarities import RARITY_LABELS
 from aerona.catalog.stats import EXISTENCE_BAND_LABELS, existence_band, max_hp
-from aerona.db.repositories.sons import ordered_pair
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.sons import SonRelationRow, SonRow
 from aerona.domain.enums.bond import BondKind, BondState
@@ -79,7 +78,3 @@ async def sibling_lines(scope: Scope, viewer: SonRow | None) -> list[SiblingLine
 
 async def siblings(scope: Scope, viewer: SonRow | None) -> str:
     return render(PromptId.SIBLINGS, SiblingsContext(siblings=await sibling_lines(scope, viewer)))
-
-
-def pair_key(first: int, second: int) -> tuple[int, int]:
-    return ordered_pair(first, second)

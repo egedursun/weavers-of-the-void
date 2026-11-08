@@ -9,13 +9,11 @@ from aerona.db.bond_index import bond_lookup
 from aerona.db.read_memo import memo_of, memoized, table_names
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
-from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
-from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.son import SonStatus
 
 ACTIVE_ONLY = (BondState.ACTIVE,)
@@ -180,10 +178,6 @@ async def living_son(session: AsyncSession, son_id: int | None) -> SonRow | None
 
 async def living_sons(session: AsyncSession) -> list[SonRow]:
     return list(await session.scalars(select(SonRow).where(SonRow.status != SonStatus.DEAD).order_by(SonRow.id)))
-
-
-async def node_kind(session: AsyncSession, node_id: int) -> NodeKind | None:
-    return await NodeRepository(session).kind_of(node_id)
 
 
 async def descendants(session: AsyncSession, ancestor_id: int, types: Iterable[EntityType]) -> list[EntityRow]:

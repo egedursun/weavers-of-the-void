@@ -8,7 +8,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import ThreadLinkRow, ThreadRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ThreadStatus
-from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.war import HeroQuestKind
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import BondIndex
@@ -138,7 +138,3 @@ def quest_options(rules: Rules, world: QuestWorld, hero: EntityRow) -> list[Ques
         *knowledge_options(rules, world, hero),
         *vengeance_options(rules, world, side),
     ]
-
-
-def lost_knowledge(flags: Mapping[EntityFlag, set[int]]) -> set[int]:
-    return set(flags.get(EntityFlag.LOST, set()))

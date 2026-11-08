@@ -298,10 +298,6 @@ async def art_year(ctx: TickContext, artwork: EntityRow) -> dict[str, int]:
     return counts
 
 
-async def best_skill(ctx: TickContext, mortal_id: int) -> int | None:
-    return await ctx.session.scalar(select(SkillRow.level).where(SkillRow.holder_node_id == mortal_id).order_by(SkillRow.level.desc()).limit(1))
-
-
 async def treasury_of(ctx: TickContext, patron: EntityRow) -> tuple[PolityProfileRow | None, SettlementProfileRow | None]:
     realm = await ctx.session.get(PolityProfileRow, patron.id) if patron.entity_type is EntityType.POLITY else None
     town = await ctx.session.get(SettlementProfileRow, patron.id) if patron.entity_type is EntityType.SETTLEMENT else None

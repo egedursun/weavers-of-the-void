@@ -20,7 +20,6 @@ from aerona.db.tables.polity import (
     OathRow,
     OfficeRow,
     PolityMemberRow,
-    PolityProfileRow,
     PolityTerritoryRow,
     TreatyClauseRow,
     TreatyPartyRow,
@@ -865,29 +864,6 @@ async def lend(ctx: TickContext, polity_id: int, lender_id: int, *, principal: i
     ctx.session.add(loan)
     found.profile.treasury += loan.principal
     found.profile.debt += round(loan.principal * (1 + loan.interest_pct / PERCENT))
-    await ctx.session.flush()
-    return loan
-
-
-async def edit_loan(
-    ctx: TickContext, loan_id: int, *, principal: int | None, interest_pct: int | None, due_epoch: int | None, status: LoanStatus | None
-) -> LoanRow:
-    loan = await ctx.session.get(LoanRow, loan_id)
-    if loan is None:
-        raise NotFoundError("No such loan.")
-    profile = await ctx.session.get(PolityProfileRow, loan.borrower_entity_id)
-    before = max(0, round(loan.principal * (1 + loan.interest_pct / PERCENT)) - loan.repaid) if loan.status is LoanStatus.OPEN else 0
-    if principal is not None:
-        loan.principal = max(1, counted("principal", principal, cap=None))
-    if interest_pct is not None:
-        loan.interest_pct = counted("interest", interest_pct, cap=PERCENT)
-    if due_epoch is not None:
-        loan.due_epoch = due_epoch
-    if status is not None:
-        loan.status = status
-    after = max(0, round(loan.principal * (1 + loan.interest_pct / PERCENT)) - loan.repaid) if loan.status is LoanStatus.OPEN else 0
-    if profile is not None:
-        profile.debt = max(0, profile.debt + after - before)
     await ctx.session.flush()
     return loan
 

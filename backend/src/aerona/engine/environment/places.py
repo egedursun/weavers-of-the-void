@@ -55,10 +55,6 @@ def apply_kind(rules: Rules, ground: PlaceEnvironmentRow, kind: PlaceKind) -> li
     return changed
 
 
-async def profile_of(session: AsyncSession, place_id: int) -> PlaceProfileRow | None:
-    return await session.get(PlaceProfileRow, place_id)
-
-
 async def write_kind(session: AsyncSession, rules: Rules, place_id: int, kind: PlaceKind) -> PlaceProfileRow:
     profile = await session.get(PlaceProfileRow, place_id)
     if profile is None:

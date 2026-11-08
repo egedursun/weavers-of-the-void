@@ -1,4 +1,3 @@
-from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import cache
 
@@ -221,8 +220,3 @@ def anatomy_of(plan: BodyPlan, traits: frozenset[BodyFunction] = frozenset()) ->
     if not extra:
         return base
     return Anatomy(base.plan, base.label, (*base.parts, *extra), base.breathes, base.bleeds, base.heals, base.infects, base.material)
-
-
-def part_label(plan: BodyPlan, key: str, traits: Iterable[BodyFunction] = ()) -> str:
-    part = anatomy_of(plan, frozenset(traits)).part(key)
-    return part.label if part is not None else key.replace("_", " ").capitalize()

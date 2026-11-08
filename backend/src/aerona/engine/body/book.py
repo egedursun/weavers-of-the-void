@@ -423,10 +423,6 @@ async def factor(session: AsyncSession, node_id: int, capacity: Capacity) -> flo
     return value / PERCENT
 
 
-async def scaled(session: AsyncSession, node_id: int, value: float, capacity: Capacity) -> float:
-    return value * await factor(session, node_id, capacity)
-
-
 async def strike_style(session: AsyncSession, rules: Rules, attacker: EntityRow | None, defender: Bearer | None = None) -> StrikeStyle:
     if attacker is None:
         return StrikeStyle.NORMAL

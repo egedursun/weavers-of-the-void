@@ -99,9 +99,5 @@ class SideIndex:
         self._sides[mortal_id] = community_id
 
 
-async def side_of(session: AsyncSession, entity: EntityRow, neighbourhood: Neighbourhood) -> int | None:
-    return (await SideIndex.load(session, neighbourhood)).side_of(entity)
-
-
 async def heroes_of(session: AsyncSession, community_id: int, neighbourhood: Neighbourhood) -> list[EntityRow]:
     return (await SideIndex.load(session, neighbourhood)).heroes_of(community_id)

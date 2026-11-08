@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import CohortRow, PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow
@@ -9,7 +7,6 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
 from aerona.domain.enums.mortal import HarshnessScale
 from aerona.engine.context import TickContext
-from aerona.engine.demography.basket import fed_index
 from aerona.engine.demography.cohorts import CohortKey, age_cohorts, row_for, seed, total
 from aerona.engine.environment.years import world_years
 from aerona.engine.primitives.harshness import harshness
@@ -19,7 +16,6 @@ from aerona.engine.services.war import ongoing_wars
 from aerona.rules.registry import Rules
 
 A = AgeBand
-FED_INDEX = 100
 DEATH_RATES = (A.CHILD, A.ADULT, A.ELDER)
 
 
@@ -37,13 +33,6 @@ class Pressures:
 class VitalYear:
     births: int
     deaths: dict[AgeBand, int]
-
-
-async def hunger_of(session: AsyncSession, community: EntityRow) -> float:
-    index = await fed_index(session, community.id)
-    if index is None:
-        return 0.0
-    return max(0.0, min(1.0, 1 - index / FED_INDEX))
 
 
 async def stress_of(ctx: TickContext, community: EntityRow) -> float:

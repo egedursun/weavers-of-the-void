@@ -104,7 +104,3 @@ async def submit_free(runtime: PlayerRuntime, job: FreeJob, command: BaseModel, 
         raise BusyError(f"Busy: {job.lock.replace('_', ' ')} is already being written.")
     job_id = await runtime.jobs.submit(job.job_kind, work, command.model_dump(mode="json"), exclusive_group=job.lock)
     return ActionOutcome(action=job.action, message="The work was queued.", values={"job_id": job_id})
-
-
-def announce(runtime: PlayerRuntime, kind: EventKind, payload: dict[str, Any]) -> None:
-    runtime.bus.publish(kind, payload)
