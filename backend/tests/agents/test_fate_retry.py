@@ -8,7 +8,7 @@ from aerona.agents.runtime import AgentRuntime
 from aerona.core.errors import ValidationFailedError
 from aerona.db.session import Database
 from aerona.db.tables.entities import CreationVerdictRow
-from aerona.db.tables.epochs import DeferredStepRow, EpochRunRow, EpochStepRow
+from aerona.db.tables.epochs import DeferredStepRow, EpochRow, EpochRunRow, EpochStepRow
 from aerona.db.tables.lore import HistorianViewRow
 from aerona.domain.enums.agent import Verdict
 from aerona.domain.enums.epoch import DeferredStepKind, DeferredStepStatus, EpochPhase, EpochStepKind, EpochStepStatus
@@ -98,3 +98,15 @@ async def test_retry_births_requeues_failed_steps(runtime: AgentRuntime, model: 
     assert step.attempts == 2
     assert result == {"epoch": 1, "born": 0}
     assert await step_status(database, EpochStepKind.WORLD_BIRTH) is EpochStepStatus.DONE
+
+
+async def test_auditing_an_epoch_needs_its_chronicle_and_reports_what_it_found(runtime: AgentRuntime, database: Database, world: AgentWorld) -> None:
+    with pytest.raises(ValidationFailedError):
+        await retry.audit_epoch_chronicle(runtime, 1)
+    async with database.write() as session:
+        session.add(EpochRow(epoch=1, narrative="The rivers rose and the people waited."))
+    result = await retry.audit_epoch_chronicle(runtime, 1)
+    assert set(result) == {"epoch", "found", "remaining", "rewritten", "repaired"} and result["epoch"] == 1 and result["rewritten"] in (0, 1)
+    async with database.read() as session:
+        row = await session.get(EpochRow, 1)
+    assert row is not None and row.narrative and row.audit is not None
