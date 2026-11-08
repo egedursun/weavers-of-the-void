@@ -1171,7 +1171,7 @@ async def weave_lines(ctx: TickContext, web: LeyWeb, regions: dict[int, EntityRo
             first, second = regions[key[0]], regions[key[1]]
             await ctx.chronicle(
                 ChronicleKind.CLIMATE,
-                f"A ley line woke between {first.name} and {second.name}: the magic of the two lands began to flow as one.",
+                f"A ley line formed between {first.name} and {second.name}.",
                 template_key="environment.ley_line_formed",
                 entity_ids=[first.id, second.id],
                 world_id=first.world_id,

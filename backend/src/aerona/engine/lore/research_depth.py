@@ -572,21 +572,22 @@ async def changes_of_adoption(ctx: TickContext) -> int:
 
 async def advanced(ctx: TickContext, atlas: RegionAtlas, holder_id: int, technique: Technique) -> bool:
     row = await ctx.session.get(ResearchProgressRow, (holder_id, technique))
-    if row is None:
-        row = ResearchProgressRow(holder_entity_id=holder_id, technique=technique, progress=0, updated_epoch=ctx.epoch)
-        ctx.session.add(row)
     gain = (
         ctx.rules.tech_graph.adopt_chance
         * await focus_factor(ctx.session, ctx.rules, holder_id, technique)
         * await catch_up(ctx, atlas, holder_id, technique)
         * await era_known(ctx, holder_id, technique)
     )
-    row.progress = clamp_int(row.progress + round_half_up(gain), 0, PERCENT)
-    row.updated_epoch = ctx.epoch
-    if row.progress < PERCENT:
-        return False
-    await ctx.session.delete(row)
-    return True
+    progress = clamp_int((row.progress if row is not None else 0) + round_half_up(gain), 0, PERCENT)
+    if progress >= PERCENT:
+        if row is not None:
+            await ctx.session.delete(row)
+        return True
+    if row is None:
+        ctx.session.add(ResearchProgressRow(holder_entity_id=holder_id, technique=technique, progress=progress, updated_epoch=ctx.epoch))
+    else:
+        row.progress, row.updated_epoch = progress, ctx.epoch
+    return False
 
 
 async def adopt_techniques(ctx: TickContext) -> int:
