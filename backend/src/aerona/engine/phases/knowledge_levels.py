@@ -306,7 +306,7 @@ async def decline_round(ctx: TickContext, scene: KnowledgeScene) -> int:
         if declined >= table.decline_cap:
             break
         knowledge = scene.knowledge.get(knowledge_id)
-        if knowledge is None or knowledge_level(ctx.rules, knowledge) <= 1:
+        if knowledge is None or frozen(knowledge.id) or knowledge_level(ctx.rules, knowledge) <= 1:
             continue
         holders = [entities[item] for item in holder_ids if item in entities and stat(entities[item], PROSPERITY_KEY) is not None]
         if not holders or any(stat_or(item, PROSPERITY_KEY, 0) >= table.decline_prosperity for item in holders):

@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
@@ -8,16 +8,19 @@ from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmic_state import WorldLeakItemRow
+from aerona.db.tables.cosmography import PhenomenonProfileRow, RiftRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.society import AddictionRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, PhenomenonKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.world import DARK_STAR_TYPES, StarType
 from aerona.domain.models.records import LedgerItem
+from aerona.engine.cosmos.placement import world_pull
 from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.world_types import mechanics_of
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -98,6 +101,20 @@ async def _temples(session: AsyncSession, world_id: int) -> int:
     return len(list(await session.scalars(statement)))
 
 
+async def open_rifts(session: AsyncSession, world_id: int) -> int:
+    statement = select(func.count()).select_from(RiftRow).where(RiftRow.world_id == world_id, RiftRow.state.in_(list(OPEN_RIFT_STATES)))
+    return int(await session.scalar(statement) or 0)
+
+
+async def wound_leak(session: AsyncSession, rules: Rules, world_id: int) -> float:
+    statement = (
+        select(PhenomenonProfileRow.intensity)
+        .join(EntityRow, EntityRow.id == PhenomenonProfileRow.entity_id)
+        .where(EntityRow.world_id == world_id, EntityRow.status == EntityStatus.CANON, PhenomenonProfileRow.kind == PhenomenonKind.LEAK_WOUND)
+    )
+    return sum(intensity * rules.phenomena.leak_wound_leak / PERCENT for intensity in await session.scalars(statement))
+
+
 def young(rules: Rules, world: WorldRow, epoch: int) -> bool:
     return epoch - (world.created_epoch or 1) < rules.deep_world.young_world_epochs
 
@@ -129,6 +146,9 @@ async def leak_delta(session: AsyncSession, rules: Rules, world: WorldRow, epoch
         "outer beings": sources.outer_beings * horror.outer_being_leak,
         "doom": doom_share * horror.apocalypse_leak,
         "world nature": mechanics.leak(rules),
+        "the heavens": float((await world_pull(session, rules, world)).leak),
+        "rifts": capped(await open_rifts(session, world.id) * rules.rifts.world_leak),
+        "phenomena": await wound_leak(session, rules, world.id),
     }
     is_young = young(rules, world, epoch)
     factor = horror.young_growth_pct / PERCENT if is_young else 1.0

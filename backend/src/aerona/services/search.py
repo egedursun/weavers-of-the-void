@@ -12,6 +12,7 @@ from aerona.catalog.rarities import RARITY_LABELS
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.cosmography import ClusterRow, DimensionRow, GalaxyRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.epochs import EpochRow
@@ -337,6 +338,18 @@ async def names_index(session: AsyncSession) -> list[NameEntry]:
     ]
     entries += [
         NameEntry(NodeKind.STAR, star.id, star.name, star.star_type.value, None, None) for star in await session.scalars(select(StarRow).order_by(StarRow.id))
+    ]
+    entries += [
+        NameEntry(NodeKind.GALAXY, row.id, row.name, row.galaxy_type.value, row.discovery.value, None)
+        for row in await session.scalars(select(GalaxyRow).order_by(GalaxyRow.id))
+    ]
+    entries += [
+        NameEntry(NodeKind.CLUSTER, row.id, row.name, row.cluster_kind.value, row.discovery.value, None)
+        for row in await session.scalars(select(ClusterRow).order_by(ClusterRow.id))
+    ]
+    entries += [
+        NameEntry(NodeKind.DIMENSION, row.id, row.name, row.dimension_kind.value, row.discovery.value, None)
+        for row in await session.scalars(select(DimensionRow).order_by(DimensionRow.id))
     ]
     creator = await session.scalar(select(CreatorRow))
     if creator is not None:

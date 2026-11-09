@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.domain.enums.world import Atmosphere, Gravity, WorldType
+from aerona.engine.cosmos.placement import CosmicPull, Cosmography, cosmography_of
 from aerona.engine.cosmos.star_types import star_capacity_pct
 from aerona.engine.cosmos.world_types import mechanics_of
 from aerona.rules.registry import Rules
@@ -37,29 +37,56 @@ def gravity_war(rules: Rules, gravity: Gravity) -> int:
     ]
 
 
-def world_physics(rules: Rules, world: WorldRow | None, star: StarRow | None = None) -> WorldPhysics:
+def world_physics(rules: Rules, world: WorldRow | None, star: StarRow | None = None, pull: CosmicPull | None = None) -> WorldPhysics:
     if world is None:
         return WorldPhysics()
+    heavens = pull or CosmicPull()
     type_capacity = mechanics_of(world.world_type).capacity_pct
     capacity = capacity_pct(rules, world.atmosphere) / PERCENT * (type_capacity(rules) / PERCENT if type_capacity is not None else 1.0)
     capacity *= star_capacity_pct(rules, star) / PERCENT
-    return WorldPhysics(world.time_factor or 1.0, capacity, gravity_war(rules, world.gravity), world.world_type)
+    capacity *= heavens.capacity
+    return WorldPhysics((world.time_factor or 1.0) * heavens.time, capacity, gravity_war(rules, world.gravity), world.world_type)
 
 
 class PhysicsTable:
-    def __init__(self, worlds: dict[int, WorldRow], rules: Rules, stars: dict[int, StarRow] | None = None) -> None:
+    def __init__(self, worlds: dict[int, WorldRow], rules: Rules, stars: dict[int, StarRow] | None = None, cosmography: Cosmography | None = None) -> None:
         found = stars or {}
         self._physics = {
-            world_id: world_physics(rules, world, found.get(world.star_id) if world.star_id is not None else None) for world_id, world in worlds.items()
+            world_id: world_physics(
+                rules,
+                world,
+                found.get(world.star_id) if world.star_id is not None else None,
+                cosmography.pull(rules, cosmography.place_world(world)) if cosmography is not None else None,
+            )
+            for world_id, world in worlds.items()
         }
 
     @classmethod
     async def load(cls, session: AsyncSession, rules: Rules) -> "PhysicsTable":
-        worlds = {world.id: world for world in await session.scalars(select(WorldRow))}
-        stars = {star.id: star for star in await session.scalars(select(StarRow))}
-        return cls(worlds, rules, stars)
+        cosmography = await cosmography_of(session)
+        return cls(dict(cosmography.worlds), rules, dict(cosmography.stars), cosmography)
 
     def of(self, world_id: int | None) -> WorldPhysics:
         if world_id is None:
             return WorldPhysics()
         return self._physics.get(world_id, WorldPhysics())
+
+
+def gravity_speed_pct(rules: Rules, world: WorldRow | None) -> int:
+    table = rules.world_life
+    if world is None:
+        return PERCENT
+    return {Gravity.LOW: PERCENT + table.low_gravity_speed_pct, Gravity.NORMAL: PERCENT, Gravity.HIGH: PERCENT - table.high_gravity_speed_pct}[world.gravity]
+
+
+def gravity_build_pct(rules: Rules, world: WorldRow | None) -> int:
+    return PERCENT + rules.world_life.high_gravity_build_pct if world is not None and world.gravity is Gravity.HIGH else PERCENT
+
+
+def flight_capacity_pct(rules: Rules, world: WorldRow | None) -> int:
+    return PERCENT + rules.world_life.low_gravity_flight_pct if world is not None and world.gravity is Gravity.LOW else PERCENT
+
+
+def air_attrition_pct(rules: Rules, world: WorldRow | None) -> int:
+    thin = world is not None and world.atmosphere in (Atmosphere.THIN, Atmosphere.NONE)
+    return PERCENT + rules.world_life.thin_air_attrition_pct if thin else PERCENT

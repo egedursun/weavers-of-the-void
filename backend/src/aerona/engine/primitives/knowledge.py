@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.cosmography import DIMENSION_LAWS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
@@ -15,6 +16,7 @@ from aerona.domain.enums.divine import LawScope
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.models.entity_stats import EntityStats, KnowledgeStats
+from aerona.engine.cosmos.placement import Cosmography, cosmography_of
 from aerona.rules.registry import Rules
 from aerona.rules.registry.knowledge import KnowledgeRules
 
@@ -121,6 +123,15 @@ class KnowledgeMap:
         return times_of(rules.knowledge, self.level(entity_id, branch), times)
 
 
+def reach_of(ladder: Cosmography, worlds: list[int], home: int, scope: LawScope) -> list[int]:
+    if scope is LawScope.COSMOS:
+        return worlds
+    if scope is LawScope.DIMENSION:
+        dimension = ladder.place_world_id(home).dimension_id
+        return [world for world in worlds if ladder.place_world_id(world).dimension_id == dimension]
+    return [home]
+
+
 class LawBook:
     def __init__(
         self, laws: dict[int, set[NaturalLaw]], regions: dict[int, set[NaturalLaw]] | None = None, strengths: dict[tuple[int, NaturalLaw], int] | None = None
@@ -136,6 +147,7 @@ class LawBook:
         )
         profiles = {row.law_entity_id: row for row in await session.scalars(select(NaturalLawProfileRow))}
         worlds = list(await session.scalars(select(WorldRow.id)))
+        ladder = await cosmography_of(session)
         laws: dict[int, set[NaturalLaw]] = defaultdict(set)
         regions: dict[int, set[NaturalLaw]] = defaultdict(set)
         strengths: dict[tuple[int, NaturalLaw], int] = {}
@@ -150,9 +162,14 @@ class LawBook:
                 regions[profile.region_entity_id].add(law)
                 continue
             home = profile.world_id if profile is not None and profile.world_id is not None else world_id
-            for target in worlds if profile is not None and profile.scope is LawScope.COSMOS else [home]:
+            for target in reach_of(ladder, worlds, home, profile.scope if profile is not None else LawScope.WORLD):
                 laws[target].add(law)
                 strengths[(target, law)] = max(strengths.get((target, law), 0), strength)
+        for target in worlds:
+            dimension = ladder.place_world_id(target).dimension
+            for law in DIMENSION_LAWS.get(dimension.dimension_kind, ()) if dimension is not None else ():
+                laws[target].add(law)
+                strengths[(target, law)] = max(strengths.get((target, law), 0), PERCENT)
         return cls(laws, regions, strengths)
 
     def has(self, law: NaturalLaw, world_id: int) -> bool:

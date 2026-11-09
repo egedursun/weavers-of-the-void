@@ -1,7 +1,7 @@
 import re
 from typing import cast
 
-from sqlalchemy import JSON, Boolean, CheckConstraint, Integer, Table
+from sqlalchemy import JSON, Boolean, CheckConstraint, Float, Integer, Table
 from sqlalchemy.sql.sqltypes import Enum as SqlEnum
 
 from aerona.core.errors import ValidationFailedError
@@ -38,6 +38,12 @@ def whole(key: str, value: object, limits: dict[str, tuple[int, int | None]]) ->
     return value
 
 
+def number(key: str, value: object) -> float:
+    if not isinstance(value, int | float) or isinstance(value, bool):
+        raise ValidationFailedError(f"{key.replace('_', ' ').capitalize()} is a number.")
+    return float(value)
+
+
 def coerce(row: Base, key: str, value: object, limits: dict[str, tuple[int, int | None]]) -> object:
     column = table_of(row).columns.get(key)
     if column is None or column.primary_key or key in FIXED:
@@ -56,8 +62,8 @@ def coerce(row: Base, key: str, value: object, limits: dict[str, tuple[int, int 
         if not isinstance(value, bool):
             raise ValidationFailedError(f"{key.replace('_', ' ').capitalize()} is yes or no.")
         return value
-    if isinstance(kind, Integer):
-        return whole(key, value, limits)
+    if isinstance(kind, Integer | Float):
+        return whole(key, value, limits) if isinstance(kind, Integer) else number(key, value)
     if isinstance(kind, JSON):
         if not isinstance(value, dict | list):
             raise ValidationFailedError(f"{key.replace('_', ' ').capitalize()} is a list or a table of values.")

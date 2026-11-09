@@ -28,6 +28,7 @@ from aerona.engine.phases import (
     commerce,
     communication,
     cosmic_economy,
+    cosmography,
     cosmos_upkeep,
     creator_mood,
     creatures,
@@ -169,6 +170,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + production.PHASES
     + climate.PHASES
     + cosmic_economy.PHASES
+    + cosmography.PHASES
     + cosmos_upkeep.PHASES
     + creator_mood.PHASES
     + creatures.PHASES
@@ -251,6 +253,8 @@ CLEANUP_STAGE = stage(
     "dead_bonds_opening",
     "modifier_upkeep",
     "world_maps",
+    "scale_ladder",
+    "cosmic_influence",
     "environment_survey",
     "environment_modifiers",
     "region_survey",
@@ -280,6 +284,7 @@ SUB_ENGINE_STAGE = stage(
     "prisoners",
     "war_casualties",
     "travel",
+    "cosmic_trade",
     "seafaring",
     "exploration",
     "geography",
@@ -290,6 +295,14 @@ SUB_ENGINE_STAGE = stage(
     "natural_laws",
     "cosmic_economy",
     "market",
+    "galaxy_cycles",
+    "star_lives",
+    "dimension_cycles",
+    "rift_cycles",
+    "cosmic_beings",
+    "phenomena",
+    "regional_leak",
+    "celestial_omens",
     "horror",
     "outer_hunger",
     "creatures",
@@ -464,7 +477,16 @@ TICK_ORDER: tuple[Phase, ...] = (
 
 PRE_TRANSITION_ORDER = stage("local_gods")
 GROWTH_STAGE = stage(
-    "law_fertility", "population_baseline", "climate_transition", "environment_derive", "ley_lines", "population_growth", "cohort_upkeep", "epoch_stars"
+    "law_fertility",
+    "population_baseline",
+    "climate_transition",
+    "world_lives",
+    "regional_climate",
+    "environment_derive",
+    "ley_lines",
+    "population_growth",
+    "cohort_upkeep",
+    "epoch_stars",
 )
 GODS_STAGE = stage(
     "sons_renewal",

@@ -5,6 +5,10 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { EntityLink } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import {
+  RouteFlowEditor,
+  RouteScopeChip,
+} from '@/features/cosmography/FlowEditors'
 import { MethodGlyph } from './Glyphs'
 import { RouteActions } from './RouteActions'
 import { RouteStatusChips } from './RouteStatusChips'
@@ -123,6 +127,10 @@ function RouteRow({
       {!state.open && route.description && (
         <Muted variant='caption'>{route.description}</Muted>
       )}
+      <div className='flex min-w-0 flex-wrap items-center gap-2'>
+        <RouteScopeChip route={route} />
+        <RouteFlowEditor route={route} />
+      </div>
       <RouteActions route={route} index={index} rules={rules} />
     </li>
   )

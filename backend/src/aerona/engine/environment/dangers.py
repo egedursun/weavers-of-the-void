@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.tables.cosmography import PhenomenonFootprintRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.culture import TraditionParticipationRow, TraditionProfileRow
 from aerona.db.tables.ecology import BeastProfileRow, SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
@@ -13,11 +14,13 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.polity import PolityTerritoryRow
 from aerona.db.tables.region import RegionDangerRow, RegionMemoryRow
 from aerona.db.write_guard import held as frozen
+from aerona.domain.enums.cosmography import OPEN_RIFT_STATES
 from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.ecology import BeastTemper, DomesticationStage
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.environment import ScarKind, SoilKind, TerrainKind
 from aerona.domain.enums.region import DangerHarm, DangerOrigin, DangerSource
+from aerona.engine.cosmos.kinds import PHENOMENON_MECHANICS
 from aerona.engine.ecology.ranges import wildness
 from aerona.engine.environment.memory import darkness
 from aerona.engine.primitives.distance import RegionAtlas
@@ -267,8 +270,26 @@ def _ground(rules: Rules, scene: DangerScene) -> None:
             volcanic.add(scar.get(ScarKind.CRATER.value, 0) * table.volcanic_crater_pct / PERCENT)
 
 
+async def _cosmic(session: AsyncSession, rules: Rules, scene: DangerScene) -> None:
+    statement = (
+        select(PhenomenonFootprintRow.region_entity_id, PhenomenonFootprintRow.intensity, PhenomenonProfileRow.kind, PhenomenonProfileRow.entity_id)
+        .join(PhenomenonProfileRow, PhenomenonProfileRow.entity_id == PhenomenonFootprintRow.phenomenon_entity_id)
+        .join(EntityRow, EntityRow.id == PhenomenonProfileRow.entity_id)
+        .where(EntityRow.status == EntityStatus.CANON)
+    )
+    for region_id, intensity, kind, entity_id in await session.execute(statement):
+        slot = scene.slot(region_id, DangerSource.PHENOMENA)
+        if slot is not None:
+            slot.add(PHENOMENON_MECHANICS[kind].danger(rules) * intensity / PERCENT, entity_id)
+    for rift in await session.scalars(select(RiftRow).where(RiftRow.state.in_(list(OPEN_RIFT_STATES)))):
+        slot = scene.slot(rift.region_entity_id, DangerSource.PHENOMENA)
+        if slot is not None:
+            slot.add(rift.size * rules.rifts.danger_pct / PERCENT)
+
+
 async def derive(session: AsyncSession, rules: Rules, scene: DangerScene, epoch: int) -> dict[int, dict[DangerSource, Derived]]:
     await _beasts(session, rules, scene)
+    await _cosmic(session, rules, scene)
     await _monsters(session, rules, scene)
     await _bandits(session, rules, scene, epoch)
     _ground(rules, scene)

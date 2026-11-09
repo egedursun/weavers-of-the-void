@@ -19,6 +19,7 @@ from aerona.constants.schema import TITLE_MAX_LENGTH
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.cosmography import ClusterRow, DimensionRow, GalaxyRow
 from aerona.db.tables.cosmos import CosmosRow, CreatorRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -51,15 +52,31 @@ KIND_PREFIX: dict[NodeKind, str] = {
     NodeKind.FOREIGN_GOD: "god",
     NodeKind.WORLD: "world",
     NodeKind.STAR: "star",
+    NodeKind.GALAXY: "galaxy",
+    NodeKind.CLUSTER: "cluster",
+    NodeKind.DIMENSION: "dimension",
     NodeKind.ENTITY: "entity",
 }
-TARGET_ORDER: tuple[NodeKind, ...] = (NodeKind.CREATOR, NodeKind.SON, NodeKind.FOREIGN_GOD, NodeKind.WORLD, NodeKind.STAR, NodeKind.ENTITY)
+TARGET_ORDER: tuple[NodeKind, ...] = (
+    NodeKind.CREATOR,
+    NodeKind.SON,
+    NodeKind.FOREIGN_GOD,
+    NodeKind.DIMENSION,
+    NodeKind.CLUSTER,
+    NodeKind.GALAXY,
+    NodeKind.WORLD,
+    NodeKind.STAR,
+    NodeKind.ENTITY,
+)
 PROMPT_TABLES: dict[NodeKind, type[NodeRow]] = {
     NodeKind.CREATOR: CreatorRow,
     NodeKind.SON: SonRow,
     NodeKind.FOREIGN_GOD: ForeignGodRow,
     NodeKind.WORLD: WorldRow,
     NodeKind.STAR: StarRow,
+    NodeKind.GALAXY: GalaxyRow,
+    NodeKind.CLUSTER: ClusterRow,
+    NodeKind.DIMENSION: DimensionRow,
     NodeKind.ENTITY: EntityRow,
 }
 PROMPT_COLUMNS: dict[NodeKind, InstrumentedAttribute[str | None]] = {
@@ -68,6 +85,9 @@ PROMPT_COLUMNS: dict[NodeKind, InstrumentedAttribute[str | None]] = {
     NodeKind.FOREIGN_GOD: ForeignGodRow.image_prompt,
     NodeKind.WORLD: WorldRow.image_prompt,
     NodeKind.STAR: StarRow.image_prompt,
+    NodeKind.GALAXY: GalaxyRow.image_prompt,
+    NodeKind.CLUSTER: ClusterRow.image_prompt,
+    NodeKind.DIMENSION: DimensionRow.image_prompt,
     NodeKind.ENTITY: EntityRow.image_prompt,
 }
 

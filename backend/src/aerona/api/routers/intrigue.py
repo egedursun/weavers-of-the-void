@@ -49,6 +49,9 @@ IDENTITY_REASON = {
     NodeKind.FOREIGN_GOD: "A foreign god hides behind no mortal name.",
     NodeKind.WORLD: "A world cannot pass itself off as another.",
     NodeKind.STAR: "A star cannot hide its light under a false name.",
+    NodeKind.GALAXY: "A galaxy cannot pass itself off as another.",
+    NodeKind.CLUSTER: "A cluster of galaxies wears no false name.",
+    NodeKind.DIMENSION: "A dimension cannot hide behind another's name.",
 }
 SCHEME_REASON = (
     "Only beings and powers of a world plot schemes; gods, worlds, stars and the Creator act through their own powers, "

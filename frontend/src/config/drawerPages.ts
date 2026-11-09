@@ -37,6 +37,21 @@ export const DRAWER_PAGES: DrawerPages = {
       default: module.TravellersGuide,
     }))
   ),
+  galaxy: lazy(() =>
+    import('@/features/cosmography/NodePages').then((module) => ({
+      default: module.GalaxyPage,
+    }))
+  ),
+  cluster: lazy(() =>
+    import('@/features/cosmography/NodePages').then((module) => ({
+      default: module.ClusterPage,
+    }))
+  ),
+  dimension: lazy(() =>
+    import('@/features/cosmography/NodePages').then((module) => ({
+      default: module.DimensionPage,
+    }))
+  ),
   help: lazy(() =>
     import('@/features/help/HelpDrawer').then((module) => ({
       default: module.HelpDrawer,

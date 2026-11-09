@@ -30,7 +30,9 @@ EPOCH_FINISHED_TITLE = "Epoch {epoch} has ended"
 SUMMARY_SEPARATOR = "\n"
 
 
-NAMED_NODE_KINDS = frozenset({NodeKind.WORLD, NodeKind.STAR, NodeKind.SON, NodeKind.FOREIGN_GOD, NodeKind.CREATOR})
+NAMED_NODE_KINDS = frozenset(
+    {NodeKind.WORLD, NodeKind.STAR, NodeKind.SON, NodeKind.FOREIGN_GOD, NodeKind.CREATOR, NodeKind.GALAXY, NodeKind.CLUSTER, NodeKind.DIMENSION}
+)
 WORK_SEPARATOR = " · "
 WORK_LINE_SEPARATOR = "\n"
 

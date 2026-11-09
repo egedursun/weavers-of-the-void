@@ -28,6 +28,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.travel import JourneyStatus
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.commerce import news_delay
 from aerona.engine.lore.language import barrier
 from aerona.engine.lore.printing import printed
 from aerona.engine.mind.memories import remember
@@ -176,10 +177,15 @@ async def links(ctx: TickContext) -> Links:
         found.spies[target].add(owner)
     arrived = await ctx.session.scalars(
         select(JourneyRow).where(
-            JourneyRow.status == JourneyStatus.ARRIVED, JourneyRow.end_epoch.is_not(None), JourneyRow.end_epoch >= ctx.epoch - FRESH_EPOCHS
+            JourneyRow.status == JourneyStatus.ARRIVED,
+            JourneyRow.end_epoch.is_not(None),
+            JourneyRow.end_epoch >= ctx.epoch - FRESH_EPOCHS - ctx.rules.cosmography.intercluster_news_epochs,
         )
     )
     for journey in arrived:
+        delay = news_delay(ctx.rules, journey.scope)
+        if journey.end_epoch is None or not 0 <= ctx.epoch - journey.end_epoch - delay <= FRESH_EPOCHS:
+            continue
         traveller = await living_entity(ctx.session, journey.traveller_entity_id)
         home = traveller.id if traveller is not None and traveller.entity_type in CARRIER_TYPES else traveller.location_id if traveller is not None else None
         if home is not None and journey.result_entity_id is not None and journey.result_entity_id != home:

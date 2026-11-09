@@ -1,11 +1,13 @@
 from sqlalchemy import func, select
 
 from aerona.agents.context.scope import Scope
+from aerona.catalog.cosmography import SCOPE_LABELS
 from aerona.catalog.worlds import ATMOSPHERE_LABELS, DISCOVERY_LABELS, GRAVITY_LABELS, WORLD_TYPES
-from aerona.db.tables.celestial import StarRow
+from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.world import Discovery
+from aerona.engine.cosmos.placement import Cosmography, cosmography_of
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.blocks import CosmosLinesContext, CosmosWorld
 
@@ -21,11 +23,24 @@ async def world_counts(scope: Scope) -> dict[tuple[int, EntityType], int]:
     return {(world_id, entity_type): int(count) for world_id, entity_type, count in await scope.session.execute(statement)}
 
 
+def galaxy_name(ladder: Cosmography, world: WorldRow) -> str | None:
+    galaxy = ladder.place_world(world).galaxy
+    return galaxy.name if galaxy is not None else None
+
+
+def dimension_name(ladder: Cosmography, world: WorldRow) -> str | None:
+    dimension = ladder.place_world(world).dimension
+    return dimension.name if dimension is not None else None
+
+
 async def cosmos_lines(scope: Scope, exclude_id: int | None = None) -> str:
     if not scope.multi_world:
         return ""
     counts = await world_counts(scope)
     stars = {star.id: star.name for star in await scope.session.scalars(select(StarRow))}
+    ladder = await cosmography_of(scope.session)
+    home = scope.worlds.get(exclude_id) if exclude_id is not None else None
+    many = len(ladder.dimensions) > 1
     worlds = [
         CosmosWorld(
             id=world.id,
@@ -39,6 +54,9 @@ async def cosmos_lines(scope: Scope, exclude_id: int | None = None) -> str:
             atmosphere=ATMOSPHERE_LABELS[world.atmosphere],
             time_factor=world.time_factor,
             discovery_label=DISCOVERY_LABELS[world.discovery] if world.discovery is not Discovery.KNOWN else None,
+            galaxy_name=galaxy_name(ladder, world),
+            dimension_name=dimension_name(ladder, world) if many else None,
+            scope=SCOPE_LABELS[ladder.scope(home, world)].lower() if home is not None else None,
         )
         for world in scope.living_worlds
         if world.id != exclude_id

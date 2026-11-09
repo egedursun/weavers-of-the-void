@@ -1,4 +1,5 @@
 from aerona.api.schemas.common import ApiModel
+from aerona.domain.enums.cosmography import OceanCurrent
 from aerona.domain.enums.environment import (
     CoastKind,
     NotableYearKind,
@@ -94,6 +95,10 @@ class RegionEnvironmentView(ApiModel):
     harvest_pct: int
     sacredness: int = 0
     derived_fertility: int | None = None
+    leak: int = 0
+    current: OceanCurrent = OceanCurrent.NONE
+    temperature_shift: int = 0
+    rainfall_shift: int = 0
     locked: list[str]
     forecast: list[WeatherForecast]
     ley_lines: list[LeyLineView]

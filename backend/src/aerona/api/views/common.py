@@ -28,6 +28,7 @@ from aerona.db.tables.meta import ImageRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.routes import RouteRow
 from aerona.domain.enums.bond import VISIBLE_BOND_STATES, BondKind, BondState
+from aerona.engine.cosmos.placement import cosmography_of
 from aerona.engine.cosmos.routes import RouteBook, current_calendar, forgotten_world_ids
 from aerona.engine.lore.display_bonds import DerivedBond, derived_bonds
 from aerona.rules.registry import Rules
@@ -192,14 +193,16 @@ async def foreign_god_records(session: AsyncSession) -> list[ForeignGodRecord]:
 async def route_records(session: AsyncSession, rules: Rules, routes: Sequence[RouteRow]) -> list[RouteRecord]:
     epoch = (await CosmosRepository(session).require_cosmos()).epoch
     book = RouteBook(routes, await current_calendar(session, rules, epoch), await forgotten_world_ids(session))
+    ladder = await cosmography_of(session)
     records = []
     for route in routes:
         status = book.status(route)
         state = RouteStatusRecord(
             open=status.is_open, state=status.state, reason=status.reason, opens_epoch=status.opens_epoch, closes_epoch=status.closes_epoch
         )
-        records.append(RouteRecord.model_validate({**{key: getattr(route, key) for key in ROUTE_FIELDS}, "status": state}))
+        scope = ladder.scope_by_id(route.world_a_id, route.world_b_id)
+        records.append(RouteRecord.model_validate({**{key: getattr(route, key) for key in ROUTE_FIELDS}, "status": state, "scope": scope}))
     return records
 
 
-ROUTE_FIELDS = tuple(name for name in RouteRecord.model_fields if name != "status")
+ROUTE_FIELDS = tuple(name for name in RouteRecord.model_fields if name not in ("status", "scope"))

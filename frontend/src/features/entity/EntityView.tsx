@@ -6,6 +6,9 @@ import { EmptyState, Section } from '@/components/domain'
 import { MentionText } from '@/components/domain/MentionText'
 import { Text } from '@/components/typography'
 import { targetsOfRefs } from '@/features/chronicle/linkTargets'
+import { CosmicBeingSection } from '@/features/cosmography/BeingsPanel'
+import { PhenomenonSection } from '@/features/cosmography/PhenomenaPanel'
+import { CelestialReadingsSection } from '@/features/cosmography/ReadingsSection'
 import { CommunityAddictions } from '@/features/cosmos/EconomyControls'
 import { LawProfileSection } from '@/features/divine/LawProfileSection'
 import { OuterProfileSection } from '@/features/divine/OuterProfileSection'
@@ -168,6 +171,9 @@ const SECTION_LINKS = [
   { id: 'section-crops', label: 'Crops' },
   { id: 'section-pets', label: 'Companions' },
   { id: 'section-event', label: 'Event' },
+  { id: 'section-phenomenon', label: 'Phenomenon' },
+  { id: 'section-cosmic-being', label: 'Cosmic being' },
+  { id: 'section-celestial-readings', label: 'Readings' },
   { id: 'section-events-here', label: 'Events here' },
   { id: 'section-body', label: 'Body' },
   { id: 'section-afflictions', label: 'Afflictions' },
@@ -298,6 +304,11 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
   if (entity.entity_type !== 'region') present.delete('section-crops')
   if (entity.entity_type !== 'mortal') present.delete('section-pets')
   if (entity.entity_type !== 'event') present.delete('section-event')
+  if (entity.entity_type !== 'phenomenon') present.delete('section-phenomenon')
+  if (entity.entity_type !== 'cosmic_being')
+    present.delete('section-cosmic-being')
+  if (entity.entity_type !== 'celestial')
+    present.delete('section-celestial-readings')
   const eventful =
     entity.entity_type === 'region' ||
     entity.entity_type === 'place' ||
@@ -431,6 +442,15 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         )}
         {entity.entity_type === 'outer_being' && (
           <OuterProfileSection beingId={entity.id} />
+        )}
+        {entity.entity_type === 'phenomenon' && (
+          <PhenomenonSection entityId={entity.id} />
+        )}
+        {entity.entity_type === 'cosmic_being' && (
+          <CosmicBeingSection entityId={entity.id} />
+        )}
+        {entity.entity_type === 'celestial' && (
+          <CelestialReadingsSection celestialId={entity.id} />
         )}
         {entity.entity_type === 'event' && (
           <EventSection eventId={entity.id} readOnlyReason={readOnly} />

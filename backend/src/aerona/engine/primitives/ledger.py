@@ -33,6 +33,13 @@ class DoomItem(StrEnum):
     WORLD_AGE = "age turning and world age"
     CREATOR_CULT = "creator's cult"
     ENLIGHTENMENT = "spread of learning"
+    OPEN_RIFTS = "open rifts"
+    INCURSIONS = "incursions from other dimensions"
+    CONVERGENCES = "converging dimensions"
+    GAMMA_BURSTS = "gamma-ray bursts"
+    LEAK_WOUNDS = "leak wounds"
+    HOT_REGIONS = "regions at their leak peak"
+    COLLAPSED_LIFE = "collapsed biospheres"
     SPEED = "apocalypse speed (world rules)"
     RESET = "post-apocalypse reset"
 

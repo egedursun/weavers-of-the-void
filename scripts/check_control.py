@@ -159,7 +159,9 @@ class Code:
         if func.id in {"list", "sorted", "next", "iter", "unheld"} and expr.args:
             return self.kind(module, env, expr.args[0])
         hit = self.resolve(module, func.id)
-        return set(self.returns.get(hit, set())) if hit else self.selected(expr)
+        if hit is None:
+            return self.selected(expr)
+        return set(self.returns.get(hit, set())) or {self.rows[arg.id] for arg in expr.args if isinstance(arg, ast.Name) and arg.id in self.rows}
 
     def call_kind(self, module: str, env: dict[str, set[str]], expr: ast.Call) -> set[str]:
         func = expr.func

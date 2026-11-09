@@ -8,6 +8,9 @@ class NodeKind(StrEnum):
     FOREIGN_GOD = "foreign_god"
     WORLD = "world"
     STAR = "star"
+    GALAXY = "galaxy"
+    CLUSTER = "cluster"
+    DIMENSION = "dimension"
 
 
 class ActorKind(StrEnum):

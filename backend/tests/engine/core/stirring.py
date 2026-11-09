@@ -5,13 +5,28 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.tables.celestial import StarRow
 from aerona.db.tables.culture import IdeologyAdherentRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.faith import SpiritProfileRow
 from aerona.db.tables.military import SpyNetworkRow
+from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.warfare import SiegeRow
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.cosmography import (
+    BeingAgenda,
+    BeingKind,
+    BeingPhase,
+    ClusterKind,
+    DimensionKind,
+    GalacticNucleus,
+    GalaxyType,
+    PhenomenonCause,
+    PhenomenonKind,
+    RiftCause,
+    StarAge,
+)
 from aerona.domain.enums.culture import CurseKind, IdeologyTenet
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
@@ -20,7 +35,12 @@ from aerona.domain.enums.faith import SpiritAlignment
 from aerona.domain.enums.intrigue import PlotKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.models.entity_stats import BeastStats, FactionStats, ItemStats, PeopleStats, SpeciesStats, SpiritStats
+from aerona.engine.context import TickContext
+from aerona.engine.cosmos.beings import create_being
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
+from aerona.engine.cosmos.ladder import ClusterDraft, DimensionDraft, GalaxyDraft, create_cluster, create_dimension, create_galaxy, ensure_ladder
+from aerona.engine.cosmos.phenomena import form_phenomenon
+from aerona.engine.cosmos.rifts import open_rift
 from aerona.engine.disease.control import DiseaseDesign, create_disease
 from aerona.engine.ecology.beasts import profile_beast
 from aerona.engine.intrigue.schemes import begin_scheme
@@ -104,4 +124,35 @@ async def stir(session: AsyncSession, cosmos: RichCosmos) -> None:
     strength = await MilitaryStrength.load(session, ctx.rules)
     await raise_army(ctx, strength, await SideIndex.load(session, await Neighbourhood.load(session, ctx.rules)), town, war)
     session.add(SiegeRow(war_id=war.id, besieged_entity_id=rival.id, besieger_entity_id=town.id, started_epoch=ctx.epoch))
+    await session.flush()
+    await stir_heavens(ctx, cosmos)
+
+
+async def stir_heavens(ctx: TickContext, cosmos: RichCosmos) -> None:
+    session, home = ctx.session, cosmos.home
+    await ensure_ladder(session, ctx.rules)
+    plane = await create_dimension(session, ctx.rules, DimensionDraft("Stirring Astral", DimensionKind.ASTRAL, ctx.epoch))
+    plane.veil = 0
+    mirror = await create_dimension(session, ctx.rules, DimensionDraft("Stirring Mirror", DimensionKind.MIRROR, ctx.epoch))
+    mirror.stability = 10
+    web = await create_cluster(session, ctx.rules, ClusterDraft("Stirring Web", ClusterKind.RICH_CLUSTER, ctx.epoch, dimension_id=plane.id, radius=5000.0))
+    far = await create_galaxy(session, ctx.rules, GalaxyDraft("Stirring Far Galaxy", GalaxyType.STARBURST, ctx.epoch, cluster_id=web.id))
+    near = await create_galaxy(session, ctx.rules, GalaxyDraft("Stirring Near Galaxy", GalaxyType.LIVING, ctx.epoch, cluster_id=web.id, x=100.0))
+    near.merging_with_galaxy_id = far.id
+    near.nucleus = GalacticNucleus.QUASAR
+    distant = cosmos.frontiers[0].world
+    distant.star_id, distant.parent_world_id, distant.dimension_id = None, None, plane.id
+    rift = await open_rift(ctx, home.world, home.regions[0], plane, RiftCause.GOD, target_world=distant)
+    rift.stability = 20
+    await create_being(ctx, BeingKind.STAR_EATER, home.world, region=home.regions[0], home_dimension_id=plane.id, phase=BeingPhase.MANIFEST)
+    await create_being(
+        ctx, BeingKind.RIFT_SPAWN, home.world, region=home.regions[1], home_dimension_id=plane.id, phase=BeingPhase.MANIFEST, agenda=BeingAgenda.CONQUER
+    )
+    await form_phenomenon(ctx, PhenomenonKind.LEAK_WOUND, home.regions[1], PhenomenonCause.DIVINE, intensity=90)
+    await form_phenomenon(ctx, PhenomenonKind.TIME_SLIP, home.regions[0], PhenomenonCause.DIVINE, intensity=60)
+    for star in await session.scalars(select(StarRow).order_by(StarRow.id)):
+        star.patron_son_id = home.son.id
+        star.age_stage, star.lifecycle_clock = StarAge.DYING, 1
+    for route in await session.scalars(select(RouteRow).order_by(RouteRow.id)):
+        route.toll_controller_entity_id, route.toll_pct, route.piracy = home.people.id, 20, 60
     await session.flush()

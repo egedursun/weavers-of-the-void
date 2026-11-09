@@ -32,10 +32,13 @@ from aerona.domain.enums.world import DARK_STAR_TYPES, Discovery, HorrorEventKin
 from aerona.domain.models.entity_stats import CultStats, KnowledgeStats, OuterBeingStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.leak import apply_leak, leak_cap, leak_delta, record_breakdown
+from aerona.engine.cosmos.phenomena import phenomenon_sanity
+from aerona.engine.cosmos.placement import world_pull
 from aerona.engine.cosmos.routes import open_alignment
 from aerona.engine.cosmos.sanity import sanity_of, shift_sanity
 from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.world_types import mechanics_of
+from aerona.engine.cosmos.worldlife import hot_regions
 from aerona.engine.divine.outer import breach_pressure, open_breaches, outer_profile, seed_void_tenets
 from aerona.engine.divine.wounds import sanity_ceiling
 from aerona.engine.environment.book import scar_region
@@ -155,6 +158,7 @@ class SanityContext:
     worshipping: set[int]
     knowledge: KnowledgeMap
     breaches: dict[int, int] = field(default_factory=dict)
+    haunting: dict[int, int] = field(default_factory=dict)
 
 
 async def _sanity_context(ctx: TickContext, knowledge: KnowledgeMap) -> SanityContext:
@@ -168,11 +172,13 @@ async def _sanity_context(ctx: TickContext, knowledge: KnowledgeMap) -> SanityCo
         void_erosion={
             world.id: mechanics_of(world.world_type).sanity_erosion(ctx.rules)
             + (star_mechanics(stars[world.star_id]).sanity_erosion(ctx.rules) if world.star_id in stars else 0)
+            + (await world_pull(ctx.session, ctx.rules, world)).sanity
             for world in worlds
         },
         worshipping={bond.source_node_id for bond in index.bonds},
         knowledge=knowledge,
         breaches=await breach_pressure(ctx),
+        haunting=await phenomenon_sanity(ctx),
     )
 
 
@@ -182,6 +188,7 @@ async def sanity_drift(ctx: TickContext, entity: EntityRow, scene: SanityContext
     erosion += horror.forbidden_erosion if scene.knowledge.knows(entity.id, KnowledgeBranch.FORBIDDEN) else 0
     erosion += horror.outer_being_erosion if entity.world_id in scene.outer_worlds else 0
     erosion += scene.breaches.get(entity.location_id or entity.id, 0) * ctx.rules.outer_beings.breach_sanity_pct / PERCENT
+    erosion += scene.haunting.get(entity.location_id or entity.id, 0)
     erosion *= await ctx.hook_easing(entity.id, DomainHook.SANITY_WARD) * await ctx.hook_factor(entity.id, DomainHook.FRENZY)
     repair: float = horror.medicine_repair if scene.knowledge.knows(entity.id, KnowledgeBranch.MEDICINE) else 0
     if entity.entity_type in LAND_COMMUNITIES:
@@ -344,7 +351,8 @@ async def summon_outer_being(ctx: TickContext, world: WorldRow) -> EntityRow | N
     regions = await canon(ctx.session, [EntityType.REGION], world.id)
     if not regions:
         return None
-    region = max(regions, key=lambda item: (stat_or(item, "danger", 0), -item.id))
+    hot = set(await hot_regions(ctx, world.id))
+    region = max(regions, key=lambda item: (item.id in hot, stat_or(item, "danger", 0), -item.id))
     rng = ctx.rng("outer")
     being = await open_record(
         ctx.session,
@@ -454,7 +462,10 @@ async def reverse_rain(ctx: TickContext, world: WorldRow) -> str:
 async def _void_candidate(ctx: TickContext, world: WorldRow) -> EntityRow | None:
     regions = await canon(ctx.session, [EntityType.REGION], world.id)
     places = await canon(ctx.session, [EntityType.PLACE], world.id)
-    pool = places + (regions if len(regions) >= ctx.rules.cosmic_horror.void_min_regions else [])
+    hot = set(await hot_regions(ctx, world.id))
+    pool = sorted(places, key=lambda item: item.location_id not in hot) + (
+        sorted(regions, key=lambda item: item.id not in hot) if len(regions) >= ctx.rules.cosmic_horror.void_min_regions else []
+    )
     for candidate in pool:
         if not any(item.entity_type in VOID_GUARDS for item in await _subtree(ctx, candidate.id)):
             return candidate
@@ -568,12 +579,15 @@ async def spontaneous_horror(ctx: TickContext) -> str | None:
     "table.breach_points",
     "table.community_societies",
     "table.cosmos",
+    "table.dimensional_events",
     "table.divine_wounds",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.galactic_structures",
     "table.holder_levels",
     "table.nodes",
     "table.outer_bargains",
+    "table.rifts",
     "table.routes",
     "table.world_domain_hooks",
 )

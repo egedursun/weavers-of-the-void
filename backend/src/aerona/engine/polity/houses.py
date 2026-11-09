@@ -133,7 +133,7 @@ async def found_house(ctx: TickContext, book: HouseBook, founder: EntityRow, *, 
 
 
 async def join(ctx: TickContext, book: HouseBook, house_id: int, mortal: EntityRow, *, by_marriage: bool) -> None:
-    if mortal.id in book.members[house_id]:
+    if mortal.id in book.members[house_id] or held(mortal.id, house_id):
         return
     previous = book.house_of.get(mortal.id)
     if previous is not None and not by_marriage:

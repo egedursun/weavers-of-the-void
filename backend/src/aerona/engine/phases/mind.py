@@ -474,8 +474,10 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     "table.body_customs",
     "table.bonds",
     "table.conditions",
+    "table.creature_anatomy",
     "table.cult_tenets",
     "table.culture_values",
+    "table.divine_wounds",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.genomes",
@@ -498,6 +500,7 @@ async def at_war(ctx: TickContext, fighter: EntityRow) -> bool:
     "table.wants",
     "table.war_sides",
     "table.wars",
+    "table.world_domain_hooks",
 )
 @writes(
     "mortal.hp",
@@ -809,6 +812,7 @@ async def mind_ideas(ctx: TickContext) -> None:
     "table.bonds",
     "table.calendars",
     "table.community_stocks",
+    "table.creator_taboos",
     "table.culture_ethics",
     "table.culture_values",
     "table.deed_claims",

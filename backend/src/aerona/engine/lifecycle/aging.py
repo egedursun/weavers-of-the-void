@@ -1,12 +1,17 @@
 from dataclasses import dataclass
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.cosmography import PhenomenonFootprintRow, PhenomenonProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.cosmography import PhenomenonKind
 from aerona.domain.enums.entity import EntityFlag, EntityType, MortalRole
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.engine.cosmos.placement import world_pull
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import known_branches
 from aerona.engine.primitives.numbers import round_half_up
@@ -77,9 +82,24 @@ async def effective_lifespan(
     return LifespanInfo(base=base, medicine=medicine_bonus, notable=notable_bonus)
 
 
+async def in_time_slip(session: AsyncSession, region_id: int | None) -> bool:
+    if region_id is None:
+        return False
+    statement = (
+        select(PhenomenonFootprintRow.phenomenon_entity_id)
+        .join(PhenomenonProfileRow, PhenomenonProfileRow.entity_id == PhenomenonFootprintRow.phenomenon_entity_id)
+        .where(PhenomenonFootprintRow.region_entity_id == region_id, PhenomenonProfileRow.kind == PhenomenonKind.TIME_SLIP)
+    )
+    return await session.scalar(statement.limit(1)) is not None
+
+
 async def life_info(session: AsyncSession, rules: Rules, entity: EntityRow) -> LifeInfo:
     world = await session.get(WorldRow, entity.world_id)
     time_factor = world.time_factor if world is not None and world.time_factor else 1.0
+    if world is not None:
+        time_factor *= (await world_pull(session, rules, world)).time
+    if await in_time_slip(session, entity.location_id):
+        time_factor *= 1 + rules.phenomena.time_slip_age_pct / PERCENT
     return LifeInfo(
         lifespan=await effective_lifespan(session, rules, entity),
         age=stat(entity, "age"),

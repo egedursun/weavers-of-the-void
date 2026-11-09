@@ -36,6 +36,7 @@ from aerona.domain.enums.son import SonStatus, Stat
 from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, Discovery, StarType, WorldType
 from aerona.engine.cosmos.actions import BargainTerms, bargain_with_outer, seal_gate
 from aerona.engine.cosmos.foreign_gods import powers_of, stat_effect
+from aerona.engine.cosmos.star_types import rekindle_cost
 from aerona.engine.cosmos.stars import extinguish_star, hang_star, rekindle_star
 from aerona.engine.cosmos.worlds import declare_holy_world
 from aerona.engine.environment.control import force_weather, reorder_seasons, sever_ley, world_seasons
@@ -268,9 +269,9 @@ async def seal(call: SonCall, args: SealInput) -> str:
 
 
 async def rekindle(call: SonCall, args: StarInput) -> str:
-    cost = share(call.rules.cosmic_costs.rekindle_dead_star, call.rules.son_tools.cosmic_rekindle_pct)
+    star = await _star(call, args.star_id)
+    cost = rekindle_cost(call.rules, star.star_type, share(call.rules.cosmic_costs.rekindle_dead_star, call.rules.son_tools.cosmic_rekindle_pct))
     require_essence(call, cost)
-    await _star(call, args.star_id)
     await rekindle_star(call.tick, args.star_id, call.son.name)
     call.spend_essence(cost)
     call.son.fame += call.rules.son_tools.rekindle_star_renown

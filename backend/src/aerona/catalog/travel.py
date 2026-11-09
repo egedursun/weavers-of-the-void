@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from aerona.domain.enums.cosmography import RouteScope
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.travel import JourneyIntent, TravelMethod, VehicleKind
 from aerona.rules.registry import Rules
@@ -123,7 +124,70 @@ TRAVEL_METHODS: dict[TravelMethod, TravelMethodSpec] = {
             lambda rules: rules.travel_methods.wormhole_duration,
             lambda rules: rules.travel_methods.wormhole_danger,
         ),
+        TravelMethodSpec(
+            M.VOID_ARK,
+            "Void ark",
+            KnowledgeBranch.SKY_NAVIGATION,
+            VehicleKind.SHIP,
+            "Takes generations; the ark carries whole communities and their stores across the dark between galaxies.",
+            lambda rules: rules.travel_methods.void_ark_duration,
+            lambda rules: rules.travel_methods.void_ark_danger,
+        ),
+        TravelMethodSpec(
+            M.GALACTIC_GATE,
+            "Galactic gate",
+            KnowledgeBranch.GATE_LORE,
+            VehicleKind.GATE,
+            "A gate pair between galaxies, built by gods or ancient makers; it wears with use and must be mended.",
+            lambda rules: rules.travel_methods.galactic_gate_duration,
+            lambda rules: rules.travel_methods.galactic_gate_danger,
+        ),
+        TravelMethodSpec(
+            M.FILAMENT_LANE,
+            "Filament lane",
+            KnowledgeBranch.SKY_NAVIGATION,
+            None,
+            "A natural road along a filament of galaxies, open to mounts and arks.",
+            lambda rules: rules.travel_methods.filament_lane_duration,
+            lambda rules: rules.travel_methods.filament_lane_danger,
+        ),
+        TravelMethodSpec(
+            M.DIMENSIONAL_RIFT,
+            "Dimensional rift",
+            None,
+            None,
+            "Passes through a rift into another dimension; it shuts when the rift seals or collapses.",
+            lambda rules: rules.travel_methods.dimensional_rift_duration,
+            lambda rules: rules.travel_methods.dimensional_rift_danger,
+        ),
+        TravelMethodSpec(
+            M.PLANAR_DOOR,
+            "Planar door",
+            KnowledgeBranch.MAGIC,
+            VehicleKind.GATE,
+            "A steady door between dimensions, made by a rite or a god.",
+            lambda rules: rules.travel_methods.planar_door_duration,
+            lambda rules: rules.travel_methods.planar_door_danger,
+        ),
     )
+}
+
+METHOD_REACH: dict[TravelMethod, RouteScope] = {
+    M.ANCIENT_GATE: RouteScope.INTERCLUSTER,
+    M.SPACE_FOLD: RouteScope.INTERCLUSTER,
+    M.LIGHT_SAIL: RouteScope.STELLAR,
+    M.COSMIC_MOUNT: RouteScope.INTERGALACTIC,
+    M.DREAM_JOURNEY: RouteScope.INTERDIMENSIONAL,
+    M.RIVER_OF_DEAD: RouteScope.INTERDIMENSIONAL,
+    M.DIVINE_BRIDGE: RouteScope.INTERCLUSTER,
+    M.SLINGSHOT_ORBIT: RouteScope.STELLAR,
+    M.SWALLOWED: RouteScope.INTERGALACTIC,
+    M.WORMHOLE: RouteScope.INTERGALACTIC,
+    M.VOID_ARK: RouteScope.INTERCLUSTER,
+    M.GALACTIC_GATE: RouteScope.INTERCLUSTER,
+    M.FILAMENT_LANE: RouteScope.INTERCLUSTER,
+    M.DIMENSIONAL_RIFT: RouteScope.INTERDIMENSIONAL,
+    M.PLANAR_DOOR: RouteScope.INTERDIMENSIONAL,
 }
 
 JOURNEY_INTENT_LABELS: dict[JourneyIntent, str] = {

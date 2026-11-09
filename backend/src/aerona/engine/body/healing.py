@@ -17,6 +17,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import (
     MADNESS_CONDITIONS,
     MEDICINE_ORDER,
@@ -668,7 +669,7 @@ async def heal_wounds(ctx: TickContext) -> None:
         if outcome.died:
             ctx.count("festered")
             continue
-        if isinstance(bearer, EntityRow):
+        if isinstance(bearer, EntityRow) and not held(bearer.id):
             body = await ensure_body(ctx.session, ctx.rules, bearer, ctx.epoch)
             open_rows = await injuries_of(ctx.session, bearer.id) if bearer.id in open_bearers else []
             infected = any(row.state is InjuryState.INFECTED for row in open_rows)

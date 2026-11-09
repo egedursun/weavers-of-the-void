@@ -10,6 +10,7 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
+from aerona.domain.enums.cosmography import OceanCurrent
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import (
     CoastKind,
@@ -37,6 +38,7 @@ REGION_ENUMS: dict[str, type[StrEnum]] = {
     "soil": SoilKind,
     "river_class": RiverClass,
     "coast_kind": CoastKind,
+    "current": OceanCurrent,
 }
 REGION_NUMBERS = frozenset(
     {
@@ -65,6 +67,9 @@ REGION_NUMBERS = frozenset(
         "harvest_pct",
         "sacredness",
         "derived_fertility",
+        "leak",
+        "temperature_shift",
+        "rainfall_shift",
     }
 )
 LOCKABLE = frozenset(
@@ -100,6 +105,10 @@ LOCKABLE = frozenset(
         "temperature_band",
         "derived_fertility",
         "biome_mix",
+        "leak",
+        "current",
+        "temperature_shift",
+        "rainfall_shift",
     }
 )
 SCAR_PREFIX = "scar."
@@ -114,6 +123,7 @@ PLACE_LOCKABLE = frozenset({"terrain", "cover", "water_source", "height_advantag
 INHERIT = "inherit"
 HARVEST_MAX = 200
 CAPS: dict[str, int] = {"harvest_pct": HARVEST_MAX}
+FLOORS: dict[str, int] = {"temperature_shift": -PERCENT, "rainfall_shift": -PERCENT}
 MODES = frozenset(mode.value for mode in MovementMode)
 SEASON_NUMBERS: dict[str, tuple[int, int]] = {
     "temperature_shift": (-PERCENT, PERCENT),
@@ -147,7 +157,7 @@ def coerce(field: str, value: int | str, enums: dict[str, type[StrEnum]], number
     if field in numbers:
         if not isinstance(value, int):
             raise ValidationFailedError(f"{field.replace('_', ' ')} takes a whole number.")
-        return clamp_int(value, 0, CAPS.get(field, PERCENT))
+        return clamp_int(value, FLOORS.get(field, 0), CAPS.get(field, PERCENT))
     raise ValidationFailedError(f"{field.replace('_', ' ')} cannot be set by hand.")
 
 

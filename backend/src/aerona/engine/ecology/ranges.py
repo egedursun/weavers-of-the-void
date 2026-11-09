@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.ecology import HerdRow, SpeciesHostRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesYieldRow
@@ -26,6 +27,7 @@ from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.physics import flight_capacity_pct
 from aerona.engine.primitives.queries import active_bonds, canon
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
@@ -50,6 +52,7 @@ class Wilds:
     sacred: dict[int, set[int]] = field(default_factory=lambda: defaultdict(set))
     life: dict[int, tuple[Biochemistry, ...]] = field(default_factory=dict)
     hunt_bonus: dict[int, float] = field(default_factory=dict)
+    lift: dict[int, float] = field(default_factory=dict)
 
     def allowed(self, land: RegionEnvironmentRow | None) -> tuple[Biochemistry, ...] | None:
         return self.life.get(land.world_id) if land is not None and land.world_id is not None else None
@@ -77,6 +80,7 @@ async def load_wilds(ctx: TickContext, species: list[EntityRow], invasive: set[i
                 wilds.invasive[region] += 1
     for world_id in sorted({land.world_id for land in lands.values() if land.world_id is not None}):
         wilds.life[world_id] = await tolerated(ctx.session, world_id)
+        wilds.lift[world_id] = flight_capacity_pct(ctx.rules, await ctx.session.get(WorldRow, world_id)) / PERCENT
     trained: dict[int, int] = {}
     for community_id, head in await ctx.session.execute(select(HerdRow.community_entity_id, HerdRow.trained).where(HerdRow.training == HerdTraining.HUNTING)):
         trained[community_id] = trained.get(community_id, 0) + head
@@ -278,6 +282,8 @@ def plan(
     capacity = (
         capacity_of(rules, land, wilds.regions.get(region), megafauna, wildness(land, T.BURROWING in traits, rules)) * fit * food_of(rules, profile, land, prey)
     )
+    if T.FLYING in traits and land is not None:
+        capacity *= wilds.lift.get(land.world_id, 1.0)
     delta = (capacity - row.abundance) * growth_rate(rules, profile, land, traits)
     delta -= predation(rules, wilds, species.id, region, hunters_of)
     if profile.diet in HUNTERS and prey and sum(prey) / len(prey) < rules.ecology.hunger_threshold:

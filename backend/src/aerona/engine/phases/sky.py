@@ -29,6 +29,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import number_word, open_alignment, sever_route, touches
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.cosmos.star_types import star_mechanics
+from aerona.engine.cosmos.starlife import flare_weight_pct
 from aerona.engine.cosmos.stars import black_sun, flare, require_star, supernova, worlds_of_star
 from aerona.engine.cosmos.world_types import mechanics_of
 from aerona.engine.cosmos.worlds import align_moons
@@ -294,7 +295,7 @@ def spontaneous_bag(rules: Rules, moons: int = 0, companions: int = 0) -> list[S
 
 def star_event_weight(rules: Rules, kind: SkyEventKind, star: StarRow) -> int:
     mechanics = star_mechanics(star.star_type)
-    return mechanics.collapse_weight(rules) if kind in COLLAPSE_EVENTS else mechanics.flare_weight(rules)
+    return mechanics.collapse_weight(rules) if kind in COLLAPSE_EVENTS else round(mechanics.flare_weight(rules) * flare_weight_pct(rules, star))
 
 
 async def eclipse_world(ctx: TickContext, stars: dict[int, StarRow]) -> WorldRow | None:

@@ -5,6 +5,18 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.achievements import ACHIEVEMENTS
+from aerona.catalog.cosmography import (
+    CAUSALITY_LABELS,
+    CLUSTER_KINDS,
+    DIMENSION_KINDS,
+    ELEMENT_LABELS,
+    GALACTIC_ZONES,
+    GALAXY_AGE_LABELS,
+    GALAXY_TYPES,
+    NUCLEUS_LABELS,
+    STAR_AGE_LABELS,
+    WORLD_AGE_LABELS,
+)
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.entity_types import entity_type_spec
 from aerona.catalog.knowledge import KNOWLEDGE_BRANCHES
@@ -18,6 +30,7 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.cosmography import ClusterRow, DimensionRow, GalaxyRow
 from aerona.db.tables.cosmos import CosmosRow, CreatorRow
 from aerona.db.tables.entities import EntityRow, EntityTagRow
 from aerona.db.tables.epochs import EpochRow, EpochStatsRow, EpochWorldNarrativeRow
@@ -34,6 +47,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.son import Passion, SonStatus, Stat
 from aerona.domain.enums.war import WarSide, WarStatus
 from aerona.domain.models.records import EpochStatsData
+from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.military.records import battle_field
 from aerona.rules.registry import Rules
 from aerona.services.books.command import add_command_areas
@@ -70,6 +84,8 @@ ENCYCLOPEDIA_ORDER: tuple[EntityType, ...] = (
     EntityType.RITE,
     EntityType.SPIRIT,
     EntityType.OUTER_BEING,
+    EntityType.COSMIC_BEING,
+    EntityType.PHENOMENON,
     EntityType.CELESTIAL,
     EntityType.NATURAL_LAW,
     EntityType.LAW,
@@ -169,6 +185,20 @@ class WorldArticle:
     picture: MapPicture | None
     facts: list[Labelled] = field(default_factory=list)
     typed: list[TypedSection] = field(default_factory=list)
+
+
+@dataclass
+class ScaleArticle:
+    kind: str
+    node_id: int
+    name: str
+    anchor: str
+    level: int
+    facts: list[Labelled]
+    description: str | None
+    cover: str | None
+    typed: list[TypedSection]
+    stars: list[tuple[str, str]] = field(default_factory=list)
 
 
 @dataclass
@@ -288,6 +318,7 @@ class BookModel:
     creator_cover: str | None
     creator_beliefs: list[FolkBeliefRow]
     stars: list[StarSection]
+    ladder: list[ScaleArticle]
     foreign_gods: list[GodArticle]
     routes: list[tuple[str, str, RouteRow]]
     journeys: list[tuple[str, JourneyRow]]
@@ -490,7 +521,16 @@ class BookBuilder:
                 Labelled("Kind", STAR_TYPE_LABELS[star.star_type]),
                 Labelled("Brightness", str(star.brightness)),
                 Labelled("Kindled", f"Epoch {star.created_epoch}"),
+                Labelled("Age", STAR_AGE_LABELS[star.age_stage]),
+                Labelled("Next age in", f"{star.lifecycle_clock} epochs" if star.lifecycle_clock is not None else "unknown"),
+                Labelled("Steadiness", f"{star.stability}/100"),
+                Labelled("Radiation", f"{star.radiation}/100"),
+                Labelled("Sacredness", f"{star.sacredness}/100"),
+                Labelled("Place in its galaxy", GALACTIC_ZONES[star.galactic_zone].label),
             ]
+            for label, node_id in (("Galaxy", star.galaxy_id), ("Patron", star.patron_son_id)):
+                if node_id is not None:
+                    facts.append(Labelled(label, self.names.get(node_id) or self.son_names.get(node_id, "?")))
             sections.append(
                 StarSection(
                     star,
@@ -508,6 +548,85 @@ class BookBuilder:
         if leftovers:
             sections.append(StarSection(None, None, leftovers))
         return sections
+
+    async def scale_article(self, kind: str, row: DimensionRow | ClusterRow | GalaxyRow, level: int, facts: list[Labelled]) -> ScaleArticle:
+        return ScaleArticle(
+            kind, row.id, row.name, f"{kind}-{row.id}", level, facts, row.description, await cover_of(self.session, row.id), self.typed.of(row.id)
+        )
+
+    async def scale_ladder(self) -> list[ScaleArticle]:
+        ladder = await Cosmography.load(self.session)
+        found: list[ScaleArticle] = []
+
+        def galaxy_facts(galaxy: GalaxyRow) -> list[Labelled]:
+            return [
+                Labelled("Type", GALAXY_TYPES[galaxy.galaxy_type].label),
+                Labelled("Arms", str(galaxy.arm_count)),
+                Labelled("Nucleus", NUCLEUS_LABELS[galaxy.nucleus]),
+                Labelled("Star formation", f"{galaxy.star_formation}/100"),
+                Labelled("Metallicity", f"{galaxy.metallicity}/100"),
+                Labelled("Age", GALAXY_AGE_LABELS[galaxy.age_stage]),
+                Labelled("Leak", f"{galaxy.leak}/100"),
+                Labelled("Radius", f"{galaxy.radius:g}"),
+                Labelled("Patron", self.son_names.get(galaxy.patron_son_id or 0, "none")),
+                Labelled(
+                    "Merging with",
+                    self.names.get(galaxy.merging_with_galaxy_id or 0, "none") + (f" ({galaxy.merge_progress}%)" if galaxy.merging_with_galaxy_id else ""),
+                ),
+            ]
+
+        async def add_galaxy(galaxy: GalaxyRow, level: int) -> None:
+            article = await self.scale_article("galaxy", galaxy, level, galaxy_facts(galaxy))
+            article.stars = [(star.name, star_anchor(star.id)) for star in sorted(ladder.stars_in_galaxy(galaxy.id), key=lambda row: row.id)]
+            found.append(article)
+
+        async def add_cluster(cluster: ClusterRow, level: int) -> None:
+            facts = [
+                Labelled("Kind", CLUSTER_KINDS[cluster.cluster_kind].label),
+                Labelled("Heat between its galaxies", f"{cluster.medium_heat}/100"),
+                Labelled("Drift", f"{cluster.expansion}/100"),
+                Labelled("Radius", f"{cluster.radius:g}"),
+            ]
+            found.append(await self.scale_article("cluster", cluster, level, facts))
+            for child in sorted((row for row in ladder.clusters.values() if row.parent_cluster_id == cluster.id), key=lambda row: row.id):
+                await add_cluster(child, level + 1)
+            for galaxy in sorted((row for row in ladder.galaxies.values() if row.cluster_id == cluster.id), key=lambda row: row.id):
+                await add_galaxy(galaxy, level + 1)
+
+        for dimension in sorted(ladder.dimensions.values(), key=lambda row: row.id):
+            facts = [
+                Labelled(
+                    "Kind",
+                    DIMENSION_KINDS[dimension.dimension_kind].label
+                    + (f" ({ELEMENT_LABELS[dimension.element].lower()})" if dimension.element is not None else ""),
+                ),
+                Labelled("Veil", f"{dimension.veil}/100"),
+                Labelled("Stability", f"{dimension.stability}/100"),
+                Labelled("Time", f"{dimension.time_factor:g} times the prime"),
+                Labelled("Magic", f"{dimension.magic}/100"),
+                Labelled("Hostility", f"{dimension.hostility}/100"),
+                Labelled("Sanity drain", str(dimension.sanity_drain)),
+                Labelled("Leak", f"{dimension.leak}/100"),
+                Labelled("Causality", CAUSALITY_LABELS[dimension.causality]),
+                Labelled("Ruler", self.names.get(dimension.ruler_node_id or 0) or self.son_names.get(dimension.ruler_node_id or 0, "none")),
+                Labelled("Lies within", self.names.get(dimension.parent_dimension_id or 0, "nothing")),
+            ]
+            found.append(await self.scale_article("dimension", dimension, 0, facts))
+            for cluster in sorted(
+                (row for row in ladder.clusters.values() if row.dimension_id == dimension.id and row.parent_cluster_id is None), key=lambda row: row.id
+            ):
+                await add_cluster(cluster, 1)
+            for galaxy in sorted(
+                (row for row in ladder.galaxies.values() if row.dimension_id == dimension.id and row.cluster_id is None), key=lambda row: row.id
+            ):
+                await add_galaxy(galaxy, 1)
+        placed = {article.node_id for article in found}
+        for cluster in sorted((row for row in ladder.clusters.values() if row.id not in placed and row.parent_cluster_id is None), key=lambda row: row.id):
+            await add_cluster(cluster, 0)
+        placed = {article.node_id for article in found}
+        for galaxy in sorted((row for row in ladder.galaxies.values() if row.id not in placed), key=lambda row: row.id):
+            await add_galaxy(galaxy, 0)
+        return found
 
     async def world_article(self, world: WorldRow, level: int, epoch: int) -> WorldArticle:
         meta = [WORLD_TYPES[world.world_type].label]
@@ -530,6 +649,17 @@ class BookBuilder:
                 facts.append(Labelled(label, self.son_names[son_id]))
         if world.mirror_twin_id is not None:
             facts.append(Labelled("Mirror twin", self.names.get(world.mirror_twin_id, "?")))
+        facts += [
+            Labelled("Magnetism", f"{world.magnetism}/100"),
+            Labelled("Radiation", f"{world.radiation}/100"),
+            Labelled("Biosphere", f"{world.biosphere_health}/100"),
+            Labelled("Age", WORLD_AGE_LABELS[world.age_stage]),
+        ]
+        if world.mood:
+            facts.append(Labelled("Mood toward its peoples", f"{world.mood:+d}"))
+        for label, node_id in (("Galaxy", world.galaxy_id), ("Dimension", world.dimension_id)):
+            if node_id is not None:
+                facts.append(Labelled(label, self.names.get(node_id, "?")))
         return WorldArticle(
             world=world,
             anchor=world_anchor(world.id),
@@ -711,8 +841,11 @@ class BookBuilder:
         found.sort(key=lambda article: (article.war.status is WarStatus.ENDED, -article.war.started_epoch))
         return found
 
-    def index(self, sons: list[SonArticle], groups: list[WorldGroup], worlds: list[StarSection], gods: list["GodArticle"]) -> dict[str, list[IndexEntry]]:
+    def index(
+        self, sons: list[SonArticle], groups: list[WorldGroup], worlds: list[StarSection], gods: list["GodArticle"], ladder: list[ScaleArticle]
+    ) -> dict[str, list[IndexEntry]]:
         entries = [IndexEntry(article.son.name, article.anchor, "son") for article in sons]
+        entries += [IndexEntry(article.name, article.anchor, article.kind) for article in ladder]
         entries += [IndexEntry(article.god.name, article.anchor, "foreign god") for article in gods]
         entries += [IndexEntry(section.star.name, section.anchor, "star") for section in worlds if section.star is not None and section.anchor]
 
@@ -744,6 +877,7 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
     relations = list(await session.scalars(select(SonRelationRow)))
     sons = [await builder.son_article(son, relations) for son in await session.scalars(select(SonRow).order_by(SonRow.id))]
     stars = await builder.world_tree(cosmos.epoch)
+    ladder = await builder.scale_ladder()
     groups = await builder.encyclopedia(multi_world)
     laws = [
         await builder.entity_article(entity)
@@ -793,6 +927,7 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
         creator_cover=await cover_of(session, creator.id) if creator else None,
         creator_beliefs=list(await session.scalars(select(FolkBeliefRow).where(FolkBeliefRow.god_node_id == creator_id))),
         stars=stars,
+        ladder=ladder,
         foreign_gods=gods,
         routes=routes,
         journeys=journeys,
@@ -808,7 +943,7 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
         scenarios=scenarios,
         scores=list(await session.scalars(select(ScoreRow).order_by(ScoreRow.epoch))),
         ledger=list(await session.scalars(select(LedgerEntryRow).order_by(LedgerEntryRow.epoch, LedgerEntryRow.id))),
-        index=builder.index(sons, groups, stars, gods),
+        index=builder.index(sons, groups, stars, gods, ladder),
         multi_world=multi_world,
         names=builder.names,
         knowledge=await builder.knowledge(),

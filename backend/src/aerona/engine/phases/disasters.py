@@ -36,6 +36,7 @@ from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.climate import cold_snap
 from aerona.engine.cosmos.world_types import disaster_pct
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.harm import disease_harm, lasting_illness
@@ -485,6 +486,8 @@ async def after_strike(ctx: TickContext, target: EntityRow, disaster: Disaster, 
     elif disaster is Disaster.ERUPTION:
         await erupted(ctx, target, severity)
         impact.notes.append("ash buried the fields")
+        if target.world_id is not None and await cold_snap(ctx, target.world_id, ctx.rules.world_life.volcano_cold, f"The eruption in {target.name}"):
+            impact.notes.append("ash in the sky cooled the world")
     elif disaster is Disaster.VOLCANIC_QUAKE and await quaked(ctx, target):
         woken, _ = await strike(ctx, target, Disaster.ERUPTION, severity)
         impact.notes.append(f"the shaking woke {woken.name}")
@@ -684,6 +687,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "settlement.defense",
     "settlement.population",
     "settlement.prosperity",
+    "table.avatars",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
@@ -699,6 +703,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.disease_cures",
     "table.disease_profiles",
     "table.districts",
+    "table.divine_wounds",
     "table.endemic_diseases",
     "table.entity_flags",
     "table.entity_tags",
@@ -754,6 +759,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.trade_route_tolls",
     "table.tradition_profiles",
     "table.traits",
+    "table.world_domain_hooks",
     "table.world_maps",
     "table.world_seasons",
     "trade_route.culture",
@@ -787,6 +793,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.incidents",
     "table.injuries",
     "table.item_history",
+    "table.marriages",
     "table.memories",
     "table.mortal_profiles",
     "table.name_registry",

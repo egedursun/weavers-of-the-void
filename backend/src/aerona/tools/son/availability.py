@@ -7,10 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.cosmography import DimensionRow, RiftRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.agent import TurnCounter
+from aerona.domain.enums.cosmography import OPEN_RIFT_STATES
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.son import SonStatus
@@ -32,6 +34,10 @@ class SonWorldState:
     free_spirit: bool
     contacted_foreign_god: bool
     outer_being: bool
+    open_rift: bool = False
+    cosmic_being: bool = False
+    phenomenon: bool = False
+    dimensions: int = 0
     spent: Mapping[TurnCounter, int] = field(default_factory=dict)
 
 
@@ -51,6 +57,16 @@ async def world_state(session: AsyncSession, son: SonRow) -> SonWorldState:
         free_spirit=spirit is not None,
         contacted_foreign_god=god is not None,
         outer_being=outer is not None,
+        open_rift=await session.scalar(select(RiftRow.id).where(RiftRow.state.in_(list(OPEN_RIFT_STATES))).limit(1)) is not None,
+        cosmic_being=await session.scalar(
+            select(EntityRow.id).where(EntityRow.entity_type == EntityType.COSMIC_BEING, EntityRow.status == EntityStatus.CANON).limit(1)
+        )
+        is not None,
+        phenomenon=await session.scalar(
+            select(EntityRow.id).where(EntityRow.entity_type == EntityType.PHENOMENON, EntityRow.status == EntityStatus.CANON).limit(1)
+        )
+        is not None,
+        dimensions=int(await session.scalar(select(func.count(DimensionRow.id))) or 0),
         spent={counter: await counter_value(session, son.id, cosmos.epoch, counter) for counter, _cap in AGE_LIMITS.values()} if cosmos is not None else {},
     )
 
@@ -98,6 +114,12 @@ CONDITIONS: dict[SonToolId, Condition] = {
     T.WAR_ON_FOREIGN_GOD: lambda _rules, state: state.contacted_foreign_god,
     T.SEAL_LEAK: lambda rules, _state: rules.son_tools.seal_per_epoch > 0,
     T.BARGAIN_WITH_OUTSIDER: lambda rules, state: state.outer_being and rules.son_tools.outer_bargain_per_epoch > 0,
+    T.OPEN_RIFT: lambda _rules, state: state.dimensions >= 2,
+    T.SEAL_RIFT: lambda _rules, state: state.open_rift,
+    T.BIND_COSMIC_BEING: lambda _rules, state: state.cosmic_being,
+    T.BANISH_COSMIC_BEING: lambda _rules, state: state.cosmic_being,
+    T.CONTAIN_PHENOMENON: lambda _rules, state: state.phenomenon,
+    T.RULE_DIMENSION: lambda _rules, state: state.dimensions >= 1,
 }
 
 

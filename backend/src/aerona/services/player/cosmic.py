@@ -26,6 +26,7 @@ from aerona.engine.cosmos.resources import define_cosmic_resource
 from aerona.engine.cosmos.routes import RouteSpec, reveal_hidden_route, sever_route, stitch_route
 from aerona.engine.cosmos.routes import open_route as engine_open_route
 from aerona.engine.cosmos.routes import recall_journey as engine_recall_journey
+from aerona.engine.cosmos.star_types import rekindle_cost
 from aerona.engine.cosmos.stars import extinguish_star
 from aerona.engine.cosmos.stars import hang_star as engine_hang_star
 from aerona.engine.cosmos.stars import rekindle_star as engine_rekindle_star
@@ -252,7 +253,7 @@ async def forget(scope: PlayerScope, command: WorldTarget) -> Effect:
 async def rekindle(scope: PlayerScope, command: StarTarget) -> Effect:
     star = await guards.star(scope.session, command.star_id)
     creator = await scope.creator()
-    spent = guards.charge(creator, scope.rules.cosmic_costs.rekindle_dead_star, "cosmic_costs.rekindle_dead_star")
+    spent = guards.charge(creator, rekindle_cost(scope.rules, star.star_type, scope.rules.cosmic_costs.rekindle_dead_star), "cosmic_costs.rekindle_dead_star")
     message = await engine_rekindle_star(await scope.context("rekindle"), star.id, creator.name)
     return Effect(message, star.id, essence_spent=spent)
 

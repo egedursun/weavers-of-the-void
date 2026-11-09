@@ -18,6 +18,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, Discovery, WorldType
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.placement import cosmography_of
 from aerona.engine.cosmos.routes import JourneyView, RouteBook, RouteStatus, SkyCalendar, journey_views
 from aerona.engine.cosmos.world_types import is_mirror
 from aerona.engine.primitives.physics import WorldPhysics, world_physics
@@ -220,13 +221,14 @@ async def cosmos_overview(session: AsyncSession, rules: Rules, epoch: int) -> Co
             sons_by_world[son.current_world_id].append(son.id)
     star_rows = list(await session.scalars(select(StarRow).order_by(StarRow.id)))
     stars = {star.id: star for star in star_rows}
+    ladder = await cosmography_of(session)
     worlds = [
         WorldSummary(
             world,
             WORLD_TYPES[world.world_type].label,
             counts.get(world.id, WorldCounts()),
             tuple(sons_by_world.get(world.id, [])),
-            world_physics(rules, world, stars.get(world.star_id) if world.star_id is not None else None),
+            world_physics(rules, world, stars.get(world.star_id) if world.star_id is not None else None, ladder.pull(rules, ladder.place_world(world))),
         )
         for world in await WorldRepository(session).all_worlds()
     ]

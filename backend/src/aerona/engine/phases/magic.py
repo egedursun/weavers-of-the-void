@@ -1,5 +1,6 @@
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
@@ -65,7 +66,7 @@ async def magic_storms(ctx: TickContext) -> None:
     regions = {region.id: region for region in await canon(ctx.session, [EntityType.REGION])}
     for region in regions.values():
         chance = engine.magic_storm_chance * (rules.environment.ley_storm_pct / PERCENT if web.on_line(region.id) else 1)
-        if (stat(region, "magic") or 0) < effects.magic_storm_min_magic or not rng.chance(chance):
+        if held(region.id, region.world_id) or (stat(region, "magic") or 0) < effects.magic_storm_min_magic or not rng.chance(chance):
             continue
         reached = [region.id] + [other for other in web.partners(region.id) if rng.chance(rules.environment.ley_storm_spread_pct)]
         touched = [entity for entity in charged if atlas.top_region(entity.id) in reached]

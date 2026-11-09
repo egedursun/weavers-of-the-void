@@ -22,7 +22,7 @@ from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.meta import LedgerOperation
 
 KEY_TEXT = re.compile(r"[a-z0-9]+(?:[_.:][a-z0-9]+)*")
-OWNER_TABLES = frozenset({"entities", "nodes", "sons", "worlds", "stars", "foreign_gods", "creator"})
+OWNER_TABLES = frozenset({"entities", "nodes", "sons", "worlds", "stars", "foreign_gods", "creator", "galaxies", "galaxy_clusters", "dimensions"})
 SKIPPED_TABLES = frozenset(
     {
         "achievements",
@@ -248,7 +248,7 @@ REFERENCE_LABELS: dict[str, Callable[[Any, dict[int, str]], str]] = {
     "resolutions": lambda row, names: f"the {words(str(row.kind.value)).lower()} resolution of epoch {row.proposed_epoch}",
     "crime_cases": lambda row, names: f"the {row.crime.value} case of epoch {row.opened_epoch} against {_named(names, row.accused_entity_id) or 'no one'}",
 }
-NAMED_TABLES = frozenset({"entities", "nodes", "sons", "worlds", "stars", "foreign_gods", "creator"})
+NAMED_TABLES = frozenset({"entities", "nodes", "sons", "worlds", "stars", "foreign_gods", "creator", "galaxies", "galaxy_clusters", "dimensions"})
 
 
 ROW_FILTERS: dict[str, ColumnElement[bool]] = {"messages": MessageRow.intent == MessageIntent.DISPATCH}

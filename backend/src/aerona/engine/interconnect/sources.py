@@ -49,6 +49,8 @@ SOURCE_SUBSYSTEMS: MappingProxyType[ModifierSource, Subsystem] = MappingProxyTyp
         S.SUPPRESSION: Subsystem.CORE,
         S.PIN: Subsystem.CORE,
         S.PERK: Subsystem.MIND,
+        S.COSMOS: Subsystem.COSMOS,
+        S.RIFT: Subsystem.COSMOS,
     }
 )
 

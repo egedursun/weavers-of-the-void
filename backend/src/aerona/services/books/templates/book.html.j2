@@ -77,7 +77,20 @@
 {% endif %}
 
 <section class="chapter" id="cosmos">
-{{ chapter_head("cosmos", numeral("cosmos"), "The Heavens", "Stars, worlds and the roads between them") }}
+{{ chapter_head("cosmos", numeral("cosmos"), "The Heavens", "Dimensions, clusters, galaxies, stars, worlds and the roads between them") }}
+{% if book.ladder %}<h3 class="bm2">The scale of the cosmos</h3>
+{% for article in book.ladder %}
+{% set level = [3 + article.level, 6] | min %}
+<article class="entry" id="{{ article.anchor }}">
+<div class="head"><h{{ level }} class="bm2">{{ article.name }}</h{{ level }}><span class="kind">{{ article.kind }}</span></div>
+{{ thumb(article.cover, article.name, links) }}
+{{ facts(article.facts) }}
+{{ article.description | paragraphs }}
+{% if article.stars %}<p class="sublabel">Stars</p><p>{% for name, anchor in article.stars %}<a href="#{{ anchor }}">{{ name }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+{{ typed(article.typed) }}
+<div class="clear"></div>
+</article>
+{% endfor %}{% endif %}
 {% for section in book.stars %}
 {% if section.star %}
 <article class="entry" id="{{ section.anchor }}">

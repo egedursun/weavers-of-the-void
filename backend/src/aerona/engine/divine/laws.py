@@ -12,13 +12,16 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import ConditionKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind
 from aerona.domain.enums.divine import LawException, LawScope
 from aerona.domain.enums.entity import HERO_ROLES, EntityOrigin, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.divine.gods import god_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
+from aerona.engine.primitives.queries import canon
 from aerona.rules.registry import Rules
 
 L = NaturalLaw
@@ -108,6 +111,7 @@ async def contest(ctx: TickContext, rows: list[NaturalLawProfileRow]) -> int:
                 world = await ctx.session.get(WorldRow, first.world_id or second.world_id) if (first.world_id or second.world_id) else None
                 if world is not None:
                     world.leakage = clamp_percent(world.leakage + table.clash_leak)
+                    await clash_scar(ctx, world)
                 continue
             weaker = second if gap > 0 else first
             if "stability" not in weaker.locked:
@@ -176,3 +180,12 @@ async def exempt(ctx: TickContext, entity: EntityRow, law: NaturalLaw) -> bool:
 async def binds(ctx: TickContext, law: NaturalLaw, entity: EntityRow) -> bool:
     laws = await ctx.laws()
     return laws.has(law, entity.world_id) and not await exempt(ctx, entity, law)
+
+
+async def clash_scar(ctx: TickContext, world: WorldRow) -> None:
+    rng = ctx.rng(f"law_clash.{world.id}")
+    regions = sorted(await canon(ctx.session, [EntityType.REGION], world.id), key=lambda row: row.id)
+    if regions and rng.chance(ctx.rules.phenomena.law_conflict_chance):
+        await form_phenomenon(
+            ctx, rng.pick((PhenomenonKind.TIME_SLIP, PhenomenonKind.GRAVITY_WELL, PhenomenonKind.DEAD_ZONE)), rng.pick(regions), PhenomenonCause.LAW_CONFLICT
+        )

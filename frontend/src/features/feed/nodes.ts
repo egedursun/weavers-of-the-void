@@ -21,6 +21,9 @@ export const DRAWER_OF_NODE: Record<NodeKind, DrawerKind | null> = {
   creator: 'creator',
   world: 'world',
   star: 'star',
+  galaxy: 'galaxy',
+  cluster: 'cluster',
+  dimension: 'dimension',
 }
 
 export function useNodeIndex(): NodeIndex {

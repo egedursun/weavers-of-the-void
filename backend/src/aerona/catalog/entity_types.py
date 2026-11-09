@@ -594,6 +594,28 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             ("great predator", "sea creature", "flying beast", "burrowing creature", "herd giant"),
         ),
         EntityTypeSpec(
+            EntityType.PHENOMENON,
+            "Phenomenon",
+            "Phenomena",
+            "phenomenon",
+            None,
+            LAND,
+            True,
+            _percent(("danger", "Danger"), ("renown", "Renown")),
+            ("a lasting change over a region", "a force that holds a land"),
+        ),
+        EntityTypeSpec(
+            EntityType.COSMIC_BEING,
+            "Cosmic Being",
+            "Cosmic Beings",
+            "cosmic being",
+            None,
+            LAND,
+            False,
+            _percent(("size", "Size"), ("interest", "Interest"), ("renown", "Renown")),
+            ("a being from another dimension", "a being of the scale of a galaxy"),
+        ),
+        EntityTypeSpec(
             EntityType.NATURAL_LAW,
             "Natural law",
             "Natural laws",
@@ -644,6 +666,8 @@ CREATION_BASE_COST_RULES: dict[EntityType, RuleBound] = {
     EntityType.RITE: lambda rules: rules.creation_base_cost.rite,
     EntityType.THEORY: lambda rules: rules.creation_base_cost.theory,
     EntityType.ART_FORM: lambda rules: rules.creation_base_cost.art_form,
+    EntityType.PHENOMENON: lambda rules: rules.creation_base_cost.phenomenon,
+    EntityType.COSMIC_BEING: lambda rules: rules.creation_base_cost.cosmic_being,
 }
 
 

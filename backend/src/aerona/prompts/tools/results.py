@@ -328,6 +328,28 @@ class SonResult(StrEnum):
     NO_TREATY = "There is no such treaty in force."
     TREATY_VOIDED = "{{ name }} broke faith at your word."
 
+    NO_SUCH_DIMENSION = "There is no dimension with id {{ id }}."
+    RIFT_REFUSED = "The rift does not open: {{ reason }}"
+    RIFT_OPENED = "A rift is open in {{ place }} into {{ dimension }}."
+    NO_SUCH_RIFT = "There is no open rift with id {{ id }}."
+    RIFT_OUT_OF_REACH = "Your hand does not reach rift #{{ id }}: its world is not yours and no open road joins it to yours."
+    RIFT_SEALED = "The rift is sealed."
+    BEING_CALLED = "{{ name }} answers your call."
+    NOT_A_COSMIC_BEING = "#{{ id }} is not a cosmic being."
+    BEING_REFUSED = "The being does not yield: {{ reason }}"
+    BEING_BOUND = "The being is bound to you."
+    BEING_BANISHED = "The being is banished to the dimension it came from."
+    NOT_A_PHENOMENON = "#{{ id }} is not a phenomenon."
+    PHENOMENON_CONTAINED = "{{ name }} is held back by your ward."
+    CLIMATE_REFUSED = "The climate does not turn: {{ reason }}"
+    CLIMATE_TURNED = "The climate of {{ place }} turns {{ turn }}."
+    NO_SUCH_GALAXY = "There is no galaxy with id {{ id }}."
+    GALAXY_OUT_OF_REACH = "Your hand does not reach {{ name }}: none of its worlds is yours or joined to yours."
+    GALAXY_CLAIMED = "You are now the patron of {{ name }}."
+    DIMENSION_OUT_OF_REACH = "Your hand does not reach {{ name }}: none of its worlds is yours or joined to yours."
+    DIMENSION_RULED = "You now rule {{ name }}."
+    STAR_CLAIMED = "You are now the patron of {{ name }}."
+
 
 class MortalResult(StrEnum):
     NAME_TAKEN = "This name is taken."

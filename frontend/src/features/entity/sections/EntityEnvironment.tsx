@@ -47,6 +47,8 @@ import {
   StatBar,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { RegionClimateControl } from '@/features/cosmography/RegionClimateControl'
+import { CURRENTS } from '@/features/cosmography/labels'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -97,6 +99,9 @@ const WORKING = 'Working on it.'
 const TERRAIN_NAMES = Object.fromEntries(
   Object.entries(TERRAIN).map(([key, value]) => [key, value.label])
 )
+const CURRENT_NAMES = Object.fromEntries(
+  Object.entries(CURRENTS).map(([key, value]) => [key, value.label])
+)
 const REGION_CHOICES: {
   key: keyof RegionEnvironment
   table: Record<string, string>
@@ -105,6 +110,7 @@ const REGION_CHOICES: {
   { key: 'soil', table: SOIL },
   { key: 'river_class', table: RIVER },
   { key: 'coast_kind', table: COAST },
+  { key: 'current', table: CURRENT_NAMES },
   {
     key: 'temperature_band',
     table: Object.fromEntries(
@@ -129,6 +135,10 @@ const YES_NO = { yes: 'Yes', no: 'No' }
 
 function environmentKey(kind: 'region' | 'place', id: number) {
   return [...loreKeys.entity(id), 'environment', kind] as const
+}
+
+function shiftField(key: string, value: number) {
+  return { key, label: fieldLabel(key), value, min: -PERCENT, max: PERCENT }
 }
 
 function percentField(key: string, value: number, max = PERCENT) {
@@ -398,6 +408,9 @@ function regionGroups(ground: RegionEnvironment): AdjustGroup[] {
         percentField('rainfall', ground.rainfall),
         percentField('seasonality', ground.seasonality),
         percentField('magic_density', ground.magic_density),
+        percentField('leak', ground.leak),
+        shiftField('temperature_shift', ground.temperature_shift),
+        shiftField('rainfall_shift', ground.rainfall_shift),
       ],
     },
     {
@@ -771,6 +784,10 @@ function RegionEnvironmentSection({ regionId }: { regionId: number }) {
               <BiomeMix regionId={regionId} ground={ground} />
             </Card>
           </div>
+          <RegionClimateControl
+            ground={ground}
+            refresh={environmentKey('region', regionId)}
+          />
           <RegionControls regionId={regionId} ground={ground} />
         </div>
       )}

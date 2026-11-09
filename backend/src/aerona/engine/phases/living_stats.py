@@ -130,6 +130,9 @@ async def _hold_piety(session: AsyncSession, rules: Rules, entity_id: int, floor
 
 
 @reads(
+    "item.damage",
+    "item.might",
+    "item.protection",
     "knowledge.spread",
     "people.piety",
     "place.mystery",
@@ -138,10 +141,14 @@ async def _hold_piety(session: AsyncSession, rules: Rules, entity_id: int, floor
     "table.bonds",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.item_profiles",
+    "table.name_registry",
+    "table.node_materials",
     "table.nodes",
     "table.place_environment",
     "table.place_secrets",
     "table.region_environment",
+    "table.world_materials",
 )
 @writes(
     "knowledge.spread",
@@ -157,6 +164,8 @@ async def _hold_piety(session: AsyncSession, rules: Rules, entity_id: int, floor
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.name_registry",
+    "table.node_materials",
     "table.place_environment",
     "table.place_profiles",
     "table.place_secrets",

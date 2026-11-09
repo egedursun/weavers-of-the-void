@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.travel import TRAVEL_METHODS, travel_method_profile
+from aerona.catalog.cosmography import SCOPE_LABELS
+from aerona.catalog.travel import METHOD_REACH, TRAVEL_METHODS, travel_method_profile
 from aerona.constants.cosmos import JOURNEY_EVENT_LIMIT, NUMBER_WORDS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -16,21 +17,25 @@ from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.ecology import BeastProfileRow
+from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow, EntityTraitRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.cosmography import RouteScope
 from aerona.domain.enums.ecology import BeastTemper, Habitat, SizeClass
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
-from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
+from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, SocialClass
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMethod, VehicleKind
 from aerona.domain.enums.world import Discovery
-from aerona.domain.models.records import JourneyEvent
+from aerona.domain.models.records import CargoLine, JourneyEvent, PassengerLine
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.placement import Cosmography, cosmography_of, within_reach
 from aerona.engine.cosmos.resources import cosmic_access
 from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.vessels import owned_vessels
@@ -39,7 +44,8 @@ from aerona.engine.economy.materials import light_fabric, rig_of
 from aerona.engine.gods.economy import spend_cosmic_resource
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.knowledge import knows
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, stat, stat_or
 from aerona.engine.structures.readers import gate_opened
 from aerona.rules.registry import Rules
@@ -50,6 +56,9 @@ CREW_KEY = "crew"
 HP_KEY = "hp"
 LIVE_JOURNEYS = (JourneyStatus.UNDERWAY, JourneyStatus.WAITING)
 WORMHOLE_LOOKAHEAD = 20
+
+PASSENGER_INTENTS = frozenset({JourneyIntent.COLONY, JourneyIntent.CONQUEST, JourneyIntent.PILGRIMAGE})
+WEARING_METHODS = frozenset({TravelMethod.ANCIENT_GATE, TravelMethod.GALACTIC_GATE, TravelMethod.DIVINE_BRIDGE, TravelMethod.PLANAR_DOOR})
 
 
 @dataclass(frozen=True)
@@ -63,6 +72,7 @@ class SkyCalendar:
     opens_epoch: int | None
     closes_epoch: int | None
     wormhole_open_pct: int = PERCENT
+    wear_close: int = PERCENT
 
     def throat_open(self, route_id: int, epoch: int | None = None) -> bool:
         when = self.epoch if epoch is None else epoch
@@ -101,7 +111,9 @@ def sky_calendar(rules: Rules, epoch: int, alignment_until: int | None) -> SkyCa
             closes += 1
     if not aligned:
         opens = next_cycle
-    return SkyCalendar(epoch, period, aligned, cycle_aligned, alignment_until, next_cycle, opens, closes, rules.travel_methods.wormhole_open_pct)
+    return SkyCalendar(
+        epoch, period, aligned, cycle_aligned, alignment_until, next_cycle, opens, closes, rules.travel_methods.wormhole_open_pct, rules.cosmography.wear_close
+    )
 
 
 async def current_calendar(session: AsyncSession, rules: Rules, epoch: int) -> SkyCalendar:
@@ -144,6 +156,23 @@ def _closed_status(route: RouteRow, forgotten: Collection[int]) -> tuple[RouteSt
     return RouteState.SEALED, "The route is sealed; only an alignment (temporarily), the creator's hand, or a legendary quest breaks the seal.", None
 
 
+def _cycle_status(route: RouteRow, calendar: SkyCalendar, aligned: bool | None, hidden: bool) -> RouteStatus | None:
+    if route.method is TravelMethod.SLINGSHOT_ORBIT and not calendar.aligned:
+        reason = f"Slingshot orbit closed: planets align at the start of Epoch {calendar.opens_epoch}."
+        return RouteStatus(False, RouteState.MISALIGNED, reason, opens_epoch=calendar.opens_epoch, aligned=aligned, hidden=hidden)
+    if route.window_every > 0 and (calendar.epoch + route.window_offset) % route.window_every != 0:
+        opens = calendar.epoch + (route.window_every - (calendar.epoch + route.window_offset) % route.window_every)
+        reason = f"This route opens only once every {route.window_every} epochs; it opens again at the start of Epoch {opens}."
+        return RouteStatus(False, RouteState.MISALIGNED, reason, opens_epoch=opens, aligned=aligned, hidden=hidden)
+    if route.method in WEARING_METHODS and route.wear >= calendar.wear_close:
+        return RouteStatus(False, RouteState.WORN, "The way is worn out and stops working until it is mended.", aligned=aligned, hidden=hidden)
+    if route.method is TravelMethod.WORMHOLE and not calendar.throat_open(route.id):
+        throat = calendar.throat_opens(route.id)
+        when = f"; it may open again at the start of Epoch {throat}" if throat is not None else ""
+        return RouteStatus(False, RouteState.UNSTABLE, f"The wormhole's throat is shut this epoch{when}.", opens_epoch=throat, aligned=aligned, hidden=hidden)
+    return None
+
+
 def route_status(route: RouteRow, calendar: SkyCalendar, forgotten: Collection[int]) -> RouteStatus:
     hidden = not route.known
     slingshot = route.method is TravelMethod.SLINGSHOT_ORBIT
@@ -152,13 +181,9 @@ def route_status(route: RouteRow, calendar: SkyCalendar, forgotten: Collection[i
     if closed is not None:
         state, reason, opens = closed
         return RouteStatus(False, state, reason, opens_epoch=opens, aligned=aligned, hidden=hidden)
-    if slingshot and not calendar.aligned:
-        reason = f"Slingshot orbit closed: planets align at the start of Epoch {calendar.opens_epoch}."
-        return RouteStatus(False, RouteState.MISALIGNED, reason, opens_epoch=calendar.opens_epoch, aligned=aligned, hidden=hidden)
-    if route.method is TravelMethod.WORMHOLE and not calendar.throat_open(route.id):
-        opens = calendar.throat_opens(route.id)
-        when = f"; it may open again at the start of Epoch {opens}" if opens is not None else ""
-        return RouteStatus(False, RouteState.UNSTABLE, f"The wormhole's throat is shut this epoch{when}.", opens_epoch=opens, aligned=aligned, hidden=hidden)
+    cycled = _cycle_status(route, calendar, aligned, hidden)
+    if cycled is not None:
+        return cycled
     closes = [value for value in (route.temp_open_until_epoch, calendar.closes_epoch if slingshot else None) if value is not None]
     closes_epoch = min(closes) if closes else None
     if route.temp_open_until_epoch is not None:
@@ -273,7 +298,12 @@ async def open_route(session: AsyncSession, rules: Rules, rng: SeededRandom, epo
         return existing
     travel = rules.travel
     profile = travel_method_profile(rules, spec.method)
+    ladder = await cosmography_of(session)
+    scope = ladder.scope(first, second)
+    if not within_reach(scope, METHOD_REACH[spec.method]):
+        raise ValidationFailedError(f"{profile.label} cannot reach that far: the worlds lie {SCOPE_LABELS[scope].lower()}.")
     terrain = mechanics_of(first.world_type).route_danger(rules) + mechanics_of(second.world_type).route_danger(rules)
+    terrain += scope_danger(rules, scope) + cosmic_route_danger(rules, ladder, first) + cosmic_route_danger(rules, ladder, second)
     bound_star_id = await _star_of(session, first) if spec.method is TravelMethod.LIGHT_SAIL else None
     bound_star = await session.get(StarRow, bound_star_id) if bound_star_id is not None else None
     terrain += star_mechanics(bound_star.star_type).sail_danger(rules) if bound_star is not None else 0
@@ -284,7 +314,7 @@ async def open_route(session: AsyncSession, rules: Rules, rng: SeededRandom, epo
         world_a_id=first.id,
         world_b_id=second.id,
         method=spec.method,
-        duration_epochs=profile.duration_epochs,
+        duration_epochs=scaled_duration(rules, profile.duration_epochs, scope),
         danger=danger,
         known=spec.known,
         controller_entity_id=spec.controller_id,
@@ -294,10 +324,46 @@ async def open_route(session: AsyncSession, rules: Rules, rng: SeededRandom, epo
         description=spec.description,
         created_epoch=epoch,
         active=True,
+        locked=[],
     )
     session.add(route)
     await session.flush()
     return route
+
+
+def scope_duration_pct(rules: Rules, scope: RouteScope) -> int:
+    table = rules.cosmography
+    return {
+        RouteScope.SYSTEM: table.system_duration_pct,
+        RouteScope.STELLAR: table.stellar_duration_pct,
+        RouteScope.GALACTIC: table.galactic_duration_pct,
+        RouteScope.INTERGALACTIC: table.intergalactic_duration_pct,
+        RouteScope.INTERCLUSTER: table.intercluster_duration_pct,
+        RouteScope.INTERDIMENSIONAL: table.interdimensional_duration_pct,
+    }[scope]
+
+
+def scope_danger(rules: Rules, scope: RouteScope) -> int:
+    table = rules.cosmography
+    return {
+        RouteScope.SYSTEM: 0,
+        RouteScope.STELLAR: 0,
+        RouteScope.GALACTIC: table.galactic_danger,
+        RouteScope.INTERGALACTIC: table.intergalactic_danger,
+        RouteScope.INTERCLUSTER: table.intercluster_danger,
+        RouteScope.INTERDIMENSIONAL: table.interdimensional_danger,
+    }[scope]
+
+
+def scaled_duration(rules: Rules, base: int, scope: RouteScope) -> int:
+    return max(1, round_half_up(base * scope_duration_pct(rules, scope) / PERCENT))
+
+
+def cosmic_route_danger(rules: Rules, ladder: Cosmography, world: WorldRow) -> int:
+    danger = ladder.pull(rules, ladder.place_world(world)).danger
+    if world.magnetism < rules.world_life.weak_magnetism:
+        danger += rules.world_life.low_magnetism_danger
+    return danger
 
 
 @dataclass(frozen=True)
@@ -484,7 +550,7 @@ async def start_journey(ctx: TickContext, spec: JourneySpec) -> JourneyRow:
     rig = await rig_of(session, spec.vehicle)
     shortened = 1 if speed >= rules.travel.fast_vessel_speed or (rig is not None and light_fabric(rules, rig.fabric)) else 0
     fit = vessel_fit(rules, spec.vehicle, route.duration_epochs, carried)
-    carried = fit.carried
+    carried = min(fit.carried, rules.cosmography.ark_capacity) if route.method is TravelMethod.VOID_ARK else fit.carried
     remaining = max(1, 1 if folding else route.duration_epochs - shortened + fit.extra_epochs)
     leaving = carried
     carried, sacrifice = await _gate_sacrifice(ctx, spec, carried)
@@ -504,9 +570,47 @@ async def start_journey(ctx: TickContext, spec: JourneySpec) -> JourneyRow:
         start_epoch=ctx.epoch,
     )
     session.add(journey)
+    await load_voyage(ctx, journey, traveller)
     await session.flush()
     ctx.count("journeys_started")
     return journey
+
+
+async def load_voyage(ctx: TickContext, journey: JourneyRow, traveller: EntityRow) -> None:
+    table = ctx.rules.journeys
+    cosmography = await cosmography_of(ctx.session)
+    journey.scope = cosmography.scope_by_id(journey.origin_world_id, journey.destination_world_id)
+    journey.convoy = max(1, journey.convoy or 1)
+    journey.escorts = journey.escorts or 0
+    journey.locked = journey.locked or []
+    if journey.intent in PASSENGER_INTENTS and journey.population > 0 and traveller.entity_type in (EntityType.PEOPLE, EntityType.SETTLEMENT):
+        shares = await class_shares(ctx.session, ctx.rules, traveller.id)
+        lines = [
+            PassengerLine(community_entity_id=traveller.id, social_class=kind, count=round(journey.population * share / PERCENT), condition=PERCENT)
+            for kind, share in sorted(shares.items(), key=lambda item: (-item[1], item[0].value))
+            if share > 0
+        ]
+        journey.passengers = [line for line in lines if line.count > 0] or [
+            PassengerLine(community_entity_id=traveller.id, social_class=SocialClass.FARMER, count=journey.population)
+        ]
+    if journey.intent is JourneyIntent.TRADE and not held(traveller.id):
+        room = table.convoy_cargo * journey.convoy
+        cargo: list[CargoLine] = []
+        stocks = await ctx.session.scalars(
+            select(CommunityStockRow)
+            .where(CommunityStockRow.community_entity_id == traveller.id, CommunityStockRow.held.is_(False))
+            .order_by(CommunityStockRow.quantity.desc())
+        )
+        for stock in stocks:
+            if room <= 0:
+                break
+            taken = min(room, stock.quantity // 2)
+            if taken <= 0:
+                continue
+            stock.quantity -= taken
+            room -= taken
+            cargo.append(CargoLine(commodity=stock.commodity, material=stock.material, amount=taken))
+        journey.cargo = cargo
 
 
 async def recall_journey(ctx: TickContext, journey_id: int, by: str) -> str:

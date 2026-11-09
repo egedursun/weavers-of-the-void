@@ -13,6 +13,7 @@ import {
   Handshake,
   HeartCrack,
   Hourglass,
+  Layers,
   Link2Off,
   Map,
   Moon,
@@ -137,6 +138,7 @@ export const PUNISHMENTS: Record<Schema['SonPunishment'], string> = {
 
 export const LAW_SCOPES: Record<Schema['LawScope'], Named> = {
   cosmos: { label: 'The whole cosmos', icon: Orbit, tone: 'gold' },
+  dimension: { label: 'One dimension', icon: Layers, tone: 'info' },
   world: { label: 'One world', icon: Globe, tone: 'info' },
   region: { label: 'One land', icon: Map, tone: 'verdigris' },
 }

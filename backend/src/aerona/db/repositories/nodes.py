@@ -4,6 +4,7 @@ from sqlalchemy.orm.util import identity_key
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.base import Repository
 from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.cosmography import ClusterRow, DimensionRow, GalaxyRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -19,6 +20,9 @@ NODE_TABLES: dict[NodeKind, type[NodeRow]] = {
     NodeKind.FOREIGN_GOD: ForeignGodRow,
     NodeKind.WORLD: WorldRow,
     NodeKind.STAR: StarRow,
+    NodeKind.GALAXY: GalaxyRow,
+    NodeKind.CLUSTER: ClusterRow,
+    NodeKind.DIMENSION: DimensionRow,
 }
 
 

@@ -12,6 +12,7 @@ import {
   ImagePlus,
   Images,
   Languages,
+  Layers,
   LayoutDashboard,
   type LucideIcon,
   Map as MapIcon,
@@ -40,6 +41,7 @@ export type NavRoute =
   | '/council'
   | '/prayers'
   | '/cosmos'
+  | '/heavens'
   | '/map'
   | '/atlas'
   | '/network'
@@ -220,6 +222,14 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Orbit,
         description: 'Stars, worlds, routes, voyages and foreign gods.',
         shortcut: '5',
+      },
+      {
+        id: 'heavens',
+        title: 'Heavens',
+        to: '/heavens',
+        icon: Layers,
+        description:
+          'Dimensions, clusters, galaxies, rifts, cosmic beings and phenomena.',
       },
       {
         id: 'map',

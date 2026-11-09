@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.cosmography import CosmicBeingProfileRow, PhenomenonFootprintRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, RiteProfileRow
 from aerona.db.tables.divine import DivineWoundRow
@@ -25,6 +26,7 @@ from aerona.db.tables.titles import DeJureLinkRow, TitleProfileRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.cosmography import BeingKind, BeingScale, DimensionKind, PhenomenonCause, PhenomenonKind, RiftCause, RiftState
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.divine import DivineWoundKind, WoundCause
 from aerona.domain.enums.domain import Domain
@@ -40,14 +42,17 @@ from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.statecraft import CrisisDemand
 from aerona.domain.enums.titles import TitleRank
 from aerona.domain.enums.world import StarType
-from aerona.domain.models.entity_stats import FactionStats, HouseStats, MortalStats, PolityStats, TitleStats
+from aerona.domain.models.entity_stats import CosmicBeingStats, FactionStats, HouseStats, MortalStats, PhenomenonStats, PolityStats, TitleStats
 from aerona.domain.models.profiles import TravelResource
+from aerona.engine.cosmos.ladder import DimensionDraft, create_dimension, ensure_ladder
 from aerona.engine.cosmos.maps import refresh_world_maps
+from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.households.formation import found_household
 from aerona.engine.phases.environment import environment_survey
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.services.war import take_captive
+from aerona.rules.registry import Rules
 from tests.tools.every_tool import Ids
 from tests.tools.factories import Realm, connect, make_entity
 
@@ -427,3 +432,57 @@ async def wounded(session: AsyncSession, realm: Realm) -> Ids:
     session.add(wound)
     await session.flush()
     return {"wound": wound.id}
+
+
+async def heavens(session: AsyncSession, realm: Realm) -> Ids:
+    rules = Rules()
+    await ensure_ladder(session, rules)
+    plane = await create_dimension(session, rules, DimensionDraft("Astral Reach", DimensionKind.ASTRAL, EPOCH))
+    cosmography = await Cosmography.load(session)
+    placement = cosmography.place_world_id(realm.cosmos.world_id)
+    assert placement.galaxy is not None and placement.dimension is not None
+    return {"dimension": plane.id, "galaxy": placement.galaxy.id, "prime": placement.dimension.id}
+
+
+async def rifted(session: AsyncSession, realm: Realm) -> Ids:
+    ids = await heavens(session, realm)
+    rift = RiftRow(
+        world_id=realm.cosmos.world_id,
+        region_entity_id=realm.cosmos.region_id,
+        dimension_id=ids["dimension"],
+        size=30,
+        stability=50,
+        state=RiftState.OPEN,
+        cause=RiftCause.GOD,
+        opened_epoch=EPOCH,
+        locked=[],
+    )
+    session.add(rift)
+    await session.flush()
+    return {**ids, "rift": rift.id}
+
+
+async def cosmic_being(session: AsyncSession, realm: Realm) -> Ids:
+    being = await make_entity(
+        session,
+        "The Long Watcher",
+        EntityType.COSMIC_BEING,
+        world_id=realm.cosmos.world_id,
+        location_id=realm.cosmos.region_id,
+        stats=CosmicBeingStats(size=50),
+    )
+    session.add(CosmicBeingProfileRow(entity_id=being.id, being_kind=BeingKind.VOID_SHEPHERD, scale=BeingScale.GALAXY, might=50, locked=[]))
+    await session.flush()
+    return {"being": being.id}
+
+
+async def phenomenon(session: AsyncSession, realm: Realm) -> Ids:
+    found = await make_entity(
+        session, "The Standing Fog", EntityType.PHENOMENON, world_id=realm.cosmos.world_id, location_id=realm.cosmos.region_id, stats=PhenomenonStats(danger=20)
+    )
+    session.add(
+        PhenomenonProfileRow(entity_id=found.id, kind=PhenomenonKind.LIVING_FOG, intensity=50, cause=PhenomenonCause.DIVINE, formed_epoch=EPOCH, locked=[])
+    )
+    session.add(PhenomenonFootprintRow(phenomenon_entity_id=found.id, region_entity_id=realm.cosmos.region_id, intensity=50))
+    await session.flush()
+    return {"phenomenon": found.id}

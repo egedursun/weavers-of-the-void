@@ -29,6 +29,17 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.cosmography import (
+    BeingKind,
+    ClusterKind,
+    DimensionalEventKind,
+    DimensionKind,
+    GalacticEventKind,
+    GalaxyType,
+    PhenomenonCause,
+    PhenomenonKind,
+    RiftCause,
+)
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
@@ -36,8 +47,13 @@ from aerona.domain.enums.epoch import DeferredStepStatus
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.world import WorldType
-from aerona.domain.models.entity_stats import NaturalLawStats, OuterBeingStats
+from aerona.domain.models.entity_stats import CelestialStats, NaturalLawStats, OuterBeingStats
+from aerona.engine.cosmos.beings import create_being
+from aerona.engine.cosmos.control import dimensional_event, galactic_event
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
+from aerona.engine.cosmos.ladder import ClusterDraft, DimensionDraft, GalaxyDraft, create_cluster, create_dimension, create_galaxy, ensure_ladder
+from aerona.engine.cosmos.phenomena import form_phenomenon
+from aerona.engine.cosmos.rifts import open_rift
 from aerona.engine.economy.route_control import route_of
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.primitives.manual import manual_context
@@ -354,6 +370,10 @@ PLANT = (
 )
 HERESY = ("cult:heresy", {"heresy_id": Pick(EntityType.CULT), "parent_id": Pick(EntityType.CULT, 1)})
 DEED = ("deed:record", {"doer_id": Pick(MORTAL), "magnitude": 20})
+ARTWORK = ("art:commission", {"patron_id": Pick(MORTAL), "medium": "song"})
+ITEM_DEED = ("item:deed", {"item_id": Pick(EntityType.ITEM), "deed": "battle"})
+REPUTATION = ("renown:set", {"subject_id": Pick(MORTAL), "community_id": Pick(TOWN), "axis": "heroism", "value": 60})
+CONTEST = ("contest:hold", {"challenger_id": Pick(MORTAL), "defender_id": Pick(MORTAL, 1), "kind": "riddle_game"})
 DISEASE = ("disease:create", {"region_id": Pick(EntityType.REGION), "name": "Grey Cough"})
 FOREIGN = ("foreign_god:place", {"world_id": Pick("world"), "name": "Ussamar"})
 
@@ -608,6 +628,39 @@ async def natural_law(session: AsyncSession) -> int:
     return law.id
 
 
+async def heavens(session: AsyncSession) -> None:
+    rules = Rules()
+    await ensure_ladder(session, rules)
+    ctx = await manual_context(session, "heavens", rules)
+    plane = await create_dimension(session, rules, DimensionDraft("Astral Deep", DimensionKind.ASTRAL, ctx.epoch))
+    group = await create_cluster(session, rules, ClusterDraft("Far Group", ClusterKind.GALAXY_GROUP, ctx.epoch, dimension_id=plane.id))
+    galaxy = await create_galaxy(session, rules, GalaxyDraft("Far Spiral", GalaxyType.SPIRAL, ctx.epoch, cluster_id=group.id))
+    await galactic_event(ctx, galaxy.id, GalacticEventKind.STARBURST, intensity=20, other_id=None, star_id=None)
+    await dimensional_event(ctx, plane.id, DimensionalEventKind.VEIL_THINNING, intensity=10, other_id=None, world_id=None)
+    world = await session.scalar(select(WorldRow).order_by(WorldRow.id).limit(1))
+    assert world is not None
+    region = await session.scalar(
+        select(EntityRow).where(EntityRow.entity_type == EntityType.REGION, EntityRow.world_id == world.id).order_by(EntityRow.id).limit(1)
+    )
+    assert region is not None
+    await open_rift(ctx, world, region, plane, RiftCause.CREATOR)
+    await create_being(ctx, BeingKind.VEIL_WARDEN, world, region=region, home_dimension_id=plane.id)
+    await form_phenomenon(ctx, PhenomenonKind.CRYSTAL_BLOOM, region, PhenomenonCause.DIVINE, intensity=40)
+    await EntityRepository(session).create(
+        EntityDraft(
+            name="The Pale Wanderer",
+            entity_type=EntityType.CELESTIAL,
+            description="A body that returns.",
+            stats=CelestialStats(brightness=40, influence=30, cycle=75),
+            power_level=2,
+            origin=EntityOrigin.CREATOR,
+            birth_epoch=1,
+            world_id=world.id,
+        )
+    )
+    await session.flush()
+
+
 async def outer_being(session: AsyncSession) -> int:
     found = await session.scalar(select(EntityRow.id).where(EntityRow.entity_type == EntityType.OUTER_BEING).order_by(EntityRow.id).limit(1))
     if found is not None:
@@ -788,6 +841,13 @@ LEVERS: dict[str, Lever] = {
         for name in ("currency:debase", "currency:delete", "currency:edit", "currency:release", "currency:use")
     },
     "deed_claim:set": after(DEED, deed_id=Newest("deed"), claimant_id=Pick(MORTAL, 1)),
+    "deed:edit": after(DEED, deed_id=Newest("deed"), magnitude=30, note="told again"),
+    "deed:remove": after(DEED, deed_id=Newest("deed")),
+    "item:deed_remove": after(ITEM_DEED, deed_id=Newest("item_history")),
+    "art:canonise": after(ARTWORK, artwork_id=Newest(EntityType.ARTWORK)),
+    "renown:remove": after(REPUTATION, reputation_id=Newest("reputation")),
+    "contest:edit": after(CONTEST, contest_id=Newest("contest"), famous=True),
+    "contest:remove": after(CONTEST, contest_id=Newest("contest")),
     **{
         name: after(DEED, ("deed_claim:set", {"deed_id": Newest("deed"), "claimant_id": Pick(MORTAL, 1), "kind": "false"}), claim_id=Newest("deed_claim"))
         for name in ("deed_claim:expose", "deed_claim:remove")
@@ -1467,6 +1527,48 @@ LEVERS: dict[str, Lever] = {
         values={"species_id": Pick(EntityType.SPECIES)}, before=(("soul:raise", {"mortal_id": DEAD, "place_id": Computed(soul_range)}),), setup=soul_eating
     ),
     **{name: after(PROPHECY, prophecy_id=Newest(EntityType.PROPHECY)) for name in ("prophecy:forget", "prophecy:fulfil", "prophecy:resolve")},
+    "dimension:create": given(name="Shadow Deep", kind="shadow"),
+    **{
+        name: setup_then(heavens, dimension_id=Where("dimensions", "id", {"dimension_kind": DimensionKind.ASTRAL}))
+        for name in ("dimension:edit", "dimension:delete")
+    },
+    "cluster:create": Lever(values={"name": "Near Group", "kind": "poor_cluster", "dimension_id": Where("dimensions", "id")}, setup=heavens),
+    **{name: setup_then(heavens, cluster_id=Newest("galaxy_cluster")) for name in ("cluster:edit", "cluster:delete")},
+    "galaxy:create": Lever(values={"name": "Near Spiral", "galaxy_type": "ring", "cluster_id": Newest("galaxy_cluster")}, setup=heavens),
+    **{name: setup_then(heavens, galaxy_id=Newest("galaxy")) for name in ("galaxy:edit", "galaxy:delete")},
+    "galactic_structure:create": Lever(values={"galaxy_id": Newest("galaxy"), "kind": "dark_nebula", "name": "Dark Lane"}, setup=heavens),
+    **{name: setup_then(heavens, structure_id=Newest("galactic_structure")) for name in ("galactic_structure:edit", "galactic_structure:delete")},
+    "galactic_event:trigger": Lever(values={"galaxy_id": Newest("galaxy"), "kind": "galactic_dimming"}, setup=heavens),
+    **{name: setup_then(heavens, event_id=Newest("galactic_event")) for name in ("galactic_event:edit", "galactic_event:delete")},
+    "dimensional_event:trigger": Lever(values={"dimension_id": Newest("dimension"), "kind": "planar_alignment"}, setup=heavens),
+    **{name: setup_then(heavens, event_id=Newest("dimensional_event")) for name in ("dimensional_event:edit", "dimensional_event:delete")},
+    "rift:open": Lever(values={"world_id": Pick("world"), "region_id": Pick(EntityType.REGION), "dimension_id": Newest("dimension")}, setup=heavens),
+    **{name: setup_then(heavens, rift_id=Newest("rift")) for name in ("rift:edit", "rift:seal", "rift:delete")},
+    "cosmic_being:call": given(kind="nebula_mind", world_id=Pick("world"), region_id=Pick(EntityType.REGION)),
+    **{name: setup_then(heavens, being_id=Newest(EntityType.COSMIC_BEING)) for name in ("cosmic_being:edit", "cosmic_being:bind", "cosmic_being:banish")},
+    "phenomenon:create": given(kind="singing_stones", region_id=Pick(EntityType.REGION), intensity=40),
+    **{name: setup_then(heavens, phenomenon_id=Newest(EntityType.PHENOMENON)) for name in ("phenomenon:edit", "phenomenon:contain")},
+    "phenomenon:footprint": setup_then(heavens, phenomenon_id=Newest(EntityType.PHENOMENON), region_id=Pick(EntityType.REGION, 1), intensity=30),
+    "star_life:edit": setup_then(heavens, star_id=Pick("star")),
+    "world_life:edit": setup_then(heavens, world_id=Pick("world")),
+    "route_flow:edit": given(route_id=Pick("route")),
+    **{
+        name: Lever(
+            values={"journey_id": Newest("journey"), **extra},
+            before=(GATE_LORE, ("expedition", {"entity_id": Pick(EntityType.PEOPLE), "route_id": Pick("route")})),
+            setup=gate_lore,
+        )
+        for name, extra in (
+            (
+                "journey:load",
+                {"convoy": 3, "escorts": 2, "cargo": [{"commodity": "grain", "amount": 50}], "passengers": [{"social_class": "farmer", "count": 40}]},
+            ),
+            ("journey:release", {"fields": ["convoy", "cargo"]}),
+        )
+    },
+    "celestial_reading:set": setup_then(heavens, celestial_id=Newest(EntityType.CELESTIAL), people_id=Pick(EntityType.PEOPLE), reading="evil"),
+    "apocalypse:variant": given(variant="galactic_death"),
+    "region_climate:turn": given(region_id=Pick(EntityType.REGION), turn="drier"),
     "body:prosthesis": after(("body:maim", {"bearer_id": Pick(MORTAL), "part": "left_arm", "severity": 5, "lethal": False}), material="wood", quality=40),
 }
 
@@ -1526,6 +1628,18 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "law_profile:edit": {"strength": 70, "scope": "cosmos", "effect": "bounty"},
     "outer_profile:edit": {"reach": 2, "hunger": "light", "fed": 3},
     "breach:edit": {"strength": 40},
+    "dimension:edit": {"veil": 30, "time_factor": 2.0, "causality": "loose"},
+    "cluster:edit": {"medium_heat": 40, "radius": 2000.0},
+    "galaxy:edit": {"star_formation": 60, "arm_count": 3, "nucleus": "active"},
+    "galactic_structure:edit": {"intensity": 70, "radius": 80.0},
+    "galactic_event:edit": {"intensity": 60},
+    "dimensional_event:edit": {"intensity": 40},
+    "rift:edit": {"size": 40, "stability": 70},
+    "cosmic_being:edit": {"might": 70, "agenda": "guard"},
+    "phenomenon:edit": {"intensity": 60, "growth": 2},
+    "star_life:edit": {"stability": 50, "age_stage": "old", "radiation": 30},
+    "world_life:edit": {"magnetism": 20, "biosphere_health": 60, "mood": -10},
+    "route_flow:edit": {"toll_pct": 10, "piracy": 20, "window_every": 2},
 }
 LEVERS.update({name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in EDITS.items()})
 
@@ -1553,6 +1667,7 @@ LORE_LEVERS: Mapping[str, Lever] = {
     kind.value: after(step, entity_id=Newest(kind))
     for kind, step in (
         (EntityType.ART_FORM, ART_FORM),
+        (EntityType.ARTWORK, ARTWORK),
         (EntityType.IDEOLOGY, IDEOLOGY),
         (EntityType.PROPHECY, PROPHECY),
         (EntityType.RITE, RITE),

@@ -21,6 +21,7 @@ class StarDraft:
     y: float
     created_epoch: int
     description: str | None = None
+    galaxy_id: int | None = None
 
 
 @dataclass(frozen=True)
@@ -58,6 +59,8 @@ class WorldRepository(Repository):
             y=draft.y,
             created_epoch=draft.created_epoch,
             description=draft.description,
+            galaxy_id=draft.galaxy_id,
+            locked=[],
         )
         await self.insert(star)
         star.name = await names.claim(star.id, draft.name)

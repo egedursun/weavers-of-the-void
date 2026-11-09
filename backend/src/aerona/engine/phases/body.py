@@ -13,6 +13,7 @@ from aerona.db.tables.faith import CultTenetRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.society import AddictionRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission
 from aerona.domain.enums.body import MADNESS_CONDITIONS, ConditionKind, DamageType, HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind
@@ -101,21 +102,21 @@ async def body_survey(ctx: TickContext) -> None:
     ctx.count("digits_named", await backfill_digits(ctx.session, rules))
     known = set(await ctx.session.scalars(select(BodyRow.node_id)))
     for species in await canon(ctx.session, [EntityType.SPECIES]):
-        if species.id not in known:
+        if species.id not in known and not held(species.id):
             await ensure_species_body(ctx.session, species)
     for people in await canon(ctx.session, [EntityType.PEOPLE]):
         await ensure_customs(ctx.session, rules, people)
     created = 0
     for mortal in await canon(ctx.session, [EntityType.MORTAL]):
-        if mortal.id not in known:
+        if mortal.id not in known and not held(mortal.id):
             await refresh(ctx.session, rules, mortal, ctx.epoch)
             created += 1
     for son in await ctx.session.scalars(select(SonRow)):
-        if son.id not in known:
+        if son.id not in known and not held(son.id):
             await refresh(ctx.session, rules, son, ctx.epoch)
             created += 1
     for god in await ctx.session.scalars(select(ForeignGodRow)):
-        if god.id not in known:
+        if god.id not in known and not held(god.id):
             await refresh(ctx.session, rules, god, ctx.epoch)
             created += 1
     ctx.count("bodies", created)

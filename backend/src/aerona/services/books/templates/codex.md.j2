@@ -331,6 +331,29 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 
 ## The Heavens
 
+{% if book.ladder %}
+### The scale of the cosmos
+
+{% for article in book.ladder %}
+<a id="{{ article.anchor }}"></a>
+
+{{ [4 + article.level, 6] | min | heading }} {{ article.name }}
+
+*{{ article.kind }}*
+
+{{ image(article.cover, article.name) }}
+{{ facts_table(article.facts) }}
+{% if article.description %}
+{{ article.description | prose }}
+
+{% endif %}
+{% if article.stars %}
+**Stars:** {% for name, anchor in article.stars %}[{{ name }}](#{{ anchor }}){% if not loop.last %} · {% endif %}{% endfor %}
+
+{% endif %}
+{{ typed(article.typed) }}
+{% endfor %}
+{% endif %}
 {% for section in book.stars %}
 {% if section.star %}
 <a id="{{ section.anchor }}"></a>

@@ -52,6 +52,9 @@ GENOME_REASON = {
     NodeKind.FOREIGN_GOD: "A foreign god has no mortal blood to read.",
     NodeKind.WORLD: "A world is land and sky, not a lineage; the peoples on it keep allele pools.",
     NodeKind.STAR: "A star bears no blood.",
+    NodeKind.GALAXY: "A galaxy bears no blood.",
+    NodeKind.CLUSTER: "A cluster of galaxies bears no blood.",
+    NodeKind.DIMENSION: "A dimension is a layer of existence, not a lineage.",
 }
 HOME_REASON = {
     NodeKind.CREATOR: "The Creator dwells nowhere and keeps no household.",
@@ -59,6 +62,9 @@ HOME_REASON = {
     NodeKind.FOREIGN_GOD: "A foreign god keeps no mortal household.",
     NodeKind.WORLD: "A world holds settlements; each keeps its households.",
     NodeKind.STAR: "A star holds no households.",
+    NodeKind.GALAXY: "A galaxy holds worlds; each keeps its households.",
+    NodeKind.CLUSTER: "A cluster holds galaxies; their worlds keep the households.",
+    NodeKind.DIMENSION: "A dimension holds worlds; each keeps its households.",
 }
 
 

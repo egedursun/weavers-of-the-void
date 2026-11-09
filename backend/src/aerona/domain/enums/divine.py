@@ -133,6 +133,7 @@ class SonPunishment(StrEnum):
 
 class LawScope(StrEnum):
     COSMOS = "cosmos"
+    DIMENSION = "dimension"
     WORLD = "world"
     REGION = "region"
 

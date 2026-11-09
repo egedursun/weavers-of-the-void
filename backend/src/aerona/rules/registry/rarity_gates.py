@@ -111,6 +111,12 @@ class RarityGatesRules:
     create_art_form: int = rule(
         1, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can inspire an Art form (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
     )
+    create_phenomenon: int = rule(
+        2, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can raise a Phenomenon (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )
+    create_cosmic_being: int = rule(
+        3, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can call a Cosmic Being (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )
     create_natural_law: int = rule(
         4, 0, 5, RuleGroup.RARITY_TIERS, "Lowest son rarity that can create a Natural Law (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
     )

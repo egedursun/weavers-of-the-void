@@ -26,6 +26,7 @@ import {
 import { Progress } from '@/components/ui/progress'
 import { EntityLink, type KpiTone, Medallion } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { JourneyLoadEditor } from '@/features/cosmography/FlowEditors'
 import { NodeAvatar } from '@/features/images/NodeAvatar'
 import { CosmicActionButton } from './CosmicActionButton'
 import { type JourneyRecord, type JourneyStatus } from './api'
@@ -181,20 +182,23 @@ export function VoyageCard({ journey, index }: VoyageCardProps) {
               ? `Arrives in ${journey.epochs_left} epochs`
               : 'Arrives this epoch'}
           </Muted>
-          <CosmicActionButton
-            actionId='journey:recall'
-            label='Recall'
-            icon={Undo2}
-            variant='ghost'
-            size='sm'
-            pending={recall.isPending}
-            confirm={{
-              title: 'Recall this voyage?',
-              description: `${traveller} turns back and returns home.`,
-              confirmText: 'Recall',
-            }}
-            onRun={() => recall.mutate()}
-          />
+          <div className='flex shrink-0 items-center gap-1'>
+            <JourneyLoadEditor journey={journey} />
+            <CosmicActionButton
+              actionId='journey:recall'
+              label='Recall'
+              icon={Undo2}
+              variant='ghost'
+              size='sm'
+              pending={recall.isPending}
+              confirm={{
+                title: 'Recall this voyage?',
+                description: `${traveller} turns back and returns home.`,
+                confirmText: 'Recall',
+              }}
+              onRun={() => recall.mutate()}
+            />
+          </div>
         </div>
       )}
       {journey.status === 'recalled' && (

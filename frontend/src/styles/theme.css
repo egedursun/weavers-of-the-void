@@ -266,6 +266,11 @@
   --cosmos-route-slingshot-orbit: #dcb45c;
   --cosmos-route-swallowed: #e0604a;
   --cosmos-route-wormhole: #9a8aff;
+  --cosmos-route-void-ark: #c9a36b;
+  --cosmos-route-galactic-gate: #d17bd8;
+  --cosmos-route-filament-lane: #7bc7a6;
+  --cosmos-route-dimensional-rift: #e46aa0;
+  --cosmos-route-planar-door: #8fb4f0;
 }
 
 @media (min-width: 48rem) {

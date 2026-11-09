@@ -65,6 +65,9 @@ LINK_KINDS = {
     NodeKind.CREATOR: "creator",
     NodeKind.WORLD: "world",
     NodeKind.STAR: "star",
+    NodeKind.GALAXY: "galaxy",
+    NodeKind.CLUSTER: "cluster",
+    NodeKind.DIMENSION: "dimension",
 }
 
 

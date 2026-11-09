@@ -115,10 +115,12 @@ def omen_morale(rules: Rules, weather: Weather | None, domains: frozenset[Domain
     return round(weather.omen_for(domains) * superstition / PERCENT * rules.campaigns.omen_morale_pct / PERCENT)
 
 
-def season_losses(rules: Rules, weather: Weather | None, region: RegionEnvironmentRow | None, *, armour_pct: int, acclimatised: bool) -> float:
+def season_losses(
+    rules: Rules, weather: Weather | None, region: RegionEnvironmentRow | None, *, armour_pct: int, acclimatised: bool, air_pct: int = PERCENT
+) -> float:
     if weather is None:
         return 0.0
-    exposure = season_attrition(rules, weather, armour_pct=armour_pct, acclimatised=acclimatised)
+    exposure = season_attrition(rules, weather, armour_pct=armour_pct, acclimatised=acclimatised) * air_pct / PERCENT
     disease = region.disease_load if region is not None else 0
     camp = weather.effect(WeatherEffect.WET) * disease / PERCENT * rules.campaigns.camp_disease_pct / PERCENT / PERCENT
     return min(1.0, exposure + camp)

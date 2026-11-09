@@ -18,11 +18,13 @@ from aerona.db.tables.society import ResurrectionOrderRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, ThreadLinkRole
+from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.son import SonDeathCause, SonStatus, Stat
 from aerona.domain.models.entity_stats import CultStats, PlaceStats, SpiritStats
 from aerona.domain.models.stats import STAT_CEILING, STAT_FLOOR
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.gods.essence import gain
 from aerona.engine.gods.queries import cosmos_row, creator_row, sons, worshippers_of
 from aerona.engine.gods.stats import Trait, set_trait, trait_or
@@ -119,6 +121,8 @@ async def god_death(ctx: TickContext, son: SonRow, cause: str, death_cause: SonD
             split_title=False,
         ),
     )
+    if home is not None:
+        await form_phenomenon(ctx, PhenomenonKind.GOD_CORPSE_AURA, home, PhenomenonCause.GOD_DEATH, cause_node_id=son.id)
     shade = await _create(
         ctx,
         EntityDraft(

@@ -27,6 +27,7 @@ from aerona.db.tables.warfare import BattleRow, WarSideRow
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import DamageType, HarmCause, InjuryState
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind
 from aerona.domain.enums.culture import (
     BacklashKind,
     CalendarSlot,
@@ -56,6 +57,9 @@ from aerona.domain.models.entity_stats import RiteStats, SpiritStats
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.beings import banish_near
+from aerona.engine.cosmos.omens import celestial_rite_pct
+from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.divine.decrees import outlawed_schools
 from aerona.engine.divine.laws import binds
@@ -566,6 +570,11 @@ async def do_ward(ctx: TickContext, work: Working) -> str | None:
     if defense is not None:
         set_stats(home, defense=clamp_int(defense + ctx.rules.intervention_effects.protection_defense_gain, 0, PERCENT))
     await add_flag(ctx.session, home.id, EntityFlag.PROTECTED, ctx.epoch)
+    if work.row.power >= ctx.rules.cosmic_beings.rite_banish_power:
+        atlas = await RegionAtlas.load(ctx.session)
+        driven = await banish_near(ctx, atlas.top_region(work.caster.id), work.caster.name)
+        if driven is not None:
+            return f"warded {home.name} and drove {driven} back to its dimension"
     return f"warded {home.name}"
 
 
@@ -766,6 +775,12 @@ async def effects_of(ctx: TickContext, rite_id: int) -> list[RiteEffectRow]:
 
 
 async def working(ctx: TickContext, caster: EntityRow, target: EntityRow | None, effect: RiteEffectRow, row: RiteProfileRow) -> Working:
+    shaped = await shaped_working(ctx, caster, target, effect, row)
+    boost = await celestial_rite_pct(ctx, caster.world_id, row.school)
+    return replace(shaped, magnitude=round_half_up(shaped.magnitude * boost)) if boost != 1.0 else shaped
+
+
+async def shaped_working(ctx: TickContext, caster: EntityRow, target: EntityRow | None, effect: RiteEffectRow, row: RiteProfileRow) -> Working:
     custom = await kind_of(ctx.session, effect.custom_kind_id, CustomCatalog.RITE_EFFECT)
     if custom is None:
         return Working(caster, target, effect, effect.magnitude, row)
@@ -799,6 +814,7 @@ async def phenomenon(ctx: TickContext, region: EntityRow) -> None:
         ),
     )
     await note(ctx, f"A rite gone wrong left a storm over {region.name} that will not die.", key="magic.eternal_storm", ids=[region.id])
+    await form_phenomenon(ctx, PhenomenonKind.ETERNAL_STORM, region, PhenomenonCause.RITE_BACKLASH)
 
 
 async def backlash(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> BacklashKind:
@@ -816,6 +832,13 @@ async def backlash(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> 
         world = await ctx.session.get(WorldRow, caster.world_id or 0)
         if world is not None:
             world.leakage = clamp_int(world.leakage + table.leak_gain, 0, PERCENT)
+        region = await ctx.session.get(EntityRow, caster.location_id) if caster.location_id is not None else None
+        if (
+            region is not None
+            and region.entity_type is EntityType.REGION
+            and ctx.rng(f"backlash_wound.{caster.id}").chance(ctx.rules.phenomena.backlash_chance)
+        ):
+            await form_phenomenon(ctx, PhenomenonKind.LEAK_WOUND, region, PhenomenonCause.RITE_BACKLASH)
     elif kind is BacklashKind.ESCAPE:
         bound = await ctx.session.scalar(select(SpiritProfileRow).where(SpiritProfileRow.bound_entity_id == caster.id).limit(1))
         if bound is not None:

@@ -38,6 +38,28 @@ from aerona.rules.registry.context import ContextRules
 from aerona.rules.registry.core_rules import CoreRulesRules
 from aerona.rules.registry.cosmic_costs import CosmicCostsRules
 from aerona.rules.registry.cosmic_horror import CosmicHorrorRules
+from aerona.rules.registry.cosmography import (
+    CelestialBodyRules,
+    ClusterRules,
+    CosmicBeingRules,
+    CosmographyRules,
+    DimensionRules,
+    GalaxyRules,
+    JourneyRules,
+    PhenomenaRules,
+    RiftRules,
+    StarLifeRules,
+    WorldLifeRules,
+)
+from aerona.rules.registry.cosmography_kinds import (
+    BeingKindRules,
+    ClusterKindRules,
+    DimensionKindRules,
+    GalacticStructureRules,
+    GalacticZoneRules,
+    GalaxyTypeRules,
+    PhenomenonKindRules,
+)
 from aerona.rules.registry.costs import CostsRules
 from aerona.rules.registry.council import CouncilRules
 from aerona.rules.registry.creation_base_cost import CreationBaseCostRules
@@ -627,6 +649,24 @@ class Rules:
     setup_wizard: SetupWizardRules = field(default_factory=SetupWizardRules)
     sky: SkyRules = field(default_factory=SkyRules)
     star_types: StarTypeRules = field(default_factory=StarTypeRules)
+    galaxies: GalaxyRules = field(default_factory=GalaxyRules)
+    clusters: ClusterRules = field(default_factory=ClusterRules)
+    dimensions: DimensionRules = field(default_factory=DimensionRules)
+    rifts: RiftRules = field(default_factory=RiftRules)
+    cosmic_beings: CosmicBeingRules = field(default_factory=CosmicBeingRules)
+    phenomena: PhenomenaRules = field(default_factory=PhenomenaRules)
+    cosmography: CosmographyRules = field(default_factory=CosmographyRules)
+    star_life: StarLifeRules = field(default_factory=StarLifeRules)
+    world_life: WorldLifeRules = field(default_factory=WorldLifeRules)
+    celestial_bodies: CelestialBodyRules = field(default_factory=CelestialBodyRules)
+    journeys: JourneyRules = field(default_factory=JourneyRules)
+    galaxy_types: GalaxyTypeRules = field(default_factory=GalaxyTypeRules)
+    cluster_kinds: ClusterKindRules = field(default_factory=ClusterKindRules)
+    dimension_kinds: DimensionKindRules = field(default_factory=DimensionKindRules)
+    galactic_structures: GalacticStructureRules = field(default_factory=GalacticStructureRules)
+    galactic_zones: GalacticZoneRules = field(default_factory=GalacticZoneRules)
+    phenomenon_kinds: PhenomenonKindRules = field(default_factory=PhenomenonKindRules)
+    being_kinds: BeingKindRules = field(default_factory=BeingKindRules)
     society: SocietyRules = field(default_factory=SocietyRules)
     son_relations: SonRelationsRules = field(default_factory=SonRelationsRules)
     son_tools: SonToolsRules = field(default_factory=SonToolsRules)

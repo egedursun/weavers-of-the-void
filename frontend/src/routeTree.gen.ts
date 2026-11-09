@@ -21,6 +21,7 @@ import { Route as AppEconomyRouteImport } from './routes/_app/economy'
 import { Route as AppEpochRouteImport } from './routes/_app/epoch'
 import { Route as AppGalleryRouteImport } from './routes/_app/gallery'
 import { Route as AppGoalsRouteImport } from './routes/_app/goals'
+import { Route as AppHeavensRouteImport } from './routes/_app/heavens'
 import { Route as AppInterconnectionsRouteImport } from './routes/_app/interconnections'
 import { Route as AppLanguagesRouteImport } from './routes/_app/languages'
 import { Route as AppLedgerRouteImport } from './routes/_app/ledger'
@@ -100,6 +101,11 @@ const AppGalleryRoute = AppGalleryRouteImport.update({
 const AppGoalsRoute = AppGoalsRouteImport.update({
   id: '/goals',
   path: '/goals',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppHeavensRoute = AppHeavensRouteImport.update({
+  id: '/heavens',
+  path: '/heavens',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppInterconnectionsRoute = AppInterconnectionsRouteImport.update({
@@ -221,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/epoch': typeof AppEpochRoute
   '/gallery': typeof AppGalleryRoute
   '/goals': typeof AppGoalsRoute
+  '/heavens': typeof AppHeavensRoute
   '/interconnections': typeof AppInterconnectionsRoute
   '/languages': typeof AppLanguagesRoute
   '/ledger': typeof AppLedgerRoute
@@ -253,6 +260,7 @@ export interface FileRoutesByTo {
   '/epoch': typeof AppEpochRoute
   '/gallery': typeof AppGalleryRoute
   '/goals': typeof AppGoalsRoute
+  '/heavens': typeof AppHeavensRoute
   '/interconnections': typeof AppInterconnectionsRoute
   '/languages': typeof AppLanguagesRoute
   '/ledger': typeof AppLedgerRoute
@@ -289,6 +297,7 @@ export interface FileRoutesById {
   '/_app/epoch': typeof AppEpochRoute
   '/_app/gallery': typeof AppGalleryRoute
   '/_app/goals': typeof AppGoalsRoute
+  '/_app/heavens': typeof AppHeavensRoute
   '/_app/interconnections': typeof AppInterconnectionsRoute
   '/_app/languages': typeof AppLanguagesRoute
   '/_app/ledger': typeof AppLedgerRoute
@@ -326,6 +335,7 @@ export interface FileRouteTypes {
     | '/epoch'
     | '/gallery'
     | '/goals'
+    | '/heavens'
     | '/interconnections'
     | '/languages'
     | '/ledger'
@@ -358,6 +368,7 @@ export interface FileRouteTypes {
     | '/epoch'
     | '/gallery'
     | '/goals'
+    | '/heavens'
     | '/interconnections'
     | '/languages'
     | '/ledger'
@@ -393,6 +404,7 @@ export interface FileRouteTypes {
     | '/_app/epoch'
     | '/_app/gallery'
     | '/_app/goals'
+    | '/_app/heavens'
     | '/_app/interconnections'
     | '/_app/languages'
     | '/_app/ledger'
@@ -505,6 +517,13 @@ declare module '@tanstack/react-router' {
       path: '/goals'
       fullPath: '/goals'
       preLoaderRoute: typeof AppGoalsRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/heavens': {
+      id: '/_app/heavens'
+      path: '/heavens'
+      fullPath: '/heavens'
+      preLoaderRoute: typeof AppHeavensRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/_app/interconnections': {
@@ -699,6 +718,7 @@ interface AppRouteRouteChildren {
   AppEpochRoute: typeof AppEpochRoute
   AppGalleryRoute: typeof AppGalleryRoute
   AppGoalsRoute: typeof AppGoalsRoute
+  AppHeavensRoute: typeof AppHeavensRoute
   AppInterconnectionsRoute: typeof AppInterconnectionsRoute
   AppLanguagesRoute: typeof AppLanguagesRoute
   AppLedgerRoute: typeof AppLedgerRoute
@@ -722,6 +742,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppEpochRoute: AppEpochRoute,
   AppGalleryRoute: AppGalleryRoute,
   AppGoalsRoute: AppGoalsRoute,
+  AppHeavensRoute: AppHeavensRoute,
   AppInterconnectionsRoute: AppInterconnectionsRoute,
   AppLanguagesRoute: AppLanguagesRoute,
   AppLedgerRoute: AppLedgerRoute,

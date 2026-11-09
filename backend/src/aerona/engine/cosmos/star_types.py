@@ -376,3 +376,14 @@ def star_heat(rules: Rules, star: StarRow | None) -> int:
 
 def star_capacity_pct(rules: Rules, star: StarRow | None) -> int:
     return star_mechanics(star.star_type).capacity_pct(rules) if star is not None else PERCENT
+
+
+def rekindle_cost(rules: Rules, star_type: StarType, base: int) -> int:
+    table = rules.star_life
+    pct = {
+        StarType.BLACK_SUN: table.rekindle_dark_pct,
+        StarType.BROKEN_STAR: table.rekindle_dark_pct,
+        StarType.BLACK_HOLE: table.rekindle_remnant_pct,
+        StarType.STAR_REMNANT: table.rekindle_remnant_pct,
+    }.get(star_type, PERCENT)
+    return round_half_up(base * pct / PERCENT)

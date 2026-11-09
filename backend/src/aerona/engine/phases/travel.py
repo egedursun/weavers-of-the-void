@@ -53,6 +53,7 @@ from aerona.engine.cosmos.routes import (
     touches,
     world_name,
 )
+from aerona.engine.cosmos.voyages import escort_share, unload, voyage_epoch
 from aerona.engine.ecology.beasts import mount_of
 from aerona.engine.ecology.domestication import carry_herds
 from aerona.engine.economy.materials import VesselRig, hull_guard, hull_wear, rig_of, wind_guard
@@ -336,6 +337,8 @@ async def spontaneous_expeditions(ctx: TickContext) -> int:
 
 
 async def _send_spontaneously(ctx: TickContext, book: RouteBook, community: EntityRow, chance: int, rng: SeededRandom) -> bool:
+    if held(community.id, community.world_id):
+        return False
     usable = [
         route for route in book.open_known(community.world_id) if await can_use_route(ctx.session, ctx.rules, ctx.epoch, community, route, book=book) is None
     ]
@@ -498,7 +501,7 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
     risk = road_risk(ctx.rules, route, scene.knowledge.branches(traveller.id), vehicle, danger, wind=wind, rig=rig, region_danger=home)
     if not scene.rng.probability(risk * await ctx.hook_easing(traveller.id, DomainHook.ROAD_SAFETY)):
         return True
-    kind = METHOD_EVENTS.get(route.method) or scene.rng.pick(COMMON_EVENTS)
+    kind = METHOD_EVENTS.get(route.method) or (JourneyEventKind.PIRATES if scene.rng.chance(route.piracy) else scene.rng.pick(COMMON_EVENTS))
     target = await world_name(ctx.session, journey.destination_world_id)
     if scene.rng.chance(swallow_chance(ctx.rules, kind, vehicle, rig)):
         how = SWALLOWED_TEXT[kind]
@@ -517,7 +520,11 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
             feed=None,
         )
         return False
-    lost = round(journey.population * (travel.road_loss_base_pct / PERCENT + scene.rng.random() * travel.road_loss_random_pct / PERCENT))
+    lost = round(
+        journey.population
+        * (travel.road_loss_base_pct / PERCENT + scene.rng.random() * travel.road_loss_random_pct / PERCENT)
+        * escort_share(ctx.rules, journey)
+    )
     journey.population = max(0, journey.population - lost)
     add_event(journey, ctx.epoch, kind, ROAD_EVENT_TEXT[kind], loss=lost)
     if kind is JourneyEventKind.MEMORY_LOSS:
@@ -574,6 +581,7 @@ async def advance_journey(ctx: TickContext, scene: JourneyScene, journey: Journe
     journey.status = JourneyStatus.UNDERWAY
     if not await road_event(ctx, scene, journey, traveller, route):
         return
+    await voyage_epoch(ctx, journey, traveller, route)
     guided = await wayfinder(ctx.session, traveller.id) or await wayfinder(ctx.session, traveller.location_id)
     journey.epochs_left = max(0, journey.epochs_left - 1 - (ctx.rules.item_powers.map_journey if guided else 0))
     if journey.epochs_left > 0 and await mount_of(ctx, traveller.id) is not None:
@@ -581,6 +589,7 @@ async def advance_journey(ctx: TickContext, scene: JourneyScene, journey: Journe
     if journey.epochs_left > 0:
         return
     result = await arrive(ctx, journey, traveller, route)
+    await unload(ctx, journey, traveller)
     journey.status = JourneyStatus.ARRIVED
     journey.end_epoch = ctx.epoch
     journey.result_entity_id = result.id if result is not None else None
@@ -599,6 +608,8 @@ async def journeys(ctx: TickContext) -> list[int]:
     )
     statement = select(JourneyRow).where(JourneyRow.status.in_(list(LIVE_JOURNEYS))).order_by(JourneyRow.id)
     for journey in list(await ctx.session.scalars(statement)):
+        if held(journey.traveller_entity_id):
+            continue
         await advance_journey(ctx, scene, journey)
     await ctx.session.flush()
     return scene.arrivals

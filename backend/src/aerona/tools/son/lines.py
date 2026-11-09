@@ -139,3 +139,12 @@ TALK_OUTCOMES = {
     ("bargain", True): "you came to terms with {god}; you gained {gain} essence",
     ("bargain", False): "{god} refused the bargain",
 }
+OPEN_RIFT = Line("tools.son.open_rift", "{son} tore a rift in {place} into {dimension}: {reason}")
+SEAL_RIFT = Line("tools.son.seal_rift", "{son} sealed a rift: {reason}")
+CALL_BEING = Line("tools.son.call_being", "{son} called {being}: {reason}")
+BIND_BEING = Line("tools.son.bind_being", "{son} bound a cosmic being: {reason}")
+BANISH_BEING = Line("tools.son.banish_being", "{son} banished a cosmic being: {reason}")
+CONTAIN_PHENOMENON = Line("tools.son.contain_phenomenon", "{son} warded {phenomenon}: {reason}")
+CLAIM_GALAXY = Line("tools.son.claim_galaxy", "{son} took {galaxy} under their patronage: {reason}")
+RULE_DIMENSION = Line("tools.son.rule_dimension", "{son} took rule of {dimension}: {reason}")
+CLAIM_STAR = Line("tools.son.claim_star", "{son} took {star} under their patronage: {reason}")

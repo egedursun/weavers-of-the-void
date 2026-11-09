@@ -703,7 +703,9 @@
       "canavar": "beast",
       "unvan": "title",
       "kuram": "theory",
-      "sanat_bicimi": "art_form"
+      "sanat_bicimi": "art_form",
+      "olgu": "phenomenon",
+      "kozmik_varlik": "cosmic_being"
     },
     "entity_status": {
       "kanon": "canon",
@@ -2136,6 +2138,15 @@
     "art_form": {
       "icracilar": "practitioners",
       "itibar": "prestige"
+    },
+    "phenomenon": {
+      "tehlike": "danger",
+      "un": "renown"
+    },
+    "cosmic_being": {
+      "buyukluk": "size",
+      "ilgi": "interest",
+      "un": "renown"
     }
   },
   "entity_extra_stats": {

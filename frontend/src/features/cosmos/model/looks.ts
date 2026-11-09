@@ -141,6 +141,56 @@ export const METHOD_LOOK: Record<TravelMethod, MethodLook> = {
       endRings: true,
     }
   ),
+  void_ark: method('--cosmos-route-void-ark', [12, 4], 1.8, 0, 0.3, 3, 2.4, 1),
+  galactic_gate: method(
+    '--cosmos-route-galactic-gate',
+    [1, 4],
+    1.6,
+    0,
+    0.4,
+    6,
+    3,
+    1.1,
+    {
+      endRings: true,
+    }
+  ),
+  filament_lane: method(
+    '--cosmos-route-filament-lane',
+    [6, 2, 1, 2],
+    1.4,
+    0,
+    0.5,
+    4,
+    2.8,
+    1
+  ),
+  dimensional_rift: method(
+    '--cosmos-route-dimensional-rift',
+    [2, 3],
+    2,
+    0.05,
+    0.9,
+    8,
+    4,
+    1.3,
+    {
+      endRings: true,
+    }
+  ),
+  planar_door: method(
+    '--cosmos-route-planar-door',
+    [4, 4],
+    1.7,
+    0,
+    0.45,
+    5,
+    3,
+    1.1,
+    {
+      endRings: true,
+    }
+  ),
 }
 
 export const CLOSED_ROUTE_DASH: readonly number[] = [2, 6]

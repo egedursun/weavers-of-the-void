@@ -55,6 +55,7 @@ from aerona.engine.military.units import rearm, stacks_of, sync, take
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.levies import demobilise
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.physics import gravity_speed_pct
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.relations.book import ensure_relation, shift
 from aerona.rules.registry import Rules
@@ -121,6 +122,8 @@ def step_towards(
     budget = march_budget(
         rules, reach, weather=weather, season=season, road=on_road(here, rules), baggage=profile.baggage, hardy=hardy, inverted=inverted, heavy=heavy
     )
+    world = ground.worlds.get(here.world_id) if here is not None else None
+    budget = round_half_up(budget * gravity_speed_pct(rules, world) / PERCENT)
     moved = 0
     for region_id in path[1:]:
         region = ground.regions.get(region_id)

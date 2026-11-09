@@ -132,6 +132,8 @@ class CelestialStats(ValueObject):
     kind: Literal["celestial"] = "celestial"
     brightness: Percent | None = None
     influence: Percent | None = None
+    cycle: int | None = Field(default=None, ge=1)
+    visibility: Percent | None = None
 
 
 class ArtworkStats(ValueObject):
@@ -274,6 +276,19 @@ class RiteStats(ValueObject):
     castings: Count | None = None
 
 
+class PhenomenonStats(ValueObject):
+    kind: Literal["phenomenon"] = "phenomenon"
+    danger: Percent | None = None
+    renown: Percent | None = None
+
+
+class CosmicBeingStats(ValueObject):
+    kind: Literal["cosmic_being"] = "cosmic_being"
+    size: Percent | None = None
+    interest: Percent | None = None
+    renown: Percent | None = None
+
+
 EntityStats = Annotated[
     RegionStats
     | PlaceStats
@@ -310,6 +325,8 @@ EntityStats = Annotated[
     | BeastStats
     | TheoryStats
     | ArtFormStats
+    | PhenomenonStats
+    | CosmicBeingStats
     | NaturalLawStats,
     Field(discriminator="kind"),
 ]

@@ -6,6 +6,7 @@ from aerona.catalog.structures import STRUCTURE_ENGINE_KINDS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import an
+from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import SkillRow
@@ -35,6 +36,7 @@ from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.physics import gravity_build_pct
 from aerona.engine.primitives.queries import add_flag, connect
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.society import shift_stock
@@ -167,7 +169,7 @@ async def begin(ctx: TickContext, order: Commission) -> tuple[EntityRow, Constru
         kind=order.kind,
         design_id=order.design.id if order.design is not None else None,
         status=ConstructionStatus.ACTIVE,
-        cost=build_cost(rules, resolved, order.level),
+        cost=round(build_cost(rules, resolved, order.level) * gravity_build_pct(rules, await ctx.session.get(WorldRow, order.site.world_id)) / PERCENT),
         progress=0,
         funds=max(0, order.funds),
         workers=0,

@@ -35,6 +35,8 @@ IMAGE_DIRECTION: dict[EntityType, str] = {
     EntityType.FACTION: "members of the faction in their meeting place, their insignia, colors and tools of their trade, a sense of hierarchy",
     EntityType.ARTWORK: "the artwork itself (song performed, statue, fresco, book) in the place it is kept or performed, with its audience or keeper",
     EntityType.LAW: "the law being proclaimed or carved: a stele, scroll or assembly, the people who live under it watching",
+    EntityType.PHENOMENON: "the phenomenon over the land it holds, at a scale that shows the whole region",
+    EntityType.COSMIC_BEING: "the being at its own scale against the place it is in, with something in view that shows its size",
 }
 
 VESSEL_DIRECTIONS: dict[VehicleKind, str] = {

@@ -95,6 +95,11 @@ export const TRAVEL_METHOD_LABEL: Record<TravelMethod, string> = {
   slingshot_orbit: 'Slingshot orbit',
   swallowed: 'Swallowing',
   wormhole: 'Wormhole',
+  void_ark: 'Void ark',
+  galactic_gate: 'Galactic gate',
+  filament_lane: 'Filament lane',
+  dimensional_rift: 'Dimensional rift',
+  planar_door: 'Planar door',
 }
 
 export const SKY_EVENT_LABEL: Record<SkyEventKind, string> = {
@@ -184,6 +189,7 @@ export const ROUTE_CLOSURE_LABEL: Record<RouteClosure, string> = {
   collapsed: 'Collapsed',
   snapped: 'Snapped',
   scorched: 'Scorched by a flare',
+  worn: 'Worn out',
 }
 
 export const LEGENDARY_QUEST_LABEL: Record<LegendaryQuestKind, string> = {

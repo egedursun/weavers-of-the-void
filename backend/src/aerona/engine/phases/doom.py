@@ -5,20 +5,27 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.cosmography import DimensionalEventRow, DimensionRow, GalacticEventRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, ApocalypseVariant, DimensionalEventKind, GalacticEventKind, PhenomenonKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.gods.worship import cult_effect
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.research import mean_spread
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import apply_disaster, record_disaster_event
+from aerona.engine.phases.horror import summon_outer_being
 from aerona.engine.phases.world_age import world_age
 from aerona.engine.primitives.doom import doom_threshold, step_doom
 from aerona.engine.primitives.faith import son_faith
@@ -92,7 +99,112 @@ async def doom_items(ctx: TickContext, new_epoch: int) -> dict[DoomItem, float]:
         DoomItem.WORLD_AGE: -age.relief,
         DoomItem.CREATOR_CULT: -cult.doom_pushback,
         DoomItem.ENLIGHTENMENT: -min(rules.research.enlightenment_cap, await mean_spread(ctx.session) * rules.research.enlightenment_relief_pct / PERCENT),
+        **await cosmic_items(ctx),
     }
+
+
+VARIANT_ITEMS: dict[ApocalypseVariant, frozenset[DoomItem]] = {
+    ApocalypseVariant.WORLD_WAR: frozenset({DoomItem.WARS}),
+    ApocalypseVariant.TWILIGHT_OF_GODS: frozenset({DoomItem.GODLESS, DoomItem.REBEL_SONS}),
+    ApocalypseVariant.OUTER_DESCENT: frozenset({DoomItem.CURSED, DoomItem.RESTLESS_SPIRITS, DoomItem.LEAK_WOUNDS, DoomItem.HOT_REGIONS}),
+    ApocalypseVariant.DIMENSIONAL_COLLAPSE: frozenset({DoomItem.OPEN_RIFTS, DoomItem.INCURSIONS, DoomItem.CONVERGENCES}),
+    ApocalypseVariant.GALACTIC_DEATH: frozenset({DoomItem.GAMMA_BURSTS, DoomItem.COLLAPSED_LIFE}),
+}
+
+
+async def cosmic_items(ctx: TickContext) -> dict[DoomItem, float]:
+    doom = ctx.rules.apocalypse
+    rifts = int(await ctx.session.scalar(select(func.count()).select_from(RiftRow).where(RiftRow.state.in_(list(OPEN_RIFT_STATES)))) or 0)
+    incursions = int(
+        await ctx.session.scalar(
+            select(func.count())
+            .select_from(DimensionalEventRow)
+            .where(DimensionalEventRow.kind == DimensionalEventKind.INCURSION, DimensionalEventRow.epoch == ctx.epoch)
+        )
+        or 0
+    )
+    converging = int(
+        await ctx.session.scalar(
+            select(func.count())
+            .select_from(DimensionalEventRow)
+            .where(
+                DimensionalEventRow.kind == DimensionalEventKind.CONVERGENCE,
+                (DimensionalEventRow.until_epoch.is_(None)) | (DimensionalEventRow.until_epoch >= ctx.epoch),
+            )
+        )
+        or 0
+    )
+    bursts = int(
+        await ctx.session.scalar(
+            select(func.count())
+            .select_from(GalacticEventRow)
+            .where(GalacticEventRow.kind == GalacticEventKind.GAMMA_RAY_BURST, GalacticEventRow.epoch == ctx.epoch)
+        )
+        or 0
+    )
+    wounds = sum(1 for profile in await ctx.session.scalars(select(PhenomenonProfileRow).where(PhenomenonProfileRow.kind == PhenomenonKind.LEAK_WOUND)))
+    hot = int(
+        await ctx.session.scalar(select(func.count()).select_from(RegionEnvironmentRow).where(RegionEnvironmentRow.leak >= ctx.rules.world_life.leak_hot)) or 0
+    )
+    collapsed = int(
+        await ctx.session.scalar(select(func.count()).select_from(WorldRow).where(WorldRow.biosphere_health < ctx.rules.world_life.biosphere_collapse)) or 0
+    )
+    return {
+        DoomItem.OPEN_RIFTS: rifts * doom.open_rift,
+        DoomItem.INCURSIONS: incursions * doom.incursion,
+        DoomItem.CONVERGENCES: converging * doom.convergence,
+        DoomItem.GAMMA_BURSTS: bursts * doom.gamma_burst,
+        DoomItem.LEAK_WOUNDS: wounds * doom.leak_wound,
+        DoomItem.HOT_REGIONS: hot * ctx.rules.world_life.hot_doom,
+        DoomItem.COLLAPSED_LIFE: collapsed * ctx.rules.world_life.collapse_doom,
+    }
+
+
+def dominant_variant(rules: Rules, items: dict[DoomItem, float]) -> ApocalypseVariant:
+    total = sum(value for value in items.values() if value > 0)
+    if total <= 0:
+        return ApocalypseVariant.RUIN
+    shares = {variant: sum(max(0.0, items.get(item, 0.0)) for item in members) / total for variant, members in VARIANT_ITEMS.items()}
+    variant, share = max(shares.items(), key=lambda pair: (pair[1], pair[0].value))
+    return variant if share * PERCENT >= rules.apocalypse.variant_share_pct else ApocalypseVariant.RUIN
+
+
+async def end_by(ctx: TickContext, variant: ApocalypseVariant) -> None:
+    doom = ctx.rules.apocalypse
+    if variant is ApocalypseVariant.TWILIGHT_OF_GODS:
+        for son in await living_sons(ctx.session):
+            if not held(son.id):
+                son.existence = son.existence // doom.twilight_fade_mult
+        await note(ctx, "The twilight of the gods came: every son faded.", key="doom.twilight", kind=ChronicleKind.APOCALYPSE)
+    elif variant is ApocalypseVariant.OUTER_DESCENT:
+        target = await leakiest_world(ctx.session)
+        if target is not None and not held(target.id):
+            for _ in range(doom.descent_beings):
+                await summon_outer_being(ctx, target)
+            await note(ctx, f"Outer beings descended on {target.name}.", key="doom.outer_descent", kind=ChronicleKind.APOCALYPSE, world_id=target.id)
+    elif variant is ApocalypseVariant.DIMENSIONAL_COLLAPSE:
+        for dimension in await ctx.session.scalars(select(DimensionRow).order_by(DimensionRow.id)):
+            if not held(dimension.id) and "veil" not in dimension.locked:
+                dimension.veil = max(0, dimension.veil - doom.collapse_veil)
+        await note(ctx, "The veils between the dimensions gave way.", key="doom.dimensional_collapse", kind=ChronicleKind.APOCALYPSE)
+    elif variant is ApocalypseVariant.GALACTIC_DEATH:
+        await galactic_death(ctx)
+    await destroy_leakiest_world(ctx)
+
+
+async def galactic_death(ctx: TickContext) -> None:
+    cosmography = await Cosmography.load(ctx.session)
+    galaxies = [galaxy for galaxy in cosmography.galaxies.values() if cosmography.stars_in_galaxy(galaxy.id) and not held(galaxy.id)]
+    if not galaxies:
+        return
+    dimmest = min(
+        galaxies,
+        key=lambda galaxy: (sum(star.brightness for star in cosmography.stars_in_galaxy(galaxy.id)) / len(cosmography.stars_in_galaxy(galaxy.id)), galaxy.id),
+    )
+    for star in cosmography.stars_in_galaxy(dimmest.id):
+        if not held(star.id) and "brightness" not in star.locked:
+            star.brightness = max(0, star.brightness - ctx.rules.apocalypse.galactic_death_dimming)
+    await note(ctx, f"The stars of {dimmest.name} went dark.", key="doom.galactic_death", kind=ChronicleKind.APOCALYPSE)
 
 
 def threshold_of(ctx: TickContext) -> int:
@@ -135,10 +247,15 @@ async def destroy_leakiest_world(ctx: TickContext) -> None:
     "table.chronicle",
     "table.community_societies",
     "table.cosmos",
+    "table.dimensional_events",
     "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.galactic_events",
     "table.modifiers",
     "table.nodes",
+    "table.phenomenon_profiles",
+    "table.region_environment",
+    "table.rifts",
     "table.war_sides",
     "table.wars",
 )
@@ -175,10 +292,11 @@ async def doom_clock(ctx: TickContext) -> None:
         if before < point <= clock:
             await note(ctx, text, key=f"doom.omen_{warning}", kind=ChronicleKind.APOCALYPSE)
     if clock >= threshold:
-        if await doom_calling(ctx):
+        variant = cosmos.apocalypse_variant or dominant_variant(rules, items)
+        if variant is ApocalypseVariant.WORLD_WAR and await doom_calling(ctx):
             reset = round_half_up(threshold * doom.after_calling_pct / PERCENT)
         else:
-            await destroy_leakiest_world(ctx)
+            await end_by(ctx, variant)
             reset = round_half_up(threshold * doom.after_ruin_pct / PERCENT)
         record_doom(ctx, DoomItem.RESET, reset - clock)
         clock = reset

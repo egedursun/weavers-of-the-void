@@ -26,6 +26,16 @@ class TravelMethodsRules:
     swallowed_danger: int = rule(60, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Being swallowed: danger")
     wormhole_duration: int = rule(1, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Wormhole: journey duration (epochs)")
     wormhole_danger: int = rule(40, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Wormhole: danger")
+    void_ark_duration: int = rule(6, 1, 100, RuleGroup.COSMOS_AND_TRAVEL, "Void ark: journey duration before its reach (epochs)")
+    void_ark_danger: int = rule(25, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Void ark: danger")
+    galactic_gate_duration: int = rule(1, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Galactic gate: journey duration (epochs)")
+    galactic_gate_danger: int = rule(15, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Galactic gate: danger")
+    filament_lane_duration: int = rule(3, 1, 50, RuleGroup.COSMOS_AND_TRAVEL, "Filament lane: journey duration before its reach (epochs)")
+    filament_lane_danger: int = rule(20, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Filament lane: danger")
+    dimensional_rift_duration: int = rule(1, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Dimensional rift: journey duration (epochs)")
+    dimensional_rift_danger: int = rule(45, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Dimensional rift: danger")
+    planar_door_duration: int = rule(1, 1, 20, RuleGroup.COSMOS_AND_TRAVEL, "Planar door: journey duration (epochs)")
+    planar_door_danger: int = rule(20, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Planar door: danger")
     wormhole_open_pct: int = rule(60, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Wormhole: chance its throat is open in a given epoch (%)")
     bridge_collapse_loss_pct: int = rule(
         70, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Chance an expedition on a collapsing divine bridge falls into the void (%; the rest turn back)"

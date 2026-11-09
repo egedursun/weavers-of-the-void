@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, between, enum_type
+from aerona.domain.enums.cosmography import OceanCurrent
 from aerona.domain.enums.environment import (
     CoastKind,
     NotableYearKind,
@@ -43,6 +44,7 @@ PERCENT_COLUMNS = (
     "built",
     "erosion",
     "sacredness",
+    "leak",
 )
 
 
@@ -51,6 +53,8 @@ class RegionEnvironmentRow(Base):
     __table_args__ = (
         *(between(column, PERCENT_MIN, PERCENT_MAX) for column in PERCENT_COLUMNS),
         at_least("harvest_pct", 0),
+        between("temperature_shift", -PERCENT_MAX, PERCENT_MAX),
+        between("rainfall_shift", -PERCENT_MAX, PERCENT_MAX),
         Index("ix_region_environment_world", "world_id"),
     )
 
@@ -91,6 +95,10 @@ class RegionEnvironmentRow(Base):
     harvest_pct: Mapped[int] = mapped_column(default=100)
     derived_fertility: Mapped[int | None]
     sacredness: Mapped[int] = mapped_column(default=0)
+    leak: Mapped[int] = mapped_column(default=0)
+    current: Mapped[OceanCurrent] = mapped_column(enum_type(OceanCurrent, "current"), default=OceanCurrent.NONE)
+    temperature_shift: Mapped[int] = mapped_column(default=0)
+    rainfall_shift: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

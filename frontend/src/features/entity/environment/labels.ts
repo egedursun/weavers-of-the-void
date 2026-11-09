@@ -233,6 +233,10 @@ export const NOTABLE: Record<string, Named> = {
 }
 
 export const FIELD_LABELS: Record<string, string> = {
+  leak: 'Leak from other dimensions',
+  current: 'Sea current',
+  temperature_shift: 'Heat shift',
+  rainfall_shift: 'Rain shift',
   temperature: 'Temperature',
   rainfall: 'Rainfall',
   seasonality: 'Seasonality',

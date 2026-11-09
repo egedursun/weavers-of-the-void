@@ -23,6 +23,7 @@ import {
 } from '@/components/domain'
 import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
 import { Label, Muted, PageTitle, Stat, Text } from '@/components/typography'
+import { StarLifeSection } from '@/features/cosmography/HeavenlyLife'
 import { StarDisc } from '@/features/cosmos/Glyphs'
 import {
   DEAD_STAR_TYPES,
@@ -177,6 +178,7 @@ export function StarWikiView({ starId }: { starId: number }) {
           />
         </div>
       </Section>
+      <StarLifeSection star={data.star} />
       <CelestialDepthSection
         kind='star'
         id={data.star.id}

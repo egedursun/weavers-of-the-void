@@ -201,6 +201,9 @@ class Surroundings:
     star_heat: int = 0
     works: Works = field(default_factory=Works)
     cleared: int = 0
+    shift_heat: int = 0
+    shift_rain: int = 0
+    pass_shift: int = 0
 
 
 @dataclass(frozen=True)
@@ -238,6 +241,7 @@ def temperature_of(rules: Rules, geography: Geography, around: Surroundings) -> 
         + around.star_heat
         + band_heat(rules, geography, around.world_type)
         - geography.elevation_mean * settings.elevation_cooling_pct / PERCENT
+        + around.shift_heat
     )
     if around.coastal:
         value += (settings.coast_moderation_target - value) * settings.coast_moderation_pct / PERCENT
@@ -252,6 +256,7 @@ def rainfall_of(rules: Rules, geography: Geography, around: Surroundings) -> int
     settings = rules.environment
     value = geography.moisture * settings.rain_from_moisture_pct / PERCENT + (settings.coastal_rainfall if around.coastal else 0)
     value -= geography.base_forest * around.cleared / PERCENT * settings.forest_rain_pct / PERCENT
+    value += around.shift_rain
     if around.era is not None:
         shift = climate_profile(rules, around.era).rain_shift
         if around.era is ClimateEra.DROUGHT and around.coastal:

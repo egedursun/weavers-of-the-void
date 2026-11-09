@@ -12,6 +12,11 @@ class TravelMethod(StrEnum):
     SLINGSHOT_ORBIT = "slingshot_orbit"
     SWALLOWED = "swallowed"
     WORMHOLE = "wormhole"
+    VOID_ARK = "void_ark"
+    GALACTIC_GATE = "galactic_gate"
+    FILAMENT_LANE = "filament_lane"
+    DIMENSIONAL_RIFT = "dimensional_rift"
+    PLANAR_DOOR = "planar_door"
 
 
 class VehicleKind(StrEnum):
@@ -51,6 +56,10 @@ class JourneyEventKind(StrEnum):
     BRIDGE_COLLAPSED = "bridge_collapsed"
     SWALLOWED = "swallowed"
     STOWAWAY = "stowaway"
+    OUTER_TOUCH = "outer_touch"
+    DERELICT = "derelict"
+    TOLL = "toll"
+    CROSSING = "crossing"
     OTHER = "other"
 
 
@@ -65,6 +74,7 @@ class RouteClosure(StrEnum):
     SEALED = "sealed"
     SEVERED = "severed"
     FORGOTTEN = "forgotten"
+    WORN = "worn"
     COLLAPSED = "collapsed"
     SNAPPED = "snapped"
     SCORCHED = "scorched"
@@ -81,3 +91,4 @@ class RouteState(StrEnum):
     SCORCHED = "scorched"
     UNSTABLE = "unstable"
     FORGOTTEN = "forgotten"
+    WORN = "worn"

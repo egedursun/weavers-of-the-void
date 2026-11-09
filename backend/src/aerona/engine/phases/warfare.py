@@ -13,6 +13,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.body import BodyRow, InjuryRow
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, OccupationRow
@@ -111,6 +112,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap, LawBook
 from aerona.engine.primitives.levies import demobilise, stand_down
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_float, clamp_int, round_half_up
+from aerona.engine.primitives.physics import air_attrition_pct
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.society import shift_stock
@@ -1313,7 +1315,12 @@ async def _weather_losses(
         army = armies[side.id][0]
         size = stat(army, "size") or 0
         share = season_losses(
-            ctx.rules, ground.weather, ground.region, armour_pct=stat(army, "equipment") or 0, acclimatised=await _acclimatised(ctx, theatre, side, ground)
+            ctx.rules,
+            ground.weather,
+            ground.region,
+            armour_pct=stat(army, "equipment") or 0,
+            acclimatised=await _acclimatised(ctx, theatre, side, ground),
+            air_pct=air_attrition_pct(ctx.rules, await ctx.session.get(WorldRow, army.world_id)),
         )
         dead = round_half_up(size * share)
         if dead:

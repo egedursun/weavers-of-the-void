@@ -1,0 +1,73 @@
+from sqlalchemy import select
+
+from aerona.db.tables.celestial import StarRow
+from aerona.db.write_guard import held
+from aerona.engine.context import TickContext
+from aerona.engine.cosmos.beings import being_cycles
+from aerona.engine.cosmos.climate import regional_climate
+from aerona.engine.cosmos.commerce import cosmic_trade
+from aerona.engine.cosmos.dimensions import dimension_cycles
+from aerona.engine.cosmos.galaxies import galaxy_cycles
+from aerona.engine.cosmos.influence import cosmic_influence
+from aerona.engine.cosmos.ladder import ensure_ladder, settle_star
+from aerona.engine.cosmos.omens import celestial_omens
+from aerona.engine.cosmos.phenomena import phenomena_cycles
+from aerona.engine.cosmos.placement import Cosmography
+from aerona.engine.cosmos.rifts import rift_cycles
+from aerona.engine.cosmos.starlife import star_lives
+from aerona.engine.cosmos.worldlife import regional_leak, world_lives
+from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.phase import Phase
+
+
+@reads("table.applied_fixups", "table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.name_registry")
+@writes(
+    "table.applied_fixups", "table.dimensions", "table.galactic_structures", "table.galaxies", "table.galaxy_clusters", "table.name_registry", "table.stars"
+)
+async def scale_ladder(ctx: TickContext) -> None:
+    ctx.count("stars_placed", await ensure_ladder(ctx.session, ctx.rules))
+    cosmography = await Cosmography.load(ctx.session)
+    for star in await ctx.session.scalars(select(StarRow).order_by(StarRow.id)):
+        if not held(star.id):
+            settle_star(ctx.rules, cosmography, star)
+    await ctx.session.flush()
+
+
+@reads("table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.modifiers", "table.rifts")
+async def influence(ctx: TickContext) -> None:
+    ctx.count("cosmic_modifiers", await cosmic_influence(ctx))
+
+
+@reads("settlement.population", "table.community_stocks", "table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.routes")
+@writes("table.community_stocks", "table.routes")
+async def trade(ctx: TickContext) -> None:
+    ctx.count("goods_carried", await cosmic_trade(ctx))
+
+
+@reads("table.entity_flags", "table.region_environment", "table.rifts", "table.routes")
+@writes("table.region_environment")
+async def leak_by_region(ctx: TickContext) -> None:
+    ctx.count("hot_regions", await regional_leak(ctx))
+
+
+@reads("table.region_environment", "table.world_maps")
+@writes("table.region_environment")
+async def climate_by_region(ctx: TickContext) -> None:
+    ctx.count("climate_shifts", await regional_climate(ctx))
+
+
+PHASES = (
+    Phase("scale_ladder", scale_ladder),
+    Phase("cosmic_influence", influence),
+    Phase("galaxy_cycles", galaxy_cycles),
+    Phase("star_lives", star_lives),
+    Phase("dimension_cycles", dimension_cycles),
+    Phase("rift_cycles", rift_cycles),
+    Phase("cosmic_beings", being_cycles),
+    Phase("phenomena", phenomena_cycles),
+    Phase("regional_leak", leak_by_region),
+    Phase("celestial_omens", celestial_omens),
+    Phase("cosmic_trade", trade),
+    Phase("world_lives", world_lives),
+    Phase("regional_climate", climate_by_region),
+)

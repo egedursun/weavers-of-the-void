@@ -50,6 +50,7 @@ MANIFESTATION_TYPES: dict[LegendCategory, EntityType] = {
 SUBJECT_CATEGORIES: dict[EntityType, LegendCategory] = {
     EntityType.SPECIES: LegendCategory.CREATURE,
     EntityType.OUTER_BEING: LegendCategory.CREATURE,
+    EntityType.COSMIC_BEING: LegendCategory.CREATURE,
     EntityType.SPIRIT: LegendCategory.SPIRIT,
     EntityType.MORTAL: LegendCategory.SPIRIT,
     EntityType.RESOURCE: LegendCategory.RESOURCE,

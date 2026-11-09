@@ -9,6 +9,7 @@ from aerona.db.base import Base, TimestampMixin
 from aerona.db.columns import at_least, between, enum_type
 from aerona.db.tables.node import NodeRow
 from aerona.db.types import PydanticJSON
+from aerona.domain.enums.cosmography import GalacticZone, StarAge, WorldAge
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.world import Atmosphere, ClimateEra, Discovery, Gravity, SkyEventKind, StarType, WorldType
@@ -18,7 +19,13 @@ from aerona.domain.models.profiles import EntityDepth
 
 class StarRow(NodeRow):
     __tablename__ = "stars"
-    __table_args__ = (between("brightness", PERCENT_MIN, PERCENT_MAX),)
+    __table_args__ = (
+        between("brightness", PERCENT_MIN, PERCENT_MAX),
+        between("stability", PERCENT_MIN, PERCENT_MAX),
+        between("radiation", PERCENT_MIN, PERCENT_MAX),
+        between("sacredness", PERCENT_MIN, PERCENT_MAX),
+        CheckConstraint("lifecycle_clock IS NULL OR lifecycle_clock >= 0", name="lifecycle_clock_min"),
+    )
     __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.STAR})
 
     id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
@@ -30,6 +37,16 @@ class StarRow(NodeRow):
     image_prompt: Mapped[str | None] = mapped_column(Text)
     depth: Mapped[EntityDepth | None] = mapped_column(PydanticJSON(EntityDepth))
     created_epoch: Mapped[int]
+    galaxy_id: Mapped[int | None] = mapped_column(ForeignKey("galaxies.id", ondelete="SET NULL"), index=True)
+    structure_id: Mapped[int | None] = mapped_column(ForeignKey("galactic_structures.id", ondelete="SET NULL"), index=True)
+    galactic_zone: Mapped[GalacticZone] = mapped_column(enum_type(GalacticZone, "galactic_zone"), default=GalacticZone.OUTER_DISC)
+    age_stage: Mapped[StarAge] = mapped_column(enum_type(StarAge, "age_stage"), default=StarAge.MAIN)
+    lifecycle_clock: Mapped[int | None]
+    stability: Mapped[int] = mapped_column(default=70)
+    radiation: Mapped[int] = mapped_column(default=20)
+    sacredness: Mapped[int] = mapped_column(default=0)
+    patron_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL", use_alter=True), index=True)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class WorldRow(NodeRow):
@@ -52,6 +69,12 @@ class WorldRow(NodeRow):
         CheckConstraint("day_length_hours IS NULL OR day_length_hours >= 1", name="day_length_positive"),
         CheckConstraint("moon_count IS NULL OR moon_count >= 0", name="moon_count_min"),
         CheckConstraint("tidal_strength IS NULL OR tidal_strength BETWEEN 0 AND 100", name="tidal_strength_range"),
+        CheckConstraint("galaxy_id IS NULL OR dimension_id IS NULL", name="one_place"),
+        CheckConstraint("(star_id IS NULL AND parent_world_id IS NULL) OR (galaxy_id IS NULL AND dimension_id IS NULL)", name="placed_by_star"),
+        between("magnetism", PERCENT_MIN, PERCENT_MAX),
+        between("radiation", PERCENT_MIN, PERCENT_MAX),
+        between("biosphere_health", PERCENT_MIN, PERCENT_MAX),
+        between("mood", -PERCENT_MAX, PERCENT_MAX),
         Index("ix_worlds_discovery", "discovery"),
     )
     __mapper_args__ = MappingProxyType({"polymorphic_identity": NodeKind.WORLD})
@@ -95,6 +118,14 @@ class WorldRow(NodeRow):
     moon_count: Mapped[int | None]
     tidal_strength: Mapped[int | None]
     calendar_locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+    galaxy_id: Mapped[int | None] = mapped_column(ForeignKey("galaxies.id", ondelete="SET NULL"), index=True)
+    dimension_id: Mapped[int | None] = mapped_column(ForeignKey("dimensions.id", ondelete="SET NULL"), index=True)
+    magnetism: Mapped[int] = mapped_column(default=50)
+    radiation: Mapped[int] = mapped_column(default=10)
+    biosphere_health: Mapped[int] = mapped_column(default=80)
+    age_stage: Mapped[WorldAge] = mapped_column(enum_type(WorldAge, "age_stage"), default=WorldAge.MATURE)
+    mood: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
 class WorldMapRow(TimestampMixin, Base):

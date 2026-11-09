@@ -1,0 +1,129 @@
+from collections import defaultdict
+
+from sqlalchemy import select
+
+from aerona.constants.units import PERCENT
+from aerona.db.tables.economy import CommunityStockRow
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.routes import RouteRow
+from aerona.db.write_guard import held
+from aerona.domain.enums.cosmography import RouteScope
+from aerona.domain.enums.entity import EntityType
+from aerona.engine.context import TickContext
+from aerona.engine.cosmos.placement import Cosmography
+from aerona.engine.cosmos.routes import current_calendar, forgotten_world_ids, route_status
+from aerona.engine.economy.purse import receive_coin
+from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.primitives.queries import canon
+from aerona.engine.primitives.stats import stat_or
+from aerona.rules.registry import Rules
+
+StockKey = tuple[object, object, object]
+
+
+def trade_cost_pct(rules: Rules, scope: RouteScope) -> int:
+    table = rules.cosmography
+    return {
+        RouteScope.SYSTEM: 0,
+        RouteScope.STELLAR: table.stellar_trade_cost_pct,
+        RouteScope.GALACTIC: table.galactic_trade_cost_pct,
+        RouteScope.INTERGALACTIC: table.intergalactic_trade_cost_pct,
+        RouteScope.INTERCLUSTER: table.intercluster_trade_cost_pct,
+        RouteScope.INTERDIMENSIONAL: table.interdimensional_trade_cost_pct,
+    }[scope]
+
+
+def news_delay(rules: Rules, scope: RouteScope | None) -> int:
+    table = rules.cosmography
+    return {RouteScope.INTERGALACTIC: table.intergalactic_news_epochs, RouteScope.INTERCLUSTER: table.intercluster_news_epochs}.get(
+        scope or RouteScope.STELLAR, 0
+    )
+
+
+async def market_of(ctx: TickContext, world_id: int, markets: dict[int, EntityRow | None]) -> EntityRow | None:
+    if world_id not in markets:
+        towns = [town for town in await canon(ctx.session, [EntityType.SETTLEMENT], world_id) if not held(town.id)]
+        markets[world_id] = max(towns, key=lambda town: (stat_or(town, "population", 0), -town.id), default=None)
+    return markets[world_id]
+
+
+async def stocks_of(ctx: TickContext, community_id: int) -> dict[StockKey, CommunityStockRow]:
+    rows = await ctx.session.scalars(select(CommunityStockRow).where(CommunityStockRow.community_entity_id == community_id).order_by(CommunityStockRow.id))
+    return {(row.commodity, row.material, row.world_material_id): row for row in rows}
+
+
+async def carry(ctx: TickContext, route: RouteRow, scope: RouteScope, first: EntityRow, second: EntityRow) -> tuple[int, int]:
+    table = ctx.rules.cosmography
+    mine, theirs = await stocks_of(ctx, first.id), await stocks_of(ctx, second.id)
+    gaps: list[tuple[int, StockKey, CommunityStockRow, CommunityStockRow | None, EntityRow]] = []
+    for key in sorted(set(mine) | set(theirs), key=str):
+        a, b = mine.get(key), theirs.get(key)
+        a_qty, b_qty = (a.quantity if a is not None else 0), (b.quantity if b is not None else 0)
+        if a is not None and a_qty > b_qty and not a.held:
+            gaps.append(((a_qty - b_qty) * table.trade_share_pct // PERCENT // 2, key, a, b, second))
+        elif b is not None and b_qty > a_qty and not b.held:
+            gaps.append(((b_qty - a_qty) * table.trade_share_pct // PERCENT // 2, key, b, a, first))
+    moved = delivered_total = 0
+    cost = trade_cost_pct(ctx.rules, scope) / PERCENT
+    stolen = route.piracy * table.piracy_loss_pct / PERCENT / PERCENT
+    for amount, key, source, target, buyer in sorted(gaps, key=lambda gap: (-gap[0], str(gap[1])))[: table.trade_lines]:
+        if amount <= 0 or (target is not None and target.held):
+            continue
+        delivered = max(0, round(amount * (1 - cost) * (1 - min(1.0, stolen))))
+        source.quantity -= amount
+        receiver = target
+        if receiver is None:
+            commodity, material, world_material = key
+            receiver = CommunityStockRow(
+                community_entity_id=buyer.id,
+                commodity=commodity,
+                material=material,
+                world_material_id=world_material,
+                quantity=0,
+                quality=source.quality,
+                preserved=0,
+            )
+            ctx.session.add(receiver)
+        receiver.quantity += delivered
+        moved += amount
+        delivered_total += delivered
+    return moved, delivered_total
+
+
+async def tend_route(ctx: TickContext, route: RouteRow, moved: int) -> None:
+    table = ctx.rules.cosmography
+    if "traffic" not in route.locked:
+        route.traffic = moved
+    busy = route.traffic >= table.busy_traffic
+    if "wear" not in route.locked:
+        route.wear = clamp_percent(route.wear + route.traffic // table.traffic_wear - (0 if busy else table.wear_repair))
+    if "piracy" not in route.locked:
+        route.piracy = clamp_percent(route.piracy + (table.piracy_growth if busy else -table.piracy_decay))
+    if "danger" not in route.locked and route.wear:
+        route.danger = clamp_percent(max(route.danger, route.wear * table.wear_danger_pct // PERCENT))
+
+
+async def cosmic_trade(ctx: TickContext) -> int:
+    cosmography = await Cosmography.load(ctx.session)
+    calendar = await current_calendar(ctx.session, ctx.rules, ctx.epoch)
+    forgotten = await forgotten_world_ids(ctx.session)
+    markets: dict[int, EntityRow | None] = {}
+    tolls: dict[int, int] = defaultdict(int)
+    carried = 0
+    for route in list(await ctx.session.scalars(select(RouteRow).where(RouteRow.active.is_(True)).order_by(RouteRow.id))):
+        if held(route.world_a_id, route.world_b_id) or not route_status(route, calendar, forgotten).is_open:
+            continue
+        first, second = await market_of(ctx, route.world_a_id, markets), await market_of(ctx, route.world_b_id, markets)
+        moved = delivered = 0
+        if first is not None and second is not None:
+            moved, delivered = await carry(ctx, route, cosmography.scope_by_id(route.world_a_id, route.world_b_id), first, second)
+        await tend_route(ctx, route, moved + (route.traffic if moved == 0 and "traffic" in route.locked else 0))
+        if route.toll_controller_entity_id is not None and route.toll_pct and delivered:
+            tolls[route.toll_controller_entity_id] += delivered * route.toll_pct // PERCENT
+        carried += moved
+    for controller_id, amount in sorted(tolls.items()):
+        controller = await ctx.session.get(EntityRow, controller_id)
+        if controller is not None and not held(controller.id):
+            await receive_coin(ctx.session, ctx.rules, controller, amount)
+    await ctx.session.flush()
+    return carried

@@ -7,6 +7,7 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import MessageIntent, PrayerRequest
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, NotificationCategory, ThreadStatus
+from aerona.domain.enums.cosmography import GalacticZone, RouteScope, StarAge, WorldAge
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import ArchiveOverride, EntityOrigin, EntityStatus, EntityType, LegendCategory, MortalRole
 from aerona.domain.enums.foreign_god import ForeignGodStatus
@@ -21,7 +22,7 @@ from aerona.domain.enums.world import Atmosphere, ClimateEra, Discovery, FateMod
 from aerona.domain.models.entity_stats import EntityStats
 from aerona.domain.models.phonology import Phonology
 from aerona.domain.models.profiles import EntityDepth, Epic, ExistenceProfile, GodDepth, Personality, TravelResource
-from aerona.domain.models.records import ChronicleAuditReport, CouncilMinutes, EpochStatsData, JourneyEvent
+from aerona.domain.models.records import CargoLine, ChronicleAuditReport, CouncilMinutes, EpochStatsData, JourneyEvent, PassengerLine
 
 
 class NodeRef(ApiModel):
@@ -274,6 +275,14 @@ class WorldRecord(ApiModel):
     terrain_sea: float
     terrain_mountains: float
     terrain_humidity: float
+    galaxy_id: int | None = None
+    dimension_id: int | None = None
+    magnetism: int = 50
+    radiation: int = 10
+    biosphere_health: int = 80
+    age_stage: WorldAge = WorldAge.MATURE
+    mood: int = 0
+    locked: list[str] = Field(default_factory=list)
 
 
 class StarRecord(ApiModel):
@@ -287,6 +296,16 @@ class StarRecord(ApiModel):
     image_prompt: str | None
     created_epoch: int
     cover: str | None = None
+    galaxy_id: int | None = None
+    structure_id: int | None = None
+    galactic_zone: GalacticZone = GalacticZone.OUTER_DISC
+    age_stage: StarAge = StarAge.MAIN
+    lifecycle_clock: int | None = None
+    stability: int = 70
+    radiation: int = 20
+    sacredness: int = 0
+    patron_son_id: int | None = None
+    locked: list[str] = Field(default_factory=list)
 
 
 class ForeignGodPower(ApiModel):
@@ -382,6 +401,16 @@ class RouteRecord(ApiModel):
     temp_open_until_epoch: int | None
     temp_closed_until_epoch: int | None
     status: RouteStatusRecord
+    capacity: int = 100
+    traffic: int = 0
+    toll_controller_entity_id: int | None = None
+    toll_pct: int = 0
+    piracy: int = 0
+    wear: int = 0
+    window_every: int = 0
+    window_offset: int = 0
+    scope: RouteScope | None = None
+    locked: list[str] = Field(default_factory=list)
 
 
 class JourneyRecord(ApiModel):
@@ -400,6 +429,12 @@ class JourneyRecord(ApiModel):
     start_epoch: int
     end_epoch: int | None
     result_entity_id: int | None
+    cargo: list[CargoLine] = Field(default_factory=list)
+    passengers: list[PassengerLine] = Field(default_factory=list)
+    convoy: int = 1
+    escorts: int = 0
+    scope: RouteScope | None = None
+    locked: list[str] = Field(default_factory=list)
 
 
 class ChronicleLineRecord(ApiModel):

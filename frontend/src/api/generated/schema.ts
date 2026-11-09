@@ -5839,6 +5839,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/cosmography/catalog': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['cosmography_catalog_api_cosmography_catalog_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/cosmography': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['cosmography_api_cosmography_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/entities/{entity_id}/ecology': {
     parameters: {
       query?: never
@@ -20143,6 +20175,614 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/dimension:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_dimension_create_api_actions_dimension_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/dimension:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_dimension_edit_api_actions_dimension_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/dimension:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_dimension_delete_api_actions_dimension_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cluster:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cluster_create_api_actions_cluster_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cluster:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cluster_edit_api_actions_cluster_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cluster:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cluster_delete_api_actions_cluster_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/galaxy:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_galaxy_create_api_actions_galaxy_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/galaxy:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_galaxy_edit_api_actions_galaxy_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/galaxy:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_galaxy_delete_api_actions_galaxy_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/galactic_structure:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_galactic_structure_create_api_actions_galactic_structure_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/galactic_structure:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_galactic_structure_edit_api_actions_galactic_structure_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/galactic_structure:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_galactic_structure_delete_api_actions_galactic_structure_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/galactic_event:trigger': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_galactic_event_trigger_api_actions_galactic_event_trigger_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/galactic_event:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_galactic_event_edit_api_actions_galactic_event_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/galactic_event:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_galactic_event_delete_api_actions_galactic_event_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/dimensional_event:trigger': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_dimensional_event_trigger_api_actions_dimensional_event_trigger_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/dimensional_event:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_dimensional_event_edit_api_actions_dimensional_event_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/dimensional_event:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_dimensional_event_delete_api_actions_dimensional_event_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/rift:open': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_rift_open_api_actions_rift_open_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/rift:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_rift_edit_api_actions_rift_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/rift:seal': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_rift_seal_api_actions_rift_seal_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/rift:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_rift_delete_api_actions_rift_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cosmic_being:call': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmic_being_call_api_actions_cosmic_being_call_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cosmic_being:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmic_being_edit_api_actions_cosmic_being_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cosmic_being:bind': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmic_being_bind_api_actions_cosmic_being_bind_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cosmic_being:banish': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmic_being_banish_api_actions_cosmic_being_banish_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/phenomenon:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_phenomenon_create_api_actions_phenomenon_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/phenomenon:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_phenomenon_edit_api_actions_phenomenon_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/phenomenon:footprint': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_phenomenon_footprint_api_actions_phenomenon_footprint_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/phenomenon:contain': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_phenomenon_contain_api_actions_phenomenon_contain_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/star_life:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_star_life_edit_api_actions_star_life_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/world_life:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_world_life_edit_api_actions_world_life_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/route_flow:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_route_flow_edit_api_actions_route_flow_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/journey:load': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_journey_load_api_actions_journey_load_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/journey:release': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_journey_release_api_actions_journey_release_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/celestial_reading:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_celestial_reading_set_api_actions_celestial_reading_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/apocalypse:variant': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_apocalypse_variant_api_actions_apocalypse_variant_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/region_climate:turn': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_region_climate_turn_api_actions_region_climate_turn_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -20859,6 +21499,16 @@ export interface components {
       epoch: number
       witness: components['schemas']['NodeRef'] | null
     }
+    ApocalypseVariant:
+      | 'ruin'
+      | 'world_war'
+      | 'outer_descent'
+      | 'twilight_of_gods'
+      | 'dimensional_collapse'
+      | 'galactic_death'
+    ApocalypseVariantInput: {
+      variant?: components['schemas']['ApocalypseVariant'] | null
+    }
     AppealKind: 'belief' | 'self_interest' | 'authority' | 'evidence' | 'fear'
     ApprovalRemoveInput: {
       polity_id: number
@@ -21573,6 +22223,35 @@ export interface components {
       state: string
       function_loss: number
     }
+    BeingAgenda:
+      | 'feed'
+      | 'explore'
+      | 'conquer'
+      | 'guard'
+      | 'trade'
+      | 'flee'
+      | 'seek_worship'
+      | 'unmake'
+      | 'mend'
+    BeingKind:
+      | 'planar_native'
+      | 'dimension_walker'
+      | 'rift_spawn'
+      | 'higher_dimensional'
+      | 'star_eater'
+      | 'nebula_mind'
+      | 'galactic_leviathan'
+      | 'void_shepherd'
+      | 'echo'
+      | 'time_wanderer'
+      | 'cosmic_titan'
+      | 'veil_warden'
+      | 'plane_sovereign'
+      | 'swarm_intelligence'
+      | 'living_constellation'
+    BeingPhase:
+      'dormant' | 'roaming' | 'manifest' | 'incursion' | 'bound' | 'banished'
+    BeingScale: 'world' | 'system' | 'galaxy' | 'cluster' | 'dimension'
     BeliefDeleteInput: {
       belief_id: number
     }
@@ -22339,6 +23018,12 @@ export interface components {
       ended_epoch: number | null
       fixed: boolean
     }
+    CargoLine: {
+      commodity: components['schemas']['CommodityKind']
+      material?: components['schemas']['MaterialKind'] | null
+      amount: number
+      item_entity_id?: number | null
+    }
     CaseDeleteInput: {
       case_id: number
     }
@@ -22447,15 +23132,30 @@ export interface components {
       role: components['schemas']['IncidentRole'] | null
       cause_incident_id: number | null
     }
+    Causality: 'strict' | 'loose' | 'broken'
     CausalityView: {
       node_id: number
       nodes: components['schemas']['CausalNode'][]
       edges: components['schemas']['CausalEdge'][]
     }
+    CelestialReadingRecord: {
+      celestial_entity_id: number
+      people_entity_id: number
+      reading: components['schemas']['OmenReading']
+      epoch: number
+      locked: string[]
+    }
+    CelestialReadingSetInput: {
+      celestial_id: number
+      people_id: number
+      reading?: components['schemas']['OmenReading'] | null
+    }
     CelestialStats: {
       kind: 'celestial'
       brightness?: number | null
       influence?: number | null
+      cycle?: number | null
+      visibility?: number | null
     }
     CellLayer: {
       x: number[]
@@ -22902,6 +23602,57 @@ export interface components {
       name: string
       share_pct: number
     }
+    ClimateTurn: 'warmer' | 'colder' | 'wetter' | 'drier'
+    ClusterCreateInput: {
+      name: string
+      kind: components['schemas']['ClusterKind']
+      dimension_id?: number | null
+      parent_cluster_id?: number | null
+      x: number
+      y: number
+      radius: number
+    }
+    ClusterDeleteInput: {
+      cluster_id: number
+    }
+    ClusterEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      cluster_id: number
+    }
+    ClusterKind:
+      | 'galaxy_group'
+      | 'local_group'
+      | 'poor_cluster'
+      | 'rich_cluster'
+      | 'supercluster'
+      | 'filament'
+      | 'wall'
+      | 'void'
+      | 'crown_cluster'
+      | 'drowned_cluster'
+      | 'forge_cluster'
+      | 'dream_cluster'
+      | 'mirror_cluster'
+    ClusterRecord: {
+      id: number
+      name: string
+      cluster_kind: components['schemas']['ClusterKind']
+      parent_cluster_id: number | null
+      dimension_id: number | null
+      x: number
+      y: number
+      radius: number
+      medium_heat: number
+      expansion: number
+      discovery: components['schemas']['Discovery']
+      description: string | null
+      image_prompt: string | null
+      created_epoch: number
+      locked: string[]
+    }
     CoastKind: 'none' | 'cliff' | 'beach' | 'harbour_site' | 'reef'
     Cognate: {
       first_word: string
@@ -23266,6 +24017,50 @@ export interface components {
       since_epoch: number
       by_hand: boolean
     }
+    CosmicBeingBanishInput: {
+      being_id: number
+    }
+    CosmicBeingBindInput: {
+      being_id: number
+    }
+    CosmicBeingCallInput: {
+      kind: components['schemas']['BeingKind']
+      world_id: number
+      region_id?: number | null
+      home_dimension_id?: number | null
+      name?: string | null
+    }
+    CosmicBeingEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      being_id: number
+    }
+    CosmicBeingRecord: {
+      entity_id: number
+      name: string
+      world_id?: number | null
+      being_kind: components['schemas']['BeingKind']
+      home_dimension_id: number | null
+      galaxy_id: number | null
+      scale: components['schemas']['BeingScale']
+      might: number
+      phase: components['schemas']['BeingPhase']
+      agenda: components['schemas']['BeingAgenda']
+      bound_by_node_id: number | null
+      rift_id: number | null
+      target_world_id: number | null
+      mirrored_entity_id: number | null
+      manifest_epochs: number
+      locked: string[]
+    }
+    CosmicBeingStats: {
+      kind: 'cosmic_being'
+      size?: number | null
+      interest?: number | null
+      renown?: number | null
+    }
     CosmicEpoch: {
       epoch: number
       name: string | null
@@ -23274,6 +24069,47 @@ export interface components {
     }
     CosmicExtinguishStarInput: {
       star_id: number
+    }
+    CosmographyCatalog: {
+      galaxy_types: components['schemas']['KindRecord'][]
+      cluster_kinds: components['schemas']['KindRecord'][]
+      dimension_kinds: components['schemas']['KindRecord'][]
+      structure_kinds: components['schemas']['KindRecord'][]
+      zones: components['schemas']['KindRecord'][]
+      phenomenon_kinds: components['schemas']['KindRecord'][]
+      being_kinds: components['schemas']['KindRecord'][]
+      galactic_events: components['schemas']['KindRecord'][]
+      dimensional_events: components['schemas']['KindRecord'][]
+      apocalypse_variants: components['schemas']['KindRecord'][]
+      method_reach: {
+        [key: string]: components['schemas']['RouteScope']
+      }
+    }
+    CosmographyView: {
+      epoch: number
+      dimensions: components['schemas']['DimensionRecord'][]
+      clusters: components['schemas']['ClusterRecord'][]
+      galaxies: components['schemas']['GalaxyRecord'][]
+      structures: components['schemas']['StructureRecord'][]
+      galactic_events: components['schemas']['GalacticEventRecord'][]
+      dimensional_events: components['schemas']['DimensionalEventRecord'][]
+      rifts: components['schemas']['RiftRecord'][]
+      beings: components['schemas']['CosmicBeingRecord'][]
+      phenomena: components['schemas']['PhenomenonRecord'][]
+      readings: components['schemas']['CelestialReadingRecord'][]
+      placements: components['schemas']['PlacementRecord'][]
+      world_names: {
+        [key: string]: string
+      }
+      star_names: {
+        [key: string]: string
+      }
+      people_names: {
+        [key: string]: string
+      }
+      stars: components['schemas']['StarRecord'][]
+      apocalypse_variant: components['schemas']['ApocalypseVariant'] | null
+      likely_variant: components['schemas']['ApocalypseVariant']
     }
     CosmosOption: {
       size: components['schemas']['CosmosSize']
@@ -24205,6 +25041,126 @@ export interface components {
       name: string
       weight: number
       lost: boolean
+    }
+    DimensionCreateInput: {
+      name: string
+      kind: components['schemas']['DimensionKind']
+      parent_dimension_id?: number | null
+      element?: components['schemas']['DimensionElement'] | null
+      description?: string | null
+    }
+    DimensionDeleteInput: {
+      dimension_id: number
+    }
+    DimensionEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      dimension_id: number
+    }
+    DimensionElement:
+      | 'fire'
+      | 'water'
+      | 'earth'
+      | 'air'
+      | 'void'
+      | 'light'
+      | 'shadow'
+      | 'ice'
+      | 'lightning'
+      | 'metal'
+      | 'wood'
+    DimensionKind:
+      | 'prime'
+      | 'parallel'
+      | 'mirror'
+      | 'pocket'
+      | 'bubble_universe'
+      | 'brane'
+      | 'higher_dimensional'
+      | 'antimatter'
+      | 'quantum_branch'
+      | 'time_reversed'
+      | 'compactified'
+      | 'astral'
+      | 'ethereal'
+      | 'dream'
+      | 'shadow'
+      | 'spirit'
+      | 'fey'
+      | 'elemental'
+      | 'celestial'
+      | 'infernal'
+      | 'abyssal'
+      | 'limbo'
+      | 'far_realm'
+      | 'clockwork'
+      | 'chaos'
+      | 'underworld'
+      | 'divine_domain'
+      | 'void_between'
+    DimensionRecord: {
+      id: number
+      name: string
+      dimension_kind: components['schemas']['DimensionKind']
+      element: components['schemas']['DimensionElement'] | null
+      parent_dimension_id: number | null
+      veil: number
+      stability: number
+      time_factor: number
+      magic: number
+      hostility: number
+      sanity_drain: number
+      leak: number
+      causality: components['schemas']['Causality']
+      discovery: components['schemas']['Discovery']
+      ruler_node_id: number | null
+      description: string | null
+      image_prompt: string | null
+      created_epoch: number
+      locked: string[]
+    }
+    DimensionalEventDeleteInput: {
+      event_id: number
+    }
+    DimensionalEventEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      event_id: number
+    }
+    DimensionalEventKind:
+      | 'incursion'
+      | 'convergence'
+      | 'veil_thinning'
+      | 'planar_alignment'
+      | 'bleed'
+      | 'schism'
+      | 'collapse'
+      | 'echo'
+    DimensionalEventRecord: {
+      id: number
+      kind: components['schemas']['DimensionalEventKind']
+      dimension_id: number
+      other_dimension_id: number | null
+      world_id: number | null
+      region_entity_id: number | null
+      subject_entity_id: number | null
+      epoch: number
+      until_epoch: number | null
+      intensity: number
+      caused_by_node_id: number | null
+      text: string | null
+      active: boolean
+    }
+    DimensionalEventTriggerInput: {
+      dimension_id: number
+      kind: components['schemas']['DimensionalEventKind']
+      intensity: number
+      other_dimension_id?: number | null
+      world_id?: number | null
     }
     DiplomacyEditInput: {
       polity_id: number
@@ -25263,6 +26219,8 @@ export interface components {
       | 'megafauna'
       | 'invasive'
       | 'worships_planet'
+      | 'worships_star'
+      | 'worships_galaxy'
       | 'planet_closed'
       | 'burned'
       | 'cosmic_plague'
@@ -25394,6 +26352,8 @@ export interface components {
         | components['schemas']['BeastStats']
         | components['schemas']['TheoryStats']
         | components['schemas']['ArtFormStats']
+        | components['schemas']['PhenomenonStats']
+        | components['schemas']['CosmicBeingStats']
         | components['schemas']['NaturalLawStats']
       domain: components['schemas']['Domain'] | null
       origin: components['schemas']['EntityOrigin']
@@ -25468,6 +26428,8 @@ export interface components {
       | 'beast'
       | 'theory'
       | 'art_form'
+      | 'phenomenon'
+      | 'cosmic_being'
     EntityTypeInfo: {
       key: string
       label: string
@@ -26714,6 +27676,11 @@ export interface components {
       nodes: components['schemas']['WebNode'][]
       links: components['schemas']['WebLink'][]
     }
+    FootprintRecord: {
+      phenomenon_entity_id: number
+      region_entity_id: number
+      intensity: number
+    }
     FootprintView: {
       region_id: number
       region: string
@@ -26926,6 +27893,178 @@ export interface components {
       item: components['schemas']['NodeRef']
       placed_epoch: number
     }
+    GalacticEventDeleteInput: {
+      event_id: number
+    }
+    GalacticEventEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      event_id: number
+    }
+    GalacticEventKind:
+      | 'core_outburst'
+      | 'gamma_ray_burst'
+      | 'starburst'
+      | 'tidal_stripping'
+      | 'merger_begun'
+      | 'merger_completed'
+      | 'hypervelocity_star'
+      | 'nebula_collapse'
+      | 'galactic_dimming'
+      | 'awakening'
+      | 'shrouding'
+      | 'severing'
+    GalacticEventRecord: {
+      id: number
+      kind: components['schemas']['GalacticEventKind']
+      galaxy_id: number
+      other_galaxy_id: number | null
+      structure_id: number | null
+      star_id: number | null
+      epoch: number
+      until_epoch: number | null
+      intensity: number
+      caused_by_node_id: number | null
+      text: string | null
+      active: boolean
+    }
+    GalacticEventTriggerInput: {
+      galaxy_id: number
+      kind: components['schemas']['GalacticEventKind']
+      intensity: number
+      other_galaxy_id?: number | null
+      star_id?: number | null
+    }
+    GalacticNucleus: 'none' | 'dormant' | 'active' | 'quasar' | 'devoured'
+    GalacticStructureCreateInput: {
+      galaxy_id: number
+      kind: components['schemas']['GalacticStructureKind']
+      name: string
+      x: number
+      y: number
+      radius: number
+      intensity: number
+    }
+    GalacticStructureDeleteInput: {
+      structure_id: number
+    }
+    GalacticStructureEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      structure_id: number
+    }
+    GalacticStructureKind:
+      | 'spiral_arm'
+      | 'bar'
+      | 'bulge'
+      | 'core'
+      | 'halo'
+      | 'emission_nebula'
+      | 'reflection_nebula'
+      | 'dark_nebula'
+      | 'planetary_nebula'
+      | 'supernova_remnant'
+      | 'stellar_nursery'
+      | 'open_cluster'
+      | 'globular_cluster'
+      | 'stellar_stream'
+      | 'dust_lane'
+      | 'superbubble'
+      | 'star_graveyard'
+      | 'ley_spiral'
+      | 'sealed_vault'
+      | 'gods_forge'
+      | 'dead_light_drift'
+      | 'singing_nebula'
+      | 'rift_scar'
+    GalacticZone:
+      | 'core'
+      | 'bulge'
+      | 'bar'
+      | 'inner_disc'
+      | 'arm'
+      | 'interarm'
+      | 'outer_disc'
+      | 'halo'
+      | 'rim'
+      | 'intergalactic'
+    GalaxyAge: 'forming' | 'young' | 'mature' | 'old' | 'dying' | 'dead'
+    GalaxyCreateInput: {
+      name: string
+      galaxy_type: components['schemas']['GalaxyType']
+      cluster_id?: number | null
+      dimension_id?: number | null
+      x: number
+      y: number
+      radius: number
+    }
+    GalaxyDeleteInput: {
+      galaxy_id: number
+    }
+    GalaxyEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      galaxy_id: number
+    }
+    GalaxyRecord: {
+      id: number
+      name: string
+      galaxy_type: components['schemas']['GalaxyType']
+      cluster_id: number | null
+      dimension_id: number | null
+      x: number
+      y: number
+      radius: number
+      arm_count: number
+      nucleus: components['schemas']['GalacticNucleus']
+      star_formation: number
+      metallicity: number
+      age_stage: components['schemas']['GalaxyAge']
+      leak: number
+      discovery: components['schemas']['Discovery']
+      patron_son_id: number | null
+      merging_with_galaxy_id: number | null
+      merge_progress: number
+      description: string | null
+      image_prompt: string | null
+      created_epoch: number
+      locked: string[]
+    }
+    GalaxyType:
+      | 'spiral'
+      | 'barred_spiral'
+      | 'grand_design_spiral'
+      | 'flocculent_spiral'
+      | 'lenticular'
+      | 'elliptical'
+      | 'giant_elliptical'
+      | 'dwarf_elliptical'
+      | 'dwarf_spheroidal'
+      | 'irregular'
+      | 'dwarf_irregular'
+      | 'ring'
+      | 'peculiar'
+      | 'starburst'
+      | 'active'
+      | 'quasar_host'
+      | 'low_surface_brightness'
+      | 'ultra_diffuse'
+      | 'living'
+      | 'dead'
+      | 'shattered'
+      | 'forged'
+      | 'dreaming'
+      | 'mirror'
+      | 'crowned'
+      | 'hollow'
+      | 'ember'
+      | 'veiled'
     GateNeed: {
       branch: components['schemas']['KnowledgeBranch']
       level: number
@@ -28577,9 +29716,20 @@ export interface components {
       | 'bridge_collapsed'
       | 'swallowed'
       | 'stowaway'
+      | 'outer_touch'
+      | 'derelict'
+      | 'toll'
+      | 'crossing'
       | 'other'
     JourneyIntent:
       'colony' | 'trade' | 'exploration' | 'conquest' | 'pilgrimage'
+    JourneyLoadInput: {
+      journey_id: number
+      convoy?: number | null
+      escorts?: number | null
+      cargo?: components['schemas']['CargoLine'][] | null
+      passengers?: components['schemas']['PassengerLine'][] | null
+    }
     JourneyRecord: {
       id: number
       traveller_entity_id: number
@@ -28596,6 +29746,16 @@ export interface components {
       start_epoch: number
       end_epoch: number | null
       result_entity_id: number | null
+      cargo?: components['schemas']['CargoLine'][]
+      passengers?: components['schemas']['PassengerLine'][]
+      convoy: number
+      escorts: number
+      scope?: components['schemas']['RouteScope'] | null
+      locked?: string[]
+    }
+    JourneyReleaseInput: {
+      journey_id: number
+      fields?: string[]
     }
     JourneyStatus:
       'underway' | 'waiting' | 'arrived' | 'lost' | 'recalled' | 'stranded'
@@ -28740,6 +29900,14 @@ export interface components {
       staff_class: components['schemas']['SocialClass'] | null
       staff_scale: components['schemas']['StaffScale']
       present: number
+    }
+    KindRecord: {
+      value: string
+      label: string
+      description: string
+      effects?: {
+        [key: string]: number
+      }
     }
     KnowledgeBranch:
       | 'agriculture'
@@ -29108,7 +30276,7 @@ export interface components {
     LawRepealInput: {
       law_id: number
     }
-    LawScope: 'cosmos' | 'world' | 'region'
+    LawScope: 'cosmos' | 'dimension' | 'world' | 'region'
     LawStats: {
       kind: 'law'
       rigidity?: number | null
@@ -30737,6 +31905,8 @@ export interface components {
       | 'curse'
       | 'dominion'
       | 'phenomenon'
+      | 'cosmos'
+      | 'rift'
       | 'god_death'
       | 'player'
       | 'suppression'
@@ -31310,7 +32480,16 @@ export interface components {
       origin: string
     }
     NobleWant: 'dwelling' | 'fine_goods' | 'office' | 'honour'
-    NodeKind: 'entity' | 'son' | 'creator' | 'foreign_god' | 'world' | 'star'
+    NodeKind:
+      | 'entity'
+      | 'son'
+      | 'creator'
+      | 'foreign_god'
+      | 'world'
+      | 'star'
+      | 'galaxy'
+      | 'cluster'
+      | 'dimension'
     NodeMaterialClearInput: {
       node_id: number
       slot: components['schemas']['MaterialSlot']
@@ -31499,6 +32678,7 @@ export interface components {
       control: number
       resistance: number
     }
+    OceanCurrent: 'none' | 'warm' | 'cold'
     OfficeAbolishInput: {
       office_id: number
     }
@@ -31549,6 +32729,7 @@ export interface components {
       target: string | null
       locked: string[]
     }
+    OmenReading: 'good' | 'evil' | 'neutral'
     OpinionComponent: 'trust' | 'fear' | 'respect' | 'affection' | 'grievance'
     OpinionComponentView: {
       component: components['schemas']['OpinionComponent']
@@ -31821,6 +33002,13 @@ export interface components {
       id: number
       name: string
       role: components['schemas']['PartyRole']
+    }
+    PassengerLine: {
+      community_entity_id?: number | null
+      social_class: components['schemas']['SocialClass']
+      count: number
+      condition: number
+      sick: boolean
     }
     Passion: 'loyalty' | 'ambition' | 'wrath' | 'mercy'
     PassionInfo: {
@@ -32178,6 +33366,70 @@ export interface components {
       current: boolean
       since_epoch: number | null
     }
+    PhenomenonCause:
+      | 'rite_backlash'
+      | 'god_death'
+      | 'law_conflict'
+      | 'sky_event'
+      | 'leak_peak'
+      | 'battlefield'
+      | 'rift'
+      | 'divine'
+    PhenomenonContainInput: {
+      phenomenon_id: number
+      amount: number
+    }
+    PhenomenonCreateInput: {
+      kind: components['schemas']['PhenomenonKind']
+      region_id: number
+      intensity: number
+    }
+    PhenomenonEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      phenomenon_id: number
+    }
+    PhenomenonFootprintInput: {
+      phenomenon_id: number
+      region_id: number
+      intensity?: number | null
+    }
+    PhenomenonKind:
+      | 'eternal_storm'
+      | 'time_slip'
+      | 'leak_wound'
+      | 'ley_nexus_flare'
+      | 'god_corpse_aura'
+      | 'living_fog'
+      | 'crystal_bloom'
+      | 'dead_zone'
+      | 'mirror_lake'
+      | 'gravity_well'
+      | 'singing_stones'
+      | 'aurora_permanent'
+      | 'ghost_road'
+      | 'blight'
+    PhenomenonRecord: {
+      entity_id: number
+      name: string
+      world_id?: number | null
+      kind: components['schemas']['PhenomenonKind']
+      intensity: number
+      growth: number
+      containment: number
+      cause: components['schemas']['PhenomenonCause']
+      cause_node_id: number | null
+      formed_epoch: number
+      locked: string[]
+      footprints?: components['schemas']['FootprintRecord'][]
+    }
+    PhenomenonStats: {
+      kind: 'phenomenon'
+      danger?: number | null
+      renown?: number | null
+    }
     Phonology: {
       vowels: string[]
       consonants: string[]
@@ -32348,6 +33600,17 @@ export interface components {
       y: number
       cell: number
       region_id: number | null
+    }
+    PlacementRecord: {
+      world_id: number
+      dimension_id: number | null
+      cluster_id: number | null
+      top_cluster_id: number | null
+      galaxy_id: number | null
+      structure_id: number | null
+      star_id: number | null
+      zone: components['schemas']['GalacticZone']
+      pull: components['schemas']['PullRecord']
     }
     PlagueCosmicInput: {
       place_id: number
@@ -33234,6 +34497,17 @@ export interface components {
       epoch: number
       held: string[]
     }
+    PullRecord: {
+      time: number
+      capacity: number
+      ore: number
+      density: number
+      magic: number
+      leak: number
+      sanity: number
+      danger: number
+      hostility: number
+    }
     PunishmentKind:
       | 'fine'
       | 'flogging'
@@ -33592,6 +34866,10 @@ export interface components {
       trust: number
       locked: string[]
     }
+    RegionClimateTurnInput: {
+      region_id: number
+      turn: components['schemas']['ClimateTurn']
+    }
     RegionControl: {
       ruler_id: number
       ruler_name: string
@@ -33691,6 +34969,10 @@ export interface components {
       harvest_pct: number
       sacredness: number
       derived_fertility?: number | null
+      leak: number
+      current: components['schemas']['OceanCurrent']
+      temperature_shift: number
+      rainfall_shift: number
       locked: string[]
       forecast: components['schemas']['WeatherForecast'][]
       ley_lines: components['schemas']['LeyLineView'][]
@@ -34342,6 +35624,50 @@ export interface components {
       partner_renown: number
       reason: string | null
     }
+    RiftCause:
+      | 'rite_backlash'
+      | 'leak_peak'
+      | 'convergence'
+      | 'god'
+      | 'being'
+      | 'phenomenon'
+      | 'creator'
+    RiftDeleteInput: {
+      rift_id: number
+    }
+    RiftEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      rift_id: number
+    }
+    RiftOpenInput: {
+      world_id: number
+      dimension_id: number
+      region_id?: number | null
+      target_world_id?: number | null
+    }
+    RiftRecord: {
+      id: number
+      world_id: number
+      region_entity_id: number | null
+      dimension_id: number
+      target_world_id: number | null
+      size: number
+      stability: number
+      state: components['schemas']['RiftState']
+      cause: components['schemas']['RiftCause']
+      opened_by_node_id: number | null
+      opened_epoch: number
+      sealed_epoch: number | null
+      route_id: number | null
+      locked: string[]
+    }
+    RiftSealInput: {
+      rift_id: number
+    }
+    RiftState: 'opening' | 'open' | 'closing' | 'sealed' | 'collapsed'
     RiteCard: {
       school: components['schemas']['MagicSchool']
       source: components['schemas']['MagicSource']
@@ -34449,7 +35775,13 @@ export interface components {
     }
     RoadKind: 'road' | 'trade'
     RouteClosure:
-      'sealed' | 'severed' | 'forgotten' | 'collapsed' | 'snapped' | 'scorched'
+      | 'sealed'
+      | 'severed'
+      | 'forgotten'
+      | 'worn'
+      | 'collapsed'
+      | 'snapped'
+      | 'scorched'
     RouteDangerInput: {
       route_id: number
       danger: number
@@ -34459,6 +35791,13 @@ export interface components {
       beasts: number
       weather: number
       sea: number
+    }
+    RouteFlowEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      route_id: number
     }
     RouteFlowView: {
       epoch: number
@@ -34508,7 +35847,24 @@ export interface components {
       temp_open_until_epoch: number | null
       temp_closed_until_epoch: number | null
       status: components['schemas']['RouteStatusRecord']
+      capacity: number
+      traffic: number
+      toll_controller_entity_id?: number | null
+      toll_pct: number
+      piracy: number
+      wear: number
+      window_every: number
+      window_offset: number
+      scope?: components['schemas']['RouteScope'] | null
+      locked?: string[]
     }
+    RouteScope:
+      | 'system'
+      | 'stellar'
+      | 'galactic'
+      | 'intergalactic'
+      | 'intercluster'
+      | 'interdimensional'
     RouteState:
       | 'open'
       | 'temporary'
@@ -34520,6 +35876,7 @@ export interface components {
       | 'scorched'
       | 'unstable'
       | 'forgotten'
+      | 'worn'
     RouteStatusRecord: {
       open: boolean
       state: components['schemas']['RouteState']
@@ -35857,6 +37214,16 @@ export interface components {
       | 'reveal_true_name'
       | 'reveal_tenet'
       | 'open_rebirth_gate'
+      | 'open_rift'
+      | 'seal_rift'
+      | 'call_cosmic_being'
+      | 'bind_cosmic_being'
+      | 'banish_cosmic_being'
+      | 'contain_phenomenon'
+      | 'turn_region_climate'
+      | 'claim_galaxy'
+      | 'rule_dimension'
+      | 'claim_star'
       | 'wage_war'
       | 'raise_host'
       | 'disband_host'
@@ -36450,6 +37817,7 @@ export interface components {
       realm: components['schemas']['NodeRef'] | null
       held: string[]
     }
+    StarAge: 'young' | 'main' | 'old' | 'dying' | 'dead' | 'reborn'
     StarDepthInput: {
       history?: string | null
       rumours?: string[] | null
@@ -36459,6 +37827,13 @@ export interface components {
       specifics?: {
         [key: string]: string
       } | null
+      star_id: number
+    }
+    StarLifeEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
       star_id: number
     }
     StarRecord: {
@@ -36472,6 +37847,16 @@ export interface components {
       image_prompt: string | null
       created_epoch: number
       cover?: string | null
+      galaxy_id?: number | null
+      structure_id?: number | null
+      galactic_zone: components['schemas']['GalacticZone']
+      age_stage: components['schemas']['StarAge']
+      lifecycle_clock?: number | null
+      stability: number
+      radiation: number
+      sacredness: number
+      patron_son_id?: number | null
+      locked?: string[]
     }
     StarType:
       | 'yellow_dwarf'
@@ -36789,6 +38174,19 @@ export interface components {
     StructureRazeInput: {
       structure_id: number
       reason: string
+    }
+    StructureRecord: {
+      id: number
+      galaxy_id: number
+      kind: components['schemas']['GalacticStructureKind']
+      name: string
+      x: number
+      y: number
+      radius: number
+      intensity: number
+      created_epoch: number
+      ended_epoch: number | null
+      locked: string[]
     }
     StructureRepairInput: {
       structure_id: number
@@ -38079,6 +39477,11 @@ export interface components {
       | 'slingshot_orbit'
       | 'swallowed'
       | 'wormhole'
+      | 'void_ark'
+      | 'galactic_gate'
+      | 'filament_lane'
+      | 'dimensional_rift'
+      | 'planar_door'
     TravelResource: {
       name: string
       description: string
@@ -39230,6 +40633,7 @@ export interface components {
       held: boolean
       design_id?: number | null
     }
+    WorldAge: 'young' | 'mature' | 'old' | 'dying'
     WorldAttentionView: {
       world: components['schemas']['NodeRef']
       attention: number
@@ -39368,6 +40772,13 @@ export interface components {
       world_id: number
       kinds: components['schemas']['LifeKind'][]
     }
+    WorldLifeEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      world_id: number
+    }
     WorldLifeInput: {
       world_id: number
       biochemistry: components['schemas']['Biochemistry']
@@ -39461,6 +40872,14 @@ export interface components {
       terrain_sea: number
       terrain_mountains: number
       terrain_humidity: number
+      galaxy_id?: number | null
+      dimension_id?: number | null
+      magnetism: number
+      radiation: number
+      biosphere_health: number
+      age_stage: components['schemas']['WorldAge']
+      mood: number
+      locked?: string[]
     }
     WorldReplacedEvent: {
       id: number
@@ -50464,6 +51883,44 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  cosmography_catalog_api_cosmography_catalog_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CosmographyCatalog']
+        }
+      }
+    }
+  }
+  cosmography_api_cosmography_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CosmographyView']
         }
       }
     }
@@ -77922,6 +79379,1184 @@ export interface operations {
       }
     }
   }
+  action_dimension_create_api_actions_dimension_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DimensionCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_dimension_edit_api_actions_dimension_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DimensionEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_dimension_delete_api_actions_dimension_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DimensionDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_cluster_create_api_actions_cluster_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ClusterCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_cluster_edit_api_actions_cluster_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ClusterEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_cluster_delete_api_actions_cluster_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ClusterDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_galaxy_create_api_actions_galaxy_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GalaxyCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_galaxy_edit_api_actions_galaxy_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GalaxyEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_galaxy_delete_api_actions_galaxy_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GalaxyDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_galactic_structure_create_api_actions_galactic_structure_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GalacticStructureCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_galactic_structure_edit_api_actions_galactic_structure_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GalacticStructureEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_galactic_structure_delete_api_actions_galactic_structure_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GalacticStructureDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_galactic_event_trigger_api_actions_galactic_event_trigger_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GalacticEventTriggerInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_galactic_event_edit_api_actions_galactic_event_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GalacticEventEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_galactic_event_delete_api_actions_galactic_event_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GalacticEventDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_dimensional_event_trigger_api_actions_dimensional_event_trigger_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DimensionalEventTriggerInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_dimensional_event_edit_api_actions_dimensional_event_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DimensionalEventEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_dimensional_event_delete_api_actions_dimensional_event_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DimensionalEventDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_rift_open_api_actions_rift_open_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RiftOpenInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_rift_edit_api_actions_rift_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RiftEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_rift_seal_api_actions_rift_seal_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RiftSealInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_rift_delete_api_actions_rift_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RiftDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_cosmic_being_call_api_actions_cosmic_being_call_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmicBeingCallInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_cosmic_being_edit_api_actions_cosmic_being_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmicBeingEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_cosmic_being_bind_api_actions_cosmic_being_bind_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmicBeingBindInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_cosmic_being_banish_api_actions_cosmic_being_banish_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmicBeingBanishInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_phenomenon_create_api_actions_phenomenon_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PhenomenonCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_phenomenon_edit_api_actions_phenomenon_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PhenomenonEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_phenomenon_footprint_api_actions_phenomenon_footprint_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PhenomenonFootprintInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_phenomenon_contain_api_actions_phenomenon_contain_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PhenomenonContainInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_star_life_edit_api_actions_star_life_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StarLifeEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_world_life_edit_api_actions_world_life_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WorldLifeEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_route_flow_edit_api_actions_route_flow_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RouteFlowEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_journey_load_api_actions_journey_load_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['JourneyLoadInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_journey_release_api_actions_journey_release_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['JourneyReleaseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_celestial_reading_set_api_actions_celestial_reading_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CelestialReadingSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_apocalypse_variant_api_actions_apocalypse_variant_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['ApocalypseVariantInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_region_climate_turn_api_actions_region_climate_turn_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegionClimateTurnInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
 }
 type FlattenedDeepRequired<T> = {
   [K in keyof T]-?: FlattenedDeepRequired<
@@ -78342,6 +80977,16 @@ export const agentWritingEventKindValues: ReadonlyArray<
 export const anomalyKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AnomalyKind']
 > = ['failed_prediction', 'contrary_cure', 'observation', 'divine_sign']
+export const apocalypseVariantValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ApocalypseVariant']
+> = [
+  'ruin',
+  'world_war',
+  'outer_descent',
+  'twilight_of_gods',
+  'dimensional_collapse',
+  'galactic_death',
+]
 export const appealKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AppealKind']
 > = ['belief', 'self_interest', 'authority', 'evidence', 'fear']
@@ -78463,6 +81108,44 @@ export const beastTemperValues: ReadonlyArray<
   'tamed',
   'companion',
 ]
+export const beingAgendaValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['BeingAgenda']
+> = [
+  'feed',
+  'explore',
+  'conquer',
+  'guard',
+  'trade',
+  'flee',
+  'seek_worship',
+  'unmake',
+  'mend',
+]
+export const beingKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['BeingKind']
+> = [
+  'planar_native',
+  'dimension_walker',
+  'rift_spawn',
+  'higher_dimensional',
+  'star_eater',
+  'nebula_mind',
+  'galactic_leviathan',
+  'void_shepherd',
+  'echo',
+  'time_wanderer',
+  'cosmic_titan',
+  'veil_warden',
+  'plane_sovereign',
+  'swarm_intelligence',
+  'living_constellation',
+]
+export const beingPhaseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['BeingPhase']
+> = ['dormant', 'roaming', 'manifest', 'incursion', 'bound', 'banished']
+export const beingScaleValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['BeingScale']
+> = ['world', 'system', 'galaxy', 'cluster', 'dimension']
 export const beliefSourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BeliefSource']
 > = ['observation', 'message', 'rumour', 'spy', 'scout', 'records', 'deception']
@@ -78782,6 +81465,9 @@ export const casusBelliKindValues: ReadonlyArray<
   'resource_need',
   'conquest',
 ]
+export const causalityValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['Causality']
+> = ['strict', 'loose', 'broken']
 export const celestialStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CelestialStats']['kind']
 > = ['celestial']
@@ -78927,6 +81613,26 @@ export const climateAffinityValues: ReadonlyArray<
 export const climateEraValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ClimateEra']
 > = ['temperate', 'drought', 'rain', 'ice_age', 'scorching']
+export const climateTurnValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ClimateTurn']
+> = ['warmer', 'colder', 'wetter', 'drier']
+export const clusterKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ClusterKind']
+> = [
+  'galaxy_group',
+  'local_group',
+  'poor_cluster',
+  'rich_cluster',
+  'supercluster',
+  'filament',
+  'wall',
+  'void',
+  'crown_cluster',
+  'drowned_cluster',
+  'forge_cluster',
+  'dream_cluster',
+  'mirror_cluster',
+]
 export const coastKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CoastKind']
 > = ['none', 'cliff', 'beach', 'harbour_site', 'reef']
@@ -79075,6 +81781,9 @@ export const contextBlockKindValues: ReadonlyArray<
   'mortal',
   'chronicler',
 ]
+export const cosmicBeingStatsKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CosmicBeingStats']['kind']
+> = ['cosmic_being']
 export const cosmosSizeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CosmosSize']
 > = ['single', 'small', 'large']
@@ -79312,6 +82021,65 @@ export const dietValues: ReadonlyArray<
   'mineral',
   'soul',
   'void',
+]
+export const dimensionElementValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DimensionElement']
+> = [
+  'fire',
+  'water',
+  'earth',
+  'air',
+  'void',
+  'light',
+  'shadow',
+  'ice',
+  'lightning',
+  'metal',
+  'wood',
+]
+export const dimensionKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DimensionKind']
+> = [
+  'prime',
+  'parallel',
+  'mirror',
+  'pocket',
+  'bubble_universe',
+  'brane',
+  'higher_dimensional',
+  'antimatter',
+  'quantum_branch',
+  'time_reversed',
+  'compactified',
+  'astral',
+  'ethereal',
+  'dream',
+  'shadow',
+  'spirit',
+  'fey',
+  'elemental',
+  'celestial',
+  'infernal',
+  'abyssal',
+  'limbo',
+  'far_realm',
+  'clockwork',
+  'chaos',
+  'underworld',
+  'divine_domain',
+  'void_between',
+]
+export const dimensionalEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DimensionalEventKind']
+> = [
+  'incursion',
+  'convergence',
+  'veil_thinning',
+  'planar_alignment',
+  'bleed',
+  'schism',
+  'collapse',
+  'echo',
 ]
 export const disasterValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Disaster']
@@ -79701,6 +82469,8 @@ export const entityFlagValues: ReadonlyArray<
   'megafauna',
   'invasive',
   'worships_planet',
+  'worships_star',
+  'worships_galaxy',
   'planet_closed',
   'burned',
   'cosmic_plague',
@@ -79806,6 +82576,8 @@ export const entityTypeValues: ReadonlyArray<
   'beast',
   'theory',
   'art_form',
+  'phenomenon',
+  'cosmic_being',
 ]
 export const envoyFateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EnvoyFate']
@@ -80254,6 +83026,101 @@ export const funeralCustomValues: ReadonlyArray<
 export const funeralRiteValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FuneralRite']
 > = ['burial', 'burning', 'exposure', 'nameless', 'none']
+export const galacticEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GalacticEventKind']
+> = [
+  'core_outburst',
+  'gamma_ray_burst',
+  'starburst',
+  'tidal_stripping',
+  'merger_begun',
+  'merger_completed',
+  'hypervelocity_star',
+  'nebula_collapse',
+  'galactic_dimming',
+  'awakening',
+  'shrouding',
+  'severing',
+]
+export const galacticNucleusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GalacticNucleus']
+> = ['none', 'dormant', 'active', 'quasar', 'devoured']
+export const galacticStructureKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GalacticStructureKind']
+> = [
+  'spiral_arm',
+  'bar',
+  'bulge',
+  'core',
+  'halo',
+  'emission_nebula',
+  'reflection_nebula',
+  'dark_nebula',
+  'planetary_nebula',
+  'supernova_remnant',
+  'stellar_nursery',
+  'open_cluster',
+  'globular_cluster',
+  'stellar_stream',
+  'dust_lane',
+  'superbubble',
+  'star_graveyard',
+  'ley_spiral',
+  'sealed_vault',
+  'gods_forge',
+  'dead_light_drift',
+  'singing_nebula',
+  'rift_scar',
+]
+export const galacticZoneValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GalacticZone']
+> = [
+  'core',
+  'bulge',
+  'bar',
+  'inner_disc',
+  'arm',
+  'interarm',
+  'outer_disc',
+  'halo',
+  'rim',
+  'intergalactic',
+]
+export const galaxyAgeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GalaxyAge']
+> = ['forming', 'young', 'mature', 'old', 'dying', 'dead']
+export const galaxyTypeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GalaxyType']
+> = [
+  'spiral',
+  'barred_spiral',
+  'grand_design_spiral',
+  'flocculent_spiral',
+  'lenticular',
+  'elliptical',
+  'giant_elliptical',
+  'dwarf_elliptical',
+  'dwarf_spheroidal',
+  'irregular',
+  'dwarf_irregular',
+  'ring',
+  'peculiar',
+  'starburst',
+  'active',
+  'quasar_host',
+  'low_surface_brightness',
+  'ultra_diffuse',
+  'living',
+  'dead',
+  'shattered',
+  'forged',
+  'dreaming',
+  'mirror',
+  'crowned',
+  'hollow',
+  'ember',
+  'veiled',
+]
 export const gazeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GazeKind']
 > = ['terror', 'petrify', 'sleep', 'madness']
@@ -80737,6 +83604,10 @@ export const journeyEventKindValues: ReadonlyArray<
   'bridge_collapsed',
   'swallowed',
   'stowaway',
+  'outer_touch',
+  'derelict',
+  'toll',
+  'crossing',
   'other',
 ]
 export const journeyIntentValues: ReadonlyArray<
@@ -80870,7 +83741,7 @@ export const lawKindValues: ReadonlyArray<
 ]
 export const lawScopeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LawScope']
-> = ['cosmos', 'world', 'region']
+> = ['cosmos', 'dimension', 'world', 'region']
 export const lawStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LawStats']['kind']
 > = ['law']
@@ -81314,6 +84185,8 @@ export const modifierSourceValues: ReadonlyArray<
   'curse',
   'dominion',
   'phenomenon',
+  'cosmos',
+  'rift',
   'god_death',
   'player',
   'suppression',
@@ -81548,7 +84421,17 @@ export const nobleWantValues: ReadonlyArray<
 > = ['dwelling', 'fine_goods', 'office', 'honour']
 export const nodeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NodeKind']
-> = ['entity', 'son', 'creator', 'foreign_god', 'world', 'star']
+> = [
+  'entity',
+  'son',
+  'creator',
+  'foreign_god',
+  'world',
+  'star',
+  'galaxy',
+  'cluster',
+  'dimension',
+]
 export const notableYearKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NotableYearKind']
 > = ['hunger', 'plenty', 'weather', 'pestilence']
@@ -81591,6 +84474,9 @@ export const oathKindValues: ReadonlyArray<
 export const oathStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OathStatus']
 > = ['sworn', 'kept', 'broken', 'fulfilled']
+export const oceanCurrentValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['OceanCurrent']
+> = ['none', 'warm', 'cold']
 export const officeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OfficeKind']
 > = [
@@ -81608,6 +84494,9 @@ export const officeKindValues: ReadonlyArray<
   'chaplain',
   'court_scholar',
 ]
+export const omenReadingValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['OmenReading']
+> = ['good', 'evil', 'neutral']
 export const opinionComponentValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OpinionComponent']
 > = ['trust', 'fear', 'respect', 'affection', 'grievance']
@@ -81749,6 +84638,39 @@ export const persuasionAimValues: ReadonlyArray<
 export const phaseStageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PhaseStage']
 > = ['tick', 'pre_transition', 'transition', 'post_transition']
+export const phenomenonCauseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PhenomenonCause']
+> = [
+  'rite_backlash',
+  'god_death',
+  'law_conflict',
+  'sky_event',
+  'leak_peak',
+  'battlefield',
+  'rift',
+  'divine',
+]
+export const phenomenonKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PhenomenonKind']
+> = [
+  'eternal_storm',
+  'time_slip',
+  'leak_wound',
+  'ley_nexus_flare',
+  'god_corpse_aura',
+  'living_fog',
+  'crystal_bloom',
+  'dead_zone',
+  'mirror_lake',
+  'gravity_well',
+  'singing_stones',
+  'aurora_permanent',
+  'ghost_road',
+  'blight',
+]
+export const phenomenonStatsKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PhenomenonStats']['kind']
+> = ['phenomenon']
 export const placeCoverValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PlaceCover']
 > = ['open', 'light', 'heavy']
@@ -82247,6 +85169,20 @@ export const resourceMechanicValues: ReadonlyArray<
 export const resourceStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ResourceStats']['kind']
 > = ['resource']
+export const riftCauseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RiftCause']
+> = [
+  'rite_backlash',
+  'leak_peak',
+  'convergence',
+  'god',
+  'being',
+  'phenomenon',
+  'creator',
+]
+export const riftStateValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RiftState']
+> = ['opening', 'open', 'closing', 'sealed', 'collapsed']
 export const riteEffectKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RiteEffectKind']
 > = [
@@ -82283,7 +85219,25 @@ export const roadKindValues: ReadonlyArray<
 > = ['road', 'trade']
 export const routeClosureValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RouteClosure']
-> = ['sealed', 'severed', 'forgotten', 'collapsed', 'snapped', 'scorched']
+> = [
+  'sealed',
+  'severed',
+  'forgotten',
+  'worn',
+  'collapsed',
+  'snapped',
+  'scorched',
+]
+export const routeScopeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RouteScope']
+> = [
+  'system',
+  'stellar',
+  'galactic',
+  'intergalactic',
+  'intercluster',
+  'interdimensional',
+]
 export const routeStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RouteState']
 > = [
@@ -82297,6 +85251,7 @@ export const routeStateValues: ReadonlyArray<
   'scorched',
   'unstable',
   'forgotten',
+  'worn',
 ]
 export const rulesChangedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RulesChangedEvent']['kind']
@@ -82689,6 +85644,16 @@ export const sonToolIdValues: ReadonlyArray<
   'reveal_true_name',
   'reveal_tenet',
   'open_rebirth_gate',
+  'open_rift',
+  'seal_rift',
+  'call_cosmic_being',
+  'bind_cosmic_being',
+  'banish_cosmic_being',
+  'contain_phenomenon',
+  'turn_region_climate',
+  'claim_galaxy',
+  'rule_dimension',
+  'claim_star',
   'wage_war',
   'raise_host',
   'disband_host',
@@ -82772,6 +85737,9 @@ export const staffScaleValues: ReadonlyArray<
 export const stanceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Stance']
 > = ['march', 'forage', 'entrench', 'besiege', 'garrison', 'raid', 'retreat']
+export const starAgeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['StarAge']
+> = ['young', 'main', 'old', 'dying', 'dead', 'reborn']
 export const starTypeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StarType']
 > = [
@@ -83501,6 +86469,11 @@ export const travelMethodValues: ReadonlyArray<
   'slingshot_orbit',
   'swallowed',
   'wormhole',
+  'void_ark',
+  'galactic_gate',
+  'filament_lane',
+  'dimensional_rift',
+  'planar_door',
 ]
 export const treasuryEntryValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TreasuryEntry']
@@ -83853,6 +86826,9 @@ export const workshopKindValues: ReadonlyArray<
   'shrine_workshop',
   'mint',
 ]
+export const worldAgeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['WorldAge']
+> = ['young', 'mature', 'old', 'dying']
 export const worldBornEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WorldBornEvent']['kind']
 > = ['world.born']

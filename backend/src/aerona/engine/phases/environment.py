@@ -31,7 +31,10 @@ from aerona.domain.enums.world import ClimateEra, Discovery
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.climate import current_heat, world_heat
+from aerona.engine.cosmos.phenomena import phenomenon_passability
 from aerona.engine.cosmos.star_types import star_heat
+from aerona.engine.cosmos.worldlife import cosmic_disease
 from aerona.engine.ecology.domestication import grazing_heads
 from aerona.engine.ecology.flora import CropBook, crop_year
 from aerona.engine.environment.battles import backfill_battle_ground
@@ -156,6 +159,8 @@ class RegionContext:
     chokepoints: int
     star: StarRow | None = None
     works: Works = field(default_factory=Works)
+    world_heat: int = 0
+    pass_shift: int = 0
 
     def surroundings(self, rules: Rules, env: RegionEnvironmentRow) -> Surroundings:
         return Surroundings(
@@ -168,6 +173,9 @@ class RegionContext:
             star_heat=star_heat(rules, self.star),
             works=self.works,
             cleared=env.cleared,
+            shift_heat=self.world_heat + env.temperature_shift + current_heat(rules, env.current),
+            shift_rain=env.rainfall_shift,
+            pass_shift=self.pass_shift,
         )
 
 
@@ -228,7 +236,7 @@ def refresh_climate(
         tides=tides,
         works=around.works,
     )
-    fresh = passability_of(rules, ground)
+    fresh = {mode: clamp_int(value + around.pass_shift, 0, PERCENT) for mode, value in passability_of(rules, ground).items()}
     env.passability = {**fresh, **{mode: value for mode, value in held.items() if value is not None}}
     if "defensibility" not in locked:
         env.defensibility = defensibility_of(rules, roughness=env.roughness, forest=env.forest_cover, river=env.river_class, chokepoints=around.chokepoints)
@@ -372,6 +380,7 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
         if place.chokepoint and place.region_entity_id is not None:
             chokepoints[place.region_entity_id] += 1
     works = await works_by_region(ctx, book)
+    hindered = await phenomenon_passability(ctx)
     contexts: dict[int, RegionContext] = {}
     for region in regions:
         world = book.worlds.get(region.world_id)
@@ -384,6 +393,8 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
             chokepoints=chokepoints[region.id],
             star=book.star_of(world),
             works=works.get(region.id, Works()),
+            world_heat=world_heat(ctx.rules, world, book.star_of(world)),
+            pass_shift=hindered[region.id],
         )
     return contexts
 
@@ -424,9 +435,12 @@ async def run_backfills(ctx: TickContext) -> None:
     "table.battles",
     "table.beast_profiles",
     "table.calendars",
+    "table.cosmos",
+    "table.dimensional_events",
     "table.districts",
     "table.entity_flags",
     "table.forced_weather",
+    "table.galactic_structures",
     "table.holder_levels",
     "table.holder_techniques",
     "table.notable_years",
@@ -570,9 +584,12 @@ async def sanitation_by_region(ctx: TickContext, book: EnvironmentBook, communit
     "region.magic",
     "settlement.population",
     "table.calendars",
+    "table.cosmos",
+    "table.dimensional_events",
     "table.districts",
     "table.entity_flags",
     "table.forced_weather",
+    "table.galactic_structures",
     "table.holder_levels",
     "table.place_environment",
     "table.region_environment",
@@ -622,7 +639,7 @@ async def environment_derive(ctx: TickContext) -> None:
                 sanitation_pct=sanitation.get(region.id, 0),
                 scars=env.scars,
             )
-            env.disease_load = clamp_int(env.disease_load + disease_extra(rules, fouled.get(region.id)), 0, PERCENT)
+            env.disease_load = clamp_int(env.disease_load + disease_extra(rules, fouled.get(region.id)) + cosmic_disease(rules, context.world), 0, PERCENT)
         current = base_stat(region, "fertility")
         if "soil_fertility" not in env.locked:
             env.soil_fertility = fold_external(env.derived_fertility, current, env.soil_fertility)
@@ -984,8 +1001,11 @@ async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason)
     "table.applied_fixups",
     "table.bonds",
     "table.calendars",
+    "table.cosmos",
+    "table.dimensional_events",
     "table.epoch_year_cursors",
     "table.forced_weather",
+    "table.galactic_structures",
     "table.holder_levels",
     "table.natural_law_profiles",
     "table.place_environment",

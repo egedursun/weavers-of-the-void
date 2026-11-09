@@ -18,6 +18,9 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, Discovery, SkyEventKind, StarType
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.ladder import ensure_ladder, home_galaxy, settle_star
+from aerona.engine.cosmos.placement import Cosmography
+from aerona.engine.cosmos.remnants import after_supernova
 from aerona.engine.cosmos.routes import restore_sail_routes, scorch_sail_routes, snap_sail_routes
 from aerona.engine.cosmos.star_types import fitted_brightness, kindled_brightness
 from aerona.engine.primitives.doom import advance_doom
@@ -36,8 +39,11 @@ def star_label(star_type: StarType) -> str:
     return STAR_TYPE_LABELS[star_type]
 
 
-async def star_position(session: AsyncSession, rng: SeededRandom) -> tuple[float, float]:
-    count = int(await session.scalar(select(func.count()).select_from(StarRow)) or 0)
+async def star_position(session: AsyncSession, rng: SeededRandom, galaxy_id: int | None = None) -> tuple[float, float]:
+    statement = select(func.count()).select_from(StarRow)
+    if galaxy_id is not None:
+        statement = statement.where(StarRow.galaxy_id == galaxy_id)
+    count = int(await session.scalar(statement) or 0)
     angle = rng.random() * math.tau
     radius = STAR_MAP_BASE_RADIUS + count * STAR_MAP_RADIUS_STEP
     return math.cos(angle) * radius, math.sin(angle) * radius
@@ -50,13 +56,22 @@ class StarSpec:
     brightness_base: int
     brightness_die: int
     description: str | None = None
+    galaxy_id: int | None = None
+    position: tuple[float, float] | None = None
 
 
 async def create_star(session: AsyncSession, rules: Rules, rng: SeededRandom, epoch: int, spec: StarSpec) -> StarRow:
     name = await NameRepository(session).unique_name(spec.name)
     brightness = kindled_brightness(rules, spec.star_type, spec.brightness_base + rng.die(spec.brightness_die))
-    x, y = await star_position(session, rng)
-    return await WorldRepository(session).create_star(StarDraft(name, spec.star_type, brightness, x, y, epoch, spec.description))
+    galaxy_id = spec.galaxy_id
+    if galaxy_id is None:
+        await ensure_ladder(session, rules)
+        home = await home_galaxy(session)
+        galaxy_id = home.id if home is not None else None
+    x, y = spec.position if spec.position is not None else await star_position(session, rng, galaxy_id)
+    star = await WorldRepository(session).create_star(StarDraft(name, spec.star_type, brightness, x, y, epoch, spec.description, galaxy_id))
+    settle_star(rules, await Cosmography.load(session), star)
+    return star
 
 
 async def worlds_of_star(session: AsyncSession, star_id: int, *, include_forgotten: bool = False) -> list[WorldRow]:
@@ -124,9 +139,9 @@ async def supernova(ctx: TickContext, star: StarRow) -> str:
         _add_leak(world, sky.supernova_leak)
     await advance_doom(ctx.session, ctx.rules, sky.supernova_apocalypse)
     await snap_sail_routes(ctx, star.id)
+    await after_supernova(ctx, star)
     await ctx.session.flush()
-    burned = "the supernova's light burned the worlds around it; most of their peoples became ash"
-    return f"{star.name} exploded: {burned}, a new and terrible light remained in the sky."
+    return f"{star.name} exploded; the worlds around it lost most of their peoples and much of their soil, and a remnant was left in its place."
 
 
 async def black_sun(ctx: TickContext, star: StarRow) -> str:
@@ -142,7 +157,7 @@ async def black_sun(ctx: TickContext, star: StarRow) -> str:
                 scale_stat(ctx.rules, cult, FOLLOWERS_KEY, sky.black_sun_outer_cult_mult_pct / PERCENT, default=followers)
     await snap_sail_routes(ctx, star.id)
     await ctx.session.flush()
-    return f"{star.name} turned into a black sun: it gives no light, it swallows light."
+    return f"{star.name} turned into a black sun that gives no light."
 
 
 async def flare(ctx: TickContext, star: StarRow) -> str:
@@ -155,7 +170,7 @@ async def flare(ctx: TickContext, star: StarRow) -> str:
             shift_bounded(ctx.rules, community, PIETY_KEY, sky.flare_piety_gain)
     scorched = await scorch_sail_routes(ctx, star.id)
     names = ", ".join(world.name for world in worlds) or "the empty void around it"
-    text = f"{star.name} flared: its fire scorched the fields of {names}, and auroras burned in their skies like omens."
+    text = f"{star.name} flared: the fields of {names} lost fertility and auroras filled their skies."
     if scorched:
         text += f" The flare scorched shut {scorched} light-sail route{'s' if scorched > 1 else ''} bound to it."
     await ctx.session.flush()
@@ -175,7 +190,7 @@ async def extinguish_star(ctx: TickContext, star_id: int, by: str) -> str:
     await advance_doom(ctx.session, ctx.rules, pantheon.extinguish_star_apocalypse)
     await snap_sail_routes(ctx, star.id)
     names = ", ".join(world.name for world in worlds) or "The void around it"
-    text = f"{by} extinguished {star.name}. {names} sank into darkness; the lands cooled, the things outside came closer."
+    text = f"{by} extinguished {star.name}. {names} lost their light; their lands cooled and the leak grew."
     await ctx.chronicle(ChronicleKind.COSMIC, text, template_key="sky.star_extinguished", feed_category=FeedCategory.SKY)
     await ctx.session.flush()
     return text
@@ -192,7 +207,7 @@ async def rekindle_star(ctx: TickContext, star_id: int, by: str) -> str:
         _add_leak(world, -hand.rekindle_leak_drain)
     await restore_sail_routes(ctx.session, star.id)
     await end_black_sun(ctx.session, star.id, ctx.epoch)
-    text = f"{by} rekindled {star.name}; light returned to the worlds buried in darkness."
+    text = f"{by} rekindled {star.name}; its worlds have light again."
     await ctx.chronicle(ChronicleKind.SKY, text, template_key="sky.star_rekindled", feed_category=FeedCategory.SKY)
     await ctx.session.flush()
     return text

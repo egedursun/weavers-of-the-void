@@ -31,6 +31,7 @@ from aerona.engine.cosmos.fauna import (
 )
 from aerona.engine.cosmos.resources import set_mechanics, travel_resource
 from aerona.engine.cosmos.sanity import sanity_of, shift_sanity
+from aerona.engine.cosmos.worldlife import radiation_mutation
 from aerona.engine.ecology.biochemistry import can_live_on
 from aerona.engine.ecology.foodweb import derive_links
 from aerona.engine.ecology.profiles import assign_traits
@@ -56,7 +57,7 @@ MAGIC_KEY = "magic"
 
 
 async def _species(ctx: TickContext) -> list[EntityRow]:
-    return await canon(ctx.session, [EntityType.SPECIES])
+    return unheld(await canon(ctx.session, [EntityType.SPECIES]))
 
 
 async def _location(ctx: TickContext, species: EntityRow) -> EntityRow | None:
@@ -114,7 +115,7 @@ async def _mutation_chance(ctx: TickContext, species: EntityRow, leaks: dict[int
         chance += creatures.mutation_cursed_bonus_pct / PERCENT
     if stat_or(species, "might", 0):
         chance += creatures.mutation_might_bonus_pct / PERCENT
-    return chance
+    return chance + radiation_mutation(ctx.rules, await ctx.session.get(WorldRow, species.world_id))
 
 
 async def mutate_species(ctx: TickContext, species: EntityRow, leak: int) -> EntityRow:
@@ -209,7 +210,7 @@ async def people_mutation(ctx: TickContext) -> EntityRow | None:
     mutated = await flags_by_entity(ctx.session, EntityFlag.MUTATED)
     rng = ctx.rng("people_mutation")
     for people in await canon(ctx.session, [EntityType.PEOPLE]):
-        if people.id in mutated or sanity_of(ctx.rules, people) >= creatures.people_mutation_sanity:
+        if people.id in mutated or held(people.id) or sanity_of(ctx.rules, people) >= creatures.people_mutation_sanity:
             continue
         if rng.chance(creatures.people_mutation_chance):
             return await split_changed_people(ctx, people)
@@ -461,6 +462,7 @@ async def invasive_pressure(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
+    "table.plant_profiles",
     "table.species_profiles",
     "table.species_uses",
     "table.species_yields",

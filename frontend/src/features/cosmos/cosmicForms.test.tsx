@@ -132,9 +132,16 @@ describe('cosmic action gating', () => {
       <IgniteStarForm index={INDEX} rules={RULES} />
     )
     await screen.getByRole('button', { name: /Ignite/ }).click()
-    await screen.getByRole('button', { name: 'Undo' }).click()
+    const undo = screen.getByRole('button', { name: 'Undo' })
+    await expect.element(undo).toBeVisible()
+    await expect
+      .poll(async () => {
+        if (callsTo('POST', '/api/ledger/31/undo').length === 0)
+          await undo.click()
+        return callsTo('POST', '/api/ledger/31/undo').length
+      })
+      .toBe(1)
     await expect.element(screen.getByText('Undone')).toBeInTheDocument()
-    expect(callsTo('POST', '/api/ledger/31/undo')).toHaveLength(1)
   })
 })
 

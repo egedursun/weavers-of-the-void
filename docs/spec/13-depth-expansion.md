@@ -6673,6 +6673,173 @@ The star-god's corpse is a `system` phenomenon. A void storm along a route is a 
 - Prophecies and legends of the prior age carry over as fragmentary texts (F33 accounts with low fidelity), so each age half-remembers the last.
 - The cycle's period and how much carries over are rules (`ages.*`).
 
+### 10.10 Galaxy (new node kind)
+
+**Current.** Stars sit on one flat map (`x`, `y`) with no larger structure. The cosmos has no galaxy, no place for a star inside a galaxy, and nothing beyond.
+
+The cosmos is one whole, with a fixed scale ladder: **dimension → cluster (with nested groups) → galaxy → galactic structure and zone → star → world → moon.** Each step is a node, or a record owned by a node, that the engine reads and the god controls. The stored star position becomes its position inside its galaxy.
+
+#### Attributes
+
+- `galaxy_type` (typed effects table), with real and fantasy types:
+  - **Real:** spiral, barred spiral, grand-design spiral, flocculent spiral, lenticular, elliptical, giant elliptical, dwarf elliptical, dwarf spheroidal, irregular, dwarf irregular, ring, peculiar (interacting), starburst, active (bright nucleus), quasar host, low surface brightness, ultra-diffuse.
+  - **Fantasy:** living galaxy, dead galaxy, shattered galaxy, forged galaxy (made by a god), dreaming galaxy, mirror galaxy, crowned galaxy (one ruling power), hollow galaxy, ember galaxy (dying fire), veiled galaxy (hidden from outside).
+  - Each type row gives star density, the star formation base, metallicity base, the arm count range, nucleus weights, leak, sanity, travel danger, life capacity and the zone layout.
+- `cluster_id` or `dimension_id` (where it lies; one of the two, and a galaxy without either lies in the prime dimension), `x`, `y` (its place in the cluster), `radius`.
+- `arm_count`, `nucleus` (none, dormant, active, quasar, devoured), `star_formation` 0–100, `metallicity` 0–100, `age_stage` (forming, young, mature, old, dying, dead), `leak` 0–100, `discovery`, `patron_son_id`.
+- `merging_with_galaxy_id`, `merge_progress` 0–100.
+
+**Galactic zones** (`galactic_zone` per star, derived from its position and the type's layout, and overridable): core, bulge, bar, inner disc, arm, interarm, outer disc, halo, rim and intergalactic (a star cast out of every galaxy). The zone row sets:
+
+| Effect | Reader |
+|---|---|
+| radiation | the star's radiation (10.1), and through it mutation pressure and the disease load of its worlds |
+| metallicity | ore yield and the signature minerals of its worlds (rare metals in metal-rich zones) |
+| star density | sky event weight (more neighbours, more omens and nearby supernovae), eclipse weight |
+| life capacity | the galactic habitable zone: a multiplier on the life capacity of its worlds |
+| leak | per-epoch leak of its worlds (the core and the rim of some fantasy types) |
+| travel | route danger and duration inside the galaxy |
+
+#### Galactic structures (owned records)
+
+`galactic_structures` rows (owned by the galaxy, shown in its entry and on its map):
+
+- **Real kinds:** spiral arm, bar, bulge, core (the central black hole), halo, emission nebula, reflection nebula, dark nebula, planetary nebula, supernova remnant, stellar nursery, open cluster, globular cluster, stellar stream, dust lane, superbubble.
+- **Fantasy kinds:** star graveyard, ley spiral (a lane of magic), sealed vault, god's forge, drift of dead light, singing nebula, rift scar.
+
+Each kind row gives effects on the stars inside it and on their worlds: star birth (nurseries, emission nebulae), hiding (dark nebulae and dust lanes lower discovery and astronomy), old metal-poor stars (globular clusters), radiation and star metal (remnants), magic density (ley spirals), leak (rift scars), route speed and danger through it. A star belongs to at most one structure (`structure_id`). Structures have `x`, `y`, `radius`, `intensity` 0–100 and an end epoch.
+
+#### Behaviours
+
+1. **Star formation:** each epoch, nurseries and emission nebulae bear new stars by the galaxy's star formation and the structure's intensity. The new stars are unclaimed and appear for sons to take (hang a world, become patron).
+2. **Galactic aging:** star formation falls with age, metallicity rises with every supernova, and old galaxies redden (more old stars, fewer nurseries). A dying galaxy's stars enter their late stages faster (10.1).
+3. **Mergers:** two galaxies of one cluster can drift into each other. The merge progresses each epoch; during it star formation bursts, arms are disrupted (structures end or move), routes between their worlds shorten, and at 100 the smaller galaxy is absorbed (its stars and structures move into the larger, which may change type to peculiar, then elliptical).
+4. **Nucleus:** an active nucleus or quasar raises the radiation of the core and bulge zones. An outburst is a galactic event.
+5. **Galactic events** (`galactic_events`, each with a start, an end and an intensity): core outburst, gamma-ray burst (worlds within its reach lose fertility and biosphere health, species face extinction checks), starburst, tidal stripping (stars thrown into a stream or out of the galaxy), merger begun or completed, hypervelocity star (a star is flung into the intergalactic zone), nebula collapse (a new nursery), galactic dimming, and the fantasy events awakening (a living galaxy stirs), shrouding (a veiled galaxy hides) and severing (a shattered galaxy splits). Events act through modifiers on everything inside their reach.
+6. **Patrons:** a son may become a galaxy's patron. It gains `galaxies.patron_essence` per epoch for each world in the galaxy that worships it, and a Star, Sun, Light or Sky patron raises the galaxy's star formation, while a Death, Ash or Shadow patron lowers it.
+
+#### Tables and rules
+
+- **Tables:** `galaxies` (node), `galactic_structures`, `galactic_events`; stars gain `galaxy_id`, `structure_id`, `galactic_zone`.
+- **Rules namespaces:** `galaxy_types`, `galactic_structures`, `galactic_zones`, `galaxies` (formation, mergers, events).
+
+### 10.11 Cluster (new node kind)
+
+Galaxies gather into groups and clusters, and those into superclusters, filaments and walls around voids: the cosmic web.
+
+#### Attributes
+
+- `cluster_kind`, with real and fantasy kinds:
+  - **Real:** galaxy group, local group, poor cluster, rich cluster, supercluster, filament, wall, void.
+  - **Fantasy:** crown cluster (one power rules it), drowned cluster (lost to a dimension), forge cluster (built by gods), dream cluster, mirror cluster.
+- `parent_cluster_id` (a group inside a supercluster, a cluster on a filament) or `dimension_id` (a top cluster; one of the two).
+- `x`, `y` (its place in the dimension's web), `radius`, `medium_heat` 0–100 (the hot gas between its galaxies: travel danger and the stripping of passing galaxies), `expansion` (drift per epoch between top clusters: inter-cluster routes lengthen), `discovery`.
+
+#### Behaviours
+
+1. **Dominance:** the largest galaxy of a cluster is its central galaxy. It pulls the others into mergers over epochs (merger chance by distance and mass).
+2. **Medium:** a hot medium strips gas from galaxies that fall through it (their star formation falls).
+3. **Expansion:** top clusters drift apart. Routes between them lengthen by `expansion`, unless a god's bridge or a gate holds them.
+4. **Voids** hold few galaxies and are the most dangerous and lonely crossings; some fantasy natures (leak, sanity) gather there.
+
+#### Tables and rules
+
+- **Tables:** `galaxy_clusters` (node).
+- **Rules namespace:** `cluster_kinds`, `clusters`.
+
+### 10.12 Intergalactic and intercluster travel and trade
+
+**Current.** Routes join two worlds with a method, a duration and a danger. Nothing knows how far apart the worlds lie.
+
+- **Route scope** is derived from the endpoints' placement: system (same star), stellar (same galaxy), galactic (a galaxy and its satellites in one group), intergalactic (two galaxies of one cluster), intercluster (two clusters), interdimensional (two dimensions). Scope multiplies duration, danger and provision cost (`cosmography.scope_*`), and sets the news delay of rumours carried along it.
+- **Methods by reach:** each travel method has a maximum scope (a light sail or a slingshot stays inside a galaxy; a cosmic mount reaches the cluster; ancient gates, space folds and divine bridges reach any scope inside one dimension; dream journeys and the river of the dead cross dimensions). New methods: **void ark** (a generation ship for intergalactic and intercluster crossings: very long, carries whole cohorts, needs the highest sky-sailing knowledge), **galactic gate** (a gate pair between galaxies, built by gods or ancient makers), **filament lane** (a natural road along a cluster filament, open to cosmic mounts and arks), **dimensional rift** (a passage through a rift, 10.14) and **planar door** (a stable door between dimensions, made by a rite or a god).
+- **Trade between worlds:** routes carry goods. Each epoch, the markets (6.4) of two worlds joined by an open route exchange surplus for deficit, up to the route's capacity, at a cost that grows with scope. Traffic is recorded on the route, the toll goes to the toll controller, and piracy takes a share. Goods found only in some galaxies, structures or dimensions (star metal from remnants, nebula salts and essences of planes, through the signature minerals of their worlds) make long routes worth their danger.
+- **Cosmic distances in the chronicle:** journeys report the scope crossed, and the arrival of a void ark from another galaxy is a founding event for its colony.
+
+#### Rules
+
+- **Rules namespace:** `cosmography` (scope multipliers, method reach, trade costs, news delay).
+
+### 10.13 Dimension (new node kind)
+
+The cosmos holds several dimensions. Each is a whole layer of existence with its own clusters, galaxies, stars and worlds, or a smaller plane that holds worlds or nothing but its own nature. The **prime dimension** is where every existing cosmos already lies.
+
+#### Attributes
+
+- `dimension_kind` (typed effects table), with real and fantasy kinds:
+  - **Real (from physics):** prime, parallel (a sibling with its own history), mirror (inverted), pocket (small, inside another), bubble universe, brane, higher-dimensional, antimatter, quantum branch, time-reversed, compactified (folded small).
+  - **Fantasy:** astral, ethereal, dream, shadow, spirit, fey, elemental (with an `element` of fire, water, earth, air, void or another typed element), celestial (a heaven), infernal, abyssal, limbo, far realm, clockwork (order), chaos, underworld, divine domain (one god's plane), void between.
+- `parent_dimension_id` (a pocket, branch or bubble inside or beside another).
+- `veil` 0–100 (how thick the boundary to the others is; 0 is open), `stability` 0–100, `time_factor` (how fast time runs against the prime), `magic` 0–100 (magic density of everything inside it), `hostility` 0–100 (danger to visitors), `sanity_drain`, `leak` 0–100, `causality` (strict, loose, broken), `discovery`.
+- `ruler_node_id` (a son, a foreign god, an outer being, a cosmic being or none), `natural_laws` (laws that hold across the whole dimension, 9.5, read by the law book as a dimension scope).
+
+The dimension kind row gives the defaults and the effects:
+
+| Effect | Reader |
+|---|---|
+| time factor | multiplies the time factor of every world inside it (years per epoch, aging) |
+| magic | added to the magic density of every region inside it; rite power (8.6) |
+| hostility | danger of its worlds and of journeys into it |
+| sanity drain | per-epoch sanity loss of mortals inside it and of visitors |
+| leak | per-epoch leak of its worlds |
+| veil | the default veil |
+| life capacity | multiplier on the life capacity of its worlds |
+| laws | the natural laws it holds by its nature (the dead speak in the underworld, dreams are real in the dream dimension) |
+
+#### Behaviours
+
+1. **Nested placement:** a dimension's clusters, galaxies and worlds read its effects through the placement chain. A world's effective time factor, magic, danger, leak and sanity drain include the dimension's.
+2. **Veils:** veils thin with open rifts, incursions, leak and rites, and thicken with sealing rites, wards and time. A thin veil raises the chance of rifts and crossings. A veil at 0 opens a convergence.
+3. **Dimensional events** (`dimensional_events`): incursion (beings cross into a world), convergence (two dimensions overlap: their veils open, beings and laws cross, time runs at the mean of both), veil thinning, planar alignment (every veil thins for a span), bleed (a dimension's nature seeps into a world: magic, time factor, danger and leak move toward the dimension's), schism (a branch dimension splits off), collapse (a pocket or bubble dimension collapses: its worlds are thrown into the parent or lost), echo (a mirror counterpart of a mortal or a people appears). Events act through modifiers and end at their end epoch.
+4. **Rulers:** a dimension's ruler gains essence or power from it and can close or open its veil. Sons may rule a divine domain dimension of their own.
+5. **Faith and afterlife:** an underworld, a celestial or an infernal dimension can host afterlife strata (3.3), so the souls of a world go to a real place.
+
+#### Tables and rules
+
+- **Tables:** `dimensions` (node); worlds without a star gain `galaxy_id` or `dimension_id`; galaxies and clusters gain `dimension_id`.
+- **Rules namespaces:** `dimension_kinds`, `dimensions` (veils, events, convergence).
+
+### 10.14 Rifts
+
+A rift is a tear between a region of a world and another dimension.
+
+- Attributes: `world_id`, `region_entity_id`, `dimension_id`, `target_world_id` (a world on the far side, if any), `size` 0–100, `stability` 0–100, `state` (opening, open, closing, sealed, collapsed), `cause` (rite backlash, leak peak, convergence, god, being, phenomenon, Creator), `opened_by_node_id`, `opened_epoch`, `sealed_epoch`, `route_id`.
+- **Effects:** the region gains leak and magic by size; it becomes a danger source; the dimension's veil thins; beings of the far side may cross (incursions); phenomena (10.6) form at large rifts (leak wounds).
+- **Passage:** an open rift with a target world opens a dimensional rift route between the two worlds. The route closes when the rift seals or collapses.
+- **Life cycle:** rifts grow when unstable and shrink when stable; sealing rites, wards, gods and the Creator seal them; a rift whose stability falls to 0 collapses (a disaster in the region).
+
+**Tables:** `rifts`. **Rules namespace:** `rifts`.
+
+### 10.15 Cosmic being (new entity type)
+
+Beings that live at the scale of galaxies or between dimensions. They are distinct from outer beings (9.6), which feed from beyond: a cosmic being is a native of a dimension or of the great dark, with a home, a reach and an aim.
+
+#### Attributes
+
+- `being_kind`, with real-flavoured and fantasy kinds: planar native, dimension walker, rift spawn, higher-dimensional entity, star eater, nebula mind, galactic leviathan, void shepherd, echo (a mirror double), time wanderer, cosmic titan, veil warden, plane sovereign, swarm intelligence, living constellation.
+- `home_dimension_id`, `galaxy_id` (where it roams), `scale` (world, system, galaxy, cluster, dimension), `might` 0–100, `phase` (dormant, roaming, manifest, incursion, bound, banished), `agenda` (feed, explore, conquer, guard, trade, flee, seek worship, unmake, mend), `bound_by_node_id`, `rift_id`, `target_world_id`, `manifest_epochs`.
+
+#### Behaviours
+
+1. **Roaming and crossing:** roaming beings move between the galaxies of their scale and cross into other dimensions where veils are thin or rifts are open.
+2. **Agenda acts:** feeders dim stars (star eaters) or drain magic (nebula minds); conquerors make incursions (a beast attack at the scale of a region, with armies answering); guards strengthen veils; traders carry goods along routes; worship-seekers draw cults (they can be a community's patron through the cult machinery, like outer beings); menders repair stars and veils; unmakers raise doom.
+3. **Binding and banishment:** rites, sons, foreign gods and the Creator bind beings (they serve their binder) or banish them to their home dimension.
+4. **Rulers:** a plane sovereign can rule a dimension (10.13).
+5. **Echoes:** an echo is bound to a mortal it mirrors; it can take that mortal's place (an impostor, 5.10) or befriend them.
+
+#### Tables and rules
+
+- **Tables:** `cosmic_being_profiles`.
+- **Rules namespace:** `cosmic_beings`.
+
+### 10.16 Interconnections of the cosmic scales
+
+- **Placement reaches every system:** world physics, temperature (through the star), life capacity, radiation, leak, magic, time factor, sanity and danger all read the placement chain (dimension → cluster → galaxy → zone and structure → star → world).
+- **Gods:** a dimension's ruler shapes it by domain: Dream, Shadow, Madness and Border rulers thin its veil or thicken it (Border thickens), Time rulers steady its stability, Death and Sleep rulers draw souls to its strata. Galaxy patrons act on star formation (10.10). Sons have tools to open and seal rifts, call and banish cosmic beings, and contain phenomena. The Creator's attention (9.2) and every lever reach every scale.
+- **Faith:** stars, galaxies and dimensions can be worshipped (sun cults, sky cults, cults of a plane), with piety tracking the object's state.
+- **Doom:** open rifts, incursions, convergences, gamma-ray bursts and unmaking beings are typed doom contributors (10.8). Dimensional collapse is an apocalypse variant.
+- **Book and Codex:** the atlas of the heavens is ordered by the scale ladder, with every dimension, cluster, galaxy, structure, event, rift and being in its place.
+
 ### 10.9 Cosmic physics (derived, second pass)
 
 All cosmic values that the first pass stored are now **derived** from a small set of physical inputs. Stored values become caches, and divine or player overrides become modifiers (F9).
@@ -6723,7 +6890,7 @@ All cosmic values that the first pass stored are now **derived** from a small se
 **Star systems and cosmic features:**
 
 - **Binary systems:** worlds orbit one star (S-type) or both (P-type). Insolation varies with the companions' phases, giving double seasons and double-sun eclipses. The habitable band is computed from both stars.
-- **Nebulae:** route travel modifiers (slower, hidden), star birth over epochs in nurseries (new stars appear for sons to claim), and omen weights.
+- **Nebulae** and the other galactic structures are records of their galaxy (10.10); this pass derives their effects from the physical inputs.
 - **Black holes:** route slingshots with time dilation (the existing `time_factor` analogue for travellers: they arrive younger than their kin), and devouring of nearby bodies.
 - **Asteroid fields:** mining for materials (vessels with miners), impacts, hiding places for void pirates.
 - **Wormholes:** natural routes with instability windows.
@@ -6731,7 +6898,7 @@ All cosmic values that the first pass stored are now **derived** from a small se
 
 **Life classes per world:** biochemistry, complexity (none, microbial, simple, complex, sapient) and environment (marine, terrestrial, aerial, subterranean). They gate which species and peoples can arise natively (the existing life seeding reads them) and which can survive transplanting.
 
-**Galactic structure:** star positions are organised in arms, clusters and voids (from the cosmic features). Light-delay of news (F21) between distant systems follows route durations.
+**Galactic structure** is placed by 10.10 (galaxies, zones, structures) and 10.11 (clusters and voids). This pass derives star positions inside the arms from the orbital model. Light-delay of news (F21) between distant systems follows route durations and the route scope (10.12).
 
 **Tables:** `star_physics`, `world_physics`, `star_systems`, `cosmic_features`, `impact_events`, `world_life`.
 
@@ -7145,7 +7312,7 @@ Each wave is independently shippable, keeps the engine green (multi-epoch simula
 | W9 | Culture and knowledge: language barriers, legends with credence, tradition effects, tech graph with holder levels, ideology, rites and magic, prophecy conditions (Part 8); artworks and items with provenance (Part 7) | W3, W4 |
 | W10 | Ecology: species ranges and food web, domestication, beasts (3.2, 3.3a) | W1, W2 |
 | W11 | Divine: domain hooks for all 40 domains, son goals, standing, divine wounds, avatars, creator passions and taboos, foreign-god relations, typed council motions (Part 9) | W3, W8 |
-| W12 | Cosmos: star life cycle, world physics wiring, regional leak, phenomena, journey cargo and convoys, typed apocalypse variants (Part 10) | W1, W11 |
+| W12 | Cosmos: star life cycle, world physics wiring, regional leak, phenomena, journey cargo and convoys, typed apocalypse variants (10.1–10.8); galaxies with zones, structures and events, clusters, intergalactic and intercluster travel and trade, dimensions with veils and events, rifts, cosmic beings, and the scale ladder in every system (10.10–10.16) | W1, W11 |
 
 #### Execution order after W10
 
@@ -7885,7 +8052,8 @@ Integration happens in waves, but **the whole of this document is the deliverabl
 | K.17 | Storyteller pacing | Default profile cyclic; selectable in genesis and editable; existing worlds get cyclic | F27 |
 | K.18 | Linear or cyclic cosmos | Existing cosmoses stay linear; the genesis default is linear, with cyclic selectable | 10.8 reference pass 4 |
 | K.19 | Mechanical harshness | One harshness dial (heroic, realistic, brutal), default realistic, scaling all lethality and loss rates as a group; editable in World Rules | G11 |
+| K.20 | Scales beyond the star (2026-11-09) | The cosmos is one whole with dimensions, clusters and galaxies as node kinds (10.10–10.16), real and fantasy kinds for each, all controllable. Existing cosmoses lie in a prime dimension, a home group and a home galaxy holding every existing star, as if it had always been so (G10). The stored star position is its position inside its galaxy | 10.10–10.16, G10 |
 
 All first-pass decisions are resolved.
 
-All second-pass decisions are resolved as well. Decisions K.10–K.19 were taken after the tenth pass. No design question remains open.
+All second-pass decisions are resolved as well. Decisions K.10–K.19 were taken after the tenth pass, and K.20 with the scale ladder of W12. No design question remains open.

@@ -42,3 +42,5 @@ class CreationBaseCostRules:
     theory: int = rule(15, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of revealing a theory")
     art_form: int = rule(15, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of inspiring an art form")
     natural_law: int = rule(30, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of decreeing a natural law")
+    phenomenon: int = rule(40, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of raising a phenomenon")
+    cosmic_being: int = rule(60, 0, 500, RuleGroup.GOD_AND_SON_COSTS, "Base cost of calling a cosmic being")

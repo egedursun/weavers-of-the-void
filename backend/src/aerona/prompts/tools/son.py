@@ -320,6 +320,57 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You pour essence into one of your own divine wounds to heal it faster. Free.",
         {"wound_id": "The id of your wound", "essence": "How much essence you pour into it"},
     ),
+    T.OPEN_RIFT: ToolText(
+        "You tear a rift in a region of a world into another dimension. The region gains leak, magic and danger, the dimension's veil thins, "
+        "and beings of that dimension may cross. If you name a world of that dimension, a passage opens between the two worlds. "
+        "{{ rules.rifts.open_essence }} essence, 1 action.",
+        {
+            "region_id": "The id of the region where the rift opens",
+            "dimension_id": "The id of the dimension it opens into",
+            "target_world_id": "The id of a world in that dimension for a passage, or nothing",
+            "reason": "Why you open it",
+        },
+    ),
+    T.SEAL_RIFT: ToolText(
+        "You seal an open rift; its passage closes. {{ rules.rifts.seal_essence }} essence, 1 action.",
+        {"rift_id": "The id of the open rift", "reason": "Why you seal it"},
+    ),
+    T.CALL_COSMIC_BEING: ToolText(
+        "You call a cosmic being of a kind you choose into a region. It roams, shows itself and acts on its own aim. "
+        "{{ rules.cosmic_beings.call_essence }} essence, 1 action.",
+        {"kind": "The kind of being", "region_id": "The id of the region where it arrives", "reason": "Why you call it"},
+    ),
+    T.BIND_COSMIC_BEING: ToolText(
+        "You bind a cosmic being to your service; a bound being stops acting on its own aim. {{ rules.cosmic_beings.bind_essence }} essence, 1 action.",
+        {"being_id": "The id of the cosmic being", "reason": "Why you bind it"},
+    ),
+    T.BANISH_COSMIC_BEING: ToolText(
+        "You banish a cosmic being to the dimension it came from; it loses might. {{ rules.cosmic_beings.banish_essence }} essence, 1 action.",
+        {"being_id": "The id of the cosmic being", "reason": "Why you banish it"},
+    ),
+    T.CONTAIN_PHENOMENON: ToolText(
+        "You ward a phenomenon so it grows more slowly and fades once fully held. {{ rules.phenomena.contain_essence }} essence, 1 action.",
+        {"phenomenon_id": "The id of the phenomenon", "reason": "Why you ward it"},
+    ),
+    T.TURN_REGION_CLIMATE: ToolText(
+        "You turn the climate of one region warmer, colder, wetter or drier; it drifts back over the following ages. "
+        "{{ rules.world_life.son_climate_essence }} essence, 1 action.",
+        {"region_id": "The id of the region", "turn": "Which way the climate turns", "reason": "Why you turn it"},
+    ),
+    T.CLAIM_GALAXY: ToolText(
+        "You become the patron of a galaxy one of whose worlds you reach. You gain essence from each world in it that has you as its patron, "
+        "and your domains move how many stars it bears. {{ rules.galaxies.claim_essence }} essence, 1 action.",
+        {"galaxy_id": "The id of the galaxy", "reason": "Why you claim it"},
+    ),
+    T.RULE_DIMENSION: ToolText(
+        "You take rule of a dimension one of whose worlds you reach. You gain essence from it each age, and your domains move its veil and its stability. "
+        "{{ rules.dimensions.rule_essence }} essence, 1 action.",
+        {"dimension_id": "The id of the dimension", "reason": "Why you take rule of it"},
+    ),
+    T.CLAIM_STAR: ToolText(
+        "You become the patron of a star. You gain essence from each community that worships it. {{ rules.star_life.claim_essence }} essence, 1 action.",
+        {"star_id": "The id of the star", "reason": "Why you claim it"},
+    ),
     T.SHAPE_BLOOD: ToolText(
         "You work an allele into both halves of a living mortal's blood: any locus of looks, of predisposition, of divine blood or of aptitude "
         "for a form of magic. Their children inherit it as blood is inherited. "

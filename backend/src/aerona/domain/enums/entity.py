@@ -38,6 +38,8 @@ class EntityType(StrEnum):
     BEAST = "beast"
     THEORY = "theory"
     ART_FORM = "art_form"
+    PHENOMENON = "phenomenon"
+    COSMIC_BEING = "cosmic_being"
 
 
 class EntityStatus(StrEnum):
@@ -192,6 +194,8 @@ class EntityFlag(StrEnum):
     MEGAFAUNA = "megafauna"
     INVASIVE = "invasive"
     WORSHIPS_PLANET = "worships_planet"
+    WORSHIPS_STAR = "worships_star"
+    WORSHIPS_GALAXY = "worships_galaxy"
     PLANET_CLOSED = "planet_closed"
     BURNED = "burned"
     COSMIC_PLAGUE = "cosmic_plague"

@@ -27,6 +27,8 @@ class ModifierSource(StrEnum):
     CURSE = "curse"
     DOMINION = "dominion"
     PHENOMENON = "phenomenon"
+    COSMOS = "cosmos"
+    RIFT = "rift"
     GOD_DEATH = "god_death"
     PLAYER = "player"
     SUPPRESSION = "suppression"

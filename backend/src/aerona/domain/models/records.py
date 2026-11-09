@@ -3,7 +3,10 @@ from pydantic import Field
 from aerona.domain.enums.agent import CouncilVote
 from aerona.domain.enums.chronicle import ChronicleAuditKind
 from aerona.domain.enums.creator import CreatorMoodAxis
+from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.meta import ScoreComponent
+from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.travel import JourneyEventKind
 from aerona.domain.models.base import ValueObject
 
@@ -13,6 +16,21 @@ class JourneyEvent(ValueObject):
     kind: JourneyEventKind
     text: str
     loss: int = Field(default=0, ge=0)
+
+
+class CargoLine(ValueObject):
+    commodity: CommodityKind
+    material: MaterialKind | None = None
+    amount: int = Field(ge=0)
+    item_entity_id: int | None = None
+
+
+class PassengerLine(ValueObject):
+    community_entity_id: int | None = None
+    social_class: SocialClass
+    count: int = Field(ge=0)
+    condition: int = Field(default=100, ge=0, le=100)
+    sick: bool = False
 
 
 class CouncilSpeech(ValueObject):

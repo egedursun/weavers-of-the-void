@@ -22,6 +22,7 @@ from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import DamageType, HarmCause
+from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
@@ -34,6 +35,7 @@ from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.book import perception_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.demography.biology import battle_edge, profiles_of
 from aerona.engine.divine.battles import intervene
 from aerona.engine.ecology.beasts import beast_dread, mounted_edge
@@ -344,6 +346,7 @@ async def clash(
         ctx.count("items_flared", await flaring_items(ctx, ground.weather, side, await leaders_of(ctx, armies[side.entity.id])))
     ctx.count("battle_gods", await intervene(ctx, war_id, sequence, first, second))
     result = resolve(ctx.rules, streams_for(ctx, war_id, sequence), first, second, ground)
+    await battlefield_scar(ctx, first.army.location_id, sum(phase.attacker_losses + phase.defender_losses for phase in result.phases))
     for side in (first, second):
         for army, _ in armies[side.entity.id]:
             sync(army, [stack.row for stack in side.stacks if stack.row.army_entity_id == army.id], ctx.rules)
@@ -358,6 +361,15 @@ async def clash(
             if side.tactic is Tactic.NIGHT_RAID:
                 await night_honour(ctx, side, enemy)
     return result
+
+
+async def battlefield_scar(ctx: TickContext, region_id: int | None, fallen: int) -> None:
+    table = ctx.rules.phenomena
+    region = await living_entity(ctx.session, region_id) if region_id is not None else None
+    if region is None or region.entity_type is not EntityType.REGION or fallen < table.battlefield_deaths:
+        return
+    if ctx.rng(f"ghost_road.{region.id}.{ctx.epoch}").chance(table.battlefield_chance):
+        await form_phenomenon(ctx, PhenomenonKind.GHOST_ROAD, region, PhenomenonCause.BATTLEFIELD)
 
 
 async def night_honour(ctx: TickContext, raider: Side, foe: Side) -> int:

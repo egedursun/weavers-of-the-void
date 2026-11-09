@@ -42,6 +42,8 @@ import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
 import { Label, Muted, PageTitle, Text } from '@/components/typography'
 import { ChronicleEntry } from '@/features/chronicle/ChronicleEntry'
 import { useChronicleKindLabels } from '@/features/chronicle/api'
+import { WorldPlacementSection } from '@/features/cosmography/HeavenlyLife'
+import { RiftsForWorld } from '@/features/cosmography/RiftsPanel'
 import { PaletteStrip, WorldDisc } from '@/features/cosmos/Glyphs'
 import { useCosmos } from '@/features/cosmos/api'
 import {
@@ -433,6 +435,8 @@ export function WorldWikiView({ worldId }: { worldId: number }) {
       <GoldenAgeSection worldId={data.world.id} />
       <WorldEraSection worldId={data.world.id} />
       <WorldLifeSection worldId={data.world.id} />
+      <WorldPlacementSection world={data.world} />
+      <RiftsForWorld worldId={data.world.id} />
       <CelestialDepthSection
         kind='world'
         id={data.world.id}

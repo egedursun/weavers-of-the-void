@@ -98,6 +98,20 @@ class WorldLineContext(PromptContext):
     golden_age_since: int | None = None
     golden_age_gain: int = 0
     golden_age_soft: bool = False
+    galaxy_name: str | None = None
+    galaxy_type: str | None = None
+    zone_label: str | None = None
+    structure_name: str | None = None
+    cluster_name: str | None = None
+    dimension_name: str | None = None
+    dimension_kind: str | None = None
+    star_age: str | None = None
+    world_age: str | None = None
+    biosphere: int = 100
+    radiation: int = 0
+    open_rifts: int = 0
+    phenomena: list[str] = Field(default_factory=list)
+    heavens: list[str] = Field(default_factory=list)
 
 
 class CosmosWorld(ContextItem):
@@ -112,6 +126,9 @@ class CosmosWorld(ContextItem):
     atmosphere: str
     time_factor: float = 1.0
     discovery_label: str | None = None
+    galaxy_name: str | None = None
+    dimension_name: str | None = None
+    scope: str | None = None
 
 
 class CosmosLinesContext(PromptContext):
