@@ -11,7 +11,7 @@ import {
 import { MindPicker } from '@/features/entity/mind/parts'
 import { useCosmography, useCosmographyAction } from './api'
 import { OMENS } from './labels'
-import { RecordPick, RecordRow } from './parts'
+import { ForgeCard, RecordPick, RecordRow } from './parts'
 
 type Omen = keyof typeof OMENS
 type Order = { people_id: number; reading: Omen | null }
@@ -58,7 +58,7 @@ export function CelestialReadingsSection({
         ) : readings.length === 0 ? (
           <EmptyState
             icon={Telescope}
-            size='compact'
+            size='inline'
             title='No people reads it yet'
             description='Peoples read the sky as they watch it, or set a reading below.'
           />
@@ -79,7 +79,7 @@ export function CelestialReadingsSection({
                   title={
                     <EntityLink kind='entity' id={String(row.people_entity_id)}>
                       {view.data?.people_names[String(row.people_entity_id)] ??
-                        `People #${row.people_entity_id}`}
+                        'A people'}
                     </EntityLink>
                   }
                   caption={`${omen.label} since epoch ${row.epoch}${row.locked.length > 0 ? ' · held' : ''}`}
@@ -105,7 +105,27 @@ export function CelestialReadingsSection({
             }}
           </PagedList>
         )}
-        <div className='grid min-w-0 grid-cols-1 gap-2 rounded-lg border border-dashed p-3 sm:grid-cols-3'>
+        <ForgeCard
+          icon={Telescope}
+          tone='info'
+          title='Set a reading'
+          note='Choose how one people reads the sky; the reading you set is held.'
+          columns={2}
+          action={
+            <Button
+              size='sm'
+              disabled={busy !== null || missing !== null}
+              disabledReason={busy ?? missing ?? undefined}
+              onClick={() =>
+                people !== null &&
+                set.mutate({ people_id: people, reading: reading as Omen })
+              }
+            >
+              <Telescope />
+              Set the reading
+            </Button>
+          }
+        >
           <RecordPick
             label='People'
             types={['people']}
@@ -119,19 +139,7 @@ export function CelestialReadingsSection({
             blocked={busy}
             onPick={setReading}
           />
-          <Button
-            size='sm'
-            disabled={busy !== null || missing !== null}
-            disabledReason={busy ?? missing ?? undefined}
-            onClick={() =>
-              people !== null &&
-              set.mutate({ people_id: people, reading: reading as Omen })
-            }
-          >
-            <Telescope />
-            Set the reading
-          </Button>
-        </div>
+        </ForgeCard>
       </div>
     </Section>
   )

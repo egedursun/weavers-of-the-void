@@ -255,7 +255,7 @@ export function ClusterView({ clusterId }: { clusterId: number }) {
           {galaxies.length === 0 ? (
             <EmptyState
               icon={Orbit}
-              size='compact'
+              size='inline'
               title='No galaxy gathers here yet'
               description='Set one in the cluster below.'
             />

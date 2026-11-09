@@ -131,7 +131,7 @@ export function RouteFlowEditor({ route }: { route: RouteRecord }) {
             onSave={(values) => edit.mutate({ values, release: [] })}
             onRelease={(release) => edit.mutate({ values: {}, release })}
           />
-          <div className='grid min-w-0 grid-cols-1 gap-2 rounded-lg border border-dashed p-2 sm:grid-cols-2'>
+          <div className='flex min-w-0 flex-col items-stretch gap-2 rounded-lg border bg-muted/20 p-3'>
             <RecordPick
               label='Toll keeper'
               types={['polity', 'people', 'organization', 'company']}

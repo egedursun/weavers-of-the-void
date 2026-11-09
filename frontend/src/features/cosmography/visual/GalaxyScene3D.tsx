@@ -17,6 +17,7 @@ import {
   DUST_VERTEX,
 } from '@/features/cosmos/scene3d/shaders/sky'
 import { type StarRecord, type StructureRecord } from '../api'
+import { type WorldMark } from '../galaxyWorlds'
 import {
   type LabelElements,
   LabelLayer,
@@ -53,13 +54,14 @@ const RING_SEGMENTS = 96
 const FOV = 42
 const POINT_RATIO = 1.6
 
-export type Pick = { kind: 'star' | 'structure'; id: number } | null
+export type Pick = { kind: 'star' | 'structure' | 'world'; id: number } | null
 
 export type GalaxySceneProps = {
   galaxy: FormInput & { name: string }
   shape: GalaxyShape
   structures: readonly StructureRecord[]
   stars: readonly StarRecord[]
+  worlds?: readonly WorldMark[]
   selected?: Pick
   placing?: boolean
   portrait?: boolean
@@ -388,6 +390,50 @@ function StructureMark({
   )
 }
 
+function WorldMarker({
+  world,
+  size,
+  selected,
+  onPick,
+}: {
+  world: WorldMark
+  size: number
+  selected: boolean
+  onPick?: (pick: Pick) => void
+}) {
+  const color = tokenHex(world.sunless ? '--cosmos-bone' : '--cosmos-orbit')
+  const radius = size * (selected ? 0.32 : 0.2)
+  return (
+    <group position={[world.x, 0, world.y]}>
+      <mesh
+        onClick={(event) => {
+          event.stopPropagation()
+          onPick?.({ kind: 'world', id: world.id })
+        }}
+      >
+        <sphereGeometry args={[radius, 16, 12]} />
+        <meshBasicMaterial color={color} />
+      </mesh>
+      {selected && (
+        <Line
+          points={Array.from({ length: RING_SEGMENTS + 1 }, (_, index) => {
+            const angle = (index / RING_SEGMENTS) * Math.PI * 2
+            return [
+              Math.cos(angle) * radius * 2,
+              0,
+              Math.sin(angle) * radius * 2,
+            ] as [number, number, number]
+          })}
+          color={tokenHex('--cosmos-copper')}
+          lineWidth={1.5}
+          transparent
+          opacity={0.9}
+        />
+      )}
+    </group>
+  )
+}
+
 function StarMark({
   star,
   selected,
@@ -543,6 +589,7 @@ function Scene({
   shape,
   structures,
   stars,
+  worlds = [],
   selected = null,
   placing = false,
   portrait = false,
@@ -586,6 +633,15 @@ function Scene({
           onPick={onPick}
         />
       ))}
+      {worlds.map((world) => (
+        <WorldMarker
+          key={world.id}
+          world={world}
+          size={starSize}
+          selected={selected?.kind === 'world' && selected.id === world.id}
+          onPick={onPick}
+        />
+      ))}
       {placing && onPlace && <Placer radius={halo} onPlace={onPlace} />}
       <OrbitControls
         makeDefault
@@ -610,6 +666,7 @@ function sceneLabels({
   shape,
   structures,
   stars,
+  worlds = [],
   selected = null,
   portrait = false,
 }: GalaxySceneProps): SceneLabel[] {
@@ -655,6 +712,18 @@ function sceneLabels({
         position: [row.x, starSize * 0.6, row.y] as [number, number, number],
         text: row.name,
         strong: true,
+      })),
+    ...worlds
+      .filter(
+        (row) =>
+          worlds.length <= 24 ||
+          (selected?.kind === 'world' && selected.id === row.id)
+      )
+      .map((row) => ({
+        key: `world-${row.id}`,
+        position: [row.x, -starSize * 0.4, row.y] as [number, number, number],
+        text: row.name,
+        quiet: !(selected?.kind === 'world' && selected.id === row.id),
       })),
   ]
 }

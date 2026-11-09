@@ -33921,6 +33921,7 @@ export interface components {
       star_type: components['schemas']['StarType']
       description?: string | null
       world_id?: number | null
+      galaxy_id?: number | null
     }
     PostCosmicLegendaryQuestBody: {
       kind: components['schemas']['LegendaryQuestKind']

@@ -65,6 +65,53 @@ describe('cosmic action gating', () => {
       star_type: 'yellow_dwarf',
       description: 'A pale eye only the dead can see',
       world_id: null,
+      galaxy_id: null,
+    })
+  })
+
+  it('hangs a void star in the galaxy shown and turns the view to where it landed', async () => {
+    serve()
+    onApi('POST', '/api/cosmic/hang-star', {
+      ...ACCEPTED_ACTION,
+      values: { galaxy_id: 9 },
+    })
+    const landed = vi.fn()
+    const { screen } = await renderApp(
+      <IgniteStarForm
+        index={INDEX}
+        rules={RULES}
+        galaxyId={9}
+        onGalaxy={landed}
+      />
+    )
+    await screen.getByRole('button', { name: /Ignite/ }).click()
+    await expect.poll(() => landed.mock.calls).toEqual([[9]])
+    expect(callsTo('POST', '/api/cosmic/hang-star')[0]?.body).toMatchObject({
+      world_id: null,
+      galaxy_id: 9,
+    })
+  })
+
+  it('lets a star set in a world’s sky follow that world’s galaxy', async () => {
+    serve()
+    const world = INDEX.worlds[0].world
+    const { screen } = await renderApp(
+      <IgniteStarForm index={INDEX} rules={RULES} galaxyId={9} />
+    )
+    await screen.getByLabelText('Where it hangs').click()
+    await screen
+      .getByRole('option', { name: `In the sky of ${world.name}` })
+      .click()
+    await expect
+      .element(screen.getByLabelText('Where it hangs'))
+      .toHaveTextContent(`In the sky of ${world.name}`)
+    await screen.getByRole('button', { name: /Ignite/ }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/cosmic/hang-star'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/cosmic/hang-star')[0]?.body).toMatchObject({
+      world_id: world.id,
+      galaxy_id: null,
     })
   })
 

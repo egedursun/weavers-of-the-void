@@ -76,6 +76,8 @@ type CommandPanelProps = {
   worldId: number | undefined
   section: CommandSection | undefined
   resource: TravelResource | null | undefined
+  galaxyId?: number
+  onGalaxy?: (galaxyId: number) => void
 }
 
 function CommandSectionBlock({
@@ -122,6 +124,8 @@ export function CommandPanel({
   worldId,
   section,
   resource,
+  galaxyId,
+  onGalaxy,
 }: CommandPanelProps) {
   const [open, setOpen] = useState<Set<CommandSection>>(() => {
     const initial = new Set<CommandSection>([section ?? 'world'])
@@ -160,7 +164,15 @@ export function CommandPanel({
   return (
     <div ref={container} className='flex min-w-0 flex-col gap-3'>
       {block('world', <CreateWorldForm index={index} rules={rules} />)}
-      {block('star', <IgniteStarForm index={index} rules={rules} />)}
+      {block(
+        'star',
+        <IgniteStarForm
+          index={index}
+          rules={rules}
+          galaxyId={galaxyId}
+          onGalaxy={onGalaxy}
+        />
+      )}
       {block(
         'route',
         <OpenRouteForm index={index} rules={rules} worldId={worldId} />

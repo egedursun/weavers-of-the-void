@@ -27,6 +27,7 @@ import { Progress } from '@/components/ui/progress'
 import {
   EmptyState,
   EntityLink,
+  Medallion,
   MiniStat,
   PagedList,
   Section,
@@ -35,6 +36,7 @@ import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { CelestialDepthSection } from '@/features/celestial/CelestialDepthSection'
 import { StarDisc } from '@/features/cosmos/Glyphs'
+import { useCosmos } from '@/features/cosmos/api'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { ThingSections } from '@/features/entity/sections/ThingSections'
 import { NumberField } from '@/features/entity/wilds/parts'
@@ -50,6 +52,7 @@ import {
   catalogTable,
   useCosmographyAction,
 } from '../api'
+import { type WorldMark, worldMarks } from '../galaxyWorlds'
 import { GALAXY_AGES, NUCLEI, STAR_AGES, STRUCTURES, ZONES } from '../labels'
 import { type Ladder, nameTable } from '../ladder'
 import { Chip, Facts, Meter, NodeLink, RecordEditor, RecordRow } from '../parts'
@@ -230,18 +233,54 @@ function Glance({ galaxy, ladder }: { galaxy: GalaxyRecord; ladder: Ladder }) {
 
 function PickedCard({
   pick,
+  worlds,
   galaxy,
   ladder,
   catalog,
   onClear,
 }: {
   pick: Pick
+  worlds: readonly WorldMark[]
   galaxy: GalaxyRecord
   ladder: Ladder
   catalog: CosmographyCatalog
   onClear: () => void
 }) {
   if (!pick) return null
+  if (pick.kind === 'world') {
+    const world = worlds.find((row) => row.id === pick.id)
+    if (!world) return null
+    const placement = ladder.data.placements.find(
+      (row) => row.world_id === world.id
+    )
+    const sun =
+      placement?.star_id != null
+        ? ladder.data.star_names[String(placement.star_id)]
+        : undefined
+    return (
+      <div className='flex min-w-0 flex-wrap items-center gap-3 rounded-xl border bg-card p-3'>
+        <Medallion icon={Globe2} tone='verdigris' />
+        <div className='flex min-w-0 flex-1 flex-col gap-1'>
+          <EntityLink kind='world' id={String(world.id)}>
+            {world.name}
+          </EntityLink>
+          <div className='flex min-w-0 flex-wrap gap-1.5'>
+            <Chip icon={Star}>{sun ? `Circles ${sun}` : 'No sun'}</Chip>
+            {placement && (
+              <Chip icon={ZONES[placement.zone].icon}>
+                {ZONES[placement.zone].label}
+              </Chip>
+            )}
+            <Chip>{`In ${galaxy.name}`}</Chip>
+          </div>
+        </div>
+        <Button variant='ghost' size='sm' onClick={onClear}>
+          <X />
+          Clear
+        </Button>
+      </div>
+    )
+  }
   if (pick.kind === 'star') {
     const star = ladder.data.stars.find((row) => row.id === pick.id)
     if (!star) return null
@@ -501,12 +540,14 @@ function MapSection({
   )
   const stars = ladder.data.stars.filter((row) => row.galaxy_id === galaxy.id)
   const shaped = structures.filter((row) => !LAYOUT_STRUCTURES.has(row.kind))
+  const cosmos = useCosmos()
+  const worlds = worldMarks(cosmos.data, ladder.data, galaxy.id)
   return (
     <>
       <Section
         id='section-galaxy-map'
         title='Map of the galaxy'
-        description='Drag to turn it, scroll to come closer. Click a star or a structure to read it.'
+        description='Drag to turn it, scroll to come closer. Click a star, a world or a structure to read it; worlds stand where the Cosmos shows them.'
         icon={MapIcon}
         tone='gold'
       >
@@ -516,6 +557,7 @@ function MapSection({
             shape={catalog.shape}
             structures={structures}
             stars={stars}
+            worlds={worlds}
             selected={pick}
             placing={placing}
             onPick={setPick}
@@ -531,6 +573,10 @@ function MapSection({
                     size='sm'
                     variant='secondary'
                   >{`${plural(stars.length, 'star')}`}</Badge>
+                  <Badge
+                    size='sm'
+                    variant='secondary'
+                  >{`${plural(worlds.length, 'world')}`}</Badge>
                   <Badge
                     size='sm'
                     variant='secondary'
@@ -550,6 +596,7 @@ function MapSection({
           />
           <PickedCard
             pick={pick}
+            worlds={worlds}
             galaxy={galaxy}
             ladder={ladder}
             catalog={catalog}
@@ -568,7 +615,7 @@ function MapSection({
           {shaped.length === 0 ? (
             <EmptyState
               icon={Sparkles}
-              size='compact'
+              size='inline'
               title='Only its arms, core and halo so far'
               description='Shape a nebula, a nursery or a vault below.'
             />
@@ -623,7 +670,7 @@ function StarsSection({
       {stars.length === 0 ? (
         <EmptyState
           icon={Star}
-          size='compact'
+          size='inline'
           title='No star burns here yet'
           description='Its nurseries bear stars over the epochs; you can hang one from the Cosmos.'
         />
@@ -884,7 +931,7 @@ export function GalaxyView({ galaxyId }: { galaxyId: number }) {
         {beings.length === 0 ? (
           <EmptyState
             icon={Orbit}
-            size='compact'
+            size='inline'
             title='No cosmic being roams it'
             description='Call one from the Heavens, or wait for one to arrive.'
           />

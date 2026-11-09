@@ -67,7 +67,7 @@ export function MindPicker({
     <div className='flex min-w-0 flex-col gap-1'>
       <Label>{label}</Label>
       <Select value={value} onValueChange={onPick} disabled={blocked !== null}>
-        <SelectTrigger aria-label={label}>
+        <SelectTrigger aria-label={label} className='w-full'>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>

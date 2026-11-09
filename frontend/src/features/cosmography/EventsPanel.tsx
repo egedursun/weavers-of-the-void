@@ -13,7 +13,7 @@ import {
   useCosmographyAction,
 } from './api'
 import { type Ladder, nameTable } from './ladder'
-import { Chip, RecordEditor, RecordRow } from './parts'
+import { Chip, ForgeCard, RecordEditor, RecordRow } from './parts'
 
 function GalacticEventRow({
   event,
@@ -162,15 +162,16 @@ function TriggerForm({
 }) {
   const [galaxy, setGalaxy] = useState('')
   const [galacticKind, setGalacticKind] = useState('')
+  const [galacticPower, setGalacticPower] = useState('50')
   const [dimension, setDimension] = useState('')
   const [planarKind, setPlanarKind] = useState('')
-  const [intensity, setIntensity] = useState('50')
+  const [planarPower, setPlanarPower] = useState('50')
   const galactic = useCosmographyAction<void>(
     'galactic_event:trigger',
     () => ({
       galaxy_id: Number(galaxy),
       kind: galacticKind,
-      intensity: Number(intensity) || 50,
+      intensity: Number(galacticPower) || 50,
     }),
     'The galaxy answers your hand'
   )
@@ -179,15 +180,37 @@ function TriggerForm({
     () => ({
       dimension_id: Number(dimension),
       kind: planarKind,
-      intensity: Number(intensity) || 50,
+      intensity: Number(planarPower) || 50,
     }),
     'The dimension answers your hand'
   )
   const busy =
     galactic.isPending || planar.isPending ? 'The heavens are moving' : null
   return (
-    <div className='grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2'>
-      <div className='flex min-w-0 flex-col gap-2 rounded-lg border border-dashed p-3'>
+    <div className='grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2'>
+      <ForgeCard
+        icon={Sparkles}
+        tone='warning'
+        title='A galactic event'
+        note='Bring an event upon one galaxy and every star and world in it.'
+        columns={3}
+        action={
+          <Button
+            size='sm'
+            disabled={busy !== null || galaxy === '' || galacticKind === ''}
+            disabledReason={
+              busy ??
+              (galaxy === '' || galacticKind === ''
+                ? 'Choose a galaxy and an event first'
+                : undefined)
+            }
+            onClick={() => galactic.mutate()}
+          >
+            <Sparkles />
+            Bring it about
+          </Button>
+        }
+      >
         <MindPicker
           label='Galaxy'
           value={galaxy}
@@ -205,22 +228,38 @@ function TriggerForm({
           blocked={busy}
           onPick={setGalacticKind}
         />
-        <Button
-          size='sm'
-          disabled={busy !== null || galaxy === '' || galacticKind === ''}
-          disabledReason={
-            busy ??
-            (galaxy === '' || galacticKind === ''
-              ? 'Choose a galaxy and an event first'
-              : undefined)
-          }
-          onClick={() => galactic.mutate()}
-        >
-          <Sparkles />
-          Bring it about
-        </Button>
-      </div>
-      <div className='flex min-w-0 flex-col gap-2 rounded-lg border border-dashed p-3'>
+        <NumberField
+          label='Intensity'
+          value={galacticPower}
+          min={0}
+          max={100}
+          disabled={busy !== null}
+          onChange={setGalacticPower}
+        />
+      </ForgeCard>
+      <ForgeCard
+        icon={Zap}
+        tone='info'
+        title='A dimensional event'
+        note='Bring an event upon one dimension and every world it holds.'
+        columns={3}
+        action={
+          <Button
+            size='sm'
+            disabled={busy !== null || dimension === '' || planarKind === ''}
+            disabledReason={
+              busy ??
+              (dimension === '' || planarKind === ''
+                ? 'Choose a dimension and an event first'
+                : undefined)
+            }
+            onClick={() => planar.mutate()}
+          >
+            <Zap />
+            Bring it about
+          </Button>
+        }
+      >
         <MindPicker
           label='Dimension'
           value={dimension}
@@ -240,29 +279,15 @@ function TriggerForm({
           blocked={busy}
           onPick={setPlanarKind}
         />
-        <Button
-          size='sm'
-          disabled={busy !== null || dimension === '' || planarKind === ''}
-          disabledReason={
-            busy ??
-            (dimension === '' || planarKind === ''
-              ? 'Choose a dimension and an event first'
-              : undefined)
-          }
-          onClick={() => planar.mutate()}
-        >
-          <Zap />
-          Bring it about
-        </Button>
-      </div>
-      <NumberField
-        label='Intensity'
-        value={intensity}
-        min={0}
-        max={100}
-        disabled={busy !== null}
-        onChange={setIntensity}
-      />
+        <NumberField
+          label='Intensity'
+          value={planarPower}
+          min={0}
+          max={100}
+          disabled={busy !== null}
+          onChange={setPlanarPower}
+        />
+      </ForgeCard>
     </div>
   )
 }
@@ -298,7 +323,7 @@ export function EventsPanel({
       {galactic.length + planar.length === 0 ? (
         <EmptyState
           icon={Sparkles}
-          size='compact'
+          size='inline'
           title='The heavens are quiet'
           description='No galactic or dimensional event in the last ten epochs.'
         />

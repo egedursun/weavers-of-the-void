@@ -26,9 +26,13 @@ const VOID = 'void'
 export function IgniteStarForm({
   index,
   rules,
+  galaxyId,
+  onGalaxy,
 }: {
   index: CosmosIndex
   rules: RuleBook
+  galaxyId?: number
+  onGalaxy?: (galaxyId: number) => void
 }) {
   const [name, setName] = useState('')
   const [type, setType] = useState<StarType>('yellow_dwarf')
@@ -43,13 +47,19 @@ export function IgniteStarForm({
             star_type: type,
             description: description.trim() || null,
             world_id: sky === VOID ? null : Number(sky),
+            galaxy_id:
+              sky === VOID && galaxyId !== undefined && galaxyId > 0
+                ? galaxyId
+                : null,
           },
         })
       ),
     success: 'A new star ignited',
-    onDone: () => {
+    onDone: (response) => {
       setName('')
       setDescription('')
+      const placed = response.values?.galaxy_id
+      if (typeof placed === 'number') onGalaxy?.(placed)
     },
   })
   return (
@@ -85,7 +95,7 @@ export function IgniteStarForm({
       </FormRow>
       <FormRow
         label='Where it hangs'
-        description='A star in the void, or a star set in one world’s sky.'
+        description='A star in the void of the galaxy shown, or a star set in one world’s sky; a world with no sun comes to circle it.'
       >
         {(id) => (
           <Select value={sky} onValueChange={setSky}>

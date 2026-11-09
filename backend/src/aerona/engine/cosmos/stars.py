@@ -6,13 +6,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.stars import STAR_TYPE_LABELS, STAR_TYPES
 from aerona.constants.cosmos import STAR_MAP_BASE_RADIUS, STAR_MAP_RADIUS_STEP
+from aerona.constants.player import ORBIT_PLANET_BASE
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.names import NameRepository
 from aerona.db.repositories.worlds import StarDraft, WorldRepository
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
+from aerona.db.tables.cosmography import GalaxyRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.limits import PERCENT_MAX
@@ -23,6 +26,7 @@ from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.remnants import after_supernova
 from aerona.engine.cosmos.routes import restore_sail_routes, scorch_sail_routes, snap_sail_routes
 from aerona.engine.cosmos.star_types import fitted_brightness, kindled_brightness
+from aerona.engine.cosmos.worlds import align_moons
 from aerona.engine.primitives.doom import advance_doom
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.engine.primitives.stats import scale_stat, shift_bounded, stat_or
@@ -213,18 +217,55 @@ async def rekindle_star(ctx: TickContext, star_id: int, by: str) -> str:
     return text
 
 
-async def hang_star(ctx: TickContext, name: str, star_type: StarType, by: str, description: str | None = None) -> StarRow:
+async def hang_star(
+    ctx: TickContext,
+    name: str,
+    star_type: StarType,
+    by: str,
+    description: str | None = None,
+    *,
+    galaxy_id: int | None = None,
+    world_id: int | None = None,
+) -> StarRow:
     pantheon = ctx.rules.pantheon
+    if galaxy_id is not None and await ctx.session.get(GalaxyRow, galaxy_id) is None:
+        raise NotFoundError("No such galaxy.")
+    world = await ctx.session.get(WorldRow, world_id) if world_id is not None else None
+    if world_id is not None and world is None:
+        raise NotFoundError("No such world.")
+    rng = ctx.rng("hang_star")
+    position: tuple[float, float] | None = None
+    root: WorldRow | None = None
+    if world is not None:
+        cosmography = await Cosmography.load(ctx.session)
+        root = cosmography.root_world(world)
+        place = cosmography.place_world(root)
+        galaxy_id = place.galaxy_id if place.galaxy_id is not None else galaxy_id
+        if place.star is not None:
+            position = beside(place.star, rng)
     star = await create_star(
         ctx.session,
         ctx.rules,
-        ctx.rng("hang_star"),
+        rng,
         ctx.epoch,
-        StarSpec(name, star_type, pantheon.star_brightness_base, pantheon.star_brightness_die, description),
+        StarSpec(name, star_type, pantheon.star_brightness_base, pantheon.star_brightness_die, description, galaxy_id=galaxy_id, position=position),
     )
     text = f"{by} hung a new star in the sky: {star.name} ({star_label(star_type)})."
+    if world is not None and root is not None:
+        text = f"{by} hung a new star in the sky of {world.name}: {star.name} ({star_label(star_type)})."
+        if root.star_id is None and not held(root.id):
+            root.star_id = star.id
+            root.orbit = ORBIT_PLANET_BASE
+            await align_moons(ctx.session)
+            text += f" {root.name} now circles it."
     await ctx.chronicle(ChronicleKind.COSMIC, text, template_key="sky.star_hung", feed_category=FeedCategory.SKY)
+    await ctx.session.flush()
     return star
+
+
+def beside(star: StarRow, rng: SeededRandom) -> tuple[float, float]:
+    angle = rng.random() * math.tau
+    return star.x + math.cos(angle) * STAR_MAP_RADIUS_STEP, star.y + math.sin(angle) * STAR_MAP_RADIUS_STEP
 
 
 async def end_black_sun(session: AsyncSession, star_id: int, epoch: int) -> None:

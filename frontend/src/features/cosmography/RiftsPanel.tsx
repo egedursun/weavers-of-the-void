@@ -7,7 +7,14 @@ import { MindPicker } from '@/features/entity/mind/parts'
 import { type RiftRecord, useCosmography, useCosmographyAction } from './api'
 import { RIFT_CAUSES, RIFT_STATES } from './labels'
 import { type Ladder, ladderOf, nameTable } from './ladder'
-import { Chip, Meter, RecordEditor, RecordPick, RecordRow } from './parts'
+import {
+  Chip,
+  ForgeCard,
+  Meter,
+  RecordEditor,
+  RecordPick,
+  RecordRow,
+} from './parts'
 
 const OPEN = new Set(['opening', 'open', 'closing'])
 
@@ -125,9 +132,11 @@ function RiftRow({
 function OpenRiftForm({
   ladder,
   worldNames,
+  openCount,
 }: {
   ladder: Ladder
   worldNames: Record<string, string>
+  openCount: number
 }) {
   const [world, setWorld] = useState('')
   const [region, setRegion] = useState<number | null>(null)
@@ -149,7 +158,25 @@ function OpenRiftForm({
       ? 'Choose a world and a dimension first'
       : null
   return (
-    <div className='grid min-w-0 grid-cols-1 gap-2 rounded-lg border border-dashed p-3 md:grid-cols-2'>
+    <ForgeCard
+      icon={Split}
+      tone='danger'
+      title='Tear a rift'
+      note='Open a region of a world onto another dimension; a passage may lead on to a second world.'
+      columns={4}
+      meta={<Chip icon={Eye}>{`${openCount} open now`}</Chip>}
+      action={
+        <Button
+          size='sm'
+          disabled={busy !== null || missing !== null}
+          disabledReason={busy ?? missing ?? undefined}
+          onClick={() => open.mutate()}
+        >
+          <Split />
+          Tear the rift
+        </Button>
+      }
+    >
       <MindPicker
         label='World'
         value={world}
@@ -183,16 +210,7 @@ function OpenRiftForm({
         blocked={busy}
         onPick={setTarget}
       />
-      <Button
-        size='sm'
-        disabled={busy !== null || missing !== null}
-        disabledReason={busy ?? missing ?? undefined}
-        onClick={() => open.mutate()}
-      >
-        <Split />
-        Tear the rift
-      </Button>
-    </div>
+    </ForgeCard>
   )
 }
 
@@ -223,7 +241,7 @@ export function RiftsPanel({
         {rifts.length === 0 ? (
           <EmptyState
             icon={Eye}
-            size='compact'
+            size='inline'
             title='No rift is open'
             description='The veils hold; tear one below.'
           />
@@ -240,10 +258,11 @@ export function RiftsPanel({
             )}
           </PagedList>
         )}
-        <OpenRiftForm ladder={ladder} worldNames={worldNames} />
-        <Chip
-          icon={Eye}
-        >{`${rifts.filter((row) => OPEN.has(row.state)).length} open`}</Chip>
+        <OpenRiftForm
+          ladder={ladder}
+          worldNames={worldNames}
+          openCount={rifts.filter((row) => OPEN.has(row.state)).length}
+        />
       </div>
     </Section>
   )

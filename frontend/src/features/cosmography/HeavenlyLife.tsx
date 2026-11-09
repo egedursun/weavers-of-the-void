@@ -223,7 +223,7 @@ export function WorldPlacementSection({ world }: { world: WorldRecord }) {
         ) : !placement || !ladder ? (
           <EmptyState
             icon={Globe2}
-            size='compact'
+            size='inline'
             title='Not placed yet'
             description='The next epoch sets it on the scale of the cosmos.'
           />

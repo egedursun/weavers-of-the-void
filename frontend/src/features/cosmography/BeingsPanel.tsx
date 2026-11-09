@@ -13,7 +13,14 @@ import {
 } from './api'
 import { BEING_AGENDAS, BEING_PHASES, BEING_SCALES } from './labels'
 import { type Ladder, ladderOf, nameTable } from './ladder'
-import { Meter, RecordEditor, RecordPick, RecordRow } from './parts'
+import {
+  Chip,
+  ForgeCard,
+  Meter,
+  RecordEditor,
+  RecordPick,
+  RecordRow,
+} from './parts'
 
 const phaseTable = Object.fromEntries(
   Object.entries(BEING_PHASES).map(([key, value]) => [key, value.label])
@@ -134,7 +141,27 @@ function CallForm({
   const missing =
     kind === '' || world === '' ? 'Choose a kind and a world first' : null
   return (
-    <div className='grid min-w-0 grid-cols-1 gap-2 rounded-lg border border-dashed p-3 md:grid-cols-3'>
+    <ForgeCard
+      icon={Crown}
+      tone='warning'
+      title='Call a cosmic being'
+      note='Choose its kind and the world it comes to; a region is where it first stands.'
+      columns={3}
+      meta={
+        <Chip icon={Crown}>{`${ladder.data.beings.length} in the cosmos`}</Chip>
+      }
+      action={
+        <Button
+          size='sm'
+          disabled={busy !== null || missing !== null}
+          disabledReason={busy ?? missing ?? undefined}
+          onClick={() => call.mutate()}
+        >
+          <Crown />
+          Call it
+        </Button>
+      }
+    >
       <MindPicker
         label='Kind'
         value={kind}
@@ -156,16 +183,7 @@ function CallForm({
         onChange={setRegion}
         worldId={world ? Number(world) : undefined}
       />
-      <Button
-        size='sm'
-        disabled={busy !== null || missing !== null}
-        disabledReason={busy ?? missing ?? undefined}
-        onClick={() => call.mutate()}
-      >
-        <Crown />
-        Call it
-      </Button>
-    </div>
+    </ForgeCard>
   )
 }
 
@@ -191,7 +209,7 @@ export function BeingsPanel({
         {ladder.data.beings.length === 0 ? (
           <EmptyState
             icon={Crown}
-            size='compact'
+            size='inline'
             title='No cosmic being walks the cosmos'
             description='Call one below, or wait for the veils to thin.'
           />
@@ -239,7 +257,7 @@ export function CosmicBeingSection({
       ) : (
         <EmptyState
           icon={Crown}
-          size='compact'
+          size='inline'
           title='No profile yet'
           description='Its profile forms at the next epoch.'
         />

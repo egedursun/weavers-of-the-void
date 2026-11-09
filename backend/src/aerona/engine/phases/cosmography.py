@@ -9,7 +9,7 @@ from aerona.engine.cosmos.commerce import cosmic_trade
 from aerona.engine.cosmos.dimensions import dimension_cycles
 from aerona.engine.cosmos.galaxies import galaxy_cycles
 from aerona.engine.cosmos.influence import cosmic_influence
-from aerona.engine.cosmos.ladder import ensure_ladder, settle_star
+from aerona.engine.cosmos.ladder import ensure_ladder, place_free_worlds, settle_star
 from aerona.engine.cosmos.omens import celestial_omens
 from aerona.engine.cosmos.phenomena import phenomena_cycles
 from aerona.engine.cosmos.placement import Cosmography
@@ -26,6 +26,7 @@ from aerona.engine.phase import Phase
 )
 async def scale_ladder(ctx: TickContext) -> None:
     ctx.count("stars_placed", await ensure_ladder(ctx.session, ctx.rules))
+    ctx.count("free_worlds_placed", await place_free_worlds(ctx.session))
     cosmography = await Cosmography.load(ctx.session)
     for star in await ctx.session.scalars(select(StarRow).order_by(StarRow.id)):
         if not held(star.id):

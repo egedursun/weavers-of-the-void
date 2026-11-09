@@ -80,6 +80,7 @@ class HangStar(Command):
     star_type: StarType = StarType.YELLOW_DWARF
     description: str | None = None
     world_id: int | None = None
+    galaxy_id: int | None = None
 
 
 class RouteTarget(Command):
@@ -218,8 +219,11 @@ async def hang_star(scope: PlayerScope, command: HangStar) -> Effect:
         raise ValidationFailedError(f'"{name}" is already used in the cosmos; choose another name.')
     spent = guards.charge(creator, scope.rules.cosmic_costs.ignite_star, "cosmic_costs.ignite_star")
     ctx = await scope.context("hang_star")
-    star = await engine_hang_star(ctx, name, command.star_type, creator.name, (command.description or "").strip() or None)
-    return Effect(f"{star.name} now hangs in the sky.", star.id, essence_spent=spent, created_ids=(star.id,))
+    star = await engine_hang_star(
+        ctx, name, command.star_type, creator.name, (command.description or "").strip() or None, galaxy_id=command.galaxy_id, world_id=command.world_id
+    )
+    (await scope.cosmos()).map_version += 1
+    return Effect(f"{star.name} now hangs in the sky.", star.id, essence_spent=spent, created_ids=(star.id,), values={"galaxy_id": star.galaxy_id})
 
 
 @player_action("cosmic:seal_gate", ActionKind.SEAL_GATE)

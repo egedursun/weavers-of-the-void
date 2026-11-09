@@ -235,7 +235,7 @@ export function NodeLink({
     return <Muted as='span'>{name ?? 'None'}</Muted>
   return (
     <EntityLink kind={kind} id={String(id)} showIcon>
-      {name ?? `#${id}`}
+      {name ?? 'Unnamed'}
     </EntityLink>
   )
 }
@@ -307,6 +307,59 @@ export function RecordPick({
         placeholder={`Choose a ${label.toLowerCase()}`}
         worldId={worldId}
       />
+    </div>
+  )
+}
+
+const FORGE_COLUMNS = {
+  2: '@lg/forge:grid-cols-2',
+  3: '@lg/forge:grid-cols-3',
+  4: '@lg/forge:grid-cols-2 @4xl/forge:grid-cols-4',
+} as const
+
+export function ForgeCard({
+  icon,
+  tone,
+  title,
+  note,
+  columns,
+  meta,
+  action,
+  children,
+}: {
+  icon: LucideIcon
+  tone: KpiTone
+  title: string
+  note: string
+  columns: keyof typeof FORGE_COLUMNS
+  meta?: ReactNode
+  action: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <div
+      data-surface='ForgeCard'
+      className='@container/forge flex min-w-0 flex-col gap-3 rounded-xl border bg-card p-3 shadow-xs'
+    >
+      <div className='flex min-w-0 items-center gap-3'>
+        <Medallion icon={icon} tone={tone} size='sm' />
+        <div className='flex min-w-0 flex-1 flex-col'>
+          <Text weight='semibold'>{title}</Text>
+          <Muted variant='caption'>{note}</Muted>
+        </div>
+      </div>
+      <div
+        className={cn(
+          'grid min-w-0 grid-cols-1 items-end gap-3',
+          FORGE_COLUMNS[columns]
+        )}
+      >
+        {children}
+      </div>
+      <div className='flex min-w-0 flex-wrap items-center justify-between gap-2 border-t pt-3'>
+        <div className='flex min-w-0 flex-wrap items-center gap-1'>{meta}</div>
+        {action}
+      </div>
     </div>
   )
 }

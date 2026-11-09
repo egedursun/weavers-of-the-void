@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { CloudFog, Shield, Sparkles } from 'lucide-react'
+import { CloudFog, MapPin, Shield, Sparkles, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EmptyState, EntityLink, PagedList, Section } from '@/components/domain'
 import { Muted } from '@/components/typography'
+import { useNames } from '@/features/entity/api/queries'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { NumberField } from '@/features/entity/wilds/parts'
 import {
@@ -15,7 +16,14 @@ import {
   useCosmographyAction,
 } from './api'
 import { PHENOMENON_CAUSES } from './labels'
-import { Chip, Meter, RecordEditor, RecordPick, RecordRow } from './parts'
+import {
+  Chip,
+  ForgeCard,
+  Meter,
+  RecordEditor,
+  RecordPick,
+  RecordRow,
+} from './parts'
 
 export function PhenomenonCard({
   phenomenon,
@@ -45,6 +53,9 @@ export function PhenomenonCard({
   }))
   const [region, setRegion] = useState<number | null>(null)
   const [strength, setStrength] = useState('40')
+  const names = useNames()
+  const named = new Map((names.data ?? []).map((row) => [row.id, row.name]))
+  const regionName = (id: number) => named.get(id) ?? 'A region'
   const busy =
     edit.isPending || contain.isPending || spread.isPending ? 'Working' : null
   return (
@@ -88,6 +99,7 @@ export function PhenomenonCard({
             key={print.region_entity_id}
             size='sm'
             variant='outline'
+            aria-label={`Draw it back from ${regionName(print.region_entity_id)}`}
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
             onClick={() =>
@@ -97,14 +109,41 @@ export function PhenomenonCard({
               })
             }
           >
-            {`Region #${print.region_entity_id} · ${print.intensity}%`}
+            <MapPin />
+            {`${regionName(print.region_entity_id)} · ${print.intensity}%`}
+            <X />
           </Button>
         ))}
         {(phenomenon.footprints ?? []).length === 0 && (
           <Muted variant='caption'>It covers no region.</Muted>
         )}
       </div>
-      <div className='grid min-w-0 grid-cols-1 gap-2 rounded-lg border border-dashed p-2 sm:grid-cols-3'>
+      <ForgeCard
+        icon={Sparkles}
+        tone='info'
+        title='Spread it'
+        note='Carry it into another region at the strength you set there.'
+        columns={2}
+        action={
+          <Button
+            size='sm'
+            disabled={busy !== null || region === null}
+            disabledReason={
+              busy ?? (region === null ? 'Choose a region first' : undefined)
+            }
+            onClick={() =>
+              region !== null &&
+              spread.mutate({
+                region_id: region,
+                intensity: Number(strength) || 0,
+              })
+            }
+          >
+            <Sparkles />
+            Spread it there
+          </Button>
+        }
+      >
         <RecordPick
           label='Region'
           types={['region']}
@@ -120,24 +159,7 @@ export function PhenomenonCard({
           disabled={busy !== null}
           onChange={setStrength}
         />
-        <Button
-          size='sm'
-          disabled={busy !== null || region === null}
-          disabledReason={
-            busy ?? (region === null ? 'Choose a region first' : undefined)
-          }
-          onClick={() =>
-            region !== null &&
-            spread.mutate({
-              region_id: region,
-              intensity: Number(strength) || 0,
-            })
-          }
-        >
-          <Sparkles />
-          Spread it there
-        </Button>
-      </div>
+      </ForgeCard>
       <RecordEditor
         title='Reshape this phenomenon'
         note='Intensity, growth and containment you set are held. Tap a region above to draw it back from there.'
@@ -198,7 +220,25 @@ function RaiseForm({
   const missing =
     kind === '' || region === null ? 'Choose a kind and a region first' : null
   return (
-    <div className='grid min-w-0 grid-cols-1 gap-2 rounded-lg border border-dashed p-3 md:grid-cols-3'>
+    <ForgeCard
+      icon={CloudFog}
+      tone='info'
+      title='Raise a phenomenon'
+      note='Set a lasting change over one region at the strength you choose.'
+      columns={3}
+      meta={<Chip icon={CloudFog}>{`${data.phenomena.length} stand now`}</Chip>}
+      action={
+        <Button
+          size='sm'
+          disabled={busy !== null || missing !== null}
+          disabledReason={busy ?? missing ?? undefined}
+          onClick={() => raise.mutate()}
+        >
+          <CloudFog />
+          Raise it
+        </Button>
+      }
+    >
       <MindPicker
         label='Kind'
         value={kind}
@@ -220,17 +260,7 @@ function RaiseForm({
         disabled={busy !== null}
         onChange={setIntensity}
       />
-      <Button
-        size='sm'
-        disabled={busy !== null || missing !== null}
-        disabledReason={busy ?? missing ?? undefined}
-        onClick={() => raise.mutate()}
-      >
-        <CloudFog />
-        Raise it
-      </Button>
-      <Chip>{`${data.phenomena.length} stand now`}</Chip>
-    </div>
+    </ForgeCard>
   )
 }
 
@@ -256,7 +286,7 @@ export function PhenomenaPanel({
         {data.phenomena.length === 0 ? (
           <EmptyState
             icon={CloudFog}
-            size='compact'
+            size='inline'
             title='No phenomenon holds a land'
             description='Raise one below, or let rites, rifts and battles leave them.'
           />
@@ -301,7 +331,7 @@ export function PhenomenonSection({
       ) : (
         <EmptyState
           icon={CloudFog}
-          size='compact'
+          size='inline'
           title='No profile yet'
           description='Its profile forms at the next epoch.'
         />

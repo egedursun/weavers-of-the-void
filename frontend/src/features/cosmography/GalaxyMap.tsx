@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import { Text } from '@/components/typography'
 import { hasWebGL2 } from '@/features/cosmos/useCosmosViewSettings'
 import { type GalaxyRecord, type StarRecord, type StructureRecord } from './api'
+import { type WorldMark } from './galaxyWorlds'
 import { type Pick } from './visual/GalaxyScene3D'
 import { GalaxyThumb } from './visual/GalaxyThumb'
 import { type GalaxyShape } from './visual/galaxyForm'
@@ -16,6 +17,7 @@ type GalaxyMapProps = {
   shape: GalaxyShape
   structures: readonly StructureRecord[]
   stars: readonly StarRecord[]
+  worlds?: readonly WorldMark[]
   selected?: Pick
   placing?: boolean
   portrait?: boolean
@@ -31,6 +33,7 @@ export function GalaxyMap({
   shape,
   structures,
   stars,
+  worlds = [],
   selected = null,
   placing = false,
   portrait = false,
@@ -63,6 +66,7 @@ export function GalaxyMap({
             shape={shape}
             structures={structures}
             stars={stars}
+            worlds={worlds}
             selected={selected}
             placing={placing}
             portrait={portrait}

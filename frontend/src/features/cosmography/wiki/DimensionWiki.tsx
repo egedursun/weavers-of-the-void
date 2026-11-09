@@ -253,7 +253,7 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
           {clusters.length === 0 && loose.length === 0 ? (
             <EmptyState
               icon={Workflow}
-              size='compact'
+              size='inline'
               title='An empty dimension'
               description='Gather a cluster or set a galaxy in it below.'
             />
@@ -333,7 +333,7 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
         {worlds.length === 0 ? (
           <EmptyState
             icon={Globe2}
-            size='compact'
+            size='inline'
             title='No world lies here'
             description='Move a world, its star or its galaxy into this dimension.'
           />
@@ -348,8 +348,7 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
             {(row) => (
               <li className='flex min-w-0 items-center justify-between gap-2 rounded-xl border bg-background p-3'>
                 <EntityLink kind='world' id={String(row.world_id)}>
-                  {ladder.data.world_names[String(row.world_id)] ??
-                    `World #${row.world_id}`}
+                  {ladder.data.world_names[String(row.world_id)] ?? 'A world'}
                 </EntityLink>
                 <span className='flex shrink-0 flex-wrap gap-1.5'>
                   <Chip icon={Hourglass}>{`×${row.pull.time.toFixed(2)}`}</Chip>
@@ -546,7 +545,7 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
         {beings.length === 0 ? (
           <EmptyState
             icon={Eye}
-            size='compact'
+            size='inline'
             title='No being calls it home'
             description='Call one from the Heavens.'
           />

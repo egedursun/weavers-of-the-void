@@ -38,6 +38,7 @@ export function useCosmosSelection(): CosmosSelection {
   const selectWorld = useCallback(
     (worldId: number) =>
       void update((previous) => ({
+        galaxy: undefined,
         world: worldId,
         star: undefined,
         panel: previous.panel === 'star' ? 'world' : previous.panel,

@@ -52,7 +52,7 @@ export function FederationForm({ index }: { index: CosmosIndex }) {
                 {members.map((id) => (
                   <li key={id} className='flex min-w-0 items-center gap-2'>
                     <Text as='span' truncate className='flex-1'>
-                      {byId.get(id)?.name ?? `#${id}`}
+                      {byId.get(id)?.name ?? 'Unnamed'}
                     </Text>
                     <Button
                       variant='ghost'

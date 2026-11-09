@@ -39,6 +39,8 @@ type CosmosSidePanelProps = {
   onOpenPanel: (panel: CosmosPanel, section?: CommandSection) => void
   onDescend: (worldId: number) => void
   galaxyPanel?: ReactNode
+  galaxyId?: number
+  onSelectGalaxy?: (galaxyId: number) => void
 }
 
 export function CosmosSidePanel({
@@ -56,6 +58,8 @@ export function CosmosSidePanel({
   onOpenPanel,
   onDescend,
   galaxyPanel,
+  galaxyId,
+  onSelectGalaxy,
 }: CosmosSidePanelProps) {
   const star = index.star(starId)
   const active = panel === 'star' && !star ? 'world' : panel
@@ -142,6 +146,8 @@ export function CosmosSidePanel({
         </TabsContent>
         <TabsContent value='command'>
           <CommandPanel
+            galaxyId={galaxyId}
+            onGalaxy={onSelectGalaxy}
             index={index}
             rules={rules}
             worldId={selected?.world.id}

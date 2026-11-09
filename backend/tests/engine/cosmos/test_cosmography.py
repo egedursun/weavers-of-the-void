@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.cosmography import BARRED_GALAXIES, SPIRAL_GALAXIES
+from aerona.constants.cosmos import STAR_MAP_RADIUS_STEP
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.cosmography import DimensionRow, GalaxyRow, PhenomenonProfileRow, RiftRow
@@ -27,6 +28,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind, TemperatureBand, TerrainKind
 from aerona.domain.enums.travel import JourneyIntent, JourneyStatus
+from aerona.domain.enums.world import StarType
 from aerona.domain.models.entity_stats import PeopleStats
 from aerona.domain.models.records import CargoLine
 from aerona.engine.context import TickContext
@@ -42,10 +44,12 @@ from aerona.engine.cosmos.ladder import (
     create_galaxy,
     ensure_ladder,
     name_home_galaxy,
+    place_free_worlds,
     settle_zones,
 )
 from aerona.engine.cosmos.placement import Cosmography, zone_at
 from aerona.engine.cosmos.rifts import leak_peaks, open_rift
+from aerona.engine.cosmos.stars import hang_star
 from aerona.rules.registry import Rules
 from aerona.services.books.model import build_book
 from aerona.services.books.render import CodexLinks, render_codex
@@ -271,3 +275,24 @@ async def test_only_galaxies_drawn_with_arms_place_stars_on_arms(ctx: TickContex
         assert (GalacticZone.ARM in arms) == (kind in SPIRAL_GALAXIES), kind
     assert {GalaxyType.RING, GalaxyType.PECULIAR, GalaxyType.QUASAR_HOST, GalaxyType.STARBURST}.isdisjoint(SPIRAL_GALAXIES)
     assert BARRED_GALAXIES <= SPIRAL_GALAXIES
+
+
+async def test_a_sunless_world_is_set_in_the_home_galaxy_and_takes_the_star_hung_in_its_sky(ctx: TickContext, cosmos: Cosmos) -> None:
+    await ensure_ladder(ctx.session, ctx.rules)
+    sunless = await make_world(ctx.session, "Ilmen")
+    assert await place_free_worlds(ctx.session) == 1
+    ladder = await Cosmography.load(ctx.session)
+    assert ladder.place_world(sunless).galaxy_id == cosmos.star.galaxy_id
+    star = await hang_star(ctx, "Firstlight", StarType.YELLOW_DWARF, "Aeron", world_id=sunless.id)
+    assert sunless.star_id == star.id and star.galaxy_id == cosmos.star.galaxy_id
+    assert (await Cosmography.load(ctx.session)).place_world(sunless).star is star
+
+
+async def test_a_star_hung_in_a_lit_sky_rises_beside_its_sun_and_a_void_star_in_the_galaxy_asked(ctx: TickContext, cosmos: Cosmos) -> None:
+    await ensure_ladder(ctx.session, ctx.rules)
+    far = await create_galaxy(ctx.session, ctx.rules, GalaxyDraft("Far Wheel", GalaxyType.SPIRAL, 1))
+    companion = await hang_star(ctx, "Companion", StarType.RED_DWARF, "Aeron", world_id=cosmos.home.id)
+    assert companion.galaxy_id == cosmos.star.galaxy_id and cosmos.home.star_id == cosmos.star.id
+    assert math.dist((companion.x, companion.y), (cosmos.star.x, cosmos.star.y)) == pytest.approx(STAR_MAP_RADIUS_STEP)
+    lone = await hang_star(ctx, "Lone", StarType.BLUE_GIANT, "Aeron", galaxy_id=far.id)
+    assert lone.galaxy_id == far.id

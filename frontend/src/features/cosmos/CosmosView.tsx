@@ -268,6 +268,8 @@ export function CosmosView() {
               onSelectWorld={chooseWorld}
               onOpenPanel={openPanel}
               onDescend={descend}
+              galaxyId={galaxyId}
+              onSelectGalaxy={selection.selectGalaxy}
               galaxyPanel={
                 heavens.data && catalog.data ? (
                   <CosmosGalaxyPanel

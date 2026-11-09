@@ -9,9 +9,10 @@ from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.base import Repository
 from aerona.db.repositories.names import NameRepository
-from aerona.db.tables.celestial import StarRow
+from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmography import ClusterRow, DimensionRow, GalacticStructureRow, GalaxyRow
 from aerona.db.tables.cosmos import AppliedFixupRow, CosmosRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.cosmography import ClusterKind, DimensionElement, DimensionKind, GalacticNucleus, GalacticStructureKind, GalacticZone, GalaxyType
 from aerona.domain.enums.world import Discovery
 from aerona.engine.cosmos.kinds import CLUSTER_KIND_MECHANICS, DIMENSION_KIND_MECHANICS, GALAXY_TYPE_MECHANICS
@@ -287,9 +288,30 @@ async def ensure_ladder(session: AsyncSession, rules: Rules) -> int:
     cosmography = await Cosmography.load(session)
     for star in stars:
         settle_star(rules, cosmography, star)
+    await place_free_worlds(session)
     session.add(AppliedFixupRow(key=LADDER_FIXUP, result={"stars": placed, "galaxy": galaxy.id, "dimension": prime.id}))
     await session.flush()
     return placed
+
+
+async def place_free_worlds(session: AsyncSession) -> int:
+    free = list(
+        await session.scalars(
+            select(WorldRow).where(
+                WorldRow.star_id.is_(None), WorldRow.parent_world_id.is_(None), WorldRow.galaxy_id.is_(None), WorldRow.dimension_id.is_(None)
+            )
+        )
+    )
+    if not free:
+        return 0
+    home = await home_galaxy(session)
+    if home is None:
+        return 0
+    placed = [world for world in free if not held(world.id)]
+    for world in placed:
+        world.galaxy_id = home.id
+    await session.flush()
+    return len(placed)
 
 
 async def settle_zones(session: AsyncSession, rules: Rules) -> int:
