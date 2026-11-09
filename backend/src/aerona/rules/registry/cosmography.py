@@ -60,8 +60,6 @@ class GalaxyRules:
     patron_formation: int = rule(10, 0, 100, G, "Star formation a galaxy's patron moves it up or down by domain")
     worship_piety: int = rule(2, 0, 50, G, "Piety a community that worships its galaxy gains in an epoch of high star formation")
     merger_arm_break: int = rule(20, 0, 100, G, "Chance each arm or bar of two merging galaxies breaks apart in an epoch (%)")
-    arm_spread: int = rule(1, 0, 6, G, "Arms a new galaxy may have more or fewer than its type gives")
-    nucleus_shift_chance: int = rule(20, 0, 100, G, "Chance the nucleus of a new galaxy is one step quieter or brighter than its type gives (%)")
     cult_chance: int = rule(3, 0, 100, G, "Chance a community whose galaxy stirs with an event comes to worship it in an epoch (%)")
 
 

@@ -144,6 +144,9 @@ describe('the heavens', () => {
       <CreateGalaxyStudio ladder={ladderOf(VIEW)} catalog={CATALOG} />
     )
     await screen.getByRole('radio', { name: 'Spiral galaxy' }).click()
+    await expect.element(screen.getByText('Arms 2–4')).toBeVisible()
+    await expect.element(screen.getByText('Dormant nucleus 75%')).toBeVisible()
+    await expect.element(screen.getByText('Quasar 1%')).toBeVisible()
     await screen.getByRole('textbox', { name: 'Name' }).fill('Far Wheel')
     await screen.getByRole('button', { name: 'Set it turning' }).click()
     await expect

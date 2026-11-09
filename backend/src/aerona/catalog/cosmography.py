@@ -468,18 +468,6 @@ SPIRAL_GALAXIES = frozenset(
         GalaxyType.EMBER,
     }
 )
-NUCLEUS_OF: MappingProxyType[GalaxyType, GalacticNucleus] = MappingProxyType(
-    {
-        GalaxyType.ACTIVE: GalacticNucleus.ACTIVE,
-        GalaxyType.QUASAR_HOST: GalacticNucleus.QUASAR,
-        GalaxyType.DWARF_SPHEROIDAL: GalacticNucleus.NONE,
-        GalaxyType.DWARF_IRREGULAR: GalacticNucleus.NONE,
-        GalaxyType.ULTRA_DIFFUSE: GalacticNucleus.NONE,
-        GalaxyType.HOLLOW: GalacticNucleus.DEVOURED,
-    }
-)
-
-
 STRATUM_HOSTS: MappingProxyType[StratumKind, tuple[DimensionKind, ...]] = MappingProxyType(
     {
         StratumKind.PARADISE: (DimensionKind.CELESTIAL, DimensionKind.DIVINE_DOMAIN),

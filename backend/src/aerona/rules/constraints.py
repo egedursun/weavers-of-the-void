@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from aerona.domain.enums.cosmography import GalaxyType
+
 RARITY_KEYS = ("common", "uncommon", "rare", "epic", "legendary", "mythic")
 
 
@@ -34,6 +36,7 @@ ASCENDING_CHAINS: list[AscendingChain] = [
     AscendingChain(("cosmic_horror.son_madness_threshold", "cosmic_horror.son_clouding_threshold"), strict=True),
     AscendingChain(("cosmic_horror.warning_1", "cosmic_horror.warning_2", "cosmic_horror.outer_being_threshold"), strict=True),
     AscendingChain(("travel.route_danger_min", "travel.route_danger_max")),
+    *(AscendingChain((f"galaxy_types.{kind.value}_arms_min", f"galaxy_types.{kind.value}_arms_max")) for kind in GalaxyType),
     AscendingChain(("world_birth.regions_min", "world_birth.regions_max")),
     AscendingChain(("world_birth.words_min", "world_birth.words_max")),
     AscendingChain(("world_physics.time_factor_min", "world_physics.time_factor_max")),

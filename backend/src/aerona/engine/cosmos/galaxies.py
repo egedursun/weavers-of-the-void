@@ -3,7 +3,7 @@ from collections import Counter
 
 from sqlalchemy import select
 
-from aerona.catalog.cosmography import GALACTIC_EVENT_LABELS, GALAXY_AGE_LABELS, GALAXY_AGE_ORDER
+from aerona.catalog.cosmography import BARRED_GALAXIES, GALACTIC_EVENT_LABELS, GALAXY_AGE_LABELS, GALAXY_AGE_ORDER, SPIRAL_GALAXIES
 from aerona.catalog.travel import travel_method_profile
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
@@ -378,6 +378,22 @@ async def shorten_routes(ctx: TickContext, cosmography: Cosmography, first: Gala
             route.duration_epochs = max(1, route.duration_epochs - ctx.rules.galaxies.merger_route_cut)
 
 
+def reshape(ctx: TickContext, cosmography: Cosmography, galaxy: GalaxyRow) -> None:
+    kind = GALAXY_TYPE_MECHANICS[galaxy.galaxy_type]
+    if unlocked(galaxy, "arm_count"):
+        galaxy.arm_count = max(kind.arms_min(ctx.rules), min(kind.arms_max(ctx.rules), galaxy.arm_count))
+    spiral = galaxy.galaxy_type in SPIRAL_GALAXIES and galaxy.arm_count > 0
+    barred = galaxy.galaxy_type in BARRED_GALAXIES
+    for structure in cosmography.structures.values():
+        if structure.galaxy_id != galaxy.id or structure.ended_epoch is not None or "ended_epoch" in structure.locked:
+            continue
+        if (structure.kind is GalacticStructureKind.SPIRAL_ARM and not spiral) or (structure.kind is GalacticStructureKind.BAR and not barred):
+            structure.ended_epoch = ctx.epoch
+            for star in cosmography.stars.values():
+                if star.structure_id == structure.id and unlocked(star, "structure_id") and not held(star.id):
+                    star.structure_id = None
+
+
 async def absorb(ctx: TickContext, cosmography: Cosmography, small: GalaxyRow, large: GalaxyRow) -> None:
     rng = ctx.rng(f"galaxy_absorb.{small.id}")
     disc = GalacticStructureRow(x=0.0, y=0.0, radius=large.radius)
@@ -393,6 +409,7 @@ async def absorb(ctx: TickContext, cosmography: Cosmography, small: GalaxyRow, l
             structure.x, structure.y = birth_position(rng, disc)
     if unlocked(large, "galaxy_type"):
         large.galaxy_type = GalaxyType.ELLIPTICAL if large.galaxy_type is GalaxyType.PECULIAR else GalaxyType.PECULIAR
+        reshape(ctx, cosmography, large)
     if unlocked(small, "age_stage"):
         small.age_stage = GalaxyAge.DEAD
     if unlocked(small, "star_formation"):

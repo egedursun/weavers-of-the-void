@@ -42,9 +42,20 @@ from aerona.engine.cosmos import control
 from aerona.engine.cosmos.beings import Scene, answer_incursion, found_cult, mirror, send_home, serve, take_rule
 from aerona.engine.cosmos.commerce import carry, news_delay
 from aerona.engine.cosmos.dimensions import dimension_cults
-from aerona.engine.cosmos.galaxies import advance_mergers, galaxy_cults, may_merge
+from aerona.engine.cosmos.galaxies import advance_mergers, galaxy_cults, may_merge, reshape
 from aerona.engine.cosmos.influence import signature_minerals
-from aerona.engine.cosmos.ladder import ClusterDraft, DimensionDraft, GalaxyDraft, create_cluster, create_dimension, create_galaxy, ensure_ladder
+from aerona.engine.cosmos.kinds import GALAXY_TYPE_MECHANICS
+from aerona.engine.cosmos.ladder import (
+    NUCLEI,
+    ClusterDraft,
+    DimensionDraft,
+    GalaxyDraft,
+    create_cluster,
+    create_dimension,
+    create_galaxy,
+    ensure_ladder,
+    nucleus_weights,
+)
 from aerona.engine.cosmos.placement import Cosmography, Placement, hidden_sky, pull_of
 from aerona.engine.cosmos.rifts import seal_near, tear_toward
 from aerona.engine.cosmos.routes import RouteSpec, _knowledge_problem, open_route, provision
@@ -60,6 +71,7 @@ from aerona.engine.primitives.knowledge import LawBook
 from aerona.engine.primitives.ledger import DoomItem
 from aerona.engine.primitives.stats import stat_or
 from aerona.rules.registry import Rules
+from aerona.rules.renames import canonical_key
 from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, make_route, make_son, make_world, teach, tick, tuned
 from tests.engine.cosmos.test_cosmography import ground_of
 
@@ -398,11 +410,33 @@ async def test_a_converging_dimension_carries_its_laws_across(ctx: TickContext, 
     assert book.has(NaturalLaw.THE_DEAD_SPEAK, cosmos.home.id)
 
 
-async def test_a_new_galaxy_varies_its_arms_within_its_type(ctx: TickContext, cosmos: Cosmos) -> None:
-    rules = tuned(ctx.rules, "galaxies", arm_spread=2)
-    arms = {(await create_galaxy(ctx.session, rules, GalaxyDraft(f"Wheel {index}", GalaxyType.SPIRAL, ctx.epoch))).arm_count for index in range(12)}
-    base = rules.galaxy_types.spiral_arms
-    assert len(arms) > 1 and all(base - 2 <= count <= base + 2 for count in arms)
+@pytest.mark.parametrize("galaxy_type", list(GalaxyType), ids=lambda value: value.value)
+async def test_every_galaxy_type_is_born_with_arms_and_a_nucleus_from_its_own_table(ctx: TickContext, cosmos: Cosmos, galaxy_type: GalaxyType) -> None:
+    kind = GALAXY_TYPE_MECHANICS[galaxy_type]
+    low, high = kind.arms_min(ctx.rules), kind.arms_max(ctx.rules)
+    weights = dict(zip(NUCLEI, nucleus_weights(ctx.rules, galaxy_type), strict=True))
+    assert low <= high and sum(weights.values()) > 0
+    born = [await create_galaxy(ctx.session, ctx.rules, GalaxyDraft(f"{galaxy_type.value} {index}", galaxy_type, ctx.epoch)) for index in range(16)]
+    assert all(low <= row.arm_count <= high for row in born)
+    assert all(weights[row.nucleus] > 0 for row in born)
+    if high > low:
+        assert len({row.arm_count for row in born}) > 1
+
+
+async def test_a_galaxy_that_becomes_elliptical_loses_its_arms_and_bar(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
+    ctx = tick(session, rules)
+    home = await home_cluster(ctx, cosmos)
+    assert home.galaxy is not None
+    home.galaxy.galaxy_type = GalaxyType.ELLIPTICAL
+    cosmography = await Cosmography.load(session)
+    reshape(ctx, cosmography, cosmography.galaxies[home.galaxy.id])
+    assert home.galaxy.arm_count == rules.galaxy_types.elliptical_arms_max
+    left = [row for row in cosmography.structures.values() if row.galaxy_id == home.galaxy.id and row.kind is GalacticStructureKind.SPIRAL_ARM]
+    assert all(row.ended_epoch == ctx.epoch for row in left)
+
+
+def test_an_old_fixed_arm_count_carries_over_as_the_most_arms() -> None:
+    assert canonical_key("galaxy_types", "spiral_arms") == ("galaxy_types", "spiral_arms_max")
 
 
 async def test_a_rite_whose_backlash_leaks_can_tear_a_rift(ctx: TickContext, cosmos: Cosmos) -> None:

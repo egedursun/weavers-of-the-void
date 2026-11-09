@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.cosmography import BARRED_GALAXIES, NUCLEUS_OF, SPIRAL_GALAXIES
+from aerona.catalog.cosmography import BARRED_GALAXIES, SPIRAL_GALAXIES
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.base import Repository
@@ -123,20 +123,27 @@ async def create_cluster(session: AsyncSession, rules: Rules, draft: ClusterDraf
     return row
 
 
-def arms_of(rules: Rules, draft: GalaxyDraft, form: SeededRandom) -> int:
-    base = GALAXY_TYPE_MECHANICS[draft.galaxy_type].arms(rules)
-    spread = rules.galaxies.arm_spread
-    if base <= 0 or spread <= 0:
-        return base
-    return max(1, base + form.die(spread * 2 + 1) - spread - 1)
+NUCLEI = (GalacticNucleus.NONE, GalacticNucleus.DORMANT, GalacticNucleus.ACTIVE, GalacticNucleus.QUASAR, GalacticNucleus.DEVOURED)
 
 
-def nucleus_of(rules: Rules, draft: GalaxyDraft, form: SeededRandom) -> GalacticNucleus:
-    if draft.galaxy_type in NUCLEUS_OF:
-        return NUCLEUS_OF[draft.galaxy_type]
-    if not form.chance(rules.galaxies.nucleus_shift_chance):
+def arms_of(rules: Rules, galaxy_type: GalaxyType, form: SeededRandom) -> int:
+    kind = GALAXY_TYPE_MECHANICS[galaxy_type]
+    low, high = kind.arms_min(rules), kind.arms_max(rules)
+    if high <= low:
+        return low
+    return low + form.die(high - low + 1) - 1
+
+
+def nucleus_weights(rules: Rules, galaxy_type: GalaxyType) -> tuple[int, ...]:
+    kind = GALAXY_TYPE_MECHANICS[galaxy_type]
+    return (kind.nucleus_none(rules), kind.nucleus_dormant(rules), kind.nucleus_active(rules), kind.nucleus_quasar(rules), kind.nucleus_devoured(rules))
+
+
+def nucleus_of(rules: Rules, galaxy_type: GalaxyType, form: SeededRandom) -> GalacticNucleus:
+    weights = nucleus_weights(rules, galaxy_type)
+    if sum(weights) <= 0:
         return GalacticNucleus.DORMANT
-    return form.pick([GalacticNucleus.NONE, GalacticNucleus.ACTIVE])
+    return form.weighted(list(NUCLEI), list(weights))
 
 
 async def create_galaxy(session: AsyncSession, rules: Rules, draft: GalaxyDraft) -> GalaxyRow:
@@ -152,8 +159,8 @@ async def create_galaxy(session: AsyncSession, rules: Rules, draft: GalaxyDraft)
         x=draft.x,
         y=draft.y,
         radius=draft.radius,
-        arm_count=arms_of(rules, draft, form),
-        nucleus=nucleus_of(rules, draft, form),
+        arm_count=arms_of(rules, draft.galaxy_type, form),
+        nucleus=nucleus_of(rules, draft.galaxy_type, form),
         star_formation=kind.formation(rules),
         metallicity=kind.metallicity(rules),
         leak=0,

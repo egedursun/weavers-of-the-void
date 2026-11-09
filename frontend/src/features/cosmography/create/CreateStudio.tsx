@@ -13,7 +13,8 @@ import {
   type KindRecord,
   useCosmographyAction,
 } from '../api'
-import { ELEMENTS } from '../labels'
+import { armRange, armText, isKindShape, nucleusOdds } from '../galaxyKind'
+import { ELEMENTS, NUCLEI } from '../labels'
 import { type Ladder, nameTable } from '../ladder'
 import { Chip } from '../parts'
 import { GalaxyThumb } from '../visual/GalaxyThumb'
@@ -28,7 +29,6 @@ const EFFECT_LABEL: Record<string, string> = {
   leak: 'Leak',
   sanity: 'Sanity drain',
   danger: 'Danger',
-  arms: 'Arms',
   heat: 'Medium heat',
   merger: 'Merging',
   veil: 'Veil',
@@ -179,12 +179,24 @@ function Studio({
               <Muted variant='caption'>{chosen.description}</Muted>
               <div className='flex min-w-0 flex-wrap gap-1'>
                 {Object.entries(chosen.effects ?? {})
-                  .filter(([, value]) => value !== 0)
+                  .filter(([key, value]) => value !== 0 && !isKindShape(key))
                   .map(([key, value]) => (
                     <Chip key={key} icon={Sparkles}>
                       {effectText(key, value)}
                     </Chip>
                   ))}
+                {'arms_min' in (chosen.effects ?? {}) && (
+                  <>
+                    <Chip icon={Sparkles}>
+                      {`Arms ${armText(chosen.effects)}`}
+                    </Chip>
+                    {nucleusOdds(chosen.effects).map(([key, share]) => (
+                      <Chip key={key} icon={NUCLEI[key].icon}>
+                        {`${NUCLEI[key].label} ${share}%`}
+                      </Chip>
+                    ))}
+                  </>
+                )}
               </div>
             </div>
           ) : (
@@ -204,8 +216,10 @@ function previewGalaxy(kind: KindRecord | undefined, value: string): FormInput {
     id: PREVIEW_ID + Math.round(unitHash(`preview-${value}`) * 1000),
     galaxy_type: (value || 'spiral') as FormInput['galaxy_type'],
     radius: 900,
-    arm_count: effects.arms ?? 2,
-    nucleus: 'dormant',
+    arm_count: Math.round(
+      armRange(effects).reduce((sum, item) => sum + item) / 2
+    ),
+    nucleus: nucleusOdds(effects)[0][0],
     star_formation: effects.formation ?? 50,
     metallicity: effects.metallicity ?? 50,
     age_stage: 'mature',

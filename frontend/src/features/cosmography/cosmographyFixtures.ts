@@ -191,7 +191,21 @@ const kind = (value: string, label: string) => ({
 })
 
 export const CATALOG: CosmographyCatalog = {
-  galaxy_types: [kind('spiral', 'Spiral galaxy')],
+  galaxy_types: [
+    {
+      ...kind('spiral', 'Spiral galaxy'),
+      effects: {
+        formation: 40,
+        arms_min: 2,
+        arms_max: 4,
+        nucleus_none: 10,
+        nucleus_dormant: 75,
+        nucleus_active: 13,
+        nucleus_quasar: 1,
+        nucleus_devoured: 1,
+      },
+    },
+  ],
   cluster_kinds: [kind('local_group', 'Local group')],
   dimension_kinds: [kind('prime', 'Prime'), kind('astral', 'Astral plane')],
   structure_kinds: [kind('stellar_nursery', 'Stellar nursery')],

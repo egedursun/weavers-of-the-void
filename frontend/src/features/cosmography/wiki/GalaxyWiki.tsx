@@ -52,6 +52,7 @@ import {
   catalogTable,
   useCosmographyAction,
 } from '../api'
+import { armText, nucleusText } from '../galaxyKind'
 import { type WorldMark, worldMarks } from '../galaxyWorlds'
 import { GALAXY_AGES, NUCLEI, STAR_AGES, STRUCTURES, ZONES } from '../labels'
 import { type Ladder, nameTable } from '../ladder'
@@ -731,6 +732,9 @@ function ShapeSection({
   const nuclei = Object.fromEntries(
     Object.entries(NUCLEI).map(([key, value]) => [key, value.label])
   )
+  const kindOf = catalog.galaxy_types.find(
+    (row) => row.value === galaxy.galaxy_type
+  )
   return (
     <Section
       id='section-galaxy'
@@ -763,6 +767,8 @@ function ShapeSection({
           items={[
             ['Type', catalogLabel(catalog.galaxy_types, galaxy.galaxy_type)],
             ['Nucleus', NUCLEI[galaxy.nucleus].label],
+            ['Arms its kind gives', armText(kindOf?.effects)],
+            ['Nuclei its kind gives', nucleusText(kindOf?.effects)],
             ['Age', GALAXY_AGES[galaxy.age_stage]],
             [
               'Place in its cluster',
