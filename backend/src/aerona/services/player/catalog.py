@@ -631,6 +631,13 @@ COSMIC_ACTIONS = (
     _sync(Meta("star:edit", "Edit a star", G.COSMOS), cosmic.edit_star, cosmic.EditStar, free, ("ACT-165",)),
     _sync(Meta("star:depth", "Rewrite a star's lore", G.COSMOS), celestial_depth.edit_star_depth, celestial_depth.StarDepth, free, ()),
     _sync(Meta("world:depth", "Rewrite a world's lore", G.WORLDS), celestial_depth.edit_world_depth, celestial_depth.WorldDepth, free, ()),
+    _sync(
+        Meta("scale:depth", "Rewrite the lore of a galaxy, cluster or dimension", G.COSMOS),
+        celestial_depth.edit_scale_depth,
+        celestial_depth.ScaleDepth,
+        free,
+        ("S10.10", "S10.11", "S10.13"),
+    ),
     _sync(Meta("route:open", "Open a road", G.COSMOS), cosmic.open_route, cosmic.OpenRoute, free, ("ACT-166",)),
     _sync(Meta("climate", "Command a climate era", G.COSMOS), cosmic.command_climate, cosmic.Climate, free, ("ACT-167",)),
     _sync(Meta("cosmos:resource", "Define the travel resource", G.COSMOS), cosmic.define_resource, cosmic.DefineResource, free, ("ACT-168",)),

@@ -36,7 +36,8 @@ import { useGodAction } from '@/features/pantheon/godAction'
 import { humanize } from '@/features/pantheon/labels'
 import { type CelestialDepth } from './api'
 
-export type CelestialKind = 'world' | 'star'
+export type CelestialKind =
+  'world' | 'star' | 'galaxy' | 'cluster' | 'dimension'
 
 const SAYING_SEPARATOR = ': '
 
@@ -99,17 +100,23 @@ function DepthEditForm({
         details: lines(draft.details),
         hidden_truth: draft.hidden_truth,
       }
-      return kind === 'world'
-        ? unwrap(
-            api.POST('/api/actions/world:depth', {
-              body: { world_id: id, ...body },
-            })
-          )
-        : unwrap(
-            api.POST('/api/actions/star:depth', {
-              body: { star_id: id, ...body },
-            })
-          )
+      if (kind === 'world')
+        return unwrap(
+          api.POST('/api/actions/world:depth', {
+            body: { world_id: id, ...body },
+          })
+        )
+      if (kind === 'star')
+        return unwrap(
+          api.POST('/api/actions/star:depth', {
+            body: { star_id: id, ...body },
+          })
+        )
+      return unwrap(
+        api.POST('/api/actions/scale:depth', {
+          body: { node_id: id, ...body },
+        })
+      )
     },
     success: 'The lore was rewritten',
   })
@@ -192,18 +199,25 @@ export function CelestialDepthSection({
   const { reason } = useGodGate()
   const [truthShown, setTruthShown] = useState(false)
   const deepen = useGodAction({
-    run: () =>
-      kind === 'world'
-        ? unwrap(
-            api.POST('/api/worlds/{world_id}/deepen', {
-              params: { path: { world_id: id } },
-            })
-          )
-        : unwrap(
-            api.POST('/api/stars/{star_id}/deepen', {
-              params: { path: { star_id: id } },
-            })
-          ),
+    run: () => {
+      if (kind === 'world')
+        return unwrap(
+          api.POST('/api/worlds/{world_id}/deepen', {
+            params: { path: { world_id: id } },
+          })
+        )
+      if (kind === 'star')
+        return unwrap(
+          api.POST('/api/stars/{star_id}/deepen', {
+            params: { path: { star_id: id } },
+          })
+        )
+      return unwrap(
+        api.POST('/api/cosmography/nodes/{node_id}/deepen', {
+          params: { path: { node_id: id } },
+        })
+      )
+    },
     success: `The lore of ${name} is being written`,
   })
   const written = Boolean(

@@ -20,6 +20,7 @@ import {
 } from '@/components/domain'
 import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
 import { Label, Stat } from '@/components/typography'
+import { CelestialDepthSection } from '@/features/celestial/CelestialDepthSection'
 import { ThingSections } from '@/features/entity/sections/ThingSections'
 import {
   type ClusterRecord,
@@ -408,6 +409,12 @@ export function ClusterView({ clusterId }: { clusterId: number }) {
           />
         </div>
       </Section>
+      <CelestialDepthSection
+        kind='cluster'
+        id={cluster.id}
+        name={cluster.name}
+        depth={wiki?.depth ?? null}
+      />
       <WikiRecords
         nodeId={cluster.id}
         name={cluster.name}

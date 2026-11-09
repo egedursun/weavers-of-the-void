@@ -13,7 +13,11 @@ const MESSAGES = {
   zIndex: 'z-index class "{{token}}" is not allowed here; stacking belongs to the overlay components.',
   controlBox: 'Control box class "{{token}}" restyles a control; pick its size variant instead.',
   numericSize: 'Numeric size "{{token}}" is not allowed here; use size-icon-*, size-control-* or size-portrait-*.',
+  tabsWrap: 'A tab bar has a fixed height and scrolls sideways; "{{token}}" would push tabs out of sight.',
 }
+
+const TAB_BARS = new Set(['TabsList'])
+const TAB_BAR_BREAKERS = /^(?:[a-z0-9-]+:)*(?:flex-wrap|flex-wrap-reverse|flex-col|grid|h-auto|overflow-hidden|overflow-y-auto)$/
 
 function jsxName(node) {
   if (!node) return ''
@@ -85,8 +89,13 @@ const classPolicy = {
     return {
       JSXAttribute(node) {
         if (node.name.name !== 'className' || !node.value) return
-        const onControl = CONTROL_COMPONENTS.has(jsxName(node.parent.name))
+        const name = jsxName(node.parent.name)
+        const onControl = CONTROL_COMPONENTS.has(name)
         reportClasses(context, node.value, onControl)
+        if (TAB_BARS.has(name))
+          for (const part of stringParts(node.value, []))
+            for (const token of tokensOf(part.text))
+              if (TAB_BAR_BREAKERS.test(token)) context.report({ node: part.node, messageId: 'tabsWrap', data: { token } })
       },
       CallExpression(node) {
         if (!CLASS_FUNCTIONS.has(calleeName(node.callee))) return

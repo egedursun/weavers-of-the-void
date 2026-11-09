@@ -350,6 +350,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 {{ article.description | prose }}
 
 {% endif %}
+{{ entity_depth(article.depth) }}
 {% if article.kind_note %}
 **What its kind does.** {{ article.kind_note }}
 

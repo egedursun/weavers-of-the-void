@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import {
   ACCEPTED_ACTION,
   callsTo,
@@ -92,6 +92,7 @@ type HarnessProps = {
     description: string
     side_effect: string
   } | null
+  galaxyPanel?: ReactNode
 }
 
 function Harness({
@@ -100,6 +101,7 @@ function Harness({
   section,
   star,
   resource = null,
+  galaxyPanel,
 }: HarnessProps) {
   const [worldId, setWorldId] = useState<number | undefined>(world)
   const [current, setCurrent] = useState<CosmosPanel>(panel)
@@ -127,6 +129,7 @@ function Harness({
           setFocus(nextSection)
         }}
         onDescend={setDescended}
+        galaxyPanel={galaxyPanel}
       />
     </>
   )
@@ -156,6 +159,21 @@ describe('cosmos side panel', () => {
       .not.toBeInTheDocument()
     await tabs.getByRole('tab', { name: /Gods/ }).click()
     await expect.element(screen.getByText('Ulmaresh').first()).toBeVisible()
+  })
+
+  it('keeps every tab in sight beside the galaxy card in a side panel', async () => {
+    await page.viewport(1200, 800)
+    const { screen } = await renderApp(
+      <div className='w-md'>
+        <Harness panel='star' star={11} galaxyPanel={<div>Galaxy card</div>} />
+      </div>
+    )
+    await expect.element(screen.getByText('Galaxy card')).toBeVisible()
+    const tabs = screen.getByRole('tablist', { name: 'Cosmos panel' })
+    for (const name of [/World/, /Voyages/, /Gods/, /Command/, /Star/])
+      await expect
+        .element(tabs.getByRole('tab', { name }), { message: String(name) })
+        .toBeInViewport({ ratio: 0.95 })
   })
 
   it('shows the star tab while a star is chosen and edits the star', async () => {

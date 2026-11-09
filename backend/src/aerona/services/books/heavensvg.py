@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from markupsafe import Markup
 
-from aerona.catalog.cosmography import BARRED_GALAXIES
+from aerona.catalog.cosmography import BARRED_GALAXIES, SPIRAL_GALAXIES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.cosmography import ClusterRow, DimensionRow, GalacticStructureRow, GalaxyRow
 from aerona.domain.enums.cosmography import (
@@ -238,7 +238,7 @@ def _galaxy_points(galaxy: GalaxyRow, rules: GalaxyRules) -> list[tuple[float, f
         root = bar if galaxy.galaxy_type in BARRED_GALAXIES else bulge * 0.6
         distance = root + rng.random() ** 1.25 * (disc - root)
         angle = rng.uniform(0, math.tau)
-        on_arm = family != "lenticular" and arms > 0 and rng.random() < 0.72
+        on_arm = galaxy.galaxy_type in SPIRAL_GALAXIES and arms > 0 and rng.random() < 0.72
         if on_arm:
             arm = rng.randrange(arms)
             angle = arm * math.tau / arms + distance / radius * wind + rng.gauss(0, width * 0.3)

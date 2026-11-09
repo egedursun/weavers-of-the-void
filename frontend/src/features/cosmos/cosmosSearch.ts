@@ -4,7 +4,6 @@ export const COSMOS_PANELS = [
   'gods',
   'command',
   'star',
-  'galaxy',
 ] as const
 
 export type CosmosPanel = (typeof COSMOS_PANELS)[number]

@@ -77,6 +77,9 @@ class DeepenEntityContext(LoreRulesContext):
 class CelestialKind(StrEnum):
     WORLD = "world"
     STAR = "star"
+    GALAXY = "galaxy"
+    CLUSTER = "cluster"
+    DIMENSION = "dimension"
 
 
 class DeepenCelestialContext(LoreRulesContext):

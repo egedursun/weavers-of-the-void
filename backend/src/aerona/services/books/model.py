@@ -27,9 +27,8 @@ from aerona.catalog.rarities import RARITY_LABELS, entity_rarity
 from aerona.catalog.scenarios import SCENARIOS
 from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.stats import PASSIONS, STATS
-from aerona.catalog.worlds import ATMOSPHERE_LABELS, GRAVITY_LABELS, WORLD_TYPES
+from aerona.catalog.worlds import ATMOSPHERE_LABELS, DISCOVERY_LABELS, GRAVITY_LABELS, WORLD_TYPES
 from aerona.db.repositories.cosmos import CosmosRepository
-from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmography import ClusterRow, CosmicBeingProfileRow, DimensionRow, GalaxyRow, RiftRow
@@ -40,6 +39,7 @@ from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow
 from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
 from aerona.db.tables.lore import CanonFactRow, ChronicleEntityRow, ChronicleRow, CouncilRow, FolkBeliefRow, HistorianViewRow, LexemeRow, MessageRow, ThreadRow
 from aerona.db.tables.meta import AchievementRow, ScenarioRow, ScoreRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.sons import SonPowerRow, SonRelationRow, SonRow
 from aerona.db.tables.warfare import BattleRow, SiegeRow, WarRow, WarSideRow
@@ -48,6 +48,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, ThreadStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.son import Passion, SonStatus, Stat
 from aerona.domain.enums.war import WarSide, WarStatus
+from aerona.domain.models.profiles import EntityDepth
 from aerona.domain.models.records import EpochStatsData
 from aerona.engine.cosmos.kinds import CLUSTER_KIND_MECHANICS, DIMENSION_KIND_MECHANICS, GALAXY_TYPE_MECHANICS
 from aerona.engine.cosmos.placement import Cosmography
@@ -57,7 +58,7 @@ from aerona.services.books.command import add_command_areas
 from aerona.services.books.heavensvg import cluster_figure, dimension_figure, galaxy_figure
 from aerona.services.books.history import HandEpoch, creator_hand, ending_line, god_fate, son_fate
 from aerona.services.books.mapsvg import MapPicture, map_picture
-from aerona.services.books.typed import LedgerChange, RecordTable, TypedIndex, TypedSection
+from aerona.services.books.typed import LedgerChange, RecordTable, TypedIndex, TypedSection, title_of
 from aerona.services.codex import CosmicEpoch, TravellerGuide, cosmic_chronicle, traveller_guide
 from aerona.services.images.records import cover_of
 from aerona.services.narrative import clean_lore
@@ -210,6 +211,9 @@ EFFECT_LABELS: dict[str, str] = {
 }
 
 
+SCALE_RENDERED = frozenset(title_of(table) for table in ("galaxies", "galaxy_clusters", "dimensions", "name_registry"))
+
+
 @dataclass
 class ScaleArticle:
     kind: str
@@ -227,6 +231,7 @@ class ScaleArticle:
     effects: list[Labelled] = field(default_factory=list)
     rifts: list[str] = field(default_factory=list)
     beings: list[str] = field(default_factory=list)
+    depth: EntityDepth | None = None
 
 
 @dataclass
@@ -424,8 +429,7 @@ class BookBuilder:
         self.names = {entity_id: name for entity_id, name in rows}
         nodes = await self.session.execute(select(SonRow.id, SonRow.name))
         self.son_names = {son_id: name for son_id, name in nodes}
-        others = await NodeRepository(self.session).names_of([])
-        self.names.update(others)
+        self.names.update({node_id: name for node_id, name in await self.session.execute(select(NodeRow.id, NodeRow.name))})
         self.names.update(self.son_names)
         for world_id, name in await self.session.execute(select(WorldRow.id, WorldRow.name)):
             self.names[world_id] = name
@@ -579,7 +583,16 @@ class BookBuilder:
 
     async def scale_article(self, kind: str, row: DimensionRow | ClusterRow | GalaxyRow, level: int, facts: list[Labelled]) -> ScaleArticle:
         return ScaleArticle(
-            kind, row.id, row.name, f"{kind}-{row.id}", level, facts, row.description, await cover_of(self.session, row.id), self.typed.of(row.id)
+            kind,
+            row.id,
+            row.name,
+            f"{kind}-{row.id}",
+            level,
+            facts,
+            row.description,
+            await cover_of(self.session, row.id),
+            [section for section in self.typed.of(row.id) if section.title not in SCALE_RENDERED],
+            depth=row.depth,
         )
 
     def kind_effects(self, mechanics: object) -> list[Labelled]:
@@ -610,6 +623,12 @@ class BookBuilder:
                     "Merging with",
                     self.names.get(galaxy.merging_with_galaxy_id or 0, "none") + (f" ({galaxy.merge_progress}%)" if galaxy.merging_with_galaxy_id else ""),
                 ),
+                Labelled("Cluster", self.names.get(galaxy.cluster_id or 0, "none")),
+                Labelled("Dimension, outside any cluster", self.names.get(galaxy.dimension_id or 0, "none")),
+                Labelled("Place", f"{galaxy.x:g}, {galaxy.y:g}"),
+                Labelled("Known", DISCOVERY_LABELS[galaxy.discovery]),
+                Labelled("Since", f"epoch {galaxy.created_epoch}"),
+                Labelled("Held by the god", ", ".join(galaxy.locked) or "nothing"),
             ]
 
         rifts = list(await self.session.scalars(select(RiftRow).order_by(RiftRow.id)))
@@ -633,6 +652,12 @@ class BookBuilder:
                 Labelled("Heat between its galaxies", f"{cluster.medium_heat}/100"),
                 Labelled("Drift", f"{cluster.expansion}/100"),
                 Labelled("Radius", f"{cluster.radius:g}"),
+                Labelled("Inside cluster", self.names.get(cluster.parent_cluster_id or 0, "none")),
+                Labelled("Dimension", self.names.get(cluster.dimension_id or 0, "the dimension of its holder")),
+                Labelled("Place", f"{cluster.x:g}, {cluster.y:g}"),
+                Labelled("Known", DISCOVERY_LABELS[cluster.discovery]),
+                Labelled("Since", f"epoch {cluster.created_epoch}"),
+                Labelled("Held by the god", ", ".join(cluster.locked) or "nothing"),
             ]
             article = await self.scale_article("cluster", cluster, level, facts)
             article.figure = cluster_figure(cluster, sum(1 for row in ladder.galaxies.values() if row.cluster_id == cluster.id))
@@ -661,6 +686,9 @@ class BookBuilder:
                 Labelled("Causality", CAUSALITY_LABELS[dimension.causality]),
                 Labelled("Ruler", self.names.get(dimension.ruler_node_id or 0) or self.son_names.get(dimension.ruler_node_id or 0, "none")),
                 Labelled("Lies within", self.names.get(dimension.parent_dimension_id or 0, "nothing")),
+                Labelled("Known", DISCOVERY_LABELS[dimension.discovery]),
+                Labelled("Since", f"epoch {dimension.created_epoch}"),
+                Labelled("Held by the god", ", ".join(dimension.locked) or "nothing"),
             ]
             article = await self.scale_article("dimension", dimension, 0, facts)
             article.figure = dimension_figure(dimension)

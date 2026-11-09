@@ -7,6 +7,7 @@ from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.db.tables.node import NodeRow
+from aerona.db.types import PydanticJSON
 from aerona.domain.enums.cosmography import (
     BeingAgenda,
     BeingKind,
@@ -31,6 +32,7 @@ from aerona.domain.enums.cosmography import (
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.world import Discovery
+from aerona.domain.models.profiles import EntityDepth
 
 
 class DimensionRow(NodeRow):
@@ -64,6 +66,7 @@ class DimensionRow(NodeRow):
     ruler_node_id: Mapped[int | None] = mapped_column(index=True)
     description: Mapped[str | None] = mapped_column(Text)
     image_prompt: Mapped[str | None] = mapped_column(Text)
+    depth: Mapped[EntityDepth | None] = mapped_column(PydanticJSON(EntityDepth))
     created_epoch: Mapped[int]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
@@ -91,6 +94,7 @@ class ClusterRow(NodeRow):
     discovery: Mapped[Discovery] = mapped_column(enum_type(Discovery, "discovery"), default=Discovery.KNOWN)
     description: Mapped[str | None] = mapped_column(Text)
     image_prompt: Mapped[str | None] = mapped_column(Text)
+    depth: Mapped[EntityDepth | None] = mapped_column(PydanticJSON(EntityDepth))
     created_epoch: Mapped[int]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
@@ -128,6 +132,7 @@ class GalaxyRow(NodeRow):
     merge_progress: Mapped[int] = mapped_column(default=0)
     description: Mapped[str | None] = mapped_column(Text)
     image_prompt: Mapped[str | None] = mapped_column(Text)
+    depth: Mapped[EntityDepth | None] = mapped_column(PydanticJSON(EntityDepth))
     created_epoch: Mapped[int]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

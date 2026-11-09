@@ -2,15 +2,18 @@ import re
 from dataclasses import replace
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.chronicle import ChronicleDraft, ChronicleRepository
+from aerona.db.tables.cosmography import GalaxyRow
 from aerona.db.tables.epochs import EpochRunRow
 from aerona.db.tables.job import JobRow
 from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
 from aerona.db.tables.lore import LexemeRow, ThreadRow
 from aerona.db.tables.mind import AttributeRow, FacetRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.tables.rule_override import RuleOverrideRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import BondKind
@@ -19,6 +22,8 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.mind import Attribute, Facet
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.models.profiles import EntityDepth
+from aerona.engine.cosmos.ladder import ensure_ladder
 from aerona.rules.registry import Rules
 from aerona.services.books import book_page, codex_markdown
 from aerona.services.books.model import build_book, roman
@@ -212,3 +217,22 @@ async def test_records_and_the_ledger_never_dump_raw_rows(session: AsyncSession,
     assert "Orrin → Orrin the Tall" in page
     codex = await codex_markdown(session, rules, CodexLinks())
     assert "**Changed** Orrin in entities — Name: Orrin → Orrin the Tall" in codex
+
+
+async def test_every_node_reference_in_the_book_is_named(session: AsyncSession, rules: Rules, world: Cosmos) -> None:
+    await enrich(session, world)
+    await ensure_ladder(session, rules)
+    galaxy = await session.scalar(select(GalaxyRow))
+    assert galaxy is not None
+    galaxy.depth = EntityDepth(epoch=1, history="It turned first.")
+    await session.flush()
+    book = await build_book(session, rules)
+    assert book is not None
+    nodes = {node_id for (node_id,) in await session.execute(select(NodeRow.id))}
+    unnamed = sorted(node_id for node_id in nodes if node_id not in book.names)
+    assert unnamed == []
+    codex = await codex_markdown(session, rules, CodexLinks())
+    page = await book_page(session, rules)
+    raw = sorted(set(re.findall(r"(?<![\w&])#\d+\b", codex)) | set(re.findall(r"(?<![\w&])#\d+\b", page.html)))
+    assert raw == []
+    assert codex.count("It turned first.") == 1

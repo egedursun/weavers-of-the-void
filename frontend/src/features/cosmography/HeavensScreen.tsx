@@ -302,7 +302,7 @@ export function HeavensView({
           value={tab}
           onValueChange={(value) => setTab(value as HeavensTab)}
         >
-          <TabsList aria-label='Heavens panel' className='w-full flex-wrap'>
+          <TabsList aria-label='Heavens panel' className='w-full'>
             <TabsTrigger value='scale'>
               <Layers />
               Scale

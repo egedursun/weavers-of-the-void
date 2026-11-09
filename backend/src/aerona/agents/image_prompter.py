@@ -6,6 +6,7 @@ from aerona.agents.ask import ask
 from aerona.agents.context.scope import Scope, load_scope
 from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
+from aerona.catalog.cosmography import CLUSTER_KINDS, DIMENSION_KINDS, GALAXY_TYPES, KindSpec
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.catalog.stars import STAR_TYPE_LABELS, STAR_TYPES
 from aerona.catalog.worlds import WORLD_TYPES
@@ -13,6 +14,7 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
+from aerona.db.tables.cosmography import ClusterRow, DimensionRow, GalaxyRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -103,13 +105,16 @@ async def missing_image_prompts(runtime: AgentRuntime, limit: int | None = None,
     return written
 
 
-CosmicRow = WorldRow | StarRow | ForeignGodRow | SonRow | CreatorRow
+CosmicRow = WorldRow | StarRow | ForeignGodRow | SonRow | CreatorRow | GalaxyRow | ClusterRow | DimensionRow
 COSMIC_TABLES: dict[CosmosSubjectKind, type[CosmicRow]] = {
     CosmosSubjectKind.WORLD: WorldRow,
     CosmosSubjectKind.STAR: StarRow,
     CosmosSubjectKind.FOREIGN_GOD: ForeignGodRow,
     CosmosSubjectKind.SON: SonRow,
     CosmosSubjectKind.CREATOR: CreatorRow,
+    CosmosSubjectKind.GALAXY: GalaxyRow,
+    CosmosSubjectKind.CLUSTER: ClusterRow,
+    CosmosSubjectKind.DIMENSION: DimensionRow,
 }
 
 
@@ -201,7 +206,33 @@ async def cosmos_subjects(scope: Scope, ids: Sequence[int] | None = None) -> lis
                 ),
             )
         )
+    found += await scale_subjects(scope, wanted, len(found))
     return found[: content.cosmic_prompt_batch]
+
+
+async def scale_subjects(scope: Scope, wanted: set[int] | None, start: int) -> list[tuple[CosmosSubjectKind, int, CosmosSubject]]:
+    limit = scope.rules.content.cosmic_prompt_other_chars
+    found: list[tuple[CosmosSubjectKind, int, CosmosSubject]] = []
+
+    def add(kind: CosmosSubjectKind, row: GalaxyRow | ClusterRow | DimensionRow, spec: KindSpec) -> None:
+        if wanted is not None and row.id not in wanted:
+            return
+        described = " ".join(part for part in (spec.description, row.description) if part)
+        found.append(
+            (
+                kind,
+                row.id,
+                CosmosSubject(number=start + len(found) + 1, kind=kind, type_label=spec.label, name=row.name, description=described[:limit]),
+            )
+        )
+
+    for dimension in await scope.session.scalars(select(DimensionRow).where(DimensionRow.image_prompt.is_(None)).order_by(DimensionRow.id)):
+        add(CosmosSubjectKind.DIMENSION, dimension, DIMENSION_KINDS[dimension.dimension_kind])
+    for cluster in await scope.session.scalars(select(ClusterRow).where(ClusterRow.image_prompt.is_(None)).order_by(ClusterRow.id)):
+        add(CosmosSubjectKind.CLUSTER, cluster, CLUSTER_KINDS[cluster.cluster_kind])
+    for galaxy in await scope.session.scalars(select(GalaxyRow).where(GalaxyRow.image_prompt.is_(None)).order_by(GalaxyRow.id)):
+        add(CosmosSubjectKind.GALAXY, galaxy, GALAXY_TYPES[galaxy.galaxy_type])
+    return found
 
 
 async def missing_cosmos_prompts(runtime: AgentRuntime, ids: Sequence[int] | None = None) -> int:

@@ -23,6 +23,7 @@ import {
 } from '@/components/domain'
 import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
 import { Label, Muted, Stat } from '@/components/typography'
+import { CelestialDepthSection } from '@/features/celestial/CelestialDepthSection'
 import { ThingSections } from '@/features/entity/sections/ThingSections'
 import { BeingCard } from '../BeingsPanel'
 import { EventsPanel } from '../EventsPanel'
@@ -39,6 +40,7 @@ import { CAUSALITIES, ELEMENTS } from '../labels'
 import { type Ladder, nameTable } from '../ladder'
 import { Chip, Facts, Meter, NodeLink, RecordEditor } from '../parts'
 import { ClusterThumb, DimensionSigil } from '../visual/ScaleThumbs'
+import { drawerKindOf } from '../visual/drawerKind'
 import { sigilOf } from '../visual/sigil'
 import { GalaxyCard } from './ClusterWiki'
 import { pageId, useScaleData } from './data'
@@ -423,9 +425,14 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
                 'Ruler',
                 <NodeLink
                   key='ruler'
-                  kind='son'
+                  kind={drawerKindOf(
+                    ladder.data.rulers?.[String(dimension.ruler_node_id)]?.kind
+                  )}
                   id={dimension.ruler_node_id}
-                  name={dimension.ruler_node_id !== null ? null : 'None'}
+                  name={
+                    ladder.data.rulers?.[String(dimension.ruler_node_id)]
+                      ?.name ?? 'None'
+                  }
                 />,
               ],
               ['Known', DISCOVERY[dimension.discovery]],
@@ -556,6 +563,12 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
           </ul>
         )}
       </Section>
+      <CelestialDepthSection
+        kind='dimension'
+        id={dimension.id}
+        name={dimension.name}
+        depth={wiki?.depth ?? null}
+      />
       <WikiRecords
         nodeId={dimension.id}
         name={dimension.name}

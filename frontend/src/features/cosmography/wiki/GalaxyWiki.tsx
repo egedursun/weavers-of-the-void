@@ -33,6 +33,7 @@ import {
 } from '@/components/domain'
 import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
 import { Label, Muted, Stat, Text } from '@/components/typography'
+import { CelestialDepthSection } from '@/features/celestial/CelestialDepthSection'
 import { StarDisc } from '@/features/cosmos/Glyphs'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { ThingSections } from '@/features/entity/sections/ThingSections'
@@ -900,6 +901,12 @@ export function GalaxyView({ galaxyId }: { galaxyId: number }) {
           </ul>
         )}
       </Section>
+      <CelestialDepthSection
+        kind='galaxy'
+        id={galaxy.id}
+        name={galaxy.name}
+        depth={wiki?.depth ?? null}
+      />
       <WikiRecords
         nodeId={galaxy.id}
         name={galaxy.name}

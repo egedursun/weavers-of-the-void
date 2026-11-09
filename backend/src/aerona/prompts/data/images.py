@@ -62,6 +62,9 @@ class CosmosSubjectKind(StrEnum):
     FOREIGN_GOD = "foreign_god"
     SON = "son"
     CREATOR = "creator"
+    GALAXY = "galaxy"
+    CLUSTER = "cluster"
+    DIMENSION = "dimension"
 
 
 COSMOS_DIRECTION: dict[CosmosSubjectKind, str] = {
@@ -70,6 +73,9 @@ COSMOS_DIRECTION: dict[CosmosSubjectKind, str] = {
     CosmosSubjectKind.FOREIGN_GOD: "a foreign god as its worshippers imagine it: a monumental idol or vision in its home world",
     CosmosSubjectKind.SON: "a divine child of the creator, a god in full figure as their worshippers see them, their two domains shaping their body, garb and the light around them, of the age, form and gender their description gives",
     CosmosSubjectKind.CREATOR: "the creator, a primordial god at the scale of the cosmos they shaped, a full-figure vision among stars and newborn worlds, in the form their description gives",
+    CosmosSubjectKind.GALAXY: "the whole galaxy seen from far outside it, its form, nucleus and age as its type and account give them",
+    CosmosSubjectKind.CLUSTER: "the whole cluster seen from far outside it, its galaxies gathered as its kind and account give them",
+    CosmosSubjectKind.DIMENSION: "the dimension as a traveller would first see it on arriving, its nature, laws and light as its kind and account give them",
 }
 
 

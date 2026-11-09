@@ -9,6 +9,9 @@ GUIDE: {{ subject.direction }}.{{ ambience_line(subject.ambience) }}
 {% elif subject.kind == "star" %}
 no {{ subject.number }}: [star / {{ subject.type_label }}] {{ subject.name }}: {{ subject.description[:rules.content.cosmic_prompt_other_chars] }}
 GUIDE: {{ subject.direction }}
+{% elif subject.kind in ("galaxy", "cluster", "dimension") %}
+no {{ subject.number }}: [{{ subject.kind }} / {{ subject.type_label }}] {{ subject.name }}: {{ subject.description[:rules.content.cosmic_prompt_other_chars] }}
+GUIDE: {{ subject.direction }}
 {% elif subject.kind == "son" %}
 no {{ subject.number }}: [son of the creator] {{ subject.name }}{% if subject.title %}, {{ subject.title }}{% endif %}: {{ subject.description[:rules.content.cosmic_prompt_other_chars] }}
 GUIDE: {{ subject.direction }}

@@ -449,7 +449,7 @@ PHENOMENON_REAGENTS: MappingProxyType[PhenomenonKind, MaterialKind] = MappingPro
 RIFT_PHENOMENA = frozenset({PhenomenonKind.LEAK_WOUND, PhenomenonKind.MIRROR_LAKE})
 MIRROR_DIMENSIONS = frozenset({DimensionKind.MIRROR, DimensionKind.PARALLEL, DimensionKind.QUANTUM_BRANCH})
 FRAGILE_DIMENSIONS = frozenset({DimensionKind.POCKET, DimensionKind.BUBBLE_UNIVERSE, DimensionKind.COMPACTIFIED})
-BARRED_GALAXIES = frozenset({GalaxyType.BARRED_SPIRAL})
+BARRED_GALAXIES = frozenset({GalaxyType.BARRED_SPIRAL, GalaxyType.FORGED})
 SPIRAL_GALAXIES = frozenset(
     {
         GalaxyType.SPIRAL,
@@ -457,8 +457,6 @@ SPIRAL_GALAXIES = frozenset(
         GalaxyType.GRAND_DESIGN_SPIRAL,
         GalaxyType.FLOCCULENT_SPIRAL,
         GalaxyType.ACTIVE,
-        GalaxyType.QUASAR_HOST,
-        GalaxyType.STARBURST,
         GalaxyType.LOW_SURFACE_BRIGHTNESS,
         GalaxyType.LIVING,
         GalaxyType.FORGED,
@@ -466,8 +464,6 @@ SPIRAL_GALAXIES = frozenset(
         GalaxyType.MIRROR,
         GalaxyType.CROWNED,
         GalaxyType.VEILED,
-        GalaxyType.RING,
-        GalaxyType.PECULIAR,
         GalaxyType.EMBER,
     }
 )

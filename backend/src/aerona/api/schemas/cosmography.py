@@ -1,7 +1,7 @@
 from pydantic import Field
 
 from aerona.api.schemas.common import ApiModel
-from aerona.api.schemas.records import ChronicleLineRecord, ImageRecord, StarRecord
+from aerona.api.schemas.records import ChronicleLineRecord, ImageRecord, NodeRef, StarRecord
 from aerona.domain.enums.cosmography import (
     ApocalypseVariant,
     BeingAgenda,
@@ -28,6 +28,7 @@ from aerona.domain.enums.cosmography import (
 )
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.world import Discovery
+from aerona.domain.models.profiles import EntityDepth
 
 
 class DimensionRecord(ApiModel):
@@ -252,6 +253,7 @@ class GalaxyShapeRecord(ApiModel):
 class ScaleWiki(ApiModel):
     node_id: int
     kind: NodeKind
+    depth: EntityDepth | None = None
     cover: str | None
     images: list[ImageRecord]
     timeline: list[ChronicleLineRecord]
@@ -288,6 +290,7 @@ class CosmographyView(ApiModel):
     world_names: dict[str, str]
     star_names: dict[str, str]
     people_names: dict[str, str]
+    rulers: dict[str, NodeRef] = Field(default_factory=dict)
     stars: list[StarRecord]
     apocalypse_variant: ApocalypseVariant | None
     likely_variant: ApocalypseVariant

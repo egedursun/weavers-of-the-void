@@ -292,6 +292,17 @@ async def ensure_ladder(session: AsyncSession, rules: Rules) -> int:
     return placed
 
 
+async def settle_zones(session: AsyncSession, rules: Rules) -> int:
+    cosmography = await Cosmography.load(session)
+    moved = 0
+    for star in cosmography.stars.values():
+        before = (star.galactic_zone, star.structure_id)
+        settle_star(rules, cosmography, star)
+        moved += int(before != (star.galactic_zone, star.structure_id))
+    await session.flush()
+    return moved
+
+
 def birth_position(rng: SeededRandom, structure: GalacticStructureRow) -> tuple[float, float]:
     angle = rng.random() * math.tau
     distance = math.sqrt(rng.random()) * structure.radius

@@ -23,6 +23,7 @@ tester.run('class-policy', rules['class-policy'], {
     "<div className='ms-auto md:grid-cols-label-track' />",
     "<svg className='size-icon-md text-muted-foreground' />",
     "<div className='p-4 md:p-6' />",
+    "<TabsList className='w-full'>x</TabsList>",
   ],
   invalid: [
     { code: "<div className='w-[13px]' />", errors: [{ messageId: 'arbitrary' }] },
@@ -41,6 +42,8 @@ tester.run('class-policy', rules['class-policy'], {
     { code: "<div className={cn('flex', open && 'text-lg')} />", errors: [{ messageId: 'textSize' }] },
     { code: "<div className={`gap-2 ${open ? 'mt-2' : ''}`} />", errors: [{ messageId: 'margin' }] },
     { code: "const styles = cn('text-xs')", errors: [{ messageId: 'textSize' }] },
+    { code: "<TabsList className='w-full flex-wrap'>x</TabsList>", errors: [{ messageId: 'tabsWrap' }] },
+    { code: "<TabsList className='md:grid'>x</TabsList>", errors: [{ messageId: 'tabsWrap' }] },
   ],
 })
 

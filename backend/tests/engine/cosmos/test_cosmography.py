@@ -1,7 +1,10 @@
+import math
+
 import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.cosmography import BARRED_GALAXIES, SPIRAL_GALAXIES
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.cosmography import DimensionRow, GalaxyRow, PhenomenonProfileRow, RiftRow
@@ -12,6 +15,7 @@ from aerona.domain.enums.cosmography import (
     BeingPhase,
     ClusterKind,
     DimensionKind,
+    GalacticZone,
     GalaxyType,
     PhenomenonCause,
     PhenomenonKind,
@@ -38,8 +42,9 @@ from aerona.engine.cosmos.ladder import (
     create_galaxy,
     ensure_ladder,
     name_home_galaxy,
+    settle_zones,
 )
-from aerona.engine.cosmos.placement import Cosmography
+from aerona.engine.cosmos.placement import Cosmography, zone_at
 from aerona.engine.cosmos.rifts import leak_peaks, open_rift
 from aerona.rules.registry import Rules
 from aerona.services.books.model import build_book
@@ -252,3 +257,17 @@ async def test_the_book_and_the_codex_draw_every_scale_of_the_heavens(ctx: TickC
     assert len(links.heavens) == len(book.ladder)
     assert all(path in text for path in links.heavens)
     assert "What its kind does" in text
+
+
+async def test_only_galaxies_drawn_with_arms_place_stars_on_arms(ctx: TickContext, cosmos: Cosmos) -> None:
+    await ensure_ladder(ctx.session, ctx.rules)
+    galaxy = await ctx.session.scalar(select(GalaxyRow))
+    assert galaxy is not None
+    for kind in GalaxyType:
+        galaxy.galaxy_type = kind
+        galaxy.arm_count = 2
+        await settle_zones(ctx.session, ctx.rules)
+        arms = {zone_at(ctx.rules, galaxy, math.cos(angle) * galaxy.radius * 0.7, math.sin(angle) * galaxy.radius * 0.7) for angle in range(0, 7)}
+        assert (GalacticZone.ARM in arms) == (kind in SPIRAL_GALAXIES), kind
+    assert {GalaxyType.RING, GalaxyType.PECULIAR, GalaxyType.QUASAR_HOST, GalaxyType.STARBURST}.isdisjoint(SPIRAL_GALAXIES)
+    assert BARRED_GALAXIES <= SPIRAL_GALAXIES

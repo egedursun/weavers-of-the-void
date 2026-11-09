@@ -2,10 +2,13 @@ from dataclasses import asdict, fields, is_dataclass
 from enum import StrEnum
 from typing import Any
 
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, Path, status
 from sqlalchemy import select
 
+from aerona.agents.celestial_deepener import SCALE_DEPTH_KINDS, deepen_celestial, scale_row
+from aerona.api.background import require_llm, submit
 from aerona.api.dependencies import ServicesDep, reader, world_rules
+from aerona.api.schemas.common import JobAccepted
 from aerona.api.schemas.cosmography import (
     CelestialReadingRecord,
     ClusterRecord,
@@ -26,7 +29,7 @@ from aerona.api.schemas.cosmography import (
     ScaleWiki,
     StructureRecord,
 )
-from aerona.api.schemas.records import StarRecord
+from aerona.api.schemas.records import NodeRef, StarRecord
 from aerona.api.views.common import chronicle_lines, images_of
 from aerona.catalog.cosmography import (
     APOCALYPSE_LABELS,
@@ -60,7 +63,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.entity import EntityStatus
-from aerona.domain.enums.node import NodeKind
+from aerona.domain.enums.job import JobKind
 from aerona.engine.cosmos.kinds import (
     BEING_MECHANICS,
     CLUSTER_KIND_MECHANICS,
@@ -73,11 +76,11 @@ from aerona.engine.cosmos.kinds import (
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.phases.doom import dominant_variant, doom_items
 from aerona.engine.primitives.manual import manual_context
+from aerona.jobs.context import JobContext
 from aerona.rules.registry import Rules
 from aerona.services.images.records import cover_of
 
 router = APIRouter(tags=["cosmography"])
-SCALE_KINDS = frozenset({NodeKind.GALAXY, NodeKind.CLUSTER, NodeKind.DIMENSION})
 RECENT_EPOCHS = 10
 
 
@@ -126,13 +129,31 @@ async def cosmography_catalog(services: ServicesDep) -> CosmographyCatalog:
     )
 
 
+@router.post("/cosmography/nodes/{node_id}/deepen", response_model=JobAccepted, status_code=status.HTTP_202_ACCEPTED)
+async def deepen_scale(services: ServicesDep, node_id: int = Path(ge=1)) -> JobAccepted:
+    require_llm(services, "Deepening a part of the heavens")
+    async with reader(services) as session:
+        node = await session.get(NodeRow, node_id)
+        if node is None or node.kind not in SCALE_DEPTH_KINDS:
+            raise NotFoundError("No such part of the heavens.")
+        name, kind = node.name, SCALE_DEPTH_KINDS[node.kind]
+
+    async def work(context: JobContext) -> dict[str, Any]:
+        context.report(0.0, "deepen")
+        await deepen_celestial(services.agents, kind, node_id)
+        return {"node_id": node_id}
+
+    return await submit(services, JobKind.DEEPEN, f"{kind.value}:{node_id}:depth", work, {"node_id": node_id}, label=f"deepening of {name}")
+
+
 @router.get("/cosmography/nodes/{node_id}/wiki", response_model=ScaleWiki)
 async def scale_wiki(services: ServicesDep, node_id: int = Path(ge=1)) -> ScaleWiki:
     async with reader(services) as session:
         node = await session.get(NodeRow, node_id)
-        if node is None or node.kind not in SCALE_KINDS:
+        if node is None or node.kind not in SCALE_DEPTH_KINDS:
             raise NotFoundError("No such part of the heavens.")
         name = node.name
+        scale = await scale_row(session, SCALE_DEPTH_KINDS[node.kind], node_id)
         lines = (
             list(
                 await session.scalars(
@@ -148,6 +169,7 @@ async def scale_wiki(services: ServicesDep, node_id: int = Path(ge=1)) -> ScaleW
         return ScaleWiki(
             node_id=node_id,
             kind=node.kind,
+            depth=scale.depth if scale is not None else None,
             cover=await cover_of(session, node_id),
             images=await images_of(session, node_id),
             timeline=await chronicle_lines(session, lines),
@@ -183,6 +205,15 @@ async def cosmography(services: ServicesDep) -> CosmographyView:
         ]
         readings = [CelestialReadingRecord.model_validate(row) for row in await session.scalars(select(CelestialReadingRow))]
         people_names = {str(row.people_entity_id): names[row.people_entity_id][0] for row in readings if row.people_entity_id in names}
+        ruler_ids = {row.ruler_node_id for row in ladder.dimensions.values() if row.ruler_node_id is not None}
+        rulers = (
+            {
+                str(node.id): NodeRef(id=node.id, kind=node.kind, name=node.name)
+                for node in await session.scalars(select(NodeRow).where(NodeRow.id.in_(ruler_ids)))
+            }
+            if ruler_ids
+            else {}
+        )
         placements = []
         for world in sorted(ladder.worlds.values(), key=lambda row: row.id):
             place = ladder.place_world(world)
@@ -221,6 +252,7 @@ async def cosmography(services: ServicesDep) -> CosmographyView:
             world_names={str(world.id): world.name for world in ladder.worlds.values()},
             star_names={str(star.id): star.name for star in ladder.stars.values()},
             people_names=people_names,
+            rulers=rulers,
             stars=[StarRecord.model_validate(star) for star in ladder.stars.values()],
             apocalypse_variant=cosmos.apocalypse_variant,
             likely_variant=likely,

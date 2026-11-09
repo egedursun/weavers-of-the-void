@@ -279,7 +279,6 @@ export function CosmosView() {
                   />
                 ) : undefined
               }
-              galaxyName={galaxy?.name}
             />
           </aside>
         </div>

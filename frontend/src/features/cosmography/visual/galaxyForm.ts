@@ -367,7 +367,9 @@ export function galaxyPoints(
   const nurseryShare =
     style.nurseries * (0.4 + (galaxy.star_formation / PERCENT) * 1.6)
   const leakShare = (galaxy.leak / PERCENT) * 0.25
-  const armCount = armsOf(galaxy)
+  const spiral = shape.spiral_types.includes(galaxy.galaxy_type)
+  const barred = shape.barred_types.includes(galaxy.galaxy_type)
+  const armCount = spiral ? armsOf(galaxy) : 0
   const wind = shape.arm_wind_deg * DEGREE
   const armWidth = shape.arm_width_deg * DEGREE
   const family = style.family
@@ -452,7 +454,7 @@ export function galaxyPoints(
       (1.25 - distance) * coreLight * 0.9
     )
   }
-  if (family === 'barred') {
+  if (barred) {
     const barCount = Math.round(count * 0.1)
     for (let index = 0; index < barCount; index += 1) {
       const along = (random() * 2 - 1) * barReach
@@ -466,7 +468,7 @@ export function galaxyPoints(
       )
     }
   }
-  const armRoot = family === 'barred' ? barReach : bulgeReach * 0.6
+  const armRoot = barred ? barReach : bulgeReach * 0.6
   while (written < count * 0.9) {
     if (family === 'elliptical' || family === 'spheroidal') {
       const spread =

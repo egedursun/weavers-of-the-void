@@ -5855,6 +5855,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/cosmography/nodes/{node_id}/deepen': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['deepen_scale_api_cosmography_nodes__node_id__deepen_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/cosmography/nodes/{node_id}/wiki': {
     parameters: {
       query?: never
@@ -8233,6 +8249,22 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_world_depth_api_actions_world_depth_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/scale:depth': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_scale_depth_api_actions_scale_depth_post']
     delete?: never
     options?: never
     head?: never
@@ -24124,6 +24156,9 @@ export interface components {
       people_names: {
         [key: string]: string
       }
+      rulers?: {
+        [key: string]: components['schemas']['NodeRef']
+      }
       stars: components['schemas']['StarRecord'][]
       apocalypse_variant: components['schemas']['ApocalypseVariant'] | null
       likely_variant: components['schemas']['ApocalypseVariant']
@@ -36055,9 +36090,21 @@ export interface components {
       form: string
       text: string
     }
+    ScaleDepthInput: {
+      history?: string | null
+      rumours?: string[] | null
+      sayings?: components['schemas']['SayingInput'][] | null
+      details?: string[] | null
+      hidden_truth?: string | null
+      specifics?: {
+        [key: string]: string
+      } | null
+      node_id: number
+    }
     ScaleWiki: {
       node_id: number
       kind: components['schemas']['NodeKind']
+      depth?: components['schemas']['EntityDepth'] | null
       cover: string | null
       images: components['schemas']['ImageRecord'][]
       timeline: components['schemas']['ChronicleLineRecord'][]
@@ -51942,6 +51989,35 @@ export interface operations {
       }
     }
   }
+  deepen_scale_api_cosmography_nodes__node_id__deepen_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['JobAccepted']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   scale_wiki_api_cosmography_nodes__node_id__wiki_get: {
     parameters: {
       query?: never
@@ -56470,6 +56546,37 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['WorldDepthInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_scale_depth_api_actions_scale_depth_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ScaleDepthInput']
       }
     }
     responses: {
