@@ -22,12 +22,13 @@ from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.civilization import TierCapability
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherEffect
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
 from aerona.domain.enums.region import DangerHarm
-from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyStatus, RouteClosure, RouteState, TravelMethod
 from aerona.domain.enums.war import WarCause
@@ -494,7 +495,8 @@ async def road_event(ctx: TickContext, scene: JourneyScene, journey: JourneyRow,
     realm = await polity_of(ctx.session, traveller.id) or await polity_of(ctx.session, traveller.location_id)
     if await well_charted(ctx.session, ctx.rules, realm, region):
         home = round(home * (PERCENT - ctx.rules.discovery.charted_journey_pct) / PERCENT)
-    if not scene.rng.probability(road_risk(ctx.rules, route, scene.knowledge.branches(traveller.id), vehicle, danger, wind=wind, rig=rig, region_danger=home)):
+    risk = road_risk(ctx.rules, route, scene.knowledge.branches(traveller.id), vehicle, danger, wind=wind, rig=rig, region_danger=home)
+    if not scene.rng.probability(risk * await ctx.hook_easing(traveller.id, DomainHook.ROAD_SAFETY)):
         return True
     kind = METHOD_EVENTS.get(route.method) or scene.rng.pick(COMMON_EVENTS)
     target = await world_name(ctx.session, journey.destination_world_id)
@@ -565,7 +567,8 @@ async def advance_journey(ctx: TickContext, scene: JourneyScene, journey: Journe
         journey.status = JourneyStatus.LOST
         journey.end_epoch = ctx.epoch
         return
-    if not route.active or scene.book.status(route).state is RouteState.FORGOTTEN:
+    dreamt = route.method is TravelMethod.DREAM_JOURNEY and (await ctx.laws()).has(NaturalLaw.DREAMS_ARE_REAL, journey.origin_world_id)
+    if not dreamt and (not route.active or scene.book.status(route).state is RouteState.FORGOTTEN):
         await _closed_route(ctx, journey, traveller, route, scene)
         return
     journey.status = JourneyStatus.UNDERWAY

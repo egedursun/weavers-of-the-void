@@ -24,14 +24,12 @@ class PromptArea(StrEnum):
 
 
 class PromptId(StrEnum):
-    CLICHE_BAN = "cliche_ban"
     IMAGE_PROMPT_RULES = "image_prompt_rules"
     SECTION_KEYS_RULE = "section_keys_rule"
     NO_NUMBERS_CLAUSE = "no_numbers_clause"
     LORE_LANGUAGE = "lore_language"
     RATIONALE_RULE = "rationale_rule"
     VERDICT_CRITERIA = "verdict_criteria"
-    TIRED_IMAGES = "tired_images"
 
     WORLD_HEADER = "world_header"
     DIALECT_BLOCK = "dialect_block"
@@ -86,7 +84,6 @@ class PromptId(StrEnum):
     CHRONICLER_SYSTEM = "chronicler_system"
     CHRONICLER_CONCISE_SYSTEM = "chronicler_concise_system"
     CHRONICLER_USER = "chronicler_user"
-    CHRONICLER_FIX_OPENING_USER = "chronicler_fix_opening_user"
     CHRONICLER_AUDIT_FIX_USER = "chronicler_audit_fix_user"
     CHRONICLER_MISSING_WORLDS_USER = "chronicler_missing_worlds_user"
     CHRONICLER_LOST_AGE_USER = "chronicler_lost_age_user"

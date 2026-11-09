@@ -14,7 +14,6 @@ from aerona.api.schemas.wilds import (
     CustomUseView,
     FoodWeb,
     HerdView,
-    HostView,
     LifeKind,
     MortalPets,
     PetView,
@@ -24,6 +23,7 @@ from aerona.api.schemas.wilds import (
     RegionCrops,
     SownView,
     SpeciesCard,
+    SpeciesHostView,
     SpeciesRangeMap,
     TotemView,
     UseKindView,
@@ -221,7 +221,7 @@ async def species_card(entity_id: Id, services: ServicesDep) -> SpeciesCard:
                 )
                 for item in yields
             ],
-            hosts=[HostView(disease=ref(refs, item.disease_entity_id), immune=item.immune, locked=item.locked) for item in hosts],
+            hosts=[SpeciesHostView(disease=ref(refs, item.disease_entity_id), immune=item.immune, locked=item.locked) for item in hosts],
             ranges=[
                 RangeView(
                     region=ref(refs, item.region_entity_id),

@@ -290,6 +290,36 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "reason": "Why you plant it",
         },
     ),
+    T.SET_AIM: ToolText(
+        "You set the aim you pursue in the ages ahead. The engine measures your progress each age and rewards you with experience and fame when you reach it; "
+        "your attention drifts toward the world of your aim. Setting a new aim sets aside the one you chose before. Free.",
+        {
+            "kind": "The aim you pursue",
+            "target_id": "The id of the son, foreign god, people, realm or house the aim names",
+            "world_id": "The id of the world the aim names",
+            "domain": "The domain you spread, for an aim to spread a domain",
+            "amount": "How many worshippers or faithful places you aim for",
+        },
+    ),
+    T.TAKE_MORTAL_FORM: ToolText(
+        "You take a mortal form that walks among a people, a settlement or a land. It raises their awe and love of you and may win them to your faith; "
+        "if it is killed you suffer a shattered manifestation. {{ rules.avatars.essence_cost }} essence, 1 action.",
+        {"place_id": "The id of the people, settlement or land you walk among", "reason": "Why you take this form"},
+    ),
+    T.WARD_AGAINST_OUTER: ToolText(
+        "You ward the cosmos against an outer being. The larger it is, the more essence it costs; you lose some sanity, the being loses interest and its breach points "
+        "weaken. 1 action.",
+        {"outsider_id": "The outer being's id", "reason": "Why you ward against it"},
+    ),
+    T.SEAL_DIVINE_PACT: ToolText(
+        "You seal a divine pact with a foreign god whose friendship toward you is at least {{ rules.god_relations.pact_friendship }}. "
+        "Neither of you may make war on the other while it holds ({{ rules.god_relations.pact_epochs }} ages). 1 action.",
+        {"god_id": "The foreign god's id", "reason": "Why you seal the pact"},
+    ),
+    T.MEND_WOUND: ToolText(
+        "You pour essence into one of your own divine wounds to heal it faster. Free.",
+        {"wound_id": "The id of your wound", "essence": "How much essence you pour into it"},
+    ),
     T.SHAPE_BLOOD: ToolText(
         "You work an allele into both halves of a living mortal's blood: any locus of looks, of predisposition, of divine blood or of aptitude "
         "for a form of magic. Their children inherit it as blood is inherited. "
@@ -751,9 +781,17 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"god_id": "The foreign god's id", "reason": "Why you make war"},
     ),
     T.BARGAIN_WITH_OUTSIDER: ToolText(
-        "FORBIDDEN: you bargain with the nameless thing that came from outside the cosmos. You gain great essence; but leakage rises, your siblings are disgusted by you, "
-        "your loyalty to the Creator unravels and one day the price is demanded. Does not spend an action, {{ rules.son_tools.outer_bargain_per_epoch }} per age.",
-        {"outsider_id": "The outer being's id", "request": "What you ask of it"},
+        "FORBIDDEN: you bargain with a being from outside the cosmos. You choose what you take and what you pay; the price is paid at once. "
+        "Leakage rises, your siblings think less of you and your loyalty to the Creator falls. "
+        "Does not spend an action, {{ rules.son_tools.outer_bargain_per_epoch }} per age.",
+        {
+            "outsider_id": "The outer being's id",
+            "request": "What you ask of it",
+            "gain": "What you take from the bargain",
+            "price": "What you pay for it",
+            "price_domain": "The domain you give up when you pay with a domain",
+            "price_world_id": "The world whose sanity you pay with; the outer being's own world when not given",
+        },
     ),
     T.REVEAL_TENET: ToolText(
         "You reveal a tenet to one of your own cults. The faithful accept it only if it fits your domains or what they already believe "

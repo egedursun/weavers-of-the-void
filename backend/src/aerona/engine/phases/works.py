@@ -123,6 +123,7 @@ async def advance_all(ctx: TickContext, knowledge: KnowledgeMap) -> int:
     "table.cosmos",
     "table.culture_values",
     "table.currencies",
+    "table.divine_wounds",
     "table.entities",
     "table.epoch_year_cursors",
     "table.goods_flows",
@@ -134,6 +135,7 @@ async def advance_all(ctx: TickContext, knowledge: KnowledgeMap) -> int:
     "table.memories",
     "table.minds",
     "table.name_registry",
+    "table.natural_law_profiles",
     "table.node_materials",
     "table.nodes",
     "table.outbreaks",
@@ -150,6 +152,7 @@ async def advance_all(ctx: TickContext, knowledge: KnowledgeMap) -> int:
     "table.traits",
     "table.vessel_profiles",
     "table.workshops",
+    "table.world_domain_hooks",
     "table.world_maps",
     "table.world_materials",
 )

@@ -304,6 +304,12 @@ export const TREATY_KINDS: Record<string, Named & { plural: string }> = {
     icon: Users,
     tone: 'danger',
   },
+  divine_pact: {
+    label: 'Divine pact',
+    plural: 'Divine pacts',
+    icon: Sparkles,
+    tone: 'gold',
+  },
 }
 
 export const TREATY_STATUSES: Record<

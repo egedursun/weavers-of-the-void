@@ -1,4 +1,3 @@
-{% from "shared/macros.md.j2" import tired_images as tired_images_block %}
 {% set special = special_section(entity_type) %}
 {{ world_header }}
 
@@ -14,10 +13,6 @@ NEIGHBOURING BONDS:
 
 Recent events:
 {{ recent_events if recent_events else "(none)" }}
-{% if tired_images.present %}
-
-{{ tired_images_block(tired_images) }}
-{% endif %}
 
 Deepen this entity. The output consists of SEPARATE KEYS; never write one inside another key:
 - history: only the history through the ages (2 to 4 paragraphs of prose; NO headings like "Rumours:", "Details:" inside it)

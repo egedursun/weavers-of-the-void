@@ -17,12 +17,13 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.discovery import BlueprintKind
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialFamily
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.settlement import TreasuryEntry
-from aerona.domain.enums.society import Commodity, KnowledgeBranch
+from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.structure import BuildScale, ConstructionState, ConstructionStatus, StructureKind
 from aerona.domain.models.entity_stats import LegendStats, StructureStats
 from aerona.engine.context import TickContext
@@ -201,7 +202,9 @@ async def builders_at(ctx: TickContext, site_id: int, active: int) -> int:
     hands = await ctx.session.scalar(
         select(func.coalesce(func.sum(LabourRow.workers), 0)).where(LabourRow.community_entity_id == site_id, LabourRow.job == Job.BUILDING)
     )
-    share = round_half_up(int(hands or 0) * table.worker_share_pct / PERCENT / max(1, active))
+    site = await ctx.session.get(EntityRow, site_id)
+    heavy = ctx.rules.natural_laws.heavy_build_pct / PERCENT if site is not None and (await ctx.laws()).has(NaturalLaw.GRAVITY_SHIFT, site.world_id) else 1.0
+    share = round_half_up(int(hands or 0) * table.worker_share_pct / PERCENT / max(1, active) * await ctx.hook_factor(site_id, DomainHook.STONEWORK) * heavy)
     return max(table.builder_floor, share)
 
 

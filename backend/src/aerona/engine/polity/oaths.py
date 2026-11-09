@@ -7,16 +7,21 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import OathRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held, unheld
+from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import HERO_ROLES, EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.intrigue import IntrigueSecret
 from aerona.domain.enums.mind import ActKind, MemoryKind, WantKind
 from aerona.domain.enums.polity import OathKind, OathStatus
+from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.son import SonStatus
+from aerona.engine.body.conditions import gain_condition
 from aerona.engine.context import TickContext
+from aerona.engine.divine.laws import binds
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.gods.progress import cap_gained_essence
 from aerona.engine.intrigue.secrets import keep_secret
@@ -113,7 +118,7 @@ async def reward_witness(ctx: TickContext, oath: OathRow) -> None:
     if son is None or son.status is not SonStatus.ACTIVE:
         return
     before = son.essence
-    son.essence += ctx.rules.oaths.essence_per_kept
+    son.essence += round(ctx.rules.oaths.essence_per_kept * (1 + await ctx.god_share(son.id, DomainHook.OATH_TITHE)))
     cap_gained_essence(ctx.rules, son, before)
 
 
@@ -129,6 +134,8 @@ async def break_oath(ctx: TickContext, oath: OathRow, reason: str) -> None:
     if swearer.entity_type is EntityType.MORTAL:
         await add_honour(ctx.session, swearer.id, -ctx.rules.standing.honour_broken_oath, ctx.epoch)
     await add_flag(ctx.session, swearer.id, EntityFlag.OATHBREAKER, ctx.epoch)
+    if swearer.entity_type is EntityType.MORTAL and await binds(ctx, NaturalLaw.OATHS_BIND, swearer):
+        await gain_condition(ctx, swearer, ConditionKind.DIVINE_BRAND, HarmCause.GOD)
     await keep_secret(
         ctx,
         swearer.id,

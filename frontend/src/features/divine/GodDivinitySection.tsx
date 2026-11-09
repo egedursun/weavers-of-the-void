@@ -1,0 +1,817 @@
+import { useMemo, useState } from 'react'
+import {
+  Activity,
+  Eye,
+  Footprints,
+  HeartCrack,
+  Link2,
+  Plus,
+  Save,
+  Sparkles,
+  Target,
+  Trash2,
+  TriangleAlert,
+  Undo2,
+  Users,
+} from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  EmptyState,
+  LoadingBlock,
+  Medallion,
+  Paged,
+  Section,
+  StatBar,
+} from '@/components/domain'
+import { LineChart } from '@/components/domain/LineChart'
+import { Muted, Text } from '@/components/typography'
+import { EntityPicker } from '@/features/cosmos/EntityPicker'
+import { busyOf } from '@/features/entity/lore/model'
+import {
+  AdjustPanel,
+  Card,
+  Group,
+  Held,
+  NumberField,
+} from '@/features/entity/wilds/parts'
+import { useGodGate } from '@/features/pantheon/gate'
+import {
+  type GodDivinity,
+  type GoalView,
+  type WoundView,
+  useDivineAction,
+  useGodDivinity,
+} from './api'
+import {
+  GOAL_KINDS,
+  GOAL_SOURCES,
+  GOAL_STATES,
+  WOUND_CAUSES,
+  WOUND_KINDS,
+  heldLabel,
+  option,
+} from './labels'
+import { useGodTable } from './model'
+import { NodeName, PickRow, RegardForm, StandingList } from './parts'
+
+const SERIES_COLORS = [
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+] as const
+const TARGET_TYPES: Record<string, readonly string[]> = {
+  win_war: ['people', 'settlement', 'polity'],
+  raise_hero: ['house'],
+}
+const PLACE_TYPES = ['people', 'settlement', 'region', 'cult'] as const
+
+function DomainsCard({ view }: { view: GodDivinity }) {
+  return (
+    <Card
+      title='Domains and their hooks'
+      icon={Sparkles}
+      tone='gold'
+      hint='What each domain gives the faithful and what it feeds on'
+      wide
+    >
+      <div className='grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2'>
+        {view.domains.map((domain) => (
+          <div
+            key={domain.domain}
+            className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'
+          >
+            <div className='flex min-w-0 flex-wrap items-center gap-2'>
+              <Text weight='semibold'>{domain.label}</Text>
+              <Badge
+                size='sm'
+                variant='outline'
+              >{`Feeds on ${domain.activity_label.toLowerCase()}`}</Badge>
+              {domain.severed && (
+                <Badge size='sm' variant='destructive'>
+                  Severed: its hooks are silent
+                </Badge>
+              )}
+            </div>
+            <ul className='flex min-w-0 flex-col gap-1'>
+              {domain.hooks.map((hook) => (
+                <li key={hook.hook} className='flex min-w-0 items-center gap-2'>
+                  <Badge
+                    size='sm'
+                    variant={hook.harmful ? 'warning' : 'secondary'}
+                  >{`+${hook.pct}%`}</Badge>
+                  <Text as='span' weight='medium'>
+                    {hook.label}
+                  </Text>
+                  <Muted as='span' variant='caption' truncate>
+                    {hook.effect}
+                  </Muted>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      {view.synergy ? (
+        <Badge size='sm' variant='default'>
+          <Link2 aria-hidden='true' />
+          {`${view.synergy.label} (${view.synergy.hook_label})`}
+        </Badge>
+      ) : (
+        <Muted variant='caption'>
+          These two domains have no shared working together.
+        </Muted>
+      )}
+    </Card>
+  )
+}
+
+function ActivityCard({ view }: { view: GodDivinity }) {
+  const series = useMemo(
+    () =>
+      view.domains.map((domain, index) => ({
+        key: domain.domain,
+        label: domain.label,
+        color: SERIES_COLORS[index % SERIES_COLORS.length],
+        points: view.activity
+          .filter((row) => row.domain === domain.domain)
+          .map((row) => ({ x: row.epoch, y: row.essence })),
+      })),
+    [view]
+  )
+  const latest =
+    view.activity.length > 0
+      ? Math.max(...view.activity.map((row) => row.epoch))
+      : null
+  return (
+    <Card
+      title='Where its essence comes from'
+      icon={Activity}
+      tone='verdigris'
+      hint='Essence each domain earned from activity in the god’s worlds'
+      wide
+    >
+      {view.activity.length === 0 ? (
+        <EmptyState
+          icon={Activity}
+          title='No domain activity yet'
+          description='After the next epoch the god earns essence from the battles, deaths, voyages and other deeds its domains feed on.'
+        />
+      ) : (
+        <>
+          <LineChart
+            series={series}
+            title='Essence by domain'
+            label='Essence'
+          />
+          <div className='flex min-w-0 flex-wrap gap-2'>
+            {view.activity
+              .filter((row) => row.epoch === latest)
+              .map((row) => (
+                <Badge
+                  key={`${row.epoch}-${row.domain}`}
+                  size='sm'
+                  variant='secondary'
+                >
+                  {`${row.domain}: ${row.count} → ${row.essence} essence`}
+                </Badge>
+              ))}
+          </div>
+        </>
+      )}
+    </Card>
+  )
+}
+
+function GoalRow({ goal, busy }: { goal: GoalView; busy: string | null }) {
+  const edit = useDivineAction<{
+    values: Record<string, unknown>
+    release: string[]
+  }>('god_goal:edit', (vars) => ({ goal_id: goal.id, ...vars }))
+  const drop = useDivineAction<void>('god_goal:drop', () => ({
+    goal_id: goal.id,
+  }))
+  const [progress, setProgress] = useState('')
+  const [state, setState] = useState('')
+  const spec = GOAL_KINDS[goal.kind]
+  const tone = GOAL_STATES[goal.state]
+  const pending = busyOf(busy, edit.isPending, drop.isPending)
+  const nothing =
+    progress === '' && state === ''
+      ? 'Change the progress or the state first'
+      : null
+  return (
+    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'>
+      <div className='flex min-w-0 items-center gap-2'>
+        <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
+        <div className='flex min-w-0 flex-1 flex-col gap-1'>
+          <Text weight='semibold'>{spec.label}</Text>
+          <div className='flex min-w-0 flex-wrap items-center gap-1'>
+            <Badge
+              size='sm'
+              variant={
+                goal.state === 'done'
+                  ? 'success'
+                  : goal.state === 'failed'
+                    ? 'destructive'
+                    : 'secondary'
+              }
+            >
+              {tone.label}
+            </Badge>
+            {goal.target && <NodeName item={goal.target} />}
+            {goal.world && <NodeName item={goal.world} />}
+            {goal.domain && (
+              <Badge size='sm' variant='outline'>
+                {goal.domain}
+              </Badge>
+            )}
+            {goal.amount > 0 && (
+              <Badge size='sm' variant='outline'>{`Aim: ${goal.amount}`}</Badge>
+            )}
+          </div>
+        </div>
+        <Button
+          size='sm'
+          variant='ghost'
+          disabled={pending !== null}
+          disabledReason={pending ?? undefined}
+          onClick={() => drop.mutate()}
+        >
+          <Trash2 />
+          Set aside
+        </Button>
+      </div>
+      <StatBar
+        label='Progress'
+        value={goal.progress}
+        max={100}
+        icon={Target}
+        tone={goal.state === 'failed' ? 'destructive' : 'success'}
+      />
+      <Muted variant='caption'>{`${GOAL_SOURCES[goal.source]}, since epoch ${goal.since_epoch}${goal.closed_epoch ? `, closed in epoch ${goal.closed_epoch}` : ''}`}</Muted>
+      <Held
+        keys={goal.locked}
+        label={heldLabel}
+        busy={pending}
+        onRelease={() => edit.mutate({ values: {}, release: goal.locked })}
+      />
+      <AdjustPanel
+        title='Reshape this aim'
+        note='Progress or a state you set is held: the world will not move it until you let it decide again.'
+      >
+        <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
+          <NumberField
+            label='Progress (%)'
+            value={progress}
+            min={0}
+            max={100}
+            disabled={pending !== null}
+            onChange={setProgress}
+          />
+          <PickRow
+            label='State'
+            table={option(GOAL_STATES)}
+            value={state}
+            blocked={pending}
+            onPick={setState}
+          />
+        </div>
+        <Button
+          size='sm'
+          disabled={pending !== null || nothing !== null}
+          disabledReason={pending ?? nothing ?? undefined}
+          onClick={() => {
+            const values: Record<string, unknown> = {}
+            if (progress !== '') values.progress = Number(progress)
+            if (state !== '') values.state = state
+            edit.mutate({ values, release: [] })
+            setProgress('')
+            setState('')
+          }}
+        >
+          <Save />
+          Hold the aim this way
+        </Button>
+      </AdjustPanel>
+    </li>
+  )
+}
+
+function GoalsCard({ view, busy }: { view: GodDivinity; busy: string | null }) {
+  const [kind, setKind] = useState('')
+  const [target, setTarget] = useState<number | null>(null)
+  const [god, setGod] = useState('')
+  const [world, setWorld] = useState<number | null>(null)
+  const [domain, setDomain] = useState('')
+  const [amount, setAmount] = useState('')
+  const gods = useGodTable()
+  const set = useDivineAction<void>('god_goal:set', () => ({
+    god_id: view.god.id,
+    kind,
+    target_id: god !== '' ? Number(god) : target,
+    world_id: world,
+    domain: domain === '' ? null : domain,
+    amount: amount === '' ? 0 : Number(amount),
+  }))
+  const pending = busyOf(busy, set.isPending)
+  const kinds = Object.fromEntries(
+    view.goal_kinds.map((item) => [item, GOAL_KINDS[item].label])
+  )
+  const needsGod = [
+    'destroy_rival',
+    'awaken_god',
+    'defeat_foreign_god',
+  ].includes(kind)
+  const needsEntity = kind in TARGET_TYPES
+  const problem =
+    kind === ''
+      ? 'Choose an aim'
+      : needsGod && god === ''
+        ? 'Choose the god it names'
+        : needsEntity && target === null
+          ? 'Choose what it names'
+          : null
+  return (
+    <Card
+      title='Aims'
+      icon={Target}
+      tone='info'
+      hint='Typed aims the god pursues; it gains experience and fame on reaching them'
+      wide
+    >
+      {view.goals.length === 0 ? (
+        <EmptyState
+          icon={Target}
+          title='No aim yet'
+          description='Gods choose aims from their values and domains; you can give one.'
+        />
+      ) : (
+        <ul className='flex min-w-0 flex-col gap-2'>
+          <Paged items={view.goals} as='li'>
+            {(goal) => <GoalRow key={goal.id} goal={goal} busy={busy} />}
+          </Paged>
+        </ul>
+      )}
+      <Group title='Give an aim' icon={Plus}>
+        <div className='grid min-w-0 grid-cols-1 gap-2 md:grid-cols-2'>
+          <PickRow
+            label='Aim'
+            table={kinds}
+            value={kind}
+            blocked={pending}
+            onPick={setKind}
+          />
+          {needsGod && (
+            <PickRow
+              label='God it names'
+              table={gods}
+              value={god}
+              blocked={pending}
+              onPick={setGod}
+            />
+          )}
+          {needsEntity && (
+            <EntityPicker
+              types={TARGET_TYPES[kind] ?? []}
+              value={target}
+              onChange={setTarget}
+              placeholder='What the aim names'
+            />
+          )}
+          <EntityPicker
+            types={['world']}
+            value={world}
+            onChange={setWorld}
+            placeholder='World it names (optional)'
+          />
+          <PickRow
+            label='Domain to spread'
+            table={Object.fromEntries(
+              view.domains.map((item) => [item.domain, item.label])
+            )}
+            value={domain}
+            blocked={pending}
+            onPick={setDomain}
+          />
+          <NumberField
+            label='How many (optional)'
+            value={amount}
+            min={0}
+            disabled={pending !== null}
+            onChange={setAmount}
+          />
+        </div>
+        <Button
+          disabled={pending !== null || problem !== null}
+          disabledReason={pending ?? problem ?? undefined}
+          onClick={() => set.mutate()}
+        >
+          <Target />
+          Give this aim
+        </Button>
+      </Group>
+    </Card>
+  )
+}
+
+function WoundRow({ wound, busy }: { wound: WoundView; busy: string | null }) {
+  const edit = useDivineAction<{
+    values: Record<string, unknown>
+    release: string[]
+  }>('divine_wound:edit', (vars) => ({ wound_id: wound.id, ...vars }))
+  const remove = useDivineAction<void>('divine_wound:remove', () => ({
+    wound_id: wound.id,
+  }))
+  const [healed, setHealed] = useState('')
+  const [severity, setSeverity] = useState('')
+  const spec = WOUND_KINDS[wound.kind]
+  const pending = busyOf(busy, edit.isPending, remove.isPending)
+  const nothing =
+    healed === '' && severity === ''
+      ? 'Change the healing or the severity first'
+      : null
+  return (
+    <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'>
+      <div className='flex min-w-0 items-center gap-2'>
+        <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
+        <div className='flex min-w-0 flex-1 flex-col gap-1'>
+          <Text weight='semibold'>
+            {wound.domain ? `${spec.label} (${wound.domain})` : spec.label}
+          </Text>
+          <Muted variant='caption'>{`From ${WOUND_CAUSES[wound.cause]}${wound.cause_node ? `, ${wound.cause_node.name}` : ''}, epoch ${wound.epoch}`}</Muted>
+        </div>
+        <Button
+          size='sm'
+          variant='ghost'
+          disabled={pending !== null}
+          disabledReason={pending ?? undefined}
+          onClick={() => remove.mutate()}
+        >
+          <HeartCrack />
+          Heal at once
+        </Button>
+      </div>
+      <StatBar
+        label='Severity'
+        value={wound.severity}
+        max={100}
+        tone='destructive'
+      />
+      <StatBar label='Healed' value={wound.healed} max={100} tone='success' />
+      <Held
+        keys={wound.locked}
+        label={heldLabel}
+        busy={pending}
+        onRelease={() => edit.mutate({ values: {}, release: wound.locked })}
+      />
+      <AdjustPanel
+        title='Reshape this wound'
+        note='Healing or severity you set is held until you let the world decide again.'
+      >
+        <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
+          <NumberField
+            label='Healed (%)'
+            value={healed}
+            min={0}
+            max={100}
+            disabled={pending !== null}
+            onChange={setHealed}
+          />
+          <NumberField
+            label='Severity'
+            value={severity}
+            min={1}
+            max={100}
+            disabled={pending !== null}
+            onChange={setSeverity}
+          />
+        </div>
+        <Button
+          size='sm'
+          disabled={pending !== null || nothing !== null}
+          disabledReason={pending ?? nothing ?? undefined}
+          onClick={() => {
+            const values: Record<string, unknown> = {}
+            if (healed !== '') values.healed = Number(healed)
+            if (severity !== '') values.severity = Number(severity)
+            edit.mutate({ values, release: [] })
+            setHealed('')
+            setSeverity('')
+          }}
+        >
+          <Save />
+          Hold the wound this way
+        </Button>
+      </AdjustPanel>
+    </li>
+  )
+}
+
+function WoundsCard({
+  view,
+  busy,
+}: {
+  view: GodDivinity
+  busy: string | null
+}) {
+  const [kind, setKind] = useState('')
+  const [domain, setDomain] = useState('')
+  const [severity, setSeverity] = useState('50')
+  const inflict = useDivineAction<void>('divine_wound:inflict', () => ({
+    god_id: view.god.id,
+    kind,
+    severity: Number(severity),
+    domain: domain === '' ? null : domain,
+  }))
+  const pending = busyOf(busy, inflict.isPending)
+  const problem = kind === '' ? 'Choose a wound' : null
+  return (
+    <Card
+      title='Divine body'
+      icon={HeartCrack}
+      tone='danger'
+      hint='Wounds of a god heal with faith and with the rites of its faithful'
+      wide
+    >
+      {view.wounds.length === 0 ? (
+        <EmptyState
+          icon={HeartCrack}
+          title='Unwounded'
+          description='Gods are wounded in duels, wars of gods, by the death of a mortal form, by outer bargains or by you.'
+        />
+      ) : (
+        <ul className='flex min-w-0 flex-col gap-2'>
+          <Paged items={view.wounds} as='li'>
+            {(wound) => <WoundRow key={wound.id} wound={wound} busy={busy} />}
+          </Paged>
+        </ul>
+      )}
+      <Group title='Wound this god' icon={TriangleAlert}>
+        <div className='grid min-w-0 grid-cols-1 gap-2 md:grid-cols-3'>
+          <PickRow
+            label='Wound'
+            table={option(WOUND_KINDS)}
+            value={kind}
+            blocked={pending}
+            onPick={setKind}
+          />
+          <PickRow
+            label='Domain to sever'
+            table={Object.fromEntries(
+              view.domains.map((item) => [item.domain, item.label])
+            )}
+            value={domain}
+            blocked={
+              kind === 'severed_domain'
+                ? pending
+                : 'Only a severed domain names a domain'
+            }
+            onPick={setDomain}
+          />
+          <NumberField
+            label='Severity'
+            value={severity}
+            min={1}
+            max={100}
+            disabled={pending !== null}
+            onChange={setSeverity}
+          />
+        </div>
+        <Button
+          variant='destructive'
+          disabled={pending !== null || problem !== null}
+          disabledReason={pending ?? problem ?? undefined}
+          onClick={() => inflict.mutate()}
+        >
+          <TriangleAlert />
+          Inflict the wound
+        </Button>
+      </Group>
+    </Card>
+  )
+}
+
+function AvatarsCard({
+  view,
+  busy,
+}: {
+  view: GodDivinity
+  busy: string | null
+}) {
+  const [place, setPlace] = useState<number | null>(null)
+  const manifest = useDivineAction<void>('avatar:manifest', () => ({
+    god_id: view.god.id,
+    place_id: place,
+  }))
+  const withdraw = useDivineAction<number>('avatar:withdraw', (avatar) => ({
+    avatar_id: avatar,
+  }))
+  const edit = useDivineAction<{
+    avatar: number
+    values: Record<string, unknown>
+    release: string[]
+  }>('avatar:edit', (vars) => ({
+    avatar_id: vars.avatar,
+    values: vars.values,
+    release: vars.release,
+  }))
+  const pending = busyOf(
+    busy,
+    manifest.isPending,
+    withdraw.isPending,
+    edit.isPending
+  )
+  const shattered = view.wounds.some(
+    (item) => item.kind === 'shattered_manifestation' && item.healed < 100
+  )
+  const problem = shattered
+    ? 'Its manifestation is shattered; heal it first'
+    : place === null
+      ? 'Choose where it walks'
+      : null
+  return (
+    <Card
+      title='Mortal forms'
+      icon={Footprints}
+      tone='gold'
+      hint='A god may walk among mortals; if its form is killed its manifestation shatters'
+      wide
+    >
+      {view.avatars.length === 0 ? (
+        <EmptyState
+          icon={Footprints}
+          title='No mortal form'
+          description='Give the god a mortal form to raise awe and love where it walks and win peoples to its faith.'
+        />
+      ) : (
+        <ul className='flex min-w-0 flex-col gap-2'>
+          <Paged items={view.avatars} as='li'>
+            {(row) => (
+              <li
+                key={row.avatar.id}
+                className='flex min-w-0 items-center gap-2 rounded-lg border bg-muted/30 p-3'
+              >
+                <Medallion
+                  icon={Eye}
+                  tone={row.alive ? 'gold' : 'muted'}
+                  size='sm'
+                />
+                <div className='flex min-w-0 flex-1 flex-col gap-1'>
+                  <NodeName item={row.avatar} />
+                  <Muted variant='caption'>{`Walking since epoch ${row.since_epoch}; ${row.deeds} deeds${row.locked.includes('deeds') ? ' (held)' : ''}`}</Muted>
+                </div>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  disabled={pending !== null}
+                  disabledReason={pending ?? undefined}
+                  onClick={() =>
+                    edit.mutate({
+                      avatar: row.avatar.id,
+                      values: row.locked.includes('deeds')
+                        ? {}
+                        : { deeds: row.deeds },
+                      release: row.locked.includes('deeds') ? ['deeds'] : [],
+                    })
+                  }
+                >
+                  {row.locked.includes('deeds') ? <Undo2 /> : <Save />}
+                  {row.locked.includes('deeds')
+                    ? 'Let its deeds count again'
+                    : 'Hold its deeds'}
+                </Button>
+                <Button
+                  size='sm'
+                  variant='ghost'
+                  disabled={pending !== null}
+                  disabledReason={pending ?? undefined}
+                  onClick={() => withdraw.mutate(row.avatar.id)}
+                >
+                  <Trash2 />
+                  Call it back
+                </Button>
+              </li>
+            )}
+          </Paged>
+        </ul>
+      )}
+      <Group title='Give it a mortal form' icon={Plus}>
+        <EntityPicker
+          types={PLACE_TYPES}
+          value={place}
+          onChange={setPlace}
+          placeholder='The people, place or land it walks among'
+        />
+        <Button
+          disabled={pending !== null || problem !== null}
+          disabledReason={pending ?? problem ?? undefined}
+          onClick={() => manifest.mutate()}
+        >
+          <Footprints />
+          Take a mortal form
+        </Button>
+      </Group>
+    </Card>
+  )
+}
+
+function StandingCard({
+  view,
+  busy,
+}: {
+  view: GodDivinity
+  busy: string | null
+}) {
+  const save = useDivineAction<{
+    community: number
+    values: Record<string, unknown>
+    release: string[]
+  }>('divine_standing:set', (vars) => ({
+    community_id: vars.community,
+    god_id: view.god.id,
+    values: vars.values,
+    release: vars.release,
+  }))
+  const clear = useDivineAction<number>(
+    'divine_standing:clear',
+    (community) => ({ community_id: community, god_id: view.god.id })
+  )
+  const pending = busyOf(busy, save.isPending, clear.isPending)
+  return (
+    <Card
+      title='How each people regards it'
+      icon={Users}
+      tone='verdigris'
+      hint='Awe, love, fear and neglect among the god’s peoples'
+      wide
+    >
+      {view.standing.length === 0 && (
+        <EmptyState
+          icon={Users}
+          title='No people regards it yet'
+          description='Peoples that worship the god form a regard of it after the next epoch.'
+        />
+      )}
+      <StandingList
+        rows={view.standing}
+        focus='god'
+        busy={pending}
+        onSave={(row, values, release) =>
+          save.mutate({ community: row.community.id, values, release })
+        }
+        onClear={(row) => clear.mutate(row.community.id)}
+      />
+      <RegardForm
+        busy={pending}
+        onSave={(community, values) =>
+          save.mutate({ community, values, release: [] })
+        }
+      />
+    </Card>
+  )
+}
+
+export function GodDivinitySection({
+  godId,
+  readOnlyReason,
+}: {
+  godId: number
+  readOnlyReason?: string | null
+}) {
+  const view = useGodDivinity(godId)
+  const { reason } = useGodGate()
+  const busy = readOnlyReason ?? reason()
+  return (
+    <Section
+      id='section-divinity'
+      title='Divinity'
+      description='Domains and their hooks, the essence they earn, aims, wounds, mortal forms and the regard of peoples. Only gods have these; mortals, places and worlds hold a god in regard instead.'
+      icon={Sparkles}
+      tone='gold'
+    >
+      {view.isPending && <LoadingBlock label='Reading this god’s divinity' />}
+      {view.isError && (
+        <EmptyState
+          icon={TriangleAlert}
+          title='Its divinity could not be read'
+          description={view.error.message}
+        />
+      )}
+      {view.data && (
+        <div
+          data-surface='GodDivinity'
+          className='@container/wild grid min-w-0 grid-cols-1 gap-3 @xl/wild:grid-cols-2'
+        >
+          <DomainsCard view={view.data} />
+          <ActivityCard view={view.data} />
+          <GoalsCard view={view.data} busy={busy} />
+          <WoundsCard view={view.data} busy={busy} />
+          <AvatarsCard view={view.data} busy={busy} />
+          <StandingCard view={view.data} busy={busy} />
+        </div>
+      )}
+    </Section>
+  )
+}

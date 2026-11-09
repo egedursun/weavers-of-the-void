@@ -66,6 +66,7 @@ class RuleGroup(StrEnum):
     SON_SUMMONING_AND_BIRTH = "Son summoning and birth"
     SON_TOOLS = "Son tools"
     THE_BEYOND = "The Beyond"
+    THE_DIVINE = "The divine"
     THE_GODS_ACTIONS = "The god's actions"
     THE_GODS_POWER = "The god's power"
     WAR_AND_DIPLOMACY = "War and diplomacy"

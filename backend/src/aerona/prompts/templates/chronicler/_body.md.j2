@@ -1,4 +1,4 @@
-{% from "shared/macros.md.j2" import tired_images as tired_images_block, entity_line %}
+{% from "shared/macros.md.j2" import entity_line %}
 {% from "fate/_events.md.j2" import events_by_world %}
 {% from "chronicler/_facts.md.j2" import fact_sheet %}
 {% set f = rules.fate %}
@@ -15,10 +15,7 @@ TASK: {{ task }}
 WORLDS: {% for world in worlds %}world#{{ world.id }} {{ world.name }}{% if not loop.last %}, {% endif %}{% endfor %}. In the "worlds" field write a separate section for EVERY world (skip none). Each world's section tells ONLY the events under that world's heading; do not carry another world's people, city or person into that world. For a world with few events, tell of its silence, its waiting, its everyday life; do not add invented great events.
 {% endif %}
 {% if previous_names %}
-NAMES OF PREVIOUS AGES (DO NOT REPEAT or imitate): {{ previous_names[-f.previous_epoch_names_shown:] | join("; ") }}
-{% endif %}
-{% if piled_roots %}
-DO NOT USE IN THE AGE NAME (piled up in previous names): {% for root in piled_roots %}{{ root }}-{% if not loop.last %}, {% endif %}{% endfor %}.
+NAMES OF PREVIOUS AGES (this age takes a name of its own): {{ previous_names[-f.previous_epoch_names_shown:] | join("; ") }}
 {% endif %}
 {% if not continuity.current %}
 Put the mortal who writes this narrative in the "chronicler" field.
@@ -29,12 +26,7 @@ CHRONICLER: {{ continuity.current.name }} has been writing for {{ continuity.str
 CHRONICLER: this age too is written by {{ continuity.current.name }} ({{ continuity.current.who }}): write the SAME name and identity in the "chronicler" field; do not introduce yourself again, do not say the previous record was lost. Chain: {% for link in continuity.chain %}Age {{ link.age }}: {{ link.name }} ({{ link.who }}){% if not loop.last %} → {% endif %}{% endfor %}
 
 {% endif %}
-OPENING: do NOT open the narrative with the sky, the star of the age, a celestial sign, or the "Age N" / "at the beginning of the age" pattern; enter from inside a person, a place, an object or a sound.{% if opening_patterns %} These patterns piled up in recent openings are FORBIDDEN in the first sentence: {% for pattern in opening_patterns %}«{{ pattern }}»{% if not loop.last %}, {% endif %}{% endfor %}.{% endif %}
-
-Do NOT copy verbatim the world engine's sentences, the council minutes or the stock phrases of the events; tell the fact with the chronicler's own eyes and own words; an event folded as "(this age N times)" is told once, with its repetition. Do not write record numbers (#12), stat names or values in the text (not even in words: "an anger at seventy-five", "twenty-two life"), star glyphs, mood scores; do not mention ledger lines such as bond counts.
-{% if tired_images.present %}
-{{ tired_images_block(tired_images) }}
-{% endif %}
+Do NOT copy verbatim the world engine's sentences, the council minutes or the wording of the event lines; tell the fact with the chronicler's own eyes and own words; an event folded as "(this age N times)" is told once, with its repetition. Do not write record numbers (#12), stat names or values in the text (not even in words: "an anger at seventy-five", "twenty-two life"), star glyphs, mood scores; do not mention ledger lines such as bond counts.
 {% if facts %}
 
 {{ budget(fact_sheet(facts) | trim, rules.chronicle_audit.budget_chars, "rest in the chronicle", trim) }}

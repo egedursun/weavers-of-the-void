@@ -17,6 +17,7 @@ from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.mind import ActKind, Facet, MemoryKind, NeedKind, OpinionComponent, ThoughtKind, TraitKind, ValueAxis
 from aerona.domain.enums.mortal import Ability, CareerPath, CrimeKind, DeathCause, LifeStage, StressBreak
@@ -194,7 +195,8 @@ async def accumulate_stress(ctx: TickContext, mortal: EntityRow, profile: Mortal
         gain += table.duty_conflict_stress
     relief = 1 - (ability(mortal, Ability.WILLPOWER) - FULL // 2) / PERCENT * table.willpower_relief_pct / PERCENT
     fragility = 1 + facet_weight(facets, STRESS_FACETS) * ctx.rules.mind_split.stress_facet_pct / PERCENT
-    profile.stress = clamp_int(profile.stress + gain * max(0.0, relief) * max(0.0, fragility) - table.decay, 0, FULL)
+    rest = await ctx.hook_factor(mortal.id, DomainHook.REST)
+    profile.stress = clamp_int(profile.stress + gain * max(0.0, relief) * max(0.0, fragility) - table.decay * rest, 0, FULL)
 
 
 def break_weights(

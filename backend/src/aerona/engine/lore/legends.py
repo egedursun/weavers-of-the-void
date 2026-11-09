@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from aerona.catalog.lore import DISTORTED, LEGEND_MORALS
 from aerona.constants.units import PERCENT
@@ -11,9 +11,11 @@ from aerona.db.tables.mind import MemoryRow, SkillRow
 from aerona.db.tables.polity import ClaimRow, HouseMemberRow, HouseProfileRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import CustomCatalog, LegendArchetype
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, LegendCategory
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.mind import MemoryKind, SkillKind, ValueAxis, ValueHolder
+from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.context import TickContext
 from aerona.engine.lore.kinds import ArchetypeParams, kind_of, params_of
 from aerona.engine.lore.language import standardisation_of
@@ -174,6 +176,7 @@ async def drift_step(ctx: TickContext, row: LegendProfileRow, communities: list[
     letters = sum([await literate(ctx, teller) for teller in communities]) / len(communities)
     written = sum([await standard(ctx, teller) for teller in communities]) / len(communities)
     rate = table.distortion_rate * (1 - letters) * (1 - written * ctx.rules.prestige.standard_distortion_pct / PERCENT)
+    rate *= sum([await ctx.hook_easing(teller, DomainHook.MEMORY_KEEPING) for teller in communities]) / len(communities)
     incident = await ctx.session.get(IncidentRow, row.source_incident_id) if row.source_incident_id is not None else None
     if incident is None:
         return clamp_int(row.distortion + round_half_up(rate), 0, PERCENT)
@@ -188,10 +191,18 @@ async def tell(ctx: TickContext, legend: EntityRow, row: LegendProfileRow) -> bo
         row.tellers = await tellers_of(ctx, legend.id)
     communities = [teller for teller in row.tellers if (await ctx.session.get(EntityRow, teller)) is not None and not await is_mortal(ctx, teller)]
     bards = len(row.tellers) - len(communities)
+    if communities and (await ctx.laws()).has(NaturalLaw.THE_DEAD_SPEAK, legend.world_id):
+        spirits = await ctx.session.scalar(
+            select(func.count(EntityRow.id)).where(
+                EntityRow.entity_type == EntityType.SPIRIT, EntityRow.status == EntityStatus.CANON, EntityRow.location_id.in_(communities)
+            )
+        )
+        bards += int(spirits or 0)
     if await fix(ctx, row) is None and "distortion" not in row.locked and communities:
         row.distortion = await drift_step(ctx, row, communities)
     if "credence" not in row.locked:
-        gain = len(communities) * table.credence_per_teller + bards * table.credence_per_bard
+        voices = sum([await ctx.hook_factor(teller, DomainHook.LEGEND_SPREAD) for teller in communities])
+        gain = round_half_up(voices * table.credence_per_teller) + bards * table.credence_per_bard
         row.credence = clamp_int(row.credence + gain - table.credence_decay, 0, PERCENT)
     drifted = False
     if communities and "archetype" not in row.locked and row.custom_archetype_id is None and row.distortion >= PERCENT // 2:

@@ -300,6 +300,7 @@ async def mortal_standing(ctx: TickContext) -> None:
     "table.conditions",
     "table.cult_tenets",
     "table.culture_values",
+    "table.divine_wounds",
     "table.entity_flags",
     "table.entity_tags",
     "table.epoch_year_cursors",
@@ -331,6 +332,7 @@ async def mortal_standing(ctx: TickContext) -> None:
     "table.traits",
     "table.war_sides",
     "table.wars",
+    "table.world_domain_hooks",
     "table.world_maps",
     "table.world_materials",
 )

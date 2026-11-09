@@ -181,9 +181,5 @@ class WorldSectionsOutput(OutputModel):
     worlds: list[WorldSectionOutput] = Field(description="A separate section for each world (all required, each world once)")
 
 
-class FirstSentenceOutput(OutputModel):
-    first_sentence: str = Field(description="The new first sentence")
-
-
 class NamingsOutput(OutputModel):
     namings: list[NamingItemOutput] = Field(description="A naming for EVERY record below")

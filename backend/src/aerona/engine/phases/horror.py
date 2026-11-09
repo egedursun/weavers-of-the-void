@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 
 from sqlalchemy import delete, select
@@ -20,6 +20,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
@@ -35,6 +36,8 @@ from aerona.engine.cosmos.routes import open_alignment
 from aerona.engine.cosmos.sanity import sanity_of, shift_sanity
 from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.cosmos.world_types import mechanics_of
+from aerona.engine.divine.outer import breach_pressure, open_breaches, outer_profile, seed_void_tenets
+from aerona.engine.divine.wounds import sanity_ceiling
 from aerona.engine.environment.book import scar_region
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
@@ -151,6 +154,7 @@ class SanityContext:
     void_erosion: dict[int, int]
     worshipping: set[int]
     knowledge: KnowledgeMap
+    breaches: dict[int, int] = field(default_factory=dict)
 
 
 async def _sanity_context(ctx: TickContext, knowledge: KnowledgeMap) -> SanityContext:
@@ -168,6 +172,7 @@ async def _sanity_context(ctx: TickContext, knowledge: KnowledgeMap) -> SanityCo
         },
         worshipping={bond.source_node_id for bond in index.bonds},
         knowledge=knowledge,
+        breaches=await breach_pressure(ctx),
     )
 
 
@@ -176,6 +181,8 @@ async def sanity_drift(ctx: TickContext, entity: EntityRow, scene: SanityContext
     erosion = scene.leaks.get(entity.world_id, 0) / horror.leak_erosion_divisor + scene.void_erosion.get(entity.world_id, 0)
     erosion += horror.forbidden_erosion if scene.knowledge.knows(entity.id, KnowledgeBranch.FORBIDDEN) else 0
     erosion += horror.outer_being_erosion if entity.world_id in scene.outer_worlds else 0
+    erosion += scene.breaches.get(entity.location_id or entity.id, 0) * ctx.rules.outer_beings.breach_sanity_pct / PERCENT
+    erosion *= await ctx.hook_easing(entity.id, DomainHook.SANITY_WARD) * await ctx.hook_factor(entity.id, DomainHook.FRENZY)
     repair: float = horror.medicine_repair if scene.knowledge.knows(entity.id, KnowledgeBranch.MEDICINE) else 0
     if entity.entity_type in LAND_COMMUNITIES:
         repair += (await class_shares(ctx.session, ctx.rules, entity.id))[SocialClass.PRIEST] / horror.priest_repair_divisor
@@ -205,9 +212,9 @@ async def birth_whisperers(ctx: TickContext, entity: EntityRow) -> EntityRow:
         ctx.session,
         ctx.epoch,
         RecordSpec(
-            name=f"{entity.name} Whisperers",
+            name=f"The outer cult of {entity.name}",
             entity_type=EntityType.CULT,
-            body=f"Among {entity.name} a cult arose worshipping something whose name is not spoken; they pray not to the gods but to the outside.",
+            body=f"A cult among {entity.name} that worships a being from outside the cosmos.",
             stats=CultStats(
                 followers=max(horror.whisperers_min_followers, round(population * horror.whisperers_share_pct / PERCENT)),
                 zeal=horror.whisperers_zealotry,
@@ -222,9 +229,10 @@ async def birth_whisperers(ctx: TickContext, entity: EntityRow) -> EntityRow:
         ),
     )
     await BondRepository(ctx.session).connect(BondDraft(cult.id, entity.id, BondKind.DESCENDS_FROM, ctx.epoch, "born from within"))
+    await seed_void_tenets(ctx, cult)
     await note(
         ctx,
-        f"Madness spread among {entity.name}: a cult that whispers to the outside was born, {cult.name}.",
+        f"A cult that worships a being from outside the cosmos arose among {entity.name}: {cult.name}.",
         key="horror.whisperers",
         ids=[entity.id, cult.id],
         feed=FeedCategory.LEAK,
@@ -315,6 +323,7 @@ async def update_son_sanity(ctx: TickContext, knowledge: KnowledgeMap) -> int:
     for son in await ctx.session.scalars(select(SonRow).where(SonRow.status != SonStatus.DEAD).order_by(SonRow.id)):
         before = son_sanity(ctx.rules, son)
         after = clamp_percent(before - await _son_erosion(ctx, son, scene) + horror.son_sanity_repair)
+        after = min(after, await sanity_ceiling(ctx.session, son.id, ctx.rules.divine_wounds.void_floor_pct))
         if after == son.sanity:
             continue
         son.sanity = after
@@ -341,9 +350,9 @@ async def summon_outer_being(ctx: TickContext, world: WorldRow) -> EntityRow | N
         ctx.session,
         ctx.epoch,
         RecordSpec(
-            name=f"The Unspoken ({world.name})",
+            name=f"The outer being of {world.name}",
             entity_type=EntityType.OUTER_BEING,
-            body=(f"Something came in through the tear in {world.name}'s sky. It cannot be fully seen; those who look remember only what they could not see."),
+            body=f"A being from outside the cosmos that entered {world.name}.",
             stats=OuterBeingStats(
                 size=clamp_percent(horror.outer_being_size_base + rng.die(horror.outer_being_size_die)),
                 interest=clamp_percent(horror.outer_being_interest_base + rng.die(horror.outer_being_interest_die)),
@@ -357,9 +366,11 @@ async def summon_outer_being(ctx: TickContext, world: WorldRow) -> EntityRow | N
         ),
     )
     world.leakage = max(0, world.leakage - horror.outer_being_entry_leak_drop)
+    profile = await outer_profile(ctx, being)
+    await open_breaches(ctx, being, profile)
     await ctx.chronicle(
         ChronicleKind.OUTER_BEING,
-        f"Something entered {world.name} from outside. No one speaks its name.",
+        f"A being from outside the cosmos entered {world.name}.",
         template_key="horror.outer_entered",
         entity_ids=[being.id],
         world_id=world.id,
@@ -554,14 +565,17 @@ async def spontaneous_horror(ctx: TickContext) -> str | None:
     "settlement.population",
     "table.addictions",
     "table.bonds",
+    "table.breach_points",
     "table.community_societies",
     "table.cosmos",
+    "table.divine_wounds",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.holder_levels",
     "table.nodes",
     "table.outer_bargains",
     "table.routes",
+    "table.world_domain_hooks",
 )
 @writes(
     "people.population",

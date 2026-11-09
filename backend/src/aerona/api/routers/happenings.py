@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.schemas.happenings import (
-    CasualtyView,
+    EventCasualtyView,
     EventSummaryView,
     EventView,
     FootprintView,
@@ -127,7 +127,7 @@ async def event(services: ServicesDep, entity_id: int = Path(ge=1)) -> EventView
                 FootprintView(region_id=row.region_entity_id, region=names.get(row.region_entity_id, ""), joined_epoch=row.joined_epoch) for row in footprint
             ],
             casualties=[
-                CasualtyView(
+                EventCasualtyView(
                     community_id=row.community_entity_id,
                     community=names.get(row.community_entity_id, ""),
                     age_band=row.age_band,

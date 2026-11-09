@@ -197,5 +197,4 @@ async def test_motifs_from_tags(session: AsyncSession, world: Cosmos) -> None:
     assert [motif.key for motif in await cache.tired(session, rules, None)] == ["weeping stone"]
     await motifs.set_override(session, None, "weeping stone", MotifOverrideMode.ALLOWED)
     await motifs.set_override(session, None, "rust", MotifOverrideMode.PINNED)
-    context = await cache.context(session, rules, None)
-    assert [share.key for share in context.motifs] == ["rust"]
+    assert [motif.key for motif in await cache.for_world(session, rules, None)] == ["rust"]

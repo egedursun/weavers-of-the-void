@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from aerona.catalog.units import UNITS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.military import ArmyUnitRow
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.environment import WeatherKind
 from aerona.domain.enums.military import UnitFamily, UnitKind
 from aerona.domain.enums.society import KnowledgeBranch
@@ -61,8 +62,9 @@ async def sea_battle(ctx: TickContext, marches: list[March], weather: WeatherKin
     if not all(afloat):
         return None
     bonuses = [await fleet_bonus(ctx, march.army.id, weather) for march in marches]
+    favour = [await ctx.hook_factor(march.owner.id, DomainHook.NAVAL_MIGHT) for march in marches]
     powers = [
-        (fleet_power(ctx, rows, weather) + bonus) * (0.8 + ctx.rng(f"sea.{slot}.{index}").below(40) / PERCENT)
+        (fleet_power(ctx, rows, weather) + bonus) * favour[index] * (0.8 + ctx.rng(f"sea.{slot}.{index}").below(40) / PERCENT)
         for index, (rows, bonus) in enumerate(zip(fleets, bonuses, strict=True))
     ]
     first_wins = powers[0] >= powers[1]

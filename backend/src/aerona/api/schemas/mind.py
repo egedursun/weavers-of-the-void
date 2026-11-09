@@ -92,7 +92,7 @@ class SkillView(ApiModel):
     variant_id: int | None = None
 
 
-class NeedView(ApiModel):
+class MindNeedView(ApiModel):
     need: NeedKind
     label: str
     value: int
@@ -100,7 +100,7 @@ class NeedView(ApiModel):
     importance: int
 
 
-class PressureView(ApiModel):
+class MindPressureView(ApiModel):
     pressure: PressureKind
     label: str
     value: int
@@ -167,8 +167,8 @@ class MindView(ApiModel):
     values: list[ValueView]
     traits: list[TraitView]
     skills: list[SkillView]
-    needs: list[NeedView]
-    pressures: list[PressureView]
+    needs: list[MindNeedView]
+    pressures: list[MindPressureView]
     memories: list[MemoryView]
     opinions: list[OpinionView]
     career: CareerView | None

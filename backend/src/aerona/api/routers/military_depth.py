@@ -6,9 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.schemas.military_depth import (
+    BattleCasualtyView,
     BattleDepthView,
     BattleStackView,
-    CasualtyView,
     FeudView,
     HullSpecView,
     PeaceTermView,
@@ -136,7 +136,7 @@ async def battle_depth(services: ServicesDep, battle_id: Id) -> BattleDepthView:
                 for row in stacks
             ],
             casualties=[
-                CasualtyView(
+                BattleCasualtyView(
                     mortal=refs.get(row.mortal_entity_id),
                     side=refs.get(row.side_entity_id) if row.side_entity_id else None,
                     fate=row.fate,

@@ -205,6 +205,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "mortal.strength",
     "mortal.willpower",
     "mortal.wisdom",
+    "table.avatars",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
@@ -215,6 +216,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.cult_tenets",
     "table.culture_values",
     "table.designated_heirs",
+    "table.divine_wounds",
     "table.endemic_diseases",
     "table.entity_flags",
     "table.entity_tags",
@@ -252,6 +254,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.thoughts",
     "table.tradition_profiles",
     "table.traits",
+    "table.world_domain_hooks",
     "table.world_maps",
 )
 @writes(

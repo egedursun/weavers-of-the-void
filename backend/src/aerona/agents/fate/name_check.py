@@ -1,5 +1,4 @@
 import re
-from collections.abc import Collection
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +13,6 @@ from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.models.phonology import Phonology
-from aerona.engine.primitives.motifs import motif_words
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.language.alphabet import first_word, fold_letter, is_consonant, is_vowel
 from aerona.language.generator import NameKind
@@ -46,11 +44,6 @@ def dialect_letters(root: str, phonology: Phonology) -> list[str]:
     return sorted(wrong | set(phonology.forbidden_in(word)))
 
 
-def tired_in(name: str, tired: Collection[str]) -> list[str]:
-    words = set(motif_words(name))
-    return sorted(word for word in tired if word in words)
-
-
 async def god_lookalike(session: AsyncSession, rules: Rules, name: str, ignore_node_id: int | None = None) -> str | None:
     if len(name.split()) != 1:
         return None
@@ -73,9 +66,7 @@ async def god_lookalike(session: AsyncSession, rules: Rules, name: str, ignore_n
     return None
 
 
-async def name_problems(
-    session: AsyncSession, rules: Rules, entity: EntityRow, name: str, *, phonology: Phonology | None, tired: Collection[str]
-) -> DialectWarning | None:
+async def name_problems(session: AsyncSession, rules: Rules, entity: EntityRow, name: str, *, phonology: Phonology | None) -> DialectWarning | None:
     cleaned = name.strip()
     if not cleaned:
         return None
@@ -90,20 +81,17 @@ async def name_problems(
         problems.append(NameProblem.SIMILAR)
     if is_weak(cleaned, rules):
         problems.append(NameProblem.WEAK)
-    worn = tired_in(cleaned, tired)
-    if worn:
-        problems.append(NameProblem.TIRED)
     if not problems:
         return None
-    return DialectWarning(id=entity.id, name=cleaned, root=root, letters=letters, problems=problems, similar_to=similar, tired_words=worn)
+    return DialectWarning(id=entity.id, name=cleaned, root=root, letters=letters, problems=problems, similar_to=similar)
 
 
-async def fresh_name(session: AsyncSession, rules: Rules, entity: EntityRow, *, phonology: Phonology | None, tired: Collection[str]) -> str | None:
+async def fresh_name(session: AsyncSession, rules: Rules, entity: EntityRow, *, phonology: Phonology | None) -> str | None:
     namer = Namer(session, rules)
     for attempt in range(rules.naming.fresh_name_attempts):
         seed = seed_of(FRESH_SEED, entity.id, attempt)
         candidate = await namer.from_speaker(entity.id, seed, NameKind.GENERAL) or await namer.person([], seed, entity.world_id)
-        if candidate and await name_problems(session, rules, entity, candidate, phonology=phonology, tired=tired) is None:
+        if candidate and await name_problems(session, rules, entity, candidate, phonology=phonology) is None:
             return candidate
     return None
 

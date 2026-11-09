@@ -54,6 +54,15 @@ NATURAL_LAWS: dict[NaturalLaw, KeyedText[NaturalLaw]] = {
         KeyedText(NaturalLaw.SOULS_REINCARNATE, "Souls reincarnate", "Souls that pass judgement may be born again into a new life."),
         KeyedText(NaturalLaw.GIFT_FLOWERING, "Gift flowering", "The magical gift is born more often in every bloodline."),
         KeyedText(NaturalLaw.GIFT_WITHERING, "Gift withering", "The magical gift is born more rarely and fades from bloodlines."),
+        KeyedText(NaturalLaw.NO_IRON, "No iron", "Iron cannot be smelted or worked."),
+        KeyedText(NaturalLaw.ETERNAL_NIGHT, "Eternal night", "The sun does not rise over its reach; fields yield far less."),
+        KeyedText(NaturalLaw.MAGIC_REQUIRES_BLOOD, "Magic requires blood", "Every rite costs the caster's blood as well as its price."),
+        KeyedText(NaturalLaw.GRAVITY_SHIFT, "Shifted weight", "Things weigh differently; building and marching are slower."),
+        KeyedText(NaturalLaw.SEASONS_REVERSED, "Seasons reversed", "The seasons run backwards; growth comes in the cold half of the year."),
+        KeyedText(NaturalLaw.DREAMS_ARE_REAL, "Dreams are real", "Dream routes never close and mortals dream more often."),
+        KeyedText(NaturalLaw.OATHS_BIND, "Oaths bind", "Whoever breaks an oath is branded at once."),
+        KeyedText(NaturalLaw.THE_DEAD_SPEAK, "The dead speak", "Spirits of the dead tell the legends of their people."),
+        KeyedText(NaturalLaw.METAL_RUSTS_FAST, "Metal rusts fast", "Metal weapons and tools wear out far faster."),
     )
 }
 

@@ -10,7 +10,6 @@ from aerona.agents.context.entity_detail import entity_detail
 from aerona.agents.context.naming import naming_item
 from aerona.agents.context.recent_chronicle import prompt_text, recent_chronicle
 from aerona.agents.context.scope import Scope, load_scope
-from aerona.agents.context.tired_images import tired_images
 from aerona.agents.context.world_header import world_header
 from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
@@ -146,7 +145,6 @@ async def deepen_entity(runtime: AgentRuntime, entity_id: int) -> EntityDepth:
             creator_son=son_brief(son) if son is not None else None,
             bond_lines=[f"{line.label} {line.other.name}" for line in outgoing + incoming],
             recent_events=await recent_chronicle(scope, rules.context.chronicle_default, entity.world_id),
-            tired_images=await tired_images(scope, entity.world_id),
         )
         old_name = entity.name
     output = await ask(

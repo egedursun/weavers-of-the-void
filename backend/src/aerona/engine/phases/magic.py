@@ -207,7 +207,7 @@ async def wizards(ctx: TickContext) -> None:
         await note(ctx, f"Wizard {mortal.name} worked {rite.name}: {casting.effect}.", key="magic.rite", ids=[mortal.id, rite.id, *targets])
 
 
-@reads("people.magic", "people.population")
+@reads("people.magic", "people.population", "table.natural_law_profiles")
 @writes("people.population")
 async def price_of_magic(ctx: TickContext) -> None:
     laws = await ctx.laws()

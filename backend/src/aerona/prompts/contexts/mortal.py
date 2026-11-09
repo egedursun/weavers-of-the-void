@@ -4,7 +4,7 @@ from pydantic import Field
 
 from aerona.prompts.contexts.base import ContextItem, LoreRulesContext, PromptContext, RulesContext
 from aerona.prompts.contexts.blocks import RouteLine
-from aerona.prompts.contexts.common import ChronicleRow, EntityLineItem, LabelValue, LexiconWord, NamedRecord, TiredImages
+from aerona.prompts.contexts.common import ChronicleRow, EntityLineItem, LabelValue, LexiconWord, NamedRecord
 
 
 class MortalTurnSystemContext(LoreRulesContext):
@@ -18,8 +18,6 @@ class MortalTurnSystemContext(LoreRulesContext):
     paid_tools: list[str] = Field(default_factory=list)
     free_tools: list[str] = Field(default_factory=list)
     captor: str | None = None
-    tics: list[str] = Field(default_factory=list)
-    tired_images: TiredImages = Field(default_factory=TiredImages)
 
 
 class MortalTurnUserContext(PromptContext):

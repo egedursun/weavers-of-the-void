@@ -123,6 +123,9 @@ TENET_EFFECTS = MappingProxyType(
         T.SACRED_SPECIES: "One beast is sacred; its hunters are hated.",
         T.PILGRIMAGE_DUTY: "The faithful must journey to a holy place.",
         T.SOULS_REST: "Souls are sealed against return.",
+        T.VOID_COMMUNION: "The faithful commune with a being from outside; they and their home lose sanity and the world leaks.",
+        T.FEEDING_THE_HUNGER: "The faithful make offerings that feed the being they worship.",
+        T.WHISPERED_SECRETS: "The being they worship passes forbidden knowledge to their home.",
     }
 )
 

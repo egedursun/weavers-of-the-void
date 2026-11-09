@@ -32,6 +32,7 @@ from aerona.engine.interconnect.catalog_army_depth import ARMY_DEPTH_MECHANICS
 from aerona.engine.interconnect.catalog_battle_depth import BATTLE_DEPTH_MECHANICS
 from aerona.engine.interconnect.catalog_communication import COMMUNICATION_MECHANICS
 from aerona.engine.interconnect.catalog_couplings import COUPLING_MECHANICS
+from aerona.engine.interconnect.catalog_divine import DIVINE_MECHANICS
 from aerona.engine.interconnect.catalog_economy import ECONOMY_DEPTH_MECHANICS
 from aerona.engine.interconnect.catalog_estates import ESTATE_MECHANICS
 from aerona.engine.interconnect.catalog_faith import BEHAVIOURS as FAITH_BEHAVIOURS
@@ -967,6 +968,7 @@ BUILT_IN = (
     *LORE_MECHANICS,
     *RUMOUR_MECHANICS,
     *WILDS_MECHANICS,
+    *DIVINE_MECHANICS,
     *ROUTE_MECHANICS,
     *PEOPLE_MECHANICS,
     *SOCIETY_DEPTH_MECHANICS,

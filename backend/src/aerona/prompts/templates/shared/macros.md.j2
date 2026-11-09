@@ -4,11 +4,6 @@
 {% macro son_brief(son) -%}
 {{ son.name }}{% if son.title %}, {{ son.title }}{% endif %} ({{ son.domain_1 }}/{{ son.domain_2 }})
 {%- endmacro %}
-{% macro tired_images(images) -%}
-{% if images.motifs %}TIRED IMAGES (repeated too often in the world's texts): {% for motif in images.motifs %}{{ motif.key }} ({{ motif.percent }}%){% if not loop.last %}, {% endif %}{% endfor %}. Do NOT use these or their synonyms; instead find images specific to this entity and this corner of the world that have not been used before (another sense, another material, another craft, another season).{% endif %}
-{% if images.motifs and images.foreign_images %} {% endif %}
-{% if images.foreign_images %}OTHER WORLD'S WORDS (the main world's worn images; do not carry them into this world): {{ images.foreign_images | join(", ") }}.{% endif %}
-{%- endmacro %}
 {% macro node_ref(node) -%}
 {% if node.kind == "son" %}son#{{ node.id }} {% elif node.kind == "foreign_god" %}foreign god {% elif node.kind == "creator" %}creator {% elif node.kind == "entity" %}#{{ node.id }} {% endif %}{{ node.name }}
 {%- endmacro %}

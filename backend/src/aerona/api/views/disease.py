@@ -1,7 +1,7 @@
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.api.schemas.depth_society import AfflictionView, HostView, IncidentRefView, NamedMortalView
+from aerona.api.schemas.depth_society import AfflictionView, FeastHostView, IncidentRefView, NamedMortalView
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.demography import CohortRow
@@ -53,7 +53,7 @@ async def disease_incidents(session: AsyncSession, disease_id: int, origin_id: i
     return await incident_views(session, sorted(ids))
 
 
-async def host_views(session: AsyncSession, profile: DiseaseProfileRow) -> list[HostView]:
+async def host_views(session: AsyncSession, profile: DiseaseProfileRow) -> list[FeastHostView]:
     links = {
         row.species_entity_id: row.immune
         for row in await session.scalars(select(SpeciesHostRow).where(SpeciesHostRow.disease_entity_id == profile.disease_entity_id))
@@ -67,7 +67,7 @@ async def host_views(session: AsyncSession, profile: DiseaseProfileRow) -> list[
     for row in await session.scalars(select(SpeciesRangeRow).where(SpeciesRangeRow.species_entity_id.in_(list(links)), SpeciesRangeRow.abundance > 0)):
         ranges.setdefault(row.species_entity_id, []).append(row.abundance)
     return [
-        HostView(
+        FeastHostView(
             species_id=species_id,
             name=species[species_id].name if species_id in species else "",
             immune=immune,

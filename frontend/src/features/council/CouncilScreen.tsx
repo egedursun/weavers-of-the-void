@@ -1,5 +1,6 @@
 import { navItem } from '@/config/navigation'
 import { PageHeader } from '@/components/domain'
+import { CouncilRulingsPanel } from '@/features/divine/CouncilRulingsPanel'
 import { CouncilBlock } from './CouncilBlock'
 
 const ITEM = navItem('council')
@@ -13,6 +14,7 @@ export function CouncilScreen() {
         icon={ITEM.icon}
       />
       <CouncilBlock showAll />
+      <CouncilRulingsPanel />
     </div>
   )
 }

@@ -17,7 +17,7 @@ from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemDeed
-from aerona.domain.enums.domain import DEATH_DOMAINS
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.faith import SpiritAlignment
 from aerona.domain.enums.modifier import IncidentRole
@@ -27,6 +27,7 @@ from aerona.domain.models.entity_stats import SpiritStats, TraditionStats
 from aerona.engine.context import TickContext
 from aerona.engine.demography.rites import mourning_factor, rite_of, spirit_factor
 from aerona.engine.demography.rites import restless as restless_by_rite
+from aerona.engine.divine.wounds import avatar_slain
 from aerona.engine.faith.judgement import profile_for
 from aerona.engine.interconnect.causes import killing_incident
 from aerona.engine.lifecycle.aging import immortal, raise_lifespan_to_death_age
@@ -105,6 +106,7 @@ async def die(
     if killer_id is not None and killer_kind is not None:
         await connect(session, killer_id, mortal.id, BondKind.KILLED, ctx.epoch, description=cause)
     await record_end(ctx, mortal, manner or (DeathCause.OLD_AGE if natural else DeathCause.UNKNOWN))
+    await avatar_slain(ctx, mortal.id)
     ctx.count("memories_inherited", await mourn(session, ctx.rules, mortal, killer_id, ctx.epoch))
     ctx.count("griefs", await bereave(ctx, mortal, killer_id))
     ctx.count("passions_bereaved", await bereaved(ctx, mortal, killer_id))
@@ -158,10 +160,11 @@ async def underworld_of(session: AsyncSession, mortal: EntityRow) -> EntityRow |
 async def _reward_death_domains(ctx: TickContext) -> None:
     effects = ctx.rules.world_effects
     for son in await living_sons(ctx.session):
-        if not set(son.domains) & DEATH_DOMAINS:
+        toll = await ctx.god_share(son.id, DomainHook.DEATH_TOLL)
+        if toll <= 0:
             continue
-        son.essence = min(max_essence(ctx.rules, son.might), son.essence + effects.death_domain_essence)
-        son.existence = min(PERCENT, son.existence + effects.death_domain_existence)
+        son.essence = min(max_essence(ctx.rules, son.might), son.essence + round(effects.death_domain_essence * toll))
+        son.existence = min(PERCENT, son.existence + round(effects.death_domain_existence * toll))
 
 
 async def _bequeath(ctx: TickContext, mortal: EntityRow) -> None:

@@ -17,6 +17,7 @@ from aerona.db.tables.society_depth import CorveeRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialSlot
 from aerona.domain.enums.entity import SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
@@ -527,6 +528,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     society.shares = drift_shares(rules, society.shares, class_targets(rules, inputs))
     labour = await labour_factor(ctx, entity)
     rate = food_rate(settings, inputs, society.shares[SocialClass.FARMER], rules.knowledge) * labour
+    rate = max(rate, await ctx.hook_pct(entity.id, DomainHook.HARVEST_FLOOR) * rules.domains.harvest_floor_per_pct / PERCENT / PERCENT)
     await save_society(ctx.session, entity.id, society, stocks=False)
     await seed_stocks(ctx, entity)
     await harvest_goods(ctx, world.economy, entity, rate, society.shares[SocialClass.FARMER])
@@ -618,6 +620,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.creature_anatomy",
     "table.cult_tenets",
     "table.culture_values",
+    "table.divine_wounds",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.faction_profiles",
@@ -638,6 +641,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.mortal_equipment",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.natural_law_profiles",
     "table.nodes",
     "table.people_biology",
     "table.people_culture",
@@ -664,6 +668,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.workshop_designs",
     "table.workshops",
     "table.world_biochemistries",
+    "table.world_domain_hooks",
     "table.world_maps",
     "table.world_materials",
     "table.world_seasons",

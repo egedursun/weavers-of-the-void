@@ -78,6 +78,16 @@ PATTERNS = (
         prose_only=True,
     ),
     Pattern(
+        "model image ban",
+        re.compile(
+            r"\b(tired (?:images?|motifs?|names?|words?|openings?)|clich(?:e|é)s?|stock (?:names?|phrases?|images?)|overused (?:images?|words?|names?)|"
+            r"(?:do not|don't|never) (?:use|repeat|reuse) (?:these|this|the following|any of these) (?:images?|words?|openings?|patterns?|roots?|names?|motifs?)|"
+            r"forbidden (?:images?|openings?|patterns?|roots?|motifs?)|banned (?:images?|openings?|patterns?|roots?|motifs?))\b",
+            re.IGNORECASE,
+        ),
+        prompts_only=True,
+    ),
+    Pattern(
         "assumed carrier",
         re.compile(r"\b(caravans|no caravan|the caravan)\b(?! way)", re.IGNORECASE),
     ),

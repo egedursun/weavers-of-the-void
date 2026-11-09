@@ -34,9 +34,9 @@ from aerona.api.schemas.depth_society import (
     OutbreakMapView,
     OutbreakView,
     PopulationCohortView,
-    PressureView,
     QuarantineView,
     SettlementPlanView,
+    SocietyPressureView,
     StorageView,
     StrainView,
     TreasuryLine,
@@ -167,7 +167,7 @@ async def demography(services: ServicesDep, entity_id: int = Path(ge=1)) -> Demo
         flows = labour_flows(
             rules, list(await session.scalars(select(CohortRow).where(CohortRow.community_entity_id == entity.id))), await community_targets(session, entity.id)
         )
-        pressures = [PressureView(kind=kind, value=value) for kind, value in sorted((await pressures_of(session, entity.id)).items())]
+        pressures = [SocietyPressureView(kind=kind, value=value) for kind, value in sorted((await pressures_of(session, entity.id)).items())]
         classes = (
             [ClassMood(social_class=item, share=society.share(item), satisfaction=society.satisfaction(item)) for item in SocialClass]
             if society is not None

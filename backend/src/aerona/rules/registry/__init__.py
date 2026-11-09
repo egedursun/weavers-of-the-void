@@ -52,6 +52,16 @@ from aerona.rules.registry.demography import CohortsRules, DemographyRules, Labo
 from aerona.rules.registry.diplomacy import DiplomacyRules
 from aerona.rules.registry.disasters import DisastersRules
 from aerona.rules.registry.discovery import DiscoveryRules
+from aerona.rules.registry.divine import (
+    AvatarRules,
+    DivineStandingRules,
+    DivineWoundRules,
+    DomainRules,
+    GodRelationRules,
+    NaturalLawRules,
+    OuterBeingRules,
+    SonGoalRules,
+)
 from aerona.rules.registry.doctrine import (
     AfterlifeRules,
     DoctrineRules,
@@ -375,6 +385,14 @@ class Rules:
     theories: TheoriesRules = field(default_factory=TheoriesRules)
     flora: FloraRules = field(default_factory=FloraRules)
     husbandry: HusbandryRules = field(default_factory=HusbandryRules)
+    domains: DomainRules = field(default_factory=DomainRules)
+    son_goals: SonGoalRules = field(default_factory=SonGoalRules)
+    divine_standing: DivineStandingRules = field(default_factory=DivineStandingRules)
+    divine_wounds: DivineWoundRules = field(default_factory=DivineWoundRules)
+    avatars: AvatarRules = field(default_factory=AvatarRules)
+    god_relations: GodRelationRules = field(default_factory=GodRelationRules)
+    natural_laws: NaturalLawRules = field(default_factory=NaturalLawRules)
+    outer_beings: OuterBeingRules = field(default_factory=OuterBeingRules)
     creature_anatomy: CreatureAnatomyRules = field(default_factory=CreatureAnatomyRules)
     monsters: MonstersRules = field(default_factory=MonstersRules)
     art_forms: ArtFormsRules = field(default_factory=ArtFormsRules)

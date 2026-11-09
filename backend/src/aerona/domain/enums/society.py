@@ -57,6 +57,15 @@ class NaturalLaw(StrEnum):
     SOULS_REINCARNATE = "souls_reincarnate"
     GIFT_FLOWERING = "gift_flowering"
     GIFT_WITHERING = "gift_withering"
+    NO_IRON = "no_iron"
+    ETERNAL_NIGHT = "eternal_night"
+    MAGIC_REQUIRES_BLOOD = "magic_requires_blood"
+    GRAVITY_SHIFT = "gravity_shift"
+    SEASONS_REVERSED = "seasons_reversed"
+    DREAMS_ARE_REAL = "dreams_are_real"
+    OATHS_BIND = "oaths_bind"
+    THE_DEAD_SPEAK = "the_dead_speak"
+    METAL_RUSTS_FAST = "metal_rusts_fast"
 
 
 class ResourceMechanic(StrEnum):

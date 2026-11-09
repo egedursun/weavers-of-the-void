@@ -63,14 +63,29 @@ def step_cost(rules: Rules, region: RegionEnvironmentRow | None, season: WorldSe
     return round_half_up(cost)
 
 
-def march_budget(rules: Rules, base_regions: int, *, weather: WeatherKind | None, season: WorldSeasonRow | None, road: bool, baggage: int) -> int:
+def march_budget(
+    rules: Rules,
+    base_regions: int,
+    *,
+    weather: WeatherKind | None,
+    season: WorldSeasonRow | None,
+    road: bool,
+    baggage: int,
+    hardy: float = 0.0,
+    inverted: bool = False,
+    heavy: bool = False,
+) -> int:
     table = rules.campaign_depth
     regions = base_regions + (table.road_regions if road else 0) - baggage // max(1, table.baggage_slow)
     budget = max(0, regions) * PERCENT
     if weather in SLOW_WEATHER:
         budget = budget * table.weather_slow_pct // PERCENT
-    if season is not None and season.campaign < PERCENT // 2:
-        budget = budget * table.winter_march_pct // PERCENT
+    campaign = (PERCENT - season.campaign if inverted else season.campaign) if season is not None else PERCENT
+    if campaign < PERCENT // 2:
+        winter = table.winter_march_pct + (PERCENT - table.winter_march_pct) * min(1.0, hardy)
+        budget = round_half_up(budget * winter / PERCENT)
+    if heavy:
+        budget = round_half_up(budget * rules.natural_laws.heavy_march_pct / PERCENT)
     return budget
 
 

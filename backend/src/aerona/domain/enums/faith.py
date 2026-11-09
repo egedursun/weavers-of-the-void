@@ -26,6 +26,9 @@ class TenetKind(StrEnum):
     SACRED_SPECIES = "sacred_species"
     PILGRIMAGE_DUTY = "pilgrimage_duty"
     SOULS_REST = "souls_rest"
+    VOID_COMMUNION = "void_communion"
+    FEEDING_THE_HUNGER = "feeding_the_hunger"
+    WHISPERED_SECRETS = "whispered_secrets"
 
 
 class JudgementDoctrine(StrEnum):

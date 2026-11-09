@@ -32,6 +32,7 @@ from aerona.domain.enums.body import (
 )
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass, Technique
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.material import MaterialKind
@@ -438,6 +439,7 @@ async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending
     split = ctx.rules.mind_split
     ward = 1 - lean_factor(await attribute(ctx.session, ctx.rules, bearer, Attribute.DISEASE_RESISTANCE), split.resistance_pct)
     mending = 1 + lean_factor(await attribute(ctx.session, ctx.rules, bearer, Attribute.RECUPERATION), split.recuperation_pct)
+    mending *= await ctx.hook_factor(bearer.id, DomainHook.HEALING)
     for row in wounds:
         if row.state not in OPEN_INJURY_STATES:
             continue

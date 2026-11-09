@@ -9,6 +9,8 @@ from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.tables.polity import TreatyClauseRow, TreatyPartyRow, TreatyProfileRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import LanguageRegister
@@ -41,6 +43,7 @@ TREATY_WORDS = MappingProxyType(
         TreatyKind.GUARANTEE: "the Guarantee",
         TreatyKind.INTERWORLD: "the Treaty of the Worlds",
         TreatyKind.COALITION: "the Coalition",
+        TreatyKind.DIVINE_PACT: "the Divine Pact",
     }
 )
 DEFAULT_CLAUSES = MappingProxyType(
@@ -58,6 +61,7 @@ DEFAULT_CLAUSES = MappingProxyType(
         TreatyKind.GUARANTEE: (ClauseKind.NON_AGGRESSION,),
         TreatyKind.CONDOTTA: (ClauseKind.CALL_TO_ARMS,),
         TreatyKind.COALITION: (ClauseKind.CALL_TO_ARMS,),
+        TreatyKind.DIVINE_PACT: (ClauseKind.NON_AGGRESSION,),
     }
 )
 DERIVED = MappingProxyType(
@@ -151,8 +155,13 @@ async def sign(
     witnessed: bool = True,
     derive: bool = True,
 ) -> EntityRow:
-    names = [entity.name for party, _ in parties if (entity := await ctx.session.get(EntityRow, party)) is not None]
-    first = await ctx.session.get(EntityRow, parties[0][0])
+    names = [node.name for party, _ in parties if (node := await ctx.session.get(NodeRow, party)) is not None]
+    first = await ctx.session.get(EntityRow, parties[0][0]) or await ctx.session.get(EntityRow, parties[-1][0])
+    if first is None:
+        god = await ctx.session.get(ForeignGodRow, parties[0][0]) or await ctx.session.get(ForeignGodRow, parties[-1][0])
+        world_id = god.world_id if god is not None else None
+    else:
+        world_id = first.world_id
     treaty = await create_record(
         ctx,
         RecordSpec(
@@ -162,7 +171,7 @@ async def sign(
             stats=TreatyStats(parties=len(parties), trust=50),
             power=2,
             location_id=None,
-            world_id=first.world_id if first is not None else None,
+            world_id=world_id,
             subtype=kind.value.replace("_", " "),
             pending=False,
         ),

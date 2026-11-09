@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.agents.ask import ask
 from aerona.agents.context.entity_detail import entity_detail
 from aerona.agents.context.scope import Scope, load_scope
-from aerona.agents.context.tired_images import tired_images
 from aerona.agents.context.world_header import world_header
 from aerona.agents.fate.name_check import dialect_letters, fresh_name, name_problems, renamed_item, type_named_subtype
 from aerona.agents.roles import AgentRole
@@ -22,7 +21,6 @@ from aerona.engine.primitives.motifs import plain, record_motifs
 from aerona.engine.primitives.renames import rewrite_name
 from aerona.language.alphabet import first_word
 from aerona.prompts import PromptId
-from aerona.prompts.contexts.common import TiredImages
 from aerona.prompts.contexts.narrative import DialectWarning, NamingContext
 from aerona.prompts.schemas.fate import NamingsOutput
 from aerona.prompts.schemas.shared import NamingItemOutput
@@ -41,10 +39,6 @@ class NamingReport:
 class NamingBatch:
     world_id: int
     ids: list[int]
-
-
-def single_words(images: TiredImages) -> set[str]:
-    return {motif.key for motif in images.motifs if len(motif.key.split()) == 1}
 
 
 async def pending_count(session: AsyncSession) -> int:
@@ -116,7 +110,6 @@ async def naming_context(scope: Scope, batch: NamingBatch, warnings: list[Dialec
         world_header=await world_header(scope, batch.world_id if scope.multi_world else None),
         records=[await entity_detail(scope, entity) for entity in entities],
         dialect_warnings=warnings,
-        tired_images=await tired_images(scope, batch.world_id),
     )
 
 
@@ -130,7 +123,6 @@ async def run_batch(runtime: AgentRuntime, batch: NamingBatch, report: NamingRep
         phonology = world.phonology if world is not None else None
         if phonology is None and scope.primary_world is not None:
             phonology = scope.primary_world.phonology
-        tired = single_words(context.tired_images)
     output = await ask(
         runtime.model, rules, label=AgentRole.NAMING, system=(PromptId.NAMING_SYSTEM, context), user=(PromptId.NAMING_USER, context), output=NamingsOutput
     )
@@ -143,11 +135,11 @@ async def run_batch(runtime: AgentRuntime, batch: NamingBatch, report: NamingRep
             if entity is None:
                 continue
             check = rules.naming.dialect_check and not await keeps_name(session, entity.id)
-            violation = await name_problems(session, rules, entity, item.name, phonology=phonology, tired=tired) if check else None
+            violation = await name_problems(session, rules, entity, item.name, phonology=phonology) if check else None
             if violation is not None and entity.naming_attempts < max_tries:
                 report.warnings[item.id] = [violation]
                 continue
-            fresh = await fresh_name(session, rules, entity, phonology=phonology, tired=tired) if violation is not None else None
+            fresh = await fresh_name(session, rules, entity, phonology=phonology) if violation is not None else None
             chosen = renamed_item(item, fresh) if fresh else item
             if await apply_naming(session, chosen, epoch) is not None:
                 report.named += 1

@@ -1,4 +1,4 @@
-from aerona.agents.context.chronicler import chronicler_context, opening_bigrams, piled_roots
+from aerona.agents.context.chronicler import chronicler_context
 from aerona.agents.context.entity_detail import entity_detail
 from aerona.agents.context.scope import load_scope
 from aerona.agents.context.son_memory import son_memory
@@ -75,9 +75,3 @@ async def test_chronicler_context_lists_pending_records(database: Database, rule
         context = await chronicler_context(await load_scope(session, rules), 1, ["The rivers rose."])
     assert [item.name for item in context.pending] == ["Unnamed Tale"]
     assert "RESULTS OF THE WORLD ENGINE" in render(PromptId.CHRONICLER_USER, context)
-
-
-def test_piled_roots_and_opening_bigrams() -> None:
-    names = ["Age of Ember Rains", "Second Ember Winter", "Embers of Silence"]
-    assert piled_roots(names, 3, 3) == ["ember"]
-    assert opening_bigrams("The salt rains fell on the old roads") == {"salt rains", "rains fell", "old roads"}

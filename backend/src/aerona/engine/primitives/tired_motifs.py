@@ -13,7 +13,6 @@ from aerona.db.tables.motifs import MotifOverrideMode, MotifOverrideRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.meta import MotifCategory
 from aerona.engine.primitives.motifs import motif_words
-from aerona.prompts.contexts.common import MotifShare, TiredImages
 from aerona.rules.registry import Rules
 
 PERCENT = 100
@@ -219,13 +218,6 @@ class MotifCache:
         own_canon = await canon_text(session, world_id)
         main = await self.tired(session, rules, primary)
         return [motif.key for motif in main if not (words := motif_words(motif.key)) or words[0] not in own_canon]
-
-    async def context(self, session: AsyncSession, rules: Rules, world_id: int | None) -> TiredImages:
-        motifs = await self.for_world(session, rules, world_id)
-        return TiredImages(
-            motifs=[MotifShare(key=motif.key, percent=motif.percent) for motif in motifs],
-            foreign_images=await self.foreign_images(session, rules, world_id),
-        )
 
 
 async def set_override(session: AsyncSession, world_id: int | None, motif: str, mode: MotifOverrideMode | None) -> None:

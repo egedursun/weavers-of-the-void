@@ -10,9 +10,10 @@ from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import Job
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.society import KnowledgeBranch, SocialClass
+from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.materials import alloy_inputs, workable
@@ -199,6 +200,8 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
     if wanted <= 0:
         return 0
     material, world_material = await best_input(ctx, book, community, step)
+    if material is MaterialKind.IRON and (await ctx.laws()).has(NaturalLaw.NO_IRON, community.world_id):
+        return 0
     held = await inputs_for(ctx, community, step, material, world_material)
     short = [commodity for commodity, per_batch in step.inputs if held.get(commodity, 0) < per_batch]
     process = process_of_step(step.key)
@@ -237,7 +240,8 @@ async def run_step(ctx: TickContext, book: EconomyBook, community: EntityRow, st
         + step.quality_gain
         + quality_bonus(design)
         + (method.quality_bonus if method is not None else 0)
-        + await guild_standard(ctx, community.id),
+        + await guild_standard(ctx, community.id)
+        + round_half_up(await ctx.hook_pct(community.id, DomainHook.CRAFT_SKILL) * ctx.rules.domains.quality_points_pct / PERCENT),
         0,
         PERCENT,
     )

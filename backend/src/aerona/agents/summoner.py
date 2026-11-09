@@ -1,4 +1,3 @@
-import math
 from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -21,7 +20,7 @@ from aerona.agents.text import replace_name, sanitize
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.rarities import RARITY_LABELS, build_rarity_table
 from aerona.catalog.stats import max_essence, max_hp
-from aerona.constants.agents import INSPIRATION_SUMMARY_CHARS, TIC_STEM_LETTERS
+from aerona.constants.agents import INSPIRATION_SUMMARY_CHARS
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
@@ -40,11 +39,12 @@ from aerona.domain.enums.son import PowerEffect, SonStatus, Stat
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.profiles import ExistenceProfile, Personality
 from aerona.domain.models.stats import PassionBlock
+from aerona.engine.divine.lineage import inherited_domains, inherited_stats
 from aerona.engine.gods.deification import roll_stats
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.events.kinds import EventKind
 from aerona.prompts import PromptId
-from aerona.prompts.contexts.genesis import PantheonRoot, SonPowersContext, SummonSonContext
+from aerona.prompts.contexts.genesis import SonPowersContext, SummonSonContext
 from aerona.prompts.schemas.genesis import SonPowersOutput
 from aerona.prompts.schemas.shared import ExistenceOutput, PowerOutput, SonProfileOutput
 from aerona.rules.registry import Rules
@@ -169,6 +169,11 @@ async def insert_son(
     second = profile.domain_2
     if second is profile.domain_1:
         second = DOMAIN_ORDER[(DOMAIN_ORDER.index(profile.domain_1) + rules.summoning.domain_shift) % len(DOMAIN_ORDER)]
+    parents = [
+        son for son in [await session.get(SonRow, node) for node in (parentage.parent_id, parentage.co_parent_id) if node is not None] if son is not None
+    ]
+    stats = inherited_stats(rules, rng, stats, parents)
+    first, second = inherited_domains(rng, (profile.domain_1, second), parents)
     home = world_id if world_id is not None else await son_world(session, rules, parentage.parent_id, None)
     name = await NameRepository(session).unique_name(await distinct_god_name(session, rules, profile.name, home))
     if name != profile.name:
@@ -177,7 +182,7 @@ async def insert_son(
         name=name,
         title=sanitize(profile.title),
         rarity=rarity,
-        domains=(profile.domain_1, second),
+        domains=(first, second),
         stats=stats,
         passions=passions,
         personality=Personality(
@@ -255,24 +260,6 @@ async def after_birth(session: AsyncSession, rules: Rules, son: SonRow, parentag
     )
 
 
-def pantheon_roots(rules: Rules, sons: Sequence[SonRow]) -> list[PantheonRoot]:
-    fate = rules.fate
-    if len(sons) < fate.pantheon_root_min_sons:
-        return []
-    counts: Counter[str] = Counter()
-    forms: dict[str, str] = {}
-    for son in sons:
-        words = {
-            word.casefold() for text in (son.title, son.personality.obsession, son.personality.secret) for word in text.split() if len(word) > TIC_STEM_LETTERS
-        }
-        stems = {word[:TIC_STEM_LETTERS] for word in words}
-        for word in words:
-            forms.setdefault(word[:TIC_STEM_LETTERS], word)
-        counts.update(stems)
-    floor = math.ceil(len(sons) * fate.pantheon_root_threshold_pct / PERCENT)
-    return [PantheonRoot(stem=stem, form=forms[stem]) for stem, count in counts.items() if count >= floor]
-
-
 async def summon_context(scope: Scope, rarity: Rarity, world_id: int | None, parentage: Parentage) -> SummonSonContext:
     sons = list(await scope.session.scalars(select(SonRow).where(SonRow.status != SonStatus.DEAD).order_by(SonRow.id)))
     parent = await scope.session.get(SonRow, parentage.parent_id) if parentage.parent_id is not None else None
@@ -291,7 +278,6 @@ async def summon_context(scope: Scope, rarity: Rarity, world_id: int | None, par
         inspiration=parentage.inspiration,
         rarity=rarity,
         rarity_label=RARITY_LABELS[rarity],
-        pantheon_roots=pantheon_roots(scope.rules, sons),
     )
 
 

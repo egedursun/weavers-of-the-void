@@ -21,4 +21,25 @@ RELATIONSHIPS BETWEEN THEM:
 (nothing notable)
 {% endif %}
 
-Every son speaks at least once; then a single concrete motion is put to a vote. The votes fit the personalities and relationships. Alliances may be formed or broken.
+{% if foreign_gods %}
+FOREIGN GODS:
+{% for god in foreign_gods %}
+{{ god.id }}: {{ god.name }}{% if god.place %} ({{ god.place }}){% endif %}
+
+{% endfor %}
+{% endif %}
+{% if worlds %}
+WORLDS:
+{% for world in worlds %}
+{{ world.id }}: {{ world.name }}
+
+{% endfor %}
+{% endif %}
+{% if rulings %}
+RULINGS OF THE COUNCIL IN FORCE:
+{% for ruling in rulings %}
+- {{ ruling }}
+{% endfor %}
+{% endif %}
+
+Every son speaks at least once; then a single concrete motion is put to a vote. The votes fit the personalities and relationships. Alliances may be formed or broken. If the motion passes it takes one typed decision; name its target by id where the decision needs one.

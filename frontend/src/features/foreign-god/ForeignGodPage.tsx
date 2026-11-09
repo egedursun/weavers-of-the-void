@@ -4,6 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, Section } from '@/components/domain'
 import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
 import { Muted, Text } from '@/components/typography'
+import { GodDivinitySection } from '@/features/divine/GodDivinitySection'
 import { BodySection } from '@/features/entity/sections/BodySection'
 import { MemoriesSection } from '@/features/entity/sections/MemoriesSection'
 import { MindSection } from '@/features/entity/sections/MindSection'
@@ -65,6 +66,7 @@ export function ForeignGodPage({ id }: DrawerPageProps) {
       <BodySection nodeId={god.id} />
       <MindSection nodeId={god.id} />
       <MemoriesSection nodeId={god.id} />
+      <GodDivinitySection godId={god.id} />
       <ThingSections nodeId={god.id} />
       <ForeignGodDepth god={god} />
       <ForeignGodRelations detail={data} />

@@ -21,6 +21,7 @@ from aerona.db.tables.warfare import WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import RumourChannel
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -219,6 +220,7 @@ async def fidelity_after(ctx: TickContext, atlas: RegionAtlas, fidelity: int, *,
     hops = atlas.hops(source, target)
     understood = await barrier(ctx.session, ctx.rules, source, target, ctx.epoch)
     garble = ctx.rules.belief.distortion_rate * (1 - await written(ctx, target))
+    garble *= await ctx.hook_factor(source, DomainHook.RUMOUR_TWIST)
     if await printed(ctx.session, target):
         garble *= 1 - ctx.rules.discovery.printed_rumour_pct / PERCENT
     loss = (

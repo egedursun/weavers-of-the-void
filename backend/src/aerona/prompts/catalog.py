@@ -36,7 +36,6 @@ from aerona.rules.registry import Rules
 
 ConstraintFactory = Callable[[Rules], list[Constraint]]
 
-ALWAYS_BANNED_BELIEF_PATTERNS = "«…they think, whereas…», «In truth …»"
 DEFAULT_ATTENDANCE = "the summoned"
 
 
@@ -62,14 +61,12 @@ A = PromptArea
 P = PromptId
 
 SPECS: tuple[PromptSpec, ...] = (
-    PromptSpec(P.CLICHE_BAN, A.SHARED, EmptyContext),
     PromptSpec(P.IMAGE_PROMPT_RULES, A.SHARED, EmptyContext),
     PromptSpec(P.SECTION_KEYS_RULE, A.SHARED, EmptyContext),
     PromptSpec(P.NO_NUMBERS_CLAUSE, A.SHARED, EmptyContext),
     PromptSpec(P.LORE_LANGUAGE, A.SHARED, LoreContext),
     PromptSpec(P.RATIONALE_RULE, A.SHARED, RulesContext),
     PromptSpec(P.VERDICT_CRITERIA, A.SHARED, EmptyContext),
-    PromptSpec(P.TIRED_IMAGES, A.SHARED, blocks.TiredImagesContext),
     PromptSpec(P.WORLD_HEADER, A.CONTEXT, blocks.WorldHeaderContext),
     PromptSpec(P.DIALECT_BLOCK, A.CONTEXT, blocks.DialectBlockContext),
     PromptSpec(P.WORLD_LINE, A.CONTEXT, blocks.WorldLineContext),
@@ -119,7 +116,6 @@ SPECS: tuple[PromptSpec, ...] = (
     PromptSpec(P.CHRONICLER_SYSTEM, A.CHRONICLER, chronicler.ChroniclerSystemContext),
     PromptSpec(P.CHRONICLER_CONCISE_SYSTEM, A.CHRONICLER, chronicler.ChroniclerSystemContext),
     PromptSpec(P.CHRONICLER_USER, A.CHRONICLER, chronicler.ChroniclerUserContext, fate_schemas.ChronicleOutput, defaults.chronicle_constraints),
-    PromptSpec(P.CHRONICLER_FIX_OPENING_USER, A.CHRONICLER, chronicler.ChroniclerFixOpeningContext, fate_schemas.FirstSentenceOutput),
     PromptSpec(P.CHRONICLER_AUDIT_FIX_USER, A.CHRONICLER, chronicler.ChroniclerAuditFixContext, fate_schemas.ChronicleFixOutput),
     PromptSpec(
         P.CHRONICLER_MISSING_WORLDS_USER,
@@ -144,7 +140,6 @@ SPECS: tuple[PromptSpec, ...] = (
         A.VOICES,
         narrative.VoicesContext,
         narrative_schemas.VoicesOutput,
-        schema_variables={"banned_patterns": ALWAYS_BANNED_BELIEF_PATTERNS},
     ),
     PromptSpec(P.DEEPEN_ENTITY_SYSTEM, A.DEEPENING, narrative.DeepenEntityContext),
     PromptSpec(P.DEEPEN_ENTITY_USER, A.DEEPENING, narrative.DeepenEntityContext, narrative_schemas.DeepenOutput, defaults.deepen_constraints),

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.api.dependencies import ServicesDep, reader
 from aerona.api.schemas.society_depth import (
     ClassStandingView,
+    CommunityNeedView,
     CorveeView,
     DriftCauseView,
     EffectView,
@@ -13,7 +14,6 @@ from aerona.api.schemas.society_depth import (
     LoyaltyPartView,
     LoyaltyView,
     MobilityEventView,
-    NeedView,
     PriceView,
     SocietyDepthView,
 )
@@ -125,7 +125,7 @@ async def society_depth(services: ServicesDep, entity_id: int = Path(ge=1)) -> S
             gini=society.gini if society is not None else 0,
             staples=list(await staples_of(session, entity)),
             needs=[
-                NeedView(
+                CommunityNeedView(
                     social_class=key[0],
                     commodity=key[1],
                     effect=SHORTFALL_EFFECTS[key[1]],

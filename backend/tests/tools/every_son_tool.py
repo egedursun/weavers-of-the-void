@@ -18,6 +18,7 @@ from tests.tools.every_setup import (
     ley_line,
     named_spirit,
     outsider,
+    pact_friend,
     plant,
     seasons,
     second_mortal,
@@ -27,6 +28,7 @@ from tests.tools.every_setup import (
     spirit,
     surveyed,
     travel_resource,
+    wounded,
 )
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
 from tests.tools.factories import Realm
@@ -258,6 +260,11 @@ SON_CASES: dict[str, Case] = {
     "curse_region": Case(plain(region_id=region, strength=20, reason=REASON), surveyed),
     "redirect_river": Case(plain(from_region_id=region, to_region_id=created("region"), reason=REASON), combined(second_region, surveyed)),
     "tend_land": Case(plain(region_id=region, reason=REASON), surveyed),
+    "set_aim": Case(plain(kind="be_worshipped", amount=3)),
+    "take_mortal_form": Case(plain(place_id=people, reason=REASON)),
+    "ward_against_outer": Case(plain(outsider_id=created("outsider"), reason=REASON), outsider),
+    "seal_divine_pact": Case(plain(god_id=god, reason=REASON), pact_friend),
+    "mend_wound": Case(plain(wound_id=created("wound"), essence=5), wounded),
     "shape_blood": Case(plain(mortal_id=mortal, locus="height", allele="tall", reason=REASON)),
     "reveal_true_name": Case(plain(bearer_id=created("spirit"), learner_id=mortal, reason=REASON), named_spirit),
 }

@@ -23,6 +23,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Capability, Technique
 from aerona.domain.enums.discovery import TheoryDomain
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeLoss, TradeMode, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, LegendCategory
 from aerona.domain.enums.environment import CoastKind, RiverClass
@@ -508,7 +509,7 @@ async def settle(ctx: TickContext, book: EconomyBook, route: Route, lane: Lane, 
     flow = ctx.rules.market
     value = round_half_up(lane.landed * delivered / PERCENT)
     seller, buyer = book.entities[lane.seller_id], book.entities[lane.buyer_id]
-    pay(rate, seller, value)
+    pay(rate, seller, round_half_up(value * await ctx.hook_factor(seller.id, DomainHook.TRADE_GAIN)))
     add_prosperity(ctx.rules, seller, flow.flow_prosperity)
     purse = stat(buyer, "wealth")
     purse = stat(buyer, "prosperity") if purse is None else purse
@@ -577,7 +578,8 @@ async def mourn_losses(ctx: TickContext, book: EconomyBook, route: Route, lane: 
         ctx.session.add(
             TradeRouteLossRow(route_entity_id=route.entity.id, epoch=ctx.epoch, commodity=lane.commodity, cause=cause, units=units, culprit_entity_id=culprit)
         )
-        if cause is TradeLoss.SEA and ctx.rng(f"wreck.{route.entity.id}.{lane.commodity.value}.{ctx.epoch}").chance(lanes.shipwreck_chance):
+        calm = await ctx.hook_easing(lane.seller_id, DomainHook.SEA_CALM)
+        if cause is TradeLoss.SEA and ctx.rng(f"wreck.{route.entity.id}.{lane.commodity.value}.{ctx.epoch}").chance(lanes.shipwreck_chance * calm):
             await _shipwreck(ctx, route, book.entities[lane.seller_id], tally)
         elif cause is TradeLoss.BANDITS:
             bandits = book.entities.get(culprit) if culprit is not None else None

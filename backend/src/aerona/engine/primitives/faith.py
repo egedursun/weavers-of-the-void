@@ -10,12 +10,14 @@ from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CreatorRow
+from aerona.db.tables.divine import DivineWoundRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.society import ReverenceRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.divine import DivineWoundKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.son import PowerEffect, SonStatus
@@ -226,6 +228,16 @@ async def first_faith_god(session: AsyncSession, rules: Rules, entity: EntityRow
 
 async def has_unlocked_power(session: AsyncSession, rules: Rules, son: SonRow, effect: PowerEffect) -> bool:
     slots = unlocked_power_slots(rules, son.level)
+    severed = len(
+        list(
+            await session.scalars(
+                select(DivineWoundRow.id).where(
+                    DivineWoundRow.god_node_id == son.id, DivineWoundRow.kind == DivineWoundKind.SEVERED_DOMAIN, DivineWoundRow.healed < PERCENT
+                )
+            )
+        )
+    )
+    slots = tuple(sorted(slots)[: max(0, len(slots) - severed)])
     if not slots:
         return False
     statement = select(SonPowerRow.slot).where(SonPowerRow.son_id == son.id, SonPowerRow.effect == effect, SonPowerRow.slot.in_(list(slots)))

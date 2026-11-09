@@ -36,17 +36,17 @@ def test_special_sections() -> None:
     assert special_section(EntityType.REGION) is None
 
 
-def test_tension_lines_come_first_and_stale_threads_lead_the_rest() -> None:
+def test_stale_threads_lead_and_tension_rises_only_when_the_rule_asks() -> None:
     lines: list[o.SonOpportunity] = [
         o.OpenThreads(thread_ids=[1]),
         o.StaleThreads(threads=[o.StaleThread(id=1, text="old")]),
         o.RebelSiblings(siblings=[NamedRecord(id=3, name="Tesh")]),
     ]
-    context = o.SonOpportunitiesContext(rules=RULES, lines=lines)
-    first, second, third = context.ordered
-    assert isinstance(first, o.RebelSiblings)
-    assert isinstance(second, o.StaleThreads)
-    assert isinstance(third, o.OpenThreads)
+    plain = o.SonOpportunitiesContext(rules=RULES, lines=lines).ordered
+    assert [type(line) for line in plain] == [o.StaleThreads, o.OpenThreads, o.RebelSiblings]
+    tense = replace(RULES, opportunities=replace(RULES.opportunities, tension_first=1))
+    raised = o.SonOpportunitiesContext(rules=tense, lines=lines).ordered
+    assert [type(line) for line in raised] == [o.RebelSiblings, o.StaleThreads, o.OpenThreads]
 
 
 def test_lines_without_available_tools_are_dropped() -> None:

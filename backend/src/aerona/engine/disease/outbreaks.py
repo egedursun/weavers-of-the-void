@@ -10,7 +10,7 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.disease import ClimateAffinity, OutbreakStatus, SpreadPath
-from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.mortal import HarshnessScale
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
@@ -27,7 +27,6 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.stats import set_stats, stat
 
-PLAGUE_SON_DOMAINS = frozenset({Domain.PLAGUE})
 STRIKING: ContextVar[DiseaseProfileRow | None] = ContextVar("striking_disease", default=None)
 FACTOR_FLOOR, FACTOR_CEILING = 0.05, 6.0
 SEVERITY_LOCK = "severity"
@@ -213,9 +212,7 @@ async def feed_gods(ctx: TickContext, disease: EntityRow) -> None:
     table = ctx.rules.epidemiology
     sons = await ctx.session.scalars(select(SonRow).where(SonRow.status == SonStatus.ACTIVE, SonRow.current_world_id == disease.world_id).order_by(SonRow.id))
     for son in sons:
-        gain = 0
-        if son.domain_primary in PLAGUE_SON_DOMAINS or son.domain_secondary in PLAGUE_SON_DOMAINS:
-            gain += table.essence_per_outbreak
+        gain = round(table.essence_per_outbreak * await ctx.god_share(son.id, DomainHook.PLAGUE_TITHE, disease.world_id))
         if son.id == disease.creator_son_id:
             gain += table.creator_essence_per_outbreak
         if gain:

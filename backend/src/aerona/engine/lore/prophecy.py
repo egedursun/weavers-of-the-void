@@ -14,6 +14,7 @@ from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import LegendArchetype, ProphecyConsequence, ProphecyPredicate, ProphecyState
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, ValueAxis, ValueHolder
 from aerona.domain.enums.polity import OfficeKind
@@ -485,7 +486,7 @@ async def press(ctx: TickContext, prophecy: EntityRow, row: ProphecyConditionRow
     if certainty < ctx.rules.record_schema.certainty_threshold:
         return None
     if "pressure" not in row.locked:
-        row.pressure = clamp_int(row.pressure + table.pressure_gain, 0, PERCENT)
+        row.pressure = clamp_int(row.pressure + round_half_up(table.pressure_gain * await ctx.hook_factor(prophecy.id, DomainHook.PROPHECY)), 0, PERCENT)
     weight = row.pressure / PERCENT
     if row.predicate is P.RULER_OF and arg(row.args, "house") is not None:
         claims = await ctx.session.scalars(select(ClaimRow).where(ClaimRow.house_entity_id == arg(row.args, "house"), ClaimRow.ended_epoch.is_(None)))

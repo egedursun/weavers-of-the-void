@@ -552,6 +552,8 @@ MEMORIES: MappingProxyType[MemoryKind, MemorySpec] = MappingProxyType(
         M.LONG_HISTORY: _memory({OC.TRUST: 40, OC.AFFECTION: 30, OC.GRIEVANCE: 30}, 2, {}, "Long shared history", inherited=False),
         M.FORMATIVE: _memory({}, 1, {}, "A formative experience", inherited=False),
         M.ILL_WILL: _memory({OC.GRIEVANCE: 50, OC.TRUST: 35, OC.FEAR: 15}, 12, {V.XENOPHILIA: -15, V.HONOUR: 10}, "Showed us ill will"),
+        M.STOLE_FAITHFUL: _memory({OC.GRIEVANCE: 60, OC.TRUST: 40}, 8, {V.LOYALTY: 15, V.COMPETITION: 15}, "Took our faithful"),
+        M.AIDED_CHOSEN: _memory({OC.AFFECTION: 50, OC.TRUST: 50}, 10, {V.FRIENDSHIP: 15, V.LOYALTY: 10}, "Aided our chosen"),
     }
 )
 

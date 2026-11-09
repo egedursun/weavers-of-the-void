@@ -302,6 +302,8 @@ class MemoryKind(StrEnum):
     LONG_HISTORY = "long_history"
     DREADS = "dreads"
     FORMATIVE = "formative"
+    STOLE_FAITHFUL = "stole_faithful"
+    AIDED_CHOSEN = "aided_chosen"
 
 
 class OpinionComponent(StrEnum):

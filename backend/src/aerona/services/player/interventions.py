@@ -68,7 +68,7 @@ class BlessingKind(StrEnum):
     EXISTENCE = "existence"
 
 
-class PunishmentKind(StrEnum):
+class GodPunishmentKind(StrEnum):
     LIGHTNING = "lightning"
     CHAIN = "chain"
     EXILE = "exile"
@@ -91,7 +91,7 @@ class Bless(Command):
 
 class Punish(Command):
     son_id: int
-    kind: PunishmentKind
+    kind: GodPunishmentKind
 
 
 class Intervene(Command):
@@ -231,15 +231,15 @@ async def _pardon(scope: PlayerScope, ctx: TickContext, son_id: int) -> Effect:
 @player_action("punish", ActionKind.LIGHTNING)
 async def punish(scope: PlayerScope, command: Punish) -> Effect:
     ctx = await scope.context("punish")
-    if command.kind is PunishmentKind.SUPPRESS:
+    if command.kind is GodPunishmentKind.SUPPRESS:
         return await _suppress(scope, ctx, command.son_id)
-    if command.kind is PunishmentKind.PARDON:
+    if command.kind is GodPunishmentKind.PARDON:
         return await _pardon(scope, ctx, command.son_id)
     son = await guards.living_son(scope.session, command.son_id)
     actions = scope.rules.god_actions
     creator = await scope.creator()
     spent = 0
-    if command.kind is PunishmentKind.LIGHTNING:
+    if command.kind is GodPunishmentKind.LIGHTNING:
         spent = guards.charge(creator, scope.rules.costs.lightning, "costs.lightning")
         bolt = round(max_hp(scope.rules, son.endurance) * actions.lightning_hp_pct / 100)
         await apply_hits(
@@ -249,7 +249,7 @@ async def punish(scope: PlayerScope, command: Punish) -> Effect:
             lethal=False,
         )
         line, kind = LIGHTNING, ActionKind.LIGHTNING
-    elif command.kind is PunishmentKind.CHAIN:
+    elif command.kind is GodPunishmentKind.CHAIN:
         if son.chained:
             raise ValidationFailedError(f"{son.name} is already chained.")
         if son.last_acted_epoch >= ctx.epoch:

@@ -44,11 +44,6 @@ class CreatorPortraitContext(LoreContext):
     sons: list[SonBrief] = Field(default_factory=list)
 
 
-class PantheonRoot(ContextItem):
-    stem: str
-    form: str
-
-
 class SummonSonContext(LoreContext):
     world_name: str
     world_header: str
@@ -62,7 +57,6 @@ class SummonSonContext(LoreContext):
     inspiration: str | None = None
     rarity: Rarity
     rarity_label: str
-    pantheon_roots: list[PantheonRoot] = Field(default_factory=list)
 
 
 class AwakenPeoplesContext(LoreRulesContext):

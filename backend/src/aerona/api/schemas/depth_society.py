@@ -42,7 +42,7 @@ class LabourFlowView(ApiModel):
     workers: int
 
 
-class PressureView(ApiModel):
+class SocietyPressureView(ApiModel):
     kind: PressureKind
     value: int
 
@@ -134,7 +134,7 @@ class DemographyView(ApiModel):
     cohorts: list[PopulationCohortView]
     labour: list[LabourView]
     flows: list[LabourFlowView]
-    pressures: list[PressureView]
+    pressures: list[SocietyPressureView]
     classes: list[ClassMood]
     biology: BiologyView | None
     culture: CultureView | None
@@ -242,7 +242,7 @@ class DiseaseView(ApiModel):
     origin_incident_id: int | None
     origin: "IncidentRefView | None"
     incidents: list["IncidentRefView"]
-    hosts: list["HostView"]
+    hosts: list["FeastHostView"]
     unseen_pct: int
     sick: int
     strains: list[StrainView]
@@ -261,7 +261,7 @@ class IncidentRefView(ApiModel):
     place_id: int | None
 
 
-class HostView(ApiModel):
+class FeastHostView(ApiModel):
     species_id: int
     name: str
     immune: bool

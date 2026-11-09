@@ -26,6 +26,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import AgeBand, Job
 from aerona.domain.enums.disease import SpreadPath
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, WeatherEffect
@@ -37,6 +38,7 @@ from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import cohorts_of
 from aerona.engine.demography.mobility import bound_revolt, inequality_pressure
+from aerona.engine.divine.hooks import foe_pct
 from aerona.engine.economy.stocks import aggregate_need
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.years import world_years
@@ -597,6 +599,7 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
     igniting = self_igniting(ctx.rules, town, ground)
     dry = 1.0 if igniting or ground is None or ground.rainfall < table.dry_rainfall else DRY_OFF_PCT / PERCENT
     dry *= 1 + table.ambient_ignition_pct / PERCENT if igniting else 1.0
+    dry *= 1 + await foe_pct(ctx, town.entity.id, DomainHook.FIRE_CURSE) / PERCENT
     rng = ctx.rng(f"fire.{town.entity.id}")
     burned = 0
     for year in fire_years(ctx, town, ground, book):

@@ -9,6 +9,7 @@ from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.ecology import SizeClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import TemperatureBand
@@ -181,6 +182,7 @@ async def tend_pool(ctx: TickContext, people: EntityRow, row: AllelePoolRow, mem
             shift -= ctx.rules.gift.law_shift_pct
         if row.gift_stance is GiftStance.PERSECUTED:
             shift -= ctx.rules.gift.persecution_pct
+        shift += round(ctx.rules.gift.law_shift_pct * await ctx.hook_pct(people.id, DomainHook.BLOODLINE) / PERCENT)
         row.frequencies = shifted_gift(frequencies, shift) if shift else frequencies
     if STANCE not in locked:
         row.gift_stance = await stance_for(ctx, people, laws)

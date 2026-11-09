@@ -3,15 +3,19 @@ from dataclasses import dataclass
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.core.errors import ConflictError
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.foreign_gods import GodConflictRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.divine import WoundCause
 from aerona.domain.enums.son import PowerEffect, SonStatus, Stat
 from aerona.domain.enums.war import GodConflictOutcome
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.divine.decrees import truce_in_force
+from aerona.engine.divine.wounds import name_exposure, strike
 from aerona.engine.gods.progress import Progress, cap_gained_essence, grant_progress
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.numbers import round_half_up
@@ -40,13 +44,16 @@ async def _score(ctx: TickContext, son: SonRow, rival: SonRow, stat: Stat) -> in
     bonus = tools.challenge_power_bonus if await _power(ctx.session, son.id, PowerEffect.DUEL_MASTER, stat) else 0
     bonus -= tools.challenge_untouchable if await _power(ctx.session, rival.id, PowerEffect.UNTOUCHABLE) else 0
     die = ctx.rng(f"duel.{son.id}.{rival.id}").die(tools.challenge_die)
-    return round_half_up(son.stat(stat) + die * tools.challenge_die_mult + son.level * tools.challenge_strength_per_level + bonus)
+    exposed = await name_exposure(ctx.session, son.id, ctx.rules.divine_wounds.name_exposure_pct)
+    return round_half_up((son.stat(stat) + die * tools.challenge_die_mult + son.level * tools.challenge_strength_per_level + bonus) * exposed)
 
 
 BODILY_STATS = frozenset({Stat.STRENGTH, Stat.ENDURANCE, Stat.AGILITY, Stat.MIGHT})
 
 
 async def son_duel(ctx: TickContext, challenger: SonRow, defender: SonRow, stat: Stat, reason: str) -> DuelResult:
+    if await truce_in_force(ctx):
+        raise ConflictError("A cosmic truce of the council forbids duels between gods.")
     tools = ctx.rules.son_tools
     first, second = await _score(ctx, challenger, defender, stat), await _score(ctx, defender, challenger, stat)
     winner, loser = (challenger, defender) if first >= second else (defender, challenger)
@@ -81,6 +88,7 @@ async def son_duel(ctx: TickContext, challenger: SonRow, defender: SonRow, stat:
     await SonRepository(ctx.session).change_relation(challenger.id, defender.id, -tools.challenge_relation)
     await ctx.chronicle(ChronicleKind.CHALLENGE, text, template_key="pantheon.duel", son_id=challenger.id)
     progress = await grant_progress(ctx, winner, xp=tools.challenge_xp, fame=tools.challenge_renown)
+    await strike(ctx, loser, winner.id, WoundCause.DUEL, abs(first - second))
     return DuelResult(winner.id, loser.id, first, second, text, progress)
 
 

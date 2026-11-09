@@ -16,7 +16,7 @@ from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import ConditionKind
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import RiteEffectKind
-from aerona.domain.enums.domain import DEATH_DOMAINS
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faith import (
     AfterlifeState,
@@ -403,7 +403,7 @@ async def soul_eaters(ctx: TickContext, atlas: RegionAtlas) -> dict[int, list[Ea
 
 async def feed_eater(ctx: TickContext, eater: EntityRow) -> SonRow | None:
     creator = await ctx.session.get(SonRow, eater.creator_son_id) if eater.creator_son_id is not None else None
-    if creator is None or not creator.alive or not ({creator.domain_primary, creator.domain_secondary} & DEATH_DOMAINS):
+    if creator is None or not creator.alive or await ctx.god_share(creator.id, DomainHook.SOUL_HOLD) <= 0:
         return None
     before = creator.essence
     creator.essence += ctx.rules.necromancy.consumption_essence
@@ -446,9 +446,10 @@ async def realm_population(session: AsyncSession, son_id: int) -> int:
 async def realm_essence(ctx: TickContext) -> int:
     drawn = 0
     for son in list(await ctx.session.scalars(select(SonRow).order_by(SonRow.id))):
-        if not son.alive or not ({son.domain_primary, son.domain_secondary} & DEATH_DOMAINS):
+        hold = await ctx.god_share(son.id, DomainHook.SOUL_HOLD)
+        if not son.alive or hold <= 0:
             continue
-        gain = await realm_population(ctx.session, son.id) * ctx.rules.afterlife.realm_essence_per_100 // PERCENT
+        gain = round(await realm_population(ctx.session, son.id) * ctx.rules.afterlife.realm_essence_per_100 * hold / PERCENT)
         if gain > 0:
             before = son.essence
             son.essence += gain

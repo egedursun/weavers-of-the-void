@@ -903,5 +903,94 @@
       "taş",
       "gölgelik"
     ]
+  },
+  "acts": {
+    "human_sacrifice": [
+      "sacrifice",
+      "sacrifices",
+      "sacrificing"
+    ],
+    "slavery": [
+      "slave",
+      "slaves",
+      "slavery",
+      "enslave"
+    ],
+    "necromancy": [
+      "necromancy",
+      "raising the dead"
+    ],
+    "blood_magic": [
+      "blood magic"
+    ],
+    "void_magic": [
+      "void magic"
+    ],
+    "magic_use": [
+      "magic",
+      "sorcery",
+      "spellcraft"
+    ],
+    "eating_sapients": [
+      "cannibalism",
+      "eating the dead"
+    ],
+    "torture": [
+      "torture"
+    ],
+    "oathbreaking": [
+      "oathbreaking",
+      "breaking oaths",
+      "broken oath",
+      "oath breaking"
+    ],
+    "desecration": [
+      "desecration",
+      "desecrate",
+      "defile"
+    ],
+    "iconoclasm": [
+      "iconoclasm",
+      "idols"
+    ],
+    "burning_books": [
+      "burning books",
+      "book burning"
+    ],
+    "killing_kin": [
+      "kinslaying",
+      "kinslayer",
+      "killing kin"
+    ],
+    "guest_killing": [
+      "killing guests",
+      "guest killing"
+    ],
+    "regicide": [
+      "regicide",
+      "killing kings"
+    ],
+    "suicide": [
+      "suicide"
+    ],
+    "infanticide": [
+      "infanticide"
+    ],
+    "incest": [
+      "incest"
+    ],
+    "usury": [
+      "usury"
+    ],
+    "theft": [
+      "theft",
+      "stealing"
+    ],
+    "treason": [
+      "treason"
+    ],
+    "conversion_by_force": [
+      "forced conversion"
+    ]
   }
 }

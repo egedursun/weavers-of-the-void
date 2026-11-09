@@ -9,6 +9,7 @@ from aerona.db.tables.economy import CommunityStockRow, ProductionRunRow
 from aerona.db.tables.entities import EntityRow, EntityTraitRow
 from aerona.db.tables.industry import CommunityIndustryRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.ecology import Diet, SizeClass, SpeciesClass, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.industry import EnergyKind, ProcessKind, QualityTier
@@ -117,6 +118,7 @@ async def spoil(ctx: TickContext, book: EconomyBook, community: EntityRow, row: 
     hunters = await pest_hunters(ctx, community.id)
     granary = book.workshop(community.id, WorkshopKind.GRANARY)
     shelter = max(0.0, 1 - (granary.level if granary is not None else 0) * table.granary_pct / PERCENT)
+    shelter *= await ctx.hook_easing(community.id, DomainHook.PRESERVATION)
     ledger = goods_of(ctx.session, ctx.epoch)
     years = max(1, len(world_years(ctx.environment, community.world_id or 0, "stores")))
     lost_total = 0

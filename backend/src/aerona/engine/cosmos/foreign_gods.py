@@ -23,6 +23,7 @@ from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.divine import WoundCause
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodPowerEffect, ForeignGodStatus
@@ -35,6 +36,8 @@ from aerona.domain.models.profiles import ExistenceProfile
 from aerona.domain.models.stats import STAT_CEILING, STAT_FLOOR, StatBlock
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.divine.foreign import league_of
+from aerona.engine.divine.wounds import name_exposure, strike
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.hooks import desecrated
 from aerona.engine.primitives.naming import Namer
@@ -378,14 +381,21 @@ async def _son_loses(ctx: TickContext, son: SonRow, god: ForeignGodRow, diff: in
     return True, f"{text} {son.name} collapsed and fell into a sleep of {son.sleep_epochs_left} epochs."
 
 
-async def resolve_god_war(ctx: TickContext, son: SonRow, god: ForeignGodRow, reason: str = "to protect their worshippers and temples") -> GodWarResult:
+async def resolve_god_war(
+    ctx: TickContext, son: SonRow, god: ForeignGodRow, reason: str = "to protect their worshippers and temples", *, allies: Sequence[SonRow] = ()
+) -> GodWarResult:
     tools = ctx.rules.son_tools
     rng = ctx.rng("god_war")
     powers = await powers_of(ctx.session, god.id)
+    exposure = ctx.rules.divine_wounds.name_exposure_pct
     son_score = round_half_up(
-        (son.strength + son.will) / max(1, tools.foreign_war_stat_divisor) + son.level * tools.foreign_war_strength_per_level + rng.die(tools.foreign_war_die)
+        ((son.strength + son.will) / max(1, tools.foreign_war_stat_divisor) + son.level * tools.foreign_war_strength_per_level + rng.die(tools.foreign_war_die))
+        * await name_exposure(ctx.session, son.id, exposure)
+        + sum(ally.strength + ally.will for ally in allies) / max(1, tools.foreign_war_stat_divisor) * ctx.rules.god_relations.league_share_pct / PERCENT
     )
-    god_score = round_half_up(war_power(ctx.rules, god, powers) + rng.die(tools.foreign_war_die))
+    league = sum([war_power(ctx.rules, ally, await powers_of(ctx.session, ally.id)) for ally in await league_of(ctx, god.id)])
+    pooled = war_power(ctx.rules, god, powers) + league * ctx.rules.god_relations.league_share_pct / PERCENT
+    god_score = round_half_up((pooled + rng.die(tools.foreign_war_die)) * await name_exposure(ctx.session, god.id, exposure))
     diff = abs(son_score - god_score)
     son.essence = max(0, son.essence - tools.foreign_war_cost)
     slept = False
@@ -401,6 +411,10 @@ async def resolve_god_war(ctx: TickContext, son: SonRow, god: ForeignGodRow, rea
     ctx.session.add(
         GodConflictRow(epoch=ctx.epoch, attacker_node_id=son.id, defender_node_id=god.id, outcome=outcome, attacker_score=son_score, defender_score=god_score)
     )
+    if outcome is GodConflictOutcome.ATTACKER_WON and status is not ForeignGodStatus.DEAD:
+        await strike(ctx, god, son.id, WoundCause.GOD_WAR, diff)
+    elif outcome is GodConflictOutcome.DEFENDER_WON:
+        await strike(ctx, son, god.id, WoundCause.GOD_WAR, diff)
     await ctx.chronicle(ChronicleKind.FOREIGN_GOD, text, template_key="pantheon.god_war", son_id=son.id, world_id=god.world_id)
     await ctx.session.flush()
     return GodWarResult(son_score, god_score, outcome, status, slept, text)

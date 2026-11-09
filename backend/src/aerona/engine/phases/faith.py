@@ -277,10 +277,12 @@ async def faith_cycles(ctx: TickContext) -> None:
     "table.cult_doctrines",
     "table.cult_tenets",
     "table.culture_values",
+    "table.divine_wounds",
     "table.entity_traits",
     "table.house_members",
     "table.house_profiles",
     "table.memories",
+    "table.natural_law_profiles",
     "table.personality_values",
     "table.possessions",
     "table.region_pollution",
@@ -288,6 +290,7 @@ async def faith_cycles(ctx: TickContext) -> None:
     "table.rite_profiles",
     "table.sons",
     "table.spirit_profiles",
+    "table.world_domain_hooks",
     "table.world_maps",
 )
 @writes(

@@ -128,7 +128,7 @@ async def climate_transition(ctx: TickContext) -> None:
     ctx.count("worlds", len(worlds))
 
 
-@reads("place.fertility", "region.fertility", "table.modifiers")
+@reads("place.fertility", "region.fertility", "table.modifiers", "table.natural_law_profiles")
 @writes("table.modifiers")
 async def law_fertility(ctx: TickContext) -> None:
     laws = await ctx.laws()

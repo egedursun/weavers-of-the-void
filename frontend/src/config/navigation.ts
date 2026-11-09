@@ -140,7 +140,7 @@ export const SETTINGS_TABS: NavItem[] = [
     to: '/settings/prompts',
     icon: FileText,
     description:
-      'Son prompts, context blocks, the prompt catalogue and tired motifs.',
+      'Son prompts, context blocks, the prompt catalogue and recurring images.',
   },
   {
     id: 'settings-images',

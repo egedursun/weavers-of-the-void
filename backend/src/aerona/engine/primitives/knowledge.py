@@ -6,9 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import HolderLevelRow
+from aerona.db.tables.divine import NaturalLawProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.divine import LawScope
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.models.entity_stats import EntityStats, KnowledgeStats
@@ -119,25 +122,50 @@ class KnowledgeMap:
 
 
 class LawBook:
-    def __init__(self, laws: dict[int, set[NaturalLaw]]) -> None:
+    def __init__(
+        self, laws: dict[int, set[NaturalLaw]], regions: dict[int, set[NaturalLaw]] | None = None, strengths: dict[tuple[int, NaturalLaw], int] | None = None
+    ) -> None:
         self._laws = laws
+        self._regions = regions or {}
+        self._strengths = strengths or {}
 
     @classmethod
     async def load(cls, session: AsyncSession) -> "LawBook":
-        statement = select(EntityRow.world_id, EntityRow.natural_law).where(
+        statement = select(EntityRow.id, EntityRow.world_id, EntityRow.natural_law).where(
             EntityRow.entity_type == EntityType.NATURAL_LAW, EntityRow.status == EntityStatus.CANON, EntityRow.natural_law.is_not(None)
         )
+        profiles = {row.law_entity_id: row for row in await session.scalars(select(NaturalLawProfileRow))}
+        worlds = list(await session.scalars(select(WorldRow.id)))
         laws: dict[int, set[NaturalLaw]] = defaultdict(set)
-        for world_id, law in await session.execute(statement):
-            if law is not None and law is not NaturalLaw.NONE:
-                laws[world_id].add(law)
-        return cls(laws)
+        regions: dict[int, set[NaturalLaw]] = defaultdict(set)
+        strengths: dict[tuple[int, NaturalLaw], int] = {}
+        for entity_id, world_id, law in await session.execute(statement):
+            if law is None or law is NaturalLaw.NONE:
+                continue
+            profile = profiles.get(entity_id)
+            if profile is not None and (profile.contested or profile.strength <= 0):
+                continue
+            strength = profile.strength if profile is not None else PERCENT
+            if profile is not None and profile.scope is LawScope.REGION and profile.region_entity_id is not None:
+                regions[profile.region_entity_id].add(law)
+                continue
+            home = profile.world_id if profile is not None and profile.world_id is not None else world_id
+            for target in worlds if profile is not None and profile.scope is LawScope.COSMOS else [home]:
+                laws[target].add(law)
+                strengths[(target, law)] = max(strengths.get((target, law), 0), strength)
+        return cls(laws, regions, strengths)
 
     def has(self, law: NaturalLaw, world_id: int) -> bool:
         return law in self._laws.get(world_id, set())
 
+    def has_at(self, law: NaturalLaw, world_id: int, region_id: int | None) -> bool:
+        return self.has(law, world_id) or (region_id is not None and law in self._regions.get(region_id, set()))
+
+    def strength(self, law: NaturalLaw, world_id: int) -> int:
+        return self._strengths.get((world_id, law), 0)
+
     def anywhere(self, law: NaturalLaw) -> bool:
-        return any(law in laws for laws in self._laws.values())
+        return any(law in laws for laws in self._laws.values()) or any(law in laws for laws in self._regions.values())
 
     def of(self, world_id: int) -> set[NaturalLaw]:
         return set(self._laws.get(world_id, set()))

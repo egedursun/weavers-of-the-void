@@ -10,7 +10,6 @@ from aerona.agents.context.recent_chronicle import recent_chronicle
 from aerona.agents.context.scope import Scope
 from aerona.agents.context.siblings import siblings
 from aerona.agents.context.thread_lines import thread_lines
-from aerona.agents.context.tired_images import tired_images, tired_images_text
 from aerona.agents.context.world_header import world_header
 from aerona.agents.context.world_line import world_line
 from aerona.catalog.domains import DOMAIN_LABELS
@@ -72,7 +71,7 @@ async def summary_header(scope: Scope, viewer: SonRow | None) -> str:
     if viewer is None:
         return await world_header(scope)
     world_id = viewer.current_world_id
-    parts = [await world_header(scope, world_id), await world_line(scope, world_id), tired_images_text(await tired_images(scope, world_id))]
+    parts = [await world_header(scope, world_id), await world_line(scope, world_id)]
     return "\n".join(part for part in parts if part)
 
 

@@ -3,7 +3,7 @@ from enum import StrEnum
 from pydantic import Field
 
 from aerona.prompts.contexts.base import ContextItem, LoreContext, LoreRulesContext, PromptContext, RulesContext
-from aerona.prompts.contexts.common import NamedRecord, TiredImages
+from aerona.prompts.contexts.common import NamedRecord
 
 
 class FateSystemContext(LoreContext):
@@ -12,13 +12,10 @@ class FateSystemContext(LoreContext):
 
 class PrescreenKind(StrEnum):
     UNBOUND = "unbound"
-    TIRED_IMAGES = "tired_images"
-    CLICHE_NAME = "cliche_name"
     SHORT_DESCRIPTION = "short_description"
     CONFUSABLE_NAME = "confusable_name"
     OFF_DOMAIN_POWER = "off_domain_power"
     LOCATION_IN_OTHER_WORLD = "location_in_other_world"
-    TIRED_NAME = "tired_name"
 
 
 class PrescreenWarning(ContextItem):
@@ -69,7 +66,6 @@ class FateJudgmentContext(LoreRulesContext):
     threads: list[FateThreadLine] = Field(default_factory=list)
     pantheon: list[NamedRecord] = Field(default_factory=list)
     languages: list[NamedRecord] = Field(default_factory=list)
-    tired_images: TiredImages = Field(default_factory=TiredImages)
 
 
 class FateExtraJudgmentContext(PromptContext):

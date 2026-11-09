@@ -34,7 +34,7 @@ export function NameHealth() {
           icon={Sparkle}
           tone={data.weak_names > 0 ? 'warning' : 'success'}
           value={data.weak_names}
-          hint='Too short or built on a tired motif word'
+          hint='Single-word names too short to carry their language'
         />
         <KpiTile
           label='Numbered borrowings'

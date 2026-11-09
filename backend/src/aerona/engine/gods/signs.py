@@ -18,6 +18,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityType, MortalRole
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.node import NodeKind
 from aerona.engine.context import TickContext
+from aerona.engine.divine.standing import standing_of_pair
 from aerona.engine.gods.interventions import apply_abundance
 from aerona.engine.gods.queries import active_sons, flagged_ids, place_of
 from aerona.engine.gods.stats import Trait, trait_or
@@ -169,7 +170,9 @@ async def estranged_turn(ctx: TickContext, creator: CreatorRow) -> EntityRow | N
     rng = ctx.rng("estranged")
     bonus = rules.estranged_content_bonus_pct if creator.mood_contentment >= rules.estranged_content_threshold else 0
     for entity in await estranged_candidates(ctx):
-        if rng.chance(rules.estranged_turn_chance + bonus) and await worship_creator(ctx.session, entity, ctx.epoch, god_lines.ESTRANGED_VOW):
+        warmth = await standing_of_pair(ctx, entity.id, creator.id)
+        lift = (warmth.love - warmth.fear) * ctx.rules.divine_standing.creator_turn_pct / PERCENT if warmth is not None else 0
+        if rng.chance(rules.estranged_turn_chance + bonus + lift) and await worship_creator(ctx.session, entity, ctx.epoch, god_lines.ESTRANGED_VOW):
             line = god_lines.ESTRANGED_TURN
             await ctx.chronicle(ChronicleKind.DIVINE_SIGN, line.render(entity=entity.name, creator=creator.name), template_key=line.key, entity_ids=[entity.id])
             ctx.count("estranged_turned")

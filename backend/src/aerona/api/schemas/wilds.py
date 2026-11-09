@@ -49,7 +49,7 @@ class YieldView(ApiModel):
     rate: int
 
 
-class HostView(ApiModel):
+class SpeciesHostView(ApiModel):
     disease: NodeRef | None
     immune: bool
     locked: list[str]
@@ -169,7 +169,7 @@ class SpeciesCard(ApiModel):
     traits: list[CreatureTrait]
     uses: list[SpeciesUse]
     yields: list[YieldView]
-    hosts: list[HostView]
+    hosts: list[SpeciesHostView]
     ranges: list[RangeView]
     herds: list[HerdView]
     hunts: list[NodeRef]

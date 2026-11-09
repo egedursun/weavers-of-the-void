@@ -103,7 +103,6 @@ PAYLOADS: dict[PromptId, dict[str, Any]] = {
         "chronicler": {"name": "Ehmel", "who": "scribe of the Kael"},
         "worlds": [SECTION],
     },
-    PromptId.CHRONICLER_FIX_OPENING_USER: {"first_sentence": "A bell rang under the salt."},
     PromptId.CHRONICLER_AUDIT_FIX_USER: {
         "narrative": "x",
         "coverage": {

@@ -74,7 +74,7 @@ class BattleStackView(ApiModel):
     target_class: TargetClass | None
 
 
-class CasualtyView(ApiModel):
+class BattleCasualtyView(ApiModel):
     mortal: NodeRef | None
     side: NodeRef | None
     fate: CasualtyFate
@@ -85,7 +85,7 @@ class CasualtyView(ApiModel):
 class BattleDepthView(ApiModel):
     battle_id: int
     stacks: list[BattleStackView]
-    casualties: list[CasualtyView]
+    casualties: list[BattleCasualtyView]
     tactic_factors: dict[str, float]
     morale: dict[str, dict[str, int]]
     magic: dict[str, int]

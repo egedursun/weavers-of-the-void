@@ -25,6 +25,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import BoostTrigger, Capability, ResearchChooser, Technique
 from aerona.domain.enums.disease import OutbreakStatus
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.environment import TerrainKind
@@ -577,6 +578,7 @@ async def advanced(ctx: TickContext, atlas: RegionAtlas, holder_id: int, techniq
         * await focus_factor(ctx.session, ctx.rules, holder_id, technique)
         * await catch_up(ctx, atlas, holder_id, technique)
         * await era_known(ctx, holder_id, technique)
+        * await ctx.hook_factor(holder_id, DomainHook.STARGAZING)
     )
     progress = clamp_int((row.progress if row is not None else 0) + round_half_up(gain), 0, PERCENT)
     if progress >= PERCENT:

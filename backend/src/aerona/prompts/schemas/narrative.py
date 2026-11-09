@@ -22,9 +22,7 @@ class FolkBeliefOutput(OutputModel):
         description="The name this people gave the god: if given in the prompt, EXACTLY that; if not, a new name with the sounds of the people's own language (NOT the god's name or title)"
     )
     story: str = Field(description="2 to 3 sentences: how this people tells of that god, by the name they gave the god")
-    wrong: str = Field(
-        description="One sentence: where their account really deviates, in the form of distortion given for that belief in the prompt. Do NOT USE these patterns: {{ banned_patterns }}"
-    )
+    wrong: str = Field(description="One sentence: where their account really deviates, in the form of distortion given for that belief in the prompt.")
 
 
 class VoicesOutput(OutputModel):

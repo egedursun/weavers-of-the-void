@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.agents.context.divine_lines import divine_lines
 from aerona.agents.context.intrigue import name_knowers, names_known
 from aerona.agents.context.powers import powers_text
 from aerona.agents.context.reputation_line import reputation_line
@@ -7,8 +8,6 @@ from aerona.agents.context.scope import Scope
 from aerona.agents.context.sky_calendar import sky_calendar
 from aerona.agents.context.son_faith import son_faith
 from aerona.agents.context.son_memory import son_memory
-from aerona.agents.context.speech import openings, tics
-from aerona.agents.context.tired_images import tired_images
 from aerona.agents.context.world_summary import world_summary
 from aerona.agents.turns.ports import ToolCatalogue
 from aerona.catalog.creator import CREATOR_PASSIONS
@@ -132,9 +131,7 @@ async def son_system_context(scope: Scope, son: SonRow, points: int, catalogue: 
         creator_wishes=await creator_wishes(scope),
         sanity=son.sanity,
         clouded=son.sanity is not None and son.sanity < horror.son_clouding_threshold,
-        tired_images=await tired_images(scope, son.current_world_id),
-        openings=await openings(scope.session, rules, son.id),
-        tics=await tics(scope.session, rules, son.id),
+        divine=await divine_lines(scope, son),
     )
 
 

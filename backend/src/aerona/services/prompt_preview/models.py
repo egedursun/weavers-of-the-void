@@ -25,7 +25,6 @@ class ContextBlockKind(StrEnum):
     ENTITY_DETAIL = "entity-detail"
     BOND_LINES = "bond-lines"
     SON_MEMORY = "son-memory"
-    TIRED_IMAGES = "tired-images"
     RECENT_EVENTS = "recent-events"
     POWERS = "powers"
     SKY_CALENDAR = "sky-calendar"

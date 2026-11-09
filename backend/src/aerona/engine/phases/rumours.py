@@ -14,6 +14,7 @@ register_profile_table("rumours", "carrier_entity_id")
     "table.applied_fixups",
     "table.bonds",
     "table.chronicle",
+    "table.divine_wounds",
     "table.epoch_year_cursors",
     "table.holder_techniques",
     "table.incident_participants",
@@ -31,6 +32,7 @@ register_profile_table("rumours", "carrier_entity_id")
     "table.speaker_cohorts",
     "table.spy_networks",
     "table.war_sides",
+    "table.world_domain_hooks",
     "table.world_maps",
 )
 @writes(

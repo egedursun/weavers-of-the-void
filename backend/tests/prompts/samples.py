@@ -28,11 +28,9 @@ from aerona.prompts.contexts.common import (
     EntityLineItem,
     LabelValue,
     LexiconWord,
-    MotifShare,
     NamedRecord,
     NamingRuleItem,
     SonBrief,
-    TiredImages,
     WorldItem,
 )
 from aerona.prompts.data.images import CosmosSubjectKind
@@ -48,7 +46,6 @@ PEOPLE = EntityLineItem(id=30, name="Kael", type_label="People", subtype="tide f
 NAMING = NamingRuleItem(
     vowels="aeo", consonants="kshrv", forbidden_sounds=["u"], syllable_patterns=["CV", "CVC"], endings=["-esh"], sample_names=["Vesh", "Karo"]
 )
-TIRED = TiredImages(motifs=[MotifShare(key="salt", percent=31)], foreign_images=["ash"])
 SON = SonBrief(id=2, name="Ozzeh", title="Who Makes the Salt Weep", domain_1="Salt", domain_2="Sea")
 WORLD = WorldItem(id=1, name="Aerona")
 OTHER_WORLD = WorldItem(id=2, name="Vel")
@@ -193,14 +190,11 @@ def chronicler_user() -> chronicler.ChroniclerUserContext:
         worlds=[WORLD, OTHER_WORLD],
         missing_worlds=[OTHER_WORLD],
         previous_names=["Age of Brine"],
-        piled_roots=["brin"],
         continuity=chronicler.ChroniclerContinuity(
             current=chronicler.ChroniclerLink(age=4, name="Ehmel", who="scribe of the Kael"),
             streak=2,
             chain=[chronicler.ChroniclerLink(age=4, name="Ehmel", who="scribe of the Kael")],
         ),
-        opening_patterns=["the salt"],
-        tired_images=TIRED,
         name_kinds=[
             chronicler.NameKind(name="Kael", type_label="People", subtype="tide folk"),
             chronicler.NameKind(name="Ehmel", type_label="Mortal", mortal=True),
@@ -297,9 +291,6 @@ def son_turn_system() -> son_turn.SonTurnSystemContext:
         creator_wishes="- FATHER'S PASSIONS: order",
         sanity=30,
         clouded=True,
-        tired_images=TIRED,
-        openings=["Salt and"],
-        tics=["brine"],
     )
 
 
@@ -437,8 +428,6 @@ def all_warnings() -> list[fate.PrescreenWarning]:
     kinds = fate.PrescreenKind
     return [
         fate.PrescreenWarning(kind=kinds.UNBOUND),
-        fate.PrescreenWarning(kind=kinds.TIRED_IMAGES, matches=["salt"]),
-        fate.PrescreenWarning(kind=kinds.CLICHE_NAME),
         fate.PrescreenWarning(kind=kinds.SHORT_DESCRIPTION),
         fate.PrescreenWarning(kind=kinds.CONFUSABLE_NAME, other_name="Vesh"),
         fate.PrescreenWarning(kind=kinds.OFF_DOMAIN_POWER, power_level=8, domain="Fire"),
@@ -478,7 +467,6 @@ def summon() -> genesis.SummonSonContext:
         inspiration="A drowned bell",
         rarity=Rarity.COMMON,
         rarity_label="Common",
-        pantheon_roots=[genesis.PantheonRoot(stem="salt", form="salted")],
     )
 
 
@@ -510,7 +498,6 @@ def naming() -> narrative.NamingContext:
         world_header=HEADER,
         records=["#13 [World engine] battle", "#14 [World engine] hero"],
         dialect_warnings=[narrative.DialectWarning(id=13, name="Uvo", root="uvo", letters=["u"])],
-        tired_images=TIRED,
     )
 
 
@@ -556,7 +543,6 @@ def deepen_celestial() -> narrative.DeepenCelestialContext:
         lore="The sea was the first word spoken.",
         neighbour_lines=["Its star: Ashen Eye (Red dwarf)", "A people of the world: Kael"],
         recent_events="[Age 4] A war began.",
-        tired_images=TIRED,
     )
 
 
@@ -571,7 +557,6 @@ def deepen() -> narrative.DeepenEntityContext:
         creator_son=SON,
         bond_lines=["→ worships son#2 Ozzeh"],
         recent_events="[Age 4] A war began.",
-        tired_images=TIRED,
     )
 
 
@@ -770,14 +755,12 @@ def localise() -> localisation.LocaliseContext:
 
 
 SAMPLES: dict[PromptId, Callable[[], PromptContext]] = {
-    P.CLICHE_BAN: EmptyContext,
     P.IMAGE_PROMPT_RULES: EmptyContext,
     P.SECTION_KEYS_RULE: EmptyContext,
     P.NO_NUMBERS_CLAUSE: EmptyContext,
     P.LORE_LANGUAGE: lambda: LoreContext(lore_language=LORE),
     P.RATIONALE_RULE: lambda: RulesContext(rules=RULES),
     P.VERDICT_CRITERIA: EmptyContext,
-    P.TIRED_IMAGES: lambda: blocks.TiredImagesContext(images=TIRED),
     P.WORLD_HEADER: world_header,
     P.DIALECT_BLOCK: lambda: blocks.DialectBlockContext(worlds=[blocks.WorldNaming(id=1, name="Aerona", naming=NAMING)]),
     P.WORLD_LINE: lambda: blocks.WorldLineContext(
@@ -971,7 +954,6 @@ SAMPLES: dict[PromptId, Callable[[], PromptContext]] = {
         ],
         pantheon=[NamedRecord(id=2, name="Ozzeh")],
         languages=[NamedRecord(id=20, name="Veshi")],
-        tired_images=TIRED,
     ),
     P.FATE_EXTRA_JUDGMENT_USER: lambda: fate.FateExtraJudgmentContext(world_header=HEADER, entries=["#12 Vesh Hollow", "#13 Kor"]),
     P.FATE_PRESCREEN_WARNINGS: lambda: fate.PrescreenWarningsContext(warnings=all_warnings()),
@@ -984,9 +966,6 @@ SAMPLES: dict[PromptId, Callable[[], PromptContext]] = {
     P.CHRONICLER_CONCISE_SYSTEM: lambda: chronicler.ChroniclerSystemContext(lore_language=LORE, world_name="Aerona"),
     P.CHRONICLER_USER: chronicler_user,
     P.CHRONICLER_AUDIT_FIX_USER: chronicler_audit_fix,
-    P.CHRONICLER_FIX_OPENING_USER: lambda: chronicler.ChroniclerFixOpeningContext(
-        lore_language=LORE, rules=RULES, patterns=["the salt"], first_sentence="The salt woke.", continuation="Then the sea rose."
-    ),
     P.CHRONICLER_MISSING_WORLDS_USER: chronicler_user,
     P.CHRONICLER_LOST_AGE_USER: chronicler_user,
     P.CHRONICLER_LOST_WORLD_SECTIONS_USER: chronicler_user,
@@ -1041,8 +1020,6 @@ SAMPLES: dict[PromptId, Callable[[], PromptContext]] = {
         paid_tools=["produce_item"],
         free_tools=["worship"],
         captor="Vor",
-        tics=["brine"],
-        tired_images=TIRED,
     ),
     P.MORTAL_TURN_USER: lambda: mortal.MortalTurnUserContext(
         age=5, creator_name="Ul", manifestations=["Rise."], dreams=["Drown."], context="CONTEXT", opportunities="- Trade", resumed=True, actions_left=2

@@ -9,6 +9,7 @@ from aerona.db.columns import at_least, between, enum_type
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.stat_columns import StatColumns, stat_checks
 from aerona.db.types import PydanticJSON
+from aerona.domain.enums.divine import BargainGain, BargainPrice
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.foreign_god import ForeignGodPowerEffect, ForeignGodStatus
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN, RELATION_MAX, RELATION_MIN
@@ -93,3 +94,8 @@ class OuterBargainRow(CreatedAtMixin, Base):
     son_id: Mapped[int] = mapped_column(ForeignKey("sons.id", ondelete="CASCADE"), primary_key=True)
     epoch: Mapped[int]
     terms: Mapped[str | None] = mapped_column(Text)
+    gain: Mapped[BargainGain] = mapped_column(enum_type(BargainGain, "gain"), default=BargainGain.ESSENCE)
+    price: Mapped[BargainPrice] = mapped_column(enum_type(BargainPrice, "price"), default=BargainPrice.WORLD_SANITY)
+    price_domain: Mapped[Domain | None] = mapped_column(enum_type(Domain, "price_domain"))
+    price_world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="SET NULL"))
+    paid: Mapped[bool] = mapped_column(default=False)

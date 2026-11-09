@@ -5,7 +5,7 @@ from pydantic import Field
 from aerona.domain.enums.entity import EntityType
 from aerona.prompts.contexts.base import ContextItem, LoreContext, LoreRulesContext
 from aerona.prompts.contexts.blocks import FolkBeliefLine
-from aerona.prompts.contexts.common import ChronicleRow, EntityLineItem, LabelValue, NamingRuleItem, SonBrief, TiredImages
+from aerona.prompts.contexts.common import ChronicleRow, EntityLineItem, LabelValue, NamingRuleItem, SonBrief
 from aerona.prompts.contexts.fate import WorldEvents
 
 
@@ -13,7 +13,6 @@ class NameProblem(StrEnum):
     DIALECT = "dialect"
     SIMILAR = "similar"
     WEAK = "weak"
-    TIRED = "tired"
 
 
 class DialectWarning(ContextItem):
@@ -23,7 +22,6 @@ class DialectWarning(ContextItem):
     letters: list[str] = Field(default_factory=list)
     problems: list[NameProblem] = Field(default_factory=lambda: [NameProblem.DIALECT])
     similar_to: str | None = None
-    tired_words: list[str] = Field(default_factory=list)
 
 
 class NamingContext(LoreContext):
@@ -32,7 +30,6 @@ class NamingContext(LoreContext):
     world_header: str
     records: list[str]
     dialect_warnings: list[DialectWarning] = Field(default_factory=list)
-    tired_images: TiredImages = Field(default_factory=TiredImages)
 
 
 class HistorianEntry(ContextItem):
@@ -75,7 +72,6 @@ class DeepenEntityContext(LoreRulesContext):
     creator_son: SonBrief | None = None
     bond_lines: list[str] = Field(default_factory=list)
     recent_events: str = ""
-    tired_images: TiredImages = Field(default_factory=TiredImages)
 
 
 class CelestialKind(StrEnum):
@@ -92,7 +88,6 @@ class DeepenCelestialContext(LoreRulesContext):
     lore: str = ""
     neighbour_lines: list[str] = Field(default_factory=list)
     recent_events: str = ""
-    tired_images: TiredImages = Field(default_factory=TiredImages)
 
 
 class GodKnown(ContextItem):

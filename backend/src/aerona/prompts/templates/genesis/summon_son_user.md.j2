@@ -22,6 +22,3 @@ The god {{ god_name }} is summoning a new son. Choose a domain left empty in the
 {% endif %}
 Rarity: {{ rarity_label }} ({% if rarity == "common" %}small, young, limited{% elif rarity in ["legendary", "mythic"] %}ancient, vast, cosmic in reach{% else %}of middling might{% endif %}). Produce the son's profile, their three powers and their existence.
 NAME: clearly different in sound from the names of the existing sons, foreign gods and records (a difference of one or two letters is forbidden; mortals would confuse them).
-{% if pantheon_roots %}
-ROOTS PILED UP IN THE PANTHEON (in the titles and obsessions of most siblings; do NOT use them in this son's name, title, obsession or secret): {% for root in pantheon_roots %}{{ root.stem }}- ({{ root.form }}){% if not loop.last %}, {% endif %}{% endfor %}.
-{% endif %}

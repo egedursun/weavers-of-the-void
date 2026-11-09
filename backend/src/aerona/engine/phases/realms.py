@@ -366,6 +366,7 @@ async def house_cycles(ctx: TickContext) -> None:
     "table.community_relations",
     "table.community_societies",
     "table.community_stocks",
+    "table.creator_taboos",
     "table.cult_tenets",
     "table.culture_ethics",
     "table.culture_values",

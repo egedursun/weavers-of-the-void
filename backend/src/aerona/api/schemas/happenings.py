@@ -22,7 +22,7 @@ class FootprintView(ApiModel):
     joined_epoch: int
 
 
-class CasualtyView(ApiModel):
+class EventCasualtyView(ApiModel):
     community_id: int
     community: str
     age_band: AgeBand
@@ -62,7 +62,7 @@ class EventView(ApiModel):
     incident_text: str | None
     siege_id: int | None
     footprint: list[FootprintView]
-    casualties: list[CasualtyView]
+    casualties: list[EventCasualtyView]
     toll: int
     steps: list[PhaseStepView]
     seasons: list[SeasonRef]

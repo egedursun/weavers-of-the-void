@@ -176,13 +176,20 @@ async def miner_of(ctx: TickContext, atlas: RegionAtlas, region_id: int | None) 
 
 
 @reads(
+    "item.damage",
+    "item.might",
+    "item.protection",
+    "knowledge.spread",
     "place.mystery",
     "resource.abundance",
     "resource.might",
     "resource.value",
     "table.bonds",
+    "table.entity_flags",
     "table.epoch_year_cursors",
+    "table.item_profiles",
     "table.name_registry",
+    "table.node_materials",
     "table.nodes",
     "table.place_profiles",
     "table.place_secrets",
@@ -191,8 +198,10 @@ async def miner_of(ctx: TickContext, atlas: RegionAtlas, region_id: int | None) 
     "table.rite_profiles",
     "table.skills",
     "table.world_maps",
+    "table.world_materials",
 )
 @writes(
+    "knowledge.spread",
     "place.danger",
     "table.bonds",
     "table.chronicle",
@@ -203,6 +212,7 @@ async def miner_of(ctx: TickContext, atlas: RegionAtlas, region_id: int | None) 
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
+    "table.node_materials",
     "table.nodes",
     "table.place_environment",
     "table.place_profiles",

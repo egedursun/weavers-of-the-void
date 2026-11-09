@@ -14,6 +14,7 @@ from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.mind import ActKind, MemoryKind, SkillKind, ThoughtKind, TraitKind, TraitSource
 from aerona.engine.body.treatment import exert
 from aerona.engine.context import TickContext
+from aerona.engine.divine.taboos import taboo_broken
 from aerona.engine.intrigue.favours import owe
 from aerona.engine.lore.taboos import violated
 from aerona.engine.mind.book import load_holder, values_for
@@ -222,6 +223,7 @@ async def horrified(ctx: TickContext, actor_id: int, victim_id: int) -> list[int
 
 async def judged(ctx: TickContext, actor_id: int, victim_id: int, act: ActKind, *, note: str | None = None) -> int:
     await violated(ctx, actor_id, act)
+    await taboo_broken(ctx, actor_id, act)
     base = ctx.rules.memory.witness_magnitude
     if not base:
         return 0

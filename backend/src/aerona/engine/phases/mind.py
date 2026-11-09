@@ -228,6 +228,7 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
     "table.community_stocks",
     "table.conditions",
     "table.culture_values",
+    "table.divine_wounds",
     "table.dwelling_furnishings",
     "table.dwellings",
     "table.entity_flags",
@@ -256,6 +257,7 @@ async def backfill_community_memories(ctx: TickContext, community: EntityRow) ->
     "table.traits",
     "table.war_sides",
     "table.wars",
+    "table.world_domain_hooks",
     "table.world_maps",
 )
 @writes(
@@ -615,6 +617,7 @@ async def mind_memories(ctx: TickContext) -> None:
     "table.community_stocks",
     "table.conditions",
     "table.culture_values",
+    "table.divine_wounds",
     "table.dwelling_furnishings",
     "table.dwellings",
     "table.entity_flags",
@@ -637,6 +640,7 @@ async def mind_memories(ctx: TickContext) -> None:
     "table.traits",
     "table.war_sides",
     "table.wars",
+    "table.world_domain_hooks",
     "table.world_maps",
 )
 @writes(
@@ -916,6 +920,7 @@ async def mind_grief(ctx: TickContext) -> None:
     "table.bonds",
     "table.conditions",
     "table.cult_tenets",
+    "table.divine_wounds",
     "table.dreams",
     "table.entities",
     "table.entity_flags",
@@ -931,6 +936,7 @@ async def mind_grief(ctx: TickContext) -> None:
     "table.minds",
     "table.mortal_equipment",
     "table.mortal_profiles",
+    "table.natural_law_profiles",
     "table.needs",
     "table.nodes",
     "table.personality_values",
@@ -942,6 +948,7 @@ async def mind_grief(ctx: TickContext) -> None:
     "table.traits",
     "table.war_sides",
     "table.wars",
+    "table.world_domain_hooks",
     "table.worlds",
 )
 @writes(
@@ -1145,6 +1152,7 @@ SURVEY_PHASES = (Phase("mind_survey", mind_survey),)
     "table.community_societies",
     "table.community_stocks",
     "table.cosmos",
+    "table.creator_taboos",
     "table.culture_ethics",
     "table.culture_values",
     "table.deed_claims",

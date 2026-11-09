@@ -26,6 +26,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind, PendingJobKind, TurnCounter
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.divine import BargainGain, BargainPrice
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherKind
@@ -33,7 +34,7 @@ from aerona.domain.enums.foreign_god import ForeignGodPowerEffect, ForeignGodSta
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.son import SonStatus, Stat
 from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, Discovery, StarType, WorldType
-from aerona.engine.cosmos.actions import bargain_with_outer, seal_gate
+from aerona.engine.cosmos.actions import BargainTerms, bargain_with_outer, seal_gate
 from aerona.engine.cosmos.foreign_gods import powers_of, stat_effect
 from aerona.engine.cosmos.stars import extinguish_star, hang_star, rekindle_star
 from aerona.engine.cosmos.worlds import declare_holy_world
@@ -120,6 +121,10 @@ class LeakSealInput(ToolInput):
 class OuterBargainInput(ToolInput):
     outsider_id: int
     request: Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
+    gain: BargainGain = BargainGain.ESSENCE
+    price: BargainPrice = BargainPrice.WORLD_SANITY
+    price_domain: Domain | None = None
+    price_world_id: int | None = None
 
 
 class BirthWorldInput(ToolInput):
@@ -406,7 +411,8 @@ async def bargain_with_outsider(call: SonCall, args: OuterBargainInput) -> str:
         fail(SonResult.OUTER_FORBIDDEN)
     cap = call.rules.son_tools.outer_bargain_per_epoch
     await call.within_limit(TurnCounter.OUTER_BARGAIN, cap, "son_tools.outer_bargain_per_epoch", SonResult.OUTER_LIMIT)
-    gain = await bargain_with_outer(call.tick, call.son.id, args.outsider_id, args.request)
+    terms = BargainTerms(args.gain, args.price, args.price_domain, args.price_world_id)
+    gain = await bargain_with_outer(call.tick, call.son.id, args.outsider_id, args.request, terms)
     call.target(args.outsider_id)
     await call.bump(TurnCounter.OUTER_BARGAIN)
     return result(SonResult.OUTER_BARGAINED, gain=gain)

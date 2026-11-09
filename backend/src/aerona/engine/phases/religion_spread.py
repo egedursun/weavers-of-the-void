@@ -21,13 +21,15 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.culture import LanguageRegister
 from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
-from aerona.domain.enums.mind import PressureKind
+from aerona.domain.enums.mind import MemoryKind, PressureKind
 from aerona.domain.enums.polity import ClauseKind, LawKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import JourneyStatus
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import CultStats
 from aerona.engine.context import TickContext
+from aerona.engine.divine.politics import god_grudge
+from aerona.engine.divine.standing import neglect_of
 from aerona.engine.economy.routes import link_partners
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.faith.zealotry import drifted, record_heresy
@@ -441,6 +443,8 @@ def god_name(faith: FaithIndex, god_id: int | None) -> str:
 
 
 async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, old: int | None, chosen: ConversionSource, *, syncretic: bool) -> None:
+    if not syncretic:
+        await god_grudge(ctx, old, chosen.god_id, MemoryKind.STOLE_FAITHFUL, f"took {community.name}")
     new_name = god_name(faith, chosen.god_id)
     if syncretic:
         text = f"{community.name} began making offerings to {new_name} too, without abandoning {god_name(faith, old)}."
@@ -462,6 +466,7 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.cult_doctrines",
     "table.cult_tenets",
     "table.culture_values",
+    "table.divine_standing",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.journeys",
@@ -543,7 +548,8 @@ async def religion_spread(ctx: TickContext) -> None:
         understood = await preaching_barrier(ctx, chosen.converter_id, community.id) if chosen is not None and chosen.converter_id is not None else 1.0
         freedom = chosen is not None and chosen.converter_id is not None and frozenset((chosen.converter_id, community.id)) in free_pairs
         lenience = ctx.rules.legislation.tolerance_spread_pct / PERCENT if freedom else tolerance(ctx, laws, community.id)
-        if chosen is None or not rng.probability(min(1.0, chosen.pull * understood * lenience)):
+        drift = 1 + (await neglect_of(ctx, community.id, old) if old is not None else 0) * ctx.rules.divine_standing.neglect_conversion_pct / PERCENT / PERCENT
+        if chosen is None or not rng.probability(min(1.0, chosen.pull * understood * lenience * drift)):
             continue
         weight = syncretism_weight(ctx.rules, world, community.id, chosen.god_id)
         syncretic = old is not None and not seeker and rng.chance(settings.syncretism_pct * god_kinship(world, old, chosen.god_id) * weight)

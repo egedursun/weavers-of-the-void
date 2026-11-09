@@ -7,6 +7,9 @@ import { MentionText } from '@/components/domain/MentionText'
 import { Text } from '@/components/typography'
 import { targetsOfRefs } from '@/features/chronicle/linkTargets'
 import { CommunityAddictions } from '@/features/cosmos/EconomyControls'
+import { LawProfileSection } from '@/features/divine/LawProfileSection'
+import { OuterProfileSection } from '@/features/divine/OuterProfileSection'
+import { RegardSection } from '@/features/divine/RegardSection'
 import { DedicationSection } from '@/features/foundations/DedicationSection'
 import { Lightbox } from '@/features/images/Lightbox'
 import { useImageGenEvents } from '@/features/images/imageGenState'
@@ -367,6 +370,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
           <CommunityRelations ctx={ctx} readOnlyReason={readOnly} />
         )}
         {isCommunity(ctx.type) && <CommunityWars entityId={entity.id} />}
+        {isCommunity(ctx.type) && (
+          <RegardSection communityId={entity.id} readOnlyReason={readOnly} />
+        )}
         <EntityDepth entity={entity} targets={targets} />
         <KnowledgeLawPanel ctx={ctx} readOnlyReason={readOnly} />
         <PeopleBeliefs ctx={ctx} readOnlyReason={readOnly} />
@@ -419,6 +425,12 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         )}
         {entity.entity_type === 'mortal' && (
           <PetsSection mortalId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'natural_law' && (
+          <LawProfileSection lawId={entity.id} />
+        )}
+        {entity.entity_type === 'outer_being' && (
+          <OuterProfileSection beingId={entity.id} />
         )}
         {entity.entity_type === 'event' && (
           <EventSection eventId={entity.id} readOnlyReason={readOnly} />

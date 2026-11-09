@@ -26,11 +26,6 @@ class SonBrief(ContextItem):
     domain_2: str
 
 
-class MotifShare(ContextItem):
-    key: str
-    percent: int
-
-
 class ChronicleRow(ContextItem):
     age: int
     text: str
@@ -50,15 +45,6 @@ class NamedRecord(ContextItem):
 class LabelValue(ContextItem):
     label: str
     value: str
-
-
-class TiredImages(ContextItem):
-    motifs: list[MotifShare] = Field(default_factory=list)
-    foreign_images: list[str] = Field(default_factory=list)
-
-    @property
-    def present(self) -> bool:
-        return bool(self.motifs or self.foreign_images)
 
 
 class NamingRuleItem(ContextItem):

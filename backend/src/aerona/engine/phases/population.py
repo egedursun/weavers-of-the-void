@@ -5,6 +5,7 @@ from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import PowerEffect
@@ -113,6 +114,7 @@ async def grow_community(
     region_id = model.atlas.top_region(community.id)
     ground = await ctx.session.get(RegionEnvironmentRow, region_id) if region_id is not None else None
     magic = model.knowledge.level(community.id, KnowledgeBranch.MAGIC)
+    vigour *= await ctx.hook_factor(community.id, DomainHook.FERTILITY)
     pressures = Pressures(
         fertility=vigour,
         hunger=hunger_level(rules, biology, ground, await fed_index(ctx.session, community.id), magic),
@@ -149,8 +151,10 @@ async def grow_community(
     "table.community_cohorts",
     "table.community_needs",
     "table.community_societies",
+    "table.divine_wounds",
     "table.endemic_diseases",
     "table.holder_levels",
+    "table.natural_law_profiles",
     "table.nodes",
     "table.outbreaks",
     "table.people_biology",
@@ -161,6 +165,7 @@ async def grow_community(
     "table.son_powers",
     "table.war_sides",
     "table.wars",
+    "table.world_domain_hooks",
     "table.world_maps",
 )
 @writes("cult.followers", "people.population", "settlement.population", "table.community_cohorts", "table.entities")

@@ -1,4 +1,3 @@
-from collections import Counter
 from dataclasses import dataclass
 
 from sqlalchemy import delete, func, select
@@ -38,9 +37,6 @@ from aerona.prompts.contexts.common import ChronicleRow as ChronicleLine
 from aerona.prompts.contexts.narrative import BeliefPair, EpicCreation, HistorianEntry, SonEpicContext, VoicesContext
 from aerona.prompts.schemas.narrative import SonEpicOutput, VoicesOutput
 
-PERCENT = 100
-ALWAYS_BANNED = ("«…they think, whereas…»", "«In truth …»")
-PATTERN_WORDS = 3
 BELIEF_BONDS = (BondKind.CURSED, BondKind.BLESSED, BondKind.ENEMY, BondKind.PROTECTS)
 CREATOR_DOMAIN_LABELS = ("Creation", "Everything")
 MECHANICAL_KINDS = (
@@ -137,14 +133,6 @@ async def belief_pairs(scope: Scope, peoples: list[EntityRow]) -> list[BeliefPai
     return (patrons + others + creator_pairs)[: scope.rules.fate.folk_beliefs_per_epoch]
 
 
-async def piled_patterns(scope: Scope) -> list[str]:
-    settings = scope.rules.folk_belief
-    rows = list(await scope.session.scalars(select(FolkBeliefRow.misconception).where(FolkBeliefRow.misconception.is_not(None)).limit(settings.pattern_window)))
-    openings = Counter(" ".join((text or "").split()[:PATTERN_WORDS]).casefold() for text in rows if text)
-    floor = max(2, len(rows) * settings.pattern_threshold_pct / PERCENT)
-    return [f"«{opening}…»" for opening, count in openings.items() if opening and count >= floor]
-
-
 def without_rejected(text: str, rejected: list[str], min_letters: int) -> str:
     banned = {sentence for sentence in sentences(text) if any(mentioned(sentence, name, min_letters, distinct_first=False) for name in rejected)}
     return drop_sentences(text, banned)[0] if banned else text
@@ -187,7 +175,6 @@ async def voices_of_peoples(runtime: AgentRuntime, epoch: int) -> VoicesResult:
             historians=writers,
             beliefs=pairs,
         )
-        banned = ", ".join([*ALWAYS_BANNED, *await piled_patterns(scope)])
         rejected = list((await unique_rejected(scope)).values())
     runtime.step(f"The peoples' historians and bards are writing their own accounts ({len(writers)} chronicles, {len(pairs)} beliefs)…")
     output = await ask(
@@ -198,7 +185,6 @@ async def voices_of_peoples(runtime: AgentRuntime, epoch: int) -> VoicesResult:
         user=(PromptId.VOICES_USER, context),
         output=VoicesOutput,
         time_limit=rules.fate.voices_timeout,
-        variables={"banned_patterns": banned},
     )
     allowed_views = {entry.people.id for entry in writers}
     allowed_pairs = {(pair.people_id, pair.son_id): pair for pair in pairs}

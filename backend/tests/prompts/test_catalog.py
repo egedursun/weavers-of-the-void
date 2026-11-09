@@ -48,7 +48,7 @@ def test_lore_prompts_carry_their_language(prompt_id: PromptId) -> None:
     context = sample_context(prompt_id)
     assert getattr(context, LORE_CONTEXT_FIELD) is LoreLanguage.TURKISH
     english = context.model_copy(update={LORE_CONTEXT_FIELD: LoreLanguage.ENGLISH})
-    if prompt_id.value.endswith("system") or prompt_id in {PromptId.LORE_LANGUAGE, PromptId.CHRONICLER_FIX_OPENING_USER}:
+    if prompt_id.value.endswith("system") or prompt_id is PromptId.LORE_LANGUAGE:
         assert LORE_DIRECTIVE in render(prompt_id, context)
         assert "in English" in render(prompt_id, english)
 

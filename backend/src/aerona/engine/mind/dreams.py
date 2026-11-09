@@ -15,8 +15,10 @@ from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.mind import DreamKind, DreamReading, MemoryKind, NeedKind, SkillKind, ThoughtKind, ValueHolder
+from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.world import WorldType
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.context import TickContext
@@ -199,7 +201,8 @@ async def nightmare(ctx: TickContext, mortal: EntityRow, mind: Mind, base: int) 
 async def dream(ctx: TickContext, mortal: EntityRow) -> DreamRow | None:
     table = ctx.rules.dreams
     rng = ctx.rng(seed_of("dream", mortal.id, ctx.epoch))
-    if not rng.chance(table.dream_pct):
+    real = ctx.rules.natural_laws.real_dream_pct / PERCENT if (await ctx.laws()).has(NaturalLaw.DREAMS_ARE_REAL, mortal.world_id) else 1.0
+    if not rng.chance(table.dream_pct * real * await ctx.hook_factor(mortal.id, DomainHook.DREAM_SENDING)):
         return None
     mind = await mind_of_dreamer(ctx, mortal)
     weights = {

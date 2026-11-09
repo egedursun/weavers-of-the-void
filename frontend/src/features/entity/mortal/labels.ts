@@ -240,7 +240,7 @@ export const CRIMES: Record<string, Named> = {
 }
 
 export const PUNISHMENTS: Record<
-  components['schemas']['aerona__domain__enums__mortal__PunishmentKind'],
+  components['schemas']['PunishmentKind'],
   Named
 > = {
   fine: { label: 'A fine', icon: Coins, tone: 'muted' },

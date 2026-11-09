@@ -5,7 +5,6 @@ from sqlalchemy import or_, select
 
 from aerona.agents.context.entity_detail import entity_detail
 from aerona.agents.context.scope import Scope
-from aerona.agents.context.tired_images import tired_images
 from aerona.agents.fate.prescreen import prescreen
 from aerona.db.tables.entities import CreationVerdictRow, EntityRow
 from aerona.domain.enums.agent import Verdict
@@ -45,8 +44,7 @@ async def records_to_judge(scope: Scope, start: int, epoch: int) -> list[EntityR
 
 
 async def creation_entry(scope: Scope, entity: EntityRow, warn: bool) -> str:
-    images = await tired_images(scope, entity.world_id)
-    warnings = await prescreen(scope, entity, images) if warn else []
+    warnings = await prescreen(scope, entity) if warn else []
     return render(PromptId.FATE_CREATION_ENTRY, FateCreationEntryContext(detail=await entity_detail(scope, entity), warnings=warnings))
 
 

@@ -201,6 +201,7 @@ class TreatyKind(StrEnum):
     GUARANTEE = "guarantee"
     INTERWORLD = "interworld"
     COALITION = "coalition"
+    DIVINE_PACT = "divine_pact"
 
 
 class TreatyStatus(StrEnum):

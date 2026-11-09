@@ -14,6 +14,7 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.relations import RelationshipRow, SocialCircleRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.body import HarmCause
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind, Facet, GriefStage, MemoryKind, NeedKind, SkillKind, ThoughtKind, ValueHolder, WantKind
 from aerona.domain.enums.relations import AppealKind, InteractionKind, PersuasionAim, RelationType
@@ -383,7 +384,8 @@ async def interact(scene: Scene, actor: int, target: int, kind: InteractionKind,
     success = await lands(scene, actor, target, kind, rng)
     if success:
         if heard is not None:
-            shift(ctx.rules, heard, ctx.epoch, friendship=spec.friendship, romance=spec.romance, familiarity=spec.familiarity, rivalry=spec.rivalry)
+            kindled = spec.romance * await ctx.hook_factor(target, DomainHook.KINDLING_LOVE) if spec.romance > 0 else spec.romance
+            shift(ctx.rules, heard, ctx.epoch, friendship=spec.friendship, romance=kindled, familiarity=spec.familiarity, rivalry=spec.rivalry)
         if spoke is not None:
             share = 1 if spec.mutual else 0.5
             shift(ctx.rules, spoke, ctx.epoch, friendship=spec.friendship * share, familiarity=spec.familiarity, rivalry=spec.rivalry * share)

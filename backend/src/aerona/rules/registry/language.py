@@ -8,19 +8,22 @@ from aerona.rules.model import rule
 class LanguageRules:
     similar_name_max_length: int = rule(7, 0, 20, RuleGroup.LANGUAGE_AND_NAMES, "Longest name for which a single-letter difference is forbidden (letters)")
     name_family_cap: int = rule(3, 1, 50, RuleGroup.LANGUAGE_AND_NAMES, "Maximum names starting with the same root (first letters, see root letters)")
-    motif_threshold_pct: int = rule(18, 1, 100, RuleGroup.LANGUAGE_AND_NAMES, "Tired motif: if it appears in this percentage of recent descriptions")
-    motifs_in_prompt: int = rule(14, 0, 60, RuleGroup.LANGUAGE_AND_NAMES, "Tired motifs shown in the prompt")
-    motif_window: int = rule(120, 15, 2000, RuleGroup.LANGUAGE_AND_NAMES, "Recent descriptions examined for tired motifs")
+    motif_threshold_pct: int = rule(
+        18, 1, 100, RuleGroup.LANGUAGE_AND_NAMES, "Recurring image report: flagged when it appears in this percentage of recent descriptions"
+    )
+    motifs_in_prompt: int = rule(14, 0, 60, RuleGroup.LANGUAGE_AND_NAMES, "Recurring images listed in the prompt-context report")
+    motif_window: int = rule(120, 15, 2000, RuleGroup.LANGUAGE_AND_NAMES, "Recurring image report: recent descriptions examined")
     motif_pair_threshold_pct: int = rule(
-        15, 1, 100, RuleGroup.LANGUAGE_AND_NAMES, "Tired image: if a two-word image appears in this percentage of recent deepenings and epoch narratives"
+        15,
+        1,
+        100,
+        RuleGroup.LANGUAGE_AND_NAMES,
+        "Recurring image report: a two-word image flagged when it appears in this percentage of recent deepenings and epoch narratives",
     )
-    motif_root_min_letters: int = rule(
-        3, 1, 20, RuleGroup.LANGUAGE_AND_NAMES, "Tired motif and piled names: minimum letters of a word root that is counted; shorter words are not counted"
-    )
-    motif_min_repeats: int = rule(6, 1, 1000, RuleGroup.LANGUAGE_AND_NAMES, "Tired motif: minimum repetitions")
-    motif_min_records: int = rule(15, 1, 2000, RuleGroup.LANGUAGE_AND_NAMES, "Tired motif: minimum descriptions before checking starts")
+    motif_min_repeats: int = rule(6, 1, 1000, RuleGroup.LANGUAGE_AND_NAMES, "Recurring image report: minimum repetitions")
+    motif_min_records: int = rule(15, 1, 2000, RuleGroup.LANGUAGE_AND_NAMES, "Recurring image report: minimum descriptions before measuring starts")
     root_letters: int = rule(4, 1, 20, RuleGroup.LANGUAGE_AND_NAMES, "Name family and common root: letters compared from the start")
-    motif_cache_per_world: int = rule(16, 1, 1000, RuleGroup.LANGUAGE_AND_NAMES, "Tired motif: measurements cached per world")
+    motif_cache_per_world: int = rule(16, 1, 1000, RuleGroup.LANGUAGE_AND_NAMES, "Recurring image report: measurements cached per world")
     motif_recent_epochs: int = rule(1, 1, 50, RuleGroup.LANGUAGE_AND_NAMES, "Rising image: closed epochs measured (the epoch being written is not counted)")
     motif_previous_epochs: int = rule(4, 1, 200, RuleGroup.LANGUAGE_AND_NAMES, "Rising image: earlier epochs it is compared against")
     motif_rising_min_pct: int = rule(
@@ -28,11 +31,13 @@ class LanguageRules:
         0,
         100,
         RuleGroup.LANGUAGE_AND_NAMES,
-        "Rising image: share of the recent epochs' creations a tag must reach (%; the family drifted to when another is banned)",
+        "Rising image: share of the recent epochs' creations a tag must reach (%)",
     )
-    motif_rising_ratio_pct: int = rule(140, 100, 10000, RuleGroup.LANGUAGE_AND_NAMES, "Rising image: growth over the earlier epochs that makes a tag tired (%)")
+    motif_rising_ratio_pct: int = rule(
+        140, 100, 10000, RuleGroup.LANGUAGE_AND_NAMES, "Rising image: growth over the earlier epochs that flags a tag as rising (%)"
+    )
     motif_spread_world_pct: int = rule(
-        50, 1, 100, RuleGroup.LANGUAGE_AND_NAMES, "Cosmos-wide image: a tag tired in this share of the worlds is banned in every world (%)"
+        50, 1, 100, RuleGroup.LANGUAGE_AND_NAMES, "Cosmos-wide image: a tag flagged in this share of the worlds is flagged in every world (%)"
     )
     dialect_root_min_letters: int = rule(3, 1, 20, RuleGroup.LANGUAGE_AND_NAMES, "Dialect check: minimum letters of an invented root examined")
     signature_consonant_pct: int = rule(62, 10, 100, RuleGroup.LANGUAGE_AND_NAMES, "Language signature: share chosen from the world's consonants (%)")

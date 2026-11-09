@@ -108,9 +108,8 @@ def test_object_fields_and_variables() -> None:
     schema = output_schema(PromptId.DEEPEN_ENTITY_USER, RULES, [ObjectFields(("special",), (("temperament", "Temperament"),))])
     special = schema["properties"]["special"]
     assert special["required"] == ["temperament"]
-    voices = output_schema(PromptId.VOICES_USER, RULES, variables={"banned_patterns": "«In truth …»"})
-    wrong = voices["properties"]["beliefs"]["items"]["properties"]["wrong"]["description"]
-    assert "«In truth …»" in wrong
+    foreign = output_schema(PromptId.FOREIGN_GOD_DEEPEN_USER, RULES, variables={"foreign_god_powers": "«every power»"})
+    assert "«every power»" in foreign["properties"]["powers"]["description"]
 
 
 def test_bad_paths_and_missing_outputs_raise() -> None:

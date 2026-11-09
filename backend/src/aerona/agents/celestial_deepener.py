@@ -3,7 +3,6 @@ from sqlalchemy import select
 from aerona.agents.ask import ask
 from aerona.agents.context.recent_chronicle import recent_chronicle
 from aerona.agents.context.scope import Scope, load_scope
-from aerona.agents.context.tired_images import tired_images
 from aerona.agents.context.world_header import world_header
 from aerona.agents.deepener import normalize_depth
 from aerona.agents.roles import AgentRole
@@ -93,7 +92,6 @@ async def deepen_celestial(runtime: AgentRuntime, kind: CelestialKind, node_id: 
             lore=lore,
             neighbour_lines=neighbours,
             recent_events=await recent_chronicle(scope, rules.context.chronicle_default, world_id),
-            tired_images=await tired_images(scope, world_id),
         )
     output = await ask(
         runtime.model,

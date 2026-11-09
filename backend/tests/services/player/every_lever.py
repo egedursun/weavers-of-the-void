@@ -12,11 +12,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.random import SeededRandom
 from aerona.db.base import Base
-from aerona.db.repositories.entities import EntityRepository
+from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.tables.agency import CreationRewardRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import CreatorRow
+from aerona.db.tables.divine import NaturalLawProfileRow, OuterBeingProfileRow
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -29,13 +30,15 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.divine import LawScope, OuterHunger
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
-from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.epoch import DeferredStepStatus
-from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
+from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.world import WorldType
+from aerona.domain.models.entity_stats import NaturalLawStats, OuterBeingStats
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
 from aerona.engine.economy.route_control import route_of
 from aerona.engine.economy.stocks import GoodsLedger
@@ -587,6 +590,53 @@ async def foreign_god(session: AsyncSession) -> None:
     await add_foreign_god(session, Rules(), SeededRandom.for_epoch(1, 1, "lever"), 1, NewForeignGod(name="Ussamar", world_id=world, domains=(Domain.SEA, None)))
 
 
+async def natural_law(session: AsyncSession) -> int:
+    world = await session.scalar(select(WorldRow.id).order_by(WorldRow.id).limit(1))
+    assert world is not None
+    law = await EntityRepository(session).create(
+        EntityDraft(
+            name="The Long Summer",
+            entity_type=EntityType.NATURAL_LAW,
+            description="A law of the world.",
+            stats=NaturalLawStats(),
+            power_level=2,
+            origin=EntityOrigin.CREATOR,
+            birth_epoch=1,
+            world_id=world,
+            natural_law=NaturalLaw.BOUNTY,
+        )
+    )
+    session.add(NaturalLawProfileRow(law_entity_id=law.id, effect=NaturalLaw.BOUNTY, scope=LawScope.WORLD, world_id=world, locked=[]))
+    await session.flush()
+    return law.id
+
+
+async def outer_being(session: AsyncSession) -> int:
+    found = await session.scalar(select(EntityRow.id).where(EntityRow.entity_type == EntityType.OUTER_BEING).order_by(EntityRow.id).limit(1))
+    if found is not None:
+        if await session.get(OuterBeingProfileRow, found) is None:
+            session.add(OuterBeingProfileRow(outer_entity_id=found, hunger=OuterHunger.NAMES, locked=[]))
+            await session.flush()
+        return found
+    world = await session.scalar(select(WorldRow.id).order_by(WorldRow.id).limit(1))
+    assert world is not None
+    being = await EntityRepository(session).create(
+        EntityDraft(
+            name="The Far Listener",
+            entity_type=EntityType.OUTER_BEING,
+            description="From outside.",
+            stats=OuterBeingStats(size=40, interest=50, influence=30),
+            power_level=3,
+            origin=EntityOrigin.CREATOR,
+            birth_epoch=1,
+            world_id=world,
+        )
+    )
+    session.add(OuterBeingProfileRow(outer_entity_id=being.id, hunger=OuterHunger.NAMES, locked=[]))
+    await session.flush()
+    return being.id
+
+
 CUSTOM_KIND = ("kind:create", {"catalog": "technique", "base": "phalanx_drill", "name": "Shieldwall Drill"})
 SPEAKERS = ("language:speakers", {"community_id": Pick(TOWN), "language_id": Pick(EntityType.LANGUAGE, 2), "share": 30, "kind": "second"})
 TEMPLE = ("structure:commission", {"site_id": Pick(TOWN), "kind": "temple"})
@@ -615,6 +665,13 @@ PROPHECY = (
 )
 MAIMED = ("body:maim", {"bearer_id": Pick(MORTAL), "part": "left_arm", "severity": 3, "lethal": False})
 
+GOAL = ("god_goal:set", {"god_id": Pick("son"), "kind": "be_worshipped", "amount": 3})
+STANDING = ("divine_standing:set", {"community_id": Pick(TOWN), "god_id": Pick("son"), "values": {"love": 40}})
+WOUND = ("divine_wound:inflict", {"god_id": Pick("son"), "kind": "stolen_name", "severity": 40})
+AVATAR = ("avatar:manifest", {"god_id": Pick("son"), "place_id": Pick(TOWN)})
+DECREE = ("ruling:decree", {"motion": "cosmic_truce"})
+BREACH = ("breach:open", {"being_id": Computed(outer_being), "region_id": Pick(EntityType.REGION), "strength": 30})
+
 LEVERS: dict[str, Lever] = {
     **{name: after("affliction:give") for name in ("affliction:cure", "affliction:delete", "affliction:edit", "affliction:hold")},
     "aspiration:dream_remove": after("aspiration:dream"),
@@ -626,6 +683,32 @@ LEVERS: dict[str, Lever] = {
     "aspiration:perk_remove": after("aspiration:perk"),
     **{f"beast:{verb}": after(BEAST) for verb in ("edit", "rouse", "bind", "lair", "slay", "treasure")},
     "pet:set": after(BEAST),
+    "domain_hook:set": given(world_id=Pick("world"), domain="sea", hook="naval_might", pct=150),
+    "domain_hook:clear": after(
+        ("domain_hook:set", {"world_id": Pick("world"), "domain": "sea", "hook": "naval_might", "pct": 150}),
+        world_id=Pick("world"),
+        domain="sea",
+        hook="naval_might",
+    ),
+    "god_goal:set": given(god_id=Pick("son"), kind="be_worshipped", amount=3),
+    **{name: after(GOAL, goal_id=Where("son_goals", "id")) for name in ("god_goal:edit", "god_goal:drop")},
+    "divine_standing:set": given(community_id=Pick(TOWN), god_id=Pick("son")),
+    "divine_standing:clear": after(STANDING, community_id=Pick(TOWN), god_id=Pick("son")),
+    "divine_wound:inflict": given(god_id=Pick("son"), kind="stolen_name", severity=40),
+    **{name: after(WOUND, wound_id=Where("divine_wounds", "id")) for name in ("divine_wound:edit", "divine_wound:remove")},
+    "avatar:manifest": given(god_id=Pick("son"), place_id=Pick(TOWN)),
+    **{name: after(AVATAR, avatar_id=Where("avatars", "avatar_entity_id")) for name in ("avatar:edit", "avatar:withdraw")},
+    "taboo:set": given(act="torture", severity=60),
+    "taboo:remove": after(("taboo:set", {"act": "torture", "severity": 60}), act="torture"),
+    "attention:set": given(world_id=Pick("world")),
+    "attention:clear": after(("attention:set", {"world_id": Pick("world"), "values": {"watched": True}}), world_id=Pick("world")),
+    "divine_pact:seal": setup_then(foreign_god, son_id=Pick("son"), god_id=Pick("foreign_god")),
+    "ruling:decree": given(motion="cosmic_truce"),
+    **{name: after(DECREE, ruling_id=Where("council_rulings", "id")) for name in ("ruling:edit", "ruling:revoke")},
+    "law_profile:edit": given(law_id=Computed(natural_law)),
+    "outer_profile:edit": given(being_id=Computed(outer_being)),
+    "breach:open": given(being_id=Computed(outer_being), region_id=Pick(EntityType.REGION), strength=30),
+    **{name: after(BREACH, breach_id=Where("breach_points", "id")) for name in ("breach:edit", "breach:close")},
     "anatomy:edit": after(BEAST, node_id=Pick(EntityType.BEAST)),
     "anatomy:reroll": after(BEAST, node_id=Pick(EntityType.BEAST)),
     "crisis:open": given(target_id=Pick(REALM, 1), demand="pay"),
@@ -1441,6 +1524,15 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "mind:values": {"honour": 40},
     "mind:attributes": {"strength": 60},
     "mind:facets": {"anxiety": 30},
+    "god_goal:edit": {"progress": 40},
+    "divine_standing:set": {"love": 40, "fear": 10},
+    "divine_wound:edit": {"healed": 30},
+    "avatar:edit": {"deeds": 2},
+    "attention:set": {"attention": 40, "watched": True},
+    "ruling:edit": {"until_epoch": 9},
+    "law_profile:edit": {"strength": 70, "scope": "cosmos"},
+    "outer_profile:edit": {"reach": 2, "hunger": "light"},
+    "breach:edit": {"strength": 40},
 }
 LEVERS.update({name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in EDITS.items()})
 

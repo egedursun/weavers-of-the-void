@@ -17,6 +17,7 @@ from aerona.tools.son import (
     cosmos,
     death,
     disease,
+    divinity,
     faith,
     flora,
     folk,
@@ -81,6 +82,7 @@ FAMILIES: tuple[Callable[[], list[SonSpec]], ...] = (
     land.specs,
     regions.specs,
     works.specs,
+    divinity.specs,
     lineage.specs,
     names.specs,
 )

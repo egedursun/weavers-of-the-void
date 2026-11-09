@@ -69,7 +69,7 @@ async def test_prompt_catalogue_lists_prompts_and_tools(api: ApiWorld) -> None:
     assert detail["template_source"]
     assert detail["output_schema"]
     assert detail["variables"]
-    plain = (await api.http.get("/api/prompt-context/catalogue/cliche_ban")).json()
+    plain = (await api.http.get("/api/prompt-context/catalogue/fate_judgment_system")).json()
     assert plain["output_schema"] is None
     assert (await api.http.get("/api/prompt-context/catalogue/nothing")).status_code in (400, 422)
 
@@ -86,8 +86,6 @@ async def test_tired_motif_override_cycle(api: ApiWorld) -> None:
     assert listed["overrides"][0]["motif"] == "rust"
     scoped = await api.http.put("/api/prompt-context/tired-motifs/overrides", json={"motif": "salt", "mode": "allowed", "world_id": world.core.world.id})
     assert scoped.json()["overrides"][0]["world_id"] == world.core.world.id
-    summary = (await api.http.get("/api/prompt-context/tired-images")).json()["text"]
-    assert "rust" in summary
     cleared = await api.http.post("/api/prompt-context/tired-motifs/overrides/clear", json={"motif": "rust"})
     assert cleared.json()["motifs"] == []
     assert cleared.json()["overrides"] == []
@@ -95,7 +93,7 @@ async def test_tired_motif_override_cycle(api: ApiWorld) -> None:
     assert (await api.http.put("/api/prompt-context/tired-motifs/overrides", json={"motif": "  ", "mode": "pinned"})).status_code == 400
 
 
-@pytest.mark.parametrize("kind", [ContextBlockKind.TIRED_IMAGES, ContextBlockKind.RECENT_EVENTS])
+@pytest.mark.parametrize("kind", [ContextBlockKind.CHRONICLER, ContextBlockKind.RECENT_EVENTS])
 async def test_empty_world_blocks_do_not_fail(empty_api: ApiWorld, kind: ContextBlockKind) -> None:
     response = await empty_api.http.get(f"/api/prompt-context/{kind.value}")
     assert response.status_code in (200, 404, 409)

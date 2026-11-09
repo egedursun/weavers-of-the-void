@@ -9,6 +9,7 @@ from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementP
 from aerona.db.tables.warfare import SiegeRow, WarRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.discovery import BlueprintKind
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.military import DefenderAction, SackChoice, SiegeAction, StarvationStage, UnitKind
 from aerona.domain.enums.mind import MemoryKind
@@ -115,6 +116,7 @@ async def starve(ctx: TickContext, siege: SiegeRow, besieged: EntityRow, rationi
         return
     days = ctx.rules.logistics.season_days
     eaten = round_half_up(days * table.ration_use_pct / PERCENT) if rationing else days
+    eaten = round_half_up(eaten * await ctx.hook_factor(siege.besieger_entity_id, DomainHook.SIEGE_STARVING))
     if "supplies" not in siege.locked:
         siege.supplies = max(0, siege.supplies - eaten)
     if "water" not in siege.locked:
@@ -155,7 +157,7 @@ async def batter(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastruct
         siege.breaches += 1 if action in {SiegeAction.BOMBARD, SiegeAction.MINE} else 0
         return
     material = wall_material(walls, siege)
-    gates = gate_factor(ctx, walls)
+    gates = gate_factor(ctx, walls) * await ctx.hook_easing(siege.besieged_entity_id, DomainHook.BORDER_GUARD)
     if action is SiegeAction.BOMBARD and "walls_condition" not in (walls.locked or []):
         damage = round_half_up(table.bombard_breach * engines * bombard_factor(ctx, material) * gates)
         walls.walls_condition = clamp_int(walls.walls_condition - damage, 0, PERCENT)

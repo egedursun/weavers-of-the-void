@@ -4,7 +4,6 @@ from pydantic import Field
 
 from aerona.domain.enums.son import ReputationLabel
 from aerona.prompts.contexts.base import ContextItem, LoreRulesContext, PromptContext, RulesContext
-from aerona.prompts.contexts.common import TiredImages
 
 
 class StatValue(ContextItem):
@@ -81,9 +80,7 @@ class SonTurnSystemContext(LoreRulesContext):
     creator_wishes: str = ""
     sanity: int | None = None
     clouded: bool = False
-    tired_images: TiredImages = Field(default_factory=TiredImages)
-    openings: list[str] = Field(default_factory=list)
-    tics: list[str] = Field(default_factory=list)
+    divine: list[str] = Field(default_factory=list)
 
 
 class SonTurnUserContext(RulesContext):

@@ -8,8 +8,6 @@ from sqlalchemy import delete, select, update
 from aerona.agents.chronicle import ChroniclePhase, write_line
 from aerona.agents.context.mortal import mortal_context
 from aerona.agents.context.scope import Scope, load_scope
-from aerona.agents.context.speech import tics
-from aerona.agents.context.tired_images import tired_images
 from aerona.agents.metrics import metrics_turn
 from aerona.agents.roles import AgentRole, turn_label
 from aerona.agents.runtime import AgentRuntime
@@ -295,8 +293,6 @@ async def mortal_prompts(runtime: AgentRuntime, started: StartedMortalTurn, cata
             paid_tools=catalogue.paid,
             free_tools=catalogue.free,
             captor=await captor_name(scope, entity),
-            tics=await tics(session, rules, None),
-            tired_images=await tired_images(scope, entity.world_id),
         )
         seen = await EntityRepository(session).has_flag(entity.id, EntityFlag.SAW_THE_CREATOR)
         texts = list(await session.scalars(select(MessageRow.text).where(MessageRow.id.in_(started.messages)).order_by(MessageRow.id)))

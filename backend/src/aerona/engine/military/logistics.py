@@ -15,9 +15,11 @@ from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ItemClass, Technique
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.environment import MovementMode, ScarKind, WeatherKind
 from aerona.domain.enums.military import CommandArea, MoraleState, MutinyOutcome, Stance
+from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.environment.book import EnvironmentBook, add_scar
@@ -104,6 +106,9 @@ def step_towards(
     weather: WeatherKind | None = None,
     season: WorldSeasonRow | None = None,
     pontoon: bool = False,
+    hardy: float = 0.0,
+    inverted: bool = False,
+    heavy: bool = False,
 ) -> int:
     profile = march.profile
     if march.goal is None or profile.region_entity_id is None or profile.region_entity_id == march.goal:
@@ -113,7 +118,9 @@ def step_towards(
     if profile.forced_march:
         reach = round_half_up(reach * rules.logistics.forced_march_pct / PERCENT)
     here = ground.regions.get(profile.region_entity_id)
-    budget = march_budget(rules, reach, weather=weather, season=season, road=on_road(here, rules), baggage=profile.baggage)
+    budget = march_budget(
+        rules, reach, weather=weather, season=season, road=on_road(here, rules), baggage=profile.baggage, hardy=hardy, inverted=inverted, heavy=heavy
+    )
     moved = 0
     for region_id in path[1:]:
         region = ground.regions.get(region_id)
@@ -383,7 +390,22 @@ async def advance(
         log.moved = retreat(ctx.rules, atlas, march.owner, profile)
     elif "region_id" not in profile.locked and profile.stance not in RESTING:
         pontoon = engineers(ctx.rules, rows)
-        log.moved = step_towards(ctx.rules, atlas, ground, march, charted=charted, supplied=supplied, weather=weather, season=season_row, pontoon=pontoon)
+        hardy = await ctx.hook_pct(march.owner.id, DomainHook.COLD_ENDURANCE) * ctx.rules.domains.cold_share_pct / PERCENT / PERCENT
+        laws = await ctx.laws()
+        log.moved = step_towards(
+            ctx.rules,
+            atlas,
+            ground,
+            march,
+            charted=charted,
+            supplied=supplied,
+            weather=weather,
+            season=season_row,
+            pontoon=pontoon,
+            hardy=hardy,
+            inverted=laws.has(NaturalLaw.SEASONS_REVERSED, march.army.world_id),
+            heavy=laws.has(NaturalLaw.GRAVITY_SHIFT, march.army.world_id),
+        )
     if enemy is not None:
         log.raided = raid_supply(ctx.rules, profile, enemy.profile) > 0 or log.raided
     wandering = await navigate(ctx, march.army, march.owner, profile.region_entity_id, origin, charted=charted)

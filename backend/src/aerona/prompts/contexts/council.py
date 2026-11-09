@@ -52,6 +52,12 @@ class CouncilRelation(ContextItem):
     covenant: bool = False
 
 
+class CouncilTarget(ContextItem):
+    id: int
+    name: str
+    place: str | None = None
+
+
 class CouncilSessionContext(LoreRulesContext):
     world_name: str
     creator_name: str
@@ -62,6 +68,9 @@ class CouncilSessionContext(LoreRulesContext):
     absent: list[str] = Field(default_factory=list)
     multi_world: bool = False
     relationships: list[CouncilRelation] = Field(default_factory=list)
+    foreign_gods: list[CouncilTarget] = Field(default_factory=list)
+    worlds: list[CouncilTarget] = Field(default_factory=list)
+    rulings: list[str] = Field(default_factory=list)
 
 
 class ChatLine(ContextItem):

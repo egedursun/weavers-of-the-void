@@ -64,6 +64,7 @@ async def genetics_survey(ctx: TickContext) -> None:
     "table.bonds",
     "table.culture_ethics",
     "table.culture_values",
+    "table.divine_wounds",
     "table.faction_profiles",
     "table.genomes",
     "table.house_members",
@@ -72,11 +73,13 @@ async def genetics_survey(ctx: TickContext) -> None:
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.mortal_profiles",
+    "table.natural_law_profiles",
     "table.natural_laws",
     "table.personality_values",
     "table.polity_members",
     "table.preferences",
     "table.settlement_profiles",
+    "table.world_domain_hooks",
 )
 @writes(
     "table.allele_pools",

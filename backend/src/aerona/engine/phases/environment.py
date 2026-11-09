@@ -25,7 +25,7 @@ from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.environment import CoastKind, LandUse, NotableYearKind, RiverClass, ScarKind, SoilKind, WeatherEffect, WeatherKind
 from aerona.domain.enums.place import PlaceKind
-from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.world import ClimateEra, Discovery
 from aerona.domain.models.calendar import epoch_start_year
@@ -922,7 +922,10 @@ async def region_harvest(ctx: TickContext, world: WorldRow, season: HarvestSeaso
     settings = ctx.rules.harvest
     results = region_years(ctx, season, env)
     if "harvest_pct" not in env.locked:
-        env.harvest_pct = round_half_up(sum(item.harvest for item in results) / len(results))
+        laws, table = await ctx.laws(), ctx.rules.natural_laws
+        dark = table.night_harvest_pct if laws.has_at(NaturalLaw.ETERNAL_NIGHT, world.id, env.entity_id) else PERCENT
+        upturned = table.reversed_harvest_pct if laws.has_at(NaturalLaw.SEASONS_REVERSED, world.id, env.entity_id) else PERCENT
+        env.harvest_pct = round_half_up(sum(item.harvest for item in results) / len(results) * dark / PERCENT * upturned / PERCENT)
     region = await ctx.session.get(EntityRow, env.entity_id)
     if region is None:
         return 0
@@ -984,6 +987,7 @@ async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason)
     "table.epoch_year_cursors",
     "table.forced_weather",
     "table.holder_levels",
+    "table.natural_law_profiles",
     "table.place_environment",
     "table.plant_profiles",
     "table.region_crops",

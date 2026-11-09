@@ -132,3 +132,17 @@ class CreatorRules:
     temperament_content_pct: int = rule(25, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Share of the temperament reflected inversely on contentment (%)")
     mood_jitter: int = rule(5, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Random per-epoch stir of wrath and contentment (plus or minus)")
     content_discharge: int = rule(15, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Drop in contentment after grace descends")
+    taboo_anger_pct: int = rule(
+        20, 0, 200, RuleGroup.CREATOR_AND_ESSENCE, "Anger per hundred points of a taboo's severity the Creator feels when it is broken (%)"
+    )
+    taboo_wrath_pct: int = rule(
+        60, 0, 200, RuleGroup.CREATOR_AND_ESSENCE, "Chance per hundred points of a taboo's severity that the Creator strikes the breaker's place (%)"
+    )
+    taboo_default_severity: int = rule(50, 1, 100, RuleGroup.CREATOR_AND_ESSENCE, "Severity of a taboo read from the Creator's own words")
+    attention_start: int = rule(50, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Attention the Creator first gives a world")
+    attention_budget_pct: int = rule(100, 0, 300, RuleGroup.CREATOR_AND_ESSENCE, "Share of the Creator's interest spent on watched worlds each epoch (%)")
+    world_attention_per_action: int = rule(5, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Attention a world draws for each act of the Creator in it")
+    attention_decay_pct: int = rule(20, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Share of a world's attention that fades each epoch (%)")
+    far_eye_below: int = rule(20, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Attention below which a world is far from the Creator's eye")
+    far_eye_rebel_pct: int = rule(15, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Further loyalty slack and rebellion chance of a son in a world far from the eye")
+    passion_sign_chance: int = rule(20, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Chance each epoch the Creator sends a sign of one of its passions (%)")

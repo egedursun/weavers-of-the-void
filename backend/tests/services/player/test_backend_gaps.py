@@ -23,7 +23,7 @@ from aerona.engine.services.war import take_captive
 from aerona.rules.registry import Rules
 from aerona.services.gods import cosmic_economy as economy_service
 from aerona.services.player import assignments, catalog, cosmic_orders, death, diplomacy, god_power, interventions, warfare
-from aerona.services.player.interventions import PunishmentKind
+from aerona.services.player.interventions import GodPunishmentKind
 from aerona.services.player.scope import PlayerScope
 from tests.engine.gods.factories import make_context
 from tests.services.player.factories import PlayerWorld, action_kinds, add_world, bond, make_entity, make_son
@@ -40,7 +40,7 @@ async def test_failed_suppression_does_not_count_as_a_suppression(scope: PlayerS
     son = await make_son(session, "Velkar", world.world.id)
     son.rebel = True
     son.will, son.strength, son.level = 100, 100, 50
-    await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=PunishmentKind.SUPPRESS))
+    await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=GodPunishmentKind.SUPPRESS))
     kinds = list(await session.scalars(select(ActionRecordRow.kind)))
     assert ActionKind.SUPPRESS_REBELLION not in kinds and ActionKind.SUPPRESS_FAILED in kinds
 

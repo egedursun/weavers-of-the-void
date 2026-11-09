@@ -14,7 +14,7 @@ from aerona.domain.enums.son import SonStatus, Stat
 from aerona.domain.models.entity_stats import KnowledgeStats, SettlementStats
 from aerona.rules.registry import Rules
 from aerona.services.player import interventions
-from aerona.services.player.interventions import BlessingKind, PunishmentKind
+from aerona.services.player.interventions import BlessingKind, GodPunishmentKind
 from aerona.services.player.scope import PlayerScope
 from tests.services.player.factories import PlayerWorld, action_kinds, bond, changed_tables, make_entity, make_son
 
@@ -35,22 +35,22 @@ async def test_bless_essence_and_refuse_full(scope: PlayerScope, session: AsyncS
 async def test_punishments(scope: PlayerScope, session: AsyncSession, world: PlayerWorld, rules: Rules) -> None:
     son = await make_son(session, "Velkar", world.world.id)
     hp = son.hp
-    await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=PunishmentKind.LIGHTNING))
+    await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=GodPunishmentKind.LIGHTNING))
     assert son.hp < hp
-    await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=PunishmentKind.CHAIN))
+    await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=GodPunishmentKind.CHAIN))
     assert son.chained
     with pytest.raises(ValidationFailedError):
-        await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=PunishmentKind.CHAIN))
-    await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=PunishmentKind.EXILE))
+        await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=GodPunishmentKind.CHAIN))
+    await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=GodPunishmentKind.EXILE))
     assert son.status is SonStatus.EXILED
-    await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=PunishmentKind.PARDON))
+    await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=GodPunishmentKind.PARDON))
     assert son.status is SonStatus.ACTIVE and not son.chained
     with pytest.raises(ValidationFailedError):
-        await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=PunishmentKind.SUPPRESS))
+        await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=GodPunishmentKind.SUPPRESS))
     son.rebel = True
     son.will, son.strength, son.level = 1, 1, 1
     world.creator.essence = 10_000
-    outcome = await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=PunishmentKind.SUPPRESS))
+    outcome = await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=GodPunishmentKind.SUPPRESS))
     assert outcome.values["won"] is True
     assert await action_kinds(session) == [ActionKind.LIGHTNING, ActionKind.CHAIN, ActionKind.EXILE_SON, ActionKind.FORGIVE, ActionKind.SUPPRESS_REBELLION]
 
@@ -60,7 +60,7 @@ async def test_failed_suppression_records_a_distinct_kind(scope: PlayerScope, se
     son.rebel = True
     son.will, son.strength, son.level = 100, 100, 50
     world.creator.essence = 100
-    outcome = await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=PunishmentKind.SUPPRESS))
+    outcome = await interventions.punish(scope, interventions.Punish(son_id=son.id, kind=GodPunishmentKind.SUPPRESS))
     assert outcome.values["won"] is False
     assert son.rebel
     assert await action_kinds(session) == [ActionKind.SUPPRESS_FAILED]

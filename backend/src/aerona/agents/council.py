@@ -13,26 +13,35 @@ from aerona.agents.runtime import AgentRuntime
 from aerona.agents.text import sanitize
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.rarities import RARITY_LABELS
+from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.divine import CouncilRulingRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lore import CouncilRow, ThreadRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.agent import CouncilCaller, CouncilVote
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, ThreadStatus
+from aerona.domain.enums.divine import CouncilMotion, SonPunishment
 from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarStatus
 from aerona.domain.models.records import CouncilBallot, CouncilMinutes, CouncilSpeech
+from aerona.engine.divine.rulings import MOTION_LABELS, Motion, enact, leaning, record
 from aerona.engine.primitives.doom import step_doom
+from aerona.engine.primitives.manual import manual_context
 from aerona.events.kinds import EventKind
 from aerona.prompts import PromptId, render
-from aerona.prompts.contexts.council import AgendaKind, CouncilAgendaContext, CouncilMember, CouncilRelation, CouncilSessionContext
-from aerona.prompts.schemas.council import AllianceChange, CouncilDecision, CouncilOutput, VoteOutput
+from aerona.prompts.contexts.council import AgendaKind, CouncilAgendaContext, CouncilMember, CouncilRelation, CouncilSessionContext, CouncilTarget
+from aerona.prompts.schemas.council import AllianceChange, CouncilOutput, VoteOutput
 from aerona.rules.registry import Rules
 
 PERCENT = 100
@@ -104,6 +113,22 @@ async def agenda(scope: Scope) -> str:
     return render(PromptId.COUNCIL_AGENDA, context)
 
 
+async def ruling_line(scope: Scope, row: CouncilRulingRow) -> str:
+    target = await scope.session.get(NodeRow, row.target_node_id) if row.target_node_id is not None else None
+    parts = [MOTION_LABELS[row.motion]]
+    if target is not None:
+        parts.append(target.name)
+    if row.world_id is not None:
+        parts.append(scope.world_name(row.world_id) or str(row.world_id))
+    if row.school is not None:
+        parts.append(row.school.value.replace("_", " "))
+    if row.punishment is not None and row.motion is CouncilMotion.PUNISH_SON:
+        parts.append(row.punishment.value.replace("_", " "))
+    until = f" until epoch {row.until_epoch}" if row.until_epoch is not None else ""
+    tail = f": {', '.join(parts[1:])}" if len(parts) > 1 else ""
+    return f"{parts[0]}{tail}{until}"
+
+
 async def covenant_between(scope: Scope, first: int, second: int) -> list[BondRow]:
     return await BondRepository(scope.session).active_between(first, second, [BondKind.ALLY])
 
@@ -132,6 +157,12 @@ async def session_context(scope: Scope, members: list[SonRow], topic: str, god_a
         absent=absent,
         multi_world=scope.multi_world,
         relationships=relations,
+        foreign_gods=[
+            CouncilTarget(id=god.id, name=god.name, place=scope.world_name(god.world_id) or None)
+            for god in await scope.session.scalars(select(ForeignGodRow).where(ForeignGodRow.status != ForeignGodStatus.DEAD).order_by(ForeignGodRow.id))
+        ],
+        worlds=[CouncilTarget(id=world.id, name=world.name) for world in await scope.session.scalars(select(WorldRow).order_by(WorldRow.id))],
+        rulings=[await ruling_line(scope, row) for row in await scope.session.scalars(select(CouncilRulingRow).where(CouncilRulingRow.active.is_(True)))],
     )
 
 
@@ -190,35 +221,59 @@ async def apply_alliances(scope: Scope, names: dict[int, str], output: CouncilOu
             notes.append(f"{names[alliance.a]} and {names[alliance.b]} broke apart in the council")
 
 
-async def apply_decision(scope: Scope, members: list[SonRow], decision: CouncilDecision, notes: list[str]) -> None:
+async def apply_decision(scope: Scope, members: list[SonRow], output: CouncilOutput, notes: list[str], council_id: int | None = None) -> None:
     council = scope.rules.council
-    if decision is CouncilDecision.AGAINST_DOOMSDAY:
+    decision = output.decision
+    if decision is CouncilMotion.AGAINST_DOOMSDAY:
         step_doom(scope.rules, scope.cosmos, -council.apocalypse_motion_push)
         notes.append(f"the doomsday clock was pushed back {council.apocalypse_motion_push}")
-    elif decision is CouncilDecision.JOINT_BLESSING:
+    elif decision is CouncilMotion.JOINT_BLESSING:
         for son in members:
             son.existence = max(0, min(PERCENT, son.existence + council.blessing_existence))
         notes.append("every son's existence grew stronger")
-    elif decision is CouncilDecision.CONDEMN_REBEL:
+    elif decision is CouncilMotion.CONDEMN_REBEL:
         for son in [member for member in members if member.rebel]:
             son.fame = max(0, son.fame - council.censure_renown_cost)
             notes.append(f"{son.name}'s fame was shaken by condemnation")
-    elif decision is CouncilDecision.CALL_FOR_PEACE:
+    elif decision is CouncilMotion.CALL_FOR_PEACE:
         peace = await call_for_peace(scope, {son.id for son in members}, scope.epoch)
         if peace:
             notes.append(peace)
+    elif decision is not CouncilMotion.NONE:
+        ctx = await manual_context(scope.session, "council", scope.rules, key=str(scope.epoch))
+        motion = Motion(decision, output.target_id, output.world_id, output.school, output.punishment or SonPunishment.CHAIN)
+        ruling = await record(ctx, motion, council_id=council_id, note_text=sanitize(output.motion)[:NAME_MAX_LENGTH])
+        notes.extend(await enact(ctx, ruling, members))
+
+
+async def weighed_votes(scope: Scope, members: list[SonRow], output: CouncilOutput, votes: dict[int, VoteOutput]) -> dict[int, VoteOutput]:
+    if output.decision is CouncilMotion.NONE:
+        return votes
+    ctx = await manual_context(scope.session, "council_votes", scope.rules, key=str(scope.epoch))
+    motion = Motion(output.decision, output.target_id, output.world_id, output.school, output.punishment)
+    firm = scope.rules.council.firm_lean
+    weighed = dict(votes)
+    for son in members:
+        lean = await leaning(ctx, son, motion)
+        given = votes.get(son.id)
+        if given is None or given.vote is CouncilVote.ABSTAIN or abs(lean) >= firm:
+            weighed[son.id] = VoteOutput(son_id=son.id, vote=CouncilVote.YES if lean >= 0 else CouncilVote.NO, reason=given.reason if given else "")
+    return weighed
 
 
 async def apply_council(scope: Scope, members: list[SonRow], output: CouncilOutput, topic: str, *, caller: CouncilCaller, god_asked: bool) -> CouncilResult:
     names = {son.id: son.name for son in members}
-    votes = await tally(scope, names, output)
+    votes = await weighed_votes(scope, members, output, await tally(scope, names, output))
     yes = sum(1 for vote in votes.values() if vote.vote is CouncilVote.YES)
     no = sum(1 for vote in votes.values() if vote.vote is CouncilVote.NO)
     passed = yes > no
     notes: list[str] = []
     await apply_alliances(scope, names, output, notes)
+    held_row = CouncilRow(epoch=scope.epoch, topic=topic, minutes=CouncilMinutes(topic=topic, convened_by=caller.value), passed=passed)
+    scope.session.add(held_row)
+    await scope.session.flush()
     if passed:
-        await apply_decision(scope, members, output.decision, notes)
+        await apply_decision(scope, members, output, notes, held_row.id)
     minutes = CouncilMinutes(
         topic=topic,
         convened_by=caller.value,
@@ -232,8 +287,8 @@ async def apply_council(scope: Scope, members: list[SonRow], output: CouncilOutp
         notes=tuple(notes),
         summary=sanitize(output.minutes),
     )
-    row = CouncilRow(epoch=scope.epoch, topic=topic, minutes=minutes, passed=passed)
-    scope.session.add(row)
+    row = held_row
+    row.minutes = minutes
     await scope.session.flush()
     subject = output.agenda.strip().rstrip(TRAILING_PUNCTUATION) if god_asked else topic
     verdict = "passed" if passed else "rejected"

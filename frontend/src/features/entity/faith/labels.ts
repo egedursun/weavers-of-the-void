@@ -108,6 +108,21 @@ export const TENETS: Record<string, Named> = {
     tone: 'info',
   },
   souls_rest: { label: 'Souls at rest', icon: Moon, tone: 'muted' },
+  void_communion: {
+    label: 'Communion with the outside',
+    icon: EyeOff,
+    tone: 'danger',
+  },
+  feeding_the_hunger: {
+    label: 'Feeding the outer hunger',
+    icon: Flame,
+    tone: 'danger',
+  },
+  whispered_secrets: {
+    label: 'Secrets from outside',
+    icon: Eye,
+    tone: 'warning',
+  },
 }
 
 export const JUDGEMENTS: Record<string, Named & { hint: string }> = {

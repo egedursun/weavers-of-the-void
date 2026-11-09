@@ -1,4 +1,3 @@
-{% from "shared/macros.md.j2" import tired_images as tired_images_block %}
 {{ world_header }}
 
 RECORDS WAITING TO BE NAMED (they have temporary names and [World engine] descriptions{% if target_world %}; all of them are in the world of {{ target_world }}{% endif %}):
@@ -7,10 +6,6 @@ RECORDS WAITING TO BE NAMED (they have temporary names and [World engine] descri
 For each record give a real name, a subtype, a description and an image prompt. Invented name roots use ONLY the sounds of this world's naming language (no disallowed vowel or consonant; no sounds of another world). For those tagged "name-from-language" the name has already been derived from their own people's language: keep that name EXACTLY, only write the subtype, description and prompt. Do not write "[World engine]" in the description; tell of the record itself in the world's lore language. Do not call a mortal (mirror birth, heir, hero) a "son": sons are only the god's children. The description must be at least three sentences. Do not describe the dialect's sound rules (vowel or consonant lists, diphthongs) in the description. The subtype says concretely what the record is (temple, ancestor spirit, warrior band), never the bare type name (tradition, place, species, mortal). {% include "shared/no_numbers_clause.md.j2" %} Do not repeat existing names and do not make a name that differs from an existing record's, son's or foreign god's name by one or two letters; no digits at the end; no very short, weak names. Tag each record with 2 to 5 motif keys for its core images: short lowercase English keys, reused whenever the same image returns.
 {% if dialect_warnings %}
 
-PREVIOUS SUGGESTIONS DID NOT FIT OR DID NOT PASS (name them again): {% for warning in dialect_warnings %}#{{ warning.id }} "{{ warning.name }}" ({% for problem in warning.problems %}{% if problem == "dialect" %}{{ warning.root }}: {{ warning.letters | join(", ") }} do not exist in this dialect{% elif problem == "similar" %}too close to the existing name "{{ warning.similar_to }}"{% elif problem == "weak" %}too short and weak{% elif problem == "tired" %}carries the worn image{% if warning.tired_words %} "{{ warning.tired_words | join('", "') }}"{% endif %}{% endif %}{% if not loop.last %}; {% endif %}{% endfor %}){% if not loop.last %}; {% endif %}{% endfor %}
+PREVIOUS SUGGESTIONS DID NOT FIT OR DID NOT PASS (name them again): {% for warning in dialect_warnings %}#{{ warning.id }} "{{ warning.name }}" ({% for problem in warning.problems %}{% if problem == "dialect" %}{{ warning.root }}: {{ warning.letters | join(", ") }} do not exist in this dialect{% elif problem == "similar" %}too close to the existing name "{{ warning.similar_to }}"{% elif problem == "weak" %}too short and weak{% endif %}{% if not loop.last %}; {% endif %}{% endfor %}){% if not loop.last %}; {% endif %}{% endfor %}
 
-{% endif %}
-{% if tired_images.present %}
-
-{{ tired_images_block(tired_images) }}
 {% endif %}

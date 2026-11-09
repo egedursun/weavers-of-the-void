@@ -4,6 +4,8 @@ from pydantic import Field
 
 from aerona.domain.enums.agent import CouncilVote
 from aerona.domain.enums.chronicle import PartOfSpeech
+from aerona.domain.enums.culture import MagicSchool
+from aerona.domain.enums.divine import CouncilMotion, SonPunishment
 from aerona.prompts.schemas.base import OutputModel
 
 
@@ -30,22 +32,18 @@ class AllianceOutput(OutputModel):
     reason: str
 
 
-class CouncilDecision(StrEnum):
-    NONE = "none"
-    AGAINST_DOOMSDAY = "against_doomsday"
-    JOINT_BLESSING = "joint_blessing"
-    CONDEMN_REBEL = "condemn_rebel"
-    CALL_FOR_PEACE = "call_for_peace"
-
-
 class CouncilOutput(OutputModel):
     speeches: list[SpeechOutput]
     motion: str = Field(description="The single concrete motion the council votes on")
     votes: list[VoteOutput]
     alliances: list[AllianceOutput]
-    decision: CouncilDecision = Field(description="The effect on the world if the motion passes")
+    decision: CouncilMotion = Field(description="The typed effect on the world if the motion passes")
+    target_id: int | None = Field(default=None, description="The id of the son, foreign god or mortal the decision names")
+    world_id: int | None = Field(default=None, description="The id of the world the decision names")
+    school: MagicSchool | None = Field(default=None, description="The school of rites an outlaw decision forbids")
+    punishment: SonPunishment | None = Field(default=None, description="How a punished son is punished")
     minutes: str = Field(
-        description="A 3 to 5 sentence summary of the council as the mortals of this world came to know it (a vision, a rumour, a song or another telling that suits this world); {{ attendance }} sons attended the council (write no other number)"
+        description="A 3 to 5 sentence summary of the council as the mortals of this world came to know it, told in a way that suits this world; {{ attendance }} sons attended the council (write no other number)"
     )
     agenda: str = Field(
         description="One-sentence, third-person summary of the agenda for the chronicle (do not repeat the god's question verbatim in the first person: e.g. \"the fate of <the subject's name>\")"

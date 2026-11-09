@@ -21,7 +21,6 @@ from aerona.agents.context.siblings import siblings
 from aerona.agents.context.sky_calendar import sky_calendar
 from aerona.agents.context.son_memory import son_memory
 from aerona.agents.context.thread_lines import thread_lines
-from aerona.agents.context.tired_images import tired_images, tired_images_text
 from aerona.agents.context.world_header import world_header
 from aerona.agents.context.world_line import world_line
 from aerona.agents.context.world_summary import world_summary
@@ -70,13 +69,6 @@ BLOCKS: tuple[ContextBlockInfo, ...] = (
     ContextBlockInfo(kind=K.ENTITY_DETAIL, needs_son=False, needs_entity=True, audience="inspect tools, Fate", rows=["CTX-025", "CTX-026", "CTX-027"]),
     ContextBlockInfo(kind=K.BOND_LINES, needs_son=False, needs_entity=True, audience="inspect tools, Fate", rows=["CTX-024"]),
     ContextBlockInfo(kind=K.SON_MEMORY, needs_son=True, needs_entity=False, audience="son, council, son chat", rows=["CTX-029", "CTX-030", "CTX-031"]),
-    ContextBlockInfo(
-        kind=K.TIRED_IMAGES,
-        needs_son=False,
-        needs_entity=False,
-        audience="every writing prompt",
-        rows=["CTX-035", "CORE-054", "CORE-055", "CORE-056", "CORE-058", "CORE-059"],
-    ),
     ContextBlockInfo(kind=K.RECENT_EVENTS, needs_son=False, needs_entity=False, audience="son, Fate", rows=["CTX-032", "CORE-014"]),
     ContextBlockInfo(kind=K.POWERS, needs_son=True, needs_entity=False, audience="son", rows=["CTX-028"]),
     ContextBlockInfo(kind=K.SKY_CALENDAR, needs_son=False, needs_entity=False, audience="son", rows=["CTX-006"]),
@@ -235,11 +227,6 @@ async def memory_block(scope: Scope, query: BlockQuery, viewer: SonRow | None) -
     return Rendered(await son_memory(scope, son, full=query.full), son.current_world_id)
 
 
-async def tired_images_block(scope: Scope, query: BlockQuery, viewer: SonRow | None) -> Rendered:
-    world_id = world_of(scope, query, viewer)
-    return Rendered(tired_images_text(await tired_images(scope, world_id)), world_id)
-
-
 async def recent_events_block(scope: Scope, query: BlockQuery, viewer: SonRow | None) -> Rendered:
     world_id = world_of(scope, query, viewer)
     return Rendered(await recent_chronicle(scope, event_rows(scope, viewer), world_id), world_id)
@@ -281,7 +268,6 @@ RENDERERS: dict[ContextBlockKind, Renderer] = {
     K.ENTITY_DETAIL: entity_detail_block,
     K.BOND_LINES: bond_lines_block,
     K.SON_MEMORY: memory_block,
-    K.TIRED_IMAGES: tired_images_block,
     K.RECENT_EVENTS: recent_events_block,
     K.POWERS: powers_block,
     K.SKY_CALENDAR: sky_calendar_block,

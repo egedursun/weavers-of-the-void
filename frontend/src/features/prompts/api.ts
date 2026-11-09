@@ -106,12 +106,12 @@ export function usePromptCatalogue(area: PromptArea | null) {
 
 export function usePromptDetail(promptId: PromptId | null) {
   return useQuery({
-    queryKey: promptKeys.detail(promptId ?? 'cliche_ban'),
+    queryKey: promptKeys.detail(promptId ?? 'fate_judgment_system'),
     enabled: promptId !== null,
     queryFn: () =>
       unwrap(
         api.GET('/api/prompt-context/catalogue/{prompt_id}', {
-          params: { path: { prompt_id: promptId ?? 'cliche_ban' } },
+          params: { path: { prompt_id: promptId ?? 'fate_judgment_system' } },
         })
       ),
   })

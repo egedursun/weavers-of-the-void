@@ -23,6 +23,7 @@ from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.disease import SpreadPath
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.happening import EventPhase
@@ -440,6 +441,7 @@ async def strike_plague(
     factor = lethality_factor(book, chosen.id, struck, await KnowledgeMap.load(ctx.session)) if chosen is not None else 1.0
     if chosen is not None and book.active_of(chosen.id, region_id) is None:
         factor *= 1 - book.hidden_share(chosen.id) * ctx.rules.epidemiology.incubation_delay_pct / PERCENT
+    factor *= await ctx.hook_easing(target.id, DomainHook.IMMUNITY)
     token = STRIKING.set(book.profiles.get(chosen.id) if chosen is not None else None)
     try:
         with flowing(FlowCategory.PLAGUE):
@@ -726,6 +728,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.mortal_equipment",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.natural_law_profiles",
     "table.nodes",
     "table.outbreaks",
     "table.passions",

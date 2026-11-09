@@ -377,6 +377,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "species.agility",
     "species.danger",
     "species.strength",
+    "table.avatars",
     "table.bodies",
     "table.body_customs",
     "table.bonds",
@@ -390,6 +391,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.culture_ethics",
     "table.culture_values",
     "table.designated_heirs",
+    "table.divine_wounds",
     "table.entity_flags",
     "table.entity_tags",
     "table.entity_traits",
@@ -425,6 +427,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.threads",
     "table.tradition_profiles",
     "table.traits",
+    "table.world_domain_hooks",
     "table.world_maps",
 )
 @writes(

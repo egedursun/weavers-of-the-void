@@ -70,6 +70,7 @@ class ContextRules:
     repeat_warning_threshold: int = rule(3, 2, 50, RuleGroup.SON_TOOLS, '"You are repeating yourself" warning in memory: creations of the same subtype')
     repeat_window: int = rule(20, 1, 500, RuleGroup.SON_TOOLS, "Repetition check in memory: recent creations examined")
     son_location_tree_lines: int = rule(90, 10, 5000, RuleGroup.CONTEXT_BUDGETS, "Son: lines in the location tree (+ wisdom)")
+    son_standing_lines: int = rule(6, 0, 200, RuleGroup.CONTEXT_BUDGETS, "Son: peoples whose regard of the son is listed")
     fate_location_tree_lines: int = rule(220, 10, 10000, RuleGroup.CONTEXT_BUDGETS, "Fate: lines in the location tree")
     son_chronicle_wisdom_step: int = rule(8, 1, 100, RuleGroup.CONTEXT_BUDGETS, "Son: every this much wisdom adds one line to recent events")
     son_words_per_language: int = rule(6, 0, 200, RuleGroup.CONTEXT_BUDGETS, "Son: sample words per language")

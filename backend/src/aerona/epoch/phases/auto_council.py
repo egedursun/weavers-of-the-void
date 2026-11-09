@@ -5,6 +5,8 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.epochs import DeferredStepRow
 from aerona.domain.enums.agent import CouncilCaller
 from aerona.domain.enums.epoch import DeferredStepKind, DeferredStepStatus, EpochPhase, EpochStepKind, EpochStepStatus
+from aerona.engine.divine.rulings import engine_council
+from aerona.engine.primitives.manual import manual_context
 from aerona.epoch.context import EpochContext
 from aerona.epoch.state import attempted
 
@@ -21,7 +23,14 @@ async def auto_council(ec: EpochContext) -> None:
     if not await council_due(ec):
         return
     if not ec.runtime.llm_enabled:
-        await ec.mark(EpochStepKind.COUNCIL, EpochStepStatus.SKIPPED)
+        async with ec.database.write() as session:
+            rules = await ec.runtime.rules(session)
+            held_council = await engine_council(await manual_context(session, "engine_council", rules, key=str(ec.epoch)))
+        if held_council is None:
+            await ec.mark(EpochStepKind.COUNCIL, EpochStepStatus.SKIPPED)
+            return
+        ec.summary["council"] = held_council.topic
+        await ec.mark(EpochStepKind.COUNCIL, EpochStepStatus.DONE)
         return
     async with ec.database.write() as session:
         step = await session.scalar(select(DeferredStepRow).where(DeferredStepRow.epoch == ec.epoch, DeferredStepRow.kind == DeferredStepKind.COUNCIL))

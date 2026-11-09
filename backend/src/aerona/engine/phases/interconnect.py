@@ -33,6 +33,7 @@ WONDER_GROUP = "wonder"
     "table.conditions",
     "table.cult_doctrines",
     "table.cult_tenets",
+    "table.divine_wounds",
     "table.entities",
     "table.entity_flags",
     "table.law_jurisdictions",

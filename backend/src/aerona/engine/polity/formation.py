@@ -8,6 +8,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.polity import OfficeHistoryRow, OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
@@ -167,6 +168,8 @@ async def found_polity(ctx: TickContext, book: RealmBook, core: EntityRow) -> Re
 
 def set_ruler(ctx: TickContext, realm: Realm, ruler_id: int | None, reason: str, *, usurped: bool = False) -> bool:
     office = realm.office(OfficeKind.RULER)
+    if held(realm.entity.id, ruler_id, office.holder_entity_id if office is not None else None):
+        return False
     if office is None:
         office = OfficeRow(polity_entity_id=realm.entity.id, kind=OfficeKind.RULER, since_epoch=ctx.epoch, powers=[])
         ctx.session.add(office)

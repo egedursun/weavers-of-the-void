@@ -3,7 +3,7 @@ from enum import StrEnum
 from pydantic import Field
 
 from aerona.prompts.contexts.base import ContextItem, LoreContext, LoreRulesContext
-from aerona.prompts.contexts.common import EntityLineItem, TiredImages, WorldItem
+from aerona.prompts.contexts.common import EntityLineItem, WorldItem
 from aerona.prompts.contexts.fate import WorldEvents
 
 
@@ -95,10 +95,7 @@ class ChroniclerUserContext(LoreRulesContext):
     worlds: list[WorldItem] = Field(default_factory=list)
     missing_worlds: list[WorldItem] = Field(default_factory=list)
     previous_names: list[str] = Field(default_factory=list)
-    piled_roots: list[str] = Field(default_factory=list)
     continuity: ChroniclerContinuity = Field(default_factory=ChroniclerContinuity)
-    opening_patterns: list[str] = Field(default_factory=list)
-    tired_images: TiredImages = Field(default_factory=TiredImages)
     name_kinds: list[NameKind] = Field(default_factory=list)
     previous_verdicts: list[str] = Field(default_factory=list)
     events: list[WorldEvents] = Field(default_factory=list)
@@ -107,12 +104,6 @@ class ChroniclerUserContext(LoreRulesContext):
     event_phases: list[str] = Field(default_factory=list)
     pending: list[EntityLineItem] = Field(default_factory=list)
     facts: ChroniclerFactSheet | None = None
-
-
-class ChroniclerFixOpeningContext(LoreRulesContext):
-    patterns: list[str] = Field(default_factory=list)
-    first_sentence: str
-    continuation: str
 
 
 class AuditFindingItem(ContextItem):

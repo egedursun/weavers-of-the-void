@@ -3,6 +3,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/domain'
 import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
+import { GodDivinitySection } from '@/features/divine/GodDivinitySection'
 import { BodySection } from '@/features/entity/sections/BodySection'
 import { MemoriesSection } from '@/features/entity/sections/MemoriesSection'
 import { MindSection } from '@/features/entity/sections/MindSection'
@@ -120,6 +121,7 @@ export function SonPage({ id }: DrawerPageProps) {
       <BodySection nodeId={son.id} />
       <MindSection nodeId={son.id} />
       <MemoriesSection nodeId={son.id} />
+      <GodDivinitySection godId={son.id} />
       <ThingSections nodeId={son.id} />
       <SonImages son={son} images={data.images} />
       <SonSiblings sonId={son.id} siblings={data.siblings} alive={!dead} />

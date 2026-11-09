@@ -7,7 +7,7 @@ from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedErr
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.domain import DEATH_DOMAINS
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faith import ReincarnationGate, TenetKind
 from aerona.engine.faith import control
@@ -63,7 +63,7 @@ async def open_rebirth_gate(call: SonCall, args: RebirthGateInput) -> str:
     spirit = require_type(await require_canon(call.session, args.spirit_id), {EntityType.SPIRIT}, SonResult.NOT_A_SPIRIT)
     await ensure_in_reach(call, spirit)
     _, profile = await control.spirit_profile(call.tick, spirit.id)
-    death_god = bool({call.son.domain_primary, call.son.domain_secondary} & DEATH_DOMAINS)
+    death_god = await call.tick.god_share(call.son.id, DomainHook.SOUL_HOLD) > 0
     if profile.patron_son_id != call.son.id and not death_god:
         fail(SonResult.NOT_YOUR_SOUL, name=spirit.name)
     if call.son.essence < table.rebirth_gate_cost:

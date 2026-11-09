@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from sqlalchemy import select
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -9,12 +11,15 @@ from aerona.db.tables.lore import ThreadLinkRow, ThreadRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory, ThreadLinkRole, ThreadStatus
+from aerona.domain.enums.divine import BargainGain, BargainPrice
+from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.travel import RouteClosure
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.routes import world_name
+from aerona.engine.divine.outer import pay_price, take_gain
 from aerona.engine.primitives.records import retire
 from aerona.engine.primitives.stats import stat_or
 
@@ -62,14 +67,27 @@ async def cleanse_leak(ctx: TickContext, world_id: int, by: str) -> str:
     return text
 
 
-async def bargain_with_outer(ctx: TickContext, son_id: int, outer_id: int, request: str) -> int:
+@dataclass(frozen=True)
+class BargainTerms:
+    gain: BargainGain = BargainGain.ESSENCE
+    price: BargainPrice = BargainPrice.WORLD_SANITY
+    price_domain: Domain | None = None
+    price_world_id: int | None = None
+
+
+async def bargain_with_outer(ctx: TickContext, son_id: int, outer_id: int, request: str, terms: BargainTerms | None = None) -> int:
     pantheon = ctx.rules.pantheon
+    deal = terms if terms is not None else BargainTerms()
     son = await SonRepository(ctx.session).require_son(son_id)
     being = await ctx.session.get(EntityRow, outer_id)
     if being is None or being.entity_type is not EntityType.OUTER_BEING or being.status is not EntityStatus.CANON:
-        raise NotFoundError("No such thing. Or there is, and you cannot see it.")
-    gain = pantheon.bargain_essence_base + round(stat_or(being, INFLUENCE_KEY, pantheon.outer_default_influence) / pantheon.bargain_influence_divisor)
-    son.essence += gain
+        raise NotFoundError("No such outer being.")
+    if deal.price is BargainPrice.DOMAIN and deal.price_domain is not None and deal.price_domain not in son.domains:
+        raise ValidationFailedError(f"{son.name} cannot give up a domain they do not hold.")
+    essence = pantheon.bargain_essence_base + round(stat_or(being, INFLUENCE_KEY, pantheon.outer_default_influence) / pantheon.bargain_influence_divisor)
+    before = son.essence
+    gained = await take_gain(ctx, son, being, deal.gain, essence)
+    paid = await pay_price(ctx, son, being, deal.price, domain=deal.price_domain, world_id=deal.price_world_id)
     son.ambition = min(PERCENT_MAX, son.ambition + pantheon.bargain_ambition)
     son.loyalty = max(0, son.loyalty - pantheon.bargain_loyalty_loss)
     world = await ctx.session.get(WorldRow, being.world_id)
@@ -78,17 +96,23 @@ async def bargain_with_outer(ctx: TickContext, son_id: int, outer_id: int, reque
     repository = SonRepository(ctx.session)
     for sibling in await ctx.session.scalars(select(SonRow).where(SonRow.id != son.id, SonRow.status != SonStatus.DEAD)):
         await repository.change_relation(son.id, sibling.id, -pantheon.bargain_sibling_relation_loss)
-    if await ctx.session.get(OuterBargainRow, (being.id, son.id)) is None:
-        ctx.session.add(OuterBargainRow(outer_entity_id=being.id, son_id=son.id, epoch=ctx.epoch, terms=request))
-    thread = ThreadRow(
-        epoch=ctx.epoch,
-        text=f"{son.name} bargained with the thing outside ({request}). No one knows what they gave in return; but one day it will be paid.",
-        status=ThreadStatus.OPEN,
+    row = await ctx.session.get(OuterBargainRow, (being.id, son.id))
+    if row is None:
+        row = OuterBargainRow(outer_entity_id=being.id, son_id=son.id, epoch=ctx.epoch)
+        ctx.session.add(row)
+    row.terms, row.gain, row.price, row.price_domain, row.price_world_id, row.paid = (
+        request,
+        deal.gain,
+        deal.price,
+        deal.price_domain,
+        deal.price_world_id,
+        True,
     )
+    thread = ThreadRow(epoch=ctx.epoch, text=f"{son.name} bargained with {being.name} ({request}): {gained}, and {paid}.", status=ThreadStatus.OPEN)
     ctx.session.add(thread)
     await ctx.session.flush()
     ctx.session.add(ThreadLinkRow(thread_id=thread.id, entity_id=being.id, role=ThreadLinkRole.RELATED, epoch=ctx.epoch))
-    text = f"{son.name} bargained with the unnamed thing. Their siblings saw another shadow over them."
+    text = f"{son.name} bargained with {being.name}: {gained}, and {paid}."
     await ctx.chronicle(ChronicleKind.PROHIBITION, text, template_key="cosmos.outer_bargain", son_id=son.id, world_id=being.world_id)
     await ctx.session.flush()
-    return gain
+    return max(0, son.essence - before)

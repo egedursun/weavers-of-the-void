@@ -1,4 +1,3 @@
-{% from "shared/macros.md.j2" import tired_images as tired_images_block %}
 {% set f = rules.fate %}
 {% set trim = rules.context.budget_trim_min_chars %}
 {% set tasks %}
@@ -58,10 +57,6 @@ PANTHEON: {% for son in pantheon %}son#{{ son.id }} {{ son.name }}{% if not loop
 {% if languages %}
 LANGUAGES: {% for language in languages %}#{{ language.id }} {{ language.name }}{% if not loop.last %}, {% endif %}{% endfor %}
 
-{% endif %}
-{% if tired_images.present %}
-
-{{ tired_images_block(tired_images) }} This ban also applies to naming, narrative and fixing.
 {% endif %}
 {% endset %}
 {% set tasks_text = tasks | trim %}

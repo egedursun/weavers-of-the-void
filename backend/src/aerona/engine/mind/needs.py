@@ -14,6 +14,7 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.body import OPEN_INJURY_STATES
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.industry import QualityTier
@@ -104,7 +105,7 @@ async def community_pressures(ctx: TickContext, community: EntityRow, culture: V
         gap_pct(table.hunger_food, food),
         gap_pct(table.hunger_prosperity, prosperity),
         basket.get(ShortfallEffect.HUNGER, 0) * plenty.hunger_pressure_pct / PERCENT,
-    )
+    ) * await ctx.hook_easing(community.id, DomainHook.FASTING)
     memories = list(await session.scalars(select(MemoryRow).where(MemoryRow.holder_node_id == community.id)))
     threat = sum(-strength_of(row, ctx.epoch) for row in memories if row.kind in THREAT_MEMORIES and row.magnitude < 0)
     wars = await ongoing_war_count(session, community.id)

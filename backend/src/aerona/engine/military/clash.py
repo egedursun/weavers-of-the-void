@@ -22,6 +22,7 @@ from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import DamageType, HarmCause
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.faith import TenetKind
@@ -234,6 +235,11 @@ async def side_of(
         "beast_dread": -await beast_dread(ctx, enemy.id),
         "warned": table.morale.warned_morale if await warned(ctx, community.id, enemy.id) else 0,
         "passion": await passion_morale(ctx, commander, [community.id, enemy.id]),
+        "divine": round(
+            (await ctx.hook_pct(community.id, DomainHook.LEVY_MORALE) + await ctx.hook_pct(community.id, DomainHook.FRENZY))
+            * table.domains.morale_points_pct
+            / PERCENT
+        ),
     }
     medicine = knowledge.level(community.id, KnowledgeBranch.MEDICINE) * PERCENT // max(1, table.morale.medicine_levels)
     medicine += await surgeon_skill(ctx, [item.id for item, _ in armies]) * table.battle_magic.surgeon_pct // PERCENT

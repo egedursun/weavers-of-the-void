@@ -1,6 +1,7 @@
 from dataclasses import replace
 
 from aerona.engine.context import TickContext
+from aerona.engine.divine.creator import passion_sign, taboo_wrath
 from aerona.engine.gods.mood import compute_mood_update, gather_mood_inputs, mood_of, store_breakdown, store_mood
 from aerona.engine.gods.queries import cosmos_row, creator_row
 from aerona.engine.gods.signs import estranged_turn, grace_sign, lonely_dream, silence, wrath_sign
@@ -17,6 +18,7 @@ from aerona.engine.primitives.numbers import clamp_percent
     "table.bonds",
     "table.cosmos",
     "table.creator_mood_inputs",
+    "table.creator_taboos",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.messages",
@@ -35,6 +37,7 @@ from aerona.engine.primitives.numbers import clamp_percent
     "table.epoch_year_cursors",
     "table.incident_participants",
     "table.incidents",
+    "table.sons",
 )
 async def creator_mood(ctx: TickContext) -> None:
     creator = await creator_row(ctx.session)
@@ -58,6 +61,8 @@ async def creator_mood(ctx: TickContext) -> None:
     if creator.mood_loneliness >= rules.lonely_threshold and rng.chance(rules.loneliness_sign_chance):
         await lonely_dream(ctx, creator)
     await estranged_turn(ctx, creator)
+    await passion_sign(ctx, creator)
+    await taboo_wrath(ctx, creator)
     await ctx.session.flush()
 
 

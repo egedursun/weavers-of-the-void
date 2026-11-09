@@ -3,7 +3,6 @@ from collections.abc import Sequence
 from sqlalchemy import case, select
 
 from aerona.agents.context.scope import Scope
-from aerona.agents.context.tired_images import tired_images
 from aerona.agents.context.world_summary import world_summary
 from aerona.agents.fate.threads import ThreadQuota
 from aerona.catalog.entity_types import ENTITY_TYPES
@@ -81,5 +80,4 @@ async def fate_judgment_context(
         ],
         pantheon=await pantheon(scope),
         languages=await languages(scope),
-        tired_images=await tired_images(scope, None),
     )

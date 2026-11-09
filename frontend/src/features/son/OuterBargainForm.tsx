@@ -15,14 +15,19 @@ import {
 import { FormRow } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
+import { GAINS, PRICES } from '@/features/divine/labels'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { useGodGate, useRuleLookup } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 
 type SonRecord = components['schemas']['SonRecord']
 type Mode = components['schemas']['OuterBargainMode']
+type Gain = components['schemas']['BargainGain']
+type Price = components['schemas']['BargainPrice']
+type Domain = components['schemas']['Domain']
 
 const OUTER_TYPES = ['outer_being'] as const
+const WORLD_TYPES = ['world'] as const
 const TERMS_MAX = 200
 const PER_EPOCH_RULE = 'son_tools.outer_bargain_per_epoch'
 const DEFAULT_TERMS = "the Creator's command"
@@ -37,6 +42,10 @@ export function OuterBargainForm({ sons, fixedSonId }: OuterBargainFormProps) {
   const [chosen, setChosen] = useState<number | null>(fixedSonId ?? null)
   const [outer, setOuter] = useState<number | null>(null)
   const [terms, setTerms] = useState('')
+  const [gain, setGain] = useState<Gain>('essence')
+  const [price, setPrice] = useState<Price>('world_sanity')
+  const [priceDomain, setPriceDomain] = useState<string>('')
+  const [priceWorld, setPriceWorld] = useState<number | null>(null)
   const { reason } = useGodGate()
   const rule = useRuleLookup()
   const perEpoch = rule(PER_EPOCH_RULE)
@@ -51,6 +60,13 @@ export function OuterBargainForm({ sons, fixedSonId }: OuterBargainFormProps) {
             mode,
             outer_id: mode === 'force' ? outer : null,
             request: terms.trim() || DEFAULT_TERMS,
+            gain,
+            price,
+            price_domain:
+              price === 'domain' && priceDomain !== ''
+                ? (priceDomain as Domain)
+                : null,
+            price_world_id: price === 'world_sanity' ? priceWorld : null,
           },
         })
       ),
@@ -103,6 +119,78 @@ export function OuterBargainForm({ sons, fixedSonId }: OuterBargainFormProps) {
           />
         )}
       </FormRow>
+      <FormRow label='What they take'>
+        {(id) => (
+          <Select
+            value={gain}
+            onValueChange={(value) => setGain(value as Gain)}
+          >
+            <SelectTrigger id={id} className='w-full'>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(GAINS).map(([key, label]) => (
+                <SelectItem key={key} value={key}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </FormRow>
+      <FormRow label='What they pay' description='Paid at once'>
+        {(id) => (
+          <Select
+            value={price}
+            onValueChange={(value) => setPrice(value as Price)}
+          >
+            <SelectTrigger id={id} className='w-full'>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(PRICES).map(([key, label]) => (
+                <SelectItem key={key} value={key}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </FormRow>
+      {price === 'domain' && son && (
+        <FormRow label='Domain they give up'>
+          {(id) => (
+            <Select value={priceDomain} onValueChange={setPriceDomain}>
+              <SelectTrigger id={id} className='w-full'>
+                <SelectValue placeholder='Let the outer being choose' />
+              </SelectTrigger>
+              <SelectContent>
+                {[son.domain_primary, son.domain_secondary].map((domain) => (
+                  <SelectItem key={domain} value={domain}>
+                    {domain}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </FormRow>
+      )}
+      {price === 'world_sanity' && (
+        <FormRow
+          label='World whose sanity they pay'
+          description='The outer being’s own world when none is chosen'
+        >
+          {(id) => (
+            <EntityPicker
+              id={id}
+              types={WORLD_TYPES}
+              value={priceWorld}
+              onChange={setPriceWorld}
+              placeholder='Choose a world'
+            />
+          )}
+        </FormRow>
+      )}
       <FormRow label='What they ask for' description='Optional'>
         {(id) => (
           <Input
@@ -128,7 +216,7 @@ export function OuterBargainForm({ sons, fixedSonId }: OuterBargainFormProps) {
           confirm={{
             title: `Make ${son?.name ?? 'them'} bargain with the outside?`,
             description:
-              'They gain essence and ambition, lose loyalty, their siblings sour on them and the world leaks. The price is asked one day.',
+              'They take what you chose and pay its price at once; they gain ambition, lose loyalty, their siblings think less of them and the world leaks.',
             confirmLabel: 'Force it',
           }}
           onRun={() => order.mutate('force')}

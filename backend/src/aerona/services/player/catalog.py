@@ -34,6 +34,7 @@ from aerona.services.player import (
     discovery,
     disease,
     divine,
+    divinity,
     economy,
     economy_depth,
     engine_control,
@@ -865,6 +866,45 @@ DIVINE_ACTIONS = (
     _sync(Meta("reputation:drift", "Settle a son's view of the Creator now", G.CREATOR), divine.drift, divine.SonTarget, free, ()),
     _sync(Meta("goals:evaluate", "Weigh the goals now", G.GOALS), divine.evaluate, divine.Empty, free, ()),
     _sync(Meta("faith:first", "Give a community its first faith", G.GOD_POWER), divine.first_faith, divine.FirstFaith, free, ()),
+)
+
+DIVINITY_ACTIONS = (
+    _sync(Meta("domain_hook:set", "Set how strongly a domain hook works in a world", G.WORLDS), divinity.set_hook, divinity.HookSetting, free, ("S9.1",)),
+    _sync(Meta("domain_hook:clear", "Let a domain hook work as usual in a world", G.WORLDS), divinity.clear_hook, divinity.HookTarget, free, ("S9.1",)),
+    _sync(Meta("god_goal:set", "Give a god an aim", G.SONS), divinity.set_goal, divinity.GoalDraft, free, ("S9.1",)),
+    _sync(Meta("god_goal:edit", "Reshape or hold a god's aim", G.SONS), divinity.edit_goal, divinity.GoalEdit, free, ("S9.1",)),
+    _sync(Meta("god_goal:drop", "Set a god's aim aside", G.SONS), divinity.drop_goal, divinity.GoalTarget, free, ("S9.1",)),
+    _sync(Meta("divine_standing:set", "Set or hold how a people regards a god", G.SONS), divinity.set_standing, divinity.StandingEdit, free, ("S9.1",)),
+    _sync(Meta("divine_standing:clear", "Make a people forget its regard of a god", G.SONS), divinity.clear_standing, divinity.StandingTarget, free, ("S9.1",)),
+    _sync(Meta("divine_wound:inflict", "Wound a god", G.SONS), divinity.inflict_wound, divinity.WoundDraft, free, ("S9.1",)),
+    _sync(Meta("divine_wound:edit", "Reshape, heal or hold a divine wound", G.SONS), divinity.edit_wound, divinity.WoundEdit, free, ("S9.1",)),
+    _sync(Meta("divine_wound:remove", "Heal a divine wound at once", G.SONS), divinity.remove_wound, divinity.WoundTarget, free, ("S9.1",)),
+    _sync(Meta("avatar:manifest", "Give a god a mortal form", G.SONS), divinity.manifest_avatar, divinity.AvatarDraft, free, ("S9.1",)),
+    _sync(Meta("avatar:edit", "Reshape or hold a god's mortal form", G.SONS), divinity.edit_avatar, divinity.AvatarEdit, free, ("S9.1",)),
+    _sync(Meta("avatar:withdraw", "Call a god back from its mortal form", G.SONS), divinity.withdraw_avatar, divinity.AvatarTarget, free, ("S9.1",)),
+    _sync(Meta("taboo:set", "Make an act taboo to the Creator", G.CREATOR), divinity.set_taboo, divinity.TabooSetting, free, ("S9.2",)),
+    _sync(Meta("taboo:remove", "Lift a taboo of the Creator", G.CREATOR), divinity.remove_taboo, divinity.TabooTarget, free, ("S9.2",)),
+    _sync(Meta("attention:set", "Turn the Creator's eye to a world or away", G.CREATOR), divinity.set_attention, divinity.AttentionEdit, free, ("S9.2",)),
+    _sync(
+        Meta("attention:clear", "Let the Creator's eye on a world start afresh", G.CREATOR), divinity.clear_attention, divinity.AttentionTarget, free, ("S9.2",)
+    ),
+    _sync(
+        Meta("divine_pact:seal", "Seal a divine pact between a son and a foreign god", G.FOREIGN_GODS), divinity.seal_pact, divinity.PactDraft, free, ("S9.3",)
+    ),
+    _sync(Meta("ruling:decree", "Lay down a ruling of the council", G.SONS), divinity.decree, divinity.RulingDraft, free, ("S9.4",)),
+    _sync(Meta("ruling:edit", "Reshape or hold a ruling of the council", G.SONS), divinity.edit_ruling, divinity.RulingEdit, free, ("S9.4",)),
+    _sync(Meta("ruling:revoke", "Strike out a ruling of the council", G.SONS), divinity.revoke_ruling, divinity.RulingTarget, free, ("S9.4",)),
+    _sync(
+        Meta("law_profile:edit", "Reshape a natural law's scope, strength, author and exceptions", G.COSMOS),
+        divinity.edit_law,
+        divinity.LawEdit,
+        free,
+        ("S9.5",),
+    ),
+    _sync(Meta("outer_profile:edit", "Reshape an outer being's hunger and reach", G.BEYOND), divinity.edit_outer, divinity.OuterEdit, free, ("S9.6",)),
+    _sync(Meta("breach:open", "Open a breach point of an outer being", G.BEYOND), divinity.open_breach, divinity.BreachDraft, free, ("S9.6",)),
+    _sync(Meta("breach:edit", "Reshape or hold a breach point", G.BEYOND), divinity.edit_breach, divinity.BreachEdit, free, ("S9.6",)),
+    _sync(Meta("breach:close", "Seal a breach point", G.BEYOND), divinity.close_breach, divinity.BreachTarget, free, ("S9.6",)),
 )
 
 HORIZON_ACTIONS = (
@@ -2601,6 +2641,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *ECONOMY_ACTIONS,
     *BODY_ACTIONS,
     *MIND_ACTIONS,
+    *DIVINITY_ACTIONS,
 )
 ACTIONS_BY_ID: dict[str, ActionSpec] = {spec.id: spec for spec in ACTIONS}
 

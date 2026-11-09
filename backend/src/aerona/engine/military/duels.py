@@ -5,6 +5,7 @@ from aerona.core.random import SeededRandom
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
 from aerona.domain.enums.military import DuelContext, DuelEnd
 from aerona.domain.enums.mind import TraitEffect, ValueAxis
@@ -44,6 +45,7 @@ class Fighter:
     disarmed: bool = False
     footing: int = PERCENT
     pain: int = 0
+    cut: float = 1.0
 
 
 @dataclass
@@ -97,6 +99,7 @@ async def fighter(ctx: TickContext, hero: EntityRow, foe: EntityRow | None = Non
         mercy=values.get(ValueAxis.MERCY, 0),
         burden=burden_of(held, broken) * ctx.rules.item_powers.weight_fatigue_pct // PERCENT + await armour_burden(ctx, hero.id),
         stamina=PERCENT - await spent_strength(ctx, hero.id),
+        cut=await ctx.hook_factor(hero.id, DomainHook.DUEL_WOUNDS),
     )
 
 
@@ -120,10 +123,10 @@ def swing(rules: Rules, rng: SeededRandom, fighter: Fighter, foe: Fighter, first
     return fighter.power * (0.5 + fighter.stamina / (2 * PERCENT)) * reach * armed * footing * pain + rng.die(campaigns.duel_die) * campaigns.duel_die_mult
 
 
-def wound(rules: Rules, target: Fighter, margin: float, total: float) -> int:
+def wound(rules: Rules, target: Fighter, margin: float, total: float, cut: float = 1.0) -> int:
     table = rules.duels
     shield = min(ARMOUR_CAP, target.armour / PERCENT * table.armour_pct / PERCENT)
-    harm = round_half_up(table.hit_hp * (0.5 + margin / max(1.0, total)) * (1 - shield))
+    harm = round_half_up(table.hit_hp * (0.5 + margin / max(1.0, total)) * (1 - shield) * cut)
     target.harm += harm
     target.pain = min(PERCENT, target.pain + round_half_up(harm * table.pain_pct / PERCENT))
     if harm >= table.hit_hp:
@@ -152,7 +155,7 @@ def bout(rules: Rules, rng: SeededRandom, first: Fighter, second: Fighter, conte
             target.disarmed = True
             log.append(f"{hitter.entity.name} struck the weapon from {target.entity.name}'s hand")
         else:
-            harm = wound(rules, target, margin, total)
+            harm = wound(rules, target, margin, total, hitter.cut)
             hits.append((target.entity.id, harm))
             log.append(f"{hitter.entity.name} hit {target.entity.name} for {harm}")
         for one in (first, second):

@@ -324,6 +324,12 @@ export const MEMORY_ICONS: Record<components['schemas']['MemoryKind'], Named> =
       tone: 'warning',
     },
     cheated_us: { label: 'Cheated us', icon: Drama, tone: 'danger' },
+    stole_faithful: { label: 'Took our faithful', icon: Drama, tone: 'danger' },
+    aided_chosen: {
+      label: 'Aided our chosen',
+      icon: Sparkles,
+      tone: 'success',
+    },
     spied_on_us: { label: 'Spied on us', icon: Eye, tone: 'warning' },
     envied: { label: 'Outshone us', icon: Trophy, tone: 'warning' },
     failed_to_heal: {

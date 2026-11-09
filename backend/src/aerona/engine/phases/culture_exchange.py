@@ -118,6 +118,7 @@ async def _spread_language(ctx: TickContext, source: EntityRow, target: EntityRo
     "table.holder_levels",
     "table.holder_techniques",
     "table.language_registers",
+    "table.natural_law_profiles",
     "table.nodes",
     "table.people_biology",
     "table.people_culture",

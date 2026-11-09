@@ -34,9 +34,8 @@ class FateRules:
     thread_advance_cap: int = rule(6, 0, 50, RuleGroup.FATE_AND_CHRONICLE, "Maximum stories Fate advances with events in one epoch")
     prophecy_renown: int = rule(10, 0, 500, RuleGroup.FATE_AND_CHRONICLE, "Renown to the creating son for a fulfilled prophecy")
     prophecy_xp: int = rule(30, 0, 1000, RuleGroup.FATE_AND_CHRONICLE, "XP to the creating son for a fulfilled prophecy")
-    banned_previous_openings: int = rule(6, 0, 50, RuleGroup.FATE_AND_CHRONICLE, "Previous narrative openings forbidden to the chronicler")
+    banned_previous_openings: int = rule(6, 0, 50, RuleGroup.FATE_AND_CHRONICLE, "Previous chroniclers shown in the chronicler's chain")
     previous_epoch_names_shown: int = rule(12, 0, 200, RuleGroup.FATE_AND_CHRONICLE, "Previous epoch names shown to the chronicler")
-    banned_son_message_openings: int = rule(3, 0, 20, RuleGroup.FATE_AND_CHRONICLE, "Recent message openings forbidden to a son")
     fate_timeout: int = rule(480, 30, 3600, RuleGroup.AGENTS_AND_MODEL, "Fate and chronicler timeout (s); safety margin for a judgment whose output grows")
     judgment_parallel: int = rule(
         3, 1, 16, RuleGroup.AGENTS_AND_MODEL, "Fate: extra judgment rounds (for creations not fitting the context) running at the same time"
@@ -56,37 +55,20 @@ class FateRules:
     prescreen_min_description: int = rule(140, 0, 2000, RuleGroup.FATE_AND_CHRONICLE, "Prescreen: a description shorter than this gets a warning (characters)")
     prescreen_max_off_domain_power: int = rule(7, 1, 11, RuleGroup.FATE_AND_CHRONICLE, "Prescreen: an off-domain creation stronger than this gets a warning")
     voices_events_chars: int = rule(6000, 500, 100000, RuleGroup.CONTEXT_BUDGETS, "Events sent to the voices of the peoples (characters)")
-    pantheon_root_threshold_pct: int = rule(
-        50, 1, 100, RuleGroup.FATE_AND_CHRONICLE, "Summoning: a root appearing in the titles/obsessions of this percentage of sons is forbidden to the new son"
-    )
-    pantheon_root_min_sons: int = rule(4, 1, 100, RuleGroup.FATE_AND_CHRONICLE, "Summoning: minimum sons for the pantheon-root measurement")
     council_sentences: int = rule(
         2, 1, 50, RuleGroup.FATE_AND_CHRONICLE, "Sentences taken from the council line in epoch events (so the minutes aren't copied into the narrative)"
     )
     name_type_lines: int = rule(60, 0, 1000, RuleGroup.FATE_AND_CHRONICLE, "Chronicler prompt: types of records mentioned in the epoch (maximum lines)")
     budget_name_type_chars: int = rule(3000, 0, 50000, RuleGroup.CONTEXT_BUDGETS, "Chronicler prompt: name and type list (characters)")
-    message_tic_window: int = rule(8, 0, 200, RuleGroup.FATE_AND_CHRONICLE, "Message tic: recent messages examined")
-    message_tic_threshold_pct: int = rule(
-        60, 1, 100, RuleGroup.FATE_AND_CHRONICLE, "Message tic: a word appearing in this percentage of recent messages is forbidden"
-    )
-    shared_tic_window: int = rule(24, 0, 500, RuleGroup.FATE_AND_CHRONICLE, "Shared message tic: recent messages of all sons examined")
-    shared_tic_threshold_pct: int = rule(
-        30, 1, 100, RuleGroup.FATE_AND_CHRONICLE, "Shared message tic: a root appearing in this percentage of recent messages is forbidden to all"
-    )
     budget_previous_judgments_chars: int = rule(
         2500, 0, 50000, RuleGroup.CONTEXT_BUDGETS, "Chronicler prompt: Fate's judgments from the previous epoch (characters)"
     )
     historian_opening_chars: int = rule(
         160, 20, 2000, RuleGroup.FATE_AND_CHRONICLE, "Historian prompt: length of the previous narrative opening shown (characters)"
     )
-    prescreen_tired_images: int = rule(3, 1, 50, RuleGroup.FATE_AND_CHRONICLE, "Prescreen: warning if this many tired images appear in the description")
     chronicler_min_tenure: int = rule(
         6, 1, 1000, RuleGroup.FATE_AND_CHRONICLE, "Chronicler continuity: minimum epochs a chronicler writes before handing over to a successor"
     )
-    shared_tic_cap: int = rule(3, 0, 20, RuleGroup.FATE_AND_CHRONICLE, "Shared message tic: maximum forbidden roots")
-    message_tic_min_messages: int = rule(4, 1, 200, RuleGroup.FATE_AND_CHRONICLE, "Message tic: minimum messages before checking starts")
-    message_tic_cap: int = rule(3, 0, 20, RuleGroup.FATE_AND_CHRONICLE, "Message tic: maximum forbidden words per message")
-    son_opening_words: int = rule(3, 1, 20, RuleGroup.FATE_AND_CHRONICLE, "Length of the message opening forbidden to a son (words)")
     summary_min_chars: int = rule(120, 0, 2000, RuleGroup.FATE_AND_CHRONICLE, "Shortest form of the epoch summary (characters)")
     thread_recent_advancers: int = rule(3, 0, 50, RuleGroup.CONTEXT_BUDGETS, "Recent creations advancing each story in the Fate prompt")
     closure_candidates_shown: int = rule(6, 0, 100, RuleGroup.CONTEXT_BUDGETS, "Stories written into the Fate prompt as priority closure candidates")
@@ -111,18 +93,6 @@ class FateRules:
     chronicler_side_share_pct: int = rule(
         25, 0, 100, RuleGroup.CONTEXT_BUDGETS, "Chronicler prompt: maximum share for engine results and unnamed records (% of data budget)"
     )
-    opening_window: int = rule(12, 0, 200, RuleGroup.FATE_AND_CHRONICLE, "Opening template: recent epoch narratives examined")
-    opening_pattern_threshold: int = rule(
-        3, 2, 50, RuleGroup.FATE_AND_CHRONICLE, "Opening template: a two-word pair appearing in this many separate openings is forbidden"
-    )
-    opening_fix: int = rule(
-        1,
-        0,
-        1,
-        RuleGroup.FATE_AND_CHRONICLE,
-        "If an opening starts with a forbidden template, the chronicler is asked to rewrite only the first sentence (1 on, 0 off)",
-    )
-    epoch_name_root_threshold: int = rule(3, 2, 100, RuleGroup.FATE_AND_CHRONICLE, "Epoch name: a root appearing in this many previous names is forbidden")
     complete_missing_worlds: int = rule(
         1, 0, 1, RuleGroup.FATE_AND_CHRONICLE, "If the chronicler skips a world's section, a second short call for those worlds (1 on, 0 off)"
     )

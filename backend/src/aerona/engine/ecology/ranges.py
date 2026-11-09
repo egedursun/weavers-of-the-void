@@ -12,6 +12,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.disease import OutbreakStatus
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.ecology import GRAZERS, HUNTERS, SIZE_ORDER, Biochemistry, DomesticationStage, HerdTraining, RangeTrend, Sociality
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
@@ -442,8 +443,9 @@ async def harvest_hunt(ctx: TickContext, wilds: Wilds, species_id: int, region: 
     taken = 0
     share = hunted / len(wilds.hunters[region])
     for community in wilds.hunters[region]:
+        luck = await ctx.hook_factor(community.id, DomainHook.HUNT_YIELD)
         for item in products:
-            amount = round_half_up(share * item.rate * wilds.hunt_bonus.get(community.id, 1.0))
+            amount = round_half_up(share * item.rate * wilds.hunt_bonus.get(community.id, 1.0) * luck)
             if amount > 0 and item.commodity is not None:
                 taken += await ledger.add(
                     community.id, item.commodity, amount, GoodsFlow.EXTRACTION, material=item.material, world_material_id=item.world_material_id

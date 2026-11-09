@@ -40,7 +40,7 @@ async def _announce(ctx: TickContext, entity: EntityRow) -> None:
         mechanics = sorted(await mechanics_of(ctx.session, entity))
         if mechanics:
             rules_text = " ".join(RESOURCE_MECHANICS[item].effect for item in mechanics)
-            await note(ctx, f"{entity.name} carries a strange rule: {rules_text}", key="mechanics.resource", ids=[entity.id], kind=ChronicleKind.RESOURCE)
+            await note(ctx, f"{entity.name} follows a rule of its own: {rules_text}", key="mechanics.resource", ids=[entity.id], kind=ChronicleKind.RESOURCE)
         return
     if entity.natural_law is not None and entity.natural_law is not NaturalLaw.NONE:
         await note(

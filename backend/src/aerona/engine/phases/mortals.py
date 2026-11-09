@@ -10,12 +10,14 @@ from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.body import OPEN_INJURY_STATES, HarmCause, InjuryState
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.body.afflictions import ageless
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.divine.laws import binds
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.aging import effective_lifespan, immortal, medicine_regions
 from aerona.engine.lifecycle.mortal_death import die, world_year
@@ -102,7 +104,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     laws, physics = world.laws, world.physics
     rules = ctx.rules
     effects = rules.world_effects
-    if laws.has(NaturalLaw.IMMORTALITY, mortal.world_id) or immortal(await mortal_flags(ctx.session, mortal)) or await ageless(ctx.session, mortal.id):
+    if await binds(ctx, NaturalLaw.IMMORTALITY, mortal) or immortal(await mortal_flags(ctx.session, mortal)) or await ageless(ctx.session, mortal.id):
         return
     rng = ctx.rng(seed_of("aging", mortal.id))
     first = mortal.birth_epoch == ctx.epoch
@@ -112,6 +114,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
         age = round_half_up(lifespan * (effects.rejuvenate_age_min_pct / PERCENT + rng.random() * effects.rejuvenate_age_random_pct / PERCENT))
     lived = years_lived(ctx, mortal)
     multiplier = (effects.short_life_aging_mult if laws.has(NaturalLaw.SHORT_LIFE, mortal.world_id) else 1) * physics.of(mortal.world_id).time
+    multiplier *= await ctx.hook_easing(mortal.id, DomainHook.AGING)
     aged = age + round_half_up(lived * multiplier)
     info = await effective_lifespan(ctx.session, rules, mortal, world.atlas, world.medicine)
     limit = info.effective
@@ -147,10 +150,12 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "mortal.lifespan",
     "mortal.strength",
     "table.afflictions",
+    "table.avatars",
     "table.bonds",
     "table.community_societies",
     "table.cosmos",
     "table.designated_heirs",
+    "table.divine_wounds",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.griefs",
@@ -166,6 +171,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "table.minds",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.natural_law_profiles",
     "table.nodes",
     "table.passions",
     "table.people_biology",
@@ -177,6 +183,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "table.thoughts",
     "table.tradition_profiles",
     "table.traits",
+    "table.world_domain_hooks",
     "table.world_maps",
 )
 @writes(

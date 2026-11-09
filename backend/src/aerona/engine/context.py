@@ -7,10 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.chronicle import ChronicleClock, ChronicleDraft, ChronicleRepository, ChronicleWrite
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.epoch import EpochPhase
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.world import LoreLanguage
 from aerona.domain.models.calendar import YearWindow
+from aerona.engine.divine.book import DivineBook
 from aerona.engine.primitives.knowledge import LawBook
 from aerona.engine.stats import TickStats
 from aerona.events.kinds import EventKind
@@ -53,11 +55,29 @@ class TickContext:
     session: AsyncSession
     phase: str
     _laws: LawBook | None = field(default=None, init=False, repr=False)
+    _divine: DivineBook | None = field(default=None, init=False, repr=False)
 
     async def laws(self) -> LawBook:
         if self._laws is None:
             self._laws = await LawBook.load(self.session)
         return self._laws
+
+    async def divine(self) -> DivineBook:
+        if self._divine is None:
+            self._divine = await DivineBook.load(self.session, self.environment.rules)
+        return self._divine
+
+    async def hook_factor(self, entity_id: int | None, hook: DomainHook) -> float:
+        return await (await self.divine()).factor(self.session, entity_id, hook)
+
+    async def hook_easing(self, entity_id: int | None, hook: DomainHook) -> float:
+        return await (await self.divine()).easing(self.session, entity_id, hook)
+
+    async def god_share(self, god_id: int, hook: DomainHook, world_id: int | None = None) -> float:
+        return (await self.divine()).share(god_id, hook, world_id)
+
+    async def hook_pct(self, entity_id: int | None, hook: DomainHook) -> float:
+        return await (await self.divine()).pct(self.session, entity_id, hook)
 
     @property
     def rules(self) -> Rules:

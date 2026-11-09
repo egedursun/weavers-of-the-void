@@ -20,13 +20,14 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import ConditionKind, HarmCause, InjuryState
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import CurseKind, CustomCatalog, ItemClass, ItemDeed, RiteEffectKind
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, MaterialFamily, MaterialSlot
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import AfterlifeState, BindingKind, SpiritAlignment
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind, SkillKind, ThoughtKind
 from aerona.domain.enums.polity import OfficeKind
-from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.engine.body.conditions import end_condition
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -264,6 +265,8 @@ async def decayed(ctx: TickContext, book: MaterialBook, item: EntityRow, row: It
 async def wear(ctx: TickContext, book: MaterialBook, item: EntityRow, row: ItemProfileRow, *, land: RegionEnvironmentRow | None, fought: bool) -> bool:
     before = row.condition
     loss = (fought_wear(ctx, row, await body_props(ctx, book, item, row)) if fought else 0) + await decayed(ctx, book, item, row, land)
+    if loss and (await ctx.laws()).has(NaturalLaw.METAL_RUSTS_FAST, item.world_id):
+        loss = round_half_up(loss * ctx.rules.natural_laws.rust_wear_pct / PERCENT)
     row.condition = clamp_int(row.condition - loss, 0, PERCENT)
     return before >= ctx.rules.item_wear.broken > row.condition
 
@@ -689,7 +692,8 @@ async def relic_year(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
             bearer = await ctx.session.get(EntityRow, condition.bearer_node_id)
             if bearer is None:
                 continue
-            if ctx.rng(f"relic_heal.{relic.item_entity_id}.{condition.id}.{ctx.epoch}").chance(table.healing_chance):
+            potency = await ctx.hook_factor(cult.id, DomainHook.RELIC_POWER)
+            if ctx.rng(f"relic_heal.{relic.item_entity_id}.{condition.id}.{ctx.epoch}").chance(table.healing_chance * potency):
                 await end_condition(ctx, bearer, condition.kind)
                 counts["healed"] += 1
                 if son is not None:

@@ -6,6 +6,7 @@ from aerona.engine.polity.trials import TrialTally, tend_cases
 
 
 @reads(
+    "law.rigidity",
     "table.council_seats",
     "table.culture_values",
     "table.estate_privileges",
@@ -15,6 +16,7 @@ from aerona.engine.polity.trials import TrialTally, tend_cases
     "table.hooks",
     "table.law_profiles",
     "table.law_proposals",
+    "table.name_registry",
     "table.offices",
     "table.personality_values",
     "table.polity_members",
@@ -30,11 +32,16 @@ from aerona.engine.polity.trials import TrialTally, tend_cases
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
+    "table.epoch_year_cursors",
     "table.favours",
     "table.hooks",
+    "table.incident_participants",
+    "table.incidents",
+    "table.law_jurisdictions",
     "table.law_profiles",
     "table.law_proposals",
     "table.mortal_profiles",
+    "table.name_registry",
     "table.proposal_stances",
     "table.settlement_profiles",
 )

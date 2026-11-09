@@ -4,7 +4,7 @@ from pydantic import Field
 
 from aerona.domain.enums.node import NodeKind
 from aerona.prompts.contexts.base import ContextItem, PromptContext, RulesContext
-from aerona.prompts.contexts.common import ChronicleRow, EntityLineItem, LabelValue, LexiconWord, NamedRecord, NamingRuleItem, TiredImages, WorldItem
+from aerona.prompts.contexts.common import ChronicleRow, EntityLineItem, LabelValue, LexiconWord, NamedRecord, NamingRuleItem, WorldItem
 from aerona.prompts.contexts.economy_depth import EconomyBlock
 
 
@@ -457,7 +457,3 @@ class InspectSiblingContext(PromptContext):
     relation: RelationToViewer
     covenant: bool = False
     creations: list[EntityLineItem] = Field(default_factory=list)
-
-
-class TiredImagesContext(PromptContext):
-    images: TiredImages

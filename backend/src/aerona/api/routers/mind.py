@@ -27,9 +27,10 @@ from aerona.api.schemas.mind import (
     LifeDreamView,
     MemoryView,
     MilestoneView,
+    MindNeedView,
+    MindPressureView,
     MindSplitView,
     MindView,
-    NeedView,
     OpinionComponentView,
     OpinionMemoryView,
     OpinionTermView,
@@ -37,7 +38,6 @@ from aerona.api.schemas.mind import (
     PerkView,
     PreferenceKindView,
     PreferenceView,
-    PressureView,
     SkillView,
     SummaryView,
     ThoughtKindView,
@@ -256,7 +256,7 @@ async def mind_view(services: ServicesDep, node_id: int = Path(ge=1)) -> MindVie
             skills=await skill_views(session, rules, node_id, epoch),
             needs=await need_views(session, rules, node, node_id),
             pressures=[
-                PressureView(pressure=kind_, label=PRESSURE_LABELS[kind_], value=value)
+                MindPressureView(pressure=kind_, label=PRESSURE_LABELS[kind_], value=value)
                 for kind_, value in sorted((await pressures_of(session, node_id)).items())
             ],
             memories=memories,
@@ -384,11 +384,11 @@ async def mind_split_view(services: ServicesDep, node_id: int = Path(ge=1)) -> M
         )
 
 
-async def need_views(session: AsyncSession, rules: Rules, node: Holder, node_id: int) -> list[NeedView]:
+async def need_views(session: AsyncSession, rules: Rules, node: Holder, node_id: int) -> list[MindNeedView]:
     facets = await facets_of(session, node_id)
     values = await values_of(session, node)
     return [
-        NeedView(need=need, label=NEED_LABELS[need], value=value, group=NEEDS[need].group, importance=need_importance(rules, need, facets, values))
+        MindNeedView(need=need, label=NEED_LABELS[need], value=value, group=NEEDS[need].group, importance=need_importance(rules, need, facets, values))
         for need, value in sorted((await needs_of(session, node_id)).items(), key=lambda item: (list(NEEDS).index(item[0]), item[0]))
     ]
 

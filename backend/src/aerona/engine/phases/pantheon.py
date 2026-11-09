@@ -34,6 +34,8 @@ from aerona.engine.cosmos.duels import ARENA_STATS, duel_history, duel_winner, s
 from aerona.engine.cosmos.foreign_gods import awaken_text, destroy_temple, god_faith, powers_of, stat_effect, wake, worshippers
 from aerona.engine.cosmos.routes import RouteBook
 from aerona.engine.cosmos.worlds import declare_holy_world
+from aerona.engine.divine.decrees import truce_in_force
+from aerona.engine.divine.foreign import pact_between
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -251,7 +253,7 @@ async def _rival_pairs(ctx: TickContext, book: RouteBook) -> list[tuple[int, Son
 
 async def rival_clashes(ctx: TickContext) -> int:
     pantheon = ctx.rules.pantheon
-    if pantheon.rival_cap <= 0:
+    if pantheon.rival_cap <= 0 or await truce_in_force(ctx):
         return 0
     rng = ctx.rng("rivals")
     repository = SonRepository(ctx.session)
@@ -481,8 +483,9 @@ async def spontaneous_god_war(ctx: TickContext, book: RouteBook) -> str | None:
         if passes_gate(ctx.rules, son.rarity, Gate.FOREIGN_GOD_WAR)
         and son.essence >= tools.foreign_war_cost
         and book.reachable(son.current_world_id, target.world_id)
+        and await pact_between(ctx, son.id, target.id) is None
     ]
-    if not sons:
+    if not sons or await truce_in_force(ctx):
         return None
     champion = max(sons, key=lambda son: (son.strength + son.will + son.level, -son.id))
     if not ctx.rng("god_war_roll").chance(pantheon.son_war_chance):
@@ -511,6 +514,7 @@ async def outer_gnaw(ctx: TickContext) -> int:
     "table.bonds",
     "table.conditions",
     "table.cosmos",
+    "table.council_rulings",
     "table.entity_flags",
     "table.epoch_year_cursors",
     "table.foreign_god_powers",

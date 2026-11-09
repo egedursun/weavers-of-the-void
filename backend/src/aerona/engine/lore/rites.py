@@ -38,6 +38,7 @@ from aerona.domain.enums.culture import (
     Technique,
 )
 from aerona.domain.enums.discovery import TheoryDomain
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
@@ -56,6 +57,8 @@ from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import shift_sanity
+from aerona.engine.divine.decrees import outlawed_schools
+from aerona.engine.divine.laws import binds
 from aerona.engine.ecology.control import spawn_beast
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.environment.control import force_weather
@@ -374,9 +377,9 @@ async def lawful(ctx: TickContext, caster: EntityRow, row: RiteProfileRow, realm
         return "the law restricts so strong a rite"
     if row.heretical and TenetKind.SANCTIFIED_MAGIC in tenets:
         return "the church brands it heresy"
-    if not await licence(ctx, caster, realms):
-        return "no licence"
-    return None
+    if row.school in await outlawed_schools(ctx):
+        return "the council of the gods outlawed it"
+    return None if await licence(ctx, caster, realms) else "no licence"
 
 
 async def on_ley(ctx: TickContext, caster: EntityRow) -> bool:
@@ -434,7 +437,8 @@ async def pay(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> bool:
     for key, amount in cost_of(ctx, row, priced=await priced(ctx, caster)).items():
         if not await PAYMENTS[key](ctx, caster, amount):
             return False
-    return True
+    bloodless = not await binds(ctx, NaturalLaw.MAGIC_REQUIRES_BLOOD, caster)
+    return bloodless or await pay_blood(ctx, caster, row.power * ctx.rules.natural_laws.blood_per_power)
 
 
 async def victim_in(ctx: TickContext, place_id: int) -> EntityRow | None:
@@ -881,6 +885,7 @@ async def cast(
     mastery = await school_level(ctx.session, caster.id, rite.id)
     steadiness, strength = gift_factors(ctx.rules, await ctx.session.get(GenomeRow, caster.id), row.school)
     strength *= await name_power(ctx, caster.id, target)
+    strength *= await ctx.hook_factor(caster.id, DomainHook.BLOOD_RITE)
     await practise_subject(ctx.session, ctx.rules, caster.id, SkillKind.SPELLCRAFT, subject_id=rite.id, xp=ctx.rules.skills.spellcraft_xp, epoch=ctx.epoch)
     understood = await theory_factor(ctx.session, ctx.rules, caster.location_id or caster.id, TheoryDomain.MAGIC)
     if rng.chance(row.backlash_chance * steadiness * (1 - mastery / PERCENT * ctx.rules.skills.school_backlash_pct / PERCENT) / understood):

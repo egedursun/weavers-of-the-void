@@ -14,6 +14,7 @@ from aerona.db.tables.mind import SKILL_MAX, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.mind import Attribute, CareerChange, MemoryKind, SkillKind, SkillSource, ThoughtKind, TraitEffect, ValueAxis
 from aerona.engine.body.book import factor
@@ -170,7 +171,10 @@ async def teach_apprentices(ctx: TickContext) -> int:
                 continue
             gap = lesson.level - (student_level.level if student_level is not None else 0)
             pace = 1 + gap * table.teach_gap_pct / PERCENT / PERCENT
-            await practise(ctx.session, ctx.rules, student.id, lesson.skill, table.teach_xp * quality * pace, epoch=ctx.epoch, source=SkillSource.TEACHING)
+            keen = await ctx.hook_factor(student.id, DomainHook.LEARNING)
+            await practise(
+                ctx.session, ctx.rules, student.id, lesson.skill, table.teach_xp * quality * pace * keen, epoch=ctx.epoch, source=SkillSource.TEACHING
+            )
         await practise(ctx.session, ctx.rules, master.id, SkillKind.TEACHING, table.teaching_xp, epoch=ctx.epoch)
         await think(ctx.session, ctx.rules, master.id, ThoughtKind.TAUGHT_APPRENTICE, ctx.epoch, subject_id=student.id)
         await remember(

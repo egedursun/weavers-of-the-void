@@ -7,6 +7,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, RiteProfileRow
+from aerona.db.tables.divine import DivineWoundRow
 from aerona.db.tables.ecology import HerdRow, SpeciesProfileRow, SpeciesUseRow
 from aerona.db.tables.economy import MarketPriceRow, TradeRouteProfileRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -17,6 +18,7 @@ from aerona.db.tables.flora import PlantProfileRow
 from aerona.db.tables.intrigue import HookRow, TrueNameRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow
+from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.sons import SonRelationRow, SonRow
 from aerona.db.tables.statecraft import CrisisRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleProfileRow
@@ -24,6 +26,7 @@ from aerona.db.tables.warfare import ArmyRow, WarRow
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.divine import DivineWoundKind, WoundCause
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.ecology import Diet, DomesticationStage, SpeciesClass, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
@@ -412,3 +415,15 @@ async def council_office(session: AsyncSession, realm: Realm) -> Ids:
     session.add(office)
     await session.flush()
     return {**found, "office": office.id}
+
+
+async def pact_friend(session: AsyncSession, realm: Realm) -> Ids:
+    session.add(RelationshipRow(holder_node_id=realm.god_id, subject_node_id=realm.son_id, friendship=80, kinds=[], since_epoch=1, last_epoch=1, locked=[]))
+    return {}
+
+
+async def wounded(session: AsyncSession, realm: Realm) -> Ids:
+    wound = DivineWoundRow(god_node_id=realm.son_id, kind=DivineWoundKind.STOLEN_NAME, severity=40, healed=0, cause=WoundCause.DUEL, epoch=1, locked=[])
+    session.add(wound)
+    await session.flush()
+    return {"wound": wound.id}

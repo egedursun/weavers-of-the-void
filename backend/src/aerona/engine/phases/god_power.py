@@ -11,6 +11,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
+from aerona.engine.divine.creator import autonomy
 from aerona.engine.gods.lineage import curse, curse_bloodline, make_prophet
 from aerona.engine.gods.power import declare_rebellion, drain_son, drained_recently, end_rebellion
 from aerona.engine.gods.queries import community_of, creator_row, flagged_ids, sons
@@ -34,10 +35,10 @@ async def spontaneous_rebellion(ctx: TickContext, creator: CreatorRow) -> None:
     candidates = [
         son
         for son in await sons(ctx.session, [SonStatus.ACTIVE])
-        if not son.rebel and son.loyalty < rules.auto_rebel_loyalty and son.wrath >= rules.auto_rebel_wrath
+        if not son.rebel and son.loyalty < rules.auto_rebel_loyalty + await autonomy(ctx, son) and son.wrath >= rules.auto_rebel_wrath
     ]
     candidates.sort(key=lambda son: (son.loyalty, -son.wrath, son.id))
-    if candidates and ctx.rng("rebellion").chance(rules.auto_rebel_chance):
+    if candidates and ctx.rng("rebellion").chance(rules.auto_rebel_chance + await autonomy(ctx, candidates[0])):
         await declare_rebellion(ctx, creator, candidates[0], god_lines.REBELLION_SPONTANEOUS_MANIFESTO, True)
 
 
@@ -208,7 +209,7 @@ async def prophet_conversions(ctx: TickContext, creator: CreatorRow) -> None:
             )
 
 
-@reads("table.bonds", "table.entity_flags", "table.epoch_year_cursors", "table.nodes", "table.son_relations")
+@reads("table.bonds", "table.entity_flags", "table.epoch_year_cursors", "table.nodes", "table.son_relations", "table.world_attention")
 @writes("table.chronicle", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.son_relations", "table.sons")
 async def god_power(ctx: TickContext) -> None:
     creator = await creator_row(ctx.session)

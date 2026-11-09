@@ -1,0 +1,320 @@
+from collections import Counter
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+
+from sqlalchemy import func, select
+
+from aerona.constants.units import PERCENT
+from aerona.db.repositories.sons import SonRepository
+from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.cosmos import CosmosRow, CreatorRow
+from aerona.db.tables.divine import CouncilRulingRow, GodGoalRow
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.foreign_gods import ForeignGodRow, GodConflictRow
+from aerona.db.tables.lore import CouncilRow
+from aerona.db.tables.sons import SonPowerRow, SonRow
+from aerona.db.write_guard import held
+from aerona.domain.enums.agent import CouncilCaller, CouncilVote
+from aerona.domain.enums.body import ConditionKind, HarmCause
+from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.culture import MagicSchool
+from aerona.domain.enums.divine import CouncilMotion, GoalState, SonPunishment
+from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.son import SonStatus
+from aerona.domain.models.records import CouncilBallot, CouncilMinutes
+from aerona.engine.body.conditions import gain_condition
+from aerona.engine.context import TickContext
+from aerona.engine.cosmos.worlds import declare_holy_world
+from aerona.engine.divine.decrees import active_rulings, assigned_world
+from aerona.engine.mind.book import stored_values
+from aerona.engine.notes import note
+from aerona.engine.primitives.doom import step_doom
+from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.services.conflict import foreign_god_war
+
+M = CouncilMotion
+LASTING = frozenset({M.COSMIC_TRUCE, M.OUTLAW_RITE, M.PUNISH_SON, M.DIVIDE_WORLDS, M.HOLY_WORLD})
+MOTION_LABELS = {
+    M.NONE: "No motion",
+    M.AGAINST_DOOMSDAY: "Stand against the doom",
+    M.JOINT_BLESSING: "Bless one another",
+    M.CONDEMN_REBEL: "Condemn a rebel",
+    M.CALL_FOR_PEACE: "Call for peace",
+    M.WAR_ON_FOREIGN_GOD: "War on a foreign god",
+    M.DIVIDE_WORLDS: "Divide the worlds",
+    M.OUTLAW_RITE: "Outlaw a rite",
+    M.PUNISH_SON: "Punish a son",
+    M.BLESS_HERO: "Bless a hero",
+    M.HOLY_WORLD: "Declare a holy world",
+    M.COSMIC_TRUCE: "Set a cosmic truce",
+    M.PETITION_CREATOR: "Petition the Creator",
+}
+
+
+@dataclass(frozen=True)
+class Motion:
+    motion: CouncilMotion
+    target_node_id: int | None = None
+    world_id: int | None = None
+    school: MagicSchool | None = None
+    punishment: SonPunishment | None = None
+
+
+async def divide(ctx: TickContext) -> list[str]:
+    worshipped = Counter[tuple[int, int]]()
+    rows = await ctx.session.execute(
+        select(EntityRow.world_id, BondRow.target_node_id)
+        .join(BondRow, BondRow.source_node_id == EntityRow.id)
+        .join(SonRow, SonRow.id == BondRow.target_node_id)
+        .where(BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE, SonRow.status != SonStatus.DEAD)
+    )
+    for world_id, son_id in rows:
+        worshipped[(world_id, son_id)] += 1
+    claimed: set[int] = set()
+    given: Counter[int] = Counter()
+    lines: list[str] = []
+    for (world_id, son_id), _ in sorted(worshipped.items(), key=lambda item: (-item[1], item[0])):
+        world = await ctx.session.get(WorldRow, world_id)
+        son = await ctx.session.get(SonRow, son_id)
+        if world is None or son is None or world.id in claimed or given[son_id] >= ctx.rules.council.worlds_per_son or held(son.id):
+            continue
+        world.patron_son_id, world.patron_automatic = son.id, False
+        claimed.add(world.id)
+        given[son_id] += 1
+        lines.append(f"{world.name} to {son.name}")
+    return lines
+
+
+async def joint_war(ctx: TickContext, ruling: CouncilRulingRow, members: list[SonRow]) -> str | None:
+    god = await ctx.session.get(ForeignGodRow, ruling.target_node_id) if ruling.target_node_id is not None else None
+    able = [son for son in members if son.status is SonStatus.ACTIVE]
+    if god is None or not able:
+        return None
+    champion = max(able, key=lambda son: (son.strength + son.will + son.level, -son.id))
+    result = await foreign_god_war(ctx, champion.id, god.id, "by the council's decree", allies=[son for son in able if son.id != champion.id])
+    return result.text
+
+
+async def enact_divide(ctx: TickContext, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    return [f"the gods gave {line}" for line in await divide(ctx)]
+
+
+async def enact_war(ctx: TickContext, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    text = await joint_war(ctx, ruling, members)
+    return [text] if text else []
+
+
+async def enact_punishment(ctx: TickContext, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    son = await ctx.session.get(SonRow, ruling.target_node_id) if ruling.target_node_id is not None else None
+    if son is None or held(son.id):
+        return []
+    if ruling.punishment is SonPunishment.STRIP_POWER:
+        power = await ctx.session.scalar(select(SonPowerRow).where(SonPowerRow.son_id == son.id).order_by(SonPowerRow.slot.desc()).limit(1))
+        if power is None:
+            return []
+        await ctx.session.delete(power)
+        return [f"{son.name} was stripped of {power.name}"]
+    if ruling.punishment is SonPunishment.EXILE:
+        son.status = SonStatus.EXILED
+        return [f"{son.name} was exiled"]
+    son.chained = True
+    return [f"{son.name} was chained"]
+
+
+async def enact_blessing(ctx: TickContext, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    hero = await ctx.session.get(EntityRow, ruling.target_node_id) if ruling.target_node_id is not None else None
+    if hero is None or held(hero.id) or await gain_condition(ctx, hero, ConditionKind.CHOSEN_MARK, HarmCause.GOD) is None:
+        return []
+    return [f"{hero.name} was blessed by the council"]
+
+
+async def enact_holy_world(ctx: TickContext, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    son = await ctx.session.get(SonRow, ruling.target_node_id) if ruling.target_node_id is not None else None
+    world = await ctx.session.get(WorldRow, ruling.world_id) if ruling.world_id is not None else None
+    return [await declare_holy_world(ctx, son, world)] if son is not None and world is not None else []
+
+
+async def enact_petition(ctx: TickContext, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    council = ctx.rules.council
+    creator = await ctx.session.scalar(select(CreatorRow).limit(1))
+    if creator is None:
+        return []
+    creator.mood_interest = clamp_percent(creator.mood_interest + council.petition_interest)
+    creator.mood_anger = clamp_percent(creator.mood_anger - council.petition_calm)
+    return ["the Creator's eye turned to the council"]
+
+
+async def enact_truce(ctx: TickContext, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    return ["the gods swore a truce among themselves"]
+
+
+async def enact_outlaw(ctx: TickContext, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    return [f"{ruling.school.value.replace('_', ' ')} rites were outlawed among the gods"] if ruling.school is not None else []
+
+
+Enactment = Callable[[TickContext, CouncilRulingRow, list[SonRow]], Awaitable[list[str]]]
+ENACTMENTS: dict[CouncilMotion, Enactment] = {
+    M.DIVIDE_WORLDS: enact_divide,
+    M.WAR_ON_FOREIGN_GOD: enact_war,
+    M.PUNISH_SON: enact_punishment,
+    M.BLESS_HERO: enact_blessing,
+    M.HOLY_WORLD: enact_holy_world,
+    M.PETITION_CREATOR: enact_petition,
+    M.COSMIC_TRUCE: enact_truce,
+    M.OUTLAW_RITE: enact_outlaw,
+}
+
+
+async def enact(ctx: TickContext, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    action = ENACTMENTS.get(ruling.motion)
+    lines = await action(ctx, ruling, members) if action is not None else []
+    ruling.enacted = True
+    if ruling.motion not in LASTING:
+        ruling.active = False
+    await ctx.session.flush()
+    return lines
+
+
+async def record(ctx: TickContext, motion: Motion, *, council_id: int | None, note_text: str | None = None) -> CouncilRulingRow:
+    row = CouncilRulingRow(
+        council_id=council_id,
+        motion=motion.motion,
+        target_node_id=motion.target_node_id,
+        world_id=motion.world_id,
+        school=motion.school,
+        punishment=motion.punishment,
+        epoch=ctx.epoch,
+        until_epoch=ctx.epoch + ctx.rules.council.ruling_epochs if motion.motion in LASTING else None,
+        active=True,
+        enacted=False,
+        note=note_text,
+        locked=[],
+    )
+    ctx.session.add(row)
+    await ctx.session.flush()
+    return row
+
+
+async def enforce_rulings(ctx: TickContext) -> int:
+    kept = 0
+    for row in await active_rulings(ctx):
+        if row.until_epoch is not None and ctx.epoch >= row.until_epoch and "active" not in row.locked:
+            row.active = False
+            if row.motion is M.PUNISH_SON and row.punishment is SonPunishment.EXILE and row.target_node_id is not None:
+                son = await ctx.session.get(SonRow, row.target_node_id)
+                if son is not None and son.status is SonStatus.EXILED and not held(son.id):
+                    son.status = SonStatus.ACTIVE
+            await note(ctx, f"The council's ruling ({MOTION_LABELS[row.motion].lower()}) lapsed.", key="divine.ruling_lapsed", kind=ChronicleKind.COUNCIL)
+            continue
+        if row.motion is M.PUNISH_SON and row.punishment is SonPunishment.CHAIN and row.target_node_id is not None:
+            son = await ctx.session.get(SonRow, row.target_node_id)
+            if son is not None and not held(son.id):
+                son.chained = True
+        if row.motion is M.DIVIDE_WORLDS:
+            for son in await ctx.session.scalars(select(SonRow).where(SonRow.status == SonStatus.ACTIVE)):
+                world = await assigned_world(ctx, son.id)
+                if world is not None and son.current_world_id != world and not held(son.id) and son.manually_assigned_epoch is None:
+                    son.current_world_id = world
+        kept += 1
+    await ctx.session.flush()
+    return kept
+
+
+async def leaning(ctx: TickContext, son: SonRow, motion: Motion) -> int:
+    table = ctx.rules.council
+    values = await stored_values(ctx.session, ValueHolder.DIVINE, son.id)
+    lean = 0
+    target = motion.target_node_id
+    if target is not None and target != son.id and await ctx.session.get(SonRow, target) is not None:
+        lean += round(await SonRepository(ctx.session).relation(son.id, target) * table.relation_vote_pct / PERCENT) * (
+            -1 if motion.motion is M.PUNISH_SON else 1
+        )
+    if target == son.id:
+        lean -= PERCENT
+    goals = await ctx.session.scalars(select(GodGoalRow).where(GodGoalRow.god_node_id == son.id, GodGoalRow.state == GoalState.ACTIVE))
+    if any(goal.target_node_id == target and target is not None for goal in goals):
+        lean += table.goal_vote
+    martial, mercy = values.get(ValueAxis.MARTIAL, 0), values.get(ValueAxis.MERCY, 0)
+    if motion.motion in {M.WAR_ON_FOREIGN_GOD}:
+        lean += martial - mercy
+    if motion.motion in {M.COSMIC_TRUCE, M.CALL_FOR_PEACE}:
+        lean += mercy - martial
+    if motion.motion is M.PETITION_CREATOR:
+        lean += son.loyalty - PERCENT // 2
+    if motion.motion is M.DIVIDE_WORLDS:
+        lean += son.ambition - PERCENT // 2
+    return lean
+
+
+async def engine_votes(ctx: TickContext, members: list[SonRow], motion: Motion) -> dict[int, bool]:
+    return {son.id: await leaning(ctx, son, motion) >= 0 for son in members}
+
+
+async def engine_motion(ctx: TickContext, members: list[SonRow]) -> Motion:
+    council = ctx.rules.council
+    rebel = next((son for son in members if son.rebel), None)
+    if rebel is not None:
+        return Motion(M.PUNISH_SON, target_node_id=rebel.id, punishment=SonPunishment.CHAIN)
+    hostile = await ctx.session.scalar(
+        select(ForeignGodRow)
+        .where(ForeignGodRow.status == ForeignGodStatus.AWAKE, ForeignGodRow.stance <= -ctx.rules.pantheon.son_war_max_attitude)
+        .order_by(ForeignGodRow.stance, ForeignGodRow.id)
+        .limit(1)
+    )
+    if hostile is not None:
+        return Motion(M.WAR_ON_FOREIGN_GOD, target_node_id=hostile.id)
+    cosmos = await ctx.session.scalar(select(CosmosRow).limit(1))
+    if cosmos is not None and cosmos.doom_clock * PERCENT >= ctx.rules.balance.apocalypse_threshold * council.agenda_apocalypse_pct and cosmos.doom_clock:
+        return Motion(M.AGAINST_DOOMSDAY)
+    duels = await ctx.session.scalar(
+        select(func.count(GodConflictRow.id)).where(GodConflictRow.duel.is_(True), GodConflictRow.epoch >= ctx.epoch - council.truce_window)
+    )
+    if int(duels or 0) >= council.truce_duels and not await active_rulings(ctx, M.COSMIC_TRUCE):
+        return Motion(M.COSMIC_TRUCE)
+    return Motion(M.PETITION_CREATOR)
+
+
+async def engine_council(ctx: TickContext) -> CouncilRow | None:
+    council = ctx.rules.council
+    members = list(
+        await ctx.session.scalars(select(SonRow).where(SonRow.status.in_([SonStatus.ACTIVE, SonStatus.ASLEEP])).order_by(SonRow.id).limit(council.max_members))
+    )
+    if len(members) < council.min_members:
+        return None
+    motion = await engine_motion(ctx, members)
+    votes = await engine_votes(ctx, members, motion)
+    yes = sum(1 for vote in votes.values() if vote)
+    passed = yes > len(votes) - yes
+    ballots = tuple(CouncilBallot(son_id=son.id, name=son.name, vote=CouncilVote.YES if votes[son.id] else CouncilVote.NO) for son in members)
+    label = MOTION_LABELS[motion.motion]
+    row = CouncilRow(
+        epoch=ctx.epoch,
+        topic=label,
+        minutes=CouncilMinutes(topic=label, convened_by=CouncilCaller.FATE.value, motion=label, ballots=ballots, passed=passed, decision=motion.motion.value),
+        passed=passed,
+    )
+    ctx.session.add(row)
+    await ctx.session.flush()
+    notes: list[str] = []
+    if passed:
+        if motion.motion is M.AGAINST_DOOMSDAY:
+            cosmos = await ctx.session.scalar(select(CosmosRow).limit(1))
+            if cosmos is not None:
+                step_doom(ctx.rules, cosmos, -council.apocalypse_motion_push)
+                notes.append(f"the doomsday clock was pushed back {council.apocalypse_motion_push}")
+        else:
+            ruling = await record(ctx, motion, council_id=row.id, note_text=label)
+            notes.extend(await enact(ctx, ruling, members))
+    row.minutes = row.minutes.model_copy(update={"notes": tuple(notes)})
+    verdict = "passed" if passed else "rejected"
+    tail = f" {'; '.join(notes)}." if notes else ""
+    await note(
+        ctx,
+        f"The Council of the Gods met on the motion: {label.lower()} — {verdict} ({yes} yes, {len(votes) - yes} no).{tail}",
+        key="council.engine_held",
+        kind=ChronicleKind.COUNCIL,
+    )
+    return row

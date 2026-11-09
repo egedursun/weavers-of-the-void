@@ -30,8 +30,9 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.intervention import Disaster, Miracle
-from aerona.domain.enums.mind import ThoughtKind
+from aerona.domain.enums.mind import MemoryKind, ThoughtKind
 from aerona.domain.models.entity_stats import EventStats
+from aerona.engine.divine.politics import god_grudge
 from aerona.engine.gods.interventions import MiracleEffect, MiracleOutcome, apply_miracle
 from aerona.engine.mind.thoughts import think
 from aerona.engine.phases.disasters import DISASTER_KINDS, after_strike, apply_disaster, joined_names, record_impact
@@ -107,7 +108,12 @@ def miracle_notes(outcome: MiracleOutcome) -> list[str]:
 
 
 async def apply_son_miracle(call: SonCall, target: EntityRow, miracle: Miracle) -> list[str]:
-    return miracle_notes(await apply_miracle(call.tick, target, miracle, lines.PEACE_REASON))
+    notes = miracle_notes(await apply_miracle(call.tick, target, miracle, lines.PEACE_REASON))
+    book = await call.tick.divine()
+    for god_id in (await book.faithful_of(call.session, target.id))[0]:
+        if god_id != call.son.id:
+            await god_grudge(call.tick, god_id, call.son.id, MemoryKind.AIDED_CHOSEN, f"blessed {target.name}")
+    return notes
 
 
 async def miracle_witnesses(call: SonCall, target: EntityRow) -> list[int]:

@@ -11,6 +11,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.domain.enums.demography import Job
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.environment import CoastKind, TemperatureBand
 from aerona.domain.enums.industry import ProcessKind
@@ -92,6 +93,7 @@ async def harvest_goods(ctx: TickContext, book: EconomyBook, community: EntityRo
     land *= await feed(ctx, community.id, farming, crews)
     sea = units * fishing.output_pct / PERCENT * fish_factor(ctx.rules, book.pollution.get(region_id_of(book, community.id) or -1))
     sea *= outdated(book, ctx.rules, community.id, ProcessKind.FISHING)
+    sea *= await ctx.hook_factor(community.id, DomainHook.CATCH)
     if mix.fish > 0:
         sea *= scale_by_energy(book, community.id, fishing.energy, round_half_up(fishing.energy_need * crews * mix.fish))
     fodder = round_half_up(land * mix.pasture * table.fodder_share_pct / PERCENT)

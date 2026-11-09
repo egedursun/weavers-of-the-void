@@ -82,3 +82,19 @@ def test_text_that_assumes_every_route_runs_by_caravan_is_caught() -> None:
         assert "assumed carrier" in rules_hit(module, PROMPT, text), text
     assert "assumed carrier" not in rules_hit(module, PROMPT, "How hard foul weather bears on the caravan way (%)")
     assert "assumed carrier" not in rules_hit(module, PROMPT, "How goods travel: road, river, sea, caravan or sky")
+
+
+def test_a_ban_on_the_model_s_own_images_is_caught() -> None:
+    module = checker()
+    for text in (
+        "TIRED IMAGES: do not lean on these.",
+        "Avoid clichés in the name.",
+        "Do NOT USE these openings: «The salt»",
+        "Never repeat these words in your message.",
+        "Forbidden roots for the new son's title",
+        "banned patterns in the deviation sentence",
+        "No stock names.",
+    ):
+        assert "model image ban" in rules_hit(module, PROMPT, text), text
+    assert "model image ban" not in rules_hit(module, PROMPT, "Name it in the language of its people.")
+    assert "model image ban" not in rules_hit(module, PROMPT, "Do not use ids that are not in the list.")

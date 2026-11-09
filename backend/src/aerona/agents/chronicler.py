@@ -6,11 +6,11 @@ from sqlalchemy import select
 
 from aerona.agents.ask import ask
 from aerona.agents.chronicle_audit import ChronicleText, coverage_from, review
-from aerona.agents.context.chronicler import banned_openings, chronicler_context, living_world_items, opening_patterns
+from aerona.agents.context.chronicler import chronicler_context, living_world_items
 from aerona.agents.context.scope import Scope, load_scope
 from aerona.agents.roles import AgentRole
 from aerona.agents.runtime import AgentRuntime
-from aerona.agents.text import replace_name, sanitize, sentences
+from aerona.agents.text import replace_name, sanitize
 from aerona.constants.agents import AGE_NAME_ORDINALS, CHRONICLER_IDENTITY_CHARS, CHRONICLER_NAME_CHARS
 from aerona.db.repositories.names import normalize_name
 from aerona.db.tables.epochs import EpochRow, EpochWorldNarrativeRow
@@ -18,10 +18,10 @@ from aerona.db.tables.lore import ChronicleRow
 from aerona.domain.models.calendar import epoch_end_year, epoch_start_year
 from aerona.domain.models.records import ChronicleAuditReport, ChronicleCoverage
 from aerona.prompts import PromptId
-from aerona.prompts.contexts.chronicler import ChroniclerFixOpeningContext, ChroniclerSystemContext, ChroniclerUserContext
+from aerona.prompts.contexts.chronicler import ChroniclerSystemContext, ChroniclerUserContext
 from aerona.prompts.contexts.common import WorldItem
 from aerona.prompts.schemas.constraints import ArrayBounds, Constraint, EnumValues, OmitField, RequireField
-from aerona.prompts.schemas.fate import ChronicleOutput, FirstSentenceOutput, WorldSectionOutput, WorldSectionsOutput
+from aerona.prompts.schemas.fate import ChronicleOutput, WorldSectionOutput, WorldSectionsOutput
 from aerona.rules.registry import Rules
 
 ITEMS = "[]"
@@ -86,32 +86,6 @@ async def write_chronicle(runtime: AgentRuntime, epoch: int, engine_notes: Seque
     return from_output(output)
 
 
-async def fix_opening(runtime: AgentRuntime, chronicle: Chronicle, epoch: int) -> None:
-    async with runtime.database.read() as session:
-        rules = await runtime.rules(session)
-        scope = await load_scope(session, rules)
-        patterns = await opening_patterns(scope, epoch)
-        system = system_context(scope)
-    first = (sentences(chronicle.narrative) or [""])[0]
-    found = banned_openings(first, patterns)
-    if not rules.fate.opening_fix or not first or not found:
-        return
-    rest = chronicle.narrative[len(first) : len(first) + rules.fate.budget_chronicler_engine_chars]
-    context = ChroniclerFixOpeningContext(lore_language=scope.cosmos.lore_language, rules=rules, patterns=found, first_sentence=first, continuation=rest)
-    output = await ask(
-        runtime.model,
-        rules,
-        label=AgentRole.CHRONICLE_FIX,
-        system=(PromptId.CHRONICLER_SYSTEM, system),
-        user=(PromptId.CHRONICLER_FIX_OPENING_USER, context),
-        output=FirstSentenceOutput,
-        time_limit=rules.fate.fate_timeout,
-    )
-    replacement = sanitize(output.first_sentence)
-    if replacement and not banned_openings(replacement, patterns):
-        chronicle.narrative = replacement + chronicle.narrative[len(first) :]
-
-
 async def missing_world_sections(runtime: AgentRuntime, epoch: int, missing: Sequence[WorldItem], prompt: PromptId) -> dict[int, WorldSectionOutput]:
     async with runtime.database.read() as session:
         rules = await runtime.rules(session)
@@ -133,10 +107,6 @@ async def missing_world_sections(runtime: AgentRuntime, epoch: int, missing: Seq
 
 async def complete_chronicle(runtime: AgentRuntime, chronicle: Chronicle, epoch: int) -> None:
     rules = await runtime.current_rules()
-    try:
-        await fix_opening(runtime, chronicle, epoch)
-    except Exception as error:
-        runtime.error(f"Chronicle completion: {error}")
     async with runtime.database.read() as session:
         worlds = living_world_items(await load_scope(session, rules), epoch)
     missing = [world for world in worlds if world.id not in chronicle.worlds]

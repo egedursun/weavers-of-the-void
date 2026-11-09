@@ -1,8 +1,7 @@
 import re
-from collections import Counter, defaultdict
+from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass
-from itertools import pairwise
 
 from sqlalchemy import func, or_, select
 
@@ -11,11 +10,9 @@ from aerona.agents.context.entity_line import line_items
 from aerona.agents.context.happenings import event_phase_lines
 from aerona.agents.context.recent_chronicle import prompt_text
 from aerona.agents.context.scope import Scope
-from aerona.agents.context.tired_images import tired_images
 from aerona.agents.context.world_header import world_header
 from aerona.agents.text import sentences
 from aerona.catalog.entity_types import ENTITY_TYPES
-from aerona.constants.agents import AGE_WORD, FUNCTION_WORDS, TIC_STEM_LETTERS
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.epochs import EpochRow
 from aerona.db.tables.lore import ChronicleEntityRow
@@ -29,7 +26,6 @@ from aerona.prompts.contexts.common import WorldItem
 from aerona.prompts.contexts.fate import AgeEventRow, AgeEventsContext, WorldEvents
 
 DIGITS = re.compile(r"\d+")
-WORD = re.compile(r"[^\W\d_]+")
 PREVIOUS_VERDICT_KEYS = ("fate.thread_advanced",)
 CREATOR_FOLD_KINDS = frozenset({ChronicleKind.CREATOR_HAND, ChronicleKind.DIVINE_SIGN, ChronicleKind.STAR})
 
@@ -119,37 +115,6 @@ async def previous_names(scope: Scope, epoch: int) -> list[str]:
     return [name for name in rows if name]
 
 
-def piled_roots(names: Sequence[str], threshold: int, minimum_letters: int) -> list[str]:
-    counts: Counter[str] = Counter()
-    for name in names:
-        stems = {word.casefold()[:TIC_STEM_LETTERS] for word in WORD.findall(name) if len(word) >= minimum_letters and word.casefold() != AGE_WORD}
-        counts.update(stems)
-    return sorted(stem for stem, count in counts.items() if count >= threshold)
-
-
-def opening_bigrams(sentence: str) -> set[str]:
-    words = [word.casefold() for word in WORD.findall(sentence)]
-    return {f"{first} {second}" for first, second in pairwise(words) if first not in FUNCTION_WORDS and second not in FUNCTION_WORDS}
-
-
-async def opening_patterns(scope: Scope, epoch: int) -> list[str]:
-    fate = scope.rules.fate
-    narratives = await scope.session.scalars(
-        select(EpochRow.narrative).where(EpochRow.epoch < epoch, EpochRow.narrative.is_not(None)).order_by(EpochRow.epoch.desc()).limit(fate.opening_window)
-    )
-    counts: Counter[str] = Counter()
-    for narrative in [text for text in narratives if text]:
-        first = sentences(narrative)[:1]
-        if first:
-            counts.update(opening_bigrams(first[0]))
-    return sorted(pattern for pattern, count in counts.items() if count >= fate.opening_pattern_threshold)
-
-
-def banned_openings(sentence: str, patterns: Sequence[str]) -> list[str]:
-    found = opening_bigrams(sentence)
-    return [pattern for pattern in patterns if pattern in found]
-
-
 async def continuity(scope: Scope, epoch: int) -> ChroniclerContinuity:
     rows = list(
         await scope.session.scalars(select(EpochRow).where(EpochRow.epoch < epoch, EpochRow.chronicler_name.is_not(None)).order_by(EpochRow.epoch.desc()))
@@ -227,10 +192,7 @@ async def chronicler_context(
         worlds=chosen,
         missing_worlds=list(missing),
         previous_names=names,
-        piled_roots=piled_roots(names, scope.rules.fate.epoch_name_root_threshold, scope.rules.language.motif_root_min_letters),
         continuity=await continuity(scope, epoch),
-        opening_patterns=await opening_patterns(scope, epoch),
-        tired_images=await tired_images(scope, None),
         name_kinds=await name_kinds(scope, epoch),
         previous_verdicts=await previous_verdicts(scope, epoch),
         events=await events_by_world(scope, epoch, chosen),

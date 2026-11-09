@@ -6,7 +6,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import DriftCause, LabourReason, LoyaltyPart, MobilityEvent, ShortfallEffect
 
 
-class NeedView(ApiModel):
+class CommunityNeedView(ApiModel):
     social_class: SocialClass
     commodity: CommodityKind
     effect: ShortfallEffect
@@ -109,7 +109,7 @@ class SocietyDepthView(ApiModel):
     entity_id: int
     gini: int
     staples: list[CommodityKind]
-    needs: list[NeedView]
+    needs: list[CommunityNeedView]
     classes: list[ClassStandingView]
     effects: list[EffectView]
     labour_reasons: list[LabourReasonView]

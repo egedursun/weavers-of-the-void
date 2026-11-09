@@ -38,6 +38,7 @@ from aerona.engine.phases import (
     dialects,
     diplomacy,
     disasters,
+    divine,
     doom,
     ecology,
     environment,
@@ -177,6 +178,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + dialects.PHASES
     + diplomacy.PHASES
     + disasters.PHASES
+    + divine.PHASES
     + doom.PHASES
     + espionage.PHASES
     + exploration.PHASES
@@ -262,6 +264,7 @@ CLEANUP_STAGE = stage(
     "structure_survey",
     "expire_truces",
     "language_and_faith",
+    "creator_taboos",
 )
 GRUDGE_STAGE = stage("divine_grudges")
 SUB_ENGINE_STAGE = stage(
@@ -284,9 +287,11 @@ SUB_ENGINE_STAGE = stage(
     "place_secrets",
     "resource_mechanics",
     "mechanics_assignment",
+    "natural_laws",
     "cosmic_economy",
     "market",
     "horror",
+    "outer_hunger",
     "creatures",
     "ecology",
     "husbandry",
@@ -296,6 +301,9 @@ SUB_ENGINE_STAGE = stage(
     "necromancy_cycles",
     "pantheon",
     "native_faith",
+    "god_relations",
+    "council_rulings",
+    "avatars",
     "death_engine",
     "civilization",
     "world_balance",
@@ -388,6 +396,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "splendor_growth",
     "structure_functions",
     "religion_spread",
+    "divine_standing",
     "life_seed",
     "writing_systems",
     "knowledge_levels",
@@ -457,7 +466,17 @@ PRE_TRANSITION_ORDER = stage("local_gods")
 GROWTH_STAGE = stage(
     "law_fertility", "population_baseline", "climate_transition", "environment_derive", "ley_lines", "population_growth", "cohort_upkeep", "epoch_stars"
 )
-GODS_STAGE = stage("sons_renewal", "gods_fate", "works_remember_gods", "domain_rivalry", "rebel_theft")
+GODS_STAGE = stage(
+    "sons_renewal",
+    "domain_economy",
+    "divine_wounds",
+    "gods_fate",
+    "works_remember_gods",
+    "domain_rivalry",
+    "rebel_theft",
+    "god_goals",
+    "creator_attention",
+)
 CLOSING_STAGE = stage("doom_clock", "creator_essence", "epoch_statistics", "advance_epoch")
 
 TRANSITION_ORDER: tuple[Phase, ...] = GROWTH_STAGE + GODS_STAGE + CLOSING_STAGE

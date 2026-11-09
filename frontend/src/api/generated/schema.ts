@@ -5727,6 +5727,118 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/gods/{god_id}/divinity': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['god_divinity_api_gods__god_id__divinity_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/entities/{entity_id}/regard': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['community_regard_api_entities__entity_id__regard_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/creator/divinity': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['creator_divinity_api_creator_divinity_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/worlds/{world_id}/divinity': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['world_divinity_api_worlds__world_id__divinity_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/council/rulings': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['council_rulings_api_council_rulings_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/entities/{entity_id}/law-profile': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['law_profile_api_entities__entity_id__law_profile_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/entities/{entity_id}/outer-profile': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['outer_profile_view_api_entities__entity_id__outer_profile_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/entities/{entity_id}/ecology': {
     parameters: {
       query?: never
@@ -19615,6 +19727,422 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/domain_hook:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_domain_hook_set_api_actions_domain_hook_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/domain_hook:clear': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_domain_hook_clear_api_actions_domain_hook_clear_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/god_goal:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_god_goal_set_api_actions_god_goal_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/god_goal:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_god_goal_edit_api_actions_god_goal_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/god_goal:drop': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_god_goal_drop_api_actions_god_goal_drop_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/divine_standing:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_divine_standing_set_api_actions_divine_standing_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/divine_standing:clear': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_divine_standing_clear_api_actions_divine_standing_clear_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/divine_wound:inflict': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_divine_wound_inflict_api_actions_divine_wound_inflict_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/divine_wound:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_divine_wound_edit_api_actions_divine_wound_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/divine_wound:remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_divine_wound_remove_api_actions_divine_wound_remove_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/avatar:manifest': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_avatar_manifest_api_actions_avatar_manifest_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/avatar:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_avatar_edit_api_actions_avatar_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/avatar:withdraw': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_avatar_withdraw_api_actions_avatar_withdraw_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/taboo:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_taboo_set_api_actions_taboo_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/taboo:remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_taboo_remove_api_actions_taboo_remove_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/attention:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_attention_set_api_actions_attention_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/attention:clear': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_attention_clear_api_actions_attention_clear_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/divine_pact:seal': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_divine_pact_seal_api_actions_divine_pact_seal_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/ruling:decree': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_ruling_decree_api_actions_ruling_decree_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/ruling:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_ruling_edit_api_actions_ruling_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/ruling:revoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_ruling_revoke_api_actions_ruling_revoke_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/law_profile:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_law_profile_edit_api_actions_law_profile_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/outer_profile:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_outer_profile_edit_api_actions_outer_profile_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/breach:open': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_breach_open_api_actions_breach_open_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/breach:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_breach_edit_api_actions_breach_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/breach:close': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_breach_close_api_actions_breach_close_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -20671,6 +21199,16 @@ export interface components {
       name: string
     }
     Atmosphere: 'none' | 'thin' | 'normal' | 'dense' | 'toxic'
+    AttentionClearInput: {
+      world_id: number
+    }
+    AttentionSetInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      world_id: number
+    }
     Attribute:
       | 'strength'
       | 'agility'
@@ -20703,6 +21241,20 @@ export interface components {
       value: number
       effective: number
       governs: components['schemas']['SkillKind'][]
+    }
+    AvatarEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      avatar_id: number
+    }
+    AvatarManifestInput: {
+      god_id: number
+      place_id: number
+    }
+    AvatarWithdrawInput: {
+      avatar_id: number
     }
     Aversion: 'fire' | 'iron' | 'noise' | 'water' | 'holy_ground'
     AwakeningTrigger: 'deep_mining' | 'desecration'
@@ -20753,16 +21305,25 @@ export interface components {
       since_epoch: number
       locked: string[]
     }
+    BargainGain: 'essence' | 'power' | 'might'
+    BargainPrice: 'world_sanity' | 'domain' | 'true_name'
     BatchDeepenLogEvent: {
       id: number
       kind: 'batch_deepen.log'
       payload: components['schemas']['BulkLogPayload']
       at: string
     }
+    BattleCasualtyView: {
+      mortal: components['schemas']['NodeRef'] | null
+      side: components['schemas']['NodeRef'] | null
+      fate: components['schemas']['CasualtyFate']
+      harm: number
+      note: string | null
+    }
     BattleDepthView: {
       battle_id: number
       stacks: components['schemas']['BattleStackView'][]
-      casualties: components['schemas']['aerona__api__schemas__military_depth__CasualtyView'][]
+      casualties: components['schemas']['BattleCasualtyView'][]
       tactic_factors: {
         [key: string]: number
       }
@@ -21530,6 +22091,29 @@ export interface components {
       branch: components['schemas']['KnowledgeBranch']
       all_of: components['schemas']['GateNeed'][]
       any_of: components['schemas']['GateNeed'][]
+    }
+    BreachCloseInput: {
+      breach_id: number
+    }
+    BreachEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      breach_id: number
+    }
+    BreachOpenInput: {
+      being_id: number
+      region_id?: number | null
+      strength: number
+    }
+    BreachPointView: {
+      id: number
+      world?: components['schemas']['NodeRef'] | null
+      region?: components['schemas']['NodeRef'] | null
+      strength: number
+      opened_epoch: number
+      locked: string[]
     }
     BreachView: {
       epoch: number
@@ -22452,10 +23036,22 @@ export interface components {
       entity_id: number
       metal?: components['schemas']['MaterialKind'] | null
     }
+    CommunityNeedView: {
+      social_class: components['schemas']['SocialClass']
+      commodity: components['schemas']['CommodityKind']
+      effect: components['schemas']['ShortfallEffect']
+      wanted: number
+      got: number
+      held_pct: number | null
+    }
     CommunityNotableInput: {
       community_id: number
       social_class?: components['schemas']['SocialClass'] | null
       role_key?: string | null
+    }
+    CommunityRegard: {
+      community: components['schemas']['NodeRef']
+      standing: components['schemas']['DivineStandingView'][]
     }
     CommunityRelationLabel:
       | 'blood_enemy'
@@ -22637,7 +23233,6 @@ export interface components {
       | 'entity-detail'
       | 'bond-lines'
       | 'son-memory'
-      | 'tired-images'
       | 'recent-events'
       | 'powers'
       | 'sky-calendar'
@@ -22749,6 +23344,20 @@ export interface components {
       notes: string[]
       summary: string
     }
+    CouncilMotion:
+      | 'none'
+      | 'against_doomsday'
+      | 'joint_blessing'
+      | 'condemn_rebel'
+      | 'call_for_peace'
+      | 'war_on_foreign_god'
+      | 'divide_worlds'
+      | 'outlaw_rite'
+      | 'punish_son'
+      | 'bless_hero'
+      | 'holy_world'
+      | 'cosmic_truce'
+      | 'petition_creator'
     CouncilPayload: {
       epoch?: number | null
       id?: number | null
@@ -22768,6 +23377,25 @@ export interface components {
     }
     CouncilRequest: {
       topic: string
+    }
+    CouncilRulingView: {
+      id: number
+      motion: components['schemas']['CouncilMotion']
+      label: string
+      target?: components['schemas']['NodeRef'] | null
+      world?: components['schemas']['NodeRef'] | null
+      school?: components['schemas']['MagicSchool'] | null
+      punishment?: components['schemas']['SonPunishment'] | null
+      epoch: number
+      until_epoch?: number | null
+      active: boolean
+      enacted: boolean
+      note?: string | null
+      locked: string[]
+    }
+    CouncilRulings: {
+      rulings: components['schemas']['CouncilRulingView'][]
+      motions: components['schemas']['CouncilMotion'][]
     }
     CouncilSpeech: {
       son_id: number
@@ -22844,6 +23472,12 @@ export interface components {
       folk_views: components['schemas']['FolkView'][]
       traces: components['schemas']['ChronicleLineRecord'][]
       images: components['schemas']['ImageRecord'][]
+    }
+    CreatorDivinity: {
+      taboos: components['schemas']['CreatorTabooView'][]
+      attention: components['schemas']['WorldAttentionView'][]
+      standing: components['schemas']['DivineStandingView'][]
+      far_below: number
     }
     CreatorHintKind:
       | 'unanswered_prayers'
@@ -22931,6 +23565,15 @@ export interface components {
       target_id?: number | null
     }
     CreatorSignKind: 'wrath' | 'grace' | 'silence' | 'dream'
+    CreatorTabooView: {
+      act: components['schemas']['ActKind']
+      label: string
+      severity: number
+      since_epoch: number
+      broken: number
+      last_broken_epoch?: number | null
+      last_breaker?: components['schemas']['NodeRef'] | null
+    }
     CreatureTrait:
       | 'flying'
       | 'venomous'
@@ -23506,7 +24149,7 @@ export interface components {
       cohorts: components['schemas']['PopulationCohortView'][]
       labour: components['schemas']['LabourView'][]
       flows: components['schemas']['LabourFlowView'][]
-      pressures: components['schemas']['aerona__api__schemas__depth_society__PressureView'][]
+      pressures: components['schemas']['SocietyPressureView'][]
       classes: components['schemas']['ClassMood'][]
       biology: components['schemas']['BiologyView'] | null
       culture: components['schemas']['CultureView'] | null
@@ -23713,7 +24356,7 @@ export interface components {
       origin_incident_id: number | null
       origin: components['schemas']['IncidentRefView'] | null
       incidents: components['schemas']['IncidentRefView'][]
-      hosts: components['schemas']['aerona__api__schemas__depth_society__HostView'][]
+      hosts: components['schemas']['FeastHostView'][]
       unseen_pct: number
       sick: number
       strains: components['schemas']['StrainView'][]
@@ -23891,6 +24534,74 @@ export interface components {
         [key: string]: number
       }
     }
+    DivineDomainView: {
+      domain: components['schemas']['Domain']
+      label: string
+      activity: components['schemas']['DomainActivity']
+      activity_label: string
+      severed: boolean
+      hooks: components['schemas']['DomainHookView'][]
+    }
+    DivinePactSealInput: {
+      son_id: number
+      god_id: number
+      epochs?: number | null
+    }
+    DivineStandingClearInput: {
+      community_id: number
+      god_id: number
+    }
+    DivineStandingSetInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      community_id: number
+      god_id: number
+    }
+    DivineStandingView: {
+      community: components['schemas']['NodeRef']
+      god: components['schemas']['NodeRef']
+      awe: number
+      love: number
+      fear: number
+      neglect: number
+      epoch: number
+      locked: string[]
+    }
+    DivineWoundEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      wound_id: number
+    }
+    DivineWoundInflictInput: {
+      god_id: number
+      kind: components['schemas']['DivineWoundKind']
+      severity: number
+      domain?: components['schemas']['Domain'] | null
+    }
+    DivineWoundKind:
+      | 'severed_domain'
+      | 'shattered_manifestation'
+      | 'stolen_name'
+      | 'void_wound'
+    DivineWoundRemoveInput: {
+      wound_id: number
+    }
+    DivineWoundView: {
+      id: number
+      kind: components['schemas']['DivineWoundKind']
+      label: string
+      domain?: components['schemas']['Domain'] | null
+      severity: number
+      healed: number
+      cause: components['schemas']['WoundCause']
+      cause_node?: components['schemas']['NodeRef'] | null
+      epoch: number
+      locked: string[]
+    }
     DoctrineView: {
       cult: components['schemas']['NodeRef'] | null
       god: components['schemas']['NodeRef'] | null
@@ -23968,6 +24679,99 @@ export interface components {
       | 'ash'
       | 'border'
       | 'sleep'
+    DomainActivity:
+      | 'battles'
+      | 'deaths'
+      | 'births'
+      | 'voyages'
+      | 'trade'
+      | 'sickness'
+      | 'oaths'
+      | 'legends'
+      | 'works'
+      | 'discoveries'
+      | 'marriages'
+      | 'hunts'
+      | 'schemes'
+      | 'rites'
+      | 'dreams'
+      | 'hunger'
+      | 'madness'
+      | 'journeys'
+      | 'harvests'
+      | 'building'
+    DomainActivityPoint: {
+      epoch: number
+      domain: components['schemas']['Domain']
+      activity: components['schemas']['DomainActivity']
+      count: number
+      essence: number
+    }
+    DomainHook:
+      | 'naval_might'
+      | 'sea_calm'
+      | 'catch'
+      | 'fire_curse'
+      | 'levy_morale'
+      | 'duel_wounds'
+      | 'soul_hold'
+      | 'death_toll'
+      | 'plague_tithe'
+      | 'immunity'
+      | 'harvest_floor'
+      | 'oath_tithe'
+      | 'memory_keeping'
+      | 'border_guard'
+      | 'preservation'
+      | 'stargazing'
+      | 'fasting'
+      | 'siege_starving'
+      | 'rumour_twist'
+      | 'spy_depth'
+      | 'road_safety'
+      | 'blood_rite'
+      | 'bloodline'
+      | 'relic_power'
+      | 'aging'
+      | 'prophecy'
+      | 'trade_gain'
+      | 'craft_skill'
+      | 'learning'
+      | 'kindling_love'
+      | 'hunt_yield'
+      | 'fertility'
+      | 'healing'
+      | 'dream_sending'
+      | 'stonework'
+      | 'sanity_ward'
+      | 'frenzy'
+      | 'cold_endurance'
+      | 'rest'
+      | 'legend_spread'
+    DomainHookClearInput: {
+      world_id: number
+      domain: components['schemas']['Domain']
+      hook: components['schemas']['DomainHook']
+    }
+    DomainHookSetInput: {
+      world_id: number
+      domain: components['schemas']['Domain']
+      hook: components['schemas']['DomainHook']
+      pct: number
+    }
+    DomainHookView: {
+      hook: components['schemas']['DomainHook']
+      label: string
+      effect: string
+      weight: number
+      pct: number
+      harmful: boolean
+    }
+    DomainSynergyView: {
+      label: string
+      hook: components['schemas']['DomainHook']
+      hook_label: string
+    }
     DomesticationStage: 'wild' | 'tamed' | 'herded' | 'domesticated' | 'breed'
     Done: {
       ok: boolean
@@ -25133,6 +25937,15 @@ export interface components {
       phase: components['schemas']['EventPhase']
       count: number
     }
+    EventCasualtyView: {
+      community_id: number
+      community: string
+      age_band: components['schemas']['AgeBand']
+      sex: components['schemas']['Sex']
+      social_class: components['schemas']['SocialClass']
+      phase: components['schemas']['EventPhase']
+      count: number
+    }
     EventCreateInput: {
       kind: components['schemas']['EngineKind']
       where_id: number
@@ -25288,7 +26101,7 @@ export interface components {
       incident_text: string | null
       siege_id: number | null
       footprint: components['schemas']['FootprintView'][]
-      casualties: components['schemas']['aerona__api__schemas__happenings__CasualtyView'][]
+      casualties: components['schemas']['EventCasualtyView'][]
       toll: number
       steps: components['schemas']['PhaseStepView'][]
       seasons: components['schemas']['SeasonRef'][]
@@ -25710,6 +26523,14 @@ export interface components {
       strength: number
       target: components['schemas']['NodeRef'] | null
       since_epoch: number
+    }
+    FeastHostView: {
+      species_id: number
+      name: string
+      immune: boolean
+      lands: number
+      abundance: number
+      primary: boolean
     }
     FeedCategory:
       | 'voyage'
@@ -26223,12 +27044,23 @@ export interface components {
       aptitude: number
       gifted: boolean
     }
+    GoalSource: 'engine' | 'agent' | 'creator'
+    GoalState: 'active' | 'done' | 'failed' | 'dropped'
     GoalsOverview: {
       scenarios: components['schemas']['ScenarioView'][]
       running: components['schemas']['RunningScenario'][]
       achievements: components['schemas']['AchievementView'][]
       score: components['schemas']['ScoreBreakdown']
       score_history: [number, number][]
+    }
+    GodAvatarView: {
+      avatar: components['schemas']['NodeRef']
+      god: components['schemas']['NodeRef']
+      world?: components['schemas']['NodeRef'] | null
+      since_epoch: number
+      deeds: number
+      alive: boolean
+      locked: string[]
     }
     GodDepth: {
       history: string
@@ -26245,6 +27077,62 @@ export interface components {
       worship: string
       epoch: number
     }
+    GodDivinity: {
+      god: components['schemas']['NodeRef']
+      domains: components['schemas']['DivineDomainView'][]
+      synergy?: components['schemas']['DomainSynergyView'] | null
+      activity: components['schemas']['DomainActivityPoint'][]
+      goals: components['schemas']['GodGoalView'][]
+      standing: components['schemas']['DivineStandingView'][]
+      wounds: components['schemas']['DivineWoundView'][]
+      avatars: components['schemas']['GodAvatarView'][]
+      goal_kinds: components['schemas']['GodGoalKind'][]
+    }
+    GodGoalDropInput: {
+      goal_id: number
+    }
+    GodGoalEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      goal_id: number
+    }
+    GodGoalKind:
+      | 'be_worshipped'
+      | 'found_realm'
+      | 'destroy_rival'
+      | 'spread_domain'
+      | 'win_war'
+      | 'acquire_relic'
+      | 'raise_hero'
+      | 'awaken_god'
+      | 'defeat_foreign_god'
+      | 'reconcile'
+      | 'rebel'
+    GodGoalSetInput: {
+      god_id: number
+      kind: components['schemas']['GodGoalKind']
+      target_id?: number | null
+      world_id?: number | null
+      domain?: components['schemas']['Domain'] | null
+      amount: number
+    }
+    GodGoalView: {
+      id: number
+      kind: components['schemas']['GodGoalKind']
+      label: string
+      target?: components['schemas']['NodeRef'] | null
+      world?: components['schemas']['NodeRef'] | null
+      domain?: components['schemas']['Domain'] | null
+      amount: number
+      progress: number
+      state: components['schemas']['GoalState']
+      source: components['schemas']['GoalSource']
+      since_epoch: number
+      closed_epoch?: number | null
+      locked: string[]
+    }
     GodLine: {
       id: number
       name: string
@@ -26257,6 +27145,7 @@ export interface components {
       used_by: string
       meaning: string
     }
+    GodPunishmentKind: 'lightning' | 'chain' | 'exile' | 'suppress' | 'pardon'
     GoldenAgeView: {
       world_id: number
       active: boolean
@@ -28131,6 +29020,8 @@ export interface components {
       basis?: components['schemas']['LegitimacyBasis'] | null
       hold?: string[]
     }
+    LawException:
+      'none' | 'creator_chosen' | 'author_worshippers' | 'heroes' | 'avatars'
     LawKind:
       | 'succession_rule'
       | 'inheritance_split'
@@ -28177,6 +29068,13 @@ export interface components {
       high: number
       choices: string[]
     }
+    LawProfileEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      law_id: number
+    }
     LawProposalView: {
       id: number
       polity: components['schemas']['NodeRef'] | null
@@ -28209,6 +29107,7 @@ export interface components {
     LawRepealInput: {
       law_id: number
     }
+    LawScope: 'cosmos' | 'world' | 'region'
     LawStats: {
       kind: 'law'
       rigidity?: number | null
@@ -29371,6 +30270,8 @@ export interface components {
       | 'long_history'
       | 'dreads'
       | 'formative'
+      | 'stole_faithful'
+      | 'aided_chosen'
     MemoryOrigin: 'derived' | 'player'
     MemoryView: {
       id: number
@@ -29594,11 +30495,23 @@ export interface components {
       value: number
       lock: boolean
     }
+    MindNeedView: {
+      need: components['schemas']['NeedKind']
+      label: string
+      value: number
+      group: components['schemas']['NeedGroup']
+      importance: number
+    }
     MindPressureInput: {
       node_id: number
       pressure: components['schemas']['PressureKind']
       value: number
       lock: boolean
+    }
+    MindPressureView: {
+      pressure: components['schemas']['PressureKind']
+      label: string
+      value: number
     }
     MindRoleInput: {
       node_id: number
@@ -29673,8 +30586,8 @@ export interface components {
       values: components['schemas']['ValueView'][]
       traits: components['schemas']['TraitView'][]
       skills: components['schemas']['SkillView'][]
-      needs: components['schemas']['aerona__api__schemas__mind__NeedView'][]
-      pressures: components['schemas']['aerona__api__schemas__mind__PressureView'][]
+      needs: components['schemas']['MindNeedView'][]
+      pressures: components['schemas']['MindPressureView'][]
       memories: components['schemas']['MemoryView'][]
       opinions: components['schemas']['OpinionView'][]
       career: components['schemas']['CareerView'] | null
@@ -29985,7 +30898,7 @@ export interface components {
     MortalSentenceInput: {
       mortal_id: number
       crime: components['schemas']['CrimeKind']
-      punishment: components['schemas']['aerona__domain__enums__mortal__PunishmentKind']
+      punishment: components['schemas']['PunishmentKind']
       judge_id?: number | null
     }
     MortalSetInput: {
@@ -30264,6 +31177,31 @@ export interface components {
       | 'souls_reincarnate'
       | 'gift_flowering'
       | 'gift_withering'
+      | 'no_iron'
+      | 'eternal_night'
+      | 'magic_requires_blood'
+      | 'gravity_shift'
+      | 'seasons_reversed'
+      | 'dreams_are_real'
+      | 'oaths_bind'
+      | 'the_dead_speak'
+      | 'metal_rusts_fast'
+    NaturalLawProfileView: {
+      law: components['schemas']['NodeRef']
+      effect: components['schemas']['NaturalLaw']
+      effect_label: string
+      effect_text: string
+      scope: components['schemas']['LawScope']
+      world?: components['schemas']['NodeRef'] | null
+      region?: components['schemas']['NodeRef'] | null
+      strength: number
+      stability: number
+      author?: components['schemas']['NodeRef'] | null
+      exception: components['schemas']['LawException']
+      contested: boolean
+      updated_epoch: number
+      locked: string[]
+    }
     NaturalLawStats: {
       kind: 'natural_law'
     }
@@ -30713,11 +31651,41 @@ export interface components {
       | 'massacre'
       | 'refused'
     OuterBargainMode: 'force' | 'forbid' | 'allow'
+    OuterBargainView: {
+      son: components['schemas']['NodeRef']
+      epoch: number
+      terms?: string | null
+      gain: components['schemas']['BargainGain']
+      price: components['schemas']['BargainPrice']
+      price_domain?: components['schemas']['Domain'] | null
+      price_world?: components['schemas']['NodeRef'] | null
+      paid: boolean
+    }
+    OuterBeingProfileView: {
+      being: components['schemas']['NodeRef']
+      hunger: components['schemas']['OuterHunger']
+      hunger_label: string
+      reach: number
+      fed: number
+      oppose_cost: number
+      updated_epoch: number
+      locked: string[]
+      breaches: components['schemas']['BreachPointView'][]
+      bargains: components['schemas']['OuterBargainView'][]
+    }
     OuterBeingStats: {
       kind: 'outer_being'
       size?: number | null
       interest?: number | null
       influence?: number | null
+    }
+    OuterHunger: 'souls' | 'knowledge' | 'light' | 'names' | 'memories'
+    OuterProfileEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      being_id: number
     }
     PackageKind:
       | 'snake_venom'
@@ -31781,7 +32749,7 @@ export interface components {
       reason: string
     }
     PostSonsSonIdPunishBody: {
-      kind: components['schemas']['aerona__services__player__interventions__PunishmentKind']
+      kind: components['schemas']['GodPunishmentKind']
     }
     PostSonsSonIdRebellionBody: {
       manifesto: string
@@ -32039,14 +33007,12 @@ export interface components {
       has_constraints: boolean
     }
     PromptId:
-      | 'cliche_ban'
       | 'image_prompt_rules'
       | 'section_keys_rule'
       | 'no_numbers_clause'
       | 'lore_language'
       | 'rationale_rule'
       | 'verdict_criteria'
-      | 'tired_images'
       | 'world_header'
       | 'dialect_block'
       | 'world_line'
@@ -32096,7 +33062,6 @@ export interface components {
       | 'chronicler_system'
       | 'chronicler_concise_system'
       | 'chronicler_user'
-      | 'chronicler_fix_opening_user'
       | 'chronicler_audit_fix_user'
       | 'chronicler_missing_worlds_user'
       | 'chronicler_lost_age_user'
@@ -32266,6 +33231,16 @@ export interface components {
       epoch: number
       held: string[]
     }
+    PunishmentKind:
+      | 'fine'
+      | 'flogging'
+      | 'exile'
+      | 'branding'
+      | 'hand'
+      | 'tongue'
+      | 'eyes'
+      | 'death'
+      | 'public_shaming'
     PutBeliefsBody: {
       people_id: number
       son_id?: number | null
@@ -33591,6 +34566,23 @@ export interface components {
     } & {
       [key: string]: unknown
     }
+    RulingDecreeInput: {
+      motion: components['schemas']['CouncilMotion']
+      target_id?: number | null
+      world_id?: number | null
+      school?: components['schemas']['MagicSchool'] | null
+      punishment?: components['schemas']['SonPunishment'] | null
+    }
+    RulingEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      ruling_id: number
+    }
+    RulingRevokeInput: {
+      ruling_id: number
+    }
     RumourBoard: {
       community_id: number
       rumours: components['schemas']['RumourView'][]
@@ -34382,7 +35374,7 @@ export interface components {
       entity_id: number
       gini: number
       staples: components['schemas']['CommodityKind'][]
-      needs: components['schemas']['aerona__api__schemas__society_depth__NeedView'][]
+      needs: components['schemas']['CommunityNeedView'][]
       classes: components['schemas']['ClassStandingView'][]
       effects: components['schemas']['EffectView'][]
       labour_reasons: components['schemas']['LabourReasonView'][]
@@ -34419,6 +35411,10 @@ export interface components {
     }
     SocietyPlentyInput: {
       entity_id: number
+    }
+    SocietyPressureView: {
+      kind: components['schemas']['PressureKind']
+      value: number
     }
     SocietySatisfactionInput: {
       entity_id: number
@@ -34573,6 +35569,10 @@ export interface components {
       mode: components['schemas']['OuterBargainMode']
       outer_id?: number | null
       request: string
+      gain: components['schemas']['BargainGain']
+      price: components['schemas']['BargainPrice']
+      price_domain?: components['schemas']['Domain'] | null
+      price_world_id?: number | null
     }
     SonPersonality: {
       appearance?: string | null
@@ -34640,6 +35640,7 @@ export interface components {
       cover: string | null
       card: components['schemas']['SonCard']
     }
+    SonPunishment: 'chain' | 'exile' | 'strip_power'
     SonRecord: {
       id: number
       name: string
@@ -34845,6 +35846,11 @@ export interface components {
       | 'spread_word'
       | 'tend_land'
       | 'shape_blood'
+      | 'set_aim'
+      | 'take_mortal_form'
+      | 'ward_against_outer'
+      | 'seal_divine_pact'
+      | 'mend_wound'
       | 'reveal_true_name'
       | 'reveal_tenet'
       | 'open_rebirth_gate'
@@ -35074,7 +36080,7 @@ export interface components {
       traits: components['schemas']['CreatureTrait'][]
       uses: components['schemas']['SpeciesUse'][]
       yields: components['schemas']['YieldView'][]
-      hosts: components['schemas']['aerona__api__schemas__wilds__HostView'][]
+      hosts: components['schemas']['SpeciesHostView'][]
       ranges: components['schemas']['RangeView'][]
       herds: components['schemas']['HerdView'][]
       hunts: components['schemas']['NodeRef'][]
@@ -35162,6 +36168,11 @@ export interface components {
       carried: boolean
       immune: boolean
       release: boolean
+    }
+    SpeciesHostView: {
+      disease: components['schemas']['NodeRef'] | null
+      immune: boolean
+      locked: string[]
     }
     SpeciesIntroduceInput: {
       species_id: number
@@ -35940,6 +36951,13 @@ export interface components {
       payload: components['schemas']['TextPayload']
       at: string
     }
+    TabooRemoveInput: {
+      act: components['schemas']['ActKind']
+    }
+    TabooSetInput: {
+      act: components['schemas']['ActKind']
+      severity: number
+    }
     Tactic:
       | 'hold_line'
       | 'frontal_assault'
@@ -36112,6 +37130,9 @@ export interface components {
       | 'sacred_species'
       | 'pilgrimage_duty'
       | 'souls_rest'
+      | 'void_communion'
+      | 'feeding_the_hunger'
+      | 'whispered_secrets'
     TenetKindSpec: {
       tenet: components['schemas']['TenetKind']
       effect: string
@@ -37182,6 +38203,7 @@ export interface components {
       | 'guarantee'
       | 'interworld'
       | 'coalition'
+      | 'divine_pact'
     TreatyParty: {
       party_id: number
       role: components['schemas']['PartyRole']
@@ -38205,6 +39227,14 @@ export interface components {
       held: boolean
       design_id?: number | null
     }
+    WorldAttentionView: {
+      world: components['schemas']['NodeRef']
+      attention: number
+      watched: boolean
+      far: boolean
+      epoch: number
+      locked: string[]
+    }
     WorldBornEvent: {
       id: number
       kind: 'world.born'
@@ -38293,6 +39323,11 @@ export interface components {
       misfits: number
       misfit_pct: number
     }
+    WorldDivinity: {
+      world: components['schemas']['NodeRef']
+      hooks: components['schemas']['WorldHookView'][]
+      attention?: components['schemas']['WorldAttentionView'] | null
+    }
     WorldEndGoldenAgeInput: {
       world_id: number
     }
@@ -38315,6 +39350,12 @@ export interface components {
     WorldGuardianInput: {
       world_id: number
       son_id: number
+    }
+    WorldHookView: {
+      domain: components['schemas']['Domain']
+      hook: components['schemas']['DomainHook']
+      label: string
+      pct: number
     }
     WorldLaw: {
       entity: components['schemas']['EntitySummary']
@@ -38523,6 +39564,8 @@ export interface components {
       timeline: components['schemas']['ChronicleLineRecord'][]
       images: components['schemas']['ImageRecord'][]
     }
+    WoundCause:
+      'duel' | 'god_war' | 'creator' | 'avatar_slain' | 'outer_bargain'
     WoundView: {
       by: components['schemas']['NodeRef'] | null
       epoch: number
@@ -38568,71 +39611,6 @@ export interface components {
       world_material: string | null
       rate: number
     }
-    aerona__api__schemas__depth_society__HostView: {
-      species_id: number
-      name: string
-      immune: boolean
-      lands: number
-      abundance: number
-      primary: boolean
-    }
-    aerona__api__schemas__depth_society__PressureView: {
-      kind: components['schemas']['PressureKind']
-      value: number
-    }
-    aerona__api__schemas__happenings__CasualtyView: {
-      community_id: number
-      community: string
-      age_band: components['schemas']['AgeBand']
-      sex: components['schemas']['Sex']
-      social_class: components['schemas']['SocialClass']
-      phase: components['schemas']['EventPhase']
-      count: number
-    }
-    aerona__api__schemas__military_depth__CasualtyView: {
-      mortal: components['schemas']['NodeRef'] | null
-      side: components['schemas']['NodeRef'] | null
-      fate: components['schemas']['CasualtyFate']
-      harm: number
-      note: string | null
-    }
-    aerona__api__schemas__mind__NeedView: {
-      need: components['schemas']['NeedKind']
-      label: string
-      value: number
-      group: components['schemas']['NeedGroup']
-      importance: number
-    }
-    aerona__api__schemas__mind__PressureView: {
-      pressure: components['schemas']['PressureKind']
-      label: string
-      value: number
-    }
-    aerona__api__schemas__society_depth__NeedView: {
-      social_class: components['schemas']['SocialClass']
-      commodity: components['schemas']['CommodityKind']
-      effect: components['schemas']['ShortfallEffect']
-      wanted: number
-      got: number
-      held_pct: number | null
-    }
-    aerona__api__schemas__wilds__HostView: {
-      disease: components['schemas']['NodeRef'] | null
-      immune: boolean
-      locked: string[]
-    }
-    aerona__domain__enums__mortal__PunishmentKind:
-      | 'fine'
-      | 'flogging'
-      | 'exile'
-      | 'branding'
-      | 'hand'
-      | 'tongue'
-      | 'eyes'
-      | 'death'
-      | 'public_shaming'
-    aerona__services__player__interventions__PunishmentKind:
-      'lightning' | 'chain' | 'exile' | 'suppress' | 'pardon'
   }
   responses: never
   parameters: never
@@ -49292,6 +50270,189 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['RumourBoard']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  god_divinity_api_gods__god_id__divinity_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        god_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GodDivinity']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  community_regard_api_entities__entity_id__regard_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        entity_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CommunityRegard']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  creator_divinity_api_creator_divinity_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CreatorDivinity']
+        }
+      }
+    }
+  }
+  world_divinity_api_worlds__world_id__divinity_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        world_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WorldDivinity']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  council_rulings_api_council_rulings_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CouncilRulings']
+        }
+      }
+    }
+  }
+  law_profile_api_entities__entity_id__law_profile_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        entity_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NaturalLawProfileView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  outer_profile_view_api_entities__entity_id__outer_profile_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        entity_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['OuterBeingProfileView']
         }
       }
       422: {
@@ -75952,6 +77113,812 @@ export interface operations {
       }
     }
   }
+  action_domain_hook_set_api_actions_domain_hook_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DomainHookSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_domain_hook_clear_api_actions_domain_hook_clear_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DomainHookClearInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_god_goal_set_api_actions_god_goal_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GodGoalSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_god_goal_edit_api_actions_god_goal_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GodGoalEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_god_goal_drop_api_actions_god_goal_drop_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GodGoalDropInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_divine_standing_set_api_actions_divine_standing_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DivineStandingSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_divine_standing_clear_api_actions_divine_standing_clear_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DivineStandingClearInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_divine_wound_inflict_api_actions_divine_wound_inflict_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DivineWoundInflictInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_divine_wound_edit_api_actions_divine_wound_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DivineWoundEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_divine_wound_remove_api_actions_divine_wound_remove_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DivineWoundRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_avatar_manifest_api_actions_avatar_manifest_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AvatarManifestInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_avatar_edit_api_actions_avatar_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AvatarEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_avatar_withdraw_api_actions_avatar_withdraw_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AvatarWithdrawInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_taboo_set_api_actions_taboo_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TabooSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_taboo_remove_api_actions_taboo_remove_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TabooRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_attention_set_api_actions_attention_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AttentionSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_attention_clear_api_actions_attention_clear_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AttentionClearInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_divine_pact_seal_api_actions_divine_pact_seal_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DivinePactSealInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_ruling_decree_api_actions_ruling_decree_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RulingDecreeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_ruling_edit_api_actions_ruling_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RulingEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_ruling_revoke_api_actions_ruling_revoke_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RulingRevokeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_law_profile_edit_api_actions_law_profile_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LawProfileEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_outer_profile_edit_api_actions_outer_profile_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['OuterProfileEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_breach_open_api_actions_breach_open_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BreachOpenInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_breach_edit_api_actions_breach_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BreachEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_breach_close_api_actions_breach_close_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BreachCloseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
 }
 type FlattenedDeepRequired<T> = {
   [K in keyof T]-?: FlattenedDeepRequired<
@@ -76460,6 +78427,12 @@ export const backlashKindValues: ReadonlyArray<
 export const backupTakenEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BackupTakenEvent']['kind']
 > = ['backup.taken']
+export const bargainGainValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['BargainGain']
+> = ['essence', 'power', 'might']
+export const bargainPriceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['BargainPrice']
+> = ['world_sanity', 'domain', 'true_name']
 export const batchDeepenLogEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BatchDeepenLogEvent']['kind']
 > = ['batch_deepen.log']
@@ -77093,7 +79066,6 @@ export const contextBlockKindValues: ReadonlyArray<
   'entity-detail',
   'bond-lines',
   'son-memory',
-  'tired-images',
   'recent-events',
   'powers',
   'sky-calendar',
@@ -77106,6 +79078,23 @@ export const cosmosSizeValues: ReadonlyArray<
 export const councilHeldEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CouncilHeldEvent']['kind']
 > = ['council.held']
+export const councilMotionValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CouncilMotion']
+> = [
+  'none',
+  'against_doomsday',
+  'joint_blessing',
+  'condemn_rebel',
+  'call_for_peace',
+  'war_on_foreign_god',
+  'divide_worlds',
+  'outlaw_rite',
+  'punish_son',
+  'bless_hero',
+  'holy_world',
+  'cosmic_truce',
+  'petition_creator',
+]
 export const councilTaskValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CouncilTask']
 > = [
@@ -77377,6 +79366,9 @@ export const districtKindValues: ReadonlyArray<
   'foreign_quarter',
   'necropolis',
 ]
+export const divineWoundKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DivineWoundKind']
+> = ['severed_domain', 'shattered_manifestation', 'stolen_name', 'void_wound']
 export const domainValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Domain']
 > = [
@@ -77420,6 +79412,74 @@ export const domainValues: ReadonlyArray<
   'ash',
   'border',
   'sleep',
+]
+export const domainActivityValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DomainActivity']
+> = [
+  'battles',
+  'deaths',
+  'births',
+  'voyages',
+  'trade',
+  'sickness',
+  'oaths',
+  'legends',
+  'works',
+  'discoveries',
+  'marriages',
+  'hunts',
+  'schemes',
+  'rites',
+  'dreams',
+  'hunger',
+  'madness',
+  'journeys',
+  'harvests',
+  'building',
+]
+export const domainHookValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DomainHook']
+> = [
+  'naval_might',
+  'sea_calm',
+  'catch',
+  'fire_curse',
+  'levy_morale',
+  'duel_wounds',
+  'soul_hold',
+  'death_toll',
+  'plague_tithe',
+  'immunity',
+  'harvest_floor',
+  'oath_tithe',
+  'memory_keeping',
+  'border_guard',
+  'preservation',
+  'stargazing',
+  'fasting',
+  'siege_starving',
+  'rumour_twist',
+  'spy_depth',
+  'road_safety',
+  'blood_rite',
+  'bloodline',
+  'relic_power',
+  'aging',
+  'prophecy',
+  'trade_gain',
+  'craft_skill',
+  'learning',
+  'kindling_love',
+  'hunt_yield',
+  'fertility',
+  'healing',
+  'dream_sending',
+  'stonework',
+  'sanity_ward',
+  'frenzy',
+  'cold_endurance',
+  'rest',
+  'legend_spread',
 ]
 export const domesticationStageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DomesticationStage']
@@ -78217,6 +80277,30 @@ export const genesisTemplateValues: ReadonlyArray<
 export const giftStanceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GiftStance']
 > = ['honoured', 'feared', 'persecuted', 'taxed']
+export const goalSourceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GoalSource']
+> = ['engine', 'agent', 'creator']
+export const goalStateValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GoalState']
+> = ['active', 'done', 'failed', 'dropped']
+export const godGoalKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GodGoalKind']
+> = [
+  'be_worshipped',
+  'found_realm',
+  'destroy_rival',
+  'spread_domain',
+  'win_war',
+  'acquire_relic',
+  'raise_hero',
+  'awaken_god',
+  'defeat_foreign_god',
+  'reconcile',
+  'rebel',
+]
+export const godPunishmentKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GodPunishmentKind']
+> = ['lightning', 'chain', 'exile', 'suppress', 'pardon']
 export const governmentKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GovernmentKind']
 > = [
@@ -78742,6 +80826,9 @@ export const lawAreaValues: ReadonlyArray<
   'magic',
   'constitutional',
 ]
+export const lawExceptionValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LawException']
+> = ['none', 'creator_chosen', 'author_worshippers', 'heroes', 'avatars']
 export const lawKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LawKind']
 > = [
@@ -78778,6 +80865,9 @@ export const lawKindValues: ReadonlyArray<
   'constitution',
   'custom',
 ]
+export const lawScopeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LawScope']
+> = ['cosmos', 'world', 'region']
 export const lawStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LawStats']['kind']
 > = ['law']
@@ -79109,6 +81199,8 @@ export const memoryKindValues: ReadonlyArray<
   'long_history',
   'dreads',
   'formative',
+  'stole_faithful',
+  'aided_chosen',
 ]
 export const memoryOriginValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MemoryOrigin']
@@ -79385,6 +81477,15 @@ export const naturalLawValues: ReadonlyArray<
   'souls_reincarnate',
   'gift_flowering',
   'gift_withering',
+  'no_iron',
+  'eternal_night',
+  'magic_requires_blood',
+  'gravity_shift',
+  'seasons_reversed',
+  'dreams_are_real',
+  'oaths_bind',
+  'the_dead_speak',
+  'metal_rusts_fast',
 ]
 export const naturalLawStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NaturalLawStats']['kind']
@@ -79530,6 +81631,9 @@ export const outerBargainModeValues: ReadonlyArray<
 export const outerBeingStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OuterBeingStats']['kind']
 > = ['outer_being']
+export const outerHungerValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['OuterHunger']
+> = ['souls', 'knowledge', 'light', 'names', 'memories']
 export const packageKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PackageKind']
 > = [
@@ -79858,14 +81962,12 @@ export const promptAreaValues: ReadonlyArray<
 export const promptIdValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PromptId']
 > = [
-  'cliche_ban',
   'image_prompt_rules',
   'section_keys_rule',
   'no_numbers_clause',
   'lore_language',
   'rationale_rule',
   'verdict_criteria',
-  'tired_images',
   'world_header',
   'dialect_block',
   'world_line',
@@ -79915,7 +82017,6 @@ export const promptIdValues: ReadonlyArray<
   'chronicler_system',
   'chronicler_concise_system',
   'chronicler_user',
-  'chronicler_fix_opening_user',
   'chronicler_audit_fix_user',
   'chronicler_missing_worlds_user',
   'chronicler_lost_age_user',
@@ -80009,6 +82110,19 @@ export const proposalStanceValues: ReadonlyArray<
 export const proposalStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ProposalState']
 > = ['debating', 'passed', 'failed', 'withdrawn']
+export const punishmentKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PunishmentKind']
+> = [
+  'fine',
+  'flogging',
+  'exile',
+  'branding',
+  'hand',
+  'tongue',
+  'eyes',
+  'death',
+  'public_shaming',
+]
 export const qualityTierValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['QualityTier']
 > = [
@@ -80452,6 +82566,9 @@ export const sonDistributionValues: ReadonlyArray<
 export const sonNewEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonNewEvent']['kind']
 > = ['son.new']
+export const sonPunishmentValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SonPunishment']
+> = ['chain', 'exile', 'strip_power']
 export const sonStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonStatus']
 > = ['active', 'asleep', 'exiled', 'dead']
@@ -80561,6 +82678,11 @@ export const sonToolIdValues: ReadonlyArray<
   'spread_word',
   'tend_land',
   'shape_blood',
+  'set_aim',
+  'take_mortal_form',
+  'ward_against_outer',
+  'seal_divine_pact',
+  'mend_wound',
   'reveal_true_name',
   'reveal_tenet',
   'open_rebirth_gate',
@@ -80969,6 +83091,9 @@ export const tenetKindValues: ReadonlyArray<
   'sacred_species',
   'pilgrimage_duty',
   'souls_rest',
+  'void_communion',
+  'feeding_the_hunger',
+  'whispered_secrets',
 ]
 export const terrainHazardValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TerrainHazard']
@@ -81421,6 +83546,7 @@ export const treatyKindValues: ReadonlyArray<
   'guarantee',
   'interworld',
   'coalition',
+  'divine_pact',
 ]
 export const treatyStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TreatyStats']['kind']
@@ -81774,6 +83900,9 @@ export const worldTypeValues: ReadonlyArray<
   'ice_shell',
   'methane',
 ]
+export const woundCauseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['WoundCause']
+> = ['duel', 'god_war', 'creator', 'avatar_slain', 'outer_bargain']
 export const writingSystemValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WritingSystem']
 > = ['alphabet', 'syllabary', 'pictographic', 'knot', 'notch']
@@ -81794,19 +83923,3 @@ export const yieldProductValues: ReadonlyArray<
   'dragonbone',
   'eggs',
 ]
-export const aerona__domain__enums__mortal__PunishmentKindValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['aerona__domain__enums__mortal__PunishmentKind']
-> = [
-  'fine',
-  'flogging',
-  'exile',
-  'branding',
-  'hand',
-  'tongue',
-  'eyes',
-  'death',
-  'public_shaming',
-]
-export const aerona__services__player__interventions__PunishmentKindValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['aerona__services__player__interventions__PunishmentKind']
-> = ['lightning', 'chain', 'exile', 'suppress', 'pardon']

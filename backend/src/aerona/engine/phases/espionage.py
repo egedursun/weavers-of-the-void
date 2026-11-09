@@ -15,6 +15,7 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.disease import SpreadPath
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.military import SabotageKind, SpyCover, SpyOperation
@@ -235,7 +236,8 @@ async def incite_uprising_quietly(ctx: TickContext, community: EntityRow) -> boo
 
 
 async def gather(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
-    network.intel = clamp_int(network.intel + cover_access(network, ctx.rules.espionage.intel_gain), 0, PERCENT)
+    gain = cover_access(network, ctx.rules.espionage.intel_gain) * await ctx.hook_factor(spymaster.id, DomainHook.SPY_DEPTH)
+    network.intel = clamp_int(network.intel + round_half_up(gain), 0, PERCENT)
     aims = await reveal_aims(ctx, network, target)
     tail = f"; {len(aims)} of its war aims lie open" if aims else ""
     return f"The agents of {spymaster.name} learned the secrets of {target.name}{tail}."

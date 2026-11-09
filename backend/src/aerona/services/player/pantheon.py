@@ -2,9 +2,11 @@ from enum import StrEnum
 
 from aerona.core.errors import ValidationFailedError
 from aerona.domain.enums.action import ActionKind
+from aerona.domain.enums.divine import BargainGain, BargainPrice
+from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.son import Stat
-from aerona.engine.cosmos.actions import bargain_with_outer
+from aerona.engine.cosmos.actions import BargainTerms, bargain_with_outer
 from aerona.engine.phases.pantheon import order_god_war, order_temple_raid, provoke_duel, wake_foreign_god
 from aerona.engine.phases.sons import set_son_relation
 from aerona.services.player import guards
@@ -42,6 +44,10 @@ class OuterBargainOrder(Command):
     mode: OuterBargainMode
     outer_id: int | None = None
     request: str = "the Creator's command"
+    gain: BargainGain = BargainGain.ESSENCE
+    price: BargainPrice = BargainPrice.WORLD_SANITY
+    price_domain: Domain | None = None
+    price_world_id: int | None = None
 
 
 class SonRelation(Command):
@@ -94,5 +100,6 @@ async def outer_bargain(scope: PlayerScope, command: OuterBargainOrder) -> Effec
         return Effect(f"{son.name} may bargain with what lies outside again.", son.id)
     if command.outer_id is None:
         raise ValidationFailedError("Name the outer being the son must bargain with.")
-    gain = await bargain_with_outer(await scope.context("outer_bargain"), son.id, command.outer_id, command.request)
-    return Effect(f"{son.name} bargained with the outside by command and gained {gain} essence.", son.id, values={"gain": gain})
+    terms = BargainTerms(command.gain, command.price, command.price_domain, command.price_world_id)
+    gain = await bargain_with_outer(await scope.context("outer_bargain"), son.id, command.outer_id, command.request, terms)
+    return Effect(f"{son.name} bargained with the outer being by command.", son.id, values={"gain": gain})
