@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ShieldCheck, Trash2, Zap } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { EmptyState, EntityLink, PagedList } from '@/components/domain'
 import {
@@ -190,7 +191,9 @@ export function ImpactsPanel({
         title='Call a body down'
         note='It strikes next epoch unless turned aside: it ruins the region, leaves a crater and can bring a winter over the world.'
         columns={worldId === null ? 3 : 2}
-        meta={<Chip icon={Zap}>{`${coming} coming`}</Chip>}
+        meta={
+          <Chip icon={Zap}>{`${plural(coming, 'body', 'bodies')} coming`}</Chip>
+        }
         action={
           <Button
             size='sm'

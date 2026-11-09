@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Telescope, Trash2 } from 'lucide-react'
 import { type ActionBody } from '@/api/actions'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { EmptyState, EntityLink, PagedList, Section } from '@/components/domain'
 import {
@@ -40,7 +41,7 @@ function SurveyList({
         size='inline'
         title={
           by === 'observer'
-            ? 'No people or realm knows this world yet'
+            ? 'No people or realm of another world knows it yet'
             : 'It knows no world beyond its own'
         }
         description='Astronomy, sky navigation and journeys bring knowledge of the worlds; you can also grant it below.'
@@ -131,7 +132,7 @@ export function WorldSurveySection({ worldId }: { worldId: number }) {
     <QuerySection
       id='section-surveys'
       title='Who knows this world'
-      description='Every people and realm knows a world only so far; journeys need it detected, colonies observed and conquests surveyed.'
+      description='How well the peoples and realms of other worlds know this one; journeys, colonies and conquests each need it known well enough.'
       icon={Telescope}
       tone='info'
       query={query}
@@ -151,7 +152,9 @@ export function WorldSurveySection({ worldId }: { worldId: number }) {
             note='The level you set is held against the engine.'
             columns={2}
             meta={
-              <Chip icon={Telescope}>{`${view.surveys.length} know it`}</Chip>
+              <Chip
+                icon={Telescope}
+              >{`${plural(view.surveys.length, 'people or realm', 'peoples or realms')} ${view.surveys.length === 1 ? 'knows' : 'know'} it`}</Chip>
             }
             action={
               <Button

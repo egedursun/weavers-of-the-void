@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Gem, Plus, Trash2 } from 'lucide-react'
 import { type ActionBody } from '@/api/actions'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { EmptyState, EntityLink, PagedList } from '@/components/domain'
@@ -261,7 +262,9 @@ export function CosmicFeaturesPanel({
         columns={
           draft.kind === 'wormhole' || draft.kind === 'rogue_world' ? 4 : 3
         }
-        meta={<Chip icon={Gem}>{`${features.length} here`}</Chip>}
+        meta={
+          <Chip icon={Gem}>{`${plural(features.length, 'feature')} here`}</Chip>
+        }
         action={
           <Button
             size='sm'

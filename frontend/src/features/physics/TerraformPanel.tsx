@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Hammer, Pickaxe, Square } from 'lucide-react'
 import { type ActionBody } from '@/api/actions'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { EmptyState, EntityLink, PagedList } from '@/components/domain'
 import {
@@ -155,7 +156,11 @@ export function TerraformPanel({
         title='Reshape a world'
         note='Its air, warmth, water or face change a little each epoch; native life of another chemistry suffers.'
         columns={worldId === null ? 4 : 3}
-        meta={<Chip icon={Pickaxe}>{`${projects.length} under way`}</Chip>}
+        meta={
+          <Chip
+            icon={Pickaxe}
+          >{`${plural(projects.length, 'work')} under way`}</Chip>
+        }
         action={
           <Button
             size='sm'

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Crown, Orbit, Plus, Split, Sun } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -189,7 +190,7 @@ export function StarSystemSection({ starId }: { starId: number }) {
               title='Bring a star into this system'
               note='A companion lights the worlds of its primary; worlds that circle both stars take the light of both.'
               columns={2}
-              meta={<Chip icon={Orbit}>{`${members.size} stars`}</Chip>}
+              meta={<Chip icon={Orbit}>{plural(members.size, 'star')}</Chip>}
               action={
                 <Button
                   size='sm'

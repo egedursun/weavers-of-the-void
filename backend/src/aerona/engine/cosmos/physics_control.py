@@ -22,7 +22,7 @@ from aerona.engine.cosmos.impacts import call_impact, deflect_impact
 from aerona.engine.cosmos.lifeforms import life_of
 from aerona.engine.cosmos.stellar import physics_of_stars, refresh
 from aerona.engine.cosmos.survey import OBSERVER_TYPES
-from aerona.engine.cosmos.systems import join_system, system_name
+from aerona.engine.cosmos.systems import join_system, settle_systems, system_name
 from aerona.engine.cosmos.terraform import begin
 from aerona.engine.divine.control import apply
 
@@ -72,13 +72,13 @@ async def create_system(ctx: TickContext, name: str, star_ids: list[int], separa
     for index, star in enumerate(stars):
         row = await join_system(ctx.session, ctx.rules, star, system.id)
         row.role = SystemRole.PRIMARY if index == 0 else SystemRole.COMPANION
-    await ctx.session.flush()
+    await settle_systems(ctx.session, ctx.rules)
     return system
 
 
 async def edit_system(ctx: TickContext, system_id: int, values: Values, release: list[str]) -> StarSystemRow:
     row = apply(await found(ctx, StarSystemRow, system_id, "star system"), values, release)
-    await ctx.session.flush()
+    await settle_systems(ctx.session, ctx.rules)
     return row
 
 
@@ -100,7 +100,7 @@ async def move_star(ctx: TickContext, star_id: int, system_id: int, role: System
             other.role = SystemRole.COMPANION
     row.role = role
     row.locked = sorted({*row.locked, "system_id"})
-    await ctx.session.flush()
+    await settle_systems(ctx.session, ctx.rules)
     return row
 
 

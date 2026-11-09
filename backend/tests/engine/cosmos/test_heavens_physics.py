@@ -36,7 +36,10 @@ async def test_settling_the_heavens_gives_every_star_and_world_its_physics(sessi
     star = await session.get(StarPhysicsRow, cosmos.star.id)
     world = await session.get(WorldPhysicsRow, cosmos.home.id)
     assert star is not None and star.mass > 0 and star.lifetime_epochs > 0
-    assert star.system_id is not None and await session.get(StarSystemRow, star.system_id) is not None
+    assert star.system_id is not None
+    system = await session.get(StarSystemRow, star.system_id)
+    assert system is not None and 0 < system.band_inner < system.band_outer
+    assert (system.band_inner, system.band_outer) == (star.band_inner, star.band_outer)
     assert world is not None and world.gravity_g > 0
 
 

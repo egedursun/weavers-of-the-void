@@ -42,8 +42,16 @@ async def ensure_systems(session: AsyncSession, rules: Rules, epoch: int) -> int
         row.system_id = system.id
         row.role = SystemRole.PRIMARY
         made += 1
-    await session.flush()
+    await settle_systems(session, rules)
     return made
+
+
+async def settle_systems(session: AsyncSession, rules: Rules) -> None:
+    stars = {row.id: row for row in await session.scalars(select(StarRow).order_by(StarRow.id))}
+    physics = await physics_of_stars(session, rules, list(stars.values()))
+    for system in (await systems_of(session)).values():
+        sync_system(rules, system, stars, physics)
+    await session.flush()
 
 
 def members(physics: dict[int, StarPhysicsRow], system_id: int) -> list[int]:
@@ -109,5 +117,5 @@ async def join_system(session: AsyncSession, rules: Rules, star: StarRow, system
     taken = any(other.system_id == system_id and other.role is SystemRole.PRIMARY and other_id != star.id for other_id, other in rows.items())
     row.system_id = system_id
     row.role = SystemRole.COMPANION if taken else SystemRole.PRIMARY
-    await session.flush()
+    await settle_systems(session, rules)
     return row
