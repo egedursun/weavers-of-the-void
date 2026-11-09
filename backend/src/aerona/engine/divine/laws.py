@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.knowledge import NATURAL_LAWS
 from aerona.constants.units import PERCENT
@@ -18,6 +19,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import god_of
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
+from aerona.rules.registry import Rules
 
 L = NaturalLaw
 CONTRADICTIONS: tuple[frozenset[NaturalLaw], ...] = (
@@ -29,18 +31,13 @@ CONTRADICTIONS: tuple[frozenset[NaturalLaw], ...] = (
 )
 
 
-async def profile_for(ctx: TickContext, law: EntityRow) -> NaturalLawProfileRow | None:
-    if law.natural_law is None or law.natural_law is NaturalLaw.NONE:
-        return None
-    row = await ctx.session.get(NaturalLawProfileRow, law.id)
-    if row is not None:
-        return row
-    table = ctx.rules.natural_laws
-    creator = await ctx.session.scalar(select(CreatorRow.id).limit(1))
+async def drafted_profile(session: AsyncSession, rules: Rules, law: EntityRow, epoch: int) -> NaturalLawProfileRow:
+    table = rules.natural_laws
+    creator = await session.scalar(select(CreatorRow.id).limit(1))
     author = law.creator_son_id if law.creator_son_id is not None else creator if law.origin is EntityOrigin.CREATOR else None
-    row = NaturalLawProfileRow(
+    return NaturalLawProfileRow(
         law_entity_id=law.id,
-        effect=law.natural_law,
+        effect=law.natural_law or NaturalLaw.NONE,
         scope=LawScope.WORLD,
         world_id=law.world_id,
         strength=table.start_strength,
@@ -48,9 +45,19 @@ async def profile_for(ctx: TickContext, law: EntityRow) -> NaturalLawProfileRow 
         author_node_id=author,
         exception=LawException.NONE,
         contested=False,
-        updated_epoch=ctx.epoch,
+        updated_epoch=epoch,
         locked=[],
     )
+
+
+async def profile_for(ctx: TickContext, law: EntityRow) -> NaturalLawProfileRow | None:
+    if law.natural_law is None or law.natural_law is NaturalLaw.NONE:
+        return None
+    row = await ctx.session.get(NaturalLawProfileRow, law.id)
+    if row is not None:
+        row.effect = law.natural_law
+        return row
+    row = await drafted_profile(ctx.session, ctx.rules, law, ctx.epoch)
     ctx.session.add(row)
     await ctx.session.flush()
     return row

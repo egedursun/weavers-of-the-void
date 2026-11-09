@@ -1,9 +1,36 @@
 from collections import Counter
 
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from aerona.db.repositories.entities import EntityDraft, EntityRepository
+from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.divine import NaturalLawProfileRow
+from aerona.domain.enums.entity import EntityOrigin, EntityType
+from aerona.domain.enums.society import NaturalLaw
+from aerona.domain.models.entity_stats import NaturalLawStats, OuterBeingStats
 from aerona.main import create_app
 from aerona.services.player.catalog import ACTIONS
 from aerona.settings import Settings
 from tests.api.conftest import ApiWorld
+
+
+async def bare(session: AsyncSession, name: str, entity_type: EntityType, stats: NaturalLawStats | OuterBeingStats) -> int:
+    world = await session.scalar(select(WorldRow.id).order_by(WorldRow.id).limit(1))
+    draft = EntityDraft(
+        name=name, entity_type=entity_type, description="A record.", stats=stats, power_level=2, origin=EntityOrigin.CREATOR, birth_epoch=1, world_id=world
+    )
+    entity = await EntityRepository(session).create(draft)
+    await session.flush()
+    return entity.id
+
+
+async def bare_law(session: AsyncSession) -> int:
+    return await bare(session, "The Quiet Rule", EntityType.NATURAL_LAW, NaturalLawStats())
+
+
+async def bare_being(session: AsyncSession) -> int:
+    return await bare(session, "The Far Listener", EntityType.OUTER_BEING, OuterBeingStats(size=40, interest=40, influence=40))
 
 
 def test_every_action_id_is_unique() -> None:
@@ -39,3 +66,26 @@ async def test_the_creator_s_taboos_and_the_council_s_rulings_read_back(api: Api
     rulings = (await api.http.get("/api/council/rulings")).json()
     assert rulings["rulings"][0]["motion"] == "cosmic_truce" and rulings["rulings"][0]["active"]
     assert "none" not in rulings["motions"]
+
+
+async def test_a_law_and_an_outer_being_without_a_working_read_as_drafts_and_take_one_at_once(api: ApiWorld) -> None:
+    async with api.services.database.write() as session:
+        law, being = await bare_law(session), await bare_being(session)
+    draft = (await api.http.get(f"/api/entities/{law}/law-profile")).json()
+    assert draft["drafted"] and draft["effect"] == "none"
+    given = await api.http.post("/api/actions/law_profile:edit", json={"law_id": law, "values": {"effect": "bounty", "strength": 40}, "release": []})
+    assert given.status_code == 200, given.text
+    kept = (await api.http.get(f"/api/entities/{law}/law-profile")).json()
+    assert not kept["drafted"] and kept["effect"] == "bounty" and kept["strength"] == 40
+    retagged = await api.http.patch(f"/api/entities/{law}/tags", json={"law": "drought"})
+    assert retagged.status_code == 200, retagged.text
+    assert (await api.http.get(f"/api/entities/{law}/law-profile")).json()["effect"] == "drought"
+    async with api.services.database.read() as session:
+        profile = await session.get(NaturalLawProfileRow, law)
+        assert profile is not None and profile.effect is NaturalLaw.DROUGHT
+    outer = (await api.http.get(f"/api/entities/{being}/outer-profile")).json()
+    assert outer["drafted"]
+    fed = await api.http.post("/api/actions/outer_profile:edit", json={"being_id": being, "values": {"fed": 4}, "release": []})
+    assert fed.status_code == 200, fed.text
+    after = (await api.http.get(f"/api/entities/{being}/outer-profile")).json()
+    assert not after["drafted"] and after["fed"] == 4 and after["hunger"] == outer["hunger"]

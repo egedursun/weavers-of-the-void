@@ -35,6 +35,7 @@ from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.knowledge import NATURAL_LAWS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
+from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.divine import (
@@ -57,8 +58,10 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.divine import CouncilMotion, DivineWoundKind, GodGoalKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.divine.goals import GOAL_LABELS, SON_ONLY
-from aerona.engine.divine.outer import HUNGER_LABELS, oppose_cost
+from aerona.engine.divine.laws import drafted_profile
+from aerona.engine.divine.outer import HUNGER_LABELS, drafted_outer, oppose_cost
 from aerona.engine.divine.rulings import MOTION_LABELS
 from aerona.engine.divine.wounds import WOUND_LABELS
 from aerona.rules.registry import Rules
@@ -324,14 +327,18 @@ async def council_rulings(services: ServicesDep) -> CouncilRulings:
 @router.get("/entities/{entity_id}/law-profile", response_model=NaturalLawProfileView)
 async def law_profile(entity_id: Id, services: ServicesDep) -> NaturalLawProfileView:
     async with reader(services) as session:
-        row = await session.get(NaturalLawProfileRow, entity_id)
-        if row is None:
-            raise NotFoundError("The world has not yet given this law its working; it will after the next epoch.")
+        law = await session.get(EntityRow, entity_id)
+        if law is None or law.entity_type is not EntityType.NATURAL_LAW:
+            raise NotFoundError("No such natural law.")
+        found = await session.get(NaturalLawProfileRow, entity_id)
+        cosmos = await CosmosRepository(session).require_cosmos()
+        row = found or await drafted_profile(session, await world_rules(services, session), law, cosmos.epoch)
         refs = await node_refs(session, [item for item in (entity_id, row.world_id, row.region_entity_id, row.author_node_id) if item is not None])
-        spec = NATURAL_LAWS[row.effect]
+        effect = law.natural_law or NaturalLaw.NONE
+        spec = NATURAL_LAWS[effect]
         return NaturalLawProfileView(
             law=refs[entity_id],
-            effect=row.effect,
+            effect=effect,
             effect_label=spec.label,
             effect_text=spec.effect,
             scope=row.scope,
@@ -343,6 +350,7 @@ async def law_profile(entity_id: Id, services: ServicesDep) -> NaturalLawProfile
             exception=row.exception,
             contested=row.contested,
             updated_epoch=row.updated_epoch,
+            drafted=found is None,
             locked=row.locked,
         )
 
@@ -352,9 +360,11 @@ async def outer_profile_view(entity_id: Id, services: ServicesDep) -> OuterBeing
     async with reader(services) as session:
         rules = await world_rules(services, session)
         being = await session.get(EntityRow, entity_id)
-        row = await session.get(OuterBeingProfileRow, entity_id)
-        if being is None or being.entity_type is not EntityType.OUTER_BEING or row is None:
-            raise NotFoundError("The world has not yet described this outer being; it will after the next epoch.")
+        if being is None or being.entity_type is not EntityType.OUTER_BEING:
+            raise NotFoundError("No such outer being.")
+        found = await session.get(OuterBeingProfileRow, entity_id)
+        cosmos = await CosmosRepository(session).require_cosmos()
+        row = found or drafted_outer(cosmos.rng_seed, being, cosmos.epoch)
         breaches = list(await session.scalars(select(BreachPointRow).where(BreachPointRow.outer_entity_id == entity_id).order_by(BreachPointRow.id)))
         bargains = list(await session.scalars(select(OuterBargainRow).where(OuterBargainRow.outer_entity_id == entity_id).order_by(OuterBargainRow.epoch)))
         ids = [entity_id, *(item for breach in breaches for item in (breach.world_id, breach.region_entity_id) if item is not None)]
@@ -368,6 +378,7 @@ async def outer_profile_view(entity_id: Id, services: ServicesDep) -> OuterBeing
             fed=row.fed,
             oppose_cost=oppose_cost(rules.outer_beings.oppose_cost_pct, being),
             updated_epoch=row.updated_epoch,
+            drafted=found is None,
             locked=row.locked,
             breaches=[
                 BreachPointView(

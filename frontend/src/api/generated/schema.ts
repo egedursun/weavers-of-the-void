@@ -31201,6 +31201,7 @@ export interface components {
       exception: components['schemas']['LawException']
       contested: boolean
       updated_epoch: number
+      drafted: boolean
       locked: string[]
     }
     NaturalLawStats: {
@@ -31670,6 +31671,7 @@ export interface components {
       fed: number
       oppose_cost: number
       updated_epoch: number
+      drafted: boolean
       locked: string[]
       breaches: components['schemas']['BreachPointView'][]
       bargains: components['schemas']['OuterBargainView'][]

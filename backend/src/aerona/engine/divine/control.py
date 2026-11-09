@@ -29,6 +29,7 @@ from aerona.domain.enums.divine import CouncilMotion, DivineWoundKind, DomainHoo
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.context import TickContext
 from aerona.engine.divine.avatars import manifest, withdraw
 from aerona.engine.divine.creator import attention_row
@@ -306,6 +307,11 @@ async def edit_law(ctx: TickContext, law_id: int, values: Mapping[str, Any], rel
     law = await living_entity(ctx.session, law_id)
     if law is None or law.entity_type is not EntityType.NATURAL_LAW:
         raise NotFoundError("No such living natural law.")
+    if "effect" in values and (law.natural_law is None or law.natural_law is NaturalLaw.NONE):
+        try:
+            law.natural_law = NaturalLaw(str(values["effect"]))
+        except ValueError as error:
+            raise ValidationFailedError(f"{values['effect']} is not a known natural law.") from error
     row = await profile_for(ctx, law)
     if row is None:
         raise ValidationFailedError(f"{law.name} has no working yet; give it one first.")

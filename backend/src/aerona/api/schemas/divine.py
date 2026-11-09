@@ -197,6 +197,7 @@ class NaturalLawProfileView(ApiModel):
     exception: LawException
     contested: bool
     updated_epoch: int
+    drafted: bool = False
     locked: list[str]
 
 
@@ -228,6 +229,7 @@ class OuterBeingProfileView(ApiModel):
     fed: int
     oppose_cost: int
     updated_epoch: int
+    drafted: bool = False
     locked: list[str]
     breaches: list[BreachPointView]
     bargains: list[OuterBargainView]

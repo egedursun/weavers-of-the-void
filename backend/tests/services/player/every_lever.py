@@ -17,7 +17,6 @@ from aerona.db.tables.agency import CreationRewardRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import CreatorRow
-from aerona.db.tables.divine import NaturalLawProfileRow, OuterBeingProfileRow
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -30,7 +29,6 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.divine import LawScope, OuterHunger
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
@@ -606,7 +604,6 @@ async def natural_law(session: AsyncSession) -> int:
             natural_law=NaturalLaw.BOUNTY,
         )
     )
-    session.add(NaturalLawProfileRow(law_entity_id=law.id, effect=NaturalLaw.BOUNTY, scope=LawScope.WORLD, world_id=world, locked=[]))
     await session.flush()
     return law.id
 
@@ -614,9 +611,6 @@ async def natural_law(session: AsyncSession) -> int:
 async def outer_being(session: AsyncSession) -> int:
     found = await session.scalar(select(EntityRow.id).where(EntityRow.entity_type == EntityType.OUTER_BEING).order_by(EntityRow.id).limit(1))
     if found is not None:
-        if await session.get(OuterBeingProfileRow, found) is None:
-            session.add(OuterBeingProfileRow(outer_entity_id=found, hunger=OuterHunger.NAMES, locked=[]))
-            await session.flush()
         return found
     world = await session.scalar(select(WorldRow.id).order_by(WorldRow.id).limit(1))
     assert world is not None
@@ -632,7 +626,6 @@ async def outer_being(session: AsyncSession) -> int:
             world_id=world,
         )
     )
-    session.add(OuterBeingProfileRow(outer_entity_id=being.id, hunger=OuterHunger.NAMES, locked=[]))
     await session.flush()
     return being.id
 
@@ -1530,8 +1523,8 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "avatar:edit": {"deeds": 2},
     "attention:set": {"attention": 40, "watched": True},
     "ruling:edit": {"until_epoch": 9},
-    "law_profile:edit": {"strength": 70, "scope": "cosmos"},
-    "outer_profile:edit": {"reach": 2, "hunger": "light"},
+    "law_profile:edit": {"strength": 70, "scope": "cosmos", "effect": "bounty"},
+    "outer_profile:edit": {"reach": 2, "hunger": "light", "fed": 3},
     "breach:edit": {"strength": 40},
 }
 LEVERS.update({name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in EDITS.items()})

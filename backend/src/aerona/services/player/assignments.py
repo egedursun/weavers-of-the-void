@@ -16,6 +16,7 @@ from aerona.db.repositories.names import NameRepository, normalize_name
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmic_state import ResourceMechanicRow
+from aerona.db.tables.divine import NaturalLawProfileRow
 from aerona.db.tables.entities import EntityRow, EntityTraitRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
@@ -497,6 +498,9 @@ async def set_tags(scope: PlayerScope, command: SetTags) -> Effect:
     await _change_traits(scope, target, command, changes)
     await _change_mechanics(scope, target, command, changes)
     _change_law(target, command.law, changes)
+    profile = await scope.session.get(NaturalLawProfileRow, target.id) if command.law is not None else None
+    if profile is not None and command.law is not None:
+        profile.effect = command.law
     await scope.session.flush()
     if not changes.added and not changes.removed:
         raise ValidationFailedError(f"Nothing changed on {target.name}.")

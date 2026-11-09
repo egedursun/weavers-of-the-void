@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { Orbit, Save, Scale, ShieldAlert, TriangleAlert } from 'lucide-react'
-import { lawExceptionValues, lawScopeValues } from '@/api/generated/schema'
+import {
+  lawExceptionValues,
+  lawScopeValues,
+  naturalLawValues,
+} from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EmptyState, LoadingBlock, Section, StatBar } from '@/components/domain'
@@ -15,6 +19,7 @@ import {
 } from '@/features/entity/wilds/parts'
 import { useWorldState } from '@/features/pantheon/api'
 import { useGodGate } from '@/features/pantheon/gate'
+import { humanize } from '@/features/pantheon/labels'
 import { useDivineAction, useLawProfile } from './api'
 import { LAW_EXCEPTIONS, LAW_SCOPES, heldLabel } from './labels'
 import { useGodTable } from './model'
@@ -27,6 +32,7 @@ export function LawProfileSection({ lawId }: { lawId: number }) {
     values: Record<string, unknown>
     release: string[]
   }>('law_profile:edit', (vars) => ({ law_id: lawId, ...vars }))
+  const [effect, setEffect] = useState('')
   const [scope, setScope] = useState('')
   const [world, setWorld] = useState<number | null>(null)
   const [region, setRegion] = useState<number | null>(null)
@@ -42,6 +48,7 @@ export function LawProfileSection({ lawId }: { lawId: number }) {
   )
   const busy = busyOf(reason(), edit.isPending)
   const values: Record<string, unknown> = {}
+  if (effect !== '') values.effect = effect
   if (scope !== '') values.scope = scope
   if (world !== null) values.world_id = world
   if (region !== null) values.region_entity_id = region
@@ -51,6 +58,11 @@ export function LawProfileSection({ lawId }: { lawId: number }) {
   if (author !== '') values.author_node_id = Number(author)
   const nothing =
     Object.keys(values).length === 0 ? 'Change something first' : null
+  const effects = Object.fromEntries(
+    naturalLawValues
+      .filter((value) => value !== 'none')
+      .map((value) => [value, humanize(value)])
+  )
   const scopes = Object.fromEntries(
     lawScopeValues.map((value) => [value, LAW_SCOPES[value].label])
   )
@@ -94,6 +106,11 @@ export function LawProfileSection({ lawId }: { lawId: number }) {
               <Badge variant='outline'>
                 {LAW_EXCEPTIONS[view.data.exception]}
               </Badge>
+              {view.data.drafted && (
+                <Badge variant='outline'>
+                  Not yet set by the world; what you set holds at once
+                </Badge>
+              )}
               {view.data.contested && (
                 <Badge variant='warning'>
                   <ShieldAlert aria-hidden='true' />
@@ -136,6 +153,13 @@ export function LawProfileSection({ lawId }: { lawId: number }) {
               note='What you set is held: the world will not erode or move it until you let it decide again.'
             >
               <div className='grid min-w-0 grid-cols-1 gap-2 md:grid-cols-2'>
+                <PickRow
+                  label='What the law does'
+                  table={effects}
+                  value={effect}
+                  blocked={busy}
+                  onPick={setEffect}
+                />
                 <PickRow
                   label='Scope'
                   table={scopes}
@@ -191,6 +215,7 @@ export function LawProfileSection({ lawId }: { lawId: number }) {
                 disabledReason={busy ?? nothing ?? undefined}
                 onClick={() => {
                   edit.mutate({ values, release: [] })
+                  setEffect('')
                   setScope('')
                   setWorld(null)
                   setRegion(null)

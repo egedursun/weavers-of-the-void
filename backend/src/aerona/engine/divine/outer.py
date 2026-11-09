@@ -1,6 +1,7 @@
 from sqlalchemy import delete, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.random import SeededRandom
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.culture import HolderLevelRow, LegendProfileRow
@@ -41,11 +42,15 @@ def oppose_cost(rules_cost_per_size: int, being: EntityRow) -> int:
     return max(1, round(stat_or(being, "size", 0) * rules_cost_per_size / PERCENT))
 
 
+def drafted_outer(seed: int, being: EntityRow, epoch: int) -> OuterBeingProfileRow:
+    hunger = SeededRandom.for_epoch(seed, 0, f"hunger.{being.id}").pick(list(OuterHunger))
+    return OuterBeingProfileRow(outer_entity_id=being.id, hunger=hunger, reach=1, fed=0, updated_epoch=epoch, locked=[])
+
+
 async def outer_profile(ctx: TickContext, being: EntityRow) -> OuterBeingProfileRow:
     row = await ctx.session.get(OuterBeingProfileRow, being.id)
     if row is None:
-        hunger = ctx.rng(f"hunger.{being.id}").pick(list(OuterHunger))
-        row = OuterBeingProfileRow(outer_entity_id=being.id, hunger=hunger, reach=1, fed=0, updated_epoch=ctx.epoch, locked=[])
+        row = drafted_outer(ctx.environment.world_seed, being, ctx.epoch)
         ctx.session.add(row)
         await ctx.session.flush()
     return row

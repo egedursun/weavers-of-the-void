@@ -38,6 +38,7 @@ export function OuterProfileSection({ beingId }: { beingId: number }) {
   const view = useOuterProfile(beingId)
   const [hunger, setHunger] = useState('')
   const [reach, setReach] = useState('')
+  const [fed, setFed] = useState('')
   const [region, setRegion] = useState<number | null>(null)
   const [strength, setStrength] = useState('30')
   const [breachDraft, setBreachDraft] = useState<Record<number, string>>({})
@@ -72,8 +73,11 @@ export function OuterProfileSection({ beingId }: { beingId: number }) {
   const values: Record<string, unknown> = {}
   if (hunger !== '') values.hunger = hunger
   if (reach !== '') values.reach = Number(reach)
+  if (fed !== '') values.fed = Number(fed)
   const nothing =
-    Object.keys(values).length === 0 ? 'Change its hunger or reach first' : null
+    Object.keys(values).length === 0
+      ? 'Change its hunger, reach or feeding first'
+      : null
   const hungers = Object.fromEntries(
     outerHungerValues.map((value) => [value, HUNGERS[value].label])
   )
@@ -107,6 +111,11 @@ export function OuterProfileSection({ beingId }: { beingId: number }) {
             <div className='flex min-w-0 flex-wrap gap-2'>
               <Badge variant='destructive'>{`Reaches ${view.data.reach} lands`}</Badge>
               <Badge variant='secondary'>{`Fed ${view.data.fed} times`}</Badge>
+              {view.data.drafted && (
+                <Badge variant='outline'>
+                  Not yet set by the world; what you set holds at once
+                </Badge>
+              )}
             </div>
             <Held
               keys={view.data.locked}
@@ -135,6 +144,13 @@ export function OuterProfileSection({ beingId }: { beingId: number }) {
                   disabled={busy !== null}
                   onChange={setReach}
                 />
+                <NumberField
+                  label='Times fed'
+                  value={fed}
+                  min={0}
+                  disabled={busy !== null}
+                  onChange={setFed}
+                />
               </div>
               <Button
                 disabled={busy !== null || nothing !== null}
@@ -143,6 +159,7 @@ export function OuterProfileSection({ beingId }: { beingId: number }) {
                   edit.mutate({ values, release: [] })
                   setHunger('')
                   setReach('')
+                  setFed('')
                 }}
               >
                 <Save />
