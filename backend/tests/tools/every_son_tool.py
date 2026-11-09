@@ -6,6 +6,7 @@ from tests.tools.every_setup import (
     dead_sibling,
     dead_star,
     death_son,
+    falling_body,
     friendly_sibling,
     heavens,
     home_star,
@@ -32,6 +33,7 @@ from tests.tools.every_setup import (
     spirit,
     surveyed,
     travel_resource,
+    world_body,
     wounded,
 )
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
@@ -279,6 +281,9 @@ SON_CASES: dict[str, Case] = {
     "claim_galaxy": Case(plain(galaxy_id=created("galaxy"), reason=REASON), heavens),
     "rule_dimension": Case(plain(dimension_id=created("prime"), reason=REASON), heavens),
     "claim_star": Case(plain(star_id=created("star"), reason=REASON), home_star),
+    "call_impact": Case(plain(region_id=region, reason=REASON)),
+    "deflect_impact": Case(plain(impact_id=created("impact"), reason=REASON), falling_body),
+    "terraform_world": Case(plain(world_id=world, aim="warm", reason=REASON), world_body),
     "shape_blood": Case(plain(mortal_id=mortal, locus="height", allele="tall", reason=REASON)),
     "reveal_true_name": Case(plain(bearer_id=created("spirit"), learner_id=mortal, reason=REASON), named_spirit),
 }

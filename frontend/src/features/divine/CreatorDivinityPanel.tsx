@@ -12,6 +12,7 @@ import {
   Undo2,
   Users,
 } from 'lucide-react'
+import { type ActionBody, type EditValues } from '@/api/actions'
 import { actKindValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -53,12 +54,15 @@ function TaboosCard({
 }) {
   const [act, setAct] = useState('')
   const [severity, setSeverity] = useState('50')
-  const set = useDivineAction<{ act: string; severity: number }>(
+  const set = useDivineAction(
     'taboo:set',
-    (vars) => vars
+    (vars: { act: string; severity: number }) => ({
+      act: vars.act as ActionBody<'taboo:set'>['act'],
+      severity: vars.severity,
+    })
   )
-  const remove = useDivineAction<string>('taboo:remove', (value) => ({
-    act: value,
+  const remove = useDivineAction('taboo:remove', (value: string) => ({
+    act: value as ActionBody<'taboo:remove'>['act'],
   }))
   const pending = busyOf(busy, set.isPending, remove.isPending)
   const table = Object.fromEntries(
@@ -158,16 +162,15 @@ function AttentionCard({
   view: CreatorDivinity
   busy: string | null
 }) {
-  const set = useDivineAction<{
-    world: number
-    values: Record<string, unknown>
-    release: string[]
-  }>('attention:set', (vars) => ({
-    world_id: vars.world,
-    values: vars.values,
-    release: vars.release,
-  }))
-  const clear = useDivineAction<number>('attention:clear', (world) => ({
+  const set = useDivineAction(
+    'attention:set',
+    (vars: { world: number; values: EditValues; release: string[] }) => ({
+      world_id: vars.world,
+      values: vars.values,
+      release: vars.release,
+    })
+  )
+  const clear = useDivineAction('attention:clear', (world: number) => ({
     world_id: world,
   }))
   const [draft, setDraft] = useState<Record<number, string>>({})
@@ -302,19 +305,18 @@ function CreatorStandingCard({
   busy: string | null
   creatorId: number
 }) {
-  const save = useDivineAction<{
-    community: number
-    values: Record<string, unknown>
-    release: string[]
-  }>('divine_standing:set', (vars) => ({
-    community_id: vars.community,
-    god_id: creatorId,
-    values: vars.values,
-    release: vars.release,
-  }))
-  const clear = useDivineAction<number>(
+  const save = useDivineAction(
+    'divine_standing:set',
+    (vars: { community: number; values: EditValues; release: string[] }) => ({
+      community_id: vars.community,
+      god_id: creatorId,
+      values: vars.values,
+      release: vars.release,
+    })
+  )
+  const clear = useDivineAction(
     'divine_standing:clear',
-    (community) => ({ community_id: community, god_id: creatorId })
+    (community: number) => ({ community_id: community, god_id: creatorId })
   )
   const pending = busyOf(busy, save.isPending, clear.isPending)
   return (

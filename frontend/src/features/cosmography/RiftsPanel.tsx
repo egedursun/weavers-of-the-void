@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Eye, Shield, Split, Trash2 } from 'lucide-react'
+import { type EditValues } from '@/api/actions'
 import { Button } from '@/components/ui/button'
 import { EmptyState, EntityLink, PagedList, Section } from '@/components/domain'
 import { Muted } from '@/components/typography'
@@ -27,18 +28,21 @@ function RiftRow({
   ladder: Ladder
   worldNames: Record<string, string>
 }) {
-  const edit = useCosmographyAction<{
-    values: Record<string, unknown>
-    release: string[]
-  }>('rift:edit', (vars) => ({ rift_id: rift.id, ...vars }))
-  const seal = useCosmographyAction<void>(
+  const edit = useCosmographyAction(
+    'rift:edit',
+    (vars: { values: EditValues; release: string[] }) => ({
+      rift_id: rift.id,
+      ...vars,
+    })
+  )
+  const seal = useCosmographyAction(
     'rift:seal',
-    () => ({ rift_id: rift.id }),
+    (_: void) => ({ rift_id: rift.id }),
     'The rift is sealed'
   )
-  const remove = useCosmographyAction<void>(
+  const remove = useCosmographyAction(
     'rift:delete',
-    () => ({ rift_id: rift.id }),
+    (_: void) => ({ rift_id: rift.id }),
     'The rift is gone from the record'
   )
   const busy =
@@ -142,9 +146,9 @@ function OpenRiftForm({
   const [region, setRegion] = useState<number | null>(null)
   const [dimension, setDimension] = useState('')
   const [target, setTarget] = useState('')
-  const open = useCosmographyAction<void>(
+  const open = useCosmographyAction(
     'rift:open',
-    () => ({
+    (_: void) => ({
       world_id: Number(world),
       region_id: region,
       dimension_id: Number(dimension),

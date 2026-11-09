@@ -6,6 +6,7 @@ import {
   resetApi,
 } from '@/test-utils/fakeApi'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { components } from '@/api/generated/schema'
 import { PeopleProfileSection } from './Demography'
 import { effectTone, folkLabel } from './folkLabels'
 
@@ -45,6 +46,11 @@ const VIEW = {
       hunger_pct: 20,
       work: [{ job: 'trade', pct: 138 }],
     },
+    biochemistry: 'carbon_water',
+    air: 'oxygen',
+    gravity_low: 50,
+    gravity_high: 160,
+    habitability: 60,
     locked: ['body_plan'],
   },
   culture: {
@@ -70,7 +76,10 @@ const VIEW = {
   neighbours: [],
   inequality: 0,
   mobilisation_pct: 100,
-}
+  afflictions: [],
+  named: [],
+  held: [],
+} satisfies components['schemas']['DemographyView']
 
 function serve() {
   onApi('GET', '/api/state', {
@@ -103,6 +112,10 @@ describe('folk and customs', () => {
     serve()
     const { screen } = await renderApp(<PeopleProfileSection peopleId={12} />)
     await expect.element(screen.getByText('Winged folk').first()).toBeVisible()
+    await expect
+      .element(screen.getByText('Breathes oxygen').first())
+      .toBeVisible()
+    await expect.element(screen.getByText('50% to 160%').first()).toBeVisible()
     await expect.element(screen.getByText('Fish eaters').first()).toBeVisible()
     await expect
       .element(screen.getByText('Take to the air').first())

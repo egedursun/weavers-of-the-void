@@ -19,6 +19,7 @@ from aerona.engine.cosmos.strata import host_strata_once
 from aerona.engine.cosmos.worldlife import regional_leak, world_lives
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
+from aerona.engine.phases import physics
 
 
 @reads("table.applied_fixups", "table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.name_registry")
@@ -70,9 +71,11 @@ async def climate_by_region(ctx: TickContext) -> None:
 
 PHASES = (
     Phase("scale_ladder", scale_ladder),
+    *physics.EARLY,
     Phase("cosmic_influence", influence),
     Phase("galaxy_cycles", galaxy_cycles),
     Phase("star_lives", star_lives),
+    *physics.LATE,
     Phase("dimension_cycles", dimension_cycles),
     Phase("rift_cycles", rift_cycles),
     Phase("cosmic_beings", being_cycles),

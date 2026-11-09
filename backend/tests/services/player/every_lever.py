@@ -1571,6 +1571,20 @@ LEVERS: dict[str, Lever] = {
     "star_life:edit": setup_then(heavens, star_id=Pick("star")),
     "world_life:edit": setup_then(heavens, world_id=Pick("world")),
     "route_flow:edit": given(route_id=Pick("route")),
+    "cosmic_feature:create": given(kind="asteroid_field", name="Near Belt", star_id=Pick("star")),
+    **{
+        name: after(("cosmic_feature:create", {"kind": "asteroid_field", "name": "Near Belt", "star_id": Pick("star")}), feature_id=Newest("cosmic_feature"))
+        for name in ("cosmic_feature:edit", "cosmic_feature:delete")
+    },
+    **{
+        name: after(("impact:call", {"world_id": Pick("world")}), impact_id=Newest("impact_event"))
+        for name in ("impact:deflect", "impact:edit", "impact:delete")
+    },
+    **{
+        name: after(("terraform:start", {"world_id": Pick("world"), "aim": "warm"}), project_id=Newest("terraforming"))
+        for name in ("terraform:edit", "terraform:stop")
+    },
+    "survey:set": given(observer_id=Pick(EntityType.PEOPLE), world_id=Pick("world"), level="observed"),
     **{
         name: Lever(
             values={"journey_id": Newest("journey"), **extra},
@@ -1659,6 +1673,13 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "star_life:edit": {"stability": 50, "age_stage": "old", "radiation": 30},
     "world_life:edit": {"magnetism": 20, "biosphere_health": 60, "mood": -10},
     "route_flow:edit": {"toll_pct": 10, "piracy": 20, "window_every": 2},
+    "star_physics:edit": {"mass": 1.2, "metallicity": 40},
+    "star_system:edit": {"name": "Twin Lights", "separation": 2.0},
+    "world_physics:edit": {"albedo": 35, "pressure": 1.2},
+    "life_class:edit": {"complexity": "complex", "environments": ["marine", "terrestrial"]},
+    "cosmic_feature:edit": {"density": 40, "richness": 60},
+    "impact:edit": {"size": 30, "winter_epochs": 1},
+    "terraform:edit": {"step": 5, "epochs_left": 3},
 }
 LEVERS.update({name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in EDITS.items()})
 

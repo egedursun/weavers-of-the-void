@@ -19,6 +19,7 @@ import {
   Workflow,
   X,
 } from 'lucide-react'
+import { type ActionBody, type EditValues } from '@/api/actions'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -51,6 +52,7 @@ import {
   catalogLabel,
   catalogTable,
   useCosmographyAction,
+  runCosmography,
 } from '../api'
 import { armText, nucleusText } from '../galaxyKind'
 import { type WorldMark, worldMarks } from '../galaxyWorlds'
@@ -70,7 +72,7 @@ import {
   WikiRecords,
 } from './shared'
 
-type Edit = { values: Record<string, unknown>; release: string[] }
+type Edit = { values: EditValues; release: string[] }
 
 const DISCOVERY = {
   known: 'Known',
@@ -350,11 +352,11 @@ function StructureForm({
   const [name, setName] = useState('')
   const [radius, setRadius] = useState('60')
   const [intensity, setIntensity] = useState('60')
-  const create = useCosmographyAction<void>(
+  const create = useCosmographyAction(
     'galactic_structure:create',
-    () => ({
+    (_: void) => ({
       galaxy_id: galaxy.id,
-      kind,
+      kind: kind as ActionBody<'galactic_structure:create'>['kind'],
       name: name.trim(),
       radius: Number(radius) || 60,
       intensity: Number(intensity) || 60,
@@ -453,13 +455,13 @@ function StructureCard({
   catalog: CosmographyCatalog
   onLocate: () => void
 }) {
-  const edit = useCosmographyAction<Edit>(
+  const edit = useCosmographyAction(
     'galactic_structure:edit',
-    (vars) => ({ structure_id: structure.id, ...vars })
+    (vars: Edit) => ({ structure_id: structure.id, ...vars })
   )
-  const remove = useCosmographyAction<void>(
+  const remove = useCosmographyAction(
     'galactic_structure:delete',
-    () => ({ structure_id: structure.id }),
+    (_: void) => ({ structure_id: structure.id }),
     'The structure is unmade'
   )
   const busy = edit.isPending || remove.isPending ? 'Working' : null
@@ -719,9 +721,9 @@ function ShapeSection({
   ladder: Ladder
   catalog: CosmographyCatalog
 }) {
-  const edit = useCosmographyAction<Edit>(
+  const edit = useCosmographyAction(
     'galaxy:edit',
-    (vars) => ({ galaxy_id: galaxy.id, ...vars }),
+    (vars: Edit) => ({ galaxy_id: galaxy.id, ...vars }),
     'The galaxy is reshaped'
   )
   const sons = useSons()
@@ -967,8 +969,13 @@ export function GalaxyView({ galaxyId }: { galaxyId: number }) {
         name={galaxy.name}
         wiki={wiki}
         prompt={galaxy.image_prompt}
-        action='galaxy:edit'
-        target={{ galaxy_id: galaxy.id }}
+        savePrompt={(next) =>
+          runCosmography('galaxy:edit', {
+            galaxy_id: galaxy.id,
+            values: { image_prompt: next },
+            release: ['image_prompt'],
+          })
+        }
       />
       <DangerZone
         noun='galaxy'

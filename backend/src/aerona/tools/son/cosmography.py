@@ -6,12 +6,14 @@ from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.core.errors import AeronaError
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmography import CosmicBeingProfileRow, DimensionRow, GalaxyRow, PhenomenonProfileRow, RiftRow
+from aerona.db.tables.physics import ImpactEventRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, BeingKind, RiftCause
 from aerona.domain.enums.entity import EntityType
-from aerona.engine.cosmos import control
+from aerona.domain.enums.physics import ImpactOutcome, TerraformAim
+from aerona.engine.cosmos import control, physics_control
 from aerona.engine.cosmos.climate import ClimateTurn
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.prompts import SonToolId
@@ -67,6 +69,22 @@ class GalaxyInput(ToolInput):
 
 class DimensionInput(ToolInput):
     dimension_id: int
+    reason: Reason
+
+
+class CallImpactInput(ToolInput):
+    region_id: int
+    reason: Reason
+
+
+class ImpactInput(ToolInput):
+    impact_id: int
+    reason: Reason
+
+
+class TerraformInput(ToolInput):
+    world_id: int
+    aim: TerraformAim
     reason: Reason
 
 
@@ -236,6 +254,52 @@ async def claim_star(call: SonCall, args: StarPatronInput) -> str:
     return result(SonResult.STAR_CLAIMED, name=star.name)
 
 
+async def call_impact(call: SonCall, args: CallImpactInput) -> str:
+    region = require_type(await require_canon(call.session, args.region_id), {EntityType.REGION}, SonResult.NOT_A_REGION, name="region")
+    await ensure_in_reach(call, region)
+    cost = call.rules.impacts.call_essence
+    require_essence(call, cost)
+    try:
+        impact = await physics_control.call(call.tick, region.world_id or 0, region.id, call.son.id, by=call.son.name, size=None)
+    except AeronaError as error:
+        fail(SonResult.IMPACT_REFUSED, reason=error.message)
+    call.spend_essence(cost)
+    call.target(region.id)
+    await call.chronicle(ChronicleKind.MIRACLE, lines.CALL_IMPACT, entity_ids=[region.id], son=call.son.name, place=region.name, reason=args.reason)
+    return result(SonResult.IMPACT_CALLED, place=region.name, epoch=impact.due_epoch)
+
+
+async def deflect_impact(call: SonCall, args: ImpactInput) -> str:
+    impact = await call.session.get(ImpactEventRow, args.impact_id)
+    if impact is None or impact.outcome is not ImpactOutcome.PENDING:
+        fail(SonResult.NO_SUCH_IMPACT, id=args.impact_id)
+    if not await call.reachable_world(impact.world_id):
+        fail(SonResult.IMPACT_OUT_OF_REACH, id=impact.id)
+    cost = call.rules.impacts.deflect_essence
+    require_essence(call, cost)
+    await physics_control.deflect(call.tick, impact.id, call.son.id, call.son.name)
+    call.spend_essence(cost)
+    world = await call.session.get(WorldRow, impact.world_id)
+    name = world.name if world is not None else ""
+    await call.chronicle(ChronicleKind.MIRACLE, lines.DEFLECT_IMPACT, son=call.son.name, world=name, reason=args.reason)
+    return result(SonResult.IMPACT_DEFLECTED, world=name)
+
+
+async def terraform_world(call: SonCall, args: TerraformInput) -> str:
+    world = await call.session.get(WorldRow, args.world_id)
+    if world is None or not await call.reachable_world(world.id):
+        fail(SonResult.TERRAFORM_REFUSED, reason="that world is beyond your reach")
+    cost = call.rules.terraforming.essence
+    require_essence(call, cost)
+    try:
+        project = await physics_control.start_terraform(call.tick, world.id, args.aim, call.son.id, by=call.son.name, step=None, epochs=None)
+    except AeronaError as error:
+        fail(SonResult.TERRAFORM_REFUSED, reason=error.message)
+    call.spend_essence(cost)
+    await call.chronicle(ChronicleKind.MIRACLE, lines.TERRAFORM_WORLD, son=call.son.name, world=world.name, reason=args.reason)
+    return result(SonResult.TERRAFORM_BEGUN, world=world.name, epochs=project.epochs_left)
+
+
 def specs() -> list[ToolSpec[SonCall, Any]]:
     standard = son_standard_action
     return [
@@ -301,6 +365,27 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
             DimensionInput,
             ToolMeta(ActionKind.BLESS_EXISTENCE, standard, essence_cost=lambda rules: rules.dimensions.rule_essence),
             rule_dimension,
+        ),
+        ToolSpec(
+            SonToolId.CALL_IMPACT,
+            AgentKind.SON,
+            CallImpactInput,
+            ToolMeta(ActionKind.SKY_EVENT, standard, essence_cost=lambda rules: rules.impacts.call_essence),
+            call_impact,
+        ),
+        ToolSpec(
+            SonToolId.DEFLECT_IMPACT,
+            AgentKind.SON,
+            ImpactInput,
+            ToolMeta(ActionKind.MANIFESTATION, standard, essence_cost=lambda rules: rules.impacts.deflect_essence),
+            deflect_impact,
+        ),
+        ToolSpec(
+            SonToolId.TERRAFORM_WORLD,
+            AgentKind.SON,
+            TerraformInput,
+            ToolMeta(ActionKind.SKY_EVENT, standard, essence_cost=lambda rules: rules.terraforming.essence),
+            terraform_world,
         ),
         ToolSpec(
             SonToolId.CLAIM_STAR,

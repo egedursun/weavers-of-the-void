@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Ban, Crown, Link2 } from 'lucide-react'
+import { type ActionBody, type EditValues } from '@/api/actions'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { EmptyState, EntityLink, PagedList, Section } from '@/components/domain'
@@ -40,18 +41,21 @@ export function BeingCard({
   ladder: Ladder
   catalog: CosmographyCatalog | undefined
 }) {
-  const edit = useCosmographyAction<{
-    values: Record<string, unknown>
-    release: string[]
-  }>('cosmic_being:edit', (vars) => ({ being_id: being.entity_id, ...vars }))
-  const bind = useCosmographyAction<void>(
+  const edit = useCosmographyAction(
+    'cosmic_being:edit',
+    (vars: { values: EditValues; release: string[] }) => ({
+      being_id: being.entity_id,
+      ...vars,
+    })
+  )
+  const bind = useCosmographyAction(
     'cosmic_being:bind',
-    () => ({ being_id: being.entity_id }),
+    (_: void) => ({ being_id: being.entity_id }),
     'The being is bound to you'
   )
-  const banish = useCosmographyAction<void>(
+  const banish = useCosmographyAction(
     'cosmic_being:banish',
-    () => ({ being_id: being.entity_id }),
+    (_: void) => ({ being_id: being.entity_id }),
     'The being is banished'
   )
   const busy =
@@ -221,9 +225,13 @@ function CallForm({
   const [kind, setKind] = useState('')
   const [world, setWorld] = useState('')
   const [region, setRegion] = useState<number | null>(null)
-  const call = useCosmographyAction<void>(
+  const call = useCosmographyAction(
     'cosmic_being:call',
-    () => ({ kind, world_id: Number(world), region_id: region }),
+    (_: void) => ({
+      kind: kind as ActionBody<'cosmic_being:call'>['kind'],
+      world_id: Number(world),
+      region_id: region,
+    }),
     'A cosmic being answers your call'
   )
   const busy = call.isPending ? 'The being is coming' : null

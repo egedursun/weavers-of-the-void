@@ -9,6 +9,7 @@ import {
   Trash2,
   TriangleAlert,
 } from 'lucide-react'
+import { type ActionBody, postAction } from '@/api/actions'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
@@ -29,16 +30,11 @@ import { useGodAction } from '@/features/pantheon/godAction'
 import { loreKeys } from '../api/keys'
 
 const WORKING = 'Working on it.'
-type Row = Record<string, unknown>
-
-function useRow(path: string) {
-  return useGodAction<Row>({
-    run: (body) =>
-      unwrap(
-        api.POST(path as '/api/actions/record_row:edit', {
-          body: body as never,
-        })
-      ),
+function useRow<
+  Name extends 'record_row:edit' | 'record_row:create' | 'record_row:delete',
+>(name: Name) {
+  return useGodAction<ActionBody<Name>>({
+    run: (body) => postAction(name, body),
   })
 }
 
@@ -99,9 +95,9 @@ export function NameSection({ nodeId }: { nodeId: number }) {
         })
       ),
   })
-  const edit = useRow('/api/actions/record_row:edit')
-  const create = useRow('/api/actions/record_row:create')
-  const remove = useRow('/api/actions/record_row:delete')
+  const edit = useRow('record_row:edit')
+  const create = useRow('record_row:create')
+  const remove = useRow('record_row:delete')
   const [tongue, setTongue] = useState<number | null>(null)
   const [form, setForm] = useState('')
   const { reason } = useGodGate()

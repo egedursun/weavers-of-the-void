@@ -11,6 +11,7 @@ import {
   Workflow,
   Zap,
 } from 'lucide-react'
+import { type EditValues } from '@/api/actions'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
@@ -34,6 +35,7 @@ import {
   catalogLabel,
   catalogTable,
   useCosmographyAction,
+  runCosmography,
 } from '../api'
 import { CreateClusterStudio, CreateGalaxyStudio } from '../create/CreateStudio'
 import { CAUSALITIES, ELEMENTS } from '../labels'
@@ -56,7 +58,7 @@ import {
   WikiRecords,
 } from './shared'
 
-type Edit = { values: Record<string, unknown>; release: string[] }
+type Edit = { values: EditValues; release: string[] }
 
 const DISCOVERY = {
   known: 'Known',
@@ -152,9 +154,9 @@ function DimensionHero({
 
 export function DimensionView({ dimensionId }: { dimensionId: number }) {
   const { view, catalog, wiki, ladder } = useScaleData(dimensionId)
-  const edit = useCosmographyAction<Edit>(
+  const edit = useCosmographyAction(
     'dimension:edit',
-    (vars) => ({ dimension_id: dimensionId, ...vars }),
+    (vars: Edit) => ({ dimension_id: dimensionId, ...vars }),
     'The dimension is reshaped'
   )
   if (view.isPending || !catalog) return <WikiLoading />
@@ -583,8 +585,13 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
         name={dimension.name}
         wiki={wiki}
         prompt={dimension.image_prompt}
-        action='dimension:edit'
-        target={{ dimension_id: dimension.id }}
+        savePrompt={(next) =>
+          runCosmography('dimension:edit', {
+            dimension_id: dimension.id,
+            values: { image_prompt: next },
+            release: ['image_prompt'],
+          })
+        }
       />
       <DangerZone
         noun='dimension'

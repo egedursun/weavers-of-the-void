@@ -10,6 +10,7 @@ import {
   TriangleAlert,
   Unlock,
 } from 'lucide-react'
+import { type ActionBody } from '@/api/actions'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
@@ -76,17 +77,18 @@ export function EraSection({
   const view = useRealmEra(polityId)
   const { reason } = useGodGate()
   const blocked = readOnlyReason ?? reason()
-  const set = useLoreAction<{
-    score?: number
-    age?: string
-    hold: boolean
-  }>('/api/actions/discovery:era', (value) => ({
-    polity_id: polityId,
-    ...value,
-  }))
-  const ban = useLoreAction<{ work: number; banned: boolean }>(
-    '/api/actions/discovery:ban',
-    (value) => ({
+  const set = useLoreAction(
+    'discovery:era',
+    (value: { score?: number; age?: string; hold: boolean }) => ({
+      polity_id: polityId,
+      score: value.score,
+      age: value.age as ActionBody<'discovery:era'>['age'],
+      hold: value.hold,
+    })
+  )
+  const ban = useLoreAction(
+    'discovery:ban',
+    (value: { work: number; banned: boolean }) => ({
       polity_id: polityId,
       work_id: value.work,
       banned: value.banned,
@@ -317,9 +319,9 @@ export function WorldEraSection({
   const view = useWorldEra(worldId)
   const { reason } = useGodGate()
   const blocked = readOnlyReason ?? reason()
-  const set = useLoreAction<{ era: number; hold: boolean }>(
-    '/api/actions/discovery:world_era',
-    (value) => ({ world_id: worldId, ...value })
+  const set = useLoreAction(
+    'discovery:world_era',
+    (value: { era: number; hold: boolean }) => ({ world_id: worldId, ...value })
   )
   const busy = busyOf(blocked, set.isPending)
   return (

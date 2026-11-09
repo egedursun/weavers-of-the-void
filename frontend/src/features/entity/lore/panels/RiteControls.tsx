@@ -8,6 +8,7 @@ import {
   Shapes,
   Unlock,
 } from 'lucide-react'
+import { type ActionBody } from '@/api/actions'
 import {
   damageTypeValues,
   summonFormValues,
@@ -52,13 +53,13 @@ function EffectShape({
 }) {
   const [damage, setDamage] = useState(effect.damage_type ?? NONE)
   const [form, setForm] = useState(effect.summon_form ?? NONE)
-  const save = useLoreAction<void>('/api/actions/rite:effect', () => ({
+  const save = useLoreAction('rite:effect', (_: void) => ({
     rite_id: id,
     effect: effect.effect,
     magnitude: effect.magnitude,
     detail: effect.detail ?? null,
-    damage_type: damage || null,
-    summon_form: form || null,
+    damage_type: (damage || null) as ActionBody<'rite:effect'>['damage_type'],
+    summon_form: (form || null) as ActionBody<'rite:effect'>['summon_form'],
     custom_kind_id: effect.custom_kind_id ?? null,
   }))
   const busy = busyOf(blocked, save.isPending)
@@ -107,7 +108,7 @@ function Requirements({
   blocked: string | null
 }) {
   const [needs, setNeeds] = useState<Needs>({ ...(card.requirements as Needs) })
-  const save = useLoreAction<void>('/api/actions/rite:requirements', () => ({
+  const save = useLoreAction('rite:requirements', (_: void) => ({
     rite_id: id,
     requirements: needs,
   }))
@@ -213,19 +214,23 @@ export function RiteControls({
   card: Rite
   blocked: string | null
 }) {
-  const teach = useLoreAction<{ holder: number; taught: boolean }>(
-    '/api/actions/rite:teach',
-    (value) => ({ rite_id: id, holder_id: value.holder, taught: value.taught })
+  const teach = useLoreAction(
+    'rite:teach',
+    (value: { holder: number; taught: boolean }) => ({
+      rite_id: id,
+      holder_id: value.holder,
+      taught: value.taught,
+    })
   )
-  const forbid = useLoreAction<{ authority: number; forbidden: boolean }>(
-    '/api/actions/rite:forbid',
-    (value) => ({
+  const forbid = useLoreAction(
+    'rite:forbid',
+    (value: { authority: number; forbidden: boolean }) => ({
       rite_id: id,
       authority_id: value.authority,
       forbidden: value.forbidden,
     })
   )
-  const dispel = useLoreAction<void>('/api/actions/rite:dispel', () => ({
+  const dispel = useLoreAction('rite:dispel', (_: void) => ({
     rite_id: id,
   }))
   const busy = busyOf(blocked, dispel.isPending, forbid.isPending)

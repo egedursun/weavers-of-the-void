@@ -228,11 +228,6 @@ class CosmographyRules:
 
 @dataclass(frozen=True)
 class StarLifeRules:
-    young_epochs: int = rule(6, 1, 10000, S, "Epochs a star stays young")
-    main_epochs: int = rule(80, 1, 100000, S, "Epochs a star stays in its long main life")
-    old_epochs: int = rule(20, 1, 10000, S, "Epochs a star stays old")
-    dying_epochs: int = rule(6, 1, 10000, S, "Epochs a star takes to die")
-    heavy_life_pct: int = rule(40, 1, 100, S, "Share of the usual life a heavy star lives (%)")
     old_dimming: int = rule(1, 0, 50, S, "Brightness an old star loses each epoch")
     dying_dimming: int = rule(3, 0, 50, S, "Brightness a dying star loses each epoch")
     young_radiation: int = rule(20, 0, 100, S, "Radiation a young star gives off")
@@ -245,7 +240,6 @@ class StarLifeRules:
     main_stability: int = rule(70, 0, 100, S, "Stability a star in its main life or dead sinks or rises toward")
     old_stability: int = rule(60, 0, 100, S, "Stability an old star sinks toward")
     dying_stability: int = rule(30, 0, 100, S, "Stability a dying star sinks toward")
-    supernova_chance: int = rule(15, 0, 100, S, "Chance a heavy dying star explodes when its life runs out (%)")
     band_inner_pct: int = rule(1, 0, 100, S, "Inner edge of the temperate band per point of brightness (hundredths of an orbit)")
     band_outer_pct: int = rule(5, 0, 1000, S, "Outer edge of the temperate band per point of brightness (hundredths of an orbit)")
     band_heat: int = rule(10, 0, 50, S, "Temperature a world gains inside the inner edge of its band or loses beyond the outer edge")

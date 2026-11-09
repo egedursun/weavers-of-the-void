@@ -35,9 +35,11 @@ import { MultiSelect } from '@/components/domain/MultiSelect'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { AIR_NEEDS } from '@/features/physics/labels'
 import { useNames } from '../api/queries'
 import { COMMODITY, type CommodityKind } from '../economy/labels'
 import { BAND, named } from '../environment/labels'
+import { BIOCHEMISTRY } from '../wilds/labels'
 import {
   BODY_SPEC,
   DIET_SPEC,
@@ -93,6 +95,22 @@ const LIFE_FIELDS = [
   { key: 'adult_years', icon: Users, min: 1, max: 10000, unit: 'years' },
   { key: 'elder_years', icon: Hourglass, min: 1, max: 10000, unit: 'years' },
   { key: 'fertility_pct', icon: Sprout, min: 0, max: FERTILITY_MAX, unit: '%' },
+] as const
+const GRAVITY_FIELDS = [
+  {
+    key: 'gravity_low',
+    icon: Users,
+    min: 1,
+    max: 10000,
+    unit: '% of a standard world',
+  },
+  {
+    key: 'gravity_high',
+    icon: Users,
+    min: 1,
+    max: 10000,
+    unit: '% of a standard world',
+  },
 ] as const
 const SOCIETY_FIELDS = [
   { key: 'cohesion', icon: Users2, min: 0, max: PERCENT },
@@ -246,6 +264,43 @@ export function FolkBody({ biology }: { biology: Biology }) {
                   : 'success'
             }
             hint='What their diet finds in the land against what they need'
+          />
+          <MiniStat
+            icon={BIOCHEMISTRY[biology.biochemistry]?.icon ?? Dna}
+            label='Body chemistry'
+            value={
+              BIOCHEMISTRY[biology.biochemistry]?.label ??
+              fieldLabel(biology.biochemistry)
+            }
+            tone='info'
+            hint='Worlds whose life is of another chemistry are hard for them to live on'
+          />
+          <MiniStat
+            icon={AIR_NEEDS[biology.air].icon}
+            label='Breath'
+            value={AIR_NEEDS[biology.air].label}
+            tone={AIR_NEEDS[biology.air].tone}
+            hint='A world without the air they breathe cannot hold them unaided'
+          />
+          <MiniStat
+            icon={Users}
+            label='Gravity they bear'
+            value={`${biology.gravity_low}% to ${biology.gravity_high}%`}
+            tone='muted'
+            hint='Of the pull of a standard world'
+          />
+          <MiniStat
+            icon={Building}
+            label='Habitability here'
+            value={`${biology.habitability}%`}
+            tone={
+              biology.habitability >= PERCENT / 2
+                ? 'success'
+                : biology.habitability > 0
+                  ? 'warning'
+                  : 'danger'
+            }
+            hint='How well their world suits their body, air and gravity; growth and colonies follow it'
           />
         </div>
         {biology.traits.length > 0 && (
@@ -647,6 +702,24 @@ export function FolkControls({
             blocked={busy}
             onPick={set('staple')}
           />
+          <ChoiceEditor
+            label='Body chemistry'
+            hint='The chemistry of their body; worlds of another chemistry suit them poorly'
+            value={biology.biochemistry}
+            table={BIOCHEMISTRY}
+            held={held('biochemistry')}
+            blocked={busy}
+            onPick={set('biochemistry')}
+          />
+          <ChoiceEditor
+            label='Breath'
+            hint='The air they need; a world without it cannot hold them unaided'
+            value={biology.air}
+            table={AIR_NEEDS}
+            held={held('air')}
+            blocked={busy}
+            onPick={set('air')}
+          />
           <MultiEditor
             key={`traits-${biology.traits.join()}`}
             label='Natural gifts'
@@ -674,6 +747,21 @@ export function FolkControls({
             blocked={busy}
             onSet={(values) => set('immunities')(values.map(Number))}
           />
+        </EditorGroup>
+      )}
+      {biology && (
+        <EditorGroup title='Gravity they bear' icon={Users} pairs>
+          {GRAVITY_FIELDS.map((field) =>
+            editor({
+              key: field.key,
+              label: folkLabel(field.key),
+              icon: field.icon,
+              value: biology[field.key],
+              min: field.min,
+              max: field.max,
+              unit: field.unit,
+            })
+          )}
         </EditorGroup>
       )}
       {culture && (

@@ -60,8 +60,8 @@ def age_cooling(rules: Rules, world: WorldRow) -> int:
     return -min(table.cooling_floor, steps * table.old_cooling)
 
 
-def world_heat(rules: Rules, world: WorldRow, star: StarRow | None) -> int:
-    return band_heat(rules, world, star) + age_cooling(rules, world)
+def world_heat(rules: Rules, world: WorldRow, star: StarRow | None, sky_heat: int | None = None) -> int:
+    return (band_heat(rules, world, star) if sky_heat is None else 0) + age_cooling(rules, world)
 
 
 def era_target(rules: Rules, env: RegionEnvironmentRow, era: ClimateEra | None) -> int:

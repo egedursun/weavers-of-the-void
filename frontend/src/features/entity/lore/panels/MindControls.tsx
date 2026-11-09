@@ -101,13 +101,17 @@ export function IdeologyControls({
   blocked: string | null
 }) {
   const kinds = useCustomKinds('tenet')
-  const suppress = useLoreAction<number>(
-    '/api/actions/creed:suppress',
-    (authority) => ({ ideology_id: id, authority_id: authority })
-  )
-  const tenet = useLoreAction<{ kind: number; held: boolean }>(
-    '/api/actions/creed:custom_tenet',
-    (value) => ({ ideology_id: id, kind_id: value.kind, held: value.held })
+  const suppress = useLoreAction('creed:suppress', (authority: number) => ({
+    ideology_id: id,
+    authority_id: authority,
+  }))
+  const tenet = useLoreAction(
+    'creed:custom_tenet',
+    (value: { kind: number; held: boolean }) => ({
+      ideology_id: id,
+      kind_id: value.kind,
+      held: value.held,
+    })
   )
   const busy = busyOf(blocked, tenet.isPending)
   return (

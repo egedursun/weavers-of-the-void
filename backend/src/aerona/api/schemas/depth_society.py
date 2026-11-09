@@ -14,10 +14,11 @@ from aerona.domain.enums.demography import (
     Sex,
 )
 from aerona.domain.enums.disease import ClimateAffinity, CureSource, DiseaseTarget, DiseaseVector, OutbreakStatus, SpreadPath
-from aerona.domain.enums.ecology import SizeClass
+from aerona.domain.enums.ecology import Biochemistry, SizeClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.mind import PressureKind, ValueAxis
+from aerona.domain.enums.physics import AirNeed
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
 from aerona.domain.enums.society import SocialClass
 
@@ -82,6 +83,11 @@ class BiologyView(ApiModel):
     diet: FolkDiet
     edible: list[CommodityKind]
     effects: KinEffectsView
+    biochemistry: Biochemistry = Biochemistry.CARBON_WATER
+    air: AirNeed = AirNeed.OXYGEN
+    gravity_low: int = 50
+    gravity_high: int = 160
+    habitability: int = 100
     locked: list[str]
 
 

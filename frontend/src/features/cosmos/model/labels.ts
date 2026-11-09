@@ -110,6 +110,8 @@ export const SKY_EVENT_LABEL: Record<SkyEventKind, string> = {
   black_sun: 'Rise of a black sun',
   void_storm: 'Void storm',
   flare: 'Stellar flare',
+  aurora: 'Aurora',
+  transit: 'Transit across the star',
 }
 
 export const SKY_EVENT_DESCRIPTION: Record<SkyEventKind, string> = {
@@ -125,6 +127,10 @@ export const SKY_EVENT_DESCRIPTION: Record<SkyEventKind, string> = {
     'A storm of the void tears a route apart for a few epochs; voyages on it wait or are lost.',
   flare:
     'A star flares: its worlds lose harvest, auroras burn as omens, and light sails bound to it may be scorched shut.',
+  aurora:
+    'After a flare, worlds with a strong field glow at night; their peoples read it as a sign.',
+  transit:
+    'An inner world crosses the face of the star as seen from an outer one; its peoples take note.',
 }
 
 export const DISCOVERY_LABEL: Record<Discovery, string> = {

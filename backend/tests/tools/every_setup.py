@@ -18,6 +18,7 @@ from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.flora import PlantProfileRow
 from aerona.db.tables.intrigue import HookRow, TrueNameRow
 from aerona.db.tables.mind import SkillRow
+from aerona.db.tables.physics import ImpactEventRow
 from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.sons import SonRelationRow, SonRow
@@ -36,6 +37,7 @@ from aerona.domain.enums.entity import CivilizationTier, EntityFlag, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.intrigue import HookSource, HookStrength
 from aerona.domain.enums.mind import SkillKind, SkillSource
+from aerona.domain.enums.physics import ImpactBody, ImpactOutcome
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.son import SonStatus
@@ -50,6 +52,7 @@ from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.households.formation import found_household
 from aerona.engine.phases.environment import environment_survey
+from aerona.engine.phases.physics import settle_heavens
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.services.war import take_captive
 from aerona.rules.registry import Rules
@@ -486,3 +489,25 @@ async def phenomenon(session: AsyncSession, realm: Realm) -> Ids:
     session.add(PhenomenonFootprintRow(phenomenon_entity_id=found.id, region_entity_id=realm.cosmos.region_id, intensity=50))
     await session.flush()
     return {"phenomenon": found.id}
+
+
+async def falling_body(session: AsyncSession, realm: Realm) -> Ids:
+    impact = ImpactEventRow(
+        world_id=realm.cosmos.world_id,
+        region_entity_id=realm.cosmos.region_id,
+        body=ImpactBody.ASTEROID,
+        size=40,
+        due_epoch=EPOCH + 2,
+        outcome=ImpactOutcome.PENDING,
+        winter_epochs=0,
+        text="",
+        locked=[],
+    )
+    session.add(impact)
+    await session.flush()
+    return {"impact": impact.id}
+
+
+async def world_body(session: AsyncSession, _realm: Realm) -> Ids:
+    await settle_heavens(session, Rules())
+    return {}

@@ -41,9 +41,9 @@ const SKY_NOTE: Record<SkyWorshipView['sky'], string> = {
 export function SkyWorship({ nodeId }: { nodeId: number }) {
   const worship = useSkyWorship(nodeId)
   const [chosen, setChosen] = useState<number | null>(null)
-  const change = useCosmographyAction<Change>(
+  const change = useCosmographyAction(
     'heavens:worship',
-    ({ communityId, worships }) => ({
+    ({ communityId, worships }: Change) => ({
       community_id: communityId,
       sky: worship.data?.sky ?? 'star',
       worships,

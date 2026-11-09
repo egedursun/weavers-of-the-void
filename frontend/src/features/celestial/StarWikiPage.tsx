@@ -34,6 +34,9 @@ import { ThingSections } from '@/features/entity/sections/ThingSections'
 import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverlay'
 import { RecordGallery } from '@/features/pantheon/RecordGallery'
 import { mediaUrl } from '@/features/pantheon/media'
+import { StarEvolutionSection } from '@/features/physics/StarEvolutionSection'
+import { StarFeaturesSection } from '@/features/physics/StarFeaturesSection'
+import { StarSystemSection } from '@/features/physics/StarSystemSection'
 import { CelestialDepthSection } from './CelestialDepthSection'
 import { CelestialTimeline } from './WorldWikiPage'
 import { type StarWiki, useStarWiki } from './api'
@@ -180,6 +183,9 @@ export function StarWikiView({ starId }: { starId: number }) {
         </div>
       </Section>
       <StarLifeSection star={data.star} />
+      <StarEvolutionSection starId={data.star.id} />
+      <StarSystemSection starId={data.star.id} />
+      <StarFeaturesSection starId={data.star.id} />
       <CelestialDepthSection
         kind='star'
         id={data.star.id}

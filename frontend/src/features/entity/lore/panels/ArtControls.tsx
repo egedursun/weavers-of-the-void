@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Award, Brush, Landmark } from 'lucide-react'
+import { type ActionBody } from '@/api/actions'
 import { artMediumValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -44,14 +45,14 @@ export function ArtControls({
   const [patron, setPatron] = useState<number | null>(null)
   const [author, setAuthor] = useState<number | null>(null)
   const [medium, setMedium] = useState<string>(card.medium)
-  const canonise = useLoreAction<boolean>(
-    '/api/actions/art:canonise',
-    (canon) => ({ artwork_id: id, canon })
-  )
-  const commission = useLoreAction<void>('/api/actions/art:commission', () => ({
-    patron_id: patron,
+  const canonise = useLoreAction('art:canonise', (canon: boolean) => ({
+    artwork_id: id,
+    canon,
+  }))
+  const commission = useLoreAction('art:commission', (by: number) => ({
+    patron_id: by,
     author_id: author,
-    medium,
+    medium: medium as ActionBody<'art:commission'>['medium'],
     subject_id: card.subject?.id ?? null,
     name: '',
     message: {},
@@ -111,7 +112,7 @@ export function ArtControls({
           disabledReason={
             busy ?? (patron === null ? 'Choose the patron' : undefined)
           }
-          onClick={() => commission.mutate()}
+          onClick={() => patron !== null && commission.mutate(patron)}
         >
           <Landmark />
           Commission it

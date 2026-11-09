@@ -9,6 +9,7 @@ import {
   Swords,
   TriangleAlert,
 } from 'lucide-react'
+import { type EditValues } from '@/api/actions'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import {
@@ -126,15 +127,15 @@ export function AnatomyCard({
   blocked: string | null
 }) {
   const view = useAnatomy(nodeId)
-  const edit = useWildAction<{
-    values: Record<string, unknown>
-    release?: string[]
-  }>('anatomy:edit', (vars) => ({
-    node_id: nodeId,
-    values: vars.values,
-    release: vars.release ?? [],
-  }))
-  const reroll = useWildAction<void>('anatomy:reroll', () => ({
+  const edit = useWildAction(
+    'anatomy:edit',
+    (vars: { values: EditValues; release?: string[] }) => ({
+      node_id: nodeId,
+      values: vars.values,
+      release: vars.release ?? [],
+    })
+  )
+  const reroll = useWildAction('anatomy:reroll', (_: void) => ({
     node_id: nodeId,
   }))
   const busy = busyOf(blocked, edit.isPending || reroll.isPending)

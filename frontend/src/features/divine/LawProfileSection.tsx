@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Orbit, Save, Scale, ShieldAlert, TriangleAlert } from 'lucide-react'
+import { type EditValues } from '@/api/actions'
 import {
   lawExceptionValues,
   lawScopeValues,
@@ -28,10 +29,13 @@ import { NodeName, PickRow } from './parts'
 export function LawProfileSection({ lawId }: { lawId: number }) {
   const view = useLawProfile(lawId)
   const { reason } = useGodGate()
-  const edit = useDivineAction<{
-    values: Record<string, unknown>
-    release: string[]
-  }>('law_profile:edit', (vars) => ({ law_id: lawId, ...vars }))
+  const edit = useDivineAction(
+    'law_profile:edit',
+    (vars: { values: EditValues; release: string[] }) => ({
+      law_id: lawId,
+      ...vars,
+    })
+  )
   const [effect, setEffect] = useState('')
   const [scope, setScope] = useState('')
   const [world, setWorld] = useState<number | null>(null)
@@ -47,7 +51,7 @@ export function LawProfileSection({ lawId }: { lawId: number }) {
       : null
   )
   const busy = busyOf(reason(), edit.isPending)
-  const values: Record<string, unknown> = {}
+  const values: EditValues = {}
   if (effect !== '') values.effect = effect
   if (scope !== '') values.scope = scope
   if (world !== null) values.world_id = world

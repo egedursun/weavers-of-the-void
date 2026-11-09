@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { EyeOff, GraduationCap, Save, Shapes, Unlock } from 'lucide-react'
+import { type ActionBody } from '@/api/actions'
 import { knowledgeBranchValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -32,18 +33,21 @@ export function LearningShaping({
   const [progress, setProgress] = useState('')
   const [secret, setSecret] = useState(current?.secret ?? false)
   const kinds = useCustomKinds('technique')
-  const edit = useLoreAction<{
-    values: Record<string, number | boolean>
-    release: string[]
-  }>('/api/actions/research:holder', (value) => ({
-    holder_id: holderId,
-    branch,
-    values: value.values,
-    release: value.release,
-  }))
-  const custom = useLoreAction<{ kind: number; held: boolean }>(
-    '/api/actions/research:custom_technique',
-    (value) => ({
+  const edit = useLoreAction(
+    'research:holder',
+    (value: {
+      values: Record<string, number | boolean>
+      release: string[]
+    }) => ({
+      holder_id: holderId,
+      branch: branch as ActionBody<'research:holder'>['branch'],
+      values: value.values,
+      release: value.release,
+    })
+  )
+  const custom = useLoreAction(
+    'research:custom_technique',
+    (value: { kind: number; held: boolean }) => ({
       holder_id: holderId,
       kind_id: value.kind,
       held: value.held,

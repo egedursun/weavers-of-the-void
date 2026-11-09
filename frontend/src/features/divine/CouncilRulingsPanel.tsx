@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Gavel, Plus, Save, Scale, Trash2, TriangleAlert } from 'lucide-react'
+import { type ActionBody, type EditValues } from '@/api/actions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,11 +29,14 @@ const GOD_TARGETS = new Set(['war_on_foreign_god', 'punish_son', 'holy_world'])
 const HERO_TARGETS = new Set(['bless_hero'])
 
 function RulingRow({ row, busy }: { row: RulingView; busy: string | null }) {
-  const edit = useDivineAction<{
-    values: Record<string, unknown>
-    release: string[]
-  }>('ruling:edit', (vars) => ({ ruling_id: row.id, ...vars }))
-  const revoke = useDivineAction<void>('ruling:revoke', () => ({
+  const edit = useDivineAction(
+    'ruling:edit',
+    (vars: { values: EditValues; release: string[] }) => ({
+      ruling_id: row.id,
+      ...vars,
+    })
+  )
+  const revoke = useDivineAction('ruling:revoke', (_: void) => ({
     ruling_id: row.id,
   }))
   const [until, setUntil] = useState('')
@@ -135,16 +139,20 @@ export function CouncilRulingsPanel() {
   const [world, setWorld] = useState<number | null>(null)
   const [school, setSchool] = useState('')
   const [punishment, setPunishment] = useState('chain')
-  const decree = useDivineAction<void>('ruling:decree', () => ({
-    motion,
+  const decree = useDivineAction('ruling:decree', (_: void) => ({
+    motion: motion as ActionBody<'ruling:decree'>['motion'],
     target_id: HERO_TARGETS.has(motion)
       ? hero
       : god === ''
         ? null
         : Number(god),
     world_id: world,
-    school: school === '' ? null : school,
-    punishment: motion === 'punish_son' ? punishment : null,
+    school:
+      school === '' ? null : (school as ActionBody<'ruling:decree'>['school']),
+    punishment:
+      motion === 'punish_son'
+        ? (punishment as ActionBody<'ruling:decree'>['punishment'])
+        : null,
   }))
   const busy = busyOf(reason(), decree.isPending)
   const motions = Object.fromEntries(

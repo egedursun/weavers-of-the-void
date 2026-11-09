@@ -336,6 +336,10 @@ export const FOLK_FIELDS: Record<string, string> = {
   liturgical_language_id: 'Tongue of prayer',
   trade_language_id: 'Tongue of trade',
   martial_record: 'Battle record',
+  biochemistry: 'Body chemistry',
+  air: 'Breath',
+  gravity_low: 'Least gravity',
+  gravity_high: 'Most gravity',
 }
 
 export const LANGUAGE_ICON: LucideIcon = ScrollText

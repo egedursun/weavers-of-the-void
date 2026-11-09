@@ -30,6 +30,7 @@ import {
   Wheat,
   type LucideIcon,
 } from 'lucide-react'
+import { type EditValues } from '@/api/actions'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import {
@@ -920,7 +921,7 @@ function RangeEditor({
   })
   const region = row.region?.id ?? 0
   const set = useGodAction<{
-    values: Record<string, unknown>
+    values: EditValues
     release?: string[]
   }>({
     run: ({ values, release }) =>

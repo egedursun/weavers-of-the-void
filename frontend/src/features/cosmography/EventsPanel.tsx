@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Sparkles, Trash2, Zap } from 'lucide-react'
+import { type ActionBody, type EditValues } from '@/api/actions'
 import { Button } from '@/components/ui/button'
 import { EmptyState, PagedList, Section } from '@/components/domain'
 import { MindPicker } from '@/features/entity/mind/parts'
@@ -24,13 +25,17 @@ function GalacticEventRow({
   ladder: Ladder
   catalog: CosmographyCatalog | undefined
 }) {
-  const edit = useCosmographyAction<Record<string, unknown>>(
+  const edit = useCosmographyAction(
     'galactic_event:edit',
-    (values) => ({ event_id: event.id, values, release: [] })
+    (values: EditValues) => ({
+      event_id: event.id,
+      values,
+      release: [],
+    })
   )
-  const remove = useCosmographyAction<void>(
+  const remove = useCosmographyAction(
     'galactic_event:delete',
-    () => ({ event_id: event.id }),
+    (_: void) => ({ event_id: event.id }),
     'The event is struck from the record'
   )
   const busy = edit.isPending || remove.isPending ? 'Working' : null
@@ -93,13 +98,17 @@ function DimensionalEventRow({
   ladder: Ladder
   catalog: CosmographyCatalog | undefined
 }) {
-  const edit = useCosmographyAction<Record<string, unknown>>(
+  const edit = useCosmographyAction(
     'dimensional_event:edit',
-    (values) => ({ event_id: event.id, values, release: [] })
+    (values: EditValues) => ({
+      event_id: event.id,
+      values,
+      release: [],
+    })
   )
-  const remove = useCosmographyAction<void>(
+  const remove = useCosmographyAction(
     'dimensional_event:delete',
-    () => ({ event_id: event.id }),
+    (_: void) => ({ event_id: event.id }),
     'The event is struck from the record'
   )
   const busy = edit.isPending || remove.isPending ? 'Working' : null
@@ -166,20 +175,20 @@ function TriggerForm({
   const [dimension, setDimension] = useState('')
   const [planarKind, setPlanarKind] = useState('')
   const [planarPower, setPlanarPower] = useState('50')
-  const galactic = useCosmographyAction<void>(
+  const galactic = useCosmographyAction(
     'galactic_event:trigger',
-    () => ({
+    (_: void) => ({
       galaxy_id: Number(galaxy),
-      kind: galacticKind,
+      kind: galacticKind as ActionBody<'galactic_event:trigger'>['kind'],
       intensity: Number(galacticPower) || 50,
     }),
     'The galaxy answers your hand'
   )
-  const planar = useCosmographyAction<void>(
+  const planar = useCosmographyAction(
     'dimensional_event:trigger',
-    () => ({
+    (_: void) => ({
       dimension_id: Number(dimension),
-      kind: planarKind,
+      kind: planarKind as ActionBody<'dimensional_event:trigger'>['kind'],
       intensity: Number(planarPower) || 50,
     }),
     'The dimension answers your hand'

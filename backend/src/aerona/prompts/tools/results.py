@@ -330,6 +330,13 @@ class SonResult(StrEnum):
 
     NO_SUCH_DIMENSION = "There is no dimension with id {{ id }}."
     RIFT_REFUSED = "The rift does not open: {{ reason }}"
+    IMPACT_CALLED = "A body falls toward {{ place }}; it strikes at epoch {{ epoch }}."
+    IMPACT_REFUSED = "No body falls: {{ reason }}"
+    NO_SUCH_IMPACT = "There is no coming impact with id {{ id }}."
+    IMPACT_OUT_OF_REACH = "The impact {{ id }} is coming to a world beyond your reach."
+    IMPACT_DEFLECTED = "The body is turned aside from {{ world }}."
+    TERRAFORM_BEGUN = "The work on {{ world }} has begun; it runs {{ epochs }} epochs."
+    TERRAFORM_REFUSED = "The world cannot be reshaped: {{ reason }}"
     RIFT_OPENED = "A rift is open in {{ place }} into {{ dimension }}."
     NO_SUCH_RIFT = "There is no open rift with id {{ id }}."
     RIFT_OUT_OF_REACH = "Your hand does not reach rift #{{ id }}: its world is not yours and no open road joins it to yours."

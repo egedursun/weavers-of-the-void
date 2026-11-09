@@ -16,6 +16,7 @@ import { RegardSection } from '@/features/divine/RegardSection'
 import { DedicationSection } from '@/features/foundations/DedicationSection'
 import { Lightbox } from '@/features/images/Lightbox'
 import { useImageGenEvents } from '@/features/images/imageGenState'
+import { ObserverSurveySection } from '@/features/physics/SurveySection'
 import { CommunityRelations } from '@/features/relations/CommunityRelations'
 import { CommunityWars } from '@/features/wars/CommunityWars'
 import { MilitarySection } from '@/features/wars/military/MilitarySection'
@@ -479,6 +480,10 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
             communityId={entity.id}
             readOnlyReason={readOnly}
           />
+        )}
+        {(entity.entity_type === 'people' ||
+          entity.entity_type === 'polity') && (
+          <ObserverSurveySection observerId={entity.id} />
         )}
         {entity.entity_type === 'people' && (
           <CultureDriftSection

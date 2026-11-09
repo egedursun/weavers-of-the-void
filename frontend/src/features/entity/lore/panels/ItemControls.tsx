@@ -8,6 +8,7 @@ import {
   Plus,
   Trash2,
 } from 'lucide-react'
+import { type ActionBody } from '@/api/actions'
 import { itemDeedValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -85,22 +86,22 @@ export function ItemControls({
   const [note, setNote] = useState('')
   const [knowledge, setKnowledge] = useState<number | null>(null)
   const [fidelity, setFidelity] = useState(String(PERCENT))
-  const transfer = useLoreAction<number>(
-    '/api/actions/item:transfer',
-    (receiver) => ({ item_id: id, receiver_id: receiver, reason: '' })
-  )
-  const addDeed = useLoreAction<void>('/api/actions/item:deed', () => ({
+  const transfer = useLoreAction('item:transfer', (receiver: number) => ({
     item_id: id,
-    deed,
+    receiver_id: receiver,
+    reason: '',
+  }))
+  const addDeed = useLoreAction('item:deed', (_: void) => ({
+    item_id: id,
+    deed: deed as ActionBody<'item:deed'>['deed'],
     note,
   }))
-  const removeDeed = useLoreAction<number>(
-    '/api/actions/item:deed_remove',
-    (deedId) => ({ deed_id: deedId })
-  )
-  const content = useLoreAction<{ knowledge: number; fidelity: number }>(
-    '/api/actions/item:content',
-    (value) => ({
+  const removeDeed = useLoreAction('item:deed_remove', (deedId: number) => ({
+    deed_id: deedId,
+  }))
+  const content = useLoreAction(
+    'item:content',
+    (value: { knowledge: number; fidelity: number }) => ({
       book_id: id,
       knowledge_id: value.knowledge,
       fidelity: value.fidelity,

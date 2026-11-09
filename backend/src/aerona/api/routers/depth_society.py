@@ -70,6 +70,7 @@ from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
 from aerona.engine.body.customs import culture_of, people_of
+from aerona.engine.cosmos.lifeforms import habitability
 from aerona.engine.demography.biology import (
     battle_edge,
     edible,
@@ -223,6 +224,11 @@ async def biology_view(session: AsyncSession, rules: Rules, community: EntityRow
         size_class=biology.size_class,
         diet=biology.diet,
         edible=sorted(edible(biology.diet), key=lambda item: item.value),
+        biochemistry=biology.biochemistry,
+        air=biology.air,
+        gravity_low=round(biology.gravity_low * PERCENT),
+        gravity_high=round(biology.gravity_high * PERCENT),
+        habitability=await habitability(session, rules, biology, community.world_id),
         effects=KinEffectsView(
             food_pct=round(food_need(rules, biology) * PERCENT),
             room_pct=round(footprint(rules, biology) * PERCENT),

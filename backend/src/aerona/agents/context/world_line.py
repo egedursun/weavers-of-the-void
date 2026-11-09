@@ -19,12 +19,16 @@ from aerona.catalog.cosmography import (
 )
 from aerona.catalog.stars import STAR_TYPE_LABELS
 from aerona.catalog.worlds import ATMOSPHERE_LABELS, GRAVITY_LABELS, WORLD_TYPES
+from aerona.core.grammar import an
 from aerona.db.tables.celestial import StarRow
 from aerona.db.tables.cosmography import CelestialReadingRow, CosmicBeingProfileRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.physics import ImpactEventRow, TerraformingRow, WorldLifeRow, WorldPhysicsRow
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.physics import ImpactOutcome
 from aerona.engine.cosmos.placement import Cosmography, cosmography_of
+from aerona.engine.cosmos.terraform import AIM_LABELS
 from aerona.engine.phases.world_age import golden_age_status
 from aerona.engine.primitives.queries import canon
 from aerona.prompts import PromptId, render
@@ -81,6 +85,30 @@ async def heaven_lines(scope: Scope, ladder: Cosmography) -> list[str]:
     return lines
 
 
+async def body_lines(scope: Scope, world_id: int) -> list[str]:
+    lines: list[str] = []
+    physics = await scope.session.get(WorldPhysicsRow, world_id)
+    if physics is not None:
+        lines.append(
+            f"surface {round(physics.surface_temperature)} K, gravity {physics.gravity_g:g} g, air pressure {physics.pressure:g}, "
+            f"water {physics.hydrosphere}/100, ice {physics.ice}/100"
+        )
+    life = await scope.session.get(WorldLifeRow, world_id)
+    if life is not None:
+        lines.append(f"life: {life.complexity.value}")
+    pending = select(ImpactEventRow).where(ImpactEventRow.world_id == world_id, ImpactEventRow.outcome == ImpactOutcome.PENDING)
+    for impact in await scope.session.scalars(pending.order_by(ImpactEventRow.due_epoch, ImpactEventRow.id)):
+        region = await scope.session.get(EntityRow, impact.region_entity_id) if impact.region_entity_id is not None else None
+        lines.append(
+            f"impact#{impact.id}: {an(impact.body.value.replace('_', ' '))} of size {impact.size}/100 strikes"
+            + (f" {region.name}" if region is not None else "")
+            + f" at age {impact.due_epoch}"
+        )
+    for project in await scope.session.scalars(select(TerraformingRow).where(TerraformingRow.world_id == world_id).order_by(TerraformingRow.id)):
+        lines.append(f"a work to {AIM_LABELS[project.aim]}, {project.epochs_left} ages left")
+    return lines
+
+
 async def world_line_context(scope: Scope, world_id: int) -> WorldLineContext | None:
     world = scope.worlds.get(world_id)
     if world is None:
@@ -110,6 +138,7 @@ async def world_line_context(scope: Scope, world_id: int) -> WorldLineContext | 
         open_rifts=rifts,
         phenomena=phenomena,
         heavens=await heaven_lines(scope, ladder),
+        body=await body_lines(scope, world.id),
         golden_age_epochs=golden.epochs if golden.active else None,
         golden_age_since=golden.since_epoch,
         golden_age_gain=golden.prosperity_gain,

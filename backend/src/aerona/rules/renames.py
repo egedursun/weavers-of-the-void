@@ -13,6 +13,7 @@ RENAMED_RULES: Mapping[RuleKey, RuleKey] = MappingProxyType(
         **WAR_RENAMES,
         **{("galaxy_types", f"{kind.value}_arms"): ("galaxy_types", f"{kind.value}_arms_max") for kind in GalaxyType},
         ("mobilisation", "martial_pct"): ("levies", "martial_pct"),
+        ("star_life", "main_epochs"): ("stellar_evolution", "sun_life_epochs"),
         ("mobilisation", "cohesion_pct"): ("levies", "cohesion_pct"),
         ("mobilisation", "harvest_pct"): ("levies", "harvest_pct"),
         ("son_tools", "stitch_per_epoch"): ("son_tools", "seal_per_epoch"),

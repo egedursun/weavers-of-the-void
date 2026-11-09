@@ -95,7 +95,8 @@ async def test_a_flare_scorches_fields_omens_and_sails(ctx: TickContext, cosmos:
     result = await sky_event(flare_ctx, SkyEventKind.FLARE, SkyOrder(star_id=cosmos.star.id))
     assert "flared" in result.text
     assert region.stats.fertility == 50 - ctx.rules.sky.flare_fertility_loss
-    assert people.stats.piety == 10 + ctx.rules.sky.flare_piety_gain
+    aurora = cosmos.home.magnetism // 2 * ctx.rules.orbits.aurora_piety_pct // 100
+    assert people.stats.piety == 10 + ctx.rules.sky.flare_piety_gain + aurora
     assert not sail.active and sail.closure is RouteClosure.SCORCHED
     assert sail.temp_closed_until_epoch == ctx.epoch + ctx.rules.sky.flare_sail_epochs
     book = await RouteBook.load(ctx.session, ctx.rules, ctx.epoch)

@@ -306,19 +306,26 @@ class TypedIndex:
             if not columns:
                 continue
             grouped: dict[int, list[Any]] = defaultdict(list)
+            ownerless: list[Any] = []
             for row in await session.scalars(_rows(mapper, table)):
                 key = getattr(row, owner)
                 if isinstance(key, int):
                     grouped[key].append(row)
+                else:
+                    ownerless.append(row)
+            index.add_records(mapper, ownerless)
             single = shape_of_table(table) is not None
             for node_id, rows in grouped.items():
                 index.sections[node_id].append(index._section(table, columns, rows, single))
         return index
 
     async def load_records(self, session: AsyncSession, mapper: Mapper[Any]) -> None:
+        self.add_records(mapper, list(await session.scalars(_rows(mapper, table_name(mapper)))))
+
+    def add_records(self, mapper: Mapper[Any], rows: list[Any]) -> None:
         columns = [column for column in mapper.local_table.columns if column.key not in SKIPPED_COLUMNS or column.primary_key]
         table = RecordTable(title_of(table_name(mapper)), [words(column.key) for column in columns])
-        for row in await session.scalars(_rows(mapper, table_name(mapper))):
+        for row in rows:
             table.rows.append([self.value(column, getattr(row, column.key)) for column in columns])
         filled = [index for index in range(len(columns)) if any(row[index] for row in table.rows)]
         if table.rows and filled:

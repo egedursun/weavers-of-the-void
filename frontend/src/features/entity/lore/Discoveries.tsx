@@ -13,6 +13,7 @@ import {
   TriangleAlert,
   Users,
 } from 'lucide-react'
+import { type ActionBody } from '@/api/actions'
 import { greatFieldValues } from '@/api/generated/schema'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -42,25 +43,31 @@ const TILE =
   'flex h-full min-w-0 flex-col gap-2 rounded-lg border p-3 @md/lore:last:odd:col-span-2'
 
 function useRowEdit() {
-  return useLoreAction<{
-    table: string
-    key: Key
-    values: Record<string, number | string | boolean>
-    hold: boolean
-  }>('/api/actions/record_row:edit', (value) => value)
+  return useLoreAction(
+    'record_row:edit',
+    (value: {
+      table: string
+      key: Key
+      values: Record<string, number | string | boolean>
+      hold: boolean
+    }) => value
+  )
 }
 
 function useRowCreate() {
-  return useLoreAction<{
-    table: string
-    values: Record<string, number | string | boolean | number[]>
-  }>('/api/actions/record_row:create', (value) => value)
+  return useLoreAction(
+    'record_row:create',
+    (value: {
+      table: string
+      values: Record<string, number | string | boolean | number[]>
+    }) => value
+  )
 }
 
 function useRowRemove() {
-  return useLoreAction<{ table: string; key: Key }>(
-    '/api/actions/record_row:delete',
-    (value) => value
+  return useLoreAction(
+    'record_row:delete',
+    (value: { table: string; key: Key }) => value
   )
 }
 
@@ -165,9 +172,13 @@ function GreatPeopleCard({
   card: LearningCard
   blocked: string | null
 }) {
-  const raise = useLoreAction<{ mortal: number; field: string }>(
-    '/api/actions/discovery:raise_great',
-    (value) => ({ mortal_id: value.mortal, field: value.field, deed: true })
+  const raise = useLoreAction(
+    'discovery:raise_great',
+    (value: { mortal: number; field: string }) => ({
+      mortal_id: value.mortal,
+      field: value.field as ActionBody<'discovery:raise_great'>['field'],
+      deed: true,
+    })
   )
   const remove = useRowRemove()
   const [mortal, setMortal] = useState<number | null>(null)
@@ -288,9 +299,12 @@ function IncidentsCard({
   card: LearningCard
   blocked: string | null
 }) {
-  const strike = useLoreAction<{ kind: string }>(
-    '/api/actions/discovery:incident',
-    (value) => ({ holder_id: card.holder_id, kind: value.kind })
+  const strike = useLoreAction(
+    'discovery:incident',
+    (value: { kind: string }) => ({
+      holder_id: card.holder_id,
+      kind: value.kind as ActionBody<'discovery:incident'>['kind'],
+    })
   )
   const remove = useRowRemove()
   const [kind, setKind] = useState('')
@@ -483,14 +497,15 @@ function BlueprintsCard({
   card: LearningCard
   blocked: string | null
 }) {
-  const grant = useLoreAction<{
-    kind: string
-    subject: string
-    quality: number
-  }>('/api/actions/discovery:design', (value) => ({
-    holder_id: card.holder_id,
-    ...value,
-  }))
+  const grant = useLoreAction(
+    'discovery:design',
+    (value: { kind: string; subject: string; quality: number }) => ({
+      holder_id: card.holder_id,
+      kind: value.kind as ActionBody<'discovery:design'>['kind'],
+      subject: value.subject,
+      quality: value.quality,
+    })
+  )
   const edit = useRowEdit()
   const remove = useRowRemove()
   const [kind, setKind] = useState('')

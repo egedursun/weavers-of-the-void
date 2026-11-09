@@ -13,6 +13,7 @@ import {
   Trash2,
   Unlock,
 } from 'lucide-react'
+import { type ActionBody, type EditValues } from '@/api/actions'
 import { speciesUseValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -122,9 +123,13 @@ function PreyRow({
 
 export function FoodLinkControls({ id, card, blocked }: Blocked) {
   const [fresh, setFresh] = useState<number | null>(null)
-  const set = useWildAction<{ prey: number; link: Link }>(
+  const set = useWildAction(
     'species:prey',
-    ({ prey, link }) => ({ hunter_id: id, prey_id: prey, link }),
+    ({ prey, link }: { prey: number; link: Link }) => ({
+      hunter_id: id,
+      prey_id: prey,
+      link,
+    }),
     () => setFresh(null)
   )
   const busy = busyOf(blocked, set.isPending)
@@ -215,14 +220,19 @@ export function FoodLinkControls({ id, card, blocked }: Blocked) {
 
 export function HostControls({ id, card, blocked }: Blocked) {
   const [fresh, setFresh] = useState<number | null>(null)
-  const set = useWildAction<{
-    disease: number
-    carried: boolean
-    immune: boolean
-    release?: boolean
-  }>(
+  const set = useWildAction(
     'species:host',
-    ({ disease, carried, immune, release }) => ({
+    ({
+      disease,
+      carried,
+      immune,
+      release,
+    }: {
+      disease: number
+      carried: boolean
+      immune: boolean
+      release?: boolean
+    }) => ({
       species_id: id,
       disease_id: disease,
       carried,
@@ -374,7 +384,7 @@ function KindRow({
   held: boolean
   busy: string | null
   onToggle: (held: boolean) => void
-  onSave: (values: Record<string, unknown>) => void
+  onSave: (values: EditValues) => void
   onRelease: () => void
   onDrop: () => void
 }) {
@@ -470,15 +480,19 @@ export function KeepingControls({ id, card, blocked }: Blocked) {
   const [name, setName] = useState('')
   const [base, setBase] = useState('')
   const [output, setOutput] = useState('100')
-  const toggle = useWildAction<{ kind: number; held: boolean }>(
+  const toggle = useWildAction(
     'species:custom_use',
-    ({ kind, held }) => ({ species_id: id, kind_id: kind, held })
+    ({ kind, held }: { kind: number; held: boolean }) => ({
+      species_id: id,
+      kind_id: kind,
+      held,
+    })
   )
-  const create = useWildAction<void>(
+  const create = useWildAction(
     'use_kind:create',
-    () => ({
+    (_: void) => ({
       name: name.trim(),
-      base_use: base,
+      base_use: base as ActionBody<'use_kind:create'>['base_use'],
       output_pct: Math.round(Number(output) || 0),
     }),
     () => {
@@ -487,16 +501,23 @@ export function KeepingControls({ id, card, blocked }: Blocked) {
       setOutput('100')
     }
   )
-  const edit = useWildAction<{
-    kind: number
-    values: Record<string, unknown>
-    release: string[]
-  }>('use_kind:edit', ({ kind, values, release }) => ({
-    kind_id: kind,
-    values,
-    release,
-  }))
-  const drop = useWildAction<number>('use_kind:drop', (kind) => ({
+  const edit = useWildAction(
+    'use_kind:edit',
+    ({
+      kind,
+      values,
+      release,
+    }: {
+      kind: number
+      values: EditValues
+      release: string[]
+    }) => ({
+      kind_id: kind,
+      values,
+      release,
+    })
+  )
+  const drop = useWildAction('use_kind:drop', (kind: number) => ({
     kind_id: kind,
   }))
   const busy = busyOf(
@@ -633,7 +654,7 @@ export function HerdDrop({
   name: string
   blocked: string | null
 }) {
-  const drop = useWildAction<void>('herd:drop', () => ({
+  const drop = useWildAction('herd:drop', (_: void) => ({
     community_id: communityId,
     species_id: speciesId,
   }))

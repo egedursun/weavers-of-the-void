@@ -23,6 +23,16 @@ async def found[Row](ctx, kind: type[Row], key: object) -> Row:
 async def remove_thing(ctx, thing_id: int) -> None:
     row = await found(ctx, ThingRow, thing_id)
     await ctx.session.delete(row)
+
+
+def apply[Row](row: Row, values: dict[str, object]) -> Row:
+    for key, value in values.items():
+        setattr(row, key, value)
+    return row
+
+
+async def edit_thing(ctx, thing_id: int, values: dict[str, object]) -> ThingRow:
+    return apply(await found(ctx, ThingRow, thing_id), values)
 """
 
 
@@ -43,3 +53,10 @@ def test_a_row_fetched_through_a_generic_finder_is_known_by_the_class_it_was_giv
     code = control.Code({"aerona.db.tables.things": ast.parse(TABLES), "aerona.engine.things": ast.parse(LEVERS)})
     node = code.defs[("aerona.engine.things", "remove_thing")][0]
     assert code.verbs("aerona.engine.things", node)["delete"] == {"things"}
+
+
+def test_a_row_handed_to_a_generic_editor_is_known_as_edited() -> None:
+    control = checker()
+    code = control.Code({"aerona.db.tables.things": ast.parse(TABLES), "aerona.engine.things": ast.parse(LEVERS)})
+    node = code.defs[("aerona.engine.things", "edit_thing")][0]
+    assert code.verbs("aerona.engine.things", node)["edit"] == {"things"}

@@ -112,6 +112,7 @@ class WorldLineContext(PromptContext):
     open_rifts: int = 0
     phenomena: list[str] = Field(default_factory=list)
     heavens: list[str] = Field(default_factory=list)
+    body: list[str] = Field(default_factory=list)
 
 
 class CosmosWorld(ContextItem):

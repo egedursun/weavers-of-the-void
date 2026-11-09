@@ -28,9 +28,9 @@ export function CelestialReadingsSection({
   const view = useCosmography()
   const [people, setPeople] = useState<number | null>(null)
   const [reading, setReading] = useState('')
-  const set = useCosmographyAction<Order>(
+  const set = useCosmographyAction(
     'celestial_reading:set',
-    (vars) => ({ celestial_id: celestialId, ...vars }),
+    (vars: Order) => ({ celestial_id: celestialId, ...vars }),
     'The reading of the sky is set'
   )
   const busy = set.isPending ? 'Working' : null

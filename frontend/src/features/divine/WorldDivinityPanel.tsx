@@ -7,6 +7,7 @@ import {
   SlidersHorizontal,
   TriangleAlert,
 } from 'lucide-react'
+import { type ActionBody, type EditValues } from '@/api/actions'
 import { domainHookValues, domainValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -35,18 +36,30 @@ const words = (value: string) =>
 export function WorldDivinityPanel({ worldId }: { worldId: number }) {
   const view = useWorldDivinity(worldId)
   const { reason } = useGodGate()
-  const set = useDivineAction<{ domain: string; hook: string; pct: number }>(
+  const set = useDivineAction(
     'domain_hook:set',
-    (vars) => ({ world_id: worldId, ...vars })
+    (vars: { domain: string; hook: string; pct: number }) => ({
+      world_id: worldId,
+      domain: vars.domain as ActionBody<'domain_hook:set'>['domain'],
+      hook: vars.hook as ActionBody<'domain_hook:set'>['hook'],
+      pct: vars.pct,
+    })
   )
-  const clear = useDivineAction<{ domain: string; hook: string }>(
+  const clear = useDivineAction(
     'domain_hook:clear',
-    (vars) => ({ world_id: worldId, ...vars })
+    (vars: { domain: string; hook: string }) => ({
+      world_id: worldId,
+      domain: vars.domain as ActionBody<'domain_hook:clear'>['domain'],
+      hook: vars.hook as ActionBody<'domain_hook:clear'>['hook'],
+    })
   )
-  const attend = useDivineAction<{
-    values: Record<string, unknown>
-    release: string[]
-  }>('attention:set', (vars) => ({ world_id: worldId, ...vars }))
+  const attend = useDivineAction(
+    'attention:set',
+    (vars: { values: EditValues; release: string[] }) => ({
+      world_id: worldId,
+      ...vars,
+    })
+  )
   const [domain, setDomain] = useState('')
   const [hook, setHook] = useState('')
   const [pct, setPct] = useState('100')

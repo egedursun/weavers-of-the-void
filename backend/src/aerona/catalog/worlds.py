@@ -597,6 +597,8 @@ SKY_EVENT_LABELS: dict[SkyEventKind, str] = {
     SkyEventKind.BLACK_SUN: "Birth of a black sun",
     SkyEventKind.VOID_STORM: "Void storm",
     SkyEventKind.FLARE: "Stellar flare",
+    SkyEventKind.AURORA: "Aurora",
+    SkyEventKind.TRANSIT: "Transit across the star",
 }
 
 

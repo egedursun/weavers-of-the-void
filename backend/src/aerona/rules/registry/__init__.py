@@ -241,6 +241,16 @@ from aerona.rules.registry.native_faith import NativeFaithRules
 from aerona.rules.registry.notifications import NotificationsRules
 from aerona.rules.registry.opportunities import OpportunitiesRules
 from aerona.rules.registry.pantheon import PantheonRules
+from aerona.rules.registry.physics import (
+    CosmicFeatureRules,
+    ImpactRules,
+    LifeClassRules,
+    OrbitRules,
+    PlanetaryClimateRules,
+    StellarEvolutionRules,
+    SurveyRules,
+    TerraformingRules,
+)
 from aerona.rules.registry.places import PlacesRules
 from aerona.rules.registry.politics import PoliticsRules
 from aerona.rules.registry.polity import (
@@ -654,6 +664,14 @@ class Rules:
     dimensions: DimensionRules = field(default_factory=DimensionRules)
     rifts: RiftRules = field(default_factory=RiftRules)
     cosmic_beings: CosmicBeingRules = field(default_factory=CosmicBeingRules)
+    stellar_evolution: StellarEvolutionRules = field(default_factory=StellarEvolutionRules)
+    orbits: OrbitRules = field(default_factory=OrbitRules)
+    planetary_climate: PlanetaryClimateRules = field(default_factory=PlanetaryClimateRules)
+    impacts: ImpactRules = field(default_factory=ImpactRules)
+    terraforming: TerraformingRules = field(default_factory=TerraformingRules)
+    cosmic_features: CosmicFeatureRules = field(default_factory=CosmicFeatureRules)
+    survey: SurveyRules = field(default_factory=SurveyRules)
+    life_classes: LifeClassRules = field(default_factory=LifeClassRules)
     phenomena: PhenomenaRules = field(default_factory=PhenomenaRules)
     cosmography: CosmographyRules = field(default_factory=CosmographyRules)
     star_life: StarLifeRules = field(default_factory=StarLifeRules)

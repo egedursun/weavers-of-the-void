@@ -12,6 +12,7 @@ from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.celestial import StarRow
 from aerona.db.tables.cosmography import GalacticEventRow, GalacticStructureRow, GalaxyRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.physics import StarSystemRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
@@ -25,6 +26,8 @@ from aerona.engine.cosmos.kinds import CLUSTER_KIND_MECHANICS, GALAXY_TYPE_MECHA
 from aerona.engine.cosmos.ladder import GalaxyDraft, birth_position, create_galaxy, settle_star
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.stars import StarSpec, create_star
+from aerona.engine.cosmos.stellar import physics_of_stars
+from aerona.engine.cosmos.systems import join_system
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
@@ -152,8 +155,25 @@ async def bear_stars(ctx: TickContext, cosmography: Cosmography, galaxy: GalaxyR
         )
         cosmography.stars[star.id] = star
         born += 1
+        await pair_newborn(ctx, cosmography, star, structure, rng)
         await note(ctx, f"A new star, {star.name}, was born in {structure.name} of {galaxy.name}.", key="galaxy.star_born", kind=ChronicleKind.SKY)
     return born
+
+
+async def pair_newborn(ctx: TickContext, cosmography: Cosmography, star: StarRow, structure: GalacticStructureRow, rng: SeededRandom) -> bool:
+    table = ctx.rules.stellar_evolution
+    siblings = sorted((row for row in cosmography.stars.values() if row.structure_id == structure.id and row.id != star.id), key=lambda row: row.id)
+    if not siblings or not rng.chance(table.binary_chance):
+        return False
+    primary = (await physics_of_stars(ctx.session, ctx.rules, [siblings[0]]))[siblings[0].id]
+    if primary.system_id is None:
+        return False
+    await join_system(ctx.session, ctx.rules, star, primary.system_id)
+    system = await ctx.session.get(StarSystemRow, primary.system_id)
+    if system is not None and "separation" not in system.locked:
+        system.separation = table.binary_separation_tenths / 10
+    await note(ctx, f"{star.name} was born as the companion of {siblings[0].name}.", key="star.binary_born", kind=ChronicleKind.SKY)
+    return True
 
 
 async def nucleus_outburst(ctx: TickContext, galaxy: GalaxyRow) -> None:

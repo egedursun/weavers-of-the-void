@@ -24,11 +24,12 @@ from aerona.domain.enums.demography import (
     MartialStyle,
     NaturalTrait,
 )
-from aerona.domain.enums.ecology import SizeClass
+from aerona.domain.enums.ecology import Biochemistry, SizeClass
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
+from aerona.domain.enums.physics import AirNeed
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import PeopleStats
 from aerona.engine.context import TickContext
@@ -56,7 +57,11 @@ BIOLOGY_CHOICES: dict[str, type[StrEnum]] = {
     "body_plan": BodyPlan,
     "size_class": SizeClass,
     "diet": FolkDiet,
+    "biochemistry": Biochemistry,
+    "air": AirNeed,
 }
+BIOLOGY_GRAVITY = ("gravity_low", "gravity_high")
+GRAVITY_HUNDREDTHS = (1, 10000)
 CULTURE_CHOICES: dict[str, type[StrEnum]] = {
     "aesthetic": Aesthetic,
     "martial_style": MartialStyle,
@@ -78,6 +83,7 @@ EDITABLE = frozenset(
         *BIOLOGY_NUMBERS,
         *CULTURE_NUMBERS,
         *BIOLOGY_CHOICES,
+        *BIOLOGY_GRAVITY,
         *CULTURE_CHOICES,
         *CULTURE_FLAGS,
         *BIOLOGY_LISTS,
@@ -167,17 +173,30 @@ def set_record(culture: PeopleCultureRow, key: str, value: Value) -> None:
     culture.martial_record = record
 
 
-async def apply(ctx: TickContext, entity: EntityRow, rows: tuple[PeopleBiologyRow, PeopleCultureRow], key: str, value: Value) -> None:
-    biology, culture = rows
+def set_biology(biology: PeopleBiologyRow, key: str, value: Value) -> bool:
     if key in BIOLOGY_NUMBERS:
         setattr(biology, key, number(key, value, *BIOLOGY_NUMBERS[key]))
-        lock(biology, key)
-    elif key in CULTURE_NUMBERS:
-        setattr(culture, key, number(key, value, *CULTURE_NUMBERS[key]))
-        lock(culture, key)
     elif key in BIOLOGY_CHOICES:
         setattr(biology, key, choice(key, value, BIOLOGY_CHOICES[key]))
-        lock(biology, key)
+    elif key in BIOLOGY_GRAVITY:
+        setattr(biology, key, number(key, value, *GRAVITY_HUNDREDTHS) / PERCENT)
+        if biology.gravity_low > biology.gravity_high:
+            raise ValidationFailedError("A people cannot bear less gravity than the least it needs.")
+    elif key in BIOLOGY_LISTS:
+        setattr(biology, key, choices(key, value, BIOLOGY_LISTS[key]))
+    else:
+        return False
+    lock(biology, key)
+    return True
+
+
+async def apply(ctx: TickContext, entity: EntityRow, rows: tuple[PeopleBiologyRow, PeopleCultureRow], key: str, value: Value) -> None:
+    biology, culture = rows
+    if set_biology(biology, key, value):
+        return
+    if key in CULTURE_NUMBERS:
+        setattr(culture, key, number(key, value, *CULTURE_NUMBERS[key]))
+        lock(culture, key)
     elif key == "funeral_rite":
         set_rite(culture, choice(key, value, FuneralCustom))
         await rite_tradition(ctx.session, ctx.rules, entity, culture, ctx.epoch)
@@ -188,9 +207,6 @@ async def apply(ctx: TickContext, entity: EntityRow, rows: tuple[PeopleBiologyRo
     elif key in CULTURE_FLAGS:
         setattr(culture, key, bool(value))
         lock(culture, key)
-    elif key in BIOLOGY_LISTS:
-        setattr(biology, key, choices(key, value, BIOLOGY_LISTS[key]))
-        lock(biology, key)
     elif key in CULTURE_LISTS:
         setattr(culture, key, choices(key, value, CULTURE_LISTS[key]))
         lock(culture, key)

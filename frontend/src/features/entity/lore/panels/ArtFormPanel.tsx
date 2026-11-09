@@ -53,16 +53,15 @@ export function ArtFormPanel({
   card: Card<'art_form'>
   blocked: string | null
 }) {
-  const practise = useLoreAction<{
-    holder: number
-    mastery: number
-    present: boolean
-  }>('/api/actions/art_form:practitioner', (value) => ({
-    art_form_id: id,
-    holder_id: value.holder,
-    mastery: value.mastery,
-    present: value.present,
-  }))
+  const practise = useLoreAction(
+    'art_form:practitioner',
+    (value: { holder: number; mastery: number; present: boolean }) => ({
+      art_form_id: id,
+      holder_id: value.holder,
+      mastery: value.mastery,
+      present: value.present,
+    })
+  )
   const [holder, setHolder] = useState<number | null>(null)
   const edit = useLoreEdit(id)
   const busy = busyOf(blocked, practise.isPending)

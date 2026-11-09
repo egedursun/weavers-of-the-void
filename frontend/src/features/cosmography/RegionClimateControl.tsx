@@ -39,9 +39,9 @@ export function RegionClimateControl({
   refresh: QueryKey
 }) {
   const { reason } = useGodGate()
-  const turn = useCosmographyAction<Turn>(
+  const turn = useCosmographyAction(
     'region_climate:turn',
-    (value) => ({ region_id: ground.region_id, turn: value }),
+    (value: Turn) => ({ region_id: ground.region_id, turn: value }),
     'The climate of the land turns',
     [refresh]
   )

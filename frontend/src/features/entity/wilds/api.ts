@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { type ActionBody, postAction } from '@/api/actions'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
@@ -124,17 +125,16 @@ export type WildAction =
   | 'anatomy:edit'
   | 'anatomy:reroll'
 
-export function runWild(name: WildAction, body: Record<string, unknown>) {
-  return unwrap(
-    api.POST(`/api/actions/${name}` as '/api/actions/species:prey', {
-      body: body as never,
-    })
-  )
+export function runWild<Name extends WildAction>(
+  name: Name,
+  body: ActionBody<Name>
+) {
+  return postAction(name, body)
 }
 
-export function useWildAction<T>(
-  name: WildAction,
-  toBody: (vars: T) => Record<string, unknown>,
+export function useWildAction<Name extends WildAction, T>(
+  name: Name,
+  toBody: (vars: T) => ActionBody<Name>,
   onDone?: () => void
 ) {
   return useGodAction<T>({

@@ -331,6 +331,21 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "reason": "Why you open it",
         },
     ),
+    T.CALL_IMPACT: ToolText(
+        "You call a body from the sky down upon a region of a world. It strikes next epoch unless someone turns it aside: it ruins the region, "
+        "leaves a crater, can bring a winter over the whole world and can leave metal from the sky. "
+        "{{ rules.impacts.call_essence }} essence, 1 action.",
+        {"region_id": "The id of the region it falls on", "reason": "Why you call it"},
+    ),
+    T.DEFLECT_IMPACT: ToolText(
+        "You turn aside a body that is due to strike a world. {{ rules.impacts.deflect_essence }} essence, 1 action.",
+        {"impact_id": "The id of the coming impact", "reason": "Why you turn it aside"},
+    ),
+    T.TERRAFORM_WORLD: ToolText(
+        "You begin to reshape a world over several epochs: its air, its warmth, its water or how much light its face throws back. "
+        "Native life of another chemistry may suffer from the change. {{ rules.terraforming.essence }} essence, 1 action.",
+        {"world_id": "The id of the world", "aim": "What you change about it", "reason": "Why you reshape it"},
+    ),
     T.SEAL_RIFT: ToolText(
         "You seal an open rift; its passage closes. {{ rules.rifts.seal_essence }} essence, 1 action.",
         {"rift_id": "The id of the open rift", "reason": "Why you seal it"},

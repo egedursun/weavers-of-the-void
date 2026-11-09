@@ -4,6 +4,7 @@ import {
   CloudFog,
   Crown,
   Eye,
+  Gem,
   History,
   Layers,
   Orbit,
@@ -23,6 +24,7 @@ import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
 import { Text } from '@/components/typography'
 import { useCosmos } from '@/features/cosmos/api'
 import { hasWebGL2 } from '@/features/cosmos/useCosmosViewSettings'
+import { HeavensPhysicsPanel } from '@/features/physics/HeavensPhysicsPanel'
 import { ApocalypseVariantPanel } from './ApocalypseVariantPanel'
 import { BeingsPanel } from './BeingsPanel'
 import { EventsPanel } from './EventsPanel'
@@ -347,6 +349,10 @@ export function HeavensView({
               <Sparkles />
               Phenomena
             </TabsTrigger>
+            <TabsTrigger value='bodies'>
+              <Gem />
+              Bodies
+            </TabsTrigger>
             <TabsTrigger value='events'>
               <History />
               Events
@@ -388,6 +394,9 @@ export function HeavensView({
           </TabsContent>
           <TabsContent value='phenomena'>
             <PhenomenaPanel data={data} catalog={shape} />
+          </TabsContent>
+          <TabsContent value='bodies'>
+            <HeavensPhysicsPanel />
           </TabsContent>
           <TabsContent value='events'>
             <EventsPanel ladder={ladder} catalog={shape} />

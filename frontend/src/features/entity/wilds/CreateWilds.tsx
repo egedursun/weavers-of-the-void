@@ -1,5 +1,6 @@
 import { type ReactNode, useId, useState } from 'react'
 import { Dna, Footprints, Plus, Sparkles, Wand2 } from 'lucide-react'
+import { type ActionBody } from '@/api/actions'
 import {
   beastTemperValues,
   biochemistryValues,
@@ -47,6 +48,9 @@ import {
   titled,
 } from './labels'
 import { NumberField, SwitchField } from './parts'
+
+type SpeciesBody = ActionBody<'species:create'>
+type BeastBody = ActionBody<'beast:create'>
 
 const SPECIES_STATS = [
   ['hp', 'Health', 1, 100000],
@@ -268,24 +272,24 @@ export function CreateSpeciesDialog({ regionId }: { regionId?: number }) {
   const shownStats = { ...sizedDefaults(SPECIES_BASE, size), ...stats }
   const [power, setPower] = useState('2')
   const { reason } = useGodGate()
-  const create = useWildAction<void>(
+  const create = useWildAction(
     'species:create',
-    () => ({
+    (land: number): SpeciesBody => ({
       name: name.trim(),
       description: description.trim(),
-      region_id: region,
-      body_plan: plan,
-      size_class: size,
-      diet,
-      sociality: social,
+      region_id: land,
+      body_plan: plan as SpeciesBody['body_plan'],
+      size_class: size as SpeciesBody['size_class'],
+      diet: diet as SpeciesBody['diet'],
+      sociality: social as SpeciesBody['sociality'],
       nocturnal,
       migratory,
-      products: grown ? [] : products,
-      species_class: kind,
-      biochemistry: life[0] ?? null,
-      growth_cycle: grown ? cycle : null,
-      plant_yields: grown ? harvest : [],
-      traits,
+      products: grown ? [] : (products as SpeciesBody['products']),
+      species_class: kind as SpeciesBody['species_class'],
+      biochemistry: (life[0] ?? null) as SpeciesBody['biochemistry'],
+      growth_cycle: grown ? (cycle as SpeciesBody['growth_cycle']) : null,
+      plant_yields: grown ? (harvest as SpeciesBody['plant_yields']) : [],
+      traits: traits as SpeciesBody['traits'],
       power: Math.min(POWER_MAX, Math.max(1, Math.round(Number(power) || 1))),
       ...numbers(SPECIES_STATS, shownStats),
     }),
@@ -478,7 +482,7 @@ export function CreateSpeciesDialog({ regionId }: { regionId?: number }) {
           <Button
             disabled={busy !== null || missing !== null}
             disabledReason={busy ?? missing ?? undefined}
-            onClick={() => create.mutate()}
+            onClick={() => region !== null && create.mutate(region)}
           >
             <Plus />
             Let it walk the land
@@ -507,15 +511,15 @@ export function CreateBeastDialog({
   const shownStats = { ...sizedDefaults(BEAST_BASE, size), ...stats }
   const [power, setPower] = useState('3')
   const { reason } = useGodGate()
-  const create = useWildAction<void>(
+  const create = useWildAction(
     'beast:create',
-    () => ({
+    (_: void): BeastBody => ({
       name: name.trim(),
       description: description.trim(),
       species_id: species,
       lair_id: lair,
-      size_class: size,
-      temper,
+      size_class: size as BeastBody['size_class'],
+      temper: temper as BeastBody['temper'],
       power: Math.min(POWER_MAX, Math.max(1, Math.round(Number(power) || 1))),
       ...numbers(BEAST_STATS, shownStats),
     }),

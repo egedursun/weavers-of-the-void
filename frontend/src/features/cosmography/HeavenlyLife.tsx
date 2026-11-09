@@ -1,4 +1,5 @@
 import { Angry, Frown, Globe2, Heart, Meh, Smile, Sun } from 'lucide-react'
+import { type EditValues } from '@/api/actions'
 import { EmptyState, LoadingBlock, Section } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { useSons } from '@/features/pantheon/api'
@@ -24,7 +25,7 @@ function moodOf(mood: number) {
   return MOODS.find((row) => mood >= row.from) ?? MOODS[MOODS.length - 1]
 }
 
-type Edit = { values: Record<string, unknown>; release: string[] }
+type Edit = { values: EditValues; release: string[] }
 
 const zoneTable = Object.fromEntries(
   Object.entries(ZONES).map(([key, value]) => [key, value.label])
@@ -41,9 +42,9 @@ function useSonNames(): Record<string, string> {
 export function StarLifeSection({ star }: { star: StarRecord }) {
   const view = useCosmography()
   const sons = useSonNames()
-  const edit = useCosmographyAction<Edit>(
+  const edit = useCosmographyAction(
     'star_life:edit',
-    (vars) => ({ star_id: star.id, ...vars }),
+    (vars: Edit) => ({ star_id: star.id, ...vars }),
     'The life of the star is set'
   )
   const busy = edit.isPending ? 'Working' : null
@@ -191,9 +192,9 @@ export function StarLifeSection({ star }: { star: StarRecord }) {
 
 export function WorldPlacementSection({ world }: { world: WorldRecord }) {
   const view = useCosmography()
-  const edit = useCosmographyAction<Edit>(
+  const edit = useCosmographyAction(
     'world_life:edit',
-    (vars) => ({ world_id: world.id, ...vars }),
+    (vars: Edit) => ({ world_id: world.id, ...vars }),
     'The life of the world is set'
   )
   const busy = edit.isPending ? 'Working' : null

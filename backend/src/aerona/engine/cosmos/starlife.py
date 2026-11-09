@@ -6,18 +6,33 @@ from aerona.catalog.cosmography import STAR_AGE_LABELS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import SkyEventRow, StarRow
+from aerona.db.tables.physics import StarPhysicsRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import GalaxyAge, StarAge
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag
-from aerona.domain.enums.world import SkyEventKind, StarType
+from aerona.domain.enums.son import SonStatus
+from aerona.domain.enums.world import SkyEventKind
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.catastrophe import scorch_world
 from aerona.engine.cosmos.galaxies import active_events, outburst_radiation
 from aerona.engine.cosmos.kinds import STRUCTURE_MECHANICS, ZONE_MECHANICS
 from aerona.engine.cosmos.placement import Cosmography
-from aerona.engine.cosmos.star_types import star_mechanics
-from aerona.engine.cosmos.stars import supernova
+from aerona.engine.cosmos.stars import supernova, worlds_of_star
+from aerona.engine.cosmos.stellar import (
+    drift_brightness,
+    drift_metallicity,
+    ends_in_supernova,
+    engulf_orbit,
+    giant_for,
+    is_dwarf,
+    physics_of_stars,
+    refresh,
+    remnant_for,
+    stage_length,
+    typical_mass,
+)
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
@@ -26,26 +41,12 @@ from aerona.engine.primitives.stats import shift_bounded
 from aerona.rules.registry import Rules
 
 NEXT_STAGE: dict[StarAge, StarAge] = {StarAge.YOUNG: StarAge.MAIN, StarAge.MAIN: StarAge.OLD, StarAge.OLD: StarAge.DYING, StarAge.REBORN: StarAge.MAIN}
-SPENT_REMNANT = StarType.WHITE_DWARF
 BRIGHT_SKY = PERCENT * 4 // 5
 
 
-def heavy(rules: Rules, star: StarRow) -> bool:
-    return star_mechanics(star.star_type).collapse_weight(rules) > 0
-
-
-def stage_epochs(rules: Rules, star: StarRow, stage: StarAge) -> int | None:
-    table = rules.star_life
-    base = {
-        StarAge.YOUNG: table.young_epochs,
-        StarAge.MAIN: table.main_epochs,
-        StarAge.OLD: table.old_epochs,
-        StarAge.DYING: table.dying_epochs,
-        StarAge.REBORN: table.young_epochs,
-    }.get(stage)
-    if base is None:
-        return None
-    return max(1, round_half_up(base * table.heavy_life_pct / PERCENT) if heavy(rules, star) else base)
+def stage_epochs(rules: Rules, star: StarRow, stage: StarAge, physics: StarPhysicsRow | None = None) -> int | None:
+    mass = physics.mass if physics is not None else typical_mass(rules, star.star_type)
+    return stage_length(rules, mass, stage)
 
 
 def stage_radiation(rules: Rules, stage: StarAge) -> int:
@@ -72,38 +73,83 @@ def stage_stability(rules: Rules, stage: StarAge) -> int:
     }[stage]
 
 
-async def pass_stage(ctx: TickContext, star: StarRow) -> None:
+async def swell(ctx: TickContext, star: StarRow, physics: StarPhysicsRow | None) -> None:
+    mass = physics.mass if physics is not None else typical_mass(ctx.rules, star.star_type)
+    giant = giant_for(ctx.rules, mass)
+    if giant is None or "star_type" in star.locked:
+        return
+    star.star_type = giant
+    reach = engulf_orbit(ctx.rules, mass)
+    await note(ctx, f"{star.name} swelled into a giant.", key="star.swelled", kind=ChronicleKind.SKY)
+    for world in sorted(await worlds_of_star(ctx.session, star.id), key=lambda row: row.id):
+        if world.parent_world_id is None and world.orbit < reach:
+            await scorch_world(ctx, world, f"The swelling of {star.name} swallowed")
+
+
+async def die(ctx: TickContext, star: StarRow, physics: StarPhysicsRow | None) -> None:
+    mass = physics.mass if physics is not None else typical_mass(ctx.rules, star.star_type)
+    if physics is not None and physics.maker_son_id is not None:
+        physics.maker_son_id = None
+    if ends_in_supernova(ctx.rules, mass):
+        text = await supernova(ctx, star)
+        await note(ctx, text, key="sky.supernova", kind=ChronicleKind.SKY)
+    if "star_type" not in star.locked:
+        star.star_type = remnant_for(ctx.rules, mass)
+    star.age_stage = StarAge.DEAD
+    star.lifecycle_clock = None
+    await note(ctx, f"{star.name} reached the end of its life.", key="star.died", kind=ChronicleKind.SKY)
+
+
+async def pass_stage(ctx: TickContext, star: StarRow, physics: StarPhysicsRow | None = None) -> None:
     if star.age_stage is StarAge.DYING:
-        if heavy(ctx.rules, star) and ctx.rng(f"star_death.{star.id}").chance(ctx.rules.star_life.supernova_chance):
-            text = await supernova(ctx, star)
-            await note(ctx, text, key="sky.supernova", kind=ChronicleKind.SKY)
-        elif "star_type" not in star.locked:
-            star.star_type = SPENT_REMNANT
-        star.age_stage = StarAge.DEAD
-        star.lifecycle_clock = None
-        await note(ctx, f"{star.name} reached the end of its life.", key="star.died", kind=ChronicleKind.SKY)
+        await die(ctx, star, physics)
         return
     following = NEXT_STAGE.get(star.age_stage)
     if following is None:
         star.lifecycle_clock = None
         return
     star.age_stage = following
-    star.lifecycle_clock = stage_epochs(ctx.rules, star, following)
+    star.lifecycle_clock = stage_epochs(ctx.rules, star, following, physics)
     await note(ctx, f"{star.name} entered its {STAR_AGE_LABELS[following].lower()} age.", key=f"star.stage.{following.value}", kind=ChronicleKind.SKY)
+    if following is StarAge.OLD:
+        await swell(ctx, star, physics)
 
 
-async def age_star(ctx: TickContext, star: StarRow, pace_pct: int = PERCENT) -> None:
+async def keep_divine(ctx: TickContext, star: StarRow, physics: StarPhysicsRow | None) -> bool:
+    if physics is None or physics.maker_son_id is None:
+        return False
+    table = ctx.rules.stellar_evolution
+    maker = await ctx.session.get(SonRow, physics.maker_son_id)
+    upkeep = table.divine_upkeep
+    if maker is None or maker.status is SonStatus.DEAD or held(maker.id) or maker.essence < upkeep:
+        physics.maker_son_id = None
+        physics.upkeep = 0
+        await note(ctx, f"{star.name} fell back under the laws of its kind.", key="star.divine_lapsed", kind=ChronicleKind.SKY)
+        return False
+    maker.essence -= upkeep
+    physics.upkeep = upkeep
+    if "stability" not in star.locked:
+        star.stability = clamp_percent(round_half_up(maker.existence * table.divine_steadiness_pct / PERCENT))
+    return True
+
+
+async def age_star(ctx: TickContext, star: StarRow, pace_pct: int = PERCENT, physics: StarPhysicsRow | None = None) -> None:
     table = ctx.rules.star_life
     if "age_stage" in star.locked or "lifecycle_clock" in star.locked:
         return
+    if physics is not None and "age_epochs" not in physics.locked:
+        physics.age_epochs += 1
+    if await keep_divine(ctx, star, physics):
+        return
     if star.lifecycle_clock is None:
-        star.lifecycle_clock = stage_epochs(ctx.rules, star, star.age_stage)
+        star.lifecycle_clock = stage_epochs(ctx.rules, star, star.age_stage, physics)
         return
     hurried = 1 if pace_pct < PERCENT and ctx.rng(f"star_pace.{star.id}").chance(PERCENT - pace_pct) else 0
     star.lifecycle_clock = max(0, star.lifecycle_clock - 1 - hurried)
     if star.lifecycle_clock == 0:
-        await pass_stage(ctx, star)
-    if "brightness" in star.locked:
+        await pass_stage(ctx, star, physics)
+    mass = physics.mass if physics is not None else typical_mass(ctx.rules, star.star_type)
+    if "brightness" in star.locked or not is_dwarf(ctx.rules, mass):
         return
     if star.age_stage is StarAge.OLD:
         star.brightness = clamp_percent(star.brightness - table.old_dimming)
@@ -184,13 +230,19 @@ async def star_lives(ctx: TickContext) -> None:
         )
     )
     dimmed: dict[int, int] = {}
+    physics_rows = await physics_of_stars(ctx.session, ctx.rules, list(cosmography.stars.values()))
     for star in sorted(cosmography.stars.values(), key=lambda row: row.id):
         if held(star.id):
             continue
         before = star.brightness
         galaxy = cosmography.galaxies.get(star.galaxy_id) if star.galaxy_id is not None else None
         dying = galaxy is not None and galaxy.age_stage in (GalaxyAge.DYING, GalaxyAge.DEAD)
-        await age_star(ctx, star, table.dying_galaxy_life_pct if dying else PERCENT)
+        physics = physics_rows.get(star.id)
+        await age_star(ctx, star, table.dying_galaxy_life_pct if dying else PERCENT, physics)
+        if physics is not None:
+            refresh(ctx.rules, star, physics)
+            drift_brightness(ctx.rules, star, physics)
+            drift_metallicity(ctx.rules, star, physics, galaxy)
         dimmed[star.id] = max(0, before - star.brightness)
         if "stability" not in star.locked:
             target = stage_stability(ctx.rules, star.age_stage)

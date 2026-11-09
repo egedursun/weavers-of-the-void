@@ -81,6 +81,7 @@ from aerona.services.player import (
     native_faith,
     pantheon,
     peoples,
+    physics,
     places,
     profiles,
     realms,
@@ -913,6 +914,52 @@ DIVINITY_ACTIONS = (
     _sync(Meta("breach:open", "Open a breach point of an outer being", G.BEYOND), divinity.open_breach, divinity.BreachDraft, free, ("S9.6",)),
     _sync(Meta("breach:edit", "Reshape or hold a breach point", G.BEYOND), divinity.edit_breach, divinity.BreachEdit, free, ("S9.6",)),
     _sync(Meta("breach:close", "Seal a breach point", G.BEYOND), divinity.close_breach, divinity.BreachTarget, free, ("S9.6",)),
+)
+
+PHYSICS_ACTIONS = (
+    _sync(
+        Meta("star_physics:edit", "Reshape a star's mass, metal, age or upkeep", G.COSMOS),
+        physics.edit_star_physics,
+        physics.StarPhysicsEdit,
+        free,
+        ("S10.1/RP2",),
+    ),
+    _sync(Meta("star_system:create", "Gather stars into a system", G.COSMOS), physics.create_system, physics.SystemDraft, free, ("S10.9",)),
+    _sync(Meta("star_system:edit", "Reshape or hold a star system", G.COSMOS), physics.edit_system, physics.SystemEdit, free, ("S10.9",)),
+    _sync(Meta("star_system:delete", "Break a star system up", G.COSMOS), physics.delete_system, physics.SystemTarget, free, ("S10.9",)),
+    _sync(Meta("star_system:move", "Set a star into a system as its primary or a companion", G.COSMOS), physics.move_star, physics.StarMove, free, ("S10.9",)),
+    _sync(
+        Meta("world_physics:edit", "Reshape a world's orbit, body, air, ice or seas", G.COSMOS),
+        physics.edit_world_physics,
+        physics.WorldPhysicsEdit,
+        free,
+        ("S10.9",),
+    ),
+    _sync(Meta("life_class:edit", "Set how complex a world's life is and where it lives", G.COSMOS), physics.edit_life, physics.LifeEdit, free, ("S10.9",)),
+    _sync(
+        Meta("cosmic_feature:create", "Set an asteroid field, wormhole, comet, rogue world or gravity well in the heavens", G.COSMOS),
+        physics.create_feature,
+        physics.FeatureDraft,
+        free,
+        ("S10.9",),
+    ),
+    _sync(Meta("cosmic_feature:edit", "Reshape or hold a cosmic feature", G.COSMOS), physics.edit_feature, physics.FeatureEdit, free, ("S10.9",)),
+    _sync(Meta("cosmic_feature:delete", "Unmake a cosmic feature", G.COSMOS), physics.delete_feature, physics.FeatureTarget, free, ("S10.9",)),
+    _sync(Meta("impact:call", "Call a body down upon a world", G.COSMOS), physics.call_impact, physics.ImpactCall, free, ("S10.9",)),
+    _sync(Meta("impact:deflect", "Turn a falling body aside", G.COSMOS), physics.deflect_impact, physics.ImpactTarget, free, ("S10.9",)),
+    _sync(Meta("impact:edit", "Reshape or hold an impact", G.COSMOS), physics.edit_impact, physics.ImpactEdit, free, ("S10.9",)),
+    _sync(Meta("impact:delete", "Strike an impact from the record", G.COSMOS), physics.delete_impact, physics.ImpactTarget, free, ("S10.9",)),
+    _sync(
+        Meta("terraform:start", "Begin to reshape a world's air, warmth, water or face", G.COSMOS),
+        physics.start_terraform,
+        physics.TerraformDraft,
+        free,
+        ("S10.9",),
+    ),
+    _sync(Meta("terraform:edit", "Reshape or hold the work on a world", G.COSMOS), physics.edit_terraform, physics.TerraformEdit, free, ("S10.9",)),
+    _sync(Meta("terraform:stop", "Stop the work on a world", G.COSMOS), physics.stop_terraform, physics.TerraformTarget, free, ("S10.9",)),
+    _sync(Meta("survey:set", "Set how well a people or realm knows a world", G.COSMOS), physics.set_survey, physics.SurveySet, free, ("S10.2/RP2",)),
+    _sync(Meta("survey:forget", "Make a people or realm forget a world", G.COSMOS), physics.forget_survey, physics.SurveyTarget, free, ("S10.2/RP2",)),
 )
 
 COSMOGRAPHY_ACTIONS = (
@@ -2793,6 +2840,7 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *MIND_ACTIONS,
     *DIVINITY_ACTIONS,
     *COSMOGRAPHY_ACTIONS,
+    *PHYSICS_ACTIONS,
 )
 ACTIONS_BY_ID: dict[str, ActionSpec] = {spec.id: spec for spec in ACTIONS}
 

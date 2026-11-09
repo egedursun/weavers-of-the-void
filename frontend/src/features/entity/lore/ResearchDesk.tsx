@@ -12,6 +12,7 @@ import {
   Unlock,
   Zap,
 } from 'lucide-react'
+import { type ActionBody } from '@/api/actions'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -58,11 +59,11 @@ function techniqueTable(rows: Technique[]): Record<string, LoreNamed> {
 }
 
 function useFocus(holderId: number) {
-  return useLoreAction<{ technique: string | null; hold: boolean }>(
-    '/api/actions/research:focus',
-    (value) => ({
+  return useLoreAction(
+    'research:focus',
+    (value: { technique: string | null; hold: boolean }) => ({
       holder_id: holderId,
-      technique: value.technique,
+      technique: value.technique as ActionBody<'research:focus'>['technique'],
       hold: value.hold,
     })
   )
@@ -297,18 +298,22 @@ function FocusCard({
 }
 
 function useInstitution(holderId: number) {
-  return useLoreAction<{
-    technique: string
-    present: boolean
-    values: Record<string, number | boolean>
-    release: string[]
-  }>('/api/actions/research:institution', (value) => ({
-    community_id: holderId,
-    technique: value.technique,
-    present: value.present,
-    values: value.values,
-    release: value.release,
-  }))
+  return useLoreAction(
+    'research:institution',
+    (value: {
+      technique: string
+      present: boolean
+      values: Record<string, number | boolean>
+      release: string[]
+    }) => ({
+      community_id: holderId,
+      technique:
+        value.technique as ActionBody<'research:institution'>['technique'],
+      present: value.present,
+      values: value.values,
+      release: value.release,
+    })
+  )
 }
 
 function InstitutionTile({
@@ -543,14 +548,13 @@ function BoostTile({
   label: string
   blocked: string | null
 }) {
-  const edit = useLoreAction<Record<string, number>>(
-    '/api/actions/research:boost_edit',
-    (values) => ({ boost_id: row.id, values })
+  const edit = useLoreAction(
+    'research:boost_edit',
+    (values: Record<string, number>) => ({ boost_id: row.id, values })
   )
-  const remove = useLoreAction<null>(
-    '/api/actions/research:boost_remove',
-    () => ({ boost_id: row.id })
-  )
+  const remove = useLoreAction('research:boost_remove', (_: null) => ({
+    boost_id: row.id,
+  }))
   const busy = busyOf(blocked, edit.isPending, remove.isPending)
   const trigger = BOOST_TRIGGERS[row.trigger]
   return (
@@ -599,14 +603,15 @@ function BoostsCard({
   blocked: string | null
 }) {
   const techniques = useTechniques(card)
-  const grant = useLoreAction<{
-    technique: string
-    trigger: string
-    progress: number
-  }>('/api/actions/research:boost', (value) => ({
-    holder_id: card.holder_id,
-    ...value,
-  }))
+  const grant = useLoreAction(
+    'research:boost',
+    (value: { technique: string; trigger: string; progress: number }) => ({
+      holder_id: card.holder_id,
+      technique: value.technique as ActionBody<'research:boost'>['technique'],
+      trigger: value.trigger as ActionBody<'research:boost'>['trigger'],
+      progress: value.progress,
+    })
+  )
   const [technique, setTechnique] = useState('')
   const [trigger, setTrigger] = useState('')
   const busy = busyOf(blocked, grant.isPending)

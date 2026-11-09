@@ -62,6 +62,13 @@ import { GoldenAgeSection } from '@/features/foundations/GoldenAgeCard'
 import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverlay'
 import { RecordGallery } from '@/features/pantheon/RecordGallery'
 import { mediaUrl } from '@/features/pantheon/media'
+import { LifeClassSection } from '@/features/physics/LifeClassSection'
+import { WorldSurveySection } from '@/features/physics/SurveySection'
+import { WorldPhysicsSection } from '@/features/physics/WorldPhysicsSection'
+import {
+  WorldImpactsSection,
+  WorldTerraformSection,
+} from '@/features/physics/WorldShapingSection'
 import { CelestialDepthSection } from './CelestialDepthSection'
 import { WorldSeasonsSection } from './WorldSeasonsSection'
 import { type WorldWiki, useWorldWiki } from './api'
@@ -436,6 +443,11 @@ export function WorldWikiView({ worldId }: { worldId: number }) {
       <WorldEraSection worldId={data.world.id} />
       <WorldLifeSection worldId={data.world.id} />
       <WorldPlacementSection world={data.world} />
+      <WorldPhysicsSection worldId={data.world.id} />
+      <LifeClassSection worldId={data.world.id} />
+      <WorldImpactsSection worldId={data.world.id} />
+      <WorldTerraformSection worldId={data.world.id} />
+      <WorldSurveySection worldId={data.world.id} />
       <RiftsForWorld worldId={data.world.id} />
       <CelestialDepthSection
         kind='world'

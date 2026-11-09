@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CloudFog, MapPin, Shield, Sparkles, X } from 'lucide-react'
+import { type ActionBody, type EditValues } from '@/api/actions'
 import { Button } from '@/components/ui/button'
 import { EmptyState, EntityLink, PagedList, Section } from '@/components/domain'
 import { Muted } from '@/components/typography'
@@ -32,25 +33,25 @@ export function PhenomenonCard({
   phenomenon: PhenomenonRecord
   catalog: CosmographyCatalog | undefined
 }) {
-  const edit = useCosmographyAction<{
-    values: Record<string, unknown>
-    release: string[]
-  }>('phenomenon:edit', (vars) => ({
-    phenomenon_id: phenomenon.entity_id,
-    ...vars,
-  }))
-  const contain = useCosmographyAction<void>(
+  const edit = useCosmographyAction(
+    'phenomenon:edit',
+    (vars: { values: EditValues; release: string[] }) => ({
+      phenomenon_id: phenomenon.entity_id,
+      ...vars,
+    })
+  )
+  const contain = useCosmographyAction(
     'phenomenon:contain',
-    () => ({ phenomenon_id: phenomenon.entity_id, amount: 40 }),
+    (_: void) => ({ phenomenon_id: phenomenon.entity_id, amount: 40 }),
     'Your ward holds it back'
   )
-  const spread = useCosmographyAction<{
-    region_id: number
-    intensity: number | null
-  }>('phenomenon:footprint', (vars) => ({
-    phenomenon_id: phenomenon.entity_id,
-    ...vars,
-  }))
+  const spread = useCosmographyAction(
+    'phenomenon:footprint',
+    (vars: { region_id: number; intensity: number | null }) => ({
+      phenomenon_id: phenomenon.entity_id,
+      ...vars,
+    })
+  )
   const [region, setRegion] = useState<number | null>(null)
   const [strength, setStrength] = useState('40')
   const names = useNames()
@@ -211,9 +212,13 @@ function RaiseForm({
   const [kind, setKind] = useState('')
   const [region, setRegion] = useState<number | null>(null)
   const [intensity, setIntensity] = useState('50')
-  const raise = useCosmographyAction<void>(
+  const raise = useCosmographyAction(
     'phenomenon:create',
-    () => ({ kind, region_id: region, intensity: Number(intensity) || 50 }),
+    (place: number) => ({
+      kind: kind as ActionBody<'phenomenon:create'>['kind'],
+      region_id: place,
+      intensity: Number(intensity) || 50,
+    }),
     'A phenomenon took hold'
   )
   const busy = raise.isPending ? 'It is forming' : null
@@ -232,7 +237,7 @@ function RaiseForm({
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}
-          onClick={() => raise.mutate()}
+          onClick={() => region !== null && raise.mutate(region)}
         >
           <CloudFog />
           Raise it

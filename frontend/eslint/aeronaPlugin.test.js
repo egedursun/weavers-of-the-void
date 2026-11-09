@@ -1,5 +1,6 @@
 import { describe, it } from 'node:test'
 import { RuleTester } from 'eslint'
+import tseslint from 'typescript-eslint'
 import { aeronaPlugin } from './aeronaPlugin.js'
 
 RuleTester.describe = describe
@@ -79,5 +80,21 @@ tester.run('disabled-needs-reason', rules['disabled-needs-reason'], {
   invalid: [
     { code: '<Button disabled>Go</Button>', errors: [{ messageId: 'missingReason' }] },
     { code: '<Button disabled={busy}>Go</Button>', errors: [{ messageId: 'missingReason' }] },
+  ],
+})
+
+const typedTester = new RuleTester({
+  languageOptions: { ecmaVersion: 'latest', sourceType: 'module', parser: tseslint.parser },
+})
+
+typedTester.run('typed-request-body', rules['typed-request-body'], {
+  valid: [
+    "postAction('impact:call', { world_id: 1 })",
+    "api.POST('/api/images', { body: file as never, bodySerializer: (body) => body as never })",
+    "api.POST('/api/x', { body })",
+  ],
+  invalid: [
+    { code: "api.POST('/api/actions/x', { body: body as never })", errors: [{ messageId: 'untypedBody' }] },
+    { code: "api.PATCH('/api/x', { params: {}, body: input as never })", errors: [{ messageId: 'untypedBody' }] },
   ],
 })

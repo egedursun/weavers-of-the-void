@@ -1,5 +1,6 @@
 import { type ReactNode, useId, useState } from 'react'
 import { Check, Layers, Orbit, Sparkles, Workflow } from 'lucide-react'
+import { type ActionBody } from '@/api/actions'
 import { unitHash } from '@/lib/hash'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -247,11 +248,11 @@ export function CreateGalaxyStudio({
   const [dimension, setDimension] = useState(
     dimensionId !== undefined ? String(dimensionId) : ''
   )
-  const create = useCosmographyAction<void>(
+  const create = useCosmographyAction(
     'galaxy:create',
-    () => ({
+    (_: void) => ({
       name: name.trim(),
-      galaxy_type: kind,
+      galaxy_type: kind as ActionBody<'galaxy:create'>['galaxy_type'],
       cluster_id: cluster ? Number(cluster) : null,
       dimension_id: cluster ? null : dimension ? Number(dimension) : null,
     }),
@@ -366,11 +367,11 @@ export function CreateClusterStudio({
   const [parent, setParent] = useState(
     parentId !== undefined ? String(parentId) : ''
   )
-  const create = useCosmographyAction<void>(
+  const create = useCosmographyAction(
     'cluster:create',
-    () => ({
+    (_: void) => ({
       name: name.trim(),
-      kind,
+      kind: kind as ActionBody<'cluster:create'>['kind'],
       dimension_id: parent ? null : dimension ? Number(dimension) : null,
       parent_cluster_id: parent ? Number(parent) : null,
     }),
@@ -484,13 +485,16 @@ export function CreateDimensionStudio({
   const [name, setName] = useState('')
   const [parent, setParent] = useState('')
   const [element, setElement] = useState('')
-  const create = useCosmographyAction<void>(
+  const create = useCosmographyAction(
     'dimension:create',
-    () => ({
+    (_: void) => ({
       name: name.trim(),
-      kind,
+      kind: kind as ActionBody<'dimension:create'>['kind'],
       parent_dimension_id: parent ? Number(parent) : null,
-      element: kind === 'elemental' && element ? element : null,
+      element:
+        kind === 'elemental' && element
+          ? (element as ActionBody<'dimension:create'>['element'])
+          : null,
     }),
     'A new dimension came into being'
   )

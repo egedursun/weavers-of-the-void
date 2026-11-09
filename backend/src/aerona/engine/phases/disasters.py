@@ -253,6 +253,11 @@ def disaster_phrase(disaster: Disaster) -> str:
 
 
 async def apply_disaster(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: float) -> DisasterImpact:
+    with flowing(FlowCategory.DISASTER):
+        return await strike_disaster(ctx, target, disaster, severity)
+
+
+async def strike_disaster(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: float) -> DisasterImpact:
     impact = DisasterImpact()
     knowledge = await KnowledgeMap.load(ctx.session)
     repository = EntityRepository(ctx.session)

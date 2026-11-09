@@ -25,9 +25,9 @@ export function TotemSection({
   const view = useTotem(peopleId)
   const { reason } = useGodGate()
   const [species, setSpecies] = useState<number | null>(null)
-  const set = useWildAction<number | null>(
+  const set = useWildAction(
     'people:totem',
-    (chosen) => ({ people_id: peopleId, species_id: chosen }),
+    (chosen: number | null) => ({ people_id: peopleId, species_id: chosen }),
     () => setSpecies(null)
   )
   const busy = busyOf(readOnlyReason ?? reason(), set.isPending)

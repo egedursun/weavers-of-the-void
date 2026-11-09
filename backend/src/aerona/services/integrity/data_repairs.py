@@ -18,6 +18,7 @@ from aerona.domain.enums.bond import ROLE_BOND_KINDS, BondState
 from aerona.domain.enums.entity import EntityStatus
 from aerona.engine.cosmos.ladder import ensure_ladder, name_home_galaxy, place_free_worlds, settle_zones
 from aerona.engine.cosmos.strata import host_strata_once
+from aerona.engine.phases.physics import settle_heavens
 from aerona.engine.primitives.canon_facts import seed_if_empty
 from aerona.rules.registry import Rules
 from aerona.services.bonds import BondService, flip_reversed, resolve_all_friend_and_foe
@@ -135,6 +136,7 @@ class DataRepairs:
             ("galactic_zones", lambda session, rules, epoch: settle_zones(session, rules)),
             ("free_worlds", lambda session, rules, epoch: place_free_worlds(session)),
             ("strata_hosts", lambda session, rules, epoch: host_strata_once(session)),
+            ("heavens_physics", lambda session, rules, epoch: settle_heavens(session, rules)),
         ]
 
     def history_steps(self) -> list[tuple[str, Repair]]:

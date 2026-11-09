@@ -13,6 +13,7 @@ import {
   TriangleAlert,
   Users,
 } from 'lucide-react'
+import { type ActionBody } from '@/api/actions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -53,25 +54,35 @@ export function TheoryPanel({
   card: Card<'theory'>
   blocked: string | null
 }) {
-  const adhere = useLoreAction<{
-    holder: number
-    strength: number
-    orthodox: boolean
-    present: boolean
-  }>('/api/actions/theory:adherent', (value) => ({
-    theory_id: id,
-    holder_id: value.holder,
-    strength: value.strength,
-    orthodox: value.orthodox,
-    present: value.present,
-  }))
-  const anomaly = useLoreAction<{ kind: string; weight: number }>(
-    '/api/actions/theory:anomaly',
-    (value) => ({ theory_id: id, kind: value.kind, weight: value.weight })
+  const adhere = useLoreAction(
+    'theory:adherent',
+    (value: {
+      holder: number
+      strength: number
+      orthodox: boolean
+      present: boolean
+    }) => ({
+      theory_id: id,
+      holder_id: value.holder,
+      strength: value.strength,
+      orthodox: value.orthodox,
+      present: value.present,
+    })
   )
-  const reveal = useLoreAction<{ community: number }>(
-    '/api/actions/theory:reveal',
-    (value) => ({ theory_id: id, community_id: value.community })
+  const anomaly = useLoreAction(
+    'theory:anomaly',
+    (value: { kind: string; weight: number }) => ({
+      theory_id: id,
+      kind: value.kind as ActionBody<'theory:anomaly'>['kind'],
+      weight: value.weight,
+    })
+  )
+  const reveal = useLoreAction(
+    'theory:reveal',
+    (value: { community: number }) => ({
+      theory_id: id,
+      community_id: value.community,
+    })
   )
   const [holder, setHolder] = useState<number | null>(null)
   const [kind, setKind] = useState('')

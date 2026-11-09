@@ -242,6 +242,16 @@ from aerona.db.tables.mortal import KindVariantRow, MarriageRow, MortalEquipment
 from aerona.db.tables.motifs import MotifOverrideRow
 from aerona.db.tables.node import NameRegistryRow, NodeRow
 from aerona.db.tables.ownership import SiteProfitRow
+from aerona.db.tables.physics import (
+    CosmicFeatureRow,
+    ImpactEventRow,
+    StarPhysicsRow,
+    StarSystemRow,
+    TerraformingRow,
+    WorldLifeRow,
+    WorldPhysicsRow,
+    WorldSurveyRow,
+)
 from aerona.db.tables.place import PlaceProfileRow, PlaceSecretRow
 from aerona.db.tables.polity import (
     ClaimRow,
@@ -369,6 +379,7 @@ __all__ = [
     "ContestRow",
     "CorveeRow",
     "CosmicBeingProfileRow",
+    "CosmicFeatureRow",
     "CosmosRow",
     "CouncilRow",
     "CouncilRulingRow",
@@ -478,6 +489,7 @@ __all__ = [
     "IdeologyTenetRow",
     "ImageRow",
     "ImmunityRow",
+    "ImpactEventRow",
     "IncidentParticipantRow",
     "IncidentRow",
     "InjuryRow",
@@ -632,12 +644,15 @@ __all__ = [
     "SpiritProfileRow",
     "SpyAgentRow",
     "SpyNetworkRow",
+    "StarPhysicsRow",
     "StarRow",
+    "StarSystemRow",
     "StructureDesignRow",
     "StructureLeyRow",
     "StructureProfileRow",
     "StructureStaffRow",
     "TaxPolicyRow",
+    "TerraformingRow",
     "TheoryAdherentRow",
     "TheoryAnomalyRow",
     "TheoryProfileRow",
@@ -675,8 +690,11 @@ __all__ = [
     "WorldDomainHookRow",
     "WorldEraRow",
     "WorldLeakItemRow",
+    "WorldLifeRow",
     "WorldMapRow",
     "WorldMaterialRow",
+    "WorldPhysicsRow",
     "WorldRow",
     "WorldSeasonRow",
+    "WorldSurveyRow",
 ]

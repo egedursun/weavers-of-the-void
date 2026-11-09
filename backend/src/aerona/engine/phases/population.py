@@ -11,6 +11,7 @@ from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import PowerEffect
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.lifeforms import disease_load, habitability, habitable_growth
 from aerona.engine.demography.basket import fed_index
 from aerona.engine.demography.biology import footprint, hunger_level
 from aerona.engine.demography.cohorts import cohorts_of, reconcile
@@ -111,6 +112,8 @@ async def grow_community(
     culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
     if community.entity_type is EntityType.SETTLEMENT:
         vigour *= growth_factor(rules, culture)
+    fit = await habitability(ctx.session, rules, biology, community.world_id)
+    vigour *= habitable_growth(rules, fit)
     region_id = model.atlas.top_region(community.id)
     ground = await ctx.session.get(RegionEnvironmentRow, region_id) if region_id is not None else None
     magic = model.knowledge.level(community.id, KnowledgeBranch.MAGIC)
@@ -119,7 +122,7 @@ async def grow_community(
         fertility=vigour,
         hunger=hunger_level(rules, biology, ground, await fed_index(ctx.session, community.id), magic),
         crowding=max(0.0, load.population * footprint(rules, biology) / max(1.0, capacity)),
-        disease=diseases.of(community),
+        disease=diseases.of(community) + disease_load(rules, fit),
         stress=await stress_of(ctx, community),
         mortality=mortality,
     )

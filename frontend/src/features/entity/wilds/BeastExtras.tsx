@@ -180,13 +180,17 @@ export function TreasureControls({ id, card, blocked }: Blocked) {
   const [item, setItem] = useState<number | null>(null)
   const [taken, setTaken] = useState('')
   const [receiver, setReceiver] = useState<number | null>(null)
-  const move = useWildAction<{
-    item: number
-    into: boolean
-    to?: number | null
-  }>(
+  const move = useWildAction(
     'beast:treasure',
-    ({ item: thing, into, to }) => ({
+    ({
+      item: thing,
+      into,
+      to,
+    }: {
+      item: number
+      into: boolean
+      to?: number | null
+    }) => ({
       beast_id: id,
       item_id: thing,
       into_hoard: into,
@@ -284,7 +288,7 @@ export function SlayControl({
   blocked: string | null
 }) {
   const [slayer, setSlayer] = useState<number | null>(null)
-  const slay = useWildAction<void>('beast:slay', () => ({
+  const slay = useWildAction('beast:slay', (_: void) => ({
     beast_id: id,
     slayer_id: slayer,
   }))

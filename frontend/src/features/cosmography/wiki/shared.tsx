@@ -1,5 +1,6 @@
 import { type ReactNode, useState } from 'react'
 import { type LucideIcon, Skull, Trash2 } from 'lucide-react'
+import { type ActionBody } from '@/api/actions'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -8,12 +9,7 @@ import { Label, Muted, PageTitle } from '@/components/typography'
 import { CelestialTimeline } from '@/features/celestial/WorldWikiPage'
 import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverlay'
 import { RecordGallery } from '@/features/pantheon/RecordGallery'
-import {
-  type CosmographyAction,
-  type ScaleWiki,
-  runCosmography,
-  useCosmographyAction,
-} from '../api'
+import { type ScaleWiki, useCosmographyAction } from '../api'
 
 export function WikiLoading() {
   return (
@@ -108,15 +104,13 @@ export function WikiRecords({
   name,
   wiki,
   prompt,
-  action,
-  target,
+  savePrompt,
 }: {
   nodeId: number
   name: string
   wiki: ScaleWiki | undefined
   prompt: string | null | undefined
-  action: CosmographyAction
-  target: Record<string, number>
+  savePrompt: (prompt: string) => Promise<unknown>
 }) {
   return (
     <>
@@ -131,19 +125,15 @@ export function WikiRecords({
         images={wiki?.images ?? []}
         prompt={prompt ?? null}
         promptLabel='Image prompt'
-        onSavePrompt={(next) =>
-          runCosmography(action, {
-            ...target,
-            values: { image_prompt: next },
-            release: ['image_prompt'],
-          })
-        }
+        onSavePrompt={savePrompt}
       />
     </>
   )
 }
 
-export function DangerZone({
+export function DangerZone<
+  Name extends 'cluster:delete' | 'dimension:delete' | 'galaxy:delete',
+>({
   noun,
   name,
   consequence,
@@ -153,13 +143,13 @@ export function DangerZone({
   noun: string
   name: string
   consequence: string
-  action: CosmographyAction
-  target: Record<string, number>
+  action: Name
+  target: ActionBody<Name>
 }) {
   const [open, setOpen] = useState(false)
-  const remove = useCosmographyAction<void>(
+  const remove = useCosmographyAction(
     action,
-    () => target,
+    (_: void) => target,
     `${name} is unmade`
   )
   return (

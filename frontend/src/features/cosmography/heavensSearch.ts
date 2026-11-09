@@ -4,6 +4,7 @@ export const HEAVENS_TABS = [
   'rifts',
   'beings',
   'phenomena',
+  'bodies',
   'events',
   'end',
 ] as const

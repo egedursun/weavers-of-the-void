@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Tags } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import type { components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import {
   Collapsible,
@@ -31,6 +32,21 @@ type TagChange = {
   add_mechanics?: string[]
   remove_mechanics?: string[]
   law?: string
+}
+
+type TagBody = components['schemas']['PatchEntitiesEntityIdTagsBody']
+
+function tagBody(change: TagChange): TagBody {
+  return {
+    add_flags: (change.add_flags ?? []) as TagBody['add_flags'],
+    remove_flags: (change.remove_flags ?? []) as TagBody['remove_flags'],
+    add_traits: (change.add_traits ?? []) as TagBody['add_traits'],
+    remove_traits: (change.remove_traits ?? []) as TagBody['remove_traits'],
+    add_mechanics: (change.add_mechanics ?? []) as TagBody['add_mechanics'],
+    remove_mechanics: (change.remove_mechanics ??
+      []) as TagBody['remove_mechanics'],
+    ...(change.law !== undefined ? { law: change.law as TagBody['law'] } : {}),
+  }
 }
 
 function enumOf(
@@ -100,7 +116,7 @@ export function TagEditor({
       unwrap(
         api.PATCH('/api/entities/{entity_id}/tags', {
           params: { path: { entity_id: ctx.entity.id } },
-          body: body as never,
+          body: tagBody(body),
         })
       ),
   })

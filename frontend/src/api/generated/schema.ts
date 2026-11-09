@@ -5919,6 +5919,70 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/physics/stars/{star_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['star_physics_api_physics_stars__star_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/physics/worlds/{world_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['world_physics_api_physics_worlds__world_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/physics/heavens': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['heavens_physics_api_physics_heavens_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/physics/observers/{entity_id}/surveys': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['observer_surveys_api_physics_observers__entity_id__surveys_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/entities/{entity_id}/ecology': {
     parameters: {
       query?: never
@@ -20895,6 +20959,310 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/star_physics:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_star_physics_edit_api_actions_star_physics_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/star_system:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_star_system_create_api_actions_star_system_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/star_system:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_star_system_edit_api_actions_star_system_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/star_system:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_star_system_delete_api_actions_star_system_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/star_system:move': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_star_system_move_api_actions_star_system_move_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/world_physics:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_world_physics_edit_api_actions_world_physics_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/life_class:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_life_class_edit_api_actions_life_class_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cosmic_feature:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmic_feature_create_api_actions_cosmic_feature_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cosmic_feature:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmic_feature_edit_api_actions_cosmic_feature_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cosmic_feature:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmic_feature_delete_api_actions_cosmic_feature_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/impact:call': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_impact_call_api_actions_impact_call_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/impact:deflect': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_impact_deflect_api_actions_impact_deflect_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/impact:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_impact_edit_api_actions_impact_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/impact:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_impact_delete_api_actions_impact_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/terraform:start': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_terraform_start_api_actions_terraform_start_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/terraform:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_terraform_edit_api_actions_terraform_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/terraform:stop': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_terraform_stop_api_actions_terraform_stop_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/survey:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_survey_set_api_actions_survey_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/survey:forget': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_survey_forget_api_actions_survey_forget_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -21516,6 +21884,7 @@ export interface components {
       }
       locked?: string[]
     }
+    AirNeed: 'oxygen' | 'carbon_dioxide' | 'methane' | 'none'
     AllelePoolFoundInput: {
       people_id: number
     }
@@ -22432,6 +22801,11 @@ export interface components {
       diet: components['schemas']['FolkDiet']
       edible: components['schemas']['CommodityKind'][]
       effects: components['schemas']['KinEffectsView']
+      biochemistry: components['schemas']['Biochemistry']
+      air: components['schemas']['AirNeed']
+      gravity_low: number
+      gravity_high: number
+      habitability: number
       locked: string[]
     }
     Biome: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
@@ -24185,6 +24559,35 @@ export interface components {
     CosmicExtinguishStarInput: {
       star_id: number
     }
+    CosmicFeatureCreateInput: {
+      kind: components['schemas']['CosmicFeatureKind']
+      name: string
+      star_id?: number | null
+      galaxy_id?: number | null
+      world_id?: number | null
+      world_b_id?: number | null
+      density?: number | null
+      richness?: number | null
+      pirates?: number | null
+      instability?: number | null
+      period_epochs?: number | null
+    }
+    CosmicFeatureDeleteInput: {
+      feature_id: number
+    }
+    CosmicFeatureEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | string[] | null
+      }
+      release?: string[]
+      feature_id: number
+    }
+    CosmicFeatureKind:
+      | 'asteroid_field'
+      | 'wormhole'
+      | 'periodic_comet'
+      | 'rogue_world'
+      | 'gravity_well'
     CosmographyCatalog: {
       galaxy_types: components['schemas']['KindRecord'][]
       cluster_kinds: components['schemas']['KindRecord'][]
@@ -27621,6 +28024,30 @@ export interface components {
       abundance: number
       primary: boolean
     }
+    FeatureRecord: {
+      id: number
+      kind: components['schemas']['CosmicFeatureKind']
+      name: string
+      galaxy_id: number | null
+      star: components['schemas']['NodeRef'] | null
+      world: components['schemas']['NodeRef'] | null
+      world_b: components['schemas']['NodeRef'] | null
+      body: components['schemas']['NodeRef'] | null
+      route_id: number | null
+      radius: number
+      density: number
+      radiation: number
+      travel: number
+      omen_weight: number
+      richness: number
+      pirates: number
+      instability: number
+      period_epochs: number
+      next_return_epoch: number | null
+      created_epoch: number
+      ended_epoch: number | null
+      locked: string[]
+    }
     FeedCategory:
       | 'voyage'
       | 'gate'
@@ -27754,6 +28181,10 @@ export interface components {
       maximum: number
       rarities: components['schemas']['Rarity'][]
       default: components['schemas']['Rarity'][]
+    }
+    FitRecord: {
+      people: components['schemas']['NodeRef']
+      fit: number
     }
     FlowView: {
       commodity: components['schemas']['CommodityKind']
@@ -28637,6 +29068,13 @@ export interface components {
       image_worker_configured: boolean
       running_jobs: number
     }
+    HeavensPhysicsView: {
+      epoch: number
+      systems: components['schemas']['SystemView'][]
+      features: components['schemas']['FeatureRecord'][]
+      impacts: components['schemas']['ImpactRecord'][]
+      terraforming: components['schemas']['TerraformRecord'][]
+    }
     HeavensWorshipInput: {
       community_id: number
       sky: components['schemas']['SkyObject']
@@ -29295,6 +29733,43 @@ export interface components {
       age_band: components['schemas']['AgeBand']
       immune_pct: number
       locked: boolean
+    }
+    ImpactBody: 'asteroid' | 'comet' | 'rogue_world' | 'called'
+    ImpactCallInput: {
+      world_id: number
+      region_id?: number | null
+      size?: number | null
+    }
+    ImpactDeflectInput: {
+      impact_id: number
+    }
+    ImpactDeleteInput: {
+      impact_id: number
+    }
+    ImpactEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | string[] | null
+      }
+      release?: string[]
+      impact_id: number
+    }
+    ImpactOutcome: 'pending' | 'struck' | 'deflected' | 'missed'
+    ImpactRecord: {
+      id: number
+      world: components['schemas']['NodeRef'] | null
+      region: components['schemas']['NodeRef'] | null
+      feature_id: number | null
+      body: components['schemas']['ImpactBody']
+      size: number
+      due_epoch: number
+      warned_epoch: number | null
+      outcome: components['schemas']['ImpactOutcome']
+      crater: components['schemas']['NodeRef'] | null
+      winter_epochs: number
+      deflected_by: components['schemas']['NodeRef'] | null
+      called_by: components['schemas']['NodeRef'] | null
+      text: string
+      locked: string[]
     }
     ImportMode: 'replace' | 'merge' | 'discovery'
     ImportResult: {
@@ -30666,6 +31141,14 @@ export interface components {
       function: number | null
       locked: string[]
     }
+    LifeClassEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | string[] | null
+      }
+      release?: string[]
+      world_id: number
+    }
+    LifeComplexity: 'none' | 'microbial' | 'simple' | 'complex' | 'sapient'
     LifeDreamView: {
       goal: components['schemas']['LifeGoal']
       label: string
@@ -30711,6 +31194,12 @@ export interface components {
       borne: boolean
       anywhere: boolean
       kinds: number
+    }
+    LifeRecord: {
+      complexity: components['schemas']['LifeComplexity']
+      environments: string[]
+      biochemistries: components['schemas']['Biochemistry'][]
+      locked: string[]
     }
     LifeStage: 'infant' | 'child' | 'youth' | 'adult' | 'elder' | 'ancient'
     LikenessView: {
@@ -32824,6 +33313,10 @@ export interface components {
       sworn: components['schemas']['OathView'][]
       received: components['schemas']['OathView'][]
     }
+    ObserverSurveyView: {
+      observer_id: number
+      surveys: components['schemas']['SurveyRecord'][]
+    }
     OccupationEditInput: {
       region_id: number
       control?: number | null
@@ -32940,6 +33433,18 @@ export interface components {
     OpportunityLines: {
       subject_id: number
       lines: components['schemas']['OpportunityLineView'][]
+    }
+    OrbitRecord: {
+      world_id: number
+      name: string
+      orbit: number
+      eccentricity: number
+      inclination: number
+      parent_world_id: number | null
+      habitable: boolean
+      ringed: boolean
+      tidally_locked: boolean
+      circumbinary: boolean
     }
     OrbitingWorld: {
       world: components['schemas']['WorldRecord']
@@ -36882,6 +37387,8 @@ export interface components {
       | 'black_sun'
       | 'void_storm'
       | 'flare'
+      | 'aurora'
+      | 'transit'
     SkyEventRecord: {
       id: number
       kind: components['schemas']['SkyEventKind']
@@ -37421,6 +37928,9 @@ export interface components {
       | 'claim_galaxy'
       | 'rule_dimension'
       | 'claim_star'
+      | 'call_impact'
+      | 'deflect_impact'
+      | 'terraform_world'
       | 'wage_war'
       | 'raise_host'
       | 'disband_host'
@@ -37944,6 +38454,10 @@ export interface components {
       locked: string[]
     }
     StaffScale: 'none' | 'few' | 'some' | 'many'
+    StageSpan: {
+      stage: components['schemas']['StarAge']
+      epochs: number
+    }
     StageView: {
       number: number
       label: string
@@ -38033,6 +38547,37 @@ export interface components {
       release?: string[]
       star_id: number
     }
+    StarPhysicsEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | string[] | null
+      }
+      release?: string[]
+      star_id: number
+    }
+    StarPhysicsView: {
+      star_id: number
+      name: string
+      star_type: components['schemas']['StarType']
+      age_stage: components['schemas']['StarAge']
+      mass: number
+      metallicity: number
+      age_epochs: number
+      luminosity: number
+      lifetime_epochs: number
+      band_inner: number
+      band_outer: number
+      maker: components['schemas']['NodeRef'] | null
+      upkeep: number
+      locked: string[]
+      stages: components['schemas']['StageSpan'][]
+      giant: components['schemas']['StarType'] | null
+      remnant: components['schemas']['StarType']
+      supernova: boolean
+      engulf_orbit: number
+      system: components['schemas']['SystemView'] | null
+      orbits: components['schemas']['OrbitRecord'][]
+      features: components['schemas']['FeatureRecord'][]
+    }
     StarRecord: {
       id: number
       name: string
@@ -38054,6 +38599,26 @@ export interface components {
       sacredness: number
       patron_son_id?: number | null
       locked?: string[]
+    }
+    StarSystemCreateInput: {
+      name: string
+      star_ids: number[]
+      separation: number
+    }
+    StarSystemDeleteInput: {
+      system_id: number
+    }
+    StarSystemEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | string[] | null
+      }
+      release?: string[]
+      system_id: number
+    }
+    StarSystemMoveInput: {
+      star_id: number
+      system_id: number
+      role: components['schemas']['SystemRole']
     }
     StarType:
       | 'yellow_dwarf'
@@ -38538,17 +39103,55 @@ export interface components {
       value: number
     }
     SummonForm: 'spirit' | 'beast' | 'undead'
+    SurveyForgetInput: {
+      survey_id: number
+    }
+    SurveyLevel:
+      'unknown' | 'rumoured' | 'detected' | 'observed' | 'surveyed' | 'mapped'
+    SurveyRecord: {
+      id: number
+      observer: components['schemas']['NodeRef'] | null
+      world: components['schemas']['NodeRef'] | null
+      level: components['schemas']['SurveyLevel']
+      epoch: number
+      locked: string[]
+    }
+    SurveySetInput: {
+      observer_id: number
+      world_id: number
+      level: components['schemas']['SurveyLevel']
+    }
     SystemErrorEvent: {
       id: number
       kind: 'system.error'
       payload: components['schemas']['ErrorPayload']
       at: string
     }
+    SystemMember: {
+      star_id: number
+      name: string
+      star_type: components['schemas']['StarType']
+      role: components['schemas']['SystemRole']
+      mass: number
+      luminosity: number
+    }
     SystemNoteEvent: {
       id: number
       kind: 'system.note'
       payload: components['schemas']['TextPayload']
       at: string
+    }
+    SystemRole: 'primary' | 'companion'
+    SystemView: {
+      id: number
+      name: string
+      galaxy_id: number | null
+      separation: number
+      band_inner: number
+      band_outer: number
+      created_epoch: number
+      locked: string[]
+      members: components['schemas']['SystemMember'][]
     }
     TabooRemoveInput: {
       act: components['schemas']['ActKind']
@@ -38752,6 +39355,42 @@ export interface components {
       params?: {
         [key: string]: number | string | boolean
       }
+    }
+    TerraformAim:
+      | 'thicken_air'
+      | 'thin_air'
+      | 'breathable_air'
+      | 'warm'
+      | 'cool'
+      | 'water'
+      | 'dry'
+      | 'brighten'
+      | 'darken'
+    TerraformEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | string[] | null
+      }
+      release?: string[]
+      project_id: number
+    }
+    TerraformRecord: {
+      id: number
+      world: components['schemas']['NodeRef'] | null
+      aim: components['schemas']['TerraformAim']
+      by: components['schemas']['NodeRef'] | null
+      step: number
+      epochs_left: number
+      started_epoch: number
+      locked: string[]
+    }
+    TerraformStartInput: {
+      world_id: number
+      aim: components['schemas']['TerraformAim']
+      step?: number | null
+      epochs?: number | null
+    }
+    TerraformStopInput: {
+      project_id: number
     }
     TerrainHazard: 'avalanche' | 'spring_flood' | 'wildfire' | 'whiteout'
     TerrainKind:
@@ -41017,6 +41656,67 @@ export interface components {
       coastline: string
       land_label: string
       water_label: string
+    }
+    WorldPhysicsEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | string[] | null
+      }
+      release?: string[]
+      world_id: number
+    }
+    WorldPhysicsRecord: {
+      eccentricity: number
+      inclination: number
+      argument: number
+      mass: number
+      radius: number
+      iron: number
+      rock: number
+      ice: number
+      gas: number
+      exotic: number
+      rotation_hours: number
+      nitrogen: number
+      oxygen: number
+      carbon_dioxide: number
+      methane: number
+      water_vapour: number
+      exotic_gas: number
+      pressure: number
+      albedo: number
+      tectonics: number
+      volcanism: number
+      hydrosphere: number
+      cryosphere: number
+      circumbinary: boolean
+      insolation: number
+      surface_temperature: number
+      gravity_g: number
+      escape_velocity: number
+      tidally_locked: boolean
+      ringed: boolean
+      aurora: number
+      eclipse_years: number
+      heat_shift: number
+      sea_level: number
+      habitable: boolean
+      locked: string[]
+    }
+    WorldPhysicsView: {
+      epoch: number
+      world_id: number
+      name: string
+      year_length_days: number | null
+      day_length_hours: number | null
+      season_count: number | null
+      axial_tilt: number | null
+      tidal_strength: number | null
+      physics: components['schemas']['WorldPhysicsRecord'] | null
+      life: components['schemas']['LifeRecord'] | null
+      terraforming: components['schemas']['TerraformRecord'][]
+      impacts: components['schemas']['ImpactRecord'][]
+      surveys: components['schemas']['SurveyRecord'][]
+      fits: components['schemas']['FitRecord'][]
     }
     WorldPlanetStirsInput: {
       world_id: number
@@ -52206,6 +52906,112 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['CosmographyView']
+        }
+      }
+    }
+  }
+  star_physics_api_physics_stars__star_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        star_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['StarPhysicsView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  world_physics_api_physics_worlds__world_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        world_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WorldPhysicsView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  heavens_physics_api_physics_heavens_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HeavensPhysicsView']
+        }
+      }
+    }
+  }
+  observer_surveys_api_physics_observers__entity_id__surveys_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        entity_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ObserverSurveyView']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
         }
       }
     }
@@ -80966,6 +81772,595 @@ export interface operations {
       }
     }
   }
+  action_star_physics_edit_api_actions_star_physics_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StarPhysicsEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_star_system_create_api_actions_star_system_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StarSystemCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_star_system_edit_api_actions_star_system_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StarSystemEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_star_system_delete_api_actions_star_system_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StarSystemDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_star_system_move_api_actions_star_system_move_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StarSystemMoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_world_physics_edit_api_actions_world_physics_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WorldPhysicsEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_life_class_edit_api_actions_life_class_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LifeClassEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_cosmic_feature_create_api_actions_cosmic_feature_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmicFeatureCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_cosmic_feature_edit_api_actions_cosmic_feature_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmicFeatureEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_cosmic_feature_delete_api_actions_cosmic_feature_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmicFeatureDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_impact_call_api_actions_impact_call_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ImpactCallInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_impact_deflect_api_actions_impact_deflect_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ImpactDeflectInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_impact_edit_api_actions_impact_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ImpactEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_impact_delete_api_actions_impact_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ImpactDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_terraform_start_api_actions_terraform_start_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TerraformStartInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_terraform_edit_api_actions_terraform_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TerraformEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_terraform_stop_api_actions_terraform_stop_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TerraformStopInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_survey_set_api_actions_survey_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SurveySetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_survey_forget_api_actions_survey_forget_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SurveyForgetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
 }
 type FlattenedDeepRequired<T> = {
   [K in keyof T]-?: FlattenedDeepRequired<
@@ -81383,6 +82778,9 @@ export const agentToolWritingEventKindValues: ReadonlyArray<
 export const agentWritingEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AgentWritingEvent']['kind']
 > = ['agent.writing']
+export const airNeedValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['AirNeed']
+> = ['oxygen', 'carbon_dioxide', 'methane', 'none']
 export const anomalyKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AnomalyKind']
 > = ['failed_prediction', 'contrary_cure', 'observation', 'divine_sign']
@@ -82193,6 +83591,15 @@ export const contextBlockKindValues: ReadonlyArray<
 export const cosmicBeingStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CosmicBeingStats']['kind']
 > = ['cosmic_being']
+export const cosmicFeatureKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CosmicFeatureKind']
+> = [
+  'asteroid_field',
+  'wormhole',
+  'periodic_comet',
+  'rogue_world',
+  'gravity_well',
+]
 export const cosmosSizeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CosmosSize']
 > = ['single', 'small', 'large']
@@ -83809,6 +85216,12 @@ export const imageStatusEventKindValues: ReadonlyArray<
 export const imageStyleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ImageStyle']
 > = ['photoreal', 'painting', 'ink', 'watercolor', 'anime', 'custom']
+export const impactBodyValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ImpactBody']
+> = ['asteroid', 'comet', 'rogue_world', 'called']
+export const impactOutcomeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ImpactOutcome']
+> = ['pending', 'struck', 'deflected', 'missed']
 export const importModeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ImportMode']
 > = ['replace', 'merge', 'discovery']
@@ -84188,6 +85601,9 @@ export const legendaryQuestOutcomeValues: ReadonlyArray<
 export const legitimacyBasisValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LegitimacyBasis']
 > = ['custom', 'decree', 'divine', 'council']
+export const lifeComplexityValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LifeComplexity']
+> = ['none', 'microbial', 'simple', 'complex', 'sapient']
 export const lifeGoalValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LifeGoal']
 > = [
@@ -85876,6 +87292,8 @@ export const skyEventKindValues: ReadonlyArray<
   'black_sun',
   'void_storm',
   'flare',
+  'aurora',
+  'transit',
 ]
 export const skyObjectValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SkyObject']
@@ -86067,6 +87485,9 @@ export const sonToolIdValues: ReadonlyArray<
   'claim_galaxy',
   'rule_dimension',
   'claim_star',
+  'call_impact',
+  'deflect_impact',
+  'terraform_world',
   'wage_war',
   'raise_host',
   'disband_host',
@@ -86338,12 +87759,18 @@ export const summarySectionValues: ReadonlyArray<
 export const summonFormValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SummonForm']
 > = ['spirit', 'beast', 'undead']
+export const surveyLevelValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SurveyLevel']
+> = ['unknown', 'rumoured', 'detected', 'observed', 'surveyed', 'mapped']
 export const systemErrorEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SystemErrorEvent']['kind']
 > = ['system.error']
 export const systemNoteEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SystemNoteEvent']['kind']
 > = ['system.note']
+export const systemRoleValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SystemRole']
+> = ['primary', 'companion']
 export const tacticValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Tactic']
 > = [
@@ -86478,6 +87905,19 @@ export const tenetKindValues: ReadonlyArray<
   'void_communion',
   'feeding_the_hunger',
   'whispered_secrets',
+]
+export const terraformAimValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['TerraformAim']
+> = [
+  'thicken_air',
+  'thin_air',
+  'breathable_air',
+  'warm',
+  'cool',
+  'water',
+  'dry',
+  'brighten',
+  'darken',
 ]
 export const terrainHazardValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TerrainHazard']

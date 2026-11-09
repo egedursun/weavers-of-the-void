@@ -9,14 +9,17 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.climate import ClimateOrderRow
+from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.world import ClimateEra
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.eras import emergent_era
 from aerona.engine.cosmos.star_types import star_mechanics
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.society_economy import population_bounds
@@ -54,12 +57,19 @@ async def apply_climate_effect(ctx: TickContext, world: WorldRow, era: ClimateEr
     loss = population_loss_pct(ctx.rules, era)
     changed = 0
     if loss:
-        for community in await canon(ctx.session, SOCIETY_TYPES, world.id):
-            population = stat(community, "population")
-            if population is not None:
-                floor, ceiling = population_bounds(ctx.rules, community)
-                set_stats(community, population=clamp_int(population * (1 - fraction(loss)), floor, ceiling))
-                changed += 1
+        with flowing(FlowCategory.DISASTER):
+            changed = await chill_peoples(ctx, world, loss)
+    return changed
+
+
+async def chill_peoples(ctx: TickContext, world: WorldRow, loss: int) -> int:
+    changed = 0
+    for community in await canon(ctx.session, SOCIETY_TYPES, world.id):
+        population = stat(community, "population")
+        if population is not None:
+            floor, ceiling = population_bounds(ctx.rules, community)
+            set_stats(community, population=clamp_int(population * (1 - fraction(loss)), floor, ceiling))
+            changed += 1
     return changed
 
 
@@ -104,10 +114,14 @@ async def advance_world(ctx: TickContext, world: WorldRow, many_worlds: bool) ->
     if order is not None:
         await apply_climate_effect(ctx, world, order.era)
         await ctx.session.delete(order)
+    physics = await ctx.session.get(WorldPhysicsRow, world.id)
+    emergent = emergent_era(ctx.rules, physics) if physics is not None and world.climate_imposed_by_son_id is None else None
     left = (world.climate_epochs_left or 0) - 1
+    if emergent is not None and emergent is not era and "climate_era" not in world.locked:
+        left = 0
     if left <= 0:
         settings = ctx.rules.climate_effects
-        era = pick_next_era(ctx, world, era)
+        era = emergent if emergent is not None else pick_next_era(ctx, world, era)
         world.climate_era = era
         world.climate_since_epoch = ctx.epoch
         world.climate_imposed_by_son_id = None

@@ -22,6 +22,7 @@ import {
   Unlock,
   Wheat,
 } from 'lucide-react'
+import { type EditValues } from '@/api/actions'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import {
@@ -723,7 +724,7 @@ function HerdCard({
   const [training, setTraining] = useState<string>(row.training ?? NO_TRAINING)
   const [trained, setTrained] = useState(String(row.trained))
   const save = useGodAction<{
-    values: Record<string, unknown>
+    values: EditValues
     release?: string[]
   }>({
     run: ({ values, release }) =>

@@ -14,6 +14,16 @@ from aerona.db.tables.cosmography import (
 )
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.interconnect import ModifierRow
+from aerona.db.tables.physics import (
+    CosmicFeatureRow,
+    ImpactEventRow,
+    StarPhysicsRow,
+    StarSystemRow,
+    TerraformingRow,
+    WorldLifeRow,
+    WorldPhysicsRow,
+    WorldSurveyRow,
+)
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
 
@@ -269,6 +279,147 @@ COSMOGRAPHY_MECHANICS = (
         backfill="none: an end not yet come takes its shape when it comes",
         templates=("doom.",),
         fields=("apocalypse_variant",),
+        targets=("world",),
+    ),
+    Mechanic(
+        key="stellar_evolution",
+        spec_item="S10.1/RP2",
+        title="Stars live by their mass, swell into giants or end in supernovae, and stars made by sons live outside these laws while their makers pay",
+        subsystem=S.COSMOS,
+        phases=("stellar_systems", "star_lives"),
+        surface=Surface(drawer="section-star-evolution"),
+        backfill="migration a67800447482: mass and age inferred from each star's type, brightness and stage",
+        templates=("star.",),
+        fields=("mass", "metallicity", "age_epochs", "luminosity", "lifetime_epochs", "maker_son_id", "upkeep"),
+        tables=(StarPhysicsRow.__tablename__,),
+        targets=("world",),
+        couplings=(
+            Coupling(
+                S.ENVIRONMENT, "a star's luminosity sets the light and warmth of its worlds", EdgeKind.MODIFIER, "stellar_evolution.luminosity_exponent_tenths"
+            ),
+        ),
+    ),
+    Mechanic(
+        key="star_systems",
+        spec_item="S10.9",
+        title="Stars gather into systems with a primary and companions; worlds circle one star or both, and the system's light sets its temperate band",
+        subsystem=S.COSMOS,
+        phases=("stellar_systems",),
+        surface=Surface(drawer="section-star-system"),
+        backfill="migration a67800447482: every star stands as the primary of its own system",
+        fields=("separation", "band_inner", "band_outer"),
+        tables=(StarSystemRow.__tablename__,),
+        targets=("world",),
+    ),
+    Mechanic(
+        key="world_physics",
+        spec_item="S10.9",
+        title=(
+            "Each world's orbit, body and air set its year, day, seasons, light, warmth, gravity, tides, rings, eclipses "
+            "and auroras, and the warmth of its regions follows"
+        ),
+        subsystem=S.ENVIRONMENT,
+        phases=("world_physics",),
+        surface=Surface(drawer="section-world-physics"),
+        backfill="migration a67800447482: inputs inferred from each world's gravity, air, terrain and calendar, its albedo set so its warmth stays as it was",
+        templates=("world.",),
+        fields=("eccentricity", "mass", "radius", "pressure", "albedo", "heat_shift", "gravity_g"),
+        tables=(WorldPhysicsRow.__tablename__,),
+        targets=("world",),
+        couplings=(
+            Coupling(S.ENVIRONMENT, "a world's surface warmth shifts the temperature of all its regions", EdgeKind.MODIFIER, "orbits.heat_per_ten_kelvin"),
+        ),
+    ),
+    Mechanic(
+        key="planetary_climate",
+        spec_item="S10.9",
+        title=(
+            "Ice brightens a cooling world, volcanoes and burning thicken its air, the seas rise and fall with the ice, and "
+            "ice ages and scorching ages follow from them"
+        ),
+        subsystem=S.ENVIRONMENT,
+        phases=("planetary_climate",),
+        surface=Surface(drawer="section-world-physics"),
+        backfill="computed: the climate moves from the next epoch",
+        templates=("climate.",),
+        fields=("cryosphere", "carbon_dioxide", "sea_level"),
+        targets=("world",),
+    ),
+    Mechanic(
+        key="life_classes",
+        spec_item="S10.9",
+        title=(
+            "Each world's life has a complexity and the places it lives; creatures and peoples arise only where life is "
+            "complex enough, and life grows more complex on temperate worlds"
+        ),
+        subsystem=S.ECOLOGY,
+        phases=("world_physics",),
+        surface=Surface(drawer="section-life-class"),
+        backfill="migration a67800447482: complexity inferred from the peoples and creatures each world holds",
+        templates=("world.life",),
+        fields=("complexity", "environments"),
+        tables=(WorldLifeRow.__tablename__,),
+        targets=("world",),
+    ),
+    Mechanic(
+        key="cosmic_features",
+        spec_item="S10.9",
+        title=(
+            "Asteroid fields feed miners and pirates, wormholes open and close, black holes swallow near worlds and slow "
+            "time for those who pass, rogue worlds stir orbits, and comets return as omens"
+        ),
+        subsystem=S.COSMOS,
+        phases=("cosmic_features",),
+        surface=Surface(drawer="section-cosmic-features"),
+        backfill="computed: wells form around black holes and comets take their periods from the next epoch",
+        templates=("feature.",),
+        fields=("richness", "pirates", "instability", "period_epochs", "next_return_epoch"),
+        tables=(CosmicFeatureRow.__tablename__,),
+        targets=("world",),
+    ),
+    Mechanic(
+        key="impacts",
+        spec_item="S10.9",
+        title=(
+            "Bodies from fields, comets and rogue worlds strike worlds; astronomers foresee them, warned peoples prepare, "
+            "and a strike leaves a crater, ruin, an impact winter, star metal and a legend"
+        ),
+        subsystem=S.COSMOS,
+        phases=("impacts",),
+        surface=Surface(drawer="section-impacts"),
+        backfill="none: no body had struck before",
+        templates=("impact.", "tools.son.call_impact", "tools.son.deflect_impact"),
+        fields=("size", "due_epoch", "outcome", "winter_epochs"),
+        tables=(ImpactEventRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("call_impact", "deflect_impact"),
+        targets=("world",),
+    ),
+    Mechanic(
+        key="terraforming",
+        spec_item="S10.9",
+        title="Gods and powers that span worlds reshape a world's air, warmth, water and face over epochs, and native life of another chemistry suffers",
+        subsystem=S.ENVIRONMENT,
+        phases=("terraforming",),
+        surface=Surface(drawer="section-terraform"),
+        backfill="none: no world was being reshaped before",
+        templates=("terraform.", "tools.son.terraform_world"),
+        fields=("aim", "step", "epochs_left"),
+        tables=(TerraformingRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("terraform_world",),
+        targets=("world",),
+    ),
+    Mechanic(
+        key="world_surveys",
+        spec_item="S10.2/RP2",
+        title="Every people and realm knows each world only so far, from rumour to a full map; journeys, colonies and conquests need it to know enough",
+        subsystem=S.KNOWLEDGE,
+        phases=("surveys",),
+        surface=Surface(drawer="section-surveys"),
+        backfill="computed: peoples come to know the worlds from the next epoch",
+        fields=("level",),
+        tables=(WorldSurveyRow.__tablename__,),
         targets=("world",),
     ),
 )

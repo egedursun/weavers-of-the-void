@@ -8,6 +8,7 @@ import {
   Star,
   Workflow,
 } from 'lucide-react'
+import { type EditValues } from '@/api/actions'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
@@ -29,6 +30,7 @@ import {
   catalogLabel,
   catalogTable,
   useCosmographyAction,
+  runCosmography,
 } from '../api'
 import { CreateGalaxyStudio } from '../create/CreateStudio'
 import { GALAXY_AGES, NUCLEI } from '../labels'
@@ -46,7 +48,7 @@ import {
   WikiRecords,
 } from './shared'
 
-type Edit = { values: Record<string, unknown>; release: string[] }
+type Edit = { values: EditValues; release: string[] }
 
 const DISCOVERY = {
   known: 'Known',
@@ -179,9 +181,9 @@ function ClusterHero({
 
 export function ClusterView({ clusterId }: { clusterId: number }) {
   const { view, catalog, wiki, ladder } = useScaleData(clusterId)
-  const edit = useCosmographyAction<Edit>(
+  const edit = useCosmographyAction(
     'cluster:edit',
-    (vars) => ({ cluster_id: clusterId, ...vars }),
+    (vars: Edit) => ({ cluster_id: clusterId, ...vars }),
     'The cluster is reshaped'
   )
   if (view.isPending || !catalog) return <WikiLoading />
@@ -435,8 +437,13 @@ export function ClusterView({ clusterId }: { clusterId: number }) {
         name={cluster.name}
         wiki={wiki}
         prompt={cluster.image_prompt}
-        action='cluster:edit'
-        target={{ cluster_id: cluster.id }}
+        savePrompt={(next) =>
+          runCosmography('cluster:edit', {
+            cluster_id: cluster.id,
+            values: { image_prompt: next },
+            release: ['image_prompt'],
+          })
+        }
       />
       <DangerZone
         noun='cluster'

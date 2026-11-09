@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Boxes, Gauge, Plus, Trash2, Users } from 'lucide-react'
+import { type EditValues } from '@/api/actions'
 import type { components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,7 +27,7 @@ type Passenger = components['schemas']['PassengerLine']
 type CommodityKind = components['schemas']['CommodityKind']
 type MaterialKind = components['schemas']['MaterialKind']
 type SocialClass = components['schemas']['SocialClass']
-type Edit = { values: Record<string, unknown>; release: string[] }
+type Edit = { values: EditValues; release: string[] }
 type Load = {
   convoy?: number
   escorts?: number
@@ -49,9 +50,9 @@ export function RouteScopeChip({ route }: { route: RouteRecord }) {
 
 export function RouteFlowEditor({ route }: { route: RouteRecord }) {
   const [keeper, setKeeper] = useState<number | null>(null)
-  const edit = useCosmographyAction<Edit>(
+  const edit = useCosmographyAction(
     'route_flow:edit',
-    (vars) => ({ route_id: route.id, ...vars }),
+    (vars: Edit) => ({ route_id: route.id, ...vars }),
     'The flow of the route is set'
   )
   const busy = edit.isPending ? 'Working' : null
@@ -289,14 +290,14 @@ function PassengerForm({
 export function JourneyLoadEditor({ journey }: { journey: JourneyRecord }) {
   const [convoy, setConvoy] = useState(String(journey.convoy))
   const [escorts, setEscorts] = useState(String(journey.escorts))
-  const load = useCosmographyAction<Load>(
+  const load = useCosmographyAction(
     'journey:load',
-    (vars) => ({ journey_id: journey.id, ...vars }),
+    (vars: Load) => ({ journey_id: journey.id, ...vars }),
     'The load of the voyage is set'
   )
-  const release = useCosmographyAction<string[]>(
+  const release = useCosmographyAction(
     'journey:release',
-    (fields) => ({ journey_id: journey.id, fields }),
+    (fields: string[]) => ({ journey_id: journey.id, fields }),
     'The voyage loads itself again'
   )
   const busy = load.isPending || release.isPending ? 'Working' : null

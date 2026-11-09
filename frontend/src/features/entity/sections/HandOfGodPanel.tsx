@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import type { components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ConfirmDialog, FormRow, Section, Paged } from '@/components/domain'
@@ -35,6 +36,8 @@ import {
   miracleBlock,
 } from './handOfGod'
 
+type InterveneBody = components['schemas']['PostEntitiesEntityIdInterveneBody']
+
 export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
   const catalogue = useCatalogue()
   const actions = useActionCatalogue()
@@ -49,16 +52,11 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
   const item = actions.data?.find((action) => action.id === 'intervene')
   const dreamItem = actions.data?.find((action) => action.id === 'dream')
   const intervene = useLoreMutation({
-    run: (input: {
-      action: Intervention
-      miracle?: string
-      disaster?: string
-      knowledge_id?: number
-    }) =>
+    run: (input: InterveneBody) =>
       unwrap(
         api.POST('/api/entities/{entity_id}/intervene', {
           params: { path: { entity_id: ctx.entity.id } },
-          body: input as never,
+          body: input,
         })
       ),
     success: 'Intervention done',
@@ -87,9 +85,16 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
   const miracles = catalogue.data?.enums.miracles ?? []
   const disasters = catalogue.data?.enums.disasters ?? []
   const run = (kind: Intervention, option?: string) => {
-    if (kind === 'miracle') intervene.mutate({ action: kind, miracle: option })
+    if (kind === 'miracle')
+      intervene.mutate({
+        action: kind,
+        miracle: option as InterveneBody['miracle'],
+      })
     else if (kind === 'disaster')
-      intervene.mutate({ action: kind, disaster: option })
+      intervene.mutate({
+        action: kind,
+        disaster: option as InterveneBody['disaster'],
+      })
     else if (kind === 'teach_knowledge' && knowledge !== null)
       intervene.mutate({ action: kind, knowledge_id: knowledge })
     else intervene.mutate({ action: kind })

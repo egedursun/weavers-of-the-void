@@ -15,6 +15,7 @@ from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.sons import SonRow
@@ -35,9 +36,12 @@ from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent, JourneyS
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import KnowledgeStats, LegendStats, SettlementStats
 from aerona.engine.body.book import factor
+from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.discovery import mark_world_discovered
 from aerona.engine.cosmos.fauna import stowaway
+from aerona.engine.cosmos.features import slingshot
+from aerona.engine.cosmos.lifeforms import habitability
 from aerona.engine.cosmos.pilgrimage import has_holy_site, reach_holy_site
 from aerona.engine.cosmos.placement import cosmography_of
 from aerona.engine.cosmos.routes import (
@@ -55,6 +59,7 @@ from aerona.engine.cosmos.routes import (
     touches,
     world_name,
 )
+from aerona.engine.cosmos.survey import knows_enough
 from aerona.engine.cosmos.voyages import escort_share, unload, voyage_epoch
 from aerona.engine.ecology.beasts import mount_of
 from aerona.engine.ecology.domestication import carry_herds
@@ -338,11 +343,28 @@ async def spontaneous_expeditions(ctx: TickContext) -> int:
     return sent
 
 
+async def planned(ctx: TickContext, community: EntityRow, target: int, intent: JourneyIntent) -> JourneyIntent:
+    survey = ctx.rules.survey
+    if intent is JourneyIntent.CONQUEST and not await knows_enough(ctx.session, community, target, survey.conquest_level):
+        return JourneyIntent.EXPLORATION
+    if intent is JourneyIntent.COLONY:
+        people = await people_of(ctx.session, community)
+        biology = await ctx.session.get(PeopleBiologyRow, people.id) if people is not None else None
+        fit = await habitability(ctx.session, ctx.rules, biology, target)
+        if fit < ctx.rules.life_classes.settle_floor or not await knows_enough(ctx.session, community, target, survey.colony_level):
+            return JourneyIntent.EXPLORATION
+    return intent
+
+
 async def _send_spontaneously(ctx: TickContext, book: RouteBook, community: EntityRow, chance: int, rng: SeededRandom) -> bool:
     if held(community.id, community.world_id):
         return False
+    survey = ctx.rules.survey
     usable = [
-        route for route in book.open_known(community.world_id) if await can_use_route(ctx.session, ctx.rules, ctx.epoch, community, route, book=book) is None
+        route
+        for route in book.open_known(community.world_id)
+        if await can_use_route(ctx.session, ctx.rules, ctx.epoch, community, route, book=book) is None
+        and await knows_enough(ctx.session, community, other_end(route, community.world_id), survey.journey_level)
     ]
     route = await weighted_route(ctx, usable, community.world_id, rng)
     if route is None or not rng.chance(chance):
@@ -353,6 +375,7 @@ async def _send_spontaneously(ctx: TickContext, book: RouteBook, community: Enti
     intent = choose_intent(
         ctx.rules, rng, community.civ_tier or 0, empty, holy_site=await has_holy_site(ctx.session, community, target, ctx.rules), warlike=warlike
     )
+    intent = await planned(ctx, community, target, intent)
     settling = intent in (JourneyIntent.COLONY, JourneyIntent.CONQUEST)
     carried = round(headcount(community) * ctx.rules.travel.colony_share_pct / PERCENT) if settling else 0
     try:
@@ -592,6 +615,7 @@ async def advance_journey(ctx: TickContext, scene: JourneyScene, journey: Journe
         return
     result = await arrive(ctx, journey, traveller, route)
     await unload(ctx, journey, traveller)
+    await slingshot(ctx, journey, route, traveller)
     if route.method is TravelMethod.VOID_ARK and result is not None and result.entity_type is EntityType.SETTLEMENT:
         await ark_founding(ctx, journey, traveller, result)
     journey.status = JourneyStatus.ARRIVED
@@ -716,6 +740,16 @@ async def _found_colony(ctx: TickContext, arrival: Arrival) -> EntityRow | None:
             ctx,
             f"{traveller.name}'s colonists could not live under {arrival.target.name}'s {sky} sky; the colony died out in its first winter.",
             key="travel.colony_failed",
+            ids=[traveller.id],
+        )
+        return None
+    people = await people_of(ctx.session, traveller)
+    biology = await ctx.session.get(PeopleBiologyRow, people.id) if people is not None else None
+    if await habitability(ctx.session, ctx.rules, biology, arrival.target.id) < ctx.rules.life_classes.settle_floor:
+        await note(
+            ctx,
+            f"{traveller.name}'s colonists could not live on {arrival.target.name}; the colony died out in its first years.",
+            key="travel.colony_unfit",
             ids=[traveller.id],
         )
         return None

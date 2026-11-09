@@ -21,15 +21,15 @@ export function DimensionLaws({
 }) {
   const [law, setLaw] = useState<number | null>(null)
   const refresh = [cosmographyKeys.wiki(dimension.id)]
-  const bind = useCosmographyAction<number>(
+  const bind = useCosmographyAction(
     'dimension:bind_law',
-    (lawId) => ({ dimension_id: dimension.id, law_id: lawId }),
+    (lawId: number) => ({ dimension_id: dimension.id, law_id: lawId }),
     'The law holds across the dimension',
     refresh
   )
-  const release = useCosmographyAction<number>(
+  const release = useCosmographyAction(
     'dimension:release_law',
-    (lawId) => ({ law_id: lawId }),
+    (lawId: number) => ({ law_id: lawId }),
     'The law holds only on its own world again',
     refresh
   )

@@ -14,6 +14,7 @@ import {
   Undo2,
   Users,
 } from 'lucide-react'
+import { type ActionBody, type EditValues } from '@/api/actions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -187,11 +188,14 @@ function ActivityCard({ view }: { view: GodDivinity }) {
 }
 
 function GoalRow({ goal, busy }: { goal: GoalView; busy: string | null }) {
-  const edit = useDivineAction<{
-    values: Record<string, unknown>
-    release: string[]
-  }>('god_goal:edit', (vars) => ({ goal_id: goal.id, ...vars }))
-  const drop = useDivineAction<void>('god_goal:drop', () => ({
+  const edit = useDivineAction(
+    'god_goal:edit',
+    (vars: { values: EditValues; release: string[] }) => ({
+      goal_id: goal.id,
+      ...vars,
+    })
+  )
+  const drop = useDivineAction('god_goal:drop', (_: void) => ({
     goal_id: goal.id,
   }))
   const [progress, setProgress] = useState('')
@@ -285,7 +289,7 @@ function GoalRow({ goal, busy }: { goal: GoalView; busy: string | null }) {
           disabled={pending !== null || nothing !== null}
           disabledReason={pending ?? nothing ?? undefined}
           onClick={() => {
-            const values: Record<string, unknown> = {}
+            const values: EditValues = {}
             if (progress !== '') values.progress = Number(progress)
             if (state !== '') values.state = state
             edit.mutate({ values, release: [] })
@@ -309,12 +313,13 @@ function GoalsCard({ view, busy }: { view: GodDivinity; busy: string | null }) {
   const [domain, setDomain] = useState('')
   const [amount, setAmount] = useState('')
   const gods = useGodTable()
-  const set = useDivineAction<void>('god_goal:set', () => ({
+  const set = useDivineAction('god_goal:set', (_: void) => ({
     god_id: view.god.id,
-    kind,
+    kind: kind as ActionBody<'god_goal:set'>['kind'],
     target_id: god !== '' ? Number(god) : target,
     world_id: world,
-    domain: domain === '' ? null : domain,
+    domain:
+      domain === '' ? null : (domain as ActionBody<'god_goal:set'>['domain']),
     amount: amount === '' ? 0 : Number(amount),
   }))
   const pending = busyOf(busy, set.isPending)
@@ -419,11 +424,14 @@ function GoalsCard({ view, busy }: { view: GodDivinity; busy: string | null }) {
 }
 
 function WoundRow({ wound, busy }: { wound: WoundView; busy: string | null }) {
-  const edit = useDivineAction<{
-    values: Record<string, unknown>
-    release: string[]
-  }>('divine_wound:edit', (vars) => ({ wound_id: wound.id, ...vars }))
-  const remove = useDivineAction<void>('divine_wound:remove', () => ({
+  const edit = useDivineAction(
+    'divine_wound:edit',
+    (vars: { values: EditValues; release: string[] }) => ({
+      wound_id: wound.id,
+      ...vars,
+    })
+  )
+  const remove = useDivineAction('divine_wound:remove', (_: void) => ({
     wound_id: wound.id,
   }))
   const [healed, setHealed] = useState('')
@@ -520,7 +528,7 @@ function WoundRow({ wound, busy }: { wound: WoundView; busy: string | null }) {
           disabled={pending !== null || nothing !== null}
           disabledReason={pending ?? nothing ?? undefined}
           onClick={() => {
-            const values: Record<string, unknown> = {}
+            const values: EditValues = {}
             if (healed !== '') values.healed = Number(healed)
             if (severity !== '') values.severity = Number(severity)
             if (form !== '') values.prior_mode = form
@@ -548,11 +556,14 @@ function WoundsCard({
   const [kind, setKind] = useState('')
   const [domain, setDomain] = useState('')
   const [severity, setSeverity] = useState('50')
-  const inflict = useDivineAction<void>('divine_wound:inflict', () => ({
+  const inflict = useDivineAction('divine_wound:inflict', (_: void) => ({
     god_id: view.god.id,
-    kind,
+    kind: kind as ActionBody<'divine_wound:inflict'>['kind'],
     severity: Number(severity),
-    domain: domain === '' ? null : domain,
+    domain:
+      domain === ''
+        ? null
+        : (domain as ActionBody<'divine_wound:inflict'>['domain']),
   }))
   const pending = busyOf(busy, inflict.isPending)
   const problem = kind === '' ? 'Choose a wound' : null
@@ -630,22 +641,21 @@ function AvatarsCard({
   busy: string | null
 }) {
   const [place, setPlace] = useState<number | null>(null)
-  const manifest = useDivineAction<void>('avatar:manifest', () => ({
+  const manifest = useDivineAction('avatar:manifest', (at: number) => ({
     god_id: view.god.id,
-    place_id: place,
+    place_id: at,
   }))
-  const withdraw = useDivineAction<number>('avatar:withdraw', (avatar) => ({
+  const withdraw = useDivineAction('avatar:withdraw', (avatar: number) => ({
     avatar_id: avatar,
   }))
-  const edit = useDivineAction<{
-    avatar: number
-    values: Record<string, unknown>
-    release: string[]
-  }>('avatar:edit', (vars) => ({
-    avatar_id: vars.avatar,
-    values: vars.values,
-    release: vars.release,
-  }))
+  const edit = useDivineAction(
+    'avatar:edit',
+    (vars: { avatar: number; values: EditValues; release: string[] }) => ({
+      avatar_id: vars.avatar,
+      values: vars.values,
+      release: vars.release,
+    })
+  )
   const pending = busyOf(
     busy,
     manifest.isPending,
@@ -736,7 +746,7 @@ function AvatarsCard({
         <Button
           disabled={pending !== null || problem !== null}
           disabledReason={pending ?? problem ?? undefined}
-          onClick={() => manifest.mutate()}
+          onClick={() => place !== null && manifest.mutate(place)}
         >
           <Footprints />
           Take a mortal form
@@ -753,19 +763,18 @@ function StandingCard({
   view: GodDivinity
   busy: string | null
 }) {
-  const save = useDivineAction<{
-    community: number
-    values: Record<string, unknown>
-    release: string[]
-  }>('divine_standing:set', (vars) => ({
-    community_id: vars.community,
-    god_id: view.god.id,
-    values: vars.values,
-    release: vars.release,
-  }))
-  const clear = useDivineAction<number>(
+  const save = useDivineAction(
+    'divine_standing:set',
+    (vars: { community: number; values: EditValues; release: string[] }) => ({
+      community_id: vars.community,
+      god_id: view.god.id,
+      values: vars.values,
+      release: vars.release,
+    })
+  )
+  const clear = useDivineAction(
     'divine_standing:clear',
-    (community) => ({ community_id: community, god_id: view.god.id })
+    (community: number) => ({ community_id: community, god_id: view.god.id })
   )
   const pending = busyOf(busy, save.isPending, clear.isPending)
   return (

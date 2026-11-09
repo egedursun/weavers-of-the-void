@@ -314,7 +314,7 @@ async def hang(call: SonCall, args: HangStarInput) -> str:
     name = " ".join(args.name.split())
     if await NameRepository(call.session).is_taken(name):
         fail(SonResult.NAME_IN_USE)
-    star = await hang_star(call.tick, name, args.type or StarType.YELLOW_DWARF, call.son.name, args.description)
+    star = await hang_star(call.tick, name, args.type or StarType.YELLOW_DWARF, call.son.name, args.description, maker_son_id=call.son.id)
     call.spend_essence(cost)
     call.target(star.id)
     return result(SonResult.STAR_HUNG, id=star.id, name=star.name)

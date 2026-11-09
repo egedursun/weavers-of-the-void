@@ -1,0 +1,168 @@
+from dataclasses import dataclass
+
+from aerona.rules.groups import RuleGroup
+from aerona.rules.model import rule
+
+C = RuleGroup.COSMOS
+T = RuleGroup.COSMOS_AND_TRAVEL
+E = RuleGroup.ENVIRONMENT
+
+
+@dataclass(frozen=True)
+class StellarEvolutionRules:
+    luminosity_exponent_tenths: int = rule(35, 10, 60, C, "Power of a star's mass that sets its luminosity, in tenths (35 is mass to the 3.5)")
+    sun_life_epochs: int = rule(120, 1, 100000, C, "Epochs a star of one sun's mass spends in its long main life")
+    life_cap_epochs: int = rule(5000, 1, 1000000, C, "Most epochs any stage of a star's life can last")
+    young_pct: int = rule(8, 1, 100, C, "Share of its main life a star spends young (%)")
+    old_pct: int = rule(20, 1, 100, C, "Share of its main life a star spends old or swollen (%)")
+    dying_pct: int = rule(5, 1, 100, C, "Share of its main life a star spends dying (%)")
+    dwarf_mass_hundredths: int = rule(50, 1, 1000, C, "Mass below which a star never swells into a giant, in hundredths of a sun")
+    supernova_mass_hundredths: int = rule(800, 100, 10000, C, "Mass from which a star ends in a supernova, in hundredths of a sun")
+    black_hole_mass_hundredths: int = rule(
+        2000, 100, 100000, C, "Mass from which a star's remnant is a black hole rather than a neutron star, in hundredths of a sun"
+    )
+    engulf_orbit_per_mass_pct: int = rule(30, 0, 500, C, "Orbit, per sun of mass, that a swelling giant swallows (%)")
+    sun_brightness: int = rule(70, 0, 100, C, "Brightness of a star of one sun's luminosity")
+    brightness_per_decade: int = rule(12, 0, 100, C, "Brightness a star gains for each tenfold of luminosity")
+    brightness_drift: int = rule(1, 0, 50, C, "Brightness a star moves toward its luminosity each epoch")
+    metallicity_drift: int = rule(1, 0, 50, C, "Metallicity a star born of its galaxy takes toward its galaxy's each epoch of youth")
+    binary_chance: int = rule(30, 0, 100, C, "Chance a star born in a nursery is born as the companion of a star already there (%)")
+    binary_separation_tenths: int = rule(20, 1, 10000, C, "Distance between a star and the companion born beside it, in tenths of an orbit")
+    divine_upkeep: int = rule(4, 0, 1000, C, "Essence a son pays each epoch to keep a star of their own making outside the laws of its kind")
+    divine_steadiness_pct: int = rule(100, 0, 300, C, "How closely a made star's steadiness follows its maker's existence (%)")
+    habitable_inner_hundredths: int = rule(95, 1, 1000, C, "Inner edge of the temperate band for one sun's luminosity, in hundredths of an orbit")
+    habitable_outer_hundredths: int = rule(137, 1, 2000, C, "Outer edge of the temperate band for one sun's luminosity, in hundredths of an orbit")
+
+
+@dataclass(frozen=True)
+class OrbitRules:
+    lock_orbit_hundredths: int = rule(
+        25, 0, 1000, C, "Orbit, per sun of mass to the third root, inside which a world turns one face to its star, in hundredths"
+    )
+    global_season_eccentricity_pct: int = rule(15, 0, 99, C, "Eccentricity from which a world's whole year swings between near and far (%)")
+    reference_temperature: int = rule(288, 1, 2000, C, "Surface temperature, in kelvin, at which a world's regions gain no heat from its sky")
+    equilibrium_constant: int = rule(279, 1, 2000, C, "Temperature, in kelvin, of a dark body at one orbit from one sun's luminosity")
+    heat_per_ten_kelvin: int = rule(4, 0, 50, C, "Regional temperature a world gains for each ten kelvin above its reference")
+    heat_cap: int = rule(45, 0, 100, C, "Most regional temperature the sky can add or take")
+    greenhouse_base: int = rule(25, 0, 500, C, "Kelvin of warming each unit of air pressure gives")
+    greenhouse_co2: int = rule(8, 0, 200, C, "Kelvin of warming per point of carbon dioxide at one unit of pressure")
+    greenhouse_methane: int = rule(20, 0, 200, C, "Kelvin of warming per point of methane at one unit of pressure")
+    greenhouse_water: int = rule(3, 0, 200, C, "Kelvin of warming per point of water vapour at one unit of pressure")
+    tidal_heat: int = rule(20, 0, 500, C, "Kelvin of tidal heating a moon at the closest orbit gains from a world of one mass")
+    internal_heat: int = rule(10, 0, 200, C, "Kelvin of inner heat a world of full volcanism gives its surface")
+    low_gravity_g_hundredths: int = rule(60, 1, 1000, C, "Gravity below which a world counts as light, in hundredths of the reference")
+    high_gravity_g_hundredths: int = rule(140, 1, 10000, C, "Gravity above which a world counts as heavy, in hundredths of the reference")
+    thin_air_hundredths: int = rule(50, 0, 10000, C, "Air pressure below which the air counts as thin, in hundredths")
+    no_air_hundredths: int = rule(2, 0, 1000, C, "Air pressure below which a world has no air, in hundredths")
+    dense_air_hundredths: int = rule(300, 1, 100000, C, "Air pressure above which the air counts as dense, in hundredths")
+    toxic_share: int = rule(20, 0, 100, C, "Share of carbon dioxide, methane and strange gases from which the air is toxic")
+    escape_hold_hundredths: int = rule(40, 0, 1000, C, "Escape velocity below which a warm world loses its air, in hundredths of the reference")
+    air_loss_hundredths: int = rule(2, 0, 1000, C, "Pressure a world too small to hold its air loses each epoch, in hundredths")
+    tide_per_moon_mass: int = rule(25, 0, 1000, C, "Tidal strength a moon of one hundredth of its world's mass at the nearest orbit raises")
+    roche_orbit_hundredths: int = rule(6, 0, 100, C, "Orbit inside which a moon breaks apart into a ring, in hundredths")
+    eclipse_years_base: int = rule(3, 1, 1000, C, "Years between eclipses for a world with one large moon on a level orbit")
+    eclipse_inclination_degrees: int = rule(5, 1, 90, C, "Degrees of a moon's tilt that double the years between eclipses")
+    aurora_per_magnetism_pct: int = rule(60, 0, 300, C, "Aurora a world's magnetism shows for its star's activity (%)")
+    aurora_piety_pct: int = rule(5, 0, 100, C, "Piety the peoples under an aurora gain against its strength (%)")
+    transit_weight: int = rule(1, 0, 100, C, "Weight of a world crossing the face of its star among the signs of the sky")
+    transit_piety: int = rule(1, 0, 50, C, "Piety the peoples who see a world cross the face of their star gain")
+    transit_inclination_degrees: int = rule(3, 0, 90, C, "Most difference of tilt at which an inner world can be seen crossing its star")
+    circumbinary_share_pct: int = rule(100, 0, 300, C, "Share of a companion star's light a world circling both stars receives (%)")
+    galactic_turn_degrees: int = rule(1, 0, 90, C, "Degrees a star at the edge of its galaxy turns about the centre each epoch")
+
+
+@dataclass(frozen=True)
+class PlanetaryClimateRules:
+    thaw_kelvin: int = rule(293, 1, 2000, E, "Surface temperature above which a world holds no lasting ice")
+    ice_per_kelvin: int = rule(2, 0, 50, E, "Ice a world holds for each kelvin below its thaw")
+    ice_step: int = rule(2, 0, 50, E, "Ice a world gains or loses each epoch toward what its warmth holds")
+    albedo_per_ice_pct: int = rule(40, 0, 300, E, "Brightness a world's surface gains for each point of ice (%)")
+    volcanic_co2_pct: int = rule(5, 0, 100, E, "Chance full volcanism raises a world's carbon dioxide by a point in an epoch (%)")
+    burning_co2_pct: int = rule(3, 0, 100, E, "Chance a world whose land is all cleared raises its carbon dioxide by a point in an epoch (%)")
+    weathering_pct: int = rule(5, 0, 100, E, "Chance rock and sea take a point of carbon dioxide back from a world in an epoch (%)")
+    weathering_floor: int = rule(1, 0, 100, E, "Carbon dioxide below which rock and sea take none back")
+    sea_per_ice_pct: int = rule(50, 0, 300, E, "Sea level a world loses for each point of ice (%)")
+    flood_step: int = rule(5, 1, 100, E, "Change of sea level that floods or bares the coasts")
+    flood_loss_pct: int = rule(10, 0, 100, E, "Share of its people a flooded coastal settlement loses or moves inland (%)")
+    ice_age_cryosphere: int = rule(45, 0, 100, E, "Ice from which a world lies in an ice age")
+    scorching_heat: int = rule(25, 0, 100, E, "Sky heat from which a world lies in a scorching age")
+    drought_hydrosphere: int = rule(15, 0, 100, E, "Water below which a power that spans worlds sets out to give a dry world water")
+
+
+@dataclass(frozen=True)
+class ImpactRules:
+    field_chance_per_density: int = rule(
+        2, 0, 100, C, "Chance an asteroid field strikes a world of its star in an epoch per ten points of density (tenths of a percent)"
+    )
+    comet_chance: int = rule(3, 0, 100, C, "Chance a returning comet strikes a world of its star (%)")
+    rogue_chance: int = rule(5, 0, 100, C, "Chance a passing rogue world sends a body into a world it passes (%)")
+    warning_epochs: int = rule(2, 0, 50, C, "Epochs of warning astronomers who can foresee it give an impact")
+    predict_level: int = rule(3, 0, 10, C, "Astronomy level that foresees an impact")
+    size_die: int = rule(60, 1, 100, C, "Spread of the size of a body that strikes")
+    devastation_pct: int = rule(80, 0, 300, C, "Severity of the ruin an impact brings its region against its size (%)")
+    winter_per_size: int = rule(20, 1, 100, C, "Size of impact that brings one epoch of impact winter")
+    winter_cold: int = rule(15, 0, 100, C, "Temperature an impact winter takes from every region of its world")
+    extinction_pct: int = rule(30, 0, 100, C, "Share of their numbers the kinds of creature lose in an impact winter, against its size (%)")
+    star_metal_size: int = rule(40, 0, 100, C, "Size of impact from which the crater holds star metal")
+    prepared_pct: int = rule(50, 0, 100, C, "Share of an impact's ruin a warned world is spared (%)")
+    prepare_piety: int = rule(5, 0, 50, C, "Piety warned peoples gain praying for deliverance")
+    call_essence: int = rule(60, 0, 10000, C, "Essence a son spends to call an impact")
+    deflect_essence: int = rule(50, 0, 10000, C, "Essence a son spends to turn an impact aside")
+    called_size: int = rule(50, 1, 100, C, "Size of an impact a god calls")
+    legend_size: int = rule(50, 0, 100, C, "Size of impact from which the peoples who saw it tell a legend of it")
+
+
+@dataclass(frozen=True)
+class TerraformingRules:
+    step: int = rule(5, 1, 100, E, "Points a terraforming moves its world each epoch")
+    epochs: int = rule(8, 1, 1000, E, "Epochs a terraforming runs")
+    essence: int = rule(80, 0, 10000, E, "Essence a son spends to begin terraforming a world")
+    polity_chance: int = rule(5, 0, 100, E, "Chance a power that spans worlds begins to reshape a world it holds but cannot breathe on, in an epoch (%)")
+    polity_tier: int = rule(4, 0, 5, E, "Civilization tier from which a power reshapes worlds")
+    native_harm_pct: int = rule(10, 0, 100, E, "Share of their numbers native kinds of another life lose to each epoch of terraforming (%)")
+    biosphere_harm: int = rule(3, 0, 100, E, "Biosphere health a world of another life loses to each epoch of terraforming")
+    pressure_hundredths: int = rule(10, 0, 1000, E, "Pressure, in hundredths, each point of thickening or thinning the air moves")
+
+
+@dataclass(frozen=True)
+class CosmicFeatureRules:
+    mining_per_richness: int = rule(2, 0, 100, T, "Ore each point of an asteroid field's richness yields a community with ships in its system each epoch")
+    star_metal_chance: int = rule(10, 0, 100, T, "Chance asteroid miners also bring back star metal in an epoch (%)")
+    pirate_piracy: int = rule(1, 0, 50, T, "Piracy routes of a system gain each epoch for each ten points of pirates in its fields")
+    wormhole_duration: int = rule(1, 1, 100, T, "Epochs a journey through a wormhole takes")
+    slingshot_cut: int = rule(1, 0, 20, T, "Epochs a route past a black hole saves")
+    dilation_years: int = rule(10, 0, 1000, T, "Years younger than their kin travellers past a black hole arrive")
+    devour_pct: int = rule(5, 0, 100, T, "Share of its orbit a world inside a black hole's well loses each epoch (%)")
+    horizon_orbit_hundredths: int = rule(5, 0, 1000, T, "Orbit inside which a black hole swallows a world, in hundredths")
+    well_reach_per_mass: int = rule(2, 0, 100, T, "Reach of a black hole's well per sun of its mass, in tenths of an orbit")
+    rogue_perturb_pct: int = rule(2, 0, 50, T, "Eccentricity a passing rogue world adds to the worlds it passes (hundredths)")
+    rogue_pass_epochs: int = rule(4, 1, 100, T, "Epochs a rogue world takes to pass through a star's system")
+    comet_festival_chance: int = rule(20, 0, 100, T, "Chance a people who sees a comet return makes a festival of its returns (%)")
+    comet_prophecy_chance: int = rule(15, 0, 100, T, "Chance a returning comet gives rise to a prophecy (%)")
+    field_density: int = rule(50, 0, 100, T, "Density of a new asteroid field")
+    comet_period: int = rule(12, 1, 10000, T, "Epochs between the returns of a new periodic comet")
+
+
+@dataclass(frozen=True)
+class SurveyRules:
+    detect_level: int = rule(1, 0, 10, T, "Astronomy level that detects the worlds of one's own galaxy")
+    observe_level: int = rule(3, 0, 10, T, "Astronomy level that observes the worlds of one's own star")
+    sail_steps: int = rule(1, 0, 5, T, "Survey steps sky navigation adds to every world one already detects")
+    journey_level: int = rule(1, 0, 5, T, "Survey level, from unknown at 0 to mapped at 5, a journey needs of the world it sails for")
+    colony_level: int = rule(3, 0, 5, T, "Survey level a colony needs of the world it settles")
+    conquest_level: int = rule(4, 0, 5, T, "Survey level a conquest needs of the world it claims")
+
+
+@dataclass(frozen=True)
+class LifeClassRules:
+    species_complexity: int = rule(2, 0, 4, E, "Complexity, from none at 0 to sapient at 4, a world needs for creatures to arise on it")
+    people_complexity: int = rule(3, 0, 3, E, "Complexity, from none at 0 to complex at 3, a world needs for peoples to arise on it")
+    rise_chance: int = rule(4, 0, 100, E, "Chance the life of a living world in its temperate band grows one step more complex in an epoch (%)")
+    rise_health: int = rule(50, 0, 100, E, "Biosphere health a world needs for its life to grow more complex")
+    mismatch_pct: int = rule(20, 0, 100, E, "Habitability a people keeps on a world of another life (%)")
+    air_pct: int = rule(40, 0, 100, E, "Habitability a people keeps where it cannot breathe the air (%)")
+    gravity_pct: int = rule(60, 0, 100, E, "Habitability a people keeps outside the gravity it bears (%)")
+    growth_pct: int = rule(100, 0, 300, E, "How strongly a people's habitability sets its growth (%)")
+    disease_per_point: int = rule(3, 0, 50, E, "Disease load an unfit world adds per ten points of habitability lost")
+    settle_floor: int = rule(40, 0, 100, E, "Habitability below which a people will not plant a colony")
+    breathable_oxygen: int = rule(15, 0, 100, E, "Oxygen share from which air-breathing peoples can breathe")

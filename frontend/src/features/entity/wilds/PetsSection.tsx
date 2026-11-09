@@ -51,15 +51,15 @@ export function PetsSection({
   readOnlyReason?: string | null
 }) {
   const view = usePets(mortalId)
-  const give = useWildAction<number>('pet:give', (species) => ({
+  const give = useWildAction('pet:give', (species: number) => ({
     owner_id: mortalId,
     species_id: species,
   }))
-  const free = useWildAction<number>('pet:set', (beast) => ({
+  const free = useWildAction('pet:set', (beast: number) => ({
     beast_id: beast,
     owner_id: null,
   }))
-  const keep = useWildAction<number>('pet:set', (picked) => ({
+  const keep = useWildAction('pet:set', (picked: number) => ({
     beast_id: picked,
     owner_id: mortalId,
   }))

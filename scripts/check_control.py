@@ -61,6 +61,20 @@ class Code:
         }
         self.facts: dict[Key, dict[str, set[str]]] = {}
         self.callees: dict[Key, set[Key]] = {}
+        self.editors: dict[Key, set[int]] = {key: self.edited_positions(nodes[0]) for key, nodes in self.defs.items() if len(nodes) == 1}
+
+    def edited_positions(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> set[int]:
+        names = [arg.arg for arg in [*node.args.posonlyargs, *node.args.args]]
+        edited: set[str] = set()
+        for sub in ast.walk(node):
+            if isinstance(sub, ast.Call) and getattr(sub.func, "id", "") == "setattr" and sub.args and isinstance(sub.args[0], ast.Name):
+                edited.add(sub.args[0].id)
+            elif isinstance(sub, (ast.Assign, ast.AugAssign, ast.AnnAssign)):
+                targets = sub.targets if isinstance(sub, ast.Assign) else [sub.target]
+                edited.update(
+                    leaf.value.id for target in targets for leaf in ast.walk(target) if isinstance(leaf, ast.Attribute) and isinstance(leaf.value, ast.Name)
+                )
+        return {position for position, name in enumerate(names) if name in edited}
 
     def index(self, name: str, tree: ast.Module) -> None:
         table: dict[str, tuple[str, str | None]] = {}
@@ -204,6 +218,11 @@ class Code:
         if isinstance(func, ast.Name) and func.id in self.rows:
             found["create"].add(self.rows[func.id])
             return
+        if isinstance(func, ast.Name):
+            editor = self.resolve(module, func.id)
+            for position in self.editors.get(editor, set()) if editor is not None else set():
+                if position < len(call.args):
+                    found["edit"] |= self.kind(module, env, call.args[position])
         if first is None:
             return
         if isinstance(func, ast.Name):

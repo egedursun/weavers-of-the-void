@@ -123,6 +123,9 @@ class SonToolId(StrEnum):
     CLAIM_GALAXY = "claim_galaxy"
     RULE_DIMENSION = "rule_dimension"
     CLAIM_STAR = "claim_star"
+    CALL_IMPACT = "call_impact"
+    DEFLECT_IMPACT = "deflect_impact"
+    TERRAFORM_WORLD = "terraform_world"
 
     WAGE_WAR = "wage_war"
     RAISE_HOST = "raise_host"

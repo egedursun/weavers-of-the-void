@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Eraser, Skull } from 'lucide-react'
+import { type ActionBody } from '@/api/actions'
 import { Button } from '@/components/ui/button'
 import { Medallion, Section } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
@@ -21,9 +22,11 @@ export function ApocalypseVariantPanel({
   catalog: CosmographyCatalog | undefined
 }) {
   const [choice, setChoice] = useState('')
-  const set = useCosmographyAction<string | null>(
+  const set = useCosmographyAction(
     'apocalypse:variant',
-    (variant) => ({ variant }),
+    (variant: string | null) => ({
+      variant: variant as ActionBody<'apocalypse:variant'>['variant'],
+    }),
     'The shape of the end is set'
   )
   const busy = set.isPending ? 'Setting the shape of the end' : null

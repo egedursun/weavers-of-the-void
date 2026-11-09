@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { type ActionBody, postAction } from '@/api/actions'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
@@ -131,17 +132,16 @@ export type DivineAction =
   | 'breach:edit'
   | 'breach:close'
 
-export function runDivine(name: DivineAction, body: Record<string, unknown>) {
-  return unwrap(
-    api.POST(`/api/actions/${name}` as '/api/actions/taboo:set', {
-      body: body as never,
-    })
-  )
+export function runDivine<Name extends DivineAction>(
+  name: Name,
+  body: ActionBody<Name>
+) {
+  return postAction(name, body)
 }
 
-export function useDivineAction<T>(
-  name: DivineAction,
-  toBody: (vars: T) => Record<string, unknown>,
+export function useDivineAction<Name extends DivineAction, T>(
+  name: Name,
+  toBody: (vars: T) => ActionBody<Name>,
   onDone?: () => void
 ) {
   return useGodAction<T>({

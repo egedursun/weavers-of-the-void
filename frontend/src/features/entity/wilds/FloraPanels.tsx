@@ -9,6 +9,7 @@ import {
   TriangleAlert,
   Wheat,
 } from 'lucide-react'
+import { type ActionBody, type EditValues } from '@/api/actions'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import {
@@ -259,9 +260,9 @@ export function FloraCard({ card }: { card: SpeciesCard }) {
 }
 
 function usePlantEdit(id: number) {
-  return useWildAction<{ values: Record<string, unknown>; release?: string[] }>(
+  return useWildAction(
     'plant:edit',
-    (vars) => ({
+    (vars: { values: EditValues; release?: string[] }) => ({
       species_id: id,
       values: vars.values,
       release: vars.release ?? [],
@@ -270,32 +271,38 @@ function usePlantEdit(id: number) {
 }
 
 function useCropSet() {
-  return useWildAction<{
-    region: number
-    plant: number
-    share: number | null
-    hold?: boolean
-    release?: string[]
-  }>('crop:set', (vars) => ({
-    region_id: vars.region,
-    plant_id: vars.plant,
-    share: vars.share,
-    hold: vars.hold ?? true,
-    release: vars.release ?? [],
-  }))
+  return useWildAction(
+    'crop:set',
+    (vars: {
+      region: number
+      plant: number
+      share: number | null
+      hold?: boolean
+      release?: string[]
+    }) => ({
+      region_id: vars.region,
+      plant_id: vars.plant,
+      share: vars.share,
+      hold: vars.hold ?? true,
+      release: vars.release ?? [],
+    })
+  )
 }
 
 function useCropDrop() {
-  return useWildAction<{ region: number; plant: number }>(
+  return useWildAction(
     'crop:drop',
-    (vars) => ({ region_id: vars.region, plant_id: vars.plant })
+    (vars: { region: number; plant: number }) => ({
+      region_id: vars.region,
+      plant_id: vars.plant,
+    })
   )
 }
 
 function useCropPest() {
-  return useWildAction<{ plant: number; pest: number; present: boolean }>(
+  return useWildAction(
     'crop_pest:set',
-    (vars) => ({
+    (vars: { plant: number; pest: number; present: boolean }) => ({
       plant_id: vars.plant,
       pest_id: vars.pest,
       present: vars.present,
@@ -991,11 +998,12 @@ function useWorldLife(worldId: number) {
 
 export function WorldLifeSection({ worldId }: { worldId: number }) {
   const view = useWorldLife(worldId)
-  const toggle = useWildAction<{ biochemistry: string; present: boolean }>(
+  const toggle = useWildAction(
     'world:life',
-    (vars) => ({
+    (vars: { biochemistry: string; present: boolean }) => ({
       world_id: worldId,
-      biochemistry: vars.biochemistry,
+      biochemistry:
+        vars.biochemistry as ActionBody<'world:life'>['biochemistry'],
       present: vars.present,
     })
   )

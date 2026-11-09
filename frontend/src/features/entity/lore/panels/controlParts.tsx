@@ -1,21 +1,18 @@
 import { useState } from 'react'
 import { type LucideIcon } from 'lucide-react'
-import { api } from '@/api/client'
-import { unwrap } from '@/api/errors'
+import { type ActionBody, type ActionName, postAction } from '@/api/actions'
 import { Button } from '@/components/ui/button'
 import { Muted } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { busyOf } from '../model'
 
-export function useLoreAction<T>(path: string, body: (value: T) => object) {
+export function useLoreAction<Name extends ActionName, T>(
+  name: Name,
+  body: (value: T) => ActionBody<Name>
+) {
   return useGodAction<T>({
-    run: (value) =>
-      unwrap(
-        api.POST(path as '/api/actions/lore:edit', {
-          body: body(value) as never,
-        })
-      ),
+    run: (value) => postAction(name, body(value)),
   })
 }
 

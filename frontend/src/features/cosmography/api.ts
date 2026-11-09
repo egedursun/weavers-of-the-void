@@ -1,4 +1,5 @@
 import { type QueryKey, useQuery } from '@tanstack/react-query'
+import { type ActionBody, postAction } from '@/api/actions'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
@@ -122,20 +123,16 @@ export type CosmographyAction =
   | 'apocalypse:variant'
   | 'region_climate:turn'
 
-export function runCosmography(
-  name: CosmographyAction,
-  body: Record<string, unknown>
+export function runCosmography<Name extends CosmographyAction>(
+  name: Name,
+  body: ActionBody<Name>
 ) {
-  return unwrap(
-    api.POST(`/api/actions/${name}` as '/api/actions/galaxy:create', {
-      body: body as never,
-    })
-  )
+  return postAction(name, body)
 }
 
-export function useCosmographyAction<T>(
-  name: CosmographyAction,
-  toBody: (vars: T) => Record<string, unknown>,
+export function useCosmographyAction<Name extends CosmographyAction, T>(
+  name: Name,
+  toBody: (vars: T) => ActionBody<Name>,
   success?: string,
   also: readonly QueryKey[] = []
 ) {

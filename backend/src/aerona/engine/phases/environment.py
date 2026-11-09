@@ -17,6 +17,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, LeyLineRow, NotableYearRow, PlaceEnvironmentRow, RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.happenings import RegionGeomorphRow
 from aerona.db.tables.industry import RegionPollutionRow
+from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held as frozen
 from aerona.db.write_guard import unheld
@@ -32,6 +33,7 @@ from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.climate import current_heat, world_heat
+from aerona.engine.cosmos.orbits import SKYLESS_WORLDS, rogue_worlds
 from aerona.engine.cosmos.phenomena import phenomenon_passability
 from aerona.engine.cosmos.star_types import star_heat
 from aerona.engine.cosmos.worldlife import cosmic_disease
@@ -161,6 +163,7 @@ class RegionContext:
     works: Works = field(default_factory=Works)
     world_heat: int = 0
     pass_shift: int = 0
+    sky_heat: int | None = None
 
     def surroundings(self, rules: Rules, env: RegionEnvironmentRow) -> Surroundings:
         return Surroundings(
@@ -170,7 +173,7 @@ class RegionContext:
             highland=is_highland(rules, geography_of(env)),
             ruins=self.ruins,
             chokepoints=self.chokepoints,
-            star_heat=star_heat(rules, self.star),
+            star_heat=star_heat(rules, self.star) if self.sky_heat is None else self.sky_heat,
             works=self.works,
             cleared=env.cleared,
             shift_heat=self.world_heat + env.temperature_shift + current_heat(rules, env.current),
@@ -368,6 +371,18 @@ async def write_seasons(ctx: TickContext, world: WorldRow) -> list[WorldSeasonRo
     return rows
 
 
+def root_world(book: EnvironmentBook, world: WorldRow) -> WorldRow:
+    seen: set[int] = set()
+    while world.parent_world_id is not None and world.parent_world_id in book.worlds and world.id not in seen:
+        seen.add(world.id)
+        world = book.worlds[world.parent_world_id]
+    return world
+
+
+def governs(world: WorldRow, star: StarRow | None, rogue: set[int]) -> bool:
+    return world.world_type not in SKYLESS_WORLDS and (star is not None or world.id in rogue)
+
+
 async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list[EntityRow]) -> dict[int, RegionContext]:
     ruined = await flags_by_entity(ctx.session, EntityFlag.RUIN)
     ruins: Counter[int] = Counter()
@@ -382,10 +397,14 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
     works = await works_by_region(ctx, book)
     hindered = await phenomenon_passability(ctx)
     contexts: dict[int, RegionContext] = {}
+    skies = {row.world_id: row for row in await ctx.session.scalars(select(WorldPhysicsRow))}
+    rogue = await rogue_worlds(ctx.session)
     for region in regions:
         world = book.worlds.get(region.world_id)
         if world is None:
             continue
+        physics = skies.get(world.id)
+        sky_heat = physics.heat_shift if physics is not None and governs(world, book.star_of(root_world(book, world)), rogue) else None
         contexts[region.id] = RegionContext(
             world=world,
             era=world.climate_era,
@@ -393,8 +412,9 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
             chokepoints=chokepoints[region.id],
             star=book.star_of(world),
             works=works.get(region.id, Works()),
-            world_heat=world_heat(ctx.rules, world, book.star_of(world)),
+            world_heat=world_heat(ctx.rules, world, book.star_of(world), sky_heat),
             pass_shift=hindered[region.id],
+            sky_heat=sky_heat,
         )
     return contexts
 

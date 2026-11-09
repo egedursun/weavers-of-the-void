@@ -15,6 +15,7 @@ from aerona.db.repositories.worlds import StarDraft, WorldRepository
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
 from aerona.db.tables.cosmography import GalaxyRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
@@ -26,6 +27,7 @@ from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.remnants import after_supernova
 from aerona.engine.cosmos.routes import restore_sail_routes, scorch_sail_routes, snap_sail_routes
 from aerona.engine.cosmos.star_types import fitted_brightness, kindled_brightness
+from aerona.engine.cosmos.stellar import physics_of_stars
 from aerona.engine.cosmos.worlds import align_moons
 from aerona.engine.primitives.doom import advance_doom
 from aerona.engine.primitives.queries import canon, flags_by_entity
@@ -164,6 +166,24 @@ async def black_sun(ctx: TickContext, star: StarRow) -> str:
     return f"{star.name} turned into a black sun that gives no light."
 
 
+async def auroras(ctx: TickContext, star: StarRow, worlds: list[WorldRow]) -> list[str]:
+    lit: list[str] = []
+    for world in worlds:
+        physics = await ctx.session.get(WorldPhysicsRow, world.id)
+        strength = physics.aurora if physics is not None else world.magnetism // 2
+        if strength <= 0 or held(world.id):
+            continue
+        ctx.session.add(
+            SkyEventRow(
+                kind=SkyEventKind.AURORA, epoch=ctx.epoch, until_epoch=ctx.epoch, world_id=world.id, star_id=star.id, text=f"Auroras over {world.name}."
+            )
+        )
+        for community in await canon(ctx.session, COMMUNITY_TYPES, world.id):
+            shift_bounded(ctx.rules, community, PIETY_KEY, strength * ctx.rules.orbits.aurora_piety_pct // PERCENT)
+        lit.append(world.name)
+    return lit
+
+
 async def flare(ctx: TickContext, star: StarRow) -> str:
     sky = ctx.rules.sky
     worlds = await worlds_of_star(ctx.session, star.id)
@@ -172,9 +192,12 @@ async def flare(ctx: TickContext, star: StarRow) -> str:
             shift_bounded(ctx.rules, region, FERTILITY_KEY, -sky.flare_fertility_loss)
         for community in await canon(ctx.session, COMMUNITY_TYPES, world.id):
             shift_bounded(ctx.rules, community, PIETY_KEY, sky.flare_piety_gain)
+    lit = await auroras(ctx, star, worlds)
     scorched = await scorch_sail_routes(ctx, star.id)
     names = ", ".join(world.name for world in worlds) or "the empty void around it"
-    text = f"{star.name} flared: the fields of {names} lost fertility and auroras filled their skies."
+    text = f"{star.name} flared: the fields of {names} lost fertility."
+    if lit:
+        text += f" Auroras filled the skies of {', '.join(lit)}."
     if scorched:
         text += f" The flare scorched shut {scorched} light-sail route{'s' if scorched > 1 else ''} bound to it."
     await ctx.session.flush()
@@ -226,6 +249,7 @@ async def hang_star(
     *,
     galaxy_id: int | None = None,
     world_id: int | None = None,
+    maker_son_id: int | None = None,
 ) -> StarRow:
     pantheon = ctx.rules.pantheon
     if galaxy_id is not None and await ctx.session.get(GalaxyRow, galaxy_id) is None:
@@ -258,6 +282,9 @@ async def hang_star(
             root.orbit = ORBIT_PLANET_BASE
             await align_moons(ctx.session)
             text += f" {root.name} now circles it."
+    if maker_son_id is not None:
+        physics = (await physics_of_stars(ctx.session, ctx.rules, [star]))[star.id]
+        physics.maker_son_id = maker_son_id
     await ctx.chronicle(ChronicleKind.COSMIC, text, template_key="sky.star_hung", feed_category=FeedCategory.SKY)
     await ctx.session.flush()
     return star

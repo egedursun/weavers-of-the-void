@@ -23,6 +23,7 @@ class StarTypeMechanics:
     capacity_pct: RuleValue
     collapse_weight: RuleValue
     flare_weight: RuleValue
+    mass: RuleValue = _zero
     eclipse_weight: RuleValue = _zero
     leak: RuleValue = _zero
     leak_repair: RuleValue = _zero
@@ -44,6 +45,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.yellow_dwarf_capacity,
             collapse_weight=lambda rules: rules.star_types.yellow_dwarf_collapse_weight,
             flare_weight=lambda rules: rules.star_types.yellow_dwarf_flare_weight,
+            mass=lambda rules: rules.star_types.yellow_dwarf_mass,
         ),
         StarTypeMechanics(
             S.BLUE_STAR,
@@ -53,6 +55,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.blue_star_capacity,
             collapse_weight=lambda rules: rules.star_types.blue_star_collapse_weight,
             flare_weight=lambda rules: rules.star_types.blue_star_flare_weight,
+            mass=lambda rules: rules.star_types.blue_star_mass,
         ),
         StarTypeMechanics(
             S.BLUE_WHITE_STAR,
@@ -62,6 +65,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.blue_white_star_capacity,
             collapse_weight=lambda rules: rules.star_types.blue_white_star_collapse_weight,
             flare_weight=lambda rules: rules.star_types.blue_white_star_flare_weight,
+            mass=lambda rules: rules.star_types.blue_white_star_mass,
         ),
         StarTypeMechanics(
             S.WHITE_STAR,
@@ -71,6 +75,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.white_star_capacity,
             collapse_weight=lambda rules: rules.star_types.white_star_collapse_weight,
             flare_weight=lambda rules: rules.star_types.white_star_flare_weight,
+            mass=lambda rules: rules.star_types.white_star_mass,
         ),
         StarTypeMechanics(
             S.YELLOW_WHITE_STAR,
@@ -80,6 +85,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.yellow_white_star_capacity,
             collapse_weight=lambda rules: rules.star_types.yellow_white_star_collapse_weight,
             flare_weight=lambda rules: rules.star_types.yellow_white_star_flare_weight,
+            mass=lambda rules: rules.star_types.yellow_white_star_mass,
         ),
         StarTypeMechanics(
             S.ORANGE_DWARF,
@@ -89,6 +95,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.orange_dwarf_capacity,
             collapse_weight=lambda rules: rules.star_types.orange_dwarf_collapse_weight,
             flare_weight=lambda rules: rules.star_types.orange_dwarf_flare_weight,
+            mass=lambda rules: rules.star_types.orange_dwarf_mass,
         ),
         StarTypeMechanics(
             S.RED_DWARF,
@@ -98,6 +105,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.red_dwarf_capacity,
             collapse_weight=lambda rules: rules.star_types.red_dwarf_collapse_weight,
             flare_weight=lambda rules: rules.star_types.red_dwarf_flare_weight,
+            mass=lambda rules: rules.star_types.red_dwarf_mass,
         ),
         StarTypeMechanics(
             S.BROWN_DWARF,
@@ -107,6 +115,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.brown_dwarf_capacity,
             collapse_weight=lambda rules: rules.star_types.brown_dwarf_collapse_weight,
             flare_weight=lambda rules: rules.star_types.brown_dwarf_flare_weight,
+            mass=lambda rules: rules.star_types.brown_dwarf_mass,
         ),
         StarTypeMechanics(
             S.YELLOW_GIANT,
@@ -116,6 +125,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.yellow_giant_capacity,
             collapse_weight=lambda rules: rules.star_types.yellow_giant_collapse_weight,
             flare_weight=lambda rules: rules.star_types.yellow_giant_flare_weight,
+            mass=lambda rules: rules.star_types.yellow_giant_mass,
         ),
         StarTypeMechanics(
             S.RED_GIANT,
@@ -125,6 +135,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.red_giant_capacity,
             collapse_weight=lambda rules: rules.star_types.red_giant_collapse_weight,
             flare_weight=lambda rules: rules.star_types.red_giant_flare_weight,
+            mass=lambda rules: rules.star_types.red_giant_mass,
         ),
         StarTypeMechanics(
             S.BLUE_GIANT,
@@ -134,6 +145,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.blue_giant_capacity,
             collapse_weight=lambda rules: rules.star_types.blue_giant_collapse_weight,
             flare_weight=lambda rules: rules.star_types.blue_giant_flare_weight,
+            mass=lambda rules: rules.star_types.blue_giant_mass,
         ),
         StarTypeMechanics(
             S.RED_SUPERGIANT,
@@ -143,6 +155,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.red_supergiant_capacity,
             collapse_weight=lambda rules: rules.star_types.red_supergiant_collapse_weight,
             flare_weight=lambda rules: rules.star_types.red_supergiant_flare_weight,
+            mass=lambda rules: rules.star_types.red_supergiant_mass,
         ),
         StarTypeMechanics(
             S.BLUE_SUPERGIANT,
@@ -152,6 +165,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.blue_supergiant_capacity,
             collapse_weight=lambda rules: rules.star_types.blue_supergiant_collapse_weight,
             flare_weight=lambda rules: rules.star_types.blue_supergiant_flare_weight,
+            mass=lambda rules: rules.star_types.blue_supergiant_mass,
         ),
         StarTypeMechanics(
             S.HYPERGIANT,
@@ -161,6 +175,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.hypergiant_capacity,
             collapse_weight=lambda rules: rules.star_types.hypergiant_collapse_weight,
             flare_weight=lambda rules: rules.star_types.hypergiant_flare_weight,
+            mass=lambda rules: rules.star_types.hypergiant_mass,
             instability=lambda rules: rules.star_types.hypergiant_instability,
         ),
         StarTypeMechanics(
@@ -171,6 +186,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.wolf_rayet_capacity,
             collapse_weight=lambda rules: rules.star_types.wolf_rayet_collapse_weight,
             flare_weight=lambda rules: rules.star_types.wolf_rayet_flare_weight,
+            mass=lambda rules: rules.star_types.wolf_rayet_mass,
             sail_danger=lambda rules: rules.star_types.wolf_rayet_sail_danger,
         ),
         StarTypeMechanics(
@@ -181,6 +197,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.protostar_capacity,
             collapse_weight=lambda rules: rules.star_types.protostar_collapse_weight,
             flare_weight=lambda rules: rules.star_types.protostar_flare_weight,
+            mass=lambda rules: rules.star_types.protostar_mass,
             sail_danger=lambda rules: rules.star_types.protostar_sail_danger,
             instability=lambda rules: rules.star_types.protostar_instability,
         ),
@@ -192,6 +209,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.carbon_star_capacity,
             collapse_weight=lambda rules: rules.star_types.carbon_star_collapse_weight,
             flare_weight=lambda rules: rules.star_types.carbon_star_flare_weight,
+            mass=lambda rules: rules.star_types.carbon_star_mass,
         ),
         StarTypeMechanics(
             S.WHITE_DWARF,
@@ -201,6 +219,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.white_dwarf_capacity,
             collapse_weight=lambda rules: rules.star_types.white_dwarf_collapse_weight,
             flare_weight=lambda rules: rules.star_types.white_dwarf_flare_weight,
+            mass=lambda rules: rules.star_types.white_dwarf_mass,
         ),
         StarTypeMechanics(
             S.BINARY,
@@ -210,6 +229,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.binary_capacity,
             collapse_weight=lambda rules: rules.star_types.binary_collapse_weight,
             flare_weight=lambda rules: rules.star_types.binary_flare_weight,
+            mass=lambda rules: rules.star_types.binary_mass,
             eclipse_weight=lambda rules: rules.star_types.binary_eclipse_weight,
         ),
         StarTypeMechanics(
@@ -220,6 +240,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.trinary_capacity,
             collapse_weight=lambda rules: rules.star_types.trinary_collapse_weight,
             flare_weight=lambda rules: rules.star_types.trinary_flare_weight,
+            mass=lambda rules: rules.star_types.trinary_mass,
             eclipse_weight=lambda rules: rules.star_types.trinary_eclipse_weight,
             instability=lambda rules: rules.star_types.trinary_instability,
         ),
@@ -231,6 +252,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.variable_star_capacity,
             collapse_weight=lambda rules: rules.star_types.variable_star_collapse_weight,
             flare_weight=lambda rules: rules.star_types.variable_star_flare_weight,
+            mass=lambda rules: rules.star_types.variable_star_mass,
             instability=lambda rules: rules.star_types.variable_star_instability,
         ),
         StarTypeMechanics(
@@ -241,6 +263,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.neutron_star_capacity,
             collapse_weight=lambda rules: rules.star_types.neutron_star_collapse_weight,
             flare_weight=lambda rules: rules.star_types.neutron_star_flare_weight,
+            mass=lambda rules: rules.star_types.neutron_star_mass,
             sail_danger=lambda rules: rules.star_types.neutron_star_sail_danger,
         ),
         StarTypeMechanics(
@@ -251,6 +274,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.pulsar_capacity,
             collapse_weight=lambda rules: rules.star_types.pulsar_collapse_weight,
             flare_weight=lambda rules: rules.star_types.pulsar_flare_weight,
+            mass=lambda rules: rules.star_types.pulsar_mass,
             sail_danger=lambda rules: rules.star_types.pulsar_sail_danger,
         ),
         StarTypeMechanics(
@@ -261,6 +285,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.magnetar_capacity,
             collapse_weight=lambda rules: rules.star_types.magnetar_collapse_weight,
             flare_weight=lambda rules: rules.star_types.magnetar_flare_weight,
+            mass=lambda rules: rules.star_types.magnetar_mass,
             sanity_erosion=lambda rules: rules.star_types.magnetar_sanity_erosion,
             sail_danger=lambda rules: rules.star_types.magnetar_sail_danger,
         ),
@@ -272,6 +297,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.black_hole_capacity,
             collapse_weight=lambda rules: rules.star_types.black_hole_collapse_weight,
             flare_weight=lambda rules: rules.star_types.black_hole_flare_weight,
+            mass=lambda rules: rules.star_types.black_hole_mass,
             sail_danger=lambda rules: rules.star_types.black_hole_sail_danger,
         ),
         StarTypeMechanics(
@@ -282,6 +308,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.dead_star_capacity,
             collapse_weight=lambda rules: rules.star_types.dead_star_collapse_weight,
             flare_weight=lambda rules: rules.star_types.dead_star_flare_weight,
+            mass=lambda rules: rules.star_types.dead_star_mass,
         ),
         StarTypeMechanics(
             S.BLACK_SUN,
@@ -291,6 +318,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.black_sun_capacity,
             collapse_weight=lambda rules: rules.star_types.black_sun_collapse_weight,
             flare_weight=lambda rules: rules.star_types.black_sun_flare_weight,
+            mass=lambda rules: rules.star_types.black_sun_mass,
             sanity_erosion=lambda rules: rules.star_types.black_sun_sanity_erosion,
         ),
         StarTypeMechanics(
@@ -301,6 +329,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.broken_star_capacity,
             collapse_weight=lambda rules: rules.star_types.broken_star_collapse_weight,
             flare_weight=lambda rules: rules.star_types.broken_star_flare_weight,
+            mass=lambda rules: rules.star_types.broken_star_mass,
         ),
         StarTypeMechanics(
             S.STAR_REMNANT,
@@ -310,6 +339,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.star_remnant_capacity,
             collapse_weight=lambda rules: rules.star_types.star_remnant_collapse_weight,
             flare_weight=lambda rules: rules.star_types.star_remnant_flare_weight,
+            mass=lambda rules: rules.star_types.star_remnant_mass,
             sail_danger=lambda rules: rules.star_types.star_remnant_sail_danger,
         ),
         StarTypeMechanics(
@@ -320,6 +350,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.reborn_star_capacity,
             collapse_weight=lambda rules: rules.star_types.reborn_star_collapse_weight,
             flare_weight=lambda rules: rules.star_types.reborn_star_flare_weight,
+            mass=lambda rules: rules.star_types.reborn_star_mass,
         ),
         StarTypeMechanics(
             S.CHAINED_STAR,
@@ -329,6 +360,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.chained_star_capacity,
             collapse_weight=lambda rules: rules.star_types.chained_star_collapse_weight,
             flare_weight=lambda rules: rules.star_types.chained_star_flare_weight,
+            mass=lambda rules: rules.star_types.chained_star_mass,
             leak_repair=lambda rules: rules.star_types.chained_star_leak_repair,
         ),
         StarTypeMechanics(
@@ -339,6 +371,7 @@ STAR_TYPE_MECHANICS: dict[StarType, StarTypeMechanics] = {
             capacity_pct=lambda rules: rules.star_types.watching_star_capacity,
             collapse_weight=lambda rules: rules.star_types.watching_star_collapse_weight,
             flare_weight=lambda rules: rules.star_types.watching_star_flare_weight,
+            mass=lambda rules: rules.star_types.watching_star_mass,
             leak=lambda rules: rules.star_types.watching_star_leak,
             sanity_erosion=lambda rules: rules.star_types.watching_star_sanity_erosion,
         ),

@@ -114,6 +114,8 @@ class SkyEventKind(StrEnum):
     BLACK_SUN = "black_sun"
     VOID_STORM = "void_storm"
     FLARE = "flare"
+    AURORA = "aurora"
+    TRANSIT = "transit"
 
 
 class HorrorEventKind(StrEnum):

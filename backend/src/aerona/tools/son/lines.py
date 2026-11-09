@@ -148,3 +148,6 @@ CONTAIN_PHENOMENON = Line("tools.son.contain_phenomenon", "{son} warded {phenome
 CLAIM_GALAXY = Line("tools.son.claim_galaxy", "{son} took {galaxy} under their patronage: {reason}")
 RULE_DIMENSION = Line("tools.son.rule_dimension", "{son} took rule of {dimension}: {reason}")
 CLAIM_STAR = Line("tools.son.claim_star", "{son} took {star} under their patronage: {reason}")
+CALL_IMPACT = Line("tools.son.call_impact", "{son} called a body down upon {place}: {reason}")
+DEFLECT_IMPACT = Line("tools.son.deflect_impact", "{son} turned a falling body aside from {world}: {reason}")
+TERRAFORM_WORLD = Line("tools.son.terraform_world", "{son} began to reshape {world}: {reason}")

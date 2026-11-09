@@ -8,6 +8,7 @@ import {
   TriangleAlert,
   Zap,
 } from 'lucide-react'
+import { type EditValues } from '@/api/actions'
 import { outerHungerValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -43,24 +44,27 @@ export function OuterProfileSection({ beingId }: { beingId: number }) {
   const [strength, setStrength] = useState('30')
   const [breachDraft, setBreachDraft] = useState<Record<number, string>>({})
   const { reason } = useGodGate()
-  const edit = useDivineAction<{
-    values: Record<string, unknown>
-    release: string[]
-  }>('outer_profile:edit', (vars) => ({ being_id: beingId, ...vars }))
-  const open = useDivineAction<void>('breach:open', () => ({
+  const edit = useDivineAction(
+    'outer_profile:edit',
+    (vars: { values: EditValues; release: string[] }) => ({
+      being_id: beingId,
+      ...vars,
+    })
+  )
+  const open = useDivineAction('breach:open', (_: void) => ({
     being_id: beingId,
     region_id: region,
     strength: Number(strength),
   }))
-  const change = useDivineAction<{
-    breach: number
-    values: Record<string, unknown>
-  }>('breach:edit', (vars) => ({
-    breach_id: vars.breach,
-    values: vars.values,
-    release: [],
-  }))
-  const close = useDivineAction<number>('breach:close', (breach) => ({
+  const change = useDivineAction(
+    'breach:edit',
+    (vars: { breach: number; values: EditValues }) => ({
+      breach_id: vars.breach,
+      values: vars.values,
+      release: [],
+    })
+  )
+  const close = useDivineAction('breach:close', (breach: number) => ({
     breach_id: breach,
   }))
   const busy = busyOf(
@@ -70,7 +74,7 @@ export function OuterProfileSection({ beingId }: { beingId: number }) {
     change.isPending,
     close.isPending
   )
-  const values: Record<string, unknown> = {}
+  const values: EditValues = {}
   if (hunger !== '') values.hunger = hunger
   if (reach !== '') values.reach = Number(reach)
   if (fed !== '') values.fed = Number(fed)

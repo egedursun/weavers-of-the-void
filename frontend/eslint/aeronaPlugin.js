@@ -216,6 +216,29 @@ const disabledNeedsReason = {
   },
 }
 
+const typedRequestBody = {
+  meta: {
+    type: 'problem',
+    messages: {
+      untypedBody:
+        'A request body cast to never escapes the API types; send it through postAction or give it the schema type of its endpoint.',
+    },
+    schema: [],
+  },
+  create(context) {
+    return {
+      Property(node) {
+        if (node.key.type !== 'Identifier' || node.key.name !== 'body') return
+        const value = node.value
+        if (value.type !== 'TSAsExpression' || value.typeAnnotation.type !== 'TSNeverKeyword') return
+        const siblings = node.parent.type === 'ObjectExpression' ? node.parent.properties : []
+        if (siblings.some((item) => item.type === 'Property' && item.key.type === 'Identifier' && item.key.name === 'bodySerializer')) return
+        context.report({ node, messageId: 'untypedBody' })
+      },
+    }
+  },
+}
+
 export const aeronaPlugin = {
   meta: { name: 'aerona' },
   rules: {
@@ -224,6 +247,7 @@ export const aeronaPlugin = {
     'no-raw-color': noRawColor,
     'no-raw-elements': noRawElements,
     'disabled-needs-reason': disabledNeedsReason,
+    'typed-request-body': typedRequestBody,
   },
 }
 
@@ -233,6 +257,7 @@ export const FEATURE_RULES = {
   'aerona/no-raw-color': 'error',
   'aerona/no-raw-elements': 'error',
   'aerona/disabled-needs-reason': 'error',
+  'aerona/typed-request-body': 'error',
 }
 
 export const GEOMETRY_FILES = [

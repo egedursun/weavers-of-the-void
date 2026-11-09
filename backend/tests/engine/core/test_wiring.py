@@ -26,6 +26,13 @@ from aerona.rules.registry.engine_phases import EnginePhasesRules
 from tests.engine.core.factories import seed_core_world
 
 TICK_CONSTRAINTS = (
+    ("scale_ladder", "stellar_systems"),
+    ("stellar_systems", "star_lives"),
+    ("star_lives", "world_physics"),
+    ("world_physics", "planetary_climate"),
+    ("world_physics", "sky"),
+    ("cosmic_features", "impacts"),
+    ("travel", "surveys"),
     ("dead_bonds_opening", "expire_truces"),
     ("expire_truces", "language_and_faith"),
     ("language_and_faith", "divine_grudges"),

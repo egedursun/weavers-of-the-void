@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { HandHeart, Plus, Save, TriangleAlert } from 'lucide-react'
+import { type EditValues } from '@/api/actions'
 import { Button } from '@/components/ui/button'
 import { EmptyState, LoadingBlock, Section } from '@/components/domain'
 import { busyOf } from '@/features/entity/lore/model'
@@ -25,17 +26,16 @@ export function RegardSection({
     : null
   const gods = useGodTable(creator)
   const { reason } = useGodGate()
-  const save = useDivineAction<{
-    god: number
-    values: Record<string, unknown>
-    release: string[]
-  }>('divine_standing:set', (vars) => ({
-    community_id: communityId,
-    god_id: vars.god,
-    values: vars.values,
-    release: vars.release,
-  }))
-  const clear = useDivineAction<number>('divine_standing:clear', (god) => ({
+  const save = useDivineAction(
+    'divine_standing:set',
+    (vars: { god: number; values: EditValues; release: string[] }) => ({
+      community_id: communityId,
+      god_id: vars.god,
+      values: vars.values,
+      release: vars.release,
+    })
+  )
+  const clear = useDivineAction('divine_standing:clear', (god: number) => ({
     community_id: communityId,
     god_id: god,
   }))

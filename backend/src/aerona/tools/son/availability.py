@@ -10,11 +10,13 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmography import DimensionRow, RiftRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.physics import ImpactEventRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.agent import TurnCounter
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.physics import ImpactOutcome
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, SonDistribution
 from aerona.prompts import SonToolId
@@ -38,6 +40,7 @@ class SonWorldState:
     cosmic_being: bool = False
     phenomenon: bool = False
     dimensions: int = 0
+    pending_impact: bool = False
     spent: Mapping[TurnCounter, int] = field(default_factory=dict)
 
 
@@ -67,6 +70,7 @@ async def world_state(session: AsyncSession, son: SonRow) -> SonWorldState:
         )
         is not None,
         dimensions=int(await session.scalar(select(func.count(DimensionRow.id))) or 0),
+        pending_impact=await session.scalar(select(ImpactEventRow.id).where(ImpactEventRow.outcome == ImpactOutcome.PENDING).limit(1)) is not None,
         spent={counter: await counter_value(session, son.id, cosmos.epoch, counter) for counter, _cap in AGE_LIMITS.values()} if cosmos is not None else {},
     )
 
@@ -115,6 +119,7 @@ CONDITIONS: dict[SonToolId, Condition] = {
     T.SEAL_LEAK: lambda rules, _state: rules.son_tools.seal_per_epoch > 0,
     T.BARGAIN_WITH_OUTSIDER: lambda rules, state: state.outer_being and rules.son_tools.outer_bargain_per_epoch > 0,
     T.OPEN_RIFT: lambda _rules, state: state.dimensions >= 2,
+    T.DEFLECT_IMPACT: lambda _rules, state: state.pending_impact,
     T.SEAL_RIFT: lambda _rules, state: state.open_rift,
     T.BIND_COSMIC_BEING: lambda _rules, state: state.cosmic_being,
     T.BANISH_COSMIC_BEING: lambda _rules, state: state.cosmic_being,
