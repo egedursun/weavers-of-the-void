@@ -18,8 +18,10 @@ from aerona.domain.enums.entity import HERO_ROLES, EntityOrigin, EntityStatus, E
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.phenomena import form_phenomenon
+from aerona.engine.cosmos.placement import cosmography_of
 from aerona.engine.divine.gods import god_of
 from aerona.engine.notes import note
+from aerona.engine.primitives.knowledge import footprint
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import canon
 from aerona.rules.registry import Rules
@@ -84,23 +86,24 @@ async def upkeep(ctx: TickContext, row: NaturalLawProfileRow) -> bool:
     return author is not None and author.power >= table.author_existence_floor
 
 
-def overlap(first: NaturalLawProfileRow, second: NaturalLawProfileRow) -> bool:
-    if LawScope.COSMOS in {first.scope, second.scope}:
-        return True
+def overlap(first: NaturalLawProfileRow, second: NaturalLawProfileRow, footprints: dict[int, set[int]]) -> bool:
     if first.scope is LawScope.REGION and second.scope is LawScope.REGION:
         return first.region_entity_id == second.region_entity_id
-    return first.world_id == second.world_id
+    return bool(footprints.get(first.law_entity_id, set()) & footprints.get(second.law_entity_id, set()))
 
 
 async def contest(ctx: TickContext, rows: list[NaturalLawProfileRow]) -> int:
     table = ctx.rules.natural_laws
     clashes = 0
+    ladder = await cosmography_of(ctx.session)
+    worlds = list(await ctx.session.scalars(select(WorldRow.id)))
+    footprints = {row.law_entity_id: footprint(ladder, worlds, row) for row in rows}
     for row in rows:
         if "contested" not in row.locked:
             row.contested = False
     for index, first in enumerate(rows):
         for second in rows[index + 1 :]:
-            if frozenset({first.effect, second.effect}) not in CONTRADICTIONS or not overlap(first, second):
+            if frozenset({first.effect, second.effect}) not in CONTRADICTIONS or not overlap(first, second, footprints):
                 continue
             clashes += 1
             gap = first.strength - second.strength

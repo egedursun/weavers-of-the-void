@@ -90,6 +90,7 @@
 {{ entity_depth(article.depth) }}
 {% if article.kind_note %}<p class="sublabel">What its kind does</p><p>{{ article.kind_note }}</p>{{ stats(article.effects) }}{% endif %}
 {% if article.stars %}<p class="sublabel">Stars</p><p>{% for name, anchor in article.stars %}<a href="#{{ anchor }}">{{ name }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+{% if article.laws %}<p class="sublabel">Laws that hold here</p>{{ facts(article.laws) }}{% endif %}
 {% if article.rifts %}<p class="sublabel">Rifts into it</p><ul class="lines">{% for line in article.rifts %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
 {% if article.beings %}<p class="sublabel">Cosmic beings</p><p>{{ article.beings | join(" · ") }}</p>{% endif %}
 {{ typed(article.typed) }}

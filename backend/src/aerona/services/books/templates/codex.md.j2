@@ -356,6 +356,11 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 
 {{ facts_table(article.effects) }}
 {% endif %}
+{% if article.laws %}
+**Laws that hold here:**
+
+{{ facts_table(article.laws) }}
+{% endif %}
 {% if article.rifts %}
 **Rifts into it:**
 

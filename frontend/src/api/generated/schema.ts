@@ -20271,6 +20271,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/dimension:bind_law': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_dimension_bind_law_api_actions_dimension_bind_law_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/dimension:release_law': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_dimension_release_law_api_actions_dimension_release_law_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/cluster:create': {
     parameters: {
       query?: never
@@ -25094,6 +25126,10 @@ export interface components {
       weight: number
       lost: boolean
     }
+    DimensionBindLawInput: {
+      dimension_id: number
+      law_id: number
+    }
     DimensionCreateInput: {
       name: string
       kind: components['schemas']['DimensionKind']
@@ -25172,6 +25208,9 @@ export interface components {
       image_prompt: string | null
       created_epoch: number
       locked: string[]
+    }
+    DimensionReleaseLawInput: {
+      law_id: number
     }
     DimensionalEventDeleteInput: {
       event_id: number
@@ -28568,6 +28607,14 @@ export interface components {
       id: number
       name: string
       since_epoch: number
+    }
+    HeldLawRecord: {
+      law: components['schemas']['NaturalLaw']
+      label: string
+      description: string
+      entity_id: number | null
+      name: string | null
+      strength: number
     }
     HerdDropInput: {
       community_id: number
@@ -36109,6 +36156,7 @@ export interface components {
       cover: string | null
       images: components['schemas']['ImageRecord'][]
       timeline: components['schemas']['ChronicleLineRecord'][]
+      laws?: components['schemas']['HeldLawRecord'][]
     }
     ScarKind:
       | 'battlefield'
@@ -79624,6 +79672,68 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['DimensionDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_dimension_bind_law_api_actions_dimension_bind_law_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DimensionBindLawInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  action_dimension_release_law_api_actions_dimension_release_law_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DimensionReleaseLawInput']
       }
     }
     responses: {

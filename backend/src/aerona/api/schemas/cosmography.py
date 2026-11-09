@@ -27,6 +27,7 @@ from aerona.domain.enums.cosmography import (
     RouteScope,
 )
 from aerona.domain.enums.node import NodeKind
+from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.profiles import EntityDepth
 
@@ -250,6 +251,15 @@ class GalaxyShapeRecord(ApiModel):
     spiral_types: list[GalaxyType]
 
 
+class HeldLawRecord(ApiModel):
+    law: NaturalLaw
+    label: str
+    description: str
+    entity_id: int | None
+    name: str | None
+    strength: int
+
+
 class ScaleWiki(ApiModel):
     node_id: int
     kind: NodeKind
@@ -257,6 +267,7 @@ class ScaleWiki(ApiModel):
     cover: str | None
     images: list[ImageRecord]
     timeline: list[ChronicleLineRecord]
+    laws: list[HeldLawRecord] = Field(default_factory=list)
 
 
 class CosmographyCatalog(ApiModel):

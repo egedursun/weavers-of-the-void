@@ -50,9 +50,10 @@ function easeInOutCubic(t: number): number {
 type CameraRigProps = {
   focus: FocusRequest
   empty: boolean
+  galaxyReach?: number
 }
 
-export function CameraRig({ focus, empty }: CameraRigProps) {
+export function CameraRig({ focus, empty, galaxyReach }: CameraRigProps) {
   const { layout, frameRef } = useScene()
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null)
   const element = useThree((state) => state.gl.domElement)
@@ -73,10 +74,11 @@ export function CameraRig({ focus, empty }: CameraRigProps) {
       Math.atan(
         Math.tan(vertical / 2) * (size.width / Math.max(size.height, 1))
       )
-    return (
-      (layout.extent / Math.sin(Math.min(vertical, horizontal) / 2)) *
-      FIT_MARGIN
-    )
+    const extent =
+      galaxyReach === undefined
+        ? layout.extent
+        : Math.max(galaxyReach, layout.extent + Math.hypot(...layout.center))
+    return (extent / Math.sin(Math.min(vertical, horizontal) / 2)) * FIT_MARGIN
   }
 
   const destination = (
@@ -84,7 +86,10 @@ export function CameraRig({ focus, empty }: CameraRigProps) {
   ): { target: Vector3; radius: number } | null => {
     if (request.kind === 'overview')
       return {
-        target: new Vector3(...layout.center),
+        target:
+          galaxyReach === undefined
+            ? new Vector3(...layout.center)
+            : new Vector3(0, 0, 0),
         radius: overviewDistance(),
       }
     if (request.kind === 'star') {

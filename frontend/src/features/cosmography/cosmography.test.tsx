@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   ACCEPTED_ACTION,
   callsTo,
@@ -6,11 +7,14 @@ import {
   resetApi,
 } from '@/test-utils/fakeApi'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { page } from 'vitest/browser'
 import { HeavensView } from './HeavensScreen'
 import { RegionClimateControl } from './RegionClimateControl'
 import { CATALOG, VIEW } from './cosmographyFixtures'
 import { CreateGalaxyStudio } from './create/CreateStudio'
+import { type HeavensSearch } from './heavensSearch'
 import { ladderOf } from './ladder'
+import { DimensionLaws } from './wiki/DimensionLaws'
 import { GalaxyView } from './wiki/GalaxyWiki'
 
 vi.mock('@/api/client', async () => {
@@ -49,8 +53,29 @@ function serveHeavens() {
   })
 }
 
+function LiveHeavens() {
+  const [search, setSearch] = useState<HeavensSearch>({})
+  return (
+    <HeavensView
+      search={search}
+      onSearch={(patch) => setSearch((previous) => ({ ...previous, ...patch }))}
+    />
+  )
+}
+
 describe('the heavens', () => {
   beforeEach(resetApi)
+
+  it('brings the creation studio into sight from the shape the heavens button', async () => {
+    serveHeavens()
+    await page.viewport(1280, 720)
+    const { screen } = await renderApp(<LiveHeavens />)
+    await screen.getByRole('button', { name: 'Shape the heavens' }).click()
+    await expect
+      .element(screen.getByRole('tab', { name: /Create/ }))
+      .toHaveAttribute('aria-selected', 'true')
+    await expect.element(screen.getByRole('tabpanel').first()).toBeInViewport()
+  })
 
   it('lays out the scale of the cosmos and seals an open rift', async () => {
     serveHeavens()
@@ -113,6 +138,46 @@ describe('the heavens', () => {
       cluster_id: null,
       dimension_id: null,
     })
+  })
+
+  it('shows the laws of a dimension and releases one bound across it', async () => {
+    serveHeavens()
+    onApi('POST', '/api/actions/dimension:release_law', ACCEPTED_ACTION)
+    const { screen } = await renderApp(
+      <DimensionLaws
+        dimension={VIEW.dimensions[0]}
+        worldCount={0}
+        laws={[
+          {
+            law: 'the_dead_speak',
+            label: 'The dead speak',
+            description: 'The dead can be heard.',
+            entity_id: null,
+            name: null,
+            strength: 100,
+          },
+          {
+            law: 'bounty',
+            label: 'Bounty',
+            description: 'Harvests swell.',
+            entity_id: 77,
+            name: 'Long Summer',
+            strength: 60,
+          },
+        ]}
+      />
+    )
+    await expect.element(screen.getByText('By its kind')).toBeVisible()
+    await expect
+      .element(screen.getByRole('button', { name: /Bind it/ }))
+      .toHaveAttribute('aria-disabled', 'true')
+    await screen.getByRole('button', { name: /Release/ }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/dimension:release_law'))
+      .toHaveLength(1)
+    expect(
+      callsTo('POST', '/api/actions/dimension:release_law')[0].body
+    ).toEqual({ law_id: 77 })
   })
 
   it('turns the climate of a region', async () => {

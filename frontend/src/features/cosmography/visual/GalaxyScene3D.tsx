@@ -390,7 +390,7 @@ function StructureMark({
   )
 }
 
-function WorldMarker({
+export function WorldMarker({
   world,
   size,
   selected,
@@ -434,7 +434,7 @@ function WorldMarker({
   )
 }
 
-function StarMark({
+export function StarMark({
   star,
   selected,
   size,

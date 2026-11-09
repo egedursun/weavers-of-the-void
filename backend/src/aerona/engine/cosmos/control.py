@@ -20,6 +20,7 @@ from aerona.db.tables.cosmography import (
     RiftRow,
 )
 from aerona.db.tables.cosmos import CosmosRow
+from aerona.db.tables.divine import NaturalLawProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
@@ -38,6 +39,7 @@ from aerona.domain.enums.cosmography import (
     PhenomenonKind,
     RiftCause,
 )
+from aerona.domain.enums.divine import LawScope
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.records import CargoLine, PassengerLine
@@ -51,6 +53,7 @@ from aerona.engine.cosmos.phenomena import contain, form_phenomenon
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.rifts import open_rift, seal_rift
 from aerona.engine.divine.control import apply
+from aerona.engine.divine.laws import profile_for
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import living_entity
 
@@ -527,3 +530,31 @@ async def set_variant(ctx: TickContext, variant: ApocalypseVariant | None) -> Co
 
 async def turn_climate(ctx: TickContext, region_id: int, turn: ClimateTurn, by: str) -> None:
     await turn_region(ctx, region_id, turn, by)
+
+
+async def bind_law(ctx: TickContext, dimension_id: int, law_id: int) -> NaturalLawProfileRow:
+    dimension = await found(ctx, DimensionRow, dimension_id, "dimension")
+    law = await ctx.session.get(EntityRow, law_id)
+    if law is None or law.entity_type is not EntityType.NATURAL_LAW:
+        raise NotFoundError("No such natural law.")
+    profile = await profile_for(ctx, law)
+    if profile is None:
+        raise ValidationFailedError(f"{law.name} has no effect to hold across a dimension.")
+    ladder = await Cosmography.load(ctx.session)
+    homes = sorted(world.id for world in ladder.worlds.values() if ladder.place_world(world).dimension_id == dimension.id)
+    if not homes:
+        raise ValidationFailedError(f"No world lies in {dimension.name} yet, so no law can hold across it.")
+    profile.scope = LawScope.DIMENSION
+    profile.world_id = profile.world_id if profile.world_id in homes else homes[0]
+    profile.region_entity_id = None
+    await ctx.session.flush()
+    return profile
+
+
+async def release_law(ctx: TickContext, law_id: int) -> NaturalLawProfileRow:
+    profile = await ctx.session.get(NaturalLawProfileRow, law_id)
+    if profile is None or profile.scope is not LawScope.DIMENSION:
+        raise ValidationFailedError("This law holds across no dimension.")
+    profile.scope = LawScope.WORLD
+    await ctx.session.flush()
+    return profile

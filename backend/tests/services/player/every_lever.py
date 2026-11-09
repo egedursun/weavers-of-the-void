@@ -48,11 +48,13 @@ from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalL
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import CelestialStats, NaturalLawStats, OuterBeingStats
+from aerona.engine.cosmos import control
 from aerona.engine.cosmos.beings import create_being
 from aerona.engine.cosmos.control import dimensional_event, galactic_event
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
 from aerona.engine.cosmos.ladder import ClusterDraft, DimensionDraft, GalaxyDraft, create_cluster, create_dimension, create_galaxy, ensure_ladder
 from aerona.engine.cosmos.phenomena import form_phenomenon
+from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.rifts import open_rift
 from aerona.engine.economy.route_control import route_of
 from aerona.engine.economy.stocks import GoodsLedger
@@ -626,6 +628,19 @@ async def natural_law(session: AsyncSession) -> int:
     )
     await session.flush()
     return law.id
+
+
+async def prime_dimension(session: AsyncSession) -> int:
+    await ensure_ladder(session, Rules())
+    prime = (await Cosmography.load(session)).prime
+    assert prime is not None
+    return prime.id
+
+
+async def bound_law(session: AsyncSession) -> None:
+    law = await natural_law(session)
+    prime = await prime_dimension(session)
+    await control.bind_law(await manual_context(session, "bound_law", Rules()), prime, law)
 
 
 async def heavens(session: AsyncSession) -> None:
@@ -1529,6 +1544,8 @@ LEVERS: dict[str, Lever] = {
     ),
     **{name: after(PROPHECY, prophecy_id=Newest(EntityType.PROPHECY)) for name in ("prophecy:forget", "prophecy:fulfil", "prophecy:resolve")},
     "dimension:create": given(name="Shadow Deep", kind="shadow"),
+    "dimension:bind_law": given(dimension_id=Computed(prime_dimension), law_id=Computed(natural_law)),
+    "dimension:release_law": Lever(values={"law_id": Newest(EntityType.NATURAL_LAW)}, setup=bound_law),
     **{
         name: setup_then(heavens, dimension_id=Where("dimensions", "id", {"dimension_kind": DimensionKind.ASTRAL}))
         for name in ("dimension:edit", "dimension:delete")

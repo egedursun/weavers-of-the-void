@@ -33,6 +33,14 @@ export type GalaxyLook = {
   jets: boolean
   crown: boolean
   dust: number
+  wind: number
+  span: number
+  bulge: number
+  bar: number
+  extent: number
+  axis: number
+  globulars: number
+  view: number | null
 }
 
 const look = (
@@ -53,6 +61,14 @@ const look = (
   jets: extra.jets ?? false,
   crown: extra.crown ?? false,
   dust: extra.dust ?? 0.25,
+  wind: extra.wind ?? 1,
+  span: extra.span ?? 1,
+  bulge: extra.bulge ?? 1,
+  bar: extra.bar ?? 1,
+  extent: extra.extent ?? 1,
+  axis: extra.axis ?? 1,
+  globulars: extra.globulars ?? 0,
+  view: extra.view ?? null,
 })
 
 const BULGE = '--galaxy-bulge'
@@ -62,38 +78,66 @@ const DISC = '--galaxy-disc'
 
 export const GALAXY_LOOK: Record<GalaxyType, GalaxyLook> = {
   spiral: look('spiral', BULGE, DISC, YOUNG),
-  barred_spiral: look('barred', BULGE, DISC, YOUNG),
+  barred_spiral: look('barred', BULGE, DISC, YOUNG, {
+    bar: 1.6,
+    wind: 0.7,
+    bulge: 0.7,
+    view: 0.25,
+  }),
   grand_design_spiral: look('grand', BULGE, DISC, YOUNG, {
     brightness: 1.15,
-    nurseries: 0.1,
+    nurseries: 0.12,
+    wind: 1.8,
+    span: 0.45,
+    view: 0.2,
   }),
-  flocculent_spiral: look('flocculent', BULGE, DISC, YOUNG, { dust: 0.35 }),
+  flocculent_spiral: look('flocculent', BULGE, DISC, YOUNG, {
+    dust: 0.35,
+    wind: 1.3,
+    span: 1.6,
+    nurseries: 0.12,
+    bulge: 0.6,
+    view: 0.3,
+  }),
   lenticular: look('lenticular', BULGE, OLD, DISC, {
     nurseries: 0.01,
-    dust: 0.15,
+    dust: 0.4,
+    bulge: 2.4,
+    flatten: 0.05,
+    view: 1.3,
   }),
   elliptical: look('elliptical', BULGE, OLD, OLD, {
     flatten: 0.62,
     nurseries: 0,
     dust: 0,
+    axis: 0.55,
+    globulars: 5,
   }),
   giant_elliptical: look('elliptical', '--galaxy-core', OLD, OLD, {
     flatten: 0.78,
     brightness: 1.3,
     nurseries: 0,
     dust: 0,
+    axis: 0.92,
+    extent: 1.15,
+    bulge: 1.6,
+    globulars: 22,
   }),
   dwarf_elliptical: look('elliptical', BULGE, OLD, OLD, {
     flatten: 0.55,
     brightness: 0.6,
     nurseries: 0,
     dust: 0,
+    axis: 0.72,
+    extent: 0.45,
   }),
   dwarf_spheroidal: look('spheroidal', OLD, '--galaxy-halo', OLD, {
     flatten: 0.8,
     brightness: 0.45,
     nurseries: 0,
     dust: 0,
+    extent: 0.6,
+    bulge: 0.2,
   }),
   irregular: look('irregular', YOUNG, DISC, YOUNG, {
     clumps: 6,
@@ -105,8 +149,9 @@ export const GALAXY_LOOK: Record<GalaxyType, GalaxyLook> = {
     brightness: 0.6,
     nurseries: 0.12,
     flatten: 0.2,
+    extent: 0.5,
   }),
-  ring: look('ring', BULGE, YOUNG, YOUNG, { nurseries: 0.16 }),
+  ring: look('ring', BULGE, YOUNG, YOUNG, { nurseries: 0.16, view: 0.3 }),
   peculiar: look('shattered', BULGE, DISC, YOUNG, {
     clumps: 4,
     nurseries: 0.12,
@@ -117,10 +162,13 @@ export const GALAXY_LOOK: Record<GalaxyType, GalaxyLook> = {
     brightness: 1.25,
     nurseries: 0.34,
     flatten: 0.22,
+    bulge: 1.4,
   }),
   active: look('spiral', '--galaxy-quasar', DISC, YOUNG, {
     jets: true,
     brightness: 1.1,
+    bulge: 1.3,
+    view: 1.05,
   }),
   quasar_host: look('elliptical', '--galaxy-quasar', OLD, OLD, {
     jets: true,
@@ -128,25 +176,37 @@ export const GALAXY_LOOK: Record<GalaxyType, GalaxyLook> = {
     brightness: 1.35,
     nurseries: 0,
     dust: 0,
+    axis: 0.8,
+    view: 1.1,
   }),
   low_surface_brightness: look('spiral', DISC, '--galaxy-halo', YOUNG, {
     brightness: 0.45,
     nurseries: 0.03,
+    wind: 0.55,
+    span: 1.7,
+    bulge: 0.25,
+    extent: 1.15,
   }),
   ultra_diffuse: look('spheroidal', '--galaxy-halo', '--galaxy-halo', DISC, {
     brightness: 0.32,
     flatten: 0.7,
     nurseries: 0,
     dust: 0,
+    extent: 1.2,
+    bulge: 0,
   }),
   living: look('spiral', '--galaxy-living', DISC, '--galaxy-living', {
-    nurseries: 0.18,
+    nurseries: 0.24,
+    wind: 1.35,
+    span: 0.8,
   }),
   dead: look('elliptical', '--galaxy-dead', '--galaxy-dead', '--galaxy-dead', {
     flatten: 0.5,
     brightness: 0.5,
     nurseries: 0,
     dust: 0,
+    axis: 0.45,
+    bulge: 0.5,
   }),
   shattered: look(
     'shattered',
@@ -161,15 +221,22 @@ export const GALAXY_LOOK: Record<GalaxyType, GalaxyLook> = {
   forged: look('barred', '--galaxy-forged', '--galaxy-forged', BULGE, {
     brightness: 1.15,
     nurseries: 0.04,
+    bar: 2.1,
+    wind: 0.35,
+    span: 0.5,
   }),
   dreaming: look('flocculent', '--galaxy-dreaming', DISC, '--galaxy-dreaming', {
     nurseries: 0.08,
     dust: 0.1,
+    wind: 2.2,
+    span: 1.2,
   }),
   mirror: look('mirror', '--galaxy-mirror', DISC, '--galaxy-mirror'),
   crowned: look('grand', '--galaxy-crowned', DISC, YOUNG, {
     crown: true,
     brightness: 1.15,
+    wind: 1.4,
+    span: 0.6,
   }),
   hollow: look('hollow', '--galaxy-hollow', YOUNG, '--galaxy-hollow', {
     nurseries: 0.1,
@@ -177,10 +244,13 @@ export const GALAXY_LOOK: Record<GalaxyType, GalaxyLook> = {
   ember: look('spiral', '--galaxy-ember', OLD, '--galaxy-ember', {
     brightness: 0.8,
     nurseries: 0.03,
+    wind: 1.1,
+    bulge: 1.5,
   }),
   veiled: look('spiral', '--galaxy-veiled', DISC, '--galaxy-veiled', {
-    dust: 0.85,
+    dust: 0.95,
     brightness: 0.75,
+    view: 1.15,
   }),
 }
 
@@ -349,7 +419,7 @@ export function galaxyPoints(
 ): GalaxyPoints {
   const random = seededRandom(galaxy.id * 7919 + 17)
   const style = GALAXY_LOOK[galaxy.galaxy_type]
-  const radius = Math.max(galaxy.radius, 1)
+  const radius = Math.max(galaxy.radius, 1) * style.extent
   const reach = (pct: number) => (pct / PERCENT) * radius
   const core = palette('--galaxy-core')
   const inner = palette(style.inner)
@@ -370,7 +440,7 @@ export function galaxyPoints(
   const spiral = shape.spiral_types.includes(galaxy.galaxy_type)
   const barred = shape.barred_types.includes(galaxy.galaxy_type)
   const armCount = spiral ? armsOf(galaxy) : 0
-  const wind = shape.arm_wind_deg * DEGREE
+  const wind = shape.arm_wind_deg * DEGREE * style.wind
   const armWidth = shape.arm_width_deg * DEGREE
   const family = style.family
   const positions = new Float32Array(count * 3)
@@ -394,7 +464,7 @@ export function galaxyPoints(
   const bulgeReach = reach(shape.bulge_reach_pct)
   const discReach = reach(shape.disc_reach_pct)
   const haloReach = reach(shape.halo_reach_pct)
-  const barReach = reach(shape.bar_reach_pct)
+  const barReach = reach(shape.bar_reach_pct) * style.bar
   const thickness = radius * style.flatten
   let written = 0
   const put = (
@@ -422,22 +492,25 @@ export function galaxyPoints(
   const radial = (distance: number) => mix(inner, outer, distance / discReach)
   const bulgeCount = Math.round(
     count *
-      (family === 'elliptical' || family === 'spheroidal'
-        ? 0.55
-        : family === 'hollow'
-          ? 0
-          : 0.16)
+      Math.min(
+        (family === 'elliptical' || family === 'spheroidal'
+          ? 0.55
+          : family === 'hollow'
+            ? 0
+            : 0.16) * style.bulge,
+        0.7
+      )
   )
   for (let index = 0; index < bulgeCount; index += 1) {
     const spread =
       family === 'elliptical' || family === 'spheroidal'
         ? radius * 0.42
-        : bulgeReach * 0.55
+        : bulgeReach * 0.55 * Math.sqrt(Math.max(style.bulge, 0.2))
     const x = gaussian(random) * spread
     const z =
       gaussian(random) *
       spread *
-      (family === 'elliptical' ? style.flatten + 0.2 : 1)
+      (family === 'elliptical' || family === 'spheroidal' ? style.axis : 1)
     const y =
       gaussian(random) *
       spread *
@@ -480,7 +553,7 @@ export function galaxyPoints(
       const cosPhi = random() * 2 - 1
       const sinPhi = Math.sqrt(1 - cosPhi * cosPhi)
       const x = Math.cos(theta) * sinPhi * spread * 1.6
-      const z = Math.sin(theta) * sinPhi * spread * 1.6 * (style.flatten + 0.25)
+      const z = Math.sin(theta) * sinPhi * spread * 1.6 * style.axis
       const y = cosPhi * spread * 1.6 * style.flatten
       const distance = Math.min(Math.hypot(x, z) / radius, 1)
       put(
@@ -535,7 +608,8 @@ export function galaxyPoints(
       const spacing = (Math.PI * 2) / armCount
       const jitter = family === 'flocculent' ? fragments[arm] : 0
       const span =
-        family === 'flocculent' ? 0.18 : family === 'grand' ? 0.22 : 0.32
+        (family === 'flocculent' ? 0.18 : family === 'grand' ? 0.22 : 0.32) *
+        style.span
       if (family === 'flocculent')
         distance = Math.min(
           Math.max(
@@ -603,6 +677,24 @@ export function galaxyPoints(
         1.2
       )
     }
+  }
+  for (let globular = 0; globular < style.globulars; globular += 1) {
+    const angle = random() * Math.PI * 2
+    const distance = radius * (0.45 + random() * 0.75)
+    const centre = [
+      Math.cos(angle) * distance,
+      gaussian(random) * radius * 0.25,
+      Math.sin(angle) * distance,
+    ] as const
+    for (let dot = 0; dot < 10; dot += 1)
+      put(
+        centre[0] + gaussian(random) * radius * 0.012,
+        centre[1] + gaussian(random) * radius * 0.012,
+        centre[2] + gaussian(random) * radius * 0.012,
+        old,
+        1.4,
+        1.1
+      )
   }
   while (written < count) {
     const angle = random() * Math.PI * 2

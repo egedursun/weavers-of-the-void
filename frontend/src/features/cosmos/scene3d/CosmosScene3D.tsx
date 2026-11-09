@@ -43,11 +43,12 @@ import { FrameDriver } from './useCosmosFrame'
 import { useCosmosLayout } from './useCosmosLayout'
 
 const CAMERA_START: [number, number, number] = [0, 1600, 1400]
-const GALAXY_POINTS = 22000
-const GALAXY_LIGHT = 0.34
-const GALAXY_CORE = 0.2
-const GALAXY_ATTENUATE = 0.6
-const GALAXY_DROP = -240
+const GALAXY_POINTS = 52000
+const GALAXY_LIGHT = 0.72
+const GALAXY_CORE = 0.55
+const GALAXY_ATTENUATE = 1.4
+const GALAXY_DROP = -30
+const GALAXY_FRAME = 1.04
 const CAMERA_FOV = 40
 const CAMERA_NEAR = 0.5
 const CAMERA_FAR = 40000
@@ -211,7 +212,16 @@ export default function CosmosScene3D({
           >
             <SceneContext.Provider value={value}>
               <FrameDriver />
-              <CameraRig focus={focus} empty={empty} />
+              <CameraRig
+                focus={focus}
+                empty={empty}
+                galaxyReach={
+                  galaxy && shape
+                    ? ((galaxy.radius * shape.disc_reach_pct) / 100) *
+                      GALAXY_FRAME
+                    : undefined
+                }
+              />
               <SkyBackdrop />
               {galaxy && shape && (
                 <group position={[0, GALAXY_DROP, 0]}>

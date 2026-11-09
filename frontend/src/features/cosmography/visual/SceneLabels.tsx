@@ -16,6 +16,7 @@ export type SceneLabel = {
 }
 
 const point = new Vector3()
+const EDGE = 4
 
 export function LabelProjector({
   labels,
@@ -33,7 +34,19 @@ export function LabelProjector({
       point.set(...label.position).project(camera)
       const hidden = point.z > 1 || point.z < -1
       element.style.opacity = hidden ? '0' : '1'
-      element.style.transform = `translate(-50%, -100%) translate(${((point.x + 1) / 2) * size.width}px, ${((1 - point.y) / 2) * size.height}px)`
+      const half = element.offsetWidth / 2 + EDGE
+      const x = Math.min(
+        Math.max(((point.x + 1) / 2) * size.width, half),
+        Math.max(size.width - half, half)
+      )
+      const y = Math.min(
+        Math.max(
+          ((1 - point.y) / 2) * size.height,
+          element.offsetHeight + EDGE
+        ),
+        size.height - EDGE
+      )
+      element.style.transform = `translate(-50%, -100%) translate(${x}px, ${y}px)`
     }
   })
   return null

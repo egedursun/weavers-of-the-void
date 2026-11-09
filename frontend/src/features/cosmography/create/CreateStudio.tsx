@@ -1,5 +1,6 @@
 import { type ReactNode, useId, useState } from 'react'
 import { Check, Layers, Orbit, Sparkles, Workflow } from 'lucide-react'
+import { unitHash } from '@/lib/hash'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,7 +39,7 @@ const EFFECT_LABEL: Record<string, string> = {
 }
 
 const PERCENT_EFFECTS = new Set(['density', 'capacity', 'time'])
-const TILES_SHOWN = 8
+const TILES_SHOWN = 12
 const PREVIEW_ID = 9_000_000
 
 function effectText(key: string, value: number): string {
@@ -66,7 +67,7 @@ function KindGallery({
       <div
         role='radiogroup'
         aria-label={`Choose a ${noun[0]}`}
-        className='grid min-w-0 grid-cols-2 gap-2 @md/studio:grid-cols-4'
+        className='grid min-w-0 grid-cols-2 gap-2 @md/studio:grid-cols-4 @4xl/studio:grid-cols-6'
       >
         {page.visible.map((kind) => (
           <Button
@@ -200,7 +201,7 @@ function Studio({
 function previewGalaxy(kind: KindRecord | undefined, value: string): FormInput {
   const effects = kind?.effects ?? {}
   return {
-    id: PREVIEW_ID + value.length,
+    id: PREVIEW_ID + Math.round(unitHash(`preview-${value}`) * 1000),
     galaxy_type: (value || 'spiral') as FormInput['galaxy_type'],
     radius: 900,
     arm_count: effects.arms ?? 2,

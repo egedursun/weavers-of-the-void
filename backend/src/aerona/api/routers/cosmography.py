@@ -4,6 +4,7 @@ from typing import Any
 
 from fastapi import APIRouter, Path, status
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.celestial_deepener import SCALE_DEPTH_KINDS, deepen_celestial, scale_row
 from aerona.api.background import require_llm, submit
@@ -21,6 +22,7 @@ from aerona.api.schemas.cosmography import (
     GalacticEventRecord,
     GalaxyRecord,
     GalaxyShapeRecord,
+    HeldLawRecord,
     KindRecord,
     PhenomenonRecord,
     PlacementRecord,
@@ -46,10 +48,12 @@ from aerona.catalog.cosmography import (
     STRUCTURE_KINDS,
     KindSpec,
 )
+from aerona.catalog.knowledge import NATURAL_LAWS
 from aerona.catalog.travel import METHOD_REACH
 from aerona.constants.api import WIKI_TIMELINE_LINES
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.cosmography import (
     CelestialReadingRow,
     CosmicBeingProfileRow,
@@ -64,6 +68,7 @@ from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.job import JobKind
+from aerona.domain.enums.node import NodeKind
 from aerona.engine.cosmos.kinds import (
     BEING_MECHANICS,
     CLUSTER_KIND_MECHANICS,
@@ -75,6 +80,7 @@ from aerona.engine.cosmos.kinds import (
 )
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.phases.doom import dominant_variant, doom_items
+from aerona.engine.primitives.knowledge import laws_of_dimension
 from aerona.engine.primitives.manual import manual_context
 from aerona.jobs.context import JobContext
 from aerona.rules.registry import Rules
@@ -173,7 +179,24 @@ async def scale_wiki(services: ServicesDep, node_id: int = Path(ge=1)) -> ScaleW
             cover=await cover_of(session, node_id),
             images=await images_of(session, node_id),
             timeline=await chronicle_lines(session, lines),
+            laws=await held_laws(session, node_id) if node.kind is NodeKind.DIMENSION else [],
         )
+
+
+async def held_laws(session: AsyncSession, dimension_id: int) -> list[HeldLawRecord]:
+    held = await laws_of_dimension(session, dimension_id)
+    names = await NodeRepository(session).names_of([row.entity_id for row in held if row.entity_id is not None])
+    return [
+        HeldLawRecord(
+            law=row.law,
+            label=NATURAL_LAWS[row.law].label,
+            description=NATURAL_LAWS[row.law].effect,
+            entity_id=row.entity_id,
+            name=names.get(row.entity_id) if row.entity_id is not None else None,
+            strength=row.strength,
+        )
+        for row in held
+    ]
 
 
 @router.get("/cosmography", response_model=CosmographyView)

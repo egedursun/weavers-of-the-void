@@ -1,5 +1,6 @@
 from collections import defaultdict
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -130,6 +131,39 @@ def reach_of(ladder: Cosmography, worlds: list[int], home: int, scope: LawScope)
         dimension = ladder.place_world_id(home).dimension_id
         return [world for world in worlds if ladder.place_world_id(world).dimension_id == dimension]
     return [home]
+
+
+@dataclass(frozen=True)
+class HeldLaw:
+    law: NaturalLaw
+    entity_id: int | None
+    strength: int
+
+
+async def laws_of_dimension(session: AsyncSession, dimension_id: int) -> list[HeldLaw]:
+    ladder = await cosmography_of(session)
+    dimension = ladder.dimensions.get(dimension_id)
+    if dimension is None:
+        return []
+    held = [HeldLaw(law, None, PERCENT) for law in DIMENSION_LAWS.get(dimension.dimension_kind, ())]
+    statement = (
+        select(NaturalLawProfileRow)
+        .join(EntityRow, EntityRow.id == NaturalLawProfileRow.law_entity_id)
+        .where(NaturalLawProfileRow.scope == LawScope.DIMENSION, EntityRow.status == EntityStatus.CANON)
+        .order_by(NaturalLawProfileRow.law_entity_id)
+    )
+    for row in await session.scalars(statement):
+        if row.world_id is not None and ladder.place_world_id(row.world_id).dimension_id == dimension_id:
+            held.append(HeldLaw(row.effect, row.law_entity_id, row.strength))
+    return held
+
+
+def footprint(ladder: Cosmography, worlds: list[int], row: NaturalLawProfileRow) -> set[int]:
+    if row.scope is LawScope.COSMOS:
+        return set(worlds)
+    if row.world_id is None:
+        return set()
+    return set(reach_of(ladder, worlds, row.world_id, row.scope))
 
 
 class LawBook:

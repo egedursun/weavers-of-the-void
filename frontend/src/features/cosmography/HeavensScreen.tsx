@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback } from 'react'
+import { Suspense, lazy, useCallback, useRef } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import {
   CloudFog,
@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmptyState, KpiTile, PageHeader } from '@/components/domain'
+import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
 import { Text } from '@/components/typography'
 import { useCosmos } from '@/features/cosmos/api'
 import { hasWebGL2 } from '@/features/cosmos/useCosmosViewSettings'
@@ -137,12 +138,25 @@ export function HeavensView({
   const view = useCosmography()
   const catalog = useCosmographyCatalog()
   const cosmos = useCosmos()
+  const drawers = useDrawerStack()
   const select = useCallback(
     (kind: ScaleKind | undefined, id: number | undefined) =>
       onSearch({ layer: kind, node: id }),
     [onSearch]
   )
   const setTab = (tab: HeavensTab) => onSearch({ pane: tab })
+  const panes = useRef<HTMLDivElement>(null)
+  const openStudio = () => {
+    setTab('create')
+    requestAnimationFrame(() => {
+      panes.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      panes.current
+        ?.querySelector<HTMLElement>(
+          '[role=tabpanel] [role=radio], [role=tabpanel] input'
+        )
+        ?.focus({ preventScroll: true })
+    })
+  }
   const pick = useCallback(
     (next: ScalePick) => select(next?.kind, next?.id),
     [select]
@@ -189,7 +203,7 @@ export function HeavensView({
           icon={Layers}
           description='The one cosmos above the stars: its dimensions, clusters and galaxies, and the rifts, beings and phenomena between them.'
           actions={
-            <Button onClick={() => setTab('create')}>
+            <Button onClick={openStudio}>
               <Plus />
               Shape the heavens
             </Button>
@@ -228,8 +242,10 @@ export function HeavensView({
                 ladder={ladder}
                 catalog={shape}
                 routes={cosmos.data?.routes ?? []}
+                cosmos={cosmos.data}
                 selected={selection}
                 onPick={pick}
+                onOpen={(kind, id) => drawers.open({ kind, id: String(id) })}
                 fallback={still}
               />
             </Suspense>
@@ -299,6 +315,9 @@ export function HeavensView({
           />
         </div>
         <Tabs
+          ref={panes}
+          id='heavens-panes'
+          className='scroll-mt-4'
           value={tab}
           onValueChange={(value) => setTab(value as HeavensTab)}
         >

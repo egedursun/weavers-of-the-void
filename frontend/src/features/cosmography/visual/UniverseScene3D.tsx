@@ -6,10 +6,11 @@ import {
   QuadraticBezierLine,
 } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { DoubleSide, NeutralToneMapping, Vector3 } from 'three'
+import { DoubleSide, Euler, NeutralToneMapping, Vector3 } from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { unitHash } from '@/lib/hash'
 import { plural } from '@/lib/units'
+import { type CosmosData } from '@/features/cosmos/api'
 import { METHOD_LOOK } from '@/features/cosmos/model/looks'
 import { PostEffects3D } from '@/features/cosmos/scene3d/PostEffects3D'
 import { shaderMaterial, uniform } from '@/features/cosmos/scene3d/materials'
@@ -17,9 +18,16 @@ import {
   type CosmographyCatalog,
   type GalaxyRecord,
   type RouteRecord,
+  type StarRecord,
 } from '../api'
+import { type WorldMark, worldMarks } from '../galaxyWorlds'
 import { type Ladder } from '../ladder'
-import { CoreGlow, GalaxyParticles } from './GalaxyScene3D'
+import {
+  CoreGlow,
+  GalaxyParticles,
+  StarMark,
+  WorldMarker,
+} from './GalaxyScene3D'
 import { type SceneLabel, LabelLayer, LabelProjector } from './SceneLabels'
 import { StarField } from './StarField'
 import { ClockDriver, useTicking } from './clock'
@@ -28,6 +36,7 @@ import { useLabelElements } from './labelElements'
 import { scenePalette, tokenHex } from './palette'
 import { CLOUD_FRAGMENT, PLANE_FRAGMENT, QUAD_VERTEX } from './shaders'
 import {
+  type PlacedGalaxy,
   type UniverseLayout,
   type Vec3,
   universeLayout,
@@ -42,9 +51,51 @@ type UniverseProps = {
   ladder: Ladder
   catalog: CosmographyCatalog
   routes: readonly RouteRecord[]
+  cosmos: CosmosData | undefined
   selected: ScalePick
   onPick: (pick: ScalePick) => void
+  onOpen: (kind: 'star' | 'world', id: number) => void
   fallback: ReactNode
+}
+
+type Held = { stars: StarRecord[]; worlds: WorldMark[] }
+
+const NAMED_INSIDE = 12
+
+function heldIn(
+  ladder: Ladder,
+  cosmos: CosmosData | undefined
+): Map<number, Held> {
+  return new Map(
+    ladder.data.galaxies.map((galaxy) => [
+      galaxy.id,
+      {
+        stars: ladder.data.stars.filter((row) => row.galaxy_id === galaxy.id),
+        worlds: worldMarks(cosmos, ladder.data, galaxy.id),
+      },
+    ])
+  )
+}
+
+function bodySize(galaxy: GalaxyRecord): number {
+  return Math.max(galaxy.radius * 0.06, 14)
+}
+
+function inSpace(
+  placed: PlacedGalaxy,
+  galaxy: GalaxyRecord,
+  x: number,
+  y: number
+): Vec3 {
+  const scale = placed.size / Math.max(galaxy.radius, 1)
+  const point = new Vector3(x, 0, y)
+    .applyEuler(new Euler(placed.tilt, placed.turn, 0))
+    .multiplyScalar(scale)
+  return [
+    placed.position[0] + point.x,
+    placed.position[1] + point.y,
+    placed.position[2] + point.z,
+  ]
 }
 
 const MINI_POINTS = 2600
@@ -197,15 +248,19 @@ function MiniGalaxy({
   catalog,
   layout,
   id,
+  held,
   selected,
   onPick,
+  onOpen,
 }: {
   ladder: Ladder
   catalog: CosmographyCatalog
   layout: UniverseLayout
   id: number
+  held: Held | undefined
   selected: boolean
   onPick: (pick: ScalePick) => void
+  onOpen: (kind: 'star' | 'world', id: number) => void
 }) {
   const placed = layout.galaxies.get(id)
   const galaxy = ladder.data.galaxies.find((row) => row.id === id)
@@ -226,6 +281,24 @@ function MiniGalaxy({
           shape={catalog.shape}
           scale={selected ? 1.4 : 1}
         />
+        {held?.stars.map((star) => (
+          <StarMark
+            key={star.id}
+            star={star}
+            size={bodySize(galaxy)}
+            selected={false}
+            onPick={(pick) => pick && onOpen('star', pick.id)}
+          />
+        ))}
+        {held?.worlds.map((world) => (
+          <WorldMarker
+            key={world.id}
+            world={world}
+            size={bodySize(galaxy)}
+            selected={false}
+            onPick={(pick) => pick && onOpen('world', pick.id)}
+          />
+        ))}
       </group>
       <mesh
         visible={false}
@@ -436,6 +509,7 @@ function universeLabels(
   ladder: Ladder,
   catalog: CosmographyCatalog,
   layout: UniverseLayout,
+  held: Map<number, Held>,
   selected: ScalePick
 ): SceneLabel[] {
   const chosen = (kind: string, id: number) =>
@@ -485,6 +559,28 @@ function universeLabels(
       detail: galaxyDetail(ladder, catalog, galaxy),
       strong: chosen('galaxy', galaxy.id),
     })
+    const inside = held.get(galaxy.id)
+    if (!inside) continue
+    const count = inside.stars.length + inside.worlds.length
+    if (count > NAMED_INSIDE && !chosen('galaxy', galaxy.id)) continue
+    const lift = bodySize(galaxy) * (placed.size / Math.max(galaxy.radius, 1))
+    for (const star of inside.stars)
+      labels.push({
+        key: `star-${star.id}`,
+        position: inSpace(placed, galaxy, star.x, star.y).map((value, axis) =>
+          axis === 1 ? value + lift : value
+        ) as Vec3,
+        text: star.name,
+      })
+    for (const world of inside.worlds)
+      labels.push({
+        key: `world-${world.id}`,
+        position: inSpace(placed, galaxy, world.x, world.y).map(
+          (value, axis) => (axis === 1 ? value - lift * 2.4 : value)
+        ) as Vec3,
+        text: world.name,
+        quiet: true,
+      })
   }
   for (const being of ladder.data.beings.filter(
     (row) => row.phase !== 'banished'
@@ -520,11 +616,14 @@ export default function UniverseScene3D({
   ladder,
   catalog,
   routes,
+  cosmos,
   selected,
   onPick,
+  onOpen,
   fallback,
 }: UniverseProps) {
   const layout = useMemo(() => universeLayout(ladder, routes), [ladder, routes])
+  const held = useMemo(() => heldIn(ladder, cosmos), [ladder, cosmos])
   const target = useMemo<Vec3 | null>(() => {
     if (!selected) return null
     if (selected.kind === 'galaxy')
@@ -536,7 +635,7 @@ export default function UniverseScene3D({
   }, [selected, layout])
   const distance = layout.extent * 1.6
   const elements = useLabelElements()
-  const labels = universeLabels(ladder, catalog, layout, selected)
+  const labels = universeLabels(ladder, catalog, layout, held, selected)
   return (
     <Boundary fallback={fallback}>
       <div className='relative h-full w-full'>
@@ -591,8 +690,10 @@ export default function UniverseScene3D({
               catalog={catalog}
               layout={layout}
               id={row.id}
+              held={held.get(row.id)}
               selected={selected?.kind === 'galaxy' && selected.id === row.id}
               onPick={onPick}
+              onOpen={onOpen}
             />
           ))}
           <Links layout={layout} />

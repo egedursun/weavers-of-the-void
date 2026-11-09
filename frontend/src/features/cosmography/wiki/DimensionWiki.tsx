@@ -43,6 +43,7 @@ import { ClusterThumb, DimensionSigil } from '../visual/ScaleThumbs'
 import { drawerKindOf } from '../visual/drawerKind'
 import { sigilOf } from '../visual/sigil'
 import { GalaxyCard } from './ClusterWiki'
+import { DimensionLaws } from './DimensionLaws'
 import { pageId, useScaleData } from './data'
 import {
   DangerZone,
@@ -540,6 +541,11 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
         ladder={ladder}
         catalog={catalog}
         dimensionId={dimension.id}
+      />
+      <DimensionLaws
+        dimension={dimension}
+        laws={wiki?.laws ?? []}
+        worldCount={worlds.length}
       />
       <Section title='Beings of this dimension' icon={Eye} tone='warning'>
         {beings.length === 0 ? (

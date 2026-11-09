@@ -27,9 +27,10 @@ from aerona.domain.enums.cosmography import (
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind, TemperatureBand, TerrainKind
+from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.travel import JourneyIntent, JourneyStatus
 from aerona.domain.enums.world import StarType
-from aerona.domain.models.entity_stats import PeopleStats
+from aerona.domain.models.entity_stats import NaturalLawStats, PeopleStats
 from aerona.domain.models.records import CargoLine
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos import control
@@ -50,6 +51,8 @@ from aerona.engine.cosmos.ladder import (
 from aerona.engine.cosmos.placement import Cosmography, zone_at
 from aerona.engine.cosmos.rifts import leak_peaks, open_rift
 from aerona.engine.cosmos.stars import hang_star
+from aerona.engine.divine.laws import contest, profile_for
+from aerona.engine.primitives.knowledge import LawBook, laws_of_dimension
 from aerona.rules.registry import Rules
 from aerona.services.books.model import build_book
 from aerona.services.books.render import CodexLinks, render_codex
@@ -296,3 +299,24 @@ async def test_a_star_hung_in_a_lit_sky_rises_beside_its_sun_and_a_void_star_in_
     assert math.dist((companion.x, companion.y), (cosmos.star.x, cosmos.star.y)) == pytest.approx(STAR_MAP_RADIUS_STEP)
     lone = await hang_star(ctx, "Lone", StarType.BLUE_GIANT, "Aeron", galaxy_id=far.id)
     assert lone.galaxy_id == far.id
+
+
+async def test_a_law_bound_across_a_dimension_holds_on_every_world_in_it_and_clashes_there(ctx: TickContext, cosmos: Cosmos) -> None:
+    await ensure_ladder(ctx.session, ctx.rules)
+    other = await make_world(ctx.session, "Velmor", star_id=cosmos.star.id)
+    prime = (await Cosmography.load(ctx.session)).prime
+    assert prime is not None
+    bounty = await make_entity(ctx.session, "Long Summer", EntityType.NATURAL_LAW, NaturalLawStats(), world_id=cosmos.home.id, natural_law=NaturalLaw.BOUNTY)
+    drought = await make_entity(ctx.session, "Dry Years", EntityType.NATURAL_LAW, NaturalLawStats(), world_id=other.id, natural_law=NaturalLaw.DROUGHT)
+    await control.bind_law(ctx, prime.id, bounty.id)
+    book = await LawBook.load(ctx.session)
+    assert book.has(NaturalLaw.BOUNTY, other.id)
+    assert [row.entity_id for row in await laws_of_dimension(ctx.session, prime.id)] == [bounty.id]
+    drought_profile = await profile_for(ctx, drought)
+    bounty_profile = await profile_for(ctx, bounty)
+    assert drought_profile is not None and bounty_profile is not None
+    assert await contest(ctx, [bounty_profile, drought_profile]) == 1
+    await control.release_law(ctx, bounty.id)
+    assert not (await LawBook.load(ctx.session)).has(NaturalLaw.BOUNTY, other.id)
+    with pytest.raises(ValidationFailedError):
+        await control.release_law(ctx, bounty.id)

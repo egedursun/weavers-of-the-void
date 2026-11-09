@@ -26,6 +26,7 @@ export type RouteRecord = Schema['RouteRecord']
 export type JourneyRecord = Schema['JourneyRecord']
 
 export type ScaleWiki = Schema['ScaleWiki']
+export type HeldLawRecord = Schema['HeldLawRecord']
 
 export const cosmographyKeys = {
   view: [...queryKeys.world.all, 'cosmography'] as const,
@@ -65,6 +66,8 @@ export type CosmographyAction =
   | 'dimension:create'
   | 'dimension:edit'
   | 'dimension:delete'
+  | 'dimension:bind_law'
+  | 'dimension:release_law'
   | 'cluster:create'
   | 'cluster:edit'
   | 'cluster:delete'

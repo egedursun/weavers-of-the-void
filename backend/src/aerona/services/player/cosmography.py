@@ -248,6 +248,27 @@ async def delete_dimension(scope: PlayerScope, command: DimensionTarget) -> Effe
     return Effect("The dimension is unmade; what lay in it falls into its parent.")
 
 
+class DimensionLaw(Command):
+    dimension_id: int
+    law_id: int
+
+
+class LawTarget(Command):
+    law_id: int
+
+
+@player_action("dimension:bind_law", ActionKind.EDIT_RECORD)
+async def bind_dimension_law(scope: PlayerScope, command: DimensionLaw) -> Effect:
+    profile = await control.bind_law(await scope.context("dimension_law"), command.dimension_id, command.law_id)
+    return Effect("The law now holds across the whole dimension.", profile.law_entity_id)
+
+
+@player_action("dimension:release_law", ActionKind.EDIT_RECORD)
+async def release_dimension_law(scope: PlayerScope, command: LawTarget) -> Effect:
+    profile = await control.release_law(await scope.context("dimension_law"), command.law_id)
+    return Effect("The law holds only on its own world again.", profile.law_entity_id)
+
+
 @player_action("cluster:create", ActionKind.CREATE_ENTITY)
 async def create_cluster(scope: PlayerScope, command: ClusterDraft) -> Effect:
     row = await control.new_cluster(

@@ -21,7 +21,7 @@ from aerona.catalog.cosmography import (
 )
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.entity_types import entity_type_spec
-from aerona.catalog.knowledge import KNOWLEDGE_BRANCHES
+from aerona.catalog.knowledge import KNOWLEDGE_BRANCHES, NATURAL_LAWS
 from aerona.catalog.powers import POWERS, power_unlock_levels
 from aerona.catalog.rarities import RARITY_LABELS, entity_rarity
 from aerona.catalog.scenarios import SCENARIOS
@@ -53,6 +53,7 @@ from aerona.domain.models.records import EpochStatsData
 from aerona.engine.cosmos.kinds import CLUSTER_KIND_MECHANICS, DIMENSION_KIND_MECHANICS, GALAXY_TYPE_MECHANICS
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.military.records import battle_field
+from aerona.engine.primitives.knowledge import laws_of_dimension
 from aerona.rules.registry import Rules
 from aerona.services.books.command import add_command_areas
 from aerona.services.books.heavensvg import cluster_figure, dimension_figure, galaxy_figure
@@ -231,6 +232,7 @@ class ScaleArticle:
     effects: list[Labelled] = field(default_factory=list)
     rifts: list[str] = field(default_factory=list)
     beings: list[str] = field(default_factory=list)
+    laws: list[Labelled] = field(default_factory=list)
     depth: EntityDepth | None = None
 
 
@@ -694,6 +696,13 @@ class BookBuilder:
             article.figure = dimension_figure(dimension)
             article.kind_note = DIMENSION_KINDS[dimension.dimension_kind].description
             article.effects = self.kind_effects(DIMENSION_KIND_MECHANICS[dimension.dimension_kind])
+            article.laws = [
+                Labelled(
+                    NATURAL_LAWS[row.law].label,
+                    f"{self.names.get(row.entity_id, 'A law') if row.entity_id is not None else 'By the nature of its kind'}, strength {row.strength}/100",
+                )
+                for row in await laws_of_dimension(self.session, dimension.id)
+            ]
             article.rifts = [
                 f"{self.names.get(row.world_id, 'A world')}: {RIFT_STATE_LABELS[row.state].lower()}, "
                 f"size {row.size}, stability {row.stability}, opened in epoch {row.opened_epoch}"

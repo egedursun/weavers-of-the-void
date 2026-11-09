@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Ban, Crown, Link2 } from 'lucide-react'
+import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { EmptyState, EntityLink, PagedList, Section } from '@/components/domain'
+import { useNames } from '@/features/entity/api/queries'
 import { MindPicker } from '@/features/entity/mind/parts'
 import {
   type CosmicBeingRecord,
@@ -15,12 +17,15 @@ import { BEING_AGENDAS, BEING_PHASES, BEING_SCALES } from './labels'
 import { type Ladder, ladderOf, nameTable } from './ladder'
 import {
   Chip,
+  Facts,
   ForgeCard,
   Meter,
+  NodeLink,
   RecordEditor,
   RecordPick,
   RecordRow,
 } from './parts'
+import { drawerKindOf } from './visual/drawerKind'
 
 const phaseTable = Object.fromEntries(
   Object.entries(BEING_PHASES).map(([key, value]) => [key, value.label])
@@ -51,6 +56,14 @@ export function BeingCard({
   )
   const busy =
     edit.isPending || bind.isPending || banish.isPending ? 'Working' : null
+  const names = useNames()
+  const named = new Map((names.data ?? []).map((row) => [row.id, row]))
+  const nameOf = (id: number | null | undefined, none: string) =>
+    id === null || id === undefined
+      ? none
+      : (named.get(id)?.name ??
+        ladder.data.world_names[String(id)] ??
+        ladder.names.get(id))
   const phase = BEING_PHASES[being.phase]
   const bound = being.phase === 'bound'
   const banished = being.phase === 'banished'
@@ -92,6 +105,82 @@ export function BeingCard({
       }
     >
       <Meter label='Might' value={being.might} tone='warning' />
+      <Facts
+        items={[
+          [
+            'Home',
+            <NodeLink
+              key='home'
+              kind='dimension'
+              id={being.home_dimension_id}
+              name={
+                being.home_dimension_id !== null
+                  ? ladder.names.get(being.home_dimension_id)
+                  : 'The great dark'
+              }
+            />,
+          ],
+          [
+            'Roams',
+            <NodeLink
+              key='roams'
+              kind='galaxy'
+              id={being.galaxy_id}
+              name={
+                being.galaxy_id !== null
+                  ? ladder.names.get(being.galaxy_id)
+                  : 'No galaxy'
+              }
+            />,
+          ],
+          [
+            'Now on',
+            <NodeLink
+              key='on'
+              kind='world'
+              id={being.world_id}
+              name={nameOf(being.world_id, 'No world')}
+            />,
+          ],
+          [
+            'Aims at',
+            <NodeLink
+              key='aim'
+              kind='world'
+              id={being.target_world_id}
+              name={nameOf(being.target_world_id, 'Nothing')}
+            />,
+          ],
+          [
+            'Bound by',
+            <NodeLink
+              key='bound'
+              kind={drawerKindOf(named.get(being.bound_by_node_id ?? 0)?.kind)}
+              id={being.bound_by_node_id}
+              name={nameOf(being.bound_by_node_id, 'No one')}
+            />,
+          ],
+          [
+            'Mirrors',
+            <NodeLink
+              key='mirror'
+              kind='entity'
+              id={being.mirrored_entity_id}
+              name={nameOf(being.mirrored_entity_id, 'No one')}
+            />,
+          ],
+          [
+            'Through a rift',
+            being.rift_id !== null ? 'Yes, an open rift' : 'No',
+          ],
+          [
+            'Manifest',
+            being.manifest_epochs > 0
+              ? plural(being.manifest_epochs, 'epoch')
+              : 'Not yet',
+          ],
+        ]}
+      />
       <RecordEditor
         title='Reshape this being'
         note='Might, phase, aim, scale and home you set are held until you release them.'
