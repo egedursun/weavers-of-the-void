@@ -33,5 +33,9 @@ async def build_codex_archive(services: Services, text: str, links: CodexLinks, 
             path.parent.mkdir(parents=True, exist_ok=True)
         await write_images(services, files)
         await write_maps(services, maps)
+        for relative, figure in links.heavens.items():
+            path = directory / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            await to_thread.run_sync(path.write_text, figure)
         await to_thread.run_sync(_pack, directory, text, stem, target)
     return target

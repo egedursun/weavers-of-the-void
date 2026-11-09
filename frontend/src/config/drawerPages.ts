@@ -38,17 +38,17 @@ export const DRAWER_PAGES: DrawerPages = {
     }))
   ),
   galaxy: lazy(() =>
-    import('@/features/cosmography/NodePages').then((module) => ({
+    import('@/features/cosmography/wiki/GalaxyWiki').then((module) => ({
       default: module.GalaxyPage,
     }))
   ),
   cluster: lazy(() =>
-    import('@/features/cosmography/NodePages').then((module) => ({
+    import('@/features/cosmography/wiki/ClusterWiki').then((module) => ({
       default: module.ClusterPage,
     }))
   ),
   dimension: lazy(() =>
-    import('@/features/cosmography/NodePages').then((module) => ({
+    import('@/features/cosmography/wiki/DimensionWiki').then((module) => ({
       default: module.DimensionPage,
     }))
   ),

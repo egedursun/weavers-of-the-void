@@ -1,3 +1,4 @@
+import { type Cosmography } from '@/features/cosmography/api'
 import {
   type CosmosView,
   type EntitySummary,
@@ -7,7 +8,16 @@ import {
 import { type AtlasSort } from './atlasSearch'
 
 export type AtlasNodeKind =
-  'group' | 'entity' | 'son' | 'creator' | 'world' | 'star' | 'foreign-god'
+  | 'group'
+  | 'entity'
+  | 'son'
+  | 'creator'
+  | 'world'
+  | 'star'
+  | 'foreign-god'
+  | 'dimension'
+  | 'cluster'
+  | 'galaxy'
 
 export type AtlasNode = {
   key: string
@@ -98,7 +108,86 @@ type TreeInput = {
   entities: EntitySummary[]
   state: WorldState | undefined
   cosmos: CosmosView | undefined
+  heavens?: Cosmography | undefined
   types: EntityTypeInfo[]
+}
+
+function humanizeKind(value: string): string {
+  const text = value.replaceAll('_', ' ')
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+function heavensTree(
+  heavens: Cosmography,
+  starNode: (starId: number) => AtlasNode | null,
+  freeWorlds: Map<string, AtlasNode[]>
+): { nodes: AtlasNode[]; placedStars: Set<number> } {
+  const placedStars = new Set<number>()
+  const galaxyNode = (galaxyId: number): AtlasNode | null => {
+    const galaxy = heavens.galaxies.find((row) => row.id === galaxyId)
+    if (!galaxy) return null
+    const stars = heavens.stars
+      .filter((star) => star.galaxy_id === galaxy.id)
+      .map((star) => {
+        placedStars.add(star.id)
+        return starNode(star.id)
+      })
+      .filter((node): node is AtlasNode => node !== null)
+    return {
+      key: nodeKey('galaxy', galaxy.id),
+      label: galaxy.name,
+      kind: 'galaxy',
+      id: galaxy.id,
+      hint: `${humanizeKind(galaxy.galaxy_type)} galaxy`,
+      children: [...stars, ...(freeWorlds.get(`galaxy:${galaxy.id}`) ?? [])],
+    }
+  }
+  const clusterNode = (clusterId: number): AtlasNode | null => {
+    const cluster = heavens.clusters.find((row) => row.id === clusterId)
+    if (!cluster) return null
+    const inner = heavens.clusters
+      .filter((row) => row.parent_cluster_id === cluster.id)
+      .map((row) => clusterNode(row.id))
+    const galaxies = heavens.galaxies
+      .filter((row) => row.cluster_id === cluster.id)
+      .map((row) => galaxyNode(row.id))
+    return {
+      key: nodeKey('cluster', cluster.id),
+      label: cluster.name,
+      kind: 'cluster',
+      id: cluster.id,
+      hint: humanizeKind(cluster.cluster_kind),
+      children: [...inner, ...galaxies].filter(
+        (node): node is AtlasNode => node !== null
+      ),
+    }
+  }
+  const prime =
+    heavens.dimensions.find((row) => row.dimension_kind === 'prime') ??
+    heavens.dimensions[0]
+  const nodes = heavens.dimensions.map((dimension) => {
+    const home = (value: number | null) => (value ?? prime?.id) === dimension.id
+    const clusters = heavens.clusters
+      .filter((row) => row.parent_cluster_id === null && home(row.dimension_id))
+      .map((row) => clusterNode(row.id))
+    const loose = heavens.galaxies
+      .filter((row) => row.cluster_id === null && home(row.dimension_id))
+      .map((row) => galaxyNode(row.id))
+    return {
+      key: nodeKey('dimension', dimension.id),
+      label: dimension.name,
+      kind: 'dimension' as const,
+      id: dimension.id,
+      hint: `${humanizeKind(dimension.dimension_kind)} dimension`,
+      children: [
+        ...[...clusters, ...loose].filter(
+          (node): node is AtlasNode => node !== null
+        ),
+        ...(freeWorlds.get(`dimension:${dimension.id}`) ?? []),
+      ],
+    }
+  })
+  return { nodes, placedStars }
 }
 
 function pantheon(state: WorldState | undefined): AtlasNode | null {
@@ -141,6 +230,7 @@ export function buildAtlasTree({
   entities,
   state,
   cosmos,
+  heavens,
   types,
 }: TreeInput): AtlasNode[] {
   const byId = new Map(entities.map((entity) => [entity.id, entity]))
@@ -230,24 +320,56 @@ export function buildAtlasTree({
   const worlds = cosmos?.worlds ?? []
   const stars = cosmos?.stars ?? []
   const topWorlds = worlds.filter((item) => item.world.parent_world_id === null)
-  const starNodes: AtlasNode[] = stars.map((star) => ({
-    key: nodeKey('star', star.id),
-    label: star.name,
-    kind: 'star',
-    id: star.id,
-    children: topWorlds
-      .filter((item) => item.world.star_id === star.id)
-      .map((item) =>
-        worldNode(item.world.id, item.world.name, item.type_label)
-      ),
-  }))
-  const starless = topWorlds
-    .filter(
-      (item) =>
-        item.world.star_id === null ||
-        !stars.some((star) => star.id === item.world.star_id)
-    )
-    .map((item) => worldNode(item.world.id, item.world.name, item.type_label))
+  const starOf = (starId: number): AtlasNode | null => {
+    const star = stars.find((row) => row.id === starId)
+    if (!star) return null
+    return {
+      key: nodeKey('star', star.id),
+      label: star.name,
+      kind: 'star',
+      id: star.id,
+      children: topWorlds
+        .filter((item) => item.world.star_id === star.id)
+        .map((item) =>
+          worldNode(item.world.id, item.world.name, item.type_label)
+        ),
+    }
+  }
+  const starlessWorlds = topWorlds.filter(
+    (item) =>
+      item.world.star_id === null ||
+      !stars.some((star) => star.id === item.world.star_id)
+  )
+  const placeOf = new Map(
+    (heavens?.placements ?? []).map((row) => [row.world_id, row])
+  )
+  const freeWorlds = new Map<string, AtlasNode[]>()
+  const unplaced: AtlasNode[] = []
+  for (const item of starlessWorlds) {
+    const node = worldNode(item.world.id, item.world.name, item.type_label)
+    const place = placeOf.get(item.world.id)
+    const slot =
+      place?.galaxy_id != null
+        ? `galaxy:${place.galaxy_id}`
+        : place?.dimension_id != null
+          ? `dimension:${place.dimension_id}`
+          : null
+    if (heavens && heavens.dimensions.length > 0 && slot)
+      freeWorlds.set(slot, [...(freeWorlds.get(slot) ?? []), node])
+    else unplaced.push(node)
+  }
+  const scale =
+    heavens && heavens.dimensions.length > 0
+      ? heavensTree(heavens, starOf, freeWorlds)
+      : null
+  const starNodes: AtlasNode[] = [
+    ...(scale?.nodes ?? []),
+    ...stars
+      .filter((star) => !scale?.placedStars.has(star.id))
+      .map((star) => starOf(star.id))
+      .filter((node): node is AtlasNode => node !== null),
+  ]
+  const starless = unplaced
   const knownWorlds = new Set(worlds.map((item) => item.world.id))
   const orphans = [...rootsOf.keys()]
     .filter((worldId) => !knownWorlds.has(worldId))

@@ -165,6 +165,14 @@ class CodexLinks:
     base: str | None = None
     images: dict[tuple[str, int, int], str] = field(default_factory=dict)
     maps: dict[int, str] = field(default_factory=dict)
+    heavens: dict[str, str] = field(default_factory=dict)
+
+    def heaven(self, anchor: str, figure: str) -> str:
+        if self.base is not None:
+            return f"data:image/svg+xml;utf8,{quote(str(figure))}"
+        path = f"{CODEX_IMAGE_DIRECTORY}/{quote(anchor)}.svg"
+        self.heavens[path] = str(figure)
+        return path
 
     def media(self, file_name: str | None) -> str:
         if not file_name:

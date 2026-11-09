@@ -1,5 +1,6 @@
-import { Globe2, Sun } from 'lucide-react'
+import { Angry, Frown, Globe2, Heart, Meh, Smile, Sun } from 'lucide-react'
 import { EmptyState, LoadingBlock, Section } from '@/components/domain'
+import { Muted } from '@/components/typography'
 import { useSons } from '@/features/pantheon/api'
 import {
   type StarRecord,
@@ -10,6 +11,18 @@ import {
 import { STAR_AGES, WORLD_AGES, ZONES } from './labels'
 import { ladderOf, nameTable } from './ladder'
 import { Chip, Facts, Meter, NodeLink, RecordEditor } from './parts'
+
+const MOODS = [
+  { from: 40, label: 'Loving', icon: Heart },
+  { from: 10, label: 'Kind', icon: Smile },
+  { from: -10, label: 'Indifferent', icon: Meh },
+  { from: -40, label: 'Restless', icon: Frown },
+  { from: -100, label: 'Wrathful', icon: Angry },
+] as const
+
+function moodOf(mood: number) {
+  return MOODS.find((row) => mood >= row.from) ?? MOODS[MOODS.length - 1]
+}
 
 type Edit = { values: Record<string, unknown>; release: string[] }
 
@@ -269,12 +282,14 @@ export function WorldPlacementSection({ world }: { world: WorldRecord }) {
             value={world.biosphere_health}
             tone='success'
           />
-          <Meter
-            label={`Mood ${world.mood > 0 ? '+' : ''}${world.mood}`}
-            value={world.mood + 100}
-            max={200}
-            tone='warning'
-          />
+          <div className='flex min-w-0 items-center justify-between gap-2 rounded-lg border bg-background p-2'>
+            <Muted as='span' variant='caption'>
+              Mood toward its peoples
+            </Muted>
+            <Chip icon={moodOf(world.mood).icon}>
+              {`${moodOf(world.mood).label} (${world.mood > 0 ? '+' : ''}${world.mood})`}
+            </Chip>
+          </div>
         </div>
         <RecordEditor
           title='Shape the life of the world'

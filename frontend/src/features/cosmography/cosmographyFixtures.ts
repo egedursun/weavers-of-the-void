@@ -201,4 +201,16 @@ export const CATALOG: CosmographyCatalog = {
   dimensional_events: [kind('convergence', 'Convergence')],
   apocalypse_variants: [kind('ruin', 'Ruin')],
   method_reach: {},
+  shape: {
+    core_reach_pct: 8,
+    bulge_reach_pct: 18,
+    bar_reach_pct: 30,
+    inner_reach_pct: 40,
+    disc_reach_pct: 100,
+    halo_reach_pct: 130,
+    arm_width_deg: 28,
+    arm_wind_deg: 180,
+    barred_types: ['barred_spiral'],
+    spiral_types: ['spiral', 'barred_spiral'],
+  },
 }

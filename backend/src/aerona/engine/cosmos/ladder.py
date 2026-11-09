@@ -19,6 +19,7 @@ from aerona.engine.cosmos.placement import Cosmography, zone_at
 from aerona.rules.registry import Rules
 
 LADDER_FIXUP = "cosmography.scale_ladder"
+HOME_NAME_FIXUP = "cosmography.home_galaxy_name"
 LOCAL_STRUCTURES = frozenset(
     kind
     for kind in GalacticStructureKind
@@ -225,6 +226,34 @@ async def home_galaxy(session: AsyncSession) -> GalaxyRow | None:
     return next(iter(cosmography.galaxies.values()), None)
 
 
+def home_galaxy_name(cosmos_name: str) -> str:
+    return f"{cosmos_name} Galaxy"
+
+
+async def name_home_galaxy(session: AsyncSession) -> int:
+    if await session.get(AppliedFixupRow, HOME_NAME_FIXUP) is not None:
+        return 0
+    ladder = await session.get(AppliedFixupRow, LADDER_FIXUP)
+    cosmos = await session.scalar(select(CosmosRow))
+    if ladder is None or cosmos is None:
+        return 0
+    galaxy = await session.get(GalaxyRow, int((ladder.result or {}).get("galaxy", 0)))
+    names = NameRepository(session)
+    renamed = 0
+    wanted = home_galaxy_name(cosmos.name)
+    if (
+        galaxy is not None
+        and galaxy.name.startswith(f"{cosmos.name} ")
+        and galaxy.name != wanted
+        and not await names.is_taken(wanted, ignore_node_id=galaxy.id)
+    ):
+        await names.rename(galaxy.id, wanted)
+        renamed = 1
+    session.add(AppliedFixupRow(key=HOME_NAME_FIXUP, result={"renamed": renamed}))
+    await session.flush()
+    return renamed
+
+
 async def ensure_ladder(session: AsyncSession, rules: Rules) -> int:
     if await session.get(AppliedFixupRow, LADDER_FIXUP) is not None:
         return 0
@@ -248,7 +277,7 @@ async def ensure_ladder(session: AsyncSession, rules: Rules) -> int:
         )
     galaxy = await session.scalar(select(GalaxyRow).order_by(GalaxyRow.id).limit(1))
     if galaxy is None:
-        galaxy = await create_galaxy(session, rules, GalaxyDraft(cosmos.name, GalaxyType.SPIRAL, epoch, cluster_id=group.id, radius=radius))
+        galaxy = await create_galaxy(session, rules, GalaxyDraft(home_galaxy_name(cosmos.name), GalaxyType.SPIRAL, epoch, cluster_id=group.id, radius=radius))
     placed = 0
     for star in stars:
         if star.galaxy_id is None:

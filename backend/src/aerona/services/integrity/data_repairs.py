@@ -16,7 +16,7 @@ from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import ROLE_BOND_KINDS, BondState
 from aerona.domain.enums.entity import EntityStatus
-from aerona.engine.cosmos.ladder import ensure_ladder
+from aerona.engine.cosmos.ladder import ensure_ladder, name_home_galaxy
 from aerona.engine.primitives.canon_facts import seed_if_empty
 from aerona.rules.registry import Rules
 from aerona.services.bonds import BondService, flip_reversed, resolve_all_friend_and_foe
@@ -130,6 +130,7 @@ class DataRepairs:
             (GRAPH_ENDS_STEP, self.graph_ends),
             ("certain_facts", lambda session, rules, epoch: seed_if_empty(session)),
             ("scale_ladder", lambda session, rules, epoch: ensure_ladder(session, rules)),
+            ("home_galaxy_name", lambda session, rules, epoch: name_home_galaxy(session)),
         ]
 
     def history_steps(self) -> list[tuple[str, Repair]]:

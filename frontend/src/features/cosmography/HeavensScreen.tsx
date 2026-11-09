@@ -1,142 +1,387 @@
+import { Suspense, lazy, useCallback } from 'react'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import {
+  CloudFog,
   Crown,
   Eye,
+  History,
   Layers,
   Orbit,
+  Plus,
+  RefreshCw,
+  Skull,
   Sparkles,
-  Star,
   Workflow,
 } from 'lucide-react'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import {
-  EmptyState,
-  KpiTile,
-  LoadingBlock,
-  PageHeader,
-  Section,
-} from '@/components/domain'
+import { plural } from '@/lib/units'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { EmptyState, KpiTile, PageHeader } from '@/components/domain'
+import { Text } from '@/components/typography'
+import { useCosmos } from '@/features/cosmos/api'
+import { hasWebGL2 } from '@/features/cosmos/useCosmosViewSettings'
 import { ApocalypseVariantPanel } from './ApocalypseVariantPanel'
-import { DimensionAtlas, GalaxyAtlas } from './Atlases'
 import { BeingsPanel } from './BeingsPanel'
-import {
-  CreateClusterForm,
-  CreateDimensionForm,
-  CreateGalaxyForm,
-} from './CreateForms'
 import { EventsPanel } from './EventsPanel'
 import { PhenomenaPanel } from './PhenomenaPanel'
 import { RiftsPanel } from './RiftsPanel'
-import { ScaleTree } from './ScaleTree'
-import { useCosmography, useCosmographyCatalog } from './api'
-import { ladderOf } from './ladder'
+import { ScaleNavigator } from './ScaleNavigator'
+import { SelectedScale } from './SelectedScale'
+import {
+  type CosmographyCatalog,
+  useCosmography,
+  useCosmographyCatalog,
+} from './api'
+import {
+  CreateClusterStudio,
+  CreateDimensionStudio,
+  CreateGalaxyStudio,
+} from './create/CreateStudio'
+import {
+  type HeavensSearch,
+  type HeavensTab,
+  type ScaleKind,
+} from './heavensSearch'
+import { type Ladder, ladderOf } from './ladder'
+import { GalaxyThumb } from './visual/GalaxyThumb'
+import { type ScalePick } from './visual/UniverseScene3D'
+import { DIMENSION_TOKEN } from './visual/galaxyForm'
+import { cssColor } from './visual/palette'
+
+const UniverseScene3D = lazy(() => import('./visual/UniverseScene3D'))
+const OPEN_RIFTS = new Set(['opening', 'open', 'closing'])
+
+function StillUniverse({
+  ladder,
+  catalog,
+  onPick,
+}: {
+  ladder: Ladder
+  catalog: CosmographyCatalog
+  onPick: (pick: ScalePick) => void
+}) {
+  return (
+    <div className='grid h-full min-w-0 auto-rows-min grid-cols-2 gap-3 overflow-y-auto p-4 sm:grid-cols-3'>
+      {ladder.data.galaxies.map((galaxy) => (
+        <Button
+          key={galaxy.id}
+          variant='ghost'
+          size='card'
+          onClick={() => onPick({ kind: 'galaxy', id: galaxy.id })}
+        >
+          <GalaxyThumb
+            galaxy={galaxy}
+            shape={catalog.shape}
+            label={galaxy.name}
+            points={2400}
+            className='aspect-square w-full'
+          />
+          <Text as='span' variant='caption' tone='inherit' truncate>
+            {galaxy.name}
+          </Text>
+        </Button>
+      ))}
+    </div>
+  )
+}
+
+function Legend({ ladder }: { ladder: Ladder }) {
+  return (
+    <div className='flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1'>
+      {ladder.data.dimensions.map((dimension) => (
+        <span key={dimension.id} className='flex items-center gap-1.5'>
+          <svg aria-hidden='true' viewBox='0 0 10 10' className='size-icon-xs'>
+            <circle
+              cx='5'
+              cy='5'
+              r='4'
+              fill={cssColor(DIMENSION_TOKEN[dimension.dimension_kind])}
+            />
+          </svg>
+          <Text as='span' variant='caption' tone='inherit'>
+            {dimension.name}
+          </Text>
+        </span>
+      ))}
+      <Text as='span' variant='caption' tone='inherit' className='opacity-70'>
+        Dashed arcs: routes between galaxies · beams: open rifts between
+        dimensions
+      </Text>
+    </div>
+  )
+}
 
 export function HeavensScreen() {
+  const search = useSearch({ from: '/_app/heavens' })
+  const navigate = useNavigate({ from: '/heavens' })
+  const change = useCallback(
+    (patch: HeavensSearch) =>
+      void navigate({
+        search: (previous) => ({ ...previous, ...patch }),
+        replace: true,
+      }),
+    [navigate]
+  )
+  return <HeavensView search={search} onSearch={change} />
+}
+
+export function HeavensView({
+  search,
+  onSearch,
+}: {
+  search: HeavensSearch
+  onSearch: (patch: HeavensSearch) => void
+}) {
   const view = useCosmography()
   const catalog = useCosmographyCatalog()
-  if (view.isPending) return <LoadingBlock label='Reading the heavens' />
+  const cosmos = useCosmos()
+  const select = useCallback(
+    (kind: ScaleKind | undefined, id: number | undefined) =>
+      onSearch({ layer: kind, node: id }),
+    [onSearch]
+  )
+  const setTab = (tab: HeavensTab) => onSearch({ pane: tab })
+  const pick = useCallback(
+    (next: ScalePick) => select(next?.kind, next?.id),
+    [select]
+  )
   if (view.isError)
     return (
-      <Alert variant='destructive'>
-        <Orbit />
-        <AlertTitle>The heavens could not be read</AlertTitle>
-        <AlertDescription>{view.error.message}</AlertDescription>
-      </Alert>
+      <div className='p-4 md:p-6'>
+        <EmptyState
+          icon={Layers}
+          title='The heavens could not be read'
+          description={view.error.message}
+          action={
+            <Button variant='outline' onClick={() => void view.refetch()}>
+              <RefreshCw />
+              Try again
+            </Button>
+          }
+        />
+      </div>
+    )
+  if (view.isPending || !catalog.data)
+    return (
+      <div className='flex flex-col gap-4 p-4 md:p-6'>
+        <Skeleton className='h-control-lg w-1/3' />
+        <Skeleton className='h-scene-lg w-full' />
+      </div>
     )
   const data = view.data
+  const shape = catalog.data
   const ladder = ladderOf(data)
-  const placed = data.placements.filter((row) => row.star_id !== null).length
-  const openRifts = data.rifts.filter((row) =>
-    ['opening', 'open', 'closing'].includes(row.state)
-  ).length
+  const selection =
+    search.layer && search.node ? { kind: search.layer, id: search.node } : null
+  const openRifts = data.rifts.filter((row) => OPEN_RIFTS.has(row.state)).length
+  const tab = search.pane ?? 'scale'
+  const still = <StillUniverse ladder={ladder} catalog={shape} onPick={pick} />
   return (
     <div
       data-surface='CosmographyScreen'
-      className='flex min-w-0 flex-col gap-6'
+      className='flex min-w-0 flex-1 flex-col'
     >
-      <PageHeader
-        eyebrow={`Epoch ${data.epoch}`}
-        title='The Heavens'
-        icon={Orbit}
-        description='Dimensions, clusters, galaxies and the beings, rifts and wonders between them. Every value here is yours to shape or hold.'
-      />
-      <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-7'>
-        <KpiTile
-          label='Dimensions'
-          value={data.dimensions.length}
+      <div className='flex min-w-0 flex-col gap-4 border-b p-4 md:px-6'>
+        <PageHeader
+          title='The Heavens'
           icon={Layers}
-          tone='info'
-        />
-        <KpiTile
-          label='Clusters'
-          value={data.clusters.length}
-          icon={Workflow}
-          tone='verdigris'
-        />
-        <KpiTile
-          label='Galaxies'
-          value={data.galaxies.length}
-          icon={Orbit}
-          tone='gold'
-        />
-        <KpiTile
-          label='Worlds under a star'
-          value={placed}
-          icon={Star}
-          tone='gold'
-        />
-        <KpiTile
-          label='Open rifts'
-          value={openRifts}
-          icon={Eye}
-          tone='danger'
-          harmful
-        />
-        <KpiTile
-          label='Cosmic beings'
-          value={data.beings.length}
-          icon={Crown}
-          tone='warning'
-        />
-        <KpiTile
-          label='Phenomena'
-          value={data.phenomena.length}
-          icon={Sparkles}
-          tone='info'
+          description='The one cosmos above the stars: its dimensions, clusters and galaxies, and the rifts, beings and phenomena between them.'
+          actions={
+            <Button onClick={() => setTab('create')}>
+              <Plus />
+              Shape the heavens
+            </Button>
+          }
+          meta={
+            <>
+              <Badge variant='outline'>{`Epoch ${data.epoch}`}</Badge>
+              <Badge variant='outline'>{`${plural(data.dimensions.length, 'dimension')}`}</Badge>
+              <Badge variant='outline'>{`${plural(data.clusters.length, 'cluster')}`}</Badge>
+              <Badge variant='outline'>{`${plural(data.galaxies.length, 'galaxy', 'galaxies')}`}</Badge>
+              {openRifts > 0 && (
+                <Badge variant='destructive'>{`${plural(openRifts, 'open rift')}`}</Badge>
+              )}
+            </>
+          }
         />
       </div>
-      <ApocalypseVariantPanel
-        current={data.apocalypse_variant ?? null}
-        likely={data.likely_variant}
-        catalog={catalog.data}
-      />
-      <Section
-        id='cosmography-ladder'
-        title='The scale of the cosmos'
-        description='Each dimension holds its clusters and galaxies; open any of them to shape it.'
-        icon={Layers}
-        tone='info'
+      <section
+        aria-label='Map of the heavens'
+        className='relative flex min-w-0 flex-col border-b'
       >
-        {data.dimensions.length === 0 ? (
-          <EmptyState
-            icon={Layers}
-            title='The cosmos has not been laid out yet'
-            description='The first epoch lays the prime dimension, a home group and a home galaxy around the existing stars; you can bring a dimension into being now.'
-          />
-        ) : (
-          <ScaleTree ladder={ladder} catalog={catalog.data} />
-        )}
-        <div className='grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-3'>
-          <CreateDimensionForm ladder={ladder} catalog={catalog.data} />
-          <CreateClusterForm ladder={ladder} catalog={catalog.data} />
-          <CreateGalaxyForm ladder={ladder} catalog={catalog.data} />
+        <div className='relative h-scene min-w-0 bg-cosmos-void text-cosmos-label lg:h-scene-lg'>
+          {data.dimensions.length === 0 ? (
+            <div className='flex h-full items-center justify-center p-6'>
+              <EmptyState
+                icon={Layers}
+                title='The cosmos is not laid out yet'
+                description='The first epoch lays the prime dimension, a home group and a home galaxy around the stars; you can bring a dimension into being now.'
+              />
+            </div>
+          ) : hasWebGL2() ? (
+            <Suspense
+              fallback={<Skeleton className='h-full w-full rounded-none' />}
+            >
+              <UniverseScene3D
+                ladder={ladder}
+                catalog={shape}
+                routes={cosmos.data?.routes ?? []}
+                selected={selection}
+                onPick={pick}
+                fallback={still}
+              />
+            </Suspense>
+          ) : (
+            still
+          )}
+          {selection && (
+            <div className='absolute top-3 left-3 w-full max-w-sm'>
+              <SelectedScale
+                ladder={ladder}
+                catalog={shape}
+                kind={selection.kind}
+                id={selection.id}
+                onClear={() => select(undefined, undefined)}
+              />
+            </div>
+          )}
+          <div className='pointer-events-none absolute right-3 bottom-3 hidden max-w-sm md:block'>
+            <Text variant='caption' tone='inherit' className='opacity-70'>
+              Click a dimension, cluster or galaxy to read it · drag: turn ·
+              wheel: zoom
+            </Text>
+          </div>
         </div>
-      </Section>
-      <DimensionAtlas ladder={ladder} catalog={catalog.data} />
-      <GalaxyAtlas ladder={ladder} catalog={catalog.data} />
-      <EventsPanel ladder={ladder} catalog={catalog.data} />
-      <RiftsPanel ladder={ladder} />
-      <BeingsPanel ladder={ladder} catalog={catalog.data} />
-      <PhenomenaPanel data={data} catalog={catalog.data} />
+        <div className='flex min-w-0 flex-col gap-2 bg-cosmos-void px-4 py-3 text-cosmos-label md:px-6'>
+          <Legend ladder={ladder} />
+        </div>
+      </section>
+      <div className='flex min-w-0 flex-col gap-4 p-4 md:p-6'>
+        <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6'>
+          <KpiTile
+            label='Dimensions'
+            value={data.dimensions.length}
+            icon={Layers}
+            tone='info'
+          />
+          <KpiTile
+            label='Clusters'
+            value={data.clusters.length}
+            icon={Workflow}
+            tone='verdigris'
+          />
+          <KpiTile
+            label='Galaxies'
+            value={data.galaxies.length}
+            icon={Orbit}
+            tone='gold'
+          />
+          <KpiTile
+            label='Open rifts'
+            value={openRifts}
+            icon={Eye}
+            tone='danger'
+            harmful
+          />
+          <KpiTile
+            label='Cosmic beings'
+            value={data.beings.length}
+            icon={Crown}
+            tone='warning'
+          />
+          <KpiTile
+            label='Phenomena'
+            value={data.phenomena.length}
+            icon={CloudFog}
+            tone='info'
+          />
+        </div>
+        <Tabs
+          value={tab}
+          onValueChange={(value) => setTab(value as HeavensTab)}
+        >
+          <TabsList aria-label='Heavens panel' className='w-full flex-wrap'>
+            <TabsTrigger value='scale'>
+              <Layers />
+              Scale
+            </TabsTrigger>
+            <TabsTrigger value='create'>
+              <Plus />
+              Create
+            </TabsTrigger>
+            <TabsTrigger value='rifts'>
+              <Eye />
+              Rifts
+              {openRifts > 0 && (
+                <Badge size='sm' variant='secondary'>
+                  {openRifts}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value='beings'>
+              <Crown />
+              Beings
+            </TabsTrigger>
+            <TabsTrigger value='phenomena'>
+              <Sparkles />
+              Phenomena
+            </TabsTrigger>
+            <TabsTrigger value='events'>
+              <History />
+              Events
+            </TabsTrigger>
+            <TabsTrigger value='end'>
+              <Skull />
+              The end
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent
+            value='scale'
+            id='cosmography-ladder'
+            className='flex min-w-0 flex-col gap-3'
+          >
+            <div
+              id='cosmography-dimensions'
+              className='flex min-w-0 flex-col gap-3'
+            >
+              <div id='cosmography-galaxies'>
+                <ScaleNavigator
+                  ladder={ladder}
+                  catalog={shape}
+                  selection={selection}
+                  onSelect={(kind, id) => select(kind, id)}
+                />
+              </div>
+            </div>
+          </TabsContent>
+          <TabsContent value='create' className='flex min-w-0 flex-col gap-4'>
+            <CreateGalaxyStudio ladder={ladder} catalog={shape} />
+            <CreateClusterStudio ladder={ladder} catalog={shape} />
+            <CreateDimensionStudio ladder={ladder} catalog={shape} />
+          </TabsContent>
+          <TabsContent value='rifts'>
+            <RiftsPanel ladder={ladder} />
+          </TabsContent>
+          <TabsContent value='beings'>
+            <BeingsPanel ladder={ladder} catalog={shape} />
+          </TabsContent>
+          <TabsContent value='phenomena'>
+            <PhenomenaPanel data={data} catalog={shape} />
+          </TabsContent>
+          <TabsContent value='events'>
+            <EventsPanel ladder={ladder} catalog={shape} />
+          </TabsContent>
+          <TabsContent value='end'>
+            <ApocalypseVariantPanel
+              current={data.apocalypse_variant ?? null}
+              likely={data.likely_variant}
+              catalog={shape}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   )
 }

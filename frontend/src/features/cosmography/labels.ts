@@ -190,6 +190,48 @@ export const CLIMATE_TURNS = {
   drier: 'Drier',
 } as const
 
+export const STRUCTURES: Record<Schema['GalacticStructureKind'], Named> = {
+  spiral_arm: { label: 'Spiral arm', icon: Waves, tone: 'info' },
+  bar: { label: 'Bar', icon: Activity, tone: 'warning' },
+  bulge: { label: 'Bulge', icon: Sun, tone: 'gold' },
+  core: { label: 'Core', icon: CircleDot, tone: 'danger' },
+  halo: { label: 'Halo', icon: CircleDashed, tone: 'muted' },
+  emission_nebula: { label: 'Emission nebula', icon: CloudFog, tone: 'danger' },
+  reflection_nebula: {
+    label: 'Reflection nebula',
+    icon: CloudFog,
+    tone: 'info',
+  },
+  dark_nebula: { label: 'Dark nebula', icon: Moon, tone: 'muted' },
+  planetary_nebula: {
+    label: 'Planetary nebula',
+    icon: CircleDot,
+    tone: 'verdigris',
+  },
+  supernova_remnant: {
+    label: 'Supernova remnant',
+    icon: Flame,
+    tone: 'warning',
+  },
+  stellar_nursery: { label: 'Stellar nursery', icon: Sprout, tone: 'success' },
+  open_cluster: { label: 'Open cluster', icon: Sparkles, tone: 'info' },
+  globular_cluster: { label: 'Globular cluster', icon: Sparkles, tone: 'gold' },
+  stellar_stream: { label: 'Stellar stream', icon: Waves, tone: 'info' },
+  dust_lane: { label: 'Dust lane', icon: CloudFog, tone: 'muted' },
+  superbubble: { label: 'Superbubble', icon: CircleDashed, tone: 'danger' },
+  star_graveyard: { label: 'Star graveyard', icon: Ghost, tone: 'muted' },
+  ley_spiral: { label: 'Ley spiral', icon: Zap, tone: 'verdigris' },
+  sealed_vault: { label: 'Sealed vault', icon: Shield, tone: 'gold' },
+  gods_forge: { label: "Gods' forge", icon: Flame, tone: 'gold' },
+  dead_light_drift: { label: 'Dead light drift', icon: Ghost, tone: 'muted' },
+  singing_nebula: {
+    label: 'Singing nebula',
+    icon: Sparkles,
+    tone: 'verdigris',
+  },
+  rift_scar: { label: 'Rift scar', icon: Eye, tone: 'danger' },
+}
+
 export const SCALE_ICONS: Record<'dimension' | 'cluster' | 'galaxy', Named> = {
   dimension: { label: 'Dimension', icon: Layers, tone: 'info' },
   cluster: { label: 'Cluster', icon: Workflow, tone: 'verdigris' },

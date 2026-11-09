@@ -104,6 +104,55 @@ describe('atlas tree', () => {
     expect(rows).toContain('foreign-god:8')
   })
 
+  it('sets galaxies, clusters and dimensions above their stars', () => {
+    const heavens = {
+      dimensions: [
+        {
+          id: 40,
+          name: 'Prime',
+          dimension_kind: 'prime',
+          parent_dimension_id: null,
+        },
+      ],
+      clusters: [
+        {
+          id: 41,
+          name: 'Home Group',
+          cluster_kind: 'local_group',
+          parent_cluster_id: null,
+          dimension_id: 40,
+        },
+      ],
+      galaxies: [
+        {
+          id: 42,
+          name: 'Home Wheel',
+          galaxy_type: 'spiral',
+          cluster_id: 41,
+          dimension_id: null,
+        },
+      ],
+      stars: [{ id: 5, galaxy_id: 42 }],
+      placements: [{ world_id: 1, galaxy_id: 42, dimension_id: 40 }],
+    } as unknown as Parameters<typeof buildAtlasTree>[0]['heavens']
+    const placed = buildAtlasTree({
+      entities: ENTITIES,
+      state: STATE,
+      cosmos: COSMOS,
+      heavens,
+      types: [],
+    })
+    const rows = flattenVisible(placed, new Set(allKeys(placed))).map(
+      (row) => row.node.key
+    )
+    expect(rows.indexOf('dimension:40')).toBeLessThan(
+      rows.indexOf('cluster:41')
+    )
+    expect(rows.indexOf('cluster:41')).toBeLessThan(rows.indexOf('galaxy:42'))
+    expect(rows.indexOf('galaxy:42')).toBeLessThan(rows.indexOf('star:5'))
+    expect(rows.indexOf('star:5')).toBeLessThan(rows.indexOf('world:1'))
+  })
+
   it('keeps only branches with a match while filtering', () => {
     const filters = {
       q: 'orun',

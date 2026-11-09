@@ -9,6 +9,13 @@ import {
 import { Canvas } from '@react-three/fiber'
 import { NeutralToneMapping, Vector3 } from 'three'
 import { Label, Text } from '@/components/typography'
+import { type GalaxyRecord } from '@/features/cosmography/api'
+import {
+  CoreGlow,
+  GalaxyParticles,
+} from '@/features/cosmography/visual/GalaxyScene3D'
+import { ClockDriver } from '@/features/cosmography/visual/clock'
+import { type GalaxyShape } from '@/features/cosmography/visual/galaxyForm'
 import { type SonPublic } from '../api'
 import { type CosmosIndex, isMisty, isUnderway } from '../model/cosmosModel'
 import { type CosmosQuality } from '../useCosmosViewSettings'
@@ -36,6 +43,11 @@ import { FrameDriver } from './useCosmosFrame'
 import { useCosmosLayout } from './useCosmosLayout'
 
 const CAMERA_START: [number, number, number] = [0, 1600, 1400]
+const GALAXY_POINTS = 22000
+const GALAXY_LIGHT = 0.34
+const GALAXY_CORE = 0.2
+const GALAXY_ATTENUATE = 0.6
+const GALAXY_DROP = -240
 const CAMERA_FOV = 40
 const CAMERA_NEAR = 0.5
 const CAMERA_FAR = 40000
@@ -49,6 +61,8 @@ type SceneProps = Omit<SceneHandlers, 'onHover'> & {
   quality: CosmosQuality
   reducedMotion: boolean
   focus: FocusRequest
+  galaxy?: GalaxyRecord
+  shape?: GalaxyShape
   onFailure: (reason: string) => void
 }
 
@@ -106,6 +120,8 @@ export default function CosmosScene3D({
   quality,
   reducedMotion,
   focus,
+  galaxy,
+  shape,
   onFailure,
   ...handlers
 }: SceneProps) {
@@ -197,6 +213,19 @@ export default function CosmosScene3D({
               <FrameDriver />
               <CameraRig focus={focus} empty={empty} />
               <SkyBackdrop />
+              {galaxy && shape && (
+                <group position={[0, GALAXY_DROP, 0]}>
+                  <GalaxyParticles
+                    galaxy={galaxy}
+                    shape={shape}
+                    count={Math.round(GALAXY_POINTS * preset.dust)}
+                    attenuate={galaxy.radius * GALAXY_ATTENUATE}
+                    light={GALAXY_LIGHT}
+                  />
+                  <CoreGlow galaxy={galaxy} shape={shape} scale={GALAXY_CORE} />
+                  <ClockDriver />
+                </group>
+              )}
               {index.data.stars.map((star) => {
                 const body = layout.stars.get(star.id)
                 return body ? (

@@ -83,10 +83,14 @@
 {% set level = [3 + article.level, 6] | min %}
 <article class="entry" id="{{ article.anchor }}">
 <div class="head"><h{{ level }} class="bm2">{{ article.name }}</h{{ level }}><span class="kind">{{ article.kind }}</span></div>
+{% if article.figure %}<figure class="heaven"><div class="sky">{{ article.figure }}</div><figcaption>{{ article.name }}, as the heavens hold it</figcaption></figure>{% endif %}
 {{ thumb(article.cover, article.name, links) }}
 {{ facts(article.facts) }}
 {{ article.description | paragraphs }}
+{% if article.kind_note %}<p class="sublabel">What its kind does</p><p>{{ article.kind_note }}</p>{{ stats(article.effects) }}{% endif %}
 {% if article.stars %}<p class="sublabel">Stars</p><p>{% for name, anchor in article.stars %}<a href="#{{ anchor }}">{{ name }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+{% if article.rifts %}<p class="sublabel">Rifts into it</p><ul class="lines">{% for line in article.rifts %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
+{% if article.beings %}<p class="sublabel">Cosmic beings</p><p>{{ article.beings | join(" · ") }}</p>{% endif %}
 {{ typed(article.typed) }}
 <div class="clear"></div>
 </article>

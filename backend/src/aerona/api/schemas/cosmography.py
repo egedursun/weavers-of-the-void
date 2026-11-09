@@ -1,7 +1,7 @@
 from pydantic import Field
 
 from aerona.api.schemas.common import ApiModel
-from aerona.api.schemas.records import StarRecord
+from aerona.api.schemas.records import ChronicleLineRecord, ImageRecord, StarRecord
 from aerona.domain.enums.cosmography import (
     ApocalypseVariant,
     BeingAgenda,
@@ -26,6 +26,7 @@ from aerona.domain.enums.cosmography import (
     RiftState,
     RouteScope,
 )
+from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.world import Discovery
 
 
@@ -235,6 +236,27 @@ class KindRecord(ApiModel):
     effects: dict[str, int] = Field(default_factory=dict)
 
 
+class GalaxyShapeRecord(ApiModel):
+    core_reach_pct: int
+    bulge_reach_pct: int
+    bar_reach_pct: int
+    inner_reach_pct: int
+    disc_reach_pct: int
+    halo_reach_pct: int
+    arm_width_deg: int
+    arm_wind_deg: int
+    barred_types: list[GalaxyType]
+    spiral_types: list[GalaxyType]
+
+
+class ScaleWiki(ApiModel):
+    node_id: int
+    kind: NodeKind
+    cover: str | None
+    images: list[ImageRecord]
+    timeline: list[ChronicleLineRecord]
+
+
 class CosmographyCatalog(ApiModel):
     galaxy_types: list[KindRecord]
     cluster_kinds: list[KindRecord]
@@ -247,6 +269,7 @@ class CosmographyCatalog(ApiModel):
     dimensional_events: list[KindRecord]
     apocalypse_variants: list[KindRecord]
     method_reach: dict[str, RouteScope]
+    shape: GalaxyShapeRecord
 
 
 class CosmographyView(ApiModel):

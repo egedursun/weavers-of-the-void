@@ -7,6 +7,9 @@ import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
 import { Label, Muted, PageTitle } from '@/components/typography'
 import { StarWikiView } from '@/features/celestial/StarWikiPage'
 import { WorldWikiView } from '@/features/celestial/WorldWikiPage'
+import { ClusterView } from '@/features/cosmography/wiki/ClusterWiki'
+import { DimensionView } from '@/features/cosmography/wiki/DimensionWiki'
+import { GalaxyView } from '@/features/cosmography/wiki/GalaxyWiki'
 import { EntityView } from '@/features/entity/EntityView'
 import { humanize } from '@/features/entity/actions/schema'
 import { useCosmos, useWorldState } from '@/features/entity/api/queries'
@@ -63,6 +66,27 @@ export function AtlasDetail({
       <div className='flex min-w-0 flex-col gap-3'>
         <OpenInDrawer kind='world' id={parsed.id} />
         <WorldWikiView worldId={parsed.id} />
+      </div>
+    )
+  if (parsed.kind === 'galaxy' && parsed.id !== null)
+    return (
+      <div className='flex min-w-0 flex-col gap-3'>
+        <OpenInDrawer kind='galaxy' id={parsed.id} />
+        <GalaxyView galaxyId={parsed.id} />
+      </div>
+    )
+  if (parsed.kind === 'cluster' && parsed.id !== null)
+    return (
+      <div className='flex min-w-0 flex-col gap-3'>
+        <OpenInDrawer kind='cluster' id={parsed.id} />
+        <ClusterView clusterId={parsed.id} />
+      </div>
+    )
+  if (parsed.kind === 'dimension' && parsed.id !== null)
+    return (
+      <div className='flex min-w-0 flex-col gap-3'>
+        <OpenInDrawer kind='dimension' id={parsed.id} />
+        <DimensionView dimensionId={parsed.id} />
       </div>
     )
   if (parsed.kind === 'star' && parsed.id !== null)

@@ -13,6 +13,19 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/domain'
 import { Text } from '@/components/typography'
+import {
+  CosmosGalaxyPanel,
+  GalaxySwitcher,
+} from '@/features/cosmography/CosmosGalaxyPanel'
+import {
+  useCosmography,
+  useCosmographyCatalog,
+} from '@/features/cosmography/api'
+import {
+  chooseGalaxy,
+  cosmosInGalaxy,
+  leavingRoutes,
+} from '@/features/cosmography/cosmosGalaxy'
 import { Cosmos2D } from './Cosmos2D'
 import { CosmosLegend } from './CosmosLegend'
 import { CosmosSidePanel } from './CosmosSidePanel'
@@ -39,15 +52,30 @@ type FocusTarget =
 export function CosmosView() {
   const navigate = useNavigate()
   const cosmos = useCosmos()
+  const heavens = useCosmography()
+  const catalog = useCosmographyCatalog()
   const { data: state } = useCosmosState()
   const rules = useRuleBook()
   const selection = useCosmosSelection()
   const settings = useCosmosViewSettings()
   const reducedMotion = useReducedMotion()
-  const index = useMemo(
-    () => (cosmos.data ? indexCosmos(cosmos.data) : undefined),
-    [cosmos.data]
+  const galaxyId = chooseGalaxy(
+    heavens.data,
+    selection.galaxyId,
+    selection.worldId,
+    state?.world?.primary_world_id ?? undefined
   )
+  const index = useMemo(
+    () =>
+      cosmos.data
+        ? indexCosmos(cosmosInGalaxy(cosmos.data, heavens.data, galaxyId))
+        : undefined,
+    [cosmos.data, heavens.data, galaxyId]
+  )
+  const galaxy = heavens.data?.galaxies.find((row) => row.id === galaxyId)
+  const leaving = cosmos.data
+    ? leavingRoutes(cosmos.data, heavens.data, galaxyId)
+    : 0
   const home = index
     ? homeWorldId(index, state?.world?.primary_world_id)
     : undefined
@@ -122,6 +150,16 @@ export function CosmosView() {
           onView={settings.setView}
           onQuality={settings.setQuality}
           onOpenResource={() => openPanel('command', 'resource')}
+          galaxySwitch={
+            heavens.data && catalog.data && heavens.data.galaxies.length > 0 ? (
+              <GalaxySwitcher
+                heavens={heavens.data}
+                catalog={catalog.data}
+                value={galaxyId}
+                onChange={selection.selectGalaxy}
+              />
+            ) : undefined
+          }
         />
       </div>
       {cosmos.isLoading && (
@@ -168,6 +206,8 @@ export function CosmosView() {
                     quality={settings.quality}
                     reducedMotion={reducedMotion}
                     focus={focus}
+                    galaxy={galaxy}
+                    shape={catalog.data?.shape}
                     onFailure={settings.reportFailure}
                     onWorld={selectWorld}
                     onWorldDouble={descend}
@@ -228,6 +268,18 @@ export function CosmosView() {
               onSelectWorld={chooseWorld}
               onOpenPanel={openPanel}
               onDescend={descend}
+              galaxyPanel={
+                heavens.data && catalog.data ? (
+                  <CosmosGalaxyPanel
+                    heavens={heavens.data}
+                    catalog={catalog.data}
+                    galaxyId={galaxyId}
+                    leaving={leaving}
+                    onChange={selection.selectGalaxy}
+                  />
+                ) : undefined
+              }
+              galaxyName={galaxy?.name}
             />
           </aside>
         </div>

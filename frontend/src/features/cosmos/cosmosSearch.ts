@@ -4,6 +4,7 @@ export const COSMOS_PANELS = [
   'gods',
   'command',
   'star',
+  'galaxy',
 ] as const
 
 export type CosmosPanel = (typeof COSMOS_PANELS)[number]
@@ -26,6 +27,7 @@ export const COMMAND_SECTIONS = [
 export type CommandSection = (typeof COMMAND_SECTIONS)[number]
 
 export type CosmosSearch = {
+  galaxy?: number
   world?: number
   star?: number
   panel?: CosmosPanel
@@ -53,10 +55,12 @@ export function validateCosmosSearch(
   search: Record<string, unknown>
 ): CosmosSearch {
   const result: CosmosSearch = {}
+  const galaxy = positiveInteger(search.galaxy)
   const world = positiveInteger(search.world)
   const star = positiveInteger(search.star)
   const panel = oneOf(COSMOS_PANELS, search.panel)
   const section = oneOf(COMMAND_SECTIONS, search.section)
+  if (galaxy !== undefined) result.galaxy = galaxy
   if (world !== undefined) result.world = world
   if (star !== undefined) result.star = star
   if (panel !== undefined) result.panel = panel

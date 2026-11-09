@@ -25,9 +25,25 @@ export type WorldRecord = Schema['WorldRecord']
 export type RouteRecord = Schema['RouteRecord']
 export type JourneyRecord = Schema['JourneyRecord']
 
+export type ScaleWiki = Schema['ScaleWiki']
+
 export const cosmographyKeys = {
   view: [...queryKeys.world.all, 'cosmography'] as const,
   catalog: [...queryKeys.world.all, 'cosmography-catalog'] as const,
+  wiki: (nodeId: number) =>
+    [...queryKeys.world.all, 'cosmography-wiki', nodeId] as const,
+}
+
+export function useScaleWiki(nodeId: number) {
+  return useQuery({
+    queryKey: cosmographyKeys.wiki(nodeId),
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/cosmography/nodes/{node_id}/wiki', {
+          params: { path: { node_id: nodeId } },
+        })
+      ),
+  })
 }
 
 export function useCosmography() {

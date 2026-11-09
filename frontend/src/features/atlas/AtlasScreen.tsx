@@ -8,6 +8,7 @@ import { EmptyState, PageHeader } from '@/components/domain'
 import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
 import { useGlobalWorld } from '@/components/layout/worldFilter'
 import { Text } from '@/components/typography'
+import { useCosmography } from '@/features/cosmography/api'
 import {
   useAllEntities,
   useCatalogue,
@@ -49,6 +50,7 @@ export function AtlasScreen() {
   const catalogue = useCatalogue()
   const state = useWorldState()
   const cosmos = useCosmos()
+  const heavens = useCosmography()
   const health = useHealth()
   const entities = useAllEntities(ALL_STATUSES, !search.history)
   const globalWorld = useGlobalWorld()
@@ -103,9 +105,10 @@ export function AtlasScreen() {
         entities: all,
         state: state.data,
         cosmos: cosmos.data,
+        heavens: heavens.data,
         types,
       }),
-    [all, state.data, cosmos.data, types]
+    [all, state.data, cosmos.data, heavens.data, types]
   )
   const filtering = isFiltering(filters)
   const matchIds = useMemo(
@@ -156,6 +159,13 @@ export function AtlasScreen() {
     else if (node.kind === 'world' && id) drawers.open({ kind: 'world', id })
     else if (node.kind === 'star' && id) drawers.open({ kind: 'star', id })
     else if (node.kind === 'creator') drawers.open({ kind: 'creator' })
+    else if (
+      (node.kind === 'galaxy' ||
+        node.kind === 'cluster' ||
+        node.kind === 'dimension') &&
+      id
+    )
+      drawers.open({ kind: node.kind, id })
     else if (node.children.length)
       branches.toggle(node.key, !open.has(node.key))
   }

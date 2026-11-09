@@ -1,4 +1,5 @@
-import { Ghost, Globe2, Rocket, Sun, Wand } from 'lucide-react'
+import { type ReactNode } from 'react'
+import { Ghost, Globe2, Orbit, Rocket, Sun, Wand } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmptyState } from '@/components/domain'
@@ -27,6 +28,8 @@ type CosmosSidePanelProps = {
   onSelectWorld: (worldId: number) => void
   onOpenPanel: (panel: CosmosPanel, section?: CommandSection) => void
   onDescend: (worldId: number) => void
+  galaxyPanel?: ReactNode
+  galaxyName?: string
 }
 
 export function CosmosSidePanel({
@@ -43,9 +46,14 @@ export function CosmosSidePanel({
   onSelectWorld,
   onOpenPanel,
   onDescend,
+  galaxyPanel,
+  galaxyName,
 }: CosmosSidePanelProps) {
   const star = index.star(starId)
-  const active = panel === 'star' && !star ? 'world' : panel
+  const active =
+    (panel === 'star' && !star) || (panel === 'galaxy' && !galaxyPanel)
+      ? 'world'
+      : panel
   const underway = index.data.journeys.filter(isUnderway).length
   const selected = index.world(worldId) ?? index.worlds[0]
   return (
@@ -53,7 +61,13 @@ export function CosmosSidePanel({
       value={active}
       onValueChange={(value) => onOpenPanel(value as CosmosPanel)}
     >
-      <TabsList aria-label='Cosmos panel' className='w-full'>
+      <TabsList aria-label='Cosmos panel' className='w-full flex-wrap'>
+        {galaxyPanel && (
+          <TabsTrigger value='galaxy' title={galaxyName}>
+            <Orbit />
+            Galaxy
+          </TabsTrigger>
+        )}
         <TabsTrigger value='world'>
           <Globe2 />
           World
@@ -87,6 +101,7 @@ export function CosmosSidePanel({
           </TabsTrigger>
         )}
       </TabsList>
+      {galaxyPanel && <TabsContent value='galaxy'>{galaxyPanel}</TabsContent>}
       <TabsContent value='world' className='flex min-w-0 flex-col gap-4'>
         <WorldChooser
           index={index}

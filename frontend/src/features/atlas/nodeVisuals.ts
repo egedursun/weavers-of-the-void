@@ -4,6 +4,9 @@ import {
   Folder,
   Ghost,
   Globe,
+  Layers,
+  Orbit,
+  Workflow,
   type LucideIcon,
   Star,
   Sun,
@@ -19,6 +22,9 @@ export const KIND_TONE: Record<AtlasNodeKind, string> = {
   world: 'text-info',
   star: 'text-warning',
   'foreign-god': 'text-destructive',
+  dimension: 'text-info',
+  cluster: 'text-brand-verdigris',
+  galaxy: 'text-primary',
 }
 
 export function nodeIcon(node: AtlasNode): LucideIcon {
@@ -36,4 +42,7 @@ const KIND_ICON: Record<AtlasNodeKind, LucideIcon> = {
   world: Globe,
   star: Star,
   'foreign-god': Ghost,
+  dimension: Layers,
+  cluster: Workflow,
+  galaxy: Orbit,
 }

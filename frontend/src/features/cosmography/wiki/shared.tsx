@@ -1,0 +1,203 @@
+import { type ReactNode, useState } from 'react'
+import { type LucideIcon, Skull, Trash2 } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { ConfirmDialog, EmptyState, Section } from '@/components/domain'
+import { Label, Muted, PageTitle } from '@/components/typography'
+import { CelestialTimeline } from '@/features/celestial/WorldWikiPage'
+import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverlay'
+import { RecordGallery } from '@/features/pantheon/RecordGallery'
+import {
+  type CosmographyAction,
+  type ScaleWiki,
+  runCosmography,
+  useCosmographyAction,
+} from '../api'
+
+export function WikiLoading() {
+  return (
+    <div className='flex flex-col gap-4'>
+      <div className='flex min-w-0 gap-4'>
+        <Skeleton className='size-portrait-xl rounded-xl' />
+        <div className='flex flex-1 flex-col gap-2'>
+          <Skeleton className='h-control-md w-1/3' />
+          <Skeleton className='h-control-lg w-2/3' />
+        </div>
+      </div>
+      <Skeleton className='h-scene w-full' />
+    </div>
+  )
+}
+
+export function WikiError({
+  icon: Icon,
+  title,
+  message,
+}: {
+  icon: LucideIcon
+  title: string
+  message: string
+}) {
+  return (
+    <Alert variant='destructive'>
+      <Icon />
+      <AlertTitle>{title}</AlertTitle>
+      <AlertDescription>{message}</AlertDescription>
+    </Alert>
+  )
+}
+
+export function Missing({ icon, title }: { icon: LucideIcon; title: string }) {
+  return (
+    <EmptyState
+      icon={icon}
+      title={title}
+      description='This link does not point to a part of the heavens that exists now.'
+    />
+  )
+}
+
+export function WikiHero({
+  nodeId,
+  name,
+  overline,
+  description,
+  cover,
+  emblem,
+  badges,
+  meter,
+}: {
+  nodeId: number
+  name: string
+  overline: string
+  description: string | null | undefined
+  cover: string | null
+  emblem: ReactNode
+  badges: ReactNode
+  meter?: ReactNode
+}) {
+  return (
+    <header className='flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start'>
+      <PortraitGenerateOverlay
+        nodeId={nodeId}
+        name={name}
+        cover={cover}
+        placeholder={emblem}
+      />
+      <div className='flex min-w-0 flex-1 flex-col gap-2'>
+        <Label variant='overline'>{overline}</Label>
+        <PageTitle truncate={2}>{name}</PageTitle>
+        {description ? (
+          <Muted>{description}</Muted>
+        ) : (
+          <Muted variant='caption'>
+            No account of it is written yet; write one under Shape, or let the
+            chroniclers find it.
+          </Muted>
+        )}
+        <div className='flex min-w-0 flex-wrap gap-1.5'>{badges}</div>
+        {meter}
+      </div>
+    </header>
+  )
+}
+
+export function WikiRecords({
+  nodeId,
+  name,
+  wiki,
+  prompt,
+  action,
+  target,
+}: {
+  nodeId: number
+  name: string
+  wiki: ScaleWiki | undefined
+  prompt: string | null | undefined
+  action: CosmographyAction
+  target: Record<string, number>
+}) {
+  return (
+    <>
+      <CelestialTimeline
+        lines={wiki?.timeline ?? []}
+        emptyText={`The chronicle has not named ${name} yet.`}
+      />
+      <RecordGallery
+        title={`Images of ${name}`}
+        nodeId={nodeId}
+        name={name}
+        images={wiki?.images ?? []}
+        prompt={prompt ?? null}
+        promptLabel='Image prompt'
+        onSavePrompt={(next) =>
+          runCosmography(action, {
+            ...target,
+            values: { image_prompt: next },
+            release: ['image_prompt'],
+          })
+        }
+      />
+    </>
+  )
+}
+
+export function DangerZone({
+  noun,
+  name,
+  consequence,
+  action,
+  target,
+}: {
+  noun: string
+  name: string
+  consequence: string
+  action: CosmographyAction
+  target: Record<string, number>
+}) {
+  const [open, setOpen] = useState(false)
+  const remove = useCosmographyAction<void>(
+    action,
+    () => target,
+    `${name} is unmade`
+  )
+  return (
+    <Section
+      title={`Unmake the ${noun}`}
+      description={consequence}
+      icon={Skull}
+      tone='danger'
+      surface='card'
+    >
+      <div className='flex min-w-0 flex-wrap items-center justify-between gap-3'>
+        <Muted variant='caption'>
+          The ledger keeps the act, so it can be undone.
+        </Muted>
+        <Button
+          variant='destructive'
+          size='sm'
+          disabled={remove.isPending}
+          disabledReason={remove.isPending ? 'Unmaking' : undefined}
+          onClick={() => setOpen(true)}
+        >
+          <Trash2 />
+          {`Unmake ${name}`}
+        </Button>
+      </div>
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title={`Unmake ${name}?`}
+        desc={consequence}
+        confirmText='Unmake'
+        destructive
+        isLoading={remove.isPending}
+        handleConfirm={() => {
+          remove.mutate()
+          setOpen(false)
+        }}
+      />
+    </Section>
+  )
+}

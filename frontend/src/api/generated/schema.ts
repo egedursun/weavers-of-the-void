@@ -5855,6 +5855,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/cosmography/nodes/{node_id}/wiki': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['scale_wiki_api_cosmography_nodes__node_id__wiki_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/cosmography': {
     parameters: {
       query?: never
@@ -24084,6 +24100,7 @@ export interface components {
       method_reach: {
         [key: string]: components['schemas']['RouteScope']
       }
+      shape: components['schemas']['GalaxyShapeRecord']
     }
     CosmographyView: {
       epoch: number
@@ -28035,6 +28052,18 @@ export interface components {
       image_prompt: string | null
       created_epoch: number
       locked: string[]
+    }
+    GalaxyShapeRecord: {
+      core_reach_pct: number
+      bulge_reach_pct: number
+      bar_reach_pct: number
+      inner_reach_pct: number
+      disc_reach_pct: number
+      halo_reach_pct: number
+      arm_width_deg: number
+      arm_wind_deg: number
+      barred_types: components['schemas']['GalaxyType'][]
+      spiral_types: components['schemas']['GalaxyType'][]
     }
     GalaxyType:
       | 'spiral'
@@ -36025,6 +36054,13 @@ export interface components {
     SayingInput: {
       form: string
       text: string
+    }
+    ScaleWiki: {
+      node_id: number
+      kind: components['schemas']['NodeKind']
+      cover: string | null
+      images: components['schemas']['ImageRecord'][]
+      timeline: components['schemas']['ChronicleLineRecord'][]
     }
     ScarKind:
       | 'battlefield'
@@ -51902,6 +51938,35 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['CosmographyCatalog']
+        }
+      }
+    }
+  }
+  scale_wiki_api_cosmography_nodes__node_id__wiki_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ScaleWiki']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
         }
       }
     }

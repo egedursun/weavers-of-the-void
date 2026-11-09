@@ -1,8 +1,11 @@
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useId, useState } from 'react'
 import { type LucideIcon, Save } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { type ProgressTone } from '@/components/ui/progress'
+import { Textarea } from '@/components/ui/textarea'
 import { EntityLink, Medallion, StatBar } from '@/components/domain'
 import { type KpiTone } from '@/components/domain/KpiTile'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
@@ -22,10 +25,12 @@ export type Field =
     }
   | { key: string; label: string; kind: 'decimal'; min?: number }
   | { key: string; label: string; kind: 'pick'; table: Record<string, string> }
+  | { key: string; label: string; kind: 'text'; long?: boolean }
 
 export type Values = Record<string, number | string | null>
 
 function parsed(field: Field, text: string): number | string | null {
+  if (field.kind === 'text') return text.trim() === '' ? null : text.trim()
   if (text === '') return null
   if (field.kind === 'pick') return text === 'none' ? null : text
   const value = Number(text)
@@ -72,7 +77,16 @@ export function RecordEditor({
       <AdjustPanel title={title} note={note}>
         <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
           {fields.map((field) =>
-            field.kind === 'pick' ? (
+            field.kind === 'text' ? (
+              <TextField
+                key={field.key}
+                label={field.label}
+                long={field.long ?? false}
+                value={draft[field.key] ?? ''}
+                disabled={busy !== null}
+                onChange={set(field.key)}
+              />
+            ) : field.kind === 'pick' ? (
               <MindPicker
                 key={field.key}
                 label={field.label}
@@ -112,6 +126,44 @@ export function RecordEditor({
           {saveLabel}
         </Button>
       </AdjustPanel>
+    </div>
+  )
+}
+
+function TextField({
+  label,
+  long,
+  value,
+  disabled,
+  onChange,
+}: {
+  label: string
+  long: boolean
+  value: string
+  disabled: boolean
+  onChange: (value: string) => void
+}) {
+  const id = useId()
+  return (
+    <div className={cn('flex min-w-0 flex-col gap-1', long && 'sm:col-span-2')}>
+      <Label as='label' htmlFor={id}>
+        {label}
+      </Label>
+      {long ? (
+        <Textarea
+          id={id}
+          value={value}
+          disabled={disabled}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      ) : (
+        <Input
+          id={id}
+          value={value}
+          disabled={disabled}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      )}
     </div>
   )
 }

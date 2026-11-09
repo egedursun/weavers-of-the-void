@@ -10,11 +10,13 @@ import {
 } from './cosmosSearch'
 
 export type CosmosSelection = {
+  galaxyId: number | undefined
   worldId: number | undefined
   starId: number | undefined
   panel: CosmosPanel
   section: CommandSection | undefined
   selectWorld: (worldId: number) => void
+  selectGalaxy: (galaxyId: number) => void
   selectStar: (starId: number) => void
   openPanel: (panel: CosmosPanel, section?: CommandSection) => void
 }
@@ -43,6 +45,16 @@ export function useCosmosSelection(): CosmosSelection {
     [update]
   )
 
+  const selectGalaxy = useCallback(
+    (galaxyId: number) =>
+      void update(() => ({
+        galaxy: galaxyId,
+        world: undefined,
+        star: undefined,
+      })),
+    [update]
+  )
+
   const selectStar = useCallback(
     (starId: number) => void update(() => ({ star: starId, panel: 'star' })),
     [update]
@@ -60,11 +72,13 @@ export function useCosmosSelection(): CosmosSelection {
   })
 
   return {
+    galaxyId: search.galaxy,
     worldId: search.world ?? globalWorld ?? undefined,
     starId: search.star,
     panel: search.panel ?? (search.star !== undefined ? 'star' : 'world'),
     section: search.section,
     selectWorld,
+    selectGalaxy,
     selectStar,
     openPanel,
   }

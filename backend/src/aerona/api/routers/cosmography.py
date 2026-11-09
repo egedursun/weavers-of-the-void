@@ -2,7 +2,7 @@ from dataclasses import asdict, fields, is_dataclass
 from enum import StrEnum
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Path
 from sqlalchemy import select
 
 from aerona.api.dependencies import ServicesDep, reader, world_rules
@@ -17,16 +17,20 @@ from aerona.api.schemas.cosmography import (
     FootprintRecord,
     GalacticEventRecord,
     GalaxyRecord,
+    GalaxyShapeRecord,
     KindRecord,
     PhenomenonRecord,
     PlacementRecord,
     PullRecord,
     RiftRecord,
+    ScaleWiki,
     StructureRecord,
 )
 from aerona.api.schemas.records import StarRecord
+from aerona.api.views.common import chronicle_lines, images_of
 from aerona.catalog.cosmography import (
     APOCALYPSE_LABELS,
+    BARRED_GALAXIES,
     BEING_KINDS,
     CLUSTER_KINDS,
     DIMENSION_KINDS,
@@ -35,10 +39,13 @@ from aerona.catalog.cosmography import (
     GALACTIC_ZONES,
     GALAXY_TYPES,
     PHENOMENON_KINDS,
+    SPIRAL_GALAXIES,
     STRUCTURE_KINDS,
     KindSpec,
 )
 from aerona.catalog.travel import METHOD_REACH
+from aerona.constants.api import WIKI_TIMELINE_LINES
+from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.cosmography import (
     CelestialReadingRow,
@@ -50,7 +57,10 @@ from aerona.db.tables.cosmography import (
     RiftRow,
 )
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.lore import ChronicleRow
+from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.node import NodeKind
 from aerona.engine.cosmos.kinds import (
     BEING_MECHANICS,
     CLUSTER_KIND_MECHANICS,
@@ -64,8 +74,10 @@ from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.phases.doom import dominant_variant, doom_items
 from aerona.engine.primitives.manual import manual_context
 from aerona.rules.registry import Rules
+from aerona.services.images.records import cover_of
 
 router = APIRouter(tags=["cosmography"])
+SCALE_KINDS = frozenset({NodeKind.GALAXY, NodeKind.CLUSTER, NodeKind.DIMENSION})
 RECENT_EPOCHS = 10
 
 
@@ -99,7 +111,47 @@ async def cosmography_catalog(services: ServicesDep) -> CosmographyCatalog:
         dimensional_events=kinds(rules, dict(DIMENSIONAL_EVENT_LABELS)),
         apocalypse_variants=kinds(rules, dict(APOCALYPSE_LABELS)),
         method_reach={method.value: reach for method, reach in METHOD_REACH.items()},
+        shape=GalaxyShapeRecord(
+            core_reach_pct=rules.galaxies.core_reach_pct,
+            bulge_reach_pct=rules.galaxies.bulge_reach_pct,
+            bar_reach_pct=rules.galaxies.bar_reach_pct,
+            inner_reach_pct=rules.galaxies.inner_reach_pct,
+            disc_reach_pct=rules.galaxies.disc_reach_pct,
+            halo_reach_pct=rules.galaxies.halo_reach_pct,
+            arm_width_deg=rules.galaxies.arm_width_deg,
+            arm_wind_deg=rules.galaxies.arm_wind_deg,
+            barred_types=sorted(BARRED_GALAXIES),
+            spiral_types=sorted(SPIRAL_GALAXIES),
+        ),
     )
+
+
+@router.get("/cosmography/nodes/{node_id}/wiki", response_model=ScaleWiki)
+async def scale_wiki(services: ServicesDep, node_id: int = Path(ge=1)) -> ScaleWiki:
+    async with reader(services) as session:
+        node = await session.get(NodeRow, node_id)
+        if node is None or node.kind not in SCALE_KINDS:
+            raise NotFoundError("No such part of the heavens.")
+        name = node.name
+        lines = (
+            list(
+                await session.scalars(
+                    select(ChronicleRow)
+                    .where(ChronicleRow.visible.is_(True), ChronicleRow.text.contains(name))
+                    .order_by(ChronicleRow.id.desc())
+                    .limit(WIKI_TIMELINE_LINES)
+                )
+            )
+            if name
+            else []
+        )
+        return ScaleWiki(
+            node_id=node_id,
+            kind=node.kind,
+            cover=await cover_of(session, node_id),
+            images=await images_of(session, node_id),
+            timeline=await chronicle_lines(session, lines),
+        )
 
 
 @router.get("/cosmography", response_model=CosmographyView)

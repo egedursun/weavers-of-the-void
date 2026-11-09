@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react'
 import { navItem } from '@/config/navigation'
 import { Gem } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -33,6 +34,7 @@ type CosmosTopBarProps = {
   onView: (view: CosmosViewMode) => void
   onQuality: (quality: CosmosQuality) => void
   onOpenResource: () => void
+  galaxySwitch?: ReactNode
 }
 
 export function CosmosTopBar({
@@ -47,6 +49,7 @@ export function CosmosTopBar({
   onView,
   onQuality,
   onOpenResource,
+  galaxySwitch,
 }: CosmosTopBarProps) {
   const routes = index?.data.routes ?? []
   const open = routes.filter((route) => routeState(route).open).length
@@ -58,13 +61,16 @@ export function CosmosTopBar({
       description={ITEM.description}
       icon={ITEM.icon}
       actions={
-        <CosmosViewSettings
-          view={view}
-          quality={quality}
-          failure={failure}
-          onView={onView}
-          onQuality={onQuality}
-        />
+        <div className='flex min-w-0 flex-wrap items-center gap-2'>
+          {galaxySwitch}
+          <CosmosViewSettings
+            view={view}
+            quality={quality}
+            failure={failure}
+            onView={onView}
+            onQuality={onQuality}
+          />
+        </div>
       }
       meta={
         index && (

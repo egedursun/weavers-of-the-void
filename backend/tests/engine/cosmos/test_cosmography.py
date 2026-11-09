@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import ValidationFailedError
+from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.cosmography import DimensionRow, GalaxyRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
@@ -28,10 +29,21 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos import control
 from aerona.engine.cosmos.beings import banish_near
 from aerona.engine.cosmos.climate import ClimateTurn
-from aerona.engine.cosmos.ladder import ClusterDraft, DimensionDraft, GalaxyDraft, create_cluster, create_dimension, create_galaxy, ensure_ladder
+from aerona.engine.cosmos.ladder import (
+    ClusterDraft,
+    DimensionDraft,
+    GalaxyDraft,
+    create_cluster,
+    create_dimension,
+    create_galaxy,
+    ensure_ladder,
+    name_home_galaxy,
+)
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.rifts import leak_peaks, open_rift
 from aerona.rules.registry import Rules
+from aerona.services.books.model import build_book
+from aerona.services.books.render import CodexLinks, render_codex
 from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, make_route, make_world, tick, tuned
 
 GROUND_NUMBERS = (
@@ -214,3 +226,29 @@ async def test_a_region_at_its_leak_peak_forms_a_leak_wound(session: AsyncSessio
     assert await leak_peaks(ctx, await Cosmography.load(session)) == 0
     kinds = list(await session.scalars(select(PhenomenonProfileRow.kind)))
     assert kinds == [PhenomenonKind.LEAK_WOUND]
+
+
+async def test_the_home_galaxy_never_takes_a_numbered_name(ctx: TickContext, cosmos: Cosmos) -> None:
+    await make_world(ctx.session, "Aerona")
+    await ensure_ladder(ctx.session, ctx.rules)
+    galaxy = await ctx.session.scalar(select(GalaxyRow))
+    assert galaxy is not None and galaxy.name == "Aerona Galaxy"
+    await NameRepository(ctx.session).rename(galaxy.id, "Aerona II")
+    assert await name_home_galaxy(ctx.session) == 1
+    assert galaxy.name == "Aerona Galaxy"
+    assert await name_home_galaxy(ctx.session) == 0
+
+
+async def test_the_book_and_the_codex_draw_every_scale_of_the_heavens(ctx: TickContext, cosmos: Cosmos) -> None:
+    await ensure_ladder(ctx.session, ctx.rules)
+    await create_dimension(ctx.session, ctx.rules, DimensionDraft("Astral Reach", DimensionKind.ASTRAL, ctx.epoch))
+    book = await build_book(ctx.session, ctx.rules)
+    assert book is not None
+    kinds = {article.kind for article in book.ladder}
+    assert kinds == {"dimension", "cluster", "galaxy"}
+    assert all(article.figure is not None and article.kind_note and article.effects for article in book.ladder)
+    links = CodexLinks()
+    text = render_codex(book, ctx.rules, links)
+    assert len(links.heavens) == len(book.ladder)
+    assert all(path in text for path in links.heavens)
+    assert "What its kind does" in text

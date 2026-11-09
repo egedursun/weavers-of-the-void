@@ -1,6 +1,7 @@
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, is_dataclass
 
+from markupsafe import Markup
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,6 +15,7 @@ from aerona.catalog.cosmography import (
     GALAXY_AGE_LABELS,
     GALAXY_TYPES,
     NUCLEUS_LABELS,
+    RIFT_STATE_LABELS,
     STAR_AGE_LABELS,
     WORLD_AGE_LABELS,
 )
@@ -30,7 +32,7 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
-from aerona.db.tables.cosmography import ClusterRow, DimensionRow, GalaxyRow
+from aerona.db.tables.cosmography import ClusterRow, CosmicBeingProfileRow, DimensionRow, GalaxyRow, RiftRow
 from aerona.db.tables.cosmos import CosmosRow, CreatorRow
 from aerona.db.tables.entities import EntityRow, EntityTagRow
 from aerona.db.tables.epochs import EpochRow, EpochStatsRow, EpochWorldNarrativeRow
@@ -47,10 +49,12 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.son import Passion, SonStatus, Stat
 from aerona.domain.enums.war import WarSide, WarStatus
 from aerona.domain.models.records import EpochStatsData
+from aerona.engine.cosmos.kinds import CLUSTER_KIND_MECHANICS, DIMENSION_KIND_MECHANICS, GALAXY_TYPE_MECHANICS
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.military.records import battle_field
 from aerona.rules.registry import Rules
 from aerona.services.books.command import add_command_areas
+from aerona.services.books.heavensvg import cluster_figure, dimension_figure, galaxy_figure
 from aerona.services.books.history import HandEpoch, creator_hand, ending_line, god_fate, son_fate
 from aerona.services.books.mapsvg import MapPicture, map_picture
 from aerona.services.books.typed import LedgerChange, RecordTable, TypedIndex, TypedSection
@@ -187,6 +191,25 @@ class WorldArticle:
     typed: list[TypedSection] = field(default_factory=list)
 
 
+EFFECT_LABELS: dict[str, str] = {
+    "density": "Star density (%)",
+    "formation": "Star formation",
+    "metallicity": "Metallicity",
+    "capacity": "Travel capacity (%)",
+    "leak": "Leak",
+    "sanity": "Sanity drain",
+    "danger": "Danger",
+    "arms": "Arms",
+    "heat": "Heat of the medium",
+    "merger": "Merging pull",
+    "veil": "Veil",
+    "stability": "Stability",
+    "time": "Time (%)",
+    "magic": "Magic",
+    "hostility": "Hostility",
+}
+
+
 @dataclass
 class ScaleArticle:
     kind: str
@@ -199,6 +222,11 @@ class ScaleArticle:
     cover: str | None
     typed: list[TypedSection]
     stars: list[tuple[str, str]] = field(default_factory=list)
+    figure: Markup | None = None
+    kind_note: str = ""
+    effects: list[Labelled] = field(default_factory=list)
+    rifts: list[str] = field(default_factory=list)
+    beings: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -554,6 +582,15 @@ class BookBuilder:
             kind, row.id, row.name, f"{kind}-{row.id}", level, facts, row.description, await cover_of(self.session, row.id), self.typed.of(row.id)
         )
 
+    def kind_effects(self, mechanics: object) -> list[Labelled]:
+        found: list[Labelled] = []
+        for item in fields(mechanics) if is_dataclass(mechanics) else ():
+            value = getattr(mechanics, item.name)
+            if callable(value):
+                amount = int(value(self.rules))
+                found.append(Labelled(EFFECT_LABELS.get(item.name, item.name.replace("_", " ").capitalize()), str(amount)))
+        return found
+
     async def scale_ladder(self) -> list[ScaleArticle]:
         ladder = await Cosmography.load(self.session)
         found: list[ScaleArticle] = []
@@ -575,9 +612,19 @@ class BookBuilder:
                 ),
             ]
 
+        rifts = list(await self.session.scalars(select(RiftRow).order_by(RiftRow.id)))
+        beings = list(await self.session.scalars(select(CosmicBeingProfileRow).order_by(CosmicBeingProfileRow.entity_id)))
+
         async def add_galaxy(galaxy: GalaxyRow, level: int) -> None:
             article = await self.scale_article("galaxy", galaxy, level, galaxy_facts(galaxy))
-            article.stars = [(star.name, star_anchor(star.id)) for star in sorted(ladder.stars_in_galaxy(galaxy.id), key=lambda row: row.id)]
+            members = sorted(ladder.stars_in_galaxy(galaxy.id), key=lambda row: row.id)
+            article.stars = [(star.name, star_anchor(star.id)) for star in members]
+            article.figure = galaxy_figure(
+                galaxy, [row for row in ladder.structures.values() if row.galaxy_id == galaxy.id], [(star.x, star.y) for star in members], self.rules.galaxies
+            )
+            article.kind_note = GALAXY_TYPES[galaxy.galaxy_type].description
+            article.effects = self.kind_effects(GALAXY_TYPE_MECHANICS[galaxy.galaxy_type])
+            article.beings = [self.names.get(row.entity_id, "") for row in beings if row.galaxy_id == galaxy.id and self.names.get(row.entity_id)]
             found.append(article)
 
         async def add_cluster(cluster: ClusterRow, level: int) -> None:
@@ -587,7 +634,11 @@ class BookBuilder:
                 Labelled("Drift", f"{cluster.expansion}/100"),
                 Labelled("Radius", f"{cluster.radius:g}"),
             ]
-            found.append(await self.scale_article("cluster", cluster, level, facts))
+            article = await self.scale_article("cluster", cluster, level, facts)
+            article.figure = cluster_figure(cluster, sum(1 for row in ladder.galaxies.values() if row.cluster_id == cluster.id))
+            article.kind_note = CLUSTER_KINDS[cluster.cluster_kind].description
+            article.effects = self.kind_effects(CLUSTER_KIND_MECHANICS[cluster.cluster_kind])
+            found.append(article)
             for child in sorted((row for row in ladder.clusters.values() if row.parent_cluster_id == cluster.id), key=lambda row: row.id):
                 await add_cluster(child, level + 1)
             for galaxy in sorted((row for row in ladder.galaxies.values() if row.cluster_id == cluster.id), key=lambda row: row.id):
@@ -611,7 +662,18 @@ class BookBuilder:
                 Labelled("Ruler", self.names.get(dimension.ruler_node_id or 0) or self.son_names.get(dimension.ruler_node_id or 0, "none")),
                 Labelled("Lies within", self.names.get(dimension.parent_dimension_id or 0, "nothing")),
             ]
-            found.append(await self.scale_article("dimension", dimension, 0, facts))
+            article = await self.scale_article("dimension", dimension, 0, facts)
+            article.figure = dimension_figure(dimension)
+            article.kind_note = DIMENSION_KINDS[dimension.dimension_kind].description
+            article.effects = self.kind_effects(DIMENSION_KIND_MECHANICS[dimension.dimension_kind])
+            article.rifts = [
+                f"{self.names.get(row.world_id, 'A world')}: {RIFT_STATE_LABELS[row.state].lower()}, "
+                f"size {row.size}, stability {row.stability}, opened in epoch {row.opened_epoch}"
+                for row in rifts
+                if row.dimension_id == dimension.id
+            ]
+            article.beings = [self.names.get(row.entity_id, "") for row in beings if row.home_dimension_id == dimension.id and self.names.get(row.entity_id)]
+            found.append(article)
             for cluster in sorted(
                 (row for row in ladder.clusters.values() if row.dimension_id == dimension.id and row.parent_cluster_id is None), key=lambda row: row.id
             ):

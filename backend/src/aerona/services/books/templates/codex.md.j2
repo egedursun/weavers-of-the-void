@@ -341,10 +341,29 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 
 *{{ article.kind }}*
 
+{% if article.figure %}![{{ article.name | cell }}, as the heavens hold it]({{ links.heaven(article.anchor, article.figure) }})
+
+{% endif %}
 {{ image(article.cover, article.name) }}
 {{ facts_table(article.facts) }}
 {% if article.description %}
 {{ article.description | prose }}
+
+{% endif %}
+{% if article.kind_note %}
+**What its kind does.** {{ article.kind_note }}
+
+{{ facts_table(article.effects) }}
+{% endif %}
+{% if article.rifts %}
+**Rifts into it:**
+
+{% for line in article.rifts %}- {{ line }}
+{% endfor %}
+
+{% endif %}
+{% if article.beings %}
+**Cosmic beings:** {{ article.beings | join(" · ") }}
 
 {% endif %}
 {% if article.stars %}
