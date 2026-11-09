@@ -234,3 +234,11 @@ export function option<T extends string>(
     ])
   )
 }
+
+export const EXISTENCE_MODES: Record<Schema['ExistenceMode'], string> = {
+  concrete: 'Concrete',
+  semi_concrete: 'Half concrete',
+  conceptual: 'Conceptual',
+  reflection: 'A reflection',
+  scattered: 'Scattered',
+}

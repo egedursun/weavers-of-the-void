@@ -187,6 +187,7 @@ async def god_divinity(god_id: Id, services: ServicesDep) -> GodDivinity:
                     cause=row.cause,
                     cause_node=ref(refs, row.cause_node_id),
                     epoch=row.epoch,
+                    prior_mode=row.prior_mode,
                     locked=row.locked,
                 )
                 for row in wounds

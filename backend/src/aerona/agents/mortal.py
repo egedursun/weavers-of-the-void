@@ -36,10 +36,12 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import TraitEffect, TraitKind
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.body.book import bedridden
 from aerona.engine.gods.mortal_opportunities import mortal_opportunities
 from aerona.engine.mind.book import scaled_by, trait_effect
 from aerona.engine.phases.civilization import late_debts
+from aerona.engine.primitives.knowledge import LawBook
 from aerona.engine.primitives.manual import manual_context
 from aerona.events.kinds import EventKind
 from aerona.prompts import PromptId, render
@@ -51,6 +53,7 @@ from aerona.rules.registry import Rules
 AGENT_TYPES = (EntityType.PEOPLE, EntityType.FACTION, EntityType.CULT, EntityType.SETTLEMENT, EntityType.MORTAL, EntityType.BEAST)
 SELECTION_STREAM = "agents.mortal_selection"
 CREATURES = frozenset({EntityType.BEAST})
+SPEAKING_DEAD = (EntityType.SPIRIT,)
 CROWD_FLOOR = 10
 
 
@@ -88,10 +91,15 @@ async def candidates(session_scope: Scope) -> list[Candidate]:
     epoch = session_scope.epoch
     rows = await session_scope.session.scalars(
         select(EntityRow)
-        .where(EntityRow.status == EntityStatus.CANON, EntityRow.last_acted_epoch < epoch, EntityRow.entity_type.in_(AGENT_TYPES))
+        .where(EntityRow.status == EntityStatus.CANON, EntityRow.last_acted_epoch < epoch, EntityRow.entity_type.in_((*AGENT_TYPES, *SPEAKING_DEAD)))
         .order_by(EntityRow.id)
     )
-    listed = list(rows)
+    laws = await LawBook.load(session_scope.session)
+    listed = [
+        row
+        for row in rows
+        if row.entity_type not in SPEAKING_DEAD or (row.world_id is not None and laws.has_at(NaturalLaw.THE_DEAD_SPEAK, row.world_id, row.location_id))
+    ]
     minds = {
         beast_id: value
         for beast_id, value in await session_scope.session.execute(

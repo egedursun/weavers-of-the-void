@@ -61,7 +61,11 @@ NATURAL_LAWS: dict[NaturalLaw, KeyedText[NaturalLaw]] = {
         KeyedText(NaturalLaw.SEASONS_REVERSED, "Seasons reversed", "The seasons run backwards; growth comes in the cold half of the year."),
         KeyedText(NaturalLaw.DREAMS_ARE_REAL, "Dreams are real", "Dream routes never close and mortals dream more often."),
         KeyedText(NaturalLaw.OATHS_BIND, "Oaths bind", "Whoever breaks an oath is branded at once."),
-        KeyedText(NaturalLaw.THE_DEAD_SPEAK, "The dead speak", "Spirits of the dead tell the legends of their people."),
+        KeyedText(
+            NaturalLaw.THE_DEAD_SPEAK,
+            "The dead speak",
+            "Spirits take turns in the world: they speak, send word, foretell and pray, and tell the legends of the places they dwell in.",
+        ),
         KeyedText(NaturalLaw.METAL_RUSTS_FAST, "Metal rusts fast", "Metal weapons and tools wear out far faster."),
     )
 }

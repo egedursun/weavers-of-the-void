@@ -251,6 +251,12 @@ export const MORALE_PART: Record<string, Named> = {
   willpower: { label: 'Willpower', icon: Brain, tone: 'success' },
   flaring_items: { label: 'Flaring relics', icon: Flame, tone: 'warning' },
   passion: { label: "A commander's passion", icon: HandHeart, tone: 'gold' },
+  divine: { label: 'Gifts of their gods', icon: Sparkles, tone: 'verdigris' },
+  god_shield: {
+    label: 'A god steadied them',
+    icon: Sparkles,
+    tone: 'success',
+  },
 }
 
 export const MAGIC_PART: Record<string, Named> = {
@@ -259,6 +265,12 @@ export const MAGIC_PART: Record<string, Named> = {
   raised: { label: 'Dead raised', icon: Ghost, tone: 'verdigris' },
   terror: { label: 'Terror', icon: Skull, tone: 'danger' },
   backlash: { label: 'Backlash', icon: Flame, tone: 'warning' },
+  god_struck: { label: 'Felled by a god', icon: Sparkles, tone: 'danger' },
+  god_spurned: {
+    label: 'A god overcome turned on its own',
+    icon: Ghost,
+    tone: 'warning',
+  },
 }
 
 export const CAUSE: Record<string, Named> = {

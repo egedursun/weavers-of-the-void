@@ -26,15 +26,15 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 | language | 114 | 114 | 124 | 115 | 62 | 114 | 135 | 128 | 113 | 110 | 100 | 126 | 61 | 104 | 120 | 128 | — | 61 | 120 | 119 | 109 |
 | ecology | 59 | 62 | 63 | 62 | 39 | 54 | 84 | 56 | 46 | 46 | 42 | 68 | 39 | 45 | 57 | 64 | 56 | — | 66 | 62 | 61 |
 | environment | 143 | 147 | 150 | 138 | 79 | 155 | 183 | 142 | 120 | 119 | 104 | 154 | 114 | 130 | 147 | 161 | 140 | 88 | — | 152 | 136 |
-| gods | 145 | 158 | 164 | 148 | 86 | 154 | 181 | 152 | 126 | 131 | 120 | 148 | 103 | 136 | 144 | 169 | 142 | 92 | 156 | — | 149 |
+| gods | 145 | 158 | 165 | 148 | 86 | 154 | 181 | 152 | 126 | 131 | 120 | 150 | 103 | 136 | 144 | 169 | 142 | 92 | 156 | — | 149 |
 | cosmos | 121 | 123 | 133 | 120 | 67 | 117 | 153 | 138 | 107 | 112 | 102 | 127 | 67 | 117 | 126 | 129 | 120 | 77 | 132 | 134 | — |
 
 ## Edges by kind
 
-- modifier: 29518
-- rule_switch: 2050
-- flow: 18512081
-- trigger: 185
+- modifier: 29566
+- rule_switch: 2052
+- flow: 18581949
+- trigger: 186
 
 ## Feedback cycles between subsystems (length ≤ 3 listed)
 
@@ -2964,7 +2964,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 
 | Class | Covered by |
 |---|---|
-| A: mythological motifs | avatars, council_rulings, dedicated_anchor, divine_wounds, domain_economy, domain_hooks, god_aims, gods_fate, realm_population, region_memory, revealed_doctrine, war_incitement |
+| A: mythological motifs | avatars, council_rulings, dedicated_anchor, divine_battle_hands, divine_wounds, domain_economy, domain_hooks, god_aims, gods_fate, realm_population, region_memory, revealed_doctrine, war_incitement |
 | B: animals | not yet covered |
 | C: tabu | council_rulings, creator_taboos, tradition_keeping |
 | D: magic | item_lives |
@@ -2983,7 +2983,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 | S: unnatural cruelty | not yet covered |
 | T: sex | avatars, folk_customs |
 | U: the nature of life | not yet covered |
-| V: religion | cultural_exchange, culture_drift_causes, domain_hooks, people_profiles, realm_population, revealed_doctrine, route_diffusion, route_renown |
+| V: religion | cultural_exchange, culture_drift_causes, divine_battle_hands, domain_hooks, people_profiles, realm_population, revealed_doctrine, route_diffusion, route_renown |
 | W: traits of character | divine_wounds |
 | X: humour | contests, ghost_legends, legend_belief, legend_memories, route_renown |
 | Z: miscellaneous groups of motifs | ghost_legends, legend_belief, legend_memories, remembrance, route_renown |

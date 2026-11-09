@@ -1526,7 +1526,7 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "mind:facets": {"anxiety": 30},
     "god_goal:edit": {"progress": 40},
     "divine_standing:set": {"love": 40, "fear": 10},
-    "divine_wound:edit": {"healed": 30},
+    "divine_wound:edit": {"healed": 30, "prior_mode": "concrete"},
     "avatar:edit": {"deeds": 2},
     "attention:set": {"attention": 40, "watched": True},
     "ruling:edit": {"until_epoch": 9},

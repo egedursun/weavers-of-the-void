@@ -154,6 +154,37 @@ describe('the divine panels', () => {
     )
   })
 
+  it('shows the form a shattered god returns to and lets it be changed', async () => {
+    serve()
+    onApi('GET', '/api/gods/7/divinity', {
+      ...DIVINITY,
+      wounds: [
+        {
+          id: 22,
+          kind: 'shattered_manifestation',
+          label: 'Shattered manifestation',
+          domain: null,
+          severity: 40,
+          healed: 10,
+          cause: 'avatar_slain',
+          cause_node: null,
+          epoch: 4,
+          prior_mode: 'concrete',
+          locked: [],
+        },
+      ],
+    })
+    onApi('POST', '/api/actions/divine_wound:edit', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<GodDivinitySection godId={7} />)
+    await expect
+      .element(
+        screen.getByText(
+          'Its form is scattered; it returns to concrete when healed'
+        )
+      )
+      .toBeVisible()
+  })
+
   it('sets an aim aside and forgets a people’s regard', async () => {
     serve()
     onApi('GET', '/api/gods/7/divinity', DIVINITY)

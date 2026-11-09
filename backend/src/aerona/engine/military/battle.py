@@ -181,6 +181,10 @@ class Side:
     concealment: int = 0
     detection: int = 0
     areas: dict[CommandArea, int] = field(default_factory=dict)
+    divine_strike_pct: int = 0
+    divine_shield: int = 0
+    divine_spurned: int = 0
+    divine_struck: int = 0
 
     @property
     def start(self) -> int:
@@ -841,6 +845,19 @@ def rites(rules: Rules, streams: Streams, side: Side, enemy: Side, ground: Field
     return missiles(rules, streams, side, enemy, ground, families=frozenset({F.MAGIC}))
 
 
+def divine_hand(rules: Rules, side: Side, enemy: Side) -> int:
+    if side.divine_shield:
+        for stack in side.stacks:
+            if stack.alive:
+                stack.row.morale = min(PERCENT, stack.row.morale + side.divine_shield)
+    if side.divine_spurned:
+        frighten(rules, side, side.divine_spurned)
+    if side.divine_strike_pct <= 0:
+        return 0
+    side.divine_struck = deal(enemy.stacks, enemy.standing * side.divine_strike_pct / PERCENT, rules, mode="missile")
+    return side.divine_struck
+
+
 def broken(side: Side) -> bool:
     return side.standing <= side.start // 4 or all(not stack.alive for stack in side.stacks)
 
@@ -1073,7 +1090,11 @@ def fighting(rules: Rules, streams: Streams, attacker: Side, defender: Side, gro
     burn_a, burn_d = backlash(rules, attacker, ground), backlash(rules, defender, ground)
     terror: dict[str, int | str] = {"attacker_terror": terror_rite(rules, attacker, defender), "defender_terror": terror_rite(rules, defender, attacker)}
     magic_a, magic_d = rites(rules, streams, attacker, defender, ground), rites(rules, streams, defender, attacker, ground)
-    phases.append(PhaseLog(BattlePhase.RITES, magic_d + burn_a, magic_a + burn_d, "rites and prayers", {**terror, "backlash": burn_a + burn_d}))
+    god_a, god_d = divine_hand(rules, attacker, defender), divine_hand(rules, defender, attacker)
+    gods: dict[str, int | str] = {"attacker_god_struck": god_a, "defender_god_struck": god_d}
+    phases.append(
+        PhaseLog(BattlePhase.RITES, magic_d + burn_a + god_d, magic_a + burn_d + god_a, "rites and prayers", {**terror, **gods, "backlash": burn_a + burn_d})
+    )
     return phases
 
 

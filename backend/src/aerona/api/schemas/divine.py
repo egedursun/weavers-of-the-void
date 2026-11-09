@@ -20,6 +20,7 @@ from aerona.domain.enums.divine import (
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import NaturalLaw
+from aerona.domain.enums.son import ExistenceMode
 
 
 class DomainHookView(ApiModel):
@@ -91,6 +92,7 @@ class DivineWoundView(ApiModel):
     cause: WoundCause
     cause_node: NodeRef | None = None
     epoch: int
+    prior_mode: ExistenceMode | None = None
     locked: list[str]
 
 

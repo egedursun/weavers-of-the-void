@@ -9,6 +9,8 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine import DivineWoundKind, WoundCause
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.son import ExistenceMode
+from aerona.domain.models.profiles import ExistenceProfile
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import God, domains_of, god_of, living_gods
 from aerona.engine.notes import note
@@ -28,6 +30,26 @@ async def open_wounds(session: AsyncSession, god_id: int, kind: DivineWoundKind 
     if kind is not None:
         statement = statement.where(DivineWoundRow.kind == kind)
     return list(await session.scalars(statement.order_by(DivineWoundRow.id)))
+
+
+def set_mode(god: God, mode: ExistenceMode | None) -> None:
+    god.existence_profile = (god.existence_profile or ExistenceProfile()).model_copy(update={"mode": mode})
+
+
+async def scatter(session: AsyncSession, god: God, row: DivineWoundRow) -> None:
+    earlier = [wound for wound in await open_wounds(session, god.id, W.SHATTERED_MANIFESTATION) if wound.id != row.id]
+    row.prior_mode = earlier[0].prior_mode if earlier else (god.existence_profile.mode if god.existence_profile else None)
+    set_mode(god, ExistenceMode.SCATTERED)
+
+
+async def gather(session: AsyncSession, row: DivineWoundRow) -> None:
+    if row.kind is not W.SHATTERED_MANIFESTATION:
+        return
+    if [wound for wound in await open_wounds(session, row.god_node_id, W.SHATTERED_MANIFESTATION) if wound.id != row.id]:
+        return
+    god = await god_of(session, row.god_node_id)
+    if god is not None and not held(god.id):
+        set_mode(god, row.prior_mode)
 
 
 async def inflict(
@@ -60,10 +82,12 @@ async def inflict(
         locked=[],
     )
     ctx.session.add(row)
+    await ctx.session.flush()
     if kind is W.SHATTERED_MANIFESTATION:
         for avatar in await ctx.session.scalars(select(AvatarRow).where(AvatarRow.god_node_id == god.id)):
             await ctx.session.delete(avatar)
-    await ctx.session.flush()
+        await scatter(ctx.session, god, row)
+        await ctx.session.flush()
     tail = f" ({row.domain.value})" if row.domain is not None else ""
     await note(
         ctx,
@@ -130,6 +154,7 @@ async def heal_wounds(ctx: TickContext) -> int:
             row.healed = clamp_int(row.healed + gain * PERCENT / max(1, row.severity), 0, PERCENT)
             if row.healed >= PERCENT:
                 closed += 1
+                await gather(ctx.session, row)
                 await note(
                     ctx,
                     f"{god.name}'s {WOUND_LABELS[row.kind].lower()} healed.",

@@ -253,7 +253,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.INSPECT_SIBLING: ToolText("Shows a sibling's visible face, powers, creations and relationship with you. Free.", {"son_id": "The sibling's id"}),
     T.WRITE_PLAN: ToolText(
         "You write or update your long-term plan. It appears in your memory in future ages; it lets you build a coherent story across ages. Free.",
-        {"plan": "Your goal spread over several ages and your next steps"},
+        {"plan": "How you pursue your aim over several ages, and your next steps"},
     ),
     T.CHOOSE_ANCHOR: ToolText(
         "You choose one of your own creations, or a temple, shrine or other structure mortals dedicated to you, as the anchor of your existence. "

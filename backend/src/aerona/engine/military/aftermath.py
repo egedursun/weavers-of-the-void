@@ -89,6 +89,8 @@ def magic_sheet(result: BattleResult) -> dict[str, int]:
         "raised": sum(side.raised_dead for side in sides),
         "terror": sum(side.terror_dealt for side in sides),
         "backlash": sum(side.backlash for side in sides),
+        "god_struck": sum(side.divine_struck for side in sides),
+        "god_spurned": sum(side.divine_spurned for side in sides),
     }
 
 

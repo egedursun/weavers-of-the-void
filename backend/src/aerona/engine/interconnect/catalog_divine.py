@@ -12,6 +12,7 @@ from aerona.db.tables.divine import (
     WorldAttentionRow,
     WorldDomainHookRow,
 )
+from aerona.db.tables.warfare import BattleRow
 from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
 
 S = Subsystem
@@ -55,6 +56,28 @@ DIVINE_MECHANICS = (
             Coupling(S.DEMOGRAPHY, "deaths and births feed gods of death and life", EdgeKind.FLOW, "domains.activity_half"),
             Coupling(S.ECONOMY, "harvests feed gods of harvest", EdgeKind.FLOW, "domains.harvest_units_per_count"),
             Coupling(S.COSMOS, "madness feeds gods of madness", EdgeKind.FLOW, "domains.madness_below"),
+        ),
+    ),
+    Mechanic(
+        key="divine_battle_hands",
+        spec_item="S9.1",
+        title=(
+            "The patron god of a side may intervene in its battle, striking the foe or steadying its faithful by its temper; "
+            "a rival patron contests it and the overcome god's hand turns on its own"
+        ),
+        subsystem=S.GODS,
+        phases=("campaigns",),
+        surface=Surface(drawer="BattleReport"),
+        backfill="none: gods intervene from the next battle",
+        templates=("divine.battle_",),
+        fields=("magic", "morale"),
+        tables=(BattleRow.__tablename__,),
+        targets=(*GODS, "people", "settlement"),
+        couplings=(
+            Coupling(S.WAR, "a striking god fells a share of the foe", EdgeKind.MODIFIER, "domains.battle_strike_pct"),
+            Coupling(S.WAR, "a steadying god lifts the morale of its faithful", EdgeKind.MODIFIER, "domains.battle_shield_morale"),
+            Coupling(S.GODS, "an intervention costs a son essence and a foreign god power", EdgeKind.FLOW, "domains.battle_essence"),
+            Coupling(S.MIND, "the overcome god remembers its humiliation", EdgeKind.TRIGGER, "domains.battle_spurned_morale"),
         ),
     ),
     Mechanic(
@@ -199,6 +222,7 @@ DIVINE_MECHANICS = (
             Coupling(S.GODS, "a law's author pays essence to keep it", EdgeKind.FLOW, "natural_laws.upkeep_essence"),
             Coupling(S.ENVIRONMENT, "eternal night cuts the harvest", EdgeKind.MODIFIER, "natural_laws.night_harvest_pct"),
             Coupling(S.MAGIC, "where magic requires blood every rite costs blood", EdgeKind.FLOW, "natural_laws.blood_per_power"),
+            Coupling(S.FAITH, "where the dead speak spirits take turns as agents", EdgeKind.RULE_SWITCH),
         ),
     ),
     Mechanic(

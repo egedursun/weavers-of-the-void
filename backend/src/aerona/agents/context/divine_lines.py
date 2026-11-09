@@ -26,6 +26,7 @@ async def goal_lines(scope: Scope, son: SonRow) -> list[str]:
         target = await name_of(scope, row.target_node_id) or scope.world_name(row.world_id) or (DOMAIN_LABELS[row.domain] if row.domain else "")
         tail = f" ({target})" if target else ""
         found.append(f"Your aim: {GOAL_LABELS[row.kind].lower()}{tail}, {row.progress}% reached")
+    found.append("Your plan is written about one of your aims" if found else "You hold no aim yet; take one, then write your plan about it")
     return found
 
 

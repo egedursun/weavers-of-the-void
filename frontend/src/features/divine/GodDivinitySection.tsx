@@ -36,6 +36,7 @@ import {
   NumberField,
 } from '@/features/entity/wilds/parts'
 import { useGodGate } from '@/features/pantheon/gate'
+import { useLabels } from '@/features/pantheon/labels'
 import {
   type GodDivinity,
   type GoalView,
@@ -44,6 +45,7 @@ import {
   useGodDivinity,
 } from './api'
 import {
+  EXISTENCE_MODES,
   GOAL_KINDS,
   GOAL_SOURCES,
   GOAL_STATES,
@@ -426,11 +428,14 @@ function WoundRow({ wound, busy }: { wound: WoundView; busy: string | null }) {
   }))
   const [healed, setHealed] = useState('')
   const [severity, setSeverity] = useState('')
+  const [form, setForm] = useState('')
+  const labels = useLabels()
   const spec = WOUND_KINDS[wound.kind]
+  const shatters = wound.kind === 'shattered_manifestation'
   const pending = busyOf(busy, edit.isPending, remove.isPending)
   const nothing =
-    healed === '' && severity === ''
-      ? 'Change the healing or the severity first'
+    healed === '' && severity === '' && form === ''
+      ? 'Change the healing, the severity or the form first'
       : null
   return (
     <li className='flex min-w-0 flex-col gap-2 rounded-lg border bg-muted/30 p-3'>
@@ -438,7 +443,9 @@ function WoundRow({ wound, busy }: { wound: WoundView; busy: string | null }) {
         <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col gap-1'>
           <Text weight='semibold'>
-            {wound.domain ? `${spec.label} (${wound.domain})` : spec.label}
+            {wound.domain
+              ? `${spec.label} (${labels.domain(wound.domain)})`
+              : spec.label}
           </Text>
           <Muted variant='caption'>{`From ${WOUND_CAUSES[wound.cause]}${wound.cause_node ? `, ${wound.cause_node.name}` : ''}, epoch ${wound.epoch}`}</Muted>
         </div>
@@ -460,6 +467,11 @@ function WoundRow({ wound, busy }: { wound: WoundView; busy: string | null }) {
         tone='destructive'
       />
       <StatBar label='Healed' value={wound.healed} max={100} tone='success' />
+      {shatters && (
+        <Badge size='sm' variant='outline' className='self-start'>
+          {`Its form is scattered; it returns ${wound.prior_mode ? `to ${EXISTENCE_MODES[wound.prior_mode].toLowerCase()}` : 'unshaped'} when healed`}
+        </Badge>
+      )}
       <Held
         keys={wound.locked}
         label={heldLabel}
@@ -487,6 +499,21 @@ function WoundRow({ wound, busy }: { wound: WoundView; busy: string | null }) {
             disabled={pending !== null}
             onChange={setSeverity}
           />
+          <PickRow
+            label='Form it returns to'
+            table={Object.fromEntries(
+              Object.entries(EXISTENCE_MODES).filter(
+                ([key]) => key !== 'scattered'
+              )
+            )}
+            value={form}
+            blocked={
+              shatters
+                ? pending
+                : 'Only a shattered manifestation scatters a form'
+            }
+            onPick={setForm}
+          />
         </div>
         <Button
           size='sm'
@@ -496,9 +523,11 @@ function WoundRow({ wound, busy }: { wound: WoundView; busy: string | null }) {
             const values: Record<string, unknown> = {}
             if (healed !== '') values.healed = Number(healed)
             if (severity !== '') values.severity = Number(severity)
+            if (form !== '') values.prior_mode = form
             edit.mutate({ values, release: [] })
             setHealed('')
             setSeverity('')
+            setForm('')
           }}
         >
           <Save />

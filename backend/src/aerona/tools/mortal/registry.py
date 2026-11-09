@@ -61,7 +61,7 @@ ACTOR_TYPES: dict[MortalToolId, frozenset[EntityType]] = {
     T.BUILD_SPY_NETWORK: frozenset({EntityType.FACTION, EntityType.CULT, EntityType.MORTAL, EntityType.PEOPLE, EntityType.SETTLEMENT}),
     T.PREACH: frozenset({EntityType.CULT}),
     T.DENY_GOD: frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.FACTION, EntityType.CULT}),
-    T.PROPHESY: frozenset({EntityType.MORTAL, EntityType.CULT}),
+    T.PROPHESY: frozenset({EntityType.MORTAL, EntityType.CULT, EntityType.SPIRIT}),
     T.FOUND_SCHOOL: NAMED,
     T.SOCIALISE: NAMED,
     T.CHALLENGE_TO_CONTEST: NAMED,
@@ -79,7 +79,9 @@ ACTOR_TYPES: dict[MortalToolId, frozenset[EntityType]] = {
     T.BACK_CRISIS: NAMED,
     T.ISSUE_MANDATE: NAMED,
     T.ASSIGN_TASK: NAMED,
-    T.SEND_DISPATCH: frozenset({EntityType.MORTAL, EntityType.POLITY, EntityType.SETTLEMENT, EntityType.PEOPLE, EntityType.FACTION, EntityType.CULT}),
+    T.SEND_DISPATCH: frozenset(
+        {EntityType.MORTAL, EntityType.POLITY, EntityType.SETTLEMENT, EntityType.PEOPLE, EntityType.FACTION, EntityType.CULT, EntityType.SPIRIT}
+    ),
     T.BUY_WORKSHOP: COMMUNITIES_AND_NAMED,
     T.LAY_TRADE_POLICY: COMMUNITIES_AND_NAMED,
     T.SPECULATE: COMMUNITIES_AND_NAMED,
@@ -105,6 +107,8 @@ ACTOR_TYPES: dict[MortalToolId, frozenset[EntityType]] = {
     T.LEND: COMMUNITIES_AND_NAMED,
     T.REPAY_DEBT: COMMUNITIES_AND_NAMED,
 }
+
+SPIRIT_TOOLS = frozenset({T.LOOK_AT_WORLD, T.INSPECT_ENTITY, T.SEARCH_ENTITIES, T.PROPHESY, T.SEND_DISPATCH, T.PRAY_TO_CREATOR})
 
 TIER_GATES: dict[MortalToolId, TierCapability] = {
     T.FIND_ROUTE: TierCapability.ROUTE_SEARCH,
@@ -227,6 +231,8 @@ def mortal_may_use(spec: MortalSpec, actor: EntityRow, rules: Rules, state: Mort
     tool_id = MortalToolId(spec.name)
     allowed = ACTOR_TYPES.get(tool_id)
     if allowed is not None and actor.entity_type not in allowed:
+        return False
+    if actor.entity_type is EntityType.SPIRIT and tool_id not in SPIRIT_TOOLS:
         return False
     capability = TIER_GATES.get(tool_id)
     if capability is not None and not unlocked(rules, state.tier, capability):

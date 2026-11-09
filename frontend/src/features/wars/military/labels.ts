@@ -383,6 +383,11 @@ export const PHASE_DETAIL: Record<string, string> = {
   defender: 'Defender plan',
   wounded: 'Wounded',
   maimed: 'Maimed',
+  attacker_terror: 'Terror the attackers sowed',
+  defender_terror: 'Terror the defenders sowed',
+  attacker_god_struck: "Felled by the attackers' god",
+  defender_god_struck: "Felled by the defenders' god",
+  backlash: 'Backlash',
 }
 
 export const FIELD: Record<string, string> = {

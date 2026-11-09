@@ -21,6 +21,14 @@ class DomainRules:
     activity_essence_max: int = rule(6, 0, 100, G, "Most essence a domain's activity gives a god in an epoch")
     activity_half: int = rule(5, 1, 10000, G, "Domain activity at which a god earns half the most essence")
     foreign_power_pct: int = rule(20, 0, 200, G, "Share of domain essence a foreign god takes as power (%)")
+    battle_intervene_chance: int = rule(35, 0, 100, G, "Chance the patron god of a side intervenes in a battle (%)")
+    battle_war_father_mult: int = rule(2, 1, 10, G, "Times more often a son with the Warbringer power intervenes in battles")
+    battle_essence: int = rule(6, 0, 1000, G, "Essence a son spends to intervene in a battle")
+    battle_foreign_power: int = rule(2, 0, 100, G, "Power a foreign god spends to intervene in a battle")
+    battle_strike_pct: int = rule(8, 0, 100, G, "Share of the enemy's standing soldiers a striking god fells (%)")
+    battle_shield_morale: int = rule(12, 0, 100, G, "Morale a steadying god gives every stack of its faithful")
+    battle_spurned_morale: int = rule(15, 0, 100, G, "Shock a god's overcome intervention deals to its own faithful")
+    battle_contest_spread_pct: int = rule(30, 0, 100, G, "Spread of the roll when two gods contest the same battle (%)")
 
 
 @dataclass(frozen=True)

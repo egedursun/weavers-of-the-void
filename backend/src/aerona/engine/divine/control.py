@@ -3,6 +3,7 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.base import Base
 from aerona.db.tables.celestial import WorldRow
@@ -38,7 +39,7 @@ from aerona.engine.divine.laws import profile_for
 from aerona.engine.divine.outer import outer_profile
 from aerona.engine.divine.rulings import Motion, enact, record
 from aerona.engine.divine.standing import standing_row
-from aerona.engine.divine.wounds import inflict
+from aerona.engine.divine.wounds import gather, inflict
 from aerona.engine.polity.control import lock
 from aerona.engine.primitives.edits import bounds, coerce
 from aerona.engine.primitives.queries import living_entity
@@ -190,11 +191,16 @@ async def wound(ctx: TickContext, wound_id: int) -> DivineWoundRow:
 async def edit_wound(ctx: TickContext, wound_id: int, values: Mapping[str, Any], release: list[str]) -> DivineWoundRow:
     row = apply(await wound(ctx, wound_id), values, release)
     await ctx.session.flush()
+    if row.healed >= PERCENT:
+        await gather(ctx.session, row)
+        await ctx.session.flush()
     return row
 
 
 async def remove_wound(ctx: TickContext, wound_id: int) -> None:
-    await ctx.session.delete(await wound(ctx, wound_id))
+    row = await wound(ctx, wound_id)
+    await gather(ctx.session, row)
+    await ctx.session.delete(row)
     await ctx.session.flush()
 
 

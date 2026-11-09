@@ -18,6 +18,7 @@ from aerona.engine.divine import control
 from aerona.engine.divine.foreign import friendship, pact_between, seal_pact
 from aerona.engine.divine.goals import GOAL_LABELS, active_goals
 from aerona.engine.divine.outer import oppose_cost
+from aerona.engine.divine.wounds import gather
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.stats import stat_or
 from aerona.prompts import SonToolId
@@ -129,6 +130,8 @@ async def mend_wound(call: SonCall, args: MendInput) -> str:
     call.spend_essence(spend)
     if "healed" not in row.locked:
         row.healed = clamp_int(row.healed + spend * PERCENT // max(1, row.severity), 0, PERCENT)
+        if row.healed >= PERCENT:
+            await gather(call.session, row)
     return result(SonResult.WOUND_MENDED, healed=row.healed)
 
 

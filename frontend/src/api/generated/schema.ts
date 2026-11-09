@@ -24600,6 +24600,7 @@ export interface components {
       cause: components['schemas']['WoundCause']
       cause_node?: components['schemas']['NodeRef'] | null
       epoch: number
+      prior_mode?: components['schemas']['ExistenceMode'] | null
       locked: string[]
     }
     DoctrineView: {

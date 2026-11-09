@@ -23,6 +23,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import NaturalLaw
+from aerona.domain.enums.son import ExistenceMode
 
 HOOK_PCT_MIN = -100
 HOOK_PCT_MAX = 300
@@ -112,6 +113,7 @@ class DivineWoundRow(Base):
     cause: Mapped[WoundCause] = mapped_column(enum_type(WoundCause, "cause"))
     cause_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     epoch: Mapped[int] = mapped_column(default=0)
+    prior_mode: Mapped[ExistenceMode | None] = mapped_column(enum_type(ExistenceMode, "prior_mode"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
