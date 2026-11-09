@@ -26,6 +26,7 @@ from aerona.domain.enums.war import WarEnding
 from aerona.domain.enums.world import Discovery, SkyEventKind
 from aerona.domain.models.entity_stats import CelestialStats, MortalStats, ProphecyStats
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.placement import cosmography_of, hidden_sky
 from aerona.engine.cosmos.routes import number_word, open_alignment, sever_route, touches
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.cosmos.star_types import star_mechanics
@@ -103,7 +104,7 @@ async def eclipse_seers(ctx: TickContext, prophecy: EntityRow, world: WorldRow) 
 
 async def sky_clarity(ctx: TickContext, world: WorldRow, slot: str) -> float:
     ground = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch)
-    return ground.clarity(ctx.environment.world_seed, ctx.epoch, world.id, slot)
+    return ground.clarity(ctx.environment.world_seed, ctx.epoch, world.id, slot) * (1 - await hidden_sky(ctx.session, ctx.rules, world.id))
 
 
 async def omen_bonus(ctx: TickContext, world_id: int) -> int:
@@ -303,11 +304,13 @@ async def eclipse_world(ctx: TickContext, stars: dict[int, StarRow]) -> WorldRow
     if not worlds:
         return None
     rules = ctx.rules
+    ladder = await cosmography_of(ctx.session)
 
     def weight(world: WorldRow) -> int:
         star = stars.get(world.star_id) if world.star_id is not None else None
         companions = star_mechanics(star.star_type).eclipse_weight(rules) if star is not None else 0
-        return 1 + (world.moon_count or 0) * rules.sky.eclipse_moon_weight + companions
+        density = ladder.pull(rules, ladder.place_world(world)).density
+        return max(1, round((1 + (world.moon_count or 0) * rules.sky.eclipse_moon_weight + companions) * density))
 
     return ctx.rng("eclipse_world").weighted(worlds, [weight(world) for world in worlds])
 
@@ -330,7 +333,9 @@ async def spontaneous_sky_event(ctx: TickContext) -> SkyEventResult | None:
         candidates = [star for star in stars.values() if star_event_weight(ctx.rules, kind, star) > 0]
         if not candidates or not rng.chance(ctx.rules.sky.star_event_chance):
             return None
-        star = rng.weighted(candidates, [star_event_weight(ctx.rules, kind, star) for star in candidates])
+        ladder = await cosmography_of(ctx.session)
+        weights = [max(1, round(star_event_weight(ctx.rules, kind, star) * ladder.pull(ctx.rules, ladder.place_star(star)).density)) for star in candidates]
+        star = rng.weighted(candidates, weights)
         order = SkyOrder(star_id=star.id)
     world = await _resolve_world(ctx, order)
     if held(world.id if world is not None else None, order.star_id):

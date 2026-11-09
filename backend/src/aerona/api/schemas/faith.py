@@ -115,6 +115,7 @@ class StratumView(ApiModel):
     son_id: int | None
     son_name: str | None
     cult: NodeRef | None
+    dimension: NodeRef | None = None
 
 
 class RealmPopulation(ApiModel):

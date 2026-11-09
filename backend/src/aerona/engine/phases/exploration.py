@@ -34,6 +34,7 @@ from aerona.domain.enums.world import Discovery
 from aerona.domain.models.entity_stats import EntityStats, PlaceStats, RegionStats, SettlementStats, VesselStats
 from aerona.engine.body.book import factor
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.placement import hidden_sky
 from aerona.engine.cosmos.routes import RouteSpec, has_tamed_mount, open_route
 from aerona.engine.cosmos.vessels import set_vessel_kind
 from aerona.engine.interconnect.annotations import reads, writes
@@ -656,7 +657,7 @@ async def cosmic_exploration(ctx: TickContext) -> int:
     for seeker in unheld(rng.shuffled(seekers)):
         if searched >= settings.route_search_cap:
             break
-        if not rng.chance(settings.route_search_chance):
+        if not rng.chance(settings.route_search_chance * (1 - await hidden_sky(ctx.session, ctx.rules, seeker.world_id))):
             continue
         searched += 1
         await report_search(ctx, seeker, await search_route(ctx, seeker, COSMIC_SEARCH_HOW), COSMIC_SEARCH_HOW)

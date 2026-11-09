@@ -15,6 +15,7 @@ from aerona.domain.enums.structure import StructureKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.placement import hidden_sky
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.printing import printed
 from aerona.engine.mind.hooks import practised
@@ -100,7 +101,8 @@ async def archive(ctx: TickContext, item: Working, host: EntityRow, tally: Tally
 
 
 async def observatory(ctx: TickContext, item: Working, host: EntityRow, tally: Tally) -> None:
-    await deepen(ctx, item, host, tally, pct=ctx.rules.structure_functions.observatory_deepen_pct, branch=KnowledgeBranch.ASTRONOMY)
+    clear = 1 - await hidden_sky(ctx.session, ctx.rules, host.world_id)
+    await deepen(ctx, item, host, tally, pct=round(ctx.rules.structure_functions.observatory_deepen_pct * clear), branch=KnowledgeBranch.ASTRONOMY)
 
 
 async def residents(ctx: TickContext, host: EntityRow, roles: frozenset[MortalRole]) -> list[EntityRow]:

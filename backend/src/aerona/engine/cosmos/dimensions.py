@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.cosmography import DIMENSIONAL_EVENT_LABELS, FRAGILE_DIMENSIONS, MIRROR_DIMENSIONS
 from aerona.constants.units import PERCENT
+from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmography import CosmicBeingProfileRow, DimensionalEventRow, DimensionRow, RiftRow
@@ -14,7 +15,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, BeingKind, BeingPhase, DimensionalEventKind, DimensionKind, RiftCause
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.world import Discovery
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.beings import create_being, ruler_gains
@@ -25,7 +26,7 @@ from aerona.engine.cosmos.rifts import open_rift
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_percent
-from aerona.engine.primitives.queries import canon
+from aerona.engine.primitives.queries import canon, connect
 from aerona.engine.primitives.stats import shift_bounded
 
 THINNING_DOMAINS = frozenset({Domain.DREAM, Domain.SHADOW, Domain.MADNESS})
@@ -247,8 +248,42 @@ async def worship_plane(ctx: TickContext, dimension: DimensionRow, worship: Coun
                 shift_bounded(ctx.rules, row, "piety", table.worship_piety)
 
 
+async def dimension_cults(ctx: TickContext, cosmography: Cosmography) -> int:
+    touched: dict[int, set[int]] = {}
+    for rift in await ctx.session.scalars(select(RiftRow).where(RiftRow.state.in_(list(OPEN_RIFT_STATES)))):
+        touched.setdefault(rift.world_id, set()).add(rift.dimension_id)
+    events = select(DimensionalEventRow).where(DimensionalEventRow.epoch == ctx.epoch, DimensionalEventRow.world_id.is_not(None))
+    for event in await ctx.session.scalars(events):
+        if event.world_id is not None:
+            touched.setdefault(event.world_id, set()).add(event.dimension_id)
+    if not touched:
+        return 0
+    rng = ctx.rng("dimension_cults")
+    risen = 0
+    for community in sorted(await canon(ctx.session, COMMUNITY_TYPES), key=lambda row: row.id):
+        if held(community.id) or community.world_id not in touched:
+            continue
+        for dimension_id in sorted(touched[community.world_id]):
+            dimension = cosmography.dimensions.get(dimension_id)
+            if dimension is None or held(dimension.id) or not rng.chance(ctx.rules.dimensions.cult_chance):
+                continue
+            if await BondRepository(ctx.session).exists_between(community.id, dimension.id, BondKind.WORSHIPS):
+                continue
+            await connect(ctx.session, community.id, dimension.id, BondKind.WORSHIPS, ctx.epoch, description="came to worship it")
+            await note(
+                ctx,
+                f"{community.name} came to worship {dimension.name}.",
+                key="dimension.cult_risen",
+                ids=[community.id],
+                world_id=community.world_id,
+                kind=ChronicleKind.WORSHIP,
+            )
+            risen += 1
+    return risen
+
+
 @reads("table.bonds", "table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.rifts")
-@writes("table.dimensions")
+@writes("table.bonds", "table.dimensions")
 async def dimension_cycles(ctx: TickContext) -> None:
     cosmography = await Cosmography.load(ctx.session)
     rifts: Counter[int] = Counter(await ctx.session.scalars(select(RiftRow.dimension_id).where(RiftRow.state.in_(list(OPEN_RIFT_STATES)))))
@@ -284,4 +319,5 @@ async def dimension_cycles(ctx: TickContext) -> None:
         await echo(ctx, cosmography, dimension)
         await spontaneous_rift(ctx, cosmography, dimension)
         await worship_plane(ctx, dimension, worship)
+    ctx.count("dimension_cults", await dimension_cults(ctx, cosmography))
     await ctx.session.flush()

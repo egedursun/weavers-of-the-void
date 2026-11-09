@@ -321,3 +321,9 @@ class OmenReading(StrEnum):
     GOOD = "good"
     EVIL = "evil"
     NEUTRAL = "neutral"
+
+
+class SkyObject(StrEnum):
+    STAR = "star"
+    GALAXY = "galaxy"
+    DIMENSION = "dimension"

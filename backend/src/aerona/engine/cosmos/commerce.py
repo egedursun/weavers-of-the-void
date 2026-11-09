@@ -35,9 +35,12 @@ def trade_cost_pct(rules: Rules, scope: RouteScope) -> int:
 
 def news_delay(rules: Rules, scope: RouteScope | None) -> int:
     table = rules.cosmography
-    return {RouteScope.INTERGALACTIC: table.intergalactic_news_epochs, RouteScope.INTERCLUSTER: table.intercluster_news_epochs}.get(
-        scope or RouteScope.STELLAR, 0
-    )
+    return {
+        RouteScope.GALACTIC: table.galactic_news_epochs,
+        RouteScope.INTERGALACTIC: table.intergalactic_news_epochs,
+        RouteScope.INTERCLUSTER: table.intercluster_news_epochs,
+        RouteScope.INTERDIMENSIONAL: table.interdimensional_news_epochs,
+    }.get(scope or RouteScope.STELLAR, 0)
 
 
 async def market_of(ctx: TickContext, world_id: int, markets: dict[int, EntityRow | None]) -> EntityRow | None:
@@ -66,9 +69,12 @@ async def carry(ctx: TickContext, route: RouteRow, scope: RouteScope, first: Ent
     moved = delivered_total = 0
     cost = trade_cost_pct(ctx.rules, scope) / PERCENT
     stolen = route.piracy * table.piracy_loss_pct / PERCENT / PERCENT
-    for amount, key, source, target, buyer in sorted(gaps, key=lambda gap: (-gap[0], str(gap[1])))[: table.trade_lines]:
+    room = route.capacity
+    for wanted, key, source, target, buyer in sorted(gaps, key=lambda gap: (-gap[0], str(gap[1])))[: table.trade_lines]:
+        amount = min(wanted, room)
         if amount <= 0 or (target is not None and target.held):
             continue
+        room -= amount
         delivered = max(0, round(amount * (1 - cost) * (1 - min(1.0, stolen))))
         source.quantity -= amount
         receiver = target

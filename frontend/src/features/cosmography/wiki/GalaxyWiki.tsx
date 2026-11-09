@@ -58,6 +58,7 @@ import { type Ladder, nameTable } from '../ladder'
 import { Chip, Facts, Meter, NodeLink, RecordEditor, RecordRow } from '../parts'
 import { GalaxyThumb } from '../visual/GalaxyThumb'
 import { LAYOUT_STRUCTURES } from '../visual/galaxyForm'
+import { SkyWorship } from './SkyWorship'
 import { pageId, useScaleData } from './data'
 import {
   DangerZone,
@@ -927,6 +928,7 @@ export function GalaxyView({ galaxyId }: { galaxyId: number }) {
       <StarsSection galaxy={galaxy} ladder={ladder} />
       <ShapeSection galaxy={galaxy} ladder={ladder} catalog={catalog} />
       <EventsPanel ladder={ladder} catalog={catalog} galaxyId={galaxy.id} />
+      <SkyWorship nodeId={galaxy.id} />
       <Section title='Beings that roam it' icon={Orbit} tone='warning'>
         {beings.length === 0 ? (
           <EmptyState

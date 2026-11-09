@@ -933,6 +933,13 @@ COSMOGRAPHY_ACTIONS = (
         free,
         ("S10.13",),
     ),
+    _sync(
+        Meta("heavens:worship", "Make a people worship its star, its galaxy or a dimension, or stop", G.COSMOS),
+        cosmography.sky_worship,
+        cosmography.SkyWorship,
+        free,
+        ("S10.16",),
+    ),
     _sync(Meta("cluster:create", "Gather galaxies into a cluster", G.COSMOS), cosmography.create_cluster, cosmography.ClusterDraft, free, ("S10.11",)),
     _sync(Meta("cluster:edit", "Reshape or hold a cluster", G.COSMOS), cosmography.edit_cluster, cosmography.ClusterEdit, free, ("S10.11",)),
     _sync(Meta("cluster:delete", "Scatter a cluster", G.COSMOS), cosmography.delete_cluster, cosmography.ClusterTarget, free, ("S10.11",)),

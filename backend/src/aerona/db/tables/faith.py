@@ -153,6 +153,7 @@ class AfterlifeStratumRow(Base):
     closed: Mapped[bool] = mapped_column(default=False)
     cult_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
+    dimension_id: Mapped[int | None] = mapped_column(ForeignKey("dimensions.id", ondelete="SET NULL"), index=True)
 
 
 class SoulJudgementRow(Base):

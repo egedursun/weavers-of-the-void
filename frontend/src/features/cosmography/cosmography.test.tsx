@@ -14,8 +14,11 @@ import { CATALOG, VIEW } from './cosmographyFixtures'
 import { CreateGalaxyStudio } from './create/CreateStudio'
 import { type HeavensSearch } from './heavensSearch'
 import { ladderOf } from './ladder'
+import { ClusterView } from './wiki/ClusterWiki'
 import { DimensionLaws } from './wiki/DimensionLaws'
 import { GalaxyView } from './wiki/GalaxyWiki'
+import { HostedStrata } from './wiki/HostedStrata'
+import { SkyWorship } from './wiki/SkyWorship'
 
 vi.mock('@/api/client', async () => {
   const { createFakeClient } = await import('@/test-utils/fakeApi')
@@ -47,6 +50,20 @@ function serveHeavens() {
   onApi('GET', '/api/cosmography/nodes/301/wiki', {
     node_id: 301,
     kind: 'galaxy',
+    cover: null,
+    images: [],
+    timeline: [],
+  })
+  onApi('GET', '/api/cosmography/nodes/301/worship', {
+    node_id: 301,
+    sky: 'galaxy',
+    name: 'Aerona',
+    worshippers: [],
+    candidates: [],
+  })
+  onApi('GET', '/api/cosmography/nodes/201/wiki', {
+    node_id: 201,
+    kind: 'cluster',
     cover: null,
     images: [],
     timeline: [],
@@ -178,6 +195,93 @@ describe('the heavens', () => {
     expect(
       callsTo('POST', '/api/actions/dimension:release_law')[0].body
     ).toEqual({ law_id: 77 })
+  })
+
+  it('lists the peoples that worship a star and turns them away or toward it', async () => {
+    serveHeavens()
+    onApi('GET', '/api/cosmography/nodes/9/worship', {
+      node_id: 9,
+      sky: 'star',
+      name: 'Homesun',
+      worshippers: [
+        {
+          id: 41,
+          name: 'Sunward Folk',
+          entity_type: 'people',
+          world_id: 1,
+          piety: 70,
+        },
+      ],
+      candidates: [
+        {
+          id: 42,
+          name: 'Valley Town',
+          entity_type: 'settlement',
+          world_id: 1,
+          piety: 30,
+        },
+      ],
+    })
+    onApi('POST', '/api/actions/heavens:worship', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<SkyWorship nodeId={9} />)
+    await expect.element(screen.getByText('Sunward Folk')).toBeVisible()
+    await expect
+      .element(screen.getByRole('button', { name: /Make them worship it/ }))
+      .toHaveAttribute('aria-disabled', 'true')
+    await screen.getByRole('button', { name: /Turn away/ }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/heavens:worship'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/heavens:worship')[0].body).toEqual({
+      community_id: 41,
+      sky: 'star',
+      worships: false,
+      dimension_id: null,
+    })
+    await screen.getByRole('combobox', { name: 'People to turn' }).click()
+    await screen.getByRole('option', { name: 'Valley Town' }).click()
+    await screen.getByRole('button', { name: /Make them worship it/ }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/heavens:worship'))
+      .toHaveLength(2)
+    expect(callsTo('POST', '/api/actions/heavens:worship')[1].body).toEqual({
+      community_id: 42,
+      sky: 'star',
+      worships: true,
+      dimension_id: null,
+    })
+  })
+
+  it('names the central galaxy of a cluster', async () => {
+    serveHeavens()
+    const { screen } = await renderApp(<ClusterView clusterId={201} />)
+    await expect
+      .element(screen.getByText(/Central galaxy, which draws the others/))
+      .toBeVisible()
+    await expect
+      .element(screen.getByRole('link', { name: 'Aerona' }).first())
+      .toBeVisible()
+  })
+
+  it('names the strata of the dead that lie in a dimension', async () => {
+    serveHeavens()
+    const { screen } = await renderApp(
+      <HostedStrata
+        name='The Below'
+        strata={[
+          {
+            id: 5,
+            name: 'Grey Field',
+            kind: 'plain',
+            population: 12,
+            realm: { id: 88, kind: 'entity', name: 'Hall of Shades' },
+          },
+        ]}
+      />
+    )
+    await expect.element(screen.getByText('Grey Field')).toBeVisible()
+    await expect.element(screen.getByText('12 souls')).toBeVisible()
+    await expect.element(screen.getByText('Hall of Shades')).toBeVisible()
   })
 
   it('turns the climate of a region', async () => {

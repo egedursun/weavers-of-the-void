@@ -21,6 +21,7 @@ from aerona.domain.models.entity_stats import SpeciesStats
 from aerona.engine.body.cohorts import cohort, labour_factor
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.placement import cosmography_of
 from aerona.engine.ecology.domestication import draught
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of, lots_of
@@ -227,6 +228,9 @@ async def output_of(ctx: TickContext, book: EconomyBook, resource: EntityRow, pr
         raw *= fish_factor(ctx.rules, book.pollution.get(region_key(book, resource.id)))
     if kind is ExtractionKind.FARMING:
         raw *= await draught(ctx, community.id)
+    if kind is ExtractionKind.MINING:
+        ladder = await cosmography_of(ctx.session)
+        raw *= ladder.pull(ctx.rules, ladder.place_world_id(resource.world_id)).ore
     return max(0, min(profile.reserve, round_half_up(raw)))
 
 

@@ -17,6 +17,7 @@ from aerona.domain.enums.cosmography import ClusterKind, DimensionElement, Dimen
 from aerona.domain.enums.world import Discovery
 from aerona.engine.cosmos.kinds import CLUSTER_KIND_MECHANICS, DIMENSION_KIND_MECHANICS, GALAXY_TYPE_MECHANICS
 from aerona.engine.cosmos.placement import Cosmography, zone_at
+from aerona.engine.cosmos.strata import host_strata
 from aerona.rules.registry import Rules
 
 LADDER_FIXUP = "cosmography.scale_ladder"
@@ -95,6 +96,7 @@ async def create_dimension(session: AsyncSession, rules: Rules, draft: Dimension
     )
     await Repository(session).insert(row)
     row.name = await names.claim(row.id, name)
+    await host_strata(session)
     return row
 
 
@@ -121,10 +123,27 @@ async def create_cluster(session: AsyncSession, rules: Rules, draft: ClusterDraf
     return row
 
 
+def arms_of(rules: Rules, draft: GalaxyDraft, form: SeededRandom) -> int:
+    base = GALAXY_TYPE_MECHANICS[draft.galaxy_type].arms(rules)
+    spread = rules.galaxies.arm_spread
+    if base <= 0 or spread <= 0:
+        return base
+    return max(1, base + form.die(spread * 2 + 1) - spread - 1)
+
+
+def nucleus_of(rules: Rules, draft: GalaxyDraft, form: SeededRandom) -> GalacticNucleus:
+    if draft.galaxy_type in NUCLEUS_OF:
+        return NUCLEUS_OF[draft.galaxy_type]
+    if not form.chance(rules.galaxies.nucleus_shift_chance):
+        return GalacticNucleus.DORMANT
+    return form.pick([GalacticNucleus.NONE, GalacticNucleus.ACTIVE])
+
+
 async def create_galaxy(session: AsyncSession, rules: Rules, draft: GalaxyDraft) -> GalaxyRow:
     kind = GALAXY_TYPE_MECHANICS[draft.galaxy_type]
     names = NameRepository(session)
     name = await names.unique_name(draft.name)
+    form = SeededRandom.for_epoch(0, draft.epoch, f"galaxy_form.{name}")
     row = GalaxyRow(
         name=name,
         galaxy_type=draft.galaxy_type,
@@ -133,8 +152,8 @@ async def create_galaxy(session: AsyncSession, rules: Rules, draft: GalaxyDraft)
         x=draft.x,
         y=draft.y,
         radius=draft.radius,
-        arm_count=kind.arms(rules),
-        nucleus=NUCLEUS_OF.get(draft.galaxy_type, GalacticNucleus.DORMANT),
+        arm_count=arms_of(rules, draft, form),
+        nucleus=nucleus_of(rules, draft, form),
         star_formation=kind.formation(rules),
         metallicity=kind.metallicity(rules),
         leak=0,

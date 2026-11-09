@@ -23,16 +23,19 @@ from aerona.api.schemas.cosmography import (
     GalaxyRecord,
     GalaxyShapeRecord,
     HeldLawRecord,
+    HostedStratumRecord,
     KindRecord,
     PhenomenonRecord,
     PlacementRecord,
     PullRecord,
     RiftRecord,
     ScaleWiki,
+    SkyWorshipperRecord,
+    SkyWorshipView,
     StructureRecord,
 )
 from aerona.api.schemas.records import NodeRef, StarRecord
-from aerona.api.views.common import chronicle_lines, images_of
+from aerona.api.views.common import chronicle_lines, images_of, node_refs
 from aerona.catalog.cosmography import (
     APOCALYPSE_LABELS,
     BARRED_GALAXIES,
@@ -54,6 +57,7 @@ from aerona.constants.api import WIKI_TIMELINE_LINES
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.nodes import NodeRepository
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmography import (
     CelestialReadingRow,
     CosmicBeingProfileRow,
@@ -64,9 +68,12 @@ from aerona.db.tables.cosmography import (
     RiftRow,
 )
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.faith import AfterlifeStratumRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.node import NodeRow
-from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.cosmography import SkyObject
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus
 from aerona.domain.enums.job import JobKind
 from aerona.domain.enums.node import NodeKind
 from aerona.engine.cosmos.kinds import (
@@ -82,6 +89,8 @@ from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.phases.doom import dominant_variant, doom_items
 from aerona.engine.primitives.knowledge import laws_of_dimension
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.primitives.queries import canon, flags_by_entity
+from aerona.engine.primitives.stats import stat
 from aerona.jobs.context import JobContext
 from aerona.rules.registry import Rules
 from aerona.services.images.records import cover_of
@@ -180,7 +189,48 @@ async def scale_wiki(services: ServicesDep, node_id: int = Path(ge=1)) -> ScaleW
             images=await images_of(session, node_id),
             timeline=await chronicle_lines(session, lines),
             laws=await held_laws(session, node_id) if node.kind is NodeKind.DIMENSION else [],
+            strata=await hosted_strata(session, node_id) if node.kind is NodeKind.DIMENSION else [],
         )
+
+
+async def hosted_strata(session: AsyncSession, dimension_id: int) -> list[HostedStratumRecord]:
+    rows = list(await session.scalars(select(AfterlifeStratumRow).where(AfterlifeStratumRow.dimension_id == dimension_id).order_by(AfterlifeStratumRow.id)))
+    refs = await node_refs(session, [row.realm_entity_id for row in rows])
+    return [HostedStratumRecord(id=row.id, name=row.name, kind=row.kind, population=row.population, realm=refs.get(row.realm_entity_id)) for row in rows]
+
+
+SKY_KINDS: dict[NodeKind, SkyObject] = {NodeKind.STAR: SkyObject.STAR, NodeKind.GALAXY: SkyObject.GALAXY, NodeKind.DIMENSION: SkyObject.DIMENSION}
+SKY_FLAGS: dict[SkyObject, EntityFlag] = {SkyObject.STAR: EntityFlag.WORSHIPS_STAR, SkyObject.GALAXY: EntityFlag.WORSHIPS_GALAXY}
+
+
+def worshipper(row: EntityRow) -> SkyWorshipperRecord:
+    return SkyWorshipperRecord(id=row.id, name=row.name, entity_type=row.entity_type, world_id=row.world_id, piety=stat(row, "piety"))
+
+
+@router.get("/cosmography/nodes/{node_id}/worship", response_model=SkyWorshipView)
+async def sky_worship(services: ServicesDep, node_id: int = Path(ge=1)) -> SkyWorshipView:
+    async with reader(services) as session:
+        node = await session.get(NodeRow, node_id)
+        if node is None or node.kind not in SKY_KINDS:
+            raise NotFoundError("No star, galaxy or dimension by that id.")
+        sky = SKY_KINDS[node.kind]
+        ladder = await Cosmography.load(session)
+        communities = sorted(await canon(session, COMMUNITY_TYPES), key=lambda row: row.id)
+
+        def under(row: EntityRow) -> bool:
+            place = ladder.place_world_id(row.world_id)
+            return {SkyObject.STAR: place.star is not None and place.star.id == node_id, SkyObject.GALAXY: place.galaxy_id == node_id}.get(sky, True)
+
+        if sky is SkyObject.DIMENSION:
+            statement = select(BondRow.source_node_id).where(
+                BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE, BondRow.target_node_id == node_id
+            )
+            devoted = set(await session.scalars(statement))
+        else:
+            devoted = await flags_by_entity(session, SKY_FLAGS[sky])
+        worshippers = [worshipper(row) for row in communities if row.id in devoted and under(row)]
+        candidates = [worshipper(row) for row in communities if row.id not in devoted and under(row)]
+        return SkyWorshipView(node_id=node_id, sky=sky, name=node.name, worshippers=worshippers, candidates=candidates)
 
 
 async def held_laws(session: AsyncSession, dimension_id: int) -> list[HeldLawRecord]:
@@ -258,7 +308,10 @@ async def cosmography(services: ServicesDep) -> CosmographyView:
         return CosmographyView(
             epoch=epoch,
             dimensions=[DimensionRecord.model_validate(row) for row in ladder.dimensions.values()],
-            clusters=[ClusterRecord.model_validate(row) for row in ladder.clusters.values()],
+            clusters=[
+                ClusterRecord.model_validate(row).model_copy(update={"central_galaxy_id": central.id if (central := ladder.central_galaxy(row.id)) else None})
+                for row in ladder.clusters.values()
+            ],
             galaxies=[GalaxyRecord.model_validate(row) for row in ladder.galaxies.values()],
             structures=[StructureRecord.model_validate(row) for row in ladder.structures.values()],
             galactic_events=[

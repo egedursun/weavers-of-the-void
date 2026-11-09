@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Label, Text } from '@/components/typography'
+import { useCosmography } from '@/features/cosmography/api'
 import { useSons } from '@/features/pantheon/api'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { MindPicker } from '../mind/parts'
@@ -17,6 +18,7 @@ import { CRITERIA_FLOORS, RITES, TENETS } from './labels'
 
 const WORKING = 'Working…'
 const ANY_GOD = 'any'
+const NO_DIMENSION = 'none'
 const PERCENT = 100
 
 type Criteria = Stratum['criteria']
@@ -118,6 +120,10 @@ export function StratumEditor({
     stratum.son_id === null ? ANY_GOD : String(stratum.son_id)
   )
   const [cult, setCult] = useState<number | null>(stratum.cult?.id ?? null)
+  const heavens = useCosmography()
+  const [dimension, setDimension] = useState<string>(
+    stratum.dimension ? String(stratum.dimension.id) : NO_DIMENSION
+  )
   const toggle =
     (setter: (update: (current: string[]) => string[]) => void) =>
     (value: string) =>
@@ -150,6 +156,8 @@ export function StratumEditor({
             cult_id: cult,
             closed: null,
             clear_links: son === ANY_GOD && cult === null,
+            dimension_id: dimension === NO_DIMENSION ? null : Number(dimension),
+            clear_dimension: dimension === NO_DIMENSION,
             remove: false,
           },
         })
@@ -165,6 +173,7 @@ export function StratumEditor({
             kind: stratum.kind,
             closed,
             clear_links: false,
+            clear_dimension: false,
             remove: false,
           },
         })
@@ -179,6 +188,7 @@ export function StratumEditor({
             stratum_id: stratum.id,
             kind: stratum.kind,
             clear_links: false,
+            clear_dimension: false,
             remove: true,
           },
         })
@@ -289,6 +299,21 @@ export function StratumEditor({
             onChange={setCult}
             blocked={busy}
             placeholder='Any church'
+          />
+          <MindPicker
+            label='Lies in the dimension'
+            value={dimension}
+            table={{
+              [NO_DIMENSION]: 'No dimension of its own',
+              ...Object.fromEntries(
+                (heavens.data?.dimensions ?? []).map((item) => [
+                  String(item.id),
+                  item.name,
+                ])
+              ),
+            }}
+            blocked={busy}
+            onPick={setDimension}
           />
         </div>
         <div className='flex min-w-0 flex-wrap items-center gap-2'>

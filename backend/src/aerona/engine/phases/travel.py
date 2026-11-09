@@ -21,6 +21,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.chronicle import FeedCategory
 from aerona.domain.enums.civilization import TierCapability
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
@@ -38,6 +39,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.discovery import mark_world_discovered
 from aerona.engine.cosmos.fauna import stowaway
 from aerona.engine.cosmos.pilgrimage import has_holy_site, reach_holy_site
+from aerona.engine.cosmos.placement import cosmography_of
 from aerona.engine.cosmos.routes import (
     LIVE_JOURNEYS,
     JourneySpec,
@@ -590,6 +592,8 @@ async def advance_journey(ctx: TickContext, scene: JourneyScene, journey: Journe
         return
     result = await arrive(ctx, journey, traveller, route)
     await unload(ctx, journey, traveller)
+    if route.method is TravelMethod.VOID_ARK and result is not None and result.entity_type is EntityType.SETTLEMENT:
+        await ark_founding(ctx, journey, traveller, result)
     journey.status = JourneyStatus.ARRIVED
     journey.end_epoch = ctx.epoch
     journey.result_entity_id = result.id if result is not None else None
@@ -597,6 +601,21 @@ async def advance_journey(ctx: TickContext, scene: JourneyScene, journey: Journe
     if target is not None:
         await mark_world_discovered(ctx, target, f"{traveller.name}'s expedition arrived there")
     scene.arrivals.append(journey.id)
+
+
+async def ark_founding(ctx: TickContext, journey: JourneyRow, traveller: EntityRow, colony: EntityRow) -> None:
+    cosmography = await cosmography_of(ctx.session)
+    origin = cosmography.place_world_id(journey.origin_world_id)
+    source = origin.galaxy.name if origin.galaxy is not None else origin.dimension.name if origin.dimension is not None else "another sky"
+    epochs = ctx.epoch - journey.start_epoch + 1
+    await note(
+        ctx,
+        f"{colony.name} was founded by the void ark of {traveller.name}, which crossed from {source} in {epochs} epochs.",
+        key="travel.ark_founding",
+        ids=[colony.id, traveller.id],
+        world_id=colony.world_id,
+        feed=FeedCategory.VOYAGE,
+    )
 
 
 async def journeys(ctx: TickContext) -> list[int]:

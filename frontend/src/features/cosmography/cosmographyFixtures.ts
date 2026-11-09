@@ -63,6 +63,7 @@ export const VIEW: Cosmography = {
       image_prompt: null,
       created_epoch: 1,
       locked: [],
+      central_galaxy_id: 301,
     },
   ],
   galaxies: [

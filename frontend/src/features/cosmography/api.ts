@@ -27,12 +27,29 @@ export type JourneyRecord = Schema['JourneyRecord']
 
 export type ScaleWiki = Schema['ScaleWiki']
 export type HeldLawRecord = Schema['HeldLawRecord']
+export type HostedStratumRecord = Schema['HostedStratumRecord']
+export type SkyWorshipView = Schema['SkyWorshipView']
+export type SkyWorshipperRecord = Schema['SkyWorshipperRecord']
 
 export const cosmographyKeys = {
   view: [...queryKeys.world.all, 'cosmography'] as const,
   catalog: [...queryKeys.world.all, 'cosmography-catalog'] as const,
   wiki: (nodeId: number) =>
     [...queryKeys.world.all, 'cosmography-wiki', nodeId] as const,
+  worship: (nodeId: number) =>
+    [...queryKeys.world.all, 'cosmography-worship', nodeId] as const,
+}
+
+export function useSkyWorship(nodeId: number) {
+  return useQuery({
+    queryKey: cosmographyKeys.worship(nodeId),
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/cosmography/nodes/{node_id}/worship', {
+          params: { path: { node_id: nodeId } },
+        })
+      ),
+  })
 }
 
 export function useScaleWiki(nodeId: number) {
@@ -68,6 +85,7 @@ export type CosmographyAction =
   | 'dimension:delete'
   | 'dimension:bind_law'
   | 'dimension:release_law'
+  | 'heavens:worship'
   | 'cluster:create'
   | 'cluster:edit'
   | 'cluster:delete'

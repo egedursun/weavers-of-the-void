@@ -8,13 +8,14 @@ from aerona.engine.cosmos.climate import regional_climate
 from aerona.engine.cosmos.commerce import cosmic_trade
 from aerona.engine.cosmos.dimensions import dimension_cycles
 from aerona.engine.cosmos.galaxies import galaxy_cycles
-from aerona.engine.cosmos.influence import cosmic_influence
+from aerona.engine.cosmos.influence import cosmic_influence, signature_minerals
 from aerona.engine.cosmos.ladder import ensure_ladder, place_free_worlds, settle_star
 from aerona.engine.cosmos.omens import celestial_omens
 from aerona.engine.cosmos.phenomena import phenomena_cycles
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.rifts import rift_cycles
 from aerona.engine.cosmos.starlife import star_lives
+from aerona.engine.cosmos.strata import host_strata_once
 from aerona.engine.cosmos.worldlife import regional_leak, world_lives
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
@@ -22,11 +23,19 @@ from aerona.engine.phase import Phase
 
 @reads("table.applied_fixups", "table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.name_registry")
 @writes(
-    "table.applied_fixups", "table.dimensions", "table.galactic_structures", "table.galaxies", "table.galaxy_clusters", "table.name_registry", "table.stars"
+    "table.afterlife_strata",
+    "table.applied_fixups",
+    "table.dimensions",
+    "table.galactic_structures",
+    "table.galaxies",
+    "table.galaxy_clusters",
+    "table.name_registry",
+    "table.stars",
 )
 async def scale_ladder(ctx: TickContext) -> None:
     ctx.count("stars_placed", await ensure_ladder(ctx.session, ctx.rules))
     ctx.count("free_worlds_placed", await place_free_worlds(ctx.session))
+    ctx.count("strata_hosted", await host_strata_once(ctx.session))
     cosmography = await Cosmography.load(ctx.session)
     for star in await ctx.session.scalars(select(StarRow).order_by(StarRow.id)):
         if not held(star.id):
@@ -34,9 +43,11 @@ async def scale_ladder(ctx: TickContext) -> None:
     await ctx.session.flush()
 
 
-@reads("table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.modifiers", "table.rifts")
+@reads("table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.modifiers", "table.region_environment", "table.rifts")
+@writes("table.region_environment")
 async def influence(ctx: TickContext) -> None:
     ctx.count("cosmic_modifiers", await cosmic_influence(ctx))
+    ctx.count("signature_minerals", await signature_minerals(ctx))
 
 
 @reads("settlement.population", "table.community_stocks", "table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.routes")

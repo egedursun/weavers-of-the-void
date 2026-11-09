@@ -88,6 +88,7 @@ def stratum_view(row: AfterlifeStratumRow, souls: list[NodeRef], refs: Refs | No
         son_id=row.son_id,
         son_name=(sons or {}).get(row.son_id or 0),
         cult=ref(known, row.cult_entity_id),
+        dimension=ref(known, row.dimension_id),
     )
 
 
@@ -298,6 +299,7 @@ async def realm_of_dead(services: ServicesDep, entity_id: Id) -> RealmOfDeadView
                 *realms,
                 *(soul.spirit_entity_id for soul in souls),
                 *(row.cult_entity_id for row in strata if row.cult_entity_id),
+                *(row.dimension_id for row in strata if row.dimension_id),
             ],
         )
         return RealmOfDeadView(
@@ -363,6 +365,7 @@ async def soul_card(services: ServicesDep, entity_id: Id) -> SoulCard:
                     held.host_entity_id if held is not None else None,
                     reborn.newborn_entity_id if reborn is not None else None,
                     stratum.realm_entity_id if stratum is not None else None,
+                    stratum.dimension_id if stratum is not None else None,
                 )
                 if node
             ],

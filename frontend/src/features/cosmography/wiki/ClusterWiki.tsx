@@ -19,7 +19,7 @@ import {
   Section,
 } from '@/components/domain'
 import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
-import { Label, Stat } from '@/components/typography'
+import { Label, Muted, Stat } from '@/components/typography'
 import { CelestialDepthSection } from '@/features/celestial/CelestialDepthSection'
 import { ThingSections } from '@/features/entity/sections/ThingSections'
 import {
@@ -33,7 +33,7 @@ import {
 import { CreateGalaxyStudio } from '../create/CreateStudio'
 import { GALAXY_AGES, NUCLEI } from '../labels'
 import { type Ladder, nameTable } from '../ladder'
-import { Chip, Facts, Meter, RecordEditor } from '../parts'
+import { Chip, Facts, Meter, NodeLink, RecordEditor } from '../parts'
 import { GalaxyThumb } from '../visual/GalaxyThumb'
 import { ClusterThumb } from '../visual/ScaleThumbs'
 import { pageId, useScaleData } from './data'
@@ -242,6 +242,21 @@ export function ClusterView({ clusterId }: { clusterId: number }) {
             tone='info'
             label='Drift'
             value={`${cluster.expansion}%`}
+          />
+        </div>
+        <div className='flex min-w-0 flex-wrap items-center gap-2'>
+          <Muted as='span' variant='caption'>
+            Central galaxy, which draws the others into mergers:
+          </Muted>
+          <NodeLink
+            kind='galaxy'
+            id={cluster.central_galaxy_id}
+            name={
+              cluster.central_galaxy_id !== null &&
+              cluster.central_galaxy_id !== undefined
+                ? (ladder.names.get(cluster.central_galaxy_id) ?? null)
+                : 'None yet'
+            }
           />
         </div>
       </Section>

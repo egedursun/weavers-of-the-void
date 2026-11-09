@@ -7,6 +7,7 @@ from aerona.catalog.tenets import STRATUM_NAMES, STRATUM_PRIORITY
 from aerona.constants.units import PERCENT
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.cosmography import DimensionRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import AfterlifeStratumRow, CultDoctrineRow, SoulJudgementRow, SpiritProfileRow
@@ -21,6 +22,7 @@ from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.models.faith import StratumCriteria
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.strata import drawing_dimensions, host_for
 from aerona.engine.demography.rites import rite_of
 from aerona.engine.faith.book import faith_tenets, patron_node
 from aerona.engine.mind.book import traits_of, values_for
@@ -176,11 +178,14 @@ def new_stratum(rules: Rules, realm: EntityRow, kind: StratumKind) -> AfterlifeS
 async def strata_of(ctx: TickContext, realm: EntityRow, tenets: set[TenetKind]) -> list[AfterlifeStratumRow]:
     rows = list(await ctx.session.scalars(select(AfterlifeStratumRow).where(AfterlifeStratumRow.realm_entity_id == realm.id).order_by(AfterlifeStratumRow.id)))
     present = {row.kind for row in rows}
-    for kind in wanted_strata(tenets):
-        if kind not in present:
-            row = new_stratum(ctx.rules, realm, kind)
-            ctx.session.add(row)
-            rows.append(row)
+    missing = [kind for kind in wanted_strata(tenets) if kind not in present]
+    dimensions = list(await ctx.session.scalars(select(DimensionRow).order_by(DimensionRow.id))) if missing else []
+    for kind in missing:
+        row = new_stratum(ctx.rules, realm, kind)
+        host = host_for(dimensions, kind)
+        row.dimension_id = host.id if host is not None else None
+        ctx.session.add(row)
+        rows.append(row)
     await ctx.session.flush()
     return rows
 
@@ -331,7 +336,14 @@ async def judge(ctx: TickContext, spirit: EntityRow, mortal: EntityRow, realm: E
     favoured = son is not None and (mortal.creator_son_id == son.id or int(devotion or 0) >= ctx.rules.afterlife.favour_relation)
     score = score_of(ctx.rules.afterlife, profile.deeds, doctrine, rite=profile.rite, favoured=favoured, tenets=tenets)
     strata = await strata_of(ctx, realm, tenets) if realm is not None else []
-    stratum = route(strata, score=score, deeds=profile.deeds, god=son, rite=profile.rite, tenets=tenets, cults=await cults_of(ctx, son))
+    cults = await cults_of(ctx, son)
+    drawing = await drawing_dimensions(ctx.session) if strata else set()
+    drawn = [row for row in strata if row.dimension_id in drawing]
+    stratum = None
+    if drawn and ctx.rng(f"soul_draw.{spirit.id}").chance(ctx.rules.dimensions.soul_draw_chance):
+        stratum = route(drawn, score=score, deeds=profile.deeds, god=son, rite=profile.rite, tenets=tenets, cults=cults)
+    if stratum is None:
+        stratum = route(strata, score=score, deeds=profile.deeds, god=son, rite=profile.rite, tenets=tenets, cults=cults)
     await place(ctx, profile, stratum)
     kind = stratum.kind if stratum is not None else None
     if "alignment" not in profile.locked:

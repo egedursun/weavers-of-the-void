@@ -6,18 +6,27 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.celestial import WorldRow
-from aerona.db.tables.cosmography import DimensionalEventRow, DimensionRow, GalacticEventRow, PhenomenonProfileRow, RiftRow
+from aerona.db.tables.cosmography import CosmicBeingProfileRow, DimensionalEventRow, DimensionRow, GalacticEventRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, ApocalypseVariant, DimensionalEventKind, GalacticEventKind, PhenomenonKind
+from aerona.domain.enums.cosmography import (
+    OPEN_RIFT_STATES,
+    ApocalypseVariant,
+    BeingAgenda,
+    BeingPhase,
+    DimensionalEventKind,
+    GalacticEventKind,
+    PhenomenonKind,
+)
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.kinds import BEING_MECHANICS
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.gods.worship import cult_effect
 from aerona.engine.interconnect.annotations import reads, writes
@@ -107,7 +116,7 @@ VARIANT_ITEMS: dict[ApocalypseVariant, frozenset[DoomItem]] = {
     ApocalypseVariant.WORLD_WAR: frozenset({DoomItem.WARS}),
     ApocalypseVariant.TWILIGHT_OF_GODS: frozenset({DoomItem.GODLESS, DoomItem.REBEL_SONS}),
     ApocalypseVariant.OUTER_DESCENT: frozenset({DoomItem.CURSED, DoomItem.RESTLESS_SPIRITS, DoomItem.LEAK_WOUNDS, DoomItem.HOT_REGIONS}),
-    ApocalypseVariant.DIMENSIONAL_COLLAPSE: frozenset({DoomItem.OPEN_RIFTS, DoomItem.INCURSIONS, DoomItem.CONVERGENCES}),
+    ApocalypseVariant.DIMENSIONAL_COLLAPSE: frozenset({DoomItem.OPEN_RIFTS, DoomItem.INCURSIONS, DoomItem.CONVERGENCES, DoomItem.UNMAKERS}),
     ApocalypseVariant.GALACTIC_DEATH: frozenset({DoomItem.GAMMA_BURSTS, DoomItem.COLLAPSED_LIFE}),
 }
 
@@ -149,7 +158,13 @@ async def cosmic_items(ctx: TickContext) -> dict[DoomItem, float]:
     collapsed = int(
         await ctx.session.scalar(select(func.count()).select_from(WorldRow).where(WorldRow.biosphere_health < ctx.rules.world_life.biosphere_collapse)) or 0
     )
+    unmaking = 0
+    statement = select(CosmicBeingProfileRow).where(CosmicBeingProfileRow.phase.in_([BeingPhase.MANIFEST, BeingPhase.INCURSION]))
+    for being in await ctx.session.scalars(statement):
+        unmaking += BEING_MECHANICS[being.being_kind].doom(ctx.rules)
+        unmaking += ctx.rules.cosmic_beings.unmake_doom if being.agenda is BeingAgenda.UNMAKE else 0
     return {
+        DoomItem.UNMAKERS: unmaking,
         DoomItem.OPEN_RIFTS: rifts * doom.open_rift,
         DoomItem.INCURSIONS: incursions * doom.incursion,
         DoomItem.CONVERGENCES: converging * doom.convergence,

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.commodities import FOOD_KINDS
 from aerona.catalog.cosmography import SCOPE_LABELS
 from aerona.catalog.travel import METHOD_REACH, TRAVEL_METHODS, travel_method_profile
 from aerona.constants.cosmos import JOURNEY_EVENT_LIMIT, NUMBER_WORDS
@@ -25,7 +26,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
-from aerona.domain.enums.cosmography import RouteScope
+from aerona.domain.enums.cosmography import ClusterKind, RouteScope
 from aerona.domain.enums.ecology import BeastTemper, Habitat, SizeClass
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, SocialClass
@@ -43,7 +44,7 @@ from aerona.engine.cosmos.world_types import hidden_route_method, mechanics_of, 
 from aerona.engine.economy.materials import light_fabric, rig_of
 from aerona.engine.gods.economy import spend_cosmic_resource
 from aerona.engine.lifecycle.wounds import apply_hits
-from aerona.engine.primitives.knowledge import knows
+from aerona.engine.primitives.knowledge import branch_level, knows
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, stat, stat_or
@@ -302,6 +303,8 @@ async def open_route(session: AsyncSession, rules: Rules, rng: SeededRandom, epo
     scope = ladder.scope(first, second)
     if not within_reach(scope, METHOD_REACH[spec.method]):
         raise ValidationFailedError(f"{profile.label} cannot reach that far: the worlds lie {SCOPE_LABELS[scope].lower()}.")
+    if spec.method is TravelMethod.FILAMENT_LANE and not (on_filament(ladder, first) and on_filament(ladder, second)):
+        raise ValidationFailedError(f"{profile.label} runs only along a filament of galaxies, and both worlds must lie on one.")
     terrain = mechanics_of(first.world_type).route_danger(rules) + mechanics_of(second.world_type).route_danger(rules)
     terrain += scope_danger(rules, scope) + cosmic_route_danger(rules, ladder, first) + cosmic_route_danger(rules, ladder, second)
     bound_star_id = await _star_of(session, first) if spec.method is TravelMethod.LIGHT_SAIL else None
@@ -314,7 +317,9 @@ async def open_route(session: AsyncSession, rules: Rules, rng: SeededRandom, epo
         world_a_id=first.id,
         world_b_id=second.id,
         method=spec.method,
-        duration_epochs=scaled_duration(rules, profile.duration_epochs, scope),
+        duration_epochs=max(
+            1, scaled_duration(rules, profile.duration_epochs, scope) + cosmic_route_delay(rules, ladder, first) + cosmic_route_delay(rules, ladder, second)
+        ),
         danger=danger,
         known=spec.known,
         controller_entity_id=spec.controller_id,
@@ -357,6 +362,14 @@ def scope_danger(rules: Rules, scope: RouteScope) -> int:
 
 def scaled_duration(rules: Rules, base: int, scope: RouteScope) -> int:
     return max(1, round_half_up(base * scope_duration_pct(rules, scope) / PERCENT))
+
+
+def on_filament(ladder: Cosmography, world: WorldRow) -> bool:
+    return any(cluster.cluster_kind is ClusterKind.FILAMENT for cluster in ladder.cluster_chain(ladder.place_world(world).cluster))
+
+
+def cosmic_route_delay(rules: Rules, ladder: Cosmography, world: WorldRow) -> int:
+    return ladder.pull(rules, ladder.place_world(world)).delay
 
 
 def cosmic_route_danger(rules: Rules, ladder: Cosmography, world: WorldRow) -> int:
@@ -419,8 +432,13 @@ async def has_tamed_mount(session: AsyncSession, traveller_id: int) -> bool:
     return await session.scalar(statement.limit(1)) is not None
 
 
-async def _knowledge_problem(session: AsyncSession, traveller: EntityRow, route: RouteRow) -> str | None:
+async def _knowledge_problem(session: AsyncSession, rules: Rules, traveller: EntityRow, route: RouteRow) -> str | None:
     spec = TRAVEL_METHODS[route.method]
+    if route.method is TravelMethod.VOID_ARK and spec.required_branch is not None:
+        level = await branch_level(session, traveller.id, spec.required_branch)
+        if level < rules.cosmography.ark_sky_level:
+            return f"{spec.label} needs sky navigation of level {rules.cosmography.ark_sky_level}; they have reached level {level}."
+        return None
     if spec.required_branch is None or await knows(session, traveller.id, spec.required_branch):
         return None
     controller = route.controller_entity_id
@@ -453,7 +471,7 @@ async def can_use_route(session: AsyncSession, rules: Rules, epoch: int, travell
     if route.method not in TRAVEL_METHODS:
         return "Unknown travel method."
     for problem in (
-        await _knowledge_problem(session, traveller, route),
+        await _knowledge_problem(session, rules, traveller, route),
         await _vehicle_problem(session, traveller, route),
         await _passage_problem(session, rules, traveller, route),
     ):
@@ -571,9 +589,38 @@ async def start_journey(ctx: TickContext, spec: JourneySpec) -> JourneyRow:
     )
     session.add(journey)
     await load_voyage(ctx, journey, traveller)
+    await provision(ctx, journey, traveller)
     await session.flush()
     ctx.count("journeys_started")
     return journey
+
+
+async def provision(ctx: TickContext, journey: JourneyRow, traveller: EntityRow) -> None:
+    table = ctx.rules.journeys
+    if journey.population <= 0 or traveller.entity_type not in (EntityType.PEOPLE, EntityType.SETTLEMENT) or held(traveller.id):
+        return
+    reach = scope_duration_pct(ctx.rules, journey.scope or RouteScope.STELLAR)
+    need = round_half_up(journey.population / PERCENT * table.provision_per_100 * journey.epochs_left * reach / PERCENT)
+    stocks = await ctx.session.scalars(
+        select(CommunityStockRow)
+        .where(
+            CommunityStockRow.community_entity_id == traveller.id,
+            CommunityStockRow.held.is_(False),
+            CommunityStockRow.commodity.in_(list(FOOD_KINDS)),
+        )
+        .order_by(CommunityStockRow.quantity.desc(), CommunityStockRow.id)
+    )
+    left = need
+    for stock in stocks:
+        if left <= 0:
+            break
+        taken = min(left, stock.quantity)
+        stock.quantity -= taken
+        left -= taken
+    if left <= 0 or "passengers" in journey.locked:
+        return
+    journey.passengers = [line.model_copy(update={"condition": clamp_int(line.condition - table.short_condition, 0, PERCENT)}) for line in journey.passengers]
+    add_event(journey, ctx.epoch, JourneyEventKind.PROVISIONS, f"they set out short of {left} food for the way")
 
 
 async def load_voyage(ctx: TickContext, journey: JourneyRow, traveller: EntityRow) -> None:

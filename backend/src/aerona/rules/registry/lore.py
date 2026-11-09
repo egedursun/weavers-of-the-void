@@ -193,6 +193,9 @@ class RitesRules:
     undead_per_power: int = rule(40, 0, 10000, H, "Most risen dead a raising rite yields per point of its strength")
     army_chance: int = rule(30, 0, 100, H, "War mages work a battle rite against their army's target in an epoch (%)")
     dark_infamy: int = rule(10, 0, 100, H, "Standing a caster loses for working blood or void magic")
+    magic_strength_pct: int = rule(
+        50, 0, 300, H, "How much the magic density of a region above or below the middle strengthens or weakens rites worked there (%)"
+    )
     cap: int = rule(12, 0, 1000, H, "Most castings in an epoch")
 
 

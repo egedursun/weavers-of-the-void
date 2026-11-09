@@ -4,11 +4,12 @@ from sqlalchemy import select
 
 from aerona.catalog.cosmography import STAR_AGE_LABELS
 from aerona.constants.units import PERCENT
+from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import SkyEventRow, StarRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.cosmography import StarAge
+from aerona.domain.enums.cosmography import GalaxyAge, StarAge
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag
 from aerona.domain.enums.world import SkyEventKind, StarType
 from aerona.engine.context import TickContext
@@ -26,6 +27,7 @@ from aerona.rules.registry import Rules
 
 NEXT_STAGE: dict[StarAge, StarAge] = {StarAge.YOUNG: StarAge.MAIN, StarAge.MAIN: StarAge.OLD, StarAge.OLD: StarAge.DYING, StarAge.REBORN: StarAge.MAIN}
 SPENT_REMNANT = StarType.WHITE_DWARF
+BRIGHT_SKY = PERCENT * 4 // 5
 
 
 def heavy(rules: Rules, star: StarRow) -> bool:
@@ -90,14 +92,15 @@ async def pass_stage(ctx: TickContext, star: StarRow) -> None:
     await note(ctx, f"{star.name} entered its {STAR_AGE_LABELS[following].lower()} age.", key=f"star.stage.{following.value}", kind=ChronicleKind.SKY)
 
 
-async def age_star(ctx: TickContext, star: StarRow) -> None:
+async def age_star(ctx: TickContext, star: StarRow, pace_pct: int = PERCENT) -> None:
     table = ctx.rules.star_life
     if "age_stage" in star.locked or "lifecycle_clock" in star.locked:
         return
     if star.lifecycle_clock is None:
         star.lifecycle_clock = stage_epochs(ctx.rules, star, star.age_stage)
         return
-    star.lifecycle_clock = max(0, star.lifecycle_clock - 1)
+    hurried = 1 if pace_pct < PERCENT and ctx.rng(f"star_pace.{star.id}").chance(PERCENT - pace_pct) else 0
+    star.lifecycle_clock = max(0, star.lifecycle_clock - 1 - hurried)
     if star.lifecycle_clock == 0:
         await pass_stage(ctx, star)
     if "brightness" in star.locked:
@@ -145,8 +148,28 @@ async def worship(ctx: TickContext, cosmography: Cosmography, dimmed: dict[int, 
     return worshippers
 
 
+async def star_cults(ctx: TickContext, cosmography: Cosmography, dimmed: dict[int, int], flaring: set[int | None]) -> int:
+    table = ctx.rules.star_life
+    devoted = await flags_by_entity(ctx.session, EntityFlag.WORSHIPS_STAR)
+    rng = ctx.rng("star_cults")
+    risen = 0
+    for community in sorted(await canon(ctx.session, COMMUNITY_TYPES), key=lambda row: row.id):
+        if community.id in devoted or held(community.id):
+            continue
+        star = cosmography.place_world_id(community.world_id).star
+        if star is None:
+            continue
+        stirred = star.id in flaring or dimmed.get(star.id, 0) >= table.dimming_crisis or star.brightness >= BRIGHT_SKY
+        if not stirred or not rng.chance(table.cult_chance):
+            continue
+        await EntityRepository(ctx.session).add_flag(community.id, EntityFlag.WORSHIPS_STAR, ctx.epoch)
+        await note(ctx, f"{community.name} came to worship {star.name}.", key="star.cult_risen", ids=[community.id], kind=ChronicleKind.WORSHIP)
+        risen += 1
+    return risen
+
+
 @reads("table.cosmos", "table.dimensional_events", "table.entity_flags", "table.galactic_events", "table.galactic_structures", "table.sky_events")
-@writes("table.stars")
+@writes("table.entity_flags", "table.stars")
 async def star_lives(ctx: TickContext) -> None:
     table = ctx.rules.star_life
     cosmography = await Cosmography.load(ctx.session)
@@ -165,7 +188,9 @@ async def star_lives(ctx: TickContext) -> None:
         if held(star.id):
             continue
         before = star.brightness
-        await age_star(ctx, star)
+        galaxy = cosmography.galaxies.get(star.galaxy_id) if star.galaxy_id is not None else None
+        dying = galaxy is not None and galaxy.age_stage in (GalaxyAge.DYING, GalaxyAge.DEAD)
+        await age_star(ctx, star, table.dying_galaxy_life_pct if dying else PERCENT)
         dimmed[star.id] = max(0, before - star.brightness)
         if "stability" not in star.locked:
             target = stage_stability(ctx.rules, star.age_stage)
@@ -174,6 +199,7 @@ async def star_lives(ctx: TickContext) -> None:
             star.radiation = radiate(
                 ctx.rules, cosmography, star, outburst_radiation(events, star.galaxy_id, star.galactic_zone, ctx.epoch), star.id in flaring
             )
+    ctx.count("star_cults", await star_cults(ctx, cosmography, dimmed, flaring))
     worshippers = await worship(ctx, cosmography, dimmed)
     for star in cosmography.stars.values():
         if held(star.id):

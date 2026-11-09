@@ -25,7 +25,10 @@ from aerona.domain.enums.cosmography import (
     RiftCause,
     RiftState,
     RouteScope,
+    SkyObject,
 )
+from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.faith import StratumKind
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.world import Discovery
@@ -70,6 +73,7 @@ class ClusterRecord(ApiModel):
     image_prompt: str | None
     created_epoch: int
     locked: list[str]
+    central_galaxy_id: int | None = None
 
 
 class GalaxyRecord(ApiModel):
@@ -260,6 +264,14 @@ class HeldLawRecord(ApiModel):
     strength: int
 
 
+class HostedStratumRecord(ApiModel):
+    id: int
+    name: str
+    kind: StratumKind
+    population: int
+    realm: NodeRef | None
+
+
 class ScaleWiki(ApiModel):
     node_id: int
     kind: NodeKind
@@ -268,6 +280,7 @@ class ScaleWiki(ApiModel):
     images: list[ImageRecord]
     timeline: list[ChronicleLineRecord]
     laws: list[HeldLawRecord] = Field(default_factory=list)
+    strata: list[HostedStratumRecord] = Field(default_factory=list)
 
 
 class CosmographyCatalog(ApiModel):
@@ -305,3 +318,19 @@ class CosmographyView(ApiModel):
     stars: list[StarRecord]
     apocalypse_variant: ApocalypseVariant | None
     likely_variant: ApocalypseVariant
+
+
+class SkyWorshipperRecord(ApiModel):
+    id: int
+    name: str
+    entity_type: EntityType
+    world_id: int | None
+    piety: int | None
+
+
+class SkyWorshipView(ApiModel):
+    node_id: int
+    sky: SkyObject
+    name: str
+    worshippers: list[SkyWorshipperRecord]
+    candidates: list[SkyWorshipperRecord]

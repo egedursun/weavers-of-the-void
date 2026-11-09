@@ -291,6 +291,8 @@ AGENT_TYPES = frozenset(
 )
 COMMUNITY_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.FACTION, EntityType.CULT})
 SOCIETY_TYPES = frozenset({EntityType.PEOPLE, EntityType.SETTLEMENT})
-COMPANION_TYPES = frozenset({EntityType.MORTAL, EntityType.SPECIES, EntityType.ARMY, EntityType.SPIRIT, EntityType.FACTION, EntityType.CULT, EntityType.PEOPLE})
+COMPANION_TYPES = frozenset(
+    {EntityType.MORTAL, EntityType.SPECIES, EntityType.ARMY, EntityType.SPIRIT, EntityType.FACTION, EntityType.CULT, EntityType.PEOPLE, EntityType.COSMIC_BEING}
+)
 LIVING_CREATION_TYPES = frozenset({EntityType.PEOPLE, EntityType.MORTAL, EntityType.SETTLEMENT, EntityType.SPECIES, EntityType.CULT, EntityType.FACTION})
 LOCATION_TYPES = frozenset({EntityType.REGION, EntityType.PLACE, EntityType.SETTLEMENT})

@@ -4,6 +4,8 @@ from typing import Any
 from sqlalchemy import select
 
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.repositories.bonds import BondRepository
+from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmography import (
@@ -24,6 +26,7 @@ from aerona.db.tables.divine import NaturalLawProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.cosmography import (
     ApocalypseVariant,
     BeingKind,
@@ -38,9 +41,10 @@ from aerona.domain.enums.cosmography import (
     PhenomenonCause,
     PhenomenonKind,
     RiftCause,
+    SkyObject,
 )
 from aerona.domain.enums.divine import LawScope
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.records import CargoLine, PassengerLine
 from aerona.engine.context import TickContext
@@ -55,7 +59,7 @@ from aerona.engine.cosmos.rifts import open_rift, seal_rift
 from aerona.engine.divine.control import apply
 from aerona.engine.divine.laws import profile_for
 from aerona.engine.primitives.numbers import clamp_percent
-from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.queries import connect, living_entity
 
 Values = Mapping[str, Any]
 NAME = "name"
@@ -558,3 +562,32 @@ async def release_law(ctx: TickContext, law_id: int) -> NaturalLawProfileRow:
     profile.scope = LawScope.WORLD
     await ctx.session.flush()
     return profile
+
+
+async def set_sky_worship(ctx: TickContext, community_id: int, sky: SkyObject, worships: bool, dimension_id: int | None = None) -> str:
+    community = await ctx.session.get(EntityRow, community_id)
+    if community is None or community.entity_type not in COMMUNITY_TYPES or community.status is not EntityStatus.CANON:
+        raise NotFoundError("No such people or settlement.")
+    ladder = await Cosmography.load(ctx.session)
+    place = ladder.place_world_id(community.world_id)
+    if sky is SkyObject.DIMENSION:
+        dimension = await found(ctx, DimensionRow, dimension_id, "dimension") if dimension_id is not None else place.dimension
+        if dimension is None:
+            raise ValidationFailedError(f"{community.name} lies in no dimension.")
+        if worships:
+            await connect(ctx.session, community.id, dimension.id, BondKind.WORSHIPS, ctx.epoch, description="worships it")
+        else:
+            await BondRepository(ctx.session).close_between(community.id, dimension.id, [BondKind.WORSHIPS], ctx.epoch)
+        await ctx.session.flush()
+        return dimension.name
+    target = place.star if sky is SkyObject.STAR else place.galaxy
+    if target is None:
+        raise ValidationFailedError(f"No {sky.value} shines over {community.name}.")
+    flag = EntityFlag.WORSHIPS_STAR if sky is SkyObject.STAR else EntityFlag.WORSHIPS_GALAXY
+    entities = EntityRepository(ctx.session)
+    if worships:
+        await entities.add_flag(community.id, flag, ctx.epoch)
+    else:
+        await entities.remove_flag(community.id, flag)
+    await ctx.session.flush()
+    return target.name

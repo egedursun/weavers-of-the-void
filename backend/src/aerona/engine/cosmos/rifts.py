@@ -114,6 +114,38 @@ async def seal_rift(ctx: TickContext, rift_id: int, by: str) -> RiftRow:
     return rift
 
 
+async def tear_toward(
+    ctx: TickContext, world: WorldRow, region: EntityRow | None, cause: RiftCause, *, by_node_id: int | None = None, home_id: int | None = None
+) -> RiftRow | None:
+    if held(world.id, region.id if region is not None else None):
+        return None
+    cosmography = await Cosmography.load(ctx.session)
+    here = cosmography.place_world(world).dimension_id
+    others = sorted(
+        (row for row in cosmography.dimensions.values() if row.id != here and not held(row.id)), key=lambda row: (row.id != home_id, row.veil, row.id)
+    )
+    if not others:
+        return None
+    return await open_rift(ctx, world, region, others[0], cause, by_node_id=by_node_id)
+
+
+async def seal_near(ctx: TickContext, region_id: int | None, by: str) -> RiftRow | None:
+    if region_id is None:
+        return None
+    statement = (
+        select(RiftRow).where(RiftRow.region_entity_id == region_id, RiftRow.state.in_(list(OPEN_RIFT_STATES))).order_by(RiftRow.size.desc(), RiftRow.id)
+    )
+    for rift in await ctx.session.scalars(statement):
+        if held(rift.world_id, rift.region_entity_id, rift.dimension_id) or "state" in rift.locked:
+            continue
+        await seal_rift(ctx, rift.id, by)
+        dimension = await ctx.session.get(DimensionRow, rift.dimension_id)
+        if dimension is not None and "veil" not in dimension.locked:
+            dimension.veil = clamp_percent(dimension.veil + ctx.rules.rifts.ward_veil)
+        return rift
+    return None
+
+
 async def wards_near(ctx: TickContext, region_id: int | None) -> int:
     if region_id is None:
         return 0
@@ -183,7 +215,7 @@ async def leak_peaks(ctx: TickContext, cosmography: Cosmography) -> int:
         others = sorted((row for row in cosmography.dimensions.values() if row.id != home and not held(row.id)), key=lambda row: (row.veil, row.id))
         if not others:
             continue
-        await open_rift(ctx, world, region, others[0], RiftCause.LEAK_PEAK)
+        await open_rift(ctx, world, region, others[0], RiftCause.PHENOMENON if ground.entity_id in gated else RiftCause.LEAK_PEAK)
         torn += 1
     return torn
 

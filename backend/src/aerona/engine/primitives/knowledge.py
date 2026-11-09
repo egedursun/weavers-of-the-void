@@ -129,7 +129,8 @@ def reach_of(ladder: Cosmography, worlds: list[int], home: int, scope: LawScope)
         return worlds
     if scope is LawScope.DIMENSION:
         dimension = ladder.place_world_id(home).dimension_id
-        return [world for world in worlds if ladder.place_world_id(world).dimension_id == dimension]
+        partner = ladder.convergences.get(dimension) if dimension is not None else None
+        return [world for world in worlds if ladder.place_world_id(world).dimension_id in (dimension, partner)]
     return [home]
 
 
@@ -200,10 +201,11 @@ class LawBook:
                 laws[target].add(law)
                 strengths[(target, law)] = max(strengths.get((target, law), 0), strength)
         for target in worlds:
-            dimension = ladder.place_world_id(target).dimension
-            for law in DIMENSION_LAWS.get(dimension.dimension_kind, ()) if dimension is not None else ():
-                laws[target].add(law)
-                strengths[(target, law)] = max(strengths.get((target, law), 0), PERCENT)
+            place = ladder.place_world_id(target)
+            for dimension in (place.dimension, ladder.partner_of(place)):
+                for law in DIMENSION_LAWS.get(dimension.dimension_kind, ()) if dimension is not None else ():
+                    laws[target].add(law)
+                    strengths[(target, law)] = max(strengths.get((target, law), 0), PERCENT)
         return cls(laws, regions, strengths)
 
     def has(self, law: NaturalLaw, world_id: int) -> bool:

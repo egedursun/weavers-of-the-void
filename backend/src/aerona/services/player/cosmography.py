@@ -15,6 +15,7 @@ from aerona.domain.enums.cosmography import (
     PhenomenonCause,
     PhenomenonKind,
     RiftCause,
+    SkyObject,
 )
 from aerona.domain.models.records import CargoLine, PassengerLine
 from aerona.engine.cosmos import control
@@ -267,6 +268,19 @@ async def bind_dimension_law(scope: PlayerScope, command: DimensionLaw) -> Effec
 async def release_dimension_law(scope: PlayerScope, command: LawTarget) -> Effect:
     profile = await control.release_law(await scope.context("dimension_law"), command.law_id)
     return Effect("The law holds only on its own world again.", profile.law_entity_id)
+
+
+class SkyWorship(Command):
+    community_id: int
+    sky: SkyObject
+    worships: bool = True
+    dimension_id: int | None = None
+
+
+@player_action("heavens:worship", ActionKind.EDIT_RECORD)
+async def sky_worship(scope: PlayerScope, command: SkyWorship) -> Effect:
+    name = await control.set_sky_worship(await scope.context("sky_worship"), command.community_id, command.sky, command.worships, command.dimension_id)
+    return Effect(f"They now worship {name}." if command.worships else f"They no longer worship {name}.", command.community_id)
 
 
 @player_action("cluster:create", ActionKind.CREATE_ENTITY)

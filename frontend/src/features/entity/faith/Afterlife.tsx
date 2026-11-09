@@ -6,6 +6,7 @@ import {
   DoorClosed,
   Flame,
   Ghost,
+  Layers,
   Link2,
   Lock,
   RefreshCw,
@@ -675,6 +676,12 @@ function StratumRung({
               text={`Claimed by ${stratum.cult.name}`}
             />
           )}
+          {stratum.dimension && (
+            <Tag
+              spec={{ label: 'Dimension', icon: Layers, tone: 'verdigris' }}
+              text={`Lies in ${stratum.dimension.name}`}
+            />
+          )}
           {criteriaText(stratum.criteria).map((line) => (
             <Badge key={line} size='sm' variant='outline'>
               {line}
@@ -715,6 +722,7 @@ function StratumRung({
             stratum.son_id,
             stratum.cult?.id,
             stratum.closed,
+            stratum.dimension?.id,
           ])}
           realmId={realmId}
           stratum={stratum}
@@ -746,6 +754,7 @@ export function AfterlifeSection({
             kind: kind as Stratum['kind'],
             name: name || null,
             clear_links: false,
+            clear_dimension: false,
             remove: false,
           },
         })

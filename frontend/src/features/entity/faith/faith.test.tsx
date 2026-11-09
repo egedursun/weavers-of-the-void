@@ -6,6 +6,7 @@ import {
   resetApi,
 } from '@/test-utils/fakeApi'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { VIEW } from '@/features/cosmography/cosmographyFixtures'
 import { AfterlifeSection, SoulSection } from './Afterlife'
 import { DoctrineSection } from './Doctrine'
 
@@ -257,6 +258,35 @@ describe('faith sections', () => {
       realm_id: 50,
       stratum_id: 7,
       closed: true,
+    })
+  })
+
+  it('sets the dimension a stratum lies in', async () => {
+    serve()
+    onApi('GET', '/api/cosmography', VIEW)
+    onApi('GET', '/api/entities/50/afterlife', {
+      realm: REGION,
+      strata: [STRATUM],
+      realms: [REGION],
+      gods: [],
+    })
+    onApi('POST', '/api/actions/afterlife:stratum', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<AfterlifeSection regionId={50} />)
+    await screen.getByRole('button', { name: 'Shape the stratum' }).click()
+    await screen
+      .getByRole('combobox', { name: 'Lies in the dimension' })
+      .click()
+    await screen.getByRole('option', { name: 'Aerona Prime' }).click()
+    await screen.getByRole('button', { name: 'Set the rules' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/afterlife:stratum'))
+      .toHaveLength(1)
+    expect(
+      callsTo('POST', '/api/actions/afterlife:stratum')[0].body
+    ).toMatchObject({
+      stratum_id: 7,
+      dimension_id: 101,
+      clear_dimension: false,
     })
   })
 })

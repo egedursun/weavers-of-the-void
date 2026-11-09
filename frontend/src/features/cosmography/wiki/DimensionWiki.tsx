@@ -44,6 +44,8 @@ import { drawerKindOf } from '../visual/drawerKind'
 import { sigilOf } from '../visual/sigil'
 import { GalaxyCard } from './ClusterWiki'
 import { DimensionLaws } from './DimensionLaws'
+import { HostedStrata } from './HostedStrata'
+import { SkyWorship } from './SkyWorship'
 import { pageId, useScaleData } from './data'
 import {
   DangerZone,
@@ -547,6 +549,8 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
         laws={wiki?.laws ?? []}
         worldCount={worlds.length}
       />
+      <HostedStrata name={dimension.name} strata={wiki?.strata ?? []} />
+      <SkyWorship nodeId={dimension.id} />
       <Section title='Beings of this dimension' icon={Eye} tone='warning'>
         {beings.length === 0 ? (
           <EmptyState

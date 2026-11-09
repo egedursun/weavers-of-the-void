@@ -60,6 +60,7 @@ class JourneyEventKind(StrEnum):
     DERELICT = "derelict"
     TOLL = "toll"
     CROSSING = "crossing"
+    PROVISIONS = "provisions"
     OTHER = "other"
 
 

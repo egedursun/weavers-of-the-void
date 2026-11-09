@@ -7,6 +7,7 @@ from aerona.catalog.cosmography import GALACTIC_EVENT_LABELS, GALAXY_AGE_LABELS,
 from aerona.catalog.travel import travel_method_profile
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
+from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.celestial import StarRow
 from aerona.db.tables.cosmography import GalacticEventRow, GalacticStructureRow, GalaxyRow
@@ -41,6 +42,7 @@ BIRTH_TYPES: dict[GalaxyAge, tuple[tuple[StarType, int], ...]] = {
     GalaxyAge.DEAD: ((StarType.BROWN_DWARF, 1),),
 }
 SPLIT_TYPES = (GalaxyType.IRREGULAR, GalaxyType.DWARF_IRREGULAR)
+DISRUPTED_STRUCTURES = frozenset({GalacticStructureKind.SPIRAL_ARM, GalacticStructureKind.BAR})
 
 
 def unlocked(row: GalaxyRow | StarRow | GalacticStructureRow, field: str) -> bool:
@@ -297,6 +299,23 @@ async def sever(ctx: TickContext, cosmography: Cosmography, galaxy: GalaxyRow, s
     await open_event(ctx, galaxy, GalacticEventKind.SEVERING, PERCENT, other=shard)
 
 
+async def break_arms(ctx: TickContext, cosmography: Cosmography, galaxy: GalaxyRow, host: GalaxyRow) -> int:
+    rng = ctx.rng(f"merger_arms.{galaxy.id}")
+    broken = 0
+    for structure in sorted(cosmography.structures.values(), key=lambda row: row.id):
+        if structure.galaxy_id not in (galaxy.id, host.id) or structure.ended_epoch is not None or structure.kind not in DISRUPTED_STRUCTURES:
+            continue
+        if "ended_epoch" in structure.locked or not rng.chance(ctx.rules.galaxies.merger_arm_break):
+            continue
+        structure.ended_epoch = ctx.epoch
+        for star in cosmography.stars.values():
+            if star.structure_id == structure.id and unlocked(star, "structure_id") and not held(star.id):
+                star.structure_id = None
+        broken += 1
+        await note(ctx, f"{structure.name} broke apart as {galaxy.name} fell into {host.name}.", key="galaxy.arm_broken", kind=ChronicleKind.SKY)
+    return broken
+
+
 async def advance_mergers(ctx: TickContext, cosmography: Cosmography, galaxies: list[GalaxyRow]) -> None:
     for galaxy in galaxies:
         if galaxy.merging_with_galaxy_id is None or held(galaxy.id) or galaxy.merge_progress >= PERCENT:
@@ -304,6 +323,7 @@ async def advance_mergers(ctx: TickContext, cosmography: Cosmography, galaxies: 
         host = cosmography.galaxies.get(galaxy.merging_with_galaxy_id)
         if host is None or held(host.id):
             continue
+        ctx.count("arms_broken", await break_arms(ctx, cosmography, galaxy, host))
         if unlocked(galaxy, "merge_progress"):
             galaxy.merge_progress = clamp_percent(galaxy.merge_progress + ctx.rules.galaxies.merger_step)
         if galaxy.merge_progress >= PERCENT:
@@ -317,11 +337,16 @@ def may_merge(ctx: TickContext, cosmography: Cosmography, first: GalaxyRow, seco
     if first.merging_with_galaxy_id is not None or second.merging_with_galaxy_id is not None or PERCENT in (first.merge_progress, second.merge_progress):
         return False
     reach = (first.radius + second.radius) * table.merger_reach_pct / PERCENT
-    if math.hypot(first.x - second.x, first.y - second.y) > reach:
+    distance = math.hypot(first.x - second.x, first.y - second.y)
+    if distance > reach:
         return False
     cluster = cosmography.clusters[first.cluster_id]
     chance = table.merger_chance * CLUSTER_KIND_MECHANICS[cluster.cluster_kind].merger(ctx.rules) / PERCENT
-    return ctx.rng(f"galaxy_merge.{first.id}.{second.id}").chance(chance)
+    chance *= 2 * (1 - distance / reach) if reach > 0 else 1
+    central = cosmography.central_galaxy(cluster.id)
+    if central is not None and central.id in (first.id, second.id):
+        chance *= ctx.rules.clusters.central_pull_pct / PERCENT
+    return ctx.rng(f"galaxy_merge.{first.id}.{second.id}").chance(min(PERCENT, chance))
 
 
 async def mergers(ctx: TickContext, cosmography: Cosmography) -> int:
@@ -404,6 +429,25 @@ async def galaxy_worship(ctx: TickContext, cosmography: Cosmography) -> int:
     return lifted
 
 
+async def galaxy_cults(ctx: TickContext, cosmography: Cosmography) -> int:
+    stirred = set(await ctx.session.scalars(select(GalacticEventRow.galaxy_id).where(GalacticEventRow.epoch == ctx.epoch)))
+    if not stirred:
+        return 0
+    devoted = await flags_by_entity(ctx.session, EntityFlag.WORSHIPS_GALAXY)
+    rng = ctx.rng("galaxy_cults")
+    risen = 0
+    for community in sorted(await canon(ctx.session, COMMUNITY_TYPES), key=lambda row: row.id):
+        if community.id in devoted or held(community.id):
+            continue
+        galaxy = cosmography.place_world_id(community.world_id).galaxy
+        if galaxy is None or galaxy.id not in stirred or not rng.chance(ctx.rules.galaxies.cult_chance):
+            continue
+        await EntityRepository(ctx.session).add_flag(community.id, EntityFlag.WORSHIPS_GALAXY, ctx.epoch)
+        await note(ctx, f"{community.name} came to worship {galaxy.name}.", key="galaxy.cult_risen", ids=[community.id], kind=ChronicleKind.WORSHIP)
+        risen += 1
+    return risen
+
+
 async def cluster_drift(ctx: TickContext, cosmography: Cosmography) -> int:
     stretched = 0
     cap = ctx.rules.clusters.expansion_cap
@@ -442,7 +486,16 @@ async def cluster_worship(ctx: TickContext, cosmography: Cosmography, grown: set
 
 
 @reads("table.cosmos", "table.dimensional_events", "table.entity_flags", "table.galactic_structures", "table.routes")
-@writes("table.chronicle", "table.epoch_year_cursors", "table.galactic_events", "table.galactic_structures", "table.galaxies", "table.incidents", "table.stars")
+@writes(
+    "table.chronicle",
+    "table.entity_flags",
+    "table.epoch_year_cursors",
+    "table.galactic_events",
+    "table.galactic_structures",
+    "table.galaxies",
+    "table.incidents",
+    "table.stars",
+)
 async def galaxy_cycles(ctx: TickContext) -> None:
     cosmography = await Cosmography.load(ctx.session)
     grown: set[int] = set()
@@ -460,6 +513,7 @@ async def galaxy_cycles(ctx: TickContext) -> None:
         await chance_events(ctx, cosmography, galaxy)
     ctx.count("mergers_begun", await mergers(ctx, cosmography))
     ctx.count("patron_essence", await patrons(ctx, cosmography))
+    ctx.count("galaxy_cults", await galaxy_cults(ctx, cosmography))
     ctx.count("galaxy_worship", await galaxy_worship(ctx, cosmography))
     ctx.count("cluster_worship", await cluster_worship(ctx, cosmography, grown))
     ctx.count("routes_stretched", await cluster_drift(ctx, cosmography))

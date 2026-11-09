@@ -5887,6 +5887,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/cosmography/nodes/{node_id}/worship': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['sky_worship_api_cosmography_nodes__node_id__worship_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/cosmography': {
     parameters: {
       query?: never
@@ -20303,6 +20319,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/heavens:worship': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_heavens_worship_api_actions_heavens_worship_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/cluster:create': {
     parameters: {
       query?: never
@@ -21400,6 +21432,8 @@ export interface components {
       cult_id?: number | null
       closed?: boolean | null
       clear_links: boolean
+      dimension_id?: number | null
+      clear_dimension: boolean
       remove: boolean
     }
     AgeBand: 'child' | 'adult' | 'elder'
@@ -23732,6 +23766,7 @@ export interface components {
       image_prompt: string | null
       created_epoch: number
       locked: string[]
+      central_galaxy_id?: number | null
     }
     CoastKind: 'none' | 'cliff' | 'beach' | 'harbour_site' | 'reef'
     Cognate: {
@@ -28602,6 +28637,12 @@ export interface components {
       image_worker_configured: boolean
       running_jobs: number
     }
+    HeavensWorshipInput: {
+      community_id: number
+      sky: components['schemas']['SkyObject']
+      worships: boolean
+      dimension_id?: number | null
+    }
     HeightClass: 'short' | 'average' | 'tall' | 'giant'
     HeirloomView: {
       id: number
@@ -28822,6 +28863,13 @@ export interface components {
     }
     HorrorSuppressCultInput: {
       cult_id: number
+    }
+    HostedStratumRecord: {
+      id: number
+      name: string
+      kind: components['schemas']['StratumKind']
+      population: number
+      realm: components['schemas']['NodeRef'] | null
     }
     HouseEditInput: {
       house_id: number
@@ -29831,6 +29879,7 @@ export interface components {
       | 'derelict'
       | 'toll'
       | 'crossing'
+      | 'provisions'
       | 'other'
     JourneyIntent:
       'colony' | 'trade' | 'exploration' | 'conquest' | 'pilgrimage'
@@ -36157,6 +36206,7 @@ export interface components {
       images: components['schemas']['ImageRecord'][]
       timeline: components['schemas']['ChronicleLineRecord'][]
       laws?: components['schemas']['HeldLawRecord'][]
+      strata?: components['schemas']['HostedStratumRecord'][]
     }
     ScarKind:
       | 'battlefield'
@@ -36842,8 +36892,23 @@ export interface components {
       route_id: number | null
       text: string | null
     }
+    SkyObject: 'star' | 'galaxy' | 'dimension'
     SkyTimeEchoInput: {
       thread_id: number
+    }
+    SkyWorshipView: {
+      node_id: number
+      sky: components['schemas']['SkyObject']
+      name: string
+      worshippers: components['schemas']['SkyWorshipperRecord'][]
+      candidates: components['schemas']['SkyWorshipperRecord'][]
+    }
+    SkyWorshipperRecord: {
+      id: number
+      name: string
+      entity_type: components['schemas']['EntityType']
+      world_id: number | null
+      piety: number | null
     }
     SlotView: {
       slot: components['schemas']['EquipmentSlot']
@@ -38179,6 +38244,7 @@ export interface components {
       son_id: number | null
       son_name: string | null
       cult: components['schemas']['NodeRef'] | null
+      dimension?: components['schemas']['NodeRef'] | null
     }
     StreamHelloEvent: {
       id: number
@@ -52084,6 +52150,35 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ScaleWiki']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  sky_worship_api_cosmography_nodes__node_id__worship_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SkyWorshipView']
         }
       }
       422: {
@@ -79755,6 +79850,37 @@ export interface operations {
       }
     }
   }
+  action_heavens_worship_api_actions_heavens_worship_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['HeavensWorshipInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   action_cluster_create_api_actions_cluster_create_post: {
     parameters: {
       query?: never
@@ -83891,6 +84017,7 @@ export const journeyEventKindValues: ReadonlyArray<
   'derelict',
   'toll',
   'crossing',
+  'provisions',
   'other',
 ]
 export const journeyIntentValues: ReadonlyArray<
@@ -85750,6 +85877,9 @@ export const skyEventKindValues: ReadonlyArray<
   'void_storm',
   'flare',
 ]
+export const skyObjectValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SkyObject']
+> = ['star', 'galaxy', 'dimension']
 export const socialClassValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SocialClass']
 > = [

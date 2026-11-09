@@ -28,6 +28,7 @@ from aerona.domain.enums.cosmography import (
     WorldAge,
 )
 from aerona.domain.enums.environment import WeatherKind
+from aerona.domain.enums.faith import StratumKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import NaturalLaw
 
@@ -475,5 +476,17 @@ NUCLEUS_OF: MappingProxyType[GalaxyType, GalacticNucleus] = MappingProxyType(
         GalaxyType.DWARF_IRREGULAR: GalacticNucleus.NONE,
         GalaxyType.ULTRA_DIFFUSE: GalacticNucleus.NONE,
         GalaxyType.HOLLOW: GalacticNucleus.DEVOURED,
+    }
+)
+
+
+STRATUM_HOSTS: MappingProxyType[StratumKind, tuple[DimensionKind, ...]] = MappingProxyType(
+    {
+        StratumKind.PARADISE: (DimensionKind.CELESTIAL, DimensionKind.DIVINE_DOMAIN),
+        StratumKind.PLAIN: (DimensionKind.UNDERWORLD,),
+        StratumKind.TORMENT: (DimensionKind.INFERNAL, DimensionKind.ABYSSAL),
+        StratumKind.OBLIVION: (DimensionKind.LIMBO, DimensionKind.UNDERWORLD),
+        StratumKind.WARRIOR_HALL: (DimensionKind.CELESTIAL, DimensionKind.UNDERWORLD),
+        StratumKind.ANCESTOR_HALL: (DimensionKind.UNDERWORLD, DimensionKind.SPIRIT),
     }
 )

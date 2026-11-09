@@ -59,6 +59,10 @@ class GalaxyRules:
     patron_essence: int = rule(1, 0, 100, G, "Essence a galaxy's patron gains each epoch for each world in it that worships the patron")
     patron_formation: int = rule(10, 0, 100, G, "Star formation a galaxy's patron moves it up or down by domain")
     worship_piety: int = rule(2, 0, 50, G, "Piety a community that worships its galaxy gains in an epoch of high star formation")
+    merger_arm_break: int = rule(20, 0, 100, G, "Chance each arm or bar of two merging galaxies breaks apart in an epoch (%)")
+    arm_spread: int = rule(1, 0, 6, G, "Arms a new galaxy may have more or fewer than its type gives")
+    nucleus_shift_chance: int = rule(20, 0, 100, G, "Chance the nucleus of a new galaxy is one step quieter or brighter than its type gives (%)")
+    cult_chance: int = rule(3, 0, 100, G, "Chance a community whose galaxy stirs with an event comes to worship it in an epoch (%)")
 
 
 @dataclass(frozen=True)
@@ -67,6 +71,8 @@ class ClusterRules:
     medium_strip: int = rule(1, 0, 50, G, "Star formation a galaxy loses each epoch for each ten points of heat in its cluster")
     expansion_cap: int = rule(20, 1, 500, G, "Most epochs the drift of clusters can add to a route")
     worship_piety: int = rule(1, 0, 50, G, "Piety a community that worships its sky gains for each galaxy of its cluster that grows")
+    central_pull_pct: int = rule(200, 100, 1000, G, "How much more readily the central galaxy of a cluster draws a near galaxy into a merger (%)")
+    heat_danger_per: int = rule(20, 1, 100, G, "Heat of the medium between the galaxies of a cluster that adds one point of danger to routes there")
 
 
 @dataclass(frozen=True)
@@ -98,6 +104,9 @@ class DimensionRules:
     worship_piety: int = rule(2, 0, 50, D, "Piety a community that worships a dimension gains while it is steady")
     leak_world_per: int = rule(20, 1, 100, D, "Leak of a dimension or galaxy that gives each world in it one point of leak each epoch")
     hostility_danger_per: int = rule(5, 1, 100, D, "Hostility of a dimension that adds one point of danger to its worlds and routes")
+    soul_draw_chance: int = rule(50, 0, 100, D, "Chance a soul is drawn to the strata of a dimension ruled by a god of Death or Sleep (%)")
+    cult_chance: int = rule(5, 0, 100, D, "Chance a community on a world touched by a dimension comes to worship it in an epoch (%)")
+    visitor_sanity_pct: int = rule(100, 0, 300, D, "Share of a dimension's sanity drain those who journey into it lose on arrival (%)")
 
 
 @dataclass(frozen=True)
@@ -121,6 +130,8 @@ class RiftRules:
     peak_chance: int = rule(10, 0, 100, D, "Chance a region at its leak peak tears a rift in an epoch (%)")
     collapse_severity: int = rule(40, 0, 100, D, "Severity of the disaster a collapsing rift brings its region (%)")
     sealed_epochs: int = rule(3, 0, 100, D, "Epochs a sealed rift stays in the records before it is gone")
+    backlash_chance: int = rule(20, 0, 100, D, "Chance a rite whose backlash leaks tears a rift into another dimension (%)")
+    ward_veil: int = rule(5, 0, 100, D, "Veil a ward rite of enough power returns to the dimension of a rift it seals")
 
 
 @dataclass(frozen=True)
@@ -147,6 +158,16 @@ class CosmicBeingRules:
     banish_essence: int = rule(40, 0, 10000, P, "Essence a son spends to banish a cosmic being")
     banish_might: int = rule(10, 0, 100, P, "Might a banishment costs the being")
     rite_banish_power: int = rule(6, 1, 10, P, "Rite power that can banish a cosmic being")
+    rite_bind_power: int = rule(7, 1, 10, P, "Rite power that can bind a manifest cosmic being to the one who works it")
+    tear_chance: int = rule(10, 0, 100, P, "Chance a manifest dimension walker or rift spawn tears a rift toward its home in an epoch (%)")
+    befriend_chance: int = rule(5, 0, 100, P, "Chance an echo befriends the mortal it mirrors in an epoch (%)")
+    serve_pct: int = rule(5, 0, 100, P, "Share of its might a bound being gives its binder each epoch as essence or power (%)")
+    foreign_bind_chance: int = rule(5, 0, 100, P, "Chance a foreign god binds a manifest cosmic being on its world in an epoch (%)")
+    rule_chance: int = rule(10, 0, 100, P, "Chance a plane sovereign takes rule of its unruled home dimension in an epoch (%)")
+    army_answer_pct: int = rule(20, 0, 100, P, "Share of their soldiers the armies of a world lose answering an incursion (%)")
+    army_drive_size: int = rule(50, 1, 100000, P, "Soldiers for each point of might that drive an incursion back")
+    cult_share_pct: int = rule(5, 0, 100, P, "Share of a community that forms the cult of a cosmic being it comes to worship (%)")
+    unmake_stability: int = rule(2, 0, 100, P, "Stability an unmaking being takes from the dimension it is in each epoch")
 
 
 @dataclass(frozen=True)
@@ -190,6 +211,10 @@ class CosmographyRules:
     interdimensional_trade_cost_pct: int = rule(50, 0, 100, T, "Share of goods spent carrying them between dimensions (%)")
     intergalactic_news_epochs: int = rule(1, 0, 50, T, "Epochs news takes to cross between galaxies")
     intercluster_news_epochs: int = rule(2, 0, 50, T, "Epochs news takes to cross between clusters")
+    galactic_news_epochs: int = rule(0, 0, 50, T, "Epochs news takes to cross to a near galaxy of the same group")
+    interdimensional_news_epochs: int = rule(1, 0, 50, T, "Epochs news takes to cross between dimensions")
+    ark_sky_level: int = rule(8, 0, 10, T, "Level of sky navigation a void ark needs")
+    signature_depth: int = rule(40, 0, 100, T, "Depth at which the signature minerals of a galaxy, structure or dimension lie in the regions of its worlds")
     trade_share_pct: int = rule(20, 0, 100, T, "Share of a world's surplus of a good that goes along an open route each epoch (%)")
     trade_lines: int = rule(4, 0, 50, T, "Most goods one route carries in an epoch")
     traffic_wear: int = rule(50, 1, 100000, T, "Traffic that wears a route by one point")
@@ -232,6 +257,8 @@ class StarLifeRules:
     sacredness_per: int = rule(10, 0, 100, S, "Sacredness a star gains for each community that worships it")
     claim_essence: int = rule(40, 0, 10000, S, "Essence a son spends to become a star's patron")
     patron_essence: int = rule(1, 0, 100, S, "Essence a star's patron gains each epoch for each community that worships the star")
+    dying_galaxy_life_pct: int = rule(60, 1, 100, S, "Share of the usual length of each stage a star lives in a dying or dead galaxy (%)")
+    cult_chance: int = rule(2, 0, 100, S, "Chance a community whose star flares, darkens or burns bright comes to worship it in an epoch (%)")
     rekindle_dark_pct: int = rule(150, 0, 1000, S, "Cost of rekindling a dark star against an ordinary dead one (%)")
     rekindle_remnant_pct: int = rule(200, 0, 1000, S, "Cost of rekindling a black hole or remnant against an ordinary dead one (%)")
 
@@ -309,3 +336,5 @@ class JourneyRules:
     outer_touch_chance: int = rule(3, 0, 100, T, "Chance a journey through a leaking or dark place is touched from outside in an epoch (%)")
     outer_touch_sanity: int = rule(10, 0, 100, T, "Sanity an outside touch takes from the travellers")
     derelict_goods: int = rule(40, 0, 100000, T, "Goods a derelict yields")
+    provision_per_100: int = rule(2, 0, 100, T, "Food a journey takes for each hundred travellers for each epoch on the way, against its reach")
+    short_condition: int = rule(20, 0, 100, T, "Condition travellers lose when they set out short of food")

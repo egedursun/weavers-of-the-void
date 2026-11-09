@@ -21,6 +21,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.environment import ScarKind, SoilKind, TerrainKind
 from aerona.domain.enums.region import DangerHarm, DangerOrigin, DangerSource
 from aerona.engine.cosmos.kinds import PHENOMENON_MECHANICS
+from aerona.engine.cosmos.placement import cosmography_of
 from aerona.engine.ecology.ranges import wildness
 from aerona.engine.environment.memory import darkness
 from aerona.engine.primitives.distance import RegionAtlas
@@ -285,6 +286,13 @@ async def _cosmic(session: AsyncSession, rules: Rules, scene: DangerScene) -> No
         slot = scene.slot(rift.region_entity_id, DangerSource.PHENOMENA)
         if slot is not None:
             slot.add(rift.size * rules.rifts.danger_pct / PERCENT)
+    ladder = await cosmography_of(session)
+    for region_id, ground in sorted(scene.grounds.items()):
+        place = ladder.place_world_id(ground.world_id)
+        heavens = ladder.pull(rules, place).danger
+        slot = scene.slot(region_id, DangerSource.PHENOMENA) if heavens > 0 else None
+        if slot is not None:
+            slot.add(heavens, place.dimension_id)
 
 
 async def derive(session: AsyncSession, rules: Rules, scene: DangerScene, epoch: int) -> dict[int, dict[DangerSource, Derived]]:

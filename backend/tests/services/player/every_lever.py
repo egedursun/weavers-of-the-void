@@ -1546,6 +1546,7 @@ LEVERS: dict[str, Lever] = {
     "dimension:create": given(name="Shadow Deep", kind="shadow"),
     "dimension:bind_law": given(dimension_id=Computed(prime_dimension), law_id=Computed(natural_law)),
     "dimension:release_law": Lever(values={"law_id": Newest(EntityType.NATURAL_LAW)}, setup=bound_law),
+    "heavens:worship": given(community_id=Pick(EntityType.PEOPLE), sky="dimension", worships=True, dimension_id=Computed(prime_dimension)),
     **{
         name: setup_then(heavens, dimension_id=Where("dimensions", "id", {"dimension_kind": DimensionKind.ASTRAL}))
         for name in ("dimension:edit", "dimension:delete")

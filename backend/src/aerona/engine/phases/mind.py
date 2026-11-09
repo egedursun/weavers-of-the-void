@@ -15,7 +15,7 @@ from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.mind import CultureValueRow, GriefRow, MemoryRow, MindRow, PersonalityValueRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.db.tables.sons import SonRow
-from aerona.db.write_guard import unheld
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import GoodsFlow
@@ -1200,7 +1200,7 @@ async def famine_aid(ctx: TickContext) -> None:
     given = 0
     hungry = [
         community
-        for community in await canon(ctx.session, list(AID_TYPES))
+        for community in unheld(await canon(ctx.session, list(AID_TYPES)))
         if (await pressures_of(ctx.session, community.id)).get(PressureKind.HUNGER, 0) >= table.famine_aid_hunger
     ]
     for community in hungry:
@@ -1234,7 +1234,7 @@ async def best_donor(ctx: TickContext, atlas: RegionAtlas, community: EntityRow)
     for region_id in sorted(nearby):
         for other_id in atlas.communities_in(region_id):
             other = await living_entity(ctx.session, other_id)
-            if other is None or other.id == community.id or other.entity_type not in AID_TYPES:
+            if other is None or other.id == community.id or other.entity_type not in AID_TYPES or held(other.id):
                 continue
             if await BondRepository(ctx.session).exists_between(community.id, other.id, BondKind.ENEMY):
                 continue

@@ -50,6 +50,8 @@ class CosmicPull:
     danger: int = 0
     hostility: int = 0
     minerals: tuple[MaterialKind, ...] = ()
+    hidden: float = 0.0
+    delay: int = 0
 
 
 @dataclass
@@ -166,6 +168,10 @@ class Cosmography:
     def stars_in_galaxy(self, galaxy_id: int) -> list[StarRow]:
         return [star for star in self.stars.values() if star.galaxy_id == galaxy_id]
 
+    def central_galaxy(self, cluster_id: int | None) -> GalaxyRow | None:
+        members = [row for row in self.galaxies.values() if cluster_id is not None and row.cluster_id == cluster_id]
+        return max(members, key=lambda row: (len(self.stars_in_galaxy(row.id)), row.radius, -row.id), default=None)
+
     def scope(self, first: WorldRow, second: WorldRow) -> RouteScope:
         a, b = self.place_world(first), self.place_world(second)
         same_cluster = a.cluster is not None and b.cluster is not None and a.cluster.id == b.cluster.id
@@ -207,61 +213,103 @@ async def world_pull(session: AsyncSession, rules: Rules, world: WorldRow) -> Co
     return cosmography.pull(rules, cosmography.place_world(world))
 
 
+async def hidden_sky(session: AsyncSession, rules: Rules, world_id: int | None) -> float:
+    cosmography = await cosmography_of(session)
+    return min(1.0, cosmography.pull(rules, cosmography.place_world_id(world_id)).hidden)
+
+
 def within_reach(scope: RouteScope, reach: RouteScope) -> bool:
     return SCOPE_ORDER.index(scope) <= SCOPE_ORDER.index(reach)
 
 
-def pull_of(rules: Rules, placement: Placement, partner: DimensionRow | None = None) -> CosmicPull:
-    capacity = ore = density = NEUTRAL
-    magic = leak = sanity = danger = hostility = 0
-    time = NEUTRAL
-    minerals: list[MaterialKind] = []
-    galaxy = placement.galaxy
-    if galaxy is not None:
+@dataclass
+class PullTally:
+    capacity: float = NEUTRAL
+    ore: float = NEUTRAL
+    density: float = NEUTRAL
+    time: float = NEUTRAL
+    magic: int = 0
+    leak: int = 0
+    sanity: int = 0
+    danger: int = 0
+    hostility: int = 0
+    delay: int = 0
+    hidden: float = 0.0
+    minerals: list[MaterialKind] = field(default_factory=list)
+
+    def zone(self, rules: Rules, zone: GalacticZone, metallicity: float) -> None:
+        effect = ZONE_MECHANICS[zone]
+        self.capacity *= effect.capacity(rules) / PERCENT
+        self.density *= effect.density(rules) / PERCENT
+        self.ore *= effect.metallicity(rules) / PERCENT * metallicity
+        self.leak += effect.leak(rules)
+        self.danger += effect.danger(rules)
+        self.delay += effect.delay(rules)
+
+    def galaxy(self, rules: Rules, galaxy: GalaxyRow, zone: GalacticZone) -> None:
         kind = GALAXY_TYPE_MECHANICS[galaxy.galaxy_type]
-        capacity *= kind.capacity(rules) / PERCENT
-        density *= kind.density(rules) / PERCENT
-        leak += kind.leak(rules) + galaxy.leak // rules.dimensions.leak_world_per
-        sanity += kind.sanity(rules)
-        danger += kind.danger(rules)
-        zone = ZONE_MECHANICS[placement.zone]
-        capacity *= zone.capacity(rules) / PERCENT
-        density *= zone.density(rules) / PERCENT
-        ore *= zone.metallicity(rules) / PERCENT * (PERCENT / 2 + galaxy.metallicity) / PERCENT
-        leak += zone.leak(rules)
-        danger += zone.danger(rules)
-    else:
-        zone = ZONE_MECHANICS[GalacticZone.INTERGALACTIC]
-        capacity *= zone.capacity(rules) / PERCENT
-        density *= zone.density(rules) / PERCENT
-        ore *= zone.metallicity(rules) / PERCENT
-        leak += zone.leak(rules)
-        danger += zone.danger(rules)
-    if placement.cluster is not None:
-        cluster = CLUSTER_KIND_MECHANICS[placement.cluster.cluster_kind]
-        leak += cluster.leak(rules)
-    structure = placement.structure
-    if structure is not None and structure.ended_epoch is None:
+        self.capacity *= kind.capacity(rules) / PERCENT
+        self.density *= kind.density(rules) / PERCENT
+        self.leak += kind.leak(rules) + galaxy.leak // rules.dimensions.leak_world_per
+        self.sanity += kind.sanity(rules)
+        self.danger += kind.danger(rules)
+        self.zone(rules, zone, (PERCENT / 2 + galaxy.metallicity) / PERCENT)
+
+    def cluster(self, rules: Rules, cluster: ClusterRow) -> None:
+        kind = CLUSTER_KIND_MECHANICS[cluster.cluster_kind]
+        self.leak += kind.leak(rules)
+        self.danger += kind.danger(rules) + cluster.medium_heat // rules.clusters.heat_danger_per
+
+    def structure(self, rules: Rules, structure: GalacticStructureRow) -> None:
         effect = STRUCTURE_MECHANICS[structure.kind]
         share = structure.intensity / PERCENT
-        magic += round(effect.magic(rules) * share)
-        leak += round(effect.leak(rules) * share)
-        danger += round(effect.danger(rules) * share)
+        self.magic += round(effect.magic(rules) * share)
+        self.leak += round(effect.leak(rules) * share)
+        self.danger += round(effect.danger(rules) * share)
+        self.delay += effect.delay(rules)
+        self.hidden = effect.hide(rules) * share / PERCENT
         if structure.kind in STRUCTURE_MINERALS:
-            minerals.append(STRUCTURE_MINERALS[structure.kind])
-    dimension = placement.dimension
-    if dimension is not None:
+            self.minerals.append(STRUCTURE_MINERALS[structure.kind])
+
+    def dimension(self, rules: Rules, dimension: DimensionRow, partner: DimensionRow | None) -> None:
         nature = DIMENSION_KIND_MECHANICS[dimension.dimension_kind]
-        time = (dimension.time_factor + partner.time_factor) / 2 if partner is not None else dimension.time_factor
-        capacity *= nature.capacity(rules) / PERCENT
-        magic += dimension.magic
-        leak += dimension.leak // rules.dimensions.leak_world_per
-        sanity += dimension.sanity_drain
-        hostility = dimension.hostility
-        danger += dimension.hostility // rules.dimensions.hostility_danger_per
+        self.time = (dimension.time_factor + partner.time_factor) / 2 if partner is not None else dimension.time_factor
+        self.capacity *= nature.capacity(rules) / PERCENT
+        self.magic += dimension.magic
+        self.leak += dimension.leak // rules.dimensions.leak_world_per
+        self.sanity += dimension.sanity_drain
+        self.hostility = dimension.hostility
+        self.danger += dimension.hostility // rules.dimensions.hostility_danger_per
         if dimension.dimension_kind in DIMENSION_MINERALS:
-            minerals.append(DIMENSION_MINERALS[dimension.dimension_kind])
-    return CosmicPull(time, capacity, ore, density, magic, leak, sanity, danger, hostility, tuple(minerals))
+            self.minerals.append(DIMENSION_MINERALS[dimension.dimension_kind])
+
+
+def pull_of(rules: Rules, placement: Placement, partner: DimensionRow | None = None) -> CosmicPull:
+    tally = PullTally()
+    if placement.galaxy is not None:
+        tally.galaxy(rules, placement.galaxy, placement.zone)
+    else:
+        tally.zone(rules, GalacticZone.INTERGALACTIC, NEUTRAL)
+    if placement.cluster is not None:
+        tally.cluster(rules, placement.cluster)
+    if placement.structure is not None and placement.structure.ended_epoch is None:
+        tally.structure(rules, placement.structure)
+    if placement.dimension is not None:
+        tally.dimension(rules, placement.dimension, partner)
+    return CosmicPull(
+        tally.time,
+        tally.capacity,
+        tally.ore,
+        tally.density,
+        tally.magic,
+        tally.leak,
+        tally.sanity,
+        tally.danger,
+        tally.hostility,
+        tuple(tally.minerals),
+        tally.hidden,
+        tally.delay,
+    )
 
 
 def zone_at(rules: Rules, galaxy: GalaxyRow, x: float, y: float) -> GalacticZone:

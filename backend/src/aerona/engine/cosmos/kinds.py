@@ -777,6 +777,7 @@ class StructureMechanics:
     magic: RuleValue
     leak: RuleValue
     danger: RuleValue
+    delay: RuleValue
 
 
 STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics] = MappingProxyType(
@@ -789,6 +790,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.spiral_arm_magic,
             leak=lambda rules: rules.galactic_structures.spiral_arm_leak,
             danger=lambda rules: rules.galactic_structures.spiral_arm_danger,
+            delay=lambda rules: rules.galactic_structures.spiral_arm_delay,
         ),
         GalacticStructureKind.BAR: StructureMechanics(
             GalacticStructureKind.BAR,
@@ -798,6 +800,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.bar_magic,
             leak=lambda rules: rules.galactic_structures.bar_leak,
             danger=lambda rules: rules.galactic_structures.bar_danger,
+            delay=lambda rules: rules.galactic_structures.bar_delay,
         ),
         GalacticStructureKind.BULGE: StructureMechanics(
             GalacticStructureKind.BULGE,
@@ -807,6 +810,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.bulge_magic,
             leak=lambda rules: rules.galactic_structures.bulge_leak,
             danger=lambda rules: rules.galactic_structures.bulge_danger,
+            delay=lambda rules: rules.galactic_structures.bulge_delay,
         ),
         GalacticStructureKind.CORE: StructureMechanics(
             GalacticStructureKind.CORE,
@@ -816,6 +820,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.core_magic,
             leak=lambda rules: rules.galactic_structures.core_leak,
             danger=lambda rules: rules.galactic_structures.core_danger,
+            delay=lambda rules: rules.galactic_structures.core_delay,
         ),
         GalacticStructureKind.HALO: StructureMechanics(
             GalacticStructureKind.HALO,
@@ -825,6 +830,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.halo_magic,
             leak=lambda rules: rules.galactic_structures.halo_leak,
             danger=lambda rules: rules.galactic_structures.halo_danger,
+            delay=lambda rules: rules.galactic_structures.halo_delay,
         ),
         GalacticStructureKind.EMISSION_NEBULA: StructureMechanics(
             GalacticStructureKind.EMISSION_NEBULA,
@@ -834,6 +840,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.emission_nebula_magic,
             leak=lambda rules: rules.galactic_structures.emission_nebula_leak,
             danger=lambda rules: rules.galactic_structures.emission_nebula_danger,
+            delay=lambda rules: rules.galactic_structures.emission_nebula_delay,
         ),
         GalacticStructureKind.REFLECTION_NEBULA: StructureMechanics(
             GalacticStructureKind.REFLECTION_NEBULA,
@@ -843,6 +850,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.reflection_nebula_magic,
             leak=lambda rules: rules.galactic_structures.reflection_nebula_leak,
             danger=lambda rules: rules.galactic_structures.reflection_nebula_danger,
+            delay=lambda rules: rules.galactic_structures.reflection_nebula_delay,
         ),
         GalacticStructureKind.DARK_NEBULA: StructureMechanics(
             GalacticStructureKind.DARK_NEBULA,
@@ -852,6 +860,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.dark_nebula_magic,
             leak=lambda rules: rules.galactic_structures.dark_nebula_leak,
             danger=lambda rules: rules.galactic_structures.dark_nebula_danger,
+            delay=lambda rules: rules.galactic_structures.dark_nebula_delay,
         ),
         GalacticStructureKind.PLANETARY_NEBULA: StructureMechanics(
             GalacticStructureKind.PLANETARY_NEBULA,
@@ -861,6 +870,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.planetary_nebula_magic,
             leak=lambda rules: rules.galactic_structures.planetary_nebula_leak,
             danger=lambda rules: rules.galactic_structures.planetary_nebula_danger,
+            delay=lambda rules: rules.galactic_structures.planetary_nebula_delay,
         ),
         GalacticStructureKind.SUPERNOVA_REMNANT: StructureMechanics(
             GalacticStructureKind.SUPERNOVA_REMNANT,
@@ -870,6 +880,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.supernova_remnant_magic,
             leak=lambda rules: rules.galactic_structures.supernova_remnant_leak,
             danger=lambda rules: rules.galactic_structures.supernova_remnant_danger,
+            delay=lambda rules: rules.galactic_structures.supernova_remnant_delay,
         ),
         GalacticStructureKind.STELLAR_NURSERY: StructureMechanics(
             GalacticStructureKind.STELLAR_NURSERY,
@@ -879,6 +890,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.stellar_nursery_magic,
             leak=lambda rules: rules.galactic_structures.stellar_nursery_leak,
             danger=lambda rules: rules.galactic_structures.stellar_nursery_danger,
+            delay=lambda rules: rules.galactic_structures.stellar_nursery_delay,
         ),
         GalacticStructureKind.OPEN_CLUSTER: StructureMechanics(
             GalacticStructureKind.OPEN_CLUSTER,
@@ -888,6 +900,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.open_cluster_magic,
             leak=lambda rules: rules.galactic_structures.open_cluster_leak,
             danger=lambda rules: rules.galactic_structures.open_cluster_danger,
+            delay=lambda rules: rules.galactic_structures.open_cluster_delay,
         ),
         GalacticStructureKind.GLOBULAR_CLUSTER: StructureMechanics(
             GalacticStructureKind.GLOBULAR_CLUSTER,
@@ -897,6 +910,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.globular_cluster_magic,
             leak=lambda rules: rules.galactic_structures.globular_cluster_leak,
             danger=lambda rules: rules.galactic_structures.globular_cluster_danger,
+            delay=lambda rules: rules.galactic_structures.globular_cluster_delay,
         ),
         GalacticStructureKind.STELLAR_STREAM: StructureMechanics(
             GalacticStructureKind.STELLAR_STREAM,
@@ -906,6 +920,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.stellar_stream_magic,
             leak=lambda rules: rules.galactic_structures.stellar_stream_leak,
             danger=lambda rules: rules.galactic_structures.stellar_stream_danger,
+            delay=lambda rules: rules.galactic_structures.stellar_stream_delay,
         ),
         GalacticStructureKind.DUST_LANE: StructureMechanics(
             GalacticStructureKind.DUST_LANE,
@@ -915,6 +930,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.dust_lane_magic,
             leak=lambda rules: rules.galactic_structures.dust_lane_leak,
             danger=lambda rules: rules.galactic_structures.dust_lane_danger,
+            delay=lambda rules: rules.galactic_structures.dust_lane_delay,
         ),
         GalacticStructureKind.SUPERBUBBLE: StructureMechanics(
             GalacticStructureKind.SUPERBUBBLE,
@@ -924,6 +940,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.superbubble_magic,
             leak=lambda rules: rules.galactic_structures.superbubble_leak,
             danger=lambda rules: rules.galactic_structures.superbubble_danger,
+            delay=lambda rules: rules.galactic_structures.superbubble_delay,
         ),
         GalacticStructureKind.STAR_GRAVEYARD: StructureMechanics(
             GalacticStructureKind.STAR_GRAVEYARD,
@@ -933,6 +950,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.star_graveyard_magic,
             leak=lambda rules: rules.galactic_structures.star_graveyard_leak,
             danger=lambda rules: rules.galactic_structures.star_graveyard_danger,
+            delay=lambda rules: rules.galactic_structures.star_graveyard_delay,
         ),
         GalacticStructureKind.LEY_SPIRAL: StructureMechanics(
             GalacticStructureKind.LEY_SPIRAL,
@@ -942,6 +960,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.ley_spiral_magic,
             leak=lambda rules: rules.galactic_structures.ley_spiral_leak,
             danger=lambda rules: rules.galactic_structures.ley_spiral_danger,
+            delay=lambda rules: rules.galactic_structures.ley_spiral_delay,
         ),
         GalacticStructureKind.SEALED_VAULT: StructureMechanics(
             GalacticStructureKind.SEALED_VAULT,
@@ -951,6 +970,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.sealed_vault_magic,
             leak=lambda rules: rules.galactic_structures.sealed_vault_leak,
             danger=lambda rules: rules.galactic_structures.sealed_vault_danger,
+            delay=lambda rules: rules.galactic_structures.sealed_vault_delay,
         ),
         GalacticStructureKind.GODS_FORGE: StructureMechanics(
             GalacticStructureKind.GODS_FORGE,
@@ -960,6 +980,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.gods_forge_magic,
             leak=lambda rules: rules.galactic_structures.gods_forge_leak,
             danger=lambda rules: rules.galactic_structures.gods_forge_danger,
+            delay=lambda rules: rules.galactic_structures.gods_forge_delay,
         ),
         GalacticStructureKind.DEAD_LIGHT_DRIFT: StructureMechanics(
             GalacticStructureKind.DEAD_LIGHT_DRIFT,
@@ -969,6 +990,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.dead_light_drift_magic,
             leak=lambda rules: rules.galactic_structures.dead_light_drift_leak,
             danger=lambda rules: rules.galactic_structures.dead_light_drift_danger,
+            delay=lambda rules: rules.galactic_structures.dead_light_drift_delay,
         ),
         GalacticStructureKind.SINGING_NEBULA: StructureMechanics(
             GalacticStructureKind.SINGING_NEBULA,
@@ -978,6 +1000,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.singing_nebula_magic,
             leak=lambda rules: rules.galactic_structures.singing_nebula_leak,
             danger=lambda rules: rules.galactic_structures.singing_nebula_danger,
+            delay=lambda rules: rules.galactic_structures.singing_nebula_delay,
         ),
         GalacticStructureKind.RIFT_SCAR: StructureMechanics(
             GalacticStructureKind.RIFT_SCAR,
@@ -987,6 +1010,7 @@ STRUCTURE_MECHANICS: MappingProxyType[GalacticStructureKind, StructureMechanics]
             magic=lambda rules: rules.galactic_structures.rift_scar_magic,
             leak=lambda rules: rules.galactic_structures.rift_scar_leak,
             danger=lambda rules: rules.galactic_structures.rift_scar_danger,
+            delay=lambda rules: rules.galactic_structures.rift_scar_delay,
         ),
     }
 )
@@ -1001,6 +1025,7 @@ class ZoneMechanics:
     capacity: RuleValue
     leak: RuleValue
     danger: RuleValue
+    delay: RuleValue
 
 
 ZONE_MECHANICS: MappingProxyType[GalacticZone, ZoneMechanics] = MappingProxyType(
@@ -1013,6 +1038,7 @@ ZONE_MECHANICS: MappingProxyType[GalacticZone, ZoneMechanics] = MappingProxyType
             capacity=lambda rules: rules.galactic_zones.core_capacity,
             leak=lambda rules: rules.galactic_zones.core_leak,
             danger=lambda rules: rules.galactic_zones.core_danger,
+            delay=lambda rules: rules.galactic_zones.core_delay,
         ),
         GalacticZone.BULGE: ZoneMechanics(
             GalacticZone.BULGE,
@@ -1022,6 +1048,7 @@ ZONE_MECHANICS: MappingProxyType[GalacticZone, ZoneMechanics] = MappingProxyType
             capacity=lambda rules: rules.galactic_zones.bulge_capacity,
             leak=lambda rules: rules.galactic_zones.bulge_leak,
             danger=lambda rules: rules.galactic_zones.bulge_danger,
+            delay=lambda rules: rules.galactic_zones.bulge_delay,
         ),
         GalacticZone.BAR: ZoneMechanics(
             GalacticZone.BAR,
@@ -1031,6 +1058,7 @@ ZONE_MECHANICS: MappingProxyType[GalacticZone, ZoneMechanics] = MappingProxyType
             capacity=lambda rules: rules.galactic_zones.bar_capacity,
             leak=lambda rules: rules.galactic_zones.bar_leak,
             danger=lambda rules: rules.galactic_zones.bar_danger,
+            delay=lambda rules: rules.galactic_zones.bar_delay,
         ),
         GalacticZone.INNER_DISC: ZoneMechanics(
             GalacticZone.INNER_DISC,
@@ -1040,6 +1068,7 @@ ZONE_MECHANICS: MappingProxyType[GalacticZone, ZoneMechanics] = MappingProxyType
             capacity=lambda rules: rules.galactic_zones.inner_disc_capacity,
             leak=lambda rules: rules.galactic_zones.inner_disc_leak,
             danger=lambda rules: rules.galactic_zones.inner_disc_danger,
+            delay=lambda rules: rules.galactic_zones.inner_disc_delay,
         ),
         GalacticZone.ARM: ZoneMechanics(
             GalacticZone.ARM,
@@ -1049,6 +1078,7 @@ ZONE_MECHANICS: MappingProxyType[GalacticZone, ZoneMechanics] = MappingProxyType
             capacity=lambda rules: rules.galactic_zones.arm_capacity,
             leak=lambda rules: rules.galactic_zones.arm_leak,
             danger=lambda rules: rules.galactic_zones.arm_danger,
+            delay=lambda rules: rules.galactic_zones.arm_delay,
         ),
         GalacticZone.INTERARM: ZoneMechanics(
             GalacticZone.INTERARM,
@@ -1058,6 +1088,7 @@ ZONE_MECHANICS: MappingProxyType[GalacticZone, ZoneMechanics] = MappingProxyType
             capacity=lambda rules: rules.galactic_zones.interarm_capacity,
             leak=lambda rules: rules.galactic_zones.interarm_leak,
             danger=lambda rules: rules.galactic_zones.interarm_danger,
+            delay=lambda rules: rules.galactic_zones.interarm_delay,
         ),
         GalacticZone.OUTER_DISC: ZoneMechanics(
             GalacticZone.OUTER_DISC,
@@ -1067,6 +1098,7 @@ ZONE_MECHANICS: MappingProxyType[GalacticZone, ZoneMechanics] = MappingProxyType
             capacity=lambda rules: rules.galactic_zones.outer_disc_capacity,
             leak=lambda rules: rules.galactic_zones.outer_disc_leak,
             danger=lambda rules: rules.galactic_zones.outer_disc_danger,
+            delay=lambda rules: rules.galactic_zones.outer_disc_delay,
         ),
         GalacticZone.HALO: ZoneMechanics(
             GalacticZone.HALO,
@@ -1076,6 +1108,7 @@ ZONE_MECHANICS: MappingProxyType[GalacticZone, ZoneMechanics] = MappingProxyType
             capacity=lambda rules: rules.galactic_zones.halo_capacity,
             leak=lambda rules: rules.galactic_zones.halo_leak,
             danger=lambda rules: rules.galactic_zones.halo_danger,
+            delay=lambda rules: rules.galactic_zones.halo_delay,
         ),
         GalacticZone.RIM: ZoneMechanics(
             GalacticZone.RIM,
@@ -1085,6 +1118,7 @@ ZONE_MECHANICS: MappingProxyType[GalacticZone, ZoneMechanics] = MappingProxyType
             capacity=lambda rules: rules.galactic_zones.rim_capacity,
             leak=lambda rules: rules.galactic_zones.rim_leak,
             danger=lambda rules: rules.galactic_zones.rim_danger,
+            delay=lambda rules: rules.galactic_zones.rim_delay,
         ),
         GalacticZone.INTERGALACTIC: ZoneMechanics(
             GalacticZone.INTERGALACTIC,
@@ -1094,6 +1128,7 @@ ZONE_MECHANICS: MappingProxyType[GalacticZone, ZoneMechanics] = MappingProxyType
             capacity=lambda rules: rules.galactic_zones.intergalactic_capacity,
             leak=lambda rules: rules.galactic_zones.intergalactic_leak,
             danger=lambda rules: rules.galactic_zones.intergalactic_danger,
+            delay=lambda rules: rules.galactic_zones.intergalactic_delay,
         ),
     }
 )

@@ -27,7 +27,7 @@ from aerona.db.tables.warfare import BattleRow, WarSideRow
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import DamageType, HarmCause, InjuryState
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind
+from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind, RiftCause
 from aerona.domain.enums.culture import (
     BacklashKind,
     CalendarSlot,
@@ -57,9 +57,10 @@ from aerona.domain.models.entity_stats import RiteStats, SpiritStats
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
-from aerona.engine.cosmos.beings import banish_near
+from aerona.engine.cosmos.beings import banish_near, bind_near
 from aerona.engine.cosmos.omens import celestial_rite_pct
 from aerona.engine.cosmos.phenomena import form_phenomenon
+from aerona.engine.cosmos.rifts import seal_near, tear_toward
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.divine.decrees import outlawed_schools
 from aerona.engine.divine.laws import binds
@@ -570,12 +571,18 @@ async def do_ward(ctx: TickContext, work: Working) -> str | None:
     if defense is not None:
         set_stats(home, defense=clamp_int(defense + ctx.rules.intervention_effects.protection_defense_gain, 0, PERCENT))
     await add_flag(ctx.session, home.id, EntityFlag.PROTECTED, ctx.epoch)
-    if work.row.power >= ctx.rules.cosmic_beings.rite_banish_power:
-        atlas = await RegionAtlas.load(ctx.session)
-        driven = await banish_near(ctx, atlas.top_region(work.caster.id), work.caster.name)
-        if driven is not None:
-            return f"warded {home.name} and drove {driven} back to its dimension"
-    return f"warded {home.name}"
+    if work.row.power < ctx.rules.cosmic_beings.rite_banish_power:
+        return f"warded {home.name}"
+    atlas = await RegionAtlas.load(ctx.session)
+    region = atlas.top_region(work.caster.id)
+    done = [f"warded {home.name}"]
+    driven = await banish_near(ctx, region, work.caster.name)
+    if driven is not None:
+        done.append(f"drove {driven} back to its dimension")
+    sealed = await seal_near(ctx, region, work.caster.name)
+    if sealed is not None:
+        done.append("sealed the rift there")
+    return " and ".join(done)
 
 
 async def do_scry(ctx: TickContext, work: Working) -> str | None:
@@ -586,6 +593,11 @@ async def do_scry(ctx: TickContext, work: Working) -> str | None:
 
 
 async def do_bind(ctx: TickContext, work: Working) -> str | None:
+    if work.row.power >= ctx.rules.cosmic_beings.rite_bind_power:
+        region = (await RegionAtlas.load(ctx.session)).top_region(work.caster.id)
+        bound = await bind_near(ctx, region, work.caster.id, work.caster.name)
+        if bound is not None:
+            return f"bound {bound} to serve"
     spirit = await wandering_near(ctx, work.caster.location_id or 0)
     if spirit is None:
         return None
@@ -839,6 +851,9 @@ async def backlash(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> 
             and ctx.rng(f"backlash_wound.{caster.id}").chance(ctx.rules.phenomena.backlash_chance)
         ):
             await form_phenomenon(ctx, PhenomenonKind.LEAK_WOUND, region, PhenomenonCause.RITE_BACKLASH)
+        if world is not None and ctx.rng(f"backlash_rift.{caster.id}.{ctx.epoch}").chance(ctx.rules.rifts.backlash_chance):
+            torn = region if region is not None and region.entity_type is EntityType.REGION else None
+            await tear_toward(ctx, world, torn, RiftCause.RITE_BACKLASH, by_node_id=caster.id)
     elif kind is BacklashKind.ESCAPE:
         bound = await ctx.session.scalar(select(SpiritProfileRow).where(SpiritProfileRow.bound_entity_id == caster.id).limit(1))
         if bound is not None:
@@ -881,6 +896,15 @@ async def dampening(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) ->
 SCHOOL_ACTS = {MagicSchool.BLOOD: ActKind.BLOOD_MAGIC, MagicSchool.VOID: ActKind.VOID_MAGIC, MagicSchool.DEATH: ActKind.NECROMANCY}
 
 
+async def magic_factor(ctx: TickContext, caster: EntityRow) -> float:
+    atlas = await RegionAtlas.load(ctx.session)
+    region = await ctx.session.get(EntityRow, atlas.top_region(caster.id) or 0)
+    magic = stat(region, "magic") if region is not None else None
+    if magic is None:
+        return 1.0
+    return max(0.0, 1 + (magic - PERCENT // 2) / PERCENT * ctx.rules.rites.magic_strength_pct / PERCENT)
+
+
 async def cast(
     ctx: TickContext,
     caster: EntityRow,
@@ -909,6 +933,7 @@ async def cast(
     steadiness, strength = gift_factors(ctx.rules, await ctx.session.get(GenomeRow, caster.id), row.school)
     strength *= await name_power(ctx, caster.id, target)
     strength *= await ctx.hook_factor(caster.id, DomainHook.BLOOD_RITE)
+    strength *= await magic_factor(ctx, caster)
     await practise_subject(ctx.session, ctx.rules, caster.id, SkillKind.SPELLCRAFT, subject_id=rite.id, xp=ctx.rules.skills.spellcraft_xp, epoch=ctx.epoch)
     understood = await theory_factor(ctx.session, ctx.rules, caster.location_id or caster.id, TheoryDomain.MAGIC)
     if rng.chance(row.backlash_chance * steadiness * (1 - mastery / PERCENT * ctx.rules.skills.school_backlash_pct / PERCENT) / understood):

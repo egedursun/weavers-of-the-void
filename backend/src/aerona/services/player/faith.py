@@ -144,6 +144,8 @@ class SetStratum(Command):
     cult_id: int | None = None
     closed: bool | None = None
     clear_links: bool = False
+    dimension_id: int | None = None
+    clear_dimension: bool = False
     remove: bool = False
 
 
@@ -306,5 +308,7 @@ async def set_stratum(scope: PlayerScope, command: SetStratum) -> Effect:
         cult_id=command.cult_id,
         closed=command.closed,
         clear_links=command.clear_links,
+        dimension_id=command.dimension_id,
+        clear_dimension=command.clear_dimension,
     )
     return Effect(f"{row.name} is set." if row is not None else "The stratum is unmade.", command.realm_id)

@@ -6,6 +6,7 @@ from sqlalchemy import delete, select
 from aerona.catalog.tenets import DOMAIN_TENETS, OPPOSED, VALUE_TENETS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
+from aerona.db.tables.cosmography import DimensionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import (
     AfterlifeStratumRow,
@@ -646,6 +647,8 @@ async def set_stratum(
     cult_id: int | None = None,
     closed: bool | None = None,
     clear_links: bool = False,
+    dimension_id: int | None = None,
+    clear_dimension: bool = False,
 ) -> AfterlifeStratumRow | None:
     realm = await living_entity(ctx.session, realm_id)
     if realm is None:
@@ -669,6 +672,12 @@ async def set_stratum(
     if closed is not None:
         row.closed = closed
     await link_stratum(ctx, row, son_id=son_id, cult_id=cult_id, clear=clear_links)
+    if clear_dimension:
+        row.dimension_id = None
+    if dimension_id is not None:
+        if await ctx.session.get(DimensionRow, dimension_id) is None:
+            raise ValidationFailedError("No such dimension to hold the stratum.")
+        row.dimension_id = dimension_id
     await ctx.session.flush()
     return row
 

@@ -24,6 +24,7 @@ import {
 import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
 import { Label, Muted, PageTitle, Stat, Text } from '@/components/typography'
 import { StarLifeSection } from '@/features/cosmography/HeavenlyLife'
+import { SkyWorship } from '@/features/cosmography/wiki/SkyWorship'
 import { StarDisc } from '@/features/cosmos/Glyphs'
 import {
   DEAD_STAR_TYPES,
@@ -186,6 +187,7 @@ export function StarWikiView({ starId }: { starId: number }) {
         depth={data.depth ?? null}
       />
       <OrbitingWorlds wiki={data} />
+      <SkyWorship nodeId={data.star.id} />
       {data.sky_events.length > 0 && (
         <Section title='Signs in the sky'>
           <PagedList

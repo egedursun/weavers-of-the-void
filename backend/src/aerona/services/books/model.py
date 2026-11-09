@@ -35,6 +35,7 @@ from aerona.db.tables.cosmography import ClusterRow, CosmicBeingProfileRow, Dime
 from aerona.db.tables.cosmos import CosmosRow, CreatorRow
 from aerona.db.tables.entities import EntityRow, EntityTagRow
 from aerona.db.tables.epochs import EpochRow, EpochStatsRow, EpochWorldNarrativeRow
+from aerona.db.tables.faith import AfterlifeStratumRow
 from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow
 from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
 from aerona.db.tables.lore import CanonFactRow, ChronicleEntityRow, ChronicleRow, CouncilRow, FolkBeliefRow, HistorianViewRow, LexemeRow, MessageRow, ThreadRow
@@ -45,7 +46,7 @@ from aerona.db.tables.sons import SonPowerRow, SonRelationRow, SonRow
 from aerona.db.tables.warfare import BattleRow, SiegeRow, WarRow, WarSideRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, ThreadStatus
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.son import Passion, SonStatus, Stat
 from aerona.domain.enums.war import WarSide, WarStatus
 from aerona.domain.models.profiles import EntityDepth
@@ -54,6 +55,7 @@ from aerona.engine.cosmos.kinds import CLUSTER_KIND_MECHANICS, DIMENSION_KIND_ME
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.military.records import battle_field
 from aerona.engine.primitives.knowledge import laws_of_dimension
+from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.rules.registry import Rules
 from aerona.services.books.command import add_command_areas
 from aerona.services.books.heavensvg import cluster_figure, dimension_figure, galaxy_figure
@@ -527,6 +529,23 @@ class BookBuilder:
             typed=self.typed.of(son.id),
         )
 
+    async def sky_worship(self) -> dict[int, list[str]]:
+        ladder = await Cosmography.load(self.session)
+        stars, galaxies = await flags_by_entity(self.session, EntityFlag.WORSHIPS_STAR), await flags_by_entity(self.session, EntityFlag.WORSHIPS_GALAXY)
+        found: dict[int, list[str]] = {}
+        for community in sorted(await canon(self.session, COMMUNITY_TYPES), key=lambda row: row.id):
+            place = ladder.place_world_id(community.world_id)
+            if community.id in stars and place.star is not None:
+                found.setdefault(place.star.id, []).append(community.name)
+            if community.id in galaxies and place.galaxy is not None:
+                found.setdefault(place.galaxy.id, []).append(community.name)
+        statement = select(BondRow.source_node_id, BondRow.target_node_id).where(
+            BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE, BondRow.target_node_id.in_(list(ladder.dimensions))
+        )
+        for source, target in await self.session.execute(statement.order_by(BondRow.id)):
+            found.setdefault(target, []).append(self.names.get(source, "?"))
+        return found
+
     async def world_tree(self, epoch: int) -> list[StarSection]:
         worlds = list(await self.session.scalars(select(WorldRow).order_by(WorldRow.id)))
         children: dict[int | None, list[WorldRow]] = defaultdict(list)
@@ -546,6 +565,7 @@ class BookBuilder:
             return nested
 
         sections: list[StarSection] = []
+        worship = await self.sky_worship()
         for star in await self.session.scalars(select(StarRow).order_by(StarRow.id)):
             articles: list[WorldArticle] = []
             for root in children.get(None, []):
@@ -565,6 +585,7 @@ class BookBuilder:
             for label, node_id in (("Galaxy", star.galaxy_id), ("Patron", star.patron_son_id)):
                 if node_id is not None:
                     facts.append(Labelled(label, self.names.get(node_id) or self.son_names.get(node_id, "?")))
+            facts.append(Labelled("Worshipped by", ", ".join(worship.get(star.id, [])) or "no people"))
             sections.append(
                 StarSection(
                     star,
@@ -609,6 +630,10 @@ class BookBuilder:
     async def scale_ladder(self) -> list[ScaleArticle]:
         ladder = await Cosmography.load(self.session)
         found: list[ScaleArticle] = []
+        worship = await self.sky_worship()
+        strata = list(
+            await self.session.scalars(select(AfterlifeStratumRow).where(AfterlifeStratumRow.dimension_id.is_not(None)).order_by(AfterlifeStratumRow.id))
+        )
 
         def galaxy_facts(galaxy: GalaxyRow) -> list[Labelled]:
             return [
@@ -630,6 +655,7 @@ class BookBuilder:
                 Labelled("Place", f"{galaxy.x:g}, {galaxy.y:g}"),
                 Labelled("Known", DISCOVERY_LABELS[galaxy.discovery]),
                 Labelled("Since", f"epoch {galaxy.created_epoch}"),
+                Labelled("Worshipped by", ", ".join(worship.get(galaxy.id, [])) or "no people"),
                 Labelled("Held by the god", ", ".join(galaxy.locked) or "nothing"),
             ]
 
@@ -659,6 +685,7 @@ class BookBuilder:
                 Labelled("Place", f"{cluster.x:g}, {cluster.y:g}"),
                 Labelled("Known", DISCOVERY_LABELS[cluster.discovery]),
                 Labelled("Since", f"epoch {cluster.created_epoch}"),
+                Labelled("Central galaxy", central.name if (central := ladder.central_galaxy(cluster.id)) is not None else "none yet"),
                 Labelled("Held by the god", ", ".join(cluster.locked) or "nothing"),
             ]
             article = await self.scale_article("cluster", cluster, level, facts)
@@ -690,6 +717,11 @@ class BookBuilder:
                 Labelled("Lies within", self.names.get(dimension.parent_dimension_id or 0, "nothing")),
                 Labelled("Known", DISCOVERY_LABELS[dimension.discovery]),
                 Labelled("Since", f"epoch {dimension.created_epoch}"),
+                Labelled("Worshipped by", ", ".join(worship.get(dimension.id, [])) or "no people"),
+                Labelled(
+                    "Afterlife strata here",
+                    ", ".join(f"{row.name} ({row.population} souls)" for row in strata if row.dimension_id == dimension.id) or "none",
+                ),
                 Labelled("Held by the god", ", ".join(dimension.locked) or "nothing"),
             ]
             article = await self.scale_article("dimension", dimension, 0, facts)

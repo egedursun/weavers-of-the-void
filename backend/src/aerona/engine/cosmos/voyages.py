@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.cosmography import SCOPE_LABELS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.economy import CommunityStockRow
@@ -13,6 +14,7 @@ from aerona.domain.enums.travel import JourneyEventKind
 from aerona.domain.models.records import CargoLine
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.commerce import market_of
+from aerona.engine.cosmos.placement import cosmography_of
 from aerona.engine.cosmos.routes import add_event
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.disease.book import DiseaseBook
@@ -22,6 +24,7 @@ from aerona.engine.primitives.numbers import clamp_percent
 from aerona.rules.registry import Rules
 
 DARK_SCOPES = frozenset({RouteScope.INTERGALACTIC, RouteScope.INTERCLUSTER, RouteScope.INTERDIMENSIONAL})
+FAR_SCOPES = frozenset({RouteScope.GALACTIC, *DARK_SCOPES})
 OUTER_LEAK = PERCENT // 2
 
 
@@ -60,15 +63,26 @@ async def voyage_epoch(ctx: TickContext, journey: JourneyRow, traveller: EntityR
         add_event(journey, ctx.epoch, JourneyEventKind.TOLL, "they paid the toll of the route")
 
 
+async def crossing_text(ctx: TickContext, journey: JourneyRow) -> str:
+    cosmography = await cosmography_of(ctx.session)
+    origin, destination = cosmography.place_world_id(journey.origin_world_id), cosmography.place_world_id(journey.destination_world_id)
+    scope = SCOPE_LABELS[journey.scope].lower() if journey.scope is not None else "far"
+    if journey.scope is RouteScope.INTERDIMENSIONAL and origin.dimension is not None and destination.dimension is not None:
+        return f"they crossed from {origin.dimension.name} into {destination.dimension.name} ({scope})"
+    if origin.galaxy is not None and destination.galaxy is not None and origin.galaxy.id != destination.galaxy.id:
+        return f"they crossed from {origin.galaxy.name} to {destination.galaxy.name} ({scope})"
+    return f"they made a crossing {scope}"
+
+
 async def unload(ctx: TickContext, journey: JourneyRow, traveller: EntityRow) -> None:
     table = ctx.rules.journeys
-    if journey.scope in DARK_SCOPES:
-        add_event(
-            journey,
-            ctx.epoch,
-            JourneyEventKind.CROSSING,
-            f"they crossed {journey.scope.value.replace('_', ' ')} space" if journey.scope is not None else "they crossed",
-        )
+    if journey.scope in FAR_SCOPES:
+        add_event(journey, ctx.epoch, JourneyEventKind.CROSSING, await crossing_text(ctx, journey))
+    if journey.scope is RouteScope.INTERDIMENSIONAL and not held(traveller.id):
+        cosmography = await cosmography_of(ctx.session)
+        dimension = cosmography.place_world_id(journey.destination_world_id).dimension
+        if dimension is not None and dimension.sanity_drain:
+            shift_sanity(ctx.rules, traveller, -dimension.sanity_drain * ctx.rules.dimensions.visitor_sanity_pct / PERCENT)
     market = await market_of(ctx, journey.destination_world_id, {})
     if market is not None and journey.cargo and not held(market.id):
         for line in journey.cargo:

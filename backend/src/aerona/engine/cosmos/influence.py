@@ -5,6 +5,7 @@ from sqlalchemy import delete, select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.cosmography import PhenomenonFootprintRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.interconnect import ModifierRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES
@@ -67,6 +68,22 @@ async def wanted(ctx: TickContext, cosmography: Cosmography) -> dict[Want, float
             if magic:
                 found[Want(rift.region_entity_id, MAGIC_KEY, ModifierOp.ADD, ModifierSource.RIFT, rift.dimension_id, f"{PREFIX}rift.{rift.id}")] = float(magic)
     return found
+
+
+async def signature_minerals(ctx: TickContext) -> int:
+    cosmography = await Cosmography.load(ctx.session)
+    depth = ctx.rules.cosmography.signature_depth
+    laid = 0
+    for ground in await ctx.session.scalars(select(RegionEnvironmentRow).order_by(RegionEnvironmentRow.entity_id)):
+        if held(ground.entity_id, ground.world_id) or "mineral_layers" in ground.locked:
+            continue
+        minerals = cosmography.pull(ctx.rules, cosmography.place_world_id(ground.world_id)).minerals
+        missing = [mineral.value for mineral in minerals if mineral.value not in (ground.mineral_layers or {})]
+        if missing:
+            ground.mineral_layers = {**(ground.mineral_layers or {}), **dict.fromkeys(missing, depth)}
+            laid += len(missing)
+    await ctx.session.flush()
+    return laid
 
 
 async def cosmic_influence(ctx: TickContext) -> int:
