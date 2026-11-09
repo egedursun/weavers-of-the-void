@@ -9,10 +9,15 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { DoubleSide, NeutralToneMapping, Vector3 } from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { unitHash } from '@/lib/hash'
+import { plural } from '@/lib/units'
 import { METHOD_LOOK } from '@/features/cosmos/model/looks'
 import { PostEffects3D } from '@/features/cosmos/scene3d/PostEffects3D'
 import { shaderMaterial, uniform } from '@/features/cosmos/scene3d/materials'
-import { type CosmographyCatalog, type RouteRecord } from '../api'
+import {
+  type CosmographyCatalog,
+  type GalaxyRecord,
+  type RouteRecord,
+} from '../api'
 import { type Ladder } from '../ladder'
 import { CoreGlow, GalaxyParticles } from './GalaxyScene3D'
 import { type SceneLabel, LabelLayer, LabelProjector } from './SceneLabels'
@@ -166,6 +171,23 @@ function ClusterCloud({
       >
         <planeGeometry args={[placed.size * 2.2, placed.size * 2.2]} />
       </mesh>
+      <Line
+        points={Array.from({ length: 97 }, (_, index) => {
+          const angle = (index / 96) * Math.PI * 2
+          return [
+            Math.cos(angle) * placed.size,
+            0,
+            Math.sin(angle) * placed.size,
+          ] as Vec3
+        })}
+        color={tokenHex(selected ? '--cosmos-copper' : '--galaxy-halo')}
+        lineWidth={selected ? 2 : 1.2}
+        dashed
+        dashSize={placed.size * 0.06}
+        gapSize={placed.size * 0.04}
+        transparent
+        opacity={selected ? 0.95 : 0.6}
+      />
     </group>
   )
 }
@@ -384,6 +406,32 @@ function Focus({ target }: { target: Vec3 | null }) {
   return null
 }
 
+const WORLDS_NAMED = 3
+
+function galaxyDetail(
+  ladder: Ladder,
+  catalog: CosmographyCatalog,
+  galaxy: GalaxyRecord
+): string {
+  const kind =
+    catalog.galaxy_types.find((row) => row.value === galaxy.galaxy_type)
+      ?.label ?? galaxy.galaxy_type
+  const worlds = ladder.data.placements
+    .filter((row) => row.galaxy_id === galaxy.id)
+    .map((row) => ladder.data.world_names[String(row.world_id)])
+    .filter((name): name is string => name !== undefined)
+  const stars = ladder.data.stars.filter(
+    (row) => row.galaxy_id === galaxy.id
+  ).length
+  const held =
+    worlds.length === 0
+      ? 'no world'
+      : worlds.length <= WORLDS_NAMED
+        ? worlds.join(', ')
+        : plural(worlds.length, 'world')
+  return `${kind} · ${held} · ${plural(stars, 'star')}`
+}
+
 function universeLabels(
   ladder: Ladder,
   catalog: CosmographyCatalog,
@@ -414,11 +462,12 @@ function universeLabels(
     labels.push({
       key: `cluster-${cluster.id}`,
       position: [
-        placed.position[0],
+        placed.position[0] - placed.size * 0.71,
         placed.position[1],
-        placed.position[2] + placed.size * 0.95,
+        placed.position[2] + placed.size * 0.71,
       ],
       text: cluster.name,
+      detail: `${catalog.cluster_kinds.find((row) => row.value === cluster.cluster_kind)?.label ?? cluster.cluster_kind} · ${plural(ladder.galaxiesIn(cluster.id).length, 'galaxy', 'galaxies')}`,
       strong: chosen('cluster', cluster.id),
     })
   }
@@ -433,9 +482,7 @@ function universeLabels(
         placed.position[2],
       ],
       text: galaxy.name,
-      detail:
-        catalog.galaxy_types.find((row) => row.value === galaxy.galaxy_type)
-          ?.label ?? galaxy.galaxy_type,
+      detail: galaxyDetail(ladder, catalog, galaxy),
       strong: chosen('galaxy', galaxy.id),
     })
   }

@@ -42,6 +42,7 @@ const TARGET = 1300
 const MIN_PLANE = 760
 const MIN_GALAXY = 70
 const MIN_CLUSTER = 160
+const CLUSTER_MARGIN = 1.35
 const PLANE_MARGIN = 1.18
 const MIN_TILT = 0.15
 const TILT_RANGE = 0.75
@@ -100,24 +101,41 @@ export function universeLayout(
       cluster: ClusterRecord,
       origin: Vec3,
       depth: number
-    ) => {
+    ): PlacedCluster => {
       const position: Vec3 = [
         origin[0] + cluster.x * scale,
         y + depth * 30,
         origin[2] + cluster.y * scale,
       ]
-      clusters.set(cluster.id, {
+      const held = [
+        ...ladder
+          .galaxiesIn(cluster.id)
+          .map((galaxy) => placeGalaxy(galaxy, position)),
+        ...ladder
+          .childClusters(cluster.id)
+          .map((child) => placeCluster(child, position, depth + 1)),
+      ]
+      const reach = held.reduce(
+        (best, inner) =>
+          Math.max(
+            best,
+            Math.hypot(
+              inner.position[0] - position[0],
+              inner.position[2] - position[2]
+            ) + inner.size
+          ),
+        0
+      )
+      const placed = {
         id: cluster.id,
         position,
-        size: Math.max(cluster.radius * scale, MIN_CLUSTER),
-      })
-      for (const galaxy of ladder.galaxiesIn(cluster.id))
-        placeGalaxy(galaxy, position)
-      for (const child of ladder.childClusters(cluster.id))
-        placeCluster(child, position, depth + 1)
+        size: Math.max(reach * CLUSTER_MARGIN, MIN_CLUSTER),
+      }
+      clusters.set(cluster.id, placed)
+      return placed
     }
-    const placeGalaxy = (galaxy: GalaxyRecord, origin: Vec3) => {
-      galaxies.set(galaxy.id, {
+    const placeGalaxy = (galaxy: GalaxyRecord, origin: Vec3): PlacedGalaxy => {
+      const placed: PlacedGalaxy = {
         id: galaxy.id,
         position: [
           origin[0] + galaxy.x * scale,
@@ -127,14 +145,26 @@ export function universeLayout(
         size: Math.max(galaxy.radius * scale, MIN_GALAXY),
         tilt: MIN_TILT + unitHash(`galaxy-tilt-${galaxy.id}`) * TILT_RANGE,
         turn: unitHash(`galaxy-turn-${galaxy.id}`) * Math.PI * 2,
-      })
+      }
+      galaxies.set(galaxy.id, placed)
+      return placed
     }
     for (const cluster of tops) placeCluster(cluster, [0, y, 0], 0)
     for (const galaxy of loose) placeGalaxy(galaxy, [0, y, 0])
-    const radius = Math.max(
-      rawExtent(tops, loose) * scale * PLANE_MARGIN,
-      MIN_PLANE
+    const reach = [
+      ...tops.map((cluster) => clusters.get(cluster.id)),
+      ...loose.map((galaxy) => galaxies.get(galaxy.id)),
+    ].reduce(
+      (best, placed) =>
+        placed
+          ? Math.max(
+              best,
+              Math.hypot(placed.position[0], placed.position[2]) + placed.size
+            )
+          : best,
+      0
     )
+    const radius = Math.max(reach * PLANE_MARGIN, MIN_PLANE)
     extent = Math.max(extent, radius)
     dimensions.set(dimensionId, { id: dimensionId, y, radius, index })
   })
