@@ -16,7 +16,7 @@ from aerona.domain.enums.gathering import (
 )
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 
-GATHERING_FIELDS = ("kind", "status", "outcome", "cost", "prestige", "epoch", "year", "season", "place_entity_id", "milestone", "note")
+GATHERING_FIELDS = ("kind", "status", "outcome", "cost", "food", "prestige", "epoch", "year", "season", "place_entity_id", "milestone", "note")
 COLLECTION_FIELDS = ("name", "kind", "start_epoch", "end_epoch", "parent_id", "note")
 
 
@@ -72,6 +72,7 @@ class GatheringRow(Base):
         at_least("year", 0),
         at_least("season", 0),
         at_least("cost", 0),
+        at_least("food", 0),
         between("prestige", PERCENT_MIN, PERCENT_MAX),
         Index("ix_gatherings_host", "host_node_id", "epoch"),
         Index("ix_gatherings_place", "place_entity_id"),
@@ -92,6 +93,7 @@ class GatheringRow(Base):
     year: Mapped[int | None]
     season: Mapped[int | None]
     cost: Mapped[int] = mapped_column(default=0)
+    food: Mapped[int] = mapped_column(default=0)
     prestige: Mapped[int] = mapped_column(default=0)
     by_player: Mapped[bool] = mapped_column(default=False)
     note: Mapped[str | None] = mapped_column(Text)

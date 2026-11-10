@@ -1,11 +1,14 @@
 from dataclasses import dataclass
 
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.gatherings import EXCAVATION_PLACES, STAGE_ORDER, STAGE_SKILLS, STAGE_TECHNIQUES
+from aerona.catalog.gatherings import EXCAVATION_FLAGS, EXCAVATION_PLACES, STAGE_ORDER, STAGE_SKILLS, STAGE_TECHNIQUES
 from aerona.constants.units import PERCENT
+from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.culture import HolderTechniqueRow
-from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.entities import EntityFlagRow, EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.faith import SpiritProfileRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.routes import RouteRow
@@ -17,8 +20,10 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.culture import ItemClass, ItemDeed, Technique
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.faith import BindingKind, SpiritAlignment
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole
+from aerona.domain.enums.military import VesselStatus
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.site import BattlefieldFeature, ExcavationFind, ExcavationRisk, ExcavationStage, ExcavationStatus
@@ -28,10 +33,12 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.features import add_stock
 from aerona.engine.cosmos.routes import reveal_hidden_route
+from aerona.engine.environment.book import add_scar
 from aerona.engine.history.collections import open_collection
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore import items
 from aerona.engine.lore.research_depth import add_progress
+from aerona.engine.military.engineering import earthworks_of
 from aerona.engine.mind.book import skill_level
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
@@ -63,6 +70,7 @@ class DigTally:
     graves: int = 0
     haunted: int = 0
     gleaned: int = 0
+    fortified: int = 0
 
 
 async def scholar_near(ctx: TickContext, atlas: RegionAtlas, site: EntityRow) -> EntityRow | None:
@@ -126,15 +134,43 @@ async def open_digs(ctx: TickContext, world_id: int | None) -> int:
     return int(await ctx.session.scalar(statement) or 0)
 
 
+async def wrecked(session: AsyncSession, site_id: int) -> bool:
+    vessel = await session.get(VesselProfileRow, site_id)
+    return vessel is not None and vessel.status is VesselStatus.WRECKED
+
+
+async def diggable(session: AsyncSession, site: EntityRow) -> bool:
+    place = await session.get(PlaceProfileRow, site.id)
+    if place is not None and place.kind in EXCAVATION_PLACES:
+        return True
+    flagged = await session.scalar(
+        select(EntityFlagRow.entity_id).where(EntityFlagRow.entity_id == site.id, EntityFlagRow.flag.in_(list(EXCAVATION_FLAGS))).limit(1)
+    )
+    return flagged is not None or await wrecked(session, site.id)
+
+
+async def dig_sites(session: AsyncSession) -> list[EntityRow]:
+    places = select(PlaceProfileRow.entity_id).where(PlaceProfileRow.kind.in_(list(EXCAVATION_PLACES)))
+    flagged = select(EntityFlagRow.entity_id).where(EntityFlagRow.flag.in_(list(EXCAVATION_FLAGS)))
+    wrecks = select(VesselProfileRow.entity_id).where(VesselProfileRow.status == VesselStatus.WRECKED)
+    return list(
+        await session.scalars(
+            select(EntityRow)
+            .where(
+                or_(
+                    and_(EntityRow.id.in_(places), EntityRow.status == EntityStatus.CANON),
+                    and_(EntityRow.id.in_(flagged), EntityRow.world_id.is_not(None)),
+                    EntityRow.id.in_(wrecks),
+                )
+            )
+            .order_by(EntityRow.id)
+        )
+    )
+
+
 async def start_digs(ctx: TickContext, atlas: RegionAtlas, tally: DigTally) -> None:
     table = ctx.rules.excavations
-    rows = await ctx.session.execute(
-        select(EntityRow, PlaceProfileRow.kind)
-        .join(PlaceProfileRow, PlaceProfileRow.entity_id == EntityRow.id)
-        .where(PlaceProfileRow.kind.in_(list(EXCAVATION_PLACES)), EntityRow.status == EntityStatus.CANON)
-        .order_by(EntityRow.id)
-    )
-    for site, _ in rows:
+    for site in await dig_sites(ctx.session):
         if held(site.id) or await ctx.session.scalar(select(ExcavationRow.id).where(ExcavationRow.site_entity_id == site.id).limit(1)) is not None:
             continue
         if await open_digs(ctx, site.world_id) >= table.open_max or not ctx.rng(f"dig.start.{site.id}.{ctx.epoch}").chance(table.start_pct):
@@ -304,7 +340,12 @@ async def mark_battlefields(ctx: TickContext, tally: DigTally) -> None:
         if place_id is None or held(place_id) or dead < table.battlefield_dead:
             continue
         strength = clamp_int(dead * PERCENT / max(1, table.battlefield_dead * 10), 1, PERCENT)
+        place = await ctx.session.get(EntityRow, place_id)
+        region = await ctx.session.get(RegionEnvironmentRow, place.location_id) if place is not None and place.location_id is not None else None
+        fortified = battle.siege_id is not None or earthworks_of(region) > 0
         for feature in BattlefieldFeature:
+            if feature is BattlefieldFeature.EARTHWORKS and not fortified:
+                continue
             ctx.session.add(
                 BattlefieldFeatureRow(place_entity_id=place_id, feature=feature, strength=strength, battle_id=battle.id, epoch=ctx.epoch, locked=[])
             )
@@ -336,6 +377,11 @@ async def tend_battlefields(ctx: TickContext, tally: DigTally) -> None:
             spirit = await raise_spirit(ctx, place, origin="risen from the mass grave")
             tally.haunted += 1
             await note(ctx, f"{spirit.name} rose from the mass grave of {place.name}.", key="battlefield.haunted", ids=[spirit.id, place.id])
+        if row.feature is BattlefieldFeature.EARTHWORKS and place.location_id is not None:
+            region = await ctx.session.get(RegionEnvironmentRow, place.location_id)
+            if region is not None and not held(place.location_id):
+                gap = row.strength - earthworks_of(region)
+                tally.fortified += add_scar(region, ScarKind.EARTHWORKS, gap) if gap > 0 else 0
         if row.feature is BattlefieldFeature.SALVAGE_FIELD:
             gleaner = await gleaner_of(ctx, place)
             if gleaner is not None and not held(gleaner.id):

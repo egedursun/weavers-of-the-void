@@ -34,6 +34,19 @@ GATHERING_MECHANICS = (
             Coupling(S.INTRIGUE, "a murder scheme strikes harder at a target who attends", EdgeKind.MODIFIER, "gatherings.strike_boost_pct"),
             Coupling(S.BODY, "bouts of a tournament and beasts of a hunt wound those who take part", EdgeKind.TRIGGER, "gatherings.bout_hp"),
             Coupling(S.ECONOMY, "a feast spends the host's coin for each guest", EdgeKind.FLOW, "gatherings.feast_cost"),
+            Coupling(
+                S.ECONOMY,
+                "a feast serves food from its host's stores, and its prestige follows how well it fed its guests",
+                EdgeKind.FLOW,
+                "gatherings.feast_food",
+            ),
+            Coupling(
+                S.LAW,
+                "a host whose land keeps the law of hospitality, or whose culture holds killing a guest unthinkable, never turns on its guests",
+                EdgeKind.RULE_SWITCH,
+                "gatherings.massacre_shameful_pct",
+            ),
+            Coupling(S.MIND, "a milestone leaves a lasting memory of its host with those who came", EdgeKind.MODIFIER, "gatherings.milestone_memory"),
             Coupling(S.POLITY, "a summit signs peaces among realms on good terms", EdgeKind.TRIGGER, "gatherings.summit_treaty_friendship"),
             Coupling(S.CULTURE, "a festival held as a gathering binds its community", EdgeKind.MODIFIER, "gatherings.festival_cohesion"),
             Coupling(S.FAITH, "pilgrimages hallow their place and processions kindle a cult's zeal", EdgeKind.MODIFIER, "gatherings.pilgrim_sacredness"),
@@ -98,12 +111,13 @@ GATHERING_MECHANICS = (
             Coupling(S.BODY, "a room not passed wounds the one who walks it", EdgeKind.TRIGGER, "sites.delve_hp"),
             Coupling(S.ECONOMY, "things won in a room pass to the one who cleared it", EdgeKind.FLOW, "sites.room_item_pct"),
             Coupling(S.FAITH, "spirits of a cleared room are laid to rest", EdgeKind.TRIGGER, "sites.spirit_rest_pct"),
+            Coupling(S.WAR, "a feud raid walks the rooms of the town it strikes, led by its avenger's ruler", EdgeKind.TRIGGER, "sites.raid_company"),
         ),
     ),
     Mechanic(
         key="excavations",
         spec_item="S6.2/RP2",
-        title="Digs at ruins, god corpses, craters and burial grounds, stage by stage, with their risks and finds",
+        title="Digs at ruins, god corpses, craters, burial grounds, the remains of earlier creations and wrecks, stage by stage, with their risks and finds",
         subsystem=S.KNOWLEDGE,
         phases=("excavations",),
         surface=Surface(drawer=SITE_SECTION),
@@ -122,7 +136,7 @@ GATHERING_MECHANICS = (
     Mechanic(
         key="battlefields",
         spec_item="S6.2/RP2",
-        title="Battlefield features: mass graves that stir up spirits and fields of salvage gleaned for arms",
+        title="Battlefield features: mass graves that stir up spirits, fields of salvage gleaned for arms and old earthworks that keep their land fortified",
         subsystem=S.WAR,
         phases=("battlefields",),
         surface=Surface(drawer=SITE_SECTION),
@@ -134,6 +148,7 @@ GATHERING_MECHANICS = (
         couplings=(
             Coupling(S.FAITH, "a mass grave stirs up spirits", EdgeKind.TRIGGER, "excavations.grave_haunt_pct"),
             Coupling(S.ECONOMY, "the nearest community gleans arms from a field of salvage", EdgeKind.FLOW, "excavations.salvage_take_pct"),
+            Coupling(S.WAR, "old earthworks from a siege keep the earthworks of their land from wearing away", EdgeKind.MODIFIER, "excavations.feature_decay"),
         ),
     ),
 )

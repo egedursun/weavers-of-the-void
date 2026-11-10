@@ -69,3 +69,4 @@ class ExcavationFind(StrEnum):
 class BattlefieldFeature(StrEnum):
     MASS_GRAVE = "mass_grave"
     SALVAGE_FIELD = "salvage_field"
+    EARTHWORKS = "earthworks"

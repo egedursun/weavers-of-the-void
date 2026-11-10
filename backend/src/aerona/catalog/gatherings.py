@@ -2,6 +2,7 @@ from types import MappingProxyType
 
 from aerona.core.total import total
 from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.entity import EntityFlag
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole, GatheringKind, GuestRole
 from aerona.domain.enums.mind import SkillKind, ThoughtKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -214,6 +215,7 @@ ITEM_ROOMS = frozenset({R.VAULT, R.STORE, R.ARMOURY, R.LIBRARY, R.CRYPT, R.HEART
 GUARDED_ROOMS = frozenset({R.LAIR, R.HEART, R.VAULT, R.CRYPT})
 
 EXCAVATION_PLACES = frozenset({PlaceKind.RUIN, PlaceKind.GOD_CORPSE, PlaceKind.CRATER, PlaceKind.BURIAL_GROUND})
+EXCAVATION_FLAGS = frozenset({EntityFlag.PREVIOUS_CREATION, EntityFlag.RUIN})
 
 STAGE_ORDER = (
     ExcavationStage.SURVEY,

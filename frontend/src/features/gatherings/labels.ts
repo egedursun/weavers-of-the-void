@@ -315,6 +315,7 @@ export const BATTLEFIELD_FEATURES: Record<Schema['BattlefieldFeature'], Named> =
   {
     mass_grave: { label: 'Mass grave', icon: Skull, tone: 'muted' },
     salvage_field: { label: 'Field of salvage', icon: Link2, tone: 'warning' },
+    earthworks: { label: 'Old earthworks', icon: Shield, tone: 'info' },
   }
 
 export function table(

@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.commodities import FOOD_KINDS
 from aerona.catalog.gatherings import CONTEST_KINDS, GATHERING_COLLECTIONS, GATHERING_THOUGHTS, GUEST_ROLES, HONOURED_ROLES, HOSTED_FEASTS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import an
@@ -17,22 +18,28 @@ from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
+from aerona.domain.enums.culture import TraditionKind
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.gathering import AttendanceReason, CollectionRole, GatheringKind, GatheringOutcome, GatheringStatus, GuestRole
 from aerona.domain.enums.intrigue import PlotKind, SchemePhase
-from aerona.domain.enums.mind import ThoughtKind
+from aerona.domain.enums.mind import ActKind, EthicalStance, MemoryKind, ThoughtKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind, TreatyKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import take_coin
+from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.gatherings.occasions import Guest, Occasion, household_of
 from aerona.engine.happenings.profile import season_for, year_at
 from aerona.engine.history.collections import open_collection
 from aerona.engine.intrigue.schemes import SchemeTally, execute
 from aerona.engine.intrigue.secrets import learn
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.lore.taboos import kept
 from aerona.engine.lore.traditions import cohere
+from aerona.engine.mind.ethics import conscience, culture_of, ethics_of
+from aerona.engine.mind.memories import remember as mind_remember
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.kin import betrothed_of, spouses_of
 from aerona.engine.mortal.kinship import betroth
@@ -266,10 +273,22 @@ async def strike_at(ctx: TickContext, holding: Holding, tally: GatheringTally) -
             holding.worsen(GatheringOutcome.VIOLENT)
 
 
+async def massacre_chance(ctx: TickContext, host: EntityRow) -> float:
+    table = ctx.rules.gatherings
+    if await kept(ctx.session, host.location_id, TraditionKind.HOSPITALITY_LAW):
+        return 0.0
+    culture = await culture_of(ctx.session, host.id)
+    ethic = (await ethics_of(ctx.session, culture.id)).get(ActKind.GUEST_KILLING) if culture is not None else None
+    if ethic is not None and ethic.stance is EthicalStance.UNTHINKABLE:
+        return 0.0
+    shame = table.massacre_shameful_pct / PERCENT if ethic is not None and ethic.stance is EthicalStance.SHAMEFUL else 1.0
+    return table.massacre_pct * shame
+
+
 async def massacre(ctx: TickContext, holding: Holding, tally: GatheringTally) -> None:
     table = ctx.rules.gatherings
     host = await ctx.session.get(EntityRow, holding.row.host_node_id)
-    if host is None or host.entity_type is not EntityType.MORTAL or not rng(ctx, holding.row, "massacre").chance(table.massacre_pct):
+    if host is None or host.entity_type is not EntityType.MORTAL or not rng(ctx, holding.row, "massacre").chance(await massacre_chance(ctx, host)):
         return
     hated: list[EntityRow] = []
     for node in holding.attendees:
@@ -283,6 +302,7 @@ async def massacre(ctx: TickContext, holding: Holding, tally: GatheringTally) ->
         await apply_hits(ctx, guest, Harm(table.massacre_hp, HarmCause.BATTLE, f"was cut down at {host.name}'s {holding.row.kind.value}", killer_id=host.id))
         holding.harmed.append(guest.id)
     await add_infamy(ctx.session, host.id, table.massacre_hp, ctx.epoch, rules=ctx.rules)
+    await conscience(ctx, host.id, ActKind.GUEST_KILLING, hated[0].id)
     holding.worsen(GatheringOutcome.MASSACRE)
     tally.massacres += 1
     await note(
@@ -475,8 +495,12 @@ async def host_the_feast(ctx: TickContext, holding: Holding) -> None:
         cost = guests * table.feast_cost
         if host is not None and cost and await take_coin(ctx.session, ctx.rules, host, cost):
             row.cost = cost
+    wanted = guests * table.feast_food if row.kind in HOSTED_FEASTS else 0
+    if wanted and "food" not in row.locked:
+        row.food = await serve(ctx, larder_of(host), wanted)
+    fed = min(1.0, row.food / wanted) if wanted else 1.0
     if "prestige" not in row.locked:
-        row.prestige = clamp_int(row.prestige + guests * table.feast_prestige, 0, PERCENT)
+        row.prestige = clamp_int(row.prestige + round(guests * table.feast_prestige * fed), 0, PERCENT)
     invited = max(1, len(holding.guests) - 1)
     if host is not None and host.entity_type is EntityType.MORTAL and guests * 2 >= invited:
         await add_honour(ctx.session, host.id, table.host_honour, ctx.epoch)
@@ -487,6 +511,24 @@ async def host_the_feast(ctx: TickContext, holding: Holding) -> None:
                 shift(ctx.rules, tie, ctx.epoch, friendship=table.guest_opinion)
 
 
+def larder_of(host: EntityRow | None) -> int | None:
+    if host is None:
+        return None
+    return host.location_id if host.entity_type is EntityType.MORTAL else host.id
+
+
+async def serve(ctx: TickContext, larder: int | None, wanted: int) -> int:
+    if larder is None:
+        return 0
+    ledger = GoodsLedger(ctx.session, ctx.epoch)
+    served = 0
+    for food in FOOD_KINDS:
+        if served >= wanted:
+            break
+        served += await ledger.take_units(larder, food, wanted - served, GoodsFlow.CONSUMPTION)
+    return served
+
+
 async def remember(ctx: TickContext, holding: Holding) -> None:
     thought = GATHERING_THOUGHTS[holding.row.kind]
     for node in holding.attendees:
@@ -495,6 +537,17 @@ async def remember(ctx: TickContext, holding: Holding) -> None:
             continue
         kind = ThoughtKind.WITNESSED_ATROCITY if holding.outcome is GatheringOutcome.MASSACRE else thought
         await think(ctx.session, ctx.rules, node, kind, ctx.epoch, subject_id=holding.row.host_node_id, intensity=ctx.rules.gatherings.thought_intensity)
+        if holding.row.milestone is not None and node != holding.row.host_node_id:
+            await mind_remember(
+                ctx.session,
+                ctx.rules,
+                holder_id=node,
+                subject_id=holding.row.host_node_id,
+                kind=MemoryKind.FORMATIVE,
+                magnitude=ctx.rules.gatherings.milestone_memory,
+                epoch=ctx.epoch,
+                note=f"the {holding.row.milestone.value.replace('_', ' ')} kept in epoch {ctx.epoch}",
+            )
 
 
 async def chronicle(ctx: TickContext, holding: Holding, extra: str) -> None:

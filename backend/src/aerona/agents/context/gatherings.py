@@ -2,15 +2,14 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.intrigue import name_of
-from aerona.catalog.gatherings import EXCAVATION_PLACES
 from aerona.core.grammar import an
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import GatheringGuestRow, GatheringRow
-from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.sites import ExcavationRow, SiteRoomRow
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.gathering import GatheringStatus
 from aerona.domain.enums.site import ExcavationStatus
+from aerona.engine.sites.digs import diggable
 from aerona.rules.registry import Rules
 
 
@@ -55,8 +54,7 @@ async def site_lines(session: AsyncSession, rules: Rules, me: EntityRow) -> list
         if rooms:
             cleared = sum(room.cleared_epoch is not None for room in rooms)
             found.append(f"{site.name} (id {site.id}) has {len(rooms)} rooms, {cleared} cleared")
-        place = await session.get(PlaceProfileRow, site.id)
-        if place is None or place.kind not in EXCAVATION_PLACES:
+        if not await diggable(session, site):
             continue
         dig = await session.scalar(
             select(ExcavationRow)

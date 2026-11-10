@@ -47,10 +47,12 @@ class GatheringRules:
     massacre_pct: int = rule(3, 0, 100, M, "Chance a host kills hated guests at the gathering it holds (%)")
     massacre_rivalry: int = rule(70, 0, 100, M, "Rivalry of a host with a guest that can turn a gathering into a massacre")
     massacre_hp: int = rule(80, 0, 200, M, "Harm the host's people deal each guest they turn on")
+    massacre_shameful_pct: int = rule(40, 0, 100, M, "Share of the massacre chance left when the host's culture holds killing a guest shameful (%)")
     quarrel_rivalry: int = rule(40, 0, 100, M, "Rivalry between two attendees at which their meeting turns to a quarrel")
     quarrel_shift: int = rule(6, 0, 100, M, "Rivalry a quarrel adds between the two")
     feast_cost: int = rule(4, 0, 10000, M, "Treasury coin a feast costs its host for each guest")
     feast_prestige: int = rule(3, 0, 100, M, "Prestige of a feast for each guest who comes")
+    feast_food: int = rule(2, 0, 1000, M, "Units of food a feast serves each guest from its host's stores")
     host_honour: int = rule(4, 0, 100, M, "Honour a host gains from a well attended gathering")
     guest_opinion: int = rule(5, 0, 100, M, "Friendship guests gain toward a generous host")
     bout_hp: int = rule(12, 0, 200, M, "Harm a contestant takes when beaten in a bout")
@@ -69,6 +71,7 @@ class GatheringRules:
     procession_zeal_gain: int = rule(2, 0, 100, M, "Zeal a cult gains from a procession")
     council_loyalty: int = rule(3, 0, 100, M, "Friendship of the council toward the ruler who called it")
     execution_stress: int = rule(4, 0, 100, M, "Stress a public execution lays on those who watch it")
+    milestone_memory: int = rule(20, 0, 100, M, "Strength of the memory a milestone gathering leaves with those who came")
     thought_intensity: int = rule(30, 0, 100, M, "Intensity of the thought a gathering leaves with those who came")
 
 

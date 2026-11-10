@@ -51,12 +51,14 @@ class GatheringView(ApiModel):
     honoured: NodeRef | None
     tradition: NodeRef | None
     collection_id: int | None
+    collection_name: str | None
     epoch: int
     year: int | None
     season: int | None
     season_name: str | None
     seasons: list[SeasonOption]
     cost: int
+    food: int
     prestige: int
     by_player: bool
     note: str | None
@@ -192,6 +194,7 @@ class DigView(ApiModel):
     leader: NodeRef | None
     sponsor: NodeRef | None
     collection_id: int | None
+    collection_name: str | None
     started_epoch: int
     ended_epoch: int | None
     idle_epochs: int
@@ -205,6 +208,7 @@ class FeatureView(ApiModel):
     feature: BattlefieldFeature
     strength: int
     battle_id: int | None
+    battle_name: str | None
     epoch: int
     locked: list[str]
 

@@ -32,11 +32,14 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.bonds",
     "table.collection_members",
     "table.collection_places",
+    "table.community_stocks",
     "table.crime_cases",
+    "table.culture_ethics",
     "table.gathering_guests",
     "table.gatherings",
     "table.incident_collections",
     "table.incidents",
+    "table.memories",
     "table.mind_facets",
     "table.minds",
     "table.nodes",
@@ -48,6 +51,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.secrets",
     "table.structure_profiles",
     "table.title_holders",
+    "table.tradition_profiles",
     "table.world_seasons",
 )
 @writes(
@@ -56,13 +60,16 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.chronicle_entities",
     "table.collection_members",
     "table.collection_places",
+    "table.community_stocks",
     "table.entities",
     "table.epoch_year_cursors",
     "table.gathering_guests",
     "table.gatherings",
+    "table.goods_flows",
     "table.incident_collections",
     "table.incident_participants",
     "table.incidents",
+    "table.memories",
     "table.mortal_profiles",
     "table.polity_profiles",
     "table.relationships",
@@ -147,7 +154,7 @@ async def site_rooms(ctx: TickContext) -> None:
     count(ctx, "site", tally)
 
 
-@reads("table.excavations")
+@reads("table.excavations", "table.skills")
 async def excavations(ctx: TickContext) -> None:
     tally = DigTally()
     atlas = await RegionAtlas.load(ctx.session)

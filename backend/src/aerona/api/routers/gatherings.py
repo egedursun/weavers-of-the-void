@@ -30,7 +30,6 @@ from aerona.api.schemas.gatherings import (
 )
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
-from aerona.catalog.gatherings import EXCAVATION_PLACES
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
@@ -38,12 +37,13 @@ from aerona.db.tables.environment import WorldSeasonRow
 from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionMemberRow, CollectionPlaceRow, CollectionRow, GatheringGuestRow, GatheringRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.lore import ChronicleRow
-from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.sites import BattlefieldFeatureRow, ExcavationRow, ExcavationStageRow, RoomContentRow, SiteHolderRow, SiteRoomRow
 from aerona.db.tables.storyteller import StorytellerRow, TensionRecordRow
+from aerona.db.tables.warfare import BattleRow
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole
 from aerona.domain.enums.storyteller import SpontaneousKind, StorytellerProfile, TensionBand
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.sites.digs import diggable
 from aerona.engine.sites.rooms import layout_of
 
 router = APIRouter(tags=["gatherings"])
@@ -53,6 +53,23 @@ PAGE_MAX = 200
 
 def ref(refs: Mapping[int, NodeRef], node_id: int | None) -> NodeRef | None:
     return refs.get(node_id) if node_id is not None else None
+
+
+async def collection_names(session: AsyncSession, ids: Iterable[int | None]) -> dict[int, str]:
+    wanted = sorted({value for value in ids if value is not None})
+    if not wanted:
+        return {}
+    return {row.id: row.name for row in await session.scalars(select(CollectionRow).where(CollectionRow.id.in_(wanted)))}
+
+
+async def battle_names(session: AsyncSession, ids: Iterable[int | None]) -> dict[int, str]:
+    wanted = sorted({value for value in ids if value is not None})
+    if not wanted:
+        return {}
+    named = await session.execute(
+        select(BattleRow.id, EntityRow.name).join(EntityRow, EntityRow.id == BattleRow.record_entity_id).where(BattleRow.id.in_(wanted))
+    )
+    return {int(battle_id): str(name) for battle_id, name in named}
 
 
 async def gathering_views(session: AsyncSession, rows: list[GatheringRow]) -> list[GatheringView]:
@@ -66,6 +83,7 @@ async def gathering_views(session: AsyncSession, rows: list[GatheringRow]) -> li
         *(node for row in rows for node in (row.place_entity_id, row.honoured_node_id, row.tradition_entity_id) if node is not None),
     }
     refs = await node_refs(session, wanted)
+    histories = await collection_names(session, [row.collection_id for row in rows])
     worlds = {row.world_id for row in rows if row.world_id is not None}
     seasons: dict[int, list[SeasonOption]] = {}
     if worlds:
@@ -83,12 +101,14 @@ async def gathering_views(session: AsyncSession, rows: list[GatheringRow]) -> li
             honoured=ref(refs, row.honoured_node_id),
             tradition=ref(refs, row.tradition_entity_id),
             collection_id=row.collection_id,
+            collection_name=histories.get(row.collection_id or 0),
             epoch=row.epoch,
             year=row.year,
             season=row.season,
             season_name=next((option.name for option in seasons.get(row.world_id or 0, []) if option.position == row.season), None),
             seasons=seasons.get(row.world_id or 0, []),
             cost=row.cost,
+            food=row.food,
             prestige=row.prestige,
             by_player=row.by_player,
             note=row.note,
@@ -337,12 +357,13 @@ async def site(services: ServicesDep, entity_id: Id) -> SiteView:
                 *(stage.find_entity_id for stage in stages if stage.find_entity_id is not None),
             },
         )
-        place = await session.get(PlaceProfileRow, entity_id)
+        histories = await collection_names(session, [dig.collection_id for dig in digs])
+        battles = await battle_names(session, [row.battle_id for row in features])
         layout = await layout_of(await manual_context(session, "site_view"), found)
         return SiteView(
             site_id=entity_id,
             roomed=layout is not None or bool(rooms),
-            diggable=place is not None and place.kind in EXCAVATION_PLACES,
+            diggable=await diggable(session, found),
             rooms=[
                 RoomView(
                     id=room.id,
@@ -374,6 +395,7 @@ async def site(services: ServicesDep, entity_id: Id) -> SiteView:
                     leader=ref(refs, dig.leader_entity_id),
                     sponsor=ref(refs, dig.sponsor_node_id),
                     collection_id=dig.collection_id,
+                    collection_name=histories.get(dig.collection_id or 0),
                     started_epoch=dig.started_epoch,
                     ended_epoch=dig.ended_epoch,
                     idle_epochs=dig.idle_epochs,
@@ -399,7 +421,15 @@ async def site(services: ServicesDep, entity_id: Id) -> SiteView:
                 for dig in digs
             ],
             features=[
-                FeatureView(id=row.id, feature=row.feature, strength=row.strength, battle_id=row.battle_id, epoch=row.epoch, locked=list(row.locked or []))
+                FeatureView(
+                    id=row.id,
+                    feature=row.feature,
+                    strength=row.strength,
+                    battle_id=row.battle_id,
+                    battle_name=battles.get(row.battle_id or 0),
+                    epoch=row.epoch,
+                    locked=list(row.locked or []),
+                )
                 for row in features
             ],
         )

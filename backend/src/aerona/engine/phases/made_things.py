@@ -151,6 +151,7 @@ async def afflict(ctx: TickContext, realms: RealmBook, item: EntityRow) -> str |
     "table.bonds",
     "table.community_stocks",
     "table.conditions",
+    "table.creature_anatomy",
     "table.cult_tenets",
     "table.culture_values",
     "table.custom_kinds",

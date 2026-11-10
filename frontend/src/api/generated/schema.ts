@@ -23060,7 +23060,7 @@ export interface components {
       gap: number
       siege_id: number | null
     }
-    BattlefieldFeature: 'mass_grave' | 'salvage_field'
+    BattlefieldFeature: 'mass_grave' | 'salvage_field' | 'earthworks'
     BattlefieldFeatureCreateInput: {
       place_id: number
       feature: components['schemas']['BattlefieldFeature']
@@ -26189,6 +26189,7 @@ export interface components {
       leader: components['schemas']['NodeRef'] | null
       sponsor: components['schemas']['NodeRef'] | null
       collection_id: number | null
+      collection_name: string | null
       started_epoch: number
       ended_epoch: number | null
       idle_epochs: number
@@ -28698,6 +28699,7 @@ export interface components {
       feature: components['schemas']['BattlefieldFeature']
       strength: number
       battle_id: number | null
+      battle_name: string | null
       epoch: number
       locked: string[]
     }
@@ -29356,12 +29358,14 @@ export interface components {
       honoured: components['schemas']['NodeRef'] | null
       tradition: components['schemas']['NodeRef'] | null
       collection_id: number | null
+      collection_name: string | null
       epoch: number
       year: number | null
       season: number | null
       season_name: string | null
       seasons: components['schemas']['SeasonOption'][]
       cost: number
+      food: number
       prestige: number
       by_player: boolean
       note: string | null
@@ -85663,7 +85667,7 @@ export const battleOutcomeValues: ReadonlyArray<
 ]
 export const battlefieldFeatureValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BattlefieldFeature']
-> = ['mass_grave', 'salvage_field']
+> = ['mass_grave', 'salvage_field', 'earthworks']
 export const beastStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BeastStats']['kind']
 > = ['beast']

@@ -16,9 +16,11 @@ import { Label, Muted, Text } from '@/components/typography'
 import {
   Chip,
   Facts,
+  NodeLink,
   RecordEditor,
   RecordRow,
 } from '@/features/cosmography/parts'
+import { useNames } from '@/features/entity/api/queries'
 import { MindPicker } from '@/features/entity/mind/parts'
 import {
   type CollectionRole,
@@ -238,6 +240,11 @@ function HistoryBody({
   onOpen: (id: number) => void
 }) {
   const collection = detail.collection
+  const names = useNames()
+  const worldName =
+    names.data?.find(
+      (entry) => entry.kind === 'world' && entry.id === collection.world_id
+    )?.name ?? 'Unnamed world'
   const edit = useGatheringAction(
     'collection:edit',
     (vars: Edit) => ({ collection_id: collection.id, ...vars }),
@@ -251,9 +258,16 @@ function HistoryBody({
           ['Span', spanOf(collection)],
           [
             'World',
-            collection.world_id === null
-              ? 'Across the heavens'
-              : `World #${collection.world_id}`,
+            collection.world_id === null ? (
+              'Across the heavens'
+            ) : (
+              <NodeLink
+                key='world'
+                kind='world'
+                id={collection.world_id}
+                name={worldName}
+              />
+            ),
           ],
           ['Figures', String(collection.members)],
           ['Places', String(collection.places)],

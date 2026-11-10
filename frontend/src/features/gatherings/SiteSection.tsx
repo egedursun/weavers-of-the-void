@@ -145,9 +145,9 @@ function AddContent({
         blocked={busy ?? (kind === 'trap' ? 'A trap needs no thing' : null)}
         types={
           kind === 'item'
-            ? ['item', 'artifact']
+            ? ['item']
             : kind === 'spirit'
-              ? ['spirit', 'shade', 'mortal']
+              ? ['spirit']
               : ['beast', 'species']
         }
       />
@@ -625,12 +625,7 @@ function DigCard({ dig, blocked }: { dig: DigView; blocked: string | null }) {
         items={[
           ['Leader', <Ref key='leader' node={dig.leader} />],
           ['Sponsor', <Ref key='sponsor' node={dig.sponsor} empty='none' />],
-          [
-            'History',
-            dig.collection_id === null
-              ? 'Not yet told'
-              : `#${dig.collection_id}`,
-          ],
+          ['History', dig.collection_name ?? 'Not yet told'],
           ['Idle', `${dig.idle_epochs} epochs`],
         ]}
       />
@@ -831,7 +826,7 @@ function FeatureRow({
       icon={look.icon}
       tone={look.tone}
       title={look.label}
-      caption={`Laid in epoch ${feature.epoch}${feature.battle_id !== null ? ` by battle #${feature.battle_id}` : ' by the gods'}`}
+      caption={`Laid in epoch ${feature.epoch}${feature.battle_id !== null ? ` by ${feature.battle_name ?? 'a battle'}` : ' by the gods'}`}
       aside={
         <Button
           size='sm'
@@ -933,7 +928,7 @@ export function SiteSection({
     <Section
       id='section-site'
       title='The site within'
-      description='Rooms walked one by one, those who have held the site, digs stage by stage and the marks battles left. Only places, structures and settlements have an inside to walk; every other thing has no rooms.'
+      description='Rooms walked one by one, those who have held the site, digs stage by stage and the marks battles left. Places, structures, settlements and vessels have an inside to walk, and the ruins and remains of earlier creations can be dug; other things have no inside of their own.'
       icon={Castle}
       tone='info'
     >

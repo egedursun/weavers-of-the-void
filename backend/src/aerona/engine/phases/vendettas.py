@@ -33,6 +33,7 @@ from aerona.engine.primitives.stats import move_stat, shift_stat, stat
 from aerona.engine.records import death_path
 from aerona.engine.services.community_relations import change_relation, end_blood_feud, open_feud, relation, start_blood_feud
 from aerona.engine.services.war import declare_war
+from aerona.engine.sites.rooms import delve, layout_of, rooms_of
 from aerona.engine.storyteller.pace import paced
 
 GRIEF = (MemoryKind.KILLED_KIN, MemoryKind.MAIMED_ME)
@@ -117,7 +118,16 @@ async def raid(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> str | 
         harm = Harm(hp, HarmCause.BATTLE, f"wounded in a feud raid by {avenger.name}", killer_id=avenger.id)
         await apply_hits(ctx, victim, harm, lethal=False)
     shift_stat(enemy, "prosperity", -hp // 5)
-    return f"Kinsmen of {avenger.name} raided {enemy.name} to avenge their dead."
+    walked = await walk_raided(ctx, avenger, enemy)
+    return f"Kinsmen of {avenger.name} raided {enemy.name} to avenge their dead{walked}."
+
+
+async def walk_raided(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> str:
+    leader = await target_of(ctx, avenger)
+    if leader is None or frozen(leader.id) or (await layout_of(ctx, enemy) is None and not await rooms_of(ctx, enemy.id)):
+        return ""
+    walk = await delve(ctx, leader, enemy, ctx.rules.sites.raid_company)
+    return f", and {leader.name} led them through {walk.cleared} of its halls"
 
 
 async def rest(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> str | None:

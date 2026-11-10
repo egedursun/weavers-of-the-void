@@ -3,9 +3,8 @@ from typing import Any
 from pydantic import Field
 from sqlalchemy import select
 
-from aerona.catalog.gatherings import EXCAVATION_PLACES
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import GatheringRow
-from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.sites import ExcavationRow
 from aerona.domain.enums.action import ActionKind
@@ -18,7 +17,7 @@ from aerona.engine.gatherings.hold import plan
 from aerona.engine.gatherings.occasions import Guest, Occasion
 from aerona.engine.mind.book import skill_level
 from aerona.engine.renown.currencies import realm_of_community
-from aerona.engine.sites.digs import begin
+from aerona.engine.sites.digs import begin, diggable, wrecked
 from aerona.engine.sites.rooms import delve, layout_of, rooms_of
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -74,9 +73,9 @@ async def delve_site(call: MortalCall, args: SiteInput) -> str:
 
 
 async def dig_site(call: MortalCall, args: SiteInput) -> str:
-    site = await require_canon(call.session, args.site_id)
-    place = await call.session.get(PlaceProfileRow, site.id)
-    if place is None or place.kind not in EXCAVATION_PLACES:
+    found = await call.session.get(EntityRow, args.site_id)
+    site = found if found is not None and await wrecked(call.session, found.id) else await require_canon(call.session, args.site_id)
+    if not await diggable(call.session, site):
         fail(MortalResult.DIG_REFUSED, why=f"{site.name} holds nothing old enough to dig")
     lore = await skill_level(call.session, call.me.id, SkillKind.LORE)
     if lore < call.rules.excavations.start_lore:

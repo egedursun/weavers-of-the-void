@@ -13,6 +13,7 @@ class SiteRules:
     difficulty_step: int = rule(10, 0, 100, H, "Difficulty each room deeper into a site adds")
     trap_strength: int = rule(40, 0, 100, H, "Strength of a trap laid in a room")
     room_item_pct: int = rule(35, 0, 100, H, "Chance a vault, store, armoury, library, crypt or heart holds a thing of the site (%)")
+    raid_company: int = rule(4, 0, 100, H, "Raiders who walk a site beside the one who leads a feud raid on it")
     delve_skill_pct: int = rule(60, 0, 200, H, "Weight of a delver's strength and wits against a room's difficulty (%)")
     delve_company_pct: int = rule(10, 0, 100, H, "Chance each companion adds to clearing a room (%)")
     delve_hp: int = rule(20, 0, 200, H, "Harm a failed room deals the one who walks it")

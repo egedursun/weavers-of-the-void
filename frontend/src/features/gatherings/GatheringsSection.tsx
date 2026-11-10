@@ -328,9 +328,9 @@ function GatheringCard({
         <Chip icon={status.icon}>{status.label}</Chip>
         {outcome && <Chip icon={outcome.icon}>{outcome.label}</Chip>}
         {gathering.collection_id !== null && (
-          <Chip
-            icon={CalendarCheck}
-          >{`Told in history #${gathering.collection_id}`}</Chip>
+          <Chip icon={CalendarCheck}>
+            {`Told in ${gathering.collection_name ?? 'a history'}`}
+          </Chip>
         )}
       </div>
       <Facts
@@ -360,6 +360,7 @@ function GatheringCard({
                 : `Season ${gathering.season + 1}`),
           ],
           ['Cost', `${gathering.cost} coin`],
+          ['Food served', `${gathering.food} units`],
           ['Prestige', String(gathering.prestige)],
         ]}
       />
@@ -426,6 +427,7 @@ function GatheringCard({
             ),
           },
           { key: 'cost', label: 'Cost in coin', kind: 'number', min: 0 },
+          { key: 'food', label: 'Food served', kind: 'number', min: 0 },
           {
             key: 'prestige',
             label: 'Prestige',

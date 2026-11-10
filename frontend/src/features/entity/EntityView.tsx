@@ -133,7 +133,8 @@ const MIND_TYPES = new Set([
   'faction',
 ])
 
-const SITE_TYPES = new Set(['place', 'structure', 'settlement'])
+const SITE_TYPES = new Set(['place', 'structure', 'settlement', 'vessel'])
+const SITE_FLAGS = new Set(['ruin', 'previous_creation'])
 
 const SECTION_LINKS = [
   { id: 'section-facts', label: 'Facts' },
@@ -322,7 +323,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
     entity.entity_type === 'place' ||
     entity.entity_type === 'settlement'
   if (!eventful) present.delete('section-events-here')
-  const sited = SITE_TYPES.has(entity.entity_type)
+  const sited =
+    SITE_TYPES.has(entity.entity_type) ||
+    detail.flags.some((flag) => SITE_FLAGS.has(flag))
   if (!sited) present.delete('section-site')
   const embodied =
     entity.entity_type === 'mortal' || entity.entity_type === 'species'

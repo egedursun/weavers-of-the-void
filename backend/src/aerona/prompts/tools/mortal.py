@@ -87,7 +87,8 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"site_id": "The site you walk"},
     ),
     T.DIG_SITE: ToolText(
-        "With lore enough, you begin a dig at an old site and lead it. It goes through five stages; each needs a skill and sometimes a technique, "
+        "With lore enough, you begin a dig at an old site, the remains of an earlier creation or a wreck, and lead it. "
+        "It goes through five stages; each needs a skill and sometimes a technique, "
         "and each may hold a risk or a find that passes to your realm. 1 action.",
         {"site_id": "The site you dig"},
     ),

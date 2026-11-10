@@ -31,7 +31,8 @@ const GATHERING = {
   place: HALL,
   honoured: null,
   tradition: null,
-  collection_id: null,
+  collection_id: 90,
+  collection_name: 'The Long Walk',
   epoch: 4,
   year: 212,
   season: 1,
@@ -41,6 +42,7 @@ const GATHERING = {
     { position: 1, name: 'Thaw' },
   ],
   cost: 30,
+  food: 8,
   prestige: 12,
   by_player: true,
   note: 'held by order of the gods',
@@ -98,6 +100,10 @@ describe('gatherings, histories, the storyteller and sites', () => {
     await expect.element(screen.getByText('Feast').first()).toBeVisible()
     await expect.element(screen.getByText('Corra').first()).toBeVisible()
     await expect.element(screen.getByText(/year 212, Thaw/)).toBeVisible()
+    await expect
+      .element(screen.getByText('Told in The Long Walk'))
+      .toBeVisible()
+    await expect.element(screen.getByText('8 units')).toBeVisible()
     await screen.getByRole('button', { name: 'Hold now' }).click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/gathering:hold'))
