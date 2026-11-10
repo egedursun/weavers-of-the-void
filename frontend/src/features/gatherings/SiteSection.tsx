@@ -324,7 +324,7 @@ function OpenRoom({
       }
     >
       <MindPicker
-        label='Kind'
+        label='Kind of room'
         value={kind}
         table={table(ROOM_KINDS)}
         blocked={busy}

@@ -8367,6 +8367,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/belief:forget': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_belief_forget_api_actions_belief_forget_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/cosmic:extinguish_star': {
     parameters: {
       query?: never
@@ -23658,9 +23674,15 @@ export interface components {
     BeliefDeleteInput: {
       belief_id: number
     }
+    BeliefForgetInput: {
+      people_id: number
+      son_id?: number | null
+      god_id?: number | null
+    }
     BeliefRenameInput: {
       people_id: number
       son_id?: number | null
+      god_id?: number | null
     }
     BeliefSetInput: {
       holder_id: number
@@ -27369,6 +27391,7 @@ export interface components {
       miracles: number
       worship: number
       spread: number
+      trend: number
       epoch: number
       ruling: boolean
       locked: string[]
@@ -29432,6 +29455,7 @@ export interface components {
       bond_total: number
       chronicle: components['schemas']['ChronicleLineRecord'][]
       sons_here: components['schemas']['NodeRef'][]
+      folk_views: components['schemas']['FolkView'][]
       images: components['schemas']['ImageRecord'][]
       cover: string | null
     }
@@ -36608,6 +36632,7 @@ export interface components {
     PutBeliefsBody: {
       people_id: number
       son_id?: number | null
+      god_id?: number | null
       name?: string | null
       narrative: string
       misconception?: string | null
@@ -39378,6 +39403,7 @@ export interface components {
       | 'convene_gathering'
       | 'raise_divine_creature'
       | 'teach_creature'
+      | 'release_creature'
       | 'shape_image'
       | 'forge_material'
       | 'hide_secret'
@@ -59900,6 +59926,37 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['EpochEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_belief_forget_api_actions_belief_forget_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BeliefForgetInput']
       }
     }
     responses: {
@@ -91836,6 +91893,7 @@ export const sonToolIdValues: ReadonlyArray<
   'convene_gathering',
   'raise_divine_creature',
   'teach_creature',
+  'release_creature',
   'shape_image',
   'forge_material',
   'hide_secret',

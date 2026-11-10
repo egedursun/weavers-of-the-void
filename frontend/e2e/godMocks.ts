@@ -493,6 +493,7 @@ const FOREIGN_DETAIL: Schemas['ForeignGodDetail'] = {
   bond_total: 0,
   chronicle: [],
   sons_here: [{ id: 8, kind: 'son', name: LONG }],
+  folk_views: [],
   images: [],
   cover: null,
 }

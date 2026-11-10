@@ -526,6 +526,7 @@ CANON_ACTIONS = (
     _sync(Meta("fact:add", "Add a canon fact", G.CANON), canon.add_fact, canon.AddFact, free, ("ACT-177",)),
     _sync(Meta("fact:remove", "Retire a canon fact", G.CANON), canon.remove_fact, canon.FactTarget, free, ("ACT-178",)),
     _sync(Meta("belief:edit", "Edit a people's belief", G.CANON), canon.edit_belief, canon.EditBelief, free, ("ACT-179",)),
+    _sync(Meta("belief:forget", "Make a people forget its tale of a god", G.CANON), canon.forget_belief, canon.ForgetBelief, free, ("S9.1/RP3",)),
     _sync(Meta("bond:add", "Add a bond", G.CANON), canon.add_bond, canon.AddBond, free, ("ACT-182",)),
     _sync(Meta("bond:remove", "Break a bond", G.CANON), canon.remove_bond, canon.BondTarget, free, ("ACT-183",)),
     _sync(Meta("map_note:add", "Pin a map note", G.CANON), canon.add_map_note, canon.AddMapNote, free, ("SVC-126",)),

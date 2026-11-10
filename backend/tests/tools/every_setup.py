@@ -556,7 +556,21 @@ async def son_creature(session: AsyncSession, realm: Realm) -> Ids:
 
 
 async def hidden_magic(session: AsyncSession, realm: Realm) -> Ids:
-    session.add(MagicSiteRow(place_entity_id=realm.cosmos.place_id, kind=MagicSiteKind.SOURCE, school=MagicSchool.LIFE, strength=50, locked=[]))
+    rite = await session.scalar(select(RiteProfileRow).order_by(RiteProfileRow.rite_entity_id).limit(1))
+    school = rite.school if rite is not None else MagicSchool.LIFE
+    session.add(MagicSiteRow(place_entity_id=realm.cosmos.place_id, kind=MagicSiteKind.SOURCE, school=school, strength=50, locked=[]))
     session.add(SkillRow(holder_node_id=realm.mortal_id, skill=SkillKind.SPELLCRAFT, level=90, peak=90, last_used_epoch=1, source=SkillSource.PRACTICE))
+    if rite is not None:
+        session.add(
+            SkillRow(
+                holder_node_id=realm.mortal_id,
+                skill=SkillKind.SPELLCRAFT,
+                subject_node_id=rite.rite_entity_id,
+                level=90,
+                peak=90,
+                last_used_epoch=1,
+                source=SkillSource.PRACTICE,
+            )
+        )
     await session.flush()
     return {}

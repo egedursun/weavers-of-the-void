@@ -27,6 +27,7 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import AgeBand, Job
 from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.divine import DomainHook
+from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, WeatherEffect
@@ -39,6 +40,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import cohorts_of
 from aerona.engine.demography.mobility import bound_revolt, inequality_pressure
 from aerona.engine.divine.hooks import foe_pct
+from aerona.engine.dominion.effects import scale_here
 from aerona.engine.economy.stocks import aggregate_need
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.environment.years import world_years
@@ -453,9 +455,10 @@ async def keep_order(ctx: TickContext, town: Town, *, justice: float, bands: lis
     effects = town.effects(ctx.rules)
     policing = soldiers / PERCENT * table.policing_per_100 + effects.policing
     wealth = stat_or(town.entity, "wealth", stat(town.entity, "prosperity") or 0)
+    rule = await scale_here(ctx, town.entity.id, DivineScale.ORDER)
     if "public_order" not in profile.locked:
         charter = ctx.rules.urban.charter_order if profile.charter_entity_id is not None else 0
-        seat = effects.order
+        seat = effects.order + rule * ctx.rules.dominion.order_per_step
         profile.public_order = clamp_int(table.order_base + soldiers / PERCENT * table.order_per_100 + charter + seat - profile.crime / HALF, 0, PERCENT)
     if "crime" not in profile.locked:
         crime = (
@@ -466,6 +469,7 @@ async def keep_order(ctx: TickContext, town: Town, *, justice: float, bands: lis
             + len(bands) * table.bandit_crime
             - policing
             - justice * table.justice_pct
+            - rule * ctx.rules.dominion.crime_per_step
         )
         profile.crime = clamp_int(crime, 0, PERCENT)
     shift_stat(town.entity, "prosperity", -profile.crime * table.prosperity_loss / PERCENT, ctx.rules.society.default_stat)
@@ -513,6 +517,7 @@ async def stir_unrest(ctx: TickContext, town: Town, *, tension: int, festival: b
     rows = await cohorts_of(ctx.session, town.entity.id)
     pressure = await needs_unrest(ctx.session, ctx.rules, town.entity.id)
     discontent = await ruler_discontent(ctx, town.entity.id)
+    turmoil = max(0, -await scale_here(ctx, town.entity.id, DivineScale.ORDER)) * ctx.rules.dominion.unrest_per_step
     unrest = (
         profile.unrest * (1 - table.unrest_decay / PERCENT)
         + profile.tax_rate * taxation.unrest_per_tax / PERCENT
@@ -522,6 +527,7 @@ async def stir_unrest(ctx: TickContext, town: Town, *, tension: int, festival: b
         + bound_revolt(ctx.rules, rows)
         + tension
         + discontent
+        + turmoil
         + (ctx.rules.urban.ration_unrest if profile.rationing else 0)
         + (ctx.rules.epidemiology.quarantine_unrest if await quarantined(ctx, region) else 0)
         - (taxation.festival_relief if festival else 0)

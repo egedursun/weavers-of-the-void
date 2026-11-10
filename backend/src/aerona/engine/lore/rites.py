@@ -66,6 +66,7 @@ from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.divine.decrees import outlawed_schools
 from aerona.engine.divine.laws import binds
 from aerona.engine.dominion.book import DominionBook
+from aerona.engine.dominion.effects import divine_power
 from aerona.engine.dominion.sites import found_sites_in
 from aerona.engine.ecology.control import spawn_beast
 from aerona.engine.economy.stocks import GoodsLedger
@@ -969,6 +970,7 @@ async def cast(
     strength *= await ctx.hook_factor(caster.id, DomainHook.BLOOD_RITE)
     strength *= await magic_factor(ctx, caster)
     strength *= await site_factor(ctx, caster, row)
+    strength *= await divine_power(ctx, await patron_of(ctx, caster), caster.id, ctx.rules.dominion.rite_power_pct)
     await practise_subject(ctx.session, ctx.rules, caster.id, SkillKind.SPELLCRAFT, subject_id=rite.id, xp=ctx.rules.skills.spellcraft_xp, epoch=ctx.epoch)
     understood = await theory_factor(ctx.session, ctx.rules, caster.location_id or caster.id, TheoryDomain.MAGIC)
     if rng.chance(row.backlash_chance * steadiness * (1 - mastery / PERCENT * ctx.rules.skills.school_backlash_pct / PERCENT) / understood):

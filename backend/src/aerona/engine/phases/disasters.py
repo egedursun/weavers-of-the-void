@@ -44,6 +44,7 @@ from aerona.engine.cosmos.world_types import disaster_pct
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.harm import disease_harm, lasting_illness
 from aerona.engine.disease.outbreaks import STRIKING, disease_for, lethality_factor, open_outbreak, spread_factor, tally
+from aerona.engine.dominion.blame import blame_rulers
 from aerona.engine.dominion.book import DominionBook
 from aerona.engine.economy.routes import trade_links
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment
@@ -331,6 +332,7 @@ async def record_disaster_event(ctx: TickContext, target: EntityRow, disaster: D
 
 
 async def record_impact(ctx: TickContext, event: EntityRow, impact: DisasterImpact) -> int:
+    await blame_rulers(ctx, list(impact.losses))
     await open_profile(ctx, event)
     await derive_footprint(ctx.session, await RegionAtlas.load(ctx.session), event, ctx.epoch)
     dead = 0
@@ -823,6 +825,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.chronicle_entities",
     "table.conditions",
     "table.districts",
+    "table.divine_standing",
     "table.entities",
     "table.entity_flags",
     "table.epoch_year_cursors",

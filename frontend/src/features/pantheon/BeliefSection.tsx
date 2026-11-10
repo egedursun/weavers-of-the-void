@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BookHeart, PenLine, RefreshCw } from 'lucide-react'
+import { BookHeart, Eraser, PenLine, RefreshCw } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Button } from '@/components/ui/button'
@@ -35,19 +35,19 @@ import { usePeoples } from './peoples'
 
 const VIEWS_SHOWN = 4
 
-function RenameBelief({
-  view,
-  sonId,
-}: {
-  view: FolkView
-  sonId: number | null
-}) {
+type Believed = { sonId: number | null; godId: number | null }
+
+function RenameBelief({ view, god }: { view: FolkView; god: Believed }) {
   const { reason } = useGodGate()
   const rename = useGodAction({
     run: () =>
       unwrap(
         api.POST('/api/actions/belief:rename', {
-          body: { people_id: view.people_id, son_id: sonId },
+          body: {
+            people_id: view.people_id,
+            son_id: god.sonId,
+            ...(god.godId === null ? {} : { god_id: god.godId }),
+          },
         })
       ),
   })
@@ -64,7 +64,35 @@ function RenameBelief({
   )
 }
 
-function BeliefCard({ view, sonId }: { view: FolkView; sonId: number | null }) {
+function ForgetBelief({ view, god }: { view: FolkView; god: Believed }) {
+  const { reason } = useGodGate()
+  const forget = useGodAction({
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/belief:forget', {
+          body: {
+            people_id: view.people_id,
+            son_id: god.sonId,
+            ...(god.godId === null ? {} : { god_id: god.godId }),
+          },
+        })
+      ),
+    success: `${view.people_name} no longer tells that tale`,
+  })
+  return (
+    <ActionButton
+      label='Make them forget'
+      icon={Eraser}
+      variant='ghost'
+      size='sm'
+      blocked={reason()}
+      pending={forget.isPending}
+      onRun={() => forget.mutate()}
+    />
+  )
+}
+
+function BeliefCard({ view, god }: { view: FolkView; god: Believed }) {
   return (
     <li className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-card p-3'>
       <div className='flex min-w-0 flex-wrap items-baseline gap-x-2'>
@@ -72,11 +100,12 @@ function BeliefCard({ view, sonId }: { view: FolkView; sonId: number | null }) {
           {view.people_name}
         </EntityLink>
         <Label>{`remembers this god so · Epoch ${view.epoch}`}</Label>
+        <ForgetBelief view={view} god={god} />
       </div>
       {view.local_name && (
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Text variant='caption' italic>{`"${view.local_name}"`}</Text>
-          <RenameBelief view={view} sonId={sonId} />
+          <RenameBelief view={view} god={god} />
         </div>
       )}
       <ExpandableText lines={3}>{view.account}</ExpandableText>
@@ -99,10 +128,17 @@ function BeliefCard({ view, sonId }: { view: FolkView; sonId: number | null }) {
 type BeliefSectionProps = {
   views: FolkView[]
   sonId: number | null
+  godId?: number | null
   godName: string
 }
 
-export function BeliefSection({ views, sonId, godName }: BeliefSectionProps) {
+export function BeliefSection({
+  views,
+  sonId,
+  godId = null,
+  godName,
+}: BeliefSectionProps) {
+  const god = { sonId, godId }
   const [open, setOpen] = useState(false)
   const [peopleId, setPeopleId] = useState('')
   const [name, setName] = useState('')
@@ -117,6 +153,7 @@ export function BeliefSection({ views, sonId, godName }: BeliefSectionProps) {
           body: {
             people_id: Number(peopleId),
             son_id: sonId,
+            ...(godId === null ? {} : { god_id: godId }),
             name: name.trim() || null,
             narrative: narrative.trim(),
             misconception: misconception.trim() || null,
@@ -148,7 +185,7 @@ export function BeliefSection({ views, sonId, godName }: BeliefSectionProps) {
               <BeliefCard
                 key={`${view.people_id}-${view.epoch}`}
                 view={view}
-                sonId={sonId}
+                god={god}
               />
             ))}
           </ul>
@@ -195,7 +232,7 @@ export function BeliefSection({ views, sonId, godName }: BeliefSectionProps) {
                   <Input
                     id={id}
                     value={name}
-                    placeholder='Who Leaves the Shadow'
+                    placeholder='The name in their own tongue'
                     onChange={(event) => setName(event.target.value)}
                   />
                 )}

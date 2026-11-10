@@ -53,6 +53,26 @@ DOMINION_MECHANICS = (
             Coupling(S.MIND, "worshippers feel their god near and priests of other gods feel out of place", EdgeKind.MODIFIER, "dominion.near_stress"),
             Coupling(S.GODS, "a son draws existence from the regions its dominion rules", EdgeKind.FLOW, "dominion.existence_per_region"),
             Coupling(S.GODS, "a god's own deeds move its scales toward them", EdgeKind.TRIGGER, "dominion.deed_shift_count"),
+            Coupling(
+                S.LAW,
+                "order raises public order and lowers crime in a dominated region, and turmoil stirs unrest",
+                EdgeKind.MODIFIER,
+                "dominion.order_per_step",
+            ),
+            Coupling(
+                S.ECONOMY,
+                "productivity raises the output of mines, quarries, forests and works, and sloth lowers it",
+                EdgeKind.MODIFIER,
+                "dominion.output_per_step_pct",
+            ),
+            Coupling(
+                S.BODY, "growth speeds the healing of wounds in a dominated region, and death slows it", EdgeKind.MODIFIER, "dominion.healing_per_step_pct"
+            ),
+            Coupling(S.FAITH, "death stirs the spirits of a dominated region", EdgeKind.MODIFIER, "dominion.spirit_unrest_per_step"),
+            Coupling(S.MAGIC, "a god's rites work better where its dominion holds the land", EdgeKind.MODIFIER, "dominion.rite_power_pct"),
+            Coupling(S.FAITH, "a god's miracles win more belief where its dominion holds the land", EdgeKind.MODIFIER, "dominion.miracle_power_pct"),
+            Coupling(S.FAITH, "a disaster in a dominated region is blamed on its ruling god", EdgeKind.TRIGGER, "dominion.blame_fear"),
+            Coupling(S.DEMOGRAPHY, "the more folk worship a god in a region, the more dominion they give it", EdgeKind.FLOW, "dominion.worship_population"),
         ),
     ),
     Mechanic(
@@ -78,6 +98,7 @@ DOMINION_MECHANICS = (
             Coupling(S.MAGIC, "a found source yields reagents to its holder each epoch", EdgeKind.FLOW, "magic_sites.output_pct"),
             Coupling(S.MAGIC, "a rite cast at a site of its school is stronger", EdgeKind.MODIFIER, "magic_sites.school_pct"),
             Coupling(S.COSMOS, "a found gateway opens a route to another world", EdgeKind.TRIGGER, "magic_sites.search_pct"),
+            Coupling(S.KNOWLEDGE, "explorers without the site's school search with less luck", EdgeKind.MODIFIER, "magic_sites.explorer_search_pct"),
             Coupling(S.POLITY, "realms covet the magic sites of their neighbours", EdgeKind.TRIGGER, "magic_sites.war_aim_pct"),
         ),
     ),
@@ -144,6 +165,8 @@ DOMINION_MECHANICS = (
             Coupling(S.GODS, "a god's wrath and mercy drift toward what its peoples believe", EdgeKind.MODIFIER, "god_images.base_pull"),
             Coupling(S.GODS, "a believed domain the god lacks becomes its second domain", EdgeKind.TRIGGER, "god_images.domain_pressure_at"),
             Coupling(S.GODS, "resisting the image costs essence and embracing it wins fame", EdgeKind.FLOW, "god_images.resist_cost"),
+            Coupling(S.MIND, "belief moves a god's anger and altruism toward its believed wrath and mercy", EdgeKind.MODIFIER, "god_images.facet_pull_pct"),
+            Coupling(S.CULTURE, "peoples who tell their own stories of a god hold its image more firmly", EdgeKind.MODIFIER, "god_images.folk_credence_pct"),
         ),
     ),
     Mechanic(
@@ -156,7 +179,7 @@ DOMINION_MECHANICS = (
         backfill=f"{MIGRATION}: divine creatures exist only once a god raises one",
         tables=(DivineCreatureRow.__tablename__, CreatureLessonRow.__tablename__),
         exposure=Exposure.TOOL,
-        tools=("raise_divine_creature", "teach_creature"),
+        tools=("raise_divine_creature", "teach_creature", "release_creature"),
         targets=("son", "foreign_god", "creator", "creature"),
         couplings=(
             Coupling(
@@ -186,6 +209,11 @@ DOMINION_MECHANICS = (
             Coupling(S.GODS, "a design that spends its budget lowers the god's stats", EdgeKind.MODIFIER, "god_design.stats_floor_pct"),
             Coupling(S.GODS, "dominion strength adds to every region where the god has a source", EdgeKind.MODIFIER, "dominion.strength_weight_pct"),
             Coupling(S.GODS, "each divine rank won by ascension raises essence income", EdgeKind.FLOW, "thrones.rank_essence_pct"),
+            Coupling(S.MAGIC, "a god's magic aptitude strengthens or weakens the rites of its faithful", EdgeKind.MODIFIER, "god_design.aptitude_rite_pct"),
+            Coupling(
+                S.BODY, "a god's manifestation strength sets the health and power of its mortal form", EdgeKind.MODIFIER, "god_design.manifestation_floor_pct"
+            ),
+            Coupling(S.GODS, "each divine rank counts as levels toward unlocking power slots", EdgeKind.TRIGGER, "god_design.rank_levels"),
         ),
     ),
 )

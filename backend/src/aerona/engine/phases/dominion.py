@@ -41,8 +41,17 @@ async def thrones(ctx: TickContext) -> None:
     count(ctx, "throne", tally)
 
 
-@reads("table.magic_sites", "table.skills")
-@writes("table.magic_sites")
+@reads("table.community_stocks", "table.magic_sites", "table.skills")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.community_stocks",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.magic_sites",
+    "table.place_profiles",
+)
 async def magic_sites(ctx: TickContext) -> None:
     tally = SiteTally()
     await seed_sites(ctx, tally)
@@ -52,6 +61,8 @@ async def magic_sites(ctx: TickContext) -> None:
 
 
 @reads(
+    "people.population",
+    "settlement.population",
     "table.action_records",
     "table.bonds",
     "table.dominions",
@@ -93,7 +104,16 @@ async def worship_views(ctx: TickContext) -> None:
     count(ctx, "worship", tally)
 
 
-@reads("table.divine_standing", "table.god_images", "table.incidents", "table.miracle_records", "table.modifiers", "table.pressures")
+@reads(
+    "table.divine_standing",
+    "table.folk_beliefs",
+    "table.god_images",
+    "table.incidents",
+    "table.mind_facets",
+    "table.miracle_records",
+    "table.modifiers",
+    "table.pressures",
+)
 @writes("table.god_images", "table.sons")
 async def god_images(ctx: TickContext) -> None:
     tally = ImageTally()

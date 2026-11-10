@@ -28,6 +28,7 @@ from aerona.domain.enums.bond import DERIVED_BOND_KINDS, BondKind, BondRole, Bon
 from aerona.domain.enums.chronicle import ThreadStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.node import NodeKind
+from aerona.engine.divine.gods import god_of
 from aerona.engine.gods.rewards import adjust_reward
 from aerona.engine.primitives.canon_facts import FactDraft, add_manual_fact, retract_fact
 from aerona.engine.primitives.folk_names import folk_god_name, guarded_names
@@ -108,9 +109,16 @@ class FactTarget(Command):
 class EditBelief(Command):
     people_id: int
     son_id: int | None = None
+    god_id: int | None = None
     name: str | None = None
     narrative: str
     misconception: str | None = None
+
+
+class ForgetBelief(Command):
+    people_id: int
+    son_id: int | None = None
+    god_id: int | None = None
 
 
 class AddBond(Command):
@@ -330,17 +338,38 @@ async def remove_fact(scope: PlayerScope, command: FactTarget) -> Effect:
     return Effect("The fact was retired; it is kept as history.", fact.subject_entity_id)
 
 
+async def believed_god(scope: PlayerScope, son_id: int | None, god_id: int | None) -> tuple[int, list[str]]:
+    creator = await scope.creator()
+    if god_id is not None and god_id != creator.id:
+        god = await god_of(scope.session, god_id)
+        if god is None:
+            raise NotFoundError("No such god.")
+        return god.id, guarded_names(god.name, god.title)
+    if son_id is not None:
+        son = await guards.son(scope.session, son_id)
+        return son.id, guarded_names(son.name, son.title)
+    return creator.id, guarded_names(creator.name, creator.title)
+
+
+@player_action("belief:forget", ActionKind.EDIT_RECORD)
+async def forget_belief(scope: PlayerScope, command: ForgetBelief) -> Effect:
+    people = await guards.entity(scope.session, command.people_id)
+    god_id, _ = await believed_god(scope, command.son_id, command.god_id)
+    belief = await scope.session.get(FolkBeliefRow, (people.id, god_id))
+    if belief is None:
+        raise NotFoundError(f"{people.name} tells no tale of this god.")
+    await scope.session.delete(belief)
+    await scope.session.flush()
+    return Effect(f"{people.name} no longer tells that tale.", people.id)
+
+
 @player_action("belief:edit", ActionKind.EDIT_RECORD)
 async def edit_belief(scope: PlayerScope, command: EditBelief) -> Effect:
     people = await guards.entity(scope.session, command.people_id)
     narrative = command.narrative.strip()
     if not narrative:
         raise ValidationFailedError("The people's narrative is required.")
-    creator = await scope.creator()
-    god_id, guarded = creator.id, guarded_names(creator.name, creator.title)
-    if command.son_id is not None:
-        son = await guards.son(scope.session, command.son_id)
-        god_id, guarded = son.id, guarded_names(son.name, son.title)
+    god_id, guarded = await believed_god(scope, command.son_id, command.god_id)
     belief = await scope.session.get(FolkBeliefRow, (people.id, god_id))
     epoch = await scope.epoch()
     if belief is None:

@@ -173,7 +173,7 @@ function DreamCard({
         }
       >
         <MindPicker
-          label='Kind'
+          label='Kind of goal'
           value={goal}
           table={table(view.goals)}
           blocked={busy}
@@ -306,7 +306,7 @@ function WantsAndFears({
           }
         >
           <MindPicker
-            label='Kind'
+            label='Kind of want'
             value={want}
             table={table(view.want_kinds)}
             blocked={busy}
@@ -365,7 +365,7 @@ function WantsAndFears({
           }
         >
           <MindPicker
-            label='Kind'
+            label='Kind of fear'
             value={fear}
             table={table(view.fear_kinds)}
             blocked={busy}

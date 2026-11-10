@@ -5,9 +5,7 @@ from sqlalchemy import select
 from aerona.db.tables.dominion import MagicSiteRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
-from aerona.domain.enums.mind import SkillKind
-from aerona.engine.dominion.sites import SiteTally, reveal
-from aerona.engine.mind.book import skill_level
+from aerona.engine.dominion.sites import SiteTally, can_search, reveal, search_chance
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -23,8 +21,9 @@ class SearchInput(ToolInput):
 
 async def search_magic_sites(call: MortalCall, args: SearchInput) -> str:
     table = call.rules.magic_sites
-    if await skill_level(call.session, call.me.id, SkillKind.SPELLCRAFT) < table.search_skill:
-        fail(MortalResult.SEARCH_REFUSED, why=f"you need spellcraft of {table.search_skill} to search for hidden magic")
+    if not await can_search(call.tick, call.me):
+        need = table.search_skill
+        fail(MortalResult.SEARCH_REFUSED, why=f"you need spellcraft of {need}, or an explorer's tracking of {need}, to search for hidden magic")
     atlas = await RegionAtlas.load(call.session)
     region = atlas.top_region(call.me.id)
     hidden = [
@@ -32,10 +31,12 @@ async def search_magic_sites(call: MortalCall, args: SearchInput) -> str:
         for site in await call.session.scalars(select(MagicSiteRow).where(MagicSiteRow.found_epoch.is_(None)).order_by(MagicSiteRow.id))
         if atlas.top_region(site.place_entity_id) == region
     ]
-    if not hidden:
+    chances = [(await search_chance(call.tick, call.me, site), site) for site in hidden]
+    seekable = [(chance, site) for chance, site in chances if chance > 0]
+    if not seekable:
         return result(MortalResult.SEARCH_EMPTY)
-    site = hidden[0]
-    if not call.tick.rng(f"magic_site.seek.{site.id}.{call.me.id}.{call.epoch}").chance(table.search_pct * 2):
+    chance, site = max(seekable, key=lambda pair: (pair[0], -pair[1].id))
+    if not call.tick.rng(f"magic_site.seek.{site.id}.{call.me.id}.{call.epoch}").chance(chance * 2):
         return result(MortalResult.SEARCH_EMPTY)
     await reveal(call.tick, site, call.me, SiteTally())
     call.target(site.place_entity_id)

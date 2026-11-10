@@ -25,7 +25,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import God, alive, domains_of, faithful_communities, god_of, living_gods
 from aerona.engine.divine.hooks import foes_of
 from aerona.engine.dominion.sites import thrones_held
-from aerona.engine.gods.progress import grant_progress
+from aerona.engine.gods.progress import grant_progress, xp_for_next_level
 from aerona.engine.mind.book import stored_values
 from aerona.engine.notes import note
 from aerona.engine.primitives.faith import worshipper_count
@@ -231,6 +231,9 @@ async def ascend(ctx: TickContext, god: God) -> None:
     if design is None or "rank" in design.locked:
         return
     design.rank += 1
+    if isinstance(god, SonRow) and not held(god.id):
+        need = sum(xp_for_next_level(ctx.rules, god.level + step) for step in range(ctx.rules.god_design.rank_levels)) - god.xp
+        await grant_progress(ctx, god, xp=max(0, need), fame=0)
     await note(ctx, f"{god.name} ascended to a higher divine rank by the thrones it holds.", key="divine.ascended", ids=[god.id], kind=ChronicleKind.ASCENSION)
 
 

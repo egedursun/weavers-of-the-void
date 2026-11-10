@@ -159,7 +159,7 @@ from aerona.db.tables.industry import CommunityIndustryRow, CommunityMethodRow, 
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow, ModifierRow
 from aerona.db.tables.intrigue import BeliefRow, FavourRow, HookRow, IdentityRow, SchemeRow, SecretRow, TrueNameRow
 from aerona.db.tables.justice import CaseWitnessRow, CrimeCaseRow, LawProposalRow, ProposalStanceRow
-from aerona.db.tables.lore import MessageRow
+from aerona.db.tables.lore import FolkBeliefRow, MessageRow
 from aerona.db.tables.military import (
     ArmyMovementRow,
     ArmyOfficerRow,
@@ -315,7 +315,7 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ),
         ("GodDominionPanel", "section-dominion"),
         ("son_turn_system", "mortal_context"),
-        ("shape_image", "raise_divine_creature", "teach_creature", "miracle"),
+        ("shape_image", "raise_divine_creature", "teach_creature", "release_creature", "miracle"),
         ("dominion.image_turned",),
         ("ea5f12047d6b",),
     ),
@@ -2907,6 +2907,17 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         (),
         ("workshop_design:create", "workshop_design:edit", "workshop_design:delete", "workshop_design:release"),
         ("DesignForge",),
+        (),
+        (),
+        (),
+        (),
+    ),
+    ComplianceRow(
+        "Control: folk beliefs",
+        (FolkBeliefRow.__tablename__,),
+        (),
+        ("belief:edit", "belief:rename", "belief:forget"),
+        ("BeliefSection",),
         (),
         (),
         (),

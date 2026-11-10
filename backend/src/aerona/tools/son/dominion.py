@@ -5,6 +5,7 @@ from pydantic import Field
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.db.tables.dominion import DivineCreatureRow, GodImageRow
+from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -33,6 +34,11 @@ class TeachCreatureInput(ToolInput):
     creature_id: int
     deed: CreatureDeed
     lesson: CreatureLesson
+    reason: Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
+
+
+class ReleaseCreatureInput(ToolInput):
+    creature_id: int
     reason: Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
 
 
@@ -68,6 +74,19 @@ async def teach_creature(call: SonCall, args: TeachCreatureInput) -> str:
     return result(SonResult.CREATURE_TAUGHT, told=told, deed=args.deed.value.replace("_", " "))
 
 
+async def release_creature(call: SonCall, args: ReleaseCreatureInput) -> str:
+    row = await call.session.get(DivineCreatureRow, args.creature_id)
+    if row is None or row.god_node_id != call.son.id:
+        fail(SonResult.CREATURE_REFUSED, why="that creature is not yours")
+    beast = await call.session.get(EntityRow, row.creature_entity_id)
+    name = beast.name if beast is not None else "your creature"
+    await call.session.delete(row)
+    await call.session.flush()
+    call.target(args.creature_id)
+    await call.chronicle(ChronicleKind.WORLD, lines.RELEASE_CREATURE, entity_ids=[args.creature_id], son=call.son.name, name=name, reason=args.reason)
+    return result(SonResult.CREATURE_RELEASED, name=name)
+
+
 async def shape_image(call: SonCall, args: ShapeImageInput) -> str:
     row = await call.session.get(GodImageRow, call.son.id)
     if row is None:
@@ -87,5 +106,6 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
             SonToolId.RAISE_DIVINE_CREATURE, AgentKind.SON, RaiseCreatureInput, ToolMeta(ActionKind.INFLUENCE, son_standard_action), raise_divine_creature
         ),
         ToolSpec(SonToolId.TEACH_CREATURE, AgentKind.SON, TeachCreatureInput, ToolMeta(ActionKind.INFLUENCE, son_standard_action), teach_creature),
+        ToolSpec(SonToolId.RELEASE_CREATURE, AgentKind.SON, ReleaseCreatureInput, ToolMeta(ActionKind.INFLUENCE, son_standard_action), release_creature),
         ToolSpec(SonToolId.SHAPE_IMAGE, AgentKind.SON, ShapeImageInput, ToolMeta(ActionKind.INFLUENCE, son_standard_action), shape_image),
     ]

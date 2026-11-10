@@ -167,6 +167,13 @@ export function hoverText(
       lines.push(
         `Ruler: ${control.ruler_name} (${typeName(control.ruler_type, labels).toLowerCase()}) ${Math.round(control.share)}%${control.contested ? ' · contested' : ''}`
       )
+    const rule =
+      view.dominion?.[String(region.id)] ??
+      view.dominion?.[String(region.top_level_id)]
+    if (rule)
+      lines.push(
+        `Divine dominion: ${rule.name} (${rule.kind.replaceAll('_', ' ')}) ${rule.share}%${rule.rivals > 0 ? ` · against ${rule.rivals} rival ${rule.rivals === 1 ? 'god' : 'gods'}` : ''}`
+      )
     const occupied = view.occupations?.[String(region.id)]
     if (occupied)
       lines.push(

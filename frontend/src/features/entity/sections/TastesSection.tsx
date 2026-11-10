@@ -183,7 +183,7 @@ function TasteControls({ view }: { view: CultureMind }) {
     >
       <div className='grid min-w-0 grid-cols-1 gap-3 @xl/taste:grid-cols-4'>
         <MindPicker
-          label='Kind'
+          label='Kind of taste'
           value={kind}
           table={kinds}
           blocked={busy}

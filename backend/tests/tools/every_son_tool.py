@@ -207,6 +207,7 @@ SON_CASES: dict[str, Case] = {
     "convene_gathering": Case(plain(host_id=people, kind="festival", reason=REASON)),
     "raise_divine_creature": Case(plain(home_id=region, name="Grey Warden", description=REASON), rich_son),
     "teach_creature": Case(plain(creature_id=created("creature"), deed="tend_fields", lesson="reward", reason=REASON), son_creature),
+    "release_creature": Case(plain(creature_id=created("creature"), reason=REASON), son_creature),
     "shape_image": Case(plain(stance="embrace", reason=REASON)),
     "incite_war": Case(plain(a_id=people, b_id=other_people, pretext="the river border was crossed")),
     "make_interworld_treaty": Case(plain(a_id=people, b_id=other_people, terms="free passage on the light sail")),

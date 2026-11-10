@@ -686,6 +686,11 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "Left without lessons for {{ rules.divine_creatures.neglect_epochs }} epochs it follows its own hunger. {{ rules.divine_creatures.teach_cost }} essence, 1 action.",
         {"creature_id": "Your creature", "deed": "The deed you reward or punish", "lesson": "reward or punish", "reason": "Why"},
     ),
+    T.RELEASE_CREATURE: ToolText(
+        "You set your divine creature free. It stays in the world as a beast of its own, but it no longer learns from you and its deeds no longer "
+        "count as yours. 1 action.",
+        {"creature_id": "Your creature", "reason": "Why you set it free"},
+    ),
     T.SHAPE_IMAGE: ToolText(
         "You choose how you meet the image your peoples hold of you: yield to it, resist it at "
         "{{ rules.god_images.resist_cost }} essence each epoch, or embrace it to win fame while it reshapes you faster. 1 action.",

@@ -164,6 +164,12 @@ export function ClaimCard({
       />
       <div className='flex min-w-0 flex-wrap gap-1.5'>
         {claim.ruling && <Chip variant='success'>Ruling</Chip>}
+        {claim.trend < 0 && (
+          <Chip variant='destructive'>{`Losing ground: ${claim.trend}`}</Chip>
+        )}
+        {claim.trend > 0 && (
+          <Chip variant='info'>{`Gaining ground: +${claim.trend}`}</Chip>
+        )}
         {held && <Badge variant='outline'>Held</Badge>}
       </div>
       <Facts

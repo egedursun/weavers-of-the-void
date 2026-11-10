@@ -37,6 +37,7 @@ class DominionRow(Base):
     miracles: Mapped[int] = mapped_column(default=0)
     worship: Mapped[int] = mapped_column(default=0)
     spread: Mapped[int] = mapped_column(default=0)
+    trend: Mapped[int] = mapped_column(default=0, server_default="0")
     epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

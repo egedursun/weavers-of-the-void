@@ -15,6 +15,7 @@ class DominionClaimView(ApiModel):
     miracles: int
     worship: int
     spread: int
+    trend: int
     epoch: int
     ruling: bool
     locked: list[str]

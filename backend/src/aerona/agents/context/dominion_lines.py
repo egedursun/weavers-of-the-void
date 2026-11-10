@@ -30,10 +30,14 @@ async def realm_lines(scope: Scope, son: SonRow) -> list[str]:
         parts = [f"{await place_name(scope, row.region_entity_id)} ({row.share}% of the dominion there, {row.rivals} rival gods)" for row in ruled[:shown]]
         found.append(f"You rule {len(ruled)} regions: {', '.join(parts)}")
     ruled_ids = {row.region_entity_id for row in ruled}
-    claims = await session.scalars(select(DominionRow).where(DominionRow.god_node_id == son.id, DominionRow.strength > 0).order_by(DominionRow.strength.desc()))
+    statement = select(DominionRow).where(DominionRow.god_node_id == son.id, DominionRow.strength > 0).order_by(DominionRow.strength.desc())
+    claims = list(await session.scalars(statement))
     contested = [row for row in claims if row.region_entity_id not in ruled_ids]
     for row in contested[:shown]:
         found.append(f"Your dominion over {await place_name(scope, row.region_entity_id)} stands at {row.strength}, yet another god rules there")
+    losing = sorted((row for row in claims if row.trend < 0), key=lambda row: row.trend)
+    for row in losing[:shown]:
+        found.append(f"Your dominion is slipping in {await place_name(scope, row.region_entity_id)}: it fell by {-row.trend} last age")
     return found
 
 

@@ -26,6 +26,7 @@ from aerona.services.images.records import clear_file_name_captions
 from aerona.services.importance import persist_if_missing
 from aerona.services.integrity.age_consistency import raise_lifespans
 from aerona.services.integrity.containment import close_market_trade, close_mismatched_inside
+from aerona.services.integrity.dominion_links import mend_dominion_links
 from aerona.services.integrity.epoch_years import align_epoch_years
 from aerona.services.integrity.folk_names import repair_belief_names
 from aerona.services.integrity.graph_ends import repair_graph_ends
@@ -101,6 +102,7 @@ class DataRepairs:
             ("inside_bonds", lambda session, rules, epoch: close_mismatched_inside(session, epoch)),
             ("market_trade", lambda session, rules, epoch: close_market_trade(session, epoch)),
             ("unfought_truces", close_unfought_truces),
+            ("dominion_links", lambda session, rules, epoch: mend_dominion_links(session)),
             ("missing_inside", lambda session, rules, epoch: add_missing_inside_bonds(session, epoch)),
             ("epoch_years", lambda session, rules, epoch: align_epoch_years(session, rules)),
             ("belief_names", lambda session, rules, epoch: repair_belief_names(session, rules)),

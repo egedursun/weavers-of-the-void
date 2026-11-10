@@ -208,7 +208,7 @@ async def voices_of_peoples(runtime: AgentRuntime, epoch: int) -> VoicesResult:
             name = pair.known_name or (
                 belief.name.strip() if valid_belief_name(belief.name, son, scope.creator, rules.folk_belief.god_name_max_letters) else ""
             )
-            name = name or f"Lord of {pair.domain_1}"
+            name = name or f"God of {pair.domain_1}"
             row = await session.get(FolkBeliefRow, (belief.people_id, god_id))
             if row is None:
                 session.add(

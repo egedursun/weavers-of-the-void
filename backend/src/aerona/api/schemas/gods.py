@@ -100,6 +100,7 @@ class ForeignGodDetail(ApiModel):
     bond_total: int
     chronicle: list[ChronicleLineRecord]
     sons_here: list[NodeRef]
+    folk_views: list[FolkView]
     images: list[ImageRecord]
     cover: str | None
 

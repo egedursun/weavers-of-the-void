@@ -66,6 +66,7 @@ RAISE_NEXUS = Line("tools.son.raise_nexus", "{son} drew the ley lines together a
 SEVER_LEY = Line("tools.son.sever_ley", "{son} cut the ley line between {first} and {second}: {reason}")
 CONVENE_GATHERING = Line("tools.son.convene_gathering", "{son} called {kind:an} at {host}: {reason}")
 RAISE_CREATURE = Line("tools.son.raise_creature", "{son} raised {name} as a divine creature at {home}")
+RELEASE_CREATURE = Line("tools.son.release_creature", "{son} set {name} free of its service: {reason}")
 SHAPE_IMAGE = Line("tools.son.shape_image", "{son} chose to {stance} the image its peoples hold of it: {reason}")
 LOOSE_DISEASE = Line("tools.son.loose_disease", "{son} loosed a sickness of its own making, {disease}, upon {target}: {reason}")
 SHAPE_FOLK = Line("tools.son.shape_folk", "{son} taught {people} new ways: {changes}. {reason}")

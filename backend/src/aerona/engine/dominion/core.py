@@ -135,7 +135,8 @@ async def gather(ctx: TickContext, atlas: RegionAtlas) -> Gathered:
         god = gathered.patrons.get(community.id)
         region = atlas.top_region(community.id)
         if god is not None and region is not None:
-            gathered.sources[(god, region)].worship += table.worship_weight
+            folk = stat_or(community, "population", table.worship_population)
+            gathered.sources[(god, region)].worship += round_half_up(table.worship_weight * min(1.0, folk / table.worship_population))
     return gathered
 
 
@@ -204,7 +205,9 @@ async def settle(ctx: TickContext, atlas: RegionAtlas, gathered: Gathered, tally
         elif value <= 0 and found.total() == 0:
             await ctx.session.delete(current)
             continue
-        current.strength = clamp_int(value, 0, PERCENT)
+        settled = clamp_int(value, 0, PERCENT)
+        current.trend = settled - (current.strength or 0)
+        current.strength = settled
         for column in COLUMNS:
             setattr(current, column, getattr(found, column))
         current.spread = max(0, current.strength - clamp_int(found.total(), 0, PERCENT))

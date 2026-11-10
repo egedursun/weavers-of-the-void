@@ -3,7 +3,7 @@ from sqlalchemy import select
 
 from aerona.api.actions import Alias, mount_all
 from aerona.api.dependencies import ServicesDep, reader, world_rules
-from aerona.api.schemas.gods import ForeignGodDetail, ForeignGodWorshipper
+from aerona.api.schemas.gods import FolkView, ForeignGodDetail, ForeignGodWorshipper
 from aerona.api.schemas.records import EntitySummary, ForeignGodPower, ForeignGodRecord, NodeRef, WorldRecord
 from aerona.api.views.common import bond_count, bond_views, chronicle_lines, foreign_god_record, foreign_god_records, images_of
 from aerona.constants.api import RELATION_PAGE_DEFAULT, RELATION_PAGE_MAX
@@ -12,7 +12,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow
-from aerona.db.tables.lore import ChronicleRow
+from aerona.db.tables.lore import ChronicleRow, FolkBeliefRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -75,6 +75,12 @@ async def read_foreign_god(
             )
         )
         sons = await session.scalars(select(SonRow).where(SonRow.current_world_id == god.world_id).order_by(SonRow.id))
+        beliefs = await session.execute(
+            select(FolkBeliefRow, EntityRow.name)
+            .join(EntityRow, EntityRow.id == FolkBeliefRow.people_entity_id)
+            .where(FolkBeliefRow.god_node_id == god.id)
+            .order_by(FolkBeliefRow.epoch.desc(), FolkBeliefRow.people_entity_id)
+        )
         return ForeignGodDetail(
             god=await foreign_god_record(session, god),
             powers=[ForeignGodPower(slot=row.slot, name=row.name, effect=row.effect.value, description=row.description) for row in powers],
@@ -89,6 +95,17 @@ async def read_foreign_god(
             bond_total=await bond_count(session, god.id, active_only=False),
             chronicle=await chronicle_lines(session, list(reversed(lines))),
             sons_here=[NodeRef(id=son.id, kind=son.kind, name=son.name) for son in sons],
+            folk_views=[
+                FolkView(
+                    people_id=row.people_entity_id,
+                    people_name=name,
+                    local_name=row.local_name,
+                    account=row.account,
+                    misconception=row.misconception,
+                    epoch=row.epoch,
+                )
+                for row, name in beliefs
+            ],
             images=await images_of(session, god.id),
             cover=await cover_of(session, god.id),
         )

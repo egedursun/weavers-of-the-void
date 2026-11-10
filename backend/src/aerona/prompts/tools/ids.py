@@ -68,6 +68,7 @@ class SonToolId(StrEnum):
     CONVENE_GATHERING = "convene_gathering"
     RAISE_DIVINE_CREATURE = "raise_divine_creature"
     TEACH_CREATURE = "teach_creature"
+    RELEASE_CREATURE = "release_creature"
     SHAPE_IMAGE = "shape_image"
     FORGE_MATERIAL = "forge_material"
     HIDE_SECRET = "hide_secret"

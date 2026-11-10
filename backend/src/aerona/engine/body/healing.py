@@ -34,6 +34,7 @@ from aerona.domain.enums.body import (
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import ItemClass, Technique
 from aerona.domain.enums.divine import DomainHook
+from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.economy import MaterialSlot
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.material import MaterialKind
@@ -50,6 +51,7 @@ from aerona.engine.body.treatment import bleed, regain_blood, treat
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import hospital_strengths
 from aerona.engine.disease.load import DiseaseLoads
+from aerona.engine.dominion.effects import step_here
 from aerona.engine.economy.materials import set_node_material
 from aerona.engine.gods.queries import community_of
 from aerona.engine.interconnect.guards import blocked
@@ -420,6 +422,14 @@ async def _progress(ctx: TickContext, bearer: Bearer, row: InjuryRow, care: Care
     return False
 
 
+async def mending_of(ctx: TickContext, bearer: Bearer) -> float:
+    mending = 1 + lean_factor(await attribute(ctx.session, ctx.rules, bearer, Attribute.RECUPERATION), ctx.rules.mind_split.recuperation_pct)
+    mending *= await ctx.hook_factor(bearer.id, DomainHook.HEALING)
+    if isinstance(bearer, EntityRow):
+        mending *= await step_here(ctx, bearer.id, DivineScale.GROWTH, ctx.rules.dominion.healing_per_step_pct)
+    return mending
+
+
 async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending:
     if blocked(bearer.id, HEALING_KEY):
         return Tending()
@@ -439,8 +449,7 @@ async def tend(ctx: TickContext, bearer: Bearer, world: HealingWorld) -> Tending
     skill = care.healer.skill if care.healer is not None else 0
     split = ctx.rules.mind_split
     ward = 1 - lean_factor(await attribute(ctx.session, ctx.rules, bearer, Attribute.DISEASE_RESISTANCE), split.resistance_pct)
-    mending = 1 + lean_factor(await attribute(ctx.session, ctx.rules, bearer, Attribute.RECUPERATION), split.recuperation_pct)
-    mending *= await ctx.hook_factor(bearer.id, DomainHook.HEALING)
+    mending = await mending_of(ctx, bearer)
     for row in wounds:
         if row.state not in OPEN_INJURY_STATES:
             continue

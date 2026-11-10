@@ -685,7 +685,7 @@ function HoldingsCard({ ctx }: { ctx: Ctx }) {
       >
         <div className='flex min-w-0 flex-col gap-1'>
           <Label as='label' htmlFor={`title-name-${view.node_id}`}>
-            Name
+            Title name
           </Label>
           <Input
             id={`title-name-${view.node_id}`}

@@ -65,7 +65,7 @@ export function LegendsSection({
       >
         <div className='grid min-w-0 grid-cols-1 items-end gap-2 sm:grid-cols-2 lg:grid-cols-4'>
           <MindPicker
-            label='Kind'
+            label='Kind of history'
             value={kind}
             table={{ [ANY]: 'Every kind', ...table(COLLECTION_KINDS) }}
             blocked={null}

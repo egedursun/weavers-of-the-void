@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.divine import AvatarRow
+from aerona.db.tables.dominion import GodDesignRow, GodImageRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
@@ -14,7 +15,7 @@ from aerona.engine.divine.standing import standing_row
 from aerona.engine.divine.wounds import manifestation_broken
 from aerona.engine.notes import note
 from aerona.engine.primitives.faith import change_religion
-from aerona.engine.primitives.numbers import clamp_int, clamp_percent
+from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up
 from aerona.engine.primitives.records import RecordSpec, open_record
 
 
@@ -30,15 +31,20 @@ async def manifest(ctx: TickContext, god: God, place: EntityRow) -> EntityRow:
         raise ValidationFailedError(f"{god.name} already walks the world in {table.max_per_god} mortal forms.")
     if place.entity_type not in COMMUNITY_TYPES and place.entity_type is not EntityType.REGION:
         raise ValidationFailedError("An avatar must walk among a people, a settlement or a land.")
+    design = await ctx.session.get(GodDesignRow, god.id)
+    image = await ctx.session.get(GodImageRow, god.id)
+    floor = ctx.rules.god_design.manifestation_floor_pct / PERCENT
+    vigour = floor + (1 - floor) * (design.manifestation_strength if design is not None else PERCENT) / PERCENT
+    seen = f" Its peoples see it as {image.manifestation.value}." if image is not None else ""
     avatar = await open_record(
         ctx.session,
         ctx.epoch,
         RecordSpec(
             name=f"{god.name} in mortal form",
             entity_type=EntityType.MORTAL,
-            body=f"The mortal form of {god.name}.",
+            body=f"The mortal form of {god.name}.{seen}",
             stats=MortalStats(
-                hp=table.hp,
+                hp=max(1, round_half_up(table.hp * vigour)),
                 strength=clamp_percent(god.strength),
                 agility=clamp_percent(god.agility),
                 intellect=clamp_percent(god.wisdom),
@@ -46,7 +52,7 @@ async def manifest(ctx: TickContext, god: God, place: EntityRow) -> EntityRow:
                 age=table.age,
                 lifespan=table.lifespan,
             ),
-            power=clamp_int(god.might, 1, PERCENT),
+            power=clamp_int(round_half_up(god.might * vigour), 1, PERCENT),
             location_id=place.id,
             world_id=place.world_id,
             mortal_role=MortalRole.CHOSEN,

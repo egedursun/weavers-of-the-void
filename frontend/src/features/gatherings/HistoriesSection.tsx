@@ -89,7 +89,7 @@ export function SetDownHistory({
       }
     >
       <MindPicker
-        label='Kind'
+        label='Kind of history'
         value={kind}
         table={table(COLLECTION_KINDS)}
         blocked={busy}
@@ -97,7 +97,7 @@ export function SetDownHistory({
       />
       <div className='flex min-w-0 flex-col gap-1'>
         <Label as='label' htmlFor={`history-name-${nodeId ?? 'all'}`}>
-          Name
+          History name
         </Label>
         <Input
           id={`history-name-${nodeId ?? 'all'}`}

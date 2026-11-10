@@ -15,10 +15,12 @@ from aerona.db.tables.faith import SpiritProfileRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import LegendArchetype
+from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.context import TickContext
+from aerona.engine.dominion.effects import scale_here
 from aerona.engine.environment.perils import haunt_factor
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
@@ -57,7 +59,8 @@ async def spirits_rest(ctx: TickContext) -> None:
         if spirit.origin is not EntityOrigin.ENGINE or spirit.engine_kind is EngineKind.GOD_SHADE:
             continue
         current = stat(spirit, "unrest")
-        unrest = clamp_int((current if current is not None else life.spirit_default_unrest) - world_rules.spirit_unrest_decay, 0, PERCENT)
+        death = max(0, -await scale_here(ctx, spirit.id, DivineScale.GROWTH)) * rules.dominion.spirit_unrest_per_step
+        unrest = clamp_int((current if current is not None else life.spirit_default_unrest) - world_rules.spirit_unrest_decay + death, 0, PERCENT)
         set_stats(spirit, unrest=unrest)
         age = ctx.epoch - spirit.birth_epoch
         if age >= life.spirit_rest_min_age and unrest < world_rules.spirit_rest_threshold and rng.chance(world_rules.spirit_rest_chance):

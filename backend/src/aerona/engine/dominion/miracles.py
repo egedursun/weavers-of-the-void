@@ -4,11 +4,14 @@ from types import MappingProxyType
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.dominion import MiracleRecordRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.gatherings import GatheringGuestRow, GatheringRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
+from aerona.domain.enums.gathering import GatheringStatus
 from aerona.domain.enums.intervention import Miracle
 from aerona.domain.enums.mind import PressureKind
 from aerona.engine.context import TickContext
@@ -99,7 +102,10 @@ async def impress(ctx: TickContext, god_id: int, target: EntityRow, *, kind: str
     legibility = PERCENT if legible else PERCENT // 2
     need = await need_at(ctx, target, community)
     novelty = await novelty_of(ctx, god_id, kind, region)
-    belief = belief_of(ctx, magnitude=clamp_int(magnitude, 0, PERCENT), witnesses=witnesses, need=need, novelty=novelty, legibility=legibility)
+    power = (await DominionBook.load(ctx.session)).power_factor(ctx.rules, god_id, region, ctx.rules.dominion.miracle_power_pct)
+    belief = round_half_up(
+        belief_of(ctx, magnitude=clamp_int(magnitude, 0, PERCENT), witnesses=witnesses, need=need, novelty=novelty, legibility=legibility) * power
+    )
     credit = await credited(ctx, god_id, kind, region, legible)
     row = MiracleRecordRow(
         god_node_id=god_id,
@@ -128,11 +134,27 @@ async def impress(ctx: TickContext, god_id: int, target: EntityRow, *, kind: str
     return row
 
 
+async def gathered_with(ctx: TickContext, target: EntityRow) -> int:
+    held_here = select(GatheringRow.id).where(
+        GatheringRow.epoch == ctx.epoch,
+        GatheringRow.status.in_([GatheringStatus.HELD, GatheringStatus.DISRUPTED]),
+        (GatheringRow.place_entity_id == target.id) | GatheringRow.id.in_(select(GatheringGuestRow.gathering_id).where(GatheringGuestRow.node_id == target.id)),
+    )
+    statement = (
+        select(func.count())
+        .select_from(GatheringGuestRow)
+        .where(GatheringGuestRow.gathering_id.in_(held_here), GatheringGuestRow.attended.is_(True), GatheringGuestRow.node_id != target.id)
+    )
+    return int(await ctx.session.scalar(statement) or 0)
+
+
 async def witness_count(ctx: TickContext, target: EntityRow) -> int:
+    crowd = await gathered_with(ctx, target)
     if target.entity_type not in COMMUNITY_TYPES:
-        return 1
-    statement = select(func.count()).select_from(EntityRow).where(await present_in(ctx.session, target), EntityRow.status == EntityStatus.CANON)
-    return max(1, int(await ctx.session.scalar(statement) or 0))
+        return 1 + crowd
+    named = select(func.count()).select_from(EntityRow).where(await present_in(ctx.session, target), EntityRow.status == EntityStatus.CANON)
+    cohorts = select(func.coalesce(func.sum(CohortRow.count), 0)).where(CohortRow.community_entity_id == target.id)
+    return max(1, int(await ctx.session.scalar(named) or 0) + int(await ctx.session.scalar(cohorts) or 0) + crowd)
 
 
 async def miracle_factor(ctx: TickContext, god_id: int, target: EntityRow) -> float:

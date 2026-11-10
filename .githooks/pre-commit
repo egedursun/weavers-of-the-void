@@ -26,6 +26,7 @@ run import_cycles "$PYTHON" scripts/check_import_cycles.py
 run hidden_controls "$PYTHON" scripts/check_hidden_controls.py
 run label_maps "$PYTHON" scripts/check_label_maps.py
 run unpaged_lists "$PYTHON" scripts/check_unpaged_lists.py
+run shared_labels "$PYTHON" scripts/check_shared_labels.py
 run orphans "$PYTHON" scripts/check_orphans.py
 run frontend_orphans "$PYTHON" scripts/check_frontend_orphans.py
 run folk_queries "$PYTHON" scripts/check_folk_queries.py

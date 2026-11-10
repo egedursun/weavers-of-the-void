@@ -11,6 +11,7 @@ from aerona.domain.enums.body import HarmCause, InjuryKind, MaimedKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.demography import Job
+from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.economy import CommodityKind, ExtractionKind, GoodsFlow, HazardKind
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.environment import TerrainKind
@@ -22,6 +23,7 @@ from aerona.engine.body.cohorts import cohort, labour_factor
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import cosmography_of
+from aerona.engine.dominion.effects import step_here
 from aerona.engine.ecology.domestication import draught
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of, lots_of
@@ -228,6 +230,8 @@ async def output_of(ctx: TickContext, book: EconomyBook, resource: EntityRow, pr
         raw *= fish_factor(ctx.rules, book.pollution.get(region_key(book, resource.id)))
     if kind is ExtractionKind.FARMING:
         raw *= await draught(ctx, community.id)
+    else:
+        raw *= await step_here(ctx, community.id, DivineScale.PRODUCTIVITY, ctx.rules.dominion.output_per_step_pct)
     if kind is ExtractionKind.MINING:
         ladder = await cosmography_of(ctx.session)
         raw *= ladder.pull(ctx.rules, ladder.place_world_id(resource.world_id)).ore

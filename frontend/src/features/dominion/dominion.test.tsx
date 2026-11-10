@@ -29,6 +29,7 @@ const CLAIM = {
   miracles: 4,
   worship: 30,
   spread: 0,
+  trend: -6,
   epoch: 5,
   ruling: true,
   locked: [],
@@ -165,6 +166,7 @@ describe('dominion', () => {
     const { screen } = await renderApp(<DominionSection nodeId={7} />)
     await expect.element(screen.getByText('Low Vale').first()).toBeVisible()
     await expect.element(screen.getByText('Turmoil 2')).toBeVisible()
+    await expect.element(screen.getByText('Losing ground: -6')).toBeVisible()
     await expect.element(screen.getByText('Malevolent').first()).toBeVisible()
     await expect.element(screen.getByText('Resists belief')).toBeVisible()
     await expect.element(screen.getByText('Harrow').first()).toBeVisible()

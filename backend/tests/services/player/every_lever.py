@@ -1392,6 +1392,11 @@ LEVERS: dict[str, Lever] = {
     "belief:rename": after(
         ("belief:edit", {"people_id": Pick(EntityType.PEOPLE), "son_id": Pick("son"), "narrative": "The god came down with the rain."}), son_id=Pick("son")
     ),
+    "belief:forget": after(
+        ("belief:edit", {"people_id": Pick(EntityType.PEOPLE), "god_id": Pick("foreign_god"), "narrative": "The god came down with the rain."}),
+        people_id=Pick(EntityType.PEOPLE),
+        god_id=Pick("foreign_god"),
+    ),
     "civilization:barter": Lever(values={"first_id": Pick(TOWN), "second_id": Pick(TOWN, 1)}, setup=bartering_towns),
     "speculation:open": Lever(values={"merchant_id": Pick(MORTAL), "market_id": Pick(TOWN), "commodity": "grain", "units": 5, "price": 10}, setup=market_goods),
     **{

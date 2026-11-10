@@ -9,18 +9,20 @@ from aerona.db.tables.divine import DivineStandingRow
 from aerona.db.tables.dominion import GodImageRow, MiracleRecordRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.interconnect import IncidentRow
+from aerona.db.tables.lore import FolkBeliefRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import BeliefStance, PerceivedAlignment
 from aerona.domain.enums.intervention import Miracle
-from aerona.domain.enums.mind import PressureKind
+from aerona.domain.enums.mind import Facet, PressureKind
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import God, domains_of, faithful_communities, living_gods
 from aerona.engine.dominion.miracles import MIRACLE_DOMAINS, MIRACLE_KINDS
 from aerona.engine.dominion.worship import perceived_of
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mind.ethics import at_war
+from aerona.engine.mind.split import facets_of, write_facets
 from aerona.engine.notes import note
 from aerona.engine.primitives.holds import is_held
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -95,6 +97,15 @@ def toward(current: int, target: int, pull: int) -> int:
     return clamp_int(current + round_half_up((target - current) * pull / PERCENT), 0, PERCENT)
 
 
+async def pull_facets(ctx: TickContext, god: God, row: GodImageRow, pull: int) -> None:
+    share = pull * ctx.rules.god_images.facet_pull_pct / PERCENT
+    current = await facets_of(ctx.session, god.id)
+    aims = {Facet.ANGER: row.believed_wrath - NEUTRAL, Facet.ALTRUISM: row.believed_mercy - NEUTRAL}
+    moved = {facet: current.get(facet, 0) + round_half_up((aim - current.get(facet, 0)) * share / PERCENT) for facet, aim in aims.items()}
+    if any(moved[facet] != current.get(facet, 0) for facet in moved):
+        await write_facets(ctx.session, god.id, moved)
+
+
 async def shape(ctx: TickContext, god: God, row: GodImageRow, tally: ImageTally) -> None:
     table = ctx.rules.god_images
     pull = row.pull
@@ -114,7 +125,8 @@ async def shape(ctx: TickContext, god: God, row: GodImageRow, tally: ImageTally)
             god.wrath = toward(god.wrath, row.believed_wrath, pull)
         if not await is_held(ctx.session, god.id, "mercy", ctx.epoch):
             god.mercy = toward(god.mercy, row.believed_mercy, pull)
-    elif isinstance(god, ForeignGodRow) and not await is_held(ctx.session, god.id, "stance", ctx.epoch):
+    await pull_facets(ctx, god, row, pull)
+    if isinstance(god, ForeignGodRow) and not await is_held(ctx.session, god.id, "stance", ctx.epoch):
         aim = PERCENT if row.believed_alignment is PerceivedAlignment.BENEVOLENT else -PERCENT if row.believed_alignment is PerceivedAlignment.MALEVOLENT else 0
         god.stance = clamp_int(god.stance + round_half_up((aim - god.stance) * pull / PERCENT), -PERCENT, PERCENT)
     domain = row.believed_domain
@@ -157,7 +169,10 @@ async def read_image(ctx: TickContext, god: God, tally: ImageTally) -> None:
     for key, value in values.items():
         if key not in row.locked:
             setattr(row, key, value)
-    row.intensity = clamp_int(common[1] * PERCENT / len(views), 0, PERCENT)
+    told = int(await ctx.session.scalar(select(func.count()).select_from(FolkBeliefRow).where(FolkBeliefRow.god_node_id == god.id)) or 0)
+    credence = table.folk_credence_pct / PERCENT
+    uniformity = common[1] / len(views)
+    row.intensity = clamp_int(uniformity * (1 - credence + credence * min(1.0, told / len(views))) * PERCENT, 0, PERCENT)
     row.worship_share = clamp_int(len(believers) * PERCENT / len(rows), 0, PERCENT)
     row.crisis = await crisis_of(ctx, god, believers)
     row.malleability = malleability_of(ctx, god)

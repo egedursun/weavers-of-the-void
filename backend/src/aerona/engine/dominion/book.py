@@ -4,9 +4,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.read_memo import memo_of, table_names
 from aerona.db.tables.dominion import DominionRow, GodDesignRow, GodScaleRow, RegionDominionRow
 from aerona.domain.enums.dominion import DivineScale
 from aerona.rules.registry import Rules
+
+BOOK_TABLES = table_names((DominionRow, RegionDominionRow, GodScaleRow, GodDesignRow))
+HALF = PERCENT // 2
 
 
 @dataclass
@@ -18,6 +22,10 @@ class DominionBook:
 
     @classmethod
     async def load(cls, session: AsyncSession) -> "DominionBook":
+        memo = memo_of(session, "dominion", BOOK_TABLES)
+        if memo is not None and "book" in memo:
+            found: DominionBook = memo["book"]
+            return found
         book = cls()
         for ruler in await session.scalars(select(RegionDominionRow)):
             book.rulers[ruler.region_entity_id] = ruler
@@ -27,6 +35,8 @@ class DominionBook:
             book.scales[(scale.god_node_id, scale.scale)] = scale.value
         for design in await session.scalars(select(GodDesignRow)):
             book.designs[design.god_node_id] = design
+        if memo is not None:
+            memo["book"] = book
         return book
 
     def ruler(self, rules: Rules, region_id: int | None) -> int | None:
@@ -52,3 +62,17 @@ class DominionBook:
 
     def ruled_regions(self, rules: Rules, god_id: int) -> list[int]:
         return sorted(region for region in self.rulers if self.ruler(rules, region) == god_id)
+
+    def power_factor(self, rules: Rules, god_id: int | None, region_id: int | None, pct: int) -> float:
+        if god_id is None:
+            return 1.0
+        return 1 + pct * self.share(region_id, god_id) / PERCENT / PERCENT
+
+    def aptitude_factor(self, rules: Rules, god_id: int | None) -> float:
+        design = self.designs.get(god_id) if god_id is not None else None
+        if design is None:
+            return 1.0
+        return max(0.0, 1 + (design.magic_aptitude - HALF) / HALF * rules.god_design.aptitude_rite_pct / PERCENT)
+
+    def step_factor(self, rules: Rules, region_id: int | None, scale: DivineScale, pct: int) -> float:
+        return max(0.0, 1 + self.scale_at(rules, region_id, scale) * pct / PERCENT)

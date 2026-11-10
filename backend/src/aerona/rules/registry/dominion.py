@@ -43,6 +43,21 @@ class DominionRules:
     magic_per_step: int = rule(5, 0, 100, D, "Magic density each step of magic adds to a dominated region, and each step of drain removes")
     deed_shift_count: int = rule(3, 1, 100, D, "Like deeds of a god in recent epochs that move one of its scales a step toward them")
     ward_per_step_pct: int = rule(8, 0, 100, D, "Better warding each step of drain gives rites in a dominated region (%)")
+    order_per_step: int = rule(4, 0, 100, D, "Public order each step of order adds to the settlements of a dominated region, and each step of turmoil removes")
+    crime_per_step: int = rule(3, 0, 100, D, "Crime each step of order removes from the settlements of a dominated region, and each step of turmoil adds")
+    unrest_per_step: int = rule(3, 0, 100, D, "Unrest each step of turmoil adds to the settlements of a dominated region each epoch")
+    output_per_step_pct: int = rule(
+        5, 0, 100, D, "Output of mines, quarries, forests and other works each step of productivity adds, and each step of sloth removes (%)"
+    )
+    healing_per_step_pct: int = rule(
+        8, 0, 100, D, "Better healing of wounds each step of growth gives in a dominated region, and worse healing each step of death (%)"
+    )
+    spirit_unrest_per_step: int = rule(3, 0, 100, D, "Unrest each step of death adds to the spirits of a dominated region each epoch")
+    rite_power_pct: int = rule(25, 0, 200, D, "Extra power of a god's rites cast where its dominion holds the whole region (%)")
+    miracle_power_pct: int = rule(25, 0, 200, D, "Extra belief a god's miracle wins where its dominion holds the whole region (%)")
+    worship_population: int = rule(1000, 1, 1000000, D, "Folk whose worship gives their god the full worship weight in their region")
+    blame_fear: int = rule(6, 0, 100, D, "Fear a disaster in a dominated region wins its ruling god among the communities it strikes")
+    blame_love: int = rule(4, 0, 100, D, "Love a disaster in a dominated region costs its ruling god among the communities it strikes")
 
 
 @dataclass(frozen=True)
@@ -83,6 +98,8 @@ class GodImageRules:
     fading_malleability: int = rule(80, 0, 100, D, "Malleability of a fading god, before its will and pride")
     radiant_malleability: int = rule(10, 0, 100, D, "Malleability of a radiant god, before its will and pride")
     will_resist_pct: int = rule(50, 0, 100, D, "Share of a god's will and ambition that resists its believed image (%)")
+    facet_pull_pct: int = rule(50, 0, 200, D, "Share of the pull that moves a god's anger and altruism toward its believed wrath and mercy (%)")
+    folk_credence_pct: int = rule(50, 0, 100, D, "Share of belief intensity that comes from the peoples who tell their own stories of the god (%)")
 
 
 @dataclass(frozen=True)
@@ -91,7 +108,7 @@ class ThroneRules:
     power: int = rule(60, 0, 100, D, "Power of a new throne")
     dominion_share: int = rule(60, 0, 100, D, "Share of a throne's region a god's dominion needs to hold the throne (%)")
     essence: int = rule(6, 0, 10000, P, "Essence a held throne gives its god each epoch at full power")
-    standing: int = rule(2, 0, 100, D, "Awe the communities around a throne feel for its god each epoch")
+    standing: int = rule(2, 0, 100, D, "Awe the communities of a throne's world feel for the god who holds it each epoch")
     spread_pct: int = rule(25, 0, 200, D, "Extra spread a god's dominion gains from each throne it holds (%)")
     ascension_share: int = rule(51, 1, 100, D, "Share of a world's thrones a god must hold for its ascension goal to count that world (%)")
     ascension_worlds: int = rule(1, 1, 100, D, "Worlds whose thrones a god must hold to ascend")
@@ -103,7 +120,10 @@ class MagicSiteRules:
     per_world: int = rule(4, 0, 100, D, "Magic sites hidden on each world")
     strength: int = rule(50, 0, 100, D, "Strength of a new magic site")
     search_pct: int = rule(20, 0, 100, D, "Chance a mage with the site's school searches its land and finds it each epoch (%)")
-    search_skill: int = rule(40, 0, 100, D, "Spellcraft a mage needs before searching for hidden magic sites")
+    search_skill: int = rule(
+        40, 0, 100, D, "Spellcraft in a site's school a mage needs, or tracking an explorer needs, before searching for hidden magic sites"
+    )
+    explorer_search_pct: int = rule(10, 0, 100, D, "Chance an explorer without the site's school searches its land and finds it each epoch (%)")
     output_pct: int = rule(20, 0, 200, D, "Reagents a source site yields its holder each epoch for each point of strength (%)")
     school_pct: int = rule(25, 0, 200, D, "Extra power rites of the site's school gain in its region at full strength (%)")
     ward_pct: int = rule(25, 0, 200, D, "Extra warding rites gain in a warded site's region at full strength (%)")
@@ -140,3 +160,8 @@ class GodDesignRules:
     scale_cost: int = rule(4, 0, 100, P, "Design cost of each step of a scale toward its favoured pole, and refund of each step toward its other pole")
     power_cost: int = rule(10, 0, 100, P, "Design cost of each power")
     stats_floor_pct: int = rule(50, 0, 100, P, "Least share of its rolled stats a son keeps however much it spends on the rest of its design (%)")
+    aptitude_rite_pct: int = rule(
+        40, 0, 200, P, "Extra power a god of full magic aptitude gives the rites of its faithful, and the power a god of none takes away (%)"
+    )
+    manifestation_floor_pct: int = rule(50, 0, 100, P, "Share of its full health and power a god's mortal form keeps at no manifestation strength (%)")
+    rank_levels: int = rule(5, 0, 100, P, "Levels each divine rank counts as toward unlocking power slots")

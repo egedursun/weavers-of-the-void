@@ -362,6 +362,7 @@ class SonResult(StrEnum):
     GATHERING_REFUSED = "You cannot call that gathering: {{ why }}."
     CREATURE_RAISED = "{{ name }} rose as your divine creature (id {{ id }}); it acts on its own and learns from what you reward and punish."
     CREATURE_TAUGHT = "You {{ told }} your creature for {{ deed }}; it will lean that way."
+    CREATURE_RELEASED = "You set {{ name }} free; it no longer acts as your creature or counts as your deed."
     CREATURE_REFUSED = "You cannot do that with a divine creature: {{ why }}."
     IMAGE_SHAPED = "You now {{ stance }} the image your peoples hold of you."
     IMAGE_REFUSED = "You cannot change how you meet your image: {{ why }}."

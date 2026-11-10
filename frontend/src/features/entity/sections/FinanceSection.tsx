@@ -398,7 +398,7 @@ function PoliciesCard({ view, blocked, hold }: Props) {
         }
       >
         <MindPicker
-          label='Kind'
+          label='Kind of policy'
           value={kind}
           table={table(view.policy_kinds)}
           blocked={busy}

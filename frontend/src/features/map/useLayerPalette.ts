@@ -417,6 +417,13 @@ export function buildLayerPalette(
       if (!tint) continue
       tints.set(region.id, tint)
       counts.set(tint.key, (counts.get(tint.key) ?? 0) + 1)
+      if (mode === 'dominion') {
+        const rule =
+          view.dominion?.[String(region.id)] ??
+          view.dominion?.[String(region.top_level_id)]
+        if (rule && rule.rivals > 0) contested.add(region.id)
+        continue
+      }
       if (mode !== 'political') continue
       const control = controlOf(view, region.id, region.top_level_id)
       if (!control) continue

@@ -73,6 +73,7 @@ async def claim_views(session: AsyncSession, claims: list[DominionRow]) -> list[
             miracles=row.miracles,
             worship=row.worship,
             spread=row.spread,
+            trend=row.trend,
             epoch=row.epoch,
             ruling=(row.god_node_id, row.region_entity_id) in ruling,
             locked=list(row.locked),

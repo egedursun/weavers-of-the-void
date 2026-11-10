@@ -13,6 +13,7 @@ from aerona.engine.primitives.renames import rewrite_name
 from aerona.services.integrity.folk_names import rename_belief
 from aerona.services.narrative import clean_chronicle_text, collapse_spaces
 from aerona.services.player import guards
+from aerona.services.player.canon import believed_god
 from aerona.services.player.chronicle import hand
 from aerona.services.player.lines import BELIEF_NAME_DERIVED, NAME_ACCEPTED
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
@@ -27,6 +28,7 @@ class EditChronicleLine(Command):
 class BeliefTarget(Command):
     people_id: int
     son_id: int | None = None
+    god_id: int | None = None
 
 
 class AcceptName(Command):
@@ -59,7 +61,7 @@ async def edit_chronicle_line(scope: PlayerScope, command: EditChronicleLine) ->
 @player_action("belief:rename", ActionKind.EDIT_RECORD)
 async def rename_folk_god(scope: PlayerScope, command: BeliefTarget) -> Effect:
     people = await guards.entity(scope.session, command.people_id)
-    god_id = (await guards.son(scope.session, command.son_id)).id if command.son_id is not None else (await scope.creator()).id
+    god_id, _ = await believed_god(scope, command.son_id, command.god_id)
     belief = await scope.session.get(FolkBeliefRow, (people.id, god_id))
     if belief is None:
         raise NotFoundError(f"{people.name} tells no tale of this god yet.")

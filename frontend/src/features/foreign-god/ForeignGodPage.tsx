@@ -9,6 +9,7 @@ import { BodySection } from '@/features/entity/sections/BodySection'
 import { MemoriesSection } from '@/features/entity/sections/MemoriesSection'
 import { MindSection } from '@/features/entity/sections/MindSection'
 import { ThingSections } from '@/features/entity/sections/ThingSections'
+import { BeliefSection } from '@/features/pantheon/BeliefSection'
 import { ChronicleList } from '@/features/pantheon/ChronicleList'
 import { RecordGallery } from '@/features/pantheon/RecordGallery'
 import { AttitudeBar } from './AttitudeBar'
@@ -67,6 +68,12 @@ export function ForeignGodPage({ id }: DrawerPageProps) {
       <MindSection nodeId={god.id} />
       <MemoriesSection nodeId={god.id} />
       <GodDivinitySection godId={god.id} />
+      <BeliefSection
+        views={data.folk_views}
+        sonId={null}
+        godId={god.id}
+        godName={god.name}
+      />
       <ThingSections nodeId={god.id} />
       <ForeignGodDepth god={god} />
       <ForeignGodRelations detail={data} />

@@ -519,7 +519,7 @@ function ConveneForm({
       }
     >
       <MindPicker
-        label='Kind'
+        label='Kind of gathering'
         value={kind}
         table={table(GATHERING_KINDS)}
         blocked={busy}

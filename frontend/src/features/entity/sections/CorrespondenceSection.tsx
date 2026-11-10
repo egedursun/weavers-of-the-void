@@ -902,7 +902,7 @@ function SignalsCard({ ctx }: { ctx: Ctx }) {
         }
       >
         <MindPicker
-          label='Kind'
+          label='Kind of signal'
           value={kind}
           table={table(view.signal_kinds)}
           blocked={busy}

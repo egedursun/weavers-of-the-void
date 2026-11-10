@@ -119,6 +119,7 @@ import {
   Wheat,
   Wrench,
   Zap,
+  Unlink,
   type LucideIcon,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
@@ -263,6 +264,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   convene_gathering: PartyPopper,
   raise_divine_creature: PawPrint,
   teach_creature: GraduationCap,
+  release_creature: Unlink,
   shape_image: Eye,
   shape_folk: Users,
   forge_material: Anvil,

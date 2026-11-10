@@ -33,7 +33,7 @@ from aerona.domain.enums.intervention import Disaster, Miracle
 from aerona.domain.enums.mind import MemoryKind, ThoughtKind
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.divine.politics import god_grudge
-from aerona.engine.dominion.miracles import impress, miracle_factor
+from aerona.engine.dominion.miracles import impress, miracle_factor, witness_count
 from aerona.engine.gods.interventions import MiracleEffect, MiracleOutcome, apply_miracle
 from aerona.engine.mind.thoughts import think
 from aerona.engine.phases.disasters import DISASTER_KINDS, after_strike, apply_disaster, joined_names, record_impact
@@ -145,7 +145,7 @@ async def miracle(call: SonCall, args: MiracleInput) -> str:
     witnesses = await miracle_witnesses(call, target)
     for witness in witnesses:
         await think(call.session, call.rules, witness, ThoughtKind.SAW_MIRACLE, call.epoch, subject_id=call.son.id)
-    await impress(call.tick, call.son.id, target, kind=args.kind.value, magnitude=call.son.might, witnesses=len(witnesses))
+    await impress(call.tick, call.son.id, target, kind=args.kind.value, magnitude=call.son.might, witnesses=await witness_count(call.tick, target))
     joined = NOTE_SEPARATOR.join(notes)
     await call.chronicle(
         ChronicleKind.MIRACLE,
