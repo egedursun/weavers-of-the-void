@@ -60,6 +60,7 @@ class MortalToolsRules:
     propose_treaty_per_epoch: int = rule(1, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "propose_treaty: treaties a community or ruler may offer per epoch")
     treaty_max_epochs: int = rule(20, 1, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Longest term in epochs a mortal may offer a treaty for")
     swear_oath_per_epoch: int = rule(1, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "swear_oath: oaths a named mortal may swear per epoch")
+    estate_bargain_per_epoch: int = rule(2, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "bargain_with_estate: bargains a ruler may strike with the estates per epoch")
     adopt_per_epoch: int = rule(1, 0, 20, RuleGroup.MORTAL_AGENTS, "adopt: maximum adoptions per epoch")
     unknown_world_per_epoch: int = rule(
         1,

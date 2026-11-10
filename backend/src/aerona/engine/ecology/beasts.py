@@ -26,7 +26,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
 from aerona.engine.ecology.anatomy import anatomy_of, harm_factor, plan_limbs, repelled
-from aerona.engine.ecology.beast_acts import bite_someone, carry_off, free_captives, gaze_strike, is_abductor, triggered, void_trophy
+from aerona.engine.ecology.beast_acts import bite_someone, breathe, carry_off, free_captives, gaze_strike, is_abductor, triggered, void_trophy
 from aerona.engine.ecology.foodweb import raid_herds
 from aerona.engine.ecology.profiles import profile_of
 from aerona.engine.economy.materials import set_node_material
@@ -294,6 +294,8 @@ async def raid(ctx: TickContext, beast: EntityRow, row: BeastProfileRow, town: E
             break
     if anatomy is not None and anatomy.bite is not None:
         await bite_someone(ctx, beast, town, anatomy.bite)
+    if anatomy is not None and anatomy.breath is not None:
+        await breathe(ctx, beast, row, town, anatomy.breath)
     treasure = await seize_treasure(ctx, beast, town)
     row.raids += 1
     set_stats(

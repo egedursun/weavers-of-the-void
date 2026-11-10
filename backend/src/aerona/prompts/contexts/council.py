@@ -31,7 +31,7 @@ class CouncilPersonaContext(RulesContext):
 class AgendaKind(StrEnum):
     DOOMSDAY = "doomsday"
     REBEL = "rebel"
-    DEAD_BROTHER = "dead_brother"
+    DEAD_SIBLING = "dead_sibling"
     WAR = "war"
     OPEN_THREAD = "open_thread"
     DEFAULT = "default"
@@ -74,7 +74,7 @@ class CouncilSessionContext(LoreRulesContext):
 
 
 class ChatLine(ContextItem):
-    from_father: bool
+    from_creator: bool
     text: str
 
 

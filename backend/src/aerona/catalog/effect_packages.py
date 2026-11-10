@@ -54,12 +54,12 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = MappingProxyType(
         P.SNAKE_VENOM: PackageSpec(
             P.SNAKE_VENOM,
             "Venom",
-            "A venom that rots the flesh around the bite, then leaves a lasting weakness.",
-            frozenset({T.BITE}),
+            "A venom that rots the flesh where it enters, then leaves a lasting weakness.",
+            frozenset({T.BITE, T.INHALATION}),
             0,
             (
                 StageSpec("Necrosis", 1, ConditionKind.CHRONIC_ILLNESS, 3, stats(endurance=-10), appearance="blackened flesh around an old bite"),
-                StageSpec("Lasting weakness", None, ConditionKind.CHRONIC_ILLNESS, 1, stats(strength=-5), appearance="a puckered bite scar"),
+                StageSpec("Lasting weakness", None, ConditionKind.CHRONIC_ILLNESS, 1, stats(strength=-5), appearance="a puckered scar"),
             ),
             frozenset({C.MEDICINE}),
             Visibility.OBVIOUS,

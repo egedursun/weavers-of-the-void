@@ -3,6 +3,7 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.entities import EntityRow
@@ -174,6 +175,8 @@ async def create_feature(ctx: TickContext, kind: CosmicFeatureKind, name: str, v
     row.locked = []
     if kind is CosmicFeatureKind.ASTEROID_FIELD and values.get("density") is None:
         row.density = ctx.rules.cosmic_features.field_density
+    if kind in PERIODIC_BODIES and values.get("omen_weight") is None:
+        row.omen_weight = PERCENT // 2
     if kind in PERIODIC_BODIES and row.next_return_epoch is None:
         row.period_epochs = row.period_epochs or periodic_period(ctx, kind)
         row.next_return_epoch = ctx.epoch + row.period_epochs

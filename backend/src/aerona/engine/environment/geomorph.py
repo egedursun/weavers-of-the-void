@@ -277,6 +277,14 @@ async def shift_river(
 
 
 async def river_after_flood(ctx: TickContext, target: EntityRow, severity: int, event: EntityRow) -> RiverShiftRow | None:
+    return await river_moved(ctx, target, severity, event, RiverShiftCause.FLOOD)
+
+
+async def river_after_quake(ctx: TickContext, target: EntityRow, severity: int, event: EntityRow) -> RiverShiftRow | None:
+    return await river_moved(ctx, target, severity, event, RiverShiftCause.QUAKE)
+
+
+async def river_moved(ctx: TickContext, target: EntityRow, severity: int, event: EntityRow, cause: RiverShiftCause) -> RiverShiftRow | None:
     table = ctx.rules.geomorphology
     if severity < table.river_shift_severity:
         return None
@@ -286,7 +294,7 @@ async def river_after_flood(ctx: TickContext, target: EntityRow, severity: int, 
         return None
     if not ctx.rng(f"river_shift.{event.id}").chance(table.river_shift_chance):
         return None
-    return await shift_river(ctx, ground.entity_id, None, RiverShiftCause.FLOOD, event_id=event.id)
+    return await shift_river(ctx, ground.entity_id, None, cause, event_id=event.id)
 
 
 async def erupted(ctx: TickContext, target: EntityRow, severity: int) -> RegionGeomorphRow | None:

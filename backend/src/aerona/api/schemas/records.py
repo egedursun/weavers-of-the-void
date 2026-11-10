@@ -282,6 +282,7 @@ class WorldRecord(ApiModel):
     biosphere_health: int = 80
     age_stage: WorldAge = WorldAge.MATURE
     mood: int = 0
+    consciousness_closed: bool = False
     locked: list[str] = Field(default_factory=list)
 
 

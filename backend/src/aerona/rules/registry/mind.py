@@ -456,6 +456,7 @@ class AspirationsRules:
     fear_poverty_below: int = rule(15, 0, 100, G, "Wealth under which a fear of poverty comes near")
     fear_shame_above: int = rule(40, 0, 100, G, "Infamy above which a fear of shame comes near")
     focus_skill: int = rule(40, 0, 100, G, "Best skill at which a mortal takes up a lifestyle focus")
+    leisure_need: int = rule(60, 0, 100, G, "Need for pleasure at which a mortal with no strong skill takes up a life of leisure")
     focus_learning_pct: int = rule(25, 0, 200, G, "How much faster a mortal learns the skills of their focus (%)")
     inspiration_pct: int = rule(15, 0, 100, G, "Chance each epoch an elated mortal is seized by inspiration (%)")
     inspiration_epochs: int = rule(2, 1, 20, G, "Epochs an inspiration burns before it fades")

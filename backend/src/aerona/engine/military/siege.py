@@ -5,7 +5,7 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow
-from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
+from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
 from aerona.db.tables.warfare import SiegeRow, WarRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.discovery import BlueprintKind
@@ -13,10 +13,11 @@ from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.military import DefenderAction, SackChoice, SiegeAction, StarvationStage, UnitKind
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.settlement import BuildMaterial, DistrictHarm
+from aerona.domain.enums.settlement import BuildMaterial, DistrictHarm, TreasuryEntry
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
 from aerona.engine.economy.equipment import siege_engines
+from aerona.engine.economy.purse import receive_coin
 from aerona.engine.environment.book import region_environment, scar_region
 from aerona.engine.happenings.emergence import record_sack
 from aerona.engine.interconnect.flows import FlowCategory, flowing
@@ -77,6 +78,7 @@ class SackReport:
     maimed: int = 0
     districts: int = 0
     witnesses: int = 0
+    coin: int = 0
 
 
 async def open_siege(ctx: TickContext, war: WarRow, besieged: EntityRow, besieger: EntityRow) -> SiegeRow:
@@ -265,6 +267,24 @@ async def sack(
     return report.dead
 
 
+async def plunder_treasury(ctx: TickContext, besieged: EntityRow, victor: EntityRow | None, choice: SackChoice) -> int:
+    town = await ctx.session.get(SettlementProfileRow, besieged.id)
+    if town is None or "treasury" in town.locked or town.treasury <= 0:
+        return 0
+    share = ctx.rules.siege_depth.treasury_sack_pct * (2 if choice is SackChoice.RAZE else 1)
+    seized = min(town.treasury, round_half_up(town.treasury * share / PERCENT))
+    town.treasury -= seized
+    note = f"plundered by {victor.name}" if victor is not None else "plundered"
+    ctx.session.add(
+        SettlementTreasuryRow(
+            settlement_entity_id=besieged.id, epoch=ctx.epoch, entry=TreasuryEntry.PLUNDER, amount=-seized, balance=town.treasury, note=note[:120]
+        )
+    )
+    if victor is not None:
+        await receive_coin(ctx.session, ctx.rules, victor, seized)
+    return seized
+
+
 async def sack_city(
     ctx: TickContext,
     besieged: EntityRow,
@@ -290,6 +310,7 @@ async def sack_city(
             shift_stat(besieged, key, -(taken if key == "wealth" else table.sack_prosperity))
     if profile is not None:
         profile.loot += taken
+    report.coin = await plunder_treasury(ctx, besieged, victor, choice)
     population = stat(besieged, "population")
     share = depth.raze_population_pct if choice is SackChoice.RAZE else ctx.rules.terrain_effects.urban_civilian_pct
     report.dead = round_half_up((population or 0) * share / PERCENT)

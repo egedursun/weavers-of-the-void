@@ -9,6 +9,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { VIEW } from '@/features/cosmography/cosmographyFixtures'
 import { AfterlifeSection, SoulSection } from './Afterlife'
 import { DoctrineSection } from './Doctrine'
+import { PossessedSection } from './Possessed'
 
 vi.mock('@/api/client', async () => {
   const { createFakeClient } = await import('@/test-utils/fakeApi')
@@ -224,6 +225,22 @@ describe('faith sections', () => {
       .element(screen.getByText('Buried nameless').first())
       .toBeVisible()
     await expect.element(screen.getByText('Mercy 20')).toBeVisible()
+    await screen.getByRole('button', { name: 'Adjust the possession' }).click()
+    await screen.getByRole('button', { name: 'Drive it out' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/soul:exorcise'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/soul:exorcise')[0].body).toEqual({
+      host_id: 41,
+    })
+  })
+
+  it('shows the spirit that possesses a mortal and drives it out from the host', async () => {
+    serve()
+    onApi('GET', '/api/entities/41/possession', SOUL.possession)
+    onApi('POST', '/api/actions/soul:exorcise', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<PossessedSection hostId={41} />)
+    await expect.element(screen.getByText('Possessed by')).toBeVisible()
     await screen.getByRole('button', { name: 'Adjust the possession' }).click()
     await screen.getByRole('button', { name: 'Drive it out' }).click()
     await expect

@@ -88,7 +88,8 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.BARGAIN_WITH_ESTATE: ToolText(
         "As the ruler of a realm, you grant one of its estates a privilege (freedom from taxes, a monopoly, a seat in council, the right to bear arms, "
-        "immunity from the courts) to win its loyalty, or take one back at a cost in loyalty. 1 action.",
+        "immunity from the courts) to win its loyalty, or take one back at a cost in loyalty. "
+        "At most {{ rules.mortal_tools.estate_bargain_per_epoch }} bargains an age. 1 action.",
         {"estate_id": "The estate", "privilege": "The privilege", "grant": "True to grant it, false to take it back"},
     ),
     T.PROPOSE_LAW: ToolText(

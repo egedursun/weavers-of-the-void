@@ -33,17 +33,10 @@ import {
 } from '../realm/parts'
 import { type SoulCard } from './api'
 import { ALIGNMENTS, DEEDS, LIVING_STATES, RITES, SOUL_FIELDS } from './labels'
+import { PERCENT, STRESS_WORDS, busyOf, clampPercent } from './possessionParts'
 
-const PERCENT = 100
 const SPAN = 100
-const WORKING = 'Working…'
 const NO_GOD = 'none'
-const STRESS_WORDS: [string, string, string, string] = [
-  'Uneasy',
-  'Troubled',
-  'Tormented',
-  'Breaking',
-]
 const SEAL_WORDS: [string, string, string, string] = [
   'A thread',
   'A knot',
@@ -56,14 +49,6 @@ const DEED_WORDS: [string, string, string, string] = [
   'Much',
   'Legendary',
 ]
-
-function busyOf(blocked: string | null, ...pending: boolean[]): string | null {
-  return blocked ?? (pending.some(Boolean) ? WORKING : null)
-}
-
-function clampPercent(value: number): number {
-  return Math.max(0, Math.min(PERCENT, Math.round(value)))
-}
 
 export function SoulSeal({
   soul,

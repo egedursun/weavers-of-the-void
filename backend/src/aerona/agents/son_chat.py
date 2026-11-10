@@ -68,7 +68,7 @@ async def chat_with_son(runtime: AgentRuntime, son_id: int, text: str) -> ChatRe
             fear=son.personality.fear[: council.chat_fear_secret_chars],
             secret=son.personality.secret[: council.chat_fear_secret_chars],
             memory=(await son_memory(scope, son))[: council.chat_memory_chars],
-            history=[ChatLine(from_father=message.sender_node_id == creator, text=message.text) for message in reversed(history)],
+            history=[ChatLine(from_creator=message.sender_node_id == creator, text=message.text) for message in reversed(history)],
             text=said,
         )
     output = await ask(

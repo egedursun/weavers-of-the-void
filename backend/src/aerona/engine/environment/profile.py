@@ -6,6 +6,7 @@ from aerona.catalog.climate import climate_profile
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
+from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.domain.enums.environment import (
     CoastKind,
     MovementMode,
@@ -524,7 +525,40 @@ def defensibility_of(rules: Rules, *, roughness: int, forest: int, river: RiverC
     )
 
 
-def mineral_layers(rules: Rules, rng: SeededRandom, geography: Geography, world_type: WorldType, terrain: TerrainKind) -> dict[str, int]:
+@dataclass(frozen=True)
+class Make:
+    metal: float = 1.0
+    stone: float = 1.0
+    rare: float = 1.0
+
+
+def make_of(rules: Rules, physics: WorldPhysicsRow | None) -> Make:
+    if physics is None:
+        return Make()
+    table = rules.orbits
+    return Make(
+        metal=physics.iron / max(1, table.iron_reference),
+        stone=physics.rock / max(1, table.rock_reference),
+        rare=1 + physics.exotic / max(1, table.exotic_reference),
+    )
+
+
+METAL_SEAMS = frozenset({MaterialKind.IRON, MaterialKind.COPPER, MaterialKind.TIN, MaterialKind.LEAD, MaterialKind.SILVER, MaterialKind.GOLD})
+STONE_SEAMS = frozenset({MaterialKind.STONE, MaterialKind.FLINT, MaterialKind.CLAY})
+RARE_SEAMS = frozenset({MaterialKind.GEMS, MaterialKind.CRYSTAL, MaterialKind.VOID_GLASS, MaterialKind.OBSIDIAN})
+
+
+def make_factor(make: Make, material: MaterialKind) -> float:
+    if material in METAL_SEAMS:
+        return make.metal
+    if material in STONE_SEAMS:
+        return make.stone
+    return make.rare if material in RARE_SEAMS else 1.0
+
+
+def mineral_layers(
+    rules: Rules, rng: SeededRandom, geography: Geography, world_type: WorldType, terrain: TerrainKind, *, make: Make | None = None
+) -> dict[str, int]:
     settings = rules.environment
     mix = geography.biome_mix
     mountains = share(mix, Biome.MOUNTAINS, Biome.PEAKS)
@@ -554,6 +588,9 @@ def mineral_layers(rules: Rules, rng: SeededRandom, geography: Geography, world_
         candidates[MaterialKind.VOID_GLASS] = settings.void_mineral
     for material in WORLD_MINERALS.get(world_type, ()):
         candidates[material] = max(candidates.get(material, 0), settings.signature_mineral)
+    body = make or Make()
+    for material, presence in list(candidates.items()):
+        candidates[material] = round_half_up(presence * make_factor(body, material))
     layers: dict[str, int] = {}
     for material, presence in sorted(candidates.items(), key=lambda item: item[0].value):
         if presence < settings.mineral_presence_min:

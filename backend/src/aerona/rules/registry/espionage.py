@@ -25,6 +25,7 @@ class EspionageRules:
     intel_gain: int = rule(15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Intelligence a network at full depth gathers in an epoch")
     exposure_per_operation: int = rule(15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Exposure an operation leaves behind")
     exposure_decay: int = rule(5, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Exposure that fades in a quiet epoch")
+    agent_service_epochs: int = rule(8, 1, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Epochs a spy serves before retiring from the network")
     counter_intel_pct: int = rule(100, 0, 300, RuleGroup.WAR_AND_DIPLOMACY, "Weight of the target's spymaster in catching spies (%)")
     assassinate_depth: int = rule(60, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Depth a network needs to reach a ruler")
     incite_unrest: int = rule(15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Unrest agents stir up in a city")

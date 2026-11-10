@@ -13,7 +13,6 @@ from aerona.api.schemas.military_depth import (
     HullSpecView,
     PeaceTermView,
     RecordColumnView,
-    RecordKindView,
     RecordRowView,
     RecordTableView,
     VesselView,
@@ -54,14 +53,6 @@ def hull_view(spec: HullSpec) -> HullSpecView:
         living=spec.living,
         strangeness=spec.strangeness,
     )
-
-
-@router.get("/military/kinds", response_model=list[RecordKindView])
-async def record_kinds() -> list[RecordKindView]:
-    return [
-        RecordKindView(kind=kind.key, label=kind.label, creatable=kind.creatable, deletable=kind.deletable, scope=kind.scope, required=list(kind.required))
-        for kind in records.KINDS.values()
-    ]
 
 
 @router.get("/military/records/{kind}", response_model=RecordTableView)

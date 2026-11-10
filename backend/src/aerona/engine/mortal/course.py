@@ -340,7 +340,18 @@ async def match(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) 
             spouse = await ctx.session.get(EntityRow, spouse_id)
             await note(ctx, f"{mortal.name} and {spouse.name if spouse else 'their spouse'} parted.", key="kin.divorce", ids=[mortal.id, spouse_id])
             return "divorced"
+        cold = custom == "forbidden" and view.value < table.divorce_opinion_below
+        if cold and await childless(ctx, mortal.id, spouse_id) and rng.chance(table.annulment_chance):
+            await end_marriage(ctx.session, row, ctx.epoch, MarriageEnd.ANNULMENT)
+            spouse = await ctx.session.get(EntityRow, spouse_id)
+            text = f"The marriage of {mortal.name} and {spouse.name if spouse else 'their spouse'} was declared void, as if it had never been."
+            await note(ctx, text, key="kin.annulment", ids=[mortal.id, spouse_id])
+            return "annulled"
     return None
+
+
+async def childless(ctx: TickContext, first: int, second: int) -> bool:
+    return not set(await children_of(ctx.session, first)) & set(await children_of(ctx.session, second))
 
 
 async def divorce_custom(ctx: TickContext, mortal: EntityRow) -> str:

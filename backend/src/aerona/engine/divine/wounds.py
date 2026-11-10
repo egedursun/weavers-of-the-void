@@ -4,12 +4,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.db.tables.culture import CastingRow
 from aerona.db.tables.divine import AvatarRow, DivineWoundRow
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine import DivineWoundKind, WoundCause
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.son import ExistenceMode
+from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.son import ExistenceMode, SonDeathCause
 from aerona.domain.models.profiles import ExistenceProfile
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import God, domains_of, god_of, living_gods
@@ -108,6 +111,28 @@ async def strike(ctx: TickContext, loser: God, winner_id: int | None, cause: Wou
     weights = [table.severed_weight, table.shattered_weight, table.name_weight]
     kind = rng.weighted(kinds, weights)
     return await inflict(ctx, loser, kind, cause, severity=table.base_severity + margin * table.severity_per_margin, cause_node_id=winner_id)
+
+
+OUTER_TYPES = frozenset({EntityType.OUTER_BEING, EntityType.COSMIC_BEING})
+
+
+async def death_cause(session: AsyncSession, god_id: int) -> SonDeathCause:
+    wounds = sorted(await open_wounds(session, god_id), key=lambda row: (-(row.severity - row.healed), row.id))
+    for wound in wounds:
+        if wound.cause is WoundCause.CREATOR:
+            return SonDeathCause.KILLED_BY_CREATOR
+        if wound.cause is WoundCause.OUTER_BARGAIN:
+            return SonDeathCause.COSMIC_HORROR
+        if wound.cause_node_id is None:
+            continue
+        if await session.get(SonRow, wound.cause_node_id) is not None:
+            return SonDeathCause.KILLED_BY_SIBLING
+        if await session.get(ForeignGodRow, wound.cause_node_id) is not None:
+            return SonDeathCause.FOREIGN_GOD
+        outsider = await session.get(EntityRow, wound.cause_node_id)
+        if outsider is not None and outsider.entity_type in OUTER_TYPES:
+            return SonDeathCause.COSMIC_HORROR
+    return SonDeathCause.FADING
 
 
 async def worst(session: AsyncSession, god_id: int, kind: DivineWoundKind) -> int:

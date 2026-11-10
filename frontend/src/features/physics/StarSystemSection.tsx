@@ -23,7 +23,6 @@ import {
 import { STAR_TYPE_LABEL } from '@/features/cosmos/model/labels'
 import { OrbitView } from './OrbitView'
 import { physicsKeys, usePhysicsAction, useStarPhysics } from './api'
-import { typed } from './edits'
 import { fixed } from './format'
 import { SYSTEM_ROLES } from './labels'
 import { QuerySection } from './parts'
@@ -211,7 +210,7 @@ export function StarSystemSection({ starId }: { starId: number }) {
                   onSave={(values) =>
                     edit.mutate({
                       system: system.id,
-                      values: typed(values, { ids: ['galaxy_id'] }),
+                      values,
                     })
                   }
                   onRelease={(release) =>

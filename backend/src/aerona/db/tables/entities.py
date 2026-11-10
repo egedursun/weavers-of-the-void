@@ -24,7 +24,6 @@ from aerona.domain.enums.entity import (
     ProphecyReading,
 )
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
-from aerona.domain.enums.meta import MotifCategory
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic, SocialClass
 from aerona.domain.models.entity_stats import EntityStats
@@ -169,7 +168,6 @@ class CreationMotifRow(Base):
 
     entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     motif: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH), primary_key=True)
-    category: Mapped[MotifCategory | None] = mapped_column(enum_type(MotifCategory, "category"))
     world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="SET NULL"))
     epoch: Mapped[int]
 

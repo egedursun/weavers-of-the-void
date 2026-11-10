@@ -86,7 +86,16 @@ async def tend_mood(ctx: TickContext, world: WorldRow, grounds: list[RegionEnvir
     if world.world_type is not WorldType.LIVING or "mood" in world.locked:
         return
     worked = sum(ground.mined + ground.cleared for ground in grounds) / len(grounds) if grounds else 0
+    if world.consciousness_closed:
+        if worked <= table.mood_reopen_worked and "consciousness_closed" not in world.locked:
+            world.consciousness_closed = False
+            await note(ctx, f"{world.name} woke again to those who live on it.", key="world.consciousness_opened", world_id=world.id)
+        return
     world.mood = clamp_int(world.mood - round(worked / 10 * table.mood_mining) + revering * table.mood_reverence, -MOOD_LIMIT, MOOD_LIMIT)
+    if world.mood <= table.mood_close and "consciousness_closed" not in world.locked:
+        world.consciousness_closed = True
+        await note(ctx, f"{world.name} withdrew into itself and no longer answers those who live on it.", key="world.consciousness_closed", world_id=world.id)
+        return
     if world.mood <= table.mood_quake and grounds:
         target = ctx.rng(f"world_mood.{world.id}").pick(sorted(ground.entity_id for ground in grounds))
         region = await ctx.session.get(EntityRow, target)

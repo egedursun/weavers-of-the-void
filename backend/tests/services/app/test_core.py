@@ -14,7 +14,6 @@ from aerona.db.tables.motifs import MotifOverrideMode
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ThreadStatus
 from aerona.domain.enums.entity import EntityOrigin, EntityType, MortalRole
-from aerona.domain.enums.meta import MotifCategory
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.son import ExistenceBand, SonRelationLabel
 from aerona.domain.models.entity_stats import NaturalLawStats, RegionStats
@@ -185,9 +184,9 @@ async def test_motifs_from_tags(session: AsyncSession, world: Cosmos) -> None:
     rules = replace(rules, language=replace(rules.language, motif_min_records=3, motif_min_repeats=2))
     for index in range(4):
         creation = await make_entity(session, f"Salt Shrine {index}", EntityType.PLACE, world_id=world.world.id, location_id=world.region.id)
-        tags: list[tuple[str, MotifCategory | None]] = [("bone", MotifCategory.MATERIAL), ("weeping stone", MotifCategory.PHRASE)]
+        tags = ["bone", "weeping stone"]
         if index == 0:
-            tags.append(("tide", MotifCategory.IMAGERY))
+            tags.append("tide")
         await record_motifs(session, creation, tags, 1)
     cache = motifs.MotifCache()
     found = await cache.tired(session, rules, None)

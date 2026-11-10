@@ -12,6 +12,7 @@ from aerona.db.ledger_capture import LedgerDraft
 from aerona.db.ledger_rows import Change, compacted, to_change
 from aerona.db.ledger_undo import changes_of, creating_entry_id, undo_entry
 from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.ledger import LedgerChangeRow, LedgerEntryRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.meta import LedgerOperation
@@ -210,6 +211,17 @@ class Ledger:
         if chronicle:
             text = UNDO_TEXT.format(actor=entry.actor_name or UNKNOWN_ACTOR, label=action_label(entry.tool, entry.action_kind))
             await self._writer.creator_hand(session, rules, text)
+            creator = await CosmosRepository(session).require_creator()
+            session.add(
+                ActionRecordRow(
+                    epoch=cosmos.epoch,
+                    actor_kind=ActorKind.CREATOR,
+                    actor_node_id=creator.id,
+                    kind=ActionKind.LEDGER_UNDO,
+                    summary=text[:LEDGER_SUMMARY_MAX_LENGTH],
+                )
+            )
+            await session.flush()
         if self._bus is not None:
             self._bus.publish(EventKind.LEDGER_UNDONE, {"entry_id": entry.id, "applied": len(report.applied), "conflicts": len(report.conflicts)})
         return UndoResult(entry_id=entry.id, applied=report.applied, conflicts=report.conflicts)

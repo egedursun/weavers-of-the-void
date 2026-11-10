@@ -107,3 +107,28 @@ export const WORLD_PHYSICS: Schema['WorldPhysicsView'] = {
   ],
   fits: [{ people: FOLK, fit: 100 }],
 }
+
+export const STAR_PHYSICS: Schema['StarPhysicsView'] = {
+  star_id: 246,
+  name: 'Osvevasi',
+  star_type: 'yellow_dwarf',
+  age_stage: 'main',
+  mass: 1,
+  metallicity: 50,
+  age_epochs: 40,
+  luminosity: 1,
+  lifetime_epochs: 120,
+  band_inner: 0.95,
+  band_outer: 1.37,
+  maker: null,
+  upkeep: 0,
+  locked: [],
+  stages: [{ stage: 'main', epochs: 120 }],
+  giant: 'red_giant',
+  remnant: 'white_dwarf',
+  supernova: false,
+  engulf_orbit: 0.3,
+  system: null,
+  orbits: [],
+  features: [],
+}

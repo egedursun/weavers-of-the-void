@@ -17,6 +17,7 @@ from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.happenings import RegionGeomorphRow
+from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import DamageType, HarmCause
@@ -43,7 +44,7 @@ from aerona.engine.disease.harm import disease_harm, lasting_illness
 from aerona.engine.disease.outbreaks import STRIKING, disease_for, lethality_factor, open_outbreak, spread_factor, tally
 from aerona.engine.economy.routes import trade_links
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment
-from aerona.engine.environment.geomorph import erupted, eruption_chance, quaked, river_after_flood, shapes_by_region
+from aerona.engine.environment.geomorph import erupted, eruption_chance, quaked, river_after_flood, river_after_quake, shapes_by_region
 from aerona.engine.environment.notable import remember_event_year
 from aerona.engine.environment.profile import RIVER_RANK
 from aerona.engine.happenings.profile import add_footprint, derive_footprint, flow_of, open_profile, record_casualties
@@ -342,10 +343,21 @@ class DisasterWorld:
     climates: Mapping[int, int]
     struck: int = 0
     world_types: Mapping[int, WorldType] = field(default_factory=dict)
+    bodies: Mapping[int, WorldPhysicsRow] = field(default_factory=dict)
 
     def nature_mult(self, rules: Rules, world_id: int | None, disaster: Disaster) -> float:
         world_type = self.world_types.get(world_id) if world_id is not None else None
-        return fraction(disaster_pct(rules, world_type, disaster)) if world_type is not None else 1.0
+        kind = fraction(disaster_pct(rules, world_type, disaster)) if world_type is not None else 1.0
+        return kind * self.restless(rules, world_id, disaster)
+
+    def restless(self, rules: Rules, world_id: int | None, disaster: Disaster) -> float:
+        body = self.bodies.get(world_id) if world_id is not None else None
+        if body is None or disaster not in SHAKING:
+            return 1.0
+        table = rules.planetary_climate
+        if disaster is Disaster.ERUPTION:
+            return body.volcanism / max(1, table.volcanism_reference)
+        return body.tectonics / max(1, table.tectonics_reference)
 
     def law_mult(self, rules: Rules, world_id: int) -> float:
         return float(rules.disasters.law_mult) if self.laws.has(NaturalLaw.DISASTERS, world_id) else 1.0
@@ -488,6 +500,8 @@ async def strike(ctx: TickContext, target: EntityRow, disaster: Disaster, severi
 async def after_strike(ctx: TickContext, target: EntityRow, disaster: Disaster, severity: int, event: EntityRow, *, impact: DisasterImpact) -> None:
     if disaster is Disaster.FLOOD and await river_after_flood(ctx, target, severity, event) is not None:
         impact.notes.append("the river left its bed")
+    elif disaster is Disaster.EARTHQUAKE and await river_after_quake(ctx, target, severity, event) is not None:
+        impact.notes.append("the ground shook the river from its bed")
     elif disaster is Disaster.ERUPTION:
         await erupted(ctx, target, severity)
         impact.notes.append("ash buried the fields")
@@ -766,6 +780,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.traits",
     "table.world_domain_hooks",
     "table.world_maps",
+    "table.world_physics",
     "table.world_seasons",
     "trade_route.culture",
 )
@@ -812,7 +827,8 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
 )
 async def natural_disasters(ctx: TickContext) -> None:
     world_types = {world_id: world_type for world_id, world_type in await ctx.session.execute(select(WorldRow.id, WorldRow.world_type))}
-    world = DisasterWorld(await ctx.laws(), await climate_plague_multipliers(ctx), world_types=world_types)
+    bodies = {row.world_id: row for row in await ctx.session.scalars(select(WorldPhysicsRow))}
+    world = DisasterWorld(await ctx.laws(), await climate_plague_multipliers(ctx), world_types=world_types, bodies=bodies)
     await _region_disasters(ctx, world)
     await _city_plagues(ctx, world)
     ctx.count("disasters", world.struck)

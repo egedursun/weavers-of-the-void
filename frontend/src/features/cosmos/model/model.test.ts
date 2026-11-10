@@ -72,6 +72,7 @@ function world(
       biosphere_health: 80,
       age_stage: 'mature',
       mood: 0,
+      consciousness_closed: false,
       ...overrides,
     },
     type_label: 'Ordinary world',

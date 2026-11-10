@@ -16,7 +16,7 @@ import {
   usePhysicsAction,
   useWorldPhysics,
 } from './api'
-import { YES_NO, typed } from './edits'
+import { YES_NO } from './edits'
 import { fixed, kelvinText } from './format'
 import { QuerySection } from './parts'
 
@@ -26,7 +26,6 @@ type Edit = {
 }
 
 const PERCENT_FIELD = { kind: 'number', min: 0, max: 100 } as const
-const FLAGS = ['circumbinary', 'tidally_locked', 'ringed', 'habitable']
 
 const GROUPS: { title: string; note: string; fields: Field[] }[] = [
   {
@@ -350,9 +349,7 @@ export function WorldPhysicsSection({ worldId }: { worldId: number }) {
                   group.fields.some((field) => field.key === key)
                 )}
                 busy={busy}
-                onSave={(values) =>
-                  edit.mutate({ values: typed(values, { flags: FLAGS }) })
-                }
+                onSave={(values) => edit.mutate({ values })}
                 onRelease={(release) => edit.mutate({ release })}
               />
             ))}

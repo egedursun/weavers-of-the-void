@@ -16,6 +16,7 @@ from aerona.engine.primitives.naming import seed_of
 STATE = "state"
 CAPTURE_PCT = 50
 KIND_TECHNIQUES: tuple[tuple[SignalKind, Technique], ...] = (
+    (SignalKind.SENDING_STONE, Technique.ALCHEMY),
     (SignalKind.MIRROR_TOWER, Technique.CRYPTOGRAPHY),
     (SignalKind.POST_STATION, Technique.PAPER),
     (SignalKind.FIRE_BEACON, Technique.ALPHABET),
@@ -64,7 +65,7 @@ async def fall_links(ctx: TickContext, tally: SignalTally) -> None:
         taker = occupied.get(link.to_region_id) or occupied.get(link.from_region_id)
         if taker is None or taker == link.owner_node_id:
             continue
-        if ctx.rng(seed_of("signal.fall", link.id, ctx.epoch)).chance(CAPTURE_PCT):
+        if link.kind is SignalKind.SENDING_STONE or ctx.rng(seed_of("signal.fall", link.id, ctx.epoch)).chance(CAPTURE_PCT):
             link.state, link.owner_node_id = SignalState.CAPTURED, taker
             tally.captured += 1
         else:

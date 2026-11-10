@@ -398,7 +398,7 @@ class WorldSummaryContext(RulesContext):
 
 class MemoryWord(ContextItem):
     age: int
-    from_father: bool
+    from_creator: bool
     sender: str
     intent_label: str | None = None
     text: str

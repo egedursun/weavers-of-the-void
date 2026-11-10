@@ -176,6 +176,14 @@ async def council_lift(ctx: TickContext, speaker_id: int, polity_id: int) -> flo
     return sum(lifts) / len(lifts)
 
 
+async def counsel_lift(ctx: TickContext, polity_id: int, ruler_id: int | None, subject_id: int) -> float:
+    adviser = await office_holder(ctx.session, polity_id, OfficeKind.CHANCELLOR, OfficeKind.TREASURER)
+    if adviser is None or ruler_id is None or adviser == ruler_id:
+        return 1.0
+    argument = await persuade(ctx, adviser, ruler_id, AppealKind.SELF_INTEREST, PersuasionAim.DECISION, subject_id=subject_id)
+    return lift(ctx.rules.persuasion.counsel_pct, argument)
+
+
 async def envoy_sways(ctx: TickContext, proposer_id: int, others: list[int], treaty_id: int) -> bool:
     envoy = await office_holder(ctx.session, proposer_id, OfficeKind.AMBASSADOR, OfficeKind.CHANCELLOR, OfficeKind.RULER)
     if envoy is None:

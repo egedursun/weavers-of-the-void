@@ -661,6 +661,9 @@ async def settle_focus(ctx: TickContext, mortal: EntityRow) -> FocusKind | None:
     best = await ctx.session.scalar(select(SkillRow).where(SkillRow.holder_node_id == mortal.id).order_by(SkillRow.level.desc(), SkillRow.id).limit(1))
     office = await rules_over(ctx.session, mortal.id)
     if best is None or (best.level < ctx.rules.aspirations.focus_skill and not office):
+        if (await needs_of(ctx.session, mortal.id)).get(NeedKind.PLEASURE, 0) >= ctx.rules.aspirations.leisure_need:
+            profile.focus = FocusKind.LEISURE
+            return profile.focus
         return None
     profile.focus = FocusKind.INTRIGUE if best.skill in INTRIGUE_SKILLS else FAMILY_FOCUS[SKILLS[best.skill].family]
     return profile.focus

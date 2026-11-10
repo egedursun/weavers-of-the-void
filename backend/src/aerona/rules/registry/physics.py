@@ -71,6 +71,9 @@ class OrbitRules:
     transit_piety: int = rule(1, 0, 50, C, "Piety the peoples who see a world cross the face of their star gain")
     transit_inclination_degrees: int = rule(3, 0, 90, C, "Most difference of tilt at which an inner world can be seen crossing its star")
     circumbinary_share_pct: int = rule(100, 0, 300, C, "Share of a companion star's light a world circling both stars receives (%)")
+    iron_reference: int = rule(30, 1, 100, C, "Iron share of a world at which its lands hold as much metal as their ground gives")
+    rock_reference: int = rule(60, 1, 100, C, "Rock share of a world at which its lands hold as much stone and clay as their ground gives")
+    exotic_reference: int = rule(50, 1, 100, C, "Share of strange matter that doubles the rare stones and crystals of a world's lands")
     galactic_turn_degrees: int = rule(1, 0, 90, C, "Degrees a star at the edge of its galaxy turns about the centre each epoch")
 
 
@@ -90,6 +93,8 @@ class PlanetaryClimateRules:
     ice_age_cryosphere: int = rule(45, 0, 100, E, "Ice from which a world lies in an ice age")
     scorching_heat: int = rule(25, 0, 100, E, "Sky heat from which a world lies in a scorching age")
     drought_hydrosphere: int = rule(15, 0, 100, E, "Water below which a power that spans worlds sets out to give a dry world water")
+    tectonics_reference: int = rule(50, 1, 100, E, "Moving ground at which a world quakes as often as the disaster rules say; more shakes it more")
+    volcanism_reference: int = rule(20, 1, 100, E, "Volcanism at which a world erupts as often as the disaster rules say; more wakes its volcanoes more")
 
 
 @dataclass(frozen=True)

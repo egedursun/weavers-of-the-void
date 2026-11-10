@@ -276,9 +276,14 @@ async def return_comets(ctx: TickContext, cosmography: Cosmography) -> int:
     return returned
 
 
+def omen_of(comet: CosmicFeatureRow) -> float:
+    return comet.omen_weight / (PERCENT // 2)
+
+
 async def festival(ctx: TickContext, comet: CosmicFeatureRow, body: EntityRow, world: WorldRow) -> EntityRow | None:
     keepers = [row for row in await canon(ctx.session, COMMUNITY_TYPES, world.id) if not held(row.id)]
-    if not keepers or not ctx.rng(f"comet_festival.{comet.id}.{world.id}.{ctx.epoch}").chance(ctx.rules.cosmic_features.comet_festival_chance):
+    chance = ctx.rules.cosmic_features.comet_festival_chance * omen_of(comet)
+    if not keepers or not ctx.rng(f"comet_festival.{comet.id}.{world.id}.{ctx.epoch}").chance(chance):
         return None
     tradition = await create_record(
         ctx,
@@ -300,14 +305,14 @@ async def festival(ctx: TickContext, comet: CosmicFeatureRow, body: EntityRow, w
 
 
 async def foretell(ctx: TickContext, comet: CosmicFeatureRow, body: EntityRow, world: WorldRow) -> EntityRow | None:
-    if not ctx.rng(f"comet_prophecy.{comet.id}.{world.id}.{ctx.epoch}").chance(ctx.rules.cosmic_features.comet_prophecy_chance):
+    if not ctx.rng(f"comet_prophecy.{comet.id}.{world.id}.{ctx.epoch}").chance(ctx.rules.cosmic_features.comet_prophecy_chance * omen_of(comet)):
         return None
     prophecy = await create_record(
         ctx,
         RecordSpec(
             name=f"The Prophecy of {comet.name}",
             entity_type=EntityType.PROPHECY,
-            stats=ProphecyStats(certainty=PERCENT // 2),
+            stats=ProphecyStats(certainty=clamp_percent(comet.omen_weight)),
             body=f"Words spoken when {comet.name} returned, telling what its next return will bring.",
             power=3,
             world_id=world.id,

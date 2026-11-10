@@ -61,6 +61,7 @@ const DATA: CosmosData = {
       biosphere_health: 80,
       age_stage: 'mature',
       mood: 0,
+      consciousness_closed: false,
     },
     type_label: id === 1 ? 'Ordinary world' : 'Ocean world',
     counts: {

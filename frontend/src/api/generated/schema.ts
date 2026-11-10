@@ -5391,22 +5391,6 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/military/kinds': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get: operations['record_kinds_api_military_kinds_get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
   '/api/military/records/{kind}': {
     parameters: {
       query?: never
@@ -27267,7 +27251,6 @@ export interface components {
       | 'epoch_words'
       | 'local_gods'
       | 'transition'
-      | 'horizon_intuitions'
       | 'world_birth'
       | 'network_repair'
       | 'prune'
@@ -35448,14 +35431,6 @@ export interface components {
       end: components['schemas']['RecordEnd']
       reason: string
     }
-    RecordKindView: {
-      kind: string
-      label: string
-      creatable: boolean
-      deletable: boolean
-      scope: string | null
-      required: string[]
-    }
     RecordRetireInput: {
       entity_id: number
       reason: string
@@ -37935,6 +37910,7 @@ export interface components {
       | 'call_impact'
       | 'deflect_impact'
       | 'terraform_world'
+      | 'break_moon'
       | 'wage_war'
       | 'raise_host'
       | 'disband_host'
@@ -40577,7 +40553,6 @@ export interface components {
       | 'commander_appointments'
       | 'adoptions'
       | 'explorations'
-      | 'repeated_creations'
       | 'resurrection_rites'
       | 'languages_founded'
       | 'cultures_created'
@@ -41791,6 +41766,7 @@ export interface components {
       biosphere_health: number
       age_stage: components['schemas']['WorldAge']
       mood: number
+      consciousness_closed: boolean
       locked?: string[]
     }
     WorldReplacedEvent: {
@@ -52040,25 +52016,6 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
-  record_kinds_api_military_kinds_get: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['RecordKindView'][]
         }
       }
     }
@@ -84445,7 +84402,6 @@ export const epochStepKindValues: ReadonlyArray<
   'epoch_words',
   'local_gods',
   'transition',
-  'horizon_intuitions',
   'world_birth',
   'network_repair',
   'prune',
@@ -87503,6 +87459,7 @@ export const sonToolIdValues: ReadonlyArray<
   'call_impact',
   'deflect_impact',
   'terraform_world',
+  'break_moon',
   'wage_war',
   'raise_host',
   'disband_host',
@@ -88431,7 +88388,6 @@ export const turnCounterValues: ReadonlyArray<
   'commander_appointments',
   'adoptions',
   'explorations',
-  'repeated_creations',
   'resurrection_rites',
   'languages_founded',
   'cultures_created',

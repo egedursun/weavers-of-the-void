@@ -150,8 +150,13 @@ def tidal_warmth(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, parent
     return rules.orbits.tidal_heat * parent.mass / max(distance, 1.0) ** 3
 
 
+def stony_share(physics: WorldPhysicsRow) -> float:
+    body = physics.iron + physics.rock + physics.ice + physics.gas
+    return (physics.iron + physics.rock) / body if body > 0 else 1.0
+
+
 def surface_temperature(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, insolation: float, parent: WorldPhysicsRow | None) -> float:
-    inner = rules.orbits.internal_heat * physics.volcanism / PERCENT
+    inner = rules.orbits.internal_heat * physics.volcanism / PERCENT * stony_share(physics)
     return equilibrium(rules, insolation, physics.albedo) + greenhouse(rules, physics) + tidal_warmth(rules, world, physics, parent) + inner
 
 

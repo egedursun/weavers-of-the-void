@@ -101,7 +101,7 @@ async def agenda(scope: Scope) -> str:
     elif rebel is not None:
         kind, subject = AgendaKind.REBEL, rebel.name
     elif dead is not None and dead.death_epoch is not None and scope.epoch - dead.death_epoch <= 1:
-        kind, subject = AgendaKind.DEAD_BROTHER, dead.name
+        kind, subject = AgendaKind.DEAD_SIBLING, dead.name
     elif war:
         kind, subject = AgendaKind.WAR, war
     elif thread is not None:

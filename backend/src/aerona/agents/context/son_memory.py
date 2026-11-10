@@ -32,7 +32,9 @@ async def memory_words(scope: Scope, son: SonRow) -> list[MemoryWord]:
         )
     )
     return [
-        MemoryWord(age=message.epoch, from_father=message.sender_node_id == scope.creator.id, sender=name, intent_label=message.intent.value, text=message.text)
+        MemoryWord(
+            age=message.epoch, from_creator=message.sender_node_id == scope.creator.id, sender=name, intent_label=message.intent.value, text=message.text
+        )
         for message, name in reversed(rows)
     ]
 

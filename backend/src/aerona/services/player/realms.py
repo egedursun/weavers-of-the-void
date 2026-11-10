@@ -674,7 +674,7 @@ async def edit_oath(scope: PlayerScope, command: EditOath) -> Effect:
     return Effect("The oath now binds as you set it.", oath.swearer_entity_id)
 
 
-@player_action("oath:release", ActionKind.OTHER)
+@player_action("oath:release", ActionKind.RELEASE_OATH)
 async def release_oath(scope: PlayerScope, command: OathTarget) -> Effect:
     oath = await control.release_oath(await scope.context("oath_release"), command.oath_id)
     return Effect("The oath is released with honour.", oath.swearer_entity_id)

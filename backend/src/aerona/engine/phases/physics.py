@@ -4,9 +4,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.cosmos import AppliedFixupRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.physics import StarPhysicsRow, WorldLifeRow, WorldPhysicsRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.features import adopt_comets, devour, ensure_wells, harbour_pirates, keep_wormholes, mine_fields, pass_rogues, return_comets
@@ -19,14 +22,18 @@ from aerona.engine.cosmos.stellar import hundredths, physics_of_stars
 from aerona.engine.cosmos.survey import survey_cycle
 from aerona.engine.cosmos.systems import ensure_systems, sync_system, systems_of, turn_galaxies
 from aerona.engine.cosmos.terraform import powers_reshape, terraform_cycle
+from aerona.engine.environment.profile import make_factor, make_of
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.environment import write_seasons
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 from aerona.rules.registry import Rules
 
 BROKEN = frozenset({WorldType.SHATTERED, WorldType.ASTEROID_BELT})
+MAKE_FIXUP = "world_make"
+MATERIALS = frozenset(kind.value for kind in MaterialKind)
 
 
 @reads("table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.star_physics", "table.star_systems")
@@ -147,11 +154,33 @@ async def world_physics(ctx: TickContext) -> None:
     ctx.count("peoples_fitted", await fit_peoples(ctx.session, ctx.rules))
 
 
+async def rescale_seams(session: AsyncSession, rules: Rules) -> int:
+    done = set(await session.scalars(select(AppliedFixupRow.key).where(AppliedFixupRow.key.like(f"{MAKE_FIXUP}.%"))))
+    rescaled = 0
+    for physics in list(await session.scalars(select(WorldPhysicsRow).order_by(WorldPhysicsRow.world_id))):
+        key = f"{MAKE_FIXUP}.{physics.world_id}"
+        if key in done:
+            continue
+        body = make_of(rules, physics)
+        for ground in await session.scalars(select(RegionEnvironmentRow).where(RegionEnvironmentRow.world_id == physics.world_id)):
+            if "mineral_layers" in ground.locked or not ground.mineral_layers:
+                continue
+            ground.mineral_layers = {
+                name: clamp_percent(round_half_up(depth * (make_factor(body, MaterialKind(name)) if name in MATERIALS else 1.0)))
+                for name, depth in ground.mineral_layers.items()
+            }
+            rescaled += 1
+        session.add(AppliedFixupRow(key=key, result={"metal": body.metal, "stone": body.stone, "rare": body.rare}))
+    await session.flush()
+    return rescaled
+
+
 async def settle_heavens(session: AsyncSession, rules: Rules) -> int:
     ctx = await manual_context(session, "heavens_physics", rules)
     made = await ensure_systems(session, rules, ctx.epoch)
     made += await derive_all(ctx, quiet=True)
     made += await fit_peoples(session, rules)
+    made += await rescale_seams(session, rules)
     return made + await survey_cycle(ctx, await Cosmography.load(session))
 
 

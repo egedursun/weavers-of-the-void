@@ -183,6 +183,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   call_impact: Flame,
   deflect_impact: ShieldCheck,
   terraform_world: Globe,
+  break_moon: Orbit,
   reveal_true_name: ScrollText,
   forge_item: Hammer,
   commission_artwork: Palette,

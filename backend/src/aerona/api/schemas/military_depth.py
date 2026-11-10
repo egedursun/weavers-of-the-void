@@ -42,15 +42,6 @@ class RecordTableView(ApiModel):
     rows: list[RecordRowView]
 
 
-class RecordKindView(ApiModel):
-    kind: str
-    label: str
-    creatable: bool
-    deletable: bool
-    scope: str | None
-    required: list[str]
-
-
 class BattleStackView(ApiModel):
     side: NodeRef | None
     army: NodeRef | None

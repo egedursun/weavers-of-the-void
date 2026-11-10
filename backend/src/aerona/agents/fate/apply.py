@@ -26,7 +26,7 @@ from aerona.engine.gods.rewards import adjust_reward
 from aerona.engine.lore.prophecy import reward_fulfilment
 from aerona.engine.primitives.canon_facts import FactDraft, apply_fate_facts, certain_facts
 from aerona.engine.primitives.manual import manual_context
-from aerona.engine.primitives.motifs import plain, record_motifs
+from aerona.engine.primitives.motifs import record_motifs
 from aerona.engine.primitives.threads import advance_story, close_story, open_story
 from aerona.prompts.schemas.fate import ClosedThreadOutput, FateJudgmentOutput, VerdictDecision, VerdictOutput
 from aerona.rules.registry import Rules
@@ -92,7 +92,7 @@ async def apply_verdicts(session: AsyncSession, rules: Rules, ruling: FateRuling
         if verdict.id not in ruling.judged_epochs or entity is None or entity.status is not EntityStatus.CANON:
             continue
         rationale = shorten_rationale(verdict.rationale, words)
-        await record_motifs(session, entity, plain(verdict.motifs), ruling.epoch, replace=True)
+        await record_motifs(session, entity, verdict.motifs, ruling.epoch, replace=True)
         if ruling.fate_off:
             await record_verdict(session, entity, Verdict.UNJUDGED, rationale, ruling.epoch)
             continue

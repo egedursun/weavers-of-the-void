@@ -11,7 +11,6 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import CreationMotifRow, EntityRow
 from aerona.db.tables.motifs import MotifOverrideMode, MotifOverrideRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.meta import MotifCategory
 from aerona.engine.primitives.motifs import motif_words
 from aerona.rules.registry import Rules
 
@@ -30,8 +29,8 @@ class TiredMotif:
         return round(self.ratio * PERCENT)
 
 
-def is_phrase(motif: str, category: MotifCategory | None) -> bool:
-    return category is MotifCategory.PHRASE or any(separator in motif.strip() for separator in PHRASE_SEPARATORS)
+def is_phrase(motif: str) -> bool:
+    return any(separator in motif.strip() for separator in PHRASE_SEPARATORS)
 
 
 def appears_in(motif: str, canon_text: str) -> bool:
@@ -81,15 +80,15 @@ async def _recent_tags(session: AsyncSession, rules: Rules, world_id: int | None
     single_docs: set[int] = set()
     phrase_docs: set[int] = set()
     if recent_ids:
-        columns = select(CreationMotifRow.entity_id, CreationMotifRow.motif, CreationMotifRow.category)
+        columns = select(CreationMotifRow.entity_id, CreationMotifRow.motif)
         rows = await session.execute(columns.where(CreationMotifRow.entity_id.in_(recent_ids)))
         seen: set[tuple[int, str]] = set()
-        for entity_id, motif, category in rows:
+        for entity_id, motif in rows:
             key = " ".join(motif_words(motif))
             if not key or (entity_id, key) in seen:
                 continue
             seen.add((entity_id, key))
-            if is_phrase(motif, category):
+            if is_phrase(motif):
                 phrases[key] += 1
                 phrase_docs.add(entity_id)
             else:

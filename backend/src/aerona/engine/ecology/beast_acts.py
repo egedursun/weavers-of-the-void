@@ -9,8 +9,8 @@ from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.warfare import CaptiveRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import PackageKind, Transmission
-from aerona.domain.enums.body import MADNESS_CONDITIONS, ConditionKind, HarmCause
-from aerona.domain.enums.ecology import AwakeningTrigger, GazeKind, Habitat, Temperament
+from aerona.domain.enums.body import MADNESS_CONDITIONS, ConditionKind, DamageType, HarmCause
+from aerona.domain.enums.ecology import AwakeningTrigger, BreathKind, GazeKind, Habitat, Temperament
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.material import MaterialKind
@@ -18,8 +18,10 @@ from aerona.domain.enums.mind import MemoryKind, ThoughtKind
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.conditions import gain_condition
+from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import GoodsLedger
+from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.standing import add_stress
 from aerona.engine.primitives.distance import RegionAtlas
@@ -63,21 +65,47 @@ async def carry_off(ctx: TickContext, beast: EntityRow, row: BeastProfileRow, ne
     if not near or not ctx.rng(f"abduct.{beast.id}.{ctx.epoch}").chance(ctx.rules.monsters.abduct_pct):
         return None
     for town in near:
-        if held(town.id):
-            continue
-        victims = await ctx.session.scalars(
-            select(EntityRow)
-            .where(await present_in(ctx.session, town), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
-            .order_by(EntityRow.id)
-        )
-        for victim in list(victims):
-            if held(victim.id) or await held_captive(ctx.session, victim.id) is not None:
-                continue
-            await take_captive(ctx, beast, victim, None, description="carried off in the night", home_id=town.id)
-            victim.location_id = row.lair_place_id or beast.location_id
-            await think(ctx.session, ctx.rules, victim.id, ThoughtKind.WAS_CAPTURED, ctx.epoch, subject_id=beast.id)
+        victim = await seize(ctx, beast, row, town, "carried off in the night")
+        if victim is not None:
             return f"{beast.name} carried {victim.name} off from {town.name}"
     return None
+
+
+async def seize(ctx: TickContext, beast: EntityRow, row: BeastProfileRow, town: EntityRow, description: str) -> EntityRow | None:
+    if held(town.id):
+        return None
+    victims = await ctx.session.scalars(
+        select(EntityRow)
+        .where(await present_in(ctx.session, town), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.id)
+    )
+    for victim in list(victims):
+        if held(victim.id) or await held_captive(ctx.session, victim.id) is not None:
+            continue
+        await take_captive(ctx, beast, victim, None, description=description, home_id=town.id)
+        victim.location_id = row.lair_place_id or beast.location_id
+        await think(ctx.session, ctx.rules, victim.id, ThoughtKind.WAS_CAPTURED, ctx.epoch, subject_id=beast.id)
+        return victim
+    return None
+
+
+BREATH_HARM: dict[BreathKind, DamageType] = {BreathKind.FIRE: DamageType.FIRE, BreathKind.STEAM: DamageType.FIRE, BreathKind.FROST: DamageType.COLD}
+
+
+async def breathe(ctx: TickContext, beast: EntityRow, row: BeastProfileRow, town: EntityRow, breath: BreathKind) -> EntityRow | None:
+    if breath is BreathKind.WEB:
+        return await seize(ctx, beast, row, town, "caught in its web")
+    living = [mortal for mortal in await townsfolk(ctx, town) if not held(mortal.id)]
+    if not living:
+        return None
+    victim = ctx.rng(f"breath.{beast.id}.{town.id}.{ctx.epoch}").pick(living)
+    if breath is BreathKind.VENOM_GAS:
+        await afflict(ctx, victim, PackageKind.SNAKE_VENOM, Transmission.INHALATION, source_node_id=beast.id)
+        return victim
+    damage = ctx.rules.creature_anatomy.breath_damage
+    harm = Harm(damage, HarmCause.MONSTER, f"breathed upon by {beast.name}", damage_type=BREATH_HARM[breath], source_node_id=beast.id, killer_id=beast.id)
+    await apply_hits(ctx, victim, harm)
+    return victim
 
 
 async def free_captives(ctx: TickContext, beast: EntityRow) -> int:

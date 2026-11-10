@@ -50,6 +50,7 @@ from aerona.engine.environment.places import place_kind_of
 from aerona.engine.environment.profile import (
     Geography,
     Ground,
+    Make,
     Surroundings,
     TerrainReading,
     Works,
@@ -59,6 +60,7 @@ from aerona.engine.environment.profile import (
     defensibility_of,
     disease_load_of,
     fertility_from,
+    make_of,
     mineral_layers,
     natural_soil,
     passability_of,
@@ -164,6 +166,7 @@ class RegionContext:
     world_heat: int = 0
     pass_shift: int = 0
     sky_heat: int | None = None
+    make: Make = field(default_factory=Make)
 
     def surroundings(self, rules: Rules, env: RegionEnvironmentRow) -> Surroundings:
         return Surroundings(
@@ -289,7 +292,9 @@ def new_region_environment(ctx: TickContext, region: EntityRow, geography: Geogr
     )
     around = context.surroundings(rules, env)
     refresh_climate(rules, env, around, context.world.axial_tilt or 0, context.world.tidal_strength or 0)
-    env.mineral_layers = mineral_layers(rules, ctx.environment.rng(f"minerals.{region.id}"), geography, context.world.world_type, env.dominant_terrain)
+    env.mineral_layers = mineral_layers(
+        rules, ctx.environment.rng(f"minerals.{region.id}"), geography, context.world.world_type, env.dominant_terrain, make=context.make
+    )
     fertility = stat(region, "fertility")
     if fertility is not None:
         env.soil_fertility = soil_for(fertility, factor_of(rules, env, context.works))
@@ -415,6 +420,7 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
             world_heat=world_heat(ctx.rules, world, book.star_of(world), sky_heat),
             pass_shift=hindered[region.id],
             sky_heat=sky_heat,
+            make=make_of(ctx.rules, physics),
         )
     return contexts
 
@@ -520,7 +526,7 @@ async def environment_survey(ctx: TickContext) -> None:
             apply_geography(env, mapped, coast, course_of(shapes, region.id))
             if not env.surveyed:
                 env.mineral_layers = mineral_layers(
-                    ctx.rules, ctx.environment.rng(f"minerals.{region.id}"), mapped, context.world.world_type, env.dominant_terrain
+                    ctx.rules, ctx.environment.rng(f"minerals.{region.id}"), mapped, context.world.world_type, env.dominant_terrain, make=context.make
                 )
             env.surveyed = True
             synced += 1

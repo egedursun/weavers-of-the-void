@@ -17,7 +17,7 @@ from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin
 from aerona.domain.models.phonology import Phonology
-from aerona.engine.primitives.motifs import plain, record_motifs
+from aerona.engine.primitives.motifs import record_motifs
 from aerona.engine.primitives.renames import rewrite_name
 from aerona.language.alphabet import first_word
 from aerona.prompts import PromptId
@@ -74,7 +74,7 @@ async def apply_naming(session: AsyncSession, item: NamingItemOutput, epoch: int
     entity.description = sanitize(without_engine_prefix(item.description) or without_engine_prefix(entity.description)) or entity.description
     entity.image_prompt = item.image_prompt.strip() or entity.image_prompt
     entity.pending_name = False
-    await record_motifs(session, entity, plain(item.motifs), epoch, replace=True)
+    await record_motifs(session, entity, item.motifs, epoch, replace=True)
     if name != old:
         name = await repository.rename(entity, name)
         await rewrite_name(session, entity.id, old, name)

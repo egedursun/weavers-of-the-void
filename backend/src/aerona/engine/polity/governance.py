@@ -53,7 +53,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
-from aerona.engine.relations.persuasion import council_lift
+from aerona.engine.relations.persuasion import council_lift, counsel_lift
 from aerona.engine.renown.currencies import spend_prestige
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import declare_war
@@ -273,7 +273,8 @@ async def works(ctx: TickContext, realm: Realm, values: dict[ValueAxis, int], *,
     table = ctx.rules.government
     if "works" in realm.profile.locked or realm.profile.treasury < table.build_cost * 2:
         return []
-    if not ctx.rng(f"works.{realm.entity.id}.{ctx.epoch}").chance(table.build_chance):
+    counsel = await counsel_lift(ctx, realm.entity.id, realm.ruler_id, realm.entity.id)
+    if not ctx.rng(f"works.{realm.entity.id}.{ctx.epoch}").chance(table.build_chance * counsel):
         return []
     knowledge = await KnowledgeMap.load(ctx.session)
     choices: list[tuple[int, int, DistrictKind]] = []

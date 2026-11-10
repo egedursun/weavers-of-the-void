@@ -289,6 +289,8 @@ class WorldLifeRules:
     mood_quake_severity: int = rule(30, 0, 100, E, "Severity of the quakes of an angry living world (%)")
     mood_bounty: int = rule(50, 0, 100, E, "Mood at or above which a living world makes its soil richer")
     mood_fertility: int = rule(2, 0, 50, E, "Soil fertility a glad living world gives its regions each epoch")
+    mood_close: int = rule(-90, -100, 0, E, "Mood at or below which a living world withdraws into itself, neither shaking nor feeding its regions")
+    mood_reopen_worked: int = rule(10, 0, 100, E, "Mined and cleared land at or below which a withdrawn living world wakes again")
     current_heat: int = rule(4, 0, 50, E, "Temperature a warm current gives its coast or a cold one takes")
     deforestation_rain: int = rule(1, 0, 50, E, "Rainfall neighbours lose for each twenty points of cleared land in a region")
     shift_step: int = rule(2, 0, 50, E, "How far a region's temperature and rainfall shifts move toward their targets each epoch")

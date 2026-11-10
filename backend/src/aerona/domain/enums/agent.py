@@ -65,7 +65,6 @@ class TurnCounter(StrEnum):
     COMMANDER_APPOINTMENTS = "commander_appointments"
     ADOPTIONS = "adoptions"
     EXPLORATIONS = "explorations"
-    REPEATED_CREATIONS = "repeated_creations"
     RESURRECTION_RITES = "resurrection_rites"
     LANGUAGES_FOUNDED = "languages_founded"
     CULTURES_CREATED = "cultures_created"

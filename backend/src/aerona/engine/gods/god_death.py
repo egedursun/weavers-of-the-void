@@ -25,6 +25,7 @@ from aerona.domain.models.entity_stats import CultStats, PlaceStats, SpiritStats
 from aerona.domain.models.stats import STAT_CEILING, STAT_FLOOR
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.phenomena import form_phenomenon
+from aerona.engine.divine.wounds import death_cause
 from aerona.engine.gods.essence import gain
 from aerona.engine.gods.queries import cosmos_row, creator_row, sons, worshippers_of
 from aerona.engine.gods.stats import Trait, set_trait, trait_or
@@ -322,7 +323,7 @@ async def tend_living_son(ctx: TickContext, son: SonRow) -> bool:
     son.fading_epochs += 1
     left = rules.fading_death_epochs - son.fading_epochs
     if left <= 0:
-        await god_death(ctx, son, god_lines.GOD_DEATH_FADED, SonDeathCause.FADING)
+        await god_death(ctx, son, god_lines.GOD_DEATH_FADED, await death_cause(ctx.session, son.id))
         return True
     line = None
     if left == FADING_WARN_TWO:

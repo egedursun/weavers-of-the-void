@@ -6,7 +6,7 @@ from aerona.db.read_memo import memoized
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ArtworkProfileRow, LanguageIntelligibilityRow, LanguageRegisterRow, LanguageStandingRow, SpeakerCohortRow
 from aerona.db.tables.demography import PeopleCultureRow
-from aerona.db.tables.entities import EntityRow, LanguageProfileRow
+from aerona.db.tables.entities import EntityFlagRow, EntityRow, LanguageProfileRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
@@ -14,7 +14,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import WritingSystem
 from aerona.domain.enums.culture import LanguageRegister, SpeakerKind
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -208,6 +208,8 @@ async def prestige_parts(ctx: TickContext, language: EntityRow) -> dict[str, int
     }
     if (stat(language, "sacredness") or 0) >= SACRED_STAT:
         parts["its holiness"] = table.sacred
+    if await ctx.session.get(EntityFlagRow, (language.id, EntityFlag.REVIVED_LANGUAGE)) is not None:
+        parts["the pride of its revival"] = table.revival
     return parts
 
 

@@ -41,6 +41,7 @@ from aerona.engine.military.spycraft import (
     owner_kind,
     plant_claimant,
     recruit,
+    retire_agents,
     reveal_aims,
     side_for,
     wound_ruler,
@@ -351,6 +352,7 @@ async def deepen(ctx: TickContext, network: SpyNetworkRow) -> None:
     skill = await skill_level(ctx.session, network.spymaster_entity_id, SkillKind.INTRIGUE) if network.spymaster_entity_id is not None else 0
     if "depth" not in network.locked:
         network.depth = clamp_int(network.depth + cover_access(network, round_half_up(rules.depth_gain * (1 + skill / PERCENT))), 0, PERCENT)
+    ctx.count("agents_retired", await retire_agents(ctx, network))
     if "agents" not in network.locked and await recruit(ctx, network) is not None:
         network.agents += 1
     network.intel = clamp_int(network.intel + round_half_up(rules.intel_gain * network.depth / PERCENT), 0, PERCENT)

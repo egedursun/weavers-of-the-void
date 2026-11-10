@@ -209,7 +209,7 @@ async def _star_name(scope: PlayerScope, world_id: int | None) -> str:
     return await NameRepository(scope.session).unique_name(STAR_NAME.format(ordinal=ordinal(stars + 1), world=world.name))
 
 
-@player_action("cosmic:hang_star", ActionKind.HANG_STAR)
+@player_action("cosmic:hang_star", ActionKind.IGNITE_STAR)
 async def hang_star(scope: PlayerScope, command: HangStar) -> Effect:
     creator = await scope.creator()
     name = command.name.strip() or await _star_name(scope, command.world_id)

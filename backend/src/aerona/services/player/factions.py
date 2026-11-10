@@ -60,7 +60,7 @@ async def edit_faction(scope: PlayerScope, command: EditFaction) -> Effect:
     return Effect(f"The faction is {an(profile.kind.value.replace('_', ' '))} with {profile.treasury} in its coffers.", command.faction_id)
 
 
-@player_action("faction:goal", ActionKind.EDIT_RECORD)
+@player_action("faction:goal", ActionKind.STEER_FACTION)
 async def set_goal(scope: PlayerScope, command: FactionGoal) -> Effect:
     goal = await control.set_goal(
         await scope.context("faction_goal"),

@@ -26,6 +26,7 @@ class CreatureAnatomyRules:
     abductor_pct: int = rule(15, 0, 100, G, "Chance a monster of a kind of its own carries people off rather than killing them (%)")
     awakening_pct: int = rule(50, 0, 100, G, "Chance a monster of a kind of its own wakes only to a trigger (%)")
     breath_harm_pct: int = rule(30, 0, 300, G, "Harm a breath attack adds to a creature's raids (%)")
+    breath_damage: int = rule(12, 0, 100, G, "Harm a breath of fire, steam or frost deals the dweller it falls on")
     head_harm_pct: int = rule(20, 0, 300, G, "Harm each head beyond the first adds to a creature's raids (%)")
     limb_harm_pct: int = rule(5, 0, 100, G, "Harm each limb beyond its plan adds to a creature's raids (%)")
     skin_damage_pct: int = rule(100, 0, 300, G, "Weight of the armour of a creature's skin against the harm of each wound it takes (%)")

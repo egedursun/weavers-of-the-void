@@ -4,7 +4,7 @@ from aerona.catalog.civics import PRIVILEGE_GATES
 from aerona.catalog.estates import ESTATE_NAMES, PRIVILEGE_LABELS
 from aerona.db.tables.estates import EstateProfileRow
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.agent import AgentKind
+from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.faction import EstatePrivilege
 from aerona.engine.factions.estates import grant, revoke
@@ -28,6 +28,8 @@ class BargainInput(ToolInput):
 
 
 async def bargain_with_estate(call: MortalCall, args: BargainInput) -> str:
+    limit = call.rules.mortal_tools.estate_bargain_per_epoch
+    await call.within_limit(TurnCounter.FACTION_ACTS, limit, "mortal_tools.estate_bargain_per_epoch", MortalResult.ESTATE_LIMIT)
     row = await call.session.get(EstateProfileRow, args.estate_id)
     if row is None:
         fail(MortalResult.ESTATE_REFUSED, why="there is no such estate")

@@ -70,6 +70,18 @@ async def agents_of(ctx: TickContext, network: SpyNetworkRow, *, active: bool = 
     return list(await ctx.session.scalars(statement.order_by(SpyAgentRow.id)))
 
 
+async def retire_agents(ctx: TickContext, network: SpyNetworkRow) -> int:
+    retired = 0
+    for agent in await agents_of(ctx, network):
+        if "status" in agent.locked or held(agent.mortal_entity_id) or ctx.epoch - agent.since_epoch < ctx.rules.espionage.agent_service_epochs:
+            continue
+        agent.status, agent.ended_epoch = AgentStatus.RETIRED, ctx.epoch
+        retired += 1
+        if "agents" not in network.locked:
+            network.agents = max(0, network.agents - 1)
+    return retired
+
+
 async def recruit(ctx: TickContext, network: SpyNetworkRow) -> SpyAgentRow | None:
     owner = await living_entity(ctx.session, network.owner_entity_id)
     if owner is None:

@@ -92,6 +92,7 @@ class PersuasionRules:
     sermon_pct: int = rule(30, 0, 200, G, "How much a persuasive sermon raises the chance of a conversion (%)")
     council_pct: int = rule(30, 0, 200, G, "How much persuasive councillors raise the chance a law is enacted (%)")
     envoy_pct: int = rule(30, 0, 200, G, "How much a persuasive envoy raises the chance a treaty is accepted (%)")
+    counsel_pct: int = rule(30, 0, 200, G, "How much a persuasive chancellor or treasurer raises the chance the ruler orders public works (%)")
     argue_pct: int = rule(30, 0, 100, G, "Chance an argument between mortals turns into an attempt to persuade (%)")
 
 

@@ -4,7 +4,7 @@ YOUR MEMORY:
 EARLIER IN THE CONVERSATION:
 {% if history %}
 {% for line in history %}
-{{ "THE CREATOR" if line.from_father else "YOU" }}: {{ line.text }}
+{{ "THE CREATOR" if line.from_creator else "YOU" }}: {{ line.text }}
 {% endfor %}
 {% else %}
 (you are speaking for the first time)

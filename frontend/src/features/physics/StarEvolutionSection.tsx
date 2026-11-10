@@ -12,7 +12,6 @@ import {
   usePhysicsAction,
   useStarPhysics,
 } from './api'
-import { typed } from './edits'
 import { fixed } from './format'
 import { STAR_STAGES } from './labels'
 import { QuerySection } from './parts'
@@ -179,7 +178,7 @@ export function StarEvolutionSection({ starId }: { starId: number }) {
               busy={busy}
               onSave={(values) =>
                 edit.mutate({
-                  values: typed(values, { ids: ['maker_son_id'] }),
+                  values,
                 })
               }
               onRelease={(release) => edit.mutate({ release })}

@@ -145,7 +145,7 @@ def son_memory() -> blocks.SonMemoryContext:
         plan_years=5,
         plan_stale=True,
         closed_since_plan=["The salt feud ended."],
-        words=[blocks.MemoryWord(age=4, from_father=True, sender="Ul", intent_label="command", text="Rise.")],
+        words=[blocks.MemoryWord(age=4, from_creator=True, sender="Ul", intent_label="command", text="Rise.")],
         creations=[blocks.MemoryCreation(entity=ENTITY, other_world="Vel", fate_note="Rejected for cliché")],
         creations_total=1,
         current_world=WORLD,
@@ -700,7 +700,7 @@ def son_chat() -> council.SonChatContext:
         fear="Fire",
         secret="A drowned brother",
         memory="MEMORY",
-        history=[council.ChatLine(from_father=True, text="Are you loyal?"), council.ChatLine(from_father=False, text="Always.")],
+        history=[council.ChatLine(from_creator=True, text="Are you loyal?"), council.ChatLine(from_creator=False, text="Always.")],
         text="Prove it.",
     )
 

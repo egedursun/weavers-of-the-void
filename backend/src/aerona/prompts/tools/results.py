@@ -410,6 +410,7 @@ class MortalResult(StrEnum):
     TREATY_ACCEPTED = "{{ name }} is sealed."
     TREATY_BROKEN = "The treaty is broken; the betrayed will remember."
     OATH_LIMIT = "You already swore an oath this age."
+    ESTATE_LIMIT = "You have bargained with the estates as often as you can this age."
     OATH_NOT_MORTAL = "Only a named mortal can swear an oath."
     OATH_SWORN = "The {{ kind }} oath is sworn {{ witnessed }}."
     SOCIAL_NOT_MORTAL = "Only a named mortal can do this."

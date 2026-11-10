@@ -16,7 +16,6 @@ import {
 } from '@/features/cosmography/parts'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { type FeatureRecord, usePhysicsAction } from './api'
-import { typed } from './edits'
 import { FEATURE_KINDS, table } from './labels'
 import { WorldPicker } from './parts'
 
@@ -299,7 +298,7 @@ export function CosmicFeaturesPanel({
                 onSave={(values) =>
                   edit.mutate({
                     feature: row.id,
-                    values: typed(values, { ids: ['star_id', 'galaxy_id'] }),
+                    values,
                   })
                 }
                 onRelease={(release) =>

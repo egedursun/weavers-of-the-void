@@ -72,6 +72,7 @@ async def language_death(ctx: TickContext) -> None:
             continue
         if assessment.change is VitalityChange.DIED:
             await add_flag(ctx.session, language.id, EntityFlag.DEAD_LANGUAGE, ctx.epoch)
+            await remove_flag(ctx.session, language.id, EntityFlag.REVIVED_LANGUAGE)
             if assessment.decipherable:
                 await add_flag(ctx.session, language.id, EntityFlag.DECIPHERABLE, ctx.epoch)
             set_stats(language, spread=0)
@@ -82,6 +83,7 @@ async def language_death(ctx: TickContext) -> None:
             continue
         await remove_flag(ctx.session, language.id, EntityFlag.DEAD_LANGUAGE)
         await remove_flag(ctx.session, language.id, EntityFlag.DECIPHERABLE)
+        await add_flag(ctx.session, language.id, EntityFlag.REVIVED_LANGUAGE, ctx.epoch)
         ctx.count("revived")
         await note(ctx, vitality_note(language.name, assessment), key="languages.revived", ids=[language.id])
 

@@ -44,6 +44,7 @@ import { SentientPacts } from './economy/SentientPact'
 import { FactionSection } from './faction/Faction'
 import { AfterlifeSection, SoulSection } from './faith/Afterlife'
 import { DoctrineSection } from './faith/Doctrine'
+import { PossessedSection } from './faith/Possessed'
 import { EventSection } from './happenings/EventCard'
 import { EventsHereSection } from './happenings/EventsHere'
 import { LandShapeSection } from './happenings/LandShape'
@@ -584,6 +585,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         )}
         {entity.entity_type === 'spirit' && (
           <SoulSection spiritId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {entity.entity_type === 'mortal' && (
+          <PossessedSection hostId={entity.id} readOnlyReason={readOnly} />
         )}
         {entity.entity_type === 'region' && (
           <AfterlifeSection regionId={entity.id} readOnlyReason={readOnly} />

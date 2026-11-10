@@ -68,6 +68,7 @@ class KinshipRules:
     marriage_chance: int = rule(25, 0, 100, G, "Chance each epoch that adult lovers or the betrothed wed (%)")
     divorce_chance: int = rule(2, 0, 100, G, "Chance each epoch that a cold marriage ends (%)")
     divorce_opinion_below: int = rule(-40, -100, 100, G, "Opinion between spouses below which they may part")
+    annulment_chance: int = rule(2, 0, 100, G, "Chance each epoch that a cold, childless marriage is declared void where divorce is forbidden (%)")
     forced_marriage_magnitude: int = rule(30, 0, 100, G, "How bitterly the unwilling remember a forced marriage")
     widowed_magnitude: int = rule(40, 0, 100, G, "How deeply a spouse remembers losing their partner")
     orphan_magnitude: int = rule(40, 0, 100, G, "How deeply a child remembers losing a parent")

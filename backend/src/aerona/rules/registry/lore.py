@@ -26,6 +26,7 @@ class PrestigeRules:
     power_pct: int = rule(40, 0, 100, R, "Weight of the speakers' realm power in a language's prestige (%)")
     literature: int = rule(3, 0, 100, R, "Prestige each work of literature lends its language")
     sacred: int = rule(15, 0, 100, R, "Prestige of a sacred or liturgical language")
+    revival: int = rule(10, 0, 100, R, "Prestige a language brought back from death holds while it lives again")
     lingua_franca: int = rule(60, 0, 100, R, "Prestige at which a language becomes the lingua franca of the trade roads")
     second_language_gain: int = rule(5, 0, 100, R, "Share of a trading people that learns the lingua franca each epoch (%)")
     conquered_pct: int = rule(50, 0, 200, R, "Weight of the conquered people's literature against the conquerors' prestige (%)")

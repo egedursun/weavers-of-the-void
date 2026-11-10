@@ -22,7 +22,6 @@ class EpochStepKind(StrEnum):
     EPOCH_WORDS = "epoch_words"
     LOCAL_GODS = "local_gods"
     TRANSITION = "transition"
-    HORIZON_INTUITIONS = "horizon_intuitions"
     WORLD_BIRTH = "world_birth"
     NETWORK_REPAIR = "network_repair"
     PRUNE = "prune"

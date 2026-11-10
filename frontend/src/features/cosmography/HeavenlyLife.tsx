@@ -1,8 +1,18 @@
-import { Angry, Frown, Globe2, Heart, Meh, Smile, Sun } from 'lucide-react'
+import {
+  Angry,
+  EyeOff,
+  Frown,
+  Globe2,
+  Heart,
+  Meh,
+  Smile,
+  Sun,
+} from 'lucide-react'
 import { type EditValues } from '@/api/actions'
 import { EmptyState, LoadingBlock, Section } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { useSons } from '@/features/pantheon/api'
+import { YES_NO } from '@/features/physics/edits'
 import {
   type StarRecord,
   type WorldRecord,
@@ -287,8 +297,14 @@ export function WorldPlacementSection({ world }: { world: WorldRecord }) {
             <Muted as='span' variant='caption'>
               Mood toward its peoples
             </Muted>
-            <Chip icon={moodOf(world.mood).icon}>
-              {`${moodOf(world.mood).label} (${world.mood > 0 ? '+' : ''}${world.mood})`}
+            <Chip
+              icon={
+                world.consciousness_closed ? EyeOff : moodOf(world.mood).icon
+              }
+            >
+              {world.consciousness_closed
+                ? 'Withdrawn into itself'
+                : `${moodOf(world.mood).label} (${world.mood > 0 ? '+' : ''}${world.mood})`}
             </Chip>
           </div>
         </div>
@@ -321,6 +337,12 @@ export function WorldPlacementSection({ world }: { world: WorldRecord }) {
               max: 100,
             },
             { key: 'mood', label: 'Mood', kind: 'number', min: -100, max: 100 },
+            {
+              key: 'consciousness_closed',
+              label: 'Withdrawn into itself',
+              kind: 'pick',
+              table: YES_NO,
+            },
             { key: 'age_stage', label: 'Age', kind: 'pick', table: WORLD_AGES },
             ...(bound === null
               ? ([
@@ -341,7 +363,12 @@ export function WorldPlacementSection({ world }: { world: WorldRecord }) {
           ]}
           locked={world.locked ?? []}
           busy={busy}
-          onSave={(values) => edit.mutate({ values, release: [] })}
+          onSave={(values) =>
+            edit.mutate({
+              values,
+              release: [],
+            })
+          }
           onRelease={(release) => edit.mutate({ values: {}, release })}
         />
       </div>

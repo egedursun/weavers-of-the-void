@@ -7,13 +7,14 @@ import {
 } from '@/test-utils/fakeApi'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { LifeClassSection } from './LifeClassSection'
+import { StarEvolutionSection } from './StarEvolutionSection'
 import { WorldSurveySection } from './SurveySection'
 import { WorldPhysicsSection } from './WorldPhysicsSection'
 import {
   WorldImpactsSection,
   WorldTerraformSection,
 } from './WorldShapingSection'
-import { WORLD_PHYSICS } from './physicsFixtures'
+import { STAR_PHYSICS, WORLD_PHYSICS } from './physicsFixtures'
 
 vi.mock('@/api/client', async () => {
   const { createFakeClient } = await import('@/test-utils/fakeApi')
@@ -114,6 +115,29 @@ describe('the physics of a world', () => {
     expect(callsTo('POST', '/api/actions/world_physics:edit')[0].body).toEqual({
       world_id: 11,
       values: { ringed: true },
+      release: [],
+    })
+  })
+
+  it('sends the maker it picks as an id', async () => {
+    serveWorld()
+    onApi('GET', '/api/physics/stars/246', STAR_PHYSICS)
+    onApi('GET', '/api/sons', [{ son: { id: 7, name: 'Veyr' } }])
+    onApi('POST', '/api/actions/star_physics:edit', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<StarEvolutionSection starId={246} />)
+    await screen.getByRole('button', { name: 'Adjust' }).first().click()
+    await screen.getByRole('combobox', { name: 'Maker who keeps it' }).click()
+    await screen.getByRole('option', { name: 'Veyr' }).click()
+    await screen
+      .getByRole('button', { name: 'Hold these values' })
+      .first()
+      .click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/star_physics:edit'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/star_physics:edit')[0].body).toEqual({
+      star_id: 246,
+      values: { maker_son_id: 7 },
       release: [],
     })
   })

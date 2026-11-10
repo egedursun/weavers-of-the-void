@@ -182,7 +182,8 @@ async def tend_rift(ctx: TickContext, rift: RiftRow) -> None:
         await note(ctx, "A rift closed by itself.", key="rift.closed", world_id=rift.world_id, kind=ChronicleKind.COSMIC)
         return
     if "state" not in rift.locked:
-        rift.state = RiftState.OPEN if rift.stability >= table.steady_at or rift.state is RiftState.OPENING else rift.state
+        steady = rift.stability >= table.steady_at
+        rift.state = RiftState.CLOSING if steady and rift.state is not RiftState.OPENING else RiftState.OPEN
     await open_passage(ctx, rift)
     if rift.size >= table.wound_size and rift.region_entity_id is not None:
         region = await ctx.session.get(EntityRow, rift.region_entity_id)

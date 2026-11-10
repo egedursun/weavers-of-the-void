@@ -27,12 +27,20 @@ export type Field =
   | { key: string; label: string; kind: 'pick'; table: Record<string, string> }
   | { key: string; label: string; kind: 'text'; long?: boolean }
 
-export type Values = Record<string, number | string | null>
+export type Values = Record<string, number | string | boolean | null>
 
-function parsed(field: Field, text: string): number | string | null {
+const WHOLE = /^\d+$/
+
+function picked(text: string): number | string | boolean | null {
+  if (text === 'none') return null
+  if (text === 'true' || text === 'false') return text === 'true'
+  return WHOLE.test(text) ? Number(text) : text
+}
+
+function parsed(field: Field, text: string): number | string | boolean | null {
   if (field.kind === 'text') return text.trim() === '' ? null : text.trim()
   if (text === '') return null
-  if (field.kind === 'pick') return text === 'none' ? null : text
+  if (field.kind === 'pick') return picked(text)
   const value = Number(text)
   return Number.isNaN(value) ? null : value
 }

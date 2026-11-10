@@ -19,7 +19,7 @@ from aerona.tools.framework.validation import fail
 from aerona.tools.son import lines
 
 
-class FatherRequest(StrEnum):
+class CreatorRequest(StrEnum):
     ESSENCE = "essence"
     BLESSING = "blessing"
     PERMISSION = "permission"
@@ -34,7 +34,7 @@ class RebelInput(ToolInput):
 
 class PrayInput(ToolInput):
     message: Annotated[str, Field(min_length=MESSAGE_MIN, max_length=MESSAGE_MAX)]
-    request: FatherRequest = FatherRequest.NONE
+    request: CreatorRequest = CreatorRequest.NONE
 
 
 async def rebel(call: SonCall, args: RebelInput) -> str:

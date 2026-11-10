@@ -65,14 +65,3 @@ class ImageMime(StrEnum):
 class ImageOrigin(StrEnum):
     GENERATED = "generated"
     UPLOADED = "uploaded"
-
-
-class MotifCategory(StrEnum):
-    IMAGERY = "imagery"
-    MATERIAL = "material"
-    COLOR = "color"
-    SOUND = "sound"
-    CREATURE = "creature"
-    PLACE = "place"
-    THEME = "theme"
-    PHRASE = "phrase"

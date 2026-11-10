@@ -10,11 +10,13 @@ export type TenetKind = components['schemas']['TenetKind']
 export type SoulCard = components['schemas']['SoulCard']
 export type RealmOfDead = components['schemas']['RealmOfDeadView']
 export type Stratum = components['schemas']['StratumView']
+export type Possession = components['schemas']['PossessionView']
 
 export const faithKeys = {
   doctrine: (id: number) => [...loreKeys.entity(id), 'doctrine'] as const,
   soul: (id: number) => [...loreKeys.entity(id), 'soul'] as const,
   afterlife: (id: number) => [...loreKeys.entity(id), 'afterlife'] as const,
+  possession: (id: number) => [...loreKeys.entity(id), 'possession'] as const,
   tenets: ['tenets', 'kinds'] as const,
 }
 
@@ -24,6 +26,18 @@ export function useDoctrine(id: number) {
     queryFn: () =>
       unwrap(
         api.GET('/api/entities/{entity_id}/doctrine', {
+          params: { path: { entity_id: id } },
+        })
+      ),
+  })
+}
+
+export function usePossession(id: number) {
+  return useQuery({
+    queryKey: faithKeys.possession(id),
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/entities/{entity_id}/possession', {
           params: { path: { entity_id: id } },
         })
       ),

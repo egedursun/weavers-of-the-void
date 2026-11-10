@@ -142,6 +142,7 @@ class SiegeDepthRules:
     district_burn: int = rule(20, 0, 100, W, "Burn scar a sack leaves in the city's land")
     infamy: int = rule(10, 0, 100, W, "Relation a sacker loses with every neighbour who saw it")
     raze_population_pct: int = rule(40, 0, 100, W, "Share of a razed city's people who die (%)")
+    treasury_sack_pct: int = rule(40, 0, 50, W, "Share of a sacked city's treasury the victors carry off; a razed city loses twice as much (%)")
 
 
 @dataclass(frozen=True)
