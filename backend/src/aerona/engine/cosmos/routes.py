@@ -2,7 +2,7 @@ import hashlib
 from collections.abc import Collection, Iterable, Sequence
 from dataclasses import dataclass
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import FOOD_KINDS
@@ -729,11 +729,55 @@ async def connect_world(ctx: TickContext, world: WorldRow, target_id: int | None
 
 
 async def connect_all_worlds(ctx: TickContext) -> int:
+    session = ctx.session
+    worlds = list(await session.scalars(select(WorldRow).where(WorldRow.discovery != Discovery.FORGOTTEN).order_by(WorldRow.id)))
+    if len(worlds) < 2:
+        return 0
+    linked = set(await session.scalars(select(RouteRow.world_a_id).union(select(RouteRow.world_b_id))))
+    stars = {world.id: await _star_of(session, world) for world in worlds}
+    counts = await session.execute(
+        select(EntityRow.world_id, func.count(EntityRow.id))
+        .where(EntityRow.status == EntityStatus.CANON, EntityRow.entity_type.in_([EntityType.PEOPLE, EntityType.SETTLEMENT]))
+        .group_by(EntityRow.world_id)
+    )
+    communities = {world_id: count for world_id, count in counts.all() if world_id is not None}
     opened = 0
-    for world in list(await ctx.session.scalars(select(WorldRow).where(WorldRow.discovery != Discovery.FORGOTTEN).order_by(WorldRow.id))):
-        if await connect_world(ctx, world) is not None:
-            opened += 1
+    for world in worlds:
+        if world.id in linked:
+            continue
+        partner = _best_partner(world, worlds, stars, communities)
+        if partner is None:
+            continue
+        await open_route(
+            session,
+            ctx.rules,
+            ctx.rng("stitch"),
+            ctx.epoch,
+            RouteSpec(
+                partner.id,
+                world.id,
+                hidden_route_method(world.world_type, partner.world_type),
+                known=False,
+                description="A passage the cosmos opened by itself, known to nobody yet.",
+            ),
+        )
+        linked.update((world.id, partner.id))
+        opened += 1
     return opened
+
+
+def _best_partner(world: WorldRow, worlds: Sequence[WorldRow], stars: dict[int, int | None], communities: dict[int, int]) -> WorldRow | None:
+    my_star = stars[world.id]
+    best: WorldRow | None = None
+    best_key: tuple[int, int, int] | None = None
+    for other in worlds:
+        if other.id == world.id:
+            continue
+        same_star = 0 if my_star is not None and stars[other.id] == my_star else 1
+        key = (same_star, -communities.get(other.id, 0), other.id)
+        if best_key is None or key < best_key:
+            best, best_key = other, key
+    return best
 
 
 async def extend_alignment(session: AsyncSession, until: int) -> int:

@@ -1,7 +1,10 @@
 import asyncio
 import hashlib
+import os
 from collections.abc import Sequence
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
+from functools import partial
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.cartography.generator import GeneratedMap, generate_map
 from aerona.cartography.model import MARKER_TYPES, MapRequest, MarkerInput, PositionUpdate, RegionInput, WorldMap, placement_preference
 from aerona.cartography.terrain import TerrainOverrides
-from aerona.constants.cartography import MAP_GENERATOR_VERSION
+from aerona.constants.cartography import MAP_BATCH_SIZE, MAP_GENERATOR_VERSION
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
@@ -89,8 +92,15 @@ def _apply_positions(entities: dict[int, EntityRow], updates: Sequence[PositionU
             found.map_x, found.map_y = update.x, update.y
 
 
+def _generate_all(requests: list[MapRequest], rules: Rules) -> list[GeneratedMap]:
+    with ProcessPoolExecutor(max_workers=os.cpu_count()) as pool:
+        return list(pool.map(partial(generate_map, rules=rules), requests, chunksize=MAP_BATCH_SIZE))
+
+
 async def generated_maps(requests: Sequence[MapRequest], rules: Rules) -> list[GeneratedMap]:
-    return [await asyncio.to_thread(generate_map, request, rules) for request in requests]
+    if not requests:
+        return []
+    return await asyncio.to_thread(_generate_all, list(requests), rules)
 
 
 async def apply_world_map(session: AsyncSession, world: WorldRow, entities: list[EntityRow], generated: GeneratedMap, epoch: int) -> WorldMap:

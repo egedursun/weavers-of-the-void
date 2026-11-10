@@ -21,7 +21,7 @@ from aerona.api.schemas.cosmos import (
     WorldTypeLook,
 )
 from aerona.api.schemas.records import EntitySummary, JourneyRecord, NodeRef, StarRecord, WorldRecord
-from aerona.api.views.celestial import count_types, world_counts
+from aerona.api.views.celestial import count_types, worlds_counts
 from aerona.api.views.common import foreign_god_records, node_refs, route_records
 from aerona.cartography.palette import palette_for
 from aerona.catalog.worlds import WORLD_TYPES
@@ -39,7 +39,7 @@ from aerona.engine.gods.economy import ADDICTION_HOLD
 from aerona.engine.phases.doom import doom_forecast
 from aerona.engine.phases.world_balance import son_shares, world_pulse
 from aerona.services.codex import traveller_guide
-from aerona.services.images.records import cover_of, covers_of
+from aerona.services.images.records import covers_of
 
 router = APIRouter(tags=["cosmos"])
 
@@ -162,13 +162,15 @@ async def read_cosmos(services: ServicesDep) -> CosmosView:
     async with reader(services) as session:
         worlds = list(await session.scalars(select(WorldRow).order_by(WorldRow.id)))
         sons = list(await session.scalars(select(SonRow).where(SonRow.status != SonStatus.DEAD).order_by(SonRow.id)))
+        counts = await worlds_counts(session, [world.id for world in worlds])
+        world_covers = await covers_of(session, [world.id for world in worlds])
         cosmos_worlds = [
             CosmosWorld(
                 world=WorldRecord.model_validate(world),
                 type_label=WORLD_TYPES[world.world_type].label,
-                counts=await world_counts(session, world.id),
+                counts=counts[world.id],
                 sons=[NodeRef(id=son.id, kind=son.kind, name=son.name) for son in sons if son.current_world_id == world.id],
-                cover=await cover_of(session, world.id),
+                cover=world_covers.get(world.id),
             )
             for world in worlds
         ]

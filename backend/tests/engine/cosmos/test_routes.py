@@ -1,5 +1,5 @@
 import pytest
-from sqlalchemy import select
+from sqlalchemy import event, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import ValidationFailedError
@@ -19,6 +19,7 @@ from aerona.engine.cosmos.routes import (
     RouteSpec,
     RouteState,
     can_use_route,
+    connect_all_worlds,
     connect_world,
     open_alignment,
     open_route,
@@ -169,3 +170,13 @@ async def test_trade_with_controller_waives_knowledge(ctx: TickContext, cosmos: 
     gate.controller_entity_id = keeper.id
     await BondRepository(ctx.session).connect(BondDraft(people.id, keeper.id, BondKind.TRADES_WITH, 1))
     assert await can_use_route(ctx.session, ctx.rules, ctx.epoch, people, gate) is None
+
+
+async def test_connecting_every_unrouted_world_reads_the_cosmos_once(session: AsyncSession, cosmos: Cosmos, ctx: TickContext) -> None:
+    worlds = [await make_world(session, f"Drift {index}", star_id=cosmos.star.id) for index in range(30)]
+    seen: list[str] = []
+    event.listen(session.sync_session.bind, "before_cursor_execute", lambda *args: seen.append(args[2]))
+    assert await connect_all_worlds(ctx) > 0
+    for world in [cosmos.home, *worlds]:
+        assert await session.scalar(select(RouteRow.id).where(or_(RouteRow.world_a_id == world.id, RouteRow.world_b_id == world.id)).limit(1)) is not None
+    assert len(seen) < 12 * (len(worlds) + 1)

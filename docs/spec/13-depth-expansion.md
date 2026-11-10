@@ -7329,17 +7329,17 @@ Waves run in dependency order, not in number order. A "+" wave deepens its base 
    - 8.8 in W0.
 
    Closing W10 also means the gap audit and the control audit are clean, and every W0–W10 row in `13-coverage.md` is `done` or `deferred-approved`.
-2. Deepen the fresh systems: W2+, W3+, W4+, W5+, W6+, W7+, W9+, W10+.
-3. Divine and cosmos: W11, W12, W12+.
-4. Gatherings, dominion, magic and language: W13, W14, W15, W16.
-5. Evolution, cities and law: W17, W18, W19.
-6. Collective life and politics: W20, W21, W22, W23.
-7. War, faith and culture depth: W24, W25, W26, W27.
-8. Society and economy depth: W28, W29, W30, W31.
-9. Identity, technology, biology and materials: W32, W33, W34, W35.
-10. World and biology variants, lifecycle ends: W36, W37, W38.
-11. Deep time: W39, which also needs the parallel engine (J.11).
-12. Transformations and the last couplings: W40, W41.
+2. Deepen the fresh systems: W2+, W3+, W4+, W5+, W6+, W7+, W9+, W10+. (Done)
+3. Divine and cosmos: W11, W12, W12+. (=2+1) (Done)
+4. Gatherings, dominion, magic and language: W13, W14, W15, W16. (=4)
+5. Evolution, cities and law: W17, W18, W19. (=3)
+6. Collective life and politics: W20, W21, W22, W23. (=4)
+7. War, faith and culture depth: W24, W25, W26, W27. (=4)
+8. Society and economy depth: W28, W29, W30, W31. (=4)
+9. Identity, technology, biology and materials: W32, W33, W34, W35. (=4)
+10. World and biology variants, lifecycle ends: W36, W37, W38. (=3)
+11. Deep time: W39, which also needs the parallel engine (J.11). (=1)
+12. Transformations and the last couplings: W40, W41. (=2)
 
 Every wave closes the same way before the next one starts:
 - engine behaviour that actually reads the data;
