@@ -11,6 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { PagedList } from '@/components/domain'
 import { Label, Stat, Text } from '@/components/typography'
 import { IconMarker, LineMarker } from '@/features/map/SwatchMarker'
 import { typeIcon } from '@/features/map/iconPaths'
@@ -101,8 +102,15 @@ export function GraphLegend({
   }
   return (
     <div data-graph-legend className='flex min-w-0 flex-col gap-3'>
-      <div className='flex min-w-0 flex-wrap gap-1.5'>
-        {present.map(({ family, types }) => {
+      <PagedList
+        items={present}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='div'
+        className='flex min-w-0 flex-wrap gap-1.5'
+        itemKey={({ family }) => family.key}
+      >
+        {({ family, types }) => {
           const state = stateOf(types, hiddenTypes)
           const count = types.reduce(
             (sum, type) => sum + (counts.get(type) ?? 0),
@@ -137,8 +145,8 @@ export function GraphLegend({
               </TooltipContent>
             </Tooltip>
           )
-        })}
-      </div>
+        }}
+      </PagedList>
       <Collapsible className='flex min-w-0 flex-col gap-2'>
         <CollapsibleTrigger asChild>
           <Button variant='ghost' size='sm' className='group justify-between'>
@@ -150,8 +158,15 @@ export function GraphLegend({
           {present.map(({ family, types }) => (
             <div key={family.key} className='flex min-w-0 flex-col gap-1.5'>
               <Label variant='overline'>{family.label}</Label>
-              <div className='flex min-w-0 flex-wrap gap-1'>
-                {types.map((type) => (
+              <PagedList
+                items={types}
+                initial={12}
+                noun={['entry', 'entries']}
+                as='div'
+                className='flex min-w-0 flex-wrap gap-1'
+                itemKey={(type) => type}
+              >
+                {(type) => (
                   <Toggle
                     key={type}
                     size='sm'
@@ -163,8 +178,8 @@ export function GraphLegend({
                     {typeLabel(type, typeLabels)}
                     <Stat value={counts.get(type) ?? 0} />
                   </Toggle>
-                ))}
-              </div>
+                )}
+              </PagedList>
             </div>
           ))}
           <div className='flex min-w-0 flex-col gap-1.5'>

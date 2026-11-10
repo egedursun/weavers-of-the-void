@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import { FormRow } from '@/components/domain'
+import { FormRow, PagedList } from '@/components/domain'
 import { Text } from '@/components/typography'
 import { toastWithUndo } from '@/features/ledger/undoToast'
 import { type ActionItem, useRunAction } from './api'
@@ -77,8 +77,16 @@ function FieldControl({
   if (field.kind === 'enum-list') {
     const chosen = Array.isArray(value) ? value : []
     return (
-      <div id={id} className='flex min-w-0 flex-wrap gap-x-4 gap-y-2'>
-        {field.options.map((option) => (
+      <PagedList
+        items={field.options}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='div'
+        className='flex min-w-0 flex-wrap gap-x-4 gap-y-2'
+        listProps={{ id: id }}
+        itemKey={(option) => option}
+      >
+        {(option) => (
           <div key={option} className='flex items-center gap-2'>
             <Checkbox
               id={`${id}-${option}`}
@@ -95,8 +103,8 @@ function FieldControl({
               {humanizeName(option)}
             </FieldLabel>
           </div>
-        ))}
-      </div>
+        )}
+      </PagedList>
     )
   }
   const text = typeof value === 'string' ? value : ''

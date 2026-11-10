@@ -5,7 +5,7 @@ import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { EntityLink, Paged } from '@/components/domain'
+import { EntityLink, Paged, PagedList } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { NodeName } from '@/features/divine/parts'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
@@ -639,8 +639,15 @@ function CircleRow({
             </EntityLink>
           </Muted>
         )}
-        <div className='flex min-w-0 flex-wrap gap-2'>
-          {circle.members.map((item) => (
+        <PagedList
+          items={circle.members}
+          initial={12}
+          noun={['entry', 'entries']}
+          as='div'
+          className='flex min-w-0 flex-wrap gap-2'
+          itemKey={(item) => item.id}
+        >
+          {(item) => (
             <div
               key={item.id}
               className='flex min-w-0 items-center gap-1 rounded-full border bg-background py-0.5 pr-0.5 pl-3'
@@ -665,8 +672,8 @@ function CircleRow({
                 <UserMinus />
               </Button>
             </div>
-          ))}
-        </div>
+          )}
+        </PagedList>
       </div>
     </ItemRow>
   )
@@ -953,40 +960,51 @@ export function ContestsCard({
                   </>
                 }
               >
-                <div className='flex min-w-0 flex-wrap items-center gap-2'>
-                  {item.rounds.map((round, index) => {
-                    const first = Math.round(round[0] ?? 0)
-                    const second = Math.round(round[1] ?? 0)
-                    return (
-                      <Badge
-                        key={`${item.id}-${index}`}
-                        variant={
-                          first > second
-                            ? 'default'
-                            : first < second
-                              ? 'destructive'
-                              : 'outline'
-                        }
+                <div className='flex min-w-0 flex-col gap-2'>
+                  <PagedList
+                    items={item.rounds}
+                    initial={12}
+                    noun={['entry', 'entries']}
+                    as='div'
+                    className='flex min-w-0 flex-wrap items-center gap-2'
+                    itemKey={(_, index) => `${item.id}-${index}`}
+                  >
+                    {(round, index) => {
+                      const first = Math.round(round[0] ?? 0)
+                      const second = Math.round(round[1] ?? 0)
+                      return (
+                        <Badge
+                          key={`${item.id}-${index}`}
+                          variant={
+                            first > second
+                              ? 'default'
+                              : first < second
+                                ? 'destructive'
+                                : 'outline'
+                          }
+                        >
+                          {`Round ${index + 1}: ${first}–${second}`}
+                        </Badge>
+                      )
+                    }}
+                  </PagedList>
+                  <div className='flex min-w-0 flex-wrap items-center gap-2'>
+                    {item.stake_node && (
+                      <Muted as='span' variant='caption'>
+                        {'The stake: '}
+                        <NodeName item={item.stake_node} />
+                      </Muted>
+                    )}
+                    {item.work && (
+                      <EntityLink
+                        kind='entity'
+                        id={String(item.work.id)}
+                        showIcon
                       >
-                        {`Round ${index + 1}: ${first}–${second}`}
-                      </Badge>
-                    )
-                  })}
-                  {item.stake_node && (
-                    <Muted as='span' variant='caption'>
-                      {'The stake: '}
-                      <NodeName item={item.stake_node} />
-                    </Muted>
-                  )}
-                  {item.work && (
-                    <EntityLink
-                      kind='entity'
-                      id={String(item.work.id)}
-                      showIcon
-                    >
-                      {item.work.name}
-                    </EntityLink>
-                  )}
+                        {item.work.name}
+                      </EntityLink>
+                    )}
+                  </div>
                 </div>
                 {item.note && <Muted variant='caption'>{item.note}</Muted>}
               </ItemRow>

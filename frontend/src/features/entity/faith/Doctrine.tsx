@@ -34,13 +34,14 @@ import {
   ChangeChip,
   EmptyState,
   KpiTile,
+  LoadingBlock,
   Medallion,
+  Paged,
+  PagedList,
   RangeField,
   Section,
   ShowMore,
   useShowMore,
-  Paged,
-  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -600,15 +601,22 @@ function DoctrineForm({
           </div>
         </div>
         {doctrine.locked.length > 0 && (
-          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-            {doctrine.locked.map((key) => (
+          <PagedList
+            items={doctrine.locked}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap items-center gap-1.5'
+            itemKey={(key) => key}
+          >
+            {(key) => (
               <Tag
                 key={key}
                 spec={{ label: key, icon: Lock, tone: 'info' }}
                 text={`Holding ${plain(DOCTRINE_FIELDS, key).toLowerCase()}`}
               />
-            ))}
-          </div>
+            )}
+          </PagedList>
         )}
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button

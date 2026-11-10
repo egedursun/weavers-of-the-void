@@ -50,10 +50,11 @@ import {
   EntityLink,
   Medallion,
   MiniStat,
+  Paged,
+  PagedList,
   StatBar,
   Timeline,
   TimelineItem,
-  Paged,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -279,8 +280,15 @@ function StackEditor({
       {stack.locked.length > 0 ? (
         <div className='flex min-w-0 flex-col gap-1'>
           <Label>Held against the world</Label>
-          <div className='flex min-w-0 flex-wrap gap-1'>
-            {stack.locked.map((key) => (
+          <PagedList
+            items={stack.locked}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap gap-1'
+            itemKey={(key) => key}
+          >
+            {(key) => (
               <Button
                 key={key}
                 size='sm'
@@ -292,8 +300,8 @@ function StackEditor({
                 <Unlock />
                 {`Release ${fieldLabel(key).toLowerCase()}`}
               </Button>
-            ))}
-          </div>
+            )}
+          </PagedList>
         </div>
       ) : (
         <Muted variant='caption'>

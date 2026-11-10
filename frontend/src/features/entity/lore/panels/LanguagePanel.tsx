@@ -14,7 +14,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ChangeChip, KpiTile, Paged } from '@/components/domain'
+import { ChangeChip, KpiTile, Paged, PagedList } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -216,16 +216,21 @@ export function LanguagePanel({
           {parts.length === 0 ? (
             <Muted>Nothing lends it standing yet.</Muted>
           ) : (
-            <ul
-              data-surface='PrestigeParts'
+            <PagedList
+              items={parts}
+              initial={12}
+              noun={['entry', 'entries']}
+              as='ul'
               className='flex min-w-0 flex-wrap gap-1.5'
+              listProps={{ 'data-surface': 'PrestigeParts' }}
+              itemKey={([part]) => part}
             >
-              {parts.map(([part, value]) => (
+              {([part, value]) => (
                 <li key={part}>
                   <ChangeChip value={value} label={sentence(part)} />
                 </li>
-              ))}
-            </ul>
+              )}
+            </PagedList>
           )}
         </LoreCard>
         <LoreCard

@@ -14,10 +14,11 @@ import {
   EntityLink,
   KpiTile,
   Medallion,
+  Paged,
+  PagedList,
   Section,
   StatBar,
   ValueRadar,
-  Paged,
 } from '@/components/domain'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
 import { Muted, Text } from '@/components/typography'
@@ -504,8 +505,15 @@ function MindControls({ mind }: { mind: Mind }) {
       hold={hold}
       onHold={setHold}
     >
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        {mind.lockable.map((field) =>
+      <PagedList
+        items={mind.lockable}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='div'
+        className='flex min-w-0 flex-wrap items-center gap-2'
+        itemKey={(field) => field}
+      >
+        {(field) =>
           held.has(field) ? (
             <Button
               key={field}
@@ -531,8 +539,8 @@ function MindControls({ mind }: { mind: Mind }) {
               {`Hold ${plain(LOCKS, field)}`}
             </Button>
           )
-        )}
-      </div>
+        }
+      </PagedList>
       {personal && (
         <div className='grid min-w-0 grid-cols-1 gap-3 @md/mind:grid-cols-2'>
           <div className='flex min-w-0 items-end gap-2'>

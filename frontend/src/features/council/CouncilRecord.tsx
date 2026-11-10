@@ -25,7 +25,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { EntityLink, Medallion, Portrait } from '@/components/domain'
+import { EntityLink, Medallion, PagedList, Portrait } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { type SonPublic, useSons } from '@/features/pantheon/api'
 import { mediaUrl } from '@/features/pantheon/media'
@@ -77,11 +77,16 @@ function BallotDots({
   sonOf: (sonId: number) => SonPublic | undefined
 }) {
   return (
-    <ul
-      aria-label='How each son voted'
+    <PagedList
+      items={ballots}
+      initial={12}
+      noun={['entry', 'entries']}
+      as='ul'
       className='flex min-w-0 flex-wrap items-center gap-1.5'
+      listProps={{ 'aria-label': 'How each son voted' }}
+      itemKey={(ballot) => ballot.son_id}
     >
-      {ballots.map((ballot) => {
+      {(ballot) => {
         const view = sonOf(ballot.son_id)
         return (
           <Tooltip key={ballot.son_id}>
@@ -104,8 +109,8 @@ function BallotDots({
             <TooltipContent>{`${ballot.name} · ${VOTE_LABEL[ballot.vote]}`}</TooltipContent>
           </Tooltip>
         )
-      })}
-    </ul>
+      }}
+    </PagedList>
   )
 }
 

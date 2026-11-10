@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Toggle } from '@/components/ui/toggle'
-import { FormRow, Section } from '@/components/domain'
+import { FormRow, PagedList, Section } from '@/components/domain'
 import { Label } from '@/components/typography'
 import { type EntityContext } from '../actions/context'
 import { humanize } from '../actions/schema'
@@ -76,8 +76,15 @@ function ToggleGrid({
   return (
     <div className='flex min-w-0 flex-col gap-2'>
       <Label variant='overline'>{label}</Label>
-      <div className='flex min-w-0 flex-wrap gap-1'>
-        {options.map((key) => (
+      <PagedList
+        items={options}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='div'
+        className='flex min-w-0 flex-wrap gap-1'
+        itemKey={(key) => key}
+      >
+        {(key) => (
           <Toggle
             key={key}
             variant='outline'
@@ -89,8 +96,8 @@ function ToggleGrid({
           >
             {labelOf(key)}
           </Toggle>
-        ))}
-      </div>
+        )}
+      </PagedList>
     </div>
   )
 }

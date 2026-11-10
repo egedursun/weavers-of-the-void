@@ -18,10 +18,11 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   KpiTile,
+  Paged,
+  PagedList,
   StatBar,
   Timeline,
   TimelineItem,
-  Paged,
 } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
@@ -192,16 +193,23 @@ export function RitePanel({
           {needs.length > 0 && (
             <div className='flex min-w-0 flex-col gap-1.5'>
               <Label>It needs</Label>
-              <div className='flex min-w-0 flex-wrap gap-1.5'>
-                {needs.map(([key, value]) => (
+              <PagedList
+                items={needs}
+                initial={12}
+                noun={['entry', 'entries']}
+                as='div'
+                className='flex min-w-0 flex-wrap gap-1.5'
+                itemKey={([key]) => key}
+              >
+                {([key, value]) => (
                   <NamedChip
                     key={key}
                     spec={{ label: '', icon: Check, tone: 'muted' }}
                   >
                     {`${sentence(key)}: ${sentence(String(value))}`}
                   </NamedChip>
-                ))}
-              </div>
+                )}
+              </PagedList>
             </div>
           )}
         </LoreCard>

@@ -19,6 +19,7 @@ import {
   EntityLink,
   FormRow,
   MiniStat,
+  PagedList,
   Section,
   StatBar,
 } from '@/components/domain'
@@ -38,13 +39,20 @@ function ToolList({ title, tools }: { title: string; tools: string[] }) {
       {tools.length === 0 ? (
         <Muted variant='caption'>None this turn.</Muted>
       ) : (
-        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-          {tools.map((tool) => (
+        <PagedList
+          items={tools}
+          initial={12}
+          noun={['entry', 'entries']}
+          as='div'
+          className='flex min-w-0 flex-wrap items-center gap-1.5'
+          itemKey={(tool) => tool}
+        >
+          {(tool) => (
             <Badge key={tool} size='sm' variant='outline'>
               {tool}
             </Badge>
-          ))}
-        </div>
+          )}
+        </PagedList>
       )}
     </div>
   )

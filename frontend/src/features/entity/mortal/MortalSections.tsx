@@ -18,9 +18,10 @@ import { Switch } from '@/components/ui/switch'
 import {
   EmptyState,
   KpiTile,
+  Paged,
+  PagedList,
   Section,
   StatBar,
-  Paged,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
@@ -441,39 +442,57 @@ function LifeControls({
         />
       </div>
       {(profile.held.length > 0 || heldAbilities.length > 0) && (
-        <div className='flex min-w-0 flex-wrap items-center gap-2'>
-          {profile.held.map((field) => (
-            <Button
-              key={field}
-              size='sm'
-              variant='outline'
-              disabled={busy !== null}
-              disabledReason={busy ?? undefined}
-              onClick={() =>
-                void send('/api/actions/mortal:release', { field })
-              }
-            >
-              <Unlock />
-              {`Release ${heldLabel(field)}`}
-            </Button>
-          ))}
-          {heldAbilities.map((item) => (
-            <Button
-              key={item.ability}
-              size='sm'
-              variant='outline'
-              disabled={busy !== null}
-              disabledReason={busy ?? undefined}
-              onClick={() =>
-                void send('/api/actions/mortal:ability_release', {
-                  ability: item.ability,
-                })
-              }
-            >
-              <Unlock />
-              {`Release ${named(ABILITIES, item.ability).label.toLowerCase()}`}
-            </Button>
-          ))}
+        <div className='flex min-w-0 flex-col gap-2'>
+          <PagedList
+            items={profile.held}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap items-center gap-2'
+            itemKey={(field) => field}
+          >
+            {(field) => (
+              <Button
+                key={field}
+                size='sm'
+                variant='outline'
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() =>
+                  void send('/api/actions/mortal:release', { field })
+                }
+              >
+                <Unlock />
+                {`Release ${heldLabel(field)}`}
+              </Button>
+            )}
+          </PagedList>
+          <PagedList
+            items={heldAbilities}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap items-center gap-2'
+            itemKey={(item) => item.ability}
+          >
+            {(item) => (
+              <Button
+                key={item.ability}
+                size='sm'
+                variant='outline'
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() =>
+                  void send('/api/actions/mortal:ability_release', {
+                    ability: item.ability,
+                  })
+                }
+              >
+                <Unlock />
+                {`Release ${named(ABILITIES, item.ability).label.toLowerCase()}`}
+              </Button>
+            )}
+          </PagedList>
         </div>
       )}
       <AdjustStats

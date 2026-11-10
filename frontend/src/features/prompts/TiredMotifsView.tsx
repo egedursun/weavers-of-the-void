@@ -17,7 +17,13 @@ import { Input } from '@/components/ui/input'
 import { Label as FieldLabel } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { EmptyState, Medallion, Section, StatBar } from '@/components/domain'
+import {
+  EmptyState,
+  Medallion,
+  PagedList,
+  Section,
+  StatBar,
+} from '@/components/domain'
 import { type Choice, ChoiceTiles } from '@/components/domain/SettingsKit'
 import { Muted, Text } from '@/components/typography'
 import { useNames } from '@/features/pantheon/api'
@@ -352,13 +358,20 @@ export function TiredMotifsView() {
                   : 'None for this world.'}
               </Muted>
             ) : (
-              <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-                {report.data.foreign_images.map((image) => (
+              <PagedList
+                items={report.data.foreign_images}
+                initial={12}
+                noun={['entry', 'entries']}
+                as='div'
+                className='flex min-w-0 flex-wrap items-center gap-1.5'
+                itemKey={(image) => image}
+              >
+                {(image) => (
                   <Badge key={image} size='sm' variant='outline'>
                     {image}
                   </Badge>
-                ))}
-              </div>
+                )}
+              </PagedList>
             )}
           </Section>
         </>

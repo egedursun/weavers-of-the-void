@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { BookOpen, SearchX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState, Section } from '@/components/domain'
+import { EmptyState, PagedList, Section } from '@/components/domain'
 import { MentionText } from '@/components/domain/MentionText'
 import { Text } from '@/components/typography'
 import { targetsOfRefs } from '@/features/chronicle/linkTargets'
@@ -211,8 +211,16 @@ function SectionNav({ present }: { present: Set<string> }) {
   const links = SECTION_LINKS.filter((link) => present.has(link.id))
   if (links.length < 4) return null
   return (
-    <nav aria-label='Sections' className='flex min-w-0 flex-wrap gap-1'>
-      {links.map((link) => (
+    <PagedList
+      items={links}
+      initial={12}
+      noun={['entry', 'entries']}
+      as='nav'
+      className='flex min-w-0 flex-wrap gap-1'
+      listProps={{ 'aria-label': 'Sections' }}
+      itemKey={(link) => link.id}
+    >
+      {(link) => (
         <Button
           key={link.id}
           variant='ghost'
@@ -221,8 +229,8 @@ function SectionNav({ present }: { present: Set<string> }) {
         >
           {link.label}
         </Button>
-      ))}
-    </nav>
+      )}
+    </PagedList>
   )
 }
 

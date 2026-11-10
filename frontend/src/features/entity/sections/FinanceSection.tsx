@@ -10,6 +10,7 @@ import {
   EntityLink,
   KpiTile,
   Paged,
+  PagedList,
   Section,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
@@ -688,14 +689,21 @@ function IndicatorRow({
       }
     >
       {row.living.length > 0 && (
-        <div className='flex min-w-0 flex-wrap gap-1'>
-          {row.living.map((item) => (
+        <PagedList
+          items={row.living}
+          initial={12}
+          noun={['entry', 'entries']}
+          as='div'
+          className='flex min-w-0 flex-wrap gap-1'
+          itemKey={(item) => item.key}
+        >
+          {(item) => (
             <Badge
               key={item.key}
               variant='outline'
             >{`${item.label} ${item.value}`}</Badge>
-          ))}
-        </div>
+          )}
+        </PagedList>
       )}
     </ItemRow>
   )

@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { type KpiTone, Medallion } from '@/components/domain'
+import { type KpiTone, Medallion, PagedList } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { ControlPanel } from '@/features/entity/mind/parts'
 import {
@@ -422,11 +422,16 @@ export function Steps({
   const keys = Object.keys(table)
   const reached = keys.indexOf(value)
   return (
-    <ol
-      aria-label={label}
+    <PagedList
+      items={keys}
+      initial={12}
+      noun={['entry', 'entries']}
+      as='ol'
       className='flex min-w-0 flex-wrap items-center gap-1'
+      listProps={{ 'aria-label': label }}
+      itemKey={(key) => key}
     >
-      {keys.map((key, index) => {
+      {(key, index) => {
         const item = table[key]
         const Icon = item.icon
         const on = index <= reached
@@ -456,8 +461,8 @@ export function Steps({
             </Text>
           </li>
         )
-      })}
-    </ol>
+      }}
+    </PagedList>
   )
 }
 

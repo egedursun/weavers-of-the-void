@@ -23,6 +23,7 @@ import {
   EntityLink,
   FormRow,
   Medallion,
+  PagedList,
   Section,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
@@ -176,8 +177,15 @@ function OpenThreadForm({ blocked }: { blocked: string | null }) {
               aria-label='Add a record to the story'
             />
             {related.length > 0 && (
-              <div className='flex min-w-0 flex-wrap gap-1'>
-                {related.map((id) => (
+              <PagedList
+                items={related}
+                initial={12}
+                noun={['entry', 'entries']}
+                as='div'
+                className='flex min-w-0 flex-wrap gap-1'
+                itemKey={(id) => id}
+              >
+                {(id) => (
                   <Button
                     key={id}
                     variant='secondary'
@@ -192,8 +200,8 @@ function OpenThreadForm({ blocked }: { blocked: string | null }) {
                     {names.data?.find((entry) => entry.id === id)?.name ??
                       `Record ${id}`}
                   </Button>
-                ))}
-              </div>
+                )}
+              </PagedList>
             )}
           </div>
         )}

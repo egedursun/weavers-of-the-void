@@ -7,6 +7,7 @@ import {
   Users,
 } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { ShowMore, useShowMore } from '@/components/domain'
 import {
   FEED_ACTORS,
   FEED_ACTOR_LABEL,
@@ -24,6 +25,8 @@ const ACTOR_ICON: Record<FeedActorFilter, LucideIcon> = {
   fate: Scale,
 }
 
+const CATEGORY_PAGE = 12
+
 function isActor(value: string): value is FeedActorFilter {
   return (FEED_ACTORS as readonly string[]).includes(value)
 }
@@ -35,6 +38,7 @@ type FeedFiltersProps = {
 export function FeedFilters({ categories }: FeedFiltersProps) {
   const actor = useFeed((state) => state.actor)
   const selected = useFeed((state) => state.categories)
+  const shownCategories = useShowMore(categories, CATEGORY_PAGE)
   const setActor = useFeed((state) => state.setActor)
   const toggleCategory = useFeed((state) => state.toggleCategory)
   return (
@@ -73,13 +77,14 @@ export function FeedFilters({ categories }: FeedFiltersProps) {
           aria-label='World event categories'
           className='flex-wrap'
         >
-          {categories.map((category) => (
+          {shownCategories.visible.map((category) => (
             <ToggleGroupItem key={category} value={category}>
               {FEED_CATEGORY_LABEL[category]}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
       )}
+      <ShowMore state={shownCategories} noun={['category', 'categories']} />
     </div>
   )
 }

@@ -11,6 +11,7 @@ import {
   KpiTile,
   Medallion,
   Paged,
+  PagedList,
   Section,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
@@ -615,8 +616,15 @@ function FeelingControls({ view }: { view: Feelings }) {
       hold={hold}
       onHold={setHold}
     >
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        {view.lockable.map((field) =>
+      <PagedList
+        items={view.lockable}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='div'
+        className='flex min-w-0 flex-wrap items-center gap-2'
+        itemKey={(field) => field}
+      >
+        {(field) =>
           held.has(field) ? (
             <Button
               key={field}
@@ -642,8 +650,8 @@ function FeelingControls({ view }: { view: Feelings }) {
               {`Hold ${plain(LOCKS, field)}`}
             </Button>
           )
-        )}
-      </div>
+        }
+      </PagedList>
       <div className='grid min-w-0 grid-cols-1 gap-3 @xl/feel:grid-cols-3'>
         <div className='flex min-w-0 flex-col gap-2 rounded-md border border-dashed p-2'>
           <MindPicker

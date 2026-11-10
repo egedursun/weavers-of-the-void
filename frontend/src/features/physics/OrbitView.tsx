@@ -1,5 +1,10 @@
 import { Orbit } from 'lucide-react'
-import { EmptyState, EntityLink } from '@/components/domain'
+import {
+  EmptyState,
+  EntityLink,
+  ShowMore,
+  useShowMore,
+} from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { type StarPhysicsView } from './api'
 import { fixed } from './format'
@@ -12,8 +17,11 @@ const WORLD_RADIUS = 4
 const LABEL_SIZE = 11
 const LABEL_OFFSET = 6
 
+const CAPTION_PAGE = 12
+
 export function OrbitView({ view }: { view: StarPhysicsView }) {
   const planets = view.orbits.filter((row) => row.parent_world_id === null)
+  const captions = useShowMore(planets, CAPTION_PAGE)
   const reach = Math.max(
     view.band_outer,
     ...planets.map((row) => row.orbit * (1 + row.eccentricity)),
@@ -106,15 +114,18 @@ export function OrbitView({ view }: { view: StarPhysicsView }) {
           )
         })}
       </svg>
-      <figcaption className='flex min-w-0 flex-wrap justify-center gap-x-3 gap-y-1'>
-        {planets.map((row) => (
-          <Muted key={row.world_id} as='span' variant='caption'>
-            <EntityLink kind='world' id={String(row.world_id)}>
-              {row.name}
-            </EntityLink>
-            {` · ${fixed(row.orbit)} orbits, ${Math.round(row.eccentricity * 100)}% stretched${row.tidally_locked ? ', one face to the star' : ''}${row.ringed ? ', ringed' : ''}${row.circumbinary ? ', circles both stars' : ''}`}
-          </Muted>
-        ))}
+      <figcaption className='flex min-w-0 flex-col items-center gap-1'>
+        <span className='flex min-w-0 flex-wrap justify-center gap-x-3 gap-y-1'>
+          {captions.visible.map((row) => (
+            <Muted key={row.world_id} as='span' variant='caption'>
+              <EntityLink kind='world' id={String(row.world_id)}>
+                {row.name}
+              </EntityLink>
+              {` · ${fixed(row.orbit)} orbits, ${Math.round(row.eccentricity * 100)}% stretched${row.tidally_locked ? ', one face to the star' : ''}${row.ringed ? ', ringed' : ''}${row.circumbinary ? ', circles both stars' : ''}`}
+            </Muted>
+          ))}
+        </span>
+        <ShowMore state={captions} noun={['world', 'worlds']} />
       </figcaption>
     </figure>
   )

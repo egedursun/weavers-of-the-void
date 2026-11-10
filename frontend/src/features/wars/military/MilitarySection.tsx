@@ -26,9 +26,10 @@ import {
   EmptyState,
   Medallion,
   MiniStat,
+  Paged,
+  PagedList,
   Section,
   StatBar,
-  Paged,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -310,11 +311,16 @@ function CommanderTraits({
             No battle trait yet. Battles won and lost teach them.
           </Muted>
         ) : (
-          <div className='flex min-w-0 flex-wrap gap-1.5'>
-            {traits.map((trait) => (
-              <TableTag key={trait} table={TRAIT} value={trait} />
-            ))}
-          </div>
+          <PagedList
+            items={traits}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap gap-1.5'
+            itemKey={(trait) => trait}
+          >
+            {(trait) => <TableTag key={trait} table={TRAIT} value={trait} />}
+          </PagedList>
         )}
         <Adjust
           title='Grant or take battle traits'

@@ -44,8 +44,15 @@ export function HeavensPhysicsPanel() {
                   title={row.name}
                   caption={`Temperate from ${fixed(row.band_inner)} to ${fixed(row.band_outer)} orbits · stars ${fixed(row.separation)} orbits apart`}
                 >
-                  <div className='flex min-w-0 flex-wrap gap-2'>
-                    {row.members.map((member) => (
+                  <PagedList
+                    items={row.members}
+                    initial={12}
+                    noun={['entry', 'entries']}
+                    as='div'
+                    className='flex min-w-0 flex-wrap gap-2'
+                    itemKey={(member) => member.star_id}
+                  >
+                    {(member) => (
                       <EntityLink
                         key={member.star_id}
                         kind='star'
@@ -53,8 +60,8 @@ export function HeavensPhysicsPanel() {
                       >
                         {`${member.name} (${SYSTEM_ROLES[member.role].label.toLowerCase()})`}
                       </EntityLink>
-                    ))}
-                  </div>
+                    )}
+                  </PagedList>
                 </RecordRow>
               )}
             </PagedList>

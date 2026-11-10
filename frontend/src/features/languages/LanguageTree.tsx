@@ -18,6 +18,7 @@ import {
   EntityLink,
   Medallion,
   MiniStat,
+  PagedList,
   Section,
 } from '@/components/domain'
 import { Label, Muted, SectionTitle, Text } from '@/components/typography'
@@ -229,8 +230,15 @@ function LanguageDetail({
       {daughters.length > 0 && (
         <div className='flex min-w-0 flex-col gap-2'>
           <Label variant='overline'>Daughter tongues</Label>
-          <div className='flex min-w-0 flex-wrap gap-1.5'>
-            {daughters.map((daughter) => (
+          <PagedList
+            items={daughters}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap gap-1.5'
+            itemKey={(daughter) => daughter.language.id}
+          >
+            {(daughter) => (
               <Button
                 key={daughter.language.id}
                 size='sm'
@@ -240,8 +248,8 @@ function LanguageDetail({
                 <GitBranch />
                 {daughter.language.name}
               </Button>
-            ))}
-          </div>
+            )}
+          </PagedList>
         </div>
       )}
       {self.cognates.length > 0 && (

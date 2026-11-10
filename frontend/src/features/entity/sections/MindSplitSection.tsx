@@ -12,6 +12,7 @@ import {
   KpiTile,
   Medallion,
   Paged,
+  PagedList,
   Section,
   StatBar,
 } from '@/components/domain'
@@ -594,8 +595,15 @@ function SplitControls({ view }: { view: MindSplit }) {
       onHold={view.lockable.length > 0 ? setHold : undefined}
     >
       {view.lockable.length > 0 && (
-        <div className='flex min-w-0 flex-wrap items-center gap-2'>
-          {view.lockable.map((field) =>
+        <PagedList
+          items={view.lockable}
+          initial={12}
+          noun={['entry', 'entries']}
+          as='div'
+          className='flex min-w-0 flex-wrap items-center gap-2'
+          itemKey={(field) => field}
+        >
+          {(field) =>
             held.has(field) ? (
               <Button
                 key={field}
@@ -621,8 +629,8 @@ function SplitControls({ view }: { view: MindSplit }) {
                 {`Hold ${plain(LOCKS, field)}`}
               </Button>
             )
-          )}
-        </div>
+          }
+        </PagedList>
       )}
       <AdjustStats
         id={`split-${view.node_id}`}

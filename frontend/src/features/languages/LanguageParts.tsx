@@ -2,7 +2,7 @@ import { ChevronRight, Signature } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Portrait } from '@/components/domain'
+import { PagedList, Portrait } from '@/components/domain'
 import { Sigil } from '@/components/domain/Sigil'
 import { Label, Muted, Text } from '@/components/typography'
 import { humanize } from '@/features/entity/actions/schema'
@@ -74,8 +74,16 @@ export function LetterTiles({
   if (letters.length === 0) return null
   const strong = new Set(emphasis)
   return (
-    <ul aria-label={label} className='flex min-w-0 flex-wrap gap-1'>
-      {letters.map((letter, index) => (
+    <PagedList
+      items={letters}
+      initial={12}
+      noun={['entry', 'entries']}
+      as='ul'
+      className='flex min-w-0 flex-wrap gap-1'
+      listProps={{ 'aria-label': label }}
+      itemKey={(letter, index) => `${letter}-${index}`}
+    >
+      {(letter, index) => (
         <li
           key={`${letter}-${index}`}
           className={cn(
@@ -87,8 +95,8 @@ export function LetterTiles({
         >
           {letter}
         </li>
-      ))}
-    </ul>
+      )}
+    </PagedList>
   )
 }
 
@@ -138,14 +146,21 @@ export function SoundSignature({
 export function NameChips({ names }: { names: string[] }) {
   if (names.length === 0) return null
   return (
-    <div className='flex min-w-0 flex-wrap gap-1.5'>
-      {names.map((name) => (
+    <PagedList
+      items={names}
+      initial={12}
+      noun={['entry', 'entries']}
+      as='div'
+      className='flex min-w-0 flex-wrap gap-1.5'
+      itemKey={(name) => name}
+    >
+      {(name) => (
         <Badge key={name} variant='secondary'>
           <Signature />
           {name}
         </Badge>
-      ))}
-    </div>
+      )}
+    </PagedList>
   )
 }
 
@@ -160,8 +175,15 @@ export function Lineage({
   return (
     <nav aria-label='Lineage' className='flex min-w-0 flex-col gap-1'>
       <Label variant='overline'>Lineage</Label>
-      <ol className='flex min-w-0 flex-wrap items-center gap-1'>
-        {chain.map((node, index) => (
+      <PagedList
+        items={chain}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='ol'
+        className='flex min-w-0 flex-wrap items-center gap-1'
+        itemKey={(node) => node.language.id}
+      >
+        {(node, index) => (
           <li
             key={node.language.id}
             className='flex min-w-0 items-center gap-1'
@@ -186,8 +208,8 @@ export function Lineage({
               </Button>
             )}
           </li>
-        ))}
-      </ol>
+        )}
+      </PagedList>
     </nav>
   )
 }

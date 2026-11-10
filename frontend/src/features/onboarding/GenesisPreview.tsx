@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 import { RARITY_LABEL } from '@/constants/rarity'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { ExpandableText, RarityIcon } from '@/components/domain'
+import { ExpandableText, PagedList, RarityIcon } from '@/components/domain'
 import { RARITY_TEXT_CLASS } from '@/components/domain/rarityClasses'
 import { Label, Muted, Text } from '@/components/typography'
 import { imageStyleLabel } from '@/features/images/imageStyles'
@@ -155,8 +155,15 @@ export function GenesisPreview({
         </div>
         <div className='flex min-w-0 flex-col gap-1.5'>
           <Label variant='overline'>{`First sons · ${sons.length}`}</Label>
-          <ul className='flex min-w-0 flex-wrap gap-2'>
-            {sons.map((rarity, index) => (
+          <PagedList
+            items={sons}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='ul'
+            className='flex min-w-0 flex-wrap gap-2'
+            itemKey={(_, index) => index}
+          >
+            {(rarity, index) => (
               <li
                 key={index}
                 title={RARITY_LABEL[rarity]}
@@ -168,8 +175,8 @@ export function GenesisPreview({
                   className={cn('size-icon-md', RARITY_TEXT_CLASS[rarity])}
                 />
               </li>
-            ))}
-          </ul>
+            )}
+          </PagedList>
         </div>
       </div>
       <ul className='flex min-w-0 flex-col gap-1.5 border-t bg-muted/30 p-4'>

@@ -17,7 +17,13 @@ import { unwrap } from '@/api/errors'
 import { traitKindValues, valueAxisValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Medallion, RangeField, StatBar, Paged } from '@/components/domain'
+import {
+  Medallion,
+  Paged,
+  PagedList,
+  RangeField,
+  StatBar,
+} from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useSons } from '@/features/pantheon/api'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -512,15 +518,22 @@ export function SoulLedger({
           </div>
         </div>
         {soul.locked.length > 0 && (
-          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-            {soul.locked.map((key) => (
+          <PagedList
+            items={soul.locked}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap items-center gap-1.5'
+            itemKey={(key) => key}
+          >
+            {(key) => (
               <Tag
                 key={key}
                 spec={{ label: key, icon: Lock, tone: 'info' }}
                 text={`Holding ${(SOUL_FIELDS[key] ?? sentence(key)).toLowerCase()}`}
               />
-            ))}
-          </div>
+            )}
+          </PagedList>
         )}
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button

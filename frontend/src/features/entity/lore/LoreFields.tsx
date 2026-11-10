@@ -32,6 +32,7 @@ import {
   EntityLink,
   type KpiTone,
   Medallion,
+  PagedList,
 } from '@/components/domain'
 import { Label, Muted, SectionTitle, Stat, Text } from '@/components/typography'
 import { type LoreValue } from './api'
@@ -340,8 +341,15 @@ export function ShiftChips({
   )
   if (rows.length === 0) return <Muted>{empty}</Muted>
   return (
-    <ul className='flex min-w-0 flex-wrap gap-1.5'>
-      {rows.map(([key, value]) => {
+    <PagedList
+      items={rows}
+      initial={12}
+      noun={['entry', 'entries']}
+      as='ul'
+      className='flex min-w-0 flex-wrap gap-1.5'
+      itemKey={([key]) => key}
+    >
+      {([key, value]) => {
         const spec = lookup(table, key)
         return (
           <li key={key}>
@@ -352,8 +360,8 @@ export function ShiftChips({
             />
           </li>
         )
-      })}
-    </ul>
+      }}
+    </PagedList>
   )
 }
 
@@ -373,8 +381,15 @@ export function TermChips({
   const rows = Object.entries(entries)
   if (rows.length === 0) return <Muted>{empty}</Muted>
   return (
-    <ul className='flex min-w-0 flex-wrap gap-1.5'>
-      {rows.map(([key, value]) => {
+    <PagedList
+      items={rows}
+      initial={12}
+      noun={['entry', 'entries']}
+      as='ul'
+      className='flex min-w-0 flex-wrap gap-1.5'
+      itemKey={([key]) => key}
+    >
+      {([key, value]) => {
         const spec = lookup(table, key)
         return (
           <li key={key}>
@@ -383,8 +398,8 @@ export function TermChips({
             </NamedChip>
           </li>
         )
-      })}
-    </ul>
+      }}
+    </PagedList>
   )
 }
 
@@ -546,26 +561,35 @@ export function LoreAdjust({
       }
     >
       {locked.length > 0 && (
-        <div
-          data-surface='LoreHeld'
-          className='flex min-w-0 flex-wrap items-center gap-2'
-        >
-          {locked.map((key) => (
-            <Badge key={key} variant='default'>
-              <Lock aria-hidden='true' />
-              {`Held: ${fieldLabel(key).toLowerCase()}`}
-            </Badge>
-          ))}
-          <Button
-            size='sm'
-            variant='outline'
-            disabled={busy !== null}
-            disabledReason={busy ?? undefined}
-            onClick={() => edit.mutate({ values: {}, release: [...locked] })}
+        <div className='flex min-w-0 flex-col gap-2'>
+          <PagedList
+            items={locked}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap items-center gap-2'
+            listProps={{ 'data-surface': 'LoreHeld' }}
+            itemKey={(key) => key}
           >
-            <Unlock />
-            Let the world decide again
-          </Button>
+            {(key) => (
+              <Badge key={key} variant='default'>
+                <Lock aria-hidden='true' />
+                {`Held: ${fieldLabel(key).toLowerCase()}`}
+              </Badge>
+            )}
+          </PagedList>
+          <div className='flex min-w-0 flex-wrap items-center gap-2'>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => edit.mutate({ values: {}, release: [...locked] })}
+            >
+              <Unlock />
+              Let the world decide again
+            </Button>
+          </div>
         </div>
       )}
       {children}

@@ -29,6 +29,7 @@ import {
   EntityLink,
   IconStat,
   LevelMeter,
+  PagedList,
   Portrait,
   RarityBadge,
   StatBar,
@@ -323,30 +324,41 @@ export function SonCard({
             </div>
           ))}
         </div>
-        <div className='flex min-w-0 flex-wrap gap-1.5'>
-          {view.powers.map((power, index) => {
-            const locked = index >= view.unlocked_powers
-            return (
+        <div className='flex min-w-0 flex-col gap-2'>
+          <PagedList
+            items={view.powers}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap gap-1.5'
+            itemKey={(power) => power.slot}
+          >
+            {(power, index) => {
+              const locked = index >= view.unlocked_powers
+              return (
+                <Chip
+                  key={power.slot}
+                  variant={locked ? 'secondary' : 'default'}
+                  icon={locked ? <Lock /> : <Sparkles />}
+                  label={power.name}
+                  hint={
+                    locked
+                      ? `${power.description} (not yet unlocked)`
+                      : power.description
+                  }
+                />
+              )
+            }}
+          </PagedList>
+          <div className='flex min-w-0 flex-wrap gap-1.5'>
+            {view.powers.length === 0 && (
               <Chip
-                key={power.slot}
-                variant={locked ? 'secondary' : 'default'}
-                icon={locked ? <Lock /> : <Sparkles />}
-                label={power.name}
-                hint={
-                  locked
-                    ? `${power.description} (not yet unlocked)`
-                    : power.description
-                }
+                variant='secondary'
+                icon={<Lock />}
+                label='No power awakened'
               />
-            )
-          })}
-          {view.powers.length === 0 && (
-            <Chip
-              variant='secondary'
-              icon={<Lock />}
-              label='No power awakened'
-            />
-          )}
+            )}
+          </div>
         </div>
         {(son.standing_order || son.plan) && (
           <Text variant='caption' truncate={3}>

@@ -24,7 +24,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Toggle } from '@/components/ui/toggle'
-import { EntityLink, Portrait, RarityBadge, Section } from '@/components/domain'
+import {
+  EntityLink,
+  PagedList,
+  Portrait,
+  RarityBadge,
+  Section,
+} from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { type SonPublic, useSonRelations, useSons } from './api'
 import { useCompareSelection } from './compareStore'
@@ -191,8 +197,15 @@ export function CompareSons() {
       title='Compare cards'
       description={`Pick ${COMPARE_MIN} to ${COMPARE_MAX} sons: power, passions, reputation and relationships side by side.`}
     >
-      <div className='flex min-w-0 flex-wrap gap-2'>
-        {all.map((view) => {
+      <PagedList
+        items={all}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='div'
+        className='flex min-w-0 flex-wrap gap-2'
+        itemKey={(view) => view.son.id}
+      >
+        {(view) => {
           const on = selected.includes(view.son.id)
           return (
             <Toggle
@@ -208,8 +221,8 @@ export function CompareSons() {
               <span className='min-w-0 truncate'>{view.son.name}</span>
             </Toggle>
           )
-        })}
-      </div>
+        }}
+      </PagedList>
       {full && (
         <Muted variant='caption'>{`At most ${COMPARE_MAX} sons.`}</Muted>
       )}

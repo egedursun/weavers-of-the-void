@@ -8,6 +8,7 @@ import {
   EmptyState,
   KpiTile,
   Paged,
+  PagedList,
   Section,
   StatBar,
 } from '@/components/domain'
@@ -992,13 +993,20 @@ function ApprovalRow({ row, ctx }: { row: Approval; ctx: Ctx }) {
       {parts.length === 0 ? (
         <Muted variant='caption'>No policy touches this class.</Muted>
       ) : (
-        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-          {parts.map(([key, value]) => (
+        <PagedList
+          items={parts}
+          initial={12}
+          noun={['entry', 'entries']}
+          as='div'
+          className='flex min-w-0 flex-wrap items-center gap-1.5'
+          itemKey={([key]) => key}
+        >
+          {([key, value]) => (
             <Badge key={key} variant={value > 0 ? 'secondary' : 'outline'}>
               {`${sentence(key.split(':')[1] ?? key)} ${value > 0 ? '+' : ''}${value}`}
             </Badge>
-          ))}
-        </div>
+          )}
+        </PagedList>
       )}
     </ItemRow>
   )

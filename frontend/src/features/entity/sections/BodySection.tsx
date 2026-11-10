@@ -40,12 +40,13 @@ import {
   EntityLink,
   KpiTile,
   Medallion,
+  Paged,
+  PagedList,
   Section,
   StatBar,
   Timeline,
   TimelineItem,
   type TimelineTone,
-  Paged,
 } from '@/components/domain'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
 import { Label, Muted, Text } from '@/components/typography'
@@ -221,37 +222,48 @@ function BodyHero({ body }: { body: Body }) {
         <Muted variant='caption'>
           {`${plain(HEIGHTS, body.height_class)}, ${plain(BUILDS, body.build).toLowerCase()} of build; ${body.plan_label}${body.covering_label ? `; covered in ${body.covering_label.toLowerCase()}` : ''}`}
         </Muted>
-        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-          {body.traits.map((trait) => (
-            <Badge key={trait} size='sm' variant='secondary'>
-              {named(FUNCTIONS, trait).label}
-            </Badge>
-          ))}
-          {medicine && body.bearer_kind === 'mortal' && (
-            <Badge size='sm' variant='info'>
-              {medicine.label}
-            </Badge>
-          )}
-          {reading && (
-            <Badge size='sm' variant='default'>
-              {`${reading.label} · presence ${body.presence_pct}%`}
-            </Badge>
-          )}
-          {body.wholeness_required && missing && (
-            <Badge size='sm' variant='destructive'>
-              Barred from rule by their people's law
-            </Badge>
-          )}
-          {body.pain > 0 && (
-            <Badge size='sm' variant='warning'>
-              {`Pain ${body.pain}%`}
-            </Badge>
-          )}
-          {!body.alive && (
-            <Badge size='sm' variant='secondary'>
-              Fallen
-            </Badge>
-          )}
+        <div className='flex min-w-0 flex-col gap-2'>
+          <PagedList
+            items={body.traits}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap items-center gap-1.5'
+            itemKey={(trait) => trait}
+          >
+            {(trait) => (
+              <Badge key={trait} size='sm' variant='secondary'>
+                {named(FUNCTIONS, trait).label}
+              </Badge>
+            )}
+          </PagedList>
+          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+            {medicine && body.bearer_kind === 'mortal' && (
+              <Badge size='sm' variant='info'>
+                {medicine.label}
+              </Badge>
+            )}
+            {reading && (
+              <Badge size='sm' variant='default'>
+                {`${reading.label} · presence ${body.presence_pct}%`}
+              </Badge>
+            )}
+            {body.wholeness_required && missing && (
+              <Badge size='sm' variant='destructive'>
+                Barred from rule by their people's law
+              </Badge>
+            )}
+            {body.pain > 0 && (
+              <Badge size='sm' variant='warning'>
+                {`Pain ${body.pain}%`}
+              </Badge>
+            )}
+            {!body.alive && (
+              <Badge size='sm' variant='secondary'>
+                Fallen
+              </Badge>
+            )}
+          </div>
         </div>
         {body.healer_id !== null && body.healer_name && (
           <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
@@ -467,16 +479,23 @@ function Digits({ body, blocked }: { body: Body; blocked: string | null }) {
                   </Badge>
                 )}
               </div>
-              <div className='flex min-w-0 flex-wrap gap-1.5'>
-                {digits.map((digit) => (
+              <PagedList
+                items={digits}
+                initial={12}
+                noun={['entry', 'entries']}
+                as='div'
+                className='flex min-w-0 flex-wrap gap-1.5'
+                itemKey={(digit) => digit.key}
+              >
+                {(digit) => (
                   <DigitButton
                     key={digit.key}
                     digit={digit}
                     bearerId={body.node_id}
                     blocked={blocked}
                   />
-                ))}
-              </div>
+                )}
+              </PagedList>
             </div>
           )
         })}
@@ -899,32 +918,50 @@ function WoundItem({
           />
         )}
         {(row.treatments.length > 0 || row.wanted.length > 0) && (
-          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-            {row.treatments.map((step) => {
-              const look = named(TREATMENTS, step)
-              return (
-                <Badge key={step} size='sm' variant='success'>
-                  <look.icon />
-                  {look.label}
-                </Badge>
-              )
-            })}
-            {row.wanted.map((step) => {
-              const look = named(TREATMENTS, step)
-              return (
-                <Button
-                  key={step}
-                  size='sm'
-                  variant='ghost'
-                  disabled={reason !== null}
-                  disabledReason={reason ?? undefined}
-                  onClick={() => treat.mutate(step)}
-                >
-                  <look.icon />
-                  {look.label}
-                </Button>
-              )
-            })}
+          <div className='flex min-w-0 flex-col gap-2'>
+            <PagedList
+              items={row.treatments}
+              initial={12}
+              noun={['entry', 'entries']}
+              as='div'
+              className='flex min-w-0 flex-wrap items-center gap-1.5'
+              itemKey={(step) => step}
+            >
+              {(step) => {
+                const look = named(TREATMENTS, step)
+                return (
+                  <Badge key={step} size='sm' variant='success'>
+                    <look.icon />
+                    {look.label}
+                  </Badge>
+                )
+              }}
+            </PagedList>
+            <PagedList
+              items={row.wanted}
+              initial={12}
+              noun={['entry', 'entries']}
+              as='div'
+              className='flex min-w-0 flex-wrap items-center gap-1.5'
+              itemKey={(step) => step}
+            >
+              {(step) => {
+                const look = named(TREATMENTS, step)
+                return (
+                  <Button
+                    key={step}
+                    size='sm'
+                    variant='ghost'
+                    disabled={reason !== null}
+                    disabledReason={reason ?? undefined}
+                    onClick={() => treat.mutate(step)}
+                  >
+                    <look.icon />
+                    {look.label}
+                  </Button>
+                )
+              }}
+            </PagedList>
           </div>
         )}
         <div className='flex min-w-0 flex-wrap items-center gap-1.5'>

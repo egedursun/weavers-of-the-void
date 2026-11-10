@@ -16,7 +16,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { type KpiTone, Medallion, ServerLineList } from '@/components/domain'
+import {
+  type KpiTone,
+  Medallion,
+  PagedList,
+  ServerLineList,
+} from '@/components/domain'
 import { Label, SectionTitle, Text } from '@/components/typography'
 import { RevelationDialog } from '@/features/creator/RevelationDialog'
 import { AwakenPeoplesControl } from './AwakenPeoplesControl'
@@ -169,8 +174,15 @@ export function ThisEpochBox({ state }: { state: WorldState }) {
                     : `${formatInteger(essence)} essence at hand.`}
               </Text>
               {known.length > 0 && (
-                <div className='flex min-w-0 flex-wrap gap-1.5'>
-                  {known.map(([name, cost]) => (
+                <PagedList
+                  items={known}
+                  initial={12}
+                  noun={['entry', 'entries']}
+                  as='div'
+                  className='flex min-w-0 flex-wrap gap-1.5'
+                  itemKey={([name]) => name}
+                >
+                  {([name, cost]) => (
                     <Badge
                       key={name}
                       size='sm'
@@ -182,8 +194,8 @@ export function ThisEpochBox({ state }: { state: WorldState }) {
                     >
                       {`${name} · ${cost}`}
                     </Badge>
-                  ))}
-                </div>
+                  )}
+                </PagedList>
               )}
             </TodoRow>
             {state.notifications_unread > 0 && (

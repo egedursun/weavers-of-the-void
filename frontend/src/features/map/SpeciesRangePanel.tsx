@@ -2,7 +2,7 @@ import { PawPrint, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Medallion } from '@/components/domain'
+import { Medallion, PagedList } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { type RangeMap } from '@/features/entity/wilds/api'
@@ -94,15 +94,22 @@ export function SpeciesRangePanel({
         </Button>
       )}
       {speciesId !== null && range && range.cells.length > 0 && (
-        <ul className='flex w-full min-w-0 flex-wrap gap-1.5'>
-          {range.cells.map((cell) => (
+        <PagedList
+          items={range.cells}
+          initial={12}
+          noun={['entry', 'entries']}
+          as='ul'
+          className='flex w-full min-w-0 flex-wrap gap-1.5'
+          itemKey={(cell) => cell.region.id}
+        >
+          {(cell) => (
             <li key={cell.region.id}>
               <Badge size='sm' variant='secondary'>
                 {`${cell.region.name}: ${cell.abundance} (${rangeBand(cell.abundance, range.peak) ?? 'none'})`}
               </Badge>
             </li>
-          ))}
-        </ul>
+          )}
+        </PagedList>
       )}
     </div>
   )

@@ -1,5 +1,6 @@
 import { Lightbulb, TriangleAlert } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { PagedList } from '@/components/domain'
 import { Text } from '@/components/typography'
 import { ShowMore } from './ShowMore'
 import { useShowMore } from './useShowMore'
@@ -45,8 +46,15 @@ export function ServerLineList({
               <div className='flex min-w-0 flex-col gap-2'>
                 <Text>{line.text}</Text>
                 {line.tools && line.tools.length > 0 && (
-                  <div className='flex min-w-0 flex-wrap gap-1'>
-                    {line.tools.map((tool) =>
+                  <PagedList
+                    items={line.tools}
+                    initial={12}
+                    noun={['entry', 'entries']}
+                    as='div'
+                    className='flex min-w-0 flex-wrap gap-1'
+                    itemKey={(tool) => tool}
+                  >
+                    {(tool) =>
                       onTool ? (
                         <Badge key={tool} variant='outline' asChild>
                           <button type='button' onClick={() => onTool(tool)}>
@@ -58,8 +66,8 @@ export function ServerLineList({
                           {tool}
                         </Badge>
                       )
-                    )}
-                  </div>
+                    }
+                  </PagedList>
                 )}
               </div>
             </li>

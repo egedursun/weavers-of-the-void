@@ -17,7 +17,13 @@ import type { components } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { EntityLink, Medallion, RangeField, Paged } from '@/components/domain'
+import {
+  EntityLink,
+  Medallion,
+  Paged,
+  PagedList,
+  RangeField,
+} from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { CLAUSES, PARTY_ROLES, TREATY_KINDS, type Named, named } from './labels'
@@ -208,16 +214,23 @@ export function HouseEditor({
       tone='gold'
       hint='Head, prestige, wealth, motto, bloodline, members and heirlooms'
     >
-      <div
-        data-surface='HouseEditor'
-        className='flex min-w-0 flex-wrap gap-1.5'
-      >
-        {house.traits.map((trait) => (
-          <Tag key={trait} spec={named(HOUSE_TRAITS, trait)} />
-        ))}
-        {house.motto && (
-          <Badge size='sm' variant='outline'>{`“${house.motto}”`}</Badge>
-        )}
+      <div className='flex min-w-0 flex-col gap-2'>
+        <PagedList
+          items={house.traits}
+          initial={12}
+          noun={['entry', 'entries']}
+          as='div'
+          className='flex min-w-0 flex-wrap gap-1.5'
+          listProps={{ 'data-surface': 'HouseEditor' }}
+          itemKey={(trait) => trait}
+        >
+          {(trait) => <Tag key={trait} spec={named(HOUSE_TRAITS, trait)} />}
+        </PagedList>
+        <div className='flex min-w-0 flex-wrap gap-1.5'>
+          {house.motto && (
+            <Badge size='sm' variant='outline'>{`“${house.motto}”`}</Badge>
+          )}
+        </div>
       </div>
       <AdjustPanel
         trigger='Shape the house'

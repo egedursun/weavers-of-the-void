@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
-import { Medallion, Paged } from '@/components/domain'
+import { Medallion, Paged, PagedList } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import {
@@ -561,16 +561,23 @@ function BlueprintsCard({
                       </div>
                     </div>
                     {row.licensed_to.length > 0 && (
-                      <div className='flex min-w-0 flex-wrap gap-1.5'>
-                        {row.licensed_to.map((item) => (
+                      <PagedList
+                        items={row.licensed_to}
+                        initial={12}
+                        noun={['entry', 'entries']}
+                        as='div'
+                        className='flex min-w-0 flex-wrap gap-1.5'
+                        itemKey={(item) => item.id}
+                      >
+                        {(item) => (
                           <RefChip
                             key={item.id}
                             icon={Users}
                             label='Licensed'
                             item={item}
                           />
-                        ))}
-                      </div>
+                        )}
+                      </PagedList>
                     )}
                     <RowEditor
                       label='Quality'

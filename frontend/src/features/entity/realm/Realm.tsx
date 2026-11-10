@@ -40,7 +40,10 @@ import {
   EmptyState,
   EntityLink,
   KpiTile,
+  LoadingBlock,
   Medallion,
+  Paged,
+  PagedList,
   Portrait,
   RangeField,
   Section,
@@ -49,8 +52,6 @@ import {
   Timeline,
   TimelineItem,
   useShowMore,
-  Paged,
-  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -1288,15 +1289,22 @@ function RealmForm({
         </div>
       </div>
       {realm.locked.length > 0 && (
-        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-          {realm.locked.map((key) => (
+        <PagedList
+          items={realm.locked}
+          initial={12}
+          noun={['entry', 'entries']}
+          as='div'
+          className='flex min-w-0 flex-wrap items-center gap-1.5'
+          itemKey={(key) => key}
+        >
+          {(key) => (
             <Tag
               key={key}
               spec={{ label: key, icon: Lock, tone: 'info' }}
               text={`Holding ${plain(REALM_FIELDS, key).toLowerCase()}`}
             />
-          ))}
-        </div>
+          )}
+        </PagedList>
       )}
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Button

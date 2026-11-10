@@ -9,6 +9,7 @@ import {
   EmptyState,
   KpiTile,
   Paged,
+  PagedList,
   Section,
   StatBar,
 } from '@/components/domain'
@@ -1031,8 +1032,15 @@ function SubjectRow({
               Set the kind
             </Button>
           </div>
-          <div className='flex min-w-0 flex-wrap items-center gap-2'>
-            {rights.map(([key, label, on]) => (
+          <PagedList
+            items={rights}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap items-center gap-2'
+            itemKey={([key]) => key}
+          >
+            {([key, label, on]) => (
               <Button
                 key={key}
                 size='sm'
@@ -1043,8 +1051,8 @@ function SubjectRow({
               >
                 {on ? `Revoke: ${label}` : `Grant: ${label}`}
               </Button>
-            ))}
-          </div>
+            )}
+          </PagedList>
         </div>
       }
     >

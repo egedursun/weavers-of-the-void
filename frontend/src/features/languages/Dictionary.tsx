@@ -15,7 +15,13 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { EmptyState, EntityLink, MiniStat, Section } from '@/components/domain'
+import {
+  EmptyState,
+  EntityLink,
+  MiniStat,
+  PagedList,
+  Section,
+} from '@/components/domain'
 import { Label, Muted, SectionTitle, Text } from '@/components/typography'
 import { Highlight } from '@/features/atlas/Highlight'
 import { humanize } from '@/features/entity/actions/schema'
@@ -273,8 +279,15 @@ function LanguageHero({
       {current.speakers.length > 0 && (
         <div className='flex min-w-0 flex-col gap-2'>
           <Label variant='overline'>Spoken by</Label>
-          <div className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1'>
-            {current.speakers.map((speaker) => (
+          <PagedList
+            items={current.speakers}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1'
+            itemKey={(speaker) => speaker.id}
+          >
+            {(speaker) => (
               <EntityLink
                 key={speaker.id}
                 kind='entity'
@@ -283,8 +296,8 @@ function LanguageHero({
               >
                 {speaker.name}
               </EntityLink>
-            ))}
-          </div>
+            )}
+          </PagedList>
         </div>
       )}
     </div>

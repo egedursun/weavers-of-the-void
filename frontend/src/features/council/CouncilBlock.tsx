@@ -16,6 +16,7 @@ import {
   EmptyState,
   KpiTile,
   Medallion,
+  PagedList,
   Portrait,
   Section,
 } from '@/components/domain'
@@ -133,11 +134,16 @@ export function CouncilBlock({ showAll = false }: { showAll?: boolean }) {
             </Text>
             <Label>{`${awake} sons would attend${minimum !== undefined ? ` · at least ${minimum} needed` : ''}`}</Label>
           </div>
-          <ul
-            aria-label='Sons who would attend'
+          <PagedList
+            items={attending}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='ul'
             className='flex min-w-0 flex-wrap items-center gap-1'
+            listProps={{ 'aria-label': 'Sons who would attend' }}
+            itemKey={(view) => view.son.id}
           >
-            {attending.map((view) => (
+            {(view) => (
               <li key={view.son.id}>
                 <Portrait
                   name={view.son.name}
@@ -146,8 +152,8 @@ export function CouncilBlock({ showAll = false }: { showAll?: boolean }) {
                   rarity={view.son.rarity}
                 />
               </li>
-            ))}
-          </ul>
+            )}
+          </PagedList>
         </div>
         <FieldLabel htmlFor='council-topic'>Agenda (optional)</FieldLabel>
         <div className='flex min-w-0 flex-wrap items-center gap-2'>

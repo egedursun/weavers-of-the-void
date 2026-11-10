@@ -11,6 +11,7 @@ import {
   EntityLink,
   KpiTile,
   Paged,
+  PagedList,
   Section,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
@@ -485,13 +486,20 @@ function PoolCard({
         </div>
       </div>
       {pool.cohort_shares.length > 0 && (
-        <div className='flex min-w-0 flex-wrap gap-2'>
-          {pool.cohort_shares.map((cohort) => (
+        <PagedList
+          items={pool.cohort_shares}
+          initial={12}
+          noun={['entry', 'entries']}
+          as='div'
+          className='flex min-w-0 flex-wrap gap-2'
+          itemKey={(cohort) => cohort.key}
+        >
+          {(cohort) => (
             <Badge key={cohort.key} variant='outline'>
               {`${cohort.key.replaceAll('_', ' ')}: ${cohort.label}% gifted`}
             </Badge>
-          ))}
-        </div>
+          )}
+        </PagedList>
       )}
       <ItemRow
         icon={GIFT_ICON}

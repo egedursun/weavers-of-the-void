@@ -100,8 +100,15 @@ export function JobItems({ items }: { items: JobItem[] }) {
   const shown = action ? items.filter((item) => item.action === action) : items
   return (
     <div data-job-items className='flex min-w-0 flex-col gap-2'>
-      <div className='flex min-w-0 flex-wrap items-center gap-1'>
-        {actions.map((key) => {
+      <PagedList
+        items={actions}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='div'
+        className='flex min-w-0 flex-wrap items-center gap-1'
+        itemKey={(key) => key}
+      >
+        {(key) => {
           const Icon = ACTION_ICON[key] ?? FALLBACK_ACTION_ICON
           const active = action === key
           return (
@@ -126,8 +133,8 @@ export function JobItems({ items }: { items: JobItem[] }) {
               </Button>
             </Badge>
           )
-        })}
-      </div>
+        }}
+      </PagedList>
       <Button
         variant='ghost'
         size='sm'

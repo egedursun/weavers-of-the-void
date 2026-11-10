@@ -35,9 +35,11 @@ import {
   EntityLink,
   Medallion,
   MiniStat,
-  RangeField,
-  StatBar,
   Paged,
+  RangeField,
+  ShowMore,
+  StatBar,
+  useShowMore,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
@@ -1102,18 +1104,24 @@ export function ForgeDisease({
   )
 }
 
+const TARGET_PAGE = 12
+
 export function TargetBadges({ targets }: { targets: DiseaseTarget[] }) {
+  const more = useShowMore(targets, TARGET_PAGE)
   return (
-    <span className='inline-flex min-w-0 flex-wrap items-center gap-1'>
-      {targets.map((target) => {
-        const spec = TARGET_SPEC[target]
-        return (
-          <Badge key={target} size='sm' variant='warning'>
-            <spec.icon />
-            {spec.label}
-          </Badge>
-        )
-      })}
+    <span className='inline-flex min-w-0 flex-col gap-1'>
+      <span className='inline-flex min-w-0 flex-wrap items-center gap-1'>
+        {more.visible.map((target) => {
+          const spec = TARGET_SPEC[target]
+          return (
+            <Badge key={target} size='sm' variant='warning'>
+              <spec.icon />
+              {spec.label}
+            </Badge>
+          )
+        })}
+      </span>
+      <ShowMore state={more} noun={['target', 'targets']} />
     </span>
   )
 }

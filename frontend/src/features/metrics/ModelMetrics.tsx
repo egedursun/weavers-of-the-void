@@ -41,7 +41,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { EmptyState, MiniStat, Section } from '@/components/domain'
+import { EmptyState, MiniStat, PagedList, Section } from '@/components/domain'
 import { Muted, Stat, Text } from '@/components/typography'
 import { useEpochTiming } from '@/features/epoch/useEpochTiming'
 import { type LlmCall, type ModelMetricsView, useModelMetrics } from './api'
@@ -235,15 +235,22 @@ function MetricsBody({ data }: { data: ModelMetricsView }) {
           ))}
         </TableBody>
       </Table>
-      <div className='flex min-w-0 flex-wrap gap-2'>
-        {data.models.map((model) => (
+      <PagedList
+        items={data.models}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='div'
+        className='flex min-w-0 flex-wrap gap-2'
+        itemKey={(model) => model.model}
+      >
+        {(model) => (
           <Chip
             key={model.model}
             label={`· ${model.calls} calls · average ${formatMilliseconds(model.average_ms)}`}
             value={model.model}
           />
-        ))}
-      </div>
+        )}
+      </PagedList>
       <Folder title={`By step (${data.steps.length})`}>
         <Table>
           <TableHeader>

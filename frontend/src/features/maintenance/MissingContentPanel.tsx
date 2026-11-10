@@ -18,7 +18,13 @@ import { formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EntityLink, Medallion, Section } from '@/components/domain'
+import {
+  EntityLink,
+  Medallion,
+  Section,
+  ShowMore,
+  useShowMore,
+} from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { useNames } from '@/features/pantheon/api'
@@ -65,17 +71,23 @@ function RecordLinks({
   fallback: string
 }) {
   const nameOf = useNameLookup()
+  const more = useShowMore(ids, ID_PAGE)
   if (ids.length === 0) return <>{NONE}</>
   return (
-    <span className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1'>
-      {ids.map((id) => (
-        <EntityLink key={id} kind={linkKind} id={String(id)}>
-          {nameOf(kind, id) ?? `${fallback} ${id}`}
-        </EntityLink>
-      ))}
+    <span className='flex min-w-0 flex-col gap-1'>
+      <span className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1'>
+        {more.visible.map((id) => (
+          <EntityLink key={id} kind={linkKind} id={String(id)}>
+            {nameOf(kind, id) ?? `${fallback} ${id}`}
+          </EntityLink>
+        ))}
+      </span>
+      <ShowMore state={more} noun={['record', 'records']} />
     </span>
   )
 }
+
+const ID_PAGE = 12
 
 type Check = {
   key: string

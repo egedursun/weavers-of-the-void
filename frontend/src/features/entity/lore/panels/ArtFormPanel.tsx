@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { KpiTile, Paged } from '@/components/domain'
+import { KpiTile, Paged, PagedList } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import {
@@ -175,28 +175,42 @@ export function ArtFormPanel({
               </Muted>
             )}
             {card.parents.length > 0 && (
-              <div className='flex min-w-0 flex-wrap gap-1.5'>
-                {card.parents.map((item) => (
+              <PagedList
+                items={card.parents}
+                initial={12}
+                noun={['entry', 'entries']}
+                as='div'
+                className='flex min-w-0 flex-wrap gap-1.5'
+                itemKey={(item) => item.id}
+              >
+                {(item) => (
                   <RefChip
                     key={item.id}
                     icon={GitMerge}
                     label='From'
                     item={item}
                   />
-                ))}
-              </div>
+                )}
+              </PagedList>
             )}
             {card.children.length > 0 && (
-              <div className='flex min-w-0 flex-wrap gap-1.5'>
-                {card.children.map((item) => (
+              <PagedList
+                items={card.children}
+                initial={12}
+                noun={['entry', 'entries']}
+                as='div'
+                className='flex min-w-0 flex-wrap gap-1.5'
+                itemKey={(item) => item.id}
+              >
+                {(item) => (
                   <RefChip
                     key={item.id}
                     icon={GitMerge}
                     label='Into'
                     item={item}
                   />
-                ))}
-              </div>
+                )}
+              </PagedList>
             )}
           </div>
         </LoreCard>
@@ -246,11 +260,18 @@ export function ArtFormPanel({
           {card.banned_in.length === 0 ? (
             <Muted>No realm bans it. Ban it from a realm's era panel.</Muted>
           ) : (
-            <div className='flex min-w-0 flex-wrap gap-1.5'>
-              {card.banned_in.map((item) => (
+            <PagedList
+              items={card.banned_in}
+              initial={12}
+              noun={['entry', 'entries']}
+              as='div'
+              className='flex min-w-0 flex-wrap gap-1.5'
+              itemKey={(item) => item.id}
+            >
+              {(item) => (
                 <RefChip key={item.id} icon={Ban} label='' item={item} />
-              ))}
-            </div>
+              )}
+            </PagedList>
           )}
         </LoreCard>
       </div>

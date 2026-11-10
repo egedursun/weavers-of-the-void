@@ -7,7 +7,7 @@ import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { JobProgress } from '@/components/domain'
+import { JobProgress, PagedList } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { JobItems } from '@/features/epoch/JobItems'
 import { resultCounters, resultLedgerEntry } from './jobResult'
@@ -63,13 +63,20 @@ export function JobOutcome({
         }
       />
       {counters.length > 0 && (
-        <div className='flex min-w-0 flex-wrap items-center gap-2'>
-          {counters.map((counter) => (
+        <PagedList
+          items={counters}
+          initial={12}
+          noun={['entry', 'entries']}
+          as='div'
+          className='flex min-w-0 flex-wrap items-center gap-2'
+          itemKey={(counter) => counter.key}
+        >
+          {(counter) => (
             <Badge key={counter.key} size='sm' variant='outline'>
               {`${counter.label} ${formatInteger(counter.value)}`}
             </Badge>
-          ))}
-        </div>
+          )}
+        </PagedList>
       )}
       <JobItems items={job.data.items} />
       {job.data.status === 'succeeded' &&

@@ -15,7 +15,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
-import { EmptyState, EntityLink, Medallion, Section } from '@/components/domain'
+import {
+  EmptyState,
+  EntityLink,
+  Medallion,
+  PagedList,
+  Section,
+} from '@/components/domain'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
 import { Label, Muted, SectionTitle, Text } from '@/components/typography'
 import { humanize } from '@/features/entity/actions/schema'
@@ -213,8 +219,15 @@ function TechDetail({
             A first discovery; nothing comes before it.
           </Muted>
         ) : (
-          <div className='flex min-w-0 flex-wrap gap-1.5'>
-            {item.prerequisites.map((ref) =>
+          <PagedList
+            items={item.prerequisites}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap gap-1.5'
+            itemKey={(ref) => ref.id}
+          >
+            {(ref) =>
               known.has(ref.id) ? (
                 <Button
                   key={ref.id}
@@ -230,8 +243,8 @@ function TechDetail({
                   {ref.name}
                 </Badge>
               )
-            )}
-          </div>
+            }
+          </PagedList>
         )}
       </div>
       <div className='flex min-w-0 flex-col gap-2'>
@@ -239,8 +252,15 @@ function TechDetail({
         {unlocks.length === 0 ? (
           <Muted variant='caption'>Nothing has grown from it yet.</Muted>
         ) : (
-          <div className='flex min-w-0 flex-wrap gap-1.5'>
-            {unlocks.map((other) => (
+          <PagedList
+            items={unlocks}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap gap-1.5'
+            itemKey={(other) => other.knowledge.id}
+          >
+            {(other) => (
               <Button
                 key={other.knowledge.id}
                 size='sm'
@@ -250,8 +270,8 @@ function TechDetail({
                 <Unlock />
                 {other.knowledge.name}
               </Button>
-            ))}
-          </div>
+            )}
+          </PagedList>
         )}
       </div>
       <div className='flex min-w-0 flex-col gap-2'>
@@ -363,8 +383,15 @@ export function KnowledgeTree({ knowledge }: { knowledge: KnowledgeView[] }) {
         }
       >
         {hits.length > 0 && (
-          <div className='flex min-w-0 flex-wrap gap-1.5'>
-            {hits.map((item) => (
+          <PagedList
+            items={hits}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap gap-1.5'
+            itemKey={(item) => item.knowledge.id}
+          >
+            {(item) => (
               <Button
                 key={item.knowledge.id}
                 size='sm'
@@ -377,8 +404,8 @@ export function KnowledgeTree({ knowledge }: { knowledge: KnowledgeView[] }) {
                 <FlaskConical />
                 {item.knowledge.name}
               </Button>
-            ))}
-          </div>
+            )}
+          </PagedList>
         )}
         <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'>
           {branches.map((summary) => (

@@ -34,14 +34,15 @@ import {
 import {
   ChangeChip,
   KpiTile,
+  LoadingBlock,
   Medallion,
   MiniStat,
+  Paged,
+  PagedList,
   Section,
   StatBar,
   Timeline,
   TimelineItem,
-  Paged,
-  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import {
@@ -378,13 +379,20 @@ function CalendarCard({
           Let go
         </Button>
       </div>
-      <div className='flex min-w-0 flex-wrap gap-1.5'>
-        {calendar.month_names.map((month) => (
+      <PagedList
+        items={calendar.month_names}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='div'
+        className='flex min-w-0 flex-wrap gap-1.5'
+        itemKey={(month) => month}
+      >
+        {(month) => (
           <Badge key={month} size='sm' variant='secondary'>
             {month}
           </Badge>
-        ))}
-      </div>
+        )}
+      </PagedList>
       {calendar.holy_days.length > 0 && (
         <div className='flex min-w-0 flex-wrap gap-1.5'>
           <Paged items={calendar.holy_days}>

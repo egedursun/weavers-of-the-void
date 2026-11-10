@@ -21,6 +21,7 @@ import {
   LoadingBlock,
   Medallion,
   Paged,
+  PagedList,
   Section,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
@@ -134,22 +135,33 @@ export function NameSection({ nodeId }: { nodeId: number }) {
                       ? `Means “${card.meaning.gloss}”`
                       : 'Its meaning is not yet known.'}
                   </Muted>
-                  <div className='flex min-w-0 flex-wrap gap-1.5'>
-                    {card.meaning.morphemes.map((part, index) => (
-                      <Badge
-                        key={`${part}-${index}`}
-                        size='sm'
-                        variant='outline'
-                      >
-                        {part}
-                      </Badge>
-                    ))}
-                    {card.meaning.language && (
-                      <Badge size='sm' variant='secondary'>
-                        <Languages aria-hidden='true' />
-                        {card.meaning.language.name}
-                      </Badge>
-                    )}
+                  <div className='flex min-w-0 flex-col gap-2'>
+                    <PagedList
+                      items={card.meaning.morphemes}
+                      initial={12}
+                      noun={['entry', 'entries']}
+                      as='div'
+                      className='flex min-w-0 flex-wrap gap-1.5'
+                      itemKey={(part, index) => `${part}-${index}`}
+                    >
+                      {(part, index) => (
+                        <Badge
+                          key={`${part}-${index}`}
+                          size='sm'
+                          variant='outline'
+                        >
+                          {part}
+                        </Badge>
+                      )}
+                    </PagedList>
+                    <div className='flex min-w-0 flex-wrap gap-1.5'>
+                      {card.meaning.language && (
+                        <Badge size='sm' variant='secondary'>
+                          <Languages aria-hidden='true' />
+                          {card.meaning.language.name}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </>
               ) : (

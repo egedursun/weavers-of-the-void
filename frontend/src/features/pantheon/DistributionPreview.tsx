@@ -2,7 +2,7 @@ import { ArrowRightLeft, Globe, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EntityLink, Medallion, Portrait } from '@/components/domain'
+import { EntityLink, Medallion, PagedList, Portrait } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { type WorldBrief, useDistributionPreview, useSons } from './api'
 import { mediaUrl } from './media'
@@ -40,13 +40,20 @@ export function DistributionPreviewPanel({ worlds }: { worlds: WorldBrief[] }) {
                 Every world has a son; no one moves.
               </Muted>
             ) : (
-              <div className='flex min-w-0 flex-wrap gap-1.5'>
-                {godless.map((id) => (
+              <PagedList
+                items={godless}
+                initial={12}
+                noun={['entry', 'entries']}
+                as='div'
+                className='flex min-w-0 flex-wrap gap-1.5'
+                itemKey={(id) => id}
+              >
+                {(id) => (
                   <Badge key={id} size='sm' variant='warning'>
                     {worldName(id)}
                   </Badge>
-                ))}
-              </div>
+                )}
+              </PagedList>
             )}
           </div>
         </div>

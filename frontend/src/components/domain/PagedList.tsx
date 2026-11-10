@@ -1,4 +1,10 @@
-import { Fragment, type Key, type ReactNode, createElement } from 'react'
+import {
+  Fragment,
+  type HTMLAttributes,
+  type Key,
+  type ReactNode,
+  createElement,
+} from 'react'
 import { ShowMore } from './ShowMore'
 import { useShowMore } from './useShowMore'
 
@@ -7,8 +13,9 @@ type PagedListProps<T> = {
   initial: number
   step?: number
   noun?: [string, string]
-  as?: 'ul' | 'ol' | 'div'
+  as?: 'ul' | 'ol' | 'div' | 'nav'
   className?: string
+  listProps?: HTMLAttributes<HTMLElement> & { 'data-surface'?: string }
   itemKey: (item: T, index: number) => Key
   children: (item: T, index: number) => ReactNode
 }
@@ -20,6 +27,7 @@ export function PagedList<T>({
   noun,
   as = 'ul',
   className,
+  listProps,
   itemKey,
   children,
 }: PagedListProps<T>) {
@@ -28,7 +36,7 @@ export function PagedList<T>({
     <div data-domain='paged-list' className='flex min-w-0 flex-col gap-3'>
       {createElement(
         as,
-        { className },
+        { ...listProps, className },
         page.visible.map((item, index) => (
           <Fragment key={itemKey(item, index)}>
             {children(item, index)}

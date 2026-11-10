@@ -14,7 +14,12 @@ import {
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { ConfirmDialog, FormRow } from '@/components/domain'
+import {
+  ConfirmDialog,
+  FormRow,
+  ShowMore,
+  useShowMore,
+} from '@/components/domain'
 import { type ComboboxOption } from '@/components/domain/RecordCombobox'
 import { Muted } from '@/components/typography'
 import { useLoreMutation } from '../api/mutations'
@@ -57,6 +62,8 @@ export type RowActionProps = {
 
 type ParamValue = number | string | boolean
 
+const HELD_PAGE = 12
+
 function pickerOf(
   field: FieldModel,
   pickers: Record<string, PickerSpec> | undefined
@@ -84,6 +91,7 @@ export function RowAction({
   params,
 }: RowActionProps) {
   const id = path.replace('/api/actions/', '')
+  const heldPage = useShowMore(held, HELD_PAGE)
   const catalogue = useActionCatalogue()
   const data = usePickerData()
   const ctx = useEntityCtx()
@@ -249,23 +257,26 @@ export function RowAction({
                   description='Held values stay as you set them until released.'
                 >
                   {(fieldId) => (
-                    <ToggleGroup
-                      id={fieldId}
-                      type='multiple'
-                      variant='outline'
-                      size='sm'
-                      className='flex-wrap justify-start'
-                      value={released}
-                      onValueChange={setReleased}
-                      disabled={mutation.isPending}
-                      aria-label='Values to release'
-                    >
-                      {held.map((key) => (
-                        <ToggleGroupItem key={key} value={key}>
-                          {labels?.[key] ?? humanize(key)}
-                        </ToggleGroupItem>
-                      ))}
-                    </ToggleGroup>
+                    <div className='flex min-w-0 flex-col gap-2'>
+                      <ToggleGroup
+                        id={fieldId}
+                        type='multiple'
+                        variant='outline'
+                        size='sm'
+                        className='flex-wrap justify-start'
+                        value={released}
+                        onValueChange={setReleased}
+                        disabled={mutation.isPending}
+                        aria-label='Values to release'
+                      >
+                        {heldPage.visible.map((key) => (
+                          <ToggleGroupItem key={key} value={key}>
+                            {labels?.[key] ?? humanize(key)}
+                          </ToggleGroupItem>
+                        ))}
+                      </ToggleGroup>
+                      <ShowMore state={heldPage} noun={['value', 'values']} />
+                    </div>
                   )}
                 </FormRow>
               )}

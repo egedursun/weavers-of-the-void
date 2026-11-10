@@ -11,7 +11,13 @@ import {
 } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
-import { EntityLink, MiniStat, StatBar, Paged } from '@/components/domain'
+import {
+  EntityLink,
+  MiniStat,
+  Paged,
+  PagedList,
+  StatBar,
+} from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import {
   FATE_OF,
@@ -97,8 +103,15 @@ export function BattleDepthPanel({
         </div>
       )}
       {magic.length > 0 && (
-        <div className='flex min-w-0 flex-wrap gap-1.5'>
-          {magic.map(([key, value]) => (
+        <PagedList
+          items={magic}
+          initial={12}
+          noun={['entry', 'entries']}
+          as='div'
+          className='flex min-w-0 flex-wrap gap-1.5'
+          itemKey={([key]) => key}
+        >
+          {([key, value]) => (
             <Tag
               key={key}
               item={{
@@ -106,8 +119,8 @@ export function BattleDepthPanel({
                 label: `${nameOf(MAGIC_PART, key).label}: ${value}`,
               }}
             />
-          ))}
-        </div>
+          )}
+        </PagedList>
       )}
       {Object.keys(depth.morale).length > 0 && (
         <div className='grid min-w-0 grid-cols-1 gap-2 @lg/mil:grid-cols-2'>

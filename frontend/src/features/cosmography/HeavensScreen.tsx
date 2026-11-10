@@ -19,7 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { EmptyState, KpiTile, PageHeader } from '@/components/domain'
+import { EmptyState, KpiTile, PagedList, PageHeader } from '@/components/domain'
 import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
 import { Text } from '@/components/typography'
 import { useCosmos } from '@/features/cosmos/api'
@@ -92,26 +92,41 @@ function StillUniverse({
 
 function Legend({ ladder }: { ladder: Ladder }) {
   return (
-    <div className='flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1'>
-      {ladder.data.dimensions.map((dimension) => (
-        <span key={dimension.id} className='flex items-center gap-1.5'>
-          <svg aria-hidden='true' viewBox='0 0 10 10' className='size-icon-xs'>
-            <circle
-              cx='5'
-              cy='5'
-              r='4'
-              fill={cssColor(DIMENSION_TOKEN[dimension.dimension_kind])}
-            />
-          </svg>
-          <Text as='span' variant='caption' tone='inherit'>
-            {dimension.name}
-          </Text>
-        </span>
-      ))}
-      <Text as='span' variant='caption' tone='inherit' className='opacity-70'>
-        Dashed arcs: routes between galaxies · beams: open rifts between
-        dimensions
-      </Text>
+    <div className='flex min-w-0 flex-col gap-2'>
+      <PagedList
+        items={ladder.data.dimensions}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='div'
+        className='flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1'
+        itemKey={(dimension) => dimension.id}
+      >
+        {(dimension) => (
+          <span key={dimension.id} className='flex items-center gap-1.5'>
+            <svg
+              aria-hidden='true'
+              viewBox='0 0 10 10'
+              className='size-icon-xs'
+            >
+              <circle
+                cx='5'
+                cy='5'
+                r='4'
+                fill={cssColor(DIMENSION_TOKEN[dimension.dimension_kind])}
+              />
+            </svg>
+            <Text as='span' variant='caption' tone='inherit'>
+              {dimension.name}
+            </Text>
+          </span>
+        )}
+      </PagedList>
+      <div className='flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1'>
+        <Text as='span' variant='caption' tone='inherit' className='opacity-70'>
+          Dashed arcs: routes between galaxies · beams: open rifts between
+          dimensions
+        </Text>
+      </div>
     </div>
   )
 }

@@ -15,6 +15,7 @@ import {
   EntityLink,
   type KpiTone,
   Medallion,
+  PagedList,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
@@ -432,8 +433,15 @@ export function NodeListEditor({
       {nodes.length === 0 ? (
         <Muted variant='caption'>None yet.</Muted>
       ) : (
-        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-          {nodes.map((node) => (
+        <PagedList
+          items={nodes}
+          initial={12}
+          noun={['entry', 'entries']}
+          as='div'
+          className='flex min-w-0 flex-wrap items-center gap-1.5'
+          itemKey={(node) => node.id}
+        >
+          {(node) => (
             <Badge key={node.id} variant='outline'>
               <RefLink node={node} />
               <Button
@@ -447,8 +455,8 @@ export function NodeListEditor({
                 <X />
               </Button>
             </Badge>
-          ))}
-        </div>
+          )}
+        </PagedList>
       )}
       <FormBar
         action={

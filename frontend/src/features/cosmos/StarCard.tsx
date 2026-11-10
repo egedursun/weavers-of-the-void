@@ -8,7 +8,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { Section } from '@/components/domain'
+import { PagedList, Section } from '@/components/domain'
 import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
 import { Label, Muted, SectionTitle, Text } from '@/components/typography'
 import { CosmicActionButton } from './CosmicActionButton'
@@ -125,8 +125,15 @@ export function StarCard({ star, index, rules, onSelectWorld }: StarCardProps) {
         {orbiting.length === 0 ? (
           <Muted>No world around this star yet.</Muted>
         ) : (
-          <div className='flex min-w-0 flex-wrap gap-2'>
-            {orbiting.map((item) => (
+          <PagedList
+            items={orbiting}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap gap-2'
+            itemKey={(item) => item.world.id}
+          >
+            {(item) => (
               <Button
                 key={item.world.id}
                 variant='outline'
@@ -135,8 +142,8 @@ export function StarCard({ star, index, rules, onSelectWorld }: StarCardProps) {
               >
                 {`${item.world.name} · orbit ${formatDecimal(item.world.orbit)}`}
               </Button>
-            ))}
-          </div>
+            )}
+          </PagedList>
         )}
       </Section>
       <Collapsible className='flex min-w-0 flex-col gap-4 rounded-xl border p-4'>

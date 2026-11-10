@@ -13,7 +13,7 @@ import { itemDeedValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Paged } from '@/components/domain'
+import { Paged, PagedList } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { AdjustBlock, ChoicePicker, NamedChip, Who } from '../LoreFields'
@@ -43,32 +43,41 @@ export function ItemFacts({ card }: { card: Item }) {
   )
     return null
   return (
-    <div
-      data-surface='ItemFacts'
-      className='flex min-w-0 flex-wrap items-center gap-2'
-    >
-      {card.secondary_materials.map((material) => (
-        <NamedChip
-          key={material}
-          spec={{ label: sentence(material), icon: Layers, tone: 'muted' }}
-        />
-      ))}
-      {card.bound_spirit && (
-        <Badge variant='outline'>
-          <Ghost aria-hidden='true' />
-          {'Bound spirit: '}
-          <Who item={card.bound_spirit} />
-        </Badge>
-      )}
-      {card.prosthesis_for && (
-        <NamedChip
-          spec={{
-            label: `A limb for the ${card.prosthesis_for}`,
-            icon: HandCoins,
-            tone: 'info',
-          }}
-        />
-      )}
+    <div className='flex min-w-0 flex-col gap-2'>
+      <PagedList
+        items={card.secondary_materials}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='div'
+        className='flex min-w-0 flex-wrap items-center gap-2'
+        listProps={{ 'data-surface': 'ItemFacts' }}
+        itemKey={(material) => material}
+      >
+        {(material) => (
+          <NamedChip
+            key={material}
+            spec={{ label: sentence(material), icon: Layers, tone: 'muted' }}
+          />
+        )}
+      </PagedList>
+      <div className='flex min-w-0 flex-wrap items-center gap-2'>
+        {card.bound_spirit && (
+          <Badge variant='outline'>
+            <Ghost aria-hidden='true' />
+            {'Bound spirit: '}
+            <Who item={card.bound_spirit} />
+          </Badge>
+        )}
+        {card.prosthesis_for && (
+          <NamedChip
+            spec={{
+              label: `A limb for the ${card.prosthesis_for}`,
+              icon: HandCoins,
+              tone: 'info',
+            }}
+          />
+        )}
+      </div>
     </div>
   )
 }

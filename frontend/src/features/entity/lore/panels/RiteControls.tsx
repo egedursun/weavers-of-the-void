@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { PagedList } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { AdjustBlock, ChoicePicker, NamedChip, Who } from '../LoreFields'
 import { type LoreCard as LoreCardData } from '../api'
@@ -265,8 +266,15 @@ export function RiteControls({
       </AdjustBlock>
       <AdjustBlock title='Forbid it' icon={Ban}>
         {card.forbidden_by.length > 0 && (
-          <div className='flex min-w-0 flex-wrap gap-2'>
-            {card.forbidden_by.map((item) => (
+          <PagedList
+            items={card.forbidden_by}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap gap-2'
+            itemKey={(item) => item.id}
+          >
+            {(item) => (
               <Badge key={item.id} variant='destructive'>
                 <Ban aria-hidden='true' />
                 <Who item={item} />
@@ -283,8 +291,8 @@ export function RiteControls({
                   <Unlock />
                 </Button>
               </Badge>
-            ))}
-          </div>
+            )}
+          </PagedList>
         )}
         <PickAndRun
           types={AUTHORITIES}

@@ -7,6 +7,7 @@ import {
   EpochSlider,
   LoadingBlock,
   MiniStat,
+  PagedList,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { type MapView, useWorldMap } from '@/features/map/api'
@@ -149,8 +150,15 @@ function MapKey({ sides }: { sides: { id: number; name: string }[] }) {
       data-surface='WarMapKey'
       className='pointer-events-none absolute inset-x-2 bottom-2 flex min-w-0 flex-col gap-1.5 rounded-lg border bg-background/85 px-3 py-2 shadow-sm backdrop-blur-sm'
     >
-      <div className='flex min-w-0 flex-wrap gap-x-3 gap-y-1'>
-        {sides.map((side, index) => (
+      <PagedList
+        items={sides}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='div'
+        className='flex min-w-0 flex-wrap gap-x-3 gap-y-1'
+        itemKey={(side) => side.id}
+      >
+        {(side, index) => (
           <span key={side.id} className='flex min-w-0 items-center gap-1.5'>
             <span
               aria-hidden='true'
@@ -160,8 +168,8 @@ function MapKey({ sides }: { sides: { id: number; name: string }[] }) {
               {side.name}
             </Text>
           </span>
-        ))}
-      </div>
+        )}
+      </PagedList>
       <div className='flex min-w-0 flex-wrap gap-x-3 gap-y-1'>
         {SYMBOLS.map((symbol) => (
           <span key={symbol.key} className='flex items-center gap-1'>
@@ -267,8 +275,15 @@ function Legend({
 }) {
   return (
     <div className='flex min-w-0 flex-col gap-2'>
-      <div className='flex min-w-0 flex-wrap gap-x-3 gap-y-1'>
-        {sides.map((side, index) => (
+      <PagedList
+        items={sides}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='div'
+        className='flex min-w-0 flex-wrap gap-x-3 gap-y-1'
+        itemKey={(side) => side.id}
+      >
+        {(side, index) => (
           <span key={side.id} className='flex min-w-0 items-center gap-1.5'>
             <span
               aria-hidden='true'
@@ -278,8 +293,8 @@ function Legend({
               {side.name}
             </Text>
           </span>
-        ))}
-      </div>
+        )}
+      </PagedList>
       <ul className='flex min-w-0 flex-col gap-1.5'>
         {room.armies.map((army, index) => {
           const place = placeOf(army, epoch)

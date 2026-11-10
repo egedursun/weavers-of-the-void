@@ -8,10 +8,18 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Skeleton } from '@/components/ui/skeleton'
-import { CopyButton, Medallion, MiniStat, Section } from '@/components/domain'
+import {
+  CopyButton,
+  Medallion,
+  MiniStat,
+  PagedList,
+  Section,
+} from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useEngineSeed } from './api'
 import { phaseLabel } from './phaseModel'
+
+const STREAM_PAGE = 24
 
 export function SeedPanel() {
   const seed = useEngineSeed()
@@ -57,12 +65,21 @@ export function SeedPanel() {
                 {`${formatInteger(seed.data.phase_streams.length)} step streams`}
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent className='flex min-w-0 flex-wrap items-center gap-1'>
-              {seed.data.phase_streams.map((name) => (
-                <Badge key={name} size='sm' variant='outline' title={name}>
-                  {phaseLabel(name)}
-                </Badge>
-              ))}
+            <CollapsibleContent>
+              <PagedList
+                items={seed.data.phase_streams}
+                initial={STREAM_PAGE}
+                noun={['stream', 'streams']}
+                as='div'
+                className='flex min-w-0 flex-wrap items-center gap-1'
+                itemKey={(name) => name}
+              >
+                {(name) => (
+                  <Badge size='sm' variant='outline' title={name}>
+                    {phaseLabel(name)}
+                  </Badge>
+                )}
+              </PagedList>
             </CollapsibleContent>
           </Collapsible>
         </div>

@@ -10,6 +10,7 @@ import {
   KpiTile,
   Medallion,
   Paged,
+  PagedList,
   Section,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
@@ -118,8 +119,15 @@ function KindCard({
         <Medallion icon={spec.icon} size='sm' tone={spec.tone} />
         <Label variant='overline'>{spec.label}</Label>
       </div>
-      <div className='flex min-w-0 flex-wrap gap-1.5'>
-        {items.map((item) => (
+      <PagedList
+        items={items}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='div'
+        className='flex min-w-0 flex-wrap gap-1.5'
+        itemKey={(item) => item.id}
+      >
+        {(item) => (
           <TasteChip
             key={item.id}
             item={item}
@@ -127,8 +135,8 @@ function KindCard({
             onSet={(strength) => onSet(item, strength)}
             onRemove={() => onRemove(item)}
           />
-        ))}
-      </div>
+        )}
+      </PagedList>
     </div>
   )
 }

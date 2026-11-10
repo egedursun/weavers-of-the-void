@@ -16,6 +16,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { PagedList } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { useGodGate, useRuleLookup } from '@/features/pantheon/gate'
@@ -45,24 +46,35 @@ export function PassionsForm({
   const overLimit = limit !== undefined && chosen.length > limit
   return (
     <div className='flex min-w-0 flex-col gap-3'>
-      <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-        {reputation.passions.map((passion) => (
-          <Tooltip key={passion}>
-            <TooltipTrigger asChild>
-              <Badge variant='default'>
-                {names.get(passion)?.name ?? passion}
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent>
-              {names.get(passion)?.hint ?? passion}
-            </TooltipContent>
-          </Tooltip>
-        ))}
-        <Muted variant='caption'>
-          {reputation.automatic
-            ? 'Read from your recent deeds'
-            : 'Chosen by you'}
-        </Muted>
+      <div className='flex min-w-0 flex-col gap-2'>
+        <PagedList
+          items={reputation.passions}
+          initial={12}
+          noun={['entry', 'entries']}
+          as='div'
+          className='flex min-w-0 flex-wrap items-center gap-1.5'
+          itemKey={(passion) => passion}
+        >
+          {(passion) => (
+            <Tooltip key={passion}>
+              <TooltipTrigger asChild>
+                <Badge variant='default'>
+                  {names.get(passion)?.name ?? passion}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                {names.get(passion)?.hint ?? passion}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </PagedList>
+        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+          <Muted variant='caption'>
+            {reputation.automatic
+              ? 'Read from your recent deeds'
+              : 'Chosen by you'}
+          </Muted>
+        </div>
       </div>
       <Collapsible className='flex min-w-0 flex-col gap-3'>
         <CollapsibleTrigger asChild>

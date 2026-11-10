@@ -35,11 +35,12 @@ import { Switch } from '@/components/ui/switch'
 import {
   EmptyState,
   EntityLink,
+  type KpiTone,
   Medallion,
+  Paged,
+  PagedList,
   RangeField,
   StatBar,
-  type KpiTone,
-  Paged,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -387,16 +388,27 @@ function OfficeEditor({
         <Medallion icon={spec.icon} tone={spec.tone} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>
           <Text truncate>{office.title ?? spec.label}</Text>
-          <div className='flex min-w-0 flex-wrap gap-1'>
-            {office.powers.map((power) => (
-              <Tag key={power} spec={named(OFFICE_POWERS, power)} />
-            ))}
-            {office.target && (
-              <Badge
-                size='sm'
-                variant='outline'
-              >{`At the court of ${office.target}`}</Badge>
-            )}
+          <div className='flex min-w-0 flex-col gap-2'>
+            <PagedList
+              items={office.powers}
+              initial={12}
+              noun={['entry', 'entries']}
+              as='div'
+              className='flex min-w-0 flex-wrap gap-1'
+              itemKey={(power) => power}
+            >
+              {(power) => (
+                <Tag key={power} spec={named(OFFICE_POWERS, power)} />
+              )}
+            </PagedList>
+            <div className='flex min-w-0 flex-wrap gap-1'>
+              {office.target && (
+                <Badge
+                  size='sm'
+                  variant='outline'
+                >{`At the court of ${office.target}`}</Badge>
+              )}
+            </div>
           </div>
         </div>
         {office.holder_id !== null && office.holder && (

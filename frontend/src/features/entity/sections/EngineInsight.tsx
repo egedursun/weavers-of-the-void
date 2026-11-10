@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
-import { EntityLink, MiniStat } from '@/components/domain'
+import { EntityLink, MiniStat, PagedList } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { type EntityContext } from '../actions/context'
 import { humanize } from '../actions/schema'
@@ -46,32 +46,43 @@ export function EngineInsight({ ctx }: { ctx: EntityContext }) {
       {resource && (
         <div className='flex min-w-0 flex-col gap-2'>
           <Label variant='overline'>Mechanics</Label>
-          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-            {resource.mechanics.map((mechanic) => (
-              <Badge key={mechanic} size='sm' variant='info'>
-                <Cog />
-                {humanize(mechanic)}
-              </Badge>
-            ))}
-            {resource.mechanics.length === 0 && (
-              <Muted variant='caption'>
-                {resource.weighed
-                  ? 'Weighed: it works no special rule.'
-                  : 'Not weighed yet; it is given a working at the next epoch end.'}
-              </Muted>
-            )}
-            {resource.depleting && (
-              <Badge size='sm' variant='warning'>
-                <PackageX />
-                Depleting
-              </Badge>
-            )}
-            {resource.depleted && (
-              <Badge size='sm' variant='destructive'>
-                <PackageX />
-                Depleted
-              </Badge>
-            )}
+          <div className='flex min-w-0 flex-col gap-2'>
+            <PagedList
+              items={resource.mechanics}
+              initial={12}
+              noun={['entry', 'entries']}
+              as='div'
+              className='flex min-w-0 flex-wrap items-center gap-1.5'
+              itemKey={(mechanic) => mechanic}
+            >
+              {(mechanic) => (
+                <Badge key={mechanic} size='sm' variant='info'>
+                  <Cog />
+                  {humanize(mechanic)}
+                </Badge>
+              )}
+            </PagedList>
+            <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+              {resource.mechanics.length === 0 && (
+                <Muted variant='caption'>
+                  {resource.weighed
+                    ? 'Weighed: it works no special rule.'
+                    : 'Not weighed yet; it is given a working at the next epoch end.'}
+                </Muted>
+              )}
+              {resource.depleting && (
+                <Badge size='sm' variant='warning'>
+                  <PackageX />
+                  Depleting
+                </Badge>
+              )}
+              {resource.depleted && (
+                <Badge size='sm' variant='destructive'>
+                  <PackageX />
+                  Depleted
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
       )}

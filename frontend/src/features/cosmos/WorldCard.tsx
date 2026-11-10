@@ -32,6 +32,7 @@ import {
 import {
   EntityLink,
   MiniStat,
+  PagedList,
   Portrait,
   Section,
   StatBar,
@@ -453,8 +454,15 @@ export function WorldCard({
         {item.sons.length === 0 ? (
           <Muted>No son is in this world right now.</Muted>
         ) : (
-          <div className='flex min-w-0 flex-wrap gap-2'>
-            {item.sons.map((ref) => {
+          <PagedList
+            items={item.sons}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap gap-2'
+            itemKey={(ref) => ref.id}
+          >
+            {(ref) => {
               const son = sonById.get(ref.id)
               return (
                 <span
@@ -472,8 +480,8 @@ export function WorldCard({
                   </EntityLink>
                 </span>
               )
-            })}
-          </div>
+            }}
+          </PagedList>
         )}
       </Section>
       <Section title={`Routes (${index.routesOf(world.id).length})`} level={3}>

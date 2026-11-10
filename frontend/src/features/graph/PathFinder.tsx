@@ -2,7 +2,7 @@ import { useId } from 'react'
 import { ArrowRight, Route as RouteIcon, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EntityLink } from '@/components/domain'
+import { EntityLink, PagedList } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { NodeOptions, NodePicker, type PickableNode } from './NodePicker'
 import { type PathResult, usePath } from './api'
@@ -57,8 +57,15 @@ function PathChain({
   const name = (id: number) => result.names[String(id)] ?? `Record ${id}`
   return (
     <div data-path-result className='flex min-w-0 flex-col gap-3'>
-      <div className='flex min-w-0 flex-wrap items-center gap-1'>
-        {result.path.map((id, index) => (
+      <PagedList
+        items={result.path}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='div'
+        className='flex min-w-0 flex-wrap items-center gap-1'
+        itemKey={(id, index) => `${id}-${index}`}
+      >
+        {(id, index) => (
           <span
             key={`${id}-${index}`}
             className='inline-flex min-w-0 items-center gap-1'
@@ -71,8 +78,8 @@ function PathChain({
             )}
             <NodeName id={id} name={name(id)} kinds={kinds} />
           </span>
-        ))}
-      </div>
+        )}
+      </PagedList>
       <ol className='flex min-w-0 list-decimal flex-col gap-1.5 ps-5'>
         {result.steps.map((step, index) => {
           const [left, right] = step.forward

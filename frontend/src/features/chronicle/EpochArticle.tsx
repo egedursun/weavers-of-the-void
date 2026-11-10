@@ -10,7 +10,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ChangeChip } from '@/components/domain'
+import { ChangeChip, PagedList } from '@/components/domain'
 import { Label, Muted, SectionTitle, Stat, Text } from '@/components/typography'
 import {
   HARMFUL_STATS,
@@ -117,11 +117,16 @@ export function EpochArticle({
         </div>
       </header>
       {deltas.length > 0 && (
-        <ul
-          aria-label='Changes since the epoch before'
+        <PagedList
+          items={deltas}
+          initial={12}
+          noun={['entry', 'entries']}
+          as='ul'
           className='flex min-w-0 flex-wrap gap-1.5'
+          listProps={{ 'aria-label': 'Changes since the epoch before' }}
+          itemKey={(delta) => delta.field}
         >
-          {deltas.map((delta) => (
+          {(delta) => (
             <li key={delta.field}>
               <ChangeChip
                 value={delta.value}
@@ -130,8 +135,8 @@ export function EpochArticle({
                 harmful={HARMFUL_STATS.has(delta.field as NumericStat)}
               />
             </li>
-          ))}
-        </ul>
+          )}
+        </PagedList>
       )}
       {item && <EpochNarrative epoch={item} perspectives={perspectives} />}
       <Collapsible

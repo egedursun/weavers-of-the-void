@@ -296,8 +296,15 @@ function HistoryBody({
       {detail.children.length > 0 && (
         <div className='flex min-w-0 flex-col gap-1.5'>
           <Label variant='overline'>Histories within it</Label>
-          <div className='flex min-w-0 flex-wrap gap-1.5'>
-            {detail.children.map((child) => {
+          <PagedList
+            items={detail.children}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap gap-1.5'
+            itemKey={(child) => child.id}
+          >
+            {(child) => {
               const look = COLLECTION_KINDS[child.kind]
               return (
                 <Button
@@ -310,8 +317,8 @@ function HistoryBody({
                   {child.name}
                 </Button>
               )
-            })}
-          </div>
+            }}
+          </PagedList>
         </div>
       )}
       <div className='flex min-w-0 flex-col gap-2'>
@@ -341,16 +348,23 @@ function HistoryBody({
         {detail.sites.length === 0 ? (
           <Muted variant='caption'>It is tied to no place.</Muted>
         ) : (
-          <div className='flex min-w-0 flex-wrap gap-1.5'>
-            {detail.sites.map((site) => (
+          <PagedList
+            items={detail.sites}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap gap-1.5'
+            itemKey={(site) => site.id}
+          >
+            {(site) => (
               <SiteChip
                 key={site.id}
                 collectionId={collection.id}
                 site={site}
                 blocked={busy}
               />
-            ))}
-          </div>
+            )}
+          </PagedList>
         )}
       </div>
       <AddToHistory detail={detail} blocked={busy} />

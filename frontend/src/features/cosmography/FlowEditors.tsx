@@ -9,6 +9,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Switch } from '@/components/ui/switch'
+import { PagedList } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { COMMODITY, MATERIAL_LABEL } from '@/features/entity/economy/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
@@ -362,8 +363,17 @@ export function JourneyLoadEditor({ journey }: { journey: JourneyRecord }) {
             {cargo.length === 0 ? (
               <Muted variant='caption'>It carries no goods.</Muted>
             ) : (
-              <ul className='flex min-w-0 flex-wrap gap-1'>
-                {cargo.map((line, at) => (
+              <PagedList
+                items={cargo}
+                initial={12}
+                noun={['entry', 'entries']}
+                as='ul'
+                className='flex min-w-0 flex-wrap gap-1'
+                itemKey={(line, at) =>
+                  `${line.commodity}-${line.material ?? ''}-${at}`
+                }
+              >
+                {(line, at) => (
                   <li key={`${line.commodity}-${line.material ?? ''}-${at}`}>
                     <Button
                       size='sm'
@@ -381,8 +391,8 @@ export function JourneyLoadEditor({ journey }: { journey: JourneyRecord }) {
                       {`${COMMODITY[line.commodity].label}${line.material ? ` (${MATERIAL_LABEL[line.material]})` : ''} × ${line.amount}`}
                     </Button>
                   </li>
-                ))}
-              </ul>
+                )}
+              </PagedList>
             )}
             <CargoForm
               busy={busy}
@@ -394,8 +404,15 @@ export function JourneyLoadEditor({ journey }: { journey: JourneyRecord }) {
             {passengers.length === 0 ? (
               <Muted variant='caption'>It carries no passengers.</Muted>
             ) : (
-              <ul className='flex min-w-0 flex-wrap gap-1'>
-                {passengers.map((line, at) => (
+              <PagedList
+                items={passengers}
+                initial={12}
+                noun={['entry', 'entries']}
+                as='ul'
+                className='flex min-w-0 flex-wrap gap-1'
+                itemKey={(line, at) => `${line.social_class}-${at}`}
+              >
+                {(line, at) => (
                   <li key={`${line.social_class}-${at}`}>
                     <Button
                       size='sm'
@@ -415,8 +432,8 @@ export function JourneyLoadEditor({ journey }: { journey: JourneyRecord }) {
                       {`${CLASS_SPEC[line.social_class].label} × ${line.count} · ${line.condition}%${line.sick ? ' · sick' : ''}`}
                     </Button>
                   </li>
-                ))}
-              </ul>
+                )}
+              </PagedList>
             )}
             <PassengerForm
               busy={busy}

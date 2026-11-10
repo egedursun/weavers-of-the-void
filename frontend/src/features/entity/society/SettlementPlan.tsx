@@ -51,10 +51,11 @@ import {
   KpiTile,
   Medallion,
   MiniStat,
+  Paged,
+  PagedList,
   RangeField,
   Section,
   StatBar,
-  Paged,
 } from '@/components/domain'
 import { LineChart } from '@/components/domain/LineChart'
 import { Muted, Stat, Text } from '@/components/typography'
@@ -230,23 +231,34 @@ function DistrictTile({
         )}
       </div>
       {district.locked.length > 0 && (
-        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-          {district.locked.map((key) => (
-            <Badge key={key} size='sm' variant='warning'>
-              <Lock />
-              {`${DISTRICT_LOCK_LABEL[key] ?? fieldLabel(key)} held`}
-            </Badge>
-          ))}
-          <Button
-            size='sm'
-            variant='ghost'
-            disabled={busy !== null}
-            disabledReason={busy ?? undefined}
-            onClick={() => edit.mutate({ release: district.locked })}
+        <div className='flex min-w-0 flex-col gap-2'>
+          <PagedList
+            items={district.locked}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap items-center gap-1.5'
+            itemKey={(key) => key}
           >
-            <LockOpen />
-            Release
-          </Button>
+            {(key) => (
+              <Badge key={key} size='sm' variant='warning'>
+                <Lock />
+                {`${DISTRICT_LOCK_LABEL[key] ?? fieldLabel(key)} held`}
+              </Badge>
+            )}
+          </PagedList>
+          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+            <Button
+              size='sm'
+              variant='ghost'
+              disabled={busy !== null}
+              disabledReason={busy ?? undefined}
+              onClick={() => edit.mutate({ release: district.locked })}
+            >
+              <LockOpen />
+              Release
+            </Button>
+          </div>
         </div>
       )}
       <div className='mt-auto grid min-w-0 grid-cols-3 gap-1.5'>

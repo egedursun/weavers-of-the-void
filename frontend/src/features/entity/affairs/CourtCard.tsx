@@ -4,7 +4,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Paged, StatBar } from '@/components/domain'
+import { Paged, PagedList, StatBar } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -128,14 +128,21 @@ export function CourtCard({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
           />
           <Muted variant='caption'>{`${court.courtiers} courtiers attend the ruler.`}</Muted>
           {parts.length > 0 && (
-            <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
-              {parts.map(([key, value]) => (
+            <PagedList
+              items={parts}
+              initial={12}
+              noun={['entry', 'entries']}
+              as='div'
+              className='flex min-w-0 flex-wrap items-center gap-1.5'
+              itemKey={([key]) => key}
+            >
+              {([key, value]) => (
                 <Badge
                   key={key}
                   variant='secondary'
                 >{`${sentence(key)} +${value}`}</Badge>
-              ))}
-            </div>
+              )}
+            </PagedList>
           )}
           {court.locked.length > 0 && <Badge variant='outline'>Held</Badge>}
         </>

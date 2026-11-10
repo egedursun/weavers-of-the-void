@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import { FormRow, Section } from '@/components/domain'
+import { FormRow, PagedList, Section } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { humanize } from '@/features/entity/actions/schema'
 import {
@@ -232,13 +232,20 @@ export function LanguageShaper({
               This tongue has too few sounds to name anything yet.
             </Muted>
           ) : (
-            <div className='flex min-w-0 flex-wrap gap-2'>
-              {preview.data.names.map((name, index) => (
+            <PagedList
+              items={preview.data.names}
+              initial={12}
+              noun={['entry', 'entries']}
+              as='div'
+              className='flex min-w-0 flex-wrap gap-2'
+              itemKey={(name, index) => `${name}-${index}`}
+            >
+              {(name, index) => (
                 <Badge key={`${name}-${index}`} variant='secondary'>
                   {name}
                 </Badge>
-              ))}
-            </div>
+              )}
+            </PagedList>
           )
         ) : (
           <Muted variant='caption'>

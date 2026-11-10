@@ -6,6 +6,7 @@ import { funeralRiteValues, tenetKindValues } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { PagedList } from '@/components/domain'
 import { Label, Text } from '@/components/typography'
 import { useCosmography } from '@/features/cosmography/api'
 import { useSons } from '@/features/pantheon/api'
@@ -69,8 +70,15 @@ function Toggles({
   return (
     <div className='flex min-w-0 flex-col gap-1.5'>
       <Label>{label}</Label>
-      <div className='flex min-w-0 flex-wrap gap-1.5'>
-        {values.map((value) => (
+      <PagedList
+        items={values}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='div'
+        className='flex min-w-0 flex-wrap gap-1.5'
+        itemKey={(value) => value}
+      >
+        {(value) => (
           <Button
             key={value}
             size='sm'
@@ -82,8 +90,8 @@ function Toggles({
           >
             {named(table, value).label}
           </Button>
-        ))}
-      </div>
+        )}
+      </PagedList>
     </div>
   )
 }

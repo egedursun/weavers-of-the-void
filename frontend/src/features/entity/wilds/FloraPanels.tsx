@@ -28,6 +28,7 @@ import {
   LoadingBlock,
   Medallion,
   Paged,
+  PagedList,
   Section,
   StatBar,
 } from '@/components/domain'
@@ -693,8 +694,15 @@ export function FloraControls({ id, card, blocked }: Blocked) {
             {card.pests.length === 0 ? (
               <Muted>Nothing feeds on it yet.</Muted>
             ) : (
-              <div className='flex min-w-0 flex-wrap gap-1.5'>
-                {card.pests.map((item) => (
+              <PagedList
+                items={card.pests}
+                initial={12}
+                noun={['entry', 'entries']}
+                as='div'
+                className='flex min-w-0 flex-wrap gap-1.5'
+                itemKey={(item) => item.id}
+              >
+                {(item) => (
                   <Badge key={item.id} variant='warning'>
                     <Bug aria-hidden='true' />
                     {item.name}
@@ -715,8 +723,8 @@ export function FloraControls({ id, card, blocked }: Blocked) {
                       <Trash2 />
                     </Button>
                   </Badge>
-                ))}
-              </div>
+                )}
+              </PagedList>
             )}
             <div className='flex min-w-0 flex-wrap items-end gap-2'>
               <EntityPicker

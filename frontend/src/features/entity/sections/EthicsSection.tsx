@@ -7,6 +7,7 @@ import {
   KpiTile,
   Medallion,
   Paged,
+  PagedList,
   Section,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
@@ -213,13 +214,20 @@ export function EthicsSection({ nodeId }: { nodeId: number }) {
           />
         ) : (
           <>
-            <div className='flex min-w-0 flex-wrap gap-1.5'>
-              {view.stances.map((item) => (
+            <PagedList
+              items={view.stances}
+              initial={12}
+              noun={['entry', 'entries']}
+              as='div'
+              className='flex min-w-0 flex-wrap gap-1.5'
+              itemKey={(item) => item.key}
+            >
+              {(item) => (
                 <Badge key={item.key} variant='outline'>
                   {`${item.label}: ${counts([item.key])}`}
                 </Badge>
-              ))}
-            </div>
+              )}
+            </PagedList>
             <Ladder view={view} />
           </>
         )}

@@ -38,6 +38,7 @@ const HEAT = [
 const CARRIER_PAGE = 24
 const LINK_PAGE = 20
 const MECHANIC_PAGE = 30
+const MECHANIC_KEY_PAGE = 8
 
 function SubsystemTag({ value }: { value: string }) {
   const spec = named(SUBSYSTEM, value)
@@ -176,6 +177,41 @@ export function SubsystemMatrix({
   )
 }
 
+function MechanicKeys({
+  keys,
+  titles,
+  onMechanic,
+}: {
+  keys: readonly string[]
+  titles: Map<string, string>
+  onMechanic: (key: string) => void
+}) {
+  const more = useShowMore(keys, MECHANIC_KEY_PAGE)
+  return (
+    <div className='flex min-w-0 flex-col gap-2'>
+      <div className='flex min-w-0 flex-wrap gap-1.5'>
+        {more.visible.map((key) =>
+          titles.has(key) ? (
+            <Button
+              key={key}
+              size='sm'
+              variant='outline'
+              onClick={() => onMechanic(key)}
+            >
+              {titles.get(key)}
+            </Button>
+          ) : (
+            <Badge key={key} size='sm' variant='secondary'>
+              {key.replaceAll('_', ' ')}
+            </Badge>
+          )
+        )}
+      </div>
+      <ShowMore state={more} noun={['mechanic', 'mechanics']} />
+    </div>
+  )
+}
+
 function LinkDetail({
   link,
   titles,
@@ -209,26 +245,13 @@ function LinkDetail({
         {(['writers', 'readers'] as const).map((side) => (
           <div key={side} className='flex min-w-0 flex-col gap-1.5'>
             <Label variant='overline'>
-              {side === 'writers' ? 'Written by' : 'Read by'}
+              {`${side === 'writers' ? 'Written by' : 'Read by'} (${link[side].length})`}
             </Label>
-            <div className='flex min-w-0 flex-wrap gap-1.5'>
-              {link[side].map((key) =>
-                titles.has(key) ? (
-                  <Button
-                    key={key}
-                    size='sm'
-                    variant='outline'
-                    onClick={() => onMechanic(key)}
-                  >
-                    {titles.get(key)}
-                  </Button>
-                ) : (
-                  <Badge key={key} size='sm' variant='secondary'>
-                    {key.replaceAll('_', ' ')}
-                  </Badge>
-                )
-              )}
-            </div>
+            <MechanicKeys
+              keys={link[side]}
+              titles={titles}
+              onMechanic={onMechanic}
+            />
           </div>
         ))}
       </div>

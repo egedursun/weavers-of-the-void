@@ -37,13 +37,14 @@ import {
   EmptyState,
   KpiTile,
   type KpiTone,
+  LoadingBlock,
   Medallion,
   MiniStat,
+  Paged,
+  PagedList,
   Section,
   StatBar,
   ValueRadar,
-  Paged,
-  LoadingBlock,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -368,8 +369,15 @@ function Pyramid({ cohorts }: { cohorts: Cohort[] }) {
           })}
         </svg>
       </div>
-      <div className='flex min-w-0 flex-wrap gap-x-3 gap-y-1.5 border-t pt-3'>
-        {present.map((item) => (
+      <PagedList
+        items={present}
+        initial={12}
+        noun={['entry', 'entries']}
+        as='div'
+        className='flex min-w-0 flex-wrap gap-x-3 gap-y-1.5 border-t pt-3'
+        itemKey={(item) => item.socialClass}
+      >
+        {(item) => (
           <span
             key={item.socialClass}
             className='flex min-w-0 items-center gap-1.5'
@@ -379,8 +387,8 @@ function Pyramid({ cohorts }: { cohorts: Cohort[] }) {
               {`${CLASS_SPEC[item.socialClass].label} ${((item.count / total) * PERCENT).toFixed(1)}%`}
             </Muted>
           </span>
-        ))}
-      </div>
+        )}
+      </PagedList>
     </div>
   )
 }

@@ -9,7 +9,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { Textarea } from '@/components/ui/textarea'
-import { FormRow } from '@/components/domain'
+import { FormRow, PagedList } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { ActionButton } from './ActionButton'
 import { NamePicker } from './NamePicker'
@@ -72,8 +72,15 @@ export function NewThreadForm() {
           )}
         </FormRow>
         {related.length > 0 && (
-          <div className='flex min-w-0 flex-wrap gap-1.5'>
-            {related.map((entry) => (
+          <PagedList
+            items={related}
+            initial={12}
+            noun={['entry', 'entries']}
+            as='div'
+            className='flex min-w-0 flex-wrap gap-1.5'
+            itemKey={(entry) => entry.id}
+          >
+            {(entry) => (
               <Button
                 key={entry.id}
                 variant='outline'
@@ -86,8 +93,8 @@ export function NewThreadForm() {
                 {entry.name}
                 <X />
               </Button>
-            ))}
-          </div>
+            )}
+          </PagedList>
         )}
         <Muted variant='caption'>
           Fate tracks open stories and advances or closes them as epochs pass.

@@ -17,7 +17,13 @@ import { type ActionBody } from '@/api/actions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { KpiTile, Medallion, Paged, StatBar } from '@/components/domain'
+import {
+  KpiTile,
+  Medallion,
+  Paged,
+  PagedList,
+  StatBar,
+} from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import {
@@ -182,22 +188,36 @@ export function TheoryPanel({
           {card.endorsed_by.length === 0 ? (
             <Muted>No faith endorses it.</Muted>
           ) : (
-            <div className='flex min-w-0 flex-wrap gap-1.5'>
-              {card.endorsed_by.map((item) => (
+            <PagedList
+              items={card.endorsed_by}
+              initial={12}
+              noun={['entry', 'entries']}
+              as='div'
+              className='flex min-w-0 flex-wrap gap-1.5'
+              itemKey={(item) => item.id}
+            >
+              {(item) => (
                 <RefChip key={item.id} icon={ThumbsUp} label='' item={item} />
-              ))}
-            </div>
+              )}
+            </PagedList>
           )}
         </LoreCard>
         <LoreCard title='Faiths that condemn it' icon={ShieldX} tone='danger'>
           {card.condemned_by.length === 0 ? (
             <Muted>No faith condemns it.</Muted>
           ) : (
-            <div className='flex min-w-0 flex-wrap gap-1.5'>
-              {card.condemned_by.map((item) => (
+            <PagedList
+              items={card.condemned_by}
+              initial={12}
+              noun={['entry', 'entries']}
+              as='div'
+              className='flex min-w-0 flex-wrap gap-1.5'
+              itemKey={(item) => item.id}
+            >
+              {(item) => (
                 <RefChip key={item.id} icon={ShieldX} label='' item={item} />
-              ))}
-            </div>
+              )}
+            </PagedList>
           )}
         </LoreCard>
         <LoreCard

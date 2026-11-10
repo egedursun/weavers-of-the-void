@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { type KpiTone, Medallion } from '@/components/domain'
+import { type KpiTone, Medallion, PagedList } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { type Spec } from './labels'
 import { PIP_TONE, WORKING } from './tones'
@@ -424,32 +424,43 @@ export function HeldStrip({
           {`${keys.length} held against the world`}
         </Text>
       </div>
-      <div className='flex min-w-0 flex-wrap items-center gap-2'>
-        {keys.map((key) => (
-          <Button
-            key={key}
-            size='sm'
-            variant='outline'
-            disabled={blocked !== null}
-            disabledReason={blocked ?? undefined}
-            onClick={() => onRelease([key])}
-          >
-            <Unlock />
-            {`Release ${labelOf(key).toLowerCase()}`}
-          </Button>
-        ))}
-        {keys.length > 1 && (
-          <Button
-            size='sm'
-            variant='secondary'
-            disabled={blocked !== null}
-            disabledReason={blocked ?? undefined}
-            onClick={() => onRelease(keys)}
-          >
-            <Unlock />
-            Release them all
-          </Button>
-        )}
+      <div className='flex min-w-0 flex-col gap-2'>
+        <PagedList
+          items={keys}
+          initial={12}
+          noun={['entry', 'entries']}
+          as='div'
+          className='flex min-w-0 flex-wrap items-center gap-2'
+          itemKey={(key) => key}
+        >
+          {(key) => (
+            <Button
+              key={key}
+              size='sm'
+              variant='outline'
+              disabled={blocked !== null}
+              disabledReason={blocked ?? undefined}
+              onClick={() => onRelease([key])}
+            >
+              <Unlock />
+              {`Release ${labelOf(key).toLowerCase()}`}
+            </Button>
+          )}
+        </PagedList>
+        <div className='flex min-w-0 flex-wrap items-center gap-2'>
+          {keys.length > 1 && (
+            <Button
+              size='sm'
+              variant='secondary'
+              disabled={blocked !== null}
+              disabledReason={blocked ?? undefined}
+              onClick={() => onRelease(keys)}
+            >
+              <Unlock />
+              Release them all
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   )
