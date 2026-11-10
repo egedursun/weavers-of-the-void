@@ -12,9 +12,18 @@ HUNK = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@", re.MULTILINE)
 WHOLE_MODULE = "*"
 
 
+def staged_names() -> list[str]:
+    return subprocess.run(["git", "diff", "--cached", "--name-only", "--diff-filter=ACMR"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
+
+
 def staged_files() -> list[Path]:
-    names = subprocess.run(["git", "diff", "--cached", "--name-only", "--diff-filter=ACMR"], cwd=ROOT, capture_output=True, text=True, check=True).stdout
-    return [ROOT / name for name in names.split() if name.endswith(".py")]
+    return [ROOT / name for name in staged_names() if name.endswith(".py")]
+
+
+def readers_of(data: Path) -> dict[str, set[str]]:
+    return {
+        module_name(path, SOURCE): {WHOLE_MODULE} for path in sorted(SOURCE.rglob("*.py")) if path.is_file() and data.name in path.read_text(encoding="utf-8")
+    }
 
 
 def changed_lines(path: Path) -> set[int]:
@@ -60,7 +69,7 @@ def imports_of(path: Path) -> list[tuple[str, set[str]]]:
 
 def covering(changes: dict[str, set[str]]) -> set[Path]:
     chosen: set[Path] = set()
-    for test in sorted(TESTS.rglob("test_*.py")):
+    for test in sorted(path for path in TESTS.rglob("test_*.py") if path.is_file()):
         for module, names in imports_of(test):
             symbols = changes.get(module)
             if symbols is None:
@@ -86,6 +95,10 @@ def main() -> int:
                 chosen.add(path)
             else:
                 changes[module_name(path, BACKEND)] = changed_symbols(path) or {WHOLE_MODULE}
+    for name in staged_names():
+        data = ROOT / name
+        if data.suffix != ".py" and data.is_file() and data.is_relative_to(SOURCE):
+            changes.update(readers_of(data))
     chosen |= covering(changes)
     for test in sorted(chosen):
         print(test.relative_to(BACKEND))

@@ -124,6 +124,7 @@ from aerona.rules.registry.flora import FloraRules
 from aerona.rules.registry.folk import BiologyRules, CustomsRules
 from aerona.rules.registry.folk_belief import FolkBeliefRules
 from aerona.rules.registry.foreign_gods import ForeignGodsRules
+from aerona.rules.registry.gatherings import CollectionRules, GatheringRules
 from aerona.rules.registry.genesis import GenesisRules
 from aerona.rules.registry.genetics import GeneticsRules, GiftRules, HouseholdRules
 from aerona.rules.registry.geography import GeographyRules
@@ -284,6 +285,7 @@ from aerona.rules.registry.seasonal import SeasonalRules
 from aerona.rules.registry.server import ServerRules
 from aerona.rules.registry.settlement import CrimeRules, DistrictRules, FireRules, SanitationRules, TaxationRules, UrbanRules
 from aerona.rules.registry.setup_wizard import SetupWizardRules
+from aerona.rules.registry.sites import ExcavationRules, SiteRules
 from aerona.rules.registry.sky import SkyRules
 from aerona.rules.registry.society import SocietyRules
 from aerona.rules.registry.society_depth import ConsumptionRules, RealmLoyaltyRules
@@ -291,6 +293,7 @@ from aerona.rules.registry.son_relations import SonRelationsRules
 from aerona.rules.registry.son_tools import SonToolsRules
 from aerona.rules.registry.star_types import StarTypeRules
 from aerona.rules.registry.statecraft import StatecraftRules
+from aerona.rules.registry.storyteller import StorytellerRules
 from aerona.rules.registry.stress import StressRules
 from aerona.rules.registry.strike import StrikeRules
 from aerona.rules.registry.structures import ConstructionRules, StructureFunctionsRules, UpkeepRules
@@ -411,6 +414,11 @@ class Rules:
     companies: CompanyRules = field(default_factory=CompanyRules)
     battle_depth: BattleDepthRules = field(default_factory=BattleDepthRules)
     army_depth: ArmyDepthRules = field(default_factory=ArmyDepthRules)
+    gatherings: GatheringRules = field(default_factory=GatheringRules)
+    collections: CollectionRules = field(default_factory=CollectionRules)
+    storyteller: StorytellerRules = field(default_factory=StorytellerRules)
+    sites: SiteRules = field(default_factory=SiteRules)
+    excavations: ExcavationRules = field(default_factory=ExcavationRules)
     war_conduct: WarConductRules = field(default_factory=WarConductRules)
     research_depth: ResearchDepthRules = field(default_factory=ResearchDepthRules)
     discovery: DiscoveryRules = field(default_factory=DiscoveryRules)

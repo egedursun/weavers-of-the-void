@@ -251,6 +251,14 @@ class EnginePhasesRules:
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: prestige, piety, dread and tyranny of rulers, spent on clergy and silence"
     )
     lore_market: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: lore traded for wealth, favours and renown")
+    gatherings: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: feasts, weddings, funerals, tournaments, councils and every other gathering")
+    event_collections: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: incidents gathered into wars, battles, plagues and every other history"
+    )
+    storyteller: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the tension of each world, its aim and the pace of disruptions")
+    site_rooms: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: rooms of towers, lairs, vaults and ruins, and who holds each site")
+    excavations: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: digs at ruins and old sites, stage by stage, with their risks and finds")
+    battlefields: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: mass graves and fields of salvage left where battles were fought")
     relations_contests: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: contests of wit between rivals, suitors, captives, courtiers and priests"
     )

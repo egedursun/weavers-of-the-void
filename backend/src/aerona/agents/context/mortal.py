@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.agents.context.economy import resource_yield, stores_for
 from aerona.agents.context.entity_detail import entity_detail
 from aerona.agents.context.entity_line import line_items
+from aerona.agents.context.gatherings import gathering_lines, site_lines
 from aerona.agents.context.geography import environment_facts, region_records, weather_words
 from aerona.agents.context.intrigue import estate_lines, intrigue_lines, letter_lines, title_lines
 from aerona.agents.context.justice import case_lines, proposal_lines
@@ -169,6 +170,8 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "opinions": opinions,
             "titles": await title_lines(scope.session, me),
             "estates": await estate_lines(scope.session, me),
+            "gatherings": await gathering_lines(scope.session, scope.rules, me, scope.epoch),
+            "sites": await site_lines(scope.session, scope.rules, me),
             "proposals": await proposal_lines(scope.session, me),
             "cases": await case_lines(scope.session, me, scope.epoch),
             "abroad": await statecraft_lines(scope.session, me),

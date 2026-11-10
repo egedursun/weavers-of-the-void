@@ -19,6 +19,7 @@ from aerona.db.tables.flora import PlantProfileRow
 from aerona.db.tables.intrigue import HookRow, TrueNameRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.physics import ImpactEventRow
+from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.sons import SonRelationRow, SonRow
@@ -38,6 +39,7 @@ from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.intrigue import HookSource, HookStrength
 from aerona.domain.enums.mind import SkillKind, SkillSource
 from aerona.domain.enums.physics import ImpactBody, ImpactOutcome
+from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.son import SonStatus
@@ -518,3 +520,18 @@ async def near_moon(session: AsyncSession, realm: Realm) -> Ids:
 async def world_body(session: AsyncSession, _realm: Realm) -> Ids:
     await settle_heavens(session, Rules())
     return {}
+
+
+async def lair_site(session: AsyncSession, realm: Realm) -> Ids:
+    site = await make_entity(session, "Hollow Den", EntityType.PLACE, world_id=realm.cosmos.world_id, location_id=realm.cosmos.region_id)
+    session.add(PlaceProfileRow(entity_id=site.id, kind=PlaceKind.LAIR, locked=[]))
+    await session.flush()
+    return {"site": site.id}
+
+
+async def dig_ready(session: AsyncSession, realm: Realm) -> Ids:
+    site = await make_entity(session, "Old Mound", EntityType.PLACE, world_id=realm.cosmos.world_id, location_id=realm.cosmos.region_id)
+    session.add(PlaceProfileRow(entity_id=site.id, kind=PlaceKind.RUIN, locked=[]))
+    session.add(SkillRow(holder_node_id=realm.mortal_id, skill=SkillKind.LORE, level=60, peak=60, last_used_epoch=1, source=SkillSource.PRACTICE))
+    await session.flush()
+    return {"site": site.id}

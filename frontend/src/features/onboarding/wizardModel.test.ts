@@ -42,6 +42,14 @@ describe('genesis wizard model', () => {
     expect(cleared.loreLanguage).toBe('turkish')
   })
 
+  it('keeps the chosen storyteller through templates and sends it', () => {
+    const draft = { ...initialDraft(DEFAULTS), storyteller: 'chaotic' as const }
+    expect(initialDraft(DEFAULTS).storyteller).toBe('cyclic')
+    const cleared = applyTemplate(draft, null, DEFAULTS)
+    expect(cleared.storyteller).toBe('chaotic')
+    expect(toRequest(cleared, ['common']).wizard?.storyteller).toBe('chaotic')
+  })
+
   it('checks each step and builds the request', () => {
     const draft = initialDraft(DEFAULTS)
     expect(stepProblem('creator', draft, 5)).toBe('Give the Creator a name.')

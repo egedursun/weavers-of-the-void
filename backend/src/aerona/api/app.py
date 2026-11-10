@@ -41,6 +41,7 @@ from aerona.api.routers import (
     finance,
     foreign_gods,
     foundations,
+    gatherings,
     genesis,
     goals,
     graph,
@@ -91,8 +92,9 @@ from aerona.api.routers import (
     wars,
     wilds,
 )
+from aerona.api.schemas.common import ErrorResponse
 from aerona.api.security import BodyLimit
-from aerona.constants.api import IMAGE_UPLOAD_MAX_BYTES, PACKAGE_UPLOAD_MAX_BYTES
+from aerona.constants.api import ERROR_DESCRIPTION, IMAGE_UPLOAD_MAX_BYTES, PACKAGE_UPLOAD_MAX_BYTES
 from aerona.constants.http import API_PREFIX
 from aerona.core.errors import NotFoundError
 
@@ -157,6 +159,7 @@ ROUTERS: tuple[ModuleType, ...] = (
     justice,
     statecraft,
     affairs,
+    gatherings,
     intrigue,
     lineage,
     sensed,
@@ -197,7 +200,7 @@ def body_limits() -> tuple[BodyLimit, ...]:
 
 
 def build_api_router() -> APIRouter:
-    api = APIRouter(prefix=API_PREFIX, dependencies=[Depends(guard_writes)])
+    api = APIRouter(prefix=API_PREFIX, dependencies=[Depends(guard_writes)], responses={"default": {"model": ErrorResponse, "description": ERROR_DESCRIPTION}})
     for module in ROUTERS:
         api.include_router(module.router)
 

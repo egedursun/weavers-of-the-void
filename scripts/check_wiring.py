@@ -392,7 +392,7 @@ def unlabelled_lists(texts: dict[Path, str]) -> list[str]:
         start = found.start() if found is not None else -1
         if start >= 0:
             end = book.find("\n\n", start)
-            known |= set(re.findall(r'"([a-z_]+)"', book[start:end if end > 0 else len(book)]))
+            known |= set(re.findall(r'"([a-z_]+)"', book[start : end if end > 0 else len(book)]))
     return [
         f"{path.relative_to(ROOT)}: list column {column} renders as bare numbers in the book; name it in one of {', '.join(LIST_SETS)} in services/books/typed.py"
         for path, text in texts.items()

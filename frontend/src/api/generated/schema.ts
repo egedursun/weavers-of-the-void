@@ -4607,6 +4607,102 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/gatherings/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['gatherings_of_api_gatherings_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/histories': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['histories_api_histories_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/histories/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['life_log_api_histories_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/histories/{collection_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['history_api_histories__collection_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/storyteller/{world_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['storyteller_api_storyteller__world_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/sites/{entity_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['site_api_sites__entity_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/intrigue/{node_id}': {
     parameters: {
       query?: never
@@ -13519,6 +13615,470 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/gathering:convene': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_gathering_convene_api_actions_gathering_convene_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/gathering:hold': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_gathering_hold_api_actions_gathering_hold_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/gathering:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_gathering_edit_api_actions_gathering_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/gathering:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_gathering_delete_api_actions_gathering_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/gathering_guest:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_gathering_guest_set_api_actions_gathering_guest_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/gathering_guest:remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_gathering_guest_remove_api_actions_gathering_guest_remove_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/collection:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_collection_create_api_actions_collection_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/collection:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_collection_edit_api_actions_collection_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/collection:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_collection_delete_api_actions_collection_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/collection_member:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_collection_member_set_api_actions_collection_member_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/collection_member:remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_collection_member_remove_api_actions_collection_member_remove_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/collection:place': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_collection_place_api_actions_collection_place_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/storyteller:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_storyteller_set_api_actions_storyteller_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/site_room:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_site_room_create_api_actions_site_room_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/site_room:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_site_room_edit_api_actions_site_room_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/site_room:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_site_room_delete_api_actions_site_room_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/room_content:add': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_room_content_add_api_actions_room_content_add_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/room_content:remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_room_content_remove_api_actions_room_content_remove_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/site:delve': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_site_delve_api_actions_site_delve_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/site_holder:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_site_holder_set_api_actions_site_holder_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/site_holder:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_site_holder_delete_api_actions_site_holder_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/excavation:begin': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_excavation_begin_api_actions_excavation_begin_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/excavation:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_excavation_edit_api_actions_excavation_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/excavation:advance': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_excavation_advance_api_actions_excavation_advance_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/excavation:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_excavation_delete_api_actions_excavation_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/excavation_stage:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_excavation_stage_edit_api_actions_excavation_stage_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/battlefield_feature:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_battlefield_feature_create_api_actions_battlefield_feature_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/battlefield_feature:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_battlefield_feature_edit_api_actions_battlefield_feature_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/battlefield_feature:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_battlefield_feature_delete_api_actions_battlefield_feature_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/identity:assume': {
     parameters: {
       query?: never
@@ -22267,6 +22827,15 @@ export interface components {
       name: string
     }
     Atmosphere: 'none' | 'thin' | 'normal' | 'dense' | 'toxic'
+    AttendanceReason:
+      | 'host'
+      | 'kin'
+      | 'friend'
+      | 'obligation'
+      | 'faith'
+      | 'renown'
+      | 'neighbour'
+      | 'summoned'
     AttentionClearInput: {
       world_id: number
     }
@@ -22490,6 +23059,22 @@ export interface components {
       outcome: components['schemas']['BattleOutcome']
       gap: number
       siege_id: number | null
+    }
+    BattlefieldFeature: 'mass_grave' | 'salvage_field'
+    BattlefieldFeatureCreateInput: {
+      place_id: number
+      feature: components['schemas']['BattlefieldFeature']
+      strength: number
+    }
+    BattlefieldFeatureDeleteInput: {
+      feature_id: number
+    }
+    BattlefieldFeatureEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      feature_id: number
     }
     BearerAfflictionView: {
       id: number
@@ -24101,6 +24686,102 @@ export interface components {
       veterans: number
       updated_epoch: number
     }
+    CollectionCreateInput: {
+      kind: components['schemas']['CollectionKind']
+      name: string
+      world_id?: number | null
+      members: components['schemas']['Member'][]
+      places?: number[]
+      parent_id?: number | null
+    }
+    CollectionDeleteInput: {
+      collection_id: number
+    }
+    CollectionEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      collection_id: number
+    }
+    CollectionKind:
+      | 'war'
+      | 'battle'
+      | 'siege'
+      | 'duel'
+      | 'abduction'
+      | 'beast_attack'
+      | 'raid'
+      | 'persecution'
+      | 'purge'
+      | 'insurrection'
+      | 'coup'
+      | 'succession_crisis'
+      | 'occupation'
+      | 'journey'
+      | 'pilgrimage'
+      | 'competition'
+      | 'performance'
+      | 'procession'
+      | 'ceremony'
+      | 'wedding'
+      | 'funeral'
+      | 'coronation'
+      | 'feast'
+      | 'tournament'
+      | 'hunt'
+      | 'council'
+      | 'summit'
+      | 'plague'
+      | 'famine'
+      | 'migration'
+      | 'founding'
+      | 'theft'
+      | 'investigation'
+      | 'trial'
+      | 'conversion_wave'
+      | 'schism'
+      | 'excavation'
+    CollectionMemberRemoveInput: {
+      collection_id: number
+      node_id: number
+    }
+    CollectionMemberSetInput: {
+      collection_id: number
+      node_id: number
+      role: components['schemas']['CollectionRole']
+    }
+    CollectionPlaceInput: {
+      collection_id: number
+      place_id: number
+      present: boolean
+    }
+    CollectionRole:
+      | 'leader'
+      | 'member'
+      | 'victim'
+      | 'witness'
+      | 'host'
+      | 'guest'
+      | 'winner'
+      | 'loser'
+      | 'founder'
+      | 'accused'
+      | 'finder'
+      | 'place'
+    CollectionView: {
+      id: number
+      kind: components['schemas']['CollectionKind']
+      name: string
+      world_id: number | null
+      start_epoch: number
+      end_epoch: number | null
+      parent_id: number | null
+      note: string | null
+      locked: string[]
+      members: number
+      places: number
+    }
     CommandArea: 'fire' | 'shock' | 'manoeuvre' | 'siege' | 'logistics'
     CommanderTrait:
       | 'aggressive_assaulter'
@@ -24319,6 +25000,13 @@ export interface components {
       finished_epoch: number | null
       player: boolean
       locked: string[]
+    }
+    ContentView: {
+      id: number
+      kind: components['schemas']['RoomContentKind']
+      entity: components['schemas']['NodeRef'] | null
+      strength: number
+      locked: boolean
     }
     ContestEditInput: {
       contest_id: number
@@ -25481,6 +26169,33 @@ export interface components {
       | 'mineral'
       | 'soul'
       | 'void'
+    DigStageView: {
+      id: number
+      stage: components['schemas']['ExcavationStage']
+      skill: components['schemas']['SkillKind']
+      technique: components['schemas']['Technique'] | null
+      difficulty: number
+      risk: components['schemas']['ExcavationRisk']
+      find: components['schemas']['ExcavationFind']
+      find_item: components['schemas']['NodeRef'] | null
+      resolved_epoch: number | null
+      locked: string[]
+    }
+    DigView: {
+      id: number
+      stage: components['schemas']['ExcavationStage']
+      status: components['schemas']['ExcavationStatus']
+      progress: number
+      leader: components['schemas']['NodeRef'] | null
+      sponsor: components['schemas']['NodeRef'] | null
+      collection_id: number | null
+      started_epoch: number
+      ended_epoch: number | null
+      idle_epochs: number
+      note: string | null
+      locked: string[]
+      stages: components['schemas']['DigStageView'][]
+    }
     DigitView: {
       key: string
       label: string
@@ -27206,6 +27921,17 @@ export interface components {
       epoch: number
       subject: components['schemas']['NodeRef'] | null
     }
+    ErrorCode:
+      | 'invalid'
+      | 'not_found'
+      | 'conflict'
+      | 'busy'
+      | 'read_only'
+      | 'insufficient'
+      | 'forbidden'
+      | 'too_large'
+      | 'unavailable'
+      | 'internal'
     ErrorPayload: {
       epoch?: number | null
       text: string
@@ -27213,6 +27939,13 @@ export interface components {
       son_id?: number | null
     } & {
       [key: string]: unknown
+    }
+    ErrorResponse: {
+      error: string
+      code: components['schemas']['ErrorCode']
+      rule_key?: string | null
+      rule_value?: number | null
+      correlation_id?: string | null
     }
     EssencePourInput: {
       amount: number
@@ -27476,6 +28209,38 @@ export interface components {
       seasons: components['schemas']['SeasonRef'][]
       kinds: components['schemas']['EngineKind'][]
     }
+    ExcavationAdvanceInput: {
+      dig_id: number
+    }
+    ExcavationBeginInput: {
+      site_id: number
+      leader_id: number
+      sponsor_id?: number | null
+    }
+    ExcavationDeleteInput: {
+      dig_id: number
+    }
+    ExcavationEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      dig_id: number
+    }
+    ExcavationFind:
+      'nothing' | 'artifact' | 'book' | 'technique' | 'regalia' | 'route_map'
+    ExcavationRisk: 'none' | 'curse' | 'spirit' | 'collapse'
+    ExcavationStage:
+      'survey' | 'clearing' | 'digging' | 'deep_layers' | 'inner_sanctum'
+    ExcavationStageEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      stage_id: number
+    }
+    ExcavationStatus:
+      'open' | 'stalled' | 'finished' | 'collapsed' | 'abandoned'
     ExistenceBand: 'radiant' | 'solid' | 'faded' | 'being_forgotten'
     ExistenceMode:
       'concrete' | 'semi_concrete' | 'conceptual' | 'reflection' | 'scattered'
@@ -27926,6 +28691,14 @@ export interface components {
       next_return_epoch: number | null
       created_epoch: number
       ended_epoch: number | null
+      locked: string[]
+    }
+    FeatureView: {
+      id: number
+      feature: components['schemas']['BattlefieldFeature']
+      strength: number
+      battle_id: number | null
+      epoch: number
       locked: string[]
     }
     FeedCategory:
@@ -28516,6 +29289,85 @@ export interface components {
       branch: components['schemas']['KnowledgeBranch']
       level: number
     }
+    GatheringConveneInput: {
+      host_id: number
+      kind: components['schemas']['GatheringKind']
+      place_id?: number | null
+      honoured_id?: number | null
+      milestone?: components['schemas']['Milestone'] | null
+      guests?: number[]
+      hold_now: boolean
+    }
+    GatheringDeleteInput: {
+      gathering_id: number
+    }
+    GatheringEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      gathering_id: number
+    }
+    GatheringGuestRemoveInput: {
+      gathering_id: number
+      node_id: number
+    }
+    GatheringGuestSetInput: {
+      gathering_id: number
+      node_id: number
+      role: components['schemas']['GuestRole']
+      reason: components['schemas']['AttendanceReason']
+      attended?: boolean | null
+      hold: boolean
+    }
+    GatheringHoldInput: {
+      gathering_id: number
+    }
+    GatheringKind:
+      | 'feast'
+      | 'wedding'
+      | 'funeral'
+      | 'coronation'
+      | 'tournament'
+      | 'hunt'
+      | 'pilgrimage'
+      | 'council'
+      | 'summit'
+      | 'festival'
+      | 'fair'
+      | 'games'
+      | 'performance'
+      | 'trial'
+      | 'execution'
+      | 'procession'
+      | 'milestone'
+      | 'wake'
+    GatheringOutcome:
+      'convivial' | 'uneventful' | 'quarrelsome' | 'violent' | 'massacre'
+    GatheringStatus: 'planned' | 'held' | 'disrupted' | 'cancelled'
+    GatheringView: {
+      id: number
+      kind: components['schemas']['GatheringKind']
+      status: components['schemas']['GatheringStatus']
+      outcome: components['schemas']['GatheringOutcome'] | null
+      milestone: components['schemas']['Milestone'] | null
+      host: components['schemas']['NodeRef'] | null
+      place: components['schemas']['NodeRef'] | null
+      honoured: components['schemas']['NodeRef'] | null
+      tradition: components['schemas']['NodeRef'] | null
+      collection_id: number | null
+      epoch: number
+      year: number | null
+      season: number | null
+      season_name: string | null
+      seasons: components['schemas']['SeasonOption'][]
+      cost: number
+      prestige: number
+      by_player: boolean
+      note: string | null
+      locked: string[]
+      guests: components['schemas']['GuestView'][]
+    }
     GazeKind: 'terror' | 'petrify' | 'sleep' | 'madness'
     GeneView: {
       locus: components['schemas']['Locus']
@@ -28559,6 +29411,7 @@ export interface components {
       language_texture: components['schemas']['LanguageTexture']
       peoples: number
       cosmos_size: components['schemas']['CosmosSize']
+      storyteller: components['schemas']['StorytellerProfile']
       tone?: string | null
       seed_idea?: string | null
     }
@@ -28857,6 +29710,26 @@ export interface components {
       key: string
       end_epoch: number | null
     }
+    GuestRole:
+      | 'host'
+      | 'guest'
+      | 'honoured'
+      | 'contestant'
+      | 'performer'
+      | 'accused'
+      | 'mourned'
+      | 'wedded'
+      | 'crowned'
+      | 'envoy'
+    GuestView: {
+      node: components['schemas']['NodeRef'] | null
+      role: components['schemas']['GuestRole']
+      reason: components['schemas']['AttendanceReason']
+      invited: boolean
+      attended: boolean | null
+      harmed: boolean
+      locked: boolean
+    }
     GuestWorld: {
       name: string
       epoch: number | null
@@ -28878,9 +29751,6 @@ export interface components {
       members: components['schemas']['GuildMemberView'][]
       secrets: components['schemas']['Technique'][]
       known: components['schemas']['Technique'][]
-    }
-    HTTPValidationError: {
-      detail?: components['schemas']['ValidationError'][]
     }
     Habitat: 'land' | 'water' | 'sky' | 'deep' | 'void'
     HalfEpochState: {
@@ -29049,6 +29919,23 @@ export interface components {
       historian: string | null
       text: string
     }
+    HistoryDetail: {
+      collection: components['schemas']['CollectionView']
+      parent: components['schemas']['CollectionView'] | null
+      children: components['schemas']['CollectionView'][]
+      roster: components['schemas']['HistoryMemberView'][]
+      sites: components['schemas']['NodeRef'][]
+      incidents: components['schemas']['IncidentLine'][]
+    }
+    HistoryMemberView: {
+      node: components['schemas']['NodeRef'] | null
+      role: components['schemas']['CollectionRole']
+      since_epoch: number
+    }
+    HistoryPage: {
+      items: components['schemas']['CollectionView'][]
+      total: number
+    }
     HistoryPoint: {
       epoch: number
       size_tier: components['schemas']['SizeTier']
@@ -29071,6 +29958,13 @@ export interface components {
       | 'golden_age'
       | 'dedicated_son_id'
       | 'anchor_entity_id'
+    HolderView: {
+      id: number
+      holder: components['schemas']['NodeRef'] | null
+      from_epoch: number
+      to_epoch: number | null
+      how: string | null
+    }
     HoldingKind: 'temple' | 'land' | 'relic' | 'holy_place' | 'monastery'
     HoldingView: {
       kind: components['schemas']['HoldingKind']
@@ -29694,6 +30588,11 @@ export interface components {
       year?: number | null
       place_entity_id?: number | null
       clear_place: boolean
+    }
+    IncidentLine: {
+      id: number
+      epoch: number
+      text: string | null
     }
     IncidentLinkCauseInput: {
       incident_id: number
@@ -31072,6 +31971,14 @@ export interface components {
       anywhere: boolean
       kinds: number
     }
+    LifeLogEntry: {
+      collection: components['schemas']['CollectionView']
+      role: components['schemas']['CollectionRole']
+    }
+    LifeLogView: {
+      node_id: number
+      entries: components['schemas']['LifeLogEntry'][]
+    }
     LifeRecord: {
       complexity: components['schemas']['LifeComplexity']
       environments: string[]
@@ -31910,6 +32817,10 @@ export interface components {
       | 'dream'
       | 'bird'
       | 'magic_sending'
+    Member: {
+      node_id: number
+      role: components['schemas']['CollectionRole']
+    }
     MemberOutputView: {
       community_id: number
       name: string
@@ -32093,6 +33004,7 @@ export interface components {
       method: components['schemas']['MethodKind']
       hold: boolean
     }
+    Milestone: 'birth' | 'coming_of_age' | 'anniversary'
     MilestoneView: {
       label: string
       at: number
@@ -32696,6 +33608,9 @@ export interface components {
       | 'tend_home'
       | 'plot_scheme'
       | 'press_leverage'
+      | 'hold_gathering'
+      | 'delve_site'
+      | 'dig_site'
       | 'send_dispatch'
       | 'seize_title'
       | 'bargain_with_estate'
@@ -33006,6 +33921,11 @@ export interface components {
       origin: string
     }
     NobleWant: 'dwelling' | 'fine_goods' | 'office' | 'honour'
+    NodeGatheringsView: {
+      node_id: number
+      hosted: components['schemas']['GatheringView'][]
+      attended: components['schemas']['GatheringView'][]
+    }
     NodeKind:
       | 'entity'
       | 'son'
@@ -36286,6 +37206,27 @@ export interface components {
       cause: components['schemas']['RiverShiftCause']
     }
     RoadKind: 'road' | 'trade'
+    RoomContentAddInput: {
+      room_id: number
+      kind: components['schemas']['RoomContentKind']
+      entity_id?: number | null
+      strength: number
+    }
+    RoomContentKind: 'item' | 'spirit' | 'beast' | 'trap'
+    RoomContentRemoveInput: {
+      content_id: number
+    }
+    RoomView: {
+      id: number
+      position: number
+      kind: components['schemas']['SiteRoomKind']
+      challenge: components['schemas']['SiteChallenge']
+      difficulty: number
+      cleared_epoch: number | null
+      cleared_by: components['schemas']['NodeRef'] | null
+      locked: string[]
+      contents: components['schemas']['ContentView'][]
+    }
     RouteClosure:
       | 'sealed'
       | 'severed'
@@ -36692,6 +37633,10 @@ export interface components {
       subtitle: string | null
       snippet: string | null
       epoch?: number | null
+    }
+    SeasonOption: {
+      position: number
+      name: string
     }
     SeasonRef: {
       position: number
@@ -37128,6 +38073,18 @@ export interface components {
       score: number
       reasons: string[]
     }
+    SiteChallenge: 'none' | 'trap' | 'guardian' | 'puzzle' | 'hazard'
+    SiteDelveInput: {
+      delver_id: number
+      site_id: number
+    }
+    SiteHolderDeleteInput: {
+      holder_row_id: number
+    }
+    SiteHolderSetInput: {
+      site_id: number
+      holder_id: number
+    }
     SiteProfitEditInput: {
       profit_id: number
       revenue?: number | null
@@ -37140,6 +38097,48 @@ export interface components {
     }
     SiteProfitRemoveInput: {
       profit_id: number
+    }
+    SiteRoomCreateInput: {
+      site_id: number
+      kind: components['schemas']['SiteRoomKind']
+      challenge: components['schemas']['SiteChallenge']
+      difficulty: number
+      position?: number | null
+    }
+    SiteRoomDeleteInput: {
+      room_id: number
+    }
+    SiteRoomEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      room_id: number
+    }
+    SiteRoomKind:
+      | 'gate'
+      | 'hall'
+      | 'stair'
+      | 'cell'
+      | 'chamber'
+      | 'vault'
+      | 'shrine'
+      | 'lair'
+      | 'library'
+      | 'armoury'
+      | 'crypt'
+      | 'laboratory'
+      | 'house'
+      | 'store'
+      | 'heart'
+    SiteView: {
+      site_id: number
+      roomed: boolean
+      diggable: boolean
+      rooms: components['schemas']['RoomView'][]
+      holders: components['schemas']['HolderView'][]
+      digs: components['schemas']['DigView'][]
+      features: components['schemas']['FeatureView'][]
     }
     SizeClass: 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'colossal'
     SizeTier: 'hamlet' | 'village' | 'town' | 'city' | 'metropolis'
@@ -37715,6 +38714,7 @@ export interface components {
       | 'shape_folk'
       | 'sever_ley'
       | 'loose_disease'
+      | 'convene_gathering'
       | 'forge_material'
       | 'hide_secret'
       | 'sanctify_place'
@@ -38235,6 +39235,8 @@ export interface components {
       | 'mockery'
       | 'warning'
       | 'bargain'
+    SpontaneousKind:
+      'beast_awakening' | 'raid' | 'comet' | 'plague' | 'claimant'
     SpreadPath:
       'origin' | 'route' | 'army' | 'journey' | 'siege' | 'loosed' | 'mutation'
     SpyCover: 'merchant' | 'priest' | 'envoy' | 'beggar'
@@ -38611,6 +39613,31 @@ export interface components {
       workshops: number
       other: number
       total: number
+    }
+    StorytellerProfile: 'steady' | 'rising' | 'cyclic' | 'chaotic'
+    StorytellerSetInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      world_id: number
+      profile?: components['schemas']['StorytellerProfile'] | null
+    }
+    StorytellerView: {
+      world_id: number
+      profile: components['schemas']['StorytellerProfile']
+      tension: number
+      target: number
+      band: components['schemas']['TensionBand']
+      boost_pct: number
+      cycle_offset: number
+      spotlight: components['schemas']['NodeRef'] | null
+      recent_kinds: {
+        [key: string]: number
+      }
+      updated_epoch: number
+      locked: string[]
+      curve: components['schemas']['TensionPoint'][]
     }
     StrainView: {
       id: number
@@ -39194,6 +40221,14 @@ export interface components {
       target_name: string | null
       since_epoch: number
       revealed_by_son_id: number | null
+    }
+    TensionBand: 'quiet' | 'in_band' | 'heated'
+    TensionPoint: {
+      epoch: number
+      tension: number
+      target: number
+      boost_pct: number
+      band: components['schemas']['TensionBand']
     }
     TermOrder: {
       kind: components['schemas']['PeaceTermKind']
@@ -40530,13 +41565,6 @@ export interface components {
       locked: string[]
       species: components['schemas']['NodeRef'][]
     }
-    ValidationError: {
-      loc: (string | number)[]
-      msg: string
-      type: string
-      input?: unknown
-      ctx?: Record<string, never>
-    }
     ValueAxis:
       | 'honour'
       | 'tradition'
@@ -41036,6 +42064,7 @@ export interface components {
       language?: string | null
       peoples?: unknown
       cosmos?: string | null
+      storyteller?: string | null
       tone?: string | null
       seed?: string | null
     }
@@ -41047,6 +42076,9 @@ export interface components {
         [key: string]: string
       }
       cosmos: components['schemas']['CosmosOption'][]
+      storyteller: {
+        [key: string]: string
+      }
       lore_languages: {
         [key: string]: string
       }
@@ -41805,6 +42837,14 @@ export interface operations {
           'application/json': components['schemas']['HealthResponse']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   report_api_health_report_get: {
@@ -41822,6 +42862,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HealthReportResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -41845,12 +42893,12 @@ export interface operations {
           'application/json': components['schemas']['JobResponse'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -41874,12 +42922,12 @@ export interface operations {
           'application/json': components['schemas']['JobResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -41903,12 +42951,12 @@ export interface operations {
           'application/json': unknown
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -41930,6 +42978,14 @@ export interface operations {
           'application/json': components['schemas']['RuleResponse'][]
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   reset_all_rules_api_rules_delete: {
@@ -41946,6 +43002,14 @@ export interface operations {
           [name: string]: unknown
         }
         content?: never
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
       }
     }
   }
@@ -41970,12 +43034,12 @@ export interface operations {
           'application/json': components['schemas']['RuleResponse'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42004,12 +43068,12 @@ export interface operations {
           'application/json': components['schemas']['RuleResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42034,12 +43098,12 @@ export interface operations {
           'application/json': components['schemas']['RuleResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42063,12 +43127,12 @@ export interface operations {
         }
         content?: never
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42157,12 +43221,12 @@ export interface operations {
           )[]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42182,6 +43246,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['StateResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42205,12 +43277,12 @@ export interface operations {
           'application/json': components['schemas']['ChangesResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42232,6 +43304,14 @@ export interface operations {
           'application/json': components['schemas']['EnumCatalogue']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   read_catalogue_api_catalogue_get: {
@@ -42251,6 +43331,14 @@ export interface operations {
           'application/json': components['schemas']['Catalogue']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   list_names_api_names_get: {
@@ -42268,6 +43356,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['NameEntry'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42291,12 +43387,12 @@ export interface operations {
           'application/json': components['schemas']['SearchHit'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42316,6 +43412,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['WizardOptions']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42341,12 +43445,12 @@ export interface operations {
           'application/json': components['schemas']['JobAccepted']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42368,6 +43472,14 @@ export interface operations {
           'application/json': components['schemas']['SavedGenesis']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   complete_epoch_api_epochs_current_complete_post: {
@@ -42385,6 +43497,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['JobAccepted']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42406,6 +43526,14 @@ export interface operations {
           'application/json': components['schemas']['Done']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   epoch_estimate_api_epochs_current_estimate_get: {
@@ -42425,6 +43553,14 @@ export interface operations {
           'application/json': components['schemas']['EpochEstimate']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   list_epochs_api_epochs_get: {
@@ -42442,6 +43578,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['EpochListItem'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42465,12 +43609,12 @@ export interface operations {
           'application/json': components['schemas']['EpochBreakdown']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42492,6 +43636,14 @@ export interface operations {
           'application/json': components['schemas']['EpochStatistics'][]
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   lore_statistics_api_stats_lore_get: {
@@ -42511,6 +43663,14 @@ export interface operations {
           'application/json': components['schemas']['LoreTotals']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   read_creator_api_creator_get: {
@@ -42528,6 +43688,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['CreatorDetail']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42553,12 +43721,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42578,6 +43746,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['CreatorReputation']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42603,12 +43779,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42634,12 +43810,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42665,12 +43841,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42692,6 +43868,14 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   post_creator_epic_api_creator_epic_post: {
@@ -42711,6 +43895,14 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   post_creator_deepen_api_creator_deepen_post: {
@@ -42728,6 +43920,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42755,12 +43955,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42786,12 +43986,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42813,6 +44013,14 @@ export interface operations {
           'application/json': components['schemas']['SonPublic'][]
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   list_relations_api_sons_relations_get: {
@@ -42832,6 +44040,14 @@ export interface operations {
           'application/json': components['schemas']['SonRelationItem'][]
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   distribution_preview_view_api_sons_distribution_preview_get: {
@@ -42849,6 +44065,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['DistributionPreviewView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42875,12 +44099,12 @@ export interface operations {
           'application/json': components['schemas']['SonDetail']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42908,12 +44132,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42937,12 +44161,12 @@ export interface operations {
           'application/json': components['schemas']['DeadSonPanel']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42966,12 +44190,12 @@ export interface operations {
           'application/json': components['schemas']['MessageRecord'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -42999,12 +44223,12 @@ export interface operations {
           'application/json': components['schemas']['ChatReply']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43028,12 +44252,12 @@ export interface operations {
           'application/json': components['schemas']['JobAccepted']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43059,12 +44283,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43084,6 +44308,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43111,12 +44343,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43144,12 +44376,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43177,12 +44409,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43206,12 +44438,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43235,12 +44467,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43264,12 +44496,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43293,12 +44525,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43326,12 +44558,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43359,12 +44591,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43388,12 +44620,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43421,12 +44653,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43450,12 +44682,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43483,12 +44715,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43516,12 +44748,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43549,12 +44781,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43582,12 +44814,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43615,12 +44847,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43644,12 +44876,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43673,12 +44905,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43706,12 +44938,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43741,12 +44973,12 @@ export interface operations {
           'application/json': components['schemas']['Page_EntitySummary_']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43768,6 +45000,14 @@ export interface operations {
           'application/json': components['schemas']['EntitySummary'][]
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   favorite_board_api_favorites_board_get: {
@@ -43785,6 +45025,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['FavoriteBoard']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43808,12 +45056,12 @@ export interface operations {
           'application/json': components['schemas']['EntityDetail']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43841,12 +45089,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43874,12 +45122,12 @@ export interface operations {
           'application/json': components['schemas']['Page_BondView_']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43906,12 +45154,12 @@ export interface operations {
           'application/json': components['schemas']['Page_ChronicleLineRecord_']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43939,12 +45187,12 @@ export interface operations {
           'application/json': components['schemas']['Importance']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43968,12 +45216,12 @@ export interface operations {
           'application/json': components['schemas']['JobAccepted']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -43997,12 +45245,12 @@ export interface operations {
           'application/json': components['schemas']['JobAccepted']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44026,12 +45274,12 @@ export interface operations {
           'application/json': components['schemas']['JobAccepted']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44059,12 +45307,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44092,12 +45340,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44125,12 +45373,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44158,12 +45406,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44191,12 +45439,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44220,12 +45468,12 @@ export interface operations {
           'application/json': components['schemas']['EntityNoteRecord']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44253,12 +45501,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44282,12 +45530,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44315,12 +45563,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44348,12 +45596,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44381,12 +45629,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44414,12 +45662,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44447,12 +45695,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44480,12 +45728,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44513,12 +45761,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44546,12 +45794,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44575,12 +45823,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44608,12 +45856,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44641,12 +45889,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44670,12 +45918,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44703,12 +45951,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44736,12 +45984,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44769,12 +46017,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44798,12 +46046,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44827,12 +46075,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44856,12 +46104,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44885,12 +46133,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44918,12 +46166,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44951,12 +46199,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -44980,12 +46228,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45013,12 +46261,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45044,12 +46292,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45073,12 +46321,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45104,12 +46352,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45133,12 +46381,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45164,12 +46412,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45189,6 +46437,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['CreatorHintLines']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45212,12 +46468,12 @@ export interface operations {
           'application/json': components['schemas']['OpportunityLines']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45241,12 +46497,12 @@ export interface operations {
           'application/json': components['schemas']['OpportunityLines']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45270,12 +46526,12 @@ export interface operations {
           'application/json': components['schemas']['SonToolsView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45299,12 +46555,12 @@ export interface operations {
           'application/json': components['schemas']['MortalAgentContext']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45328,12 +46584,12 @@ export interface operations {
           'application/json': components['schemas']['DreamInbox']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45355,6 +46611,14 @@ export interface operations {
           'application/json': components['schemas']['EnginePhaseList']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   engine_seed_api_engine_seed_get: {
@@ -45374,6 +46638,14 @@ export interface operations {
           'application/json': components['schemas']['EngineSeed']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   integrity_tasks_api_integrity_tasks_get: {
@@ -45391,6 +46663,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['IntegrityTaskList']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45414,12 +46694,12 @@ export interface operations {
           'application/json': components['schemas']['IntegrityResult']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45444,12 +46724,12 @@ export interface operations {
           'application/json': components['schemas']['RelationPair']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45478,12 +46758,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45508,12 +46788,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45538,12 +46818,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45569,12 +46849,12 @@ export interface operations {
           'application/json': components['schemas']['RelationList']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45601,12 +46881,12 @@ export interface operations {
           'application/json': components['schemas']['Page_WarSummary_']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45630,12 +46910,12 @@ export interface operations {
           'application/json': components['schemas']['WarSummary']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45662,12 +46942,12 @@ export interface operations {
           'application/json': components['schemas']['Page_ArmyView_']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45694,12 +46974,12 @@ export interface operations {
           'application/json': components['schemas']['Page_BattleView_']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45726,12 +47006,12 @@ export interface operations {
           'application/json': components['schemas']['Page_SiegeView_']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45759,12 +47039,12 @@ export interface operations {
           'application/json': components['schemas']['Page_CaptiveView_']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45792,12 +47072,12 @@ export interface operations {
           'application/json': components['schemas']['Page_TributeView_']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45824,12 +47104,12 @@ export interface operations {
           'application/json': components['schemas']['Page_WarSummary_']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45853,12 +47133,12 @@ export interface operations {
           'application/json': components['schemas']['HeroView'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45878,6 +47158,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ForeignGodRecord'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45903,12 +47191,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45935,12 +47223,12 @@ export interface operations {
           'application/json': components['schemas']['ForeignGodDetail']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45968,12 +47256,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -45997,12 +47285,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46026,12 +47314,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46059,12 +47347,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46088,12 +47376,12 @@ export interface operations {
           'application/json': components['schemas']['WorldLaw'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46117,12 +47405,12 @@ export interface operations {
           'application/json': components['schemas']['AddictionView'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46146,12 +47434,12 @@ export interface operations {
           'application/json': components['schemas']['CravingImmunityView'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46173,6 +47461,14 @@ export interface operations {
           'application/json': components['schemas']['DoomForecastView']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   read_cosmos_api_cosmos_get: {
@@ -46192,6 +47488,14 @@ export interface operations {
           'application/json': components['schemas']['CosmosView']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   discovery_summary_api_discovery_summary_get: {
@@ -46209,6 +47513,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['DiscoverySummary']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46232,12 +47544,12 @@ export interface operations {
           'application/json': components['schemas']['TravellerGuideView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46263,12 +47575,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46296,12 +47608,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46329,12 +47641,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46362,12 +47674,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46391,12 +47703,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46420,12 +47732,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46453,12 +47765,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46484,12 +47796,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46517,12 +47829,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46550,12 +47862,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46583,12 +47895,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46612,12 +47924,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46643,12 +47955,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46674,12 +47986,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46705,12 +48017,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46736,12 +48048,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46767,12 +48079,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46798,12 +48110,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46829,12 +48141,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46860,12 +48172,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46891,12 +48203,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46922,12 +48234,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46953,12 +48265,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -46982,12 +48294,12 @@ export interface operations {
           'application/json': components['schemas']['WorldPulseView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47011,12 +48323,12 @@ export interface operations {
           'application/json': components['schemas']['WorldWiki']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47040,12 +48352,12 @@ export interface operations {
           'application/json': components['schemas']['StarWiki']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47069,12 +48381,12 @@ export interface operations {
           'application/json': components['schemas']['JobAccepted']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47098,12 +48410,12 @@ export interface operations {
           'application/json': components['schemas']['JobAccepted']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47127,12 +48439,12 @@ export interface operations {
           'application/json': components['schemas']['EpochStarView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47156,12 +48468,12 @@ export interface operations {
           'application/json': components['schemas']['GreatExpedition'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47187,12 +48499,12 @@ export interface operations {
           'application/json': components['schemas']['MapView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47216,12 +48528,12 @@ export interface operations {
           'application/json': components['schemas']['GeographyPreview']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47245,12 +48557,12 @@ export interface operations {
           'application/json': components['schemas']['MapNoteRecord'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47276,12 +48588,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47309,12 +48621,12 @@ export interface operations {
           'application/json': components['schemas']['Done']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47338,12 +48650,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47370,12 +48682,12 @@ export interface operations {
           'application/json': components['schemas']['ChroniclePage']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47395,6 +48707,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ChronicleEpoch'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47418,12 +48738,12 @@ export interface operations {
           'application/json': components['schemas']['PerspectiveLine'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47447,12 +48767,12 @@ export interface operations {
           'application/json': components['schemas']['CosmicEpoch'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47472,6 +48792,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ThreadRecord'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47497,12 +48825,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47530,12 +48858,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47557,6 +48885,14 @@ export interface operations {
           'text/markdown': unknown
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   codex_archive_api_codex_zip_get: {
@@ -47574,6 +48910,14 @@ export interface operations {
         }
         content: {
           'application/zip': unknown
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47598,12 +48942,12 @@ export interface operations {
           'text/html': string
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47627,12 +48971,12 @@ export interface operations {
           'image/jpeg': unknown
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47654,6 +48998,14 @@ export interface operations {
           'application/json': components['schemas']['BookPdfStatus']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   print_book_api_book_pdf_post: {
@@ -47671,6 +49023,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['JobAccepted']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47692,6 +49052,14 @@ export interface operations {
           'application/pdf': unknown
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   list_prayers_api_prayers_get: {
@@ -47709,6 +49077,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['PrayerView'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47736,12 +49112,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47761,6 +49137,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['CouncilRecord'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47786,12 +49170,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47818,12 +49202,12 @@ export interface operations {
           'application/json': components['schemas']['GraphWindow']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47849,12 +49233,12 @@ export interface operations {
           'application/json': components['schemas']['PathResult']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47876,6 +49260,14 @@ export interface operations {
           'application/json': components['schemas']['NetworkHealth']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   repair_graph_api_graph_repair_post: {
@@ -47893,6 +49285,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['RepairResult']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47918,12 +49318,12 @@ export interface operations {
           'application/json': components['schemas']['JobAccepted']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47945,6 +49345,14 @@ export interface operations {
           'application/json': components['schemas']['Done']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   list_languages_api_languages_get: {
@@ -47962,6 +49370,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['LanguageView'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -47983,6 +49399,14 @@ export interface operations {
           'application/json': components['schemas']['LanguageNode'][]
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   dialect_fit_api_languages_dialect_fit_get: {
@@ -48000,6 +49424,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['NameReport']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48027,12 +49459,12 @@ export interface operations {
           'application/json': components['schemas']['SampleNames']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48060,12 +49492,12 @@ export interface operations {
           'application/json': components['schemas']['TranslationOutput']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48085,6 +49517,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['KnowledgeView'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48112,12 +49552,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48147,12 +49587,12 @@ export interface operations {
         }
         content?: never
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48176,12 +49616,12 @@ export interface operations {
           'application/json': components['schemas']['ImageListView'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48212,12 +49652,12 @@ export interface operations {
           'application/json': components['schemas']['ImageRecord']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48241,12 +49681,12 @@ export interface operations {
           'application/json': components['schemas']['ImageRecord']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48274,12 +49714,12 @@ export interface operations {
           'application/json': components['schemas']['ImageRecord']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48303,12 +49743,12 @@ export interface operations {
           'application/json': components['schemas']['Done']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48333,12 +49773,12 @@ export interface operations {
           'application/json': components['schemas']['EntitySummary'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48358,6 +49798,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ImageGenStatus']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48383,12 +49831,12 @@ export interface operations {
           'application/json': components['schemas']['QueuedImage']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48410,6 +49858,14 @@ export interface operations {
           'application/json': components['schemas']['BulkRun']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   restyle_batch_api_image_gen_batch_restyle_post: {
@@ -48427,6 +49883,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BulkRun']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48448,6 +49912,14 @@ export interface operations {
           'application/json': components['schemas']['BulkRun']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   write_missing_prompts_api_entities_prompts_write_missing_post: {
@@ -48465,6 +49937,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['JobAccepted']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48486,6 +49966,14 @@ export interface operations {
           'application/json': components['schemas']['BulkStatus']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   start_batch_api_batch_deepen_start_post: {
@@ -48503,6 +49991,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BulkState']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48524,6 +50020,14 @@ export interface operations {
           'application/json': components['schemas']['BulkState']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   assign_missing_names_api_names_assign_missing_post: {
@@ -48543,6 +50047,14 @@ export interface operations {
           'application/json': components['schemas']['JobAccepted']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   list_notes_api_notes_get: {
@@ -48560,6 +50072,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['NotesView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48587,12 +50107,12 @@ export interface operations {
           'application/json': components['schemas']['NotificationList']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48618,12 +50138,12 @@ export interface operations {
           'application/json': components['schemas']['NotificationRecord']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48649,12 +50169,12 @@ export interface operations {
           'application/json': components['schemas']['MarkReadResult']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48684,12 +50204,12 @@ export interface operations {
           }
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48713,12 +50233,12 @@ export interface operations {
           'application/json': components['schemas']['NotificationRecord']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48745,12 +50265,12 @@ export interface operations {
           'application/json': components['schemas']['LedgerPage']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48774,12 +50294,12 @@ export interface operations {
           'application/json': components['schemas']['UndoResult']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48801,6 +50321,14 @@ export interface operations {
           'application/json': components['schemas']['GoalsOverview']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   opportunities_api_opportunities_get: {
@@ -48818,6 +50346,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['PlayerHints']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48843,12 +50379,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48872,12 +50408,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48897,6 +50433,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['WorldSettingsView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48922,12 +50466,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48953,12 +50497,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -48984,12 +50528,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49015,12 +50559,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49042,6 +50586,14 @@ export interface operations {
           'application/json': components['schemas']['BackupInfo'][]
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   take_backup_api_backups_post: {
@@ -49061,6 +50613,14 @@ export interface operations {
           'application/json': components['schemas']['BackupInfo']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   secondary_target_api_backups_secondary_get: {
@@ -49078,6 +50638,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['SecondaryTarget']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49103,12 +50671,12 @@ export interface operations {
           'application/json': components['schemas']['SecondaryTarget']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49134,12 +50702,12 @@ export interface operations {
           'application/json': components['schemas']['SafetyResult']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49161,12 +50729,12 @@ export interface operations {
         }
         content?: never
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49188,12 +50756,12 @@ export interface operations {
         }
         content?: never
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49219,12 +50787,12 @@ export interface operations {
           'application/json': components['schemas']['SafetyResult']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49246,12 +50814,12 @@ export interface operations {
         }
         content?: never
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49280,12 +50848,12 @@ export interface operations {
           'application/json': components['schemas']['ImportResult']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49307,6 +50875,14 @@ export interface operations {
           'application/json': components['schemas']['DiscoveryStatus']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   end_discovery_api_discovery_end_post: {
@@ -49324,6 +50900,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['DiscoveryEnded']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49347,12 +50931,12 @@ export interface operations {
           'application/json': components['schemas']['ModelMetricsView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49372,6 +50956,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['TaskInfo'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49395,12 +50987,12 @@ export interface operations {
           'application/json': components['schemas']['JobAccepted']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49420,6 +51012,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['MissingContent']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49443,12 +51043,12 @@ export interface operations {
           'application/json': components['schemas']['BackupVerified']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49472,12 +51072,12 @@ export interface operations {
           'application/json': components['schemas']['JobAccepted']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49499,6 +51099,14 @@ export interface operations {
           'application/json': components['schemas']['JobAccepted']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   write_missing_chronicles_api_maintenance_chronicles_post: {
@@ -49518,6 +51126,14 @@ export interface operations {
           'application/json': components['schemas']['JobAccepted']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   list_blocks_api_prompt_context_blocks_get: {
@@ -49535,6 +51151,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ContextBlockInfo'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49558,12 +51182,12 @@ export interface operations {
           'application/json': components['schemas']['PromptCatalogue']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49587,12 +51211,12 @@ export interface operations {
           'application/json': components['schemas']['PromptDetail']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49616,12 +51240,12 @@ export interface operations {
           'application/json': components['schemas']['SonPromptPreview']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49645,12 +51269,12 @@ export interface operations {
           'application/json': components['schemas']['TiredMotifReport']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49676,12 +51300,12 @@ export interface operations {
           'application/json': components['schemas']['TiredMotifReport']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49707,12 +51331,12 @@ export interface operations {
           'application/json': components['schemas']['TiredMotifReport']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49743,12 +51367,12 @@ export interface operations {
           'application/json': components['schemas']['ContextBlock']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49768,6 +51392,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['FateControlsView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49791,12 +51423,12 @@ export interface operations {
           'application/json': components['schemas']['RegionEnvironmentView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49820,12 +51452,12 @@ export interface operations {
           'application/json': components['schemas']['PlaceEnvironmentView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49849,12 +51481,12 @@ export interface operations {
           'application/json': components['schemas']['WorldSeasonsView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49878,12 +51510,12 @@ export interface operations {
           'application/json': components['schemas']['RegionTerrainView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49907,12 +51539,12 @@ export interface operations {
           'application/json': components['schemas']['BodyView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49936,12 +51568,12 @@ export interface operations {
           'application/json': components['schemas']['BodyCustomsView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49965,12 +51597,12 @@ export interface operations {
           'application/json': components['schemas']['MaimedView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -49990,6 +51622,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['PackageView'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50013,12 +51653,12 @@ export interface operations {
           'application/json': components['schemas']['AfflictionsView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50042,12 +51682,12 @@ export interface operations {
           'application/json': components['schemas']['ThingRecordsView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50071,12 +51711,12 @@ export interface operations {
           'application/json': components['schemas']['WorldCalendarView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50100,12 +51740,12 @@ export interface operations {
           'application/json': components['schemas']['RegionWorksView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50129,12 +51769,12 @@ export interface operations {
           'application/json': components['schemas']['MindView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50158,12 +51798,12 @@ export interface operations {
           'application/json': components['schemas']['MindSplitView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50187,12 +51827,12 @@ export interface operations {
           'application/json': components['schemas']['FeelingsView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50216,12 +51856,12 @@ export interface operations {
           'application/json': components['schemas']['CultureMindView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50245,12 +51885,12 @@ export interface operations {
           'application/json': components['schemas']['AspirationsView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50274,12 +51914,12 @@ export interface operations {
           'application/json': components['schemas']['BondsView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50303,12 +51943,12 @@ export interface operations {
           'application/json': components['schemas']['RenownView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50332,12 +51972,12 @@ export interface operations {
           'application/json': components['schemas']['WorksView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50361,12 +52001,12 @@ export interface operations {
           'application/json': components['schemas']['FinanceView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50390,12 +52030,12 @@ export interface operations {
           'application/json': components['schemas']['CorrespondenceView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50419,12 +52059,12 @@ export interface operations {
           'application/json': components['schemas']['EstatesView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50448,12 +52088,12 @@ export interface operations {
           'application/json': components['schemas']['TitlesView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50477,12 +52117,12 @@ export interface operations {
           'application/json': components['schemas']['JusticeView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50506,12 +52146,12 @@ export interface operations {
           'application/json': components['schemas']['StatecraftView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50535,12 +52175,191 @@ export interface operations {
           'application/json': components['schemas']['AffairsView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  gatherings_of_api_gatherings_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NodeGatheringsView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  histories_api_histories_get: {
+    parameters: {
+      query?: {
+        kind?: components['schemas']['CollectionKind'] | null
+        world_id?: number | null
+        node_id?: number | null
+        place_id?: number | null
+        offset?: number
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HistoryPage']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  life_log_api_histories_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LifeLogView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  history_api_histories__collection_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        collection_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HistoryDetail']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  storyteller_api_storyteller__world_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        world_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['StorytellerView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  site_api_sites__entity_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        entity_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SiteView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50564,12 +52383,12 @@ export interface operations {
           'application/json': components['schemas']['IntrigueView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50593,12 +52412,12 @@ export interface operations {
           'application/json': components['schemas']['LineageView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50622,12 +52441,12 @@ export interface operations {
           'application/json': components['schemas']['HomeView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50647,6 +52466,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['SensedWorldsView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50670,12 +52497,12 @@ export interface operations {
           'application/json': components['schemas']['MortalProfileView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50699,12 +52526,12 @@ export interface operations {
           'application/json': components['schemas']['FamilyTreeView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50726,6 +52553,14 @@ export interface operations {
           'application/json': components['schemas']['VariantView'][]
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   list_mechanics_api_mechanics_get: {
@@ -50743,6 +52578,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['MechanicRecord'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50766,12 +52609,12 @@ export interface operations {
           'application/json': components['schemas']['NodeMechanicsView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50797,12 +52640,12 @@ export interface operations {
           'application/json': components['schemas']['CausalityView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50822,6 +52665,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['MechanicsGraphView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50845,12 +52696,12 @@ export interface operations {
           'application/json': components['schemas']['MechanicDetailView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50874,12 +52725,12 @@ export interface operations {
           'application/json': components['schemas']['PlaceProfileView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50903,12 +52754,12 @@ export interface operations {
           'application/json': components['schemas']['ProfileTableRecord'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50932,12 +52783,12 @@ export interface operations {
           'application/json': components['schemas']['MaterialsView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50961,12 +52812,12 @@ export interface operations {
           'application/json': components['schemas']['CommunityEconomyView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -50990,12 +52841,12 @@ export interface operations {
           'application/json': components['schemas']['ResourceProfileView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51019,12 +52870,12 @@ export interface operations {
           'application/json': components['schemas']['MarketView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51048,12 +52899,12 @@ export interface operations {
           'application/json': components['schemas']['TradeRouteView'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51077,12 +52928,12 @@ export interface operations {
           'application/json': components['schemas']['TradeRouteDetail']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51104,6 +52955,14 @@ export interface operations {
           'application/json': components['schemas']['CurrencyView'][]
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   debts_ledger_api_ledger_debts_get: {
@@ -51121,6 +52980,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['LedgerView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51144,12 +53011,12 @@ export interface operations {
           'application/json': components['schemas']['MarketSummary'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51173,12 +53040,12 @@ export interface operations {
           'application/json': components['schemas']['PactView'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51202,12 +53069,12 @@ export interface operations {
           'application/json': components['schemas']['PolityProductionView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51231,12 +53098,12 @@ export interface operations {
           'application/json': components['schemas']['NodeMaterialsView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51260,12 +53127,12 @@ export interface operations {
           'application/json': components['schemas']['MarketHoldsView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51285,6 +53152,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['DebtLawView'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51308,12 +53183,12 @@ export interface operations {
           'application/json': components['schemas']['WorkshopDesignView'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51337,12 +53212,12 @@ export interface operations {
           'application/json': components['schemas']['DemographyView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51366,12 +53241,12 @@ export interface operations {
           'application/json': components['schemas']['DiseaseView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51395,12 +53270,12 @@ export interface operations {
           'application/json': components['schemas']['SettlementPlanView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51424,12 +53299,12 @@ export interface operations {
           'application/json': components['schemas']['SocietyDepthView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51453,12 +53328,12 @@ export interface operations {
           'application/json': components['schemas']['EventView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51482,12 +53357,12 @@ export interface operations {
           'application/json': components['schemas']['HappeningsHereView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51511,12 +53386,12 @@ export interface operations {
           'application/json': components['schemas']['LandShapeView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51540,12 +53415,12 @@ export interface operations {
           'application/json': components['schemas']['RealmLink']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51569,12 +53444,12 @@ export interface operations {
           'application/json': components['schemas']['RealmView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51598,12 +53473,12 @@ export interface operations {
           'application/json': components['schemas']['HouseView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51627,12 +53502,12 @@ export interface operations {
           'application/json': components['schemas']['TreatyView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51656,12 +53531,12 @@ export interface operations {
           'application/json': components['schemas']['OathsView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51681,6 +53556,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['LawKindSpec'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51704,12 +53587,12 @@ export interface operations {
           'application/json': components['schemas']['FactionView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51729,6 +53612,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['UnitKindSpec'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51752,12 +53643,12 @@ export interface operations {
           'application/json': components['schemas']['WarRoomView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51781,12 +53672,12 @@ export interface operations {
           'application/json': components['schemas']['ArmyCard']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51810,12 +53701,12 @@ export interface operations {
           'application/json': components['schemas']['MilitaryOverview']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51841,12 +53732,12 @@ export interface operations {
           'application/json': components['schemas']['RecordTableView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51870,12 +53761,12 @@ export interface operations {
           'application/json': components['schemas']['BattleDepthView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51895,6 +53786,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HullSpecView'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51918,12 +53817,12 @@ export interface operations {
           'application/json': components['schemas']['VesselView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51947,12 +53846,12 @@ export interface operations {
           'application/json': components['schemas']['FeudView'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -51976,12 +53875,12 @@ export interface operations {
           'application/json': components['schemas']['PeaceTermView'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52001,6 +53900,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['TenetKindSpec'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52024,12 +53931,12 @@ export interface operations {
           'application/json': components['schemas']['DoctrineView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52053,12 +53960,12 @@ export interface operations {
           'application/json': components['schemas']['RealmOfDeadView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52082,12 +53989,12 @@ export interface operations {
           'application/json': components['schemas']['PossessionView'] | null
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52111,12 +54018,12 @@ export interface operations {
           'application/json': components['schemas']['SoulCard']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52140,12 +54047,12 @@ export interface operations {
           'application/json': components['schemas']['LoreCard']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52165,6 +54072,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['TechGraph']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52188,12 +54103,12 @@ export interface operations {
           'application/json': components['schemas']['LearningCard']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52217,12 +54132,12 @@ export interface operations {
           'application/json': components['schemas']['NameCard']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52246,12 +54161,12 @@ export interface operations {
           'application/json': components['schemas']['RealmEraView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52275,12 +54190,12 @@ export interface operations {
           'application/json': components['schemas']['WorldEraView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52304,12 +54219,12 @@ export interface operations {
           'application/json': components['schemas']['TongueAtlas']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52334,12 +54249,12 @@ export interface operations {
           'application/json': components['schemas']['CustomKinds']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52363,12 +54278,12 @@ export interface operations {
           'application/json': components['schemas']['RumourBoard']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52392,12 +54307,12 @@ export interface operations {
           'application/json': components['schemas']['GodDivinity']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52421,12 +54336,12 @@ export interface operations {
           'application/json': components['schemas']['CommunityRegard']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52446,6 +54361,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['CreatorDivinity']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52469,12 +54392,12 @@ export interface operations {
           'application/json': components['schemas']['WorldDivinity']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52494,6 +54417,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['CouncilRulings']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52517,12 +54448,12 @@ export interface operations {
           'application/json': components['schemas']['NaturalLawProfileView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52546,12 +54477,12 @@ export interface operations {
           'application/json': components['schemas']['OuterBeingProfileView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52571,6 +54502,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['CosmographyCatalog']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52594,12 +54533,12 @@ export interface operations {
           'application/json': components['schemas']['JobAccepted']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52623,12 +54562,12 @@ export interface operations {
           'application/json': components['schemas']['ScaleWiki']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52652,12 +54591,12 @@ export interface operations {
           'application/json': components['schemas']['SkyWorshipView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52677,6 +54616,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['CosmographyView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52700,12 +54647,12 @@ export interface operations {
           'application/json': components['schemas']['StarPhysicsView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52729,12 +54676,12 @@ export interface operations {
           'application/json': components['schemas']['WorldPhysicsView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52754,6 +54701,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HeavensPhysicsView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52777,12 +54732,12 @@ export interface operations {
           'application/json': components['schemas']['ObserverSurveyView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52806,12 +54761,12 @@ export interface operations {
           'application/json': components['schemas']['SpeciesCard']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52835,12 +54790,12 @@ export interface operations {
           'application/json': components['schemas']['BeastCard']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52864,12 +54819,12 @@ export interface operations {
           'application/json': components['schemas']['FoodWeb']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52893,12 +54848,12 @@ export interface operations {
           'application/json': components['schemas']['HerdView'][]
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52922,12 +54877,12 @@ export interface operations {
           'application/json': components['schemas']['SpeciesRangeMap']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52947,6 +54902,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['UseKindView'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52970,12 +54933,12 @@ export interface operations {
           'application/json': components['schemas']['TotemView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -52999,12 +54962,12 @@ export interface operations {
           'application/json': components['schemas']['RegionCrops']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53028,12 +54991,12 @@ export interface operations {
           'application/json': components['schemas']['WorldLife']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53057,12 +55020,12 @@ export interface operations {
           'application/json': components['schemas']['MortalPets']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53086,12 +55049,12 @@ export interface operations {
           'application/json': components['schemas']['AnatomyView'] | null
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53115,12 +55078,12 @@ export interface operations {
           'application/json': components['schemas']['SettlementStructuresView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53144,12 +55107,12 @@ export interface operations {
           'application/json': components['schemas']['StructureView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53173,12 +55136,12 @@ export interface operations {
           'application/json': components['schemas']['GoldenAgeView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53202,12 +55165,12 @@ export interface operations {
           'application/json': components['schemas']['AnchorageView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53231,12 +55194,12 @@ export interface operations {
           'application/json': components['schemas']['DedicationView']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53256,6 +55219,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionCatalogueItem'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53281,12 +55252,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53312,12 +55283,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53343,12 +55314,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53374,12 +55345,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53405,12 +55376,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53436,12 +55407,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53467,12 +55438,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53498,12 +55469,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53529,12 +55500,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53560,12 +55531,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53591,12 +55562,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53622,12 +55593,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53653,12 +55624,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53684,12 +55655,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53715,12 +55686,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53746,12 +55717,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53777,12 +55748,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53808,12 +55779,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53839,12 +55810,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53870,12 +55841,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53901,12 +55872,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53932,12 +55903,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53963,12 +55934,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -53994,12 +55965,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54025,12 +55996,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54056,12 +56027,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54087,12 +56058,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54118,12 +56089,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54149,12 +56120,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54180,12 +56151,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54211,12 +56182,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54242,12 +56213,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54273,12 +56244,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54304,12 +56275,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54335,12 +56306,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54366,12 +56337,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54397,12 +56368,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54428,12 +56399,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54459,12 +56430,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54490,12 +56461,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54521,12 +56492,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54552,12 +56523,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54583,12 +56554,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54614,12 +56585,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54645,12 +56616,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54676,12 +56647,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54707,12 +56678,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54738,12 +56709,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54769,12 +56740,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54800,12 +56771,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54831,12 +56802,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54862,12 +56833,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54893,12 +56864,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54924,12 +56895,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54955,12 +56926,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -54986,12 +56957,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55017,12 +56988,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55048,12 +57019,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55079,12 +57050,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55110,12 +57081,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55141,12 +57112,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55172,12 +57143,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55203,12 +57174,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55234,12 +57205,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55265,12 +57236,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55296,12 +57267,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55327,12 +57298,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55358,12 +57329,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55389,12 +57360,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55420,12 +57391,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55451,12 +57422,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55482,12 +57453,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55513,12 +57484,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55544,12 +57515,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55575,12 +57546,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55606,12 +57577,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55637,12 +57608,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55668,12 +57639,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55699,12 +57670,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55730,12 +57701,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55761,12 +57732,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55792,12 +57763,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55823,12 +57794,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55854,12 +57825,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55885,12 +57856,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55916,12 +57887,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55947,12 +57918,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -55978,12 +57949,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56009,12 +57980,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56040,12 +58011,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56071,12 +58042,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56102,12 +58073,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56133,12 +58104,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56164,12 +58135,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56195,12 +58166,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56226,12 +58197,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56257,12 +58228,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56288,12 +58259,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56319,12 +58290,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56350,12 +58321,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56381,12 +58352,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56412,12 +58383,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56443,12 +58414,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56474,12 +58445,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56505,12 +58476,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56536,12 +58507,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56567,12 +58538,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56598,12 +58569,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56629,12 +58600,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56660,12 +58631,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56691,12 +58662,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56722,12 +58693,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56753,12 +58724,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56784,12 +58755,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56815,12 +58786,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56846,12 +58817,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56877,12 +58848,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56908,12 +58879,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56939,12 +58910,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -56970,12 +58941,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57001,12 +58972,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57032,12 +59003,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57063,12 +59034,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57094,12 +59065,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57125,12 +59096,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57156,12 +59127,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57187,12 +59158,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57218,12 +59189,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57249,12 +59220,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57280,12 +59251,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57311,12 +59282,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57342,12 +59313,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57373,12 +59344,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57404,12 +59375,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57435,12 +59406,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57466,12 +59437,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57497,12 +59468,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57528,12 +59499,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57559,12 +59530,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57590,12 +59561,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57621,12 +59592,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57652,12 +59623,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57683,12 +59654,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57714,12 +59685,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57745,12 +59716,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57776,12 +59747,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57807,12 +59778,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57838,12 +59809,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57869,12 +59840,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57900,12 +59871,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57931,12 +59902,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57962,12 +59933,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -57993,12 +59964,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58024,12 +59995,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58055,12 +60026,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58086,12 +60057,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58117,12 +60088,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58148,12 +60119,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58179,12 +60150,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58210,12 +60181,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58241,12 +60212,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58272,12 +60243,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58303,12 +60274,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58334,12 +60305,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58365,12 +60336,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58396,12 +60367,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58427,12 +60398,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58458,12 +60429,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58489,12 +60460,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58520,12 +60491,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58551,12 +60522,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58582,12 +60553,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58613,12 +60584,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58644,12 +60615,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58675,12 +60646,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58706,12 +60677,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58737,12 +60708,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58768,12 +60739,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58799,12 +60770,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58830,12 +60801,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58861,12 +60832,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58892,12 +60863,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58923,12 +60894,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58954,12 +60925,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -58985,12 +60956,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59016,12 +60987,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59047,12 +61018,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59078,12 +61049,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59109,12 +61080,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59140,12 +61111,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59171,12 +61142,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59202,12 +61173,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59233,12 +61204,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59264,12 +61235,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59295,12 +61266,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59326,12 +61297,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59357,12 +61328,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59388,12 +61359,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59419,12 +61390,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59450,12 +61421,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59481,12 +61452,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59512,12 +61483,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59543,12 +61514,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59574,12 +61545,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59605,12 +61576,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59636,12 +61607,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59667,12 +61638,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59698,12 +61669,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59729,12 +61700,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59760,12 +61731,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59791,12 +61762,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59816,6 +61787,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59841,12 +61820,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59872,12 +61851,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59903,12 +61882,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59934,12 +61913,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59965,12 +61944,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -59996,12 +61975,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60027,12 +62006,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60058,12 +62037,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60089,12 +62068,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60120,12 +62099,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60151,12 +62130,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60182,12 +62161,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60213,12 +62192,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60244,12 +62223,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60275,12 +62254,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60306,12 +62285,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60337,12 +62316,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60368,12 +62347,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60399,12 +62378,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60430,12 +62409,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60461,12 +62440,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60492,12 +62471,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60523,12 +62502,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60554,12 +62533,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60585,12 +62564,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60616,12 +62595,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60641,6 +62620,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60666,12 +62653,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60697,12 +62684,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60728,12 +62715,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60759,12 +62746,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60790,12 +62777,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60821,12 +62808,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60852,12 +62839,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60883,12 +62870,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60910,6 +62897,14 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   action_economy_cosmic_api_actions_economy_cosmic_post: {
@@ -60927,6 +62922,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60952,12 +62955,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -60983,12 +62986,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61014,12 +63017,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61045,12 +63048,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61076,12 +63079,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61107,12 +63110,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61138,12 +63141,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61169,12 +63172,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61194,6 +63197,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61219,12 +63230,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61250,12 +63261,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61281,12 +63292,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61312,12 +63323,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61343,12 +63354,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61374,12 +63385,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61405,12 +63416,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61436,12 +63447,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61467,12 +63478,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61492,6 +63503,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61517,12 +63536,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61544,6 +63563,14 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   action_mechanics_weigh_api_actions_mechanics_weigh_post: {
@@ -61561,6 +63588,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61586,12 +63621,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61611,6 +63646,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61636,12 +63679,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61667,12 +63710,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61692,6 +63735,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61717,12 +63768,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61744,6 +63795,14 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   action_records_living_stats_api_actions_records_living_stats_post: {
@@ -61761,6 +63820,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61786,12 +63853,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61813,6 +63880,14 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   action_fate_rejudge_debt_api_actions_fate_rejudge_debt_post: {
@@ -61832,6 +63907,14 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
     }
   }
   action_fate_rejudge_limbo_api_actions_fate_rejudge_limbo_post: {
@@ -61849,6 +63932,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61874,12 +63965,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61905,12 +63996,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61936,12 +64027,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61961,6 +64052,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -61986,12 +64085,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62017,12 +64116,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62042,6 +64141,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62067,12 +64174,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62098,12 +64205,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62129,12 +64236,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62160,12 +64267,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62191,12 +64298,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62222,12 +64329,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62253,12 +64360,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62284,12 +64391,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62315,12 +64422,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62346,12 +64453,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62377,12 +64484,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62408,12 +64515,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62439,12 +64546,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62470,12 +64577,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62501,12 +64608,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62532,12 +64639,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62563,12 +64670,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62594,12 +64701,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62625,12 +64732,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62656,12 +64763,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62687,12 +64794,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62718,12 +64825,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62749,12 +64856,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62780,12 +64887,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62811,12 +64918,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62842,12 +64949,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62873,12 +64980,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62904,12 +65011,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62935,12 +65042,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62966,12 +65073,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -62997,12 +65104,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63028,12 +65135,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63059,12 +65166,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63090,12 +65197,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63121,12 +65228,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63152,12 +65259,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63183,12 +65290,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63214,12 +65321,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63245,12 +65352,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63276,12 +65383,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63307,12 +65414,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63338,12 +65445,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63369,12 +65476,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63400,12 +65507,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63431,12 +65538,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63462,12 +65569,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63493,12 +65600,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63524,12 +65631,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63555,12 +65662,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63586,12 +65693,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63617,12 +65724,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63648,12 +65755,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63679,12 +65786,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63710,12 +65817,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63741,12 +65848,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63772,12 +65879,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63803,12 +65910,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63834,12 +65941,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63865,12 +65972,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63896,12 +66003,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63927,12 +66034,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63958,12 +66065,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -63989,12 +66096,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64020,12 +66127,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64051,12 +66158,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64082,12 +66189,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64113,12 +66220,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64144,12 +66251,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64175,12 +66282,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64206,12 +66313,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64237,12 +66344,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64268,12 +66375,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64299,12 +66406,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64330,12 +66437,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64361,12 +66468,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64392,12 +66499,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64423,12 +66530,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64454,12 +66561,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64485,12 +66592,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64516,12 +66623,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64547,12 +66654,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64578,12 +66685,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64609,12 +66716,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64640,12 +66747,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64671,12 +66778,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64702,12 +66809,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64733,12 +66840,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64764,12 +66871,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64795,12 +66902,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64826,12 +66933,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64857,12 +66964,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64888,12 +66995,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64919,12 +67026,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64950,12 +67057,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -64981,12 +67088,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65012,12 +67119,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65043,12 +67150,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65074,12 +67181,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65105,12 +67212,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65136,12 +67243,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65167,12 +67274,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65198,12 +67305,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65229,12 +67336,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65260,12 +67367,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65291,12 +67398,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65322,12 +67429,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65353,12 +67460,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65384,12 +67491,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65415,12 +67522,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65446,12 +67553,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65477,12 +67584,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65508,12 +67615,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65539,12 +67646,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65570,12 +67677,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65601,12 +67708,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65632,12 +67739,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65663,12 +67770,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65694,12 +67801,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65725,12 +67832,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65756,12 +67863,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65787,12 +67894,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65818,12 +67925,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65849,12 +67956,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65880,12 +67987,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65911,12 +68018,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65942,12 +68049,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -65973,12 +68080,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66004,12 +68111,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66035,12 +68142,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66066,12 +68173,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66097,12 +68204,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66128,12 +68235,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66159,12 +68266,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66190,12 +68297,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66221,12 +68328,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66252,12 +68359,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66283,12 +68390,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66314,12 +68421,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66345,12 +68452,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66376,12 +68483,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66407,12 +68514,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66438,12 +68545,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66469,12 +68576,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66500,12 +68607,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66531,12 +68638,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66562,12 +68669,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66593,12 +68700,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66624,12 +68731,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66655,12 +68762,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66686,12 +68793,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66717,12 +68824,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66748,12 +68855,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66779,12 +68886,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66810,12 +68917,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66841,12 +68948,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66872,12 +68979,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66903,12 +69010,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66934,12 +69041,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66965,12 +69072,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -66996,12 +69103,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67027,12 +69134,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67058,12 +69165,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67089,12 +69196,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67120,12 +69227,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67151,12 +69258,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67182,12 +69289,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67213,12 +69320,911 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_gathering_convene_api_actions_gathering_convene_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GatheringConveneInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_gathering_hold_api_actions_gathering_hold_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GatheringHoldInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_gathering_edit_api_actions_gathering_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GatheringEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_gathering_delete_api_actions_gathering_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GatheringDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_gathering_guest_set_api_actions_gathering_guest_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GatheringGuestSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_gathering_guest_remove_api_actions_gathering_guest_remove_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GatheringGuestRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_collection_create_api_actions_collection_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CollectionCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_collection_edit_api_actions_collection_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CollectionEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_collection_delete_api_actions_collection_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CollectionDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_collection_member_set_api_actions_collection_member_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CollectionMemberSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_collection_member_remove_api_actions_collection_member_remove_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CollectionMemberRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_collection_place_api_actions_collection_place_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CollectionPlaceInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_storyteller_set_api_actions_storyteller_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StorytellerSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_site_room_create_api_actions_site_room_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SiteRoomCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_site_room_edit_api_actions_site_room_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SiteRoomEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_site_room_delete_api_actions_site_room_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SiteRoomDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_room_content_add_api_actions_room_content_add_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RoomContentAddInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_room_content_remove_api_actions_room_content_remove_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RoomContentRemoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_site_delve_api_actions_site_delve_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SiteDelveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_site_holder_set_api_actions_site_holder_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SiteHolderSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_site_holder_delete_api_actions_site_holder_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SiteHolderDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_excavation_begin_api_actions_excavation_begin_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExcavationBeginInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_excavation_edit_api_actions_excavation_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExcavationEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_excavation_advance_api_actions_excavation_advance_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExcavationAdvanceInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_excavation_delete_api_actions_excavation_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExcavationDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_excavation_stage_edit_api_actions_excavation_stage_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExcavationStageEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_battlefield_feature_create_api_actions_battlefield_feature_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BattlefieldFeatureCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_battlefield_feature_edit_api_actions_battlefield_feature_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BattlefieldFeatureEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_battlefield_feature_delete_api_actions_battlefield_feature_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BattlefieldFeatureDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67244,12 +70250,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67275,12 +70281,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67306,12 +70312,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67337,12 +70343,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67368,12 +70374,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67399,12 +70405,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67430,12 +70436,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67461,12 +70467,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67492,12 +70498,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67523,12 +70529,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67554,12 +70560,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67585,12 +70591,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67616,12 +70622,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67647,12 +70653,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67678,12 +70684,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67709,12 +70715,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67740,12 +70746,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67771,12 +70777,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67802,12 +70808,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67833,12 +70839,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67864,12 +70870,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67895,12 +70901,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67926,12 +70932,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67957,12 +70963,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -67988,12 +70994,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68019,12 +71025,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68050,12 +71056,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68081,12 +71087,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68112,12 +71118,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68143,12 +71149,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68174,12 +71180,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68205,12 +71211,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68236,12 +71242,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68267,12 +71273,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68298,12 +71304,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68329,12 +71335,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68360,12 +71366,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68391,12 +71397,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68422,12 +71428,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68453,12 +71459,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68484,12 +71490,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68515,12 +71521,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68546,12 +71552,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68577,12 +71583,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68608,12 +71614,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68639,12 +71645,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68670,12 +71676,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68701,12 +71707,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68732,12 +71738,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68763,12 +71769,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68794,12 +71800,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68825,12 +71831,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68856,12 +71862,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68887,12 +71893,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68918,12 +71924,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68949,12 +71955,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -68980,12 +71986,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69011,12 +72017,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69042,12 +72048,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69073,12 +72079,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69104,12 +72110,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69135,12 +72141,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69166,12 +72172,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69197,12 +72203,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69228,12 +72234,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69259,12 +72265,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69290,12 +72296,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69321,12 +72327,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69352,12 +72358,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69383,12 +72389,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69414,12 +72420,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69445,12 +72451,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69476,12 +72482,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69507,12 +72513,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69538,12 +72544,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69569,12 +72575,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69600,12 +72606,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69631,12 +72637,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69662,12 +72668,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69693,12 +72699,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69724,12 +72730,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69755,12 +72761,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69786,12 +72792,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69817,12 +72823,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69848,12 +72854,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69879,12 +72885,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69910,12 +72916,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69941,12 +72947,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -69972,12 +72978,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70003,12 +73009,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70034,12 +73040,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70065,12 +73071,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70096,12 +73102,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70127,12 +73133,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70158,12 +73164,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70189,12 +73195,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70220,12 +73226,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70251,12 +73257,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70282,12 +73288,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70313,12 +73319,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70344,12 +73350,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70375,12 +73381,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70406,12 +73412,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70437,12 +73443,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70468,12 +73474,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70499,12 +73505,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70530,12 +73536,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70561,12 +73567,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70592,12 +73598,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70623,12 +73629,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70654,12 +73660,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70685,12 +73691,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70716,12 +73722,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70747,12 +73753,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70778,12 +73784,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70809,12 +73815,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70840,12 +73846,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70871,12 +73877,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70902,12 +73908,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70933,12 +73939,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70964,12 +73970,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -70995,12 +74001,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71026,12 +74032,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71057,12 +74063,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71088,12 +74094,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71119,12 +74125,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71150,12 +74156,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71181,12 +74187,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71212,12 +74218,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71243,12 +74249,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71274,12 +74280,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71305,12 +74311,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71336,12 +74342,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71367,12 +74373,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71398,12 +74404,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71429,12 +74435,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71460,12 +74466,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71491,12 +74497,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71522,12 +74528,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71553,12 +74559,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71584,12 +74590,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71615,12 +74621,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71646,12 +74652,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71677,12 +74683,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71708,12 +74714,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71739,12 +74745,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71770,12 +74776,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71801,12 +74807,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71832,12 +74838,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71863,12 +74869,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71894,12 +74900,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71925,12 +74931,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71956,12 +74962,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -71987,12 +74993,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72018,12 +75024,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72049,12 +75055,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72080,12 +75086,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72111,12 +75117,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72142,12 +75148,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72173,12 +75179,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72204,12 +75210,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72235,12 +75241,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72266,12 +75272,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72297,12 +75303,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72328,12 +75334,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72359,12 +75365,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72390,12 +75396,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72421,12 +75427,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72452,12 +75458,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72483,12 +75489,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72514,12 +75520,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72545,12 +75551,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72576,12 +75582,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72607,12 +75613,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72638,12 +75644,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72669,12 +75675,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72700,12 +75706,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72731,12 +75737,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72762,12 +75768,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72793,12 +75799,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72824,12 +75830,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72855,12 +75861,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72886,12 +75892,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72917,12 +75923,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72948,12 +75954,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -72979,12 +75985,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73010,12 +76016,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73041,12 +76047,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73072,12 +76078,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73103,12 +76109,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73134,12 +76140,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73165,12 +76171,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73196,12 +76202,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73227,12 +76233,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73258,12 +76264,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73289,12 +76295,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73320,12 +76326,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73351,12 +76357,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73382,12 +76388,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73413,12 +76419,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73444,12 +76450,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73475,12 +76481,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73506,12 +76512,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73537,12 +76543,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73568,12 +76574,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73599,12 +76605,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73630,12 +76636,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73661,12 +76667,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73692,12 +76698,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73723,12 +76729,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73754,12 +76760,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73785,12 +76791,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73816,12 +76822,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73847,12 +76853,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73878,12 +76884,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73909,12 +76915,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73940,12 +76946,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -73971,12 +76977,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74002,12 +77008,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74033,12 +77039,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74064,12 +77070,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74095,12 +77101,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74126,12 +77132,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74157,12 +77163,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74188,12 +77194,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74219,12 +77225,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74250,12 +77256,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74281,12 +77287,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74312,12 +77318,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74343,12 +77349,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74374,12 +77380,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74405,12 +77411,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74436,12 +77442,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74467,12 +77473,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74498,12 +77504,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74529,12 +77535,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74560,12 +77566,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74591,12 +77597,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74622,12 +77628,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74653,12 +77659,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74684,12 +77690,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74715,12 +77721,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74746,12 +77752,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74777,12 +77783,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74808,12 +77814,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74839,12 +77845,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74870,12 +77876,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74901,12 +77907,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74932,12 +77938,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74963,12 +77969,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -74994,12 +78000,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75025,12 +78031,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75056,12 +78062,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75087,12 +78093,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75118,12 +78124,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75149,12 +78155,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75180,12 +78186,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75211,12 +78217,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75242,12 +78248,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75273,12 +78279,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75304,12 +78310,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75335,12 +78341,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75366,12 +78372,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75397,12 +78403,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75428,12 +78434,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75459,12 +78465,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75490,12 +78496,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75521,12 +78527,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75552,12 +78558,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75583,12 +78589,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75614,12 +78620,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75645,12 +78651,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75676,12 +78682,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75707,12 +78713,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75738,12 +78744,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75769,12 +78775,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75800,12 +78806,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75831,12 +78837,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75862,12 +78868,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75893,12 +78899,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75924,12 +78930,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75955,12 +78961,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -75986,12 +78992,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76017,12 +79023,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76048,12 +79054,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76079,12 +79085,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76110,12 +79116,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76141,12 +79147,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76172,12 +79178,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76203,12 +79209,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76234,12 +79240,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76265,12 +79271,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76296,12 +79302,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76327,12 +79333,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76358,12 +79364,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76389,12 +79395,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76420,12 +79426,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76451,12 +79457,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76482,12 +79488,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76513,12 +79519,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76544,12 +79550,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76575,12 +79581,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76606,12 +79612,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76637,12 +79643,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76668,12 +79674,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76699,12 +79705,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76730,12 +79736,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76761,12 +79767,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76792,12 +79798,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76823,12 +79829,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76854,12 +79860,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76885,12 +79891,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76916,12 +79922,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76947,12 +79953,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -76978,12 +79984,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77009,12 +80015,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77040,12 +80046,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77071,12 +80077,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77102,12 +80108,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77133,12 +80139,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77164,12 +80170,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77195,12 +80201,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77226,12 +80232,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77257,12 +80263,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77288,12 +80294,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77319,12 +80325,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77350,12 +80356,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77381,12 +80387,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77412,12 +80418,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77443,12 +80449,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77474,12 +80480,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77505,12 +80511,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77536,12 +80542,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77567,12 +80573,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77598,12 +80604,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77629,12 +80635,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77660,12 +80666,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77691,12 +80697,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77722,12 +80728,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77753,12 +80759,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77784,12 +80790,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77815,12 +80821,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77846,12 +80852,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77877,12 +80883,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77908,12 +80914,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77939,12 +80945,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -77970,12 +80976,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78001,12 +81007,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78032,12 +81038,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78063,12 +81069,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78094,12 +81100,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78125,12 +81131,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78156,12 +81162,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78187,12 +81193,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78218,12 +81224,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78249,12 +81255,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78280,12 +81286,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78311,12 +81317,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78342,12 +81348,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78373,12 +81379,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78404,12 +81410,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78435,12 +81441,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78466,12 +81472,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78497,12 +81503,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78528,12 +81534,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78559,12 +81565,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78590,12 +81596,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78621,12 +81627,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78652,12 +81658,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78683,12 +81689,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78714,12 +81720,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78745,12 +81751,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78776,12 +81782,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78807,12 +81813,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78838,12 +81844,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78869,12 +81875,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78900,12 +81906,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78931,12 +81937,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78962,12 +81968,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -78993,12 +81999,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79024,12 +82030,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79055,12 +82061,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79086,12 +82092,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79117,12 +82123,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79148,12 +82154,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79179,12 +82185,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79210,12 +82216,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79241,12 +82247,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79272,12 +82278,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79303,12 +82309,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79334,12 +82340,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79365,12 +82371,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79396,12 +82402,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79427,12 +82433,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79458,12 +82464,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79489,12 +82495,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79520,12 +82526,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79551,12 +82557,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79582,12 +82588,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79613,12 +82619,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79644,12 +82650,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79675,12 +82681,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79706,12 +82712,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79737,12 +82743,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79768,12 +82774,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79799,12 +82805,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79830,12 +82836,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79861,12 +82867,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79892,12 +82898,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79923,12 +82929,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79954,12 +82960,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -79985,12 +82991,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80016,12 +83022,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80047,12 +83053,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80078,12 +83084,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80109,12 +83115,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80140,12 +83146,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80171,12 +83177,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80202,12 +83208,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80233,12 +83239,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80264,12 +83270,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80295,12 +83301,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80326,12 +83332,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80357,12 +83363,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80388,12 +83394,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80419,12 +83425,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80450,12 +83456,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80481,12 +83487,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80512,12 +83518,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80543,12 +83549,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80574,12 +83580,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80605,12 +83611,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80636,12 +83642,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80667,12 +83673,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80698,12 +83704,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80729,12 +83735,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80760,12 +83766,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80791,12 +83797,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80822,12 +83828,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80853,12 +83859,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80884,12 +83890,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80915,12 +83921,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80946,12 +83952,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -80977,12 +83983,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81008,12 +84014,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81039,12 +84045,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81070,12 +84076,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81101,12 +84107,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81132,12 +84138,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81163,12 +84169,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81194,12 +84200,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81225,12 +84231,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81256,12 +84262,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81287,12 +84293,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81318,12 +84324,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81349,12 +84355,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81380,12 +84386,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81411,12 +84417,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81442,12 +84448,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81473,12 +84479,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81504,12 +84510,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81535,12 +84541,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81566,12 +84572,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81597,12 +84603,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81628,12 +84634,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81659,12 +84665,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81690,12 +84696,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81721,12 +84727,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81752,12 +84758,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81783,12 +84789,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81814,12 +84820,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81845,12 +84851,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81876,12 +84882,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81907,12 +84913,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81938,12 +84944,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -81969,12 +84975,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -82000,12 +85006,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -82031,12 +85037,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -82062,12 +85068,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -82093,12 +85099,12 @@ export interface operations {
           'application/json': components['schemas']['ActionResponse']
         }
       }
-      422: {
+      default: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['HTTPValidationError']
+          'application/json': components['schemas']['ErrorResponse']
         }
       }
     }
@@ -82589,6 +85595,18 @@ export const artworkStatsKindValues: ReadonlyArray<
 export const atmosphereValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Atmosphere']
 > = ['none', 'thin', 'normal', 'dense', 'toxic']
+export const attendanceReasonValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['AttendanceReason']
+> = [
+  'host',
+  'kin',
+  'friend',
+  'obligation',
+  'faith',
+  'renown',
+  'neighbour',
+  'summoned',
+]
 export const attributeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Attribute']
 > = [
@@ -82643,6 +85661,9 @@ export const battleOutcomeValues: ReadonlyArray<
   'siege_starvation',
   'refused',
 ]
+export const battlefieldFeatureValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['BattlefieldFeature']
+> = ['mass_grave', 'salvage_field']
 export const beastStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BeastStats']['kind']
 > = ['beast']
@@ -83188,6 +86209,63 @@ export const coastKindValues: ReadonlyArray<
 export const cohortConditionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CohortCondition']
 > = ['none', 'veteran', 'sick', 'enslaved', 'captive', 'maimed']
+export const collectionKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CollectionKind']
+> = [
+  'war',
+  'battle',
+  'siege',
+  'duel',
+  'abduction',
+  'beast_attack',
+  'raid',
+  'persecution',
+  'purge',
+  'insurrection',
+  'coup',
+  'succession_crisis',
+  'occupation',
+  'journey',
+  'pilgrimage',
+  'competition',
+  'performance',
+  'procession',
+  'ceremony',
+  'wedding',
+  'funeral',
+  'coronation',
+  'feast',
+  'tournament',
+  'hunt',
+  'council',
+  'summit',
+  'plague',
+  'famine',
+  'migration',
+  'founding',
+  'theft',
+  'investigation',
+  'trial',
+  'conversion_wave',
+  'schism',
+  'excavation',
+]
+export const collectionRoleValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CollectionRole']
+> = [
+  'leader',
+  'member',
+  'victim',
+  'witness',
+  'host',
+  'guest',
+  'winner',
+  'loser',
+  'founder',
+  'accused',
+  'finder',
+  'place',
+]
 export const commandAreaValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CommandArea']
 > = ['fire', 'shock', 'manoeuvre', 'siege', 'logistics']
@@ -84212,6 +87290,20 @@ export const eraDeedValues: ReadonlyArray<
   'defeat',
   'famine',
 ]
+export const errorCodeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ErrorCode']
+> = [
+  'invalid',
+  'not_found',
+  'conflict',
+  'busy',
+  'read_only',
+  'insufficient',
+  'forbidden',
+  'too_large',
+  'unavailable',
+  'internal',
+]
 export const estatePrivilegeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EstatePrivilege']
 > = ['tax_exemption', 'monopoly', 'council_seat', 'arms', 'judicial_immunity']
@@ -84302,6 +87394,18 @@ export const eventReleaseInputFieldValues: ReadonlyArray<
 export const eventStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EventStats']['kind']
 > = ['event']
+export const excavationFindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ExcavationFind']
+> = ['nothing', 'artifact', 'book', 'technique', 'regalia', 'route_map']
+export const excavationRiskValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ExcavationRisk']
+> = ['none', 'curse', 'spirit', 'collapse']
+export const excavationStageValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ExcavationStage']
+> = ['survey', 'clearing', 'digging', 'deep_layers', 'inner_sanctum']
+export const excavationStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ExcavationStatus']
+> = ['open', 'stalled', 'finished', 'collapsed', 'abandoned']
 export const existenceBandValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ExistenceBand']
 > = ['radiant', 'solid', 'faded', 'being_forgotten']
@@ -84665,6 +87769,34 @@ export const galaxyTypeValues: ReadonlyArray<
   'ember',
   'veiled',
 ]
+export const gatheringKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GatheringKind']
+> = [
+  'feast',
+  'wedding',
+  'funeral',
+  'coronation',
+  'tournament',
+  'hunt',
+  'pilgrimage',
+  'council',
+  'summit',
+  'festival',
+  'fair',
+  'games',
+  'performance',
+  'trial',
+  'execution',
+  'procession',
+  'milestone',
+  'wake',
+]
+export const gatheringOutcomeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GatheringOutcome']
+> = ['convivial', 'uneventful', 'quarrelsome', 'violent', 'massacre']
+export const gatheringStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GatheringStatus']
+> = ['planned', 'held', 'disrupted', 'cancelled']
 export const gazeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GazeKind']
 > = ['terror', 'petrify', 'sleep', 'madness']
@@ -84752,6 +87884,20 @@ export const groupKindValues: ReadonlyArray<
 export const growthCycleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GrowthCycle']
 > = ['annual', 'perennial', 'tree']
+export const guestRoleValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GuestRole']
+> = [
+  'host',
+  'guest',
+  'honoured',
+  'contestant',
+  'performer',
+  'accused',
+  'mourned',
+  'wedded',
+  'crowned',
+  'envoy',
+]
 export const habitatValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Habitat']
 > = ['land', 'water', 'sky', 'deep', 'void']
@@ -85707,6 +88853,9 @@ export const methodKindValues: ReadonlyArray<
   'gathered_eggs',
   'kept_flocks',
 ]
+export const milestoneValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['Milestone']
+> = ['birth', 'coming_of_age', 'anniversary']
 export const miracleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Miracle']
 > = ['healing', 'bounty', 'peace', 'protection']
@@ -85856,6 +89005,9 @@ export const mortalToolIdValues: ReadonlyArray<
   'tend_home',
   'plot_scheme',
   'press_leverage',
+  'hold_gathering',
+  'delve_site',
+  'dig_site',
   'send_dispatch',
   'seize_title',
   'bargain_with_estate',
@@ -86771,6 +89923,9 @@ export const riverShiftCauseValues: ReadonlyArray<
 export const roadKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RoadKind']
 > = ['road', 'trade']
+export const roomContentKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RoomContentKind']
+> = ['item', 'spirit', 'beast', 'trap']
 export const routeClosureValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RouteClosure']
 > = [
@@ -86939,6 +90094,28 @@ export const signalKindValues: ReadonlyArray<
 export const signalStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SignalState']
 > = ['active', 'captured', 'burned']
+export const siteChallengeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SiteChallenge']
+> = ['none', 'trap', 'guardian', 'puzzle', 'hazard']
+export const siteRoomKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SiteRoomKind']
+> = [
+  'gate',
+  'hall',
+  'stair',
+  'cell',
+  'chamber',
+  'vault',
+  'shrine',
+  'lair',
+  'library',
+  'armoury',
+  'crypt',
+  'laboratory',
+  'house',
+  'store',
+  'heart',
+]
 export const sizeClassValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SizeClass']
 > = ['tiny', 'small', 'medium', 'large', 'huge', 'colossal']
@@ -87155,6 +90332,7 @@ export const sonToolIdValues: ReadonlyArray<
   'shape_folk',
   'sever_ley',
   'loose_disease',
+  'convene_gathering',
   'forge_material',
   'hide_secret',
   'sanctify_place',
@@ -87277,6 +90455,9 @@ export const spokenIntentValues: ReadonlyArray<
   'warning',
   'bargain',
 ]
+export const spontaneousKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SpontaneousKind']
+> = ['beast_awakening', 'raid', 'comet', 'plague', 'claimant']
 export const spreadPathValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SpreadPath']
 > = ['origin', 'route', 'army', 'journey', 'siege', 'loosed', 'mutation']
@@ -87355,6 +90536,9 @@ export const statValues: ReadonlyArray<
   'charisma',
   'might',
 ]
+export const storytellerProfileValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['StorytellerProfile']
+> = ['steady', 'rising', 'cyclic', 'chaotic']
 export const stratumKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StratumKind']
 > = [
@@ -87635,6 +90819,9 @@ export const tenetKindValues: ReadonlyArray<
   'feeding_the_hunger',
   'whispered_secrets',
 ]
+export const tensionBandValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['TensionBand']
+> = ['quiet', 'in_band', 'heated']
 export const terraformAimValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TerraformAim']
 > = [

@@ -64,6 +64,7 @@ HIDE_SECRET = Line("tools.son.hide_secret", "{son} hid something in {place}: {re
 SANCTIFY_PLACE = Line("tools.son.sanctify_place", "{son} sanctified {place}: {reason}")
 RAISE_NEXUS = Line("tools.son.raise_nexus", "{son} drew the ley lines together at {place}: {reason}")
 SEVER_LEY = Line("tools.son.sever_ley", "{son} cut the ley line between {first} and {second}: {reason}")
+CONVENE_GATHERING = Line("tools.son.convene_gathering", "{son} called {kind:an} at {host}: {reason}")
 LOOSE_DISEASE = Line("tools.son.loose_disease", "{son} loosed a sickness of its own making, {disease}, upon {target}: {reason}")
 SHAPE_FOLK = Line("tools.son.shape_folk", "{son} taught {people} new ways: {changes}. {reason}")
 FORGE_MATERIAL = Line("tools.son.forge_material", "{son} forged {name} into the world: {reason}")

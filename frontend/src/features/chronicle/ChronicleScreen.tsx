@@ -19,6 +19,7 @@ import { Text } from '@/components/typography'
 import { useCatalogue, useWorldState } from '@/features/entity/api/queries'
 import { type ChronicleLine } from '@/features/entity/api/types'
 import { scrollToSection } from '@/features/entity/scrollToSection'
+import { LegendsSection } from '@/features/gatherings/LegendsSection'
 import { useThreads } from '@/features/pantheon/api'
 import { ChronicleFilters } from './ChronicleFilters'
 import { ChronicleSearchResults } from './ChronicleSearchResults'
@@ -233,6 +234,9 @@ export function ChronicleScreen() {
             </div>
           )}
           <ChronicleThreads />
+          <LegendsSection
+            worlds={worlds.map((world) => ({ id: world.id, name: world.name }))}
+          />
           <CosmicChronicleGrid enabled={multiWorld} />
           <CompareEpochs stats={stats.data ?? []} epochs={epochs.data ?? []} />
           <EpochTraces stats={stats.data ?? []} sons={state.data?.sons ?? []} />

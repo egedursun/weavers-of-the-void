@@ -1,4 +1,5 @@
 import {
+  Activity,
   AudioLines,
   Cog,
   Languages,
@@ -94,6 +95,12 @@ function GenesisBody({ saved }: { saved: SavedGenesis }) {
               label='Cosmos size'
               value={humanize(settings.cosmos_size)}
               tone='info'
+            />
+            <MiniStat
+              icon={Activity}
+              label='Storyteller'
+              value={humanize(settings.storyteller)}
+              tone='warning'
             />
           </>
         )}

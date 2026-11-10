@@ -39,7 +39,9 @@ def raw_queries(files: dict[Path, str]) -> list[Raw]:
 def main() -> int:
     found = raw_queries({path: path.read_text(encoding="utf-8") for path in sorted(SOURCE.rglob("*.py"))})
     for item in found:
-        print(f"{item.path.relative_to(ROOT)}:{item.line}: {item.text} finds mortals by a raw place; a people or polity holds none, use present_among or folk_among")
+        print(
+            f"{item.path.relative_to(ROOT)}:{item.line}: {item.text} finds mortals by a raw place; a people or polity holds none, use present_among or folk_among"
+        )
     print(f"raw folk queries: {len(found)}")
     return 1 if found else 0
 

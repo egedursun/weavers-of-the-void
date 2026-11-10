@@ -59,6 +59,7 @@ import { WorldEraSection } from '@/features/entity/lore/EraSection'
 import { ThingSections } from '@/features/entity/sections/ThingSections'
 import { WorldLifeSection } from '@/features/entity/wilds/FloraPanels'
 import { GoldenAgeSection } from '@/features/foundations/GoldenAgeCard'
+import { StorytellerSection } from '@/features/gatherings/StorytellerSection'
 import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverlay'
 import { RecordGallery } from '@/features/pantheon/RecordGallery'
 import { mediaUrl } from '@/features/pantheon/media'
@@ -449,6 +450,7 @@ export function WorldWikiView({ worldId }: { worldId: number }) {
       <WorldTerraformSection worldId={data.world.id} />
       <WorldSurveySection worldId={data.world.id} />
       <RiftsForWorld worldId={data.world.id} />
+      <StorytellerSection worldId={data.world.id} />
       <CelestialDepthSection
         kind='world'
         id={data.world.id}

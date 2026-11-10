@@ -139,6 +139,7 @@ from aerona.db.tables.faith import (
 )
 from aerona.db.tables.finance import CreditProfileRow, EconomicIndicatorRow, SpeculationRow, TradePolicyRow
 from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow, WorldBiochemistryRow
+from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionMemberRow, CollectionPlaceRow, CollectionRow, GatheringGuestRow, GatheringRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
 from aerona.db.tables.households import DwellingFurnishingRow, DwellingRow, HouseholdAggregateRow, HouseholdMemberRow, HouseholdRow
@@ -214,6 +215,7 @@ from aerona.db.tables.settlement import (
     SettlementProfileRow,
     SettlementTreasuryRow,
 )
+from aerona.db.tables.sites import BattlefieldFeatureRow, ExcavationRow, ExcavationStageRow, RoomContentRow, SiteHolderRow, SiteRoomRow
 from aerona.db.tables.society import CommunityRelationRow, CommunitySocietyRow
 from aerona.db.tables.society_depth import (
     ClassStandingRow,
@@ -225,6 +227,7 @@ from aerona.db.tables.society_depth import (
     PolityLoyaltyRow,
 )
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, DiplomacyProfileRow, PolityRegardRow, SphereRow
+from aerona.db.tables.storyteller import StorytellerRow, TensionRecordRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow, StructureStaffRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleHolderRow, TitleProfileRow
 from aerona.db.tables.warfare import CasusBelliRow, SiegeRow, WarProductionRow, WarRow, WarSideRow
@@ -244,6 +247,74 @@ class ComplianceRow:
 
 
 CATALOGUE: tuple[ComplianceRow, ...] = (
+    ComplianceRow(
+        "F25",
+        (GatheringRow.__tablename__, GatheringGuestRow.__tablename__),
+        ("gatherings",),
+        ("gathering:convene", "gathering:hold", "gathering:edit", "gathering:delete", "gathering_guest:set", "gathering_guest:remove"),
+        ("GatheringsSection", "section-gatherings"),
+        ("mortal_context",),
+        ("hold_gathering", "convene_gathering"),
+        ("gathering.",),
+        ("959c964d1a42",),
+    ),
+    ComplianceRow(
+        "F10/RP2",
+        (CollectionRow.__tablename__, CollectionMemberRow.__tablename__, CollectionIncidentRow.__tablename__, CollectionPlaceRow.__tablename__),
+        ("event_collections",),
+        ("collection:create", "collection:edit", "collection:delete", "collection_member:set", "collection_member:remove", "collection:place"),
+        ("HistoriesSection", "section-histories"),
+        ("chronicler_user",),
+        (),
+        (),
+        ("959c964d1a42",),
+    ),
+    ComplianceRow(
+        "F27",
+        (StorytellerRow.__tablename__, TensionRecordRow.__tablename__),
+        ("storyteller",),
+        ("storyteller:set",),
+        ("StorytellerSection", "section-storyteller"),
+        ("chronicler_user",),
+        (),
+        ("storyteller.",),
+        ("959c964d1a42",),
+    ),
+    ComplianceRow(
+        "S6.2/RP2",
+        (
+            SiteRoomRow.__tablename__,
+            RoomContentRow.__tablename__,
+            SiteHolderRow.__tablename__,
+            ExcavationRow.__tablename__,
+            ExcavationStageRow.__tablename__,
+            BattlefieldFeatureRow.__tablename__,
+        ),
+        ("site_rooms", "excavations", "battlefields", "heroes"),
+        (
+            "site_room:create",
+            "site_room:edit",
+            "site_room:delete",
+            "room_content:add",
+            "room_content:remove",
+            "site:delve",
+            "site_holder:set",
+            "site_holder:delete",
+            "excavation:begin",
+            "excavation:edit",
+            "excavation:advance",
+            "excavation:delete",
+            "excavation_stage:edit",
+            "battlefield_feature:create",
+            "battlefield_feature:edit",
+            "battlefield_feature:delete",
+        ),
+        ("SiteSection", "section-site"),
+        ("mortal_context",),
+        ("delve_site", "dig_site"),
+        ("site.", "excavation.", "battlefield."),
+        ("959c964d1a42",),
+    ),
     ComplianceRow(
         "S10.10",
         (GalaxyRow.__tablename__, GalacticStructureRow.__tablename__, GalacticEventRow.__tablename__, StarRow.__tablename__),

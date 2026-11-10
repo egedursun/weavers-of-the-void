@@ -27,6 +27,7 @@ from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitKind
 from aerona.domain.enums.polity import GenderRule, LawKind, OathKind, OfficeKind, OfficePower, SuccessionRule, TreatyStatus
 from aerona.domain.enums.settlement import TIER_ORDER
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.storyteller import SpontaneousKind
 from aerona.domain.enums.war import WarSide
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
@@ -52,6 +53,7 @@ from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import war_event
 from aerona.engine.settlement.book import towns
 from aerona.engine.settlement.districts import office_tier
+from aerona.engine.storyteller.pace import paced
 from aerona.rules.registry import Rules
 
 S = SkillKind
@@ -462,7 +464,9 @@ async def regency(ctx: TickContext, realm: Realm, held: set[int]) -> str | None:
     if regent is None or fresh:
         return "appointed" if fresh else None
     ambitious = TraitKind.AMBITIOUS in await traits_of(ctx.session, regent.id)
-    if ambitious and ctx.rng(f"usurp.{realm.entity.id}.{ctx.epoch}").chance(ctx.rules.succession.usurp_chance):
+    if ambitious and ctx.rng(f"usurp.{realm.entity.id}.{ctx.epoch}").chance(
+        await paced(ctx, realm.entity.world_id, SpontaneousKind.CLAIMANT, ctx.rules.succession.usurp_chance)
+    ):
         await usurp(ctx, realm, regent, ruler)
         return "usurped"
     return None

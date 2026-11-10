@@ -358,6 +358,8 @@ class SonResult(StrEnum):
     DIMENSION_OUT_OF_REACH = "Your hand does not reach {{ name }}: none of its worlds is yours or joined to yours."
     DIMENSION_RULED = "You now rule {{ name }}."
     STAR_CLAIMED = "You are now the patron of {{ name }}."
+    GATHERING_CONVENED = "You called {{ kind | an }} at {{ host }} (gathering {{ id }}); it is held this epoch."
+    GATHERING_REFUSED = "You cannot call that gathering: {{ why }}."
 
 
 class MortalResult(StrEnum):
@@ -430,6 +432,12 @@ class MortalResult(StrEnum):
     SCHEME_REFUSED = "You cannot begin that scheme: {{ why }}."
     LEVERAGE_PRESSED = "You pressed {{ target }} to {{ demand }}: {{ deed }}."
     LEVERAGE_FAILED = "Your pressure came to nothing: {{ why }}."
+    GATHERING_PLANNED = "You called {{ kind | an }} for this epoch and invited {{ guests }} by name; who else comes is their own choice."
+    GATHERING_REFUSED = "You cannot call that gathering: {{ why }}."
+    SITE_DELVED = "You walked {{ site }} room by room and {{ told }}; you carried out {{ found }} things."
+    DELVE_REFUSED = "You cannot walk that site: {{ why }}."
+    DIG_BEGUN = "You began to dig at {{ site }} (dig {{ id }}); it goes on stage by stage each epoch while you lead it."
+    DIG_REFUSED = "You cannot dig there: {{ why }}."
     DISPATCH_SENT = "You sent {{ deed }} to {{ target }} by {{ medium }}; it should arrive by epoch {{ epoch }}, unless it is waylaid or read on the road."
     DISPATCH_REFUSED = "You cannot send that: {{ why }}."
     TITLE_SEIZED = "You {{ deed }} {{ title }}, {{ rank | an }}; you now hold it."

@@ -18,7 +18,7 @@ def staged_files() -> list[Path]:
 
 
 def is_test(path: Path) -> bool:
-    return path.name.endswith(TEST_SUFFIXES)
+    return path.name.endswith(TEST_SUFFIXES) and not path.is_dir()
 
 
 def resolved(test: Path, target: str) -> Path | None:

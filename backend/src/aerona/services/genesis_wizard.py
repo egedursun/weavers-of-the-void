@@ -15,6 +15,7 @@ from aerona.db.session import Database
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.rarity import RARITY_ORDER, Rarity
+from aerona.domain.enums.storyteller import StorytellerProfile
 from aerona.domain.enums.world import CosmosSize, GenesisTemplate, ImageStyle, LanguageTexture, LoreLanguage, TechnologyEra
 from aerona.domain.models.genesis import GenesisSettings
 from aerona.engine.primitives.stats import set_stats, stat
@@ -58,6 +59,12 @@ TEXTURE_LABELS: dict[LanguageTexture, str] = {
     LanguageTexture.FREE: "Free",
 }
 COSMOS_LABELS: dict[CosmosSize, str] = {CosmosSize.SINGLE: "Single world", CosmosSize.SMALL: "Small cosmos", CosmosSize.LARGE: "Large cosmos"}
+STORYTELLER_LABELS: dict[StorytellerProfile, str] = {
+    StorytellerProfile.STEADY: "Steady",
+    StorytellerProfile.RISING: "Rising",
+    StorytellerProfile.CYCLIC: "Cyclic",
+    StorytellerProfile.CHAOTIC: "Chaotic",
+}
 LORE_LANGUAGE_LABELS: dict[LoreLanguage, str] = {LoreLanguage.ENGLISH: "English", LoreLanguage.TURKISH: "Turkish"}
 
 
@@ -252,6 +259,7 @@ class WizardInput(BaseModel):
     language: str | None = None
     peoples: Any = None
     cosmos: str | None = None
+    storyteller: str | None = None
     tone: str | None = None
     seed: str | None = None
 
@@ -276,6 +284,7 @@ class WizardOptions:
     technology: dict[TechnologyEra, str]
     language: dict[LanguageTexture, str]
     cosmos: list[CosmosOption]
+    storyteller: dict[StorytellerProfile, str]
     lore_languages: dict[LoreLanguage, str]
     templates: list[WizardTemplate]
     first_sons: FirstSonsOptions
@@ -302,6 +311,7 @@ def options(rules: Rules) -> WizardOptions:
         technology=dict(TECHNOLOGY_LABELS),
         language=dict(TEXTURE_LABELS),
         cosmos=[CosmosOption(size, COSMOS_LABELS[size], 1 + extra_worlds(rules, size)) for size in CosmosSize],
+        storyteller=dict(STORYTELLER_LABELS),
         lore_languages=dict(LORE_LANGUAGE_LABELS),
         templates=list(TEMPLATES.values()),
         first_sons=FirstSonsOptions(
@@ -339,7 +349,7 @@ def _percent(value: Any, fallback: int) -> int:
         return fallback
 
 
-def _choice[E: (TechnologyEra, LanguageTexture, CosmosSize)](kind: type[E], value: str | None, fallback: E) -> E:
+def _choice[E: (TechnologyEra, LanguageTexture, CosmosSize, StorytellerProfile)](kind: type[E], value: str | None, fallback: E) -> E:
     try:
         return kind(value) if value is not None else fallback
     except ValueError:
@@ -367,6 +377,7 @@ def sanitize(rules: Rules, raw: WizardInput) -> GenesisSettings:
         language_texture=_choice(LanguageTexture, raw.language or (template.language.value if template else None), LanguageTexture.FREE),
         peoples=peoples,
         cosmos_size=_choice(CosmosSize, raw.cosmos or (template.cosmos.value if template else None), CosmosSize.SINGLE),
+        storyteller=_choice(StorytellerProfile, raw.storyteller, StorytellerProfile.CYCLIC),
         tone=tone,
         seed_idea=seed,
     )

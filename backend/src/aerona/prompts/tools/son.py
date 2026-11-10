@@ -675,6 +675,11 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "for {{ rules.environment.sever_ley_epochs }} ages. {{ rules.son_tools.sever_ley_essence }} essence, 1 action.",
         {"line_id": "The ley line's id (see the region's ley lines)", "reason": "Why you cut it"},
     ),
+    T.CONVENE_GATHERING: ToolText(
+        "You call a gathering at a people, settlement, cult or place in your reach: a festival, procession, pilgrimage, feast, games or performance. "
+        "It is held this epoch; those who come grow closer to one another and to the host, and it is set down in history. 1 action.",
+        {"host_id": "Who hosts it", "kind": "The kind of gathering", "reason": "Why you call it"},
+    ),
     T.LOOSE_DISEASE: ToolText(
         "You forge a new sickness of your own design and loose it on a region or community: you choose how it spreads (vector), the body functions "
         "it strikes, how readily it passes on, how many it kills, how long it hides before the sick show it, which beast carries it and the climate it loves. "

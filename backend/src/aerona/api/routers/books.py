@@ -10,7 +10,16 @@ from fastapi.responses import FileResponse, HTMLResponse, Response, StreamingRes
 from aerona.api.background import submit
 from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.common import ApiModel, JobAccepted
-from aerona.constants.api import BOOK_CSP, BOOK_PATH, CODEX_FILENAME_SUFFIX, IMMUTABLE_CACHE, MARKDOWN_MEDIA_TYPE
+from aerona.constants.api import (
+    BOOK_CSP,
+    BOOK_PATH,
+    CODEX_FILENAME_SUFFIX,
+    ERROR_DESCRIPTION,
+    ERROR_SCHEMA_REF,
+    IMMUTABLE_CACHE,
+    JSON_CONTENT_TYPE,
+    MARKDOWN_MEDIA_TYPE,
+)
 from aerona.constants.books import (
     CODEX_ARCHIVE_MEDIA_TYPE,
     CODEX_ARCHIVE_SUFFIX,
@@ -86,7 +95,11 @@ async def codex_archive(services: ServicesDep) -> StreamingResponse:
     return StreamingResponse(stream_and_delete(archive), media_type=CODEX_ARCHIVE_MEDIA_TYPE, headers=headers)
 
 
-@router.get(BOOK_PATH, response_class=HTMLResponse)
+@router.get(
+    BOOK_PATH,
+    response_class=HTMLResponse,
+    responses={"default": {"description": ERROR_DESCRIPTION, "content": {JSON_CONTENT_TYPE: {"schema": {"$ref": ERROR_SCHEMA_REF}}}}},
+)
 async def book(services: ServicesDep, son_id: int | None = Query(default=None, ge=1), entity_id: int | None = Query(default=None, ge=1)) -> HTMLResponse:
     async with reader(services) as session:
         rules = await world_rules(services, session)

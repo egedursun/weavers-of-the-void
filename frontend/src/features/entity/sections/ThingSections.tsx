@@ -1,3 +1,5 @@
+import { GatheringsSection } from '@/features/gatherings/GatheringsSection'
+import { HistoriesSection } from '@/features/gatherings/HistoriesSection'
 import { AffairsSection } from './AffairsSection'
 import { AspirationsSection } from './AspirationsSection'
 import { BondsSection } from './BondsSection'
@@ -55,6 +57,8 @@ export function ThingSections({
       <JusticeSection nodeId={nodeId} />
       <StatecraftSection nodeId={nodeId} />
       <AffairsSection nodeId={nodeId} />
+      <GatheringsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <HistoriesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <RecordRowsSection nodeId={nodeId} />
     </>
   )

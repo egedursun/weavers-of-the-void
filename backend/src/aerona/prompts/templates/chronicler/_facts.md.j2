@@ -21,6 +21,12 @@ Sons:
 - {{ son.name }} (id {{ son.id }}, ref {{ son.ref }}{% if son.world %}, {{ son.world }}{% endif %}): {% if son.deeds %}{{ son.deeds | join("; ") }}{% if son.deed_count > son.deeds | length %} ({{ son.deed_count }} deeds in all){% endif %}{% else %}did no great deed this age (tell of their waiting in one sentence){% endif %}{% if son.records %}; made or blessed: {% for record in son.records %}{{ record.name }} (id {{ record.id }}){% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
 
 {% endfor %}
+{% if facts.histories %}
+Histories under way this age (the incidents of this age belong to them; tell events as parts of the history they belong to):
+{% for history in facts.histories %}
+- {{ history.name }} ({{ history.kind }}, since age {{ history.since }}{% if history.ended %}, ended in age {{ history.ended }}{% endif %}{% if history.within %}, part of {{ history.within }}{% endif %})
+{% endfor %}
+{% endif %}
 {% if facts.events %}
 Major events:
 {% for event in facts.events %}

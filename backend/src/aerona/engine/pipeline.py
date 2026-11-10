@@ -50,6 +50,7 @@ from aerona.engine.phases import (
     factions,
     faith,
     finance,
+    gatherings,
     genetics,
     geography,
     goals,
@@ -148,6 +149,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + renown.PHASES
     + industry.PHASES
     + genetics.PHASES
+    + gatherings.PHASES
     + households.PHASES
     + intrigue.PHASES
     + communication.PHASES
@@ -290,6 +292,8 @@ SUB_ENGINE_STAGE = stage(
     "exploration",
     "geography",
     "place_profiles",
+    "site_rooms",
+    "excavations",
     "place_secrets",
     "resource_mechanics",
     "mechanics_assignment",
@@ -461,6 +465,7 @@ MIND_STAGE = stage(
     "mind_ethics",
     "mind_aspirations",
     "relations_social",
+    "gatherings",
     "relations_circles",
     "relations_passions",
     "relations_pecking",
@@ -475,6 +480,9 @@ MIND_STAGE = stage(
     "famine_aid",
     "mind_opinion",
     "ethnic_relations",
+    "battlefields",
+    "event_collections",
+    "storyteller",
     "incident_threads",
 )
 

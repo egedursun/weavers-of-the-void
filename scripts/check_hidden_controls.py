@@ -67,7 +67,9 @@ def hidden_in(path: Path) -> list[Hidden]:
 def main() -> int:
     hidden = [item for path in sorted(FRONTEND.rglob("*.tsx")) if ".test." not in path.name for item in hidden_in(path)]
     for item in hidden:
-        print(f"{item.path.relative_to(ROOT)}:{item.line}: a god control is replaced by a note when `{item.condition}`; keep the control and disable it with a reason")
+        print(
+            f"{item.path.relative_to(ROOT)}:{item.line}: a god control is replaced by a note when `{item.condition}`; keep the control and disable it with a reason"
+        )
     print(f"hidden controls: {len(hidden)}")
     return 1 if hidden else 0
 

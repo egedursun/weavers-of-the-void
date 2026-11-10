@@ -14,6 +14,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.mortal import MarriageKind
 from aerona.domain.enums.polity import ClauseKind, LawKind, PartyRole, RegionalStanding, TreatyKind, TreatyStatus
+from aerona.domain.enums.storyteller import RecoveryKind
 from aerona.domain.enums.war import WarCause, WarEnding
 from aerona.engine.body.cohorts import war_appetite
 from aerona.engine.context import TickContext
@@ -48,6 +49,7 @@ from aerona.engine.services.war import (
 )
 from aerona.engine.services.war_geography import Neighbourhood
 from aerona.engine.services.war_resolution import end_war, settle_peace
+from aerona.engine.storyteller.pace import recovered
 from aerona.rules.registry import Rules
 
 MARRIAGE_AGE_FALLBACK_KEY = "age"
@@ -347,7 +349,15 @@ async def _neighbour_pair(
         await _note(ctx, text, "diplomacy.war_declared", (first.id, second.id), ChronicleKind.WAR)
     elif (
         enemy
-        and ((value >= rules.peace_threshold and rng.chance(rules.peace_chance + await blockade_pressure(ctx, first.id, second.id))) or tired)
+        and (
+            (
+                value >= rules.peace_threshold
+                and rng.chance(
+                    await recovered(ctx, first.world_id, RecoveryKind.PEACE_ENVOY, rules.peace_chance) + await blockade_pressure(ctx, first.id, second.id)
+                )
+            )
+            or tired
+        )
         and counters.peaces < rules.peace_cap
     ):
         await settle_peace(ctx, first.id, second.id, WarEnding.PEACE, "peace")
@@ -461,6 +471,7 @@ async def alliance_lifetimes(ctx: TickContext) -> int:
     "table.ruler_currencies",
     "table.sieges",
     "table.speaker_cohorts",
+    "table.storytellers",
     "table.trade_route_profiles",
     "table.tradition_profiles",
     "table.traits",

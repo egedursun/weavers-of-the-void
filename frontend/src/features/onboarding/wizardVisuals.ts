@@ -15,12 +15,15 @@ import {
   LayoutTemplate,
   Lightbulb,
   type LucideIcon,
+  Minus,
   Moon,
   Mountain,
   Orbit,
   Palette,
+  Repeat,
   ScrollText,
   Shell,
+  Shuffle,
   Skull,
   Snowflake,
   Star,
@@ -32,12 +35,14 @@ import {
   Sparkle,
   Telescope,
   TreePine,
+  TrendingUp,
   Users,
 } from 'lucide-react'
 import {
   type CosmosSize,
   type LanguageTexture,
   type LoreLanguage,
+  type StorytellerProfile,
   type TechnologyEra,
   type WizardTemplate,
 } from './api'
@@ -113,6 +118,20 @@ export const COSMOS_ICON: Record<CosmosSize, LucideIcon> = {
   single: Sun,
   small: Orbit,
   large: Telescope,
+}
+
+export const STORYTELLER_ICON: Record<StorytellerProfile, LucideIcon> = {
+  steady: Minus,
+  rising: TrendingUp,
+  cyclic: Repeat,
+  chaotic: Shuffle,
+}
+
+export const STORYTELLER_HINT: Record<StorytellerProfile, string> = {
+  steady: 'Tension held near one level all along',
+  rising: 'Tension grows with the ages',
+  cyclic: 'Hard years and quiet years in turn',
+  chaotic: 'Tension rises and falls without warning',
 }
 
 export const LORE_LANGUAGE_ICON: Record<LoreLanguage, LucideIcon> = {

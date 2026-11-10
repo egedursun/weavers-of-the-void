@@ -39,6 +39,7 @@ from aerona.engine.interconnect.catalog_estates import ESTATE_MECHANICS
 from aerona.engine.interconnect.catalog_faith import BEHAVIOURS as FAITH_BEHAVIOURS
 from aerona.engine.interconnect.catalog_faith import FAITH_MECHANICS
 from aerona.engine.interconnect.catalog_foundations import FOUNDATION_MECHANICS
+from aerona.engine.interconnect.catalog_gatherings import GATHERING_MECHANICS
 from aerona.engine.interconnect.catalog_industry import INDUSTRY_MECHANICS
 from aerona.engine.interconnect.catalog_intrigue import INTRIGUE_MECHANICS
 from aerona.engine.interconnect.catalog_justice import JUSTICE_MECHANICS
@@ -988,6 +989,7 @@ BUILT_IN = (
     *AFFAIRS_MECHANICS,
     *FOUNDATION_MECHANICS,
     *PLACE_MECHANICS,
+    *GATHERING_MECHANICS,
     *PLACE_BEHAVIOURS,
     *COUPLING_MECHANICS,
     *REGION_MECHANICS,
@@ -1007,6 +1009,7 @@ MODULE_SUBSYSTEMS: dict[str, Subsystem] = {
     "dark_ages": Subsystem.POLITY,
     "world_age": Subsystem.POLITY,
     "births": Subsystem.DEMOGRAPHY,
+    "gatherings": Subsystem.SOCIAL,
     "mortals": Subsystem.DEMOGRAPHY,
     "life_cycles": Subsystem.DEMOGRAPHY,
     "heroes": Subsystem.DEMOGRAPHY,

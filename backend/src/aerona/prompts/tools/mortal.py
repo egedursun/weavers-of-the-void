@@ -75,6 +75,22 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "Each epoch it may be discovered. One scheme at a time. 1 action.",
         {"kind": "The scheme", "target_id": "Whom or what it is aimed at"},
     ),
+    T.HOLD_GATHERING: ToolText(
+        "You hold a gathering of the kind you choose where you live, this epoch, and name the guests you most want; others come by friendship, "
+        "kinship, duty and distance. Those who come grow closer, may fall in love, quarrel or learn each other's secrets. A feast costs coin for each guest. "
+        "Councils, summits and tournaments are for rulers. One gathering planned at a time. 1 action.",
+        {"kind": "The kind of gathering", "guest_ids": "Whom you invite by name"},
+    ),
+    T.DELVE_SITE: ToolText(
+        "You walk a site that has rooms, room by room. A room may hold a trap, a guardian, a puzzle or a hazard, and things, spirits or beasts within; "
+        "you take what you win and stop at the first room you cannot pass. Reaching its heart wins renown. 1 action.",
+        {"site_id": "The site you walk"},
+    ),
+    T.DIG_SITE: ToolText(
+        "With lore enough, you begin a dig at an old site and lead it. It goes through five stages; each needs a skill and sometimes a technique, "
+        "and each may hold a risk or a find that passes to your realm. 1 action.",
+        {"site_id": "The site you dig"},
+    ),
     T.PRESS_LEVERAGE: ToolText(
         "You lean on someone you hold a hook on, or who owes you a favour: to marry you, to step down from their offices, or to lend you support. "
         "A weak hook is spent; a favour called in may be refused. 1 action.",

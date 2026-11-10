@@ -14,6 +14,7 @@ import { LawProfileSection } from '@/features/divine/LawProfileSection'
 import { OuterProfileSection } from '@/features/divine/OuterProfileSection'
 import { RegardSection } from '@/features/divine/RegardSection'
 import { DedicationSection } from '@/features/foundations/DedicationSection'
+import { SiteSection } from '@/features/gatherings/SiteSection'
 import { Lightbox } from '@/features/images/Lightbox'
 import { useImageGenEvents } from '@/features/images/imageGenState'
 import { ObserverSurveySection } from '@/features/physics/SurveySection'
@@ -132,6 +133,8 @@ const MIND_TYPES = new Set([
   'faction',
 ])
 
+const SITE_TYPES = new Set(['place', 'structure', 'settlement'])
+
 const SECTION_LINKS = [
   { id: 'section-facts', label: 'Facts' },
   { id: 'section-stats', label: 'Stats' },
@@ -177,6 +180,9 @@ const SECTION_LINKS = [
   { id: 'section-cosmic-being', label: 'Cosmic being' },
   { id: 'section-celestial-readings', label: 'Readings' },
   { id: 'section-events-here', label: 'Events here' },
+  { id: 'section-site', label: 'Rooms and digs' },
+  { id: 'section-gatherings', label: 'Gatherings' },
+  { id: 'section-histories', label: 'Histories' },
   { id: 'section-body', label: 'Body' },
   { id: 'section-afflictions', label: 'Afflictions' },
   { id: 'section-body-customs', label: 'Wounds and bodies' },
@@ -316,6 +322,8 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
     entity.entity_type === 'place' ||
     entity.entity_type === 'settlement'
   if (!eventful) present.delete('section-events-here')
+  const sited = SITE_TYPES.has(entity.entity_type)
+  if (!sited) present.delete('section-site')
   const embodied =
     entity.entity_type === 'mortal' || entity.entity_type === 'species'
   if (!embodied) present.delete('section-body')
@@ -456,6 +464,13 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
         )}
         {entity.entity_type === 'event' && (
           <EventSection eventId={entity.id} readOnlyReason={readOnly} />
+        )}
+        {sited && (
+          <SiteSection
+            siteId={entity.id}
+            entityType={entity.entity_type}
+            readOnlyReason={readOnly}
+          />
         )}
         {eventful && (
           <EventsHereSection locationId={entity.id} readOnlyReason={readOnly} />

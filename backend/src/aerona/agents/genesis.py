@@ -23,9 +23,11 @@ from aerona.db.repositories.names import NameRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.repositories.worlds import WorldDraft, WorldRepository
 from aerona.db.tables.sons import SonRow
+from aerona.db.tables.storyteller import StorytellerRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityType
 from aerona.domain.enums.rarity import Rarity
+from aerona.domain.enums.storyteller import StorytellerProfile
 from aerona.domain.enums.world import LoreLanguage, WorldType
 from aerona.domain.models.genesis import GenesisSettings
 from aerona.domain.models.profiles import TravelResource
@@ -157,6 +159,9 @@ async def write_genesis(session: AsyncSession, rules: Rules, request: GenesisReq
         )
     )
     cosmos.primary_world_id = world.id
+    session.add(
+        StorytellerRow(world_id=world.id, profile=settings.storyteller if settings is not None else StorytellerProfile.CYCLIC, recent_kinds={}, locked=[])
+    )
     entities = EntityRepository(session)
     genesis_rules = rules.genesis
     regions = []

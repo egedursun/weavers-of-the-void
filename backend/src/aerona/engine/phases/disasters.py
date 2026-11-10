@@ -32,6 +32,7 @@ from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.settlement import DistrictHarm
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, NaturalLaw
+from aerona.domain.enums.storyteller import SpontaneousKind
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import EventStats
@@ -65,6 +66,7 @@ from aerona.engine.primitives.stats import FOLLOWERS_KEY, POPULATION_KEY, headco
 from aerona.engine.primitives.thresholds import relative_threshold
 from aerona.engine.records import death_path
 from aerona.engine.settlement.districts import damage_districts
+from aerona.engine.storyteller.pace import paced
 from aerona.engine.structures.damage import harm, quake_loss
 from aerona.engine.structures.readers import strength_at
 from aerona.rules.registry import Rules
@@ -536,7 +538,8 @@ async def _region_disasters(ctx: TickContext, world: DisasterWorld) -> None:
         tidal = (planet.tidal_strength or 0) if planet is not None else 0
         shape = shapes.get(region.id)
         candidates = region_candidates(ctx, region, atlas, regional_population.get(region.id, 0), world.laws, ground=ground, tidal=tidal, shape=shape)
-        for disaster, chance in candidates:
+        for disaster, base in candidates:
+            chance = await paced(ctx, region.world_id, SpontaneousKind.PLAGUE, base) if disaster is Disaster.PLAGUE else base
             climate = world.climate_mult(region.world_id) if disaster is Disaster.PLAGUE else 1.0
             if not rng.chance(chance * world.law_mult(ctx.rules, region.world_id) * climate * world.nature_mult(ctx.rules, region.world_id, disaster)):
                 continue

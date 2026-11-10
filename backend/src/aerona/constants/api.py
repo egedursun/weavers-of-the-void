@@ -37,3 +37,5 @@ PATH_MAX_DEPTH = 6
 STATIC_INDEX = "index.html"
 WIKI_TIMELINE_LINES = 40
 WIKI_PEOPLES_SHOWN = 12
+ERROR_DESCRIPTION = "The error and its code"
+ERROR_SCHEMA_REF = "#/components/schemas/ErrorResponse"

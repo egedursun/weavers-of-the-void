@@ -9,7 +9,9 @@ import {
   NeutralToneMapping,
 } from 'three'
 import { unitHash } from '@/lib/hash'
+import { type CosmosData } from '@/features/cosmos/api'
 import { STAR_LOOK } from '@/features/cosmos/model/looks'
+import { EmbeddedWorlds3D } from '@/features/cosmos/scene3d/EmbeddedWorlds3D'
 import { PostEffects3D } from '@/features/cosmos/scene3d/PostEffects3D'
 import { shaderMaterial, uniform } from '@/features/cosmos/scene3d/materials'
 import {
@@ -17,7 +19,7 @@ import {
   DUST_VERTEX,
 } from '@/features/cosmos/scene3d/shaders/sky'
 import { type StarRecord, type StructureRecord } from '../api'
-import { type WorldMark } from '../galaxyWorlds'
+import { type WorldMark, worldRadius } from '../galaxyWorlds'
 import {
   type LabelElements,
   LabelLayer,
@@ -62,6 +64,7 @@ export type GalaxySceneProps = {
   structures: readonly StructureRecord[]
   stars: readonly StarRecord[]
   worlds?: readonly WorldMark[]
+  cosmos?: CosmosData
   selected?: Pick
   placing?: boolean
   portrait?: boolean
@@ -401,18 +404,17 @@ export function WorldMarker({
   selected: boolean
   onPick?: (pick: Pick) => void
 }) {
-  const color = tokenHex(world.sunless ? '--cosmos-bone' : '--cosmos-orbit')
-  const radius = size * (selected ? 0.32 : 0.2)
+  const radius = worldRadius(size, selected)
   return (
     <group position={[world.x, 0, world.y]}>
       <mesh
+        visible={false}
         onClick={(event) => {
           event.stopPropagation()
           onPick?.({ kind: 'world', id: world.id })
         }}
       >
         <sphereGeometry args={[radius, 16, 12]} />
-        <meshBasicMaterial color={color} />
       </mesh>
       {selected && (
         <Line
@@ -590,6 +592,7 @@ function Scene({
   structures,
   stars,
   worlds = [],
+  cosmos,
   selected = null,
   placing = false,
   portrait = false,
@@ -633,6 +636,20 @@ function Scene({
           onPick={onPick}
         />
       ))}
+      {cosmos && (
+        <EmbeddedWorlds3D
+          cosmos={cosmos}
+          worlds={worlds}
+          radius={(world) =>
+            worldRadius(
+              starSize,
+              selected?.kind === 'world' && selected.id === world.id
+            )
+          }
+          selectedId={selected?.kind === 'world' ? selected.id : null}
+          reduced={portrait}
+        />
+      )}
       {worlds.map((world) => (
         <WorldMarker
           key={world.id}

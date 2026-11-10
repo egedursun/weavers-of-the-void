@@ -20,6 +20,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, SOCIETY_TYPES, EntityFla
 from aerona.domain.enums.mind import MemoryKind, PressureKind, TraitEffect, ValueAxis
 from aerona.domain.enums.mortal import DeathCause, HarshnessScale, LifeStage, MortalSex
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.storyteller import RecoveryKind
 from aerona.domain.models.entity_stats import MortalStats, PeopleStats, SettlementStats
 from aerona.engine.body.afflictions import afflict, inherit
 from aerona.engine.body.cohorts import healer_demand
@@ -67,6 +68,7 @@ from aerona.engine.primitives.queries import (
 from aerona.engine.primitives.records import RecordSpec, open_record, sentence_case
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import headcount, headcount_bounds, set_stats, stat, stat_or
+from aerona.engine.storyteller.pace import recovered
 from aerona.language.generator import NameKind
 from aerona.language.titles import from_among
 from aerona.rules.registry import Rules
@@ -395,7 +397,7 @@ async def notables(ctx: TickContext, namer: Namer) -> None:
         if not rng.chance(chance):
             continue
         social_class = pick_class(rng.random(), await class_shares(ctx.session, rules, community.id))
-        demand = await healer_demand(ctx, community)
+        demand = await recovered(ctx, community.world_id, RecoveryKind.HEALER_BIRTH, await healer_demand(ctx, community))
         roles = NOTABLE_ROLES[social_class]
         pick = weighted(rng, {index: demand if role.role is MortalRole.HEALER else 1.0 for index, role in enumerate(roles)})
         await raise_notable(ctx, community, social_class, roles[pick] if pick is not None else rng.pick(roles), namer)

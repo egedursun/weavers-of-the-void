@@ -202,6 +202,7 @@ SON_CASES: dict[str, Case] = {
     "transform": Case(plain(entity_id=faction, new_description=TEXT, reason=REASON)),
     "destroy": Case(plain(entity_id=faction, reason=REASON)),
     "loose_disease": Case(plain(target_id=people, name="Grey Cough", target_functions=["breath"], reason=REASON)),
+    "convene_gathering": Case(plain(host_id=people, kind="festival", reason=REASON)),
     "incite_war": Case(plain(a_id=people, b_id=other_people, pretext="the river border was crossed")),
     "make_interworld_treaty": Case(plain(a_id=people, b_id=other_people, terms="free passage on the light sail")),
     "war_on_foreign_god": Case(plain(god_id=god, reason=REASON)),

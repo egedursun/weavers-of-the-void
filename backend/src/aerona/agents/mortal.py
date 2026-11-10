@@ -29,6 +29,7 @@ from aerona.db.tables.entities import EntityFlagRow, EntityRow, EntityTagRow
 from aerona.db.tables.lore import MessageRow
 from aerona.db.tables.mind import NeedRow, PressureRow, TraitRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.storyteller import StorytellerRow
 from aerona.domain.enums.agent import AgentKind, MessageIntent
 from aerona.domain.enums.body import Consciousness
 from aerona.domain.enums.bond import BondKind
@@ -66,6 +67,7 @@ class Candidate:
     pressure: int = 0
     temperament: int = 0
     mood: int = 0
+    spotlight: float = 1.0
 
 
 @dataclass(frozen=True)
@@ -147,6 +149,7 @@ async def candidates(session_scope: Scope) -> list[Candidate]:
     held: dict[int, list[TraitKind]] = defaultdict(list)
     for node_id, trait in await session_scope.session.execute(select(TraitRow.node_id, TraitRow.trait).where(TraitRow.node_id.in_(ids))):
         held[node_id].append(trait)
+    lit = {row.spotlight_entity_id for row in await session_scope.session.scalars(select(StorytellerRow)) if row.spotlight_entity_id is not None}
     return [
         Candidate(
             row,
@@ -156,6 +159,7 @@ async def candidates(session_scope: Scope) -> list[Candidate]:
             pressure[row.id],
             trait_effect(held[row.id], TraitEffect.AGENT_WEIGHT, rules.traits.effect_scale_pct),
             moods.get(row.id, 0),
+            rules.storyteller.spotlight_weight_pct / PERCENT if row.id in lit else 1.0,
         )
         for row in eligible
     ]
@@ -172,7 +176,7 @@ def score(rules: Rules, candidate: Candidate, epoch: int, rng: SeededRandom) -> 
     value += tools.agent_dream_bonus if candidate.dreaming else 0
     value += candidate.pressure * rules.needs.agent_pressure_weight / PERCENT
     value += abs(candidate.mood) * rules.thoughts.agent_mood_weight / PERCENT
-    return value * scaled_by(candidate.temperament)
+    return value * scaled_by(candidate.temperament) * candidate.spotlight
 
 
 def pick(rules: Rules, group: Sequence[Candidate], count: int, epoch: int, rng: SeededRandom) -> list[Candidate]:

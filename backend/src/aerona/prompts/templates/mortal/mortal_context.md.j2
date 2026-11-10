@@ -63,6 +63,8 @@ YOUR WORK: {{ stores.job }}{% endif %}{% endif %}
 {% endif %}{% if home and (home.letters or home.opinions) %}YOUR LETTERS AND YOUR PEOPLE'S MINDS{% if home.letters %}: {{ home.letters | join('; ') }}{% endif %}{% if home.opinions %}; {{ home.opinions | join('; ') }}{% endif %}
 {% endif %}{% if home and home.titles %}YOUR TITLES: {{ home.titles | join('; ') }}
 {% endif %}{% if home and home.estates %}YOUR ESTATES, GUILD AND STAKES: {{ home.estates | join('; ') }}
+{% endif %}{% if home and home.gatherings %}YOUR GATHERINGS: {{ home.gatherings | join('; ') }}
+{% endif %}{% if home and home.sites %}SITES AROUND YOU: {{ home.sites | join('; ') }}
 {% endif %}{% if home and (home.proposals or home.cases) %}YOUR PROPOSALS AND CASES: {{ (home.proposals + home.cases) | join('; ') }}
 {% endif %}{% if home and home.abroad %}YOUR REALM ABROAD: {{ home.abroad | join('; ') }}
 {% endif %}{% if home and home.affairs %}YOUR REALM'S AFFAIRS: {{ home.affairs | join('; ') }}

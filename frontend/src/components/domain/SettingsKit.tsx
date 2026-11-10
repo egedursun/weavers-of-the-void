@@ -20,12 +20,14 @@ export function ChoiceTiles<T extends string>({
   options,
   onChange,
   columns = 3,
+  blocked = null,
 }: {
   label: string
   value: T
   options: readonly Choice<T>[]
   onChange: (value: T) => void
   columns?: 2 | 3 | 4
+  blocked?: string | null
 }) {
   return (
     <div
@@ -48,6 +50,8 @@ export function ChoiceTiles<T extends string>({
             aria-checked={active}
             variant='outline'
             size='tile'
+            disabled={blocked !== null}
+            disabledReason={blocked ?? undefined}
             onClick={() => onChange(option.value)}
             className={cn(active && 'border-primary/60 bg-primary/10')}
           >

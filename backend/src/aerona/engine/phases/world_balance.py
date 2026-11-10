@@ -31,6 +31,7 @@ from aerona.engine.primitives.queries import canon, connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat
+from aerona.engine.storyteller.pace import quiet_world
 from aerona.rules.registry import Rules
 
 FACTION_KINDS: dict[SocialClass, tuple[str, str]] = {
@@ -419,6 +420,7 @@ async def revive(ctx: TickContext, world: WorldRow, *, forced: bool = False) -> 
     "table.lexemes",
     "table.name_registry",
     "table.nodes",
+    "table.storytellers",
     "table.world_maps",
 )
 @writes(
@@ -443,7 +445,7 @@ async def world_balance(ctx: TickContext) -> None:
         return
     revived = 0
     for world in unheld(worlds):
-        if await revive(ctx, world):
+        if await quiet_world(ctx, world.id) and await revive(ctx, world):
             revived += 1
     ctx.count("revived", revived)
     await ctx.session.flush()

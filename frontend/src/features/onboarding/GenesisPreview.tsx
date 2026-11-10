@@ -17,6 +17,7 @@ import {
 import {
   COSMOS_ICON,
   LANGUAGE_ICON,
+  STORYTELLER_ICON,
   TECHNOLOGY_ICON,
   TEMPLATE_ICON,
   darknessLevel,
@@ -63,6 +64,7 @@ export function GenesisPreview({
   const TechIcon = TECHNOLOGY_ICON[draft.technology]
   const LanguageIcon = LANGUAGE_ICON[draft.language]
   const CosmosIcon = COSMOS_ICON[draft.cosmos]
+  const StorytellerIcon = STORYTELLER_ICON[draft.storyteller]
   return (
     <aside
       aria-label='Your world so far'
@@ -135,6 +137,10 @@ export function GenesisPreview({
             {cosmos
               ? `${cosmos.label} · ${cosmos.worlds} ${cosmos.worlds === 1 ? 'world' : 'worlds'}`
               : draft.cosmos}
+          </Badge>
+          <Badge variant='outline'>
+            <StorytellerIcon />
+            {`${options.storyteller[draft.storyteller] ?? draft.storyteller} storyteller`}
           </Badge>
           <Badge variant='outline'>
             <Users />

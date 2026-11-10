@@ -21,6 +21,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory, ThreadLinkRole, ThreadStatus
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityType
+from aerona.domain.enums.storyteller import SpontaneousKind
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.travel import TravelMethod
 from aerona.domain.enums.war import WarEnding
@@ -47,6 +48,7 @@ from aerona.engine.primitives.queries import canon, connect, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.stats import shift_bounded, stat_or
 from aerona.engine.services.war_resolution import settle_peace
+from aerona.engine.storyteller.pace import paced
 from aerona.engine.structures.readers import strength_at, working
 from aerona.rules.registry import Rules
 
@@ -351,7 +353,7 @@ async def spontaneous_sky_event(ctx: TickContext) -> SkyEventResult | None:
     rng = ctx.rng("spontaneous")
     stars = {star.id: star for star in await ctx.session.scalars(select(StarRow).order_by(StarRow.id))}
     bag = spontaneous_bag(ctx.rules)
-    if not bag or not rng.chance(ctx.rules.sky.sky_event_chance):
+    if not bag or not rng.chance(await paced(ctx, None, SpontaneousKind.COMET, ctx.rules.sky.sky_event_chance)):
         return None
     kind = bag[rng.die(len(bag)) - 1]
     order = await spontaneous_order(ctx, kind, stars)
@@ -522,6 +524,7 @@ async def drift_worlds(ctx: TickContext) -> None:
     "table.place_environment",
     "table.region_environment",
     "table.sky_events",
+    "table.storytellers",
     "table.traits",
     "table.war_sides",
     "table.wars",

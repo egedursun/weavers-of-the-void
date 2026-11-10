@@ -28,13 +28,34 @@ FIXED: Mapping[str, Any] = {
 SECOND = frozenset({"other_id"})
 
 
-def get_paths() -> list[str]:
+def api_paths() -> dict[str, dict[str, Any]]:
     settings = Settings(data_dir=Path(tempfile.mkdtemp()) / "data", llm_enabled=False, image_worker_url="")
     paths: dict[str, dict[str, Any]] = create_app(settings).openapi()["paths"]
-    return sorted(path for path, methods in paths.items() if "get" in methods and path.startswith("/api") and path not in STREAMS)
+    return paths
 
 
-GET_PATHS = get_paths()
+API_PATHS = api_paths()
+GET_PATHS = sorted(path for path, methods in API_PATHS.items() if "get" in methods and path.startswith("/api") and path not in STREAMS)
+
+
+def mismatched_path_params(paths: Mapping[str, Mapping[str, Any]]) -> list[str]:
+    found: list[str] = []
+    for path, methods in paths.items():
+        wanted = set(PARAM.findall(path))
+        for method, operation in methods.items():
+            declared = {param["name"] for param in operation.get("parameters", []) if param.get("in") == "path"}
+            if declared != wanted:
+                found.append(f"{method.upper()} {path}: declares {sorted(declared)}")
+    return found
+
+
+def test_every_route_declares_the_path_params_of_its_template() -> None:
+    assert mismatched_path_params(API_PATHS) == []
+
+
+def test_a_shared_path_default_is_caught() -> None:
+    shared = {"/api/things/{thing_id}": {"get": {"parameters": [{"name": "node_id", "in": "path"}]}}}
+    assert mismatched_path_params(shared) == ["GET /api/things/{thing_id}: declares ['node_id']"]
 
 
 @pytest.fixture

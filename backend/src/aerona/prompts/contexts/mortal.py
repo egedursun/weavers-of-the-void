@@ -177,6 +177,8 @@ class HomeLine(ContextItem):
     opinions: list[str] = Field(default_factory=list)
     titles: list[str] = Field(default_factory=list)
     estates: list[str] = Field(default_factory=list)
+    gatherings: list[str] = Field(default_factory=list)
+    sites: list[str] = Field(default_factory=list)
     proposals: list[str] = Field(default_factory=list)
     cases: list[str] = Field(default_factory=list)
     abroad: list[str] = Field(default_factory=list)

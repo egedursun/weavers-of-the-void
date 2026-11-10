@@ -11,6 +11,7 @@ from aerona.db.session import Database
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.storyteller import StorytellerProfile
 from aerona.domain.enums.world import CosmosSize, GenesisTemplate, LanguageTexture, LoreLanguage, TechnologyEra
 from aerona.domain.models.entity_stats import CelestialStats, RegionStats
 from aerona.domain.models.profiles import EntityDepth
@@ -108,6 +109,10 @@ def test_wizard_sanitize_and_text() -> None:
     assert defaults.template is None
     assert defaults.language_texture is LanguageTexture.FREE
     assert defaults.magic == rules.setup_wizard.magic
+    assert defaults.storyteller is StorytellerProfile.CYCLIC
+    assert sanitize(rules, WizardInput(storyteller="chaotic")).storyteller is StorytellerProfile.CHAOTIC
+    assert sanitize(rules, WizardInput(storyteller="loud")).storyteller is StorytellerProfile.CYCLIC
+    assert set(options(rules).storyteller) == set(StorytellerProfile)
     assert extra_worlds(rules, CosmosSize.LARGE) == rules.setup_wizard.large_cosmos_worlds
     assert [option.worlds for option in options(rules).cosmos] == [1, 2, 3]
     assert "Cosmic horror" in wizard_text(rules, settings)

@@ -562,6 +562,7 @@ function MapSection({
             structures={structures}
             stars={stars}
             worlds={worlds}
+            cosmos={cosmos.data}
             selected={pick}
             placing={placing}
             onPick={setPick}

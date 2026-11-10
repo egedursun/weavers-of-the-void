@@ -148,7 +148,7 @@ async def beast_cycles(ctx: TickContext) -> None:
     "table.world_biochemistries",
     "table.world_seasons",
 )
-@writes("table.applied_fixups", "table.region_crops", "table.world_biochemistries")
+@writes("table.applied_fixups", "table.plant_profiles", "table.region_crops", "table.world_biochemistries")
 async def flora_cycles(ctx: TickContext) -> None:
     ctx.count("world_life", await seed_world_life(ctx.session))
     for key, value in (await flora_backfill(ctx)).items():

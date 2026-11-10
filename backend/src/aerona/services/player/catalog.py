@@ -49,6 +49,7 @@ from aerona.services.player import (
     flora,
     foreign_gods,
     foundations,
+    gatherings,
     genetics,
     goals,
     god_power,
@@ -1589,6 +1590,95 @@ ECONOMY_ACTIONS = (
     _sync(Meta("favour:edit", "Set and hold a favour's weight", G.ENTITIES), intrigue.edit_favour, intrigue.EditFavour, free, ("F20",)),
     _sync(Meta("favour:call", "Call a favour in, honoured or refused", G.ENTITIES), intrigue.call, intrigue.CallFavour, free, ("F20",)),
     _sync(Meta("favour:delete", "Forgive a favour", G.ENTITIES), intrigue.delete_favour, intrigue.FavourTarget, free, ("F20",)),
+    _sync(
+        Meta("gathering:convene", "Convene a gathering of any kind and hold it now or later", G.SOCIETY), gatherings.convene, gatherings.Convene, free, ("F25",)
+    ),
+    _sync(Meta("gathering:hold", "Hold a planned gathering now", G.SOCIETY), gatherings.hold_now, gatherings.GatheringTarget, free, ("F25",)),
+    _sync(Meta("gathering:edit", "Edit and hold any value of a gathering", G.SOCIETY), gatherings.edit_gathering, gatherings.GatheringEdit, free, ("F25",)),
+    _sync(Meta("gathering:delete", "Strike a gathering from memory", G.SOCIETY), gatherings.delete_gathering, gatherings.GatheringTarget, free, ("F25",)),
+    _sync(
+        Meta("gathering_guest:set", "Invite a guest, set its part and whether it came", G.SOCIETY), gatherings.set_guest, gatherings.GuestSet, free, ("F25",)
+    ),
+    _sync(Meta("gathering_guest:remove", "Send a guest away from a gathering", G.SOCIETY), gatherings.remove_guest, gatherings.GuestTarget, free, ("F25",)),
+    _sync(
+        Meta("collection:create", "Set down a history: a war, a plague, a wedding or any other", G.MEMORY),
+        gatherings.create_collection,
+        gatherings.CollectionDraft,
+        free,
+        ("F10/RP2",),
+    ),
+    _sync(Meta("collection:edit", "Edit and hold any value of a history", G.MEMORY), gatherings.edit_collection, gatherings.CollectionEdit, free, ("F10/RP2",)),
+    _sync(Meta("collection:delete", "Unwrite a history", G.MEMORY), gatherings.delete_collection, gatherings.CollectionTarget, free, ("F10/RP2",)),
+    _sync(
+        Meta("collection_member:set", "Set the part a record played in a history", G.MEMORY), gatherings.set_member, gatherings.MemberSet, free, ("F10/RP2",)
+    ),
+    _sync(Meta("collection_member:remove", "Strike a record from a history", G.MEMORY), gatherings.remove_member, gatherings.MemberTarget, free, ("F10/RP2",)),
+    _sync(Meta("collection:place", "Add or strike a place of a history", G.MEMORY), gatherings.set_place, gatherings.PlaceSet, free, ("F10/RP2",)),
+    _sync(
+        Meta("storyteller:set", "Set the storyteller of a world and hold its tension and pace", G.FATE),
+        gatherings.set_storyteller,
+        gatherings.StorytellerSet,
+        free,
+        ("F27",),
+    ),
+    _sync(Meta("site_room:create", "Open a room in a site", G.ENTITIES), gatherings.create_room, gatherings.RoomDraft, free, ("S6.2/RP2",)),
+    _sync(Meta("site_room:edit", "Edit and hold any value of a room", G.ENTITIES), gatherings.edit_room, gatherings.RoomEdit, free, ("S6.2/RP2",)),
+    _sync(Meta("site_room:delete", "Seal a room for good", G.ENTITIES), gatherings.delete_room, gatherings.RoomTarget, free, ("S6.2/RP2",)),
+    _sync(
+        Meta("room_content:add", "Set a thing, spirit, beast or trap in a room", G.ENTITIES),
+        gatherings.add_content,
+        gatherings.ContentDraft,
+        free,
+        ("S6.2/RP2",),
+    ),
+    _sync(
+        Meta("room_content:remove", "Take a thing, spirit, beast or trap out of a room", G.ENTITIES),
+        gatherings.remove_content,
+        gatherings.ContentTarget,
+        free,
+        ("S6.2/RP2",),
+    ),
+    _sync(Meta("site:delve", "Send a mortal to walk a site room by room", G.ENTITIES), gatherings.delve, gatherings.DelveOrder, free, ("S6.2/RP2",)),
+    _sync(Meta("site_holder:set", "Give a site into new hands", G.ENTITIES), gatherings.set_holder, gatherings.HolderSet, free, ("S6.2/RP2",)),
+    _sync(
+        Meta("site_holder:delete", "Strike a holding from a site's history", G.ENTITIES), gatherings.delete_holder, gatherings.HolderTarget, free, ("S6.2/RP2",)
+    ),
+    _sync(
+        Meta("excavation:begin", "Begin a dig at a site with a leader and a sponsor", G.ENTITIES),
+        gatherings.begin_dig,
+        gatherings.DigDraft,
+        free,
+        ("S6.2/RP2",),
+    ),
+    _sync(Meta("excavation:edit", "Edit and hold any value of a dig", G.ENTITIES), gatherings.edit_dig, gatherings.DigEdit, free, ("S6.2/RP2",)),
+    _sync(
+        Meta("excavation:advance", "Carry a dig through its present stage now", G.ENTITIES), gatherings.advance_dig, gatherings.DigTarget, free, ("S6.2/RP2",)
+    ),
+    _sync(Meta("excavation:delete", "Fill in a dig and forget it", G.ENTITIES), gatherings.delete_dig, gatherings.DigTarget, free, ("S6.2/RP2",)),
+    _sync(
+        Meta("excavation_stage:edit", "Edit and hold the skill, technique, risk and find of a stage", G.ENTITIES),
+        gatherings.edit_stage,
+        gatherings.StageEdit,
+        free,
+        ("S6.2/RP2",),
+    ),
+    _sync(
+        Meta("battlefield_feature:create", "Lay a mass grave or a field of salvage on a battlefield", G.ENTITIES),
+        gatherings.create_feature,
+        gatherings.FeatureDraft,
+        free,
+        ("S6.2/RP2",),
+    ),
+    _sync(
+        Meta("battlefield_feature:edit", "Edit and hold a battlefield feature", G.ENTITIES),
+        gatherings.edit_feature,
+        gatherings.FeatureEdit,
+        free,
+        ("S6.2/RP2",),
+    ),
+    _sync(
+        Meta("battlefield_feature:delete", "Clear a battlefield feature", G.ENTITIES), gatherings.delete_feature, gatherings.FeatureTarget, free, ("S6.2/RP2",)
+    ),
     _sync(Meta("identity:assume", "Give a mortal a false name to live under", G.ENTITIES), intrigue.mask, intrigue.AssumeIdentity, free, ("F20",)),
     _sync(
         Meta("identity:edit", "Set and hold a false name, cover, community and exposure", G.ENTITIES),

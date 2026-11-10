@@ -9,6 +9,7 @@ import {
   type LanguageTexture,
   type LoreLanguage,
   type Rarity,
+  type StorytellerProfile,
   type TechnologyEra,
   type WizardTemplate,
 } from './api'
@@ -39,6 +40,7 @@ export type WizardDraft = {
   technology: TechnologyEra
   language: LanguageTexture
   cosmos: CosmosSize
+  storyteller: StorytellerProfile
   peoples: number
   firstSons: Rarity[] | null
   imageStyle: ImageStyle
@@ -63,6 +65,7 @@ export function initialDraft(defaults: WizardDefaults): WizardDraft {
     technology: 'iron',
     language: 'free',
     cosmos: 'single',
+    storyteller: 'cyclic',
     peoples: defaults.peoples,
     firstSons: null,
     imageStyle: DEFAULT_IMAGE_STYLE,
@@ -80,6 +83,7 @@ export function applyTemplate(
       ...initialDraft(defaults),
       creatorName: draft.creatorName,
       loreLanguage: draft.loreLanguage,
+      storyteller: draft.storyteller,
       firstSons: draft.firstSons,
       imageStyle: draft.imageStyle,
       imageStyleCustom: draft.imageStyleCustom,
@@ -152,6 +156,7 @@ export function toRequest(
       technology: draft.technology,
       language: draft.language,
       cosmos: draft.cosmos,
+      storyteller: draft.storyteller,
       peoples: draft.peoples,
       tone: draft.tone.trim() || null,
       seed: draft.seed.trim(),

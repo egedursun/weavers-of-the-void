@@ -12,6 +12,7 @@ import { unitHash } from '@/lib/hash'
 import { plural } from '@/lib/units'
 import { type CosmosData } from '@/features/cosmos/api'
 import { METHOD_LOOK } from '@/features/cosmos/model/looks'
+import { EmbeddedWorlds3D } from '@/features/cosmos/scene3d/EmbeddedWorlds3D'
 import { PostEffects3D } from '@/features/cosmos/scene3d/PostEffects3D'
 import { shaderMaterial, uniform } from '@/features/cosmos/scene3d/materials'
 import {
@@ -20,7 +21,7 @@ import {
   type RouteRecord,
   type StarRecord,
 } from '../api'
-import { type WorldMark, worldMarks } from '../galaxyWorlds'
+import { type WorldMark, worldMarks, worldRadius } from '../galaxyWorlds'
 import { type Ladder } from '../ladder'
 import {
   CoreGlow,
@@ -249,6 +250,7 @@ function MiniGalaxy({
   layout,
   id,
   held,
+  cosmos,
   selected,
   onPick,
   onOpen,
@@ -258,6 +260,7 @@ function MiniGalaxy({
   layout: UniverseLayout
   id: number
   held: Held | undefined
+  cosmos: CosmosData | undefined
   selected: boolean
   onPick: (pick: ScalePick) => void
   onOpen: (kind: 'star' | 'world', id: number) => void
@@ -290,6 +293,14 @@ function MiniGalaxy({
             onPick={(pick) => pick && onOpen('star', pick.id)}
           />
         ))}
+        {cosmos && held && held.worlds.length > 0 && (
+          <EmbeddedWorlds3D
+            cosmos={cosmos}
+            worlds={held.worlds}
+            radius={() => worldRadius(bodySize(galaxy), false)}
+            selectedId={null}
+          />
+        )}
         {held?.worlds.map((world) => (
           <WorldMarker
             key={world.id}
@@ -691,6 +702,7 @@ export default function UniverseScene3D({
               layout={layout}
               id={row.id}
               held={held.get(row.id)}
+              cosmos={cosmos}
               selected={selected?.kind === 'galaxy' && selected.id === row.id}
               onPick={onPick}
               onOpen={onOpen}

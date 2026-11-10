@@ -12,6 +12,7 @@ export type TechnologyEra = components['schemas']['TechnologyEra']
 export type LanguageTexture = components['schemas']['LanguageTexture']
 export type Rarity = components['schemas']['Rarity']
 export type CosmosSize = components['schemas']['CosmosSize']
+export type StorytellerProfile = components['schemas']['StorytellerProfile']
 
 export type SavedGenesis = components['schemas']['SavedGenesis']
 

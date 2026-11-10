@@ -41,6 +41,7 @@ from aerona.engine.records import death_path
 from aerona.engine.services.community_relations import blood_feud_pairs
 from aerona.engine.services.sides import SideIndex, held_captives
 from aerona.engine.services.war_geography import Neighbourhood
+from aerona.engine.sites.rooms import delve, layout_of, rooms_of
 from aerona.rules.registry import Rules
 
 HERO_SUBTYPE = "hero"
@@ -201,7 +202,11 @@ async def resolve_quest_now(ctx: TickContext, hero: EntityRow, quest: HeroQuestR
         return quest.status
     companions = await companions_of(ctx, hero)
     chance = success_chance(ctx.rules, hero, len(companions), hero.id in world.chosen, await factor(ctx.session, hero.id, Capacity.MOBILITY))
-    succeeded = forced if forced is not None else ctx.rng(f"quest.{quest.id}").probability(chance)
+    if await layout_of(ctx, target) is not None or await rooms_of(ctx, target.id):
+        walk = await delve(ctx, hero, target, len(companions))
+        succeeded = forced if forced is not None else walk.reached_heart
+    else:
+        succeeded = forced if forced is not None else ctx.rng(f"quest.{quest.id}").probability(chance)
     if not succeeded:
         await _quest_failed(ctx, hero, quest)
         return quest.status
@@ -420,7 +425,9 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.personality_values",
     "table.prostheses",
     "table.reverences",
+    "table.room_contents",
     "table.routes",
+    "table.site_rooms",
     "table.skills",
     "table.thoughts",
     "table.thread_links",
@@ -454,6 +461,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.mortal_profiles",
     "table.name_registry",
     "table.personality_values",
+    "table.site_rooms",
     "table.sons",
     "table.thoughts",
 )

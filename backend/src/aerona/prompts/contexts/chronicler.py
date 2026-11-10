@@ -66,6 +66,14 @@ class FactDraw(ContextItem):
     text: str
 
 
+class FactHistory(ContextItem):
+    name: str
+    kind: str
+    since: int
+    ended: int | None = None
+    within: str | None = None
+
+
 class FactEvent(ContextItem):
     ref: str
     category: str
@@ -85,6 +93,7 @@ class ChroniclerFactSheet(ContextItem):
     outcomes: list[FactOutcome] = Field(default_factory=list)
     draws: list[FactDraw] = Field(default_factory=list)
     events: list[FactEvent] = Field(default_factory=list)
+    histories: list[FactHistory] = Field(default_factory=list)
     verdicts: list[FactVerdict] = Field(default_factory=list)
     rejected: list[str] = Field(default_factory=list)
 

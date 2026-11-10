@@ -10,6 +10,7 @@ from aerona.db.tables.routes import RouteRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.ecology import AwakeningTrigger, BeastTemper, Habitat
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.storyteller import SpontaneousKind
 from aerona.domain.models.entity_stats import BeastStats
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.anatomy import beast_anatomy
@@ -18,6 +19,7 @@ from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.storyteller.pace import paced
 
 
 async def emerge_from_deep(ctx: TickContext, atlas: RegionAtlas) -> int:
@@ -33,7 +35,11 @@ async def emerge_from_deep(ctx: TickContext, atlas: RegionAtlas) -> int:
             continue
         region_id = atlas.top_region(resource_id)
         region = await ctx.session.get(EntityRow, region_id) if region_id is not None else None
-        if region is None or held(region.id) or not ctx.rng(f"emerge.{resource_id}.{ctx.epoch}").chance(table.emerge_pct):
+        if (
+            region is None
+            or held(region.id)
+            or not ctx.rng(f"emerge.{resource_id}.{ctx.epoch}").chance(await paced(ctx, region.world_id, SpontaneousKind.BEAST_AWAKENING, table.emerge_pct))
+        ):
             continue
         beast = await create_record(
             ctx,

@@ -1571,6 +1571,62 @@ LEVERS: dict[str, Lever] = {
     "star_life:edit": setup_then(heavens, star_id=Pick("star")),
     "world_life:edit": setup_then(heavens, world_id=Pick("world")),
     "route_flow:edit": given(route_id=Pick("route")),
+    "gathering:convene": given(host_id=Pick(MORTAL), kind="feast", guests=[Pick(MORTAL, 1)]),
+    **{
+        name: after(("gathering:convene", {"host_id": Pick(MORTAL), "kind": "feast", "hold_now": False}), gathering_id=Newest("gathering"))
+        for name in ("gathering:hold", "gathering:edit", "gathering:delete")
+    },
+    "gathering_guest:set": after(
+        ("gathering:convene", {"host_id": Pick(MORTAL), "kind": "feast", "hold_now": False}), gathering_id=Newest("gathering"), node_id=Pick(MORTAL, 1)
+    ),
+    "gathering_guest:remove": after(
+        ("gathering:convene", {"host_id": Pick(MORTAL), "kind": "feast", "hold_now": False}),
+        ("gathering_guest:set", {"gathering_id": Newest("gathering"), "node_id": Pick(MORTAL, 1)}),
+        gathering_id=Newest("gathering"),
+        node_id=Pick(MORTAL, 1),
+    ),
+    "collection:create": given(kind="war", name="War of the Fords", members=[{"node_id": Pick(REALM), "role": "leader"}], places=[Pick(TOWN)]),
+    **{
+        name: after(("collection:create", {"kind": "war", "members": [{"node_id": Pick(REALM)}]}), collection_id=Newest("incident_collection"))
+        for name in ("collection:edit", "collection:delete")
+    },
+    "collection_member:set": after(
+        ("collection:create", {"kind": "war", "members": [{"node_id": Pick(REALM)}]}), collection_id=Newest("incident_collection"), node_id=Pick(MORTAL)
+    ),
+    "collection_member:remove": after(
+        ("collection:create", {"kind": "war", "members": [{"node_id": Pick(REALM)}, {"node_id": Pick(MORTAL)}]}),
+        collection_id=Newest("incident_collection"),
+        node_id=Pick(MORTAL),
+    ),
+    "collection:place": after(
+        ("collection:create", {"kind": "war", "members": [{"node_id": Pick(REALM)}]}), collection_id=Newest("incident_collection"), place_id=Pick(TOWN)
+    ),
+    "storyteller:set": given(world_id=Pick("world"), profile="steady"),
+    "site_room:create": given(site_id=Pick(EntityType.PLACE), kind="vault", challenge="trap", difficulty=40),
+    **{
+        name: after(("site_room:create", {"site_id": Pick(EntityType.PLACE), "kind": "vault"}), room_id=Newest("site_room"))
+        for name in ("site_room:edit", "site_room:delete")
+    },
+    "room_content:add": after(("site_room:create", {"site_id": Pick(EntityType.PLACE), "kind": "vault"}), room_id=Newest("site_room"), kind="trap"),
+    "room_content:remove": after(
+        ("site_room:create", {"site_id": Pick(EntityType.PLACE), "kind": "vault"}),
+        ("room_content:add", {"room_id": Newest("site_room"), "kind": "trap"}),
+        content_id=Newest("room_content"),
+    ),
+    "site:delve": after(("site_room:create", {"site_id": Pick(EntityType.PLACE), "kind": "hall"}), delver_id=Pick(MORTAL), site_id=Pick(EntityType.PLACE)),
+    "site_holder:set": given(site_id=Pick(EntityType.PLACE), holder_id=Pick(REALM)),
+    "site_holder:delete": after(("site_holder:set", {"site_id": Pick(EntityType.PLACE), "holder_id": Pick(REALM)}), holder_row_id=Newest("site_holder")),
+    "excavation:begin": given(site_id=Pick(EntityType.PLACE), leader_id=Pick(MORTAL), sponsor_id=Pick(REALM)),
+    **{
+        name: after(("excavation:begin", {"site_id": Pick(EntityType.PLACE), "leader_id": Pick(MORTAL)}), dig_id=Newest("excavation"))
+        for name in ("excavation:edit", "excavation:advance", "excavation:delete")
+    },
+    "excavation_stage:edit": after(("excavation:begin", {"site_id": Pick(EntityType.PLACE), "leader_id": Pick(MORTAL)}), stage_id=Newest("excavation_stage")),
+    "battlefield_feature:create": given(place_id=Pick(EntityType.PLACE), feature="mass_grave", strength=60),
+    **{
+        name: after(("battlefield_feature:create", {"place_id": Pick(EntityType.PLACE), "feature": "salvage_field"}), feature_id=Newest("battlefield_feature"))
+        for name in ("battlefield_feature:edit", "battlefield_feature:delete")
+    },
     "cosmic_feature:create": given(kind="asteroid_field", name="Near Belt", star_id=Pick("star")),
     **{
         name: after(("cosmic_feature:create", {"kind": "asteroid_field", "name": "Near Belt", "star_id": Pick("star")}), feature_id=Newest("cosmic_feature"))
@@ -1677,6 +1733,13 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "star_system:edit": {"name": "Twin Lights", "separation": 2.0},
     "world_physics:edit": {"albedo": 35, "pressure": 1.2},
     "life_class:edit": {"complexity": "complex", "environments": ["marine", "terrestrial"]},
+    "gathering:edit": {"prestige": 40, "cost": 12, "note": "held by order of the gods"},
+    "collection:edit": {"name": "War of the Two Fords", "start_epoch": 1, "note": "a long war"},
+    "storyteller:set": {"tension": 40, "boost_pct": 10, "cycle_offset": 2},
+    "site_room:edit": {"difficulty": 55, "challenge": "guardian"},
+    "excavation:edit": {"progress": 30, "stage": "clearing"},
+    "excavation_stage:edit": {"difficulty": 45, "risk": "collapse", "find": "book"},
+    "battlefield_feature:edit": {"strength": 70},
     "cosmic_feature:edit": {"density": 40, "richness": 60},
     "impact:edit": {"size": 30, "winter_epochs": 1},
     "terraform:edit": {"step": 5, "epochs_left": 3},

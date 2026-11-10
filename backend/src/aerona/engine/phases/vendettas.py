@@ -12,6 +12,7 @@ from aerona.domain.enums.mind import ActKind, MemoryKind, TraitKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.storyteller import SpontaneousKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -32,6 +33,7 @@ from aerona.engine.primitives.stats import move_stat, shift_stat, stat
 from aerona.engine.records import death_path
 from aerona.engine.services.community_relations import change_relation, end_blood_feud, open_feud, relation, start_blood_feud
 from aerona.engine.services.war import declare_war
+from aerona.engine.storyteller.pace import paced
 
 GRIEF = (MemoryKind.KILLED_KIN, MemoryKind.MAIMED_ME)
 INSULTS = (MemoryKind.HUMILIATED_ME, MemoryKind.HARMED_ME, MemoryKind.BETRAYED_ME, MemoryKind.MAIMED_ME, MemoryKind.KILLED_KIN)
@@ -69,7 +71,7 @@ async def choose(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> Feud
         return FeudAction.ESCALATE
     if rng.chance(table.assassinate_chance):
         return FeudAction.ASSASSINATE
-    if rng.chance(table.raid_chance):
+    if rng.chance(await paced(ctx, avenger.world_id, SpontaneousKind.RAID, table.raid_chance)):
         return FeudAction.RAID
     return FeudAction.REST
 

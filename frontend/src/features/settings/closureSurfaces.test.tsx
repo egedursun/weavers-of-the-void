@@ -119,6 +119,7 @@ describe('genesis record', () => {
           language_texture: 'flowing',
           peoples: 3,
           cosmos_size: 'small',
+          storyteller: 'rising',
         },
       },
     })
@@ -127,6 +128,7 @@ describe('genesis record', () => {
       .toBeVisible()
     await expect.element(screen.getByText('Mythic age')).toBeVisible()
     await expect.element(screen.getByText('Flowing')).toBeVisible()
+    await expect.element(screen.getByText('Rising')).toBeVisible()
   })
 })
 

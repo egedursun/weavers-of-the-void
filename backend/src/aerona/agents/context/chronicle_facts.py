@@ -1,23 +1,35 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
 from aerona.agents.context.recent_chronicle import prompt_text
 from aerona.agents.context.scope import Scope
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import GodConflictRow
+from aerona.db.tables.gatherings import CollectionRow
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.tables.storyteller import StorytellerRow
 from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.chronicle import ChronicleKind, MajorEventCategory
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import GodConflictOutcome
-from aerona.prompts.contexts.chronicler import ChroniclerFactSheet, ContestKind, FactActor, FactDraw, FactEvent, FactOutcome, FactRecord, FactVerdict
+from aerona.prompts.contexts.chronicler import (
+    ChroniclerFactSheet,
+    ContestKind,
+    FactActor,
+    FactDraw,
+    FactEvent,
+    FactHistory,
+    FactOutcome,
+    FactRecord,
+    FactVerdict,
+)
 
 CREATOR_REF = "creator"
 TIMES_SUFFIX = " ({count} times)"
@@ -59,6 +71,7 @@ class EpochFacts:
     outcomes: list[FactOutcome] = field(default_factory=list)
     draws: list[FactDraw] = field(default_factory=list)
     events: list[FactEvent] = field(default_factory=list)
+    histories: list[FactHistory] = field(default_factory=list)
     verdicts: list[FactVerdict] = field(default_factory=list)
     rejected_recent: list[str] = field(default_factory=list)
     counts: dict[str, int] = field(default_factory=dict)
@@ -79,6 +92,7 @@ class EpochFacts:
             outcomes=self.outcomes,
             draws=self.draws,
             events=self.events,
+            histories=self.histories,
             verdicts=self.verdicts,
             rejected=self.rejected_recent,
         )
@@ -301,10 +315,37 @@ async def recent_rejections(scope: Scope, rejected: dict[int, str], epoch: int) 
     return sorted(rejected[entity_id] for entity_id in recent)
 
 
+async def history_facts(scope: Scope, epoch: int) -> list[FactHistory]:
+    rows = list(
+        await scope.session.scalars(
+            select(CollectionRow)
+            .where(CollectionRow.start_epoch <= epoch, or_(CollectionRow.end_epoch.is_(None), CollectionRow.end_epoch >= epoch))
+            .order_by(CollectionRow.start_epoch, CollectionRow.id)
+            .limit(scope.rules.chronicle_audit.major_events)
+        )
+    )
+    names = {row.id: row.name for row in rows}
+    parents = {row.parent_id for row in rows if row.parent_id is not None and row.parent_id not in names}
+    if parents:
+        names.update({row.id: row.name for row in await scope.session.scalars(select(CollectionRow).where(CollectionRow.id.in_(parents)))})
+    return [
+        FactHistory(
+            name=row.name,
+            kind=row.kind.value.replace("_", " "),
+            since=row.start_epoch,
+            ended=row.end_epoch,
+            within=names.get(row.parent_id) if row.parent_id is not None else None,
+        )
+        for row in rows
+    ]
+
+
 async def epoch_facts(scope: Scope, epoch: int) -> EpochFacts:
     settings = scope.rules.chronicle_audit
     rejected = await unique_rejected(scope)
     rows, links = await epoch_rows(scope, epoch, set(rejected))
+    lit = {row.spotlight_entity_id for row in await scope.session.scalars(select(StorytellerRow)) if row.spotlight_entity_id is not None}
+    rows = sorted(rows, key=lambda row: (not any(entity.id in lit for entity in links.get(row.id, [])), row.id))
     creator = await creator_actor(scope, epoch, settings.deed_chars)
     facts = EpochFacts(epoch=epoch, creator=creator, rejected=rejected)
     facts.counts[CREATOR_REF] = creator.deed_count
@@ -324,6 +365,7 @@ async def epoch_facts(scope: Scope, epoch: int) -> EpochFacts:
     )
     generic = {scope.creator.name, *son_names.values(), *(world.name for world in scope.worlds.values())}
     add_events(scope, facts, rows, links, skip=son_rows, generic=generic)
+    facts.histories.extend(await history_facts(scope, epoch))
     verdicts, keys = await previous_verdict_facts(scope, epoch, settings.previous_verdicts, set(son_names.values()))
     facts.verdicts.extend(verdicts)
     facts.names.update(keys)

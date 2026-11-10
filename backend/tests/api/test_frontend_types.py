@@ -17,3 +17,17 @@ def test_the_frontend_types_are_generated_from_the_api_as_it_stands() -> None:
     missing += [f"{name}.{value}" for name, body in components.items() for value in body.get("enum", []) if isinstance(value, str) and value not in quoted]
     missing += [f"{name}.{field}" for name, body in components.items() for field in body.get("properties", {}) if field not in keys]
     assert missing == [], f"run npm run typegen in frontend: {missing[:20]}"
+
+
+def test_every_error_body_is_typed_for_the_frontend() -> None:
+    api: dict[str, Any] = create_app().openapi()
+    assert {"ErrorResponse", "ErrorCode"} <= set(api["components"]["schemas"])
+    untyped = [
+        f"{method.upper()} {path}"
+        for path, operations in api["paths"].items()
+        if path.startswith("/api")
+        for method, operation in operations.items()
+        if operation["responses"].get("default", {}).get("content", {}).get("application/json", {}).get("schema", {}).get("$ref", "").rsplit("/", 1)[-1]
+        != "ErrorResponse"
+    ]
+    assert untyped == []

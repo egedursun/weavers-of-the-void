@@ -180,6 +180,7 @@ from aerona.db.tables.faith import (
 from aerona.db.tables.finance import CreditProfileRow, EconomicIndicatorRow, SpeculationRow, TradePolicyRow
 from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow, WorldBiochemistryRow
 from aerona.db.tables.foreign_gods import ForeignGodPowerRow, ForeignGodRow, GodConflictRow, OuterBargainRow
+from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionMemberRow, CollectionPlaceRow, CollectionRow, GatheringGuestRow, GatheringRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
 from aerona.db.tables.households import DwellingFurnishingRow, DwellingRow, HouseholdAggregateRow, HouseholdMemberRow, HouseholdRow
@@ -287,6 +288,7 @@ from aerona.db.tables.settlement import (
     SettlementProfileRow,
     SettlementTreasuryRow,
 )
+from aerona.db.tables.sites import BattlefieldFeatureRow, ExcavationRow, ExcavationStageRow, RoomContentRow, SiteHolderRow, SiteRoomRow
 from aerona.db.tables.society import (
     AddictionRow,
     ArchiveHoldingRow,
@@ -308,6 +310,7 @@ from aerona.db.tables.society_depth import (
 )
 from aerona.db.tables.sons import SonPowerRow, SonRelationRow, SonRow
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, DiplomacyProfileRow, PolityRegardRow, SphereRow
+from aerona.db.tables.storyteller import StorytellerRow, TensionRecordRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow, StructureStaffRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleHolderRow, TitleProfileRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, CasusBelliRow, HeroQuestRow, SiegeRow, TributeRow, WarProductionRow, WarRow, WarSideRow
@@ -339,6 +342,7 @@ __all__ = [
     "BattlePhaseRow",
     "BattleRow",
     "BattleStackRow",
+    "BattlefieldFeatureRow",
     "BeastProfileRow",
     "BeliefRow",
     "BlueprintRow",
@@ -365,6 +369,10 @@ __all__ = [
     "ClimateOrderRow",
     "ClusterRow",
     "CohortRow",
+    "CollectionIncidentRow",
+    "CollectionMemberRow",
+    "CollectionPlaceRow",
+    "CollectionRow",
     "CommanderTraitRow",
     "CommunityIndustryRow",
     "CommunityMethodRow",
@@ -446,6 +454,8 @@ __all__ = [
     "EventCasualtyRow",
     "EventFootprintRow",
     "EventProfileRow",
+    "ExcavationRow",
+    "ExcavationStageRow",
     "FactionActionRow",
     "FactionGoalRow",
     "FactionMembershipRow",
@@ -459,6 +469,8 @@ __all__ = [
     "GalacticEventRow",
     "GalacticStructureRow",
     "GalaxyRow",
+    "GatheringGuestRow",
+    "GatheringRow",
     "GenomeRow",
     "GodConflictRow",
     "GodGoalRow",
@@ -608,6 +620,7 @@ __all__ = [
     "RiteEffectRow",
     "RiteProfileRow",
     "RiverShiftRow",
+    "RoomContentRow",
     "RouteRow",
     "RuleOverrideRow",
     "RulerCurrencyRow",
@@ -622,7 +635,9 @@ __all__ = [
     "SettlementTreasuryRow",
     "SiegeRow",
     "SignalLinkRow",
+    "SiteHolderRow",
     "SiteProfitRow",
+    "SiteRoomRow",
     "SkillRow",
     "SkyEventRow",
     "SocialCircleRow",
@@ -647,11 +662,13 @@ __all__ = [
     "StarPhysicsRow",
     "StarRow",
     "StarSystemRow",
+    "StorytellerRow",
     "StructureDesignRow",
     "StructureLeyRow",
     "StructureProfileRow",
     "StructureStaffRow",
     "TaxPolicyRow",
+    "TensionRecordRow",
     "TerraformingRow",
     "TheoryAdherentRow",
     "TheoryAnomalyRow",

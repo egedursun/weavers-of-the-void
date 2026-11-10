@@ -41,6 +41,7 @@ import {
   type LanguageTexture,
   type LoreLanguage,
   type Rarity,
+  type StorytellerProfile,
   type TechnologyEra,
   type WizardTemplate,
 } from './api'
@@ -57,6 +58,8 @@ import {
   LANGUAGE_HINT,
   LANGUAGE_ICON,
   LORE_LANGUAGE_ICON,
+  STORYTELLER_HINT,
+  STORYTELLER_ICON,
   TECHNOLOGY_HINT,
   TECHNOLOGY_ICON,
   TEMPLATE_ICON,
@@ -276,6 +279,14 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
     hint: LANGUAGE_HINT[key as LanguageTexture],
     icon: LANGUAGE_ICON[key as LanguageTexture] ?? Sparkles,
   }))
+  const storyteller: Choice<StorytellerProfile>[] = Object.entries(
+    options.storyteller
+  ).map(([key, label]) => ({
+    value: key as StorytellerProfile,
+    label,
+    hint: STORYTELLER_HINT[key as StorytellerProfile],
+    icon: STORYTELLER_ICON[key as StorytellerProfile] ?? Sparkles,
+  }))
   const cosmos: Choice<CosmosSize>[] = options.cosmos.map((option) => ({
     value: option.size,
     label: option.label,
@@ -396,6 +407,17 @@ export function WorldStep({ draft, update, options, peoplesMax }: StepProps) {
           value={draft.cosmos}
           options={cosmos}
           onChange={(value) => update({ cosmos: value })}
+        />
+      </SettingGroup>
+      <SettingGroup
+        label='Storyteller'
+        description='How the tension of the world rises and falls across the epochs. You can change it later in the world drawer.'
+      >
+        <ChoiceTiles
+          label='Storyteller'
+          value={draft.storyteller}
+          options={storyteller}
+          onChange={(value) => update({ storyteller: value })}
         />
       </SettingGroup>
       <SettingGroup

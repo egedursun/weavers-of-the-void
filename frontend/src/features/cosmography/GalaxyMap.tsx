@@ -1,6 +1,7 @@
 import { type ReactNode, Suspense, lazy } from 'react'
 import { cn } from '@/lib/utils'
 import { Text } from '@/components/typography'
+import { type CosmosData } from '@/features/cosmos/api'
 import { hasWebGL2 } from '@/features/cosmos/useCosmosViewSettings'
 import { type GalaxyRecord, type StarRecord, type StructureRecord } from './api'
 import { type WorldMark } from './galaxyWorlds'
@@ -18,6 +19,7 @@ type GalaxyMapProps = {
   structures: readonly StructureRecord[]
   stars: readonly StarRecord[]
   worlds?: readonly WorldMark[]
+  cosmos?: CosmosData
   selected?: Pick
   placing?: boolean
   portrait?: boolean
@@ -34,6 +36,7 @@ export function GalaxyMap({
   structures,
   stars,
   worlds = [],
+  cosmos,
   selected = null,
   placing = false,
   portrait = false,
@@ -67,6 +70,7 @@ export function GalaxyMap({
             structures={structures}
             stars={stars}
             worlds={worlds}
+            cosmos={cosmos}
             selected={selected}
             placing={placing}
             portrait={portrait}
