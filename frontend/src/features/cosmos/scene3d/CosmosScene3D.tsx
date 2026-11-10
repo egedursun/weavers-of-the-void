@@ -146,6 +146,11 @@ export default function CosmosScene3D({
     () => ({ frameRef, layout, index, preset, routeBend, geometries, labels }),
     [layout, index, preset, routeBend, geometries, labels]
   )
+  const detailStarId = useMemo(() => {
+    if (selectedStarId !== undefined) return selectedStarId
+    if (selectedWorldId === undefined) return undefined
+    return layout.worlds.get(selectedWorldId)?.starId
+  }, [layout, selectedStarId, selectedWorldId])
   const starPositions = useMemo(
     () =>
       new Map(
@@ -250,9 +255,10 @@ export default function CosmosScene3D({
               {index.worlds.map((item) => {
                 const body = layout.worlds.get(item.world.id)
                 if (!body) return null
+                const selected = item.world.id === selectedWorldId
+                if (!selected && body.starId !== detailStarId) return null
                 const host = index.star(body.starId)
                 const palette = index.palette(item.world.world_type)
-                const selected = item.world.id === selectedWorldId
                 return (
                   <group key={item.world.id}>
                     <Orbit3D
