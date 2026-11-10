@@ -8,6 +8,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { LifeClassSection } from './LifeClassSection'
 import { WorldSurveySection } from './SurveySection'
+import { WorldPhysicsSection } from './WorldPhysicsSection'
 import {
   WorldImpactsSection,
   WorldTerraformSection,
@@ -91,6 +92,29 @@ describe('the physics of a world', () => {
       .toHaveLength(1)
     expect(callsTo('POST', '/api/actions/survey:forget')[0].body).toEqual({
       survey_id: 91,
+    })
+  })
+
+  it('shows the calendar of its sky and holds a value the heavens derive', async () => {
+    serveWorld()
+    onApi('POST', '/api/actions/world_physics:edit', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<WorldPhysicsSection worldId={11} />)
+    await expect.element(screen.getByText('Epoch 15')).toBeVisible()
+    await expect.element(screen.getByText('Sennet at epoch 20')).toBeVisible()
+    await screen.getByRole('button', { name: 'Adjust' }).nth(4).click()
+    await screen.getByRole('combobox', { name: 'Ringed' }).click()
+    await screen.getByRole('option', { name: 'Yes' }).click()
+    await screen
+      .getByRole('button', { name: 'Hold these values' })
+      .first()
+      .click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/world_physics:edit'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/world_physics:edit')[0].body).toEqual({
+      world_id: 11,
+      values: { ringed: true },
+      release: [],
     })
   })
 })

@@ -132,8 +132,8 @@ async def advance_world(ctx: TickContext, world: WorldRow, many_worlds: bool) ->
     await apply_climate_effect(ctx, world, era)
 
 
-@reads("table.climate_orders", "table.epoch_year_cursors")
-@writes("table.chronicle", "table.epoch_year_cursors", "table.incidents", "table.worlds")
+@reads("people.population", "settlement.population", "table.climate_orders", "table.epoch_year_cursors", "table.world_physics")
+@writes("people.population", "settlement.population", "table.chronicle", "table.entities", "table.epoch_year_cursors", "table.incidents", "table.worlds")
 async def climate_transition(ctx: TickContext) -> None:
     worlds = await WorldRepository(ctx.session).reachable_worlds()
     for world in worlds:

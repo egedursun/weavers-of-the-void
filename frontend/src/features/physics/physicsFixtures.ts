@@ -5,6 +5,7 @@ type Schema = components['schemas']
 const HOME = { id: 11, kind: 'world', name: 'Orvael' } as const
 const VALE = { id: 41, kind: 'entity', name: 'Low Vale' } as const
 const FOLK = { id: 51, kind: 'entity', name: 'Vael' } as const
+const VALE_WORLD = { id: 12, kind: 'world', name: 'Sennet' } as const
 
 export const WORLD_PHYSICS: Schema['WorldPhysicsView'] = {
   epoch: 12,
@@ -15,6 +16,10 @@ export const WORLD_PHYSICS: Schema['WorldPhysicsView'] = {
   season_count: 4,
   axial_tilt: 23,
   tidal_strength: 30,
+  calendar_locked: [],
+  icebound: false,
+  next_eclipse_epoch: 15,
+  transits: [{ inner: VALE_WORLD, next_epoch: 20 }],
   physics: {
     eccentricity: 0.02,
     inclination: 1,

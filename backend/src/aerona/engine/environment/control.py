@@ -132,6 +132,7 @@ SEASON_NUMBERS: dict[str, tuple[int, int]] = {
     "travel": (0, PERCENT),
     "campaign": (0, PERCENT),
 }
+CALENDAR_FIELDS = frozenset({"axial_tilt", "year_length_days", "day_length_hours", "moon_count", "tidal_strength", "season_count"})
 
 
 async def region_ground(session: AsyncSession, region_id: int) -> RegionEnvironmentRow:
@@ -290,15 +291,23 @@ async def edit_season(session: AsyncSession, season_id: int, values: dict[str, i
     return season
 
 
+def hold_calendar(world: WorldRow, field: str) -> None:
+    if field in CALENDAR_FIELDS and field not in world.calendar_locked:
+        world.calendar_locked = [*world.calendar_locked, field]
+
+
 def set_world_calendar(rules: Rules, world: WorldRow, *, axial_tilt: int | None, year_length_days: int | None, day_length_hours: int | None) -> None:
     settings = rules.seasons
     if axial_tilt is not None:
         world.axial_tilt = clamp_int(axial_tilt, 0, settings.tilt_max)
         world.season_count = season_count_for(rules, world.world_type, world.axial_tilt)
+        hold_calendar(world, "axial_tilt")
     if year_length_days is not None:
         world.year_length_days = clamp_int(year_length_days, settings.year_days_min, settings.year_days_max)
+        hold_calendar(world, "year_length_days")
     if day_length_hours is not None:
         world.day_length_hours = max(1, day_length_hours)
+        hold_calendar(world, "day_length_hours")
 
 
 async def astronomy_record(session: AsyncSession, knowledge_id: int) -> EntityRow:

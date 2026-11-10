@@ -337,6 +337,8 @@ class SonResult(StrEnum):
     IMPACT_DEFLECTED = "The body is turned aside from {{ world }}."
     TERRAFORM_BEGUN = "The work on {{ world }} has begun; it runs {{ epochs }} epochs."
     TERRAFORM_REFUSED = "The world cannot be reshaped: {{ reason }}"
+    MOON_BROKEN = "{{ moon }} is broken; its pieces circle its world as a ring."
+    MOON_REFUSED = "The moon does not break: {{ reason }}"
     RIFT_OPENED = "A rift is open in {{ place }} into {{ dimension }}."
     NO_SUCH_RIFT = "There is no open rift with id {{ id }}."
     RIFT_OUT_OF_REACH = "Your hand does not reach rift #{{ id }}: its world is not yours and no open road joins it to yours."

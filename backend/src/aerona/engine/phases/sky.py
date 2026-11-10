@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.worlds import SKY_EVENT_LABELS
@@ -27,6 +27,7 @@ from aerona.domain.enums.war import WarEnding
 from aerona.domain.enums.world import Discovery, SkyEventKind
 from aerona.domain.models.entity_stats import CelestialStats, MortalStats, ProphecyStats
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.orbits import eclipse_period, next_epoch, transit_pairs, transit_phase
 from aerona.engine.cosmos.placement import cosmography_of, hidden_sky
 from aerona.engine.cosmos.routes import number_word, open_alignment, sever_route, touches
 from aerona.engine.cosmos.sanity import shift_sanity
@@ -284,19 +285,14 @@ async def sky_event(ctx: TickContext, kind: SkyEventKind, order: SkyOrder) -> Sk
     return SkyEventResult(kind, world.id, star_id, text)
 
 
-def spontaneous_bag(rules: Rules, moons: int = 0, companions: int = 0) -> list[SkyEventKind]:
+def spontaneous_bag(rules: Rules) -> list[SkyEventKind]:
     sky = rules.sky
-    first_eclipse = min(1, sky.event_weight_eclipse)
-    moon_eclipses = sky.event_weight_eclipse * moons * rules.seasons.eclipse_per_moon_pct // PERCENT
     return [
-        *[SkyEventKind.ECLIPSE] * first_eclipse,
         *[SkyEventKind.COMET] * sky.event_weight_comet,
         *[SkyEventKind.ALIGNMENT] * sky.event_weight_alignment,
-        *[SkyEventKind.ECLIPSE] * (sky.event_weight_eclipse - first_eclipse + moon_eclipses + companions),
         *[SkyEventKind.SUPERNOVA] * sky.event_weight_supernova,
         *[SkyEventKind.BLACK_SUN] * sky.event_weight_black_sun,
         *[SkyEventKind.FLARE] * sky.event_weight_flare,
-        *[SkyEventKind.TRANSIT] * rules.orbits.transit_weight,
     ]
 
 
@@ -305,50 +301,15 @@ def star_event_weight(rules: Rules, kind: SkyEventKind, star: StarRow) -> int:
     return mechanics.collapse_weight(rules) if kind in COLLAPSE_EVENTS else round(mechanics.flare_weight(rules) * flare_weight_pct(rules, star))
 
 
-async def eclipse_world(ctx: TickContext, stars: dict[int, StarRow]) -> WorldRow | None:
-    worlds = await WorldRepository(ctx.session).reachable_worlds()
-    if not worlds:
-        return None
-    rules = ctx.rules
-    ladder = await cosmography_of(ctx.session)
-
-    skies = {row.world_id: row for row in await ctx.session.scalars(select(WorldPhysicsRow))}
-
-    def weight(world: WorldRow) -> int:
-        star = stars.get(world.star_id) if world.star_id is not None else None
-        companions = star_mechanics(star.star_type).eclipse_weight(rules) if star is not None else 0
-        density = ladder.pull(rules, ladder.place_world(world)).density
-        physics = skies.get(world.id)
-        if physics is not None:
-            if physics.eclipse_years <= 0:
-                return 0
-            return max(1, round((rules.time.years_per_epoch / physics.eclipse_years + companions) * density))
-        return max(1, round((1 + (world.moon_count or 0) * rules.sky.eclipse_moon_weight + companions) * density))
-
-    weights = [weight(world) for world in worlds]
-    if not any(weights):
-        return None
-    return ctx.rng("eclipse_world").weighted(worlds, weights)
-
-
-async def transit_world(ctx: TickContext) -> tuple[WorldRow, WorldRow] | None:
-    skies = {row.world_id: row for row in await ctx.session.scalars(select(WorldPhysicsRow))}
-    worlds = [world for world in await WorldRepository(ctx.session).reachable_worlds() if world.parent_world_id is None and world.star_id is not None]
-    pairs: list[tuple[WorldRow, WorldRow]] = []
-    reach = ctx.rules.orbits.transit_inclination_degrees
-    for outer in worlds:
-        for inner in worlds:
-            seen, seer = skies.get(inner.id), skies.get(outer.id)
-            if inner.star_id != outer.star_id or inner.orbit >= outer.orbit or seen is None or seer is None:
-                continue
-            if abs(seen.inclination - seer.inclination) <= reach:
-                pairs.append((outer, inner))
-    return ctx.rng("transit_world").pick(sorted(pairs, key=lambda pair: (pair[0].id, pair[1].id))) if pairs else None
+async def sky_rows(session: AsyncSession) -> dict[int, WorldPhysicsRow]:
+    return {row.world_id: row for row in await session.scalars(select(WorldPhysicsRow))}
 
 
 async def _transit(ctx: TickContext, world: WorldRow) -> str:
-    pair = await transit_world(ctx)
-    inner = pair[1] if pair is not None and pair[0].id == world.id else None
+    worlds = await WorldRepository(ctx.session).reachable_worlds()
+    pairs = [pair for pair in transit_pairs(ctx.rules, worlds, await sky_rows(ctx.session)) if pair[0].id == world.id]
+    due = [inner for _outer, inner, period in pairs if next_epoch(ctx.epoch, period, transit_phase(world, inner)) == ctx.epoch]
+    inner = due[0] if due else pairs[0][1] if pairs else None
     for community in await canon(ctx.session, COMMUNITY_TYPES, world.id):
         if not held(community.id):
             shift_bounded(ctx.rules, community, PIETY_KEY, ctx.rules.orbits.transit_piety)
@@ -357,13 +318,25 @@ async def _transit(ctx: TickContext, world: WorldRow) -> str:
     return f"{inner.name} crossed the face of the star in {world.name}'s sky."
 
 
+async def calendar_signs(ctx: TickContext) -> int:
+    skies = await sky_rows(ctx.session)
+    worlds = sorted((world for world in await WorldRepository(ctx.session).reachable_worlds() if not held(world.id)), key=lambda row: row.id)
+    stars = {star.id: star for star in await ctx.session.scalars(select(StarRow).order_by(StarRow.id))}
+    signs = 0
+    for world in worlds:
+        star = stars.get(world.star_id) if world.star_id is not None else None
+        period = eclipse_period(ctx.rules, skies.get(world.id), star)
+        if period is not None and next_epoch(ctx.epoch, period, world.id) == ctx.epoch:
+            await sky_event(ctx, SkyEventKind.ECLIPSE, SkyOrder(world_id=world.id))
+            signs += 1
+    for outer, inner, period in transit_pairs(ctx.rules, worlds, skies):
+        if next_epoch(ctx.epoch, period, transit_phase(outer, inner)) == ctx.epoch:
+            await sky_event(ctx, SkyEventKind.TRANSIT, SkyOrder(world_id=outer.id))
+            signs += 1
+    return signs
+
+
 async def spontaneous_order(ctx: TickContext, kind: SkyEventKind, stars: dict[int, StarRow]) -> SkyOrder | None:
-    if kind is SkyEventKind.ECLIPSE:
-        world = await eclipse_world(ctx, stars)
-        return SkyOrder(world_id=world.id) if world is not None else None
-    if kind is SkyEventKind.TRANSIT:
-        pair = await transit_world(ctx)
-        return SkyOrder(world_id=pair[0].id) if pair is not None else None
     if kind not in STAR_EVENTS:
         return SkyOrder()
     candidates = [star for star in stars.values() if star_event_weight(ctx.rules, kind, star) > 0]
@@ -376,11 +349,8 @@ async def spontaneous_order(ctx: TickContext, kind: SkyEventKind, stars: dict[in
 
 async def spontaneous_sky_event(ctx: TickContext) -> SkyEventResult | None:
     rng = ctx.rng("spontaneous")
-    moons = int(await ctx.session.scalar(select(func.max(WorldRow.moon_count))) or 0)
     stars = {star.id: star for star in await ctx.session.scalars(select(StarRow).order_by(StarRow.id))}
-    lit = {world.star_id for world in await WorldRepository(ctx.session).reachable_worlds() if world.star_id is not None}
-    companions = max((star_mechanics(star.star_type).eclipse_weight(ctx.rules) for star_id, star in stars.items() if star_id in lit), default=0)
-    bag = spontaneous_bag(ctx.rules, moons, companions)
+    bag = spontaneous_bag(ctx.rules)
     if not bag or not rng.chance(ctx.rules.sky.sky_event_chance):
         return None
     kind = bag[rng.die(len(bag)) - 1]
@@ -534,6 +504,8 @@ async def drift_worlds(ctx: TickContext) -> None:
 
 @reads(
     "mortal.charisma",
+    "people.piety",
+    "settlement.piety",
     "table.bonds",
     "table.calendars",
     "table.community_relations",
@@ -554,9 +526,12 @@ async def drift_worlds(ctx: TickContext) -> None:
     "table.war_sides",
     "table.wars",
     "table.world_maps",
+    "table.world_physics",
     "table.world_seasons",
 )
 @writes(
+    "people.piety",
+    "settlement.piety",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
@@ -572,6 +547,7 @@ async def drift_worlds(ctx: TickContext) -> None:
     "table.sons",
 )
 async def sky_phase(ctx: TickContext) -> None:
+    ctx.count("calendar_signs", await calendar_signs(ctx))
     result = await spontaneous_sky_event(ctx)
     if result is not None:
         await note(ctx, result.text, key=f"sky.spontaneous.{result.kind.value}", feed=FeedCategory.SKY)

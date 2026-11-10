@@ -88,6 +88,11 @@ class TerraformInput(ToolInput):
     reason: Reason
 
 
+class MoonInput(ToolInput):
+    moon_id: int
+    reason: Reason
+
+
 class StarPatronInput(ToolInput):
     star_id: int
     reason: Reason
@@ -300,6 +305,24 @@ async def terraform_world(call: SonCall, args: TerraformInput) -> str:
     return result(SonResult.TERRAFORM_BEGUN, world=world.name, epochs=project.epochs_left)
 
 
+async def break_moon(call: SonCall, args: MoonInput) -> str:
+    moon = await call.session.get(WorldRow, args.moon_id)
+    reached = moon is not None and (
+        await call.reachable_world(moon.id) or (moon.parent_world_id is not None and await call.reachable_world(moon.parent_world_id))
+    )
+    if moon is None or not reached:
+        fail(SonResult.MOON_REFUSED, reason="that world is beyond your reach")
+    cost = call.rules.orbits.break_moon_essence
+    require_essence(call, cost)
+    try:
+        await physics_control.break_moon(call.tick, moon.id, call.son.name)
+    except AeronaError as error:
+        fail(SonResult.MOON_REFUSED, reason=error.message)
+    call.spend_essence(cost)
+    await call.chronicle(ChronicleKind.MIRACLE, lines.BREAK_MOON, son=call.son.name, moon=moon.name, reason=args.reason)
+    return result(SonResult.MOON_BROKEN, moon=moon.name)
+
+
 def specs() -> list[ToolSpec[SonCall, Any]]:
     standard = son_standard_action
     return [
@@ -386,6 +409,13 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
             TerraformInput,
             ToolMeta(ActionKind.SKY_EVENT, standard, essence_cost=lambda rules: rules.terraforming.essence),
             terraform_world,
+        ),
+        ToolSpec(
+            SonToolId.BREAK_MOON,
+            AgentKind.SON,
+            MoonInput,
+            ToolMeta(ActionKind.SKY_EVENT, standard, essence_cost=lambda rules: rules.orbits.break_moon_essence),
+            break_moon,
         ),
         ToolSpec(
             SonToolId.CLAIM_STAR,

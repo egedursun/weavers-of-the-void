@@ -48,7 +48,7 @@ def shift(physics: WorldPhysicsRow, key: str, amount: int) -> bool:
     return True
 
 
-def reshape(rules: Rules, physics: WorldPhysicsRow, aim: TerraformAim, step: int) -> bool:
+def reshape(rules: Rules, physics: WorldPhysicsRow, aim: TerraformAim, step: int, breath: str = AIR_GAS[AirNeed.OXYGEN]) -> bool:
     if aim in (TerraformAim.THICKEN_AIR, TerraformAim.THIN_AIR):
         if "pressure" in physics.locked:
             return False
@@ -56,11 +56,10 @@ def reshape(rules: Rules, physics: WorldPhysicsRow, aim: TerraformAim, step: int
         physics.pressure = max(0.0, round(physics.pressure + sign * step * rules.terraforming.pressure_hundredths / PERCENT, 3))
         return True
     if aim is TerraformAim.BREATHABLE_AIR:
-        return (
-            shift(physics, "oxygen", step)
-            | shift(physics, "carbon_dioxide", -min(step, physics.carbon_dioxide))
-            | shift(physics, "methane", -min(step, physics.methane))
-        )
+        moved = shift(physics, breath, step)
+        for gas in sorted(set(AIR_GAS.values()) - {breath, AIR_GAS[AirNeed.OXYGEN]}):
+            moved |= shift(physics, gas, -min(step, getattr(physics, gas)))
+        return moved
     moves = {
         TerraformAim.WARM: ("carbon_dioxide", step),
         TerraformAim.COOL: ("carbon_dioxide", -min(step, physics.carbon_dioxide)),
@@ -99,6 +98,11 @@ async def settle_chemistry(ctx: TickContext, world: WorldRow, physics: WorldPhys
         ctx.session.add(WorldBiochemistryRow(world_id=world.id, biochemistry=biochemistry))
 
 
+async def breath_of(ctx: TickContext, maker_id: int | None) -> str:
+    biology = await ctx.session.get(PeopleBiologyRow, maker_id) if maker_id is not None else None
+    return AIR_GAS.get(biology.air, AIR_GAS[AirNeed.OXYGEN]) if biology is not None else AIR_GAS[AirNeed.OXYGEN]
+
+
 async def terraform_cycle(ctx: TickContext) -> int:
     moved = 0
     for project in list(await ctx.session.scalars(select(TerraformingRow).order_by(TerraformingRow.id))):
@@ -106,7 +110,7 @@ async def terraform_cycle(ctx: TickContext) -> int:
         physics = await ctx.session.get(WorldPhysicsRow, project.world_id)
         if world is None or physics is None or held(world.id) or (project.by_node_id is not None and held(project.by_node_id)):
             continue
-        if reshape(ctx.rules, physics, project.aim, project.step):
+        if reshape(ctx.rules, physics, project.aim, project.step, await breath_of(ctx, project.by_node_id)):
             moved += 1
             if project.aim in AIR_AIMS:
                 await harm_natives(ctx, world, physics, project)
@@ -153,7 +157,7 @@ async def begin(
 def wanted_aim(biology: PeopleBiologyRow, physics: WorldPhysicsRow, rules: Rules) -> TerraformAim | None:
     gas = AIR_GAS.get(biology.air)
     if gas is not None and getattr(physics, gas) < rules.life_classes.breathable_oxygen:
-        return TerraformAim.BREATHABLE_AIR if biology.air is AirNeed.OXYGEN else TerraformAim.WARM
+        return TerraformAim.BREATHABLE_AIR
     if physics.pressure < rules.orbits.thin_air_hundredths / PERCENT:
         return TerraformAim.THICKEN_AIR
     if physics.hydrosphere < rules.planetary_climate.drought_hydrosphere:

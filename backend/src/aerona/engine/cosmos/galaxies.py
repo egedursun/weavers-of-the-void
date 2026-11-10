@@ -522,7 +522,7 @@ async def cluster_worship(ctx: TickContext, cosmography: Cosmography, grown: set
     return lifted
 
 
-@reads("table.cosmos", "table.dimensional_events", "table.entity_flags", "table.galactic_structures", "table.routes")
+@reads("table.cosmos", "table.dimensional_events", "table.entity_flags", "table.galactic_events", "table.galactic_structures", "table.routes")
 @writes(
     "table.chronicle",
     "table.entity_flags",

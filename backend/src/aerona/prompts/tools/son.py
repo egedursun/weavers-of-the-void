@@ -346,6 +346,11 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "Native life of another chemistry may suffer from the change. {{ rules.terraforming.essence }} essence, 1 action.",
         {"world_id": "The id of the world", "aim": "What you change about it", "reason": "Why you reshape it"},
     ),
+    T.BREAK_MOON: ToolText(
+        "You break a moon apart; its pieces become a ring about its world, and whatever lives on it is lost. "
+        "{{ rules.orbits.break_moon_essence }} essence, 1 action.",
+        {"moon_id": "The id of the moon", "reason": "Why you break it"},
+    ),
     T.SEAL_RIFT: ToolText(
         "You seal an open rift; its passage closes. {{ rules.rifts.seal_essence }} essence, 1 action.",
         {"rift_id": "The id of the open rift", "reason": "Why you seal it"},

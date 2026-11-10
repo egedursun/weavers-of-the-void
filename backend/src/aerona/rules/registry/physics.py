@@ -60,11 +60,14 @@ class OrbitRules:
     air_loss_hundredths: int = rule(2, 0, 1000, C, "Pressure a world too small to hold its air loses each epoch, in hundredths")
     tide_per_moon_mass: int = rule(25, 0, 1000, C, "Tidal strength a moon of one hundredth of its world's mass at the nearest orbit raises")
     roche_orbit_hundredths: int = rule(6, 0, 100, C, "Orbit inside which a moon breaks apart into a ring, in hundredths")
+    break_moon_essence: int = rule(90, 0, 10000, C, "Essence a son spends to break a moon into a ring about its world")
     eclipse_years_base: int = rule(3, 1, 1000, C, "Years between eclipses for a world with one large moon on a level orbit")
     eclipse_inclination_degrees: int = rule(5, 1, 90, C, "Degrees of a moon's tilt that double the years between eclipses")
     aurora_per_magnetism_pct: int = rule(60, 0, 300, C, "Aurora a world's magnetism shows for its star's activity (%)")
     aurora_piety_pct: int = rule(5, 0, 100, C, "Piety the peoples under an aurora gain against its strength (%)")
-    transit_weight: int = rule(1, 0, 100, C, "Weight of a world crossing the face of its star among the signs of the sky")
+    great_eclipse_rarity: int = rule(150, 1, 100000, C, "Eclipses that pass for each one that darkens the whole sky of a world")
+    transit_rarity: int = rule(40, 1, 100000, C, "Meetings of two worlds that pass for each one in which the inner is seen crossing the star")
+    binary_season_share_pct: int = rule(20, 0, 100, C, "Share of a world's light its companion star gives from which its year has twice the seasons (%)")
     transit_piety: int = rule(1, 0, 50, C, "Piety the peoples who see a world cross the face of their star gain")
     transit_inclination_degrees: int = rule(3, 0, 90, C, "Most difference of tilt at which an inner world can be seen crossing its star")
     circumbinary_share_pct: int = rule(100, 0, 300, C, "Share of a companion star's light a world circling both stars receives (%)")
@@ -110,6 +113,10 @@ class ImpactRules:
     deflect_essence: int = rule(50, 0, 10000, C, "Essence a son spends to turn an impact aside")
     called_size: int = rule(50, 1, 100, C, "Size of an impact a god calls")
     legend_size: int = rule(50, 0, 100, C, "Size of impact from which the peoples who saw it tell a legend of it")
+    miss_pct: int = rule(10, 0, 100, C, "Chance a body of the heavens on a crossing path passes its world by at the last (%)")
+    hoard_pct: int = rule(30, 0, 100, C, "Share of their fresh food warned peoples set aside against the impact winter (%)")
+    hardy_cold: int = rule(-20, -100, 100, C, "Lowest warmth a kind of creature bears from which it weathers an impact winter")
+    hardy_pct: int = rule(40, 0, 100, C, "Share of the loss of an impact winter a kind that bears the cold suffers (%)")
 
 
 @dataclass(frozen=True)
@@ -141,6 +148,7 @@ class CosmicFeatureRules:
     comet_prophecy_chance: int = rule(15, 0, 100, T, "Chance a returning comet gives rise to a prophecy (%)")
     field_density: int = rule(50, 0, 100, T, "Density of a new asteroid field")
     comet_period: int = rule(12, 1, 10000, T, "Epochs between the returns of a new periodic comet")
+    wanderer_period: int = rule(20, 1, 10000, T, "Epochs between the returns of a new wandering star")
 
 
 @dataclass(frozen=True)

@@ -10,6 +10,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import LanguageStandingRow
 from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.disease import EndemicDiseaseRow
@@ -28,6 +29,7 @@ from aerona.domain.enums.environment import CoastKind, TemperatureBand, TerrainK
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.engine.body.customs import culture_of
+from aerona.engine.cosmos.lifeforms import HOMELAND_FIXUP, fit_to_homeland
 from aerona.engine.demography.biology import edible, record_of, staple_for
 from aerona.engine.demography.rites import set_rite
 from aerona.engine.faith.book import patron_node
@@ -341,6 +343,8 @@ async def ensure_profiles(
     if biology is None:
         diseases = await homeland_diseases(session, [region.entity_id] if region is not None else [])
         biology = biology_for(rules, people, await member_lifespan(session, people), region, kin=await kin_of(session, people), immunities=diseases)
+        if await fit_to_homeland(session, rules, biology, people.world_id):
+            session.add(AppliedFixupRow(key=f"{HOMELAND_FIXUP}.{people.id}", result={"world_id": people.world_id}))
         session.add(biology)
         await session.flush()
     culture = await session.get(PeopleCultureRow, people.id)

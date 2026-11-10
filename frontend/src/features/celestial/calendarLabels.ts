@@ -47,6 +47,7 @@ export const CALENDAR_FIELDS: Record<string, string> = {
   day_length_hours: 'Hours a day',
   moon_count: 'Moons',
   tidal_strength: 'Tides',
+  season_count: 'Number of seasons',
   season_position: 'Season',
   calendar_entity_id: 'Calendar',
 }

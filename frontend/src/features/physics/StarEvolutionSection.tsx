@@ -1,21 +1,32 @@
 import { Flame, Hourglass, Sparkles, Star } from 'lucide-react'
+import { type EditValues } from '@/api/actions'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Label, Muted, Text } from '@/components/typography'
 import { Facts, NodeLink, RecordEditor } from '@/features/cosmography/parts'
 import { STAR_TYPE_LABEL } from '@/features/cosmos/model/labels'
+import { useSons } from '@/features/pantheon/api'
 import {
   type StarPhysicsView,
   physicsKeys,
   usePhysicsAction,
   useStarPhysics,
 } from './api'
+import { typed } from './edits'
 import { fixed } from './format'
 import { STAR_STAGES } from './labels'
 import { QuerySection } from './parts'
 
+const BODY_KEYS = [
+  'mass',
+  'metallicity',
+  'age_epochs',
+  'upkeep',
+  'maker_son_id',
+]
+
 type Edit = {
-  values?: Record<string, number | string | null>
+  values?: EditValues
   release?: string[]
 }
 
@@ -51,6 +62,10 @@ function Track({ view }: { view: StarPhysicsView }) {
 
 export function StarEvolutionSection({ starId }: { starId: number }) {
   const query = useStarPhysics(starId)
+  const sons = useSons()
+  const makers = Object.fromEntries(
+    (sons.data ?? []).map((view) => [String(view.son.id), view.son.name])
+  )
   const edit = usePhysicsAction(
     'star_physics:edit',
     (vars: Edit) => ({
@@ -153,8 +168,52 @@ export function StarEvolutionSection({ starId }: { starId: number }) {
                   kind: 'number',
                   min: 0,
                 },
+                {
+                  key: 'maker_son_id',
+                  label: 'Maker who keeps it',
+                  kind: 'pick',
+                  table: makers,
+                },
               ]}
-              locked={view.locked}
+              locked={view.locked.filter((key) => BODY_KEYS.includes(key))}
+              busy={busy}
+              onSave={(values) =>
+                edit.mutate({
+                  values: typed(values, { ids: ['maker_son_id'] }),
+                })
+              }
+              onRelease={(release) => edit.mutate({ release })}
+            />
+            <RecordEditor
+              title='Light, life and temperate band'
+              note='Its mass works these out each epoch; a value you hold here stands by your will.'
+              fields={[
+                {
+                  key: 'luminosity',
+                  label: 'Light (suns)',
+                  kind: 'decimal',
+                  min: 0,
+                },
+                {
+                  key: 'lifetime_epochs',
+                  label: 'Main life (epochs)',
+                  kind: 'number',
+                  min: 0,
+                },
+                {
+                  key: 'band_inner',
+                  label: 'Temperate band from (orbits)',
+                  kind: 'decimal',
+                  min: 0,
+                },
+                {
+                  key: 'band_outer',
+                  label: 'Temperate band to (orbits)',
+                  kind: 'decimal',
+                  min: 0,
+                },
+              ]}
+              locked={view.locked.filter((key) => !BODY_KEYS.includes(key))}
               busy={busy}
               onSave={(values) => edit.mutate({ values })}
               onRelease={(release) => edit.mutate({ release })}

@@ -29,6 +29,10 @@ class CosmicFeatureKind(StrEnum):
     PERIODIC_COMET = "periodic_comet"
     ROGUE_WORLD = "rogue_world"
     GRAVITY_WELL = "gravity_well"
+    WANDERING_STAR = "wandering_star"
+
+
+PERIODIC_BODIES = frozenset({CosmicFeatureKind.PERIODIC_COMET, CosmicFeatureKind.WANDERING_STAR})
 
 
 class SurveyLevel(StrEnum):

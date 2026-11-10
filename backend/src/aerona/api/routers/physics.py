@@ -17,6 +17,7 @@ from aerona.api.schemas.physics import (
     SystemMember,
     SystemView,
     TerraformRecord,
+    TransitRecord,
     WorldPhysicsRecord,
     WorldPhysicsView,
 )
@@ -39,7 +40,10 @@ from aerona.db.tables.physics import (
 )
 from aerona.domain.enums.cosmography import StarAge
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.world import ClimateEra
+from aerona.engine.cosmos.eras import emergent_era
 from aerona.engine.cosmos.lifeforms import world_fit
+from aerona.engine.cosmos.orbits import eclipse_period, next_epoch, transit_pairs, transit_phase
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.stellar import ends_in_supernova, engulf_orbit, giant_for, remnant_for, stage_length, typical_mass
 from aerona.engine.cosmos.systems import members
@@ -65,6 +69,9 @@ async def feature_records(session: AsyncSession, rows: list[CosmicFeatureRow]) -
             world_b=refs.get(row.world_b_id) if row.world_b_id is not None else None,
             body=refs.get(row.entity_id) if row.entity_id is not None else None,
             route_id=row.route_id,
+            x=row.x,
+            y=row.y,
+            description=row.description,
             radius=row.radius,
             density=row.density,
             radiation=row.radiation,
@@ -140,6 +147,8 @@ async def system_view(session: AsyncSession, system: StarSystemRow, stars: dict[
         id=system.id,
         name=system.name,
         galaxy_id=system.galaxy_id,
+        x=system.x,
+        y=system.y,
         separation=system.separation,
         band_inner=system.band_inner,
         band_outer=system.band_outer,
@@ -259,8 +268,15 @@ async def world_physics(services: ServicesDep, world_id: int = Path(ge=1)) -> Wo
             for people in peoples
             if people.id in refs
         ]
+        epoch = (await CosmosRepository(session).require_cosmos()).epoch
+        star = await session.get(StarRow, world.star_id) if world.star_id is not None else None
+        period = eclipse_period(rules, physics, star)
+        cosmography = await Cosmography.load(session)
+        skies = {row.world_id: row for row in await session.scalars(select(WorldPhysicsRow))}
+        pairs = [(inner, every) for outer, inner, every in transit_pairs(rules, list(cosmography.worlds.values()), skies) if outer.id == world.id]
+        inner_refs = await node_refs(session, [inner.id for inner, _every in pairs])
         return WorldPhysicsView(
-            epoch=(await CosmosRepository(session).require_cosmos()).epoch,
+            epoch=epoch,
             world_id=world.id,
             name=world.name,
             year_length_days=world.year_length_days,
@@ -268,6 +284,14 @@ async def world_physics(services: ServicesDep, world_id: int = Path(ge=1)) -> Wo
             season_count=world.season_count,
             axial_tilt=world.axial_tilt,
             tidal_strength=world.tidal_strength,
+            calendar_locked=list(world.calendar_locked),
+            icebound=physics is not None and emergent_era(rules, physics) is ClimateEra.ICE_AGE,
+            next_eclipse_epoch=next_epoch(epoch, period, world.id) if period is not None else None,
+            transits=[
+                TransitRecord(inner=inner_refs[inner.id], next_epoch=next_epoch(epoch, every, transit_phase(world, inner)))
+                for inner, every in pairs
+                if inner.id in inner_refs
+            ],
             physics=physics_record(physics) if physics is not None else None,
             life=LifeRecord(complexity=life.complexity, environments=list(life.environments), biochemistries=chemistries, locked=list(life.locked))
             if life is not None

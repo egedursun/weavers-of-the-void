@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Gem, Plus, Trash2 } from 'lucide-react'
-import { type ActionBody } from '@/api/actions'
+import { type ActionBody, type EditValues } from '@/api/actions'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { EmptyState, EntityLink, PagedList } from '@/components/domain'
-import { Label } from '@/components/typography'
+import { Label, Muted } from '@/components/typography'
 import { useCosmography } from '@/features/cosmography/api'
 import {
   Chip,
@@ -16,12 +16,13 @@ import {
 } from '@/features/cosmography/parts'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { type FeatureRecord, usePhysicsAction } from './api'
+import { typed } from './edits'
 import { FEATURE_KINDS, table } from './labels'
 import { WorldPicker } from './parts'
 
 type Edit = {
   feature: number
-  values?: Record<string, number | string | null>
+  values?: EditValues
   release?: string[]
 }
 type Draft = {
@@ -37,6 +38,7 @@ const STAR_FEATURES = new Set([
   'asteroid_field',
   'periodic_comet',
   'gravity_well',
+  'wandering_star',
 ])
 
 function needs(draft: Draft): string | null {
@@ -187,6 +189,9 @@ export function CosmicFeaturesPanel({
                 )}
                 <Meter label='Density' value={row.density} tone='muted' />
               </div>
+              {row.description && (
+                <Muted variant='caption'>{row.description}</Muted>
+              )}
               <RecordEditor
                 title='Its nature'
                 note={FEATURE_KINDS[row.kind].hint}
@@ -238,10 +243,65 @@ export function CosmicFeaturesPanel({
                     kind: 'number',
                     min: 1,
                   },
+                  {
+                    key: 'radiation',
+                    label: 'Radiation',
+                    kind: 'number',
+                    min: 0,
+                    max: 100,
+                  },
+                  {
+                    key: 'travel',
+                    label: 'Epochs it adds to routes past it',
+                    kind: 'number',
+                    min: -100,
+                    max: 100,
+                  },
+                  {
+                    key: 'omen_weight',
+                    label: 'Weight as an omen',
+                    kind: 'number',
+                    min: 0,
+                    max: 100,
+                  },
+                  {
+                    key: 'x',
+                    label: 'Place across its galaxy',
+                    kind: 'decimal',
+                  },
+                  {
+                    key: 'y',
+                    label: 'Place along its galaxy',
+                    kind: 'decimal',
+                  },
+                  { key: 'star_id', label: 'Star', kind: 'pick', table: stars },
+                  {
+                    key: 'galaxy_id',
+                    label: 'Galaxy',
+                    kind: 'pick',
+                    table: galaxies,
+                  },
+                  {
+                    key: 'ended_epoch',
+                    label: 'Gone since epoch',
+                    kind: 'number',
+                    min: 1,
+                  },
+                  {
+                    key: 'description',
+                    label: 'What is told of it',
+                    kind: 'text',
+                    long: true,
+                  },
                 ]}
                 locked={row.locked}
                 busy={busy}
-                onSave={(values) => edit.mutate({ feature: row.id, values })}
+                onSave={(values) =>
+                  edit.mutate({
+                    feature: row.id,
+                    values: typed(values, { ids: ['star_id', 'galaxy_id'] }),
+                  })
+                }
                 onRelease={(release) =>
                   edit.mutate({ feature: row.id, release })
                 }

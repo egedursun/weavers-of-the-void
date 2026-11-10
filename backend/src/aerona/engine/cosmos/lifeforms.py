@@ -2,7 +2,9 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.core.total import partial
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.physics import WorldLifeRow, WorldPhysicsRow
@@ -22,7 +24,9 @@ COMPLEXITY_ORDER: tuple[LifeComplexity, ...] = tuple(LifeComplexity)
 BARREN_WORLDS = frozenset({*LIFELESS_WORLDS, WorldType.VOID_POCKET, WorldType.ASTEROID_BELT, WorldType.SHATTERED})
 HARSH_WORLDS = frozenset({WorldType.LAVA, WorldType.FORGE, WorldType.ICE, WorldType.ICE_SHELL, WorldType.METHANE, WorldType.GREENHOUSE, WorldType.DWARF_PLANET})
 BURIED_WORLDS = frozenset({WorldType.ICE_SHELL, WorldType.HOLLOW, WorldType.CHTHONIAN, WorldType.FUNGAL})
-AIR_GAS: dict[AirNeed, str] = {AirNeed.OXYGEN: "oxygen", AirNeed.CARBON_DIOXIDE: "carbon_dioxide", AirNeed.METHANE: "methane"}
+AIR_GAS = partial(AirNeed, {AirNeed.OXYGEN: "oxygen", AirNeed.CARBON_DIOXIDE: "carbon_dioxide", AirNeed.METHANE: "methane"}, without={AirNeed.NONE})
+GRAVITY_SPAN = (0.5, 1.6)
+HOMELAND_FIXUP = "homeland_body"
 
 
 def rank(complexity: LifeComplexity) -> int:
@@ -144,3 +148,43 @@ async def quicken(ctx: TickContext, worlds: dict[int, WorldRow], physics: dict[i
             await note(ctx, f"The life of {world.name} grew more complex.", key="world.life_grew", world_id=world_id, kind=ChronicleKind.WORLD)
             grown += 1
     return grown
+
+
+def breath_of_world(rules: Rules, physics: WorldPhysicsRow) -> AirNeed:
+    if physics.pressure < rules.orbits.no_air_hundredths / PERCENT:
+        return AirNeed.NONE
+    shares = {need: getattr(physics, gas) for need, gas in AIR_GAS.items() if getattr(physics, gas) >= rules.life_classes.breathable_oxygen}
+    return max(sorted(shares), key=lambda need: shares[need]) if shares else AirNeed.NONE
+
+
+async def fit_to_homeland(session: AsyncSession, rules: Rules, biology: PeopleBiologyRow, world_id: int | None) -> bool:
+    physics = await session.get(WorldPhysicsRow, world_id) if world_id is not None else None
+    if physics is None:
+        return False
+    allowed = await tolerated(session, physics.world_id)
+    chemistry = Biochemistry.CARBON_WATER if not allowed or Biochemistry.CARBON_WATER in allowed else allowed[0]
+    low, high = GRAVITY_SPAN
+    for key, value in (
+        ("biochemistry", chemistry),
+        ("air", breath_of_world(rules, physics)),
+        ("gravity_low", round(physics.gravity_g * low, 2)),
+        ("gravity_high", round(physics.gravity_g * high, 2)),
+    ):
+        if key not in biology.locked:
+            setattr(biology, key, value)
+    return True
+
+
+async def fit_peoples(session: AsyncSession, rules: Rules) -> int:
+    done = set(await session.scalars(select(AppliedFixupRow.key).where(AppliedFixupRow.key.like(f"{HOMELAND_FIXUP}.%"))))
+    fitted = 0
+    for biology in list(await session.scalars(select(PeopleBiologyRow).order_by(PeopleBiologyRow.people_entity_id))):
+        key = f"{HOMELAND_FIXUP}.{biology.people_entity_id}"
+        people = await session.get(EntityRow, biology.people_entity_id)
+        if key in done or people is None or held(people.id):
+            continue
+        if await fit_to_homeland(session, rules, biology, people.world_id):
+            session.add(AppliedFixupRow(key=key, result={"world_id": people.world_id}))
+            fitted += 1
+    await session.flush()
+    return fitted

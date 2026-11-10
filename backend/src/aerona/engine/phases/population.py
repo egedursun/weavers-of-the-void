@@ -168,6 +168,7 @@ async def grow_community(
     "table.son_powers",
     "table.war_sides",
     "table.wars",
+    "table.world_biochemistries",
     "table.world_domain_hooks",
     "table.world_maps",
 )

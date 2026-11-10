@@ -22,7 +22,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.phases import physics
 
 
-@reads("table.applied_fixups", "table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.name_registry")
+@reads("table.afterlife_strata", "table.applied_fixups", "table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.name_registry")
 @writes(
     "table.afterlife_strata",
     "table.applied_fixups",

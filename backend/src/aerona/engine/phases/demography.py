@@ -287,6 +287,7 @@ async def refresh_people(ctx: TickContext, atlas: RegionAtlas, tally: BattleTall
     "table.region_environment",
     "table.speaker_cohorts",
     "table.species_profiles",
+    "table.world_biochemistries",
     "table.world_maps",
 )
 @writes(

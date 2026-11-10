@@ -126,6 +126,7 @@ class SonToolId(StrEnum):
     CALL_IMPACT = "call_impact"
     DEFLECT_IMPACT = "deflect_impact"
     TERRAFORM_WORLD = "terraform_world"
+    BREAK_MOON = "break_moon"
 
     WAGE_WAR = "wage_war"
     RAISE_HOST = "raise_host"

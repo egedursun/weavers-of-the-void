@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Hammer, Pickaxe, Square } from 'lucide-react'
-import { type ActionBody } from '@/api/actions'
+import { type ActionBody, type EditValues } from '@/api/actions'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { EmptyState, EntityLink, PagedList } from '@/components/domain'
@@ -18,7 +18,7 @@ import { WorldPicker } from './parts'
 
 type Edit = {
   project: number
-  values?: Record<string, number | string | null>
+  values?: EditValues
   release?: string[]
 }
 type Start = {
@@ -137,6 +137,12 @@ export function TerraformPanel({
                     label: 'Epochs left',
                     kind: 'number',
                     min: 0,
+                  },
+                  {
+                    key: 'aim',
+                    label: 'What it works toward',
+                    kind: 'pick',
+                    table: table(TERRAFORM_AIMS),
                   },
                 ]}
                 locked={row.locked}

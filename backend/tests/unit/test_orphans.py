@@ -104,12 +104,14 @@ def test_a_private_method_counts_as_used_only_in_its_own_file(tmp_path: Path) ->
     package.mkdir()
     first = package / "first.py"
     first.write_text(
-        "class Repair:\n    def run(self):\n        return self._linked()\n\n    def _linked(self):\n        return 1\n\n    def _stale(self):\n        return 2\n",
+        "class Repair:\n    def run(self):\n        return self._linked()\n\n"
+        "    def _linked(self):\n        return 1\n\n    def _stale(self):\n        return 2\n",
         encoding="utf-8",
     )
     second = package / "second.py"
     second.write_text(
-        "class Other:\n    def _stale(self):\n        return 3\n\n    def go(self):\n        return self._stale()\n\n\ndef use(repair, other):\n    return repair.run(), other.go()\n",
+        "class Other:\n    def _stale(self):\n        return 3\n\n    def go(self):\n        return self._stale()\n\n\n"
+        "def use(repair, other):\n    return repair.run(), other.go()\n",
         encoding="utf-8",
     )
     module.SOURCE = package

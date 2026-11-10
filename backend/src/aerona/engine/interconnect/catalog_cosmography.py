@@ -316,15 +316,17 @@ COSMOGRAPHY_MECHANICS = (
         spec_item="S10.9",
         title=(
             "Each world's orbit, body and air set its year, day, seasons, light, warmth, gravity, tides, rings, eclipses "
-            "and auroras, and the warmth of its regions follows"
+            "and auroras, and the warmth of its regions follows; great eclipses and transits fall on the calendar its orbits set"
         ),
         subsystem=S.ENVIRONMENT,
-        phases=("world_physics",),
+        phases=("world_physics", "sky"),
         surface=Surface(drawer="section-world-physics"),
         backfill="migration a67800447482: inputs inferred from each world's gravity, air, terrain and calendar, its albedo set so its warmth stays as it was",
-        templates=("world.",),
-        fields=("eccentricity", "mass", "radius", "pressure", "albedo", "heat_shift", "gravity_g"),
+        templates=("world.", "tools.son.break_moon"),
+        fields=("eccentricity", "mass", "radius", "pressure", "albedo", "heat_shift", "gravity_g", "eclipse_years"),
         tables=(WorldPhysicsRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("break_moon",),
         targets=("world",),
         couplings=(
             Coupling(S.ENVIRONMENT, "a world's surface warmth shifts the temperature of all its regions", EdgeKind.MODIFIER, "orbits.heat_per_ten_kelvin"),
@@ -350,7 +352,7 @@ COSMOGRAPHY_MECHANICS = (
         spec_item="S10.9",
         title=(
             "Each world's life has a complexity and the places it lives; creatures and peoples arise only where life is "
-            "complex enough, and life grows more complex on temperate worlds"
+            "complex enough, life grows more complex on temperate worlds, and each people's body fits the world it arose on"
         ),
         subsystem=S.ECOLOGY,
         phases=("world_physics",),
@@ -366,7 +368,7 @@ COSMOGRAPHY_MECHANICS = (
         spec_item="S10.9",
         title=(
             "Asteroid fields feed miners and pirates, wormholes open and close, black holes swallow near worlds and slow "
-            "time for those who pass, rogue worlds stir orbits, and comets return as omens"
+            "time for those who pass, rogue worlds stir orbits, and comets and wandering stars return as omens"
         ),
         subsystem=S.COSMOS,
         phases=("cosmic_features",),
@@ -381,8 +383,8 @@ COSMOGRAPHY_MECHANICS = (
         key="impacts",
         spec_item="S10.9",
         title=(
-            "Bodies from fields, comets and rogue worlds strike worlds; astronomers foresee them, warned peoples prepare, "
-            "and a strike leaves a crater, ruin, an impact winter, star metal and a legend"
+            "Bodies from fields, comets and rogue worlds strike or pass by; warned peoples pray, hoard and flee, "
+            "and a strike leaves a crater, ruin, a winter, a remembered year, star metal and a legend"
         ),
         subsystem=S.COSMOS,
         phases=("impacts",),
@@ -398,7 +400,10 @@ COSMOGRAPHY_MECHANICS = (
     Mechanic(
         key="terraforming",
         spec_item="S10.9",
-        title="Gods and powers that span worlds reshape a world's air, warmth, water and face over epochs, and native life of another chemistry suffers",
+        title=(
+            "Gods and powers that span worlds reshape a world's air toward what its makers breathe, its warmth, water and face over epochs, "
+            "and native life of another chemistry suffers"
+        ),
         subsystem=S.ENVIRONMENT,
         phases=("terraforming",),
         surface=Surface(drawer="section-terraform"),
@@ -413,7 +418,10 @@ COSMOGRAPHY_MECHANICS = (
     Mechanic(
         key="world_surveys",
         spec_item="S10.2/RP2",
-        title="Every people and realm knows each world only so far, from rumour to a full map; journeys, colonies and conquests need it to know enough",
+        title=(
+            "Every people and realm knows each world only so far, from rumour to a full map, and learns of it by its settlements' journeys; "
+            "journeys, colonies and conquests need it to know enough"
+        ),
         subsystem=S.KNOWLEDGE,
         phases=("surveys",),
         surface=Surface(drawer="section-surveys"),

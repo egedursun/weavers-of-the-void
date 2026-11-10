@@ -2,7 +2,8 @@ from sqlalchemy import select
 
 from aerona.catalog.stars import STAR_TYPES
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.celestial import SkyEventRow
+from aerona.db.tables.celestial import SkyEventRow, StarRow
+from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.tables.routes import JourneyRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType
@@ -14,6 +15,7 @@ from aerona.domain.enums.world import HorrorEventKind, SkyEventKind, StarType, W
 from aerona.domain.models.entity_stats import MortalStats, PeopleStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.leak import leak_delta
+from aerona.engine.cosmos.orbits import eclipse_period
 from aerona.engine.cosmos.routes import RouteBook, RouteSpec, can_use_route, open_route, sky_calendar
 from aerona.engine.cosmos.star_types import brightness_band
 from aerona.engine.cosmos.stars import StarSpec, create_star, rekindle_star, supernova
@@ -22,11 +24,12 @@ from aerona.engine.phases.afterlife import void_storm
 from aerona.engine.phases.climate import star_instability
 from aerona.engine.phases.disasters import DisasterWorld
 from aerona.engine.phases.horror import _sanity_context, horror_event
-from aerona.engine.phases.sky import SkyOrder, eclipse_world, sky_event, spontaneous_bag, star_event_weight
+from aerona.engine.phases.sky import SkyOrder, sky_event, spontaneous_bag, star_event_weight
 from aerona.engine.phases.society_economy import EconomyWorld
 from aerona.engine.phases.travel import bridge_collapse
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.physics import PhysicsTable
+from aerona.rules.registry import Rules
 from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, make_route, make_son, make_world, tick, tuned
 
 
@@ -226,16 +229,13 @@ async def test_nature_of_the_world_shapes_its_disasters(ctx: TickContext, cosmos
     assert built.nature_mult(ctx.rules, cosmos.home.id, Disaster.EARTHQUAKE) == 0
 
 
-async def test_a_spontaneous_eclipse_prefers_worlds_with_moons_and_many_suns(ctx: TickContext, cosmos: Cosmos) -> None:
-    lonely = await make_world(ctx.session, "Barren")
-    cosmos.home.moon_count = 40
-    cosmos.star.star_type = StarType.TRINARY
-    await ctx.session.flush()
-    stars = {cosmos.star.id: cosmos.star}
-    picks = [await eclipse_world(tick(ctx.session, ctx.rules, epoch=epoch), stars) for epoch in range(1, 30)]
-    homes = sum(1 for world in picks if world is not None and world.id == cosmos.home.id)
-    assert homes > sum(1 for world in picks if world is not None and world.id == lonely.id)
-    assert spontaneous_bag(ctx.rules, companions=3).count(SkyEventKind.ECLIPSE) == spontaneous_bag(ctx.rules).count(SkyEventKind.ECLIPSE) + 3
+def test_a_great_eclipse_comes_sooner_under_many_suns(rules: Rules) -> None:
+    physics = WorldPhysicsRow(eclipse_years=3)
+    lone = eclipse_period(rules, physics, StarRow(star_type=StarType.YELLOW_DWARF))
+    many = eclipse_period(rules, physics, StarRow(star_type=StarType.TRINARY))
+    assert lone is not None and many is not None and many < lone
+    assert eclipse_period(rules, WorldPhysicsRow(eclipse_years=0), StarRow(star_type=StarType.TRINARY)) is None
+    assert not any(kind in spontaneous_bag(rules) for kind in (SkyEventKind.ECLIPSE, SkyEventKind.TRANSIT))
 
 
 async def test_the_afterlife_void_storm_darkens_the_weather_of_both_ends(ctx: TickContext, cosmos: Cosmos) -> None:

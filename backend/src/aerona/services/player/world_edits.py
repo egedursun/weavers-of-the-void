@@ -7,11 +7,13 @@ from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import an
 from aerona.db.repositories.names import NameRepository, normalize_name
 from aerona.db.repositories.worlds import WorldRepository
-from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.tables.routes import RouteRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.world import Atmosphere, Discovery, Gravity, WorldType
+from aerona.engine.cosmos.orbits import match_air, match_gravity, match_kind
 from aerona.engine.cosmos.world_types import mechanics_of
 from aerona.engine.cosmos.worlds import forget_world, set_mirror_twin
 from aerona.engine.primitives.renames import rewrite_name
@@ -132,6 +134,20 @@ def _agents(scope: PlayerScope, world: WorldRow, command: EditWorld, notes: list
     notes.append(f"{command.mortal_agents} mortal agents each epoch")
 
 
+async def _body(scope: PlayerScope, world: WorldRow, command: EditWorld) -> None:
+    physics = await scope.session.get(WorldPhysicsRow, world.id)
+    if physics is None:
+        return
+    if command.world_type is not None:
+        star_id = await WorldRepository(scope.session).root_star_id(world)
+        star = await scope.session.get(StarRow, star_id) if star_id is not None else None
+        match_kind(scope.rules, world, physics, star)
+    if command.world_type is not None or command.gravity is not None:
+        match_gravity(physics, world.gravity)
+    if command.world_type is not None or command.atmosphere is not None:
+        match_air(physics, world.atmosphere)
+
+
 async def _discovery(scope: PlayerScope, world: WorldRow, discovery: Discovery, notes: list[str]) -> None:
     if discovery is world.discovery:
         return
@@ -180,6 +196,7 @@ async def edit_world(scope: PlayerScope, command: EditWorld) -> Effect:
             setattr(world, field, value.strip() or None)
             notes.append(f"{field.replace('_', ' ')} rewritten")
     _physics(scope, world, command, notes)
+    await _body(scope, world, command)
     _agents(scope, world, command, notes)
     if command.guardian_son_id is not None and command.guardian_son_id != world.patron_son_id:
         guardian = await guards.son(scope.session, command.guardian_son_id)

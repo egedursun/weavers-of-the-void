@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { ShieldCheck, Trash2, Zap } from 'lucide-react'
+import { type EditValues } from '@/api/actions'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { EmptyState, EntityLink, PagedList } from '@/components/domain'
+import { Muted } from '@/components/typography'
 import {
   Chip,
   ForgeCard,
@@ -12,12 +14,12 @@ import {
 } from '@/features/cosmography/parts'
 import { NumberField } from '@/features/entity/wilds/parts'
 import { type ImpactRecord, physicsKeys, usePhysicsAction } from './api'
-import { IMPACT_BODIES, IMPACT_OUTCOMES } from './labels'
+import { IMPACT_BODIES, IMPACT_OUTCOMES, table } from './labels'
 import { WorldPicker } from './parts'
 
 type Edit = {
   impact: number
-  values?: Record<string, number | string | null>
+  values?: EditValues
   release?: string[]
 }
 type Call = { world: number; region: number | null; size: number | null }
@@ -150,6 +152,22 @@ export function ImpactsPanel({
                   <Chip>{`Impact winter: ${row.winter_epochs} epochs`}</Chip>
                 )}
               </div>
+              {row.text !== '' && <Muted variant='caption'>{row.text}</Muted>}
+              {row.world && (
+                <RecordPick
+                  label='Where it falls'
+                  types={['region']}
+                  worldId={row.world.id}
+                  value={row.region?.id ?? null}
+                  onChange={(id) =>
+                    id !== null &&
+                    edit.mutate({
+                      impact: row.id,
+                      values: { region_entity_id: id },
+                    })
+                  }
+                />
+              )}
               <RecordEditor
                 title='Size, time and winter'
                 note='A held value is kept against the engine.'
@@ -172,6 +190,30 @@ export function ImpactsPanel({
                     label: 'Winter epochs',
                     kind: 'number',
                     min: 0,
+                  },
+                  {
+                    key: 'warned_epoch',
+                    label: 'Foreseen at epoch',
+                    kind: 'number',
+                    min: 1,
+                  },
+                  {
+                    key: 'body',
+                    label: 'Body',
+                    kind: 'pick',
+                    table: table(IMPACT_BODIES),
+                  },
+                  {
+                    key: 'outcome',
+                    label: 'Outcome',
+                    kind: 'pick',
+                    table: table(IMPACT_OUTCOMES),
+                  },
+                  {
+                    key: 'text',
+                    label: 'What is told of it',
+                    kind: 'text',
+                    long: true,
                   },
                 ]}
                 locked={row.locked}

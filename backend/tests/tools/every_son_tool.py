@@ -20,6 +20,7 @@ from tests.tools.every_setup import (
     leaking_world,
     ley_line,
     named_spirit,
+    near_moon,
     outsider,
     pact_friend,
     phenomenon,
@@ -284,6 +285,7 @@ SON_CASES: dict[str, Case] = {
     "call_impact": Case(plain(region_id=region, reason=REASON)),
     "deflect_impact": Case(plain(impact_id=created("impact"), reason=REASON), falling_body),
     "terraform_world": Case(plain(world_id=world, aim="warm", reason=REASON), world_body),
+    "break_moon": Case(plain(moon_id=created("moon"), reason=REASON), near_moon),
     "shape_blood": Case(plain(mortal_id=mortal, locus="height", allele="tall", reason=REASON)),
     "reveal_true_name": Case(plain(bearer_id=created("spirit"), learner_id=mortal, reason=REASON), named_spirit),
 }

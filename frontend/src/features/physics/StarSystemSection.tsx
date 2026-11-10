@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Crown, Orbit, Plus, Split, Sun } from 'lucide-react'
+import { type EditValues } from '@/api/actions'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,6 +23,7 @@ import {
 import { STAR_TYPE_LABEL } from '@/features/cosmos/model/labels'
 import { OrbitView } from './OrbitView'
 import { physicsKeys, usePhysicsAction, useStarPhysics } from './api'
+import { typed } from './edits'
 import { fixed } from './format'
 import { SYSTEM_ROLES } from './labels'
 import { QuerySection } from './parts'
@@ -29,13 +31,16 @@ import { QuerySection } from './parts'
 type Move = { star: number; role: 'primary' | 'companion'; system: number }
 type Edit = {
   system: number
-  values?: Record<string, number | string | null>
+  values?: EditValues
   release?: string[]
 }
 
 export function StarSystemSection({ starId }: { starId: number }) {
   const query = useStarPhysics(starId)
   const heavens = useCosmography()
+  const galaxies = Object.fromEntries(
+    (heavens.data?.galaxies ?? []).map((row) => [String(row.id), row.name])
+  )
   const [joining, setJoining] = useState<string>('')
   const refresh = [physicsKeys.star(starId)]
   const move = usePhysicsAction(
@@ -172,11 +177,42 @@ export function StarSystemSection({ starId }: { starId: number }) {
                       kind: 'decimal',
                       min: 0,
                     },
+                    {
+                      key: 'band_inner',
+                      label: 'Temperate band from (orbits)',
+                      kind: 'decimal',
+                      min: 0,
+                    },
+                    {
+                      key: 'band_outer',
+                      label: 'Temperate band to (orbits)',
+                      kind: 'decimal',
+                      min: 0,
+                    },
+                    {
+                      key: 'x',
+                      label: 'Place across its galaxy',
+                      kind: 'decimal',
+                    },
+                    {
+                      key: 'y',
+                      label: 'Place along its galaxy',
+                      kind: 'decimal',
+                    },
+                    {
+                      key: 'galaxy_id',
+                      label: 'Galaxy',
+                      kind: 'pick',
+                      table: galaxies,
+                    },
                   ]}
                   locked={system.locked}
                   busy={busy}
                   onSave={(values) =>
-                    edit.mutate({ system: system.id, values })
+                    edit.mutate({
+                      system: system.id,
+                      values: typed(values, { ids: ['galaxy_id'] }),
+                    })
                   }
                   onRelease={(release) =>
                     edit.mutate({ system: system.id, release })

@@ -7,12 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.physics import CosmicFeatureRow, StarPhysicsRow, StarSystemRow, WorldPhysicsRow
+from aerona.domain.enums.cosmography import WorldAge
 from aerona.domain.enums.physics import CosmicFeatureKind
 from aerona.domain.enums.world import Atmosphere, Gravity, WorldType
 from aerona.engine.cosmos.climate import band_heat
-from aerona.engine.cosmos.star_types import star_heat
+from aerona.engine.cosmos.star_types import star_heat, star_mechanics
 from aerona.engine.cosmos.stellar import hundredths, luminosity_of, typical_mass
-from aerona.engine.environment.seasons import NO_SEASON_WORLDS, season_count_for
+from aerona.engine.environment.seasons import NO_SEASON_WORLDS, SEASON_SHAPES, season_count_for
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up
 from aerona.rules.registry import Rules
 
@@ -32,6 +33,7 @@ AIR: dict[Atmosphere, tuple[float, dict[str, int]]] = {
     Atmosphere.TOXIC: (1.5, {"nitrogen": 40, "oxygen": 2, "carbon_dioxide": 40, "methane": 8, "water_vapour": 0, "exotic_gas": 10}),
 }
 TOXIC_GASES = ("carbon_dioxide", "methane", "exotic_gas")
+LOCK_REACH_BY_AGE: dict[WorldAge, float] = {WorldAge.YOUNG: 0.5, WorldAge.MATURE: 1.0, WorldAge.OLD: 1.5, WorldAge.DYING: 2.0}
 
 
 @dataclass(frozen=True)
@@ -49,7 +51,16 @@ class Sky:
 
     @property
     def insolation(self) -> float:
-        return sum(light.luminosity / max(light.distance, 0.01) ** 2 for light in self.lights)
+        return sum(flux(light) for light in self.lights)
+
+    @property
+    def companion_share(self) -> float:
+        total = self.insolation
+        return sum(flux(light) for light in self.lights[1:]) / total if total > 0 else 0.0
+
+
+def flux(light: Light) -> float:
+    return light.luminosity / max(light.distance, 0.01) ** 2
 
 
 @dataclass(frozen=True)
@@ -57,6 +68,18 @@ class Moon:
     mass: float
     orbit: float
     inclination: float
+
+
+HELD_MOON_SHARE = 0.0123
+HELD_MOON_TILT = 5.0
+
+
+def counted_moons(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, moons: list[Moon]) -> list[Moon]:
+    held = world.moon_count or 0
+    if "moon_count" not in world.calendar_locked or held <= len(moons):
+        return moons
+    orbit = hundredths(rules.orbits.roche_orbit_hundredths) * 4
+    return [*moons, *[Moon(physics.mass * HELD_MOON_SHARE, orbit, HELD_MOON_TILT)] * (held - len(moons))]
 
 
 def root_of(worlds: dict[int, WorldRow], world: WorldRow) -> WorldRow:
@@ -164,7 +187,7 @@ def locks(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, sky: Sky) -> 
         return world.world_type is WorldType.TIDALLY_LOCKED or world.orbit <= hundredths(rules.orbits.roche_orbit_hundredths) * 4
     if not sky.lights:
         return False
-    reach = hundredths(rules.orbits.lock_orbit_hundredths) * float(sky.central_mass ** (1 / 3))
+    reach = hundredths(rules.orbits.lock_orbit_hundredths) * float(sky.central_mass ** (1 / 3)) * LOCK_REACH_BY_AGE[world.age_stage]
     return world.orbit < reach
 
 
@@ -221,6 +244,34 @@ def infer(rules: Rules, world: WorldRow, star: StarRow | None) -> WorldPhysicsRo
     return physics
 
 
+ORBIT_INPUTS = frozenset({"eccentricity", "inclination", "argument", "circumbinary"})
+DERIVED_WORLD_FIELDS = frozenset({"gravity", "atmosphere", "year_length_days", "day_length_hours", "season_count", "tidal_strength"})
+
+
+def take(physics: WorldPhysicsRow, key: str, value: object) -> None:
+    if key not in physics.locked:
+        setattr(physics, key, value)
+
+
+def match_gravity(physics: WorldPhysicsRow, gravity: Gravity) -> None:
+    take(physics, "mass", round(GRAVITY_G[gravity] * physics.radius**2, 3))
+    take(physics, "gravity_g", GRAVITY_G[gravity])
+
+
+def match_air(physics: WorldPhysicsRow, atmosphere: Atmosphere) -> None:
+    pressure, mix = AIR[atmosphere]
+    take(physics, "pressure", pressure)
+    for key, value in mix.items():
+        take(physics, key, value)
+
+
+def match_kind(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, star: StarRow | None) -> None:
+    fresh = infer(rules, world, star)
+    for column in WorldPhysicsRow.__table__.columns:
+        if column.key not in ORBIT_INPUTS and column.key not in ("world_id", "locked"):
+            take(physics, column.key, getattr(fresh, column.key))
+
+
 def calibrate(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, *, star: StarRow | None, sky: Sky, parent: WorldPhysicsRow | None) -> None:
     if not sky.lights or world.world_type in SKYLESS_WORLDS:
         return
@@ -251,6 +302,7 @@ def derive(
     parent: WorldPhysicsRow | None,
     rogue: set[int],
     orbit: float,
+    shards: bool,
 ) -> None:
     def put(key: str, value: object) -> None:
         if key not in physics.locked:
@@ -264,7 +316,7 @@ def derive(
     put("gravity_g", round(gravity, 3))
     put("escape_velocity", round(math.sqrt(physics.mass / max(physics.radius, 0.01)), 3))
     put("tidally_locked", locks(rules, world, physics, sky))
-    put("ringed", world.world_type is WorldType.RINGED or any(moon.orbit < hundredths(rules.orbits.roche_orbit_hundredths) for moon in moons))
+    put("ringed", shards or world.world_type is WorldType.RINGED or any(moon.orbit < hundredths(rules.orbits.roche_orbit_hundredths) for moon in moons))
     put("aurora", clamp_percent(round_half_up(world.magnetism * sky.flare * rules.orbits.aurora_per_magnetism_pct / PERCENT / PERCENT)))
     put("eclipse_years", eclipse_years(rules, moons, len(sky.lights), physics.circumbinary))
     put("heat_shift", heat_of(rules, temperature) if governed(world, sky, rogue) else 0)
@@ -305,6 +357,8 @@ def apply_to_world(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, sky:
         count = 1 if physics.tidally_locked or world.world_type in NO_SEASON_WORLDS else season_count_for(rules, world.world_type, world.axial_tilt)
         if count == 1 and physics.eccentricity * PERCENT >= rules.orbits.global_season_eccentricity_pct and not physics.tidally_locked:
             count = 2
+        if not physics.circumbinary and not physics.tidally_locked and sky.companion_share * PERCENT >= rules.orbits.binary_season_share_pct:
+            count = min(max(SEASON_SHAPES), count * 2)
         if world.season_count != count:
             world.season_count = count
             changed.append("season_count")
@@ -320,3 +374,47 @@ async def rogue_worlds(session: AsyncSession) -> set[int]:
         CosmicFeatureRow.kind == CosmicFeatureKind.ROGUE_WORLD, CosmicFeatureRow.ended_epoch.is_(None), CosmicFeatureRow.world_id.is_not(None)
     )
     return {world_id for world_id in await session.scalars(statement) if world_id is not None}
+
+
+def great_eclipse_epochs(rules: Rules, physics: WorldPhysicsRow, companions: int) -> int | None:
+    if physics.eclipse_years <= 0:
+        return None
+    years = physics.eclipse_years * rules.orbits.great_eclipse_rarity / (1 + max(0, companions))
+    return max(1, round_half_up(years / rules.time.years_per_epoch))
+
+
+def eclipse_period(rules: Rules, physics: WorldPhysicsRow | None, star: StarRow | None) -> int | None:
+    if physics is None:
+        return None
+    return great_eclipse_epochs(rules, physics, star_mechanics(star.star_type).eclipse_weight(rules) if star is not None else 0)
+
+
+def transit_epochs(rules: Rules, inner_year: int, outer_year: int, tilt: float) -> int | None:
+    reach = rules.orbits.transit_inclination_degrees
+    if inner_year <= 0 or inner_year >= outer_year or tilt > reach:
+        return None
+    meeting_days = 1 / (1 / inner_year - 1 / outer_year)
+    years = meeting_days / outer_year * rules.orbits.transit_rarity * (1 + tilt / (reach + 1))
+    return max(1, round_half_up(years / rules.time.years_per_epoch))
+
+
+def next_epoch(epoch: int, period: int, phase: int) -> int:
+    return epoch + (-(epoch + phase)) % period
+
+
+def transit_pairs(rules: Rules, worlds: list[WorldRow], skies: dict[int, WorldPhysicsRow]) -> list[tuple[WorldRow, WorldRow, int]]:
+    planets = [world for world in worlds if world.parent_world_id is None and world.star_id is not None]
+    pairs: list[tuple[WorldRow, WorldRow, int]] = []
+    for outer in planets:
+        for inner in planets:
+            seen, seer = skies.get(inner.id), skies.get(outer.id)
+            if inner.star_id != outer.star_id or inner.orbit >= outer.orbit or seen is None or seer is None:
+                continue
+            period = transit_epochs(rules, inner.year_length_days or 0, outer.year_length_days or 0, abs(seen.inclination - seer.inclination))
+            if period is not None:
+                pairs.append((outer, inner, period))
+    return sorted(pairs, key=lambda pair: (pair[0].id, pair[1].id))
+
+
+def transit_phase(outer: WorldRow, inner: WorldRow) -> int:
+    return outer.id + inner.id

@@ -15,7 +15,7 @@ from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.material import MaterialKind
-from aerona.domain.enums.physics import CosmicFeatureKind
+from aerona.domain.enums.physics import PERIODIC_BODIES, CosmicFeatureKind
 from aerona.domain.enums.travel import RouteClosure, TravelMethod, VehicleKind
 from aerona.domain.enums.world import SkyEventKind, StarType
 from aerona.domain.models.entity_stats import ProphecyStats, TraditionStats
@@ -31,6 +31,7 @@ from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat
 
 AGE_KEY = "age"
+WANDERING_SUBTYPES: dict[str, CosmicFeatureKind] = {"comet": CosmicFeatureKind.PERIODIC_COMET, "wandering light": CosmicFeatureKind.WANDERING_STAR}
 LIVE = CosmicFeatureRow.ended_epoch.is_(None)
 
 
@@ -228,20 +229,38 @@ async def pass_rogues(ctx: TickContext, cosmography: Cosmography) -> int:
     return perturbed
 
 
+def periodic_period(ctx: TickContext, kind: CosmicFeatureKind) -> int:
+    table = ctx.rules.cosmic_features
+    return table.wanderer_period if kind is CosmicFeatureKind.WANDERING_STAR else table.comet_period
+
+
+def returned_now(row: CosmicFeatureRow, epoch: int) -> bool:
+    if row.next_return_epoch is None:
+        return False
+    return row.next_return_epoch == epoch or (row.created_epoch < epoch and row.next_return_epoch - max(1, row.period_epochs) == epoch)
+
+
 async def return_comets(ctx: TickContext, cosmography: Cosmography) -> int:
     returned = 0
-    for comet in await live_features(ctx, CosmicFeatureKind.PERIODIC_COMET):
+    bodies = [row for kind in sorted(PERIODIC_BODIES) for row in await live_features(ctx, kind)]
+    for comet in sorted(bodies, key=lambda row: row.id):
         if comet.next_return_epoch is None or comet.next_return_epoch > ctx.epoch or held(comet.star_id, comet.entity_id):
             continue
         if "next_return_epoch" not in comet.locked:
             comet.next_return_epoch = ctx.epoch + max(1, comet.period_epochs)
         body = await ctx.session.get(EntityRow, comet.entity_id) if comet.entity_id is not None else None
         for world in worlds_of(cosmography, comet.star_id):
-            ctx.session.add(
-                SkyEventRow(
-                    kind=SkyEventKind.COMET, epoch=ctx.epoch, until_epoch=ctx.epoch, world_id=world.id, star_id=comet.star_id, text=f"{comet.name} returned."
+            if comet.kind is CosmicFeatureKind.PERIODIC_COMET:
+                ctx.session.add(
+                    SkyEventRow(
+                        kind=SkyEventKind.COMET,
+                        epoch=ctx.epoch,
+                        until_epoch=ctx.epoch,
+                        world_id=world.id,
+                        star_id=comet.star_id,
+                        text=f"{comet.name} returned.",
+                    )
                 )
-            )
             await note(
                 ctx,
                 f"{comet.name} returned to the sky of {world.name}.",
@@ -300,23 +319,25 @@ async def foretell(ctx: TickContext, comet: CosmicFeatureRow, body: EntityRow, w
 
 
 async def adopt_comets(ctx: TickContext) -> int:
-    known = {row.entity_id for row in await ctx.session.scalars(select(CosmicFeatureRow).where(CosmicFeatureRow.kind == CosmicFeatureKind.PERIODIC_COMET))}
+    known = {row.entity_id for row in await ctx.session.scalars(select(CosmicFeatureRow).where(CosmicFeatureRow.kind.in_(sorted(PERIODIC_BODIES))))}
     adopted = 0
-    flagged = select(EntityRow).where(EntityRow.entity_type == EntityType.CELESTIAL, EntityRow.subtype == "comet").order_by(EntityRow.id)
+    flagged = select(EntityRow).where(EntityRow.entity_type == EntityType.CELESTIAL, EntityRow.subtype.in_(sorted(WANDERING_SUBTYPES))).order_by(EntityRow.id)
     for body in await ctx.session.scalars(flagged):
-        if body.id in known or held(body.id):
+        if body.id in known or held(body.id) or body.subtype is None:
             continue
         world = await ctx.session.get(WorldRow, body.world_id) if body.world_id is not None else None
         star_id = world.star_id if world is not None else None
+        kind = WANDERING_SUBTYPES[body.subtype]
+        period = periodic_period(ctx, kind)
         ctx.session.add(
             CosmicFeatureRow(
-                kind=CosmicFeatureKind.PERIODIC_COMET,
+                kind=kind,
                 name=body.name,
                 star_id=star_id,
                 entity_id=body.id,
                 omen_weight=PERCENT // 2,
-                period_epochs=ctx.rules.cosmic_features.comet_period,
-                next_return_epoch=ctx.epoch + ctx.rules.cosmic_features.comet_period,
+                period_epochs=period,
+                next_return_epoch=ctx.epoch + period,
                 created_epoch=max(1, ctx.epoch),
                 locked=[],
             )

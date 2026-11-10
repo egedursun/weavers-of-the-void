@@ -24,6 +24,8 @@ class SystemView(ApiModel):
     id: int
     name: str
     galaxy_id: int | None
+    x: float
+    y: float
     separation: float
     band_inner: float
     band_outer: float
@@ -55,6 +57,9 @@ class FeatureRecord(ApiModel):
     world_b: NodeRef | None
     body: NodeRef | None
     route_id: int | None
+    x: float
+    y: float
+    description: str | None
     radius: float
     density: int
     radiation: int
@@ -184,6 +189,11 @@ class FitRecord(ApiModel):
     fit: int
 
 
+class TransitRecord(ApiModel):
+    inner: NodeRef
+    next_epoch: int
+
+
 class WorldPhysicsView(ApiModel):
     epoch: int
     world_id: int
@@ -193,6 +203,10 @@ class WorldPhysicsView(ApiModel):
     season_count: int | None
     axial_tilt: int | None
     tidal_strength: int | None
+    calendar_locked: list[str]
+    icebound: bool
+    next_eclipse_epoch: int | None
+    transits: list[TransitRecord]
     physics: WorldPhysicsRecord | None
     life: LifeRecord | None
     terraforming: list[TerraformRecord]

@@ -151,3 +151,4 @@ CLAIM_STAR = Line("tools.son.claim_star", "{son} took {star} under their patrona
 CALL_IMPACT = Line("tools.son.call_impact", "{son} called a body down upon {place}: {reason}")
 DEFLECT_IMPACT = Line("tools.son.deflect_impact", "{son} turned a falling body aside from {world}: {reason}")
 TERRAFORM_WORLD = Line("tools.son.terraform_world", "{son} began to reshape {world}: {reason}")
+BREAK_MOON = Line("tools.son.break_moon", "{son} broke {moon} into a ring: {reason}")

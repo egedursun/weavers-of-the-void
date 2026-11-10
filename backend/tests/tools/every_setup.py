@@ -57,7 +57,7 @@ from aerona.engine.primitives.manual import manual_context
 from aerona.engine.services.war import take_captive
 from aerona.rules.registry import Rules
 from tests.tools.every_tool import Ids
-from tests.tools.factories import Realm, connect, make_entity
+from tests.tools.factories import Realm, add_world, connect, make_entity
 
 EPOCH = 3
 
@@ -506,6 +506,13 @@ async def falling_body(session: AsyncSession, realm: Realm) -> Ids:
     session.add(impact)
     await session.flush()
     return {"impact": impact.id}
+
+
+async def near_moon(session: AsyncSession, realm: Realm) -> Ids:
+    moon = await add_world(session, "Pebble")
+    moon.parent_world_id, moon.star_id, moon.orbit = realm.cosmos.world_id, None, 0.2
+    await session.flush()
+    return {"moon": moon.id}
 
 
 async def world_body(session: AsyncSession, _realm: Realm) -> Ids:

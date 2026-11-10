@@ -23,10 +23,11 @@ from aerona.core.grammar import an
 from aerona.db.tables.celestial import StarRow
 from aerona.db.tables.cosmography import CelestialReadingRow, CosmicBeingProfileRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.physics import ImpactEventRow, TerraformingRow, WorldLifeRow, WorldPhysicsRow
+from aerona.db.tables.physics import CosmicFeatureRow, ImpactEventRow, TerraformingRow, WorldLifeRow, WorldPhysicsRow
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.physics import ImpactOutcome
+from aerona.domain.enums.physics import PERIODIC_BODIES, ImpactOutcome
+from aerona.engine.cosmos.orbits import eclipse_period, next_epoch
 from aerona.engine.cosmos.placement import Cosmography, cosmography_of
 from aerona.engine.cosmos.terraform import AIM_LABELS
 from aerona.engine.phases.world_age import golden_age_status
@@ -91,8 +92,13 @@ async def body_lines(scope: Scope, world_id: int) -> list[str]:
     if physics is not None:
         lines.append(
             f"surface {round(physics.surface_temperature)} K, gravity {physics.gravity_g:g} g, air pressure {physics.pressure:g}, "
-            f"water {physics.hydrosphere}/100, ice {physics.ice}/100"
+            f"water {physics.hydrosphere}/100, ice {physics.cryosphere}/100"
         )
+        world = scope.worlds.get(world_id)
+        star = await scope.session.get(StarRow, world.star_id) if world is not None and world.star_id is not None else None
+        period = eclipse_period(scope.rules, physics, star)
+        if world is not None and period is not None:
+            lines.append(f"the next great eclipse darkens its sky at age {next_epoch(scope.epoch, period, world.id)}")
     life = await scope.session.get(WorldLifeRow, world_id)
     if life is not None:
         lines.append(f"life: {life.complexity.value}")
@@ -106,6 +112,14 @@ async def body_lines(scope: Scope, world_id: int) -> list[str]:
         )
     for project in await scope.session.scalars(select(TerraformingRow).where(TerraformingRow.world_id == world_id).order_by(TerraformingRow.id)):
         lines.append(f"a work to {AIM_LABELS[project.aim]}, {project.epochs_left} ages left")
+    root = scope.worlds.get(world_id)
+    star_id = root.star_id if root is not None else None
+    returning = select(CosmicFeatureRow).where(
+        CosmicFeatureRow.star_id == star_id, CosmicFeatureRow.kind.in_(sorted(PERIODIC_BODIES)), CosmicFeatureRow.ended_epoch.is_(None)
+    )
+    for body in await scope.session.scalars(returning.order_by(CosmicFeatureRow.next_return_epoch, CosmicFeatureRow.id)) if star_id is not None else []:
+        if body.next_return_epoch is not None:
+            lines.append(f"{body.name} returns to its sky at age {body.next_return_epoch}")
     return lines
 
 

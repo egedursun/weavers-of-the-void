@@ -11,8 +11,8 @@ from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.features import adopt_comets, devour, ensure_wells, harbour_pirates, keep_wormholes, mine_fields, pass_rogues, return_comets
 from aerona.engine.cosmos.impacts import forecast, impact_winters, resolve
-from aerona.engine.cosmos.lifeforms import inferred_life, quicken
-from aerona.engine.cosmos.orbits import Moon, apply_to_world, calibrate, derive, infer, lose_air, rogue_worlds, root_of, sky_of
+from aerona.engine.cosmos.lifeforms import fit_peoples, inferred_life, quicken
+from aerona.engine.cosmos.orbits import Moon, apply_to_world, calibrate, counted_moons, derive, infer, lose_air, rogue_worlds, root_of, sky_of
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.planetary import planetary_climate, sea_level_of
 from aerona.engine.cosmos.stellar import hundredths, physics_of_stars
@@ -102,6 +102,7 @@ async def derive_all(ctx: TickContext, *, quiet: bool) -> int:
         ctx.count("rings_formed", await break_moons(ctx, worlds))
         ctx.count("life_quickened", await quicken(ctx, worlds, rows))
     moons = moons_of(worlds, rows)
+    shards = {world.parent_world_id for world in worlds.values() if world.parent_world_id is not None and world.world_type in BROKEN}
     rogue = await rogue_worlds(ctx.session)
     systems = await systems_of(ctx.session)
     derived = 0
@@ -113,10 +114,11 @@ async def derive_all(ctx: TickContext, *, quiet: bool) -> int:
         sky = sky_of(ctx.rules, root, rows.get(root.id, row), stars=stars, star_physics=star_physics, systems=systems)
         parent = rows.get(world.parent_world_id) if world.parent_world_id is not None else None
         was_locked = row.tidally_locked
-        derive(ctx.rules, world, row, sky=sky, moons=moons.get(world.id, []), parent=parent, rogue=rogue, orbit=root.orbit)
+        circling = counted_moons(ctx.rules, world, row, moons.get(world.id, []))
+        derive(ctx.rules, world, row, sky=sky, moons=circling, parent=parent, rogue=rogue, orbit=root.orbit, shards=world.id in shards)
         if not quiet and lose_air(ctx.rules, row):
             ctx.count("air_lost")
-        changed = apply_to_world(ctx.rules, world, row, sky, moons.get(world.id, []))
+        changed = apply_to_world(ctx.rules, world, row, sky, circling)
         if "season_count" in changed:
             await write_seasons(ctx, world)
         if not quiet and world_id in known and row.tidally_locked and not was_locked:
@@ -126,16 +128,30 @@ async def derive_all(ctx: TickContext, *, quiet: bool) -> int:
     return derived
 
 
-@reads("table.cosmic_features", "table.cosmos", "table.star_physics", "table.star_systems", "table.world_physics", "table.worlds")
+@reads(
+    "table.applied_fixups",
+    "table.cosmic_features",
+    "table.cosmos",
+    "table.dimensional_events",
+    "table.galactic_structures",
+    "table.people_biology",
+    "table.star_physics",
+    "table.star_systems",
+    "table.world_life",
+    "table.world_physics",
+    "table.worlds",
+)
 @writes("table.chronicle", "table.epoch_year_cursors", "table.incidents", "table.world_life", "table.world_physics", "table.world_seasons", "table.worlds")
 async def world_physics(ctx: TickContext) -> None:
     ctx.count("worlds_derived", await derive_all(ctx, quiet=False))
+    ctx.count("peoples_fitted", await fit_peoples(ctx.session, ctx.rules))
 
 
 async def settle_heavens(session: AsyncSession, rules: Rules) -> int:
     ctx = await manual_context(session, "heavens_physics", rules)
     made = await ensure_systems(session, rules, ctx.epoch)
     made += await derive_all(ctx, quiet=True)
+    made += await fit_peoples(session, rules)
     return made + await survey_cycle(ctx, await Cosmography.load(session))
 
 
@@ -148,7 +164,7 @@ async def planetary(ctx: TickContext) -> None:
     await ctx.session.flush()
 
 
-@reads("table.cosmic_features", "table.cosmos", "table.routes", "table.star_physics")
+@reads("table.cosmic_features", "table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.routes", "table.star_physics")
 @writes("table.chronicle", "table.community_stocks", "table.cosmic_features", "table.epoch_year_cursors", "table.incidents", "table.routes", "table.sky_events")
 async def cosmic_features(ctx: TickContext) -> None:
     cosmography = await Cosmography.load(ctx.session)
@@ -163,7 +179,7 @@ async def cosmic_features(ctx: TickContext) -> None:
     await ctx.session.flush()
 
 
-@reads("table.cosmic_features", "table.cosmos", "table.impact_events")
+@reads("table.cosmic_features", "table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.impact_events")
 @writes("table.chronicle", "table.epoch_year_cursors", "table.impact_events", "table.incidents", "table.region_environment")
 async def impacts(ctx: TickContext) -> None:
     cosmography = await Cosmography.load(ctx.session)
@@ -183,7 +199,7 @@ async def terraforming(ctx: TickContext) -> None:
     await ctx.session.flush()
 
 
-@reads("table.journeys", "table.routes", "table.world_surveys")
+@reads("table.cosmos", "table.dimensional_events", "table.galactic_structures", "table.holder_levels", "table.journeys", "table.routes", "table.world_surveys")
 @writes("table.world_surveys")
 async def surveys(ctx: TickContext) -> None:
     ctx.count("surveys_raised", await survey_cycle(ctx, await Cosmography.load(ctx.session)))

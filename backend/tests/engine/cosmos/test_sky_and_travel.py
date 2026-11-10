@@ -28,16 +28,13 @@ from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, make
 def test_spontaneous_bag_order(rules: Rules) -> None:
     bag = spontaneous_bag(rules)
     assert bag == [
-        SkyEventKind.ECLIPSE,
         SkyEventKind.COMET,
         SkyEventKind.COMET,
         SkyEventKind.ALIGNMENT,
-        SkyEventKind.ECLIPSE,
         SkyEventKind.SUPERNOVA,
         SkyEventKind.BLACK_SUN,
         SkyEventKind.FLARE,
         SkyEventKind.FLARE,
-        SkyEventKind.TRANSIT,
     ]
 
 

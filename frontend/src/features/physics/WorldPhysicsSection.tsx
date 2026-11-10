@@ -1,4 +1,5 @@
 import { Globe2, Snowflake, Sun, Thermometer, Waves } from 'lucide-react'
+import { type EditValues } from '@/api/actions'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/domain'
 import { Label } from '@/components/typography'
@@ -15,15 +16,17 @@ import {
   usePhysicsAction,
   useWorldPhysics,
 } from './api'
+import { YES_NO, typed } from './edits'
 import { fixed, kelvinText } from './format'
 import { QuerySection } from './parts'
 
 type Edit = {
-  values?: Record<string, number | string | null>
+  values?: EditValues
   release?: string[]
 }
 
 const PERCENT_FIELD = { kind: 'number', min: 0, max: 100 } as const
+const FLAGS = ['circumbinary', 'tidally_locked', 'ringed', 'habitable']
 
 const GROUPS: { title: string; note: string; fields: Field[] }[] = [
   {
@@ -52,7 +55,7 @@ const GROUPS: { title: string; note: string; fields: Field[] }[] = [
         key: 'circumbinary',
         label: 'Circles both stars',
         kind: 'pick',
-        table: { true: 'Yes', false: 'No' },
+        table: YES_NO,
       },
     ],
   },
@@ -99,6 +102,52 @@ const GROUPS: { title: string; note: string; fields: Field[] }[] = [
       { key: 'cryosphere', label: 'Ice', ...PERCENT_FIELD },
     ],
   },
+  {
+    title: 'What follows from them',
+    note: 'The heavens work these out each epoch; a value you hold here stands by your will over what they derive.',
+    fields: [
+      { key: 'insolation', label: 'Light it takes', kind: 'decimal', min: 0 },
+      {
+        key: 'surface_temperature',
+        label: 'Surface warmth (kelvin)',
+        kind: 'decimal',
+        min: 0,
+      },
+      {
+        key: 'heat_shift',
+        label: 'Warmth it gives its regions',
+        kind: 'number',
+      },
+      { key: 'gravity_g', label: 'Gravity', kind: 'decimal', min: 0 },
+      {
+        key: 'escape_velocity',
+        label: 'Speed to leave it',
+        kind: 'decimal',
+        min: 0,
+      },
+      { key: 'aurora', label: 'Auroras', ...PERCENT_FIELD },
+      {
+        key: 'eclipse_years',
+        label: 'Years between eclipses',
+        kind: 'number',
+        min: 0,
+      },
+      { key: 'sea_level', label: 'Sea level', kind: 'number' },
+      {
+        key: 'tidally_locked',
+        label: 'One face to its star',
+        kind: 'pick',
+        table: YES_NO,
+      },
+      { key: 'ringed', label: 'Ringed', kind: 'pick', table: YES_NO },
+      {
+        key: 'habitable',
+        label: "In its star's temperate band",
+        kind: 'pick',
+        table: YES_NO,
+      },
+    ],
+  },
 ]
 
 function Derived({
@@ -129,7 +178,7 @@ function Derived({
             Ringed
           </Badge>
         )}
-        {physics.cryosphere >= 45 && (
+        {view.icebound && (
           <Badge size='sm' variant='info'>
             <Snowflake />
             Gripped by ice
@@ -179,6 +228,23 @@ function Derived({
           ],
           ['Auroras', `${physics.aurora}/100`],
           ['Sea level', String(physics.sea_level)],
+          [
+            'Next great eclipse',
+            view.next_eclipse_epoch !== null
+              ? `Epoch ${view.next_eclipse_epoch}`
+              : 'None in its sky',
+          ],
+          [
+            'Worlds seen crossing its star',
+            view.transits.length === 0
+              ? 'None'
+              : view.transits
+                  .map(
+                    (transit) =>
+                      `${transit.inner.name} at epoch ${transit.next_epoch}`
+                  )
+                  .join(', '),
+          ],
         ]}
       />
       <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
@@ -285,14 +351,7 @@ export function WorldPhysicsSection({ worldId }: { worldId: number }) {
                 )}
                 busy={busy}
                 onSave={(values) =>
-                  edit.mutate({
-                    values: Object.fromEntries(
-                      Object.entries(values).map(([key, value]) => [
-                        key,
-                        key === 'circumbinary' ? value === 'true' : value,
-                      ])
-                    ) as Record<string, number | string | null>,
-                  })
+                  edit.mutate({ values: typed(values, { flags: FLAGS }) })
                 }
                 onRelease={(release) => edit.mutate({ release })}
               />

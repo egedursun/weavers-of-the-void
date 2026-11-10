@@ -5,10 +5,16 @@ from pathlib import Path
 from typing import get_args
 
 import pytest
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.session import Database
+from aerona.db.tables.celestial import WorldRow
 from aerona.domain.enums.entity import EntityType
+from aerona.engine.cosmos.orbits import DERIVED_WORLD_FIELDS
 from aerona.engine.lore import control
+from aerona.engine.phases.physics import derive_all
+from aerona.engine.primitives.manual import manual_context
 from aerona.rules.registry import Rules
 from aerona.services.player.catalog import ACTIONS, action, run_ledgered
 from aerona.services.player.scope import PlayerScope
@@ -28,8 +34,22 @@ async def run(database: Database, action_id: str, lever: Lever) -> None:
         async with database.write() as session:
             await lever.then(session)
     async with database.write() as session:
+        before = await derived_values(session)
         payload = await payload_for(session, action(action_id).input_model, lever.values, 1)
         await run_ledgered(PlayerScope(session, Rules()), action_id, payload)
+        after = await derived_values(session)
+    changed = {key: value for key, value in after.items() if key in before and before[key] != value}
+    if changed:
+        async with database.write() as session:
+            await derive_all(await manual_context(session, "lever_heavens", Rules()), quiet=True)
+            settled = await derived_values(session)
+        assert {key: settled[key] for key in changed} == changed, f"{action_id} sets world values the heavens then undo"
+
+
+async def derived_values(session: AsyncSession) -> dict[tuple[int, str], object]:
+    fields = sorted(DERIVED_WORLD_FIELDS)
+    rows = await session.execute(select(WorldRow.id, *(getattr(WorldRow, name) for name in fields)))
+    return {(row[0], name): value for row in rows for name, value in zip(fields, row[1:], strict=True)}
 
 
 def test_every_lever_case_names_a_real_action() -> None:

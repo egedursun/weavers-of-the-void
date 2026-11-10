@@ -260,7 +260,6 @@ class SeasonsRules:
     campaign_warm: int = rule(80, 0, 200, RuleGroup.ENVIRONMENT, "Fitness for war summer adds and winter takes at full tilt")
     campaign_wet: int = rule(30, 0, 100, RuleGroup.ENVIRONMENT, "Fitness for war a wet season takes away")
     tide_per_moon: int = rule(30, 0, 100, RuleGroup.ENVIRONMENT, "Tidal strength added per moon")
-    eclipse_per_moon_pct: int = rule(50, 0, 1000, RuleGroup.ENVIRONMENT, "Eclipse weight added per moon of the most moon-rich world (%)")
     seasonality_equator_pct: int = rule(30, 0, 100, RuleGroup.ENVIRONMENT, "Share of the world's seasons felt at the equator (%)")
 
 

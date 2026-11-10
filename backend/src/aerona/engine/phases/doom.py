@@ -261,6 +261,7 @@ async def destroy_leakiest_world(ctx: TickContext) -> None:
     "table.bonds",
     "table.chronicle",
     "table.community_societies",
+    "table.cosmic_being_profiles",
     "table.cosmos",
     "table.dimensional_events",
     "table.entity_flags",

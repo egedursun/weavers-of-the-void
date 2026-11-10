@@ -3,9 +3,11 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import an
+from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.ecology import SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.environment import NotableYearRow, RegionEnvironmentRow
 from aerona.db.tables.physics import CosmicFeatureRow, ImpactEventRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
@@ -13,7 +15,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
-from aerona.domain.enums.environment import ScarKind
+from aerona.domain.enums.environment import NotableYearKind, ScarKind, WeatherKind
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.physics import CosmicFeatureKind, ImpactBody, ImpactOutcome
@@ -22,15 +24,19 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import LegendStats, PlaceStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.climate import cold_snap
-from aerona.engine.cosmos.features import live_features, worlds_of
+from aerona.engine.cosmos.features import live_features, returned_now, worlds_of
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.economy.deposits import Deposit, open_deposit
 from aerona.engine.environment.places import write_kind
+from aerona.engine.environment.years import world_years
+from aerona.engine.industry.stores import perishables
 from aerona.engine.lore.research import has_technique
 from aerona.engine.notes import note
 from aerona.engine.phases.disasters import apply_disaster
+from aerona.engine.phases.environment import Notable, YearHarvest, record_notable
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import branch_level
-from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 from aerona.engine.primitives.queries import canon, connect
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import scale_stat, shift_bounded
@@ -87,10 +93,43 @@ async def schedule(
     return impact
 
 
+async def flee(ctx: TickContext, world: WorldRow, impact: ImpactEventRow) -> int:
+    if impact.region_entity_id is None:
+        return 0
+    away = sorted((await RegionAtlas.load(ctx.session)).neighbour_regions(impact.region_entity_id))
+    if not away:
+        return 0
+    statement = select(EntityRow).where(
+        EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.world_id == world.id, EntityRow.location_id == impact.region_entity_id
+    )
+    fled = 0
+    for town in list(await ctx.session.scalars(statement.order_by(EntityRow.id))):
+        if held(town.id):
+            continue
+        town.location_id = away[0]
+        await BondRepository(ctx.session).refresh_location(town.id, town.location_id, ctx.epoch)
+        await note(ctx, f"{town.name} left its land before the body from the sky could fall on it.", key="impact.fled", ids=[town.id], world_id=world.id)
+        fled += 1
+    return fled
+
+
+async def hoard(ctx: TickContext, community: EntityRow) -> int:
+    kept = 0
+    for lot in await perishables(ctx, community.id):
+        if lot.held:
+            continue
+        part = round_half_up((lot.quantity - lot.preserved) * ctx.rules.impacts.hoard_pct / PERCENT)
+        lot.preserved += part
+        kept += part
+    return kept
+
+
 async def warn(ctx: TickContext, world: WorldRow, impact: ImpactEventRow, seers: list[EntityRow]) -> None:
     for community in await canon(ctx.session, COMMUNITY_TYPES, world.id):
         if not held(community.id):
             shift_bounded(ctx.rules, community, PIETY_KEY, ctx.rules.impacts.prepare_piety)
+            await hoard(ctx, community)
+    await flee(ctx, world, impact)
     await note(
         ctx,
         f"The astronomers of {seers[0].name} foresaw a body that will strike {world.name} in {impact.due_epoch - ctx.epoch} epochs; its peoples prepare.",
@@ -105,7 +144,7 @@ async def forecast(ctx: TickContext, cosmography: Cosmography) -> int:
     table = ctx.rules.impacts
     made = 0
     fields = await live_features(ctx, CosmicFeatureKind.ASTEROID_FIELD)
-    comets = [row for row in await live_features(ctx, CosmicFeatureKind.PERIODIC_COMET) if row.next_return_epoch == ctx.epoch]
+    comets = [row for row in await live_features(ctx, CosmicFeatureKind.PERIODIC_COMET) if returned_now(row, ctx.epoch)]
     rogues = await live_features(ctx, CosmicFeatureKind.ROGUE_WORLD)
     for source, body, chance in (
         *((row, ImpactBody.ASTEROID, row.density / 10 * table.field_chance_per_density / 10) for row in fields),
@@ -193,13 +232,31 @@ async def strike(ctx: TickContext, impact: ImpactEventRow) -> bool:
         impact.crater_place_id = place.id
     impact.winter_epochs = impact.size // max(1, table.winter_per_size)
     for species in await canon(ctx.session, [EntityType.SPECIES], world.id):
-        if not held(species.id):
-            scale_stat(ctx.rules, species, ABUNDANCE_KEY, 1 - impact.size * table.extinction_pct / PERCENT / PERCENT * (1 - spared))
+        if held(species.id):
+            continue
+        profile = await ctx.session.get(SpeciesProfileRow, species.id)
+        bears = table.hardy_pct / PERCENT if profile is not None and profile.temperature_min <= table.hardy_cold else 1.0
+        scale_stat(ctx.rules, species, ABUNDANCE_KEY, 1 - impact.size * table.extinction_pct / PERCENT / PERCENT * (1 - spared) * bears)
     impact.text = f"{an(impact.body.value.replace('_', ' '), capital=True)} struck {region.name if region is not None else world.name}."
     await note(ctx, impact.text, key="impact.struck", ids=[region.id] if region is not None else [], world_id=world.id, kind=ChronicleKind.SKY)
     if place is not None:
         await legend_of(ctx, impact, world, place)
+    await remember_the_fall(ctx, world, region, impact)
     return True
+
+
+async def remember_the_fall(ctx: TickContext, world: WorldRow, region: EntityRow | None, impact: ImpactEventRow) -> NotableYearRow | None:
+    years = world_years(ctx.environment, world.id, "impact")
+    if not years:
+        return None
+    sampled = years[0]
+    name = f"the Year the Sky Fell on {region.name if region is not None else world.name}"
+    return await record_notable(
+        ctx,
+        world,
+        region,
+        Notable(NotableYearKind.WEATHER, YearHarvest(sampled.offset, sampled.year, 0, WeatherKind.ASH_FALL), clamp_percent(impact.size), name, impact.text),
+    )
 
 
 async def resolve(ctx: TickContext) -> int:
@@ -208,8 +265,18 @@ async def resolve(ctx: TickContext) -> int:
     for impact in list(await ctx.session.scalars(statement)):
         if held(impact.world_id) or "outcome" in impact.locked:
             continue
+        if impact.called_by_node_id is None and ctx.rng(f"impact_miss.{impact.id}").chance(ctx.rules.impacts.miss_pct):
+            await pass_by(ctx, impact)
+            continue
         struck += int(await strike(ctx, impact))
     return struck
+
+
+async def pass_by(ctx: TickContext, impact: ImpactEventRow) -> None:
+    world = await ctx.session.get(WorldRow, impact.world_id)
+    impact.outcome = ImpactOutcome.MISSED
+    impact.text = f"The body passed {world.name if world is not None else 'its world'} by."
+    await note(ctx, impact.text, key="impact.missed", world_id=impact.world_id, kind=ChronicleKind.SKY)
 
 
 async def impact_winters(ctx: TickContext) -> int:

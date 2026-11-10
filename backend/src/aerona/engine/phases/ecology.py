@@ -195,6 +195,7 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
     "species.intelligence",
     "species.might",
     "species.strength",
+    "spirit.unrest",
     "table.bonds",
     "table.cult_doctrines",
     "table.cult_tenets",
@@ -215,6 +216,7 @@ async def wild_numbers(ctx: TickContext, species: list[EntityRow], marks: Ecolog
 )
 @writes(
     "species.abundance",
+    "spirit.unrest",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",

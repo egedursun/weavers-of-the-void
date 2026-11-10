@@ -3638,7 +3638,7 @@
     "GOK.olay_kara_gunes": "sky.event_weight_black_sun",
     "GOK.olay_kuyruklu": "sky.event_weight_comet",
     "GOK.olay_supernova": "sky.event_weight_supernova",
-    "GOK.olay_tutulma": "sky.event_weight_eclipse",
+    "GOK.olay_tutulma": null,
     "GOK.supernova_bereket": "sky.supernova_fertility_loss",
     "GOK.supernova_kalinti_parlaklik": "sky.supernova_remnant_brightness",
     "GOK.supernova_kiyamet": "sky.supernova_apocalypse",

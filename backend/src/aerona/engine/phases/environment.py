@@ -334,7 +334,7 @@ async def ensure_world_calendar(ctx: TickContext, world: WorldRow, moons: int) -
         created = True
     if "moon_count" not in world.calendar_locked:
         world.moon_count = moons
-    if "tidal_strength" not in world.calendar_locked:
+    if world.tidal_strength is None and "tidal_strength" not in world.calendar_locked:
         world.tidal_strength = tidal_strength(rules, world.moon_count or 0)
     existing = await ctx.session.scalar(select(func.count()).select_from(WorldSeasonRow).where(WorldSeasonRow.world_id == world.id))
     if not existing:
@@ -455,6 +455,7 @@ async def run_backfills(ctx: TickContext) -> None:
     "table.battles",
     "table.beast_profiles",
     "table.calendars",
+    "table.cosmic_features",
     "table.cosmos",
     "table.dimensional_events",
     "table.districts",
@@ -471,6 +472,7 @@ async def run_backfills(ctx: TickContext) -> None:
     "table.settlement_infrastructure",
     "table.sky_events",
     "table.world_maps",
+    "table.world_physics",
     "table.world_seasons",
 )
 @writes(
@@ -604,6 +606,7 @@ async def sanitation_by_region(ctx: TickContext, book: EnvironmentBook, communit
     "region.magic",
     "settlement.population",
     "table.calendars",
+    "table.cosmic_features",
     "table.cosmos",
     "table.dimensional_events",
     "table.districts",
@@ -619,6 +622,7 @@ async def sanitation_by_region(ctx: TickContext, book: EnvironmentBook, communit
     "table.settlement_profiles",
     "table.sky_events",
     "table.world_maps",
+    "table.world_physics",
     "table.world_seasons",
 )
 @writes("place.fertility", "region.fertility", "table.entities", "table.place_environment", "table.region_environment")

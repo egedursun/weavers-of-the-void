@@ -16,8 +16,12 @@ from aerona.db.tables.physics import (
     WorldPhysicsRow,
     WorldSurveyRow,
 )
-from aerona.domain.enums.physics import CosmicFeatureKind, LifeEnvironment, SurveyLevel, SystemRole, TerraformAim
+from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.physics import PERIODIC_BODIES, CosmicFeatureKind, LifeEnvironment, SurveyLevel, SystemRole, TerraformAim
+from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.catastrophe import scorch_world
+from aerona.engine.cosmos.features import periodic_period
 from aerona.engine.cosmos.impacts import call_impact, deflect_impact
 from aerona.engine.cosmos.lifeforms import life_of
 from aerona.engine.cosmos.stellar import physics_of_stars, refresh
@@ -25,9 +29,12 @@ from aerona.engine.cosmos.survey import OBSERVER_TYPES
 from aerona.engine.cosmos.systems import join_system, settle_systems, system_name
 from aerona.engine.cosmos.terraform import begin
 from aerona.engine.divine.control import apply
+from aerona.engine.notes import note
 
 Values = Mapping[str, Any]
 SYSTEM_KEYS = frozenset({"system_id", "role"})
+BROKEN_WORLDS = frozenset({WorldType.SHATTERED, WorldType.ASTEROID_BELT})
+STAR_BOUND = frozenset({CosmicFeatureKind.ASTEROID_FIELD, CosmicFeatureKind.GRAVITY_WELL, *PERIODIC_BODIES})
 
 
 async def found[Row](ctx: TickContext, kind: type[Row], key: object, label: str) -> Row:
@@ -116,6 +123,22 @@ async def edit_world_physics(ctx: TickContext, world_id: int, values: Values, re
     return row
 
 
+async def break_moon(ctx: TickContext, moon_id: int, by: str) -> WorldRow:
+    moon = await found(ctx, WorldRow, moon_id, "world")
+    parent = await ctx.session.get(WorldRow, moon.parent_world_id) if moon.parent_world_id is not None else None
+    if parent is None:
+        raise ValidationFailedError(f"{moon.name} circles no world; only a moon breaks into a ring.")
+    if moon.world_type in BROKEN_WORLDS:
+        raise ValidationFailedError(f"{moon.name} is already broken.")
+    if "world_type" in moon.locked:
+        raise ValidationFailedError(f"The nature of {moon.name} is held.")
+    await scorch_world(ctx, moon, f"{by} broke")
+    moon.world_type = WorldType.SHATTERED
+    await note(ctx, f"{by} broke {moon.name} into a ring about {parent.name}.", key="world.ring_formed", world_id=parent.id, kind=ChronicleKind.SKY)
+    await ctx.session.flush()
+    return moon
+
+
 async def edit_life(ctx: TickContext, world_id: int, values: Values, release: list[str]) -> WorldLifeRow:
     world = await found(ctx, WorldRow, world_id, "world")
     places = values.get("environments")
@@ -133,7 +156,7 @@ async def create_feature(ctx: TickContext, kind: CosmicFeatureKind, name: str, v
         values.get("world_id") is None or values.get("world_b_id") is None or values.get("world_id") == values.get("world_b_id")
     ):
         raise ValidationFailedError("A wormhole joins two different worlds.")
-    if kind in (CosmicFeatureKind.ASTEROID_FIELD, CosmicFeatureKind.PERIODIC_COMET, CosmicFeatureKind.GRAVITY_WELL) and star is None:
+    if kind in STAR_BOUND and star is None:
         raise ValidationFailedError("This feature belongs to a star; choose one.")
     if kind is CosmicFeatureKind.ROGUE_WORLD and star is None and values.get("galaxy_id") is None:
         raise ValidationFailedError("A rogue world drifts among the stars of a galaxy; choose its star or its galaxy.")
@@ -151,8 +174,8 @@ async def create_feature(ctx: TickContext, kind: CosmicFeatureKind, name: str, v
     row.locked = []
     if kind is CosmicFeatureKind.ASTEROID_FIELD and values.get("density") is None:
         row.density = ctx.rules.cosmic_features.field_density
-    if kind is CosmicFeatureKind.PERIODIC_COMET and row.next_return_epoch is None:
-        row.period_epochs = row.period_epochs or ctx.rules.cosmic_features.comet_period
+    if kind in PERIODIC_BODIES and row.next_return_epoch is None:
+        row.period_epochs = row.period_epochs or periodic_period(ctx, kind)
         row.next_return_epoch = ctx.epoch + row.period_epochs
     await ctx.session.flush()
     return row

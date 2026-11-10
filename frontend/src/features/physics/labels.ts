@@ -28,7 +28,7 @@ import {
   Snowflake,
   Sparkles,
   Sprout,
-  type Star,
+  Star,
   Sun,
   SunDim,
   Telescope,
@@ -75,6 +75,12 @@ export const FEATURE_KINDS: Record<
     icon: CircleDot,
     tone: 'danger',
     hint: 'The pull around a black hole: it shortens routes past it, slows time for travellers and swallows near worlds',
+  },
+  wandering_star: {
+    label: 'Wandering star',
+    icon: Star,
+    tone: 'gold',
+    hint: 'A light that crosses the sky of its star and returns at its period, raising festivals and prophecies',
   },
 }
 

@@ -24588,6 +24588,7 @@ export interface components {
       | 'periodic_comet'
       | 'rogue_world'
       | 'gravity_well'
+      | 'wandering_star'
     CosmographyCatalog: {
       galaxy_types: components['schemas']['KindRecord'][]
       cluster_kinds: components['schemas']['KindRecord'][]
@@ -28034,6 +28035,9 @@ export interface components {
       world_b: components['schemas']['NodeRef'] | null
       body: components['schemas']['NodeRef'] | null
       route_id: number | null
+      x: number
+      y: number
+      description: string | null
       radius: number
       density: number
       radiation: number
@@ -39146,6 +39150,8 @@ export interface components {
       id: number
       name: string
       galaxy_id: number | null
+      x: number
+      y: number
       separation: number
       band_inner: number
       band_outer: number
@@ -40274,6 +40280,10 @@ export interface components {
       effects: components['schemas']['TraitEffectView'][]
       capacities: components['schemas']['TraitCapacityView'][]
       variant_id?: number | null
+    }
+    TransitRecord: {
+      inner: components['schemas']['NodeRef']
+      next_epoch: number
     }
     TranslateRequest: {
       text: string
@@ -41711,6 +41721,10 @@ export interface components {
       season_count: number | null
       axial_tilt: number | null
       tidal_strength: number | null
+      calendar_locked: string[]
+      icebound: boolean
+      next_eclipse_epoch: number | null
+      transits: components['schemas']['TransitRecord'][]
       physics: components['schemas']['WorldPhysicsRecord'] | null
       life: components['schemas']['LifeRecord'] | null
       terraforming: components['schemas']['TerraformRecord'][]
@@ -83599,6 +83613,7 @@ export const cosmicFeatureKindValues: ReadonlyArray<
   'periodic_comet',
   'rogue_world',
   'gravity_well',
+  'wandering_star',
 ]
 export const cosmosSizeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CosmosSize']

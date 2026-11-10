@@ -13,6 +13,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.physics import SURVEY_ORDER, SurveyLevel
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.travel import JourneyIntent, JourneyStatus
+from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import Cosmography, Placement
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -31,9 +32,9 @@ def at(index: int) -> SurveyLevel:
     return SURVEY_ORDER[max(0, min(len(SURVEY_ORDER) - 1, index))]
 
 
-async def observer_of(session: AsyncSession, entity: EntityRow) -> int:
+async def observers_of(session: AsyncSession, entity: EntityRow) -> list[int]:
     if entity.entity_type in OBSERVER_TYPES:
-        return entity.id
+        return [entity.id]
     statement = (
         select(BondRow.source_node_id)
         .join(EntityRow, EntityRow.id == BondRow.source_node_id)
@@ -41,8 +42,11 @@ async def observer_of(session: AsyncSession, entity: EntityRow) -> int:
             BondRow.kind == BondKind.RULES, BondRow.state == BondState.ACTIVE, BondRow.target_node_id == entity.id, EntityRow.entity_type == EntityType.POLITY
         )
     )
-    ruler = await session.scalar(statement.order_by(BondRow.id).limit(1))
-    return ruler if ruler is not None else entity.id
+    found = list(await session.scalars(statement.order_by(BondRow.id)))
+    people = await people_of(session, entity)
+    if people is not None:
+        found.append(people.id)
+    return list(dict.fromkeys(found)) or [entity.id]
 
 
 async def level_of(session: AsyncSession, observer_id: int, world_id: int) -> SurveyLevel:
@@ -65,8 +69,10 @@ async def level_of(session: AsyncSession, observer_id: int, world_id: int) -> Su
 
 
 async def knows_enough(session: AsyncSession, traveller: EntityRow, world_id: int, needed: int) -> bool:
-    observer = await observer_of(session, traveller)
-    return index_of(await level_of(session, observer, world_id)) >= needed
+    if traveller.world_id == world_id:
+        return True
+    levels = [index_of(await level_of(session, observer, world_id)) for observer in await observers_of(session, traveller)]
+    return max(levels) >= needed
 
 
 @dataclass(frozen=True)
@@ -102,8 +108,11 @@ async def survey_cycle(ctx: TickContext, cosmography: Cosmography) -> int:
     knowledge = await KnowledgeMap.load(ctx.session)
     raised = 0
     arrivals: dict[int, list[tuple[int, JourneyIntent]]] = {}
-    for journey in await ctx.session.scalars(select(JourneyRow).where(JourneyRow.status == JourneyStatus.ARRIVED, JourneyRow.end_epoch >= ctx.epoch - 1)):
-        arrivals.setdefault(journey.traveller_entity_id, []).append((journey.destination_world_id, journey.intent))
+    recent = select(JourneyRow).where(JourneyRow.status == JourneyStatus.ARRIVED, JourneyRow.end_epoch >= ctx.epoch - 1).order_by(JourneyRow.id)
+    for journey in list(await ctx.session.scalars(recent)):
+        traveller = await ctx.session.get(EntityRow, journey.traveller_entity_id)
+        for seer in await observers_of(ctx.session, traveller) if traveller is not None else []:
+            arrivals.setdefault(seer, []).append((journey.destination_world_id, journey.intent))
     routes = list(await ctx.session.scalars(select(RouteRow).where(RouteRow.known.is_(True)).order_by(RouteRow.id)))
     known = {(row.observer_entity_id, row.world_id): row for row in await ctx.session.scalars(select(WorldSurveyRow))}
     for observer in sorted(await canon(ctx.session, list(OBSERVER_TYPES)), key=lambda row: row.id):

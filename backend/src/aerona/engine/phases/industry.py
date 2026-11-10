@@ -72,6 +72,7 @@ NOTE_CAP = 6
 )
 @writes(
     "people.wealth",
+    "settlement.wealth",
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_industry",

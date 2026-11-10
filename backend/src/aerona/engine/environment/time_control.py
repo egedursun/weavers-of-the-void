@@ -11,13 +11,12 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import CalendarRow, ForcedWeatherRow, LeyLineRow, NotableYearRow, StructureLeyRow, WorldSeasonRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import NotableYearKind, WeatherKind
-from aerona.engine.environment.control import SEASON_NUMBERS
+from aerona.engine.environment.control import CALENDAR_FIELDS, SEASON_NUMBERS, hold_calendar
 from aerona.engine.environment.ley_works import LEY_WORK_KINDS, ley_row
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.rules.registry import Rules
 
-CALENDAR_FIELDS = frozenset({"axial_tilt", "year_length_days", "day_length_hours", "moon_count", "tidal_strength"})
-DERIVED_CALENDAR = frozenset({"moon_count", "tidal_strength"})
+DERIVED_CALENDAR = frozenset({"year_length_days", "day_length_hours", "moon_count", "tidal_strength", "season_count"})
 SEASONS_MAX = 6
 NAME_MAX = 120
 LEY_FLAGS = frozenset({"attuned", "on_ley_line", "at_nexus"})
@@ -57,6 +56,7 @@ async def add_season(session: AsyncSession, world_id: int, name: str, values: di
     ordered = [*seasons[:at], row, *seasons[at:]]
     await _renumber(session, ordered)
     world.season_count = len(ordered)
+    hold_calendar(world, "season_count")
     await session.flush()
     return row
 
@@ -75,6 +75,7 @@ async def remove_season(session: AsyncSession, season_id: int) -> WorldSeasonRow
     rest = [item for item in seasons if item.id != season_id]
     await _renumber(session, rest)
     world.season_count = len(rest)
+    hold_calendar(world, "season_count")
     statement = select(TraditionProfileRow).where(TraditionProfileRow.season_position.is_not(None), TraditionProfileRow.season_position >= removed)
     for row in await session.scalars(statement):
         position = row.season_position or 0
@@ -94,17 +95,13 @@ async def release_season(session: AsyncSession, season_id: int) -> WorldSeasonRo
     return season
 
 
-def hold_calendar(world: WorldRow, field: str) -> None:
-    if field in DERIVED_CALENDAR and field not in world.calendar_locked:
-        world.calendar_locked = [*world.calendar_locked, field]
-
-
 def set_moons(world: WorldRow, rules: Rules, *, moon_count: int | None, tidal_strength: int | None) -> None:
     if moon_count is not None:
         world.moon_count = max(0, moon_count)
         hold_calendar(world, "moon_count")
         if tidal_strength is None and "tidal_strength" not in world.calendar_locked:
             world.tidal_strength = clamp_int(world.moon_count * rules.seasons.tide_per_moon, 0, PERCENT)
+            hold_calendar(world, "tidal_strength")
     if tidal_strength is not None:
         world.tidal_strength = clamp_int(tidal_strength, 0, PERCENT)
         hold_calendar(world, "tidal_strength")
