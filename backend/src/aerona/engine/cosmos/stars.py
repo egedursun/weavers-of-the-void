@@ -45,13 +45,16 @@ def star_label(star_type: StarType) -> str:
     return STAR_TYPE_LABELS[star_type]
 
 
-async def star_position(session: AsyncSession, rng: SeededRandom, galaxy_id: int | None = None) -> tuple[float, float]:
+async def star_position(session: AsyncSession, rng: SeededRandom, reach: float, galaxy_id: int | None = None) -> tuple[float, float]:
     statement = select(func.count()).select_from(StarRow)
     if galaxy_id is not None:
         statement = statement.where(StarRow.galaxy_id == galaxy_id)
     count = int(await session.scalar(statement) or 0)
     angle = rng.random() * math.tau
-    radius = STAR_MAP_BASE_RADIUS + count * STAR_MAP_RADIUS_STEP
+    if galaxy_id is None:
+        radius = STAR_MAP_BASE_RADIUS + count * STAR_MAP_RADIUS_STEP
+    else:
+        radius = STAR_MAP_BASE_RADIUS + max(reach - STAR_MAP_BASE_RADIUS, 0.0) * math.sqrt(rng.random())
     return math.cos(angle) * radius, math.sin(angle) * radius
 
 
@@ -74,8 +77,12 @@ async def create_star(session: AsyncSession, rules: Rules, rng: SeededRandom, ep
         await ensure_ladder(session, rules)
         home = await home_galaxy(session)
         galaxy_id = home.id if home is not None else None
-    x, y = spec.position if spec.position is not None else await star_position(session, rng, galaxy_id)
+    x, y = spec.position if spec.position is not None else await star_position(session, rng, rules.galaxies.home_radius, galaxy_id)
     star = await WorldRepository(session).create_star(StarDraft(name, spec.star_type, brightness, x, y, epoch, spec.description, galaxy_id))
+    galaxy = await session.get(GalaxyRow, galaxy_id) if galaxy_id is not None else None
+    if galaxy is not None and not held(galaxy.id):
+        galaxy.radius = max(galaxy.radius, math.hypot(x, y) * rules.galaxies.home_radius_margin_pct / PERCENT)
+        await session.flush()
     settle_star(rules, await Cosmography.load(session), star)
     return star
 

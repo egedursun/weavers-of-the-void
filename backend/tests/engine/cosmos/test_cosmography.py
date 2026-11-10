@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.cosmography import BARRED_GALAXIES, SPIRAL_GALAXIES
 from aerona.constants.cosmos import STAR_MAP_RADIUS_STEP
 from aerona.core.errors import ValidationFailedError
+from aerona.core.random import SeededRandom
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.cosmography import DimensionRow, GalaxyRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -50,7 +51,7 @@ from aerona.engine.cosmos.ladder import (
 )
 from aerona.engine.cosmos.placement import Cosmography, zone_at
 from aerona.engine.cosmos.rifts import leak_peaks, open_rift
-from aerona.engine.cosmos.stars import hang_star
+from aerona.engine.cosmos.stars import StarSpec, create_star, hang_star
 from aerona.engine.divine.laws import contest, profile_for
 from aerona.engine.primitives.knowledge import LawBook, laws_of_dimension
 from aerona.rules.registry import Rules
@@ -320,3 +321,11 @@ async def test_a_law_bound_across_a_dimension_holds_on_every_world_in_it_and_cla
     assert not (await LawBook.load(ctx.session)).has(NaturalLaw.BOUNTY, other.id)
     with pytest.raises(ValidationFailedError):
         await control.release_law(ctx, bounty.id)
+
+
+async def test_a_star_beyond_the_home_galaxy_grows_the_galaxy_to_hold_it(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
+    far = (5000.0, 0.0)
+    star = await create_star(session, rules, SeededRandom.for_epoch(1, 1, "far"), 1, StarSpec("Far Sun", StarType.YELLOW_DWARF, 40, 10, position=far))
+    galaxy = await session.get(GalaxyRow, star.galaxy_id)
+    assert galaxy is not None
+    assert galaxy.radius >= math.hypot(*far) * rules.galaxies.home_radius_margin_pct / 100
