@@ -315,6 +315,7 @@ class CosmographyView(ApiModel):
     star_names: dict[str, str]
     people_names: dict[str, str]
     rulers: dict[str, NodeRef] = Field(default_factory=dict)
+    actor_names: dict[str, str] = Field(default_factory=dict)
     stars: list[StarRecord]
     apocalypse_variant: ApocalypseVariant | None
     likely_variant: ApocalypseVariant

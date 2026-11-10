@@ -223,6 +223,16 @@ function Hero({ card }: { card: SpeciesCard }) {
             {`${card.abundance} strong in all its lands`}
           </Badge>
         </div>
+        {card.migration_path.length > 0 && (
+          <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+            <Muted as='span' variant='caption'>
+              Migrates through
+            </Muted>
+            <Paged items={card.migration_path}>
+              {(land) => <Name key={land.id} item={land} />}
+            </Paged>
+          </div>
+        )}
         {card.totem_of.length > 0 && (
           <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
             <Muted as='span' variant='caption'>

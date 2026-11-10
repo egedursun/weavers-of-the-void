@@ -129,7 +129,7 @@ function TraitChip({
             {trait.label}
           </Text>
           <Muted as='span' variant='caption'>
-            {plain(TRAIT_SOURCES, trait.source)}
+            {`${plain(TRAIT_SOURCES, trait.source)}${trait.heritable ? ' · passes to children' : ''}`}
           </Muted>
           <Button
             size='icon-sm'

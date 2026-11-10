@@ -13,7 +13,12 @@ import { MethodGlyph } from './Glyphs'
 import { RouteActions } from './RouteActions'
 import { RouteStatusChips } from './RouteStatusChips'
 import { type RouteRecord } from './api'
-import { type CosmosIndex, otherEnd, routeState } from './model/cosmosModel'
+import {
+  type CosmosIndex,
+  otherEnd,
+  routeState,
+  routeWindows,
+} from './model/cosmosModel'
 import { TRAVEL_METHOD_LABEL } from './model/labels'
 import { type RuleBook } from './model/rules'
 
@@ -105,7 +110,7 @@ function RouteRow({
         </Button>
       </div>
       <Muted variant='caption'>
-        {`${plural(route.duration_epochs, 'epoch')} · danger ${route.danger}`}
+        {`${plural(route.duration_epochs, 'epoch')} · danger ${route.danger}${routeWindows(route, index.star(route.bound_star_id)?.name)}`}
         {controller && route.controller_entity_id !== null && (
           <>
             {' · controlled by '}

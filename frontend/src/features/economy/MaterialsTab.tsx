@@ -852,6 +852,36 @@ export function MaterialsBrowser({ worldId }: { worldId: number }) {
           />
         )}
       </PagedList>
+      <PartHeader
+        icon={Coins}
+        title='Goods'
+        note='What each good is worth before markets move it, how much it feeds, whether war needs it, and how much of it a thousand people use each epoch.'
+      />
+      <PagedList
+        items={[...view.data.commodities]}
+        initial={12}
+        noun={['good', 'goods']}
+        className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3'
+        itemKey={(good) => good.kind}
+      >
+        {(good) => (
+          <div className='flex min-w-0 flex-col gap-1 rounded-lg border bg-background p-2'>
+            <div className='flex min-w-0 items-center justify-between gap-2'>
+              <Text as='span' weight='semibold' truncate>
+                {good.label}
+              </Text>
+              {good.strategic && (
+                <Badge size='sm' variant='warning'>
+                  Strategic
+                </Badge>
+              )}
+            </div>
+            <Muted as='span' variant='caption'>
+              {`Worth ${good.base_price} · feeds ${good.nourishment} · ${good.per_1000} used by a thousand each epoch`}
+            </Muted>
+          </div>
+        )}
+      </PagedList>
     </div>
   )
 }

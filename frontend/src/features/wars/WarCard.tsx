@@ -138,6 +138,11 @@ export function WarCard({
                 ? `Epoch ${war.started_epoch}–${war.ended_epoch}`
                 : `Since epoch ${war.started_epoch}`}
             </Badge>
+            {war.last_clash_epoch !== null && (
+              <Badge size='sm' variant='outline'>
+                {`Last clash in epoch ${war.last_clash_epoch}`}
+              </Badge>
+            )}
             <Badge size='sm' variant='outline'>
               <Crosshair />
               {`${war.battles} ${war.battles === 1 ? 'battle' : 'battles'}`}

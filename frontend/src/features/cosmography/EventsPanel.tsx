@@ -44,7 +44,12 @@ function GalacticEventRow({
       icon={Sparkles}
       tone={event.active ? 'warning' : 'muted'}
       title={`${catalogLabel(catalog?.galactic_events, event.kind)} · ${ladder.names.get(event.galaxy_id) ?? 'a galaxy'}`}
-      caption={event.text ?? undefined}
+      caption={eventCaption(
+        ladder,
+        event.text,
+        event.other_galaxy_id,
+        event.caused_by_node_id
+      )}
       aside={
         <div className='flex shrink-0 items-center gap-1'>
           <Chip>{event.active ? 'Under way' : `Epoch ${event.epoch}`}</Chip>
@@ -117,7 +122,13 @@ function DimensionalEventRow({
       icon={Zap}
       tone={event.active ? 'danger' : 'muted'}
       title={`${catalogLabel(catalog?.dimensional_events, event.kind)} · ${ladder.names.get(event.dimension_id) ?? 'a dimension'}`}
-      caption={event.text ?? undefined}
+      caption={eventCaption(
+        ladder,
+        event.text,
+        event.other_dimension_id,
+        event.caused_by_node_id,
+        event.subject_entity_id
+      )}
       aside={
         <div className='flex shrink-0 items-center gap-1'>
           <Chip>{event.active ? 'Under way' : `Epoch ${event.epoch}`}</Chip>
@@ -299,6 +310,26 @@ function TriggerForm({
       </ForgeCard>
     </div>
   )
+}
+
+function eventCaption(
+  ladder: Ladder,
+  text: string | null,
+  other: number | null,
+  cause: number | null,
+  subject: number | null = null
+): string | undefined {
+  const parts = [
+    text,
+    other !== null
+      ? `with ${ladder.names.get(other) ?? 'another realm'}`
+      : null,
+    subject !== null
+      ? `upon ${ladder.names.get(subject) ?? 'one of its peoples'}`
+      : null,
+    cause !== null ? `set off by ${ladder.names.get(cause) ?? 'a god'}` : null,
+  ].filter((part): part is string => part !== null && part !== '')
+  return parts.length > 0 ? parts.join(' · ') : undefined
 }
 
 export function EventsPanel({

@@ -24614,6 +24614,9 @@ export interface components {
       rulers?: {
         [key: string]: components['schemas']['NodeRef']
       }
+      actor_names?: {
+        [key: string]: string
+      }
       stars: components['schemas']['StarRecord'][]
       apocalypse_variant: components['schemas']['ApocalypseVariant'] | null
       likely_variant: components['schemas']['ApocalypseVariant']

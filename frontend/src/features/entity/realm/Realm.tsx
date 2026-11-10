@@ -167,6 +167,11 @@ function RealmCrest({ realm }: { realm: Realm }) {
         <Layers aria-hidden='true' />
         {`Tier ${realm.tier}`}
       </Badge>
+      {realm.tier_strain > 0 && (
+        <Badge size='sm' variant='warning'>
+          {`Strained by its size: ${realm.tier_strain}`}
+        </Badge>
+      )}
       <Tag spec={rule} text={RULES[realm.decision_rule]?.hint ?? rule.label} />
       {tincture && <Tag spec={tincture} text={`Arms of ${tincture.label}`} />}
       {realm.overlord && (

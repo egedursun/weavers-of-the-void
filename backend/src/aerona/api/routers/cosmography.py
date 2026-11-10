@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from dataclasses import asdict, fields, is_dataclass
 from enum import StrEnum
 from typing import Any
@@ -111,6 +112,19 @@ def kinds[K: StrEnum](rules: Rules, specs: dict[K, KindSpec], mechanics: dict[K,
                     effects[item.name] = int(value(rules))
         found.append(KindRecord(value=kind.value, label=spec.label, description=spec.description, effects=effects))
     return found
+
+
+async def actor_names(session: AsyncSession, galactic: Sequence[Any], planar: Sequence[Any], rifts: Sequence[Any]) -> dict[str, str]:
+    ids = [
+        node
+        for node in (
+            *(row.caused_by_node_id for row in galactic),
+            *(node for row in planar for node in (row.caused_by_node_id, row.subject_entity_id)),
+            *(row.opened_by_node_id for row in rifts),
+        )
+        if node is not None
+    ]
+    return {str(node): ref.name for node, ref in (await node_refs(session, ids)).items()}
 
 
 @router.get("/cosmography/catalog", response_model=CosmographyCatalog)
@@ -321,6 +335,7 @@ async def cosmography(services: ServicesDep) -> CosmographyView:
                 DimensionalEventRecord.model_validate(row).model_copy(update={"active": row.until_epoch is None or row.until_epoch >= epoch}) for row in planar
             ],
             rifts=[RiftRecord.model_validate(row) for row in rifts],
+            actor_names=await actor_names(session, galactic, planar, rifts),
             beings=beings,
             phenomena=phenomena,
             readings=readings,

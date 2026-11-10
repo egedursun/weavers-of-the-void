@@ -19,7 +19,13 @@ function describe(part: Part): string {
   const worn = part.prosthesis
     ? `, replaced with ${plain(MATERIALS, part.prosthesis).toLowerCase()}`
     : ''
-  return `${part.label}: ${state}${loss}${worn}`
+  const kind = [
+    part.internal ? 'inside the body' : '',
+    part.severable ? 'can be cut off' : '',
+  ]
+    .filter(Boolean)
+    .join(', ')
+  return `${part.label}: ${state}${loss}${worn}${kind ? ` (${kind})` : ''}`
 }
 
 function PartChip({ part }: { part: Part }) {

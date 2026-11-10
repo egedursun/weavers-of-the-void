@@ -249,6 +249,13 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
                 {'; '}
               </>
             )}
+            {detail.succession_law && (
+              <>
+                {'passed on by '}
+                <Ref node={detail.succession_law} />
+                {'; '}
+              </>
+            )}
             {detail.capital && (
               <>
                 {'seat at '}

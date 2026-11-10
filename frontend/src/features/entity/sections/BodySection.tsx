@@ -219,7 +219,7 @@ function BodyHero({ body }: { body: Body }) {
       <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
         <Text weight='semibold'>{`${plan.label} body`}</Text>
         <Muted variant='caption'>
-          {`${plain(HEIGHTS, body.height_class)}, ${plain(BUILDS, body.build).toLowerCase()} of build; ${body.plan_label}`}
+          {`${plain(HEIGHTS, body.height_class)}, ${plain(BUILDS, body.build).toLowerCase()} of build; ${body.plan_label}${body.covering_label ? `; covered in ${body.covering_label.toLowerCase()}` : ''}`}
         </Muted>
         <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
           {body.traits.map((trait) => (
@@ -881,7 +881,7 @@ function WoundItem({
           )}
           {row.prosthesis && (
             <Badge size='sm' variant='default'>
-              {`${plain(MATERIALS, row.prosthesis.material)} replacement · restores ${row.prosthesis.restored_pct}%`}
+              {`${plain(MATERIALS, row.prosthesis.material)} replacement · restores ${row.prosthesis.restored_pct}%${row.prosthesis.maker_name ? ` · made by ${row.prosthesis.maker_name}` : ''}`}
             </Badge>
           )}
         </div>

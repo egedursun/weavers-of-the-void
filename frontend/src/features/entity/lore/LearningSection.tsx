@@ -49,7 +49,8 @@ import {
   RowEditors,
 } from './LoreFields'
 import { ResearchDesk } from './ResearchDesk'
-import { type LearningCard, useLearning } from './api'
+import { type LearningCard, useLearning, useTechGraph } from './api'
+import { boostText, gateText } from './learningModel'
 import { KPI_GRID, MAX_LEVEL, PERCENT, branchOf, busyOf } from './model'
 
 type Level = LearningCard['levels'][number]
@@ -158,6 +159,8 @@ function TechniqueTile({
   const busy = busyOf(blocked, set.isPending)
   const branch = branchOf(row.branch)
   const open = row.reachable && !row.known
+  const graph = useTechGraph()
+  const gate = gateText(graph.data, row.technique)
   return (
     <li
       data-surface='TechniqueNode'
@@ -185,6 +188,11 @@ function TechniqueTile({
             {row.label}
           </Text>
           <Muted variant='caption'>{row.effect}</Muted>
+          {boostText(graph.data, row.technique) && (
+            <Muted variant='caption'>
+              {boostText(graph.data, row.technique)}
+            </Muted>
+          )}
         </div>
         <Badge size='sm' variant={row.known ? 'default' : 'outline'}>
           {`Tier ${tierNumeral(row.level)}`}
@@ -244,7 +252,7 @@ function TechniqueTile({
               <Badge variant='secondary'>
                 <Lock aria-hidden='true' />
                 {reached >= row.level
-                  ? 'Its gate is not yet met'
+                  ? (gate ?? 'Its gate is not yet met')
                   : `Needs ${branch.label.toLowerCase()} ${row.level}`}
               </Badge>
             )}

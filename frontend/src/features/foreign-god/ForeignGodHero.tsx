@@ -86,6 +86,11 @@ export function ForeignGodHero({ detail }: { detail: ForeignGodDetail }) {
             tone='mythic'
           />
         )}
+        {god.status === 'asleep' && god.awakening_average !== null && (
+          <Muted variant='caption'>
+            {`Stirred by about ${Math.round(god.awakening_average)} each epoch of late`}
+          </Muted>
+        )}
         {god.status === 'asleep' && (
           <Muted variant='caption'>
             Sons acting on this world, expeditions, great events, new lands and

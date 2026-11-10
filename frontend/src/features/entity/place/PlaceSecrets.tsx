@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EntityLink, Medallion, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { useSons } from '@/features/pantheon/api'
 import { useGodGate } from '@/features/pantheon/gate'
 import { plain } from '../environment/labels'
 import { busyOf, PERCENT } from '../lore/model'
@@ -38,6 +39,10 @@ function SecretTile({
   placeId: number
 }) {
   const { reason } = useGodGate()
+  const sonRows = useSons()
+  const sons = Object.fromEntries(
+    (sonRows.data ?? []).map((view) => [String(view.son.id), view.son.name])
+  )
   const reveal = usePlaceAction('place:reveal')
   const edit = usePlaceAction('place:secret_edit')
   const erase = usePlaceAction('place:secret_delete')
@@ -69,7 +74,7 @@ function SecretTile({
           <Muted as='span' variant='caption' truncate>
             {known
               ? `Found in age ${secret.revealed_epoch} by ${secret.revealed_by_name ?? MODE[secret.revealed_by ?? ''] ?? 'someone'}`
-              : `${ORIGIN[secret.origin] ?? 'Hidden'}; strength ${secret.strength}${extra ? `; ${extra}` : ''}`}
+              : `${ORIGIN[secret.origin] ?? 'Hidden'}${secret.hidden_by_son_id !== null ? ` by ${sons[String(secret.hidden_by_son_id)] ?? 'a son'}` : ''}; strength ${secret.strength}${extra ? `; ${extra}` : ''}`}
           </Muted>
         </div>
         {secret.sealed && (

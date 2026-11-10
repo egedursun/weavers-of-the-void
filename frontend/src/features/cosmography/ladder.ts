@@ -21,6 +21,14 @@ export function ladderOf(data: Cosmography): Ladder {
   const names = new Map<number, string>()
   for (const row of [...data.dimensions, ...data.clusters, ...data.galaxies])
     names.set(row.id, row.name)
+  for (const table of [
+    data.actor_names,
+    data.people_names,
+    data.world_names,
+    data.star_names,
+  ])
+    for (const [id, name] of Object.entries(table ?? {}))
+      if (!names.has(Number(id))) names.set(Number(id), name)
   const clusters = new Map(data.clusters.map((row) => [row.id, row]))
   const prime =
     data.dimensions.find((row) => row.dimension_kind === 'prime') ??

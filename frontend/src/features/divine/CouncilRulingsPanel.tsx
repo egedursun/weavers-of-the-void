@@ -56,6 +56,9 @@ function RulingRow({ row, busy }: { row: RulingView; busy: string | null }) {
             <Badge size='sm' variant={row.active ? 'success' : 'secondary'}>
               {row.active ? 'In force' : 'Lapsed'}
             </Badge>
+            <Badge size='sm' variant='outline'>
+              {row.enacted ? 'Carried out' : 'Not yet carried out'}
+            </Badge>
             {row.target && <NodeName item={row.target} />}
             {row.world && <NodeName item={row.world} />}
             {row.school && (

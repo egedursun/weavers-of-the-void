@@ -64,6 +64,18 @@ export function routeStateText(route: RouteRecord): string {
   return label
 }
 
+export function routeWindows(route: RouteRecord, star?: string): string {
+  return [
+    route.bound_star_id !== null ? ` · bound to ${star ?? 'its star'}` : '',
+    route.temp_open_until_epoch !== null
+      ? ` · held open until epoch ${route.temp_open_until_epoch}`
+      : '',
+    route.temp_closed_until_epoch !== null
+      ? ` · held shut until epoch ${route.temp_closed_until_epoch}`
+      : '',
+  ].join('')
+}
+
 export function isRouteOpen(route: RouteRecord): boolean {
   return route.active
 }

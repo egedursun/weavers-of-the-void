@@ -842,6 +842,30 @@ function FactionBody({
           <Badge variant='secondary'>{`Monopoly on ${plain({}, faction.monopoly)}`}</Badge>
         )}
       </div>
+      {Object.keys(faction.influence_over).length > 0 && (
+        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+          <Muted as='span' variant='caption'>
+            Holds sway over
+          </Muted>
+          {Object.entries(faction.influence_over).map(([id, share]) => (
+            <Badge key={id} size='sm' variant='outline'>
+              {`${faction.influence_names[id] ?? 'a community'} ${share}`}
+            </Badge>
+          ))}
+        </div>
+      )}
+      {Object.keys(faction.cohort_share).length > 0 && (
+        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+          <Muted as='span' variant='caption'>
+            Drawn from
+          </Muted>
+          {Object.entries(faction.cohort_share).map(([cohort, share]) => (
+            <Badge key={cohort} size='sm' variant='outline'>
+              {`${plain({}, cohort)} ${share}%`}
+            </Badge>
+          ))}
+        </div>
+      )}
       <div className='grid min-w-0 grid-cols-2 gap-2 @2xl/realm:grid-cols-4'>
         <KpiTile
           label='Treasury'

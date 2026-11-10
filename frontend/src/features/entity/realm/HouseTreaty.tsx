@@ -643,6 +643,11 @@ export function TreatySection({
               value={`Epoch ${treaty.signed_epoch}`}
               icon={PenLine}
               tone='gold'
+              hint={
+                treaty.proposed_by_id !== null
+                  ? `Put forward by ${treaty.parties.find((party) => party.id === treaty.proposed_by_id)?.name ?? 'one of its parties'}`
+                  : undefined
+              }
             />
             <KpiTile
               label={treaty.ended_epoch !== null ? 'Ended' : 'Holds until'}

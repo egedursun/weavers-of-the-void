@@ -105,6 +105,9 @@ export function ImpactsPanel({
                     </EntityLink>
                   )}
                   {row.region && ` · ${row.region.name}`}
+                  {row.called_by && ` · called by ${row.called_by.name}`}
+                  {row.deflected_by &&
+                    ` · turned aside by ${row.deflected_by.name}`}
                   {row.outcome === 'pending'
                     ? ` · strikes in ${Math.max(0, row.due_epoch - epoch)} epochs${row.warned_epoch !== null ? ', foreseen' : ''}`
                     : ` · ${IMPACT_OUTCOMES[row.outcome].label.toLowerCase()} at epoch ${row.due_epoch}`}

@@ -97,7 +97,7 @@ function ShapeSummary({ data }: { data: LandShape }) {
         tone={river?.tone ?? 'muted'}
         hint={
           data.course_changed_epoch !== null
-            ? `New course since age ${data.course_changed_epoch}`
+            ? `New course since age ${data.course_changed_epoch}${data.river_course ? `: it took the course of a ${RIVER_SPEC[data.river_course].label.toLowerCase()}` : ''}`
             : 'In its old bed'
         }
       />
