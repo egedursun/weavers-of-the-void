@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.db.tables.dominion import MagicSiteRow
 from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.finance import TradePolicyRow
@@ -137,6 +138,20 @@ async def holy_wars_and_hunger(ctx: TickContext, book: RealmBook) -> list[Grieva
     return found
 
 
+async def coveted_sites(ctx: TickContext, book: RealmBook) -> list[Grievance]:
+    found: list[Grievance] = []
+    table = ctx.rules.magic_sites
+    statement = select(MagicSiteRow).where(MagicSiteRow.found_epoch.is_not(None), MagicSiteRow.holder_node_id.is_not(None)).order_by(MagicSiteRow.id)
+    for site in await ctx.session.scalars(statement):
+        holder = await ctx.session.get(EntityRow, site.holder_node_id) if site.holder_node_id is not None else None
+        if holder is None or holder.status is not EntityStatus.CANON or holder.entity_type not in COMMUNITY_TYPES:
+            continue
+        for other in await neighbours_of(ctx, book, holder):
+            if ctx.rng(f"magic_site.covet.{site.id}.{other}.{ctx.epoch}").chance(table.war_aim_pct):
+                found.append((other, holder.id, CasusBelliKind.RESOURCE_NEED, site.place_entity_id))
+    return found
+
+
 async def grievances(ctx: TickContext) -> list[Grievance]:
     book = await RealmBook.load(ctx.session)
     return [
@@ -148,6 +163,7 @@ async def grievances(ctx: TickContext) -> list[Grievance]:
         *await defaults(ctx),
         *await liberations(ctx, book),
         *await holy_wars_and_hunger(ctx, book),
+        *await coveted_sites(ctx, book),
     ]
 
 

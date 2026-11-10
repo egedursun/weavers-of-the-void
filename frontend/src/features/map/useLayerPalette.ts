@@ -67,6 +67,7 @@ const ALPHA: Record<LayerMode, number> = {
   regions: 0.3,
   creators: 0.3,
   religions: 0.42,
+  dominion: 0.3,
   languages: 0.42,
   ground: 0.45,
   soil: 0.45,
@@ -186,6 +187,17 @@ function regionKey(
     case 'religions': {
       const son = view.dominance[String(topId)]?.son_id
       return son ? { key: `son:${son}`, alpha } : null
+    }
+    case 'dominion': {
+      const rule =
+        view.dominion?.[String(regionId)] ?? view.dominion?.[String(topId)]
+      if (!rule) return null
+      return {
+        key: `god:${rule.god_id}`,
+        alpha:
+          alpha +
+          Math.min(POLITICAL_ALPHA_GAIN, rule.share / POLITICAL_SHARE_DIVISOR),
+      }
     }
     case 'languages': {
       const language = view.dominance[String(topId)]?.language_id
@@ -320,6 +332,14 @@ function labelFor(
   )
     return words(raw)
   if (kind === 'range') return rangeLabel(raw)
+  if (kind === 'god') {
+    const rule = Object.values(view.dominion ?? {}).find(
+      (item) => item.god_id === id
+    )
+    return rule
+      ? `${rule.name}${rule.rivals > 0 ? `, against ${rule.rivals} rivals` : ''}`
+      : `God ${id}`
+  }
   if (kind === 'realm') {
     const held = Object.values(view.realms ?? {}).find(
       (item) => item.polity_id === id

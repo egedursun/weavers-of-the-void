@@ -33,13 +33,16 @@ from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.limits import MIN_STARS
 from aerona.domain.enums.rarity import RARITY_ORDER, Rarity
 from aerona.domain.enums.son import PowerEffect, SonStatus, Stat
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.profiles import ExistenceProfile, Personality
 from aerona.domain.models.stats import PassionBlock
 from aerona.engine.divine.lineage import inherited_domains, inherited_stats
+from aerona.engine.dominion.design import Design, budget_of, fate_check, scaled_stats, write_design
 from aerona.engine.gods.deification import roll_stats
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.events.kinds import EventKind
@@ -173,6 +176,8 @@ async def insert_son(
         son for son in [await session.get(SonRow, node) for node in (parentage.parent_id, parentage.co_parent_id) if node is not None] if son is not None
     ]
     stats = inherited_stats(rules, rng, stats, parents)
+    checked = fate_check(rules, budget_of(rules, rarity, MIN_STARS), design_of(profile))
+    stats = stats.model_copy(update=scaled_stats(stats.model_dump(), checked.stats_pct))
     first, second = inherited_domains(rng, (profile.domain_1, second), parents)
     home = world_id if world_id is not None else await son_world(session, rules, parentage.parent_id, None)
     name = await NameRepository(session).unique_name(await distinct_god_name(session, rules, profile.name, home))
@@ -204,7 +209,22 @@ async def insert_son(
         current_world_id=home,
         image_prompt=profile.image_prompt.strip() or None,
     )
-    return await SonRepository(session).create(draft)
+    son = await SonRepository(session).create(draft)
+    await write_design(session, son.id, checked, epoch)
+    return son
+
+
+def design_of(profile: SonProfileOutput) -> Design:
+    scales: dict[DivineScale, int] = {}
+    for item in profile.design.scales:
+        scales.setdefault(item.scale, item.value)
+    return Design(
+        dominion_strength=profile.design.dominion_strength,
+        magic_aptitude=profile.design.magic_aptitude,
+        manifestation_strength=profile.design.manifestation_strength,
+        scales=scales,
+        powers=len(profile.powers),
+    )
 
 
 async def distinct_god_name(session: AsyncSession, rules: Rules, name: str, world_id: int | None) -> str:

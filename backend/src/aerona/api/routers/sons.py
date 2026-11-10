@@ -167,6 +167,7 @@ async def read_son(
                     recipient=refs.get(row.recipient_node_id),
                     intent=row.intent.value,
                     text=row.text,
+                    tone=row.tone,
                     answered=row.answered,
                 )
                 for row in messages

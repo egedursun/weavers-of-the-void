@@ -1,3 +1,4 @@
+import { DominionSection } from '@/features/dominion/DominionSection'
 import { GatheringsSection } from '@/features/gatherings/GatheringsSection'
 import { HistoriesSection } from '@/features/gatherings/HistoriesSection'
 import { AffairsSection } from './AffairsSection'
@@ -59,6 +60,7 @@ export function ThingSections({
       <AffairsSection nodeId={nodeId} />
       <GatheringsSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <HistoriesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <DominionSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <RecordRowsSection nodeId={nodeId} />
     </>
   )

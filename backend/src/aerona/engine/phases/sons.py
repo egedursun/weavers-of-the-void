@@ -20,6 +20,7 @@ from aerona.domain.enums.structure import STANDING_STATES
 from aerona.engine.context import TickContext
 from aerona.engine.divine.decrees import council_chained
 from aerona.engine.divine.standing import mean_neglect
+from aerona.engine.dominion.book import DominionBook
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
@@ -89,6 +90,8 @@ async def renew_existence(ctx: TickContext, son: SonRow, faith: int) -> Existenc
     anchor_alive = anchor is None or anchor.status in ANCHOR_ALIVE_STATUSES
     target = existence_target(rules, faith, son.fame, anchor_alive, await worshipper_count(ctx.session, son.id))
     target = clamp_int(target - await mean_neglect(ctx, son.id) * rules.divine_standing.neglect_existence_pct / PERCENT, 0, PERCENT)
+    ruled = len((await DominionBook.load(ctx.session)).ruled_regions(rules, son.id))
+    target = clamp_int(target + min(rules.dominion.existence_cap, ruled * rules.dominion.existence_per_region), 0, PERCENT)
     before = existence_band(rules, son.existence)
     son.existence = step_toward(son.existence, target, rules.world_epoch_transition.existence_step)
     after = existence_band(rules, son.existence)
@@ -136,7 +139,11 @@ async def regenerate_essence(ctx: TickContext, son: SonRow, faith: int, band: Ex
     "table.council_rulings",
     "table.divine_standing",
     "table.divine_wounds",
+    "table.dominions",
     "table.epoch_year_cursors",
+    "table.god_designs",
+    "table.god_scales",
+    "table.region_dominion",
     "table.son_powers",
 )
 @writes("table.chronicle", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.sons")

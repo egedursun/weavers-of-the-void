@@ -83,6 +83,7 @@ const LAYER_ICON: Record<LayerMode, LucideIcon> = {
   regions: MapIcon,
   creators: Crown,
   religions: Church,
+  dominion: Sparkles,
   languages: Languages,
   ground: Mountain,
   soil: Sprout,

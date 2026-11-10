@@ -12,9 +12,11 @@ from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow
 from aerona.db.tables.storyteller import StorytellerRow, TensionRecordRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.storyteller import RecoveryKind, SpontaneousKind, StorytellerProfile, TensionBand
 from aerona.engine.context import TickContext
+from aerona.engine.dominion.book import DominionBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
 
@@ -81,7 +83,13 @@ async def drama(ctx: TickContext, world_id: int) -> int:
     weight = await ctx.session.scalar(
         select(func.coalesce(func.sum(IncidentRow.magnitude), 0)).where(IncidentRow.epoch == ctx.epoch, IncidentRow.world_id == world_id)
     )
-    return int(weight or 0)
+    return int(weight or 0) + await turmoil(ctx, world_id)
+
+
+async def turmoil(ctx: TickContext, world_id: int) -> int:
+    book = await DominionBook.load(ctx.session)
+    steps = sum(max(0, -book.scale_at(ctx.rules, ruler.region_entity_id, DivineScale.ORDER)) for ruler in book.rulers.values() if ruler.world_id == world_id)
+    return steps * ctx.rules.dominion.tension_per_step
 
 
 async def struck_counts(ctx: TickContext, world_id: int) -> Counter[str]:

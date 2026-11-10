@@ -16,6 +16,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus
 from aerona.domain.enums.war import TributeStatus, WarEnding
 from aerona.engine.body.afflictions import desecration_curse
 from aerona.engine.context import TickContext
+from aerona.engine.dominion.curses import curse_desecrator
 from aerona.engine.economy.loot import loot_temple
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.hooks import desecrated
@@ -190,6 +191,7 @@ async def raze(ctx: TickContext, structure: EntityRow, sentence: str, cause_id: 
         await bonds.connect(BondDraft(destroyer_id, structure.id, BondKind.DESTROYED, ctx.epoch, "looted in conquest"))
         keeper = await living_entity(ctx.session, structure.location_id)
         if holy and keeper is not None:
+            await curse_desecrator(ctx, keeper.id, destroyer_id)
             await desecrated(ctx, keeper.id, destroyer_id, note=structure.name)
             await desecration_curse(ctx, structure, destroyer_id)
 

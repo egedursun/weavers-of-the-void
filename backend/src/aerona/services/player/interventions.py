@@ -24,6 +24,7 @@ from aerona.domain.enums.son import SonStatus, Stat
 from aerona.domain.models.stats import STAT_CEILING
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.dominion.miracles import impress, witness_count
 from aerona.engine.gods.interventions import MiracleEffect, apply_miracle
 from aerona.engine.gods.power import end_rebellion
 from aerona.engine.gods.stats import Trait, add_trait
@@ -335,6 +336,14 @@ async def intervene(scope: PlayerScope, command: Intervene) -> Effect:
         notes = await _miracle(ctx, target, command.miracle)
         if await _fingerprint(scope, target) == before:
             raise ValidationFailedError(f"The miracle found nothing to change in {target.name}; the essence was returned.")
+        await impress(
+            ctx,
+            creator.id,
+            target,
+            kind=command.miracle.value,
+            magnitude=scope.rules.miracle_impression.creator_magnitude,
+            witnesses=await witness_count(ctx, target),
+        )
         label = MIRACLES[command.miracle].label.lower()
         message = await tell(
             ctx, MIRACLE, ids=[target.id], kind=ChronicleKind.MIRACLE, creator=creator.name, label=label, entity=target.name, effects=", ".join(notes) or label

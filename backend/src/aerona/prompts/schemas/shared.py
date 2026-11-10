@@ -2,6 +2,7 @@ from pydantic import Field
 
 from aerona.domain.enums.chronicle import PartOfSpeech
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.son import ExistenceMode, PowerEffect, Stat
 from aerona.prompts.schemas.base import OutputModel
 
@@ -39,6 +40,24 @@ class PassionsOutput(OutputModel):
     mercy: int = Field(ge=0, le=PERCENT_MAX)
 
 
+class ScaleOutput(OutputModel):
+    scale: DivineScale
+    value: int = Field(ge=-3, le=3, description="Where this god pulls the land it rules on this scale, from -3 to 3; 0 leaves it untouched")
+
+
+class DesignOutput(OutputModel):
+    dominion_strength: int = Field(
+        default=30, ge=0, le=PERCENT_MAX, description="How strongly this god's presence spreads over the land it is worshipped in, 0 to 100"
+    )
+    magic_aptitude: int = Field(default=30, ge=0, le=PERCENT_MAX, description="How gifted this god is in magic, 0 to 100")
+    manifestation_strength: int = Field(default=30, ge=0, le=PERCENT_MAX, description="How mighty this god's body is when it walks the world, 0 to 100")
+    scales: list[ScaleOutput] = Field(
+        default_factory=list,
+        max_length=6,
+        description="The scales this god pulls in the land it rules, each at most once; the favoured end of a scale costs design budget and the other end gives some back. {{ design_budget }}",
+    )
+
+
 class SonProfileOutput(OutputModel):
     name: str = Field(description="Proper name, fitting the naming language")
     title: str = Field(
@@ -61,6 +80,7 @@ class SonProfileOutput(OutputModel):
         description="Three powers fitting their personality and domains; the first is the most basic, the third the deepest. All three must have DIFFERENT effects.",
     )
     existence: ExistenceOutput
+    design: DesignOutput = Field(default_factory=DesignOutput, description="How this god spends its design budget across its dominion, magic, body and scales")
     image_prompt: str = Field(
         description="English, detailed full-length portrait prompt: body, face, material, clothing, lighting, background, composition. {{ image_prompt_rules }}"
     )

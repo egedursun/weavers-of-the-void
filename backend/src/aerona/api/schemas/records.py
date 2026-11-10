@@ -9,6 +9,7 @@ from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, NotificationCategory, ThreadStatus
 from aerona.domain.enums.cosmography import GalacticZone, RouteScope, StarAge, WorldAge
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.dominion import PrayerTone
 from aerona.domain.enums.entity import ArchiveOverride, EntityOrigin, EntityStatus, EntityType, LegendCategory, MortalRole
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.limits import POWER_SLOTS
@@ -462,6 +463,7 @@ class MessageRecord(ApiModel):
     recipient_node_id: int
     intent: MessageIntent
     text: str
+    tone: PrayerTone | None
     request: PrayerRequest | None
     wish: str | None
     is_read: bool

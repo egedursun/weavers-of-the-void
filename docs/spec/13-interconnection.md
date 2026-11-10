@@ -9,32 +9,32 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | core | — | 120 | 117 | 117 | 60 | 118 | 131 | 117 | 100 | 105 | 92 | 118 | 61 | 102 | 112 | 125 | 111 | 64 | 124 | 120 | 109 |
 | body | 129 | — | 140 | 135 | 76 | 143 | 153 | 132 | 110 | 117 | 102 | 136 | 83 | 128 | 129 | 148 | 124 | 77 | 141 | 146 | 127 |
-| mind | 163 | 175 | — | 180 | 100 | 161 | 203 | 191 | 165 | 164 | 149 | 186 | 108 | 151 | 175 | 189 | 170 | 102 | 173 | 182 | 166 |
+| mind | 163 | 175 | — | 180 | 100 | 161 | 203 | 191 | 165 | 164 | 149 | 186 | 107 | 151 | 175 | 189 | 170 | 102 | 173 | 181 | 166 |
 | social | 116 | 125 | 140 | — | 64 | 115 | 156 | 147 | 126 | 119 | 114 | 120 | 72 | 127 | 129 | 141 | 114 | 63 | 119 | 126 | 118 |
 | household | 50 | 55 | 59 | 56 | — | 53 | 61 | 52 | 46 | 50 | 44 | 52 | 35 | 42 | 49 | 53 | 49 | 38 | 52 | 51 | 53 |
 | demography | 121 | 135 | 125 | 119 | 67 | — | 142 | 123 | 99 | 107 | 92 | 124 | 76 | 116 | 115 | 134 | 113 | 68 | 126 | 135 | 114 |
-| economy | 189 | 237 | 279 | 266 | 106 | 236 | — | 287 | 197 | 175 | 157 | 270 | 177 | 184 | 234 | 276 | 200 | 131 | 256 | 234 | 211 |
-| polity | 137 | 139 | 169 | 171 | 72 | 133 | 207 | — | 163 | 136 | 135 | 168 | 93 | 135 | 159 | 171 | 143 | 73 | 146 | 147 | 146 |
+| economy | 189 | 237 | 279 | 266 | 106 | 236 | — | 287 | 197 | 175 | 157 | 270 | 176 | 184 | 234 | 276 | 200 | 131 | 256 | 233 | 211 |
+| polity | 137 | 139 | 169 | 171 | 72 | 133 | 207 | — | 163 | 136 | 135 | 168 | 92 | 135 | 159 | 171 | 143 | 73 | 146 | 146 | 146 |
 | law | 101 | 103 | 119 | 122 | 55 | 94 | 132 | 130 | — | 104 | 110 | 110 | 56 | 105 | 117 | 120 | 106 | 54 | 105 | 105 | 96 |
 | intrigue | 104 | 107 | 114 | 112 | 51 | 100 | 114 | 115 | 100 | — | 99 | 113 | 48 | 102 | 104 | 110 | 105 | 52 | 107 | 106 | 103 |
-| communication | 87 | 88 | 105 | 106 | 44 | 83 | 112 | 113 | 108 | 97 | — | 100 | 46 | 97 | 100 | 109 | 95 | 49 | 92 | 95 | 90 |
-| war | 143 | 147 | 159 | 149 | 81 | 141 | 174 | 162 | 135 | 135 | 118 | — | 83 | 126 | 145 | 160 | 145 | 88 | 152 | 148 | 141 |
-| faith | 55 | 66 | 71 | 69 | 34 | 68 | 89 | 74 | 57 | 54 | 47 | 59 | — | 65 | 60 | 77 | 57 | 39 | 62 | 80 | 63 |
-| magic | 108 | 122 | 118 | 126 | 53 | 114 | 137 | 125 | 110 | 106 | 105 | 109 | 65 | — | 123 | 130 | 104 | 58 | 113 | 124 | 110 |
-| knowledge | 128 | 130 | 142 | 139 | 69 | 124 | 163 | 152 | 132 | 118 | 117 | 139 | 76 | 128 | — | 150 | 135 | 71 | 137 | 134 | 125 |
-| culture | 155 | 162 | 182 | 175 | 88 | 162 | 209 | 184 | 148 | 141 | 135 | 167 | 110 | 154 | 172 | — | 164 | 90 | 171 | 176 | 145 |
-| language | 116 | 116 | 126 | 117 | 62 | 116 | 137 | 130 | 113 | 112 | 101 | 128 | 62 | 106 | 123 | 130 | — | 61 | 122 | 121 | 111 |
+| communication | 87 | 88 | 105 | 106 | 44 | 83 | 112 | 113 | 108 | 97 | — | 100 | 45 | 97 | 100 | 109 | 95 | 49 | 92 | 94 | 90 |
+| war | 143 | 147 | 159 | 149 | 81 | 141 | 174 | 162 | 135 | 135 | 118 | — | 83 | 127 | 145 | 160 | 145 | 88 | 152 | 148 | 141 |
+| faith | 55 | 66 | 70 | 69 | 34 | 68 | 88 | 73 | 56 | 53 | 46 | 58 | — | 65 | 59 | 77 | 56 | 39 | 61 | 79 | 62 |
+| magic | 108 | 123 | 119 | 126 | 53 | 114 | 138 | 127 | 111 | 106 | 106 | 110 | 65 | — | 123 | 130 | 104 | 58 | 113 | 128 | 111 |
+| knowledge | 128 | 130 | 142 | 139 | 69 | 124 | 163 | 152 | 132 | 118 | 117 | 139 | 75 | 128 | — | 150 | 135 | 71 | 137 | 133 | 125 |
+| culture | 155 | 161 | 180 | 174 | 88 | 161 | 207 | 182 | 147 | 140 | 134 | 165 | 108 | 153 | 170 | — | 162 | 89 | 169 | 174 | 143 |
+| language | 116 | 115 | 125 | 116 | 62 | 115 | 136 | 129 | 113 | 112 | 101 | 127 | 60 | 105 | 122 | 129 | — | 60 | 121 | 119 | 110 |
 | ecology | 63 | 67 | 67 | 65 | 41 | 59 | 89 | 60 | 49 | 47 | 43 | 73 | 41 | 48 | 61 | 68 | 58 | — | 71 | 66 | 65 |
-| environment | 149 | 158 | 158 | 146 | 82 | 160 | 193 | 147 | 122 | 124 | 108 | 162 | 117 | 133 | 154 | 169 | 144 | 94 | — | 157 | 142 |
-| gods | 147 | 160 | 165 | 150 | 86 | 157 | 181 | 153 | 126 | 132 | 120 | 153 | 103 | 138 | 147 | 170 | 143 | 94 | 161 | — | 152 |
-| cosmos | 129 | 131 | 141 | 129 | 69 | 127 | 165 | 146 | 110 | 116 | 104 | 138 | 75 | 124 | 134 | 139 | 126 | 90 | 147 | 143 | — |
+| environment | 149 | 158 | 158 | 146 | 82 | 160 | 193 | 147 | 122 | 124 | 108 | 162 | 116 | 134 | 154 | 169 | 144 | 94 | — | 156 | 142 |
+| gods | 152 | 164 | 168 | 149 | 90 | 161 | 185 | 151 | 125 | 131 | 119 | 155 | 109 | 142 | 145 | 172 | 145 | 97 | 165 | — | 154 |
+| cosmos | 129 | 131 | 141 | 129 | 69 | 127 | 165 | 146 | 110 | 116 | 104 | 138 | 74 | 124 | 134 | 139 | 126 | 90 | 147 | 142 | — |
 
 ## Edges by kind
 
-- modifier: 29678
-- rule_switch: 2088
-- flow: 18930212
-- trigger: 197
+- modifier: 29815
+- rule_switch: 2097
+- flow: 18888164
+- trigger: 204
 
 ## Feedback cycles between subsystems (length ≤ 3 listed)
 
@@ -2964,10 +2964,10 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 
 | Class | Covered by |
 |---|---|
-| A: mythological motifs | avatars, council_rulings, dedicated_anchor, divine_battle_hands, divine_wounds, domain_economy, domain_hooks, god_aims, gods_fate, realm_population, region_memory, revealed_doctrine, war_incitement |
-| B: animals | not yet covered |
+| A: mythological motifs | avatars, council_rulings, dedicated_anchor, divine_battle_hands, divine_creatures, divine_wounds, domain_economy, domain_hooks, dominion, god_aims, god_design, god_images, gods_fate, miracle_impression, realm_population, region_memory, revealed_doctrine, war_incitement |
+| B: animals | divine_creatures |
 | C: tabu | council_rulings, creator_taboos, tradition_keeping |
-| D: magic | item_lives |
+| D: magic | god_design, item_lives |
 | E: the dead | avatars, death_engine, realm_population |
 | F: marvels | wonders |
 | G: ogres | not yet covered |
@@ -2978,7 +2978,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 | M: ordaining the future | gods_fate |
 | N: chance and fate | gods_fate |
 | P: society | not yet covered |
-| Q: rewards and punishments | council_rulings, god_aims, item_lives |
+| Q: rewards and punishments | council_rulings, divine_creatures, god_aims, item_lives |
 | R: captives and fugitives | contests |
 | S: unnatural cruelty | not yet covered |
 | T: sex | avatars, folk_customs |
@@ -2997,7 +2997,7 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 | status: status, rank and leadership | army_command, circles, council_tasks, court, faction_recruitment, factions, mandates, mortal_acts, needs_basket, policy_network, polity_loyalty, ruler_currencies, titles, unjustified_war |
 | law: rules, sanctions and property | debt_settlement, enactment, law_effects, legislation |
 | conflict: conflict, violence and its mediation | blockades, captive_cohorts, duels, herd_training, martial_tradition, naval_war, peace_costs, resource_conflict, route_chokepoints, vendettas, war_aims, war_weariness |
-| religion: religion, magic and ritual | battle_magic, celestial_omens, ley_lines, magical_gift, price_of_magic |
+| religion: religion, magic and ritual | battle_magic, celestial_omens, ley_lines, magical_gift, price_of_magic, thrones_and_sites |
 | death: mourning and death practices | remembrance |
 | art: art, music and adornment | art_forms, artwork_lives, season_traditions, tradition_keeping |
 | exchange: reciprocity, gifts and trade | chartered_companies, coin_trust, cosmic_trade, disease_vectors, economic_indicators, faith_missions, forced_march, lore_branch_trade, lore_lingua_franca, lore_road_tongue, lore_taboo_resentment, lore_trade_barrier, lore_trade_register, lore_trade_words, market_access, market_districts, route_contagion, route_missions, route_volume_contagion, sea_seasons, structure_functions, toll_waiver, trade_rights, trade_routes, treaty_adoption, wilds_craft_feathers, wilds_craft_ivory, wilds_craft_silk |

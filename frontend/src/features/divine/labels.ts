@@ -64,6 +64,11 @@ export const GOAL_KINDS: Record<Schema['GodGoalKind'], Named> = {
     tone: 'success',
   },
   rebel: { label: 'Rebel against the Creator', icon: Flame, tone: 'danger' },
+  hold_thrones: {
+    label: 'Hold the thrones of power',
+    icon: Crown,
+    tone: 'gold',
+  },
 }
 
 export const GOAL_STATES: Record<Schema['GoalState'], Named> = {

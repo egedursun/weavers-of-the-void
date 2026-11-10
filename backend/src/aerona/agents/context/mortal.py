@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.agents.context.dominion_lines import mortal_dominion_lines
 from aerona.agents.context.economy import resource_yield, stores_for
 from aerona.agents.context.entity_detail import entity_detail
 from aerona.agents.context.entity_line import line_items
@@ -176,6 +177,7 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "cases": await case_lines(scope.session, me, scope.epoch),
             "abroad": await statecraft_lines(scope.session, me),
             "affairs": await affairs_lines(scope.session, me),
+            "dominion": await mortal_dominion_lines(scope, me),
         }
     )
 

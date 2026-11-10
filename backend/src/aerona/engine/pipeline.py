@@ -40,6 +40,7 @@ from aerona.engine.phases import (
     diplomacy,
     disasters,
     divine,
+    dominion,
     doom,
     ecology,
     environment,
@@ -150,6 +151,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + industry.PHASES
     + genetics.PHASES
     + gatherings.PHASES
+    + dominion.PHASES
     + households.PHASES
     + intrigue.PHASES
     + communication.PHASES
@@ -295,6 +297,8 @@ SUB_ENGINE_STAGE = stage(
     "site_rooms",
     "excavations",
     "place_secrets",
+    "magic_sites",
+    "thrones",
     "resource_mechanics",
     "mechanics_assignment",
     "natural_laws",
@@ -421,6 +425,9 @@ SOCIETY_ENGINE_STAGE = stage(
     "structure_functions",
     "religion_spread",
     "divine_standing",
+    "dominion",
+    "worship_views",
+    "divine_creatures",
     "life_seed",
     "writing_systems",
     "knowledge_levels",
@@ -510,6 +517,7 @@ GODS_STAGE = stage(
     "gods_fate",
     "works_remember_gods",
     "domain_rivalry",
+    "god_images",
     "rebel_theft",
     "god_goals",
     "creator_attention",

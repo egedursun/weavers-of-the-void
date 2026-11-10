@@ -458,6 +458,8 @@ class ThoughtKind(StrEnum):
     PRAYED_ANSWERED = "prayed_answered"
     PRAYER_IGNORED = "prayer_ignored"
     SAW_MIRACLE = "saw_miracle"
+    FELT_GOD_NEAR = "felt_god_near"
+    ALIEN_DOMINION = "alien_dominion"
     LOST_FAITH = "lost_faith"
     FOUND_FAITH = "found_faith"
     SAW_DESECRATION = "saw_desecration"

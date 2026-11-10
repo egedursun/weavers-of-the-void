@@ -26,6 +26,7 @@ from aerona.domain.enums.chronicle import (
     ThreadStatus,
 )
 from aerona.domain.enums.communication import DispatchContent, DispatchState, EnvoyFate, Medium
+from aerona.domain.enums.dominion import PrayerTone
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.models.records import CouncilMinutes
 
@@ -194,6 +195,7 @@ class MessageRow(CreatedAtMixin, Base):
         Index("ix_messages_recipient", "recipient_node_id", "answered"),
         Index("ix_messages_sender", "sender_node_id", "epoch"),
         CheckConstraint("request IS NULL OR intent = 'prayer'", name="request_on_prayer"),
+        CheckConstraint("tone IS NULL OR intent = 'prayer'", name="tone_on_prayer"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -203,6 +205,7 @@ class MessageRow(CreatedAtMixin, Base):
     intent: Mapped[MessageIntent] = mapped_column(enum_type(MessageIntent, "intent"))
     text: Mapped[str] = mapped_column(Text)
     request: Mapped[PrayerRequest | None] = mapped_column(enum_type(PrayerRequest, "request"))
+    tone: Mapped[PrayerTone | None] = mapped_column(enum_type(PrayerTone, "tone"))
     wish: Mapped[str | None] = mapped_column(Text)
     is_read: Mapped[bool] = mapped_column(default=False)
     answered: Mapped[bool] = mapped_column(default=False)

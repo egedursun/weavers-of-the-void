@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.agents.context.dominion_lines import dominion_lines
 from aerona.agents.context.scope import Scope
 from aerona.catalog.domain_effects import ACTIVITY_LABELS, DOMAIN_EFFECTS, HOOKS, SYNERGY_OF
 from aerona.catalog.domains import DOMAIN_LABELS
@@ -72,4 +73,5 @@ async def divine_lines(scope: Scope, son: SonRow) -> list[str]:
     for ruling in await session.scalars(select(CouncilRulingRow).where(CouncilRulingRow.active.is_(True)).order_by(CouncilRulingRow.id)):
         target = await name_of(scope, ruling.target_node_id)
         lines.append(f"Council ruling in force: {MOTION_LABELS[ruling.motion].lower()}{f' ({target})' if target else ''}")
+    lines.extend(await dominion_lines(scope, son))
     return lines

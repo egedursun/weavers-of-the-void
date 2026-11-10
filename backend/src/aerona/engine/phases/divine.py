@@ -46,12 +46,22 @@ async def domain_economy(ctx: TickContext) -> None:
     "table.son_goals",
     "table.son_powers",
     "table.sons",
+    "table.thrones",
     "table.war_sides",
     "table.wars",
     "table.world_domain_hooks",
     "table.worlds",
 )
-@writes("table.chronicle", "table.epoch_year_cursors", "table.foreign_gods", "table.incident_participants", "table.incidents", "table.son_goals", "table.sons")
+@writes(
+    "table.chronicle",
+    "table.epoch_year_cursors",
+    "table.foreign_gods",
+    "table.god_designs",
+    "table.incident_participants",
+    "table.incidents",
+    "table.son_goals",
+    "table.sons",
+)
 async def god_goals(ctx: TickContext) -> None:
     ctx.count("attention_moved", await pursue_goals(ctx))
 

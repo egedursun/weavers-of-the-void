@@ -88,6 +88,8 @@ async def standing_views(session: AsyncSession, rows: list[DivineStandingRow]) -
             love=row.love,
             fear=row.fear,
             neglect=row.neglect,
+            perceived=row.perceived,
+            mode=row.mode,
             epoch=row.epoch,
             locked=row.locked,
         )

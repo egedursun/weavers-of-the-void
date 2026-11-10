@@ -9,6 +9,7 @@ from aerona.db.tables.cosmography import CosmicBeingProfileRow, PhenomenonFootpr
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, RiteProfileRow
 from aerona.db.tables.divine import DivineWoundRow
+from aerona.db.tables.dominion import DivineCreatureRow, MagicSiteRow
 from aerona.db.tables.ecology import HerdRow, SpeciesProfileRow, SpeciesUseRow
 from aerona.db.tables.economy import MarketPriceRow, TradeRouteProfileRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -29,9 +30,10 @@ from aerona.db.tables.warfare import ArmyRow, WarRow
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.cosmography import BeingKind, BeingScale, DimensionKind, PhenomenonCause, PhenomenonKind, RiftCause, RiftState
-from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.culture import MagicSchool, Technique
 from aerona.domain.enums.divine import DivineWoundKind, WoundCause
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.dominion import MagicSiteKind
 from aerona.domain.enums.ecology import Diet, DomesticationStage, SpeciesClass, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import CivilizationTier, EntityFlag, EntityType
@@ -46,7 +48,7 @@ from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.statecraft import CrisisDemand
 from aerona.domain.enums.titles import TitleRank
 from aerona.domain.enums.world import StarType
-from aerona.domain.models.entity_stats import CosmicBeingStats, FactionStats, HouseStats, MortalStats, PhenomenonStats, PolityStats, TitleStats
+from aerona.domain.models.entity_stats import BeastStats, CosmicBeingStats, FactionStats, HouseStats, MortalStats, PhenomenonStats, PolityStats, TitleStats
 from aerona.domain.models.profiles import TravelResource
 from aerona.engine.cosmos.ladder import DimensionDraft, create_dimension, ensure_ladder
 from aerona.engine.cosmos.maps import refresh_world_maps
@@ -535,3 +537,26 @@ async def dig_ready(session: AsyncSession, realm: Realm) -> Ids:
     session.add(SkillRow(holder_node_id=realm.mortal_id, skill=SkillKind.LORE, level=60, peak=60, last_used_epoch=1, source=SkillSource.PRACTICE))
     await session.flush()
     return {"site": site.id}
+
+
+async def rich_son(session: AsyncSession, realm: Realm) -> Ids:
+    son = await session.get(SonRow, realm.son_id)
+    assert son is not None
+    son.essence = max(son.essence, 1000)
+    await session.flush()
+    return {}
+
+
+async def son_creature(session: AsyncSession, realm: Realm) -> Ids:
+    await rich_son(session, realm)
+    beast = await make_entity(session, "Grey Warden", EntityType.BEAST, world_id=realm.cosmos.world_id, location_id=realm.cosmos.region_id, stats=BeastStats())
+    session.add(DivineCreatureRow(creature_entity_id=beast.id, god_node_id=realm.son_id, weights={}, locked=[]))
+    await session.flush()
+    return {"creature": beast.id}
+
+
+async def hidden_magic(session: AsyncSession, realm: Realm) -> Ids:
+    session.add(MagicSiteRow(place_entity_id=realm.cosmos.place_id, kind=MagicSiteKind.SOURCE, school=MagicSchool.LIFE, strength=50, locked=[]))
+    session.add(SkillRow(holder_node_id=realm.mortal_id, skill=SkillKind.SPELLCRAFT, level=90, peak=90, last_used_epoch=1, source=SkillSource.PRACTICE))
+    await session.flush()
+    return {}

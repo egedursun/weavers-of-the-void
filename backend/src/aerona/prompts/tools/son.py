@@ -675,6 +675,22 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "for {{ rules.environment.sever_ley_epochs }} ages. {{ rules.son_tools.sever_ley_essence }} essence, 1 action.",
         {"line_id": "The ley line's id (see the region's ley lines)", "reason": "Why you cut it"},
     ),
+    T.RAISE_DIVINE_CREATURE: ToolText(
+        "You raise a divine creature of your own design in a place or region in your reach. It acts on its own each epoch: it may hunt, tend fields, "
+        "heal, guard your holy places, strike those of other faiths, wreck works, wander or rest. What it does counts as your deed for how peoples regard you "
+        "and for your dominion. {{ rules.divine_creatures.raise_cost }} essence, 1 action.",
+        {"home_id": "The place or region it makes its home", "name": "Its name", "description": "What it is and how it looks"},
+    ),
+    T.TEACH_CREATURE: ToolText(
+        "You reward or punish your divine creature for one kind of deed; rewarded deeds it does more often, punished ones less. "
+        "Left without lessons for {{ rules.divine_creatures.neglect_epochs }} epochs it follows its own hunger. {{ rules.divine_creatures.teach_cost }} essence, 1 action.",
+        {"creature_id": "Your creature", "deed": "The deed you reward or punish", "lesson": "reward or punish", "reason": "Why"},
+    ),
+    T.SHAPE_IMAGE: ToolText(
+        "You choose how you meet the image your peoples hold of you: yield to it, resist it at "
+        "{{ rules.god_images.resist_cost }} essence each epoch, or embrace it to win fame while it reshapes you faster. 1 action.",
+        {"stance": "yield, resist or embrace", "reason": "Why"},
+    ),
     T.CONVENE_GATHERING: ToolText(
         "You call a gathering at a people, settlement, cult or place in your reach: a festival, procession, pilgrimage, feast, games or performance. "
         "It is held this epoch; those who come grow closer to one another and to the host, and it is set down in history. 1 action.",

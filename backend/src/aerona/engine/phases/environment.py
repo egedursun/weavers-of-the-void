@@ -23,6 +23,7 @@ from aerona.db.write_guard import held as frozen
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
+from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
 from aerona.domain.enums.environment import CoastKind, LandUse, NotableYearKind, RiverClass, ScarKind, SoilKind, WeatherEffect, WeatherKind
 from aerona.domain.enums.place import PlaceKind
@@ -37,6 +38,7 @@ from aerona.engine.cosmos.orbits import SKYLESS_WORLDS, rogue_worlds
 from aerona.engine.cosmos.phenomena import phenomenon_passability
 from aerona.engine.cosmos.star_types import star_heat
 from aerona.engine.cosmos.worldlife import cosmic_disease
+from aerona.engine.dominion.book import DominionBook
 from aerona.engine.ecology.domestication import grazing_heads
 from aerona.engine.ecology.flora import CropBook, crop_year
 from aerona.engine.environment.battles import backfill_battle_ground
@@ -166,6 +168,7 @@ class RegionContext:
     world_heat: int = 0
     pass_shift: int = 0
     sky_heat: int | None = None
+    dominion_heat: int = 0
     make: Make = field(default_factory=Make)
 
     def surroundings(self, rules: Rules, env: RegionEnvironmentRow) -> Surroundings:
@@ -179,7 +182,7 @@ class RegionContext:
             star_heat=star_heat(rules, self.star) if self.sky_heat is None else self.sky_heat,
             works=self.works,
             cleared=env.cleared,
-            shift_heat=self.world_heat + env.temperature_shift + current_heat(rules, env.current),
+            shift_heat=self.world_heat + self.dominion_heat + env.temperature_shift + current_heat(rules, env.current),
             shift_rain=env.rainfall_shift,
             pass_shift=self.pass_shift,
         )
@@ -404,6 +407,7 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
     contexts: dict[int, RegionContext] = {}
     skies = {row.world_id: row for row in await ctx.session.scalars(select(WorldPhysicsRow))}
     rogue = await rogue_worlds(ctx.session)
+    dominion = await DominionBook.load(ctx.session)
     for region in regions:
         world = book.worlds.get(region.world_id)
         if world is None:
@@ -421,6 +425,7 @@ async def region_contexts(ctx: TickContext, book: EnvironmentBook, regions: list
             pass_shift=hindered[region.id],
             sky_heat=sky_heat,
             make=make_of(ctx.rules, physics),
+            dominion_heat=dominion.scale_at(ctx.rules, region.id, DivineScale.HEAT) * ctx.rules.dominion.heat_per_step,
         )
     return contexts
 
@@ -465,14 +470,18 @@ async def run_backfills(ctx: TickContext) -> None:
     "table.cosmos",
     "table.dimensional_events",
     "table.districts",
+    "table.dominions",
     "table.entity_flags",
     "table.forced_weather",
     "table.galactic_structures",
+    "table.god_designs",
+    "table.god_scales",
     "table.holder_levels",
     "table.holder_techniques",
     "table.notable_years",
     "table.place_environment",
     "table.place_profiles",
+    "table.region_dominion",
     "table.region_environment",
     "table.region_geomorphology",
     "table.settlement_infrastructure",
@@ -616,11 +625,15 @@ async def sanitation_by_region(ctx: TickContext, book: EnvironmentBook, communit
     "table.cosmos",
     "table.dimensional_events",
     "table.districts",
+    "table.dominions",
     "table.entity_flags",
     "table.forced_weather",
     "table.galactic_structures",
+    "table.god_designs",
+    "table.god_scales",
     "table.holder_levels",
     "table.place_environment",
+    "table.region_dominion",
     "table.region_environment",
     "table.region_geomorphology",
     "table.region_pollution",
@@ -933,6 +946,7 @@ class HarvestSeason:
     growing: WorldSeasonRow | None
     years: list[SampledYear]
     crops: CropBook
+    productivity: dict[int, int] = field(default_factory=dict)
     worst_weather: tuple[int, YearHarvest, RegionEnvironmentRow] | None = None
     best_plenty: tuple[YearHarvest, RegionEnvironmentRow] | None = None
 
@@ -972,7 +986,8 @@ async def region_harvest(ctx: TickContext, world: WorldRow, season: HarvestSeaso
         laws, table = await ctx.laws(), ctx.rules.natural_laws
         dark = table.night_harvest_pct if laws.has_at(NaturalLaw.ETERNAL_NIGHT, world.id, env.entity_id) else PERCENT
         upturned = table.reversed_harvest_pct if laws.has_at(NaturalLaw.SEASONS_REVERSED, world.id, env.entity_id) else PERCENT
-        env.harvest_pct = round_half_up(sum(item.harvest for item in results) / len(results) * dark / PERCENT * upturned / PERCENT)
+        worked = PERCENT + season.productivity.get(env.entity_id, 0) * ctx.rules.dominion.harvest_per_step_pct
+        env.harvest_pct = round_half_up(sum(item.harvest for item in results) / len(results) * dark / PERCENT * upturned / PERCENT * worked / PERCENT)
     region = await ctx.session.get(EntityRow, env.entity_id)
     if region is None:
         return 0
@@ -1033,14 +1048,18 @@ async def weather_year(ctx: TickContext, world: WorldRow, season: HarvestSeason)
     "table.calendars",
     "table.cosmos",
     "table.dimensional_events",
+    "table.dominions",
     "table.epoch_year_cursors",
     "table.forced_weather",
     "table.galactic_structures",
+    "table.god_designs",
+    "table.god_scales",
     "table.holder_levels",
     "table.natural_law_profiles",
     "table.place_environment",
     "table.plant_profiles",
     "table.region_crops",
+    "table.region_dominion",
     "table.region_environment",
     "table.sky_events",
     "table.species_profiles",
@@ -1066,6 +1085,7 @@ async def harvest(ctx: TickContext) -> None:
     loads = capacity.build_loads(await canon(ctx.session, LAND_COMMUNITY_TYPES))
     planned = await calendar_regions(ctx, book)
     crops = await CropBook.load(ctx.session, rules, book.regions)
+    dominion = await DominionBook.load(ctx.session)
     notable = 0
     for world in book.worlds.values():
         if frozen(world.id):
@@ -1074,7 +1094,8 @@ async def harvest(ctx: TickContext) -> None:
         if not regions:
             continue
         years = world_years(ctx.environment, world.id, "harvest")
-        season = HarvestSeason(book, loads, knowledge, planned, book.growing_season(world.id), years, crops)
+        productivity = {env.entity_id: dominion.scale_at(rules, env.entity_id, DivineScale.PRODUCTIVITY) for env in regions}
+        season = HarvestSeason(book, loads, knowledge, planned, book.growing_season(world.id), years, crops, productivity)
         for env in regions:
             notable += await region_harvest(ctx, world, season, env)
         notable += await weather_year(ctx, world, season)

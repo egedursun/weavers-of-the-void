@@ -1623,6 +1623,27 @@ LEVERS: dict[str, Lever] = {
     },
     "excavation_stage:edit": after(("excavation:begin", {"site_id": Pick(EntityType.PLACE), "leader_id": Pick(MORTAL)}), stage_id=Newest("excavation_stage")),
     "battlefield_feature:create": given(place_id=Pick(EntityType.PLACE), feature="mass_grave", strength=60),
+    "modifier:edit": given(modifier_id=Pick("modifier"), magnitude=1.5),
+    "throne:create": given(place_id=Pick(EntityType.REGION), power=70),
+    **{name: after(("throne:create", {"place_id": Pick(EntityType.REGION)}), throne_id=Newest("throne")) for name in ("throne:edit", "throne:delete")},
+    **{
+        name: after(("intervene", {"entity_id": Pick(TOWN), "action": "miracle", "miracle": "bounty"}), miracle_id=Newest("miracle_record"))
+        for name in ("miracle_record:edit", "miracle_record:delete")
+    },
+    "divine_creature:raise": given(god_id=Pick("son"), name="Grey Warden", description="A watcher of the hills", home_id=Pick(EntityType.REGION)),
+    **{
+        name: after(
+            ("divine_creature:raise", {"god_id": Pick("son"), "name": "Grey Warden", "home_id": Pick(EntityType.REGION)}),
+            creature_id=Where("divine_creatures", "creature_entity_id"),
+            **extra,
+        )
+        for name, extra in (
+            ("divine_creature:edit", {}),
+            ("divine_creature:teach", {"deed": "tend_fields", "lesson": "reward"}),
+            ("divine_creature:weight", {"deed": "heal_sick", "weight": 40}),
+            ("divine_creature:release", {}),
+        )
+    },
     **{
         name: after(("battlefield_feature:create", {"place_id": Pick(EntityType.PLACE), "feature": "salvage_field"}), feature_id=Newest("battlefield_feature"))
         for name in ("battlefield_feature:edit", "battlefield_feature:delete")
@@ -1738,6 +1759,12 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "storyteller:set": {"tension": 40, "boost_pct": 10, "cycle_offset": 2},
     "site_room:edit": {"difficulty": 55, "challenge": "guardian"},
     "excavation:edit": {"progress": 30, "stage": "clearing"},
+    "god_design:edit": {"dominion_strength": 40, "rank": 1},
+    "god_image:edit": {"stance": "resist", "believed_wrath": 30},
+    "miracle_record:edit": {"belief": 12, "need": 40},
+    "magic_site:edit": {"strength": 70, "output": 5},
+    "throne:edit": {"power": 80},
+    "divine_creature:edit": {"hunger": 20, "neglect_epochs": 1},
     "excavation_stage:edit": {"difficulty": 45, "risk": "collapse", "find": "book"},
     "battlefield_feature:edit": {"strength": 70},
     "cosmic_feature:edit": {"density": 40, "richness": 60},

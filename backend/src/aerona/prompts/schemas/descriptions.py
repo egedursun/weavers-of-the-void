@@ -1,8 +1,10 @@
+from aerona.catalog.dominion import SCALE_POLES
 from aerona.catalog.foreign_gods import FOREIGN_GOD_POWERS
 from aerona.catalog.knowledge import KNOWLEDGE_BRANCHES, NATURAL_LAWS, RESOURCE_MECHANICS
 from aerona.catalog.powers import POWERS
 from aerona.catalog.stars import STAR_TYPES
 from aerona.catalog.worlds import WORLD_TYPES
+from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.son import ExistenceMode
 from aerona.prompts.data.foreign_gods import foreign_power_effect
@@ -46,6 +48,16 @@ def world_type_catalogue() -> str:
     return "; ".join(f"{kind} ({spec.label}: {spec.description})" for kind, spec in WORLD_TYPES.items())
 
 
+def design_budget(rules: Rules) -> str:
+    table = rules.god_design
+    poles = "; ".join(f"{scale}: {SCALE_POLES[scale][0]} at +3, {SCALE_POLES[scale][1]} at -3" for scale in DivineScale)
+    return (
+        f"Scales: {poles}. Each step toward a favoured end costs {table.scale_cost} budget and each step the other way gives it back; heat and cold cost nothing. "
+        f"Each point of dominion costs {table.dominion_cost_pct}%, of magic {table.magic_cost_pct}%, of body {table.manifestation_cost_pct}%, each power {table.power_cost}. "
+        f"Budget left over keeps more of the god's rolled stats, never less than {table.stats_floor_pct}% of them."
+    )
+
+
 def description_variables(rules: Rules) -> dict[str, object]:
     return {
         "rules": rules,
@@ -60,4 +72,5 @@ def description_variables(rules: Rules) -> dict[str, object]:
         "existence_states": ", ".join(ExistenceMode),
         "star_types": star_type_catalogue(),
         "world_types": world_type_catalogue(),
+        "design_budget": design_budget(rules),
     }

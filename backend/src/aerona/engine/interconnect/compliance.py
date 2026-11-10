@@ -95,6 +95,18 @@ from aerona.db.tables.divine import (
     WorldAttentionRow,
     WorldDomainHookRow,
 )
+from aerona.db.tables.dominion import (
+    CreatureLessonRow,
+    DivineCreatureRow,
+    DominionRow,
+    GodDesignRow,
+    GodImageRow,
+    GodScaleRow,
+    MagicSiteRow,
+    MiracleRecordRow,
+    RegionDominionRow,
+    ThroneRow,
+)
 from aerona.db.tables.ecology import BeastProfileRow, HerdRow, SpeciesHostRow, SpeciesProfileRow, SpeciesRangeRow, SpeciesUseRow, SpeciesYieldRow
 from aerona.db.tables.economy import (
     CommunityStockRow,
@@ -247,6 +259,66 @@ class ComplianceRow:
 
 
 CATALOGUE: tuple[ComplianceRow, ...] = (
+    ComplianceRow(
+        "F31",
+        (DominionRow.__tablename__, RegionDominionRow.__tablename__, GodScaleRow.__tablename__),
+        ("dominion",),
+        ("dominion:set", "dominion:delete", "god_scale:set", "god_scale:delete"),
+        ("DominionSection", "section-dominion", "GodDominionPanel", "WorldDominionPanel"),
+        ("son_turn_system", "mortal_context"),
+        (),
+        ("dominion.",),
+        ("ea5f12047d6b",),
+    ),
+    ComplianceRow(
+        "S6.2/RP3",
+        (ThroneRow.__tablename__, MagicSiteRow.__tablename__),
+        ("thrones", "magic_sites"),
+        (
+            "throne:create",
+            "throne:edit",
+            "throne:delete",
+            "magic_site:create",
+            "magic_site:edit",
+            "magic_site:reveal",
+            "magic_site:delete",
+        ),
+        ("PlaceDominionPanel", "WorldDominionPanel"),
+        ("son_turn_system", "mortal_context"),
+        ("search_magic_sites",),
+        ("dominion.throne_passed", "dominion.magic_site_found"),
+        ("ea5f12047d6b",),
+    ),
+    ComplianceRow(
+        "S9.1/RP3",
+        (
+            GodDesignRow.__tablename__,
+            GodImageRow.__tablename__,
+            MiracleRecordRow.__tablename__,
+            DivineCreatureRow.__tablename__,
+            CreatureLessonRow.__tablename__,
+        ),
+        ("worship_views", "god_images", "divine_creatures", "dominion"),
+        (
+            "god_design:edit",
+            "god_design:delete",
+            "god_image:edit",
+            "god_image:delete",
+            "miracle_record:edit",
+            "miracle_record:delete",
+            "divine_creature:raise",
+            "divine_creature:edit",
+            "divine_creature:teach",
+            "divine_creature:weight",
+            "divine_creature:release",
+            "divine_standing:set",
+        ),
+        ("GodDominionPanel", "section-dominion"),
+        ("son_turn_system", "mortal_context"),
+        ("shape_image", "raise_divine_creature", "teach_creature", "miracle"),
+        ("dominion.image_turned",),
+        ("ea5f12047d6b",),
+    ),
     ComplianceRow(
         "F25",
         (GatheringRow.__tablename__, GatheringGuestRow.__tablename__),

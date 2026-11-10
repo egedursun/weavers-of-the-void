@@ -40,6 +40,7 @@ import {
   Portrait,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { PRAYER_TONES } from '@/features/dominion/labels'
 import { NamedRecord } from '@/features/entity/NamedRecord'
 import {
   type SonPublic,
@@ -98,6 +99,7 @@ function PrayerCard({
   const sender = prayer.sender
   const mortal = sender?.kind === 'entity'
   const wish = message.request ? WISH_LABEL[message.request] : null
+  const tone = message.tone ? PRAYER_TONES[message.tone] : null
   const WishIcon = message.request ? WISH_ICON[message.request] : HandHeart
   return (
     <Card
@@ -149,6 +151,12 @@ function PrayerCard({
                 <Badge size='sm' variant='outline'>
                   <WishIcon />
                   {`Wishes: ${message.wish ?? wish}`}
+                </Badge>
+              )}
+              {tone && (
+                <Badge size='sm' variant='outline'>
+                  <tone.icon />
+                  {tone.label}
                 </Badge>
               )}
             </div>

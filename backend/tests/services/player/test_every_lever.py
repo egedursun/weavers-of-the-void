@@ -8,6 +8,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.core.errors import AeronaError
 from aerona.db.session import Database
 from aerona.db.tables.celestial import WorldRow
 from aerona.domain.enums.entity import EntityType
@@ -63,6 +64,28 @@ async def test_every_god_lever_runs_to_success(lever_template: Path, tmp_path: P
     database = Database(f"sqlite+aiosqlite:///{path}")
     try:
         await run(database, action_id, LEVERS.get(action_id, Lever()))
+    finally:
+        await database.dispose()
+
+
+CREATE_VERBS = frozenset({"create", "raise", "found", "add", "convene", "begin", "plant", "build", "summon", "forge"})
+CREATE_LEVERS = [action_id for action_id in SYNC_ACTIONS if action_id.rsplit(":", 1)[-1] in CREATE_VERBS]
+
+
+@pytest.mark.parametrize("action_id", CREATE_LEVERS)
+async def test_creating_the_same_thing_twice_never_breaks_the_store(lever_template: Path, tmp_path: Path, action_id: str) -> None:
+    path = tmp_path / "twice.db"
+    shutil.copyfile(lever_template, path)
+    database = Database(f"sqlite+aiosqlite:///{path}")
+    lever = LEVERS.get(action_id, Lever())
+    try:
+        await run(database, action_id, lever)
+        async with database.write() as session:
+            payload = await payload_for(session, action(action_id).input_model, lever.values, 1)
+            try:
+                await run_ledgered(PlayerScope(session, Rules()), action_id, payload)
+            except AeronaError:
+                await session.rollback()
     finally:
         await database.dispose()
 

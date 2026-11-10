@@ -183,6 +183,7 @@ class HomeLine(ContextItem):
     cases: list[str] = Field(default_factory=list)
     abroad: list[str] = Field(default_factory=list)
     affairs: list[str] = Field(default_factory=list)
+    dominion: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

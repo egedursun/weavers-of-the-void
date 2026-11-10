@@ -125,7 +125,7 @@ async def recover(ctx: TickContext, world_id: int, boost: int, atlas: RegionAtla
     return True
 
 
-@reads("table.cosmos", "table.incidents", "table.storytellers")
+@reads("table.cosmos", "table.dominions", "table.god_designs", "table.god_scales", "table.incidents", "table.region_dominion", "table.storytellers")
 @writes(
     "table.chronicle",
     "table.chronicle_entities",

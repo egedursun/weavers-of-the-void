@@ -86,6 +86,11 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "you take what you win and stop at the first room you cannot pass. Reaching its heart wins renown. 1 action.",
         {"site_id": "The site you walk"},
     ),
+    T.SEARCH_MAGIC_SITES: ToolText(
+        "With spellcraft of {{ rules.magic_sites.search_skill }} or more, you search the land around you for hidden magic sites. "
+        "A site you find is held by your community and adds to its holiness; some yield reagents, some strengthen rites, some guard, some open a way to another world. 1 action.",
+        {},
+    ),
     T.DIG_SITE: ToolText(
         "With lore enough, you begin a dig at an old site, the remains of an earlier creation or a wreck, and lead it. "
         "It goes through five stages; each needs a skill and sometimes a technique, "

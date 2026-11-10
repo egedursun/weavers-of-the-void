@@ -28,6 +28,7 @@ from aerona.engine.body.book import perception_of
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.dominion.book import DominionBook
 from aerona.engine.genetics.life import madness_factor
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -159,7 +160,11 @@ async def convert(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow
     current = await living_patron(ctx.session, mortal)
     if target is None or (current is not None and current.id == target.id):
         return False
-    if not ctx.rng(seed_of("convert", mortal.id, ctx.epoch)).chance(table.conversion_chance):
+    atlas = await RegionAtlas.load(ctx.session)
+    share = (await DominionBook.load(ctx.session)).share(atlas.top_region(mortal.id), target.id)
+    if not ctx.rng(seed_of("convert", mortal.id, ctx.epoch)).chance(
+        table.conversion_chance * (1 + share * ctx.rules.dominion.conversion_pct / PERCENT / PERCENT)
+    ):
         return False
     for bond in await active_bonds(ctx.session, [BondKind.WORSHIPS], sources=[mortal.id]):
         await close(ctx.session, bond, ctx.epoch, "turned to another god")

@@ -30,6 +30,7 @@ from aerona.domain.models.entity_stats import CultStats
 from aerona.engine.context import TickContext
 from aerona.engine.divine.politics import god_grudge
 from aerona.engine.divine.standing import neglect_of
+from aerona.engine.dominion.book import DominionBook
 from aerona.engine.economy.routes import link_partners
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.faith.zealotry import drifted, record_heresy
@@ -505,6 +506,42 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
     "table.memories",
     "table.reverences",
 )
+def nearness(ctx: TickContext, dominion: DominionBook, atlas: RegionAtlas, community: EntityRow, god_id: int) -> float:
+    return 1 + dominion.share(atlas.top_region(community.id), god_id) * ctx.rules.dominion.conversion_pct / PERCENT / PERCENT
+
+
+@reads(
+    "cult.followers",
+    "cult.influence",
+    "people.population",
+    "settlement.population",
+    "table.bonds",
+    "table.cult_doctrines",
+    "table.cult_tenets",
+    "table.culture_values",
+    "table.divine_standing",
+    "table.dominions",
+    "table.entity_flags",
+    "table.god_designs",
+    "table.god_scales",
+    "table.journeys",
+    "table.language_registers",
+    "table.law_jurisdictions",
+    "table.law_profiles",
+    "table.nodes",
+    "table.personality_values",
+    "table.polity_members",
+    "table.pressures",
+    "table.region_dominion",
+    "table.reverences",
+    "table.speaker_cohorts",
+    "table.trade_flows",
+    "table.trade_route_profiles",
+    "table.trade_route_regions",
+    "table.trade_route_tolls",
+    "table.treaty_clauses",
+    "trade_route.culture",
+)
 async def religion_spread(ctx: TickContext) -> None:
     settings = ctx.rules.religion
     session = ctx.session
@@ -530,7 +567,7 @@ async def religion_spread(ctx: TickContext) -> None:
     )
     shares = WorshipShares.count(ctx.rules, communities, faith)
     shares.faith = await faith_shares(session)
-    creator_id = await NodeRepository(session).creator_id()
+    creator_id, dominion = await NodeRepository(session).creator_id(), await DominionBook.load(session)
     rng = ctx.rng("spread")
     laws = await LawBook.load(session)
     free_pairs = await clause_pairs(session, ClauseKind.RELIGIOUS_FREEDOM)
@@ -549,7 +586,9 @@ async def religion_spread(ctx: TickContext) -> None:
         freedom = chosen is not None and chosen.converter_id is not None and frozenset((chosen.converter_id, community.id)) in free_pairs
         lenience = ctx.rules.legislation.tolerance_spread_pct / PERCENT if freedom else tolerance(ctx, laws, community.id)
         drift = 1 + (await neglect_of(ctx, community.id, old) if old is not None else 0) * ctx.rules.divine_standing.neglect_conversion_pct / PERCENT / PERCENT
-        if chosen is None or not rng.probability(min(1.0, chosen.pull * understood * lenience * drift)):
+        if chosen is None or not rng.probability(
+            min(1.0, chosen.pull * understood * lenience * drift * nearness(ctx, dominion, atlas, community, chosen.god_id))
+        ):
             continue
         weight = syncretism_weight(ctx.rules, world, community.id, chosen.god_id)
         syncretic = old is not None and not seeker and rng.chance(settings.syncretism_pct * god_kinship(world, old, chosen.god_id) * weight)

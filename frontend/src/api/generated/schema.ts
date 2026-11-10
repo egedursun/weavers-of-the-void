@@ -4703,6 +4703,54 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/dominion/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['god_dominion_api_dominion_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/dominion/place/{place_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['place_dominion_api_dominion_place__place_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/dominion/world/{world_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['world_dominion_api_dominion_world__world_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/intrigue/{node_id}': {
     parameters: {
       query?: never
@@ -14079,6 +14127,358 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/dominion:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_dominion_set_api_actions_dominion_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/dominion:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_dominion_delete_api_actions_dominion_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/god_scale:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_god_scale_set_api_actions_god_scale_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/god_scale:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_god_scale_delete_api_actions_god_scale_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/god_design:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_god_design_edit_api_actions_god_design_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/god_design:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_god_design_delete_api_actions_god_design_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/god_image:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_god_image_edit_api_actions_god_image_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/god_image:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_god_image_delete_api_actions_god_image_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/miracle_record:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_miracle_record_edit_api_actions_miracle_record_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/miracle_record:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_miracle_record_delete_api_actions_miracle_record_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/magic_site:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_magic_site_create_api_actions_magic_site_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/magic_site:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_magic_site_edit_api_actions_magic_site_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/magic_site:reveal': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_magic_site_reveal_api_actions_magic_site_reveal_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/magic_site:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_magic_site_delete_api_actions_magic_site_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/throne:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_throne_create_api_actions_throne_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/throne:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_throne_edit_api_actions_throne_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/throne:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_throne_delete_api_actions_throne_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/divine_creature:raise': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_divine_creature_raise_api_actions_divine_creature_raise_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/divine_creature:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_divine_creature_edit_api_actions_divine_creature_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/divine_creature:teach': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_divine_creature_teach_api_actions_divine_creature_teach_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/divine_creature:weight': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_divine_creature_weight_api_actions_divine_creature_weight_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/divine_creature:release': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_divine_creature_release_api_actions_divine_creature_release_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/identity:assume': {
     parameters: {
       query?: never
@@ -23285,6 +23685,7 @@ export interface components {
       | 'scout'
       | 'records'
       | 'deception'
+    BeliefStance: 'yield' | 'resist' | 'embrace'
     BeliefView: {
       id: number
       subject: components['schemas']['NodeRef'] | null
@@ -25546,6 +25947,16 @@ export interface components {
       last_broken_epoch?: number | null
       last_breaker?: components['schemas']['NodeRef'] | null
     }
+    CreatureDeed:
+      | 'hunt_folk'
+      | 'tend_fields'
+      | 'guard_holy_sites'
+      | 'strike_foes'
+      | 'heal_sick'
+      | 'wreck_works'
+      | 'wander'
+      | 'rest'
+    CreatureLesson: 'reward' | 'punish'
     CreatureTrait:
       | 'flying'
       | 'venomous'
@@ -25579,6 +25990,18 @@ export interface components {
       | 'sacred_animal'
       | 'horned'
       | 'tailed'
+    CreatureView: {
+      creature: components['schemas']['NodeRef'] | null
+      god: components['schemas']['NodeRef'] | null
+      weights: components['schemas']['DeedWeightView'][]
+      hunger: number
+      neglect_epochs: number
+      last_deed: components['schemas']['CreatureDeed'] | null
+      deeds: number
+      since_epoch: number
+      lessons: components['schemas']['LessonView'][]
+      locked: string[]
+    }
     CreditRemoveInput: {
       subject_id: number
     }
@@ -26089,6 +26512,10 @@ export interface components {
       actor: components['schemas']['NodeRef'] | null
       note: string
       id: number
+    }
+    DeedWeightView: {
+      deed: components['schemas']['CreatureDeed']
+      weight: number
     }
     DefenceView: {
       wall_pct: number
@@ -26661,6 +27088,33 @@ export interface components {
         [key: string]: number
       }
     }
+    DivineCreatureEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      creature_id: number
+    }
+    DivineCreatureRaiseInput: {
+      god_id: number
+      name: string
+      description: string
+      home_id: number
+    }
+    DivineCreatureReleaseInput: {
+      creature_id: number
+    }
+    DivineCreatureTeachInput: {
+      creature_id: number
+      deed: components['schemas']['CreatureDeed']
+      lesson: components['schemas']['CreatureLesson']
+    }
+    DivineCreatureWeightInput: {
+      creature_id: number
+      deed: components['schemas']['CreatureDeed']
+      weight: number
+      hold: boolean
+    }
     DivineDomainView: {
       domain: components['schemas']['Domain']
       label: string
@@ -26674,6 +27128,8 @@ export interface components {
       god_id: number
       epochs?: number | null
     }
+    DivineScale:
+      'order' | 'productivity' | 'heat' | 'growth' | 'fortune' | 'magic'
     DivineStandingClearInput: {
       community_id: number
       god_id: number
@@ -26693,6 +27149,8 @@ export interface components {
       love: number
       fear: number
       neglect: number
+      perceived: components['schemas']['PerceivedAlignment'] | null
+      mode: components['schemas']['WorshipMode'] | null
       epoch: number
       locked: string[]
     }
@@ -26901,6 +27359,30 @@ export interface components {
       hook_label: string
     }
     DomesticationStage: 'wild' | 'tamed' | 'herded' | 'domesticated' | 'breed'
+    DominionClaimView: {
+      god: components['schemas']['NodeRef'] | null
+      region: components['schemas']['NodeRef'] | null
+      strength: number
+      temples: number
+      holy_sites: number
+      prophets: number
+      miracles: number
+      worship: number
+      spread: number
+      epoch: number
+      ruling: boolean
+      locked: string[]
+    }
+    DominionDeleteInput: {
+      god_id: number
+      region_id: number
+    }
+    DominionSetInput: {
+      god_id: number
+      region_id: number
+      strength: number
+      hold: boolean
+    }
     Done: {
       ok: boolean
       message?: string | null
@@ -29521,6 +30003,27 @@ export interface components {
       worship: string
       epoch: number
     }
+    GodDesignDeleteInput: {
+      god_id: number
+    }
+    GodDesignEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      god_id: number
+    }
+    GodDesignView: {
+      budget: number
+      spent: number
+      dominion_strength: number
+      magic_aptitude: number
+      manifestation_strength: number
+      stats_pct: number
+      rank: number
+      checked_epoch: number
+      locked: string[]
+    }
     GodDivinity: {
       god: components['schemas']['NodeRef']
       domains: components['schemas']['DivineDomainView'][]
@@ -29531,6 +30034,18 @@ export interface components {
       wounds: components['schemas']['DivineWoundView'][]
       avatars: components['schemas']['GodAvatarView'][]
       goal_kinds: components['schemas']['GodGoalKind'][]
+    }
+    GodDominionView: {
+      node: components['schemas']['NodeRef']
+      claims: components['schemas']['DominionClaimView'][]
+      scales: components['schemas']['ScaleView'][]
+      design: components['schemas']['GodDesignView'] | null
+      image: components['schemas']['ImageView'] | null
+      miracles: components['schemas']['MiracleView'][]
+      credited: components['schemas']['MiracleView'][]
+      creatures: components['schemas']['CreatureView'][]
+      thrones: components['schemas']['ThroneView'][]
+      sites: components['schemas']['MagicSiteView'][]
     }
     GodGoalDropInput: {
       goal_id: number
@@ -29554,6 +30069,7 @@ export interface components {
       | 'defeat_foreign_god'
       | 'reconcile'
       | 'rebel'
+      | 'hold_thrones'
     GodGoalSetInput: {
       god_id: number
       kind: components['schemas']['GodGoalKind']
@@ -29577,6 +30093,16 @@ export interface components {
       closed_epoch?: number | null
       locked: string[]
     }
+    GodImageDeleteInput: {
+      god_id: number
+    }
+    GodImageEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      god_id: number
+    }
     GodLine: {
       id: number
       name: string
@@ -29590,6 +30116,16 @@ export interface components {
       meaning: string
     }
     GodPunishmentKind: 'lightning' | 'chain' | 'exile' | 'suppress' | 'pardon'
+    GodScaleDeleteInput: {
+      god_id: number
+      scale: components['schemas']['DivineScale']
+    }
+    GodScaleSetInput: {
+      god_id: number
+      scale: components['schemas']['DivineScale']
+      value: number
+      hold: boolean
+    }
     GoldenAgeView: {
       world_id: number
       active: boolean
@@ -30502,6 +31038,22 @@ export interface components {
     }
     ImageStyle:
       'photoreal' | 'painting' | 'ink' | 'watercolor' | 'anime' | 'custom'
+    ImageView: {
+      believed_alignment: components['schemas']['PerceivedAlignment']
+      believed_wrath: number
+      believed_mercy: number
+      believed_domain: components['schemas']['Domain'] | null
+      manifestation: components['schemas']['Manifestation']
+      intensity: number
+      worship_share: number
+      crisis: number
+      malleability: number
+      pull: number
+      domain_pressure: number
+      stance: components['schemas']['BeliefStance']
+      epoch: number
+      locked: string[]
+    }
     ImmunityView: {
       community_id: number
       community: string
@@ -31826,6 +32378,13 @@ export interface components {
     LegendaryQuestKind: 'dead_star' | 'sealed_gate' | 'archive' | 'expel_outer'
     LegendaryQuestOutcome: 'completed' | 'failed' | 'invalidated'
     LegitimacyBasis: 'custom' | 'decree' | 'divine' | 'council'
+    LessonView: {
+      id: number
+      deed: components['schemas']['CreatureDeed']
+      lesson: components['schemas']['CreatureLesson']
+      strength: number
+      epoch: number
+    }
     LevelView: {
       branch: components['schemas']['KnowledgeBranch']
       level: number
@@ -32292,6 +32851,41 @@ export interface components {
       | 'summoning'
       | 'blood'
       | 'void'
+    MagicSiteCreateInput: {
+      place_id: number
+      kind: components['schemas']['MagicSiteKind']
+      school: components['schemas']['MagicSchool']
+      strength: number
+      found_now: boolean
+    }
+    MagicSiteDeleteInput: {
+      site_id: number
+    }
+    MagicSiteEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      site_id: number
+    }
+    MagicSiteKind: 'source' | 'school_seat' | 'ward' | 'gateway'
+    MagicSiteRevealInput: {
+      site_id: number
+      finder_id?: number | null
+    }
+    MagicSiteView: {
+      id: number
+      place: components['schemas']['NodeRef'] | null
+      kind: components['schemas']['MagicSiteKind']
+      school: components['schemas']['MagicSchool']
+      strength: number
+      found_epoch: number | null
+      found_by: components['schemas']['NodeRef'] | null
+      holder: components['schemas']['NodeRef'] | null
+      output: number
+      target_world: components['schemas']['NodeRef'] | null
+      locked: string[]
+    }
     MagicSource: 'ley' | 'divine' | 'blood' | 'soul' | 'reagent' | 'void'
     MaimedKind:
       | 'one_armed'
@@ -32369,6 +32963,7 @@ export interface components {
       state: components['schemas']['MandateState']
       locked: string[]
     }
+    Manifestation: 'radiant' | 'serene' | 'stern' | 'dreadful'
     MapArmy: {
       army_id: number
       name: string
@@ -32525,6 +33120,9 @@ export interface components {
       }
       de_jure?: {
         [key: string]: components['schemas']['RegionDeJure']
+      }
+      dominion?: {
+        [key: string]: components['schemas']['RegionDivineRule']
       }
       armies?: components['schemas']['MapArmy'][]
       occupations?: {
@@ -32928,6 +33526,7 @@ export interface components {
       recipient_node_id: number
       intent: components['schemas']['MessageIntent']
       text: string
+      tone: components['schemas']['PrayerTone'] | null
       request: components['schemas']['PrayerRequest'] | null
       wish: string | null
       is_read: boolean
@@ -32943,6 +33542,7 @@ export interface components {
       recipient: components['schemas']['NodeRef'] | null
       intent: string
       text: string
+      tone: components['schemas']['PrayerTone'] | null
       answered: boolean
     }
     MethodKind:
@@ -33205,6 +33805,32 @@ export interface components {
       max_traits: number
     }
     Miracle: 'healing' | 'bounty' | 'peace' | 'protection'
+    MiracleRecordDeleteInput: {
+      miracle_id: number
+    }
+    MiracleRecordEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      miracle_id: number
+    }
+    MiracleView: {
+      id: number
+      god: components['schemas']['NodeRef'] | null
+      kind: string
+      epoch: number
+      target: components['schemas']['NodeRef'] | null
+      region: components['schemas']['NodeRef'] | null
+      magnitude: number
+      witnesses: number
+      need: number
+      novelty: number
+      legibility: number
+      belief: number
+      credited: components['schemas']['NodeRef'] | null
+      locked: string[]
+    }
     MissingContent: {
       portrait: boolean
       son_powers: number[]
@@ -33615,6 +34241,7 @@ export interface components {
       | 'hold_gathering'
       | 'delve_site'
       | 'dig_site'
+      | 'search_magic_sites'
       | 'send_dispatch'
       | 'seize_title'
       | 'bargain_with_estate'
@@ -34696,6 +35323,7 @@ export interface components {
     PeopleVillageInput: {
       people_id: number
     }
+    PerceivedAlignment: 'benevolent' | 'ambivalent' | 'malevolent'
     PerkKind:
       | 'silver_tongue'
       | 'peacemaker'
@@ -34915,6 +35543,14 @@ export interface components {
       danger: number
       fertility: number
       sacredness?: number | null
+    }
+    PlaceDominionView: {
+      place: components['schemas']['NodeRef']
+      rule: components['schemas']['RegionRuleView'] | null
+      claims: components['schemas']['DominionClaimView'][]
+      thrones: components['schemas']['ThroneView'][]
+      sites: components['schemas']['MagicSiteView'][]
+      creatures: components['schemas']['CreatureView'][]
     }
     PlaceEditInput: {
       place_id: number
@@ -35534,6 +36170,7 @@ export interface components {
       | 'forgiveness'
       | 'none'
       | 'wish'
+    PrayerTone: 'thanks' | 'mercy'
     PrayerView: {
       message: components['schemas']['MessageRecord']
       sender: components['schemas']['NodeRef'] | null
@@ -36358,6 +36995,13 @@ export interface components {
       polity_id: number | null
       held_by_right: boolean
     }
+    RegionDivineRule: {
+      god_id: number
+      kind: components['schemas']['NodeKind']
+      name: string
+      share: number
+      rivals: number
+    }
     RegionDominance: {
       son_id: number | null
       language_id: number | null
@@ -36536,6 +37180,13 @@ export interface components {
     RegionRiverRedirectInput: {
       from_region_id: number
       to_region_id: number
+    }
+    RegionRuleView: {
+      region: components['schemas']['NodeRef'] | null
+      god: components['schemas']['NodeRef'] | null
+      share: number
+      rivals: number
+      epoch: number
     }
     RegionSanctifyInput: {
       region_id: number
@@ -37493,6 +38144,12 @@ export interface components {
         [key: string]: string
       } | null
       node_id: number
+    }
+    ScaleView: {
+      scale: components['schemas']['DivineScale']
+      value: number
+      stored: boolean
+      locked: string[]
     }
     ScaleWiki: {
       node_id: number
@@ -38719,6 +39376,9 @@ export interface components {
       | 'sever_ley'
       | 'loose_disease'
       | 'convene_gathering'
+      | 'raise_divine_creature'
+      | 'teach_creature'
+      | 'shape_image'
       | 'forge_material'
       | 'hide_secret'
       | 'sanctify_place'
@@ -40448,6 +41108,8 @@ export interface components {
       | 'prayed_answered'
       | 'prayer_ignored'
       | 'saw_miracle'
+      | 'felt_god_near'
+      | 'alien_dominion'
       | 'lost_faith'
       | 'found_faith'
       | 'saw_desecration'
@@ -40601,6 +41263,30 @@ export interface components {
       related?: components['schemas']['NodeRef'][]
     }
     ThreadStatus: 'open' | 'closed'
+    ThroneCreateInput: {
+      place_id: number
+      power: number
+      holder_id?: number | null
+    }
+    ThroneDeleteInput: {
+      throne_id: number
+    }
+    ThroneEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      throne_id: number
+    }
+    ThroneView: {
+      id: number
+      world: components['schemas']['NodeRef'] | null
+      place: components['schemas']['NodeRef'] | null
+      power: number
+      holder: components['schemas']['NodeRef'] | null
+      since_epoch: number | null
+      locked: string[]
+    }
     TieRemoveInput: {
       relation_id: number
     }
@@ -42453,6 +43139,12 @@ export interface components {
       hooks: components['schemas']['WorldHookView'][]
       attention?: components['schemas']['WorldAttentionView'] | null
     }
+    WorldDominionView: {
+      world: components['schemas']['NodeRef']
+      rules: components['schemas']['RegionRuleView'][]
+      thrones: components['schemas']['ThroneView'][]
+      sites: components['schemas']['MagicSiteView'][]
+    }
     WorldEndGoldenAgeInput: {
       world_id: number
     }
@@ -42768,6 +43460,7 @@ export interface components {
       timeline: components['schemas']['ChronicleLineRecord'][]
       images: components['schemas']['ImageRecord'][]
     }
+    WorshipMode: 'devotion' | 'appeasement'
     WoundCause:
       'duel' | 'god_war' | 'creator' | 'avatar_slain' | 'outer_bargain'
     WoundView: {
@@ -52356,6 +53049,93 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['SiteView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  god_dominion_api_dominion_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GodDominionView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  place_dominion_api_dominion_place__place_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        place_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PlaceDominionView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  world_dominion_api_dominion_world__world_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        world_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WorldDominionView']
         }
       }
       default: {
@@ -70233,6 +71013,688 @@ export interface operations {
       }
     }
   }
+  action_dominion_set_api_actions_dominion_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DominionSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_dominion_delete_api_actions_dominion_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DominionDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_god_scale_set_api_actions_god_scale_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GodScaleSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_god_scale_delete_api_actions_god_scale_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GodScaleDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_god_design_edit_api_actions_god_design_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GodDesignEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_god_design_delete_api_actions_god_design_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GodDesignDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_god_image_edit_api_actions_god_image_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GodImageEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_god_image_delete_api_actions_god_image_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GodImageDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_miracle_record_edit_api_actions_miracle_record_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MiracleRecordEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_miracle_record_delete_api_actions_miracle_record_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MiracleRecordDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_magic_site_create_api_actions_magic_site_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MagicSiteCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_magic_site_edit_api_actions_magic_site_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MagicSiteEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_magic_site_reveal_api_actions_magic_site_reveal_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MagicSiteRevealInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_magic_site_delete_api_actions_magic_site_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MagicSiteDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_throne_create_api_actions_throne_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ThroneCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_throne_edit_api_actions_throne_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ThroneEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_throne_delete_api_actions_throne_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ThroneDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_divine_creature_raise_api_actions_divine_creature_raise_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DivineCreatureRaiseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_divine_creature_edit_api_actions_divine_creature_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DivineCreatureEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_divine_creature_teach_api_actions_divine_creature_teach_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DivineCreatureTeachInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_divine_creature_weight_api_actions_divine_creature_weight_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DivineCreatureWeightInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_divine_creature_release_api_actions_divine_creature_release_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DivineCreatureReleaseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   action_identity_assume_api_actions_identity_assume_post: {
     parameters: {
       query?: never
@@ -85723,6 +87185,9 @@ export const beingScaleValues: ReadonlyArray<
 export const beliefSourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BeliefSource']
 > = ['observation', 'message', 'rumour', 'spy', 'scout', 'records', 'deception']
+export const beliefStanceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['BeliefStance']
+> = ['yield', 'resist', 'embrace']
 export const bindingKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BindingKind']
 > = ['none', 'place', 'item', 'structure', 'beast', 'person']
@@ -86507,6 +87972,21 @@ export const creatorRevelationEventKindValues: ReadonlyArray<
 export const creatorSignKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CreatorSignKind']
 > = ['wrath', 'grace', 'silence', 'dream']
+export const creatureDeedValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CreatureDeed']
+> = [
+  'hunt_folk',
+  'tend_fields',
+  'guard_holy_sites',
+  'strike_foes',
+  'heal_sick',
+  'wreck_works',
+  'wander',
+  'rest',
+]
+export const creatureLessonValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CreatureLesson']
+> = ['reward', 'punish']
 export const creatureTraitValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CreatureTrait']
 > = [
@@ -86778,6 +88258,9 @@ export const districtKindValues: ReadonlyArray<
   'foreign_quarter',
   'necropolis',
 ]
+export const divineScaleValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DivineScale']
+> = ['order', 'productivity', 'heat', 'growth', 'fortune', 'magic']
 export const divineWoundKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DivineWoundKind']
 > = ['severed_domain', 'shattered_manifestation', 'stolen_name', 'void_wound']
@@ -87847,6 +89330,7 @@ export const godGoalKindValues: ReadonlyArray<
   'defeat_foreign_god',
   'reconcile',
   'rebel',
+  'hold_thrones',
 ]
 export const godPunishmentKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GodPunishmentKind']
@@ -88604,6 +90088,9 @@ export const magicSchoolValues: ReadonlyArray<
   'blood',
   'void',
 ]
+export const magicSiteKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MagicSiteKind']
+> = ['source', 'school_seat', 'ward', 'gateway']
 export const magicSourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MagicSource']
 > = ['ley', 'divine', 'blood', 'soul', 'reagent', 'void']
@@ -88646,6 +90133,9 @@ export const mandateKindValues: ReadonlyArray<
 export const mandateStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MandateState']
 > = ['active', 'met', 'failed']
+export const manifestationValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['Manifestation']
+> = ['radiant', 'serene', 'stern', 'dreadful']
 export const markerKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MarkerKind']
 > = ['battle', 'disaster', 'ruin', 'remnant', 'event']
@@ -89012,6 +90502,7 @@ export const mortalToolIdValues: ReadonlyArray<
   'hold_gathering',
   'delve_site',
   'dig_site',
+  'search_magic_sites',
   'send_dispatch',
   'seize_title',
   'bargain_with_estate',
@@ -89298,6 +90789,9 @@ export const peaceTermKindValues: ReadonlyArray<
 export const peopleStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PeopleStats']['kind']
 > = ['people']
+export const perceivedAlignmentValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PerceivedAlignment']
+> = ['benevolent', 'ambivalent', 'malevolent']
 export const perkKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PerkKind']
 > = [
@@ -89498,6 +90992,9 @@ export const prayerRequestValues: ReadonlyArray<
   'none',
   'wish',
 ]
+export const prayerToneValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PrayerTone']
+> = ['thanks', 'mercy']
 export const preferenceKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PreferenceKind']
 > = [
@@ -90337,6 +91834,9 @@ export const sonToolIdValues: ReadonlyArray<
   'sever_ley',
   'loose_disease',
   'convene_gathering',
+  'raise_divine_creature',
+  'teach_creature',
+  'shape_image',
   'forge_material',
   'hide_secret',
   'sanctify_place',
@@ -90919,6 +92419,8 @@ export const thoughtKindValues: ReadonlyArray<
   'prayed_answered',
   'prayer_ignored',
   'saw_miracle',
+  'felt_god_near',
+  'alien_dominion',
   'lost_faith',
   'found_faith',
   'saw_desecration',
@@ -91651,6 +93153,9 @@ export const worldTypeValues: ReadonlyArray<
   'ice_shell',
   'methane',
 ]
+export const worshipModeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['WorshipMode']
+> = ['devotion', 'appeasement']
 export const woundCauseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WoundCause']
 > = ['duel', 'god_war', 'creator', 'avatar_slain', 'outer_bargain']

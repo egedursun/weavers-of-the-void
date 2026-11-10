@@ -41,6 +41,7 @@ from aerona.domain.enums.culture import (
 from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.dominion import DivineScale, MagicSiteKind
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
@@ -64,6 +65,8 @@ from aerona.engine.cosmos.rifts import seal_near, tear_toward
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.divine.decrees import outlawed_schools
 from aerona.engine.divine.laws import binds
+from aerona.engine.dominion.book import DominionBook
+from aerona.engine.dominion.sites import found_sites_in
 from aerona.engine.ecology.control import spawn_beast
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.environment.control import force_weather
@@ -438,9 +441,22 @@ async def unmet(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> str
     return next((reason for failed, reason in checks if failed), None)
 
 
+async def dominion_price(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> float:
+    atlas = await RegionAtlas.load(ctx.session)
+    region = atlas.top_region(caster.id)
+    book = await DominionBook.load(ctx.session)
+    patron = await patron_of(ctx, caster)
+    factor = book.cost_factor(ctx.rules, patron, region) if patron is not None else 1.0
+    death = max(0, -book.scale_at(ctx.rules, region, DivineScale.GROWTH))
+    if row.school is MagicSchool.DEATH and death:
+        factor *= max(0.0, 1 - death * ctx.rules.dominion.necromancy_per_step_pct / PERCENT)
+    return factor
+
+
 async def pay(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> bool:
+    factor = await dominion_price(ctx, caster, row)
     for key, amount in cost_of(ctx, row, priced=await priced(ctx, caster)).items():
-        if not await PAYMENTS[key](ctx, caster, amount):
+        if not await PAYMENTS[key](ctx, caster, max(1, round_half_up(amount * factor))):
             return False
     bloodless = not await binds(ctx, NaturalLaw.MAGIC_REQUIRES_BLOOD, caster)
     return bloodless or await pay_blood(ctx, caster, row.power * ctx.rules.natural_laws.blood_per_power)
@@ -896,6 +912,24 @@ async def dampening(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) ->
 SCHOOL_ACTS = {MagicSchool.BLOOD: ActKind.BLOOD_MAGIC, MagicSchool.VOID: ActKind.VOID_MAGIC, MagicSchool.DEATH: ActKind.NECROMANCY}
 
 
+async def site_factor(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> float:
+    atlas = await RegionAtlas.load(ctx.session)
+    region = atlas.top_region(caster.id)
+    if region is None:
+        return 1.0
+    table = ctx.rules.magic_sites
+    factor = 1.0
+    for site in await found_sites_in(ctx, atlas, region):
+        if site.kind is MagicSiteKind.SCHOOL_SEAT and site.school is row.school:
+            factor += table.school_pct * site.strength / PERCENT / PERCENT
+        if site.kind is MagicSiteKind.WARD and row.school is MagicSchool.WARDING:
+            factor += table.ward_pct * site.strength / PERCENT / PERCENT
+    drain = max(0, -(await DominionBook.load(ctx.session)).scale_at(ctx.rules, region, DivineScale.MAGIC))
+    if row.school is MagicSchool.WARDING:
+        factor += drain * ctx.rules.dominion.ward_per_step_pct / PERCENT
+    return factor
+
+
 async def magic_factor(ctx: TickContext, caster: EntityRow) -> float:
     atlas = await RegionAtlas.load(ctx.session)
     region = await ctx.session.get(EntityRow, atlas.top_region(caster.id) or 0)
@@ -934,6 +968,7 @@ async def cast(
     strength *= await name_power(ctx, caster.id, target)
     strength *= await ctx.hook_factor(caster.id, DomainHook.BLOOD_RITE)
     strength *= await magic_factor(ctx, caster)
+    strength *= await site_factor(ctx, caster, row)
     await practise_subject(ctx.session, ctx.rules, caster.id, SkillKind.SPELLCRAFT, subject_id=rite.id, xp=ctx.rules.skills.spellcraft_xp, epoch=ctx.epoch)
     understood = await theory_factor(ctx.session, ctx.rules, caster.location_id or caster.id, TheoryDomain.MAGIC)
     if rng.chance(row.backlash_chance * steadiness * (1 - mastery / PERCENT * ctx.rules.skills.school_backlash_pct / PERCENT) / understood):

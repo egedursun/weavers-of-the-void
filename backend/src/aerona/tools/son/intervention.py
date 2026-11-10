@@ -33,10 +33,12 @@ from aerona.domain.enums.intervention import Disaster, Miracle
 from aerona.domain.enums.mind import MemoryKind, ThoughtKind
 from aerona.domain.models.entity_stats import EventStats
 from aerona.engine.divine.politics import god_grudge
+from aerona.engine.dominion.miracles import impress, miracle_factor
 from aerona.engine.gods.interventions import MiracleEffect, MiracleOutcome, apply_miracle
 from aerona.engine.mind.thoughts import think
 from aerona.engine.phases.disasters import DISASTER_KINDS, after_strike, apply_disaster, joined_names, record_impact
 from aerona.engine.primitives.folk import present_in
+from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.renames import rewrite_name
 from aerona.engine.primitives.subtypes import normalized_subtype
 from aerona.prompts import SonToolId
@@ -129,7 +131,7 @@ async def miracle(call: SonCall, args: MiracleInput) -> str:
     tools = call.rules.son_tools
     target = await require_canon(call.session, args.entity_id)
     await ensure_in_reach(call, target)
-    cost = miracle_cost(call.rules, target.power_level)
+    cost = round_half_up(miracle_cost(call.rules, target.power_level) * await miracle_factor(call.tick, call.son.id, target))
     require_essence(call, cost)
     notes = await apply_son_miracle(call, target, args.kind)
     bonds = BondRepository(call.session)
@@ -140,8 +142,10 @@ async def miracle(call: SonCall, args: MiracleInput) -> str:
     call.spend_essence(cost)
     call.target(target.id)
     level = await grant(call, call.son, tools.miracle_xp, tools.miracle_renown)
-    for witness in await miracle_witnesses(call, target):
+    witnesses = await miracle_witnesses(call, target)
+    for witness in witnesses:
         await think(call.session, call.rules, witness, ThoughtKind.SAW_MIRACLE, call.epoch, subject_id=call.son.id)
+    await impress(call.tick, call.son.id, target, kind=args.kind.value, magnitude=call.son.might, witnesses=len(witnesses))
     joined = NOTE_SEPARATOR.join(notes)
     await call.chronicle(
         ChronicleKind.MIRACLE,

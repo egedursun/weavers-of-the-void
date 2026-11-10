@@ -18,6 +18,7 @@ from aerona.domain.enums.divine import (
     WoundCause,
 )
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.dominion import PerceivedAlignment, WorshipMode
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.son import ExistenceMode
@@ -78,6 +79,8 @@ class DivineStandingView(ApiModel):
     love: int
     fear: int
     neglect: int
+    perceived: PerceivedAlignment | None
+    mode: WorshipMode | None
     epoch: int
     locked: list[str]
 

@@ -94,6 +94,16 @@ from aerona.rules.registry.doctrine import (
     TithesRules,
     ZealRules,
 )
+from aerona.rules.registry.dominion import (
+    DivineCreatureRules,
+    DominionRules,
+    GodDesignRules,
+    GodImageRules,
+    MagicSiteRules,
+    MiracleImpressionRules,
+    ThroneRules,
+    WorshipViewRules,
+)
 from aerona.rules.registry.ecology import EcologyRules
 from aerona.rules.registry.economy import EconomyRules
 from aerona.rules.registry.effect_packages import EffectPackageRules
@@ -415,6 +425,14 @@ class Rules:
     battle_depth: BattleDepthRules = field(default_factory=BattleDepthRules)
     army_depth: ArmyDepthRules = field(default_factory=ArmyDepthRules)
     gatherings: GatheringRules = field(default_factory=GatheringRules)
+    dominion: DominionRules = field(default_factory=DominionRules)
+    miracle_impression: MiracleImpressionRules = field(default_factory=MiracleImpressionRules)
+    worship_views: WorshipViewRules = field(default_factory=WorshipViewRules)
+    god_images: GodImageRules = field(default_factory=GodImageRules)
+    thrones: ThroneRules = field(default_factory=ThroneRules)
+    magic_sites: MagicSiteRules = field(default_factory=MagicSiteRules)
+    divine_creatures: DivineCreatureRules = field(default_factory=DivineCreatureRules)
+    god_design: GodDesignRules = field(default_factory=GodDesignRules)
     collections: CollectionRules = field(default_factory=CollectionRules)
     storyteller: StorytellerRules = field(default_factory=StorytellerRules)
     sites: SiteRules = field(default_factory=SiteRules)

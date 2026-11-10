@@ -25,6 +25,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.divine import DomainHook
+from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import COMMUNITY_TYPES, LOCATION_TYPES, SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.domain.enums.happening import EventPhase
@@ -43,6 +44,7 @@ from aerona.engine.cosmos.world_types import disaster_pct
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.harm import disease_harm, lasting_illness
 from aerona.engine.disease.outbreaks import STRIKING, disease_for, lethality_factor, open_outbreak, spread_factor, tally
+from aerona.engine.dominion.book import DominionBook
 from aerona.engine.economy.routes import trade_links
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment
 from aerona.engine.environment.geomorph import erupted, eruption_chance, quaked, river_after_flood, river_after_quake, shapes_by_region
@@ -346,6 +348,11 @@ class DisasterWorld:
     struck: int = 0
     world_types: Mapping[int, WorldType] = field(default_factory=dict)
     bodies: Mapping[int, WorldPhysicsRow] = field(default_factory=dict)
+    dominion: DominionBook = field(default_factory=DominionBook)
+
+    def fortune_mult(self, rules: Rules, region_id: int) -> float:
+        fortune = self.dominion.scale_at(rules, region_id, DivineScale.FORTUNE)
+        return max(0.0, 1 - fortune * rules.dominion.fortune_per_step_pct / PERCENT)
 
     def nature_mult(self, rules: Rules, world_id: int | None, disaster: Disaster) -> float:
         world_type = self.world_types.get(world_id) if world_id is not None else None
@@ -541,7 +548,13 @@ async def _region_disasters(ctx: TickContext, world: DisasterWorld) -> None:
         for disaster, base in candidates:
             chance = await paced(ctx, region.world_id, SpontaneousKind.PLAGUE, base) if disaster is Disaster.PLAGUE else base
             climate = world.climate_mult(region.world_id) if disaster is Disaster.PLAGUE else 1.0
-            if not rng.chance(chance * world.law_mult(ctx.rules, region.world_id) * climate * world.nature_mult(ctx.rules, region.world_id, disaster)):
+            if not rng.chance(
+                chance
+                * world.law_mult(ctx.rules, region.world_id)
+                * climate
+                * world.nature_mult(ctx.rules, region.world_id, disaster)
+                * world.fortune_mult(ctx.rules, region.id)
+            ):
                 continue
             event, impact = await strike(ctx, region, disaster, severity_roll(ctx, f"severity.{region.id}"))
             world.struck += 1
@@ -726,6 +739,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.disease_profiles",
     "table.districts",
     "table.divine_wounds",
+    "table.dominions",
     "table.endemic_diseases",
     "table.entity_flags",
     "table.entity_tags",
@@ -736,6 +750,8 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.event_profiles",
     "table.forced_weather",
     "table.genomes",
+    "table.god_designs",
+    "table.god_scales",
     "table.holder_levels",
     "table.holder_techniques",
     "table.immunities",
@@ -765,6 +781,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.polity_members",
     "table.prostheses",
     "table.quarantines",
+    "table.region_dominion",
     "table.region_environment",
     "table.region_geomorphology",
     "table.river_shifts",
@@ -831,7 +848,9 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
 async def natural_disasters(ctx: TickContext) -> None:
     world_types = {world_id: world_type for world_id, world_type in await ctx.session.execute(select(WorldRow.id, WorldRow.world_type))}
     bodies = {row.world_id: row for row in await ctx.session.scalars(select(WorldPhysicsRow))}
-    world = DisasterWorld(await ctx.laws(), await climate_plague_multipliers(ctx), world_types=world_types, bodies=bodies)
+    world = DisasterWorld(
+        await ctx.laws(), await climate_plague_multipliers(ctx), world_types=world_types, bodies=bodies, dominion=await DominionBook.load(ctx.session)
+    )
     await _region_disasters(ctx, world)
     await _city_plagues(ctx, world)
     ctx.count("disasters", world.struck)

@@ -22,6 +22,7 @@ from aerona.domain.enums.relations import AppealKind, PersuasionAim
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.book import factor
+from aerona.engine.dominion.worship import prayer_tone
 from aerona.engine.gods import devotion
 from aerona.engine.gods.devotion import RiteKind as EngineRite
 from aerona.engine.lore import prophecy as prophecy_engine
@@ -109,6 +110,7 @@ async def pray_to_creator(call: MortalCall, args: PrayerInput) -> str:
             text=args.prayer,
             request=request,
             wish=args.request,
+            tone=await prayer_tone(call.session, call.me, creator.id),
         )
     )
     await call.bump(TurnCounter.PRAYERS)

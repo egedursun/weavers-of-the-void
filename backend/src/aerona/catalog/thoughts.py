@@ -110,6 +110,8 @@ THOUGHTS: MappingProxyType[ThoughtKind, ThoughtSpec] = MappingProxyType(
         T.PRAYED_ANSWERED: th(E.AWE, 70, "A prayer was answered", {"piety": 10}, {"cheerfulness": 3}),
         T.PRAYER_IGNORED: th(E.SADNESS, 40, "A prayer went unanswered", {"piety": -5}),
         T.SAW_MIRACLE: th(E.AWE, 80, "Saw a miracle", {"piety": 10, "superstition": 6}, {"imagination": 4}),
+        T.FELT_GOD_NEAR: th(E.CONTENTMENT, 30, "Felt their god near in the land", {"piety": 3}),
+        T.ALIEN_DOMINION: th(E.ANXIETY, 35, "Served their god in a land another god rules", {"piety": 2}),
         T.LOST_FAITH: th(E.DESPAIR, 65, "Lost their faith", {"piety": -10}),
         T.FOUND_FAITH: th(E.HOPE, 60, "Found faith", {"piety": 10}),
         T.SAW_DESECRATION: th(E.ANGER, 70, "Saw something holy desecrated", {"piety": 6, "purity": 4}),

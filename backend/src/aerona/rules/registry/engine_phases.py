@@ -256,6 +256,14 @@ class EnginePhasesRules:
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: incidents gathered into wars, battles, plagues and every other history"
     )
     storyteller: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the tension of each world, its aim and the pace of disruptions")
+    thrones: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: thrones of power, who holds them and the ascension they lead to")
+    magic_sites: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: hidden magic sites, the mages who find them and what they yield")
+    dominion: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the dominion of every god over the land, its contests and its scales")
+    worship_views: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: how each people sees each god and whether it worships in devotion or appeasement"
+    )
+    god_images: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the image peoples hold of their gods and how it reshapes them")
+    divine_creatures: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: divine creatures acting on what their gods taught them")
     site_rooms: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: rooms of towers, lairs, vaults and ruins, and who holds each site")
     excavations: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: digs at ruins and old sites, stage by stage, with their risks and finds")
     battlefields: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: mass graves and fields of salvage left where battles were fought")

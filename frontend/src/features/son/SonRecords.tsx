@@ -10,6 +10,7 @@ import {
   useShowMore,
 } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
+import { PRAYER_TONES } from '@/features/dominion/labels'
 import { humanize, useLabels } from '@/features/pantheon/labels'
 import { NodeLink } from './SonBonds'
 import { type SonDetail } from './api'
@@ -132,6 +133,11 @@ export function SonRecords({ detail }: { detail: SonDetail }) {
                     <Badge size='sm' variant='outline'>
                       {humanize(message.intent)}
                     </Badge>
+                    {message.tone && (
+                      <Badge size='sm' variant='outline'>
+                        {PRAYER_TONES[message.tone].label}
+                      </Badge>
+                    )}
                     <Label>{`Epoch ${message.epoch}`}</Label>
                   </div>
                   <ExpandableText

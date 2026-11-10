@@ -360,6 +360,11 @@ class SonResult(StrEnum):
     STAR_CLAIMED = "You are now the patron of {{ name }}."
     GATHERING_CONVENED = "You called {{ kind | an }} at {{ host }} (gathering {{ id }}); it is held this epoch."
     GATHERING_REFUSED = "You cannot call that gathering: {{ why }}."
+    CREATURE_RAISED = "{{ name }} rose as your divine creature (id {{ id }}); it acts on its own and learns from what you reward and punish."
+    CREATURE_TAUGHT = "You {{ told }} your creature for {{ deed }}; it will lean that way."
+    CREATURE_REFUSED = "You cannot do that with a divine creature: {{ why }}."
+    IMAGE_SHAPED = "You now {{ stance }} the image your peoples hold of you."
+    IMAGE_REFUSED = "You cannot change how you meet your image: {{ why }}."
 
 
 class MortalResult(StrEnum):
@@ -438,6 +443,9 @@ class MortalResult(StrEnum):
     DELVE_REFUSED = "You cannot walk that site: {{ why }}."
     DIG_BEGUN = "You began to dig at {{ site }} (dig {{ id }}); it goes on stage by stage each epoch while you lead it."
     DIG_REFUSED = "You cannot dig there: {{ why }}."
+    SITE_FOUND = "You found a hidden {{ kind }} of {{ school }} magic (site {{ id }}); your community holds it now."
+    SEARCH_EMPTY = "You searched the land around you and found no hidden magic this time."
+    SEARCH_REFUSED = "You cannot search for hidden magic: {{ why }}."
     DISPATCH_SENT = "You sent {{ deed }} to {{ target }} by {{ medium }}; it should arrive by epoch {{ epoch }}, unless it is waylaid or read on the road."
     DISPATCH_REFUSED = "You cannot send that: {{ why }}."
     TITLE_SEIZED = "You {{ deed }} {{ title }}, {{ rank | an }}; you now hold it."

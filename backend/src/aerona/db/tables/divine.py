@@ -20,6 +20,7 @@ from aerona.domain.enums.divine import (
     WoundCause,
 )
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.dominion import PerceivedAlignment, WorshipMode
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.society import NaturalLaw
@@ -91,6 +92,8 @@ class DivineStandingRow(Base):
     love: Mapped[int] = mapped_column(default=0)
     fear: Mapped[int] = mapped_column(default=0)
     neglect: Mapped[int] = mapped_column(default=0)
+    perceived: Mapped[PerceivedAlignment | None] = mapped_column(enum_type(PerceivedAlignment, "perceived"))
+    mode: Mapped[WorshipMode | None] = mapped_column(enum_type(WorshipMode, "mode"))
     epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

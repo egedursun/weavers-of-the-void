@@ -385,7 +385,7 @@ const SON_DETAIL: Schemas['SonDetail'] = {
   creations: [ENTITY(42, 'Oskar', 'settlement'), { ...ENTITY(44, 'The Bell Choir', 'tradition'), status: 'rejected' }],
   chronicle: CHRONICLE,
   messages: [
-    { id: 301, epoch: 11, sender: { id: 7, kind: 'son', name: 'Thalassir' }, recipient: { id: 1, kind: 'creator', name: 'Aeron' }, intent: 'prayer', text: 'Grant me the strength to hold the western storm.', answered: false },
+    { id: 301, epoch: 11, sender: { id: 7, kind: 'son', name: 'Thalassir' }, recipient: { id: 1, kind: 'creator', name: 'Aeron' }, intent: 'prayer', text: 'Grant me the strength to hold the western storm.', tone: 'thanks', answered: false },
   ],
   siblings: [
     { son: { id: 8, kind: 'son', name: LONG }, value: 64, note: 'Brothers of the tide and the dream.', cover: null },
@@ -499,15 +499,15 @@ const FOREIGN_DETAIL: Schemas['ForeignGodDetail'] = {
 
 const PRAYERS: Schemas['PrayerView'][] = [
   {
-    message: { id: 301, epoch: 11, sender_node_id: 7, recipient_node_id: 1, intent: 'prayer', text: 'Grant me the strength to hold the western storm.', request: 'essence', wish: 'Essence', is_read: false, answered: false, answered_epoch: null, answer_essence: null, created_at: NOW },
+    message: { id: 301, epoch: 11, sender_node_id: 7, recipient_node_id: 1, intent: 'prayer', text: 'Grant me the strength to hold the western storm.', tone: 'thanks', request: 'essence', wish: 'Essence', is_read: false, answered: false, answered_epoch: null, answer_essence: null, created_at: NOW },
     sender: { id: 7, kind: 'son', name: 'Thalassir' },
   },
   {
-    message: { id: 302, epoch: 12, sender_node_id: 70, recipient_node_id: 1, intent: 'prayer', text: `Let the rains return to the valley of ${LONG}.`, request: 'blessing', wish: null, is_read: false, answered: false, answered_epoch: null, answer_essence: null, created_at: NOW },
+    message: { id: 302, epoch: 12, sender_node_id: 70, recipient_node_id: 1, intent: 'prayer', text: `Let the rains return to the valley of ${LONG}.`, tone: 'mercy', request: 'blessing', wish: null, is_read: false, answered: false, answered_epoch: null, answer_essence: null, created_at: NOW },
     sender: { id: 70, kind: 'entity', name: 'Old Ilsa the Netmender' },
   },
   {
-    message: { id: 303, epoch: 10, sender_node_id: 9, recipient_node_id: 1, intent: 'prayer', text: 'Forgive me, father.', request: 'forgiveness', wish: null, is_read: true, answered: true, answered_epoch: 10, answer_essence: 10, created_at: NOW },
+    message: { id: 303, epoch: 10, sender_node_id: 9, recipient_node_id: 1, intent: 'prayer', text: 'Forgive me, father.', tone: 'mercy', request: 'forgiveness', wish: null, is_read: true, answered: true, answered_epoch: 10, answer_essence: 10, created_at: NOW },
     sender: { id: 9, kind: 'son', name: 'Kharun the Ashen' },
   },
 ]
@@ -700,8 +700,8 @@ const LEDGER: Schemas['LedgerPage'] = {
 }
 
 const CHAT: Schemas['MessageRecord'][] = [
-  { id: 401, epoch: 11, sender_node_id: 1, recipient_node_id: 7, intent: 'chat', text: 'Why do the bells ring at night?', request: null, wish: null, is_read: true, answered: true, answered_epoch: 11, answer_essence: null, created_at: NOW },
-  { id: 402, epoch: 11, sender_node_id: 7, recipient_node_id: 1, intent: 'chat', text: 'To remind the drowned that someone still counts them, father.', request: null, wish: null, is_read: true, answered: false, answered_epoch: null, answer_essence: null, created_at: NOW },
+  { id: 401, epoch: 11, sender_node_id: 1, recipient_node_id: 7, intent: 'chat', text: 'Why do the bells ring at night?', tone: null, request: null, wish: null, is_read: true, answered: true, answered_epoch: 11, answer_essence: null, created_at: NOW },
+  { id: 402, epoch: 11, sender_node_id: 7, recipient_node_id: 1, intent: 'chat', text: 'To remind the drowned that someone still counts them, father.', tone: null, request: null, wish: null, is_read: true, answered: false, answered_epoch: null, answer_essence: null, created_at: NOW },
 ]
 
 const ACCEPTED = { action: 'mock', message: 'Done.', essence_spent: 0, essence_gained: 0 }

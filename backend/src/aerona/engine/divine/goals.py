@@ -6,6 +6,7 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.divine import GodGoalRow
+from aerona.db.tables.dominion import GodDesignRow, ThroneRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import RelicRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -23,6 +24,7 @@ from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import God, alive, domains_of, faithful_communities, god_of, living_gods
 from aerona.engine.divine.hooks import foes_of
+from aerona.engine.dominion.sites import thrones_held
 from aerona.engine.gods.progress import grant_progress
 from aerona.engine.mind.book import stored_values
 from aerona.engine.notes import note
@@ -43,6 +45,7 @@ GOAL_LABELS = {
     K.DEFEAT_FOREIGN_GOD: "Defeat a foreign god",
     K.RECONCILE: "Reconcile with the Creator",
     K.REBEL: "Rebel against the Creator",
+    K.HOLD_THRONES: "Hold the thrones of power and ascend",
 }
 
 
@@ -156,6 +159,13 @@ async def rebel(ctx: TickContext, god: God, goal: GodGoalRow) -> Reading:
     return Reading(PERCENT, GoalState.DONE) if god.rebel else Reading(clamp_int(PERCENT - god.loyalty, 0, PERCENT - 1))
 
 
+async def thrones(ctx: TickContext, god: God, goal: GodGoalRow) -> Reading:
+    held_worlds, wanted = await thrones_held(ctx, god.id)
+    if held_worlds >= wanted:
+        return Reading(PERCENT, GoalState.DONE)
+    return Reading(clamp_int(held_worlds * PERCENT / wanted, 0, PERCENT - 1))
+
+
 CHECKS: dict[GodGoalKind, Check] = {
     K.BE_WORSHIPPED: worshipped,
     K.FOUND_REALM: realm,
@@ -168,6 +178,7 @@ CHECKS: dict[GodGoalKind, Check] = {
     K.DEFEAT_FOREIGN_GOD: defeat,
     K.RECONCILE: reconcile,
     K.REBEL: rebel,
+    K.HOLD_THRONES: thrones,
 }
 
 
@@ -200,6 +211,8 @@ async def close(ctx: TickContext, god: God, goal: GodGoalRow, state: GoalState) 
     goal.state, goal.closed_epoch = state, ctx.epoch
     if state is GoalState.DONE:
         goal.progress = PERCENT
+        if goal.kind is K.HOLD_THRONES:
+            await ascend(ctx, god)
         if isinstance(god, SonRow):
             await grant_progress(ctx, god, xp=table.done_xp, fame=table.done_fame)
             if goal.kind is K.REBEL:
@@ -211,6 +224,14 @@ async def close(ctx: TickContext, god: God, goal: GodGoalRow, state: GoalState) 
     verb = "reached" if state is GoalState.DONE else "gave up"
     text = f"{goal_text(god, goal, await target_name(ctx, goal))} — {verb}."
     await note(ctx, text, key=f"divine.goal_{state.value}", son_id=god.id if isinstance(god, SonRow) else None, kind=ChronicleKind.ASCENSION)
+
+
+async def ascend(ctx: TickContext, god: God) -> None:
+    design = await ctx.session.get(GodDesignRow, god.id)
+    if design is None or "rank" in design.locked:
+        return
+    design.rank += 1
+    await note(ctx, f"{god.name} ascended to a higher divine rank by the thrones it holds.", key="divine.ascended", ids=[god.id], kind=ChronicleKind.ASCENSION)
 
 
 async def measure(ctx: TickContext, god: God, goal: GodGoalRow) -> None:
@@ -227,6 +248,17 @@ async def measure(ctx: TickContext, god: God, goal: GodGoalRow) -> None:
 async def rivals_of(ctx: TickContext, god: God) -> list[God]:
     mine = set(domains_of(god))
     return [other for other in await living_gods(ctx.session) if other.id != god.id and mine & set(domains_of(other))]
+
+
+async def ascension_options(ctx: TickContext, god: God, ambition: float) -> list[tuple[GodGoalRow, float]]:
+    weight = ctx.rules.son_goals.base_weight * (1 + ambition / PERCENT)
+    found: list[tuple[GodGoalRow, float]] = []
+    if await ctx.session.scalar(select(ThroneRow.id).limit(1)) is not None:
+        found.append((GodGoalRow(kind=K.HOLD_THRONES), weight))
+    design = await ctx.session.get(GodDesignRow, god.id)
+    if isinstance(god, SonRow) and not god.rebel and design is not None and design.rank > 0:
+        found.append((GodGoalRow(kind=K.REBEL), weight))
+    return found
 
 
 async def choose(ctx: TickContext, god: God) -> GodGoalRow | None:
@@ -254,6 +286,7 @@ async def choose(ctx: TickContext, god: God) -> GodGoalRow | None:
     if house is not None:
         options.append((GodGoalRow(kind=K.RAISE_HERO, target_node_id=house), table.base_weight * (1 + max(0, mercy) / PERCENT)))
     options.append((GodGoalRow(kind=K.ACQUIRE_RELIC), table.base_weight / 2))
+    options.extend(await ascension_options(ctx, god, ambition))
     if isinstance(god, SonRow):
         world = await ctx.session.get(WorldRow, god.current_world_id) if god.current_world_id is not None else None
         if world is not None and world.patron_son_id != god.id:

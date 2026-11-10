@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { EntityLink, Medallion, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
+import { ALIGNMENTS, WORSHIP_MODES, table } from '@/features/dominion/labels'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { AdjustPanel, Held, NumberField } from '@/features/entity/wilds/parts'
 import type { StandingView } from './api'
@@ -46,7 +47,7 @@ export function StandingRow({
   row: StandingView
   focus: 'god' | 'community'
   busy: string | null
-  onSave: (values: Record<string, number>, release: string[]) => void
+  onSave: (values: Record<string, number | string>, release: string[]) => void
   onClear: () => void
 }) {
   const [draft, setDraft] = useState<Record<string, string>>({})
@@ -64,6 +65,36 @@ export function StandingRow({
       <div className='flex min-w-0 items-center gap-2'>
         <NodeName item={focus === 'god' ? row.community : row.god} />
         <Muted variant='caption'>{`since epoch ${row.epoch}`}</Muted>
+      </div>
+      <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+        {row.perceived ? (
+          <Badge variant='outline'>
+            {`Seen as ${ALIGNMENTS[row.perceived].label.toLowerCase()}`}
+          </Badge>
+        ) : (
+          <Muted variant='caption'>Not yet judged good or ill</Muted>
+        )}
+        {row.mode && (
+          <Badge variant='outline'>
+            {`Worshipped in ${WORSHIP_MODES[row.mode].label.toLowerCase()}`}
+          </Badge>
+        )}
+      </div>
+      <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
+        <MindPicker
+          label='Seen as'
+          value={row.perceived ?? ''}
+          table={table(ALIGNMENTS)}
+          blocked={busy}
+          onPick={(picked) => onSave({ perceived: picked }, [])}
+        />
+        <MindPicker
+          label='Worshipped in'
+          value={row.mode ?? ''}
+          table={table(WORSHIP_MODES)}
+          blocked={busy}
+          onPick={(picked) => onSave({ mode: picked }, [])}
+        />
       </div>
       <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4'>
         {STANDING_AXES.map((axis) => {
@@ -151,7 +182,7 @@ export function StandingList({
   busy: string | null
   onSave: (
     row: StandingView,
-    values: Record<string, number>,
+    values: Record<string, number | string>,
     release: string[]
   ) => void
   onClear: (row: StandingView) => void

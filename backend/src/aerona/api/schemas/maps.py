@@ -9,6 +9,7 @@ from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import TradeMode, TradeRouteStatus
 from aerona.domain.enums.faith import HoldingKind
 from aerona.domain.enums.military import Stance
+from aerona.domain.enums.node import NodeKind
 from aerona.domain.models.records import RegionControl
 from aerona.services.wiki import EventMarker, RegionDominance, RoadKind, SettlementInfo
 
@@ -102,6 +103,14 @@ class RegionRealm(ApiModel):
     polity_id: int
     name: str
     control: int
+
+
+class RegionDivineRule(ApiModel):
+    god_id: int
+    kind: NodeKind
+    name: str
+    share: int
+    rivals: int
 
 
 class RegionDeJure(ApiModel):
@@ -205,6 +214,7 @@ class MapView(ApiModel):
     outbreaks: list[MapOutbreak] = Field(default_factory=list)
     realms: dict[int, RegionRealm] = Field(default_factory=dict)
     de_jure: dict[int, RegionDeJure] = Field(default_factory=dict)
+    dominion: dict[int, RegionDivineRule] = Field(default_factory=dict)
     armies: list[MapArmy] = Field(default_factory=list)
     occupations: dict[int, MapOccupation] = Field(default_factory=dict)
     fronts: list[MapFront] = Field(default_factory=list)

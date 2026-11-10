@@ -28,6 +28,7 @@ from aerona.api.schemas.maps import (
     MapView,
     MapWar,
     RegionDeJure,
+    RegionDivineRule,
     RegionGround,
     RegionRealm,
     RegionStocks,
@@ -43,11 +44,13 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
 from aerona.db.tables.culture import ArtworkProfileRow, CastingRow, HolderLevelRow, IdeologyAdherentRow, LanguageStandingRow, LegendProfileRow
 from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
+from aerona.db.tables.dominion import RegionDominionRow
 from aerona.db.tables.ecology import BeastProfileRow, SpeciesRangeRow
 from aerona.db.tables.economy import TradeFlowRow, TradeRouteProfileRow, TradeRouteRegionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultHoldingRow
 from aerona.db.tables.military import ArmyProfileRow, CampaignFrontRow, OccupationRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.tables.polity import PolityTerritoryRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleProfileRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
@@ -181,6 +184,7 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
             outbreaks=await outbreak_lines(session, world_id, positions),
             realms=await region_realms(session, world_id),
             de_jure=await region_de_jure(session, world_id),
+            dominion=await region_rulers(session, world_id),
             armies=await army_marks(session, world_id, positions),
             occupations=await occupation_marks(session, world_id),
             fronts=await front_lines(session, world_id, positions),
@@ -205,6 +209,18 @@ async def region_realms(session: AsyncSession, world_id: int) -> dict[int, Regio
         if current is None or row.control > current.control:
             found[row.region_entity_id] = RegionRealm(polity_id=row.polity_entity_id, name=name, control=row.control)
     return found
+
+
+async def region_rulers(session: AsyncSession, world_id: int) -> dict[int, RegionDivineRule]:
+    statement = (
+        select(RegionDominionRow, NodeRow.kind, NodeRow.name)
+        .join(NodeRow, NodeRow.id == RegionDominionRow.god_node_id)
+        .where(RegionDominionRow.world_id == world_id)
+    )
+    return {
+        row.region_entity_id: RegionDivineRule(god_id=row.god_node_id, kind=kind, name=name, share=row.share, rivals=row.rivals)
+        for row, kind, name in await session.execute(statement)
+    }
 
 
 async def top_title(session: AsyncSession, title_id: int) -> TitleProfileRow | None:

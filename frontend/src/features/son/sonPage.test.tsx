@@ -359,7 +359,9 @@ describe('son sections', () => {
         name: 'Edit name, plan, personality, stats and resources',
       })
       .click()
-    const name = screen.getByRole('textbox', { name: 'Name', exact: true })
+    const name = screen
+      .getByRole('region', { name: 'Edit Thalassir' })
+      .getByRole('textbox', { name: 'Name', exact: true })
     await name.clear()
     await name.fill('Thalassir the Bellwarden')
     await screen.getByRole('button', { name: 'Save', exact: true }).click()
@@ -485,7 +487,10 @@ describe('son sections', () => {
     toast.dismiss()
     await expect.element(broken).not.toBeInTheDocument()
     await screen.getByRole('button', { name: 'Create a bond' }).click()
-    await screen.getByRole('combobox', { name: 'Kind' }).click()
+    await screen
+      .getByRole('region', { name: 'Their hand in the world' })
+      .getByRole('combobox', { name: 'Kind' })
+      .click()
     await screen.getByRole('option', { name: 'Protects' }).click()
     await screen.getByRole('combobox', { name: 'Target' }).click()
     await screen.getByRole('option', { name: /Fisher Folk/ }).click()

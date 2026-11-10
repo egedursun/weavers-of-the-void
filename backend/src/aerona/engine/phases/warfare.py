@@ -474,6 +474,7 @@ async def _weary_peace(ctx: TickContext, item: OngoingWar, side_id: int, *, behi
     "table.law_profiles",
     "table.learned_tactics",
     "table.loans",
+    "table.magic_sites",
     "table.memories",
     "table.mercenary_contracts",
     "table.node_materials",

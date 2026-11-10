@@ -51,7 +51,7 @@ async def fade_and_sum(ctx: TickContext) -> tuple[int, int]:
     return faded, raised
 
 
-@reads("table.culture_ethics", "table.deed_claims", "table.deeds", "table.mortal_profiles", "table.reputations", "table.rumours")
+@reads("table.culture_ethics", "table.culture_values", "table.deed_claims", "table.deeds", "table.mortal_profiles", "table.reputations", "table.rumours")
 @writes("table.deed_claims", "table.mortal_profiles", "table.reputations")
 async def renown_hearsay(ctx: TickContext) -> None:
     tally = DeedTally()

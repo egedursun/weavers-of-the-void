@@ -62,6 +62,7 @@ async def correspondence(ctx: TickContext) -> None:
 
 
 @reads(
+    "cult.zeal",
     "people.piety",
     "people.prosperity",
     "settlement.piety",

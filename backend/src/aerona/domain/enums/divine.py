@@ -79,6 +79,7 @@ class GodGoalKind(StrEnum):
     DEFEAT_FOREIGN_GOD = "defeat_foreign_god"
     RECONCILE = "reconcile"
     REBEL = "rebel"
+    HOLD_THRONES = "hold_thrones"
 
 
 class GoalState(StrEnum):
