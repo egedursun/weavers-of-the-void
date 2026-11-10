@@ -16,13 +16,11 @@ import {
   type ClimateEra,
   type Disaster,
   type Discovery,
-  type ForeignGodStatus,
   type Gravity,
   type HorizonStatus,
   type JourneyIntent,
   type JourneyStatus,
   type LegendaryQuestKind,
-  type RouteClosure,
   type SkyEventKind,
   type StarType,
   type TravelMethod,
@@ -188,16 +186,6 @@ export const JOURNEY_STATUS_ORDER: Record<JourneyStatus, number> = {
   lost: 5,
 }
 
-export const ROUTE_CLOSURE_LABEL: Record<RouteClosure, string> = {
-  sealed: 'Sealed',
-  severed: 'Severed',
-  forgotten: 'In oblivion',
-  collapsed: 'Collapsed',
-  snapped: 'Snapped',
-  scorched: 'Scorched by a flare',
-  worn: 'Worn out',
-}
-
 export const LEGENDARY_QUEST_LABEL: Record<LegendaryQuestKind, string> = {
   dead_star: 'Re-ignite the dead star',
   sealed_gate: 'Re-open the sealed gate',
@@ -213,13 +201,6 @@ export const DISASTER_LABEL: Record<Disaster, string> = {
   storm: 'Storm',
   eruption: 'Eruption',
   volcanic_quake: 'Volcanic earthquake',
-}
-
-export const FOREIGN_GOD_STATUS_LABEL: Record<ForeignGodStatus, string> = {
-  awake: 'Awake',
-  asleep: 'Asleep',
-  defeated: 'Defeated',
-  dead: 'Dead',
 }
 
 export const HORIZON_STATUS_LABEL: Record<HorizonStatus, string> = {

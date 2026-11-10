@@ -20,12 +20,9 @@ import {
   Footprints,
   Gem,
   Ghost,
-  Globe,
-  Hammer,
   Hexagon,
   Landmark,
   Leaf,
-  Map as MapIcon,
   Mountain,
   MountainSnow,
   Pickaxe,
@@ -266,9 +263,6 @@ export const FIELD_LABELS: Record<string, string> = {
   cleared: 'Cleared land',
 }
 
-export const WORLD_ICON = Globe
-export const MAP_ICON = MapIcon
-export const HAMMER_ICON = Hammer
 export const THERMOMETER_ICON = Thermometer
 export const SEASONALITY_ICON = SunSnow
 

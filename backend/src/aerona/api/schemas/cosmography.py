@@ -183,7 +183,6 @@ class CosmicBeingRecord(ApiModel):
 
 
 class FootprintRecord(ApiModel):
-    phenomenon_entity_id: int
     region_entity_id: int
     intensity: int
 

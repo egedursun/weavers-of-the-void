@@ -283,7 +283,7 @@ function IdeaCard({
             {idea.label}
           </Text>
           <Muted variant='caption' truncate>
-            {`${source.label} · since epoch ${idea.started_epoch}`}
+            {`${source.label} · since epoch ${idea.started_epoch}${idea.finished_epoch !== null ? `, settled in epoch ${idea.finished_epoch}` : ''}`}
           </Muted>
         </div>
         <Badge variant={idea.state === 'internalised' ? 'default' : 'outline'}>

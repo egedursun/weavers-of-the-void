@@ -160,7 +160,7 @@ function RumourCard({
         tone={truthBar(rumour.fidelity)}
       />
       <div className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1'>
-        <Muted variant='caption'>{`Happened in age ${rumour.happened_epoch}, heard in age ${rumour.heard_epoch}`}</Muted>
+        <Muted variant='caption'>{`Happened in age ${rumour.happened_epoch}, heard in age ${rumour.heard_epoch}${rumour.lingered > 0 ? `, told for ${rumour.lingered} ${rumour.lingered === 1 ? 'age' : 'ages'}` : ''}`}</Muted>
         <Muted variant='caption'>{`${rumour.hops} tellings away`}</Muted>
         <Muted variant='caption'>{`${rumour.carriers} communities speak of it`}</Muted>
         {rumour.source && (

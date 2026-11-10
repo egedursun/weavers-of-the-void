@@ -50,11 +50,3 @@ export function relativesOf(nodes: LanguageNode[], id: number) {
   const daughters = nodes.filter((node) => node.parent_language_id === id)
   return { self, parent, daughters }
 }
-
-export function signatureText(signature: LanguageNode['signature']): string {
-  if (!signature) return 'No signature yet'
-  const parts = [`consonants ${signature.consonants}`]
-  if (signature.cluster) parts.push(`cluster ${signature.cluster}`)
-  if (signature.ending) parts.push(`ending -${signature.ending}`)
-  return parts.join(' · ')
-}

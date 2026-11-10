@@ -15,7 +15,6 @@ import {
   hasMentions,
   parseLore,
   parseMentions,
-  plainMentions,
   threadSummary,
 } from './mentionTokens'
 import { selectionText, visibleOptions } from './multiSelectModel'
@@ -92,12 +91,6 @@ describe('mention tokens', () => {
       ['Ithren', 'son'],
       ['Saltreach', 'world-guide'],
     ])
-    expect(
-      plainMentions(
-        'Velmora (#12) fell; #12 Velmora wept and son#7 Ithren laughed on world#3.',
-        INDEX
-      )
-    ).toBe('Velmora fell; Velmora wept and Ithren laughed on Saltreach.')
   })
 
   it('quotes a thread and falls back for unknown records', () => {
@@ -109,7 +102,9 @@ describe('mention tokens', () => {
     })
     expect(threadSummary('short')).toBe('"short"')
     expect(
-      plainMentions('son#99 and #404 crossed route#2; thread#8 faded', INDEX)
+      parseMentions('son#99 and #404 crossed route#2; thread#8 faded', INDEX)
+        .map((piece) => piece.text)
+        .join('')
     ).toBe('a son and a record crossed a road; a story faded')
     expect(hasMentions('No tokens here, #hashtag only')).toBe(false)
     expect(hasMentions('Born of son#7')).toBe(true)

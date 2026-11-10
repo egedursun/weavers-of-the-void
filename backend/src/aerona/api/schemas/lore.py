@@ -175,7 +175,6 @@ class ShiftView(ApiModel):
 
 class TheoryCard(ApiModel):
     domain: TheoryDomain
-    domain_label: str
     subject: str
     claim: str
     correctness: int
@@ -511,7 +510,6 @@ class RealmEraView(ApiModel):
     polity_id: int
     score: int
     age: AgeKind
-    age_label: str
     since_epoch: int
     lowest: int
     golden_at: int

@@ -341,6 +341,9 @@ function CargoEpoch({
   const carried = flows.reduce((sum, row) => sum + row.volume, 0)
   const lost = flows.reduce((sum, row) => sum + row.lost, 0)
   const tolls = flows.reduce((sum, row) => sum + row.toll_paid, 0)
+  const names = useNames()
+  const nameOf = (id: number) =>
+    names.data?.find((item) => item.id === id)?.name ?? 'a lost place'
   return (
     <TimelineItem
       icon={lost > 0 ? ShieldAlert : Package}
@@ -357,11 +360,7 @@ function CargoEpoch({
               key={`${row.commodity}-${row.material ?? ''}-${index}`}
               kind={row.commodity}
               quantity={row.volume}
-              suffix={
-                row.material
-                  ? ` of ${MATERIAL_LABEL[row.material].toLowerCase()}`
-                  : undefined
-              }
+              suffix={`${row.material ? ` of ${MATERIAL_LABEL[row.material].toLowerCase()}` : ''} from ${nameOf(row.from_id)} to ${nameOf(row.to_id)}`}
             />
           )}
         </Paged>

@@ -190,5 +190,3 @@ class WorldMap(BaseModel):
     borders: BorderLayer
     regions: list[RegionRecord]
     markers: list[PlacedMarker]
-    new_positions: list[PositionUpdate]
-    relocated_positions: list[PositionUpdate]

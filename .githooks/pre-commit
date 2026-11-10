@@ -26,6 +26,7 @@ run import_cycles "$PYTHON" scripts/check_import_cycles.py
 run hidden_controls "$PYTHON" scripts/check_hidden_controls.py
 run label_maps "$PYTHON" scripts/check_label_maps.py
 run orphans "$PYTHON" scripts/check_orphans.py
+run frontend_orphans "$PYTHON" scripts/check_frontend_orphans.py
 run folk_queries "$PYTHON" scripts/check_folk_queries.py
 run coin_units "$PYTHON" scripts/check_coin_units.py
 run zero_fallbacks "$PYTHON" scripts/check_zero_fallbacks.py
@@ -45,6 +46,9 @@ if echo "$STAGED" | grep -qE '^backend/(src|tests)/.*\.py$|^backend/pyproject\.t
   PROVING="$PROVING tests/epoch/test_epoch_engine_only.py::test_engine_only_epochs_run_end_to_end"
   PROVING="$PROVING tests/unit/test_total_tables.py tests/unit/test_word_matching.py tests/unit/test_mechanic_compliance.py tests/unit/test_model_schemas.py tests/unit/test_produced_kinds.py tests/unit/test_rule_registry.py tests/unit/test_derived_world_fields.py tests/api/test_frontend_types.py"
   PROVING="$PROVING $("$PYTHON" scripts/covering_tests.py | tr '\n' ' ')"
+fi
+if echo "$STAGED" | grep -qE '^backend/(src|tests)/.*\.py$|^frontend/src/.*\.(ts|tsx)$|^scripts/check_frontend_orphans\.py$'; then
+  PROVING="$PROVING tests/api/test_frontend_reads_every_field.py tests/unit/test_frontend_orphans.py"
 fi
 if [ -n "$PROVING" ]; then
   run proving sh -c "cd backend && .venv/bin/pytest -q -p no:cacheprovider -n auto --dist worksteal --durations=15 $PROVING"

@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntityLink, Section } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { NamedRecord } from '@/features/entity/NamedRecord'
 import { CosmicActionButton } from './CosmicActionButton'
 import { useDiscoverySummary, useSensedWorlds } from './api'
 import { type CosmosIndex, crowdedRegions } from './model/cosmosModel'
@@ -101,6 +102,12 @@ function SensedBirths() {
             >
               {STEP_STATUS[step.status] ?? step.status}
             </Badge>
+            {step.result_world !== null && (
+              <Text as='span' variant='caption'>
+                {'Became '}
+                <NamedRecord id={step.result_world} fallback='a world' />
+              </Text>
+            )}
             {(step.status === 'pending' || step.status === 'held') && (
               <CosmicActionButton
                 actionId='sensed_world:hold'
@@ -310,6 +317,12 @@ export function HorizonSection({ worldId, index, rules }: HorizonSectionProps) {
               <Badge size='sm' variant='outline'>
                 {HORIZON_STATUS_LABEL[item.status]}
               </Badge>
+              {item.result_world_id !== null && (
+                <Text as='span' variant='caption'>
+                  {'Found as '}
+                  <NamedRecord id={item.result_world_id} fallback='a world' />
+                </Text>
+              )}
               {item.status === 'pending' && (
                 <CosmicActionButton
                   actionId='intuition:discard'

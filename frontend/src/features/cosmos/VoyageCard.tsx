@@ -112,6 +112,9 @@ export function VoyageCard({ journey, index }: VoyageCardProps) {
         <EntityLink kind='entity' id={String(journey.traveller_entity_id)}>
           {traveller}
         </EntityLink>
+        <Text as='span' tone='muted' truncate>
+          {index.worldName(journey.origin_world_id)}
+        </Text>
         <ArrowRight
           aria-hidden='true'
           className='size-icon-sm shrink-0 text-muted-foreground'

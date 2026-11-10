@@ -67,7 +67,6 @@ async def preview_son_prompt(session: AsyncSession, rules: Rules, son_id: int, c
         token_estimate=estimate_tokens(total),
         prompt_limit=prompt_limit,
         over_limit=total > prompt_limit,
-        tool_names=catalogue.names,
         paid_tools=catalogue.paid,
         free_tools=catalogue.free,
         summary_sections=[SectionBudget(section=name, characters=count, limit=limits[name]) for name, count in raw.items()],

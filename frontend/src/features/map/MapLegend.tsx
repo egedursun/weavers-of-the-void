@@ -351,6 +351,24 @@ export function MapLegend({
           <DomainKey mode={mode} palette={palette} />
         </Block>
       )}
+      <Block title='The land' defaultOpen={false}>
+        <ul className='flex min-w-0 flex-col gap-1.5'>
+          {view.geometry.palette.biome_names.map((name, index) => (
+            <Row
+              key={name}
+              icon={
+                <ColorSwatch
+                  color={view.geometry.palette.biome_colours[index]}
+                />
+              }
+            >
+              <Text as='span' truncate className='flex-1'>
+                {name.replaceAll('_', ' ')}
+              </Text>
+            </Row>
+          ))}
+        </ul>
+      </Block>
       <Block title='Markers' defaultOpen={!layerTitle}>
         {!anyMarker && <Muted>No markers on this map yet.</Muted>}
         {fallenCount > 0 && (

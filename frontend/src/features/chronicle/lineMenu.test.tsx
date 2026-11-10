@@ -11,7 +11,6 @@ const LINE = {
   son_id: null,
   world_id: 1,
   text: 'Velmora was founded on the salt shore shore.',
-  template_key: null,
   created_at: '2026-01-01T12:00:00Z',
   entity_ids: [],
 } as never

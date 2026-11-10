@@ -39,7 +39,8 @@ import {
   PageHeader,
   Portrait,
 } from '@/components/domain'
-import { Text } from '@/components/typography'
+import { Muted, Text } from '@/components/typography'
+import { NamedRecord } from '@/features/entity/NamedRecord'
 import {
   type SonPublic,
   useNames,
@@ -134,6 +135,10 @@ function PrayerCard({
                 size='sm'
                 variant='outline'
               >{`Epoch ${message.epoch}`}</Badge>
+              <Muted as='span' variant='caption'>
+                {'To '}
+                <NamedRecord id={message.recipient_node_id} fallback='you' />
+              </Muted>
               {worldName && (
                 <Badge size='sm' variant='outline'>
                   <Globe />
@@ -151,9 +156,16 @@ function PrayerCard({
           {message.answered ? (
             <Badge size='sm' variant='success'>
               <CircleCheck />
-              {message.answer_essence
-                ? `Answered · ${message.answer_essence} essence`
-                : 'Answered'}
+              {[
+                message.answered_epoch !== null
+                  ? `Answered in epoch ${message.answered_epoch}`
+                  : 'Answered',
+                message.answer_essence
+                  ? `${message.answer_essence} essence`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
             </Badge>
           ) : (
             <Badge size='sm' variant='warning'>

@@ -68,7 +68,7 @@ import {
   NumberEditor,
   Panel,
 } from './parts'
-import { structureKeys, useHostStructures, useStructure } from './structureApi'
+import { useHostStructures, useStructure } from './structureApi'
 import {
   BUILDER_SPEC,
   type DesignView,
@@ -355,7 +355,6 @@ function DesignCard({
   blocked: string | null
 }) {
   const kind = KIND_SPEC[design.base_kind]
-  const invalidate = [structureKeys.designs(design.world_id)]
   const edit = useGodAction({
     run: ({
       values,
@@ -369,7 +368,6 @@ function DesignCard({
           body: { design_id: design.id, values, release },
         })
       ),
-    invalidate,
   })
   const retire = useGodAction({
     run: (retired: boolean) =>
@@ -378,7 +376,6 @@ function DesignCard({
           body: { design_id: design.id, retired },
         })
       ),
-    invalidate,
   })
   const busy = blocked ?? (edit.isPending || retire.isPending ? WORKING : null)
   const id = useId()
@@ -540,7 +537,6 @@ function DesignsPanel({
           },
         })
       ),
-    invalidate: [structureKeys.designs(worldId)],
     success: 'The design was drawn up',
   })
   const reason =
@@ -1231,6 +1227,7 @@ export function StructureSection({
                   }
                 />
               </div>
+              <Muted variant='caption'>{`Begun in epoch ${data.construction.started_epoch}${data.construction.finished_epoch !== null ? `, finished in epoch ${data.construction.finished_epoch}` : ', still rising'}.`}</Muted>
               {data.construction.generations > 0 && (
                 <Muted variant='caption'>{`${data.construction.generations} generations have worked on it.`}</Muted>
               )}

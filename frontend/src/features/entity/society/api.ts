@@ -7,7 +7,6 @@ export const societyKeys = {
   demography: (id: number) => [...loreKeys.entity(id), 'demography'] as const,
   disease: (id: number) => [...loreKeys.entity(id), 'disease'] as const,
   plan: (id: number) => [...loreKeys.entity(id), 'settlement-plan'] as const,
-  outbreaks: (worldId: number) => ['world', 'outbreaks', worldId] as const,
 }
 
 export function useDemography(id: number, enabled = true) {
@@ -44,19 +43,6 @@ export function useSettlementPlan(id: number, enabled = true) {
       unwrap(
         api.GET('/api/entities/{entity_id}/settlement-plan', {
           params: { path: { entity_id: id } },
-        })
-      ),
-  })
-}
-
-export function useWorldOutbreaks(worldId: number | null) {
-  return useQuery({
-    queryKey: societyKeys.outbreaks(worldId ?? 0),
-    enabled: worldId !== null,
-    queryFn: () =>
-      unwrap(
-        api.GET('/api/worlds/{world_id}/outbreaks', {
-          params: { path: { world_id: worldId ?? 0 } },
         })
       ),
   })

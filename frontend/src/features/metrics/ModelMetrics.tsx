@@ -10,7 +10,7 @@ import {
   Timer,
   TriangleAlert,
 } from 'lucide-react'
-import { formatCompact } from '@/lib/format'
+import { formatCompact, formatDecimal } from '@/lib/format'
 import { formatDuration, formatMilliseconds, formatUsd } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -116,7 +116,7 @@ function CallList({
           <Text as='span' variant='caption' tone={tone}>
             {tone === 'destructive'
               ? (call.error ?? 'Failed')
-              : formatMilliseconds(call.duration_ms)}
+              : `${formatMilliseconds(call.duration_ms)}${call.cost_usd > 0 ? ` · $${formatDecimal(call.cost_usd, 4)}` : ''}`}
           </Text>
         </li>
       ))}

@@ -115,6 +115,13 @@ export function ImageStyleSettings() {
             </span>
           </Badge>
           {dirty && <Badge variant='warning'>Unsaved change</Badge>}
+          <Badge
+            variant={settings.data.image_generation ? 'success' : 'secondary'}
+          >
+            {settings.data.image_generation
+              ? 'The image worker is ready'
+              : 'The image worker is off; the style waits for it'}
+          </Badge>
         </div>
         <ImageStylePicker
           value={current.style}

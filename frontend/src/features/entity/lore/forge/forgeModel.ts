@@ -97,14 +97,6 @@ export const FORGE_KIND: Record<ForgeKind, LoreNamed> = {
 
 export const FORGE_KINDS = Object.keys(FORGE_KIND) as ForgeKind[]
 
-export function isForgeKind(
-  kind: string | null | undefined
-): kind is ForgeKind {
-  return (
-    Boolean(kind) && (FORGE_KINDS as readonly string[]).includes(kind ?? '')
-  )
-}
-
 export const FORGE_FIELDS: Record<ForgeKind, ForgeField[]> = {
   language: [],
   theory: [

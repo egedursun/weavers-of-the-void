@@ -37,6 +37,17 @@ type RevelationDialogProps = {
   triggerSize?: 'sm' | 'default'
 }
 
+function placeNote(
+  info: { location_required: boolean; containers: string[] } | undefined
+): string | undefined {
+  if (!info) return undefined
+  if (info.location_required)
+    return 'It must stand somewhere; Fate finds it a place.'
+  return info.containers.length > 0
+    ? 'It may stand in a place or nowhere at all.'
+    : 'It stands in no place.'
+}
+
 export function RevelationDialog({
   triggerLabel = 'Reveal',
   triggerVariant = 'outline',
@@ -102,7 +113,12 @@ export function RevelationDialog({
               />
             )}
           </FormRow>
-          <FormRow label='Type'>
+          <FormRow
+            label='Type'
+            description={placeNote(
+              catalogue?.entity_types.find((type) => type.key === entityType)
+            )}
+          >
             {(id) => (
               <Select value={entityType} onValueChange={setEntityType}>
                 <SelectTrigger id={id} className='w-full'>

@@ -853,6 +853,11 @@ function WoundItem({
           <Badge size='sm' variant='outline'>
             {plain(CAUSES, row.cause_kind)}
           </Badge>
+          {row.healed_epoch !== null && (
+            <Badge size='sm' variant='success'>
+              {`Healed in epoch ${row.healed_epoch}`}
+            </Badge>
+          )}
           {!row.visible && (
             <Badge size='sm' variant='outline'>
               Unseen

@@ -114,7 +114,7 @@ const BONDS = [
 ]
 
 function line(id: number, epoch: number, kind: string, text: string, ids: number[] = [], world = WORLD) {
-  return { id, epoch, year: 1100 + epoch * 20 + (id % 5), kind, son_id: null, world_id: world, text, template_key: null, created_at: NOW, entity_ids: ids }
+  return { id, epoch, year: 1100 + epoch * 20 + (id % 5), kind, son_id: null, world_id: world, text, created_at: NOW, entity_ids: ids }
 }
 
 const LINES = [
@@ -213,7 +213,6 @@ function record(id: number) {
     domain: 'salt',
     origin: 'son',
     creator_son_id: 7,
-    maker_entity_id: null,
     mortal_role: base.entity_type === 'mortal' ? 'hero' : null,
     legend_category: null,
     fate_note: id === 42 ? 'Accepted: the ossuary binds the town to its dead, and the dead to the town.' : null,
@@ -385,7 +384,7 @@ export function loreResponse(method: string, url: URL, referer: string | undefin
   if (route === '/api/chronicle') {
     const epoch = Number(url.searchParams.get('epoch') ?? 0)
     const items = epoch ? LINES.filter((item) => item.epoch === epoch) : LINES
-    return { items, total: items.length, has_more: false, oldest_id: items[0]?.id ?? null }
+    return { items, total: items.length }
   }
   if (route === '/api/languages/tree') return LANGUAGE_TREE
   if (route === '/api/knowledge') return KNOWLEDGE

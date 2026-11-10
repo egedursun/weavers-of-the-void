@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
@@ -22,7 +22,6 @@ export const chronicleKeys = {
   counts: [...world, 'chronicle', 'epochs'] as const,
   linesAll: [...world, 'chronicle', 'lines'] as const,
   lines: (epoch: number) => [...world, 'chronicle', 'lines', epoch] as const,
-  latest: [...world, 'chronicle', 'latest'] as const,
   perspectives: [...world, 'chronicle', 'perspectives'] as const,
   cosmic: (last: number) => [...world, 'chronicle', 'cosmic', last] as const,
   stats: [...world, 'stats', 'epochs'] as const,
@@ -56,22 +55,6 @@ export function useEpochLines(epoch: number, enabled: boolean) {
     queryKey: chronicleKeys.lines(epoch),
     queryFn: () => fetchEpochLines(epoch),
     enabled,
-  })
-}
-
-export function useManyEpochLines(epochs: number[]) {
-  return useQueries({
-    queries: epochs.map((epoch) => ({
-      queryKey: chronicleKeys.lines(epoch),
-      queryFn: () => fetchEpochLines(epoch),
-    })),
-  })
-}
-
-export function useLatestChronicle() {
-  return useQuery({
-    queryKey: chronicleKeys.latest,
-    queryFn: () => unwrap(api.GET('/api/chronicle')),
   })
 }
 

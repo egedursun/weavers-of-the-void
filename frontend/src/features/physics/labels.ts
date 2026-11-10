@@ -4,7 +4,6 @@ import {
   Bird,
   Ban,
   Check,
-  Circle,
   CircleDot,
   CloudFog,
   Compass,
@@ -22,8 +21,6 @@ import {
   Mountain,
   Orbit,
   Radar,
-  Rocket,
-  ScanEye,
   ShieldCheck,
   Snowflake,
   Sparkles,
@@ -171,8 +168,6 @@ export const STAR_STAGES: Record<Schema['StarAge'], string> = {
   dead: 'Dead',
   reborn: 'Reborn',
 }
-
-export const PROBE = { icon: ScanEye, rocket: Rocket, circle: Circle } as const
 
 export function table(
   record: Record<string, { label: string }>

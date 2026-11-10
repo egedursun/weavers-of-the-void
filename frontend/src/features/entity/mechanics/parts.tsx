@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input'
 import { Medallion, TimelineItem, Paged } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { NamedRecord } from '../NamedRecord'
 import { humanize } from '../actions/schema'
 import { MindPicker } from '../mind/parts'
 import { IncidentControls } from './IncidentForge'
@@ -412,6 +413,13 @@ export function IncidentEntry({
               variant='secondary'
             >{`${incident.consequences.length} ${incident.consequences.length === 1 ? 'consequence' : 'consequences'}`}</Badge>
           )}
+          {incident.place_entity_id !== null &&
+            incident.place_entity_id !== undefined && (
+              <Muted as='span' variant='caption'>
+                {'At '}
+                <NamedRecord id={incident.place_entity_id} />
+              </Muted>
+            )}
         </div>
         <CausalChain causes={incident.causes} text={null} />
         <IncidentControls

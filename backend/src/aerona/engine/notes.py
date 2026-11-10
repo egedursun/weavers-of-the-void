@@ -46,7 +46,6 @@ async def note(
             "epoch": ctx.epoch,
             "phase": ctx.phase,
             "kind": kind.value,
-            "template_key": key,
             "text": write.row.text,
             "entity_ids": list(ids),
             "feed": feed.value if feed is not None else None,

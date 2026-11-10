@@ -10,7 +10,6 @@ import {
   Mountain,
   MountainSnow,
   PawPrint,
-  ScrollText,
   Skull,
   Snowflake,
   Sparkles,
@@ -18,7 +17,6 @@ import {
   Waves,
   Wheat,
   Zap,
-  type LucideIcon,
 } from 'lucide-react'
 import type { KpiTone } from '@/components/domain'
 import type { Named } from './labels'
@@ -130,8 +128,6 @@ export const HAZARD: Record<string, Named & { season: string }> = {
     season: 'in the coldest season',
   },
 }
-
-export const KNOWLEDGE_ICON: LucideIcon = ScrollText
 
 const DANGER_HIGH = 60
 const DANGER_MID = 30

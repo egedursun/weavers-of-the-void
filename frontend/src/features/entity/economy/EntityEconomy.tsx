@@ -118,6 +118,58 @@ const PIP_TONE: Record<KpiTone, string> = {
   muted: 'bg-muted-foreground',
 }
 
+function MarketQuotes({ economy }: { economy: Economy }) {
+  return (
+    <div data-surface='MarketQuotes' className='flex min-w-0 flex-col gap-3'>
+      <PartHeader
+        icon={Store}
+        title='Market prices'
+        note='What each good fetches here this epoch, how much is offered and wanted, what came in and went out, and how far the price swung.'
+      />
+      {economy.quotes.length === 0 ? (
+        <EmptyState
+          icon={Store}
+          size='inline'
+          title='No market prices here yet'
+          description='Prices appear once the community trades at a market.'
+        />
+      ) : (
+        <ul className='grid min-w-0 grid-cols-1 gap-2 @xl/econ:grid-cols-2 @4xl/econ:grid-cols-3'>
+          <Paged items={economy.quotes} as='li'>
+            {(quote) => (
+              <li
+                key={quote.commodity}
+                className='flex min-w-0 flex-col gap-1 rounded-lg border bg-background p-2'
+              >
+                <div className='flex min-w-0 items-center justify-between gap-2'>
+                  <Text as='span' weight='semibold' truncate>
+                    {COMMODITY[quote.commodity].label}
+                  </Text>
+                  <Badge
+                    size='sm'
+                    variant={
+                      quote.swing > 0
+                        ? 'warning'
+                        : quote.swing < 0
+                          ? 'success'
+                          : 'outline'
+                    }
+                  >
+                    {`${formatInteger(quote.price)}${quote.swing !== 0 ? ` (${quote.swing > 0 ? '+' : ''}${quote.swing}%)` : ''}`}
+                  </Badge>
+                </div>
+                <Muted as='span' variant='caption'>
+                  {`Offered ${formatInteger(quote.supply)} · wanted ${formatInteger(quote.demand)} · in ${formatInteger(quote.imported)} · out ${formatInteger(quote.exported)}`}
+                </Muted>
+              </li>
+            )}
+          </Paged>
+        </ul>
+      )}
+    </div>
+  )
+}
+
 export function PartHeader({
   icon,
   title,
@@ -1325,6 +1377,7 @@ export function EntityEconomy({
             worldId={worldId}
             readOnlyReason={readOnlyReason}
           />
+          <MarketQuotes economy={view.data} />
           <CoinChoice economy={view.data} readOnlyReason={readOnlyReason} />
           {view.data.market && (
             <HoardControl

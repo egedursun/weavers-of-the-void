@@ -60,6 +60,9 @@ export type FieldSpec =
       table?: Record<string, LoreNamed>
       values?: readonly string[]
     }
+  | { key: string; kind: 'record'; table: Record<string, LoreNamed> }
+
+export const NO_RECORD = 'none'
 
 export type Editor = {
   mutate: (variables: {
@@ -585,6 +588,7 @@ function parsed(spec: FieldSpec, raw: string | boolean): LoreValue {
     return Math.round(Number(raw) || 0)
   }
   if (spec.kind === 'text' && raw === '' && spec.nullable) return null
+  if (spec.kind === 'record') return raw === NO_RECORD ? null : Number(raw)
   return String(raw)
 }
 
@@ -619,7 +623,9 @@ export function LoreFields({
         spec.key,
         spec.kind === 'bool'
           ? Boolean(current[spec.key])
-          : shown(current[spec.key]),
+          : spec.kind === 'record'
+            ? shown(current[spec.key]) || NO_RECORD
+            : shown(current[spec.key]),
       ])
     )
   )
@@ -638,7 +644,9 @@ export function LoreFields({
     })
   const put = (key: string, value: string | boolean) =>
     setDraft((before) => ({ ...before, [key]: value }))
-  const choices = fields.filter((spec) => spec.kind === 'enum')
+  const choices = fields.filter(
+    (spec) => spec.kind === 'enum' || spec.kind === 'record'
+  )
   const values = fields.filter(
     (spec) => spec.kind === 'number' || spec.kind === 'text'
   )
@@ -652,12 +660,16 @@ export function LoreFields({
         <div className='grid min-w-0 grid-cols-1 gap-3 @md/lore:grid-cols-2 @3xl/lore:grid-cols-3'>
           {choices.map(
             (spec) =>
-              spec.kind === 'enum' && (
+              (spec.kind === 'enum' || spec.kind === 'record') && (
                 <ChoicePicker
                   key={spec.key}
                   label={fieldLabel(spec.key)}
                   value={String(draft[spec.key])}
-                  table={spec.table ?? tableOf(spec.values ?? [])}
+                  table={
+                    spec.kind === 'record'
+                      ? spec.table
+                      : (spec.table ?? tableOf(spec.values ?? []))
+                  }
                   blocked={busy}
                   onPick={(value) => put(spec.key, value)}
                 />

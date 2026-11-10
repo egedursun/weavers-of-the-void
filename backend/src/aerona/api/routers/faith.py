@@ -395,7 +395,6 @@ async def soul_card(services: ServicesDep, entity_id: Id) -> SoulCard:
                 )
                 for item in judgements
             ],
-            possessing=ref(refs, held.host_entity_id) if held is not None else None,
             possession=possession_view(held, refs) if held is not None else None,
             reborn_as=ref(refs, reborn.newborn_entity_id) if reborn is not None else None,
             gate=reborn.gate if reborn is not None else None,

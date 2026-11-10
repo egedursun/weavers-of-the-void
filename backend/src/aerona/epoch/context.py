@@ -58,7 +58,7 @@ class EpochContext:
         name = PHASE_NAMES[phase] + (f" ({detail})" if detail else "")
         async with self.database.write() as session:
             await phase_started(session, self.epoch, phase, self.elapsed())
-        self.publish(EventKind.EPOCH_PROGRESS, {"no": int(phase), "total": PHASE_COUNT, "name": name, "elapsed_s": round(self.elapsed())})
+        self.publish(EventKind.EPOCH_PROGRESS, {"no": int(phase), "total": PHASE_COUNT, "name": name})
         if self.job is not None:
             self.job.report((int(phase) - 1) / PHASE_COUNT, name)
 

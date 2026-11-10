@@ -236,7 +236,7 @@ function describe(event: ServerEvent): Draft | null {
           tone: 'primary',
           detail:
             event.payload.order && event.payload.order.length > 0
-              ? `Order: ${event.payload.order.map((item) => item.name).join(', ')}`
+              ? `Order: ${event.payload.order.map((item) => `${item.name} (initiative ${item.ini})`).join(', ')}`
               : null,
         }
       )

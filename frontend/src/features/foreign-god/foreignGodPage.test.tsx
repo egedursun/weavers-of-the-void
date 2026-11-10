@@ -14,7 +14,6 @@ const CHRONICLE_LINE = {
   son_id: null,
   world_id: 2,
   text: 'Ysmera turned in her sleep and the glass dunes sang.',
-  template_key: null,
   created_at: '2026-01-01T12:00:00+00:00',
 }
 const DEPTH = {

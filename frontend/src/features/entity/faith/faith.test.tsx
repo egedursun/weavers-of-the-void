@@ -116,7 +116,6 @@ const SOUL = {
   deeds: { renown: 20, honour: 30, faith: 40, violence: 50, infamy: 60 },
   stratum: null,
   judgements: [],
-  possessing: HOST,
   possession: {
     host: HOST,
     spirit: SHADE,

@@ -300,30 +300,3 @@ export function orbitOffset(body: WorldBody, time: number, out: Vec3): Vec3 {
   out[2] = -x * sinNode + depth * cosNode
   return out
 }
-
-export function worldPositions(
-  layout: Layout3D,
-  time: number
-): Map<number, Vec3> {
-  const positions = new Map<number, Vec3>()
-  const offset: Vec3 = [0, 0, 0]
-  for (const id of layout.order) {
-    const body = layout.worlds.get(id)
-    if (!body) continue
-    const anchor =
-      body.kind === 'moon'
-        ? (positions.get(body.parentId ?? 0) ?? body.anchor)
-        : body.anchor
-    if (body.kind === 'free') {
-      positions.set(id, [anchor[0], anchor[1], anchor[2]])
-      continue
-    }
-    orbitOffset(body, time, offset)
-    positions.set(id, [
-      anchor[0] + offset[0],
-      anchor[1] + offset[1],
-      anchor[2] + offset[2],
-    ])
-  }
-  return positions
-}

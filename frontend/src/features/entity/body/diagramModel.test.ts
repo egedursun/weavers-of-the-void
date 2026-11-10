@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { components } from '@/api/generated/schema'
-import {
-  DRAW_STATES,
-  calloutSpots,
-  drawState,
-  isLost,
-  partTone,
-} from './diagramModel'
+import { DRAW_STATES, calloutSpots, drawState, partTone } from './diagramModel'
 import {
   CAPACITIES,
   CONDITIONS,
@@ -50,11 +44,11 @@ describe('body diagram model', () => {
   })
 
   it('knows a lost part from a damaged one', () => {
-    expect(isLost(part({ state: 'permanent', loss: 100 }))).toBe(true)
-    expect(isLost(part({ state: 'permanent', loss: 60 }))).toBe(false)
+    expect(drawState(part({ state: 'permanent', loss: 100 }))).toBe('lost')
+    expect(drawState(part({ state: 'permanent', loss: 60 }))).toBe('lasting')
     expect(
-      isLost(part({ state: 'permanent', loss: 100, prosthesis: 'wood' }))
-    ).toBe(false)
+      drawState(part({ state: 'permanent', loss: 100, prosthesis: 'wood' }))
+    ).not.toBe('lost')
   })
 
   it('draws every wound state the backend sends', () => {

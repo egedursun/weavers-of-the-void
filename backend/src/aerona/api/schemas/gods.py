@@ -34,7 +34,6 @@ class CreatorMood(ApiModel):
 class FolkView(ApiModel):
     people_id: int
     people_name: str
-    god_node_id: int
     local_name: str | None
     account: str
     misconception: str | None

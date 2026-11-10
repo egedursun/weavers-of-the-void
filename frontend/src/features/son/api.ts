@@ -5,7 +5,6 @@ import { type components } from '@/api/generated/schema'
 import { queryKeys } from '@/api/queryKeys'
 
 export type SonDetail = components['schemas']['SonDetail']
-export type ChatMessage = components['schemas']['MessageRecord']
 export type ChatReply = components['schemas']['ChatReply']
 export type LedgerPage = components['schemas']['LedgerPage']
 export type BondView = components['schemas']['BondView']

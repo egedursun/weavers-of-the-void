@@ -34,7 +34,6 @@ import {
   Globe,
   Hammer,
   Hand,
-  HandCoins,
   HandHeart,
   Heart,
   HeartHandshake,
@@ -50,7 +49,6 @@ import {
   Milestone,
   Minus,
   Moon,
-  Mountain,
   Orbit,
   PartyPopper,
   PawPrint,
@@ -216,7 +214,6 @@ export const DISTRICT_SPEC: Record<DistrictKind, Spec> = {
   foreign_quarter: { label: 'Foreign quarter', icon: Globe, tone: 'info' },
   necropolis: { label: 'Necropolis', icon: Skull, tone: 'muted' },
 }
-export const DISTRICT_ORDER = Object.keys(DISTRICT_SPEC) as DistrictKind[]
 export const DISTRICT_MAX_LEVEL = 5
 
 export const SIZE_SPEC: Record<SizeTier, Spec & { rank: number }> = {
@@ -487,11 +484,7 @@ export const FIELD_LABEL: Record<string, string> = {
   quarantined: 'Sealed',
 }
 
-export const TREASURY_ICON: LucideIcon = HandCoins
 export const SETTLEMENT_ICON: LucideIcon = Landmark
-export const FIRE_ICON: LucideIcon = Flame
-export const GEM_ICON: LucideIcon = Gem
-export const MOUNTAIN_ICON: LucideIcon = Mountain
 
 export function fieldLabel(key: string): string {
   return (

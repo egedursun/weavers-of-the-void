@@ -1,16 +1,13 @@
 import {
   Activity,
-  Anchor,
   Ban,
   CircleDashed,
   CircleDot,
   CloudFog,
   Compass,
-  Crown,
   Eye,
   Flame,
   Ghost,
-  Globe2,
   Hourglass,
   Layers,
   Link2,
@@ -232,12 +229,6 @@ export const STRUCTURES: Record<Schema['GalacticStructureKind'], Named> = {
   rift_scar: { label: 'Rift scar', icon: Eye, tone: 'danger' },
 }
 
-export const SCALE_ICONS: Record<'dimension' | 'cluster' | 'galaxy', Named> = {
-  dimension: { label: 'Dimension', icon: Layers, tone: 'info' },
-  cluster: { label: 'Cluster', icon: Workflow, tone: 'verdigris' },
-  galaxy: { label: 'Galaxy', icon: Orbit, tone: 'gold' },
-}
-
 export const HELD_LABELS: Record<string, string> = {
   veil: 'Veil',
   stability: 'Stability',
@@ -305,14 +296,3 @@ export const HELD_LABELS: Record<string, string> = {
 export function heldLabel(key: string): string {
   return HELD_LABELS[key] ?? key.replaceAll('_', ' ')
 }
-
-export const KIND_ICONS = {
-  dimension: Layers,
-  cluster: Workflow,
-  galaxy: Orbit,
-  rift: Eye,
-  being: Crown,
-  phenomenon: CloudFog,
-  anchor: Anchor,
-  globe: Globe2,
-} as const

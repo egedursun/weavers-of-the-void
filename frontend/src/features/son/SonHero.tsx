@@ -28,6 +28,7 @@ import {
 import { MentionText } from '@/components/domain/MentionText'
 import { RecordNavLink } from '@/components/domain/RecordNavLink'
 import { Label, Muted, PageTitle, Text } from '@/components/typography'
+import { NamedRecord } from '@/features/entity/NamedRecord'
 import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverlay'
 import { type SonPublic, useWorldState } from '@/features/pantheon/api'
 import { useRuleLookup } from '@/features/pantheon/gate'
@@ -78,6 +79,13 @@ export function SonHero({
           {dead && son.death_epoch !== null && (
             <Label>{`Died in Epoch ${son.death_epoch}`}</Label>
           )}
+          {son.reputation_last_contact_epoch !== null && (
+            <Label>{`You last spoke to it in Epoch ${son.reputation_last_contact_epoch}`}</Label>
+          )}
+          {son.reputation_unanswered !== null &&
+            son.reputation_unanswered > 0 && (
+              <Label>{`${son.reputation_unanswered} of its prayers wait for your answer`}</Label>
+            )}
         </div>
         <PageTitle truncate={2}>{dead ? `† ${son.name}` : son.name}</PageTitle>
         <Muted>{son.title}</Muted>
@@ -151,7 +159,11 @@ export function SonHero({
             value={view.power_cap}
           />
         </div>
-        {(detail.anchor || detail.parent || detail.children.length > 0) && (
+        {(detail.anchor ||
+          detail.parent ||
+          son.co_parent_son_id !== null ||
+          son.corpse_entity_id !== null ||
+          detail.children.length > 0) && (
           <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
             {detail.anchor && (
               <Badge size='sm' variant='outline'>
@@ -169,6 +181,20 @@ export function SonHero({
                 <EntityLink kind='son' id={String(detail.parent.id)}>
                   {detail.parent.name}
                 </EntityLink>
+              </Badge>
+            )}
+            {son.co_parent_son_id !== null && (
+              <Badge size='sm' variant='outline'>
+                <UserRound />
+                Second parent
+                <NamedRecord id={son.co_parent_son_id} fallback='a lost son' />
+              </Badge>
+            )}
+            {son.corpse_entity_id !== null && (
+              <Badge size='sm' variant='outline'>
+                <Anchor />
+                Body
+                <NamedRecord id={son.corpse_entity_id} fallback='lost' />
               </Badge>
             )}
             <Paged items={detail.children}>

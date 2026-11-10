@@ -546,6 +546,7 @@ export function branchOf(branch: string): LoreNamed {
 }
 
 export const FIELDS: Record<string, string> = {
+  custom_class_id: 'Class of your own',
   prestige: 'Prestige',
   standardisation: 'Standardisation',
   liturgical: 'Tongue of worship',

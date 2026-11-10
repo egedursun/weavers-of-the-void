@@ -1,7 +1,6 @@
 import {
   Ban,
   CheckCircle2,
-  Coins,
   Eye,
   EyeOff,
   Flame,
@@ -100,8 +99,6 @@ export const CRIMES: Record<string, Named> = {
   blasphemy: { label: 'Blasphemy', icon: Flame, tone: 'warning' },
   desertion: { label: 'Desertion', icon: Wind, tone: 'warning' },
 }
-
-export const PENALTY_ICON = Coins
 
 export function labelTable(
   specs: Record<string, Named>

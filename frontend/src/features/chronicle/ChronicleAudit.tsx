@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react'
 import {
   ChevronDown,
   ScanSearch,
@@ -14,14 +15,16 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { Medallion } from '@/components/domain'
+import { Medallion, Paged } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { NamedRecord } from '@/features/entity/NamedRecord'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 
 type AuditReport = components['schemas']['ChronicleAuditReport']
 type AuditKind = components['schemas']['ChronicleAuditKind']
+type Coverage = components['schemas']['ChronicleCoverage']
 
 const KIND_LABEL: Record<AuditKind, string> = {
   rejected_mentioned: 'Names a rejected record',
@@ -32,6 +35,117 @@ const KIND_LABEL: Record<AuditKind, string> = {
   active_as_silent: 'Shows an active god as silent',
   deed_miscredited: 'Credits a deed to the wrong god',
   number_contradiction: 'States a wrong number',
+}
+
+function CoverageRow({
+  label,
+  children,
+}: {
+  label: string
+  children: ReactNode
+}) {
+  return (
+    <li className='flex min-w-0 flex-wrap items-center gap-1.5 rounded-lg border bg-muted/30 px-2 py-1'>
+      <Badge size='sm' variant='outline'>
+        {label}
+      </Badge>
+      {children}
+    </li>
+  )
+}
+
+function CoverageList({ coverage }: { coverage: Coverage }) {
+  const empty =
+    coverage.covered.length === 0 &&
+    coverage.entity_ids.length === 0 &&
+    coverage.outcomes.length === 0 &&
+    coverage.credits.length === 0 &&
+    coverage.idle_actor_ids.length === 0 &&
+    coverage.counts.length === 0
+  return (
+    <div className='flex min-w-0 flex-col gap-1.5'>
+      <Label>What the chronicle tells</Label>
+      {empty ? (
+        <Muted variant='caption'>
+          The audit found nothing of the fact sheet in the text.
+        </Muted>
+      ) : (
+        <ul className='flex min-w-0 flex-col gap-1'>
+          {coverage.covered.length > 0 && (
+            <CoverageRow label='Facts told'>
+              <Muted variant='caption'>{`${coverage.covered.length} of the epoch's facts`}</Muted>
+            </CoverageRow>
+          )}
+          <Paged
+            items={coverage.entity_ids}
+            initial={6}
+            noun={['record', 'records']}
+            as='li'
+          >
+            {(id) => (
+              <CoverageRow key={`named-${id}`} label='Names'>
+                <NamedRecord id={id} />
+              </CoverageRow>
+            )}
+          </Paged>
+          <Paged
+            items={coverage.outcomes}
+            initial={6}
+            noun={['contest', 'contests']}
+            as='li'
+          >
+            {(claim) => (
+              <CoverageRow key={`won-${claim.ref}`} label='Winner'>
+                <NamedRecord id={claim.winner_id} />
+                <Muted variant='caption'>{`wins ${claim.ref}`}</Muted>
+              </CoverageRow>
+            )}
+          </Paged>
+          <Paged
+            items={coverage.credits}
+            initial={6}
+            noun={['credit', 'credits']}
+            as='li'
+          >
+            {(claim) => (
+              <CoverageRow
+                key={`credit-${claim.entity_id}-${claim.actor_id}`}
+                label='Made by'
+              >
+                <NamedRecord id={claim.entity_id} />
+                <Muted variant='caption'>credited to</Muted>
+                <NamedRecord id={claim.actor_id} />
+              </CoverageRow>
+            )}
+          </Paged>
+          <Paged
+            items={coverage.idle_actor_ids}
+            initial={6}
+            noun={['god', 'gods']}
+            as='li'
+          >
+            {(id) => (
+              <CoverageRow key={`idle-${id}`} label='Told as silent'>
+                <NamedRecord id={id} />
+              </CoverageRow>
+            )}
+          </Paged>
+          <Paged
+            items={coverage.counts}
+            initial={6}
+            noun={['number', 'numbers']}
+            as='li'
+          >
+            {(claim) => (
+              <CoverageRow key={`count-${claim.ref}`} label='Number'>
+                <Muted variant='caption'>{`${claim.ref}: ${claim.value}`}</Muted>
+              </CoverageRow>
+            )}
+          </Paged>
+        </ul>
+      )}
+    </div>
+  )
 }
 
 export function ChronicleAudit({
@@ -85,11 +199,11 @@ export function ChronicleAudit({
             )}
           </div>
         )}
-        {remaining.length > 0 && (
+        {audit && (
           <CollapsibleTrigger asChild>
             <Button variant='ghost' size='sm'>
               <ChevronDown />
-              Findings
+              {remaining.length > 0 ? 'Findings' : 'What it tells'}
             </Button>
           </CollapsibleTrigger>
         )}
@@ -103,7 +217,7 @@ export function ChronicleAudit({
           onRun={() => run.mutate()}
         />
       </div>
-      <CollapsibleContent>
+      <CollapsibleContent className='flex min-w-0 flex-col gap-3'>
         <ul className='flex min-w-0 flex-col gap-1.5'>
           {remaining.map((finding, index) => (
             <li
@@ -132,6 +246,7 @@ export function ChronicleAudit({
             </li>
           ))}
         </ul>
+        {audit?.coverage && <CoverageList coverage={audit.coverage} />}
       </CollapsibleContent>
     </Collapsible>
   )

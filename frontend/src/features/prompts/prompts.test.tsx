@@ -45,7 +45,6 @@ const PREVIEW = {
   token_estimate: 5_250,
   prompt_limit: 20_000,
   over_limit: true,
-  tool_names: ['create_place', 'inspect_entity'],
   paid_tools: ['create_place'],
   free_tools: ['inspect_entity'],
   summary_sections: [{ section: 'events', characters: 900, limit: 1_000 }],

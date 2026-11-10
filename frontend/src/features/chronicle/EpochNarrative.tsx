@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { BookOpen, ChevronDown, ChevronUp, Globe2 } from 'lucide-react'
+import { formatDateTime } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MentionText } from '@/components/domain/MentionText'
@@ -67,9 +68,15 @@ export function EpochNarrative({ epoch, perspectives }: EpochNarrativeProps) {
         </TabsList>
       </div>
       <TabsContent value={CHRONICLER} className='flex min-w-0 flex-col gap-4'>
-        {(epoch.chronicler_name || epoch.chronicler_identity) && (
+        {(epoch.chronicler_name ||
+          epoch.chronicler_identity ||
+          epoch.closed_at) && (
           <Muted variant='caption'>
-            {[epoch.chronicler_name, epoch.chronicler_identity]
+            {[
+              epoch.chronicler_name,
+              epoch.chronicler_identity,
+              epoch.closed_at && `closed ${formatDateTime(epoch.closed_at)}`,
+            ]
               .filter(Boolean)
               .join(' · ')}
           </Muted>

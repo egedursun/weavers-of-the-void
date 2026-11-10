@@ -44,7 +44,6 @@ const SON_PROMPT = {
   token_estimate: 4_605,
   prompt_limit: 20_000,
   over_limit: false,
-  tool_names: ['create_place', 'declare_war', 'inspect_entity', 'read_chronicle', 'bless_people'],
   paid_tools: ['create_place', 'declare_war', 'bless_people'],
   free_tools: ['inspect_entity', 'read_chronicle'],
   summary_sections: [

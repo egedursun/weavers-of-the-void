@@ -86,7 +86,6 @@ class ActingMechanic(ApiModel):
     writes: list[str]
     affects: list[Subsystem]
     suppressed: bool
-    last_incident_id: int | None
     last_text: str | None
     last_epoch: int | None
 

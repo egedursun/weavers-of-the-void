@@ -140,6 +140,4 @@ class WorksView(ApiModel):
     holdings: list[WorksSiteView]
     ledger: list[WorksLedgerView]
     bottlenecks: list[WorksBottleneckView]
-    workshop_kinds: list[LabelView]
     tiers: list[LabelView]
-    processes: list[LabelView]

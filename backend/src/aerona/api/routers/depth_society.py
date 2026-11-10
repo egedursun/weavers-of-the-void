@@ -31,10 +31,8 @@ from aerona.api.schemas.depth_society import (
     LinkedRecord,
     MartialRecordView,
     NeighbourCulture,
-    OutbreakMapView,
     OutbreakView,
     PopulationCohortView,
-    QuarantineView,
     SettlementPlanView,
     SocietyPressureView,
     StorageView,
@@ -49,7 +47,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleBiologyRow, PeopleCultureRow
-from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, EndemicDiseaseRow, ImmunityRow, OutbreakRow, QuarantineRow
+from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, EndemicDiseaseRow, ImmunityRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.settlement import (
@@ -407,34 +405,6 @@ async def disease(services: ServicesDep, entity_id: int = Path(ge=1)) -> Disease
                     locked=bool(row.locked),
                 )
                 for row in immunities
-            ],
-        )
-
-
-@router.get("/worlds/{world_id}/outbreaks", response_model=OutbreakMapView)
-async def world_outbreaks(services: ServicesDep, world_id: int = Path(ge=1)) -> OutbreakMapView:
-    async with reader(services) as session:
-        regions = set(await session.scalars(select(EntityRow.id).where(EntityRow.world_id == world_id, EntityRow.entity_type == EntityType.REGION)))
-        outbreaks = [row for row in await session.scalars(select(OutbreakRow).order_by(OutbreakRow.id)) if row.region_entity_id in regions]
-        endemic = [row for row in await session.scalars(select(EndemicDiseaseRow)) if row.region_entity_id in regions]
-        quarantines = [row for row in await session.scalars(select(QuarantineRow)) if row.region_entity_id in regions]
-        names = await names_of(
-            session,
-            {
-                *(row.region_entity_id for row in outbreaks),
-                *(row.disease_entity_id for row in outbreaks),
-                *(row.region_entity_id for row in endemic),
-                *(row.disease_entity_id for row in endemic),
-                *(row.region_entity_id for row in quarantines),
-            },
-        )
-        rules = await rules_of(session)
-        return OutbreakMapView(
-            world_id=world_id,
-            outbreaks=outbreak_views(outbreaks, names, await source_regions(session, outbreaks), await unseen_of(session, rules, outbreaks)),
-            endemic=endemic_views(endemic, names),
-            quarantines=[
-                QuarantineView(region_id=row.region_entity_id, region=names.get(row.region_entity_id, ""), until_epoch=row.until_epoch) for row in quarantines
             ],
         )
 

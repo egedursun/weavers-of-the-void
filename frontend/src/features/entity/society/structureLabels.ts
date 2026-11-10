@@ -356,7 +356,6 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
     hint: 'Knowledge of all worlds',
   },
 }
-export const KIND_ORDER = Object.keys(KIND_SPEC) as StructureKind[]
 
 export const STATE_SPEC: Record<ConstructionState, Spec> = {
   planned: { label: 'Planned', icon: HardHat, tone: 'muted' },

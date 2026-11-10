@@ -9,7 +9,6 @@ import { RULES_STALE_TIME_MS } from '@/constants/ui'
 export type WorldState = components['schemas']['StateResponse']
 export type SonPublic = components['schemas']['SonPublic']
 export type SonRecord = components['schemas']['SonRecord']
-export type SonRelation = components['schemas']['SonRelationItem']
 export type ThreadRecord = components['schemas']['ThreadRecord']
 export type PlayerHints = components['schemas']['PlayerHints']
 export type RuleValue = components['schemas']['RuleResponse']

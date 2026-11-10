@@ -32,7 +32,6 @@ export function ForeignGodPowerPanel({ detail }: { detail: ForeignGodDetail }) {
   const [devour, setDevour] = useState(false)
   const [target, setTarget] = useState<string | null>(null)
   const [temple, setTemple] = useState<string | null>(null)
-  const deathless = detail.powers.some((power) => power.effect === 'deathless')
   const drained = detail.drain_amount
   const drainGain = detail.drain_gain
   const killCost = detail.kill_cost
@@ -179,8 +178,8 @@ export function ForeignGodPowerPanel({ detail }: { detail: ForeignGodDetail }) {
             onRun={() => kill.mutate()}
           />
         </div>
-        {deathless && (
-          <Text variant='caption'>Deathless: killing costs more.</Text>
+        {detail.deathless_caption && (
+          <Text variant='caption'>{detail.deathless_caption}</Text>
         )}
       </div>
       <Separator />

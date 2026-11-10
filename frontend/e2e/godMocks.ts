@@ -211,12 +211,7 @@ const CREATOR: Schemas['CreatorRecord'] = {
   image_prompt: 'A radiant dawn figure over a dark ocean of stars',
   note: 'No son may unmake the western sea.',
   essence: 186,
-  mood_contentment: 64,
-  mood_anger: 22,
-  mood_interest: 71,
-  mood_loneliness: 38,
   passions: ['creation', 'order'],
-  passions_automatic: true,
   depth: {
     history: 'Before the first star, Aeron dreamed of a sea that remembered.',
     names: [{ name: 'The First Light', used_by: 'The fisher folk', meaning: 'He who lit the western waters' }],
@@ -376,8 +371,8 @@ const ENTITY = (id: number, name: string, type: Schemas['EntityType']): Schemas[
 })
 
 const CHRONICLE: Schemas['ChronicleLineRecord'][] = [
-  { id: 91, epoch: 11, year: 340, kind: 'creation', son_id: 7, world_id: 1, text: 'Thalassir raised a lighthouse temple over the drowned city.', template_key: null, created_at: NOW },
-  { id: 92, epoch: 12, year: 352, kind: 'prayer', son_id: 7, world_id: 1, text: 'The fisher folk prayed for calm seas.', template_key: null, created_at: NOW },
+  { id: 91, epoch: 11, year: 340, kind: 'creation', son_id: 7, world_id: 1, text: 'Thalassir raised a lighthouse temple over the drowned city.', created_at: NOW },
+  { id: 92, epoch: 12, year: 352, kind: 'prayer', son_id: 7, world_id: 1, text: 'The fisher folk prayed for calm seas.', created_at: NOW },
 ]
 
 const SON_DETAIL: Schemas['SonDetail'] = {
@@ -385,7 +380,7 @@ const SON_DETAIL: Schemas['SonDetail'] = {
   kill_cost: 100,
   reputation: { son_id: 7, name: 'Thalassir', love: 58, fear: 32, forgotten: 12, unanswered: 1, last_contact: EPOCH - 1, label: 'loved' },
   folk_views: [
-    { people_id: 50, people_name: 'The Fisher Folk', god_node_id: 7, local_name: 'Bellfather', account: 'He rings the drowned bells to warn us of storms.', misconception: 'He does it to count the dead.', epoch: 10 },
+    { people_id: 50, people_name: 'The Fisher Folk', local_name: 'Bellfather', account: 'He rings the drowned bells to warn us of storms.', misconception: 'He does it to count the dead.', epoch: 10 },
   ],
   creations: [ENTITY(42, 'Oskar', 'settlement'), { ...ENTITY(44, 'The Bell Choir', 'tradition'), status: 'rejected' }],
   chronicle: CHRONICLE,
@@ -651,7 +646,6 @@ const RULES: Schemas['RuleResponse'][] = RULE_VALUES.map(([namespace, key, value
 
 const CATALOGUE = {
   enums: {},
-  rarities: [],
   entity_types: [
     { key: 'people', label: 'People', plural: 'Peoples', containers: [], location_required: false, stats: [] },
     { key: 'settlement', label: 'Settlement', plural: 'Settlements', containers: [], location_required: true, stats: [] },
@@ -675,8 +669,6 @@ const CATALOGUE = {
   link_groups: [{"key": "all", "label": "All links", "kinds": ["ally", "apprentice_of", "beat", "blessed", "built", "captain_of", "caused", "celebrates", "commands", "companion", "created", "cursed", "descends_from", "destroyed", "discovered", "enemy", "fears", "forbids", "holds_captive", "hunts", "in_world", "inside", "killed", "knows", "lives_in", "loves", "member_of", "migrated_to", "owes", "owns", "part_of", "party_to", "passenger_of", "pays_tribute", "produced", "prophesies", "protects", "pursues", "related", "rival", "route", "rules", "soul_descended_to", "source_of", "speaks", "spy_network", "tamed", "tells_of", "trades_with", "truce", "worships"]}, {"key": "travel", "label": "Travel and trade network", "kinds": ["captain_of", "discovered", "migrated_to", "passenger_of", "pays_tribute", "route", "trades_with"]}, {"key": "no_location", "label": "Excluding location links", "kinds": ["ally", "apprentice_of", "beat", "blessed", "built", "captain_of", "caused", "celebrates", "commands", "companion", "created", "cursed", "descends_from", "destroyed", "discovered", "enemy", "fears", "forbids", "holds_captive", "hunts", "in_world", "killed", "knows", "lives_in", "loves", "member_of", "migrated_to", "owes", "owns", "part_of", "party_to", "passenger_of", "pays_tribute", "produced", "prophesies", "protects", "pursues", "related", "rival", "route", "rules", "soul_descended_to", "source_of", "speaks", "spy_network", "tamed", "tells_of", "trades_with", "truce", "worships"]}, {"key": "conflict", "label": "Conflict", "kinds": ["beat", "caused", "cursed", "destroyed", "enemy", "holds_captive", "hunts", "killed", "party_to", "pursues", "rival"]}, {"key": "faith", "label": "Faith and narrative", "kinds": ["blessed", "celebrates", "prophesies", "soul_descended_to", "tells_of", "worships"]}, {"key": "lineage", "label": "Lineage, property and making", "kinds": ["apprentice_of", "built", "commands", "created", "descends_from", "member_of", "migrated_to", "owns", "part_of", "produced", "rules"]}, {"key": "knowledge", "label": "Knowledge, language and trade", "kinds": ["ally", "knows", "owes", "source_of", "speaks", "trades_with", "truce"]}],
   world_types: [],
   chronicle_kinds: [],
-  notification_categories: [],
-  climates: [],
   creature_traits: [],
   passions: [],
 }

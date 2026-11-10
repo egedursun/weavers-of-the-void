@@ -666,6 +666,7 @@ function MapScreen({
         typeLabel={world?.typeLabel ?? view.world.world_type}
         multiWorld={worlds.length > 1}
         knownCells={view.geometry.extent.known_cells}
+        knownRatio={view.geometry.extent.known_ratio}
         regions={view.geometry.regions.length}
         markers={markerCount}
         past={past}

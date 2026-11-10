@@ -56,6 +56,7 @@ import {
 import { Label, Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { NamedRecord } from '../NamedRecord'
 import { loreKeys } from '../api/keys'
 import { PowerBalance } from '../realm/Statecraft'
 import { type Named, named, plain } from '../realm/labels'
@@ -842,6 +843,12 @@ function FactionBody({
           <Badge variant='secondary'>{`Monopoly on ${plain({}, faction.monopoly)}`}</Badge>
         )}
       </div>
+      {faction.contract_id !== null && (
+        <Muted as='span' variant='caption'>
+          {'Its condotta is sealed by '}
+          <NamedRecord id={faction.contract_id} fallback='a lost treaty' />
+        </Muted>
+      )}
       {Object.keys(faction.influence_over).length > 0 && (
         <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
           <Muted as='span' variant='caption'>

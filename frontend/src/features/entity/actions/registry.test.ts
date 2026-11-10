@@ -31,7 +31,6 @@ function detail(
       domain: null,
       origin: 'son',
       creator_son_id: null,
-      maker_entity_id: null,
       mortal_role: null,
       legend_category: null,
       fate_note: null,

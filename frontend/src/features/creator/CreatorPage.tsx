@@ -92,7 +92,11 @@ export function CreatorPage() {
       <CreatorEpic creator={creator} />
       <CreatorDepth creator={creator} />
       <CreatorBeliefs views={data.folk_views} name={creator.name} />
-      <CreatorCult cult={data.cult} faith={data.faith} />
+      <CreatorCult
+        cult={data.cult}
+        faith={data.faith}
+        essence={data.cult_essence}
+      />
       <CreatorTraces traces={data.traces} />
       <CreatorGalleries
         creatorId={creator.id}

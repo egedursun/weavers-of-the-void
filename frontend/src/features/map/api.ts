@@ -12,9 +12,7 @@ import { queryKeys } from '@/api/queryKeys'
 export type MapView =
   paths['/api/worlds/{world_id}/map']['get']['responses'][200]['content']['application/json']
 export type WorldMap = MapView['geometry']
-export type MapPoint = MapView['points'][number]
 export type MapNote = MapView['notes'][number]
-export type RegionRecord = WorldMap['regions'][number]
 export type CosmosView = components['schemas']['CosmosView']
 export type CosmosWorld = components['schemas']['CosmosWorld']
 export type Catalogue = components['schemas']['Catalogue']

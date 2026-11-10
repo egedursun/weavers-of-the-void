@@ -44,12 +44,14 @@ describe('epoch flow lines', () => {
     const started = lineOf(1, 'epoch.started', {
       resuming: false,
       order: [
-        { son_id: 1, name: 'Ithren' },
-        { son_id: 2, name: 'Kharun' },
+        { id: 1, name: 'Ithren', ini: 14 },
+        { id: 2, name: 'Kharun', ini: 9 },
       ],
     })
     expect(started.title).toBe('A new epoch begins')
-    expect(started.detail).toBe('Order: Ithren, Kharun')
+    expect(started.detail).toBe(
+      'Order: Ithren (initiative 14), Kharun (initiative 9)'
+    )
     expect(
       lineOf(2, 'epoch.progress', { no: 2, total: 5, name: 'Sons act' }).title
     ).toBe('Phase 2/5: Sons act')

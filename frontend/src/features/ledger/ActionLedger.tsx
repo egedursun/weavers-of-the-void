@@ -12,7 +12,7 @@ import {
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { formatInteger } from '@/lib/format'
+import { formatDateTime, formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -142,7 +142,9 @@ function LedgerEntry({
           {entry.undone ? (
             <Badge size='sm' variant='secondary'>
               <Undo2 />
-              Undone
+              {entry.undone_at
+                ? `Undone ${formatDateTime(entry.undone_at)}`
+                : 'Undone'}
             </Badge>
           ) : (
             <Button

@@ -229,7 +229,11 @@ function GreatPeopleCard({
                         variant={row.deed_done ? 'default' : 'outline'}
                       >
                         {row.deed_done ? <CircleCheck /> : <Hourglass />}
-                        {row.deed_done ? 'Deed done' : 'Deed waits'}
+                        {row.deed_done
+                          ? row.deed_epoch !== null
+                            ? `Deed done in epoch ${row.deed_epoch}`
+                            : 'Deed done'
+                          : 'Deed waits'}
                       </Badge>
                     </div>
                     <Muted variant='caption'>{`Their deed: ${row.deed}.`}</Muted>

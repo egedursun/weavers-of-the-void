@@ -18,6 +18,7 @@ import {
   type FavourOrigin,
   type Hook,
   type HookDemand,
+  type HookSource,
   type HookStrength,
   type Intrigue,
   type IdentityReason,
@@ -477,6 +478,7 @@ function HooksCard({ ctx }: { ctx: Ctx }) {
   const view = ctx.view
   const [target, setTarget] = useState<number | null>(null)
   const [strength, setStrength] = useState('weak')
+  const [source, setSource] = useState('secret')
   const grant = useGodAction({
     run: (targetId: number) =>
       unwrap(
@@ -485,7 +487,7 @@ function HooksCard({ ctx }: { ctx: Ctx }) {
             holder_id: view.node_id,
             target_id: targetId,
             strength: strength as HookStrength,
-            source: 'secret',
+            source: source as HookSource,
           },
         })
       ),
@@ -549,6 +551,13 @@ function HooksCard({ ctx }: { ctx: Ctx }) {
           table={STRENGTHS}
           blocked={busy}
           onPick={setStrength}
+        />
+        <MindPicker
+          label='Learned through'
+          value={source}
+          table={table(view.hook_sources)}
+          blocked={busy}
+          onPick={setSource}
         />
       </AddBar>
     </MindCard>

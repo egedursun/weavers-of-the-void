@@ -37,13 +37,18 @@ import { type EntityContext } from '../actions/context'
 import { humanize } from '../actions/schema'
 import { useLoreMutation } from '../api/mutations'
 import { useCatalogue, useEntityBonds, useNames } from '../api/queries'
-import { type BondView } from '../api/types'
+import { type BondKindInfo, type BondView } from '../api/types'
 import { BOND_DESCRIPTION_MAX, BOND_PAGE_SIZE } from '../constants'
 import { groupBonds } from './bondGroups'
 
 type EntityBondsProps = {
   ctx: EntityContext
   readOnlyReason: string | null
+}
+
+function bondKindNote(info: BondKindInfo | undefined): string | undefined {
+  if (!info) return undefined
+  return `${info.weavable ? 'Your sons can make this bond too' : 'Only you and the engine make this bond'}; ${info.fate_suggestable ? 'Fate may suggest it' : 'Fate never suggests it'}.`
 }
 
 function BondOther({ bond }: { bond: BondView }) {
@@ -83,6 +88,9 @@ function BondChip({
           )}
           <BondOther bond={bond} />
         </Text>
+        {past && bond.closed_reason && (
+          <Muted variant='caption'>{`Ended: ${humanize(bond.closed_reason)}`}</Muted>
+        )}
         {bond.description && (
           <ExpandableText variant='caption' tone='muted' lines={2}>
             {bond.description}
@@ -201,7 +209,10 @@ function CreateBondForm({ ctx, readOnlyReason }: EntityBondsProps) {
           </Select>
         )}
       </FormRow>
-      <FormRow label='Bond'>
+      <FormRow
+        label='Bond'
+        description={bondKindNote(kinds.find((item) => item.key === kind))}
+      >
         {(id) => (
           <Select value={kind ?? undefined} onValueChange={setKind}>
             <SelectTrigger id={id} className='w-full'>

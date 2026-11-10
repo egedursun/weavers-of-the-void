@@ -20,12 +20,7 @@ import {
 } from './cosmosModel'
 import { fnv1a, seededRandom, unitHash } from './hash'
 import { curvedPath, layoutCosmos2D } from './layout2d'
-import {
-  bodyRadius,
-  layoutCosmos3D,
-  orbitUnit,
-  worldPositions,
-} from './layout3d'
+import { bodyRadius, layoutCosmos3D, orbitOffset, orbitUnit } from './layout3d'
 import { questBlockers } from './quests'
 import { buildRuleBook } from './rules'
 import { skyCalendar, skyCalendarText } from './skyCalendar'
@@ -421,11 +416,11 @@ describe('3D layout', () => {
   it('places planets on their orbit and moons around their parent', () => {
     const data = cosmos()
     const layout = layoutCosmos3D(data)
-    const positions = worldPositions(layout, 0)
     const star = layout.stars.get(1)
-    const planet = positions.get(1)
     const body = layout.worlds.get(1)
-    if (!star || !planet || !body) throw new Error('missing layout')
+    if (!star || !body) throw new Error('missing layout')
+    const offset = orbitOffset(body, 0, [0, 0, 0])
+    const planet = body.anchor.map((value, axis) => value + (offset[axis] ?? 0))
     const distance = Math.hypot(
       planet[0] - star.position[0],
       planet[1] - star.position[1],

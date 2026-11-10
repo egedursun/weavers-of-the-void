@@ -7,7 +7,7 @@ import {
 } from '@/test-utils/mockServer'
 import { renderScreen } from '@/test-utils/renderScreen'
 import { toast } from 'sonner'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { ThemeProvider } from '@/context/ThemeProvider'
 import { Toaster } from '@/components/ui/sonner'
@@ -449,12 +449,17 @@ describe('undo offer in the success toast', () => {
     const server = startMockServer({
       'POST /api/ledger/13/undo': failure(409, 'Already undone.'),
     })
-    const screen = await render(<Host />)
+    const offered = vi.spyOn(toast, 'success')
+    const reported = vi.spyOn(toast, 'error')
     toastWithUndo(new QueryClient(), 'Cursed Valka', 13)
-    await screen.getByRole('button', { name: 'Undo' }).click()
-    await expect
-      .element(screen.getByText('Already undone.'))
-      .toBeInTheDocument()
+    const action = offered.mock.calls[0]?.[1]?.action
+    if (!action || typeof action !== 'object' || !('onClick' in action))
+      throw new Error('the toast offers no undo')
+    action.onClick(new MouseEvent('click') as never)
+    await expect.poll(() => reported.mock.calls[0]?.[0]).toBe('Already undone.')
+    expect(server.callsTo('POST /api/ledger/13/undo')).toHaveLength(1)
+    offered.mockRestore()
+    reported.mockRestore()
     server.stop()
   })
 })

@@ -113,6 +113,10 @@ export function hoverText(
     const lines = [point.subtype ? `${kind} · ${point.subtype}` : kind]
     const population = populationLine(view, point.id)
     if (population) lines.push(population)
+    for (const holy of (view.holy ?? []).filter(
+      (item) => item.holding_id === point.id
+    ))
+      lines.push(`Holy to ${holy.cult}: ${holy.kind.replaceAll('_', ' ')}`)
     const others = (hit.members ?? []).filter((id) => id !== point.id)
     if (others.length > 0) {
       lines.push(
@@ -142,6 +146,18 @@ export function hoverText(
       .join(', ')
     const lines = [[point.subtype, terrain].filter(Boolean).join(' · ')]
     if (climate) lines.push(climate)
+    const shape = region.geography
+    lines.push(
+      [
+        `Mean height ${Math.round(region.mean_elevation)}`,
+        shape ? `${shape.land_share}% land` : null,
+        shape && shape.river_flow > 0
+          ? `river flow ${Math.round(shape.river_flow)}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    )
     const neighbours = names(region.neighbours)
     if (neighbours.length) lines.push(`Neighbours: ${neighbours.join(', ')}`)
     const control =
@@ -149,7 +165,12 @@ export function hoverText(
       view.political[String(region.top_level_id)]
     if (control)
       lines.push(
-        `Ruler: ${control.ruler_name} ${Math.round(control.share)}%${control.contested ? ' · contested' : ''}`
+        `Ruler: ${control.ruler_name} (${typeName(control.ruler_type, labels).toLowerCase()}) ${Math.round(control.share)}%${control.contested ? ' · contested' : ''}`
+      )
+    const occupied = view.occupations?.[String(region.id)]
+    if (occupied)
+      lines.push(
+        `Occupied by ${pointById.get(occupied.occupier_id)?.name ?? occupied.name} · control ${occupied.control}%, resistance ${occupied.resistance}%`
       )
     const dominance = palette
       ? view.dominance[String(region.top_level_id ?? region.id)]

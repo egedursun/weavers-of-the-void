@@ -10,13 +10,10 @@ type Schema = components['schemas']
 export type GodDivinity = Schema['GodDivinity']
 export type GoalView = Schema['GodGoalView']
 export type WoundView = Schema['DivineWoundView']
-export type AvatarView = Schema['GodAvatarView']
 export type StandingView = Schema['DivineStandingView']
 export type CreatorDivinity = Schema['CreatorDivinity']
 export type WorldDivinity = Schema['WorldDivinity']
 export type RulingView = Schema['CouncilRulingView']
-export type LawProfileView = Schema['NaturalLawProfileView']
-export type OuterProfileView = Schema['OuterBeingProfileView']
 
 export const divineKeys = {
   god: (id: number) => [...loreKeys.entity(id), 'divinity'] as const,

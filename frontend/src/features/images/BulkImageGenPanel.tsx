@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { queryKeys } from '@/api/queryKeys'
-import { formatInteger } from '@/lib/format'
+import { formatDateTime, formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -19,6 +19,7 @@ import {
   ConfirmDialog,
   JobProgress,
   MiniStat,
+  Paged,
   Section,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
@@ -57,10 +58,24 @@ function useImageMutation<T>(
   })
 }
 
+const QUEUE_SHOWN = 5
+
+const IMAGE_CLASS_LABEL: Record<
+  QueueStatus['queue'][number]['image_class'],
+  string
+> = {
+  manual: 'Asked by you',
+  bulk: 'Bulk run',
+  auto: 'After the epoch',
+  restyle: 'Repaint',
+}
+
 function bulkTitle(bulk: QueueStatus['bulk']): string {
   if (!bulk.running) return 'Last bulk run'
   if (bulk.stop_requested) return 'Stopping after the current image'
   if (bulk.restyle) return 'Repainting images in the world style'
+  if (bulk.rerun_requested)
+    return 'Painting missing images; another pass follows for the new epoch'
   return bulk.auto
     ? 'Painting missing images after the epoch'
     : 'Painting missing images'
@@ -172,8 +187,43 @@ export function BulkImageGenPanel() {
                     queue.current ? nameOf(queue.current.node_id) : 'Nothing'
                   }
                   tone={queue.current ? 'gold' : 'muted'}
+                  hint={
+                    queue.current
+                      ? `${IMAGE_CLASS_LABEL[queue.current.image_class]}${queue.current.queued_at ? ` · queued ${formatDateTime(queue.current.queued_at)}` : ''}`
+                      : undefined
+                  }
                 />
               </div>
+              {queue.queue.length > 0 && (
+                <ul className='flex min-w-0 flex-col gap-1'>
+                  <Paged
+                    items={queue.queue}
+                    initial={QUEUE_SHOWN}
+                    noun={['image', 'images']}
+                    as='li'
+                  >
+                    {(item, index) => (
+                      <li
+                        key={`${item.node_id}-${item.queued_at}`}
+                        className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border bg-muted/20 px-2 py-1'
+                      >
+                        <Badge size='sm' variant='outline'>
+                          {formatInteger(index + 1)}
+                        </Badge>
+                        <Text as='span' truncate className='min-w-0 flex-1'>
+                          {nameOf(item.node_id)}
+                        </Text>
+                        <Badge size='sm' variant='secondary'>
+                          {IMAGE_CLASS_LABEL[item.image_class]}
+                        </Badge>
+                        <Muted as='span' variant='caption'>
+                          {item.queued_at ? formatDateTime(item.queued_at) : ''}
+                        </Muted>
+                      </li>
+                    )}
+                  </Paged>
+                </ul>
+              )}
               {(bulk.running || bulk.total > 0) && (
                 <div className='flex min-w-0 flex-col gap-2'>
                   <div className='flex min-w-0 flex-wrap items-center gap-2'>

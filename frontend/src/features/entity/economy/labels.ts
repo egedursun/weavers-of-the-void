@@ -28,7 +28,6 @@ import {
   Gem,
   Gift,
   Hammer,
-  HandCoins,
   HandHeart,
   Hourglass,
   Landmark,
@@ -394,14 +393,6 @@ export const MATERIAL_FAMILY: Record<MaterialFamily, Named> = {
   exotic: { label: 'Exotic', icon: Sparkles, tone: 'warning' },
 }
 
-export const FAMILY_TONE: Record<MaterialFamily, KpiTone> = {
-  organic: MATERIAL_FAMILY.organic.tone,
-  stone: MATERIAL_FAMILY.stone.tone,
-  metal: MATERIAL_FAMILY.metal.tone,
-  precious: MATERIAL_FAMILY.precious.tone,
-  exotic: MATERIAL_FAMILY.exotic.tone,
-}
-
 export const MATERIAL_ORIGIN: Record<MaterialOrigin, Named> = {
   catalog: { label: 'Of the world', icon: Mountain, tone: 'muted' },
   god_remains: { label: 'From a dead god', icon: Skull, tone: 'danger' },
@@ -681,22 +672,6 @@ export function qualityTier(quality: number): {
   return { label: 'Crude', tone: 'muted', meter: 'muted' }
 }
 
-export const ECONOMY_ICONS = {
-  route: Route,
-  bank: Landmark,
-  coin: HandCoins,
-  factory: Factory,
-  goods: Package,
-}
-
-export function commodityLabel(kind: CommodityKind): string {
-  return COMMODITY[kind].label
-}
-
-export function materialLabel(kind: MaterialKind | null): string | null {
-  return kind === null ? null : MATERIAL_LABEL[kind]
-}
-
 export const MATERIAL_SLOT: Record<MaterialSlot, Named & { note: string }> = {
   body: {
     label: 'Body',
@@ -759,8 +734,6 @@ export const DEBT_REMEDY: Record<
     note: 'Every debt is wiped clean after a set number of epochs.',
   },
 }
-
-export const DEBT_REMEDIES = Object.keys(DEBT_REMEDY) as DebtRemedy[]
 
 export const FOE_NATURE: Record<FoeNature, Named> = {
   undead: { label: 'Undead', icon: Skull, tone: 'danger' },

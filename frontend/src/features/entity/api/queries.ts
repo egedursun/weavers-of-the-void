@@ -2,7 +2,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { ApiError, unwrap } from '@/api/errors'
 import { ENTITY_PAGE_MAX, NAMES_STALE_MS } from '../constants'
-import { type EntityListParams, loreKeys } from './keys'
+import { loreKeys } from './keys'
 import { type EntitySummary } from './types'
 
 export function useEntity(id: number | null) {
@@ -70,30 +70,6 @@ export function useEntityChronicle(
       unwrap(
         api.GET('/api/entities/{entity_id}/chronicle', {
           params: { path: { entity_id: id }, query: { offset, limit } },
-        })
-      ),
-    enabled,
-    placeholderData: keepPreviousData,
-  })
-}
-
-export function useEntityList(params: EntityListParams, enabled = true) {
-  return useQuery({
-    queryKey: loreKeys.entityList(params),
-    queryFn: () =>
-      unwrap(
-        api.GET('/api/entities', {
-          params: {
-            query: {
-              type: (params.type ?? undefined) as never,
-              q: params.q || undefined,
-              status: params.status ?? undefined,
-              world_id: params.worldId ?? undefined,
-              hide_archived: params.hideArchived ?? false,
-              offset: params.offset,
-              limit: params.limit,
-            },
-          },
         })
       ),
     enabled,

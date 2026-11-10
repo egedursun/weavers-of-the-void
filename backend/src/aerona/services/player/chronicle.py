@@ -20,7 +20,7 @@ async def tell(
 ) -> str:
     text = line.render(**fields)
     await ctx.chronicle(kind, text, template_key=line.key, entity_ids=[item for item in ids if item], son_id=son_id, world_id=world_id)
-    ctx.publish(EventKind.ENGINE_NOTE, {"epoch": ctx.epoch, "phase": ctx.phase, "kind": kind.value, "template_key": line.key, "text": text})
+    ctx.publish(EventKind.ENGINE_NOTE, {"epoch": ctx.epoch, "phase": ctx.phase, "kind": kind.value, "text": text})
     return text
 
 
@@ -37,5 +37,5 @@ async def hand(
 ) -> str:
     text = HAND.render(creator=creator.name, text=line.render(**fields))
     await ctx.chronicle(kind, text, template_key=line.key, entity_ids=[item for item in ids if item], son_id=son_id, world_id=world_id)
-    ctx.publish(EventKind.ENGINE_NOTE, {"epoch": ctx.epoch, "phase": ctx.phase, "kind": kind.value, "template_key": line.key, "text": text})
+    ctx.publish(EventKind.ENGINE_NOTE, {"epoch": ctx.epoch, "phase": ctx.phase, "kind": kind.value, "text": text})
     return text

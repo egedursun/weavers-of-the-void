@@ -5,7 +5,6 @@ import type { components } from '@/api/generated/schema'
 import { loreKeys } from '../api/keys'
 
 export type EventView = components['schemas']['EventView']
-export type HappeningsHere = components['schemas']['HappeningsHereView']
 export type LandShape = components['schemas']['LandShapeView']
 
 export const happeningKeys = {

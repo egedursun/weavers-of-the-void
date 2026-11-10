@@ -10,6 +10,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { FormRow } from '@/components/domain'
+import { useCosmographyCatalog } from '@/features/cosmography/api'
+import { SCOPES } from '@/features/cosmography/labels'
 import { CosmicActionButton } from './CosmicActionButton'
 import { type TravelMethod } from './api'
 import { type CosmosIndex } from './model/cosmosModel'
@@ -30,6 +32,11 @@ export function OpenRouteForm({ index, rules, worldId }: OpenRouteFormProps) {
   const [firstChoice, setFirst] = useState('')
   const [secondChoice, setSecond] = useState('')
   const [method, setMethod] = useState<TravelMethod>('ancient_gate')
+  const reach = useCosmographyCatalog().data?.method_reach ?? {}
+  const reachText = (value: TravelMethod) => {
+    const scope = reach[value]
+    return scope ? ` · reaches ${SCOPES[scope].label.toLowerCase()}` : ''
+  }
   const first =
     firstChoice ||
     String(
@@ -95,7 +102,7 @@ export function OpenRouteForm({ index, rules, worldId }: OpenRouteFormProps) {
             <SelectContent>
               {TRAVEL_METHODS.map((value) => (
                 <SelectItem key={value} value={value}>
-                  {`${TRAVEL_METHOD_LABEL[value]} · ${ruleText(rules.methodDuration(value))} epochs · danger ${ruleText(rules.methodDanger(value))}`}
+                  {`${TRAVEL_METHOD_LABEL[value]} · ${ruleText(rules.methodDuration(value))} epochs · danger ${ruleText(rules.methodDanger(value))}${reachText(value)}`}
                 </SelectItem>
               ))}
             </SelectContent>

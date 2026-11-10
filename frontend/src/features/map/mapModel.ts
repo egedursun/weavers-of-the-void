@@ -90,9 +90,6 @@ export const OVERLAY_SURFACE: Partial<Record<Overlay, string>> = {
   beasts: 'map-layer-beasts',
 }
 
-export const STOCK_LAYERS = ['population', 'followers', 'soldiers'] as const
-export type StockLayer = (typeof STOCK_LAYERS)[number]
-
 export const OVERLAYS = [
   'roads',
   'trade',

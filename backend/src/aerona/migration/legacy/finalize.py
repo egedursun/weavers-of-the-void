@@ -9,7 +9,7 @@ from aerona.db.tables.node import NameRegistryRow, NodeRow
 from aerona.domain.enums.ecology import SpeciesClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.world import LoreLanguage
-from aerona.engine.cosmos.maps import store_world_map
+from aerona.engine.cosmos.maps import apply_world_map, generated_maps, map_request, world_entities
 from aerona.engine.ecology.profiles import SpeciesSpec, profile_of
 from aerona.engine.primitives.canon_facts import seed_if_empty
 from aerona.engine.primitives.manual import manual_context
@@ -66,12 +66,14 @@ async def type_species(context: MigrationContext) -> None:
 
 async def regenerate_maps(context: MigrationContext) -> None:
     for world in list(await context.session.scalars(select(WorldRow).order_by(WorldRow.id))):
-        world_map = await store_world_map(context.session, context.rules, world, context.epoch)
+        entities = await world_entities(context.session, world.id)
+        (generated,) = await generated_maps([map_request(world, entities)], context.rules)
+        world_map = await apply_world_map(context.session, world, entities, generated, context.epoch)
         context.report.convert("maps_generated")
         context.report.convert("map_regions", len(world_map.regions))
         context.report.convert("map_markers", len(world_map.markers))
-        context.report.convert("map_positions_new", len(world_map.new_positions))
-        context.report.convert("map_positions_relocated", len(world_map.relocated_positions))
+        context.report.convert("map_positions_new", len(generated.new_positions))
+        context.report.convert("map_positions_relocated", len(generated.relocated_positions))
 
 
 async def check_constraints(context: MigrationContext) -> None:

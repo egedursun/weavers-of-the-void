@@ -162,9 +162,3 @@ const TOKEN_PROBE = new RegExp(TOKEN.source)
 export function hasMentions(text: string): boolean {
   return TOKEN_PROBE.test(text)
 }
-
-export function plainMentions(text: string, index: MentionIndex): string {
-  return parseMentions(text, index)
-    .map((piece) => piece.text)
-    .join('')
-}

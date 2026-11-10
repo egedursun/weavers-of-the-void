@@ -46,15 +46,10 @@ import { MATERIAL_LABEL } from '@/features/entity/economy/labels'
 import { CLASS_SPEC } from '@/features/entity/society/labels'
 import { type Named } from './labels'
 
-export type RecordTable = components['schemas']['RecordTableView']
 export type RecordRow = components['schemas']['RecordRowView']
-export type RecordColumn = components['schemas']['RecordColumnView']
 export type BattleDepth = components['schemas']['BattleDepthView']
 export type Vessel = components['schemas']['VesselView']
-export type HullSpec = components['schemas']['HullSpecView']
 export type Feud = components['schemas']['FeudView']
-export type PeaceTerm = components['schemas']['PeaceTermView']
-export type RecordValues = Record<string, unknown>
 
 export const depthKeys = {
   records: (kind: string, scope: number | null) =>

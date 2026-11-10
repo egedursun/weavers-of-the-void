@@ -193,6 +193,7 @@ export function AnatomyCard({
             />
             <MiniStat icon={Dna} label='Tails' value={row.tails} tone='muted' />
           </div>
+          <Muted variant='caption'>{`Its body took this shape in epoch ${row.generated_epoch}.`}</Muted>
           <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
             <KpiTile
               label='Armour from its body'

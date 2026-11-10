@@ -272,7 +272,7 @@ function MechanicDetail({
           <Muted
             variant='caption'
             truncate
-          >{`Spec ${mechanic.spec_item} · steps ${mechanic.phases.join(', ') || 'none'}`}</Muted>
+          >{`Spec ${mechanic.spec_item} · steps ${mechanic.phases.join(', ') || 'none'} · shown in ${mechanic.surfaces.map((surface) => surface.replace(/-/g, ' ')).join(', ') || 'no view'}`}</Muted>
         </div>
         <SubsystemTag value={mechanic.subsystem} />
       </div>

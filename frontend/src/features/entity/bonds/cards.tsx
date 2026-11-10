@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { EntityLink, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { NodeName } from '@/features/divine/parts'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { VALUE_ICONS, named } from '../mind/labels'
@@ -27,6 +28,7 @@ import {
   type ContestKind,
   type ContestStake,
   type PassionKind,
+  type PassionSource,
   type Rank,
   type ValueAxis,
 } from './api'
@@ -347,6 +349,7 @@ export function BondsCard({ view, blocked, hold }: Props) {
 
 export function PassionsCard({ view, blocked, hold }: Props) {
   const [kind, setKind] = useState<string>('love')
+  const [source, setSource] = useState<string>('divine')
   const [object, setObject] = useState<number | null>(null)
   const kindle = useGodAction({
     run: () =>
@@ -357,7 +360,7 @@ export function PassionsCard({ view, blocked, hold }: Props) {
             kind: kind as PassionKind,
             object_id: object ?? 0,
             strength: 80,
-            source: 'divine',
+            source: source as PassionSource,
             hold,
           },
         })
@@ -502,6 +505,13 @@ export function PassionsCard({ view, blocked, hold }: Props) {
           table={table(view.passion_kinds)}
           blocked={busy}
           onPick={setKind}
+        />
+        <MindPicker
+          label='Kindled by'
+          value={source}
+          table={table(view.passion_sources)}
+          blocked={busy}
+          onPick={setSource}
         />
         <NodePicker
           label='For'
@@ -906,7 +916,7 @@ export function ContestsCard({
                 icon={spec.icon}
                 tone={spec.tone}
                 title={`${item.label} for ${item.stake_label.toLowerCase()}`}
-                meta={`${item.challenger?.name ?? 'Someone'} against ${item.defender?.name ?? 'someone'}${item.judge ? `, judged by ${item.judge.name}` : ''} · epoch ${item.epoch}`}
+                meta={`${item.challenger?.name ?? 'Someone'} against ${item.defender?.name ?? 'someone'}${item.judge ? `, judged by ${item.judge.name}` : ''}${item.place ? ` at ${item.place.name}` : ''}${item.wager > 0 ? ` · wager ${item.wager}` : ''} · epoch ${item.epoch}`}
                 badges={
                   <>
                     <Badge
@@ -962,6 +972,12 @@ export function ContestsCard({
                       </Badge>
                     )
                   })}
+                  {item.stake_node && (
+                    <Muted as='span' variant='caption'>
+                      {'The stake: '}
+                      <NodeName item={item.stake_node} />
+                    </Muted>
+                  )}
                   {item.work && (
                     <EntityLink
                       kind='entity'
@@ -972,6 +988,7 @@ export function ContestsCard({
                     </EntityLink>
                   )}
                 </div>
+                {item.note && <Muted variant='caption'>{item.note}</Muted>}
               </ItemRow>
             )
           }}

@@ -5,8 +5,6 @@ from aerona.api.schemas.records import ChronicleLineRecord
 class ChroniclePage(ApiModel):
     items: list[ChronicleLineRecord]
     total: int
-    has_more: bool
-    oldest_id: int | None
 
 
 class ChronicleEpoch(ApiModel):

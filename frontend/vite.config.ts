@@ -6,6 +6,8 @@ import { playwright } from '@vitest/browser-playwright'
 import { readFileSync } from 'fs'
 import { defineConfig } from 'vitest/config'
 
+const ELEMENT_WAIT_MS = 5000
+
 const { version } = JSON.parse(
   readFileSync(path.resolve(import.meta.dirname, 'package.json'), 'utf-8')
 ) as { version: string }
@@ -42,6 +44,7 @@ export default defineConfig({
     silent: 'passed-only',
     unstubEnvs: true,
     setupFiles: ['src/test-utils/setup.ts'],
+    expect: { poll: { timeout: ELEMENT_WAIT_MS } },
     browser: {
       enabled: true,
       provider: playwright(),

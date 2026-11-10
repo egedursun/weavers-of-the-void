@@ -243,7 +243,7 @@ function shapesOf(view: MapView): Shape[] {
         kind: 'supply',
         source: army.army_id,
         target: army.region_id ?? army.army_id,
-        description: `${army.name}: ${army.size} soldiers, ${army.stance.replaceAll('_', ' ')}`,
+        description: `${army.name}: ${army.size} soldiers, ${army.stance.replaceAll('_', ' ')}${army.blockade_id !== null ? ', holding a blockade' : ''}`,
         length: null,
       },
       points: army.path,

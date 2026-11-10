@@ -96,8 +96,8 @@ async def generated_maps(requests: Sequence[MapRequest], rules: Rules) -> list[G
 async def apply_world_map(session: AsyncSession, world: WorldRow, entities: list[EntityRow], generated: GeneratedMap, epoch: int) -> WorldMap:
     world_map = generated.world_map
     by_id = {entity.id: entity for entity in entities}
-    _apply_positions(by_id, world_map.new_positions)
-    _apply_positions(by_id, world_map.relocated_positions)
+    _apply_positions(by_id, generated.new_positions)
+    _apply_positions(by_id, generated.relocated_positions)
     payload = world_map.model_dump(mode="json")
     signature = map_signature(map_request(world, entities))
     existing = await session.get(WorldMapRow, world.id)

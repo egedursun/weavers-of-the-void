@@ -62,7 +62,6 @@ class RulesChangedPayload(EventPayload):
 class EngineNotePayload(EventPayload):
     phase: str
     kind: str
-    template_key: str | None = None
     text: str
     feed: FeedCategory | None = None
 
@@ -102,7 +101,6 @@ class EpochProgressPayload(EventPayload):
     no: int
     total: int
     name: str
-    elapsed_s: int
 
 
 class EpochStoppedPayload(EventPayload):

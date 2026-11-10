@@ -21,7 +21,6 @@ export type Occupation = components['schemas']['OccupationView']
 
 export const militaryKeys = {
   room: (id: number) => ['wars', id, 'room'] as const,
-  battle: (id: number) => ['battles', id] as const,
   army: (id: number) => [...loreKeys.entity(id), 'army'] as const,
   overview: (id: number) => [...loreKeys.entity(id), 'military'] as const,
   kinds: ['units', 'kinds'] as const,
@@ -34,18 +33,6 @@ export function useWarRoom(id: number) {
       unwrap(
         api.GET('/api/wars/{war_id}/room', {
           params: { path: { war_id: id } },
-        })
-      ),
-  })
-}
-
-export function useBattleReport(id: number) {
-  return useQuery({
-    queryKey: militaryKeys.battle(id),
-    queryFn: () =>
-      unwrap(
-        api.GET('/api/battles/{battle_id}', {
-          params: { path: { battle_id: id } },
         })
       ),
   })

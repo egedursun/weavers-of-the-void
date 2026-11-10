@@ -27,7 +27,6 @@ from aerona.api.schemas.military import (
 )
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
-from aerona.catalog.battle_depth import FORMATIONS, MORALE_LABELS
 from aerona.catalog.units import UNITS, weapon_of
 from aerona.catalog.war_terms import CASUS_BELLI_LABELS
 from aerona.core.errors import NotFoundError
@@ -189,9 +188,7 @@ def stack_view(row: ArmyUnitRow, rules: Rules) -> StackView:
         ammunition=row.ammunition,
         missing=row.missing,
         morale_state=row.morale_state,
-        morale_label=MORALE_LABELS[row.morale_state],
         formation=row.formation,
-        formation_label=FORMATIONS[row.formation].label,
         target_class=class_of(rules, spec, row),
         reach=weapon.reach,
         volleys=weapon.volleys,
@@ -453,15 +450,6 @@ async def war_room(services: ServicesDep, war_id: Id) -> WarRoomView:
             captives=[cohort_view(row, refs) for row in captives],
             battles=await battle_reports(session, battles),
         )
-
-
-@router.get("/battles/{battle_id}", response_model=BattleReportView)
-async def battle_report(services: ServicesDep, battle_id: Id) -> BattleReportView:
-    async with reader(services) as session:
-        row = await session.get(BattleRow, battle_id)
-        if row is None:
-            raise NotFoundError("No such battle.")
-        return (await battle_reports(session, [row]))[0]
 
 
 @router.get("/entities/{entity_id}/army", response_model=ArmyCard)

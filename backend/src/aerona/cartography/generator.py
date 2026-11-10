@@ -30,6 +30,8 @@ class GeneratedMap:
     normalized: NDArray[np.float64]
     water: NDArray[np.bool_]
     known: NDArray[np.int64]
+    new_positions: list[PositionUpdate]
+    relocated_positions: list[PositionUpdate]
 
     def graph(self) -> RegionGraph:
         return RegionGraph(self.world_map.regions)
@@ -121,7 +123,13 @@ def generate_map(request: MapRequest, rules: Rules) -> GeneratedMap:
         borders=border_layer(context, leaf_owner, top_owner, known),
         regions=records,
         markers=markers,
+    )
+    return GeneratedMap(
+        world_map=world_map,
+        mesh=context.mesh,
+        normalized=context.normalized,
+        water=context.water,
+        known=known,
         new_positions=_updates({**territories.new_positions, **placement.new_positions}),
         relocated_positions=_updates({**territories.relocated, **placement.relocated}),
     )
-    return GeneratedMap(world_map=world_map, mesh=context.mesh, normalized=context.normalized, water=context.water, known=known)

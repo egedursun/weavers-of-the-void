@@ -313,7 +313,7 @@ function GriefCard({
             <Text>Someone lost</Text>
           )}
           <Muted variant='caption'>
-            {`Since epoch ${item.started_epoch} · mourning lasts ${item.length_epochs} epochs`}
+            {`Since epoch ${item.started_epoch} · ${stage.label.toLowerCase()} since epoch ${item.stage_epoch} · mourning lasts ${item.length_epochs} epochs`}
           </Muted>
         </div>
         <Badge variant='outline'>{stage.label}</Badge>

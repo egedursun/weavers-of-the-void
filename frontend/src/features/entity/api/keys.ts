@@ -2,16 +2,6 @@ import { queryKeys } from '@/api/queryKeys'
 
 const world = queryKeys.world.all
 
-export type EntityListParams = {
-  type?: string | null
-  q?: string | null
-  status?: string | null
-  worldId?: number | null
-  hideArchived?: boolean
-  offset: number
-  limit: number
-}
-
 export const loreKeys = {
   state: [...world, 'state'] as const,
   catalogue: ['catalogue'] as const,
@@ -25,8 +15,6 @@ export const loreKeys = {
   languages: [...world, 'languages'] as const,
   languageTree: [...world, 'languages', 'tree'] as const,
   entities: [...world, 'entities'] as const,
-  entityList: (params: EntityListParams) =>
-    [...world, 'entities', 'list', params] as const,
   entityAll: (status: string) => [...world, 'entities', 'all', status] as const,
   entity: (id: number) => [...world, 'entity', id] as const,
   note: (id: number) => [...world, 'entity', id, 'note'] as const,

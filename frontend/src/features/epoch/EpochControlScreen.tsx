@@ -83,6 +83,7 @@ function CurrentRun({ state }: { state: WorldState }) {
           value={state.world?.epoch ?? 0}
           icon={Hourglass}
           tone='gold'
+          hint={`The world map has been redrawn ${state.world?.map_version ?? 1} times`}
         />
         <KpiTile
           label='Sons still to act'

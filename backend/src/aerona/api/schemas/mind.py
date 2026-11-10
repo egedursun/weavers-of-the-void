@@ -308,7 +308,6 @@ class DreamLogView(ApiModel):
     partner: NodeRef | None
     world: NodeRef | None
     reading: DreamReading
-    reading_label: str
     reader: NodeRef | None
     reading_true: bool | None
     recurring: bool
@@ -374,7 +373,6 @@ class EthicView(ApiModel):
     act: ActKind
     label: str
     stance: EthicalStance
-    stance_label: str
     reading: int
     since_epoch: int
     held: bool

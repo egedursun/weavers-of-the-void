@@ -23,7 +23,6 @@ import {
   Sprout,
   Sun,
   Swords,
-  Tornado,
   TrendingUp,
   Users,
   Waves,
@@ -176,8 +175,6 @@ export const CAUSE_SPEC: Record<RiverShiftCause, Spec> = {
   divine: { label: 'A god', icon: Sparkles, tone: 'gold' },
   player: { label: 'Your hand', icon: Sparkles, tone: 'gold' },
 }
-
-export const TORNADO_ICON: LucideIcon = Tornado
 
 export const FIELD_LABEL: Record<string, string> = {
   phase: 'Phase',

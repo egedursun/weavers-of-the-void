@@ -8,8 +8,6 @@ export type Renown = components['schemas']['RenownView']
 export type LocalReputation = components['schemas']['LocalReputationView']
 export type Standing = components['schemas']['StandingView']
 export type DeedRecord = components['schemas']['DeedRecordView']
-export type DeedClaim = components['schemas']['DeedClaimView']
-export type LoreTrade = components['schemas']['LoreTradeView']
 export type ReputationAxis = components['schemas']['ReputationAxis']
 
 export function renownKey(nodeId: number) {

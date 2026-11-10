@@ -130,7 +130,7 @@ export function ModifierCard({
             {`${humanize(modifier.key)} ${shiftText(modifier.op, modifier.magnitude)}`}
           </Text>
           <Muted variant='caption' truncate>
-            {modifier.reason}
+            {`${modifier.reason} · ${humanize(modifier.source_subsystem)}`}
           </Muted>
         </div>
         <Badge size='sm' variant={badgeVariant(spec.tone)}>

@@ -35,6 +35,9 @@ export const SPACING_TOKENS = [
   'label-track',
   'drawer',
   'reading',
+  'emblem',
+  'scene',
+  'scene-lg',
 ] as const
 
 const twMerge = extendTailwindMerge({

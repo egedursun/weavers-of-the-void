@@ -49,13 +49,28 @@ const POINTS = new Map<number, PositionedPoint>([
 const VIEW = {
   population: { '1': 3000 },
   settlements: { '1': { tier: 'unknown', previous_population: 2000 } },
-  political: { '2': { ruler_name: 'Kethrani', share: 61.6, contested: true } },
+  political: {
+    '2': {
+      ruler_name: 'Kethrani',
+      ruler_type: 'polity',
+      share: 61.6,
+      contested: true,
+    },
+  },
+  occupations: {
+    '2': { occupier_id: 1, name: 'Velmora', control: 60, resistance: 30 },
+  },
+  holy: [
+    { cult_id: 5, cult: 'The Quiet Order', holding_id: 4, kind: 'shrine' },
+  ],
   geometry: {
     regions: [
       {
         id: 2,
         elevation_class: 'plain',
         coastal: true,
+        mean_elevation: 41.6,
+        geography: { land_share: 80, river_flow: 12.4 },
         climate: [
           { name: 'arid', share_pct: 70 },
           { name: 'cold', share_pct: 20 },
@@ -92,15 +107,20 @@ describe('map hover text', () => {
   })
 
   it('names other entity types through the catalogue labels', () => {
-    expect(text({ kind: 'entity', id: 4 })?.lines).toEqual(['Structure'])
+    expect(text({ kind: 'entity', id: 4 })?.lines).toEqual([
+      'Structure',
+      'Holy to The Quiet Order: shrine',
+    ])
   })
 
   it('describes a region with terrain, climate, neighbours and its ruler', () => {
     expect(text({ kind: 'region', id: 2 })?.lines).toEqual([
       'steppe · plains, coastal',
       'arid 70%, cold 20%',
+      'Mean height 42 · 80% land · river flow 12',
       'Neighbours: Salt Wells',
-      'Ruler: Kethrani 62% · contested',
+      'Ruler: Kethrani (polity) 62% · contested',
+      'Occupied by Velmora · control 60%, resistance 30%',
     ])
   })
 

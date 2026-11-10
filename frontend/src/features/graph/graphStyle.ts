@@ -19,16 +19,6 @@ export type Highlight = {
   focusId: number | null
 }
 
-export const EMPTY_HIGHLIGHT: Highlight = {
-  hoverId: null,
-  hoverNeighbours: new Set(),
-  pathNodes: new Set(),
-  pathLinks: new Set(),
-  family: null,
-  selectedId: null,
-  focusId: null,
-}
-
 export function highlightActive(highlight: Highlight): boolean {
   return (
     highlight.hoverId !== null ||

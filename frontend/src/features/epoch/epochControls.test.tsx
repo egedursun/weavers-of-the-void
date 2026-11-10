@@ -177,7 +177,6 @@ describe('epoch progress strip', () => {
         no: 2,
         total: 5,
         name: 'Engine',
-        elapsed_s: 3,
       })
     )
     store.apply(serverEvent('son.turn_queued', { no: 1, total: 3 }))

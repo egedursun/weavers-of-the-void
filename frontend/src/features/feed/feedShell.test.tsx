@@ -170,7 +170,6 @@ describe('live feed dock', () => {
         no: 3,
         total: 5,
         name: 'Fate',
-        elapsed_s: 2,
       })
     )
     const { screen } = await renderScreen(
@@ -253,7 +252,6 @@ describe('job progress panel', () => {
         no: 1,
         total: 5,
         name: 'Sons',
-        elapsed_s: 75,
       })
     )
     store.apply(serverEvent('son.turn_queued', { no: 2, total: 4 }))

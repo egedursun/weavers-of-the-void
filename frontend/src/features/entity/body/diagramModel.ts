@@ -55,10 +55,6 @@ export function partTone(part: Part): string {
   return TONES[drawState(part)]
 }
 
-export function isLost(part: Part): boolean {
-  return drawState(part) === 'lost'
-}
-
 export const CALLOUT_GAP = 30
 const CALLOUT_EDGE = 14
 

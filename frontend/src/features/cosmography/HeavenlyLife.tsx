@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react'
 import {
   Angry,
   EyeOff,
@@ -269,6 +270,20 @@ export function WorldPlacementSection({ world }: { world: WorldRecord }) {
                     name={ladder.names.get(placement.galaxy_id ?? 0)}
                   />,
                 ],
+                ...(placement.top_cluster_id !== null &&
+                placement.top_cluster_id !== placement.cluster_id
+                  ? ([
+                      [
+                        'Supercluster',
+                        <NodeLink
+                          key='top-cluster'
+                          kind='cluster'
+                          id={placement.top_cluster_id}
+                          name={ladder.names.get(placement.top_cluster_id)}
+                        />,
+                      ],
+                    ] satisfies [string, ReactNode][])
+                  : []),
                 ['Zone', ZONES[placement.zone].label],
                 [
                   'Time against the prime',

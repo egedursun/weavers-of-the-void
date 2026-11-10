@@ -147,6 +147,24 @@ describe('hints and opportunities', () => {
       '1 story has not moved for a while; advance or close it.'
     )
     expect(byKey.doom).toBeUndefined()
+    expect(byKey.news).toBeUndefined()
+  })
+
+  it('warns of a near doom, unread news, open stories and a running epoch', () => {
+    const items = opportunitiesOf({
+      ...HINTS,
+      creator: { ...HINTS.creator, doom: 80 },
+      unread_notifications: 2,
+      open_threads: 1,
+      epoch_in_progress: true,
+    })
+    const byKey = Object.fromEntries(items.map((item) => [item.key, item.body]))
+    expect(byKey.doom).toBe(
+      'The doom clock stands at 80 of 100; the world ends when it is reached.'
+    )
+    expect(byKey.news).toBe('2 notices wait unread.')
+    expect(byKey.threads).toBe('1 story is still open.')
+    expect(byKey.epoch).toContain('your changes land when it settles')
   })
 
   it('collects the hints that concern one son', () => {

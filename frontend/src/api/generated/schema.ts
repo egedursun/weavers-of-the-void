@@ -5103,22 +5103,6 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/worlds/{world_id}/outbreaks': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get: operations['world_outbreaks_api_worlds__world_id__outbreaks_get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
   '/api/entities/{entity_id}/settlement-plan': {
     parameters: {
       query?: never
@@ -5335,22 +5319,6 @@ export interface paths {
       cookie?: never
     }
     get: operations['war_room_api_wars__war_id__room_get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/battles/{battle_id}': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get: operations['battle_report_api_battles__battle_id__get']
     put?: never
     post?: never
     delete?: never
@@ -6167,22 +6135,6 @@ export interface paths {
       cookie?: never
     }
     get: operations['one_structure_api_entities__entity_id__structure_get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/structure-designs': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get: operations['designs_api_structure_designs_get']
     put?: never
     post?: never
     delete?: never
@@ -21348,7 +21300,6 @@ export interface components {
       writes: string[]
       affects: components['schemas']['Subsystem'][]
       suppressed: boolean
-      last_incident_id: number | null
       last_text: string | null
       last_epoch: number | null
     }
@@ -23193,7 +23144,6 @@ export interface components {
       order: components['schemas']['RankView'][]
       contests: components['schemas']['ContestView'][]
       persuasions: components['schemas']['PersuasionView'][]
-      relation_types: components['schemas']['LabelView'][]
       circle_kinds: components['schemas']['LabelView'][]
       passion_kinds: components['schemas']['LabelView'][]
       passion_sources: components['schemas']['LabelView'][]
@@ -23201,7 +23151,6 @@ export interface components {
       aims: components['schemas']['LabelView'][]
       contest_kinds: components['schemas']['LabelView'][]
       stakes: components['schemas']['LabelView'][]
-      group_kinds: components['schemas']['LabelView'][]
     }
     BookPage: {
       knowledge: components['schemas']['NodeRef'] | null
@@ -23565,15 +23514,12 @@ export interface components {
     }
     Catalogue: {
       enums: components['schemas']['EnumCatalogue']
-      rarities: components['schemas']['Labelled'][]
       entity_types: components['schemas']['EntityTypeInfo'][]
       bond_kinds: components['schemas']['BondKindInfo'][]
       link_groups: components['schemas']['LinkGroupInfo'][]
       domains: components['schemas']['Labelled'][]
       world_types: components['schemas']['WorldTypeInfo'][]
       chronicle_kinds: components['schemas']['Labelled'][]
-      notification_categories: components['schemas']['NotificationCategoryInfo'][]
-      climates: components['schemas']['Labelled'][]
       creature_traits: components['schemas']['Labelled'][]
       passions: components['schemas']['Labelled'][]
     }
@@ -23832,7 +23778,6 @@ export interface components {
       son_id: number | null
       world_id: number | null
       text: string
-      template_key: string | null
       created_at: string
       entity_ids?: number[]
     }
@@ -23843,8 +23788,6 @@ export interface components {
     ChroniclePage: {
       items: components['schemas']['ChronicleLineRecord'][]
       total: number
-      has_more: boolean
-      oldest_id: number | null
     }
     CipherBreakInput: {
       owner_id: number
@@ -24881,12 +24824,7 @@ export interface components {
       image_prompt: string | null
       note: string | null
       essence: number
-      mood_contentment: number
-      mood_anger: number
-      mood_interest: number
-      mood_loneliness: number
       passions: string[]
-      passions_automatic: boolean
       depth: components['schemas']['GodDepth'] | null
       epic: components['schemas']['Epic'] | null
     }
@@ -26304,7 +26242,6 @@ export interface components {
       partner: components['schemas']['NodeRef'] | null
       world: components['schemas']['NodeRef'] | null
       reading: components['schemas']['DreamReading']
-      reading_label: string
       reader: components['schemas']['NodeRef'] | null
       reading_true: boolean | null
       recurring: boolean
@@ -26589,7 +26526,6 @@ export interface components {
       epoch?: number | null
       phase: string
       kind: string
-      template_key?: string | null
       text: string
       feed?: components['schemas']['FeedCategory'] | null
     } & {
@@ -26875,7 +26811,6 @@ export interface components {
       domain: components['schemas']['Domain'] | null
       origin: components['schemas']['EntityOrigin']
       creator_son_id: number | null
-      maker_entity_id: number | null
       mortal_role: components['schemas']['MortalRole'] | null
       legend_category: components['schemas']['LegendCategory'] | null
       fate_note: string | null
@@ -26958,41 +26893,9 @@ export interface components {
     EnumCatalogue: {
       event_kinds: components['schemas']['EventKind'][]
       job_statuses: components['schemas']['JobStatus'][]
-      job_kinds: components['schemas']['JobKind'][]
-      rarities: components['schemas']['Rarity'][]
-      entity_types: components['schemas']['EntityType'][]
-      entity_statuses: components['schemas']['EntityStatus'][]
-      entity_flags: components['schemas']['EntityFlag'][]
-      chronicle_kinds: components['schemas']['ChronicleKind'][]
-      action_kinds: components['schemas']['ActionKind'][]
-      action_groups: components['schemas']['ActionGroup'][]
-      action_modes: components['schemas']['ActionMode'][]
-      node_kinds: components['schemas']['NodeKind'][]
       actor_kinds: components['schemas']['ActorKind'][]
-      bond_kinds: components['schemas']['BondKind'][]
-      bond_states: components['schemas']['BondState'][]
-      notification_categories: components['schemas']['NotificationCategory'][]
-      thread_statuses: components['schemas']['ThreadStatus'][]
-      son_statuses: components['schemas']['SonStatus'][]
-      stats: components['schemas']['Stat'][]
-      domains: components['schemas']['Domain'][]
-      world_types: components['schemas']['WorldType'][]
-      star_types: components['schemas']['StarType'][]
-      discoveries: components['schemas']['Discovery'][]
-      climate_eras: components['schemas']['ClimateEra'][]
-      sky_events: components['schemas']['SkyEventKind'][]
-      travel_methods: components['schemas']['TravelMethod'][]
-      journey_statuses: components['schemas']['JourneyStatus'][]
-      foreign_god_statuses: components['schemas']['ForeignGodStatus'][]
-      interventions: components['schemas']['InterventionKind'][]
       miracles: components['schemas']['Miracle'][]
       disasters: components['schemas']['Disaster'][]
-      passions: components['schemas']['CreatorPassion'][]
-      mood_labels: components['schemas']['CreatorMoodLabel'][]
-      fate_modes: components['schemas']['FateMode'][]
-      son_distributions: components['schemas']['SonDistribution'][]
-      lore_languages: components['schemas']['LoreLanguage'][]
-      error_codes: components['schemas']['ErrorCode'][]
     }
     EnvironmentBiomeInput: {
       region_id: number
@@ -27153,7 +27056,6 @@ export interface components {
       no: number
       total: number
       name: string
-      elapsed_s: number
     } & {
       [key: string]: unknown
     }
@@ -27304,17 +27206,6 @@ export interface components {
       epoch: number
       subject: components['schemas']['NodeRef'] | null
     }
-    ErrorCode:
-      | 'invalid'
-      | 'not_found'
-      | 'conflict'
-      | 'busy'
-      | 'read_only'
-      | 'insufficient'
-      | 'forbidden'
-      | 'too_large'
-      | 'unavailable'
-      | 'internal'
     ErrorPayload: {
       epoch?: number | null
       text: string
@@ -27384,7 +27275,6 @@ export interface components {
       act: components['schemas']['ActKind']
       label: string
       stance: components['schemas']['EthicalStance']
-      stance_label: string
       reading: number
       since_epoch: number
       held: boolean
@@ -28211,7 +28101,6 @@ export interface components {
     FolkView: {
       people_id: number
       people_name: string
-      god_node_id: number
       local_name: string | null
       account: string
       misconception: string | null
@@ -28224,7 +28113,6 @@ export interface components {
       links: components['schemas']['WebLink'][]
     }
     FootprintRecord: {
-      phenomenon_entity_id: number
       region_entity_id: number
       intensity: number
     }
@@ -29707,7 +29595,6 @@ export interface components {
       width: number | null
       height: number | null
       created_at: string
-      readonly content_type: string
     }
     ImageStatusEvent: {
       id: number
@@ -33207,12 +33094,6 @@ export interface components {
       | 'error'
       | 'note'
       | 'work'
-    NotificationCategoryInfo: {
-      key: string
-      label: string
-      severity: number
-      enabled_by_default: boolean
-    }
     NotificationCreatedEvent: {
       id: number
       kind: 'notification.created'
@@ -33452,12 +33333,6 @@ export interface components {
     }
     OutbreakEndInput: {
       outbreak_id: number
-    }
-    OutbreakMapView: {
-      world_id: number
-      outbreaks: components['schemas']['OutbreakView'][]
-      endemic: components['schemas']['EndemicView'][]
-      quarantines: components['schemas']['QuarantineView'][]
     }
     OutbreakStatus: 'active' | 'waning' | 'ended'
     OutbreakView: {
@@ -34477,11 +34352,6 @@ export interface components {
       holder_id?: number | null
       hold: boolean
     }
-    PositionUpdate: {
-      id: number
-      x: number
-      y: number
-    }
     PositionView: {
       position: components['schemas']['CourtPosition']
       holder: components['schemas']['NodeRef'] | null
@@ -35257,11 +35127,6 @@ export interface components {
       | 'exceptional'
       | 'masterwork'
       | 'artifact'
-    QuarantineView: {
-      region_id: number
-      region: string
-      until_epoch: number
-    }
     QuestAbandonInput: {
       thread_id: number
     }
@@ -35343,7 +35208,6 @@ export interface components {
       polity_id: number
       score: number
       age: components['schemas']['AgeKind']
-      age_label: string
       since_epoch: number
       lowest: number
       golden_at: number
@@ -37659,7 +37523,6 @@ export interface components {
       token_estimate: number
       prompt_limit: number
       over_limit: boolean
-      tool_names: string[]
       paid_tools: string[]
       free_tools: string[]
       summary_sections: components['schemas']['SectionBudget'][]
@@ -38012,7 +37875,6 @@ export interface components {
       }
       stratum: components['schemas']['StratumView'] | null
       judgements: components['schemas']['JudgementView'][]
-      possessing: components['schemas']['NodeRef'] | null
       reborn_as: components['schemas']['NodeRef'] | null
       gate: components['schemas']['ReincarnationGate'] | null
       locked: string[]
@@ -38426,9 +38288,7 @@ export interface components {
       ammunition: number
       missing: number
       morale_state: components['schemas']['MoraleState']
-      morale_label: string
       formation: components['schemas']['Formation']
-      formation_label: string
       target_class: components['schemas']['TargetClass']
       reach: number
       volleys: number
@@ -39437,7 +39297,6 @@ export interface components {
     }
     TheoryCard: {
       domain: components['schemas']['TheoryDomain']
-      domain_label: string
       subject: string
       claim: string
       correctness: number
@@ -41361,9 +41220,7 @@ export interface components {
       holdings: components['schemas']['WorksSiteView'][]
       ledger: components['schemas']['WorksLedgerView'][]
       bottlenecks: components['schemas']['WorksBottleneckView'][]
-      workshop_kinds: components['schemas']['LabelView'][]
       tiers: components['schemas']['LabelView'][]
-      processes: components['schemas']['LabelView'][]
     }
     WorkshopDesignCreateInput: {
       world_id: number
@@ -41619,8 +41476,6 @@ export interface components {
       borders: components['schemas']['BorderLayer']
       regions: components['schemas']['RegionRecord'][]
       markers: components['schemas']['PlacedMarker'][]
-      new_positions: components['schemas']['PositionUpdate'][]
-      relocated_positions: components['schemas']['PositionUpdate'][]
     }
     WorldMapInput: {
       world_id: number
@@ -51521,35 +51376,6 @@ export interface operations {
       }
     }
   }
-  world_outbreaks_api_worlds__world_id__outbreaks_get: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        world_id: number
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['OutbreakMapView']
-        }
-      }
-      422: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
   settlement_plan_api_entities__entity_id__settlement_plan_get: {
     parameters: {
       query?: never
@@ -51924,35 +51750,6 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['WarRoomView']
-        }
-      }
-      422: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
-  battle_report_api_battles__battle_id__get: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        battle_id: number
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BattleReportView']
         }
       }
       422: {
@@ -53345,35 +53142,6 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['StructureView']
-        }
-      }
-      422: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HTTPValidationError']
-        }
-      }
-    }
-  }
-  designs_api_structure_designs_get: {
-    parameters: {
-      query?: {
-        world_id?: number | null
-      }
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['DesignView'][]
         }
       }
       422: {
@@ -84443,20 +84211,6 @@ export const eraDeedValues: ReadonlyArray<
   'great_person',
   'defeat',
   'famine',
-]
-export const errorCodeValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['ErrorCode']
-> = [
-  'invalid',
-  'not_found',
-  'conflict',
-  'busy',
-  'read_only',
-  'insufficient',
-  'forbidden',
-  'too_large',
-  'unavailable',
-  'internal',
 ]
 export const estatePrivilegeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EstatePrivilege']

@@ -120,7 +120,6 @@ async def acting_mechanics(session: AsyncSession, entity: EntityRow | None, supp
                 writes=writes,
                 affects=sorted(target for target in affected.get(mechanic.key, frozenset()) if target != mechanic.subsystem),
                 suppressed=mechanic.key in suppressed,
-                last_incident_id=last.id if last is not None else None,
                 last_text=chronicle.text if chronicle is not None else None,
                 last_epoch=last.epoch if last is not None else None,
             )

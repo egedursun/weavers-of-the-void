@@ -30,7 +30,6 @@ describe('epoch run model', () => {
         no: 2,
         total: 5,
         name: 'Engine',
-        elapsed_s: 3,
       })
     )
     expect(phaseRatio(state.phase)).toBeCloseTo(0.4)

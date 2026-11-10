@@ -23,7 +23,6 @@ import {
   Shell,
   Skull,
   Snowflake,
-  Sparkles,
   Star,
   Sun,
   Sunrise,
@@ -34,7 +33,6 @@ import {
   Telescope,
   TreePine,
   Users,
-  Wand2,
 } from 'lucide-react'
 import {
   type CosmosSize,
@@ -156,8 +154,3 @@ export function magicLevel(value: number): string {
 export function darknessLevel(value: number): string {
   return levelOf(DARKNESS_LEVELS, value)
 }
-
-export const MAGIC_ICON = Wand2
-export const DARKNESS_ICON = Moon
-export const SEED_ICON = Sparkles
-export const PEOPLE_ICON = Users

@@ -79,6 +79,9 @@ export function WorldPulse({ worldId }: { worldId: number }) {
           }
           aria-label='Record quota this epoch'
         />
+        <Muted variant='caption'>
+          {`${data.engine_records} records born over the last ${data.window} epochs, ${data.per_epoch} an epoch on average`}
+        </Muted>
       </div>
     </div>
   )

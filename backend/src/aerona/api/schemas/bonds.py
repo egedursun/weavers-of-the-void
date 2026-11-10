@@ -124,7 +124,6 @@ class BondsView(ApiModel):
     order: list[RankView]
     contests: list[ContestView]
     persuasions: list[PersuasionView]
-    relation_types: list[LabelView]
     circle_kinds: list[LabelView]
     passion_kinds: list[LabelView]
     passion_sources: list[LabelView]
@@ -132,4 +131,3 @@ class BondsView(ApiModel):
     aims: list[LabelView]
     contest_kinds: list[LabelView]
     stakes: list[LabelView]
-    group_kinds: list[LabelView]

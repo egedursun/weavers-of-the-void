@@ -158,6 +158,12 @@ export function EntityHero({
           </Badge>
           <Badge variant='outline'>{`Power ${formatInteger(entity.power_level)}`}</Badge>
           {domainLabel && <Badge variant='outline'>{domainLabel}</Badge>}
+          {entity.legend_category && (
+            <Badge variant='outline'>{`A legend of a ${humanize(entity.legend_category).toLowerCase()}`}</Badge>
+          )}
+          {entity.map_x !== null && entity.map_y !== null && (
+            <Badge variant='outline'>{`On the map at ${formatInteger(entity.map_x)}, ${formatInteger(entity.map_y)}`}</Badge>
+          )}
           <Badge variant='outline'>{`Epoch ${formatInteger(entity.birth_epoch)}`}</Badge>
           {entity.status !== 'canon' && (
             <Badge variant={STATUS_TONE[entity.status] ?? 'secondary'}>

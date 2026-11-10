@@ -76,10 +76,6 @@ export function routeWindows(route: RouteRecord, star?: string): string {
   ].join('')
 }
 
-export function isRouteOpen(route: RouteRecord): boolean {
-  return route.active
-}
-
 export function otherEnd(route: RouteRecord, worldId: number): number {
   return route.world_a_id === worldId ? route.world_b_id : route.world_a_id
 }

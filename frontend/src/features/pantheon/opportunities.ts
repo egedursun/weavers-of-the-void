@@ -3,6 +3,9 @@ import { plural, verbFor } from './labels'
 
 export type Opportunity = { key: string; title: string; body: string }
 
+const DOOM_WARNING_SHARE = 3
+const DOOM_WARNING_DIVISOR = 4
+
 function names(list: string[]): string {
   return list.join(', ')
 }
@@ -58,6 +61,34 @@ export function opportunitiesOf(
       key: 'stale',
       title: 'Stalled stories',
       body: `${plural(creator.stale_threads, 'story', 'stories')} ${creator.stale_threads === 1 ? 'has' : 'have'} not moved for a while; advance or close ${creator.stale_threads === 1 ? 'it' : 'them'}.`,
+    })
+  if (
+    creator.doom_threshold > 0 &&
+    creator.doom * DOOM_WARNING_DIVISOR >=
+      creator.doom_threshold * DOOM_WARNING_SHARE
+  )
+    items.push({
+      key: 'doom',
+      title: 'Doom nears',
+      body: `The doom clock stands at ${creator.doom} of ${creator.doom_threshold}; the world ends when it is reached.`,
+    })
+  if (hints.epoch_in_progress)
+    items.push({
+      key: 'epoch',
+      title: 'An epoch is running',
+      body: 'The world is living through an epoch; your changes land when it settles.',
+    })
+  if (hints.unread_notifications > 0)
+    items.push({
+      key: 'news',
+      title: 'Unread news',
+      body: `${plural(hints.unread_notifications, 'notice')} ${hints.unread_notifications === 1 ? 'waits' : 'wait'} unread.`,
+    })
+  if (hints.open_threads > 0)
+    items.push({
+      key: 'threads',
+      title: 'Open stories',
+      body: `${plural(hints.open_threads, 'story', 'stories')} ${hints.open_threads === 1 ? 'is' : 'are'} still open.`,
     })
   if (hints.sons_without_orders.length > 0)
     items.push({

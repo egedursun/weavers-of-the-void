@@ -38,6 +38,7 @@ import {
 } from '@/components/domain'
 import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
 import { Label, Muted, SectionTitle, Text } from '@/components/typography'
+import { useCatalogue } from '@/features/entity/api/queries'
 import { usePersistentState } from '@/features/map/usePersistentState'
 import { mediaUrl } from '@/features/pantheon/media'
 import { CreatorHandPanel } from './CreatorHandPanel'
@@ -148,6 +149,9 @@ export function WorldCard({
 }: WorldCardProps) {
   const navigate = useNavigate()
   const drawer = useDrawerStack()
+  const deadRealm = useCatalogue().data?.world_types.find(
+    (type) => type.key === item.world.world_type
+  )?.realm_of_dead
   const world = item.world
   const palette = index.palette(world.world_type)
   const host = index.star(world.star_id)
@@ -167,7 +171,7 @@ export function WorldCard({
   const arriving = index.arrivingAt(world.id)
   const gods = index.godsOf(world.id)
   const climate = world.climate_era
-    ? `${CLIMATE_LABEL[world.climate_era]}${world.climate_epochs_left ? ` (${world.climate_epochs_left} epochs left)` : ''}`
+    ? `${CLIMATE_LABEL[world.climate_era]}${world.climate_since_epoch !== null ? ` since epoch ${world.climate_since_epoch}` : ''}${world.climate_epochs_left ? ` (${world.climate_epochs_left} epochs left)` : ''}`
     : 'Mild, uncertain'
   return (
     <article data-world-id={world.id} className='flex min-w-0 flex-col gap-6'>
@@ -186,6 +190,11 @@ export function WorldCard({
               <Badge size='sm' variant={DISCOVERY_VARIANT[world.discovery]}>
                 {DISCOVERY_LABEL[world.discovery]}
               </Badge>
+              {deadRealm && (
+                <Badge size='sm' variant='secondary'>
+                  A realm of the dead
+                </Badge>
+              )}
             </div>
             <SectionTitle level={3} truncate={2}>
               {world.name}

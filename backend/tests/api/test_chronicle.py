@@ -10,8 +10,8 @@ async def test_chronicle_pages_and_threads(api: ApiWorld) -> None:
     assert closed.status_code == 200, closed.text
     page = (await api.http.get("/api/chronicle")).json()
     assert page["total"] >= len(page["items"])
-    if page["oldest_id"]:
-        older = await api.http.get("/api/chronicle", params={"before": page["oldest_id"], "limit": 5})
+    if page["items"]:
+        older = await api.http.get("/api/chronicle", params={"before": page["items"][0]["id"], "limit": 5})
         assert older.status_code == 200
     assert (await api.http.get("/api/chronicle/epochs")).status_code == 200
     assert (await api.http.get("/api/chronicle/perspectives", params={"epoch": 1})).status_code == 200

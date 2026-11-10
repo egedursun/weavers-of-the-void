@@ -3,7 +3,6 @@ import {
   BookOpenText,
   Brain,
   CloudSun,
-  Cog,
   Crown,
   Eye,
   Flame,
@@ -11,7 +10,6 @@ import {
   Hand,
   HeartPulse,
   Landmark,
-  Leaf,
   Lock,
   MapPin,
   Mountain,
@@ -77,8 +75,3 @@ export const INCIDENT_ROLE: Record<string, Named> = {
 }
 
 export const VIRTUAL_KEYS = ['growth'] as const
-
-export const KEY_ICON: Record<string, Named> = {
-  growth: { label: 'Growth', icon: Leaf, tone: 'success' },
-  mechanics: { label: 'Mechanics', icon: Cog },
-}

@@ -1,6 +1,6 @@
 from collections import Counter
 
-from fastapi import APIRouter, Path, Query
+from fastapi import APIRouter, Path
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -251,9 +251,3 @@ async def one_structure(services: ServicesDep, entity_id: int = Path(ge=1)) -> S
         if work is None or work.entity_type is not EntityType.STRUCTURE or profile is None:
             raise NotFoundError("This structure is surveyed at the next epoch.")
         return await structure_view(session, rules, work, profile)
-
-
-@router.get("/structure-designs", response_model=list[DesignView])
-async def designs(services: ServicesDep, world_id: int | None = Query(default=None, ge=1)) -> list[DesignView]:
-    async with reader(services) as session:
-        return await design_views(session, world_id)

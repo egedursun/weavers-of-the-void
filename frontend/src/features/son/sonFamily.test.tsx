@@ -201,7 +201,6 @@ describe('folk belief names', () => {
       {
         people_id: 31,
         people_name: 'Marsh Folk',
-        god_node_id: 7,
         local_name: 'Ith-the-wet',
         account: 'He rose from the reeds.',
         misconception: null,

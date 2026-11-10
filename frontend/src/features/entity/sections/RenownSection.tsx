@@ -462,6 +462,7 @@ function StandingCard({ view, blocked, hold }: Props) {
 function DeedRow({ deed, view, blocked, hold }: { deed: DeedRecord } & Props) {
   const [claimant, setClaimant] = useState<number | null>(null)
   const [kind, setKind] = useState<string>('shared')
+  const [status, setStatus] = useState<string>('standing')
   const spec = named(AXES, deed.axis)
   const strike = useGodAction({
     run: () =>
@@ -497,7 +498,7 @@ function DeedRow({ deed, view, blocked, hold }: { deed: DeedRecord } & Props) {
             deed_id: deed.id,
             claimant_id: claimant ?? 0,
             kind: kind as 'true' | 'shared' | 'false',
-            status: 'standing',
+            status: status as 'standing' | 'verified' | 'exposed',
             hold,
           },
         })
@@ -573,6 +574,13 @@ function DeedRow({ deed, view, blocked, hold }: { deed: DeedRecord } & Props) {
               table={table(view.claim_kinds)}
               blocked={busy}
               onPick={setKind}
+            />
+            <MindPicker
+              label='Standing'
+              value={status}
+              table={table(view.claim_statuses)}
+              blocked={busy}
+              onPick={setStatus}
             />
           </FormBar>
           <AdjustStats

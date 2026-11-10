@@ -36,6 +36,7 @@ import {
   LoreCard,
   LoreFields,
   LoreHero,
+  NO_RECORD,
   NamedChip,
   RefChip,
   RoleRow,
@@ -43,6 +44,7 @@ import {
   RowEditors,
   Who,
 } from '../LoreFields'
+import { useCustomKinds } from '../forge/kindApi'
 import {
   CURSES,
   DEEDS,
@@ -78,6 +80,29 @@ export function ItemPanel({
   const busy = busyOf(blocked, enchant.isPending)
   const kind = lookup(ITEM_CLASSES, card.item_class)
   const curse = lookup(CURSES, card.curse)
+  const customKinds = useCustomKinds('item_class').data?.kinds ?? []
+  const customClass = customKinds.find(
+    (item) => item.id === card.custom_class_id
+  )
+  const customTable = Object.fromEntries([
+    [
+      NO_RECORD,
+      {
+        label: 'No class of your own',
+        icon: kind.icon,
+        tone: 'muted' as const,
+      },
+    ],
+    ...customKinds.map((item) => [
+      String(item.id),
+      {
+        label: item.name,
+        icon: kind.icon,
+        tone: 'gold' as const,
+        hint: item.description,
+      },
+    ]),
+  ])
   return (
     <div data-surface='ItemCard' className='flex min-w-0 flex-col gap-4'>
       <LoreHero
@@ -89,6 +114,11 @@ export function ItemPanel({
           <NamedChip
             spec={curse}
           >{`Cursed: ${curse.label.toLowerCase()}`}</NamedChip>
+        )}
+        {customClass && (
+          <NamedChip
+            spec={{ label: '', icon: kind.icon, tone: 'gold' }}
+          >{`Of the ${customClass.name} class`}</NamedChip>
         )}
         {card.material && (
           <NamedChip spec={{ label: '', icon: Hammer, tone: 'muted' }}>
@@ -287,6 +317,7 @@ export function ItemPanel({
             fields={[
               { key: 'item_class', kind: 'enum', table: ITEM_CLASSES },
               { key: 'curse', kind: 'enum', table: CURSES },
+              { key: 'custom_class_id', kind: 'record', table: customTable },
               { key: 'material', kind: 'text', nullable: true },
               { key: 'quality', kind: 'number', min: 0, max: PERCENT },
               { key: 'condition', kind: 'number', min: 0, max: PERCENT },

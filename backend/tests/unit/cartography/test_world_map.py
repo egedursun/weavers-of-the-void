@@ -84,12 +84,12 @@ def test_distant_regions_are_still_connected_by_hops() -> None:
 
 def test_regions_with_the_same_position_get_distinct_seeds() -> None:
     request = MapRequest(seed="Aerona", regions=(RegionInput(id=1, position=(1500, 1000)), RegionInput(id=2, position=(1500, 1000))))
-    world_map = generate_map(request, RULES).world_map
-    first, second = world_map.regions
+    generated = generate_map(request, RULES)
+    first, second = generated.world_map.regions
     assert first.seed != second.seed
     assert first.size > 0
     assert second.size > 0
-    assert [update.id for update in world_map.relocated_positions] == [2]
+    assert [update.id for update in generated.relocated_positions] == [2]
 
 
 def test_water_region_on_land_is_moved_to_water() -> None:
@@ -97,18 +97,18 @@ def test_water_region_on_land_is_moved_to_water() -> None:
     cells = probe.world_map.cells
     land = next(index for index, water in enumerate(cells.water) if not water)
     position = (cells.x[land], cells.y[land])
-    world_map = generate_map(MapRequest(seed="Aerona", regions=(RegionInput(id=1, is_water=True, position=position),)), RULES).world_map
-    record = world_map.regions[0]
+    generated = generate_map(MapRequest(seed="Aerona", regions=(RegionInput(id=1, is_water=True, position=position),)), RULES)
+    record = generated.world_map.regions[0]
     assert record.is_water
-    assert [update.id for update in world_map.relocated_positions] == [1]
+    assert [update.id for update in generated.relocated_positions] == [1]
     assert record.elevation_class.value == "water"
 
 
 def test_unpositioned_regions_receive_new_positions() -> None:
-    world_map = sample_map().world_map
-    updated = {update.id for update in world_map.new_positions}
+    generated = sample_map()
+    updated = {update.id for update in generated.new_positions}
     assert {region.id for region in SAMPLE_REGIONS} <= updated
-    for update in world_map.new_positions:
+    for update in generated.new_positions:
         assert isinstance(update.x, int)
 
 
@@ -134,18 +134,19 @@ def test_markers_land_inside_their_parent_region() -> None:
 
 
 def test_marker_positions_are_kept_inside_and_relocated_outside() -> None:
-    base = sample_map().world_map
+    sampled = sample_map()
+    base = sampled.world_map
     inside = next(marker for marker in base.markers if marker.id == 3)
     far = (base.window.x + 5, base.window.y + 5)
-    persisted = {update.id: (float(update.x), float(update.y)) for update in base.new_positions}
+    persisted = {update.id: (float(update.x), float(update.y)) for update in sampled.new_positions}
     regions = tuple(region.model_copy(update={"position": persisted[region.id]}) for region in SAMPLE_REGIONS)
     request = sample_request().model_copy(
         update={"regions": regions, "markers": (MarkerInput(id=3, parent_id=1, position=(inside.x, inside.y)), MarkerInput(id=12, parent_id=4, position=far))}
     )
-    world_map = generate_map(request, RULES).world_map
-    markers = {marker.id: marker for marker in world_map.markers}
+    generated = generate_map(request, RULES)
+    markers = {marker.id: marker for marker in generated.world_map.markers}
     assert (markers[3].x, markers[3].y) == (inside.x, inside.y)
-    assert 12 in {update.id for update in world_map.relocated_positions}
+    assert 12 in {update.id for update in generated.relocated_positions}
     assert (markers[12].x, markers[12].y) != far
 
 

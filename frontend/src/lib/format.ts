@@ -12,6 +12,11 @@ const percentFormat = new Intl.NumberFormat(LOCALE, {
   maximumFractionDigits: 0,
 })
 
+const dateTimeFormat = new Intl.DateTimeFormat(LOCALE, {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+})
+
 export type NumberFormat = 'integer' | 'decimal' | 'percent' | 'compact'
 
 export function formatInteger(value: number): string {
@@ -27,6 +32,10 @@ export function formatDecimal(value: number, digits = 2): string {
 
 export function formatPercent(ratio: number): string {
   return percentFormat.format(ratio)
+}
+
+export function formatDateTime(value: string): string {
+  return dateTimeFormat.format(new Date(value))
 }
 
 export function formatCompact(value: number): string {

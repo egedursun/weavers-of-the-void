@@ -53,7 +53,7 @@ async def test_son_prompt_preview_reports_the_budget(api: ApiWorld) -> None:
     assert body["token_estimate"] > 0
     assert body["over_limit"] == (body["total_characters"] > body["prompt_limit"])
     assert {section["section"] for section in body["summary_sections"]} >= {"header", "events", "geography"}
-    assert body["tool_names"]
+    assert body["paid_tools"] or body["free_tools"]
     assert (await api.http.get("/api/prompt-context/son-prompt/999999")).status_code == 404
 
 

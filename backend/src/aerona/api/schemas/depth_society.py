@@ -276,19 +276,6 @@ class FeastHostView(ApiModel):
     primary: bool
 
 
-class QuarantineView(ApiModel):
-    region_id: int
-    region: str
-    until_epoch: int
-
-
-class OutbreakMapView(ApiModel):
-    world_id: int
-    outbreaks: list[OutbreakView]
-    endemic: list[EndemicView]
-    quarantines: list[QuarantineView]
-
-
 class DistrictView(ApiModel):
     id: int
     kind: DistrictKind

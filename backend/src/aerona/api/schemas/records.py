@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import Field, computed_field
+from pydantic import Field
 
 from aerona.api.schemas.common import ApiModel
 from aerona.domain.enums.action import ActionKind
@@ -185,7 +185,6 @@ class EntityRecord(EntitySummary):
     domain: Domain | None
     origin: EntityOrigin
     creator_son_id: int | None
-    maker_entity_id: int | None
     mortal_role: MortalRole | None
     legend_category: LegendCategory | None
     fate_note: str | None
@@ -234,12 +233,7 @@ class CreatorRecord(ApiModel):
     image_prompt: str | None
     note: str | None
     essence: int
-    mood_contentment: int
-    mood_anger: int
-    mood_interest: int
-    mood_loneliness: int
     passions: list[str]
-    passions_automatic: bool
     depth: GodDepth | None
     epic: Epic | None
 
@@ -446,7 +440,6 @@ class ChronicleLineRecord(ApiModel):
     son_id: int | None
     world_id: int | None
     text: str
-    template_key: str | None
     created_at: datetime
     entity_ids: list[int] = Field(default_factory=list)
 
@@ -530,10 +523,6 @@ class ImageRecord(ApiModel):
     width: int | None
     height: int | None
     created_at: datetime
-
-    @computed_field
-    def content_type(self) -> str:
-        return self.mime.value
 
 
 class MapNoteRecord(ApiModel):

@@ -71,7 +71,6 @@ async def read_creator(services: ServicesDep) -> CreatorDetail:
                 FolkView(
                     people_id=row.people_entity_id,
                     people_name=name,
-                    god_node_id=row.god_node_id,
                     local_name=row.local_name,
                     account=row.account,
                     misconception=row.misconception,

@@ -55,9 +55,7 @@ async def read_chronicle(
             size = total
         rows = list(await session.scalars(statement.order_by(ChronicleRow.id.desc()).limit(size)))
         rows.reverse()
-        oldest = rows[0].id if rows else None
-        remaining = int(await session.scalar(select(func.count()).select_from(statement.where(ChronicleRow.id < oldest).subquery())) or 0) if oldest else 0
-        return ChroniclePage(items=await chronicle_lines(session, rows), total=total, has_more=remaining > 0, oldest_id=oldest)
+        return ChroniclePage(items=await chronicle_lines(session, rows), total=total)
 
 
 @router.get("/chronicle/epochs", response_model=list[ChronicleEpoch])

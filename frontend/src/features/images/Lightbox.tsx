@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Star, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { queryKeys } from '@/api/queryKeys'
 import { formatInteger } from '@/lib/format'
+import { formatBytes } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -26,6 +27,8 @@ import {
 } from './api'
 import { mediaUrl } from './media'
 import { CAPTION_MAX_LENGTH } from './useImageUpload'
+
+const SHORT_HASH = 8
 
 type LightboxProps = {
   images: ImageRecord[]
@@ -129,7 +132,7 @@ export function Lightbox({
           <DialogTitle className='truncate'>{title}</DialogTitle>
           <DialogDescription>
             {current
-              ? `${formatInteger(wrap(index ?? 0, images.length) + 1)} of ${formatInteger(images.length)}${current.origin === 'generated' ? ' · generated' : ' · uploaded'}`
+              ? `${formatInteger(wrap(index ?? 0, images.length) + 1)} of ${formatInteger(images.length)}${current.origin === 'generated' ? ' · generated' : ' · uploaded'} · ${current.mime.replace('image/', '').toUpperCase()}${current.width !== null && current.height !== null ? ` · ${formatInteger(current.width)}×${formatInteger(current.height)}` : ''} · ${formatBytes(current.size_bytes)} · #${current.sha256.slice(0, SHORT_HASH)}`
               : ''}
           </DialogDescription>
         </DialogHeader>

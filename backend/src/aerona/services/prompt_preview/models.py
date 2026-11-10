@@ -69,7 +69,6 @@ class SonPromptPreview(BaseModel):
     token_estimate: int
     prompt_limit: int
     over_limit: bool
-    tool_names: list[str]
     paid_tools: list[str]
     free_tools: list[str]
     summary_sections: list[SectionBudget]

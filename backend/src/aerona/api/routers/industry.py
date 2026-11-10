@@ -371,7 +371,5 @@ async def works_view(services: ServicesDep, node_id: int = Path(ge=1)) -> WorksV
             ),
             ledger=await ledger_views(session, node_id),
             bottlenecks=await bottleneck_views(session, node_id) if community else [],
-            workshop_kinds=labels(WORKSHOP_LABELS),
             tiers=labels(TIER_LABELS),
-            processes=labels(PROCESS_LABELS),
         )

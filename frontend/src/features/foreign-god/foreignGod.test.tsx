@@ -141,6 +141,8 @@ describe('foreign god power panel', () => {
           powers: [
             { slot: 1, name: 'x', effect: 'deathless', description: '' },
           ],
+          deathless: true,
+          deathless_caption: 'Deathless: killing costs 3 times more.',
         })}
       />,
       routes({ creator: { essence: 10 } })
@@ -149,7 +151,7 @@ describe('foreign god power panel', () => {
       .element(screen.getByRole('button', { name: /^Kill/ }))
       .toHaveAttribute('aria-description', '150 essence needed; you have 10.')
     await expect
-      .element(screen.getByText('Deathless: killing costs more.'))
+      .element(screen.getByText('Deathless: killing costs 3 times more.'))
       .toBeInTheDocument()
   })
 

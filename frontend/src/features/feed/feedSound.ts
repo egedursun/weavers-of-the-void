@@ -40,10 +40,6 @@ function audio(): AudioContext | null {
   return context
 }
 
-export function categoryTone(category: FeedCategory): number {
-  return CATEGORY_TONE_HZ[category]
-}
-
 export function playTone(category: FeedCategory, force = false): void {
   const now = Date.now()
   if (!force && now - lastTone < TONE_THROTTLE_MS) return

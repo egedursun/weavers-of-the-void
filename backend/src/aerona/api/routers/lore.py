@@ -63,7 +63,7 @@ from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
 from aerona.api.views.culture_cards import language_card, legend_card, registers_of_languages, tradition_card
 from aerona.catalog.civics import CAPABILITIES, TRIGGERS
-from aerona.catalog.discovery import AGES, BLUEPRINT_KINDS, BLUEPRINT_SOURCES, DEEDS, FIELDS, INCIDENTS, era_name
+from aerona.catalog.discovery import BLUEPRINT_KINDS, BLUEPRINT_SOURCES, DEEDS, FIELDS, INCIDENTS, era_name
 from aerona.catalog.rumours import is_alarm, is_atrocity
 from aerona.catalog.techniques import BRANCH_GRAPH, INSTITUTIONS, TECHNIQUES, Gate
 from aerona.catalog.theories import ANOMALIES, DISCIPLINES, DOMAINS
@@ -211,7 +211,6 @@ async def theory_card(session: AsyncSession, entity_id: int) -> TheoryCard | Non
     pressure = await weight_against(session, rules, entity_id, max((item.epoch for item in anomalies), default=0))
     return TheoryCard(
         domain=row.domain,
-        domain_label=DOMAINS[row.domain].label,
         subject=DOMAINS[row.domain].subject,
         claim=row.claim,
         correctness=row.correctness,
@@ -734,7 +733,6 @@ async def realm_era(polity_id: Id, services: ServicesDep) -> RealmEraView:
             polity_id=polity_id,
             score=row.score if row is not None else 0,
             age=age,
-            age_label=AGES[age],
             since_epoch=row.since_epoch if row is not None else 0,
             lowest=row.lowest if row is not None else 0,
             golden_at=table.golden_at,

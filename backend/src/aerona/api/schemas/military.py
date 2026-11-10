@@ -65,9 +65,7 @@ class StackView(ApiModel):
     ammunition: int
     missing: int
     morale_state: MoraleState
-    morale_label: str
     formation: Formation
-    formation_label: str
     target_class: TargetClass
     reach: int
     volleys: int

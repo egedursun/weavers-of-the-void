@@ -19,7 +19,6 @@ function line(
     son_id: null,
     world_id: world,
     text,
-    template_key: null,
     created_at: '',
     entity_ids: [],
   } as ChronicleLine

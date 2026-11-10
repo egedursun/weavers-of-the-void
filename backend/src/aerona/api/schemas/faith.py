@@ -166,7 +166,6 @@ class SoulCard(ApiModel):
     deeds: dict[str, int]
     stratum: StratumView | None
     judgements: list[JudgementView]
-    possessing: NodeRef | None
     reborn_as: NodeRef | None
     gate: ReincarnationGate | None
     locked: list[str]

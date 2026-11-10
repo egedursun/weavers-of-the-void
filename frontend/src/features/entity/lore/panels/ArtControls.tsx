@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Award, Brush, Landmark } from 'lucide-react'
 import { type ActionBody } from '@/api/actions'
 import { artMediumValues } from '@/api/generated/schema'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Muted } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
@@ -23,15 +22,6 @@ const PATRONS = [
 const MEDIUM_TABLE = Object.fromEntries(
   artMediumValues.map((medium) => [medium, lookup(MEDIUMS, medium)])
 )
-
-export function CanonBadge({ card }: { card: Artwork }) {
-  if (!card.canon) return null
-  return (
-    <Badge variant='default' data-surface='ArtworkCanon'>
-      <Award aria-hidden='true' />A classic of its people
-    </Badge>
-  )
-}
 
 export function ArtControls({
   id,

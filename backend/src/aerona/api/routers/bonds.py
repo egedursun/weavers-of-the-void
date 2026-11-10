@@ -18,7 +18,6 @@ from aerona.catalog.relations import (
     GROUP_LABELS,
     PASSION_LABELS,
     PASSION_SOURCE_LABELS,
-    RELATION_LABELS,
     STAKE_LABELS,
 )
 from aerona.core.errors import NotFoundError
@@ -267,7 +266,6 @@ async def bonds_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BondsV
             order=await rank_views(session, order) if grouped else [],
             contests=await contest_views(session, node_id) if applies else [],
             persuasions=await persuasion_views(session, node_id) if mortal else [],
-            relation_types=labels(RELATION_LABELS),
             circle_kinds=[LabelView(key=key.value, label=spec.label) for key, spec in CIRCLES.items()],
             passion_kinds=labels(PASSION_LABELS),
             passion_sources=labels(PASSION_SOURCE_LABELS),
@@ -275,5 +273,4 @@ async def bonds_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BondsV
             aims=labels(AIM_LABELS),
             contest_kinds=[LabelView(key=key.value, label=spec.label) for key, spec in CONTESTS.items()],
             stakes=labels(STAKE_LABELS),
-            group_kinds=labels(GROUP_LABELS),
         )

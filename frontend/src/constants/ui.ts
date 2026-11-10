@@ -1,5 +1,4 @@
 export const MAX_DRAWER_DEPTH = 8
-export const DRAWER_SEARCH_KEY = 'drawer'
 export const DRAWER_ENTRY_SEPARATOR = ','
 export const DRAWER_ID_SEPARATOR = ':'
 export const QUERY_STALE_TIME_MS = 10_000

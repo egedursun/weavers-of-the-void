@@ -7,9 +7,9 @@ import {
 } from '../rumours/rumourModel'
 import {
   FORGE_FIELDS,
+  FORGE_KINDS,
   forgeValues,
   initialDraft,
-  isForgeKind,
   missingField,
 } from './forgeModel'
 import { KIND_CATALOG, paramsOf } from './kindModel'
@@ -30,8 +30,8 @@ describe('lore forge', () => {
   it('needs at least one tenet for a creed and knows which kinds it forges', () => {
     const fields = FORGE_FIELDS.ideology
     expect(missingField(fields, initialDraft(fields))?.key).toBe('tenets')
-    expect(isForgeKind('knowledge')).toBe(true)
-    expect(isForgeKind('mortal')).toBe(false)
+    expect(FORGE_KINDS).toContain('knowledge')
+    expect(FORGE_KINDS).not.toContain('mortal')
   })
 
   it('summarises custom kinds from their parameters', () => {

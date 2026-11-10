@@ -2,6 +2,8 @@ import { Compass } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Label, Muted, Text } from '@/components/typography'
+import { NamedRecord } from '@/features/entity/NamedRecord'
+import { useCosmos } from './api'
 import {
   OUTCOME_LABEL,
   OUTCOME_VARIANT,
@@ -11,6 +13,50 @@ import {
   expeditionProgress,
 } from './expeditionFormat'
 import { type GreatExpedition } from './expeditionsApi'
+
+function RouteName({ id }: { id: number }) {
+  const cosmos = useCosmos()
+  const route = cosmos.data?.routes.find((item) => item.id === id)
+  const world = (worldId: number) =>
+    cosmos.data?.worlds.find((item) => item.world.id === worldId)?.world.name ??
+    'a lost world'
+  return (
+    <Text as='span' variant='caption'>
+      {route
+        ? `the road ${world(route.world_a_id)} to ${world(route.world_b_id)}`
+        : 'a road now gone'}
+    </Text>
+  )
+}
+
+function ExpeditionAim({ expedition }: { expedition: GreatExpedition }) {
+  const aims = [
+    expedition.target_star_id !== null && (
+      <NamedRecord
+        key='star'
+        id={expedition.target_star_id}
+        fallback='a star'
+      />
+    ),
+    expedition.target_route_id !== null && (
+      <RouteName key='route' id={expedition.target_route_id} />
+    ),
+    expedition.target_entity_id !== null && (
+      <NamedRecord
+        key='entity'
+        id={expedition.target_entity_id}
+        fallback='a record'
+      />
+    ),
+  ].filter(Boolean)
+  if (aims.length === 0) return null
+  return (
+    <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+      <Label>Its aim</Label>
+      {aims}
+    </div>
+  )
+}
 
 export function ExpeditionCard({
   expedition,
@@ -49,6 +95,7 @@ export function ExpeditionCard({
         </Badge>
       </div>
       <Muted variant='caption'>{expedition.text}</Muted>
+      <ExpeditionAim expedition={expedition} />
       <div className='flex min-w-0 flex-wrap gap-1.5'>
         <Badge
           size='sm'

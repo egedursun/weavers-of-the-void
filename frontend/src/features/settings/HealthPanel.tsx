@@ -79,6 +79,12 @@ export function HealthPanel() {
             }
           />
           <MiniStat
+            icon={Database}
+            label='Database right now'
+            value={live.database_ok ? 'Answering' : 'Not answering'}
+            tone={live.database_ok ? 'success' : 'danger'}
+          />
+          <MiniStat
             icon={ImageIcon}
             label='Image worker'
             value={

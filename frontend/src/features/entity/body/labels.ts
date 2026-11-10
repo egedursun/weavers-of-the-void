@@ -4,7 +4,6 @@ import {
   BatteryLow,
   CircleDot,
   Droplet,
-  Gauge,
   Layers,
   ScanSearch,
   Unplug,
@@ -39,11 +38,9 @@ import {
   HandHeart,
   HeartPulse,
   Hourglass,
-  Mic,
   MicOff,
   PersonStanding,
   Pill,
-  Scale,
   Scissors,
   Shell,
   ShieldHalf,
@@ -370,8 +367,6 @@ export const BODY_VALUES: Record<string, string> = {
 
 export const HEALER_ICON = Stethoscope
 export const ARMOUR_ICON = ShieldHalf
-export const SCALE_ICON = Scale
-export const VOICE_ICON = Mic
 
 export function bodyValueLabel(key: string): string {
   return CAPACITIES[key]?.label ?? BODY_VALUES[key] ?? plain({}, key)
@@ -454,4 +449,3 @@ export const TREATMENTS: Record<string, Named> = {
 
 export const BLOOD_ICON = Droplet
 export const EXERTION_ICON = BatteryLow
-export const STAMINA_ICON = Gauge

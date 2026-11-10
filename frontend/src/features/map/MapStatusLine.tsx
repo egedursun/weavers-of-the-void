@@ -1,5 +1,5 @@
 import { Grid3x3, Map as MapIcon, MapPin } from 'lucide-react'
-import { formatNumber } from '@/lib/format'
+import { formatNumber, formatPercent } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Muted } from '@/components/typography'
 
@@ -8,6 +8,7 @@ type MapStatusLineProps = {
   typeLabel: string
   multiWorld: boolean
   knownCells: number
+  knownRatio: number
   regions: number
   markers: number
   past: boolean
@@ -33,7 +34,7 @@ export function MapStatusLine(props: MapStatusLineProps) {
       )}
       <Badge size='sm' variant='outline'>
         <Grid3x3 />
-        {`${formatNumber(props.knownCells)} known cells`}
+        {`${formatNumber(props.knownCells)} known cells · ${formatPercent(props.knownRatio)} of the world`}
       </Badge>
       <Badge size='sm' variant='outline'>
         <MapIcon />

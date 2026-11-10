@@ -104,7 +104,7 @@ export function NetworkHealthPanel({ intro = false }: { intro?: boolean }) {
         <>
           <div className='flex min-w-0 flex-wrap gap-1.5'>
             <Badge variant='outline'>
-              {`${formatNumber(health.data.nodes)} nodes · ${formatNumber(health.data.edges)} links (${formatNumber(health.data.past_edges)} past)`}
+              {`${formatNumber(health.data.nodes)} nodes · ${formatNumber(health.data.edges)} links (${formatNumber(health.data.active_edges)} active, ${formatNumber(health.data.past_edges)} past)`}
             </Badge>
             <Badge variant='outline'>
               {`avg. ${formatDecimal(health.data.mean_degree, 1)} links (median ${formatDecimal(health.data.median_degree, 1)})`}
@@ -116,7 +116,7 @@ export function NetworkHealthPanel({ intro = false }: { intro?: boolean }) {
                   : 'warning'
               }
             >
-              {`main cluster ${Math.round(health.data.largest_share_pct)}% · ${formatNumber(health.data.components)} clusters`}
+              {`main cluster ${formatNumber(health.data.largest_component)} nodes (${Math.round(health.data.largest_share_pct)}%) · ${formatNumber(health.data.components)} clusters`}
             </Badge>
             <Badge variant={health.data.isolated > 0 ? 'warning' : 'outline'}>
               {`${formatNumber(health.data.isolated)} isolated`}

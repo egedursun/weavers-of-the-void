@@ -121,10 +121,10 @@ async def test_foreign_god_detail_reports_deathless_from_the_server(api: ApiWorl
     assert detail["kill_cost"] > plain["kill_cost"]
 
 
-async def test_image_records_carry_content_type_and_digest(api: ApiWorld) -> None:
+async def test_image_records_carry_their_mime_and_digest(api: ApiWorld) -> None:
     town = seeded(api).core.extra["town"].id
     image = (await api.http.post("/api/images", params={"node_id": town}, content=png(), headers={"content-type": "image/png"})).json()
-    assert image["content_type"] == "image/png"
+    assert image["mime"] == "image/png"
     assert len(image["sha256"]) == 64
 
 

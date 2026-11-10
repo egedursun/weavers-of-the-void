@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from aerona.core.total import total
 from aerona.domain.enums.environment import TerrainKind
-from aerona.domain.enums.military import Formation, MoraleState, UnitFamily, UnitKind
+from aerona.domain.enums.military import Formation, UnitFamily, UnitKind
 
 VOLLEYS_CARRIED = 9
 K = UnitKind
@@ -161,18 +161,6 @@ TERRAIN_WIDTH = total(
         T.RUIN_FIELD: 70,
         T.URBAN: 45,
         T.SEA: 140,
-    },
-)
-
-MORALE_LABELS = total(
-    MoraleState,
-    {
-        MoraleState.STEADY: "Steady",
-        MoraleState.SHAKEN: "Shaken",
-        MoraleState.WAVERING: "Wavering",
-        MoraleState.ROUTING: "Routing",
-        MoraleState.BROKEN: "Broken",
-        MoraleState.RALLIED: "Rallied",
     },
 )
 

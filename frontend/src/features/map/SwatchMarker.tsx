@@ -1,10 +1,6 @@
 import { type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { type ThemeColorName } from '@/components/domain/useThemeColors'
-import { type FamilyShape } from '@/features/graph/families'
-
-const GLYPH = 14
-const HALF = GLYPH / 2
 
 function tokenVar(token: ThemeColorName): string {
   return `var(--${token})`
@@ -124,128 +120,6 @@ export function GlowMarker() {
           'radial-gradient(circle, var(--destructive) 0%, transparent 70%)',
       }}
     />
-  )
-}
-
-function shapePoints(
-  sides: number,
-  radius: number,
-  start = -Math.PI / 2
-): string {
-  return Array.from({ length: sides }, (_, index) => {
-    const angle = start + (index * 2 * Math.PI) / sides
-    return `${(radius * Math.cos(angle)).toFixed(2)},${(radius * Math.sin(angle)).toFixed(2)}`
-  }).join(' ')
-}
-
-function starPoints(radius: number): string {
-  return Array.from({ length: 10 }, (_, index) => {
-    const angle = -Math.PI / 2 + (index * Math.PI) / 5
-    const reach = index % 2 ? radius * 0.5 : radius * 1.15
-    return `${(reach * Math.cos(angle)).toFixed(2)},${(reach * Math.sin(angle)).toFixed(2)}`
-  }).join(' ')
-}
-
-export function ShapeMarker({
-  shape,
-  token,
-}: {
-  shape: FamilyShape
-  token: ThemeColorName
-}) {
-  const color = tokenVar(token)
-  const radius = HALF * 0.62
-  const fill = { fill: color }
-  let body
-  switch (shape) {
-    case 'square':
-      body = (
-        <rect
-          x={-radius}
-          y={-radius}
-          width={radius * 2}
-          height={radius * 2}
-          style={fill}
-        />
-      )
-      break
-    case 'triangle':
-      body = <polygon points={shapePoints(3, radius * 1.25)} style={fill} />
-      break
-    case 'diamond':
-      body = <polygon points={shapePoints(4, radius * 1.2)} style={fill} />
-      break
-    case 'hexagon':
-      body = <polygon points={shapePoints(6, radius * 1.05, 0)} style={fill} />
-      break
-    case 'star':
-      body = <polygon points={starPoints(radius)} style={fill} />
-      break
-    case 'plus':
-      body = (
-        <path
-          d={`M${-radius * 0.35} ${-radius}H${radius * 0.35}V${-radius * 0.35}H${radius}V${radius * 0.35}H${radius * 0.35}V${radius}H${-radius * 0.35}V${radius * 0.35}H${-radius}V${-radius * 0.35}H${-radius * 0.35}Z`}
-          style={fill}
-        />
-      )
-      break
-    case 'ring':
-      body = (
-        <circle
-          r={radius * 0.85}
-          style={{ fill: 'none', stroke: color, strokeWidth: 1.8 }}
-        />
-      )
-      break
-    default:
-      body = <circle r={radius} style={fill} />
-  }
-  return (
-    <svg
-      aria-hidden='true'
-      className='size-icon-md shrink-0'
-      viewBox={`${-HALF} ${-HALF} ${GLYPH} ${GLYPH}`}
-    >
-      {body}
-    </svg>
-  )
-}
-
-export function RingMarker({
-  token,
-  dashed = false,
-  double = false,
-  dot = false,
-}: {
-  token: ThemeColorName
-  dashed?: boolean
-  double?: boolean
-  dot?: boolean
-}) {
-  const stroke = tokenVar(token)
-  return (
-    <svg
-      aria-hidden='true'
-      className='size-icon-md shrink-0'
-      viewBox={`${-HALF} ${-HALF} ${GLYPH} ${GLYPH}`}
-    >
-      <circle
-        r={HALF - 1.5}
-        style={{
-          fill: 'none',
-          stroke,
-          strokeWidth: 1.5,
-          strokeDasharray: dashed ? '2 2' : undefined,
-        }}
-      />
-      {double && (
-        <circle
-          r={HALF - 3.5}
-          style={{ fill: 'none', stroke, strokeWidth: 1.2 }}
-        />
-      )}
-      {dot && <circle r={1.8} style={{ fill: stroke }} />}
-    </svg>
   )
 }
 

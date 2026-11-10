@@ -13,8 +13,6 @@ export type ServerEvent<K extends EventKind = EventKind> = Extract<
   { kind: K }
 >
 
-export type EventPayload<K extends EventKind> = ServerEvent<K>['payload']
-
 export const EVENT_KINDS: readonly EventKind[] = eventKindValues
 
 const jobReference = z.object({

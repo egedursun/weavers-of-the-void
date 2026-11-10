@@ -8,7 +8,6 @@ export type Doctrine = components['schemas']['DoctrineView']
 export type TenetKindSpec = components['schemas']['TenetKindSpec']
 export type TenetKind = components['schemas']['TenetKind']
 export type SoulCard = components['schemas']['SoulCard']
-export type RealmOfDead = components['schemas']['RealmOfDeadView']
 export type Stratum = components['schemas']['StratumView']
 export type Possession = components['schemas']['PossessionView']
 

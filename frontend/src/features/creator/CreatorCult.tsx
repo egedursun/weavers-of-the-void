@@ -14,9 +14,11 @@ import { plural, useLabels } from '@/features/pantheon/labels'
 export function CreatorCult({
   cult,
   faith,
+  essence,
 }: {
   cult: EntitySummary[]
   faith: number
+  essence: number
 }) {
   const { entityType } = useLabels()
   return (
@@ -24,7 +26,7 @@ export function CreatorCult({
       title='Cult'
       description={
         cult.length > 0
-          ? `${plural(cult.length, 'community', 'communities')} worship the Creator directly · total faith ${formatDecimal(faith, 1)}`
+          ? `${plural(cult.length, 'community', 'communities')} worship the Creator directly · total faith ${formatDecimal(faith, 1)} · ${essence} essence an epoch`
           : undefined
       }
       level={3}

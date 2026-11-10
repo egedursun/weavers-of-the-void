@@ -16,7 +16,6 @@ export const NODE_MECHANICS: Schemas['NodeMechanicsView'] = {
       writes: ['hp'],
       affects: ['mind', 'war'],
       suppressed: false,
-      last_incident_id: 7,
       last_text: 'Arn lost an eye at the ford.',
       last_epoch: 11,
     },
