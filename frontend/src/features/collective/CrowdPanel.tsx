@@ -86,48 +86,56 @@ function MoodBoard({
           min: 0,
           max: SPAN,
         },
+        {
+          key: 'last_trigger',
+          label: 'Last stirred by',
+          kind: 'pick',
+          table: { none: 'Nothing yet', ...table(TRIGGERS) },
+        },
       ]}
       locked={mood.locked}
       blocked={action.busy}
       onEdit={action.onEdit}
       onRemove={action.onRemove}
     >
-      <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5'>
-        <KpiTile
-          label='Anger'
-          value={mood.anger}
-          icon={Flame}
-          tone='danger'
-          meter={{ value: mood.anger, max: SPAN, label: 'Anger' }}
-        />
-        <KpiTile
-          label='Fear'
-          value={mood.anxiety}
-          icon={Wind}
-          tone='warning'
-          meter={{ value: mood.anxiety, max: SPAN, label: 'Fear' }}
-        />
-        <KpiTile
-          label='Fervour'
-          value={mood.fervour}
-          icon={Sparkles}
-          tone='gold'
-          meter={{ value: mood.fervour, max: SPAN, label: 'Fervour' }}
-        />
-        <KpiTile
-          label='Deterrence'
-          value={mood.deterrence}
-          icon={Shield}
-          tone='info'
-          meter={{ value: mood.deterrence, max: SPAN, label: 'Deterrence' }}
-        />
-        <KpiTile
-          label='Sway'
-          value={mood.agitation}
-          icon={Megaphone}
-          tone='verdigris'
-          meter={{ value: mood.agitation, max: SPAN, label: 'Sway' }}
-        />
+      <div className='@container/tiles min-w-0'>
+        <div className='grid min-w-0 grid-cols-2 gap-2 @lg/tiles:grid-cols-3 @3xl/tiles:grid-cols-5'>
+          <KpiTile
+            label='Anger'
+            value={mood.anger}
+            icon={Flame}
+            tone='danger'
+            meter={{ value: mood.anger, max: SPAN, label: 'Anger' }}
+          />
+          <KpiTile
+            label='Fear'
+            value={mood.anxiety}
+            icon={Wind}
+            tone='warning'
+            meter={{ value: mood.anxiety, max: SPAN, label: 'Fear' }}
+          />
+          <KpiTile
+            label='Fervour'
+            value={mood.fervour}
+            icon={Sparkles}
+            tone='gold'
+            meter={{ value: mood.fervour, max: SPAN, label: 'Fervour' }}
+          />
+          <KpiTile
+            label='Deterrence'
+            value={mood.deterrence}
+            icon={Shield}
+            tone='info'
+            meter={{ value: mood.deterrence, max: SPAN, label: 'Deterrence' }}
+          />
+          <KpiTile
+            label='Sway'
+            value={mood.agitation}
+            icon={Megaphone}
+            tone='verdigris'
+            meter={{ value: mood.agitation, max: SPAN, label: 'Sway' }}
+          />
+        </div>
       </div>
     </Held>
   )
@@ -283,13 +291,23 @@ function CascadeCard({
           ['Took part', row.participants],
           ['Fled', row.fled],
           ['Died', row.deaths],
+          ['Recorded as', row.collection_name ?? 'no recorded event'],
         ]}
       />
     </Held>
   )
 }
 
-function MobCard({ row, blocked }: { row: Mob; blocked: string | null }) {
+function MobCard({
+  row,
+  cascades,
+  blocked,
+}: {
+  row: Mob
+  cascades: Cascade[]
+  blocked: string | null
+}) {
+  const source = cascades.find((item) => item.id === row.cascade_id)
   const action = useRow('mob:edit', 'mob:delete', { mob_id: row.id }, blocked)
   const [by, setBy] = useState<keyof typeof MOB_ENDS>('concession')
   const dispersing = useCollectiveAction(
@@ -313,13 +331,27 @@ function MobCard({ row, blocked }: { row: Mob; blocked: string | null }) {
       editTitle='Set the crowd'
       note='Size and anger decide what a crowd breaks and whether the watch can break it.'
       fields={[
+        { key: 'act', label: 'What it does', kind: 'pick', table: table(ACTS) },
         { key: 'size', label: 'Size', kind: 'number', min: 0 },
         { key: 'anger', label: 'Anger', kind: 'number', min: 0, max: SPAN },
+        { key: 'damage', label: 'Damage done', kind: 'number', min: 0 },
         {
           key: 'target',
           label: 'Target',
           kind: 'pick',
           table: table(MOB_TARGETS),
+        },
+        {
+          key: 'target_entity_id',
+          label: 'Scapegoat or target',
+          kind: 'node',
+          types: ['mortal', 'faction', 'structure', 'cult', 'house'],
+        },
+        {
+          key: 'leader_entity_id',
+          label: 'Led by',
+          kind: 'node',
+          types: ['mortal'],
         },
         {
           key: 'status',
@@ -349,6 +381,15 @@ function MobCard({ row, blocked }: { row: Mob; blocked: string | null }) {
       <Facts
         items={[
           ['Damage done', row.damage],
+          ['Gathered in', row.district_name ?? 'the whole town'],
+          [
+            'Rose from',
+            source
+              ? `${ACTS[source.act].label} over ${TRIGGERS[source.trigger].label.toLowerCase()}, epoch ${source.epoch}`
+              : row.cascade_id !== null
+                ? 'a cascade no longer recorded'
+                : 'a god’s hand',
+          ],
           [
             'Scapegoat or target',
             <Ref key='target' node={row.target_node} empty='none' />,
@@ -478,6 +519,13 @@ function MovementCard({
       editTitle='Set the movement'
       note='A movement grows with grievance and fades without it; strong enough, it takes up arms as rebels or a holy movement.'
       fields={[
+        { key: 'act', label: 'What it does', kind: 'pick', table: table(ACTS) },
+        {
+          key: 'trigger',
+          label: 'Grievance',
+          kind: 'pick',
+          table: table(TRIGGERS),
+        },
         { key: 'members', label: 'Members', kind: 'number', min: 0 },
         {
           key: 'strength',
@@ -485,6 +533,30 @@ function MovementCard({
           kind: 'number',
           min: 0,
           max: SPAN,
+        },
+        {
+          key: 'leader_entity_id',
+          label: 'Led by',
+          kind: 'node',
+          types: ['mortal'],
+        },
+        {
+          key: 'cult_entity_id',
+          label: 'Its faith',
+          kind: 'node',
+          types: ['cult'],
+        },
+        {
+          key: 'faction_entity_id',
+          label: 'Its faction',
+          kind: 'node',
+          types: ['faction'],
+        },
+        {
+          key: 'ended_epoch',
+          label: 'Ended in epoch',
+          kind: 'number',
+          min: 0,
         },
       ]}
       locked={row.locked}
@@ -623,7 +695,9 @@ export function CrowdPanel({
         noun={['crowd', 'crowds']}
         itemKey={(row) => row.id}
       >
-        {(row) => <MobCard row={row} blocked={blocked} />}
+        {(row) => (
+          <MobCard row={row} cascades={data.cascades} blocked={blocked} />
+        )}
       </Listed>
       <MobForge townId={townId} blocked={blocked} />
       <Listed

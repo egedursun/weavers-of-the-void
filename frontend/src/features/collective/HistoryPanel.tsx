@@ -9,6 +9,7 @@ import {
   ScrollText,
   Sparkles,
   Star,
+  Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label, Muted } from '@/components/typography'
@@ -39,6 +40,13 @@ const STRIKERS = ['polity', 'cult']
 const MYTHS = ['people', 'polity']
 const YES_NO = { true: 'Yes', false: 'No' }
 
+function accountName(account: AccountView) {
+  const kind = ACCOUNT_KINDS[account.kind].label
+  return account.collection_name
+    ? `${kind}: ${account.collection_name}`
+    : `${kind}, epoch ${account.epoch}`
+}
+
 function StanceRow({
   accountId,
   row,
@@ -65,8 +73,8 @@ function StanceRow({
         disabledReason={action.busy ?? undefined}
         onClick={action.onRemove}
       >
-        <EyeOff />
-        Leave them out
+        <Trash2 />
+        Drop this stance
       </Button>
     </div>
   )
@@ -123,11 +131,14 @@ function StanceForge({
 
 function AccountCard({
   row,
+  accounts,
   blocked,
 }: {
   row: AccountView
+  accounts: AccountView[]
   blocked: string | null
 }) {
+  const older = accounts.find((account) => account.id === row.revised_from_id)
   const action = useRow(
     'account:edit',
     'account:delete',
@@ -179,8 +190,37 @@ function AccountCard({
           min: 0,
           max: SPAN,
         },
+        {
+          key: 'kind',
+          label: 'Kind of account',
+          kind: 'pick',
+          table: table(ACCOUNT_KINDS),
+        },
         { key: 'medium', label: 'Kept as', kind: 'pick', table: table(MEDIA) },
         { key: 'defaced', label: 'Defaced', kind: 'pick', table: YES_NO },
+        {
+          key: 'author_node_id',
+          label: 'Written by',
+          kind: 'node',
+          types: ['mortal'],
+          kinds: ['son', 'foreign_god'],
+        },
+        {
+          key: 'subject_node_id',
+          label: 'About',
+          kind: 'node',
+          types: [
+            'mortal',
+            'polity',
+            'people',
+            'cult',
+            'house',
+            'settlement',
+            'army',
+            'faction',
+          ],
+          kinds: ['son', 'foreign_god'],
+        },
       ]}
       locked={row.locked}
       blocked={busy}
@@ -195,10 +235,11 @@ function AccountCard({
             </Chip>
           )}
           {row.revised_from_id !== null && (
-            <Chip
-              icon={PenLine}
-              variant='warning'
-            >{`Rewrites account ${row.revised_from_id}`}</Chip>
+            <Chip icon={PenLine} variant='warning'>
+              {older
+                ? `Rewrites the account of epoch ${older.epoch}`
+                : 'Rewrites an older account'}
+            </Chip>
           )}
         </>
       }
@@ -219,7 +260,7 @@ function AccountCard({
           icon={Eye}
         />
         <Meter
-          label='Distance from the truth'
+          label='Untruth'
           value={row.distance}
           max={SPAN}
           tone='warning'
@@ -244,10 +285,7 @@ function AccountCard({
             'Shown in',
             <Ref key='artwork' node={row.artwork} empty='no work of art' />,
           ],
-          [
-            'Event',
-            row.collection_id !== null ? `#${row.collection_id}` : 'none',
-          ],
+          ['Event', row.collection_name ?? 'none'],
         ]}
       />
       <Label variant='overline'>{`How it speaks of each (${row.stances.length})`}</Label>
@@ -458,12 +496,18 @@ function StrikeForge({
 function MythCard({
   holderId,
   row,
+  accounts,
   blocked,
 }: {
   holderId: number
   row: Myth
+  accounts: AccountView[]
   blocked: string | null
 }) {
+  const told = Object.fromEntries(
+    accounts.map((account) => [String(account.id), accountName(account)])
+  )
+  const toldBy = accounts.find((account) => account.id === row.account_id)
   const action = useRow(
     'founding_myth:edit',
     'founding_myth:delete',
@@ -499,14 +543,20 @@ function MythCard({
           min: 0,
           max: SPAN,
         },
+        {
+          key: 'account_id',
+          label: 'Told in the account',
+          kind: 'pick',
+          table: { none: 'No written account', ...told },
+        },
       ]}
       locked={row.locked}
       blocked={busy}
       onEdit={action.onEdit}
       onRemove={action.onRemove}
       extra={
-        row.account_id !== null ? (
-          <Chip icon={ScrollText}>{`Account ${row.account_id}`}</Chip>
+        toldBy ? (
+          <Chip icon={ScrollText}>{accountName(toldBy)}</Chip>
         ) : undefined
       }
     >
@@ -729,6 +779,12 @@ function LandCard({ row, blocked }: { row: Land; blocked: string | null }) {
           min: 0,
           max: SPAN,
         },
+        {
+          key: 'claimed_epoch',
+          label: 'Claimed back in epoch',
+          kind: 'number',
+          min: 0,
+        },
       ]}
       locked={row.locked}
       blocked={action.busy}
@@ -837,7 +893,9 @@ export function HistoryPanel({
         noun={['account', 'accounts']}
         itemKey={(row) => row.id}
       >
-        {(row) => <AccountCard row={row} blocked={blocked} />}
+        {(row) => (
+          <AccountCard row={row} accounts={data.accounts} blocked={blocked} />
+        )}
       </Listed>
       <AccountForge nodeId={nodeId} type={type} blocked={blocked} />
       <Listed
@@ -851,7 +909,12 @@ export function HistoryPanel({
       </Listed>
       <StrikeForge nodeId={nodeId} blocked={blocked} />
       {data.myth ? (
-        <MythCard holderId={nodeId} row={data.myth} blocked={blocked} />
+        <MythCard
+          holderId={nodeId}
+          row={data.myth}
+          accounts={data.accounts}
+          blocked={blocked}
+        />
       ) : (
         <MythForge holderId={nodeId} type={type} blocked={blocked} />
       )}

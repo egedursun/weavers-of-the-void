@@ -154,6 +154,31 @@ describe('the divine panels', () => {
     )
   })
 
+  it('seals a pact between a son and a foreign god', async () => {
+    serve()
+    onApi('GET', '/api/foreign-gods', [{ id: 12, name: 'Veyth' }])
+    onApi('GET', '/api/gods/7/divinity', DIVINITY)
+    onApi('POST', '/api/actions/divine_pact:seal', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<GodDivinitySection godId={7} />)
+    await expect
+      .element(screen.getByRole('button', { name: 'Seal the pact' }))
+      .toBeDisabled()
+    await screen.getByRole('combobox', { name: 'Foreign god' }).click()
+    await screen.getByRole('option', { name: 'Veyth' }).click()
+    await screen
+      .getByRole('spinbutton', { name: 'Lasting epochs (empty for good)' })
+      .fill('5')
+    await screen.getByRole('button', { name: 'Seal the pact' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/divine_pact:seal'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/divine_pact:seal')[0].body).toEqual({
+      son_id: 7,
+      god_id: 12,
+      epochs: 5,
+    })
+  })
+
   it('shows the form a shattered god returns to and lets it be changed', async () => {
     serve()
     onApi('GET', '/api/gods/7/divinity', {

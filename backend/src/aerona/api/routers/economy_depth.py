@@ -87,6 +87,18 @@ async def node_materials(services: ServicesDep, node_id: int = Path(ge=1)) -> No
                     rarity=props.rarity,
                     base_value=props.base_value,
                     decay=props.decay,
+                    melting_point=props.melting_point,
+                    ignition_point=props.ignition_point,
+                    boiling_point=props.boiling_point,
+                    density=props.density,
+                    impact_yield=props.impact_yield,
+                    impact_fracture=props.impact_fracture,
+                    shear_yield=props.shear_yield,
+                    shear_fracture=props.shear_fracture,
+                    elasticity=props.elasticity,
+                    thermal_conductivity=props.thermal_conductivity,
+                    solid_density=props.solid_density,
+                    max_edge=props.max_edge,
                     effects=effects_of(rules, entity, row.slot, props),
                 )
             )

@@ -137,13 +137,13 @@ export function KpiTile({
     <div
       data-domain='kpi-tile'
       className={cn(
-        'relative flex min-w-0 flex-col gap-3 overflow-hidden rounded-xl border bg-background p-4 before:absolute before:inset-x-0 before:top-0 before:h-0.5',
+        '@container/kpi relative flex min-w-0 flex-col gap-3 overflow-hidden rounded-xl border bg-background p-4 before:absolute before:inset-x-0 before:top-0 before:h-0.5',
         ACCENT[tone]
       )}
     >
-      <div className='flex min-w-0 items-center gap-3'>
+      <div className='flex min-w-0 flex-col items-start gap-2 @tile/kpi:flex-row @tile/kpi:items-center @tile/kpi:gap-3'>
         <Medallion icon={icon} tone={tone} />
-        <Label className='min-w-0 flex-1'>{label}</Label>
+        <Label className='min-w-0 flex-1 break-normal'>{label}</Label>
       </div>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Stat value={value} size='kpi' tone={valueTone} />

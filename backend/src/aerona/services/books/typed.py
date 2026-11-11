@@ -26,6 +26,7 @@ OWNER_TABLES = frozenset({"entities", "nodes", "sons", "worlds", "stars", "forei
 SKIPPED_TABLES = frozenset(
     {
         "achievements",
+        "arms",
         "bonds",
         "chronicle",
         "chronicle_entities",

@@ -173,7 +173,7 @@ function TollPanel({ view }: { view: EventView }) {
             >
               <div className='flex min-w-0 items-center justify-between gap-2'>
                 <EntityLink kind='entity' id={String(row.community_id)}>
-                  {row.community || `#${row.community_id}`}
+                  {row.community || 'an unnamed community'}
                 </EntityLink>
                 <Badge size='sm' variant='destructive'>
                   <Skull />
@@ -252,7 +252,7 @@ function FootprintPanel({
                 className='size-icon-xs text-warning'
               />
               <EntityLink kind='entity' id={String(item.region_id)}>
-                {item.region || `#${item.region_id}`}
+                {item.region || 'an unnamed region'}
               </EntityLink>
               <Muted as='span' variant='caption' className='ms-auto'>
                 {`Since age ${item.joined_epoch}`}

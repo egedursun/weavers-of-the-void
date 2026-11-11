@@ -315,7 +315,7 @@ export function ArmsCard({
         <ArmsShield
           drawing={row.drawing}
           label={`Arms of ${label}`}
-          size='lg'
+          size='xl'
         />
         <div className='flex min-w-0 flex-1 flex-col gap-3'>
           <Text weight='semibold'>{row.blazon}</Text>
@@ -444,7 +444,7 @@ export function ArmsForge({
             <ArmsShield
               drawing={preview.data.drawing}
               label='The arms as drawn'
-              size='lg'
+              size='xl'
             />
           ) : (
             <Muted variant='caption'>

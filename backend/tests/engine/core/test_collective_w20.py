@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.agents.context.collective_lines import mortal_collective_lines
+from aerona.agents.context.collective_lines import mortal_collective_lines, son_collective_lines
 from aerona.agents.context.scope import load_scope
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.collective import (
@@ -13,6 +13,7 @@ from aerona.db.tables.collective import (
     DatingSystemRow,
     DemographicTransitionRow,
     DesignComponentRow,
+    DiasporaRow,
     FoundingMythRow,
     GenerationRow,
     LearningEventRow,
@@ -571,6 +572,54 @@ async def test_a_mortal_reads_role_classes_kept_as_json_in_context(session: Asyn
     await session.refresh(role)
     lines = await mortal_collective_lines(await load_scope(session, Rules()), someone)
     assert any("only for noble" in line for line in lines)
+
+
+async def test_a_mortal_knows_the_memory_generation_and_diaspora_around_them(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world)
+    someone = await mortal(session, "Juna", world, town.id)
+    realm = await realm_of(session, world, town)
+    struck = await mortal(session, "Kade", world, town.id)
+    folk = await entity(session, "Far Folk", EntityType.PEOPLE, PeopleStats(), world_id=world.world.id)
+    session.add_all(
+        [
+            FoundingMythRow(holder_entity_id=realm.id, credence=64, since_epoch=0, locked=[]),
+            LostLandRow(claimant_entity_id=realm.id, region_entity_id=world.regions[1].id, strength=55, lost_epoch=2, locked=[]),
+            MemoryStrikeRow(node_id=struck.id, by_entity_id=realm.id, active=True, since_epoch=1, locked=[]),
+            GenerationRow(community_entity_id=town.id, generation_epoch=4, formative=["famine"], value_shifts={}, alive=120, locked=[]),
+            DiasporaRow(people_entity_id=folk.id, host_entity_id=town.id, population=80, ties=45, since_epoch=1, locked=[]),
+        ]
+    )
+    await session.flush()
+    lines = "\n".join(await mortal_collective_lines(await load_scope(session, Rules()), someone))
+    assert f"the founding story of {realm.name} is believed at credence 64" in lines
+    assert f"{realm.name} remembers losing {world.regions[1].name} in epoch 2, memory strength 55" in lines
+    assert f"Kade is struck from the records of {realm.name}" in lines
+    assert "young in epoch 4 was shaped by famine; 120 of them live" in lines
+    assert "Far Folk keep a diaspora of 80 here, ties to home 45" in lines
+
+
+async def test_a_son_sees_stirred_towns_crowds_rewritten_accounts_and_waiting_storylets(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session)
+    town = await town_of(session, world)
+    realm = await realm_of(session, world, town)
+    mood = await mood_of(ctx, town.id)
+    mood.anger, mood.anxiety, mood.fervour = 80, 10, 5
+    session.add(MobRow(settlement_entity_id=town.id, act=CollectiveActKind.RIOT, size=250, anger=70, target=MobTarget.GRANARY, since_epoch=1, locked=[]))
+    older = AccountRow(holder_entity_id=realm.id, kind=AccountKind.OFFICIAL_CHRONICLE, fidelity=80, credence=60, epoch=1, locked=[])
+    session.add(older)
+    await session.flush()
+    newer = AccountRow(holder_entity_id=realm.id, kind=AccountKind.OFFICIAL_CHRONICLE, fidelity=30, credence=70, revised_from_id=older.id, epoch=2, locked=[])
+    session.add(newer)
+    session.add(
+        StoryletRunRow(storylet=next(iter(StoryletId)), world_id=world.world.id, cast={}, status=StoryletStatus.OPEN, due_epoch=9, opened_epoch=1, locked=[])
+    )
+    await session.flush()
+    world.son.current_world_id = world.world.id
+    lines = "\n".join(await son_collective_lines(await load_scope(session, Rules()), world.son))
+    assert f"{town.name} (town {town.id}) is stirred: anger 80" in lines
+    assert f"a crowd of 250 in {town.name}" in lines
+    assert f"account {newer.id}: the official chronicle kept by {realm.name} hides an older telling" in lines
+    assert "waits on its chooser until epoch 9" in lines
 
 
 async def test_a_custom_set_by_the_gods_records_what_it_was_before(session: AsyncSession, world: CoreWorld) -> None:

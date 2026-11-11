@@ -98,6 +98,7 @@ function serveBase() {
     { kind: 'entity', id: 20, name: 'Ashby', type: 'settlement', world_id: 1 },
     { kind: 'entity', id: 30, name: 'Varo', type: 'polity', world_id: 1 },
     { kind: 'entity', id: 40, name: 'Aldric', type: 'mortal', world_id: 1 },
+    { kind: 'entity', id: 50, name: 'Gull', type: 'vessel', world_id: 1 },
   ])
   onApi('GET', '/api/collective/storylets', [
     {
@@ -219,7 +220,9 @@ describe('crowds, memory, customs and craft', () => {
     await expect
       .element(screen.getByText('Official chronicle: The crowning of Aldric'))
       .toBeVisible()
-    await expect.element(screen.getByText('Rewrites account 9')).toBeVisible()
+    await expect
+      .element(screen.getByText('Rewrites an older account'))
+      .toBeVisible()
     await expect
       .element(screen.getByText('Varo struck Aldric from memory'))
       .toBeVisible()
@@ -319,12 +322,14 @@ describe('crowds, memory, customs and craft', () => {
       },
     })
     const { screen } = await renderApp(<CollectiveSection nodeId={30} />)
+    await screen.getByRole('tab', { name: /Arms/ }).click()
     await expect
       .element(screen.getByText('Per pale azure and argent, a tower or'))
       .toBeVisible()
     await expect
       .element(screen.getByRole('img', { name: 'Arms of Varo' }))
       .toBeVisible()
+    await screen.getByRole('tab', { name: /Reckoning/ }).click()
     await expect
       .element(
         screen.getByText('It is the 10th year since the founding of Varo')
@@ -350,6 +355,7 @@ describe('crowds, memory, customs and craft', () => {
     })
     onApi('POST', '/api/actions/arms:set', ACCEPTED_ACTION)
     const { screen } = await renderApp(<CollectiveSection nodeId={30} />)
+    await screen.getByRole('tab', { name: /Arms/ }).click()
     await expect
       .element(screen.getByRole('img', { name: 'The arms as drawn' }))
       .toBeVisible()
@@ -397,6 +403,7 @@ describe('crowds, memory, customs and craft', () => {
     })
     onApi('POST', '/api/actions/arms:edit', ACCEPTED_ACTION)
     const { screen } = await renderApp(<CollectiveSection nodeId={30} />)
+    await screen.getByRole('tab', { name: /Arms/ }).click()
     await screen.getByRole('button', { name: 'Reforge at random' }).click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/arms:edit'))
@@ -407,10 +414,68 @@ describe('crowds, memory, customs and craft', () => {
     })
   })
 
+  it('sets and mends the wear of a part on the vessel in the drawer', async () => {
+    serveBase()
+    onApi('GET', '/api/collective/of/50', {
+      ...EMPTY,
+      node: { id: 50, kind: 'entity', name: 'Gull' },
+      vessel_design_id: 9,
+      designs: [
+        {
+          id: 9,
+          owner: REALM,
+          kind: 'vessel',
+          hull: 'cog',
+          name: 'The Swift',
+          designer: null,
+          parent_design_id: null,
+          mark: 1,
+          mass: 40,
+          speed: 30,
+          range: 30,
+          seaworthiness: 60,
+          cargo: 50,
+          armament: 10,
+          crew: 20,
+          obsolete: false,
+          epoch: 3,
+          vessels: 1,
+          components: [
+            {
+              component: 'hull',
+              material_id: null,
+              material_name: null,
+              size: 3,
+              quality: 50,
+              wear: null,
+            },
+          ],
+          locked: [],
+        },
+      ],
+    })
+    onApi('POST', '/api/actions/component_wear:set', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CollectiveSection nodeId={50} />)
+    await expect
+      .element(screen.getByRole('button', { name: 'Make it as good as new' }))
+      .toBeDisabled()
+    await screen.getByRole('spinbutton', { name: 'Wear' }).fill('35')
+    await screen.getByRole('button', { name: 'Set the wear' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/component_wear:set'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/component_wear:set')[0].body).toEqual({
+      vessel_id: 50,
+      component: 'hull',
+      wear: 35,
+    })
+  })
+
   it('keeps crowd controls for other things disabled with their reason', async () => {
     serveBase()
     onApi('GET', '/api/collective/of/40', { ...EMPTY, node: KING })
     const { screen } = await renderApp(<CollectiveSection nodeId={40} />)
+    await screen.getByRole('tab', { name: /Crowds/ }).click()
     await expect
       .element(screen.getByRole('button', { name: 'Raise it' }).first())
       .toBeDisabled()

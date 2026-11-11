@@ -28809,6 +28809,8 @@ export interface components {
       outcome: components['schemas']['CascadeOutcome']
       deaths: number
       fled: number
+      collection_id: number | null
+      collection_name: string | null
       epoch: number
     }
     CaseDeleteInput: {
@@ -31120,6 +31122,7 @@ export interface components {
     DatingView: {
       kind: components['schemas']['DatingSystemKind']
       anchor_year: number
+      anchor: components['schemas']['NodeRef'] | null
       label: components['schemas']['NodeRef'] | null
       cycle_years: number
       reformed_epoch: number | null
@@ -39157,6 +39160,18 @@ export interface components {
       rarity: number
       base_value: number
       decay: number
+      melting_point: number
+      ignition_point: number
+      boiling_point: number
+      density: number
+      impact_yield: number
+      impact_fracture: number
+      shear_yield: number
+      shear_fracture: number
+      elasticity: number
+      thermal_conductivity: number
+      solid_density: number
+      max_edge: number
       effects: {
         [key: string]: number
       }
@@ -39753,6 +39768,8 @@ export interface components {
       status: components['schemas']['MobStatus']
       ended_by: components['schemas']['MobEnd'] | null
       damage: number
+      district_name: string | null
+      cascade_id: number | null
       since_epoch: number
       locked: string[]
     }
@@ -44351,12 +44368,17 @@ export interface components {
       role: components['schemas']['RoleKind']
     }
     RoleNormEditInput: {
-      values?: {
-        [key: string]: number | string | boolean | null
-      }
-      release?: string[]
       holder_id: number
       role: components['schemas']['RoleKind']
+      values?: {
+        [key: string]:
+          | number
+          | string
+          | boolean
+          | components['schemas']['SocialClass'][]
+          | null
+      }
+      release?: string[]
     }
     RoleNormSetInput: {
       holder_id: number
@@ -47167,6 +47189,7 @@ export interface components {
       choices: components['schemas']['StoryletChoiceView'][]
       follows_run_id: number | null
       collection_id: number | null
+      collection_name: string | null
       due_epoch: number | null
       opened_epoch: number
       resolved_epoch: number | null

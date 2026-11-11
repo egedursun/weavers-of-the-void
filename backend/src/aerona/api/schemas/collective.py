@@ -58,6 +58,8 @@ class CascadeView(ApiModel):
     outcome: CascadeOutcome
     deaths: int
     fled: int
+    collection_id: int | None
+    collection_name: str | None
     epoch: int
 
 
@@ -72,6 +74,8 @@ class MobView(ApiModel):
     status: MobStatus
     ended_by: MobEnd | None
     damage: int
+    district_name: str | None
+    cascade_id: int | None
     since_epoch: int
     locked: list[str]
 
@@ -178,6 +182,7 @@ class StoryletView(ApiModel):
     choices: list[StoryletChoiceView]
     follows_run_id: int | None
     collection_id: int | None
+    collection_name: str | None
     due_epoch: int | None
     opened_epoch: int
     resolved_epoch: int | None
@@ -265,6 +270,7 @@ class RoleView(ApiModel):
 class DatingView(ApiModel):
     kind: DatingSystemKind
     anchor_year: int
+    anchor: NodeRef | None
     label: NodeRef | None
     cycle_years: int
     reformed_epoch: int | None

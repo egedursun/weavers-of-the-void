@@ -41,7 +41,7 @@ export function ArmsCrest({ nodeId, name }: { nodeId: number; name: string }) {
             <ArmsShield
               drawing={row.drawing}
               label={`Arms of ${name}, drawn large`}
-              size='lg'
+              size='xl'
             />
             <div className='flex min-w-0 flex-col gap-1'>
               <Text weight='semibold'>{row.blazon}</Text>

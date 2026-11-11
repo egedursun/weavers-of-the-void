@@ -286,10 +286,6 @@ function HistoryBody({
               'No greater history'
             ),
           ],
-          [
-            'Parent number',
-            collection.parent_id === null ? 'None' : `#${collection.parent_id}`,
-          ],
         ]}
       />
       {collection.note && <Muted variant='caption'>{collection.note}</Muted>}

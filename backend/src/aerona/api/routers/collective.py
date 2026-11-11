@@ -126,6 +126,12 @@ async def crowd_views(session: AsyncSession, node_id: int) -> tuple[MoodView | N
         row.id: row.kind.value.replace("_", " ") for row in await session.scalars(select(DistrictRow).where(DistrictRow.settlement_entity_id == node_id))
     }
     mobs = list(await session.scalars(select(MobRow).where(MobRow.settlement_entity_id == node_id).order_by(MobRow.id.desc())))
+    events = {
+        row.id: row.name
+        for row in await session.scalars(
+            select(CollectionRow).where(CollectionRow.id.in_([row.collection_id for row in cascades if row.collection_id is not None]))
+        )
+    }
     movements = list(await session.scalars(select(MovementRow).where(MovementRow.settlement_entity_id == node_id).order_by(MovementRow.id.desc())))
     refs = await refs_for(
         session,
@@ -157,6 +163,8 @@ async def crowd_views(session: AsyncSession, node_id: int) -> tuple[MoodView | N
                 outcome=row.outcome,
                 deaths=row.deaths,
                 fled=row.fled,
+                collection_id=row.collection_id,
+                collection_name=events.get(row.collection_id) if row.collection_id is not None else None,
                 epoch=row.epoch,
             )
             for row in cascades
@@ -173,6 +181,8 @@ async def crowd_views(session: AsyncSession, node_id: int) -> tuple[MoodView | N
                 status=mob.status,
                 ended_by=mob.ended_by,
                 damage=mob.damage,
+                district_name=districts.get(mob.district_id) if mob.district_id is not None else None,
+                cascade_id=mob.cascade_id,
                 since_epoch=mob.since_epoch,
                 locked=list(mob.locked),
             )
@@ -332,6 +342,12 @@ async def storylet_views(session: AsyncSession, node: EntityRow | None, node_id:
     rows = list(await session.scalars(select(StoryletRunRow).where(or_(*clauses)).order_by(StoryletRunRow.opened_epoch.desc(), StoryletRunRow.id.desc())))
     rows = [row for row in rows if row.chooser_node_id == node_id or node_id in row.cast.values() or row.world_id == node_id]
     refs = await refs_for(session, [item for row in rows for item in (row.chooser_node_id, *row.cast.values())])
+    chains = {
+        row.id: row.name
+        for row in await session.scalars(
+            select(CollectionRow).where(CollectionRow.id.in_([row.collection_id for row in rows if row.collection_id is not None]))
+        )
+    }
     found: list[StoryletView] = []
     for row in rows:
         choices = await choice_texts(session, row)
@@ -350,6 +366,7 @@ async def storylet_views(session: AsyncSession, node: EntityRow | None, node_id:
                 choices=[StoryletChoiceView(index=index, text=text) for index, text in enumerate(choices)],
                 follows_run_id=row.follows_run_id,
                 collection_id=row.collection_id,
+                collection_name=chains.get(row.collection_id) if row.collection_id is not None else None,
                 due_epoch=row.due_epoch,
                 opened_epoch=row.opened_epoch,
                 resolved_epoch=row.resolved_epoch,
@@ -456,10 +473,11 @@ async def dating_view(session: AsyncSession, node_id: int, year: int) -> DatingV
     row = await session.get(DatingSystemRow, node_id)
     if row is None:
         return None
-    refs = await refs_for(session, [row.label_node_id])
+    refs = await refs_for(session, [row.label_node_id, row.anchor_node_id])
     return DatingView(
         kind=row.kind,
         anchor_year=row.anchor_year,
+        anchor=at(refs, row.anchor_node_id),
         label=at(refs, row.label_node_id),
         cycle_years=row.cycle_years,
         reformed_epoch=row.reformed_epoch,

@@ -122,6 +122,42 @@ describe('urban', () => {
     })
   })
 
+  it('sets the coverage of a service a district already has', async () => {
+    serveBase()
+    onApi('GET', '/api/urban/of/30', {
+      ...EMPTY,
+      node: TOWN,
+      districts: [
+        {
+          id: 7,
+          kind: 'market',
+          level: 2,
+          housing: 'townhouse',
+          desirability: 64,
+          land_value: 58,
+          services: [{ service: 'watch', coverage: 70, epoch: 5, locked: [] }],
+          turf: [],
+          locked: [],
+        },
+      ],
+    })
+    onApi('POST', '/api/actions/district_service:edit', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<UrbanSection nodeId={30} />)
+    await screen.getByRole('spinbutton', { name: 'Coverage' }).fill('40')
+    await screen.getByRole('button', { name: 'Set its coverage' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/district_service:edit'))
+      .toHaveLength(1)
+    expect(
+      callsTo('POST', '/api/actions/district_service:edit')[0].body
+    ).toEqual({
+      district_id: 7,
+      service: 'watch',
+      values: { coverage: 40 },
+      release: [],
+    })
+  })
+
   it('shows an organisation’s rackets and breaks one', async () => {
     serveBase()
     onApi('GET', '/api/urban/of/40', {

@@ -34,6 +34,7 @@ import { why } from '@/features/dominion/model'
 import { NodePicker } from '@/features/dominion/parts'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { DISTRICT_SPEC } from '@/features/entity/society/labels'
+import { NumberField } from '@/features/entity/wilds/parts'
 import { Ref } from '@/features/gatherings/parts'
 import {
   type ConvoyView,
@@ -257,6 +258,11 @@ function TownCard({
   )
 }
 
+function clampCoverage(text: string) {
+  const value = Number(text)
+  return Number.isNaN(value) ? 0 : Math.min(100, Math.max(0, Math.round(value)))
+}
+
 function DistrictCard({
   district,
   blocked,
@@ -265,6 +271,8 @@ function DistrictCard({
   blocked: string | null
 }) {
   const [service, setService] = useState<string>('watch')
+  const [coverage, setCoverage] = useState('100')
+  const held = district.services.some((row) => row.service === service)
   const edit = useUrbanAction(
     'district_urban:edit',
     (vars: Edit) => ({ district_id: district.id, ...vars }),
@@ -275,11 +283,21 @@ function DistrictCard({
     (_: void) => ({
       district_id: district.id,
       service: service as DistrictUrbanView['services'][number]['service'],
-      coverage: 100,
+      coverage: clampCoverage(coverage),
     }),
     'The service covers it'
   )
-  const busy = why(blocked, edit.isPending, cover.isPending)
+  const recover = useUrbanAction(
+    'district_service:edit',
+    (_: void) => ({
+      district_id: district.id,
+      service: service as DistrictUrbanView['services'][number]['service'],
+      values: { coverage: clampCoverage(coverage) },
+      release: [],
+    }),
+    'The coverage is set'
+  )
+  const busy = why(blocked, edit.isPending, cover.isPending, recover.isPending)
   const homes = HOUSING[district.housing]
   return (
     <RecordRow
@@ -322,23 +340,31 @@ function DistrictCard({
           </li>
         )}
       </PagedList>
-      <div className='grid min-w-0 grid-cols-1 items-end gap-2 sm:grid-cols-2'>
+      <div className='grid min-w-0 grid-cols-1 items-end gap-2 sm:grid-cols-3'>
         <MindPicker
-          label='Service to give it in full'
+          label='Service'
           value={service}
           table={table(SERVICES)}
           blocked={blocked}
           onPick={setService}
+        />
+        <NumberField
+          label='Coverage'
+          value={coverage}
+          min={0}
+          max={100}
+          disabled={busy !== null}
+          onChange={setCoverage}
         />
         <Button
           size='sm'
           variant='outline'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
-          onClick={() => cover.mutate()}
+          onClick={() => (held ? recover.mutate() : cover.mutate())}
         >
           <Plus />
-          Cover it
+          {held ? 'Set its coverage' : 'Cover it'}
         </Button>
       </div>
       <RecordEditor

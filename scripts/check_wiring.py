@@ -30,6 +30,11 @@ def frontend_text() -> str:
 
 
 WORD = re.compile(r"\w+")
+UNION_MEMBER = re.compile(r"(?m)^\s*\|\s*'[^']+'\s*$")
+
+
+def calling_text(frontend: str) -> str:
+    return UNION_MEMBER.sub("", frontend)
 WORD_HOMES: dict[str, frozenset[Path]] = {}
 
 
@@ -408,7 +413,7 @@ def main() -> int:
         *orphan_enums(texts),
         *orphan_tables(texts),
         *unregistered_actions(texts),
-        *actions_without_ui(texts, frontend_text()),
+        *actions_without_ui(texts, calling_text(frontend_text())),
         *uncontrolled_tables(texts),
         *pages_without_shared_sections(),
         *book_gaps(texts),

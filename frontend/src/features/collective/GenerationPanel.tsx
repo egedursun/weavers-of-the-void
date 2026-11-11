@@ -244,6 +244,12 @@ function DiasporaCard({
           kind: 'number',
           min: 0,
         },
+        {
+          key: 'home_entity_id',
+          label: 'Homeland',
+          kind: 'node',
+          types: ['settlement', 'region', 'polity'],
+        },
       ]}
       locked={row.locked}
       blocked={action.busy}
@@ -322,14 +328,14 @@ function DiasporaForge({
       }
     >
       <NodePicker
-        label={isPeople ? 'Town' : 'People'}
+        label={isPeople ? 'Host town' : 'Settling people'}
         value={other}
         onChange={setOther}
         blocked={wrong ?? blocked}
         types={[isPeople ? 'settlement' : 'people']}
       />
       <NumberField
-        label='People'
+        label='How many settle'
         value={population}
         min={0}
         blocked={wrong ?? blocked}
@@ -398,31 +404,33 @@ function TransitionCard({
       onEdit={action.onEdit}
       onRemove={action.onRemove}
     >
-      <div className='grid min-w-0 grid-cols-2 gap-2 lg:grid-cols-4'>
-        <KpiTile
-          label='Fertility'
-          value={`${row.fertility_pct}%`}
-          icon={Baby}
-          tone='success'
-        />
-        <KpiTile
-          label='Elders'
-          value={`${row.elder_share}%`}
-          icon={Hourglass}
-          tone='muted'
-        />
-        <KpiTile
-          label='In towns'
-          value={`${row.urban_share}%`}
-          icon={Building2}
-          tone='info'
-        />
-        <KpiTile
-          label='Lettered'
-          value={`${row.literacy}%`}
-          icon={BookOpen}
-          tone='gold'
-        />
+      <div className='@container/tiles min-w-0'>
+        <div className='grid min-w-0 grid-cols-2 gap-2 @2xl/tiles:grid-cols-4'>
+          <KpiTile
+            label='Fertility'
+            value={`${row.fertility_pct}%`}
+            icon={Baby}
+            tone='success'
+          />
+          <KpiTile
+            label='Elders'
+            value={`${row.elder_share}%`}
+            icon={Hourglass}
+            tone='muted'
+          />
+          <KpiTile
+            label='In towns'
+            value={`${row.urban_share}%`}
+            icon={Building2}
+            tone='info'
+          />
+          <KpiTile
+            label='Lettered'
+            value={`${row.literacy}%`}
+            icon={BookOpen}
+            tone='gold'
+          />
+        </div>
       </div>
     </Held>
   )

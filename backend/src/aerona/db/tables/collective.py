@@ -38,19 +38,19 @@ from aerona.domain.enums.military import HullClass
 from aerona.domain.enums.mind import EthicalStance, ValueAxis
 
 KEY_LENGTH = 80
-MOOD_FIELDS = ("anger", "anxiety", "fervour", "deterrence", "agitation")
-MOB_FIELDS = ("size", "anger", "target", "target_entity_id", "leader_entity_id", "status")
-MOVEMENT_FIELDS = ("members", "strength", "cult_entity_id")
-ACCOUNT_FIELDS = ("fidelity", "credence", "defaced", "medium")
+MOOD_FIELDS = ("anger", "anxiety", "fervour", "deterrence", "agitation", "last_trigger")
+MOB_FIELDS = ("act", "size", "anger", "damage", "target", "target_entity_id", "leader_entity_id", "status")
+MOVEMENT_FIELDS = ("act", "trigger", "members", "strength", "leader_entity_id", "cult_entity_id", "faction_entity_id", "ended_epoch")
+ACCOUNT_FIELDS = ("kind", "fidelity", "credence", "defaced", "medium", "author_node_id", "subject_node_id")
 STRIKE_FIELDS = ("active",)
 MYTH_FIELDS = ("credence", "account_id")
 COMMEMORATION_FIELDS = ("strength", "pride")
-LOST_LAND_FIELDS = ("strength",)
-STORYLET_FIELDS = ("status", "choice", "due_epoch")
+LOST_LAND_FIELDS = ("strength", "claimed_epoch")
+STORYLET_FIELDS = ("status", "choice", "due_epoch", "chooser_node_id")
 NORM_FIELDS = ("stance",)
 BIAS_FIELDS = ("prestige_pct", "conformity_pct", "content_pct")
 GENERATION_FIELDS = ("alive", "passed_epoch")
-DIASPORA_FIELDS = ("population", "ties", "remittance")
+DIASPORA_FIELDS = ("population", "ties", "remittance", "home_entity_id")
 TRANSITION_FIELDS = ("fertility_pct", "elder_share", "urban_share", "literacy")
 SEX_RATIO_FIELDS = ("males_per_hundred", "widows")
 ROLE_FIELDS = ("eligibility", "min_age", "classes", "stance")
@@ -78,7 +78,7 @@ ARMS_FIELDS = (
     "crest_tincture",
     "motto",
 )
-DESIGN_FIELDS = ("name", "hull", "obsolete", "speed", "range", "seaworthiness", "cargo", "armament", "crew")
+DESIGN_FIELDS = ("name", "hull", "obsolete", "speed", "range", "seaworthiness", "cargo", "armament", "crew", "designer_entity_id")
 COMPONENT_FIELDS = ("material_id", "size", "quality")
 WEAR_FIELDS = ("wear",)
 

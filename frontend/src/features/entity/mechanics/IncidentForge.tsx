@@ -397,7 +397,7 @@ export function IncidentControls({
                 variant={badgeVariant(spec.tone)}
               >
                 <Icon aria-hidden='true' />
-                {`${item.name ?? `#${item.node_id}`} · ${spec.label.toLowerCase()}`}
+                {`${item.name ?? 'an unnamed record'} · ${spec.label.toLowerCase()}`}
               </Badge>
             )
           }}

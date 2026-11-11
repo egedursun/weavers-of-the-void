@@ -7,11 +7,12 @@ import {
   Package,
   RefreshCw,
   Ship,
+  Sparkles,
   Sword,
   Wrench,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { KpiTile } from '@/components/domain'
+import { KpiTile, PagedList } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
 import { Chip, Facts, ForgeCard, Meter } from '@/features/cosmography/parts'
@@ -75,6 +76,20 @@ function DatingCard({
           kind: 'number',
           min: 0,
         },
+        {
+          key: 'anchor_node_id',
+          label: 'Counted from the life of',
+          kind: 'node',
+          types: ['mortal', 'polity', 'cult', 'people', 'settlement'],
+          kinds: ['son', 'foreign_god'],
+        },
+        {
+          key: 'label_node_id',
+          label: 'Era named for',
+          kind: 'node',
+          types: ['mortal', 'polity', 'cult', 'people', 'settlement'],
+          kinds: ['son', 'foreign_god'],
+        },
       ]}
       locked={row.locked}
       blocked={action.busy}
@@ -87,6 +102,10 @@ function DatingCard({
           [
             'Named for',
             <Ref key='label' node={row.label} empty='the era itself' />,
+          ],
+          [
+            'Counted from the life of',
+            <Ref key='anchor' node={row.anchor} empty='no one' />,
           ],
           ['Years in a cycle', row.cycle_years],
         ]}
@@ -228,13 +247,90 @@ export function HeraldryPanel({
   )
 }
 
+function WearControl({
+  vesselId,
+  part,
+  blocked,
+}: {
+  vesselId: number
+  part: Part
+  blocked: string | null
+}) {
+  const [wear, setWear] = useState(String(part.wear ?? 0))
+  const keys = { vessel_id: vesselId, component: part.component }
+  const setting = useCollectiveAction(
+    'component_wear:set',
+    (_: void) => ({ ...keys, wear: clamp(wear) }),
+    'The part wears so'
+  )
+  const editing = useCollectiveAction(
+    'component_wear:edit',
+    (_: void) => ({ ...keys, values: { wear: clamp(wear) }, release: [] }),
+    'The part wears so'
+  )
+  const mending = useRemove('component_wear:delete', keys, blocked)
+  const busy = why(mending.busy, setting.isPending, editing.isPending)
+  return (
+    <div className='flex min-w-0 flex-col gap-2'>
+      <Meter
+        label='Wear on this vessel'
+        value={part.wear ?? 0}
+        max={SPAN}
+        tone='warning'
+        icon={Wrench}
+      />
+      <div className='flex min-w-0 flex-wrap items-end gap-2'>
+        <NumberField
+          label='Wear'
+          value={wear}
+          min={0}
+          max={SPAN}
+          blocked={busy}
+          onChange={setWear}
+        />
+        <Button
+          size='sm'
+          variant='outline'
+          disabled={busy !== null}
+          disabledReason={busy ?? undefined}
+          onClick={() =>
+            part.wear === null ? setting.mutate() : editing.mutate()
+          }
+        >
+          <Wrench />
+          Set the wear
+        </Button>
+        <Button
+          size='sm'
+          variant='ghost'
+          disabled={
+            (busy ??
+              (part.wear === null ? 'This part is as good as new' : null)) !==
+            null
+          }
+          disabledReason={
+            busy ??
+            (part.wear === null ? 'This part is as good as new' : undefined)
+          }
+          onClick={mending.onRemove}
+        >
+          <Sparkles />
+          Make it as good as new
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 function PartRow({
   designId,
+  vesselId,
   part,
   materials,
   blocked,
 }: {
   designId: number
+  vesselId: number | null
   part: Part
   materials: Record<string, string>
   blocked: string | null
@@ -268,14 +364,18 @@ function PartRow({
         <Chip icon={spec.icon}>{spec.label}</Chip>
         <Muted variant='caption'>{part.material_name ?? 'common stuff'}</Muted>
       </div>
-      {part.wear !== null && (
-        <Meter
-          label='Wear on this vessel'
-          value={part.wear}
-          max={SPAN}
-          tone='warning'
-          icon={Wrench}
-        />
+      {vesselId !== null ? (
+        <WearControl vesselId={vesselId} part={part} blocked={busy} />
+      ) : (
+        part.wear !== null && (
+          <Meter
+            label='Wear on this vessel'
+            value={part.wear}
+            max={SPAN}
+            tone='warning'
+            icon={Wrench}
+          />
+        )
       )}
       <div className='grid min-w-0 gap-2 sm:grid-cols-4'>
         <NumberField
@@ -368,13 +468,23 @@ function DesignCard({
     <Held
       icon={kind.icon}
       tone={row.obsolete ? 'muted' : kind.tone}
-      title={`${row.name} · mark ${row.mark}`}
+      title={
+        row.name.endsWith(`mark ${row.mark}`)
+          ? row.name
+          : `${row.name} · mark ${row.mark}`
+      }
       caption={`${kind.label}${row.hull ? ` · ${HULL[row.hull]?.label ?? row.hull}` : ''} · drawn in epoch ${row.epoch}${row.obsolete ? ' · superseded' : ''}`}
       removeLabel='Strike the design'
       editTitle='Set the design'
       note='Speed, reach, cargo, arms and crew follow from its parts; set them here to hold them against the parts.'
       fields={[
-        { key: 'name', label: 'Name', kind: 'text' },
+        { key: 'name', label: 'Design name', kind: 'text' },
+        {
+          key: 'designer_entity_id',
+          label: 'Drawn by',
+          kind: 'node',
+          types: ['mortal'],
+        },
         { key: 'hull', label: 'Hull', kind: 'pick', table: table(HULL) },
         { key: 'speed', label: 'Speed', kind: 'number', min: 0, max: SPAN },
         { key: 'range', label: 'Reach', kind: 'number', min: 0, max: SPAN },
@@ -410,33 +520,35 @@ function DesignCard({
         </>
       }
     >
-      <div className='grid min-w-0 grid-cols-2 gap-2 lg:grid-cols-4'>
-        <KpiTile
-          label='Speed'
-          value={row.speed}
-          icon={Gauge}
-          tone='info'
-          meter={{ value: row.speed, max: SPAN, label: 'Speed' }}
-        />
-        <KpiTile
-          label='Seaworthiness'
-          value={row.seaworthiness}
-          icon={Anchor}
-          tone='success'
-          meter={{
-            value: row.seaworthiness,
-            max: SPAN,
-            label: 'Seaworthiness',
-          }}
-        />
-        <KpiTile
-          label='Arms'
-          value={row.armament}
-          icon={Sword}
-          tone='danger'
-          meter={{ value: row.armament, max: SPAN, label: 'Arms' }}
-        />
-        <KpiTile label='Cargo' value={row.cargo} icon={Package} tone='gold' />
+      <div className='@container/tiles min-w-0'>
+        <div className='grid min-w-0 grid-cols-2 gap-2 @2xl/tiles:grid-cols-4'>
+          <KpiTile
+            label='Speed'
+            value={row.speed}
+            icon={Gauge}
+            tone='info'
+            meter={{ value: row.speed, max: SPAN, label: 'Speed' }}
+          />
+          <KpiTile
+            label='Seaworthiness'
+            value={row.seaworthiness}
+            icon={Anchor}
+            tone='success'
+            meter={{
+              value: row.seaworthiness,
+              max: SPAN,
+              label: 'Seaworthiness',
+            }}
+          />
+          <KpiTile
+            label='Arms'
+            value={row.armament}
+            icon={Sword}
+            tone='danger'
+            meter={{ value: row.armament, max: SPAN, label: 'Arms' }}
+          />
+          <KpiTile label='Cargo' value={row.cargo} icon={Package} tone='gold' />
+        </div>
       </div>
       <Facts
         items={[
@@ -457,15 +569,23 @@ function DesignCard({
         ]}
       />
       <Label variant='overline'>{`Parts (${row.components.length})`}</Label>
-      {row.components.map((part) => (
-        <PartRow
-          key={part.component}
-          designId={row.id}
-          part={part}
-          materials={materials}
-          blocked={busy}
-        />
-      ))}
+      <PagedList
+        items={row.components}
+        initial={3}
+        noun={['part', 'parts']}
+        className='flex min-w-0 flex-col gap-2'
+        itemKey={(part) => part.component}
+      >
+        {(part) => (
+          <PartRow
+            designId={row.id}
+            vesselId={fitted ? vesselId : null}
+            part={part}
+            materials={materials}
+            blocked={busy}
+          />
+        )}
+      </PagedList>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
           size='sm'

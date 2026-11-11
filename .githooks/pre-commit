@@ -26,6 +26,7 @@ run import_cycles "$PYTHON" scripts/check_import_cycles.py
 run hidden_controls "$PYTHON" scripts/check_hidden_controls.py
 run label_maps "$PYTHON" scripts/check_label_maps.py
 run unpaged_lists "$PYTHON" scripts/check_unpaged_lists.py
+run raw_ids "$PYTHON" scripts/check_raw_ids.py
 run shared_labels "$PYTHON" scripts/check_shared_labels.py
 run orphans "$PYTHON" scripts/check_orphans.py
 run frontend_orphans "$PYTHON" scripts/check_frontend_orphans.py
@@ -51,7 +52,7 @@ if echo "$STAGED" | grep -qE '^backend/(src|tests)/.*\.py$|^backend/pyproject\.t
   PROVING="$PROVING $("$PYTHON" scripts/covering_tests.py | tr '\n' ' ')"
 fi
 if echo "$STAGED" | grep -qE '^backend/(src|tests)/.*\.py$|^frontend/src/.*\.(ts|tsx)$|^scripts/check_frontend_orphans\.py$'; then
-  PROVING="$PROVING tests/api/test_frontend_reads_every_field.py tests/unit/test_frontend_orphans.py"
+  PROVING="$PROVING tests/api/test_frontend_reads_every_field.py tests/unit/test_frontend_orphans.py tests/unit/test_editable_fields.py tests/api/test_material_slot_fields.py"
 fi
 if [ -n "$PROVING" ]; then
   run proving sh -c "cd backend && .venv/bin/pytest -q -p no:cacheprovider -n auto --dist worksteal --durations=15 $PROVING"

@@ -19,6 +19,14 @@ import {
 import { ROLES_IN_STORY, STORYLET_STATES, STORYLETS } from './labels'
 import { Held, Listed } from './parts'
 
+function cast(text: string) {
+  return text.replace(/\{(\w+)\}/g, (_, role: string) =>
+    role in ROLES_IN_STORY
+      ? `the ${ROLES_IN_STORY[role as keyof typeof ROLES_IN_STORY].toLowerCase()}`
+      : role
+  )
+}
+
 function ChoiceButton({
   run,
   index,
@@ -94,6 +102,12 @@ function StoryletCard({
         },
         { key: 'due_epoch', label: 'Decided by epoch', kind: 'number', min: 0 },
         { key: 'choice', label: 'Choice made', kind: 'number', min: 0, max: 3 },
+        {
+          key: 'chooser_node_id',
+          label: 'Chosen by',
+          kind: 'node',
+          types: ['mortal', 'polity', 'people', 'cult', 'house', 'settlement'],
+        },
       ]}
       locked={row.locked}
       blocked={busy}
@@ -114,10 +128,7 @@ function StoryletCard({
           ['Chooser', <Ref key='chooser' node={row.chooser} empty='no one' />],
           ['Step', row.step + 1],
           ['World', row.world_id ?? 'none'],
-          [
-            'Event chain',
-            row.collection_id !== null ? `#${row.collection_id}` : 'none',
-          ],
+          ['Event chain', row.collection_name ?? 'none'],
           ...row.cast.map((part): [string, ReactNode] => [
             ROLES_IN_STORY[part.role],
             <Ref key={part.role} node={part.node} />,
@@ -153,16 +164,20 @@ function SpecCard({ spec }: { spec: StoryletSpecView }) {
       tone={named.tone}
       title={spec.title}
       caption={`Chosen by the ${ROLES_IN_STORY[spec.chooser].toLowerCase()} · weight ${spec.weight}`}
-      aside={<Chip icon={BookOpen}>{`${spec.steps.length} steps`}</Chip>}
+      aside={
+        <Chip icon={BookOpen}>
+          {`${spec.steps.length} ${spec.steps.length === 1 ? 'step' : 'steps'}`}
+        </Chip>
+      }
     >
       <Muted variant='caption'>{`Parts: ${spec.roles.map((role) => ROLES_IN_STORY[role]).join(', ')}`}</Muted>
       {spec.steps.map((step, index) => (
         <div key={step.text} className='flex min-w-0 flex-col gap-1'>
           <Label>{`Step ${index + 1}`}</Label>
-          <Text>{step.text}</Text>
+          <Text>{cast(step.text)}</Text>
           <Muted variant='caption'>
             {step.choices
-              .map((choice, at) => `${at + 1}. ${choice}`)
+              .map((choice, at) => `${at + 1}. ${cast(choice)}`)
               .join(' · ')}
           </Muted>
         </div>

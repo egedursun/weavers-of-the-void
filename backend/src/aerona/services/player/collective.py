@@ -319,9 +319,11 @@ class RoleTarget(Command):
     role: RoleKind
 
 
-class RoleEdit(Edited):
+class RoleEdit(Command):
     holder_id: int
     role: RoleKind
+    values: dict[str, int | str | bool | list[SocialClass] | None] = Field(default_factory=dict)
+    release: list[str] = Field(default_factory=list)
 
 
 class DatingDraft(Command):

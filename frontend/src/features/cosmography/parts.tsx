@@ -1,4 +1,4 @@
-import { type ReactNode, useId, useState } from 'react'
+import { type ReactNode, useId, useMemo, useState } from 'react'
 import { type LucideIcon, Save } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -8,9 +8,11 @@ import { type ProgressTone } from '@/components/ui/progress'
 import { Textarea } from '@/components/ui/textarea'
 import { EntityLink, Medallion, StatBar } from '@/components/domain'
 import { type KpiTone } from '@/components/domain/KpiTile'
+import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
+import { useNames } from '@/features/entity/api/queries'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { AdjustPanel, Held, NumberField } from '@/features/entity/wilds/parts'
 import { heldLabel } from './labels'
@@ -26,6 +28,13 @@ export type Field =
   | { key: string; label: string; kind: 'decimal'; min?: number }
   | { key: string; label: string; kind: 'pick'; table: Record<string, string> }
   | { key: string; label: string; kind: 'text'; long?: boolean }
+  | {
+      key: string
+      label: string
+      kind: 'node'
+      types: readonly string[]
+      kinds?: readonly string[]
+    }
 
 export type Values = Record<string, number | string | boolean | null>
 
@@ -41,8 +50,69 @@ function parsed(field: Field, text: string): number | string | boolean | null {
   if (field.kind === 'text') return text.trim() === '' ? null : text.trim()
   if (text === '') return null
   if (field.kind === 'pick') return picked(text)
+  if (field.kind === 'node') return Number(text)
   const value = Number(text)
   return Number.isNaN(value) ? null : value
+}
+
+function LinkField({
+  label,
+  value,
+  types,
+  kinds,
+  busy,
+  onChange,
+}: {
+  label: string
+  value: string
+  types: readonly string[]
+  kinds: readonly string[]
+  busy: string | null
+  onChange: (value: string) => void
+}) {
+  const id = useId()
+  const names = useNames()
+  const options = useMemo(
+    () =>
+      (names.data ?? [])
+        .filter((entry) =>
+          entry.kind === 'entity'
+            ? entry.status !== 'dead' && types.includes(entry.type)
+            : kinds.includes(entry.kind)
+        )
+        .map((entry) => ({
+          value: String(entry.id),
+          label: entry.name,
+          hint: (entry.kind === 'entity' ? entry.type : entry.kind).replaceAll(
+            '_',
+            ' '
+          ),
+        })),
+    [names.data, types, kinds]
+  )
+  const sought = [...kinds, ...types]
+    .map((kind) => kind.replaceAll('_', ' '))
+    .join(', ')
+  return (
+    <div className='flex min-w-0 flex-col gap-1'>
+      <Label as='label' htmlFor={id}>
+        {label}
+      </Label>
+      <RecordCombobox
+        id={id}
+        options={options}
+        value={value === '' ? null : value}
+        onChange={(next) => onChange(next ?? '')}
+        placeholder={`Search ${sought}`}
+        disabled={busy !== null || names.isPending}
+        disabledReason={
+          busy ?? (names.isPending ? 'Reading the names' : undefined)
+        }
+        clearable
+        aria-label={label}
+      />
+    </div>
+  )
 }
 
 export function RecordEditor({
@@ -92,6 +162,16 @@ export function RecordEditor({
                 long={field.long ?? false}
                 value={draft[field.key] ?? ''}
                 disabled={busy !== null}
+                onChange={set(field.key)}
+              />
+            ) : field.kind === 'node' ? (
+              <LinkField
+                key={field.key}
+                label={field.label}
+                value={draft[field.key] ?? ''}
+                types={field.types}
+                kinds={field.kinds ?? []}
+                busy={busy}
                 onChange={set(field.key)}
               />
             ) : field.kind === 'pick' ? (

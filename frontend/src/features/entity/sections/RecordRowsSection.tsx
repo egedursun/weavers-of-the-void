@@ -1,17 +1,18 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
+  Baby,
   BookOpen,
-  CalendarDays,
   Brain,
+  CalendarDays,
   Check,
   Coins,
   Database,
+  Flame,
   Globe2,
   GraduationCap,
-  ImageIcon,
-  Tag,
   HeartPulse,
+  ImageIcon,
   Landmark,
   Link2,
   Lock,
@@ -19,14 +20,19 @@ import {
   Orbit,
   Pencil,
   Plus,
+  Scale,
+  ScrollText,
   Search,
+  Shield,
+  Ship,
   Sparkles,
   Swords,
+  Tag,
   Trash2,
   TriangleAlert,
+  type LucideIcon,
   X,
   Zap,
-  type LucideIcon,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -116,7 +122,16 @@ const LOOKS: { words: string[]; look: Look }[] = [
     look: { icon: HeartPulse, tone: 'danger', family: 'Body' },
   },
   {
-    words: ['mind', 'memor', 'skill', 'trait', 'need', 'personality', 'value'],
+    words: [
+      'mind',
+      'memor',
+      'skill',
+      'trait',
+      'need',
+      'personality',
+      'value',
+      'dream',
+    ],
     look: { icon: Brain, tone: 'verdigris', family: 'Mind' },
   },
   {
@@ -163,6 +178,7 @@ const LOOKS: { words: string[]; look: Look }[] = [
       'rumour',
       'language',
       'lexeme',
+      'meaning',
       'tradition',
       'book',
       'thread',
@@ -208,7 +224,7 @@ LOOKS.push(
     look: { icon: Orbit, tone: 'gold', family: 'Cosmos' },
   },
   {
-    words: ['event', 'happening', 'disaster', 'footprint'],
+    words: ['event', 'happening', 'disaster', 'footprint', 'gathering'],
     look: { icon: Zap, tone: 'warning', family: 'Events' },
   },
   {
@@ -225,11 +241,47 @@ LOOKS.push(
   }
 )
 const PLAIN_LOOK: Look = { icon: Database, tone: 'muted', family: 'Other' }
+const CROWDS_LOOK: Look = { icon: Flame, tone: 'warning', family: 'Crowds' }
+const MEMORY_LOOK: Look = { icon: ScrollText, tone: 'gold', family: 'Memory' }
+const CUSTOMS_LOOK: Look = { icon: Scale, tone: 'verdigris', family: 'Customs' }
+const PEOPLE_LOOK: Look = { icon: Baby, tone: 'info', family: 'Generations' }
+const CRAFT_LOOK: Look = { icon: Ship, tone: 'info', family: 'Craft' }
+const TABLE_LOOKS: Record<string, Look> = {
+  crowd_moods: CROWDS_LOOK,
+  cascades: CROWDS_LOOK,
+  mobs: CROWDS_LOOK,
+  movements: CROWDS_LOOK,
+  accounts: MEMORY_LOOK,
+  account_stances: MEMORY_LOOK,
+  memory_strikes: MEMORY_LOOK,
+  founding_myths: MEMORY_LOOK,
+  commemorations: MEMORY_LOOK,
+  lost_lands: MEMORY_LOOK,
+  storylet_runs: MEMORY_LOOK,
+  dating_systems: MEMORY_LOOK,
+  social_norms: CUSTOMS_LOOK,
+  norm_changes: CUSTOMS_LOOK,
+  learning_biases: CUSTOMS_LOOK,
+  learning_events: CUSTOMS_LOOK,
+  role_norms: CUSTOMS_LOOK,
+  generations: PEOPLE_LOOK,
+  diasporas: PEOPLE_LOOK,
+  demographic_transitions: PEOPLE_LOOK,
+  sex_ratios: PEOPLE_LOOK,
+  arms: { icon: Shield, tone: 'gold', family: 'Arms' },
+  designs: CRAFT_LOOK,
+  design_components: CRAFT_LOOK,
+  component_wear: CRAFT_LOOK,
+  courts: { icon: Landmark, tone: 'gold', family: 'Rule' },
+  credit_profiles: { icon: Coins, tone: 'gold', family: 'Economy' },
+}
 
 function lookOf(table: string): Look {
   return (
+    TABLE_LOOKS[table] ??
     LOOKS.find((item) => item.words.some((word) => table.includes(word)))
-      ?.look ?? PLAIN_LOOK
+      ?.look ??
+    PLAIN_LOOK
   )
 }
 

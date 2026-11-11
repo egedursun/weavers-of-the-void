@@ -44,6 +44,7 @@ const SIZES = {
   sm: 'size-portrait-md',
   md: 'size-portrait-lg',
   lg: 'size-portrait-xl',
+  xl: 'size-portrait-2xl',
 } as const
 
 export function ArmsShield({

@@ -3,6 +3,7 @@ import {
   Activity,
   Eye,
   Footprints,
+  Handshake,
   HeartCrack,
   Link2,
   Plus,
@@ -36,6 +37,7 @@ import {
   Held,
   NumberField,
 } from '@/features/entity/wilds/parts'
+import { useForeignGods, useSons } from '@/features/pantheon/api'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useLabels } from '@/features/pantheon/labels'
 import {
@@ -811,6 +813,79 @@ function StandingCard({
   )
 }
 
+function PactCard({ view, busy }: { view: GodDivinity; busy: string | null }) {
+  const sons = useSons()
+  const gods = useForeignGods()
+  const [other, setOther] = useState('')
+  const [epochs, setEpochs] = useState('')
+  const isSon = view.god.kind === 'son'
+  const isForeign = view.god.kind === 'foreign_god'
+  const table = useMemo(
+    () =>
+      Object.fromEntries(
+        isSon
+          ? (gods.data ?? []).map((god) => [String(god.id), god.name])
+          : (sons.data ?? []).map((row) => [String(row.son.id), row.son.name])
+      ),
+    [isSon, gods.data, sons.data]
+  )
+  const seal = useDivineAction(
+    'divine_pact:seal',
+    (_: void) => ({
+      son_id: isSon ? view.god.id : Number(other),
+      god_id: isSon ? Number(other) : view.god.id,
+      epochs: epochs === '' ? null : Number(epochs),
+    }),
+    () => setOther('')
+  )
+  const reason =
+    busy ??
+    (!isSon && !isForeign
+      ? 'Only a son and a foreign god can seal a pact with each other'
+      : other === ''
+        ? `Choose the ${isSon ? 'foreign god' : 'son'} to bind`
+        : seal.isPending
+          ? 'Sealing the pact'
+          : null)
+  return (
+    <Card
+      title='A pact between gods'
+      icon={Handshake}
+      tone='gold'
+      hint='A son and a foreign god bound by a sealed treaty, for a span of epochs or for good'
+      wide
+    >
+      <div className='grid min-w-0 grid-cols-1 items-end gap-2 sm:grid-cols-3'>
+        <PickRow
+          label={isSon ? 'Foreign god' : 'Son'}
+          table={table}
+          value={other}
+          blocked={
+            busy ?? (!isSon && !isForeign ? 'Not a son or a foreign god' : null)
+          }
+          onPick={setOther}
+        />
+        <NumberField
+          label='Lasting epochs (empty for good)'
+          value={epochs}
+          min={1}
+          disabled={busy !== null || (!isSon && !isForeign)}
+          onChange={setEpochs}
+        />
+        <Button
+          size='sm'
+          disabled={reason !== null}
+          disabledReason={reason ?? undefined}
+          onClick={() => seal.mutate()}
+        >
+          <Handshake />
+          Seal the pact
+        </Button>
+      </div>
+    </Card>
+  )
+}
+
 export function GodDivinitySection({
   godId,
   readOnlyReason,
@@ -848,6 +923,7 @@ export function GodDivinitySection({
           <WoundsCard view={view.data} busy={busy} />
           <AvatarsCard view={view.data} busy={busy} />
           <StandingCard view={view.data} busy={busy} />
+          <PactCard view={view.data} busy={busy} />
         </div>
       )}
     </Section>
