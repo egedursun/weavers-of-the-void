@@ -180,26 +180,104 @@ function roadTile(
   return { key, cell, model: 'sharp', turn: cornerTurn(behind, forth, -WIDE) }
 }
 
-export function roadTiles(
+export type RoadDress = {
+  key: string
+  kind: 'stone' | 'lantern' | 'cart'
+  x: number
+  z: number
+  turn: number
+}
+
+const STONES_PER_STEP = 3
+const LANTERN_EVERY = 2
+const CART_EVERY = 3
+const SIDE = 0.62
+const COBBLED_FROM = 2
+const LIT_FROM = 3
+
+export function roadPaths(
   radius: number,
   roads: number,
-  length: number
-): RoadTile[] {
+  length: number,
+  blocked: (cell: Cell) => boolean = () => false
+): Cell[][] {
   if (radius < 1 || roads < 1) return []
   const ring = hexRing(radius)
-  return [...gateIndices(radius, gateCount(roads))].flatMap((index) => {
-    const path: Cell[] = [inward(ring[index]), ring[index]]
+  return [...gateIndices(radius, gateCount(roads))].map((index) => {
+    const inner: Cell[] = []
+    let cell = ring[index]
+    while (hexDistance(cell, [0, 0]) > 0) {
+      const next = inward(cell)
+      if (blocked(next)) break
+      inner.push(next)
+      cell = next
+    }
+    const path: Cell[] = [...inner.reverse(), ring[index]]
     for (let step = 0; step < length; step += 1)
       path.push(outward(path[path.length - 1], [0, 0]))
     return path
-      .slice(1)
-      .map((cell, step) =>
-        roadTile(
-          `road-${index}-${step}`,
-          cell,
-          path[step],
-          path[step + 2] ?? null
-        )
-      )
   })
+}
+
+export function roadTiles(
+  radius: number,
+  roads: number,
+  length: number,
+  blocked: (cell: Cell) => boolean = () => false
+): RoadTile[] {
+  return roadPaths(radius, roads, length, blocked).flatMap((path, road) =>
+    path.map((cell, step) => {
+      const key = `road-${road}-${step}`
+      if (step === 0)
+        return path.length > 1
+          ? roadTile(key, cell, path[1], null)
+          : { key, cell, model: 'end' as const, turn: 0 }
+      return roadTile(key, cell, path[step - 1], path[step + 1] ?? null)
+    })
+  )
+}
+
+export function roadDress(
+  paths: Cell[][],
+  roads: number,
+  radius: number
+): RoadDress[] {
+  return paths.flatMap((path, road) =>
+    path.slice(0, -1).flatMap((cell, step) => {
+      const [fx, fz] = hexToWorld(cell[0], cell[1])
+      const [tx, tz] = hexToWorld(path[step + 1][0], path[step + 1][1])
+      const along = Math.atan2(tz - fz, tx - fx)
+      const [nx, nz] = [-Math.sin(along), Math.cos(along)]
+      const found: RoadDress[] = []
+      if (roads >= COBBLED_FROM)
+        for (let part = 0; part < STONES_PER_STEP; part += 1) {
+          const t = part / STONES_PER_STEP
+          found.push({
+            key: `stone-${road}-${step}-${part}`,
+            kind: 'stone',
+            x: fx + (tx - fx) * t,
+            z: fz + (tz - fz) * t,
+            turn: -along + (part % 2) * (Math.PI / 2),
+          })
+        }
+      const side = step % 2 === 0 ? 1 : -1
+      if (roads >= LIT_FROM && step % LANTERN_EVERY === 0)
+        found.push({
+          key: `lantern-${road}-${step}`,
+          kind: 'lantern',
+          x: (fx + tx) / 2 + nx * SIDE * side,
+          z: (fz + tz) / 2 + nz * SIDE * side,
+          turn: -along,
+        })
+      if (step % CART_EVERY === 1 && hexDistance(cell, [0, 0]) > radius)
+        found.push({
+          key: `cart-${road}-${step}`,
+          kind: 'cart',
+          x: (fx + tx) / 2 - nx * SIDE * side,
+          z: (fz + tz) / 2 - nz * SIDE * side,
+          turn: -along,
+        })
+      return found
+    })
+  )
 }

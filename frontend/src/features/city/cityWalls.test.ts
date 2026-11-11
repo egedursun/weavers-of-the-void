@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { gateCount, roadTiles, wallPieces } from './cityWalls'
+import {
+  gateCount,
+  roadDress,
+  roadPaths,
+  roadTiles,
+  wallPieces,
+} from './cityWalls'
 import { type Cell, hexDistance, hexRing, hexToWorld } from './hex'
 
 const HALF_TURN = 180
@@ -86,9 +92,9 @@ describe('city walls', () => {
   })
 
   it('lays road tiles that meet the hexes before and after them along the way out', () => {
-    const tiles = roadTiles(3, 1, 3)
+    const tiles = roadTiles(3, 1, 3, (cell) => hexDistance(cell, [0, 0]) < 2)
     expect(tiles.filter((tile) => tile.model === 'end')).toHaveLength(
-      gateCount(1)
+      2 * gateCount(1)
     )
     const local: Record<string, number[]> = {
       straight: [0, HALF_TURN],
@@ -120,8 +126,29 @@ describe('city walls', () => {
   it('draws no walls without walls and more roads out of more gates', () => {
     expect(wallPieces(3, 0, 2)).toEqual([])
     expect(roadTiles(3, 0, 3)).toEqual([])
-    expect(roadTiles(3, 1, 3)).toHaveLength(gateCount(1) * 4)
-    expect(roadTiles(3, 3, 3)).toHaveLength(gateCount(3) * 4)
+    const open = roadPaths(3, 3, 3)
+    expect(open).toHaveLength(gateCount(3))
+    for (const path of open) {
+      expect(hexDistance(path[0], [0, 0])).toBe(0)
+      expect(hexDistance(path[path.length - 1], [0, 0])).toBe(6)
+      path
+        .slice(1)
+        .forEach((cell, at) => expect(hexDistance(cell, path[at])).toBe(1))
+    }
+    const blocked = roadPaths(3, 1, 3, (cell) => hexDistance(cell, [0, 0]) < 2)
+    expect(blocked.every((path) => hexDistance(path[0], [0, 0]) === 2)).toBe(
+      true
+    )
+    expect(roadTiles(3, 3, 3)).toHaveLength(open.flat().length)
+    const dirt = roadDress(open, 1, 3)
+    expect(
+      dirt.some((item) => item.kind === 'stone' || item.kind === 'lantern')
+    ).toBe(false)
+    const paved = roadDress(open, 3, 3)
+    expect(
+      paved.filter((item) => item.kind === 'stone').length
+    ).toBeGreaterThan(0)
+    expect(paved.some((item) => item.kind === 'lantern')).toBe(true)
     expect(gateCount(9)).toBe(6)
   })
 })

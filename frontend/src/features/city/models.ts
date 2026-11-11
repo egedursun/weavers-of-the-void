@@ -287,6 +287,20 @@ export const ROAD_LOOK: Record<RoadModel, string> = {
   end: hex('tiles/roads/hex_road_M'),
 }
 
+export const ROAD_DRESS: Record<'stone' | 'lantern' | 'cart', Look> = {
+  stone: [
+    { model: spooky('path_A'), scale: SPOOKY },
+    { model: spooky('path_B'), scale: SPOOKY },
+    { model: spooky('path_C'), scale: SPOOKY },
+  ],
+  lantern: [{ model: spooky('lantern_standing'), scale: SPOOKY * 1.1 }],
+  cart: [
+    { model: prop('wheelbarrow'), scale: 1.6 },
+    { model: prop('crate_A_small'), scale: 1.6, offset: [0.28, 0.12] },
+    { model: prop('sack'), scale: 1.8, offset: [-0.25, 0.1] },
+  ],
+}
+
 export const WALL_LOOK: Record<WallModel, (level: number) => Part> = {
   straight: () => ({ model: neutral('wall_straight') }),
   gate: () => ({ model: neutral('wall_straight_gate') }),

@@ -8,7 +8,7 @@ import { Model } from './Model'
 import { SceneFrame } from './SceneFrame'
 import { type SceneLabel, SceneLabels } from './SceneLabels'
 import { type CityBuilding, type CityDistrict, type CityScene } from './api'
-import { roadTiles, wallPieces } from './cityWalls'
+import { roadDress, roadPaths, roadTiles, wallPieces } from './cityWalls'
 import {
   type Cell,
   cellKey,
@@ -27,6 +27,7 @@ import {
   SHELTER,
   STAGE_LOOK,
   STRUCTURE_LOOK,
+  ROAD_DRESS,
   ROAD_LOOK,
   WALL_LOOK,
   WATER_TILE,
@@ -184,13 +185,23 @@ export default function CityScene3D({
         water.push(cell)
   }
   const wet = new Set(water.map(cellKey))
-  const roads = roadTiles(
-    scene.walls_radius ?? radius,
-    scene.roads,
+  const roadReach =
     COUNTRYSIDE + Math.max(0, radius - (scene.walls_radius ?? radius))
-  ).filter(
-    (tile) => !wet.has(cellKey(tile.cell)) && !built.has(cellKey(tile.cell))
+  const offRoad = (cell: Cell) =>
+    built.has(cellKey(cell)) || wet.has(cellKey(cell))
+  const roadRadius = scene.walls_radius ?? radius
+  const paths = roadPaths(roadRadius, scene.roads, roadReach, offRoad).map(
+    (path) => {
+      const dry = path.findIndex(
+        (cell, index) => index > 0 && wet.has(cellKey(cell))
+      )
+      return dry === -1 ? path : path.slice(0, dry)
+    }
   )
+  const roads = roadTiles(roadRadius, scene.roads, roadReach, offRoad).filter(
+    (tile) => !offRoad(tile.cell)
+  )
+  const dress = roadDress(paths, scene.roads, roadRadius)
   const roadCells = new Set(roads.map((tile) => cellKey(tile.cell)))
   const countryside = around(center, radius + COUNTRYSIDE).filter(
     (cell) =>
@@ -437,6 +448,32 @@ export default function CityScene3D({
         ).map(([model, items]) => (
           <InstancedModel key={`road-${model}`} model={model} items={items} />
         ))}
+        {(['stone', 'lantern', 'cart'] as const).flatMap((kind) =>
+          ROAD_DRESS[kind].map((part, index) => (
+            <InstancedModel
+              key={`dress-${kind}-${index}`}
+              model={part.model}
+              items={dress
+                .filter((item) => item.kind === kind)
+                .filter(
+                  (_, at) =>
+                    kind !== 'stone' || at % ROAD_DRESS.stone.length === index
+                )
+                .map((item) => {
+                  const [dx, dz] = part.offset ?? [0, 0]
+                  const cos = Math.cos(item.turn)
+                  const sin = Math.sin(item.turn)
+                  return {
+                    x: item.x + dx * cos + dz * sin,
+                    z: item.z - dx * sin + dz * cos,
+                    y: 0.005,
+                    scale: part.scale ?? 1,
+                    turn: item.turn + (part.turn ?? 0),
+                  }
+                })}
+            />
+          ))
+        )}
         {labels && <SceneLabels labels={names} />}
         {hover && (
           <Html position={[hover.x, 2, hover.z]} center zIndexRange={[20, 0]}>
