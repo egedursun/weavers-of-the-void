@@ -12,6 +12,7 @@ from aerona.catalog.heraldry import (
     FUR_PARTNERS,
     FUR_SOLIDS,
     FURS,
+    GLYPH_BOXES,
     GLYPHS,
     LIGHTNESS,
     SHAPE_ZONES,
@@ -44,6 +45,8 @@ FAR = 260.0
 NUMBER = re.compile(r"-?(?:\d+\.?\d*|\.\d+)(?:e-?\d+)?")
 STEPS = 18
 BOLDEST = 6.0
+FILL = 0.84
+AXIS = 60.0
 
 
 @dataclass(frozen=True)
@@ -248,16 +251,71 @@ def hidden(start: Point, end: Point) -> bool:
     return (start[0] < 4 and end[0] < 4) or (start[0] > 116 and end[0] > 116) or (start[1] < 2 and end[1] < 2) or (start[1] > 130 and end[1] > 130)
 
 
+def reflect(point: Point) -> Point:
+    return (2 * AXIS - point[0], point[1])
+
+
+def balanced(start: Point, end: Point, line: PartitionLine, scale: float) -> list[Point]:
+    middle = ((start[0] + end[0]) / 2, (start[1] + end[1]) / 2)
+    half = along([middle, end], line, scale)
+    length = hypot(end[0] - start[0], end[1] - start[1]) or 1.0
+    ux, uy = (end[0] - start[0]) / length, (end[1] - start[1]) / length
+
+    def across(point: Point) -> Point:
+        t = (point[0] - middle[0]) * ux + (point[1] - middle[1]) * uy
+        return (point[0] - 2 * t * ux, point[1] - 2 * t * uy)
+
+    return [across(point) for point in reversed(half[1:])] + half
+
+
+def crossings(points: tuple[Point, ...]) -> list[tuple[int, Point]]:
+    found: list[tuple[int, Point]] = []
+    for index, start in enumerate(points):
+        end = points[(index + 1) % len(points)]
+        if (start[0] - AXIS) * (end[0] - AXIS) <= 0 and start[0] != end[0]:
+            t = (AXIS - start[0]) / (end[0] - start[0])
+            found.append((index, (AXIS, start[1] + (end[1] - start[1]) * t)))
+        elif start[0] == AXIS == end[0]:
+            found.append((index, start))
+    return found
+
+
+def right_half(points: tuple[Point, ...]) -> list[Point]:
+    found = crossings(points)
+    (top_index, top), (bottom_index, bottom) = min(found, key=lambda item: item[1][1]), max(found, key=lambda item: item[1][1])
+    count = len(points)
+    ahead = next(points[(top_index + step) % count][0] for step in range(1, count + 1) if abs(points[(top_index + step) % count][0] - AXIS) > 1e-6)
+    forward = ahead > AXIS
+    walk: list[Point] = [top]
+    index = (top_index + 1) % count if forward else top_index
+    stop = bottom_index if forward else (bottom_index + 1) % count
+    for _ in range(count):
+        if points[index][0] > AXIS:
+            walk.append(points[index])
+        if index == stop:
+            break
+        index = (index + 1) % count if forward else (index - 1) % count
+    return [*walk, bottom]
+
+
+def mirrored_loop(points: tuple[Point, ...], line: PartitionLine, scale: float) -> list[Point]:
+    right = right_half(points)
+    drawn = right if line is L.STRAIGHT else along(right, line, scale)
+    return drawn + [reflect(point) for point in reversed(drawn[1:-1])]
+
+
 def styled(loop: Loop, line: PartitionLine, scale: float = 1.0) -> list[Point]:
     points, curved = loop
-    if line is L.STRAIGHT:
+    if line is L.STRAIGHT and not curved:
         return list(points)
     if curved:
-        return along([*points, points[0]], line, scale)[:-1]
+        if len(crossings(points)) >= 2:
+            return mirrored_loop(points, line, scale)
+        return list(points) if line is L.STRAIGHT else along([*points, points[0]], line, scale)[:-1]
     found: list[Point] = []
     for index, start in enumerate(points):
         end = points[(index + 1) % len(points)]
-        found.extend([end] if hidden(start, end) else along([start, end], line, scale)[1:])
+        found.extend([end] if hidden(start, end) else balanced(start, end, line, scale)[1:])
     return found
 
 
@@ -422,6 +480,9 @@ def regions(division: HeraldicDivision, shape: ShieldShape) -> tuple[tuple[Loop,
 def region_path(design: Design) -> str:
     loops, _ = regions(design.division, design.shape)
     line = L.STRAIGHT if design.division in UNSTYLED else design.line
+    if design.division is D.FLAUNCHES:
+        left = styled(loops[0], line)
+        return path(left) + path([reflect(point) for point in left])
     return "".join(path(styled(loop, line)) for loop in loops)
 
 
@@ -599,11 +660,15 @@ def placed(charge: HeraldicCharge, tincture: Tincture, spots: list[Placement], c
     d = glyph(charge)
     if not d:
         return []
+    x0, y0, x1, y1 = GLYPH_BOXES[charge]
+    centre = ((x0 + x1) / 2, (y0 + y1) / 2)
+    reach = max(x1 - x0, y1 - y0, 1.0)
     layers: list[Layer] = []
     for x, y, size, turn, flip in spots:
-        scale = size / 24
-        transform = f"translate({num(x)} {num(y)}) rotate({num(turn)}) scale({num(-scale if flip else scale)} {num(scale)}) translate(-12 -12)"
-        outer = min(3.6 * scale, BOLDEST) / scale
+        scale = size * FILL / reach
+        mirror = "scale(-1 1) " if flip else ""
+        transform = f"translate({num(x)} {num(y)}) {mirror}rotate({num(turn)}) scale({num(scale)}) translate({num(-centre[0])} {num(-centre[1])})"
+        outer = min(3.6 * size / 24, BOLDEST) / scale
         layers.append(Layer(d, ArmsInk.LINE, False, round(outer, 3), transform=transform, clipped=clipped))
         layers.append(Layer(d, ink(tincture), False, round(outer * 0.56, 3), transform=transform, clipped=clipped))
     return layers
@@ -614,7 +679,7 @@ def charge_layers(design: Design) -> list[Layer]:
     layers: list[Layer] = []
     for (charge, tincture), (x, y, size) in zip(shown, slots(design, len(shown)), strict=False):
         chosen = tincture if tincture is not None else contrasting(beneath(design, x, y, size))
-        layers.extend(placed(charge, chosen, [(x, y, size, 0.0, False)], True))
+        layers.extend(placed(charge, chosen, [(x, y, size, 0.0, x < AXIS - 1)], True))
     return layers
 
 
@@ -638,16 +703,24 @@ def ornament_tincture(tincture: Tincture | None) -> Tincture:
     return tincture if tincture is not None else Tincture.GOLD
 
 
-def beads(shape: ShieldShape, depth: float, gap: float, radius: float) -> str:
-    track = Track([*inset(shape, depth), inset(shape, depth)[0]])
+def spaced(shape: ShieldShape, depth: float, gap: float, lead: float = 0.0) -> list[Point]:
+    track = Track(right_half(inset(shape, depth)))
     count = max(1, round(track.length / gap))
-    return "".join(circle(*track.at(track.length * k / count)[0], radius) for k in range(count))
+    return [track.at(track.length * (k + 0.5 + lead) / count)[0] for k in range(count)]
+
+
+def both_sides(points: list[Point]) -> list[Point]:
+    return points + [reflect(point) for point in points]
+
+
+def beads(shape: ShieldShape, depth: float, gap: float, radius: float) -> str:
+    return "".join(circle(x, y, radius) for x, y in both_sides(spaced(shape, depth, gap)))
 
 
 def cords(shape: ShieldShape) -> str:
-    near, far = Track([*inset(shape, 1.0), inset(shape, 1.0)[0]]), Track([*inset(shape, 6.0), inset(shape, 6.0)[0]])
-    count = max(1, round(near.length / 3.2))
-    return "".join(path([near.at(near.length * k / count)[0], far.at(far.length * (k + 0.8) / count)[0]], closed=False) for k in range(count))
+    near, far = spaced(shape, 1.0, 3.2), spaced(shape, 6.0, 3.2, 0.8)
+    pairs = list(zip(near, far, strict=False))
+    return "".join(path([a, b], closed=False) for a, b in pairs + [(reflect(a), reflect(b)) for a, b in pairs])
 
 
 def rim_layers(design: Design, outline: str) -> list[Layer]:

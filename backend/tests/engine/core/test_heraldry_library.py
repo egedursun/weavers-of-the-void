@@ -1,9 +1,10 @@
+import math
 import re
 from dataclasses import replace
 
 import pytest
 
-from aerona.catalog.heraldry import CHARGE_NAMES, GLYPHS, LIGHTNESS, VALUE_POOLS
+from aerona.catalog.heraldry import CHARGE_NAMES, GLYPH_BOXES, GLYPHS, LIGHTNESS, VALUE_POOLS
 from aerona.core.random import SeededRandom
 from aerona.domain.enums.collective import (
     ArmsInk,
@@ -192,3 +193,107 @@ def test_ornaments_outside_the_shield_show_on_light_and_dark_pages() -> None:
         for key in ("supporter_tincture", "crest_tincture"):
             tincture = values[key]
             assert tincture is None or LIGHTNESS[tincture] >= 0.5, (holder, key, tincture)
+
+
+def matrix_of(transform: str) -> tuple[float, float, float, float, float, float]:
+    a, b, c, d, e, f = 1.0, 0.0, 0.0, 1.0, 0.0, 0.0
+    for name, args in re.findall(r"(\w+)\(([^)]*)\)", transform):
+        values = [float(value) for value in args.split()]
+        if name == "translate":
+            m = (1.0, 0.0, 0.0, 1.0, values[0], values[1])
+        elif name == "scale":
+            m = (values[0], 0.0, 0.0, values[-1], 0.0, 0.0)
+        else:
+            turn = math.radians(values[0])
+            m = (math.cos(turn), math.sin(turn), -math.sin(turn), math.cos(turn), 0.0, 0.0)
+        a, b, c, d, e, f = (
+            a * m[0] + c * m[1],
+            b * m[0] + d * m[1],
+            a * m[2] + c * m[3],
+            b * m[2] + d * m[3],
+            a * m[4] + c * m[5] + e,
+            b * m[4] + d * m[5] + f,
+        )
+    return a, b, c, d, e, f
+
+
+def moved(transform: str, x: float, y: float) -> tuple[float, float]:
+    a, b, c, d, e, f = matrix_of(transform)
+    return (round(a * x + c * y + e, 1), round(b * x + d * y + f, 1))
+
+
+@pytest.mark.parametrize("pose", [SupporterPose.CROSSED, SupporterPose.FLANKING, SupporterPose.CORNERS])
+def test_paired_supporters_mirror_each_other_across_the_shield(pose: SupporterPose) -> None:
+    for supporter in (HeraldicCharge.SWORD, HeraldicCharge.KEY, HeraldicCharge.TORCH, HeraldicCharge.BIRD, HeraldicCharge.LAUREL):
+        drawing = draw(replace(PLAIN, supporter=supporter, pose=pose, supporter_tincture=Tincture.GOLD))
+        copies = [layer.transform for layer in drawing.layers if not layer.clipped and layer.ink is ArmsInk.LINE and layer.transform]
+        x0, y0, x1, y1 = GLYPH_BOXES[supporter]
+        corners = [(x0, y0), (x1, y0), (x0, y1), (x1, y1), ((x0 + x1) / 2, y0)]
+        shapes = {tuple(sorted(moved(transform, x, y) for x, y in corners)) for transform in copies if transform}
+        mirrored = {tuple(sorted((round(120 - x, 1), y) for x, y in shape)) for shape in shapes}
+        assert shapes == mirrored, (pose, supporter)
+
+
+def test_every_charge_sits_on_the_centre_of_its_slot() -> None:
+    for charge in (HeraldicCharge.KEY, HeraldicCharge.LAUREL, HeraldicCharge.HELPING_HAND, HeraldicCharge.WING):
+        design = replace(PLAIN, charges=((charge, Tincture.GOLD),))
+        ((x, y, _),) = slots(design, 1)
+        transform = next(layer.transform for layer in draw(design).layers if layer.transform)
+        x0, y0, x1, y1 = GLYPH_BOXES[charge]
+        assert moved(transform, (x0 + x1) / 2, (y0 + y1) / 2) == (round(x, 1), round(y, 1))
+
+
+MIRRORED_DIVISIONS = [
+    division
+    for division in HeraldicDivision
+    if division
+    not in {
+        HeraldicDivision.PLAIN,
+        HeraldicDivision.PER_PALE,
+        HeraldicDivision.PER_BEND,
+        HeraldicDivision.PER_BEND_SINISTER,
+        HeraldicDivision.QUARTERLY,
+        HeraldicDivision.GYRONNY,
+        HeraldicDivision.PALY,
+        HeraldicDivision.BENDY,
+        HeraldicDivision.BENDY_SINISTER,
+        HeraldicDivision.CHEQUY,
+        HeraldicDivision.BEND,
+        HeraldicDivision.BEND_SINISTER,
+        HeraldicDivision.CANTON,
+    }
+]
+
+
+def points_of(d: str) -> list[tuple[float, float]]:
+    rings = re.findall(r"M(-?[\d.]+) (-?[\d.]+)a([\d.]+)", d)
+    if rings:
+        return [(float(x) + float(r), float(y)) for x, y, r in rings]
+    numbers = [float(value) for value in re.findall(r"-?\d+(?:\.\d+)?", d)]
+    return list(zip(numbers[::2], numbers[1::2], strict=False))
+
+
+def is_mirrored(d: str) -> bool:
+    points = points_of(d)
+    grid = {(round(x * 10), round(y * 10)) for x, y in points}
+    near = [(dx, dy) for dx in (-2, -1, 0, 1, 2) for dy in (-2, -1, 0, 1, 2)]
+    return all(any((round((120 - x) * 10) + dx, round(y * 10) + dy) in grid for dx, dy in near) for x, y in points)
+
+
+@pytest.mark.parametrize("shape", list(ShieldShape))
+def test_every_balanced_division_and_edge_is_a_mirror_image_on_every_line(shape: ShieldShape) -> None:
+    for line in PartitionLine:
+        for division in MIRRORED_DIVISIONS:
+            assert is_mirrored(region_path(replace(PLAIN, shape=shape, division=division, line=line))), (shape, division, line)
+        outline = draw(replace(PLAIN, shape=shape, rim_line=line)).outline
+        assert is_mirrored(outline), (shape, line)
+        xs = [x for x, _ in points_of(outline)]
+        assert max(xs) - min(xs) > 80, (shape, line)
+
+
+@pytest.mark.parametrize("shape", list(ShieldShape))
+def test_every_rim_is_a_mirror_image(shape: ShieldShape) -> None:
+    for rim in ArmsRim:
+        for layer in draw(replace(PLAIN, shape=shape, rim=rim)).layers:
+            if layer.transform is None and layer.clip is None:
+                assert is_mirrored(layer.d), (shape, rim)
