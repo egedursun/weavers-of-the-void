@@ -20,6 +20,7 @@ from aerona.db.tables.collective import (
     MemoryStrikeRow,
     MobRow,
     MovementRow,
+    NormChangeRow,
     RoleNormRow,
     SexRatioRow,
     SocialNormRow,
@@ -85,6 +86,7 @@ from aerona.engine.collective.accounts import (
     rewrite_reigns,
     write_accounts,
 )
+from aerona.engine.collective.control import set_norm
 from aerona.engine.collective.crowds import CrowdTally, cascade, crowd_for, mood_of, rage_mobs, ready_to_arm, spark
 from aerona.engine.collective.dating import render_date
 from aerona.engine.collective.demography import DemographyTally, fertility_factor, measure
@@ -545,3 +547,12 @@ async def test_a_mortal_reads_role_classes_kept_as_json_in_context(session: Asyn
     await session.refresh(role)
     lines = await mortal_collective_lines(await load_scope(session, Rules()), someone)
     assert any("only for noble" in line for line in lines)
+
+
+async def test_a_custom_set_by_the_gods_records_what_it_was_before(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session)
+    people = await entity(session, "Folk", EntityType.PEOPLE, PeopleStats(), world_id=world.world.id)
+    await set_norm(ctx, people.id, NormSituation.FEAST, NormBehaviour.JEST, EthicalStance.ADMIRABLE)
+    await set_norm(ctx, people.id, NormSituation.FEAST, NormBehaviour.JEST, EthicalStance.ADMIRABLE)
+    changes = list(await session.scalars(select(NormChangeRow).where(NormChangeRow.holder_entity_id == people.id)))
+    assert [(row.before, row.after) for row in changes] == [(EthicalStance.ACCEPTABLE, EthicalStance.ADMIRABLE)]

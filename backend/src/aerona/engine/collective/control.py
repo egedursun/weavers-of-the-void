@@ -299,15 +299,16 @@ async def choose_storylet(ctx: TickContext, run_id: int, choice: int) -> Storyle
 async def set_norm(ctx: TickContext, holder_id: int, situation: NormSituation, behaviour: NormBehaviour, stance: EthicalStance) -> SocialNormRow:
     await of_type(ctx, holder_id, CULTURES, "a people or cult")
     row = await ctx.session.get(SocialNormRow, (holder_id, situation, behaviour))
+    before = row.stance if row is not None else EthicalStance.ACCEPTABLE
     if row is None:
         row = await saved(
             ctx, SocialNormRow(holder_entity_id=holder_id, situation=situation, behaviour=behaviour, stance=stance, since_epoch=ctx.epoch, locked=[])
         )
-    before = row.stance
     apply(row, {"stance": stance}, [])
-    ctx.session.add(
-        NormChangeRow(holder_entity_id=holder_id, situation=situation, behaviour=behaviour, before=before, after=stance, cause="the gods", epoch=ctx.epoch)
-    )
+    if before is not stance:
+        ctx.session.add(
+            NormChangeRow(holder_entity_id=holder_id, situation=situation, behaviour=behaviour, before=before, after=stance, cause="the gods", epoch=ctx.epoch)
+        )
     await ctx.session.flush()
     return row
 

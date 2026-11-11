@@ -169,7 +169,11 @@ function ChangeCard({ row, blocked }: { row: Norm; blocked: string | null }) {
       onRemove={action.onRemove}
       extra={
         <>
-          <Chip>{row.before ? ETHICS[row.before].label : 'No custom'}</Chip>
+          <Chip icon={row.before ? ETHICS[row.before].icon : undefined}>
+            {row.before
+              ? `Was ${ETHICS[row.before].label.toLowerCase()}`
+              : 'No custom'}
+          </Chip>
           <Chip icon={after.icon}>{after.label}</Chip>
         </>
       }

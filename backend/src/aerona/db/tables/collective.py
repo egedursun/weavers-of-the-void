@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, ForeignKey, Index, String
+from sqlalchemy import JSON, CheckConstraint, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.db.base import Base
@@ -267,7 +267,11 @@ class SocialNormRow(Base):
 
 class NormChangeRow(Base):
     __tablename__ = "norm_changes"
-    __table_args__ = (at_least("epoch", 0), Index("ix_norm_changes_holder", "holder_entity_id", "epoch"))
+    __table_args__ = (
+        at_least("epoch", 0),
+        CheckConstraint("before IS NULL OR before <> after", name="a_change"),
+        Index("ix_norm_changes_holder", "holder_entity_id", "epoch"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     holder_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
