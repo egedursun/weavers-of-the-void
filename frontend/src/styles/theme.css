@@ -145,6 +145,9 @@
 }
 
 :root {
+  --scene-sun: oklch(0.99 0.012 85);
+  --scene-sky: oklch(0.97 0.012 235);
+  --scene-ground: oklch(0.52 0.06 135);
   --cosmos-void: #0d0620;
   --cosmos-void-edge: #1a0d38;
   --cosmos-copper: #fdca26;

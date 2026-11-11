@@ -75,7 +75,7 @@ export function SceneFrame({
           castShadow
           position={[cx + span, span * 2.2, cz + span * 0.7]}
           intensity={1.6}
-          color={tokenHex('--cosmos-bone')}
+          color={tokenHex('--scene-sun')}
           shadow-mapSize={[1024, 1024]}
           shadow-camera-left={-span * 1.5}
           shadow-camera-right={span * 1.5}

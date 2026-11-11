@@ -16,11 +16,13 @@ export type WallPiece = {
   turn: number
 }
 
-export type RoadSegment = {
+export type RoadModel = 'straight' | 'bend' | 'sharp' | 'end'
+
+export type RoadTile = {
   key: string
   cell: Cell
-  from: readonly [number, number]
-  to: readonly [number, number]
+  model: RoadModel
+  turn: number
 }
 
 const STONE_FROM = 3
@@ -141,22 +143,63 @@ function outward(cell: Cell, center: Cell): Cell {
     })[0]
 }
 
-export function roadSegments(
+function inward(cell: Cell): Cell {
+  const [x, z] = hexToWorld(cell[0], cell[1])
+  const heading = Math.atan2(-z, -x)
+  return hexRing(1)
+    .map((step) => [cell[0] + step[0], cell[1] + step[1]] as Cell)
+    .filter((near) => hexDistance(near, [0, 0]) < hexDistance(cell, [0, 0]))
+    .sort((first, second) => {
+      const [ax, az] = hexToWorld(first[0], first[1])
+      const [bx, bz] = hexToWorld(second[0], second[1])
+      const turnA = Math.abs(
+        wrap(((Math.atan2(az - z, ax - x) - heading) * HALF_TURN) / Math.PI)
+      )
+      const turnB = Math.abs(
+        wrap(((Math.atan2(bz - z, bx - x) - heading) * HALF_TURN) / Math.PI)
+      )
+      return turnA - turnB
+    })[0]
+}
+
+function roadTile(
+  key: string,
+  cell: Cell,
+  back: Cell,
+  ahead: Cell | null
+): RoadTile {
+  const behind = angleOf(cell, back)
+  if (ahead === null)
+    return { key, cell, model: 'end', turn: radians(HALF_TURN - behind) }
+  const forth = angleOf(cell, ahead)
+  const bend = Math.abs(wrap(behind - forth))
+  if (bend > HALF_TURN - 1)
+    return { key, cell, model: 'straight', turn: radians(-forth) }
+  if (Math.abs(bend - WIDE) < 1)
+    return { key, cell, model: 'bend', turn: cornerTurn(behind, forth, -SHARP) }
+  return { key, cell, model: 'sharp', turn: cornerTurn(behind, forth, -WIDE) }
+}
+
+export function roadTiles(
   radius: number,
   roads: number,
   length: number
-): RoadSegment[] {
+): RoadTile[] {
   if (radius < 1 || roads < 1) return []
   const ring = hexRing(radius)
   return [...gateIndices(radius, gateCount(roads))].flatMap((index) => {
-    const path: Cell[] = [ring[index]]
+    const path: Cell[] = [inward(ring[index]), ring[index]]
     for (let step = 0; step < length; step += 1)
       path.push(outward(path[path.length - 1], [0, 0]))
-    return path.slice(1).map((cell, step) => ({
-      key: `road-${index}-${step}`,
-      cell,
-      from: hexToWorld(path[step][0], path[step][1]),
-      to: hexToWorld(cell[0], cell[1]),
-    }))
+    return path
+      .slice(1)
+      .map((cell, step) =>
+        roadTile(
+          `road-${index}-${step}`,
+          cell,
+          path[step],
+          path[step + 2] ?? null
+        )
+      )
   })
 }

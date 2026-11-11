@@ -3,11 +3,11 @@ import { Html } from '@react-three/drei'
 import { tokenHex } from '@/features/cosmography/visual/palette'
 import { Model } from './Model'
 import { SceneFrame } from './SceneFrame'
+import { SceneLabels } from './SceneLabels'
 import { type LandScene } from './api'
 import { cellKey, hexDistance, hexRing, hexToWorld } from './hex'
 import { COVERS, GROUNDS, STATES } from './labels'
 import {
-  GROUND_TILE,
   RIVER_TILE,
   SETTLEMENT_LOOK,
   STAGE_LOOK,
@@ -70,7 +70,6 @@ export default function LandScene3D({
       ...scene.resources,
     ].map((item) => cellKey([item.q, item.r]))
   )
-  const grass = tokenHex('--success')
   const wetCells = new Set(
     scene.tiles
       .filter((tile) => tile.ground === 'water')
@@ -135,11 +134,8 @@ export default function LandScene3D({
                   ? tokenHex('--brand-gold')
                   : part.token
                     ? tokenHex(part.token)
-                    : part.model === GROUND_TILE
-                      ? grass
-                      : null
+                    : null
               }
-              dim={part.model === GROUND_TILE ? 0.8 : 1}
               onClick={pick}
               onPointerOver={() => setHover({ x, z, text })}
               onPointerOut={() => setHover(null)}
@@ -244,6 +240,42 @@ export default function LandScene3D({
             />
           )
         })}
+        <SceneLabels
+          labels={[
+            ...scene.places
+              .filter(
+                (place) =>
+                  selected?.kind === 'place' && selected.id === place.node.id
+              )
+              .map((place) => {
+                const [x, z] = hexToWorld(place.q, place.r)
+                return {
+                  id: `place-${place.node.id}`,
+                  x,
+                  z,
+                  text: place.node.name,
+                  fill: 'fill-zone-civic',
+                  rank: -1,
+                  chosen:
+                    selected?.kind === 'place' && selected.id === place.node.id,
+                }
+              }),
+            ...scene.settlements.map((town) => {
+              const [x, z] = hexToWorld(town.q, town.r)
+              return {
+                id: String(town.node.id),
+                x,
+                z,
+                text: town.node.name,
+                fill: 'fill-zone-governance',
+                rank: Number(town.detail) || 0,
+                chosen:
+                  selected?.kind === 'settlement' &&
+                  selected.id === town.node.id,
+              }
+            }),
+          ]}
+        />
         {hover && (
           <Html position={[hover.x, 1.8, hover.z]} center zIndexRange={[20, 0]}>
             <div className='pointer-events-none rounded-md border bg-popover px-2 py-1 whitespace-nowrap text-popover-foreground shadow-sm'>

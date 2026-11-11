@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { gateCount, roadSegments, wallPieces } from './cityWalls'
+import { gateCount, roadTiles, wallPieces } from './cityWalls'
 import { type Cell, hexDistance, hexRing, hexToWorld } from './hex'
 
 const HALF_TURN = 180
@@ -85,11 +85,43 @@ describe('city walls', () => {
     )
   })
 
+  it('lays road tiles that meet the hexes before and after them along the way out', () => {
+    const tiles = roadTiles(3, 1, 3)
+    expect(tiles.filter((tile) => tile.model === 'end')).toHaveLength(
+      gateCount(1)
+    )
+    const local: Record<string, number[]> = {
+      straight: [0, HALF_TURN],
+      bend: [HALF_TURN, -60],
+      sharp: [HALF_TURN, -120],
+      end: [HALF_TURN],
+    }
+    for (const tile of tiles) {
+      const edges = local[tile.model].map((angle) =>
+        wrap(angle - degrees(tile.turn))
+      )
+      const neighbours = hexRing(1)
+        .map((step) => [tile.cell[0] + step[0], tile.cell[1] + step[1]] as Cell)
+        .filter(
+          (near) =>
+            tiles.some(
+              (other) => other.cell[0] === near[0] && other.cell[1] === near[1]
+            ) || hexDistance(near, [0, 0]) === 2
+        )
+        .map((near) => wrap(angleTo(tile.cell, near)))
+      edges.forEach((edge) =>
+        expect(
+          neighbours.some((angle) => Math.abs(wrap(angle - edge)) < 1)
+        ).toBe(true)
+      )
+    }
+  })
+
   it('draws no walls without walls and more roads out of more gates', () => {
     expect(wallPieces(3, 0, 2)).toEqual([])
-    expect(roadSegments(3, 0, 3)).toEqual([])
-    expect(roadSegments(3, 1, 3)).toHaveLength(gateCount(1) * 3)
-    expect(roadSegments(3, 3, 3)).toHaveLength(gateCount(3) * 3)
+    expect(roadTiles(3, 0, 3)).toEqual([])
+    expect(roadTiles(3, 1, 3)).toHaveLength(gateCount(1) * 4)
+    expect(roadTiles(3, 3, 3)).toHaveLength(gateCount(3) * 4)
     expect(gateCount(9)).toBe(6)
   })
 })

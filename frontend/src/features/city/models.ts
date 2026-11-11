@@ -1,5 +1,5 @@
 import type { components } from '@/api/generated/schema'
-import { type WallModel } from './cityWalls'
+import { type RoadModel, type WallModel } from './cityWalls'
 
 type Schema = components['schemas']
 type Colour = 'blue' | 'red' | 'yellow' | 'green'
@@ -280,6 +280,13 @@ export const DISTRICT_DRESS: Partial<Record<Schema['DistrictKind'], Look>> = {
 export const GROUND_TILE = hex('tiles/base/hex_grass')
 export const WATER_TILE = hex('tiles/base/hex_water')
 export const RIVER_TILE = hex('tiles/rivers/hex_river_A')
+export const ROAD_LOOK: Record<RoadModel, string> = {
+  straight: hex('tiles/roads/hex_road_A'),
+  bend: hex('tiles/roads/hex_road_B'),
+  sharp: hex('tiles/roads/hex_road_C'),
+  end: hex('tiles/roads/hex_road_M'),
+}
+
 export const WALL_LOOK: Record<WallModel, (level: number) => Part> = {
   straight: () => ({ model: neutral('wall_straight') }),
   gate: () => ({ model: neutral('wall_straight_gate') }),
@@ -453,11 +460,11 @@ const PLACE_LOOK: Record<Schema['PlaceKind'], Part> = {
   god_corpse: { model: spooky('bone_A'), scale: SPOOKY * 2 },
   mine_site: { model: building('mine', 'red'), scale: 0.6 },
   harbour_site: { model: neutral('building_bridge_A'), scale: 0.6 },
-  crossroads: { model: spooky('post_lantern'), scale: SPOOKY },
+  crossroads: { model: nature('rock_single_A'), scale: 0.5 },
 }
 
 const SACRED: Part = { model: spooky('shrine_candles'), scale: SPOOKY }
-const UNKNOWN_PLACE: Part = { model: prop('flag_yellow'), scale: 0.6 }
+const UNKNOWN_PLACE: Part = { model: nature('rock_single_B'), scale: 0.55 }
 
 export function placeLook(
   kind: Schema['PlaceKind'] | null,

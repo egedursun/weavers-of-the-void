@@ -8,7 +8,7 @@ import { Model } from './Model'
 import { SceneFrame } from './SceneFrame'
 import { type SceneLabel, SceneLabels } from './SceneLabels'
 import { type CityBuilding, type CityDistrict, type CityScene } from './api'
-import { roadSegments, wallPieces } from './cityWalls'
+import { roadTiles, wallPieces } from './cityWalls'
 import {
   type Cell,
   cellKey,
@@ -27,6 +27,7 @@ import {
   SHELTER,
   STAGE_LOOK,
   STRUCTURE_LOOK,
+  ROAD_LOOK,
   WALL_LOOK,
   WATER_TILE,
   stageOf,
@@ -47,12 +48,10 @@ const SHARED_SCALE = 0.62
 const DAMAGED_DIM = 0.55
 const FADED = 0.3
 const SELECTED_LIFT = 0.12
-const ROAD_WIDTH = 0.3
 const FIELDS: ReadonlySet<CityDistrict['kind']> = new Set([
   'farmland',
   'necropolis',
 ])
-const ROAD_WIDTH_STEP = 0.06
 
 type Hover = { x: number; z: number; text: string } | null
 
@@ -185,24 +184,25 @@ export default function CityScene3D({
         water.push(cell)
   }
   const wet = new Set(water.map(cellKey))
+  const roads = roadTiles(
+    scene.walls_radius ?? radius,
+    scene.roads,
+    COUNTRYSIDE + Math.max(0, radius - (scene.walls_radius ?? radius))
+  ).filter(
+    (tile) => !wet.has(cellKey(tile.cell)) && !built.has(cellKey(tile.cell))
+  )
+  const roadCells = new Set(roads.map((tile) => cellKey(tile.cell)))
   const countryside = around(center, radius + COUNTRYSIDE).filter(
-    (cell) => !built.has(cellKey(cell)) && !wet.has(cellKey(cell))
+    (cell) =>
+      !built.has(cellKey(cell)) &&
+      !wet.has(cellKey(cell)) &&
+      !roadCells.has(cellKey(cell))
   )
   const walls = wallPieces(
     scene.walls_radius ?? 0,
     scene.walls_level,
     scene.roads
   )
-  const roads = roadSegments(
-    scene.walls_radius ?? radius,
-    scene.roads,
-    COUNTRYSIDE + Math.max(0, radius - (scene.walls_radius ?? radius))
-  ).filter(
-    (segment) =>
-      !wet.has(cellKey(segment.cell)) && !built.has(cellKey(segment.cell))
-  )
-  const roadWidth = ROAD_WIDTH + scene.roads * ROAD_WIDTH_STEP
-  const roadColor = tokenHex('--cosmos-bone')
   const names: SceneLabel[] = scene.districts
     .filter((district) => visible(district.zone) && district.cells.length > 0)
     .map((district) => {
@@ -249,7 +249,6 @@ export default function CityScene3D({
   const zoneOf = new Map(scene.districts.map((row) => [row.id, row.zone]))
   const pickDistrict = (id: number) => onPick({ kind: 'district', id })
   const [focusX, focusZ] = hexToWorld(center[0], center[1])
-  const countrysideTint = tokenHex('--success')
   return (
     <SceneFrame
       label={`City of ${scene.town.name}`}
@@ -265,8 +264,6 @@ export default function CityScene3D({
             ...placeAt(cell),
             y: -0.06,
           }))}
-          tint={countrysideTint}
-          dim={0.8}
           onPick={
             moving !== null
               ? (item) =>
@@ -426,27 +423,20 @@ export default function CityScene3D({
             />
           )
         })}
-        {roads.map((segment) => {
-          const [fx, fz] = segment.from
-          const [tx, tz] = segment.to
-          return (
-            <mesh
-              key={segment.key}
-              receiveShadow
-              position={[(fx + tx) / 2, 0.01, (fz + tz) / 2]}
-              rotation={[0, -Math.atan2(tz - fz, tx - fx), 0]}
-            >
-              <boxGeometry
-                args={[
-                  Math.hypot(tx - fx, tz - fz) + roadWidth,
-                  0.02,
-                  roadWidth,
-                ]}
-              />
-              <meshStandardMaterial color={roadColor} roughness={1} />
-            </mesh>
-          )
-        })}
+        {grouped(
+          roads.map((tile) => {
+            const [x, z] = hexToWorld(tile.cell[0], tile.cell[1])
+            return {
+              part: { model: ROAD_LOOK[tile.model] },
+              x,
+              z,
+              y: -0.06,
+              turn: tile.turn,
+            }
+          })
+        ).map(([model, items]) => (
+          <InstancedModel key={`road-${model}`} model={model} items={items} />
+        ))}
         {labels && <SceneLabels labels={names} />}
         {hover && (
           <Html position={[hover.x, 2, hover.z]} center zIndexRange={[20, 0]}>
