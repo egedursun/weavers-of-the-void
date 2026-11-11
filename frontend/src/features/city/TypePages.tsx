@@ -137,11 +137,11 @@ function BuildingType({
   const count = (state: StructureType['instances'][number]['state']) =>
     row.instances.filter((item) => item.state === state).length
   return (
-    <div className='flex min-w-0 flex-col gap-4'>
+    <div className='@container/type flex min-w-0 flex-col gap-4'>
       <PageHeader
         eyebrow='Building type'
         title={row.label}
-        description={zone.hint}
+        description={`Stands in the ${zone.label.toLowerCase()} zone${row.service ? ` and serves ${SERVICES[row.service].label.toLowerCase()}` : ''}; ${row.instances.length} built in this world. Every one of them is listed below, and each is ruled from its own record.`}
         icon={spec.icon}
       />
       <Preview
@@ -162,7 +162,7 @@ function BuildingType({
         {row.amenity && <Chip variant='secondary'>Raises desirability</Chip>}
         {row.nuisance && <Chip variant='secondary'>Lowers desirability</Chip>}
       </div>
-      <div className='grid min-w-0 grid-cols-2 gap-2 lg:grid-cols-4'>
+      <div className='grid min-w-0 grid-cols-2 gap-2 @xl/type:grid-cols-4'>
         <KpiTile
           label='Standing'
           value={count('complete')}

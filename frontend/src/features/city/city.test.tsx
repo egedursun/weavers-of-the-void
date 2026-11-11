@@ -6,8 +6,11 @@ import {
   resetApi,
 } from '@/test-utils/fakeApi'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { CitiesView } from './CitiesScreen'
 import { CityPlan2D } from './CityPlan2D'
+import { CityPlane } from './CityPlane'
 import { CitySection } from './CitySection'
+import { LandPlane } from './LandPlane'
 import { LandSection } from './LandSection'
 import { TypePage } from './TypePages'
 import { type CityScene, type LandScene, type StructureTypes } from './api'
@@ -182,17 +185,52 @@ function serve() {
   onApi('GET', '/api/city/4', CITY)
   onApi('GET', '/api/land/5', LAND)
   onApi('GET', '/api/structure-types/1', TYPES)
+  onApi('GET', '/api/entities', {
+    items: [
+      {
+        ...SUMMARY,
+        id: 4,
+        name: 'Harrowmere',
+        entity_type: 'settlement',
+        location_id: 5,
+        importance: 9,
+      },
+      {
+        ...SUMMARY,
+        id: 5,
+        name: 'Ashreach',
+        entity_type: 'region',
+        importance: 3,
+      },
+    ],
+    total: 2,
+  })
+}
+
+const SUMMARY = {
+  title: null,
+  subtype: null,
+  status: 'canon',
+  world_id: 1,
+  location_id: null,
+  power_level: 1,
+  birth_epoch: 1,
+  end_epoch: null,
+  favorite: false,
+  pending_name: false,
 }
 
 describe('city', () => {
   beforeEach(resetApi)
 
-  it('draws the town from the engine and drives the god’s levers on its districts and buildings', async () => {
+  it('draws the town from the engine and drives the god’s levers from the scene', async () => {
     serve()
     onApi('POST', '/api/actions/district:edit', ACCEPTED_ACTION)
     onApi('POST', '/api/actions/district_urban:edit', ACCEPTED_ACTION)
     onApi('POST', '/api/actions/structure:finish', ACCEPTED_ACTION)
-    const { screen } = await renderApp(<CitySection settlementId={4} />)
+    const { screen } = await renderApp(
+      <CityPlane settlementId={4} blocked={null} />
+    )
     await expect
       .element(
         screen.getByRole('img', {
@@ -202,10 +240,10 @@ describe('city', () => {
       .toBeVisible()
     await expect
       .element(
-        screen.getByText('Residential: 1 districts, 2 hexes, 0 buildings')
+        screen.getByText('Residential · 1 districts · 2 hexes · 0 buildings')
       )
       .toBeVisible()
-    await screen.getByRole('button', { name: 'Show' }).first().click()
+    await screen.getByRole('button', { name: 'Rule it' }).first().click()
     await screen.getByRole('button', { name: 'Raise a level' }).click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/district:edit'))
@@ -227,7 +265,8 @@ describe('city', () => {
         release: ['hex'],
       }
     )
-    await screen.getByRole('button', { name: 'Show' }).nth(2).click()
+    await screen.getByRole('tab', { name: /Buildings/ }).click()
+    await screen.getByRole('button', { name: 'Rule it' }).first().click()
     await screen.getByRole('button', { name: 'Finish now' }).click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/structure:finish'))
@@ -235,6 +274,21 @@ describe('city', () => {
     expect(callsTo('POST', '/api/actions/structure:finish')[0].body).toEqual({
       structure_id: 21,
     })
+  })
+
+  it('sums the town up in its record and leads to the whole city', async () => {
+    serve()
+    const { screen } = await renderApp(<CitySection settlementId={4} />)
+    await expect.element(screen.getByText('4,200')).toBeVisible()
+    const walk = screen.getByRole('link', {
+      name: 'Walk the city and rule its districts',
+    })
+    await expect
+      .element(walk)
+      .toHaveAttribute('href', '/cities?view=city&town=4')
+    await expect
+      .element(screen.getByRole('button', { name: 'Raise the district' }))
+      .toBeVisible()
   })
 
   it('picks a district or a building from the flat plan', async () => {
@@ -255,17 +309,15 @@ describe('city', () => {
     document
       .querySelector('circle')
       ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    document
-      .querySelector('polygon')
-      ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     expect(picks).toContainEqual({ kind: 'building', id: 21 })
   })
 
-  it('draws the land and lets the god set its shares and its deposits', async () => {
+  it('draws the land and lets the god set its deposits and lay new ones', async () => {
     serve()
-    onApi('POST', '/api/actions/environment:set', ACCEPTED_ACTION)
     onApi('POST', '/api/actions/resource:set', ACCEPTED_ACTION)
-    const { screen } = await renderApp(<LandSection regionId={5} />)
+    const { screen } = await renderApp(
+      <LandPlane regionId={5} blocked={null} />
+    )
     await expect
       .element(
         screen.getByRole('img', {
@@ -273,11 +325,10 @@ describe('city', () => {
         })
       )
       .toBeVisible()
-    await expect.element(screen.getByText('Forest: 1 tiles')).toBeVisible()
     await expect
-      .element(screen.getByRole('button', { name: 'Lay it' }))
-      .toBeDisabled()
-    await screen.getByRole('button', { name: 'Show' }).first().click()
+      .element(screen.getByText('Forest · 1 of 3 tiles'))
+      .toBeVisible()
+    await screen.getByRole('button', { name: 'Rule it' }).first().click()
     await screen.getByRole('button', { name: 'Set', exact: true }).click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/resource:set'))
@@ -287,6 +338,35 @@ describe('city', () => {
       reserve: 600,
       fields: { richness: 70 },
     })
+    await screen.getByRole('tab', { name: 'Shape' }).click()
+    await expect
+      .element(screen.getByRole('button', { name: 'Lay it' }))
+      .toBeDisabled()
+  })
+
+  it('sums the land up in its record and leads to the whole land', async () => {
+    serve()
+    const { screen } = await renderApp(<LandSection regionId={5} />)
+    const walk = screen.getByRole('link', {
+      name: 'Walk the land and shape it',
+    })
+    await expect
+      .element(walk)
+      .toHaveAttribute('href', '/cities?view=land&region=5')
+  })
+
+  it('chooses the most important town of the world and switches to its land', async () => {
+    serve()
+    const seen: unknown[] = []
+    const { screen } = await renderApp(
+      <CitiesView search={{}} onSearch={(patch) => seen.push(patch)} />
+    )
+    await expect.poll(() => seen).toContainEqual({ town: 4 })
+    await expect
+      .element(screen.getByRole('img', { name: /Plan of Harrowmere/ }))
+      .toBeVisible()
+    await screen.getByRole('radio', { name: 'Land' }).click()
+    expect(seen).toContainEqual({ view: 'land' })
   })
 
   it('shows a building type with its values and every building of it, and a home type with its towns', async () => {

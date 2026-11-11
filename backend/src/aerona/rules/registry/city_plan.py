@@ -8,8 +8,8 @@ S = RuleGroup.SETTLEMENTS
 
 @dataclass(frozen=True)
 class CityPlanRules:
-    cells_per_level: int = rule(1, 1, 6, S, "Hexes of the city plan each level of a district covers")
-    ring_spacing: int = rule(2, 1, 6, S, "Hexes between the rings of the city plan's zones, from the seat of government outward")
+    cells_per_level: int = rule(3, 1, 8, S, "Hexes of the city plan each level of a district covers")
+    ring_spacing: int = rule(1, 1, 6, S, "Hexes between the rings of the city plan's zones, from the seat of government outward")
     household: int = rule(5, 1, 50, S, "People living in one dwelling of a district")
     residential_housing_pct: int = rule(160, 0, 400, S, "Homes a residential quarter holds against another district of its level (%)")
     civic_quarter_at: int = rule(

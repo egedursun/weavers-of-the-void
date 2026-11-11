@@ -7678,6 +7678,7 @@ Cities and lands are drawn, and every drawn thing is a value of the engine; noth
 - **Atlas by type.** Buildings and dwellings appear in the Atlas by type, each type with its instances, its zone, what it serves and what it costs; individual structures are reached from their type and their town.
 - **Assets.** The scenes use the KayKit medieval hexagon and Halloween bits packs (CC0), tinted by zone.
 
+The Cities screen (`/cities`) draws a whole town or land full-bleed, like the Heavens: the 3D scene fills the page, the selected district, building, tile or deposit opens its god's panel over the scene, the zones can be shown or hidden and named, and a flat plan stands in where WebGL is missing. The settlement and region records show a summary, a flat plan and the way into that screen. Each level of a district covers three hexes and the zones' rings lie one hex apart, so a town's districts touch; seats not held by the god were cleared to be planned again on the new spacing. Scene colours come from theme tokens resolved to plain hex, never handed to three.js raw.
 ### J.13 Fourth-pass integration addendum
 
 **Waves:**

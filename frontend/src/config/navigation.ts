@@ -1,4 +1,5 @@
 import {
+  Building2,
   Coins,
   Archive,
   Bell,
@@ -43,6 +44,7 @@ export type NavRoute =
   | '/cosmos'
   | '/heavens'
   | '/map'
+  | '/cities'
   | '/atlas'
   | '/network'
   | '/interconnections'
@@ -238,6 +240,14 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: MapIcon,
         description: 'Regions, settlements, peoples, roads and wars.',
         shortcut: '6',
+      },
+      {
+        id: 'cities',
+        title: 'Cities',
+        to: '/cities',
+        icon: Building2,
+        description:
+          'Every town on its hexes and every land on its tiles, drawn from the engine, with the god’s hand on each.',
       },
       {
         id: 'atlas',

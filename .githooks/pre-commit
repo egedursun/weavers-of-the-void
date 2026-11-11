@@ -32,6 +32,7 @@ run frontend_orphans "$PYTHON" scripts/check_frontend_orphans.py
 run folk_queries "$PYTHON" scripts/check_folk_queries.py
 run coin_units "$PYTHON" scripts/check_coin_units.py
 run zero_fallbacks "$PYTHON" scripts/check_zero_fallbacks.py
+run scene_colors "$PYTHON" scripts/check_scene_colors.py
 run spec_coverage "$PYTHON" scripts/spec_coverage.py check
 
 if echo "$STAGED" | grep -qE '^(backend/|scripts/).*\.py$'; then

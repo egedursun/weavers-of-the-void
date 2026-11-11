@@ -14,6 +14,7 @@ import { Route as GenesisRouteImport } from './routes/genesis'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAtlasRouteImport } from './routes/_app/atlas'
 import { Route as AppChronicleRouteImport } from './routes/_app/chronicle'
+import { Route as AppCitiesRouteImport } from './routes/_app/cities'
 import { Route as AppCosmosRouteImport } from './routes/_app/cosmos'
 import { Route as AppCouncilRouteImport } from './routes/_app/council'
 import { Route as AppDesignRouteImport } from './routes/_app/design'
@@ -66,6 +67,11 @@ const AppAtlasRoute = AppAtlasRouteImport.update({
 const AppChronicleRoute = AppChronicleRouteImport.update({
   id: '/chronicle',
   path: '/chronicle',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppCitiesRoute = AppCitiesRouteImport.update({
+  id: '/cities',
+  path: '/cities',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppCosmosRoute = AppCosmosRouteImport.update({
@@ -220,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRouteRouteWithChildren
   '/atlas': typeof AppAtlasRoute
   '/chronicle': typeof AppChronicleRoute
+  '/cities': typeof AppCitiesRoute
   '/cosmos': typeof AppCosmosRoute
   '/council': typeof AppCouncilRoute
   '/design': typeof AppDesignRoute
@@ -253,6 +260,7 @@ export interface FileRoutesByTo {
   '/genesis': typeof GenesisRoute
   '/atlas': typeof AppAtlasRoute
   '/chronicle': typeof AppChronicleRoute
+  '/cities': typeof AppCitiesRoute
   '/cosmos': typeof AppCosmosRoute
   '/council': typeof AppCouncilRoute
   '/design': typeof AppDesignRoute
@@ -290,6 +298,7 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRouteRouteWithChildren
   '/_app/atlas': typeof AppAtlasRoute
   '/_app/chronicle': typeof AppChronicleRoute
+  '/_app/cities': typeof AppCitiesRoute
   '/_app/cosmos': typeof AppCosmosRoute
   '/_app/council': typeof AppCouncilRoute
   '/_app/design': typeof AppDesignRoute
@@ -328,6 +337,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/atlas'
     | '/chronicle'
+    | '/cities'
     | '/cosmos'
     | '/council'
     | '/design'
@@ -361,6 +371,7 @@ export interface FileRouteTypes {
     | '/genesis'
     | '/atlas'
     | '/chronicle'
+    | '/cities'
     | '/cosmos'
     | '/council'
     | '/design'
@@ -397,6 +408,7 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/atlas'
     | '/_app/chronicle'
+    | '/_app/cities'
     | '/_app/cosmos'
     | '/_app/council'
     | '/_app/design'
@@ -468,6 +480,13 @@ declare module '@tanstack/react-router' {
       path: '/chronicle'
       fullPath: '/chronicle'
       preLoaderRoute: typeof AppChronicleRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/cities': {
+      id: '/_app/cities'
+      path: '/cities'
+      fullPath: '/cities'
+      preLoaderRoute: typeof AppCitiesRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/_app/cosmos': {
@@ -711,6 +730,7 @@ interface AppRouteRouteChildren {
   AppSettingsRouteRoute: typeof AppSettingsRouteRouteWithChildren
   AppAtlasRoute: typeof AppAtlasRoute
   AppChronicleRoute: typeof AppChronicleRoute
+  AppCitiesRoute: typeof AppCitiesRoute
   AppCosmosRoute: typeof AppCosmosRoute
   AppCouncilRoute: typeof AppCouncilRoute
   AppDesignRoute: typeof AppDesignRoute
@@ -735,6 +755,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppSettingsRouteRoute: AppSettingsRouteRouteWithChildren,
   AppAtlasRoute: AppAtlasRoute,
   AppChronicleRoute: AppChronicleRoute,
+  AppCitiesRoute: AppCitiesRoute,
   AppCosmosRoute: AppCosmosRoute,
   AppCouncilRoute: AppCouncilRoute,
   AppDesignRoute: AppDesignRoute,

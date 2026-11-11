@@ -18,7 +18,11 @@ import { type KpiTone } from '@/components/domain/KpiTile'
 
 type Schema = components['schemas']
 export type Named = { label: string; icon: LucideIcon; tone: KpiTone }
-export type ZoneSpec = Named & { token: string; fill: string; hint: string }
+export type ZoneSpec = Named & {
+  token: string
+  fill: string
+  hint: string
+}
 
 export const CITY_ICON: LucideIcon = Building2
 

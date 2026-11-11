@@ -8,6 +8,7 @@ import { cellKey, hexToWorld } from './hex'
 import { COVERS, GROUNDS, STATES } from './labels'
 import {
   COVER_LOOK,
+  GROUND_TILE,
   GROUND_LOOK,
   RIVER_TILE,
   SETTLEMENT_LOOK,
@@ -68,6 +69,7 @@ export default function LandScene3D({
       ...scene.resources,
     ].map((item) => cellKey([item.q, item.r]))
   )
+  const grass = tokenHex('--success')
   const lifted = (kind: NonNullable<LandPick>['kind'], id: number) =>
     selected !== null &&
     selected.kind === kind &&
@@ -109,7 +111,14 @@ export default function LandScene3D({
               x={x}
               z={z}
               y={chosen ? 0.1 : 0}
-              tint={chosen && index === 0 ? tokenHex('--brand-gold') : null}
+              tint={
+                chosen && index === 0
+                  ? tokenHex('--brand-gold')
+                  : part.model === GROUND_TILE
+                    ? grass
+                    : null
+              }
+              dim={part.model === GROUND_TILE ? 0.8 : 1}
               onClick={pick}
               onPointerOver={() => setHover({ x, z, text })}
               onPointerOut={() => setHover(null)}

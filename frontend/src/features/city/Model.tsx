@@ -28,7 +28,7 @@ function tinted(
     return material
   const copy = material.clone()
   if (tint)
-    copy.color = new Color(tint).lerp(new Color(tokenHex('--card')), 0.45)
+    copy.color = new Color(tint).lerp(new Color(tokenHex('--cosmos-bone')), 0.2)
   if (dim !== 1) copy.color.multiplyScalar(dim)
   return copy
 }

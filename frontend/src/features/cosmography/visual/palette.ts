@@ -31,10 +31,26 @@ function parseHex(value: string): Rgb {
   ]
 }
 
+let probe: CanvasRenderingContext2D | null = null
+
+function resolved(value: string): Rgb {
+  if (value === '' || value.startsWith('#')) return parseHex(value)
+  if (typeof document === 'undefined') return parseHex('')
+  probe ??= document
+    .createElement('canvas')
+    .getContext('2d', { willReadFrequently: true })
+  if (!probe) return parseHex('')
+  probe.clearRect(0, 0, 1, 1)
+  probe.fillStyle = value
+  probe.fillRect(0, 0, 1, 1)
+  const [r, g, b] = probe.getImageData(0, 0, 1, 1).data
+  return [r / CHANNEL, g / CHANNEL, b / CHANNEL]
+}
+
 export const screenPalette: Palette = (token) => {
   const cached = screen.get(token)
   if (cached) return cached
-  const rgb = parseHex(tokenValue(token))
+  const rgb = resolved(tokenValue(token))
   screen.set(token, rgb)
   return rgb
 }
@@ -64,6 +80,11 @@ export function cssColor(token: string, alpha = 1): string {
   return mixColor(r, g, b, alpha)
 }
 
+export function colorHex(value: string): string {
+  const [r, g, b] = resolved(value)
+  return `#${pair(r)}${pair(g)}${pair(b)}`
+}
+
 export function tokenHex(token: string): string {
-  return tokenValue(token) || tokenValue('--cosmos-bone')
+  return colorHex(tokenValue(token) || tokenValue('--cosmos-bone'))
 }
