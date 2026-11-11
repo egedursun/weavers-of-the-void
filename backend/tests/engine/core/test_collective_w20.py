@@ -1,6 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.agents.context.collective_lines import mortal_collective_lines
+from aerona.agents.context.scope import load_scope
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.collective import (
     AccountRow,
@@ -97,6 +99,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.phases.collective import ArmedTally, arm_movements
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import stat_or
+from aerona.rules.registry import Rules
 from aerona.services.integrity.collective_links import mend_collective_links
 from tests.engine.core.factories import CoreWorld, entity, mortal, settlement, tuned_rules
 
@@ -521,3 +524,24 @@ async def test_vanished_towns_end_their_crowds_and_storylets(session: AsyncSessi
     assert await mend_collective_links(session, ctx.epoch) >= 2
     assert (await session.scalar(select(MobRow))).status is MobStatus.DISPERSED
     assert (await session.scalar(select(StoryletRunRow))).status is StoryletStatus.EXPIRED
+
+
+async def test_a_mortal_reads_role_classes_kept_as_json_in_context(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world)
+    people = await entity(session, "Folk", EntityType.PEOPLE, PeopleStats(), world_id=world.world.id)
+    await homeland(session, people, town)
+    role = RoleNormRow(
+        holder_entity_id=people.id,
+        role=RoleKind.OFFICE,
+        eligibility=RoleEligibility.ANY,
+        min_age=16,
+        classes=[SocialClass.NOBLE.value],
+        since_epoch=0,
+        locked=[],
+    )
+    session.add(role)
+    someone = await mortal(session, "Ilse", world, town.id)
+    await session.flush()
+    await session.refresh(role)
+    lines = await mortal_collective_lines(await load_scope(session, Rules()), someone)
+    assert any("only for noble" in line for line in lines)

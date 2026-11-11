@@ -472,7 +472,7 @@ function MovementCard({
     <Held
       icon={Flag}
       tone={act.tone}
-      title={`A movement that ${act.label.toLowerCase()}`}
+      title={`A ${act.label.toLowerCase()} movement`}
       caption={`Since epoch ${row.since_epoch} over ${TRIGGERS[row.trigger].label.toLowerCase()}${row.ended_epoch !== null ? ` · faded in epoch ${row.ended_epoch}` : ''}`}
       removeLabel='Strike from the record'
       editTitle='Set the movement'

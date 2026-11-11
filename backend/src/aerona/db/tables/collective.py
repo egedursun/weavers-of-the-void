@@ -31,7 +31,6 @@ from aerona.domain.enums.collective import (
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.military import HullClass
 from aerona.domain.enums.mind import EthicalStance, ValueAxis
-from aerona.domain.enums.society import SocialClass
 
 KEY_LENGTH = 80
 MOOD_FIELDS = ("anger", "anxiety", "fervour", "deterrence", "agitation")
@@ -370,7 +369,7 @@ class RoleNormRow(Base):
     role: Mapped[RoleKind] = mapped_column(enum_type(RoleKind, "role"), primary_key=True)
     eligibility: Mapped[RoleEligibility] = mapped_column(enum_type(RoleEligibility, "eligibility"), default=RoleEligibility.ANY)
     min_age: Mapped[int] = mapped_column(default=0)
-    classes: Mapped[list[SocialClass]] = mapped_column(JSON, default=list)
+    classes: Mapped[list[str]] = mapped_column(JSON, default=list)
     stance: Mapped[EthicalStance] = mapped_column(enum_type(EthicalStance, "stance"), default=EthicalStance.ACCEPTABLE)
     since_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

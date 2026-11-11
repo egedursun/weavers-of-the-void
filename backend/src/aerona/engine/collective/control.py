@@ -154,7 +154,8 @@ async def raise_mob(ctx: TickContext, town_id: int, act: CollectiveActKind, targ
     if target_id is not None:
         await entity(ctx, target_id, "target")
     row = MobRow(settlement_entity_id=town_id, act=act, target=target, status=MobStatus.GATHERING, since_epoch=ctx.epoch, locked=[])
-    apply(row, {"size": size, "anger": anger, "target_entity_id": target_id}, [])
+    apply(row, {"size": size, "anger": anger}, [])
+    row.target_entity_id = target_id
     return await saved(ctx, row)
 
 
@@ -379,7 +380,7 @@ async def set_role(
     if row is None:
         row = await saved(ctx, RoleNormRow(holder_entity_id=holder_id, role=role, since_epoch=ctx.epoch, locked=[]))
     apply(row, {"eligibility": eligibility, "min_age": min_age, "stance": stance}, [])
-    row.classes = list(classes)
+    row.classes = [item.value for item in classes]
     await ctx.session.flush()
     return row
 

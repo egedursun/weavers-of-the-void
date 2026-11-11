@@ -11,7 +11,6 @@ from aerona.domain.enums.polity import (
     ClauseKind,
     DecisionRule,
     GovernmentKind,
-    HouseTrait,
     Jurisdiction,
     LawArea,
     LawKind,
@@ -204,7 +203,7 @@ class HouseProfileRow(Base):
     wealth: Mapped[int] = mapped_column(default=0)
     motto: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
     emblem: Mapped[dict[str, str]] = mapped_column(JSON, default=dict)
-    traits: Mapped[list[HouseTrait]] = mapped_column(JSON, default=list)
+    traits: Mapped[list[str]] = mapped_column(JSON, default=list)
     seats: Mapped[list[int]] = mapped_column(JSON, default=list)
     founded_epoch: Mapped[int] = mapped_column(default=0)
     extinct_epoch: Mapped[int | None]

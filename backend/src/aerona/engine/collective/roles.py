@@ -120,7 +120,7 @@ async def seed_roles(ctx: TickContext, people: EntityRow, tally: RoleTally) -> N
         if strict >= LEAN * 2 and rng.chance(strict / 2):
             favoured = FEMALE if rng.chance(PERCENT // 2) else MALE
             eligibility = NARROWING[favoured][1 if strict >= LEAN * 3 else 0]
-        classes = list(ELITE) if role is RoleKind.OFFICE and values.get(ValueAxis.HIERARCHY, 0) >= LEAN else []
+        classes = [item.value for item in ELITE] if role is RoleKind.OFFICE and values.get(ValueAxis.HIERARCHY, 0) >= LEAN else []
         ctx.session.add(
             RoleNormRow(
                 holder_entity_id=people.id,

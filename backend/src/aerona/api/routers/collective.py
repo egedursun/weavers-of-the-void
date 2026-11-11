@@ -79,6 +79,7 @@ from aerona.db.tables.gatherings import CollectionRow
 from aerona.db.tables.settlement import DistrictRow
 from aerona.domain.enums.collective import DesignComponentKind, FormativeKind, StoryletRole
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.society import SocialClass
 from aerona.engine.collective.accounts import distance_from_truth
 from aerona.engine.collective.dating import SINGLETON, current_year, render_date
 from aerona.engine.collective.designs import lineage_of
@@ -381,7 +382,7 @@ async def culture_views(
                 role=row.role,
                 eligibility=row.eligibility,
                 min_age=row.min_age,
-                classes=list(row.classes),
+                classes=[SocialClass(item) for item in row.classes],
                 stance=row.stance,
                 since_epoch=row.since_epoch,
                 locked=list(row.locked),

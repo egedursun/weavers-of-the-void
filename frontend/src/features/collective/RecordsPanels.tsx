@@ -287,9 +287,13 @@ function ArmsCard({
         />
         <div className='flex min-w-0 flex-1 flex-col gap-2'>
           {row.motto && (
-            <Text>
-              <Quote className='size-icon-sm' aria-hidden='true' /> {row.motto}
-            </Text>
+            <div className='flex min-w-0 items-center gap-2'>
+              <Quote
+                className='size-icon-sm shrink-0 text-muted-foreground'
+                aria-hidden='true'
+              />
+              <Text>{row.motto}</Text>
+            </div>
           )}
           <Facts
             items={[

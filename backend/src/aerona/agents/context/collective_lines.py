@@ -49,7 +49,7 @@ async def custom_lines(scope: Scope, me: EntityRow) -> list[str]:
         found.append(f"{behaviour.value.replace('_', ' ')} at {an(where.value.replace('_', ' '))} is {stance.value.replace('_', ' ')}")
     for row in await session.scalars(select(RoleNormRow).where(RoleNormRow.holder_entity_id == people.id).order_by(RoleNormRow.role)):
         if row.eligibility is not RoleEligibility.ANY or row.classes:
-            classes = f", only for {', '.join(item.value for item in row.classes)}" if row.classes else ""
+            classes = f", only for {', '.join(row.classes)}" if row.classes else ""
             found.append(f"the {row.role.value} role is {row.eligibility.value.replace('_', ' ')} from age {row.min_age}{classes}")
     return found
 

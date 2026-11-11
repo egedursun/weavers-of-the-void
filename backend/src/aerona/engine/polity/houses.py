@@ -437,7 +437,7 @@ async def gain_traits(ctx: TickContext, book: HouseBook, profile: HouseProfileRo
     if "traits" in profile.locked:
         return
     table = ctx.rules.houses
-    held = set(profile.traits)
+    held = {HouseTrait(trait) for trait in profile.traits}
     found: list[HouseTrait] = []
     if HouseTrait.SEER_GIFT not in held and any(mortal.mortal_role is MortalRole.SEER for mortal in alive):
         found.append(HouseTrait.SEER_GIFT)
