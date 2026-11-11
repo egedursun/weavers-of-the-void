@@ -34,6 +34,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.materials import key_parts, set_node_material
 from aerona.engine.military.units import stacks_of, sync
 from aerona.engine.polity.control import lock
+from aerona.engine.primitives.edits import empty_value
 from aerona.engine.primitives.queries import living_entity
 
 UNIT_KINDS = frozenset(kind.value for kind in UnitKind)
@@ -170,9 +171,7 @@ COERCERS = {CHOICE: choice, FLAG: flag, INTEGER: whole, NUMBER: number, WORDS: w
 
 def coerce(kind: RecordKind, column: Column, value: object) -> Any:
     if value is None:
-        if not column.nullable:
-            raise ValidationFailedError(f"{column.name.replace('_', ' ').capitalize()} cannot be left empty.")
-        return None
+        return empty_value(mapper_of(kind).columns[column.name].type, column.nullable, f"{column.name.replace('_', ' ').capitalize()} cannot be left empty.")
     return COERCERS.get(column.kind, text)(kind, column, value)
 
 

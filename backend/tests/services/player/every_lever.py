@@ -2079,7 +2079,29 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "sex_ratio:edit": {"males_per_hundred": 90, "widows": 10},
     "role_norm:edit": {"eligibility": "female_preferred", "min_age": 18, "stance": "frowned_upon"},
     "dating_system:edit": {"kind": "regnal", "anchor_year": 12, "cycle_years": 30},
-    "arms:edit": {"field": "red", "division": "per_pale", "second": "silver", "charge": "tower", "charge_tincture": "gold", "motto": "Steady"},
+    "arms:edit": {
+        "shape": "kite",
+        "field": "red",
+        "division": "bend_sinister",
+        "line": "engrailed",
+        "second": "ermine",
+        "charge": "tower",
+        "charge_tincture": "gold",
+        "charge_two": "fleur_de_lis",
+        "charge_two_tincture": "silver",
+        "charge_three": "rose",
+        "charge_three_tincture": "gold",
+        "arrangement": "one_and_two",
+        "rim": "beaded",
+        "rim_line": "wavy",
+        "rim_tincture": "gold",
+        "supporter": "column",
+        "supporter_pose": "flanking",
+        "supporter_tincture": "silver",
+        "crest": "crown",
+        "crest_tincture": "gold",
+        "motto": "Steady",
+    },
     "design:edit": {
         "name": "The Swift",
         "hull": "cog",
@@ -2254,7 +2276,28 @@ TRANSITION = ("transition:set", {"community_id": Pick(TOWN)})
 RATIO = ("sex_ratio:set", {"community_id": Pick(TOWN)})
 ROLE = ("role_norm:set", {"holder_id": Pick(PEOPLE), "role": "office"})
 DATING = ("dating_system:set", {"holder_id": Pick(REALM), "kind": "founding", "anchor_year": 10})
-ARMS = ("arms:set", {"holder_id": Pick(REALM), "holder_kind": "polity", "field": "gold", "charge": "star", "charge_tincture": "black"})
+ARMS = (
+    "arms:set",
+    {
+        "holder_id": Pick(REALM),
+        "holder_kind": "polity",
+        "shape": "french",
+        "field": "gold",
+        "division": "chevron",
+        "line": "indented",
+        "second": "blue",
+        "charge": "star",
+        "charge_tincture": "black",
+        "charge_two": "star",
+        "charge_two_tincture": "black",
+        "arrangement": "in_fess",
+        "rim": "rope",
+        "supporter": "sword",
+        "supporter_pose": "crossed",
+        "supporter_tincture": "silver",
+        "crest": "sun",
+    },
+)
 OTHER_ARMS = ("arms:set", {"holder_id": Pick(REALM, 1), "holder_kind": "polity", "field": "blue"})
 DESIGN = ("design:draw", {"owner_id": Pick(REALM), "kind": "vessel", "hull": "carrack"})
 WEAR = ("component_wear:set", {"vessel_id": VESSEL, "component": "hull", "wear": 20})
@@ -2304,10 +2347,10 @@ LEVERS.update(
         **{name: after(ROLE, holder_id=Pick(PEOPLE), role="office") for name in ("role_norm:edit", "role_norm:delete")},
         "dating_system:set": given(holder_id=Pick(REALM), kind="founding", anchor_year=10),
         **{name: after(DATING, holder_id=Pick(REALM)) for name in ("dating_system:edit", "dating_system:delete")},
-        "arms:set": given(holder_id=Pick(REALM), holder_kind="polity", field="gold", charge="star", charge_tincture="black"),
+        "arms:set": given(**ARMS[1]),
         **{name: after(ARMS, holder_id=Pick(REALM)) for name in ("arms:edit", "arms:delete")},
         "arms:quarter": after(ARMS, OTHER_ARMS, holder_id=Pick(REALM), other_id=Pick(REALM, 1)),
-        "arms:difference": after(ARMS, holder_id=Pick(REALM, 1), parent_id=Pick(REALM)),
+        "arms:difference": after(ARMS, holder_id=Pick(REALM, 1), parent_id=Pick(REALM), border="vair", line="nebuly"),
         "design:draw": given(owner_id=Pick(REALM), kind="vessel", hull="carrack"),
         **{name: after(DESIGN, design_id=Newest("design")) for name in ("design:edit", "design:refit", "design:delete")},
         "design_component:set": after(DESIGN, design_id=Newest("design"), component="hull", size=5, quality=60),

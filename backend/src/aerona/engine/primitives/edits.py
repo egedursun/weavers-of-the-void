@@ -10,6 +10,7 @@ from aerona.db.base import Base
 RANGE = re.compile(r"^(\w+) BETWEEN (-?\d+) AND (-?\d+)$")
 FLOOR = re.compile(r"^(\w+) >= (-?\d+)$")
 FIXED = frozenset({"updated_epoch", "locked", "resolved_epoch", "since_epoch"})
+EMPTY_CHOICE = "none"
 
 
 def table_of(row: Base) -> Table:
@@ -44,15 +45,29 @@ def number(key: str, value: object) -> float:
     return float(value)
 
 
+def none_member(kind: object) -> object | None:
+    enum_class = getattr(kind, "enum_class", None)
+    if enum_class is None:
+        return None
+    return next((member for member in enum_class if str(getattr(member, "value", "")) == EMPTY_CHOICE), None)
+
+
+def empty_value(kind: object, nullable: bool, message: str) -> object:
+    if nullable:
+        return None
+    member = none_member(kind)
+    if member is None:
+        raise ValidationFailedError(message)
+    return member
+
+
 def coerce(row: Base, key: str, value: object, limits: dict[str, tuple[int, int | None]]) -> object:
     column = table_of(row).columns.get(key)
     if column is None or column.primary_key or key in FIXED:
         raise ValidationFailedError(f"{key.replace('_', ' ').capitalize()} cannot be set here.")
     kind = column.type
     if value is None:
-        if not column.nullable:
-            raise ValidationFailedError(f"{key.replace('_', ' ').capitalize()} cannot be empty.")
-        return None
+        return empty_value(kind, bool(column.nullable), f"{key.replace('_', ' ').capitalize()} cannot be empty.")
     if isinstance(kind, SqlEnum) and kind.enum_class is not None:
         try:
             return kind.enum_class(str(value))

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { type ActionBody, postAction } from '@/api/actions'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -12,6 +12,8 @@ export type AccountView = Schema['AccountView']
 export type StoryletView = Schema['StoryletView']
 export type DesignView = Schema['MachineDesignView']
 export type ArmsView = Schema['ArmsView']
+export type ArmsDesign = Omit<Schema['ArmsDesignView'], 'blazon' | 'drawing'>
+export type ArmsDesignView = Schema['ArmsDesignView']
 export type StoryletSpecView = Schema['StoryletSpecView']
 
 export const collectiveKeys = {
@@ -20,6 +22,8 @@ export const collectiveKeys = {
   storylets: () => [...queryKeys.world.all, 'storylet-catalog'] as const,
   arms: (nodeId: number) =>
     [...queryKeys.world.all, 'arms-of', nodeId] as const,
+  armsPreview: (design: ArmsDesign) =>
+    [...queryKeys.world.all, 'arms-preview', design] as const,
 }
 
 export function useNodeCollective(nodeId: number) {
@@ -44,6 +48,31 @@ export function useNodeArms(nodeId: number) {
         })
       ),
   })
+}
+
+export function useArmsPreview(design: ArmsDesign) {
+  const query = Object.fromEntries(
+    Object.entries(design).filter(([, value]) => value !== null)
+  ) as ArmsDesign
+  return useQuery({
+    queryKey: collectiveKeys.armsPreview(query),
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/collective/arms-preview', {
+          params: { query },
+        })
+      ),
+    placeholderData: keepPreviousData,
+    staleTime: Infinity,
+  })
+}
+
+export function rollArms(nodeId: number, roll: number) {
+  return unwrap(
+    api.GET('/api/collective/arms-roll/{node_id}', {
+      params: { path: { node_id: nodeId }, query: { roll } },
+    })
+  )
 }
 
 export function useStoryletCatalog() {

@@ -19,6 +19,47 @@ const TOWN = { id: 20, kind: 'entity' as const, name: 'Ashby' }
 const REALM = { id: 30, kind: 'entity' as const, name: 'Varo' }
 const KING = { id: 40, kind: 'entity' as const, name: 'Aldric' }
 
+const DRAWING = {
+  view_box: '7 5 106 122',
+  outline: 'M10 8L110 8L110 62L60 124L10 62Z',
+  layers: [
+    {
+      d: 'M10 8L110 8L110 62L60 124L10 62Z',
+      ink: 'red' as const,
+      filled: true,
+      width: 0,
+      opacity: 1,
+      evenodd: false,
+      clip: null,
+      transform: null,
+      clipped: true,
+    },
+  ],
+}
+
+const DESIGN = {
+  shape: 'heater' as const,
+  field: 'red' as const,
+  division: 'chevron' as const,
+  line: 'straight' as const,
+  second: 'gold' as const,
+  charge: 'sword' as const,
+  charge_tincture: 'silver' as const,
+  charge_two: 'none' as const,
+  charge_two_tincture: null,
+  charge_three: 'none' as const,
+  charge_three_tincture: null,
+  arrangement: 'two_and_one' as const,
+  rim: 'line' as const,
+  rim_line: 'straight' as const,
+  rim_tincture: null,
+  supporter: 'none' as const,
+  supporter_pose: 'crossed' as const,
+  supporter_tincture: null,
+  crest: 'none' as const,
+  crest_tincture: null,
+}
+
 const EMPTY = {
   mood: null,
   cascades: [],
@@ -251,12 +292,14 @@ describe('crowds, memory, customs and craft', () => {
       ...EMPTY,
       node: REALM,
       arms: {
-        holder_kind: 'polity',
+        ...DESIGN,
         field: 'blue',
         division: 'per_pale',
         second: 'silver',
         charge: 'tower',
         charge_tincture: 'gold',
+        drawing: DRAWING,
+        holder_kind: 'polity',
         motto: 'Steady',
         parent: null,
         quartered: null,
@@ -289,6 +332,81 @@ describe('crowds, memory, customs and craft', () => {
       .toBeVisible()
   })
 
+  it('casts the dice for a realm’s arms and grants what it drew', async () => {
+    serveBase()
+    onApi('GET', '/api/collective/of/30', { ...EMPTY, node: REALM })
+    onApi('GET', '/api/collective/arms-preview', {
+      ...DESIGN,
+      blazon: 'Azure, a star or',
+      drawing: DRAWING,
+    })
+    onApi('GET', '/api/collective/arms-roll/30', {
+      ...DESIGN,
+      shape: 'kite',
+      supporter: 'column',
+      supporter_pose: 'flanking',
+      blazon: 'Gules, a chevron or, a sword argent',
+      drawing: DRAWING,
+    })
+    onApi('POST', '/api/actions/arms:set', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CollectiveSection nodeId={30} />)
+    await expect
+      .element(screen.getByRole('img', { name: 'The arms as drawn' }))
+      .toBeVisible()
+    await expect.element(screen.getByText('Azure, a star or')).toBeVisible()
+    await screen.getByRole('button', { name: 'Cast the dice' }).click()
+    await expect
+      .element(screen.getByRole('combobox', { name: 'Shield shape' }))
+      .toHaveTextContent('Kite shield')
+    await screen.getByRole('button', { name: 'Grant them' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/arms:set'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/arms:set')[0].body).toMatchObject({
+      holder_id: 30,
+      holder_kind: 'polity',
+      shape: 'kite',
+      supporter: 'column',
+      supporter_pose: 'flanking',
+    })
+  })
+
+  it('reforges held arms at random through the arms editor', async () => {
+    serveBase()
+    onApi('GET', '/api/collective/of/30', {
+      ...EMPTY,
+      node: REALM,
+      arms: {
+        ...DESIGN,
+        drawing: DRAWING,
+        holder_kind: 'polity',
+        motto: null,
+        parent: null,
+        quartered: null,
+        blazon: 'Gules, a chevron or, a sword argent',
+        since_epoch: 2,
+        locked: [],
+      },
+    })
+    onApi('GET', '/api/collective/arms-roll/30', {
+      ...DESIGN,
+      rim: 'beaded',
+      crest: 'crown',
+      blazon: 'Gules, a chevron or, a sword argent, within a beaded rim or',
+      drawing: DRAWING,
+    })
+    onApi('POST', '/api/actions/arms:edit', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CollectiveSection nodeId={30} />)
+    await screen.getByRole('button', { name: 'Reforge at random' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/arms:edit'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/arms:edit')[0].body).toMatchObject({
+      holder_id: 30,
+      values: { rim: 'beaded', crest: 'crown', shape: 'heater' },
+    })
+  })
+
   it('keeps crowd controls for other things disabled with their reason', async () => {
     serveBase()
     onApi('GET', '/api/collective/of/40', { ...EMPTY, node: KING })
@@ -317,12 +435,9 @@ describe('crowds, memory, customs and craft', () => {
   it('shows a record’s arms beside its portrait and opens them', async () => {
     serveBase()
     onApi('GET', '/api/collective/arms/30', {
+      ...DESIGN,
+      drawing: DRAWING,
       holder_kind: 'polity',
-      field: 'red',
-      division: 'chevron',
-      second: 'gold',
-      charge: 'sword',
-      charge_tincture: 'silver',
       motto: 'First into the breach',
       parent: null,
       quartered: null,

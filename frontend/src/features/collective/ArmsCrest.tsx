@@ -1,4 +1,4 @@
-import { Quote, Shield } from 'lucide-react'
+import { Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -8,9 +8,10 @@ import {
 import { Label, Muted, Text } from '@/components/typography'
 import { Chip, Facts } from '@/features/cosmography/parts'
 import { Ref } from '@/features/gatherings/parts'
+import { ArmsFacts, Motto } from './ArmsPanels'
 import { ArmsShield } from './ArmsShield'
 import { useNodeArms } from './api'
-import { BEARERS, CHARGES, DIVISIONS, TINCTURES } from './labels'
+import { BEARERS } from './labels'
 
 export function ArmsCrest({ nodeId, name }: { nodeId: number; name: string }) {
   const arms = useNodeArms(nodeId)
@@ -28,25 +29,17 @@ export function ArmsCrest({ nodeId, name }: { nodeId: number; name: string }) {
             className='transition-transform motion-safe:hover:scale-105'
           >
             <ArmsShield
-              field={row.field}
-              division={row.division}
-              second={row.second}
-              charge={row.charge}
-              chargeTincture={row.charge_tincture}
+              drawing={row.drawing}
               label={`Arms of ${name}`}
               size='lg'
             />
             <Label variant='overline'>Arms</Label>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className='flex w-80 flex-col gap-3'>
+        <PopoverContent className='flex max-h-144 w-96 flex-col gap-3 overflow-y-auto'>
           <div className='flex min-w-0 items-center gap-3'>
             <ArmsShield
-              field={row.field}
-              division={row.division}
-              second={row.second}
-              charge={row.charge}
-              chargeTincture={row.charge_tincture}
+              drawing={row.drawing}
               label={`Arms of ${name}, drawn large`}
               size='lg'
             />
@@ -55,22 +48,10 @@ export function ArmsCrest({ nodeId, name }: { nodeId: number; name: string }) {
               <Chip icon={bearer.icon}>{bearer.label}</Chip>
             </div>
           </div>
-          {row.motto ? (
-            <div className='flex min-w-0 items-center gap-2'>
-              <Quote
-                className='size-icon-sm shrink-0 text-muted-foreground'
-                aria-hidden='true'
-              />
-              <Text>{row.motto}</Text>
-            </div>
-          ) : (
-            <Muted variant='caption'>These arms carry no words.</Muted>
-          )}
+          <Motto motto={row.motto} />
+          <ArmsFacts row={row} />
           <Facts
             items={[
-              ['Field', TINCTURES[row.field]],
-              ['Division', DIVISIONS[row.division]],
-              ['Charge', CHARGES[row.charge]],
               [
                 'Differenced from',
                 <Ref key='parent' node={row.parent} empty='no parent' />,

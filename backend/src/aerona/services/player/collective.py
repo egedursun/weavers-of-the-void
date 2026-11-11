@@ -5,6 +5,8 @@ from aerona.domain.enums.collective import (
     AccountKind,
     AccountMedium,
     AccountStance,
+    ArmsRim,
+    ChargeArrangement,
     CollectiveActKind,
     CollectiveTrigger,
     DatingSystemKind,
@@ -18,9 +20,12 @@ from aerona.domain.enums.collective import (
     MobTarget,
     NormBehaviour,
     NormSituation,
+    PartitionLine,
     RoleEligibility,
     RoleKind,
+    ShieldShape,
     StoryletId,
+    SupporterPose,
     Tincture,
 )
 from aerona.domain.enums.military import HullClass
@@ -330,11 +335,26 @@ class DatingDraft(Command):
 class ArmsDraft(Command):
     holder_id: int
     holder_kind: HeraldryHolderKind
+    shape: ShieldShape = ShieldShape.HEATER
     field: Tincture
     division: HeraldicDivision = HeraldicDivision.PLAIN
+    line: PartitionLine = PartitionLine.STRAIGHT
     second: Tincture | None = None
     charge: HeraldicCharge = HeraldicCharge.NONE
     charge_tincture: Tincture | None = None
+    charge_two: HeraldicCharge = HeraldicCharge.NONE
+    charge_two_tincture: Tincture | None = None
+    charge_three: HeraldicCharge = HeraldicCharge.NONE
+    charge_three_tincture: Tincture | None = None
+    arrangement: ChargeArrangement = ChargeArrangement.TWO_AND_ONE
+    rim: ArmsRim = ArmsRim.LINE
+    rim_line: PartitionLine = PartitionLine.STRAIGHT
+    rim_tincture: Tincture | None = None
+    supporter: HeraldicCharge = HeraldicCharge.NONE
+    supporter_pose: SupporterPose = SupporterPose.CROSSED
+    supporter_tincture: Tincture | None = None
+    crest: HeraldicCharge = HeraldicCharge.NONE
+    crest_tincture: Tincture | None = None
     motto: str | None = Field(default=None, max_length=NAME)
 
 
@@ -347,6 +367,7 @@ class ArmsDifference(Command):
     holder_id: int
     parent_id: int
     border: Tincture = Tincture.SILVER
+    line: PartitionLine = PartitionLine.STRAIGHT
 
 
 class DesignDraft(Command):
@@ -820,12 +841,7 @@ async def arms_set(scope: PlayerScope, command: ArmsDraft) -> Effect:
         await scope.context("arms_set"),
         command.holder_id,
         command.holder_kind,
-        field=command.field,
-        division=command.division,
-        second=command.second,
-        charge=command.charge,
-        charge_tincture=command.charge_tincture,
-        motto=command.motto,
+        command.model_dump(exclude={"holder_id", "holder_kind"}),
     )
     return Effect("The arms are granted.", command.holder_id)
 
@@ -844,7 +860,7 @@ async def arms_quarter(scope: PlayerScope, command: ArmsQuarter) -> Effect:
 
 @player_action("arms:difference", ActionKind.EDIT_RECORD)
 async def arms_difference(scope: PlayerScope, command: ArmsDifference) -> Effect:
-    await control.difference_arms(await scope.context("arms_difference"), command.holder_id, command.parent_id, command.border)
+    await control.difference_arms(await scope.context("arms_difference"), command.holder_id, command.parent_id, command.border, command.line)
     return Effect("The cadet arms are drawn within a border.", command.holder_id)
 
 

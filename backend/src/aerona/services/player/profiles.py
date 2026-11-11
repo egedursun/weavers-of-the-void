@@ -16,6 +16,7 @@ from aerona.db.tables.interconnect import ModifierRow
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
+from aerona.engine.primitives.edits import empty_value
 from aerona.engine.primitives.modifiers import ModifierDraft, add_modifier
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -105,9 +106,7 @@ def coerce(mapper: Mapper[Any], column: str, value: ScalarValue) -> Any:
     nullable = bool(mapper.columns[column].nullable)
     label = column.replace("_", " ")
     if value is None:
-        if not nullable:
-            raise ValidationFailedError(f"{label.capitalize()} cannot be left empty.")
-        return None
+        return empty_value(mapper.columns[column].type, nullable, f"{label.capitalize()} cannot be left empty.")
     if kind == CHOICE_KIND:
         if str(value) not in options:
             raise ValidationFailedError(f"{label.capitalize()} must be one of {', '.join(options)}.")

@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from typing import Any
 
 from aerona.catalog.storylets import STORYLETS
@@ -65,7 +66,6 @@ from aerona.domain.enums.collective import (
     DesignComponentKind,
     DesignKind,
     FormativeKind,
-    HeraldicCharge,
     HeraldicDivision,
     HeraldryHolderKind,
     MobEnd,
@@ -73,6 +73,7 @@ from aerona.domain.enums.collective import (
     MobTarget,
     NormBehaviour,
     NormSituation,
+    PartitionLine,
     RoleEligibility,
     RoleKind,
     StoryletId,
@@ -403,26 +404,15 @@ async def set_dating(ctx: TickContext, holder_id: int, kind: DatingSystemKind, *
     return row
 
 
-async def set_arms(
-    ctx: TickContext,
-    holder_id: int,
-    holder_kind: HeraldryHolderKind,
-    *,
-    field: Tincture,
-    division: HeraldicDivision,
-    second: Tincture | None,
-    charge: HeraldicCharge,
-    charge_tincture: Tincture | None,
-    motto: str | None,
-) -> ArmsRow:
+async def set_arms(ctx: TickContext, holder_id: int, holder_kind: HeraldryHolderKind, values: Mapping[str, Any]) -> ArmsRow:
     holder = await entity(ctx, holder_id, "holder")
     wanted = ARMS_TYPES.get(holder_kind)
     if wanted is not None and holder.entity_type is not wanted:
         raise ValidationFailedError(f"{holder.name} is not {an(holder_kind.value)}.")
     row = await ctx.session.get(ArmsRow, holder_id)
     if row is None:
-        row = await saved(ctx, ArmsRow(holder_entity_id=holder_id, holder_kind=holder_kind, field=field, since_epoch=ctx.epoch, locked=[]))
-    apply(row, {"field": field, "division": division, "second": second, "charge": charge, "charge_tincture": charge_tincture, "motto": motto}, [])
+        row = await saved(ctx, ArmsRow(holder_entity_id=holder_id, holder_kind=holder_kind, field=values["field"], since_epoch=ctx.epoch, locked=[]))
+    apply(row, {key: value for key, value in values.items() if key in ARMS_FIELDS}, [])
     row.holder_kind = holder_kind
     await sync_emblem(ctx, row)
     await ctx.session.flush()
@@ -445,16 +435,13 @@ async def quarter_arms(ctx: TickContext, holder_id: int, other_id: int) -> ArmsR
     return row
 
 
-async def difference_arms(ctx: TickContext, holder_id: int, parent_id: int, border: Tincture) -> ArmsRow:
+async def difference_arms(ctx: TickContext, holder_id: int, parent_id: int, border: Tincture, line: PartitionLine) -> ArmsRow:
     parent = await found(ctx, ArmsRow, parent_id, "arms")
     row = await ctx.session.get(ArmsRow, holder_id)
     if row is None:
         row = await saved(ctx, ArmsRow(holder_entity_id=holder_id, holder_kind=parent.holder_kind, field=parent.field, since_epoch=ctx.epoch, locked=[]))
-    apply(
-        row,
-        {"field": parent.field, "division": HeraldicDivision.BORDURE, "second": border, "charge": parent.charge, "charge_tincture": parent.charge_tincture},
-        [],
-    )
+    copied = {name: getattr(parent, name) for name in ARMS_FIELDS if name != "motto"}
+    apply(row, copied | {"division": HeraldicDivision.BORDURE, "line": line, "second": border}, [])
     row.parent_entity_id = parent.holder_entity_id
     await sync_emblem(ctx, row)
     await ctx.session.flush()

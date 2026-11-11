@@ -1,8 +1,8 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, Path, Query
 from sqlalchemy import cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.types import String
@@ -11,6 +11,10 @@ from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.collective import (
     AccountStanceView,
     AccountView,
+    ArmsDesignQuery,
+    ArmsDesignView,
+    ArmsDrawingView,
+    ArmsLayerView,
     ArmsView,
     BiasView,
     CascadeView,
@@ -44,6 +48,7 @@ from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
 from aerona.catalog.storylets import STORYLETS
 from aerona.core.errors import NotFoundError
+from aerona.core.random import SeededRandom
 from aerona.db.tables.collective import (
     AccountRow,
     AccountStanceRow,
@@ -81,9 +86,10 @@ from aerona.domain.enums.collective import DesignComponentKind, FormativeKind, S
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.collective.accounts import distance_from_truth
+from aerona.engine.collective.armory import Design, draw
 from aerona.engine.collective.dating import SINGLETON, current_year, render_date
 from aerona.engine.collective.designs import lineage_of
-from aerona.engine.collective.heraldry import blazon
+from aerona.engine.collective.heraldry import DESIGN_FIELDS, blazon_of, invent, strongest
 from aerona.engine.collective.storylets import choice_texts, situation
 
 router = APIRouter(tags=["collective"])
@@ -100,6 +106,7 @@ class Clock:
 
 
 NodeId = Annotated[int, Path(ge=1)]
+ROLLS = 1_000_000
 
 
 async def refs_for(session: AsyncSession, ids: Iterable[int | None]) -> dict[int, NodeRef]:
@@ -462,22 +469,70 @@ async def dating_view(session: AsyncSession, node_id: int, year: int) -> DatingV
     )
 
 
+def drawing_view(design: Design) -> ArmsDrawingView:
+    drawing = draw(design)
+    return ArmsDrawingView(
+        view_box=drawing.view_box,
+        outline=drawing.outline,
+        layers=[
+            ArmsLayerView(
+                d=layer.d,
+                ink=layer.ink,
+                filled=layer.filled,
+                width=layer.width,
+                opacity=layer.opacity,
+                evenodd=layer.evenodd,
+                clip=layer.clip,
+                transform=layer.transform,
+                clipped=layer.clipped,
+            )
+            for layer in drawing.layers
+        ],
+    )
+
+
+def design_from(values: Mapping[str, Any]) -> Design:
+    return Design(
+        shape=values["shape"],
+        field=values["field"],
+        division=values["division"],
+        line=values["line"],
+        second=values["second"],
+        charges=(
+            (values["charge"], values["charge_tincture"]),
+            (values["charge_two"], values["charge_two_tincture"]),
+            (values["charge_three"], values["charge_three_tincture"]),
+        ),
+        arrangement=values["arrangement"],
+        rim=values["rim"],
+        rim_line=values["rim_line"],
+        rim_tincture=values["rim_tincture"],
+        supporter=values["supporter"],
+        pose=values["supporter_pose"],
+        supporter_tincture=values["supporter_tincture"],
+        crest=values["crest"],
+        crest_tincture=values["crest_tincture"],
+    )
+
+
+def design_view(values: Mapping[str, Any]) -> ArmsDesignView:
+    design = design_from(values)
+    return ArmsDesignView(**{name: values[name] for name in DESIGN_FIELDS}, blazon=blazon_of(design), drawing=drawing_view(design))
+
+
 async def arms_view(session: AsyncSession, node_id: int) -> ArmsView | None:
     row = await session.get(ArmsRow, node_id)
     if row is None:
         return None
     refs = await refs_for(session, [row.parent_entity_id, row.quartered_entity_id])
+    design = design_view({name: getattr(row, name) for name in DESIGN_FIELDS})
     return ArmsView(
+        **design.model_dump(exclude={"drawing"}),
+        drawing=design.drawing,
         holder_kind=row.holder_kind,
-        field=row.field,
-        division=row.division,
-        second=row.second,
-        charge=row.charge,
-        charge_tincture=row.charge_tincture,
         motto=row.motto,
         parent=at(refs, row.parent_entity_id),
         quartered=at(refs, row.quartered_entity_id),
-        blazon=blazon(row),
         since_epoch=row.since_epoch,
         locked=list(row.locked),
     )
@@ -597,6 +652,21 @@ async def node_collective(services: ServicesDep, node_id: NodeId) -> CollectiveV
 async def node_arms(services: ServicesDep, node_id: NodeId) -> ArmsView | None:
     async with reader(services) as session:
         return await arms_view(session, node_id)
+
+
+@router.get("/collective/arms-preview", response_model=ArmsDesignView)
+async def arms_preview(query: Annotated[ArmsDesignQuery, Query()]) -> ArmsDesignView:
+    return design_view(query.model_dump())
+
+
+@router.get("/collective/arms-roll/{node_id}", response_model=ArmsDesignView)
+async def arms_roll(services: ServicesDep, node_id: NodeId, roll: Annotated[int, Query(ge=0, le=ROLLS)] = 0) -> ArmsDesignView:
+    async with reader(services) as session:
+        holder = await session.get(EntityRow, node_id)
+        if holder is None:
+            raise NotFoundError("No such record.")
+        axes = await strongest(session, holder)
+    return design_view(invent(SeededRandom.for_epoch(node_id, roll, f"arms.roll.{node_id}"), None, axes))
 
 
 @router.get("/collective/storylets", response_model=list[StoryletSpecView])

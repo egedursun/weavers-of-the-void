@@ -7,7 +7,9 @@ from aerona.domain.enums.collective import (
     AccountKind,
     AccountMedium,
     AccountStance,
+    ArmsRim,
     CascadeOutcome,
+    ChargeArrangement,
     CollectiveActKind,
     CollectiveTrigger,
     DatingSystemKind,
@@ -21,11 +23,14 @@ from aerona.domain.enums.collective import (
     MobTarget,
     NormBehaviour,
     NormSituation,
+    PartitionLine,
     RoleEligibility,
     RoleKind,
+    ShieldShape,
     SocialBias,
     StoryletId,
     StoryletStatus,
+    SupporterPose,
     Tincture,
 )
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
@@ -50,7 +55,29 @@ TRANSITION_FIELDS = ("fertility_pct", "elder_share", "urban_share", "literacy")
 SEX_RATIO_FIELDS = ("males_per_hundred", "widows")
 ROLE_FIELDS = ("eligibility", "min_age", "classes", "stance")
 DATING_FIELDS = ("kind", "anchor_year", "anchor_node_id", "cycle_years", "label_node_id")
-ARMS_FIELDS = ("field", "division", "second", "charge", "charge_tincture", "motto")
+ARMS_FIELDS = (
+    "shape",
+    "field",
+    "division",
+    "line",
+    "second",
+    "charge",
+    "charge_tincture",
+    "charge_two",
+    "charge_two_tincture",
+    "charge_three",
+    "charge_three_tincture",
+    "arrangement",
+    "rim",
+    "rim_line",
+    "rim_tincture",
+    "supporter",
+    "supporter_pose",
+    "supporter_tincture",
+    "crest",
+    "crest_tincture",
+    "motto",
+)
 DESIGN_FIELDS = ("name", "hull", "obsolete", "speed", "range", "seaworthiness", "cargo", "armament", "crew")
 COMPONENT_FIELDS = ("material_id", "size", "quality")
 WEAR_FIELDS = ("wear",)
@@ -400,11 +427,38 @@ class ArmsRow(Base):
 
     holder_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     holder_kind: Mapped[HeraldryHolderKind] = mapped_column(enum_type(HeraldryHolderKind, "holder_kind"))
+    shape: Mapped[ShieldShape] = mapped_column(enum_type(ShieldShape, "shape"), default=ShieldShape.HEATER, server_default=ShieldShape.HEATER.value)
     field: Mapped[Tincture] = mapped_column(enum_type(Tincture, "field"))
     division: Mapped[HeraldicDivision] = mapped_column(enum_type(HeraldicDivision, "division"), default=HeraldicDivision.PLAIN)
+    line: Mapped[PartitionLine] = mapped_column(enum_type(PartitionLine, "line"), default=PartitionLine.STRAIGHT, server_default=PartitionLine.STRAIGHT.value)
     second: Mapped[Tincture | None] = mapped_column(enum_type(Tincture, "second"))
     charge: Mapped[HeraldicCharge] = mapped_column(enum_type(HeraldicCharge, "charge"), default=HeraldicCharge.NONE)
     charge_tincture: Mapped[Tincture | None] = mapped_column(enum_type(Tincture, "charge_tincture"))
+    charge_two: Mapped[HeraldicCharge] = mapped_column(
+        enum_type(HeraldicCharge, "charge_two"), default=HeraldicCharge.NONE, server_default=HeraldicCharge.NONE.value
+    )
+    charge_two_tincture: Mapped[Tincture | None] = mapped_column(enum_type(Tincture, "charge_two_tincture"))
+    charge_three: Mapped[HeraldicCharge] = mapped_column(
+        enum_type(HeraldicCharge, "charge_three"), default=HeraldicCharge.NONE, server_default=HeraldicCharge.NONE.value
+    )
+    charge_three_tincture: Mapped[Tincture | None] = mapped_column(enum_type(Tincture, "charge_three_tincture"))
+    arrangement: Mapped[ChargeArrangement] = mapped_column(
+        enum_type(ChargeArrangement, "arrangement"), default=ChargeArrangement.TWO_AND_ONE, server_default=ChargeArrangement.TWO_AND_ONE.value
+    )
+    rim: Mapped[ArmsRim] = mapped_column(enum_type(ArmsRim, "rim"), default=ArmsRim.LINE, server_default=ArmsRim.LINE.value)
+    rim_line: Mapped[PartitionLine] = mapped_column(
+        enum_type(PartitionLine, "rim_line"), default=PartitionLine.STRAIGHT, server_default=PartitionLine.STRAIGHT.value
+    )
+    rim_tincture: Mapped[Tincture | None] = mapped_column(enum_type(Tincture, "rim_tincture"))
+    supporter: Mapped[HeraldicCharge] = mapped_column(
+        enum_type(HeraldicCharge, "supporter"), default=HeraldicCharge.NONE, server_default=HeraldicCharge.NONE.value
+    )
+    supporter_pose: Mapped[SupporterPose] = mapped_column(
+        enum_type(SupporterPose, "supporter_pose"), default=SupporterPose.CROSSED, server_default=SupporterPose.CROSSED.value
+    )
+    supporter_tincture: Mapped[Tincture | None] = mapped_column(enum_type(Tincture, "supporter_tincture"))
+    crest: Mapped[HeraldicCharge] = mapped_column(enum_type(HeraldicCharge, "crest"), default=HeraldicCharge.NONE, server_default=HeraldicCharge.NONE.value)
+    crest_tincture: Mapped[Tincture | None] = mapped_column(enum_type(Tincture, "crest_tincture"))
     motto: Mapped[str | None] = mapped_column(String(200))
     parent_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     quartered_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))

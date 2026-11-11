@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from aerona.core.total import total
-from aerona.domain.enums.collective import CollectiveActKind, CollectiveTrigger, FormativeKind, HeraldicCharge, MobTarget, Tincture
+from aerona.domain.enums.collective import CollectiveActKind, CollectiveTrigger, FormativeKind, MobTarget, Tincture
 from aerona.domain.enums.gathering import CollectionKind
 from aerona.domain.enums.mind import ValueAxis
 
@@ -100,6 +100,14 @@ LEGACY_TINCTURES = MappingProxyType(
         "sable": Tincture.BLACK,
         "purpure": Tincture.PURPLE,
         "tenne": Tincture.ORANGE,
+        "celeste": Tincture.CELESTE,
+        "murrey": Tincture.MURREY,
+        "rose": Tincture.ROSE,
+        "brunatre": Tincture.BROWN,
+        "cendree": Tincture.GREY,
+        "ermine": Tincture.ERMINE,
+        "ermines": Tincture.ERMINES,
+        "vair": Tincture.VAIR,
     }
 )
 HERALDIC_NAMES = total(
@@ -113,35 +121,13 @@ HERALDIC_NAMES = total(
         Tincture.BLACK: "sable",
         Tincture.PURPLE: "purpure",
         Tincture.ORANGE: "tenne",
-    },
-)
-METALS = frozenset({Tincture.GOLD, Tincture.SILVER})
-VALUE_CHARGES = total(
-    ValueAxis,
-    {
-        V.HONOUR: HeraldicCharge.HAND,
-        V.TRADITION: HeraldicCharge.TOWER,
-        V.HIERARCHY: HeraldicCharge.CROWN,
-        V.MARTIAL: HeraldicCharge.SWORD,
-        V.PIETY: HeraldicCharge.STAR,
-        V.PURITY: HeraldicCharge.SUN,
-        V.KINSHIP: HeraldicCharge.TREE,
-        V.MERCY: HeraldicCharge.HAND,
-        V.KNOWLEDGE: HeraldicCharge.EYE,
-        V.WEALTH: HeraldicCharge.KEY,
-        V.NATURE: HeraldicCharge.TREE,
-        V.SUPERSTITION: HeraldicCharge.MOON,
-        V.XENOPHILIA: HeraldicCharge.WAVE,
-        V.DEATH: HeraldicCharge.MOON,
-        V.LAW: HeraldicCharge.KEY,
-        V.LOYALTY: HeraldicCharge.HAND,
-        V.FAMILY: HeraldicCharge.TREE,
-        V.FRIENDSHIP: HeraldicCharge.HAND,
-        V.TRUTH: HeraldicCharge.SUN,
-        V.CRAFTSMANSHIP: HeraldicCharge.WHEEL,
-        V.ARTWORK: HeraldicCharge.STAR,
-        V.COMPETITION: HeraldicCharge.BEAST,
-        V.PERSEVERANCE: HeraldicCharge.TOWER,
-        V.LEISURE: HeraldicCharge.BIRD,
+        Tincture.CELESTE: "celeste",
+        Tincture.MURREY: "murrey",
+        Tincture.ROSE: "rose",
+        Tincture.BROWN: "brunatre",
+        Tincture.GREY: "cendree",
+        Tincture.ERMINE: "ermine",
+        Tincture.ERMINES: "ermines",
+        Tincture.VAIR: "vair",
     },
 )

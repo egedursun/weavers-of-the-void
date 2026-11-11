@@ -26,7 +26,9 @@ def test_every_column_of_every_military_record_takes_a_value_of_its_kind(key: st
         if column.kind == CHOICE:
             with pytest.raises(ValidationFailedError):
                 coerce(kind, column, "not a choice")
-        if not column.nullable:
+        if not column.nullable and "none" in column.options:
+            assert scalar(coerce(kind, column, None)) == "none"
+        elif not column.nullable:
             with pytest.raises(ValidationFailedError):
                 coerce(kind, column, None)
 

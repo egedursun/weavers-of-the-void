@@ -48,6 +48,7 @@ from aerona.domain.enums.collective import (
     DatingSystemKind,
     DesignComponentKind,
     DesignKind,
+    HeraldicCharge,
     HeraldicDivision,
     HeraldryHolderKind,
     MobEnd,
@@ -86,13 +87,13 @@ from aerona.engine.collective.accounts import (
     rewrite_reigns,
     write_accounts,
 )
-from aerona.engine.collective.control import set_norm
+from aerona.engine.collective.control import edit_arms, set_norm
 from aerona.engine.collective.crowds import CrowdTally, cascade, crowd_for, mood_of, rage_mobs, ready_to_arm, spark
 from aerona.engine.collective.dating import render_date
 from aerona.engine.collective.demography import DemographyTally, fertility_factor, measure
 from aerona.engine.collective.designs import DesignTally, design_power, draw_design, hull_sizes, mend, siege_design_factor, wear_leg
 from aerona.engine.collective.generations import GenerationTally, keep_generations
-from aerona.engine.collective.heraldry import HeraldryTally, grant_arms, quarter_on_marriage
+from aerona.engine.collective.heraldry import HeraldryTally, grant_arms, invent, quarter_on_marriage, signature, signature_of
 from aerona.engine.collective.learning import LearningTally, learn_socially
 from aerona.engine.collective.norms import NormTally, keep_norms, stance_in, volition
 from aerona.engine.collective.roles import allowed_heirs, combat_sexes
@@ -469,6 +470,29 @@ async def test_arms_are_granted_differenced_for_cadets_and_quartered_by_marriage
     arms = await session.get(ArmsRow, elder.id)
     assert arms.division is HeraldicDivision.QUARTERLY and arms.quartered_entity_id == other.id
     assert arms.holder_kind is HeraldryHolderKind.HOUSE and (await session.get(HouseProfileRow, elder.id)).emblem["field"]
+
+
+async def test_no_two_holders_are_granted_the_same_arms(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session)
+    town = await town_of(session, world)
+    houses = [await house_with(session, world, f"House {name}", await mortal(session, name, world, town.id)) for name in ("Ari", "Bo", "Cy", "Di")]
+    first_roll = invent(ctx.rng(f"arms.{houses[1].id}.0"), None, [])
+    session.add(ArmsRow(holder_entity_id=houses[0].id, holder_kind=HeraldryHolderKind.HOUSE, since_epoch=0, locked=[], **first_roll))
+    await session.flush()
+    await grant_arms(ctx, HeraldryTally())
+    rows = [await session.get(ArmsRow, house.id) for house in houses]
+    assert all(row is not None for row in rows)
+    assert len({signature_of(row) for row in rows if row is not None}) == len(houses)
+    assert signature_of(rows[1]) != signature(first_roll)
+
+
+async def test_choosing_no_charge_in_the_editor_clears_the_charge(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session)
+    town = await town_of(session, world)
+    house = await house_with(session, world, "House Eda", await mortal(session, "Eda", world, town.id))
+    await grant_arms(ctx, HeraldryTally())
+    row = await edit_arms(ctx, house.id, {"charge_two": None, "supporter": None, "charge_two_tincture": None}, [])
+    assert row.charge_two is HeraldicCharge.NONE and row.supporter is HeraldicCharge.NONE and row.charge_two_tincture is None
 
 
 async def test_designs_derive_performance_wear_on_legs_fail_and_are_mended(session: AsyncSession, world: CoreWorld) -> None:

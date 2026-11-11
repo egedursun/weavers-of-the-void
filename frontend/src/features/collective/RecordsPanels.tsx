@@ -2,61 +2,38 @@ import { useState } from 'react'
 import {
   Anchor,
   CalendarDays,
-  Copy,
   Gauge,
   Hammer,
   Package,
-  Quote,
   RefreshCw,
-  Shield,
   Ship,
   Sword,
   Wrench,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
-import { Label, Muted, Text } from '@/components/typography'
+import { Label, Muted } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
 import { Chip, Facts, ForgeCard, Meter } from '@/features/cosmography/parts'
 import { why } from '@/features/dominion/model'
-import { NodePicker } from '@/features/dominion/parts'
 import { MindPicker } from '@/features/entity/mind/parts'
 import { NumberField } from '@/features/entity/realm/parts'
 import { Ref } from '@/features/gatherings/parts'
 import { HULL } from '@/features/wars/military/depth'
-import { ArmsShield } from './ArmsShield'
+import { ArmsCard, ArmsForge } from './ArmsPanels'
 import {
-  type ArmsView,
   type CollectiveView,
   type DesignView,
   useCollectiveAction,
 } from './api'
-import {
-  BEARERS,
-  CHARGES,
-  DATING,
-  DESIGN_KINDS,
-  DIVISIONS,
-  PARTS,
-  TINCTURES,
-} from './labels'
+import { DATING, DESIGN_KINDS, PARTS } from './labels'
 import { clamp, SPAN, useRemove, useRow } from './model'
 import { Held, Listed } from './parts'
 
 type Dating = NonNullable<CollectiveView['dating']>
 type Part = DesignView['components'][number]
-type Tincture = keyof typeof TINCTURES
 
 const CALENDARS = ['polity', 'cult', 'people']
-const BEARER_TYPES: Record<string, keyof typeof BEARERS> = {
-  house: 'house',
-  polity: 'polity',
-  title: 'title',
-  army: 'army',
-  faction: 'guild',
-}
-const NO_TINCTURE = 'none'
-const TINCTURE_PICK = { [NO_TINCTURE]: 'None', ...TINCTURES }
 const NO_MATERIAL = 'none'
 
 function DatingCard({
@@ -214,278 +191,6 @@ export function DatingPanel({
         <DatingForge holderId={nodeId} type={type} blocked={blocked} />
       )}
     </div>
-  )
-}
-
-function ArmsCard({
-  holderId,
-  row,
-  label,
-  blocked,
-}: {
-  holderId: number
-  row: ArmsView
-  label: string
-  blocked: string | null
-}) {
-  const action = useRow(
-    'arms:edit',
-    'arms:delete',
-    { holder_id: holderId },
-    blocked
-  )
-  const [other, setOther] = useState<number | null>(null)
-  const quartering = useCollectiveAction(
-    'arms:quarter',
-    (_: void) => ({ holder_id: holderId, other_id: other ?? 0 }),
-    'The arms are quartered'
-  )
-  const busy = why(action.busy, quartering.isPending)
-  const bearer = BEARERS[row.holder_kind]
-  return (
-    <Held
-      icon={Shield}
-      tone='gold'
-      title={row.blazon}
-      caption={`${bearer.label} has borne these arms since epoch ${row.since_epoch}`}
-      removeLabel='Grant them anew'
-      editTitle='Set the arms'
-      note='A cadet bears its parent’s arms within a border; a marriage of two armigerous houses may quarter them.'
-      fields={[
-        { key: 'field', label: 'Field', kind: 'pick', table: TINCTURES },
-        { key: 'division', label: 'Division', kind: 'pick', table: DIVISIONS },
-        {
-          key: 'second',
-          label: 'Second tincture',
-          kind: 'pick',
-          table: TINCTURE_PICK,
-        },
-        { key: 'charge', label: 'Charge', kind: 'pick', table: CHARGES },
-        {
-          key: 'charge_tincture',
-          label: 'Charge tincture',
-          kind: 'pick',
-          table: TINCTURE_PICK,
-        },
-        { key: 'motto', label: 'Motto', kind: 'text' },
-      ]}
-      locked={row.locked}
-      blocked={busy}
-      onEdit={action.onEdit}
-      onRemove={action.onRemove}
-      extra={<Chip icon={bearer.icon}>{bearer.label}</Chip>}
-    >
-      <div className='flex min-w-0 flex-wrap items-center gap-4'>
-        <ArmsShield
-          field={row.field}
-          division={row.division}
-          second={row.second}
-          charge={row.charge}
-          chargeTincture={row.charge_tincture}
-          label={`Arms of ${label}`}
-          size='lg'
-        />
-        <div className='flex min-w-0 flex-1 flex-col gap-2'>
-          {row.motto && (
-            <div className='flex min-w-0 items-center gap-2'>
-              <Quote
-                className='size-icon-sm shrink-0 text-muted-foreground'
-                aria-hidden='true'
-              />
-              <Text>{row.motto}</Text>
-            </div>
-          )}
-          <Facts
-            items={[
-              ['Field', TINCTURES[row.field]],
-              ['Division', DIVISIONS[row.division]],
-              ['Second tincture', row.second ? TINCTURES[row.second] : 'none'],
-              ['Charge', CHARGES[row.charge]],
-              [
-                'Charge tincture',
-                row.charge_tincture ? TINCTURES[row.charge_tincture] : 'none',
-              ],
-              [
-                'Differenced from',
-                <Ref key='parent' node={row.parent} empty='no parent' />,
-              ],
-              [
-                'Quartered with',
-                <Ref key='quartered' node={row.quartered} empty='no one' />,
-              ],
-            ]}
-          />
-        </div>
-      </div>
-      <div className='flex min-w-0 flex-wrap items-end gap-2'>
-        <NodePicker
-          label='Quarter with'
-          value={other}
-          onChange={setOther}
-          blocked={busy}
-          types={['house', 'polity']}
-        />
-        <Button
-          size='sm'
-          variant='outline'
-          disabled={
-            (other === null ? 'Choose whose arms to quarter with' : busy) !==
-            null
-          }
-          disabledReason={
-            other === null
-              ? 'Choose whose arms to quarter with'
-              : (busy ?? undefined)
-          }
-          onClick={() => quartering.mutate()}
-        >
-          <Copy />
-          Quarter them
-        </Button>
-      </div>
-    </Held>
-  )
-}
-
-function ArmsForge({
-  holderId,
-  type,
-  blocked,
-}: {
-  holderId: number
-  type: string | null
-  blocked: string | null
-}) {
-  const [field, setField] = useState<Tincture>('blue')
-  const [division, setDivision] = useState<keyof typeof DIVISIONS>('plain')
-  const [second, setSecond] = useState<string>('silver')
-  const [charge, setCharge] = useState<keyof typeof CHARGES>('star')
-  const [chargeTincture, setChargeTincture] = useState<string>('gold')
-  const [parent, setParent] = useState<number | null>(null)
-  const bearer = type ? BEARER_TYPES[type] : undefined
-  const granting = useCollectiveAction(
-    'arms:set',
-    (_: void) => ({
-      holder_id: holderId,
-      holder_kind: bearer ?? 'house',
-      field,
-      division,
-      second: second === NO_TINCTURE ? null : (second as Tincture),
-      charge,
-      charge_tincture:
-        chargeTincture === NO_TINCTURE ? null : (chargeTincture as Tincture),
-    }),
-    'The arms are granted'
-  )
-  const differencing = useCollectiveAction(
-    'arms:difference',
-    (_: void) => ({
-      holder_id: holderId,
-      parent_id: parent ?? 0,
-      border: second === NO_TINCTURE ? 'silver' : (second as Tincture),
-    }),
-    'The cadet arms are drawn'
-  )
-  const wrong =
-    bearer === undefined
-      ? 'Only houses, realms, titles, armies and guilds bear arms'
-      : null
-  const busy = why(wrong ?? blocked, granting.isPending, differencing.isPending)
-  return (
-    <ForgeCard
-      icon={Shield}
-      tone='gold'
-      title='Grant arms'
-      note='Choose the field, its division, a charge and their tinctures, or bear a parent’s arms within a border.'
-      columns={3}
-      meta={
-        <ArmsShield
-          field={field}
-          division={division}
-          second={second === NO_TINCTURE ? null : (second as Tincture)}
-          charge={charge}
-          chargeTincture={
-            chargeTincture === NO_TINCTURE ? null : (chargeTincture as Tincture)
-          }
-          label='The arms as drawn'
-          size='md'
-        />
-      }
-      action={
-        <div className='flex min-w-0 flex-wrap gap-2'>
-          <Button
-            size='sm'
-            disabled={busy !== null}
-            disabledReason={busy ?? undefined}
-            onClick={() => granting.mutate()}
-          >
-            <Shield />
-            Grant them
-          </Button>
-          <Button
-            size='sm'
-            variant='outline'
-            disabled={
-              (parent === null
-                ? 'Choose the parent whose arms to bear'
-                : busy) !== null
-            }
-            disabledReason={
-              parent === null
-                ? 'Choose the parent whose arms to bear'
-                : (busy ?? undefined)
-            }
-            onClick={() => differencing.mutate()}
-          >
-            <Copy />
-            Bear the parent’s within a border
-          </Button>
-        </div>
-      }
-    >
-      <MindPicker
-        label='Field'
-        value={field}
-        table={TINCTURES}
-        blocked={busy}
-        onPick={(value) => setField(value as Tincture)}
-      />
-      <MindPicker
-        label='Division'
-        value={division}
-        table={DIVISIONS}
-        blocked={busy}
-        onPick={(value) => setDivision(value as keyof typeof DIVISIONS)}
-      />
-      <MindPicker
-        label='Second tincture'
-        value={second}
-        table={TINCTURE_PICK}
-        blocked={busy}
-        onPick={setSecond}
-      />
-      <MindPicker
-        label='Charge'
-        value={charge}
-        table={CHARGES}
-        blocked={busy}
-        onPick={(value) => setCharge(value as keyof typeof CHARGES)}
-      />
-      <MindPicker
-        label='Charge tincture'
-        value={chargeTincture}
-        table={TINCTURE_PICK}
-        blocked={busy}
-        onPick={setChargeTincture}
-      />
-      <NodePicker
-        label='Parent'
-        value={parent}
-        onChange={setParent}
-        blocked={busy}
-        types={['house', 'polity']}
-      />
-    </ForgeCard>
   )
 }
 

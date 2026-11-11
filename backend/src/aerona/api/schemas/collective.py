@@ -4,7 +4,10 @@ from aerona.domain.enums.collective import (
     AccountKind,
     AccountMedium,
     AccountStance,
+    ArmsInk,
+    ArmsRim,
     CascadeOutcome,
+    ChargeArrangement,
     CollectiveActKind,
     CollectiveTrigger,
     DatingSystemKind,
@@ -19,12 +22,15 @@ from aerona.domain.enums.collective import (
     MobTarget,
     NormBehaviour,
     NormSituation,
+    PartitionLine,
     RoleEligibility,
     RoleKind,
+    ShieldShape,
     SocialBias,
     StoryletId,
     StoryletRole,
     StoryletStatus,
+    SupporterPose,
     Tincture,
 )
 from aerona.domain.enums.military import HullClass
@@ -267,17 +273,77 @@ class DatingView(ApiModel):
     locked: list[str]
 
 
-class ArmsView(ApiModel):
-    holder_kind: HeraldryHolderKind
+class ArmsLayerView(ApiModel):
+    d: str
+    ink: ArmsInk
+    filled: bool
+    width: float
+    opacity: float
+    evenodd: bool
+    clip: str | None
+    transform: str | None
+    clipped: bool
+
+
+class ArmsDrawingView(ApiModel):
+    view_box: str
+    outline: str
+    layers: list[ArmsLayerView]
+
+
+class ArmsDesignQuery(ApiModel):
+    shape: ShieldShape = ShieldShape.HEATER
+    field: Tincture = Tincture.BLUE
+    division: HeraldicDivision = HeraldicDivision.PLAIN
+    line: PartitionLine = PartitionLine.STRAIGHT
+    second: Tincture | None = None
+    charge: HeraldicCharge = HeraldicCharge.NONE
+    charge_tincture: Tincture | None = None
+    charge_two: HeraldicCharge = HeraldicCharge.NONE
+    charge_two_tincture: Tincture | None = None
+    charge_three: HeraldicCharge = HeraldicCharge.NONE
+    charge_three_tincture: Tincture | None = None
+    arrangement: ChargeArrangement = ChargeArrangement.TWO_AND_ONE
+    rim: ArmsRim = ArmsRim.LINE
+    rim_line: PartitionLine = PartitionLine.STRAIGHT
+    rim_tincture: Tincture | None = None
+    supporter: HeraldicCharge = HeraldicCharge.NONE
+    supporter_pose: SupporterPose = SupporterPose.CROSSED
+    supporter_tincture: Tincture | None = None
+    crest: HeraldicCharge = HeraldicCharge.NONE
+    crest_tincture: Tincture | None = None
+
+
+class ArmsDesignView(ApiModel):
+    shape: ShieldShape
     field: Tincture
     division: HeraldicDivision
+    line: PartitionLine
     second: Tincture | None
     charge: HeraldicCharge
     charge_tincture: Tincture | None
+    charge_two: HeraldicCharge
+    charge_two_tincture: Tincture | None
+    charge_three: HeraldicCharge
+    charge_three_tincture: Tincture | None
+    arrangement: ChargeArrangement
+    rim: ArmsRim
+    rim_line: PartitionLine
+    rim_tincture: Tincture | None
+    supporter: HeraldicCharge
+    supporter_pose: SupporterPose
+    supporter_tincture: Tincture | None
+    crest: HeraldicCharge
+    crest_tincture: Tincture | None
+    blazon: str
+    drawing: ArmsDrawingView
+
+
+class ArmsView(ArmsDesignView):
+    holder_kind: HeraldryHolderKind
     motto: str | None
     parent: NodeRef | None
     quartered: NodeRef | None
-    blazon: str
     since_epoch: int
     locked: list[str]
 

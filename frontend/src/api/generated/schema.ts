@@ -4895,6 +4895,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/collective/arms-preview': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['arms_preview_api_collective_arms_preview_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/collective/arms-roll/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['arms_roll_api_collective_arms_roll__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/collective/storylets': {
     parameters: {
       query?: never
@@ -27084,10 +27116,40 @@ export interface components {
     ArmsDeleteInput: {
       holder_id: number
     }
+    ArmsDesignView: {
+      shape: components['schemas']['ShieldShape']
+      field: components['schemas']['Tincture']
+      division: components['schemas']['HeraldicDivision']
+      line: components['schemas']['PartitionLine']
+      second: components['schemas']['Tincture'] | null
+      charge: components['schemas']['HeraldicCharge']
+      charge_tincture: components['schemas']['Tincture'] | null
+      charge_two: components['schemas']['HeraldicCharge']
+      charge_two_tincture: components['schemas']['Tincture'] | null
+      charge_three: components['schemas']['HeraldicCharge']
+      charge_three_tincture: components['schemas']['Tincture'] | null
+      arrangement: components['schemas']['ChargeArrangement']
+      rim: components['schemas']['ArmsRim']
+      rim_line: components['schemas']['PartitionLine']
+      rim_tincture: components['schemas']['Tincture'] | null
+      supporter: components['schemas']['HeraldicCharge']
+      supporter_pose: components['schemas']['SupporterPose']
+      supporter_tincture: components['schemas']['Tincture'] | null
+      crest: components['schemas']['HeraldicCharge']
+      crest_tincture: components['schemas']['Tincture'] | null
+      blazon: string
+      drawing: components['schemas']['ArmsDrawingView']
+    }
     ArmsDifferenceInput: {
       holder_id: number
       parent_id: number
       border: components['schemas']['Tincture']
+      line: components['schemas']['PartitionLine']
+    }
+    ArmsDrawingView: {
+      view_box: string
+      outline: string
+      layers: components['schemas']['ArmsLayerView'][]
     }
     ArmsEditInput: {
       values?: {
@@ -27096,31 +27158,89 @@ export interface components {
       release?: string[]
       holder_id: number
     }
+    ArmsInk:
+      | 'gold'
+      | 'silver'
+      | 'red'
+      | 'blue'
+      | 'green'
+      | 'black'
+      | 'purple'
+      | 'orange'
+      | 'celeste'
+      | 'murrey'
+      | 'rose'
+      | 'brown'
+      | 'grey'
+      | 'line'
+    ArmsLayerView: {
+      d: string
+      ink: components['schemas']['ArmsInk']
+      filled: boolean
+      width: number
+      opacity: number
+      evenodd: boolean
+      clip: string | null
+      transform: string | null
+      clipped: boolean
+    }
     ArmsQuarterInput: {
       holder_id: number
       other_id: number
     }
+    ArmsRim: 'line' | 'band' | 'double' | 'beaded' | 'studded' | 'rope'
     ArmsSetInput: {
       holder_id: number
       holder_kind: components['schemas']['HeraldryHolderKind']
+      shape: components['schemas']['ShieldShape']
       field: components['schemas']['Tincture']
       division: components['schemas']['HeraldicDivision']
+      line: components['schemas']['PartitionLine']
       second?: components['schemas']['Tincture'] | null
       charge: components['schemas']['HeraldicCharge']
       charge_tincture?: components['schemas']['Tincture'] | null
+      charge_two: components['schemas']['HeraldicCharge']
+      charge_two_tincture?: components['schemas']['Tincture'] | null
+      charge_three: components['schemas']['HeraldicCharge']
+      charge_three_tincture?: components['schemas']['Tincture'] | null
+      arrangement: components['schemas']['ChargeArrangement']
+      rim: components['schemas']['ArmsRim']
+      rim_line: components['schemas']['PartitionLine']
+      rim_tincture?: components['schemas']['Tincture'] | null
+      supporter: components['schemas']['HeraldicCharge']
+      supporter_pose: components['schemas']['SupporterPose']
+      supporter_tincture?: components['schemas']['Tincture'] | null
+      crest: components['schemas']['HeraldicCharge']
+      crest_tincture?: components['schemas']['Tincture'] | null
       motto?: string | null
     }
     ArmsView: {
-      holder_kind: components['schemas']['HeraldryHolderKind']
+      shape: components['schemas']['ShieldShape']
       field: components['schemas']['Tincture']
       division: components['schemas']['HeraldicDivision']
+      line: components['schemas']['PartitionLine']
       second: components['schemas']['Tincture'] | null
       charge: components['schemas']['HeraldicCharge']
       charge_tincture: components['schemas']['Tincture'] | null
+      charge_two: components['schemas']['HeraldicCharge']
+      charge_two_tincture: components['schemas']['Tincture'] | null
+      charge_three: components['schemas']['HeraldicCharge']
+      charge_three_tincture: components['schemas']['Tincture'] | null
+      arrangement: components['schemas']['ChargeArrangement']
+      rim: components['schemas']['ArmsRim']
+      rim_line: components['schemas']['PartitionLine']
+      rim_tincture: components['schemas']['Tincture'] | null
+      supporter: components['schemas']['HeraldicCharge']
+      supporter_pose: components['schemas']['SupporterPose']
+      supporter_tincture: components['schemas']['Tincture'] | null
+      crest: components['schemas']['HeraldicCharge']
+      crest_tincture: components['schemas']['Tincture'] | null
+      blazon: string
+      drawing: components['schemas']['ArmsDrawingView']
+      holder_kind: components['schemas']['HeraldryHolderKind']
       motto: string | null
       parent: components['schemas']['NodeRef'] | null
       quartered: components['schemas']['NodeRef'] | null
-      blazon: string
       since_epoch: number
       locked: string[]
     }
@@ -28886,6 +29006,14 @@ export interface components {
       relations_changed: boolean
       foreign_god_ids: number[]
     }
+    ChargeArrangement:
+      | 'two_and_one'
+      | 'one_and_two'
+      | 'in_pale'
+      | 'in_fess'
+      | 'in_bend'
+      | 'in_bend_sinister'
+      | 'in_chief'
     ChargeView: {
       effect: components['schemas']['RiteEffectKind']
       strength: number
@@ -35423,14 +35551,175 @@ export interface components {
       | 'wave'
       | 'flame'
       | 'key'
+      | 'crossed_swords'
+      | 'axe'
+      | 'bow'
+      | 'spear'
+      | 'shield'
+      | 'target'
+      | 'fist'
+      | 'arm'
+      | 'flag'
+      | 'castle'
+      | 'column'
+      | 'laurel'
+      | 'fleur_de_lis'
+      | 'cross'
+      | 'cross_patty'
+      | 'crosslet'
+      | 'annulet'
+      | 'mascle'
+      | 'lozenge'
+      | 'hexagon'
+      | 'triangle'
+      | 'estoile'
+      | 'sparkles'
+      | 'moon_star'
+      | 'eclipse'
+      | 'sunrise'
+      | 'bell'
+      | 'infinity'
+      | 'orbit'
+      | 'atom'
+      | 'galaxy'
+      | 'rocket'
+      | 'hand_heart'
+      | 'helping_hand'
+      | 'heart'
+      | 'handshake'
+      | 'droplet'
+      | 'snowflake'
+      | 'flower'
+      | 'blossom'
+      | 'rose'
+      | 'feather'
+      | 'gem'
+      | 'shell'
+      | 'pine'
+      | 'grove'
+      | 'palm'
+      | 'shrub'
+      | 'sprout'
+      | 'leaf'
+      | 'clover'
+      | 'wheat'
+      | 'grapes'
+      | 'apple'
+      | 'cherries'
+      | 'house'
+      | 'hearth'
+      | 'egg'
+      | 'book'
+      | 'open_book'
+      | 'scroll'
+      | 'quill'
+      | 'telescope'
+      | 'dividers'
+      | 'compass'
+      | 'brain'
+      | 'hourglass'
+      | 'globe'
+      | 'coins'
+      | 'ship'
+      | 'sailboat'
+      | 'anchor'
+      | 'amphora'
+      | 'barrel'
+      | 'scales'
+      | 'gavel'
+      | 'temple'
+      | 'lock'
+      | 'mountain'
+      | 'peak'
+      | 'fish'
+      | 'rabbit'
+      | 'squirrel'
+      | 'snail'
+      | 'turtle'
+      | 'cat'
+      | 'dog'
+      | 'rat'
+      | 'prawn'
+      | 'worm'
+      | 'paw'
+      | 'wind'
+      | 'tornado'
+      | 'lightning'
+      | 'cloud'
+      | 'rainbow'
+      | 'skull'
+      | 'bone'
+      | 'ghost'
+      | 'die'
+      | 'wand'
+      | 'mask'
+      | 'masks'
+      | 'tent'
+      | 'king'
+      | 'queen'
+      | 'bishop'
+      | 'pawn'
+      | 'pyramid'
+      | 'medal'
+      | 'rosette'
+      | 'trophy'
+      | 'hammer'
+      | 'anvil'
+      | 'cog'
+      | 'pickaxe'
+      | 'shovel'
+      | 'shears'
+      | 'spool'
+      | 'wall'
+      | 'palette'
+      | 'music'
+      | 'brush'
+      | 'lute'
+      | 'drum'
+      | 'goblet'
+      | 'tankard'
+      | 'bridge'
+      | 'lighthouse'
+      | 'torch'
+      | 'wing'
+      | 'footprints'
+      | 'dna'
     HeraldicDivision:
       | 'plain'
       | 'per_pale'
       | 'per_fess'
       | 'per_bend'
+      | 'per_bend_sinister'
+      | 'per_chevron'
+      | 'per_chevron_inverted'
+      | 'per_saltire'
       | 'quarterly'
+      | 'gyronny'
+      | 'paly'
+      | 'barry'
+      | 'bendy'
+      | 'bendy_sinister'
+      | 'chequy'
+      | 'lozengy'
+      | 'pily'
+      | 'chevronny'
+      | 'chief'
+      | 'base'
+      | 'pale'
+      | 'fess'
+      | 'bars'
+      | 'bend'
+      | 'bend_sinister'
+      | 'cross'
+      | 'saltire'
+      | 'pall'
       | 'chevron'
+      | 'pile'
+      | 'canton'
+      | 'flaunches'
       | 'bordure'
+      | 'orle'
+      | 'inescutcheon'
     HeraldryHolderKind: 'house' | 'polity' | 'title' | 'army' | 'guild'
     HerdDropInput: {
       community_id: number
@@ -40981,6 +41270,17 @@ export interface components {
       node_id: number
       role: components['schemas']['IncidentRole']
     }
+    PartitionLine:
+      | 'straight'
+      | 'wavy'
+      | 'indented'
+      | 'dancetty'
+      | 'engrailed'
+      | 'invected'
+      | 'embattled'
+      | 'nebuly'
+      | 'raguly'
+      | 'dovetailed'
     PartyRole: 'signatory' | 'overlord' | 'vassal' | 'guarantor'
     PartyView: {
       id: number
@@ -44938,6 +45238,16 @@ export interface components {
       share: number
       held: boolean
     }
+    ShieldShape:
+      | 'heater'
+      | 'french'
+      | 'iberian'
+      | 'swiss'
+      | 'kite'
+      | 'lozenge'
+      | 'oval'
+      | 'round'
+      | 'banner'
     ShieldType: 'none' | 'small' | 'large' | 'tower'
     ShiftView: {
       id: number
@@ -47290,6 +47600,7 @@ export interface components {
       value: number
     }
     SummonForm: 'spirit' | 'beast' | 'undead'
+    SupporterPose: 'crossed' | 'behind' | 'flanking' | 'corners'
     SurveyForgetInput: {
       survey_id: number
     }
@@ -47981,6 +48292,14 @@ export interface components {
       | 'black'
       | 'purple'
       | 'orange'
+      | 'celeste'
+      | 'murrey'
+      | 'rose'
+      | 'brown'
+      | 'grey'
+      | 'ermine'
+      | 'ermines'
+      | 'vair'
     TiredMotifReport: {
       world_id: number | null
       motifs: components['schemas']['TiredMotifView'][]
@@ -60315,6 +60634,85 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ArmsView'] | null
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  arms_preview_api_collective_arms_preview_get: {
+    parameters: {
+      query?: {
+        shape?: components['schemas']['ShieldShape']
+        field?: components['schemas']['Tincture']
+        division?: components['schemas']['HeraldicDivision']
+        line?: components['schemas']['PartitionLine']
+        second?: components['schemas']['Tincture'] | null
+        charge?: components['schemas']['HeraldicCharge']
+        charge_tincture?: components['schemas']['Tincture'] | null
+        charge_two?: components['schemas']['HeraldicCharge']
+        charge_two_tincture?: components['schemas']['Tincture'] | null
+        charge_three?: components['schemas']['HeraldicCharge']
+        charge_three_tincture?: components['schemas']['Tincture'] | null
+        arrangement?: components['schemas']['ChargeArrangement']
+        rim?: components['schemas']['ArmsRim']
+        rim_line?: components['schemas']['PartitionLine']
+        rim_tincture?: components['schemas']['Tincture'] | null
+        supporter?: components['schemas']['HeraldicCharge']
+        supporter_pose?: components['schemas']['SupporterPose']
+        supporter_tincture?: components['schemas']['Tincture'] | null
+        crest?: components['schemas']['HeraldicCharge']
+        crest_tincture?: components['schemas']['Tincture'] | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ArmsDesignView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  arms_roll_api_collective_arms_roll__node_id__get: {
+    parameters: {
+      query?: {
+        roll?: number
+      }
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ArmsDesignView']
         }
       }
       default: {
@@ -101768,6 +102166,27 @@ export const archiveOverrideValues: ReadonlyArray<
 export const armourTypeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ArmourType']
 > = ['none', 'hide', 'padded', 'mail', 'scale', 'plate', 'enchanted']
+export const armsInkValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ArmsInk']
+> = [
+  'gold',
+  'silver',
+  'red',
+  'blue',
+  'green',
+  'black',
+  'purple',
+  'orange',
+  'celeste',
+  'murrey',
+  'rose',
+  'brown',
+  'grey',
+  'line',
+]
+export const armsRimValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ArmsRim']
+> = ['line', 'band', 'double', 'beaded', 'studded', 'rope']
 export const armyStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ArmyStats']['kind']
 > = ['army']
@@ -102261,6 +102680,17 @@ export const causalityValues: ReadonlyArray<
 export const celestialStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CelestialStats']['kind']
 > = ['celestial']
+export const chargeArrangementValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ChargeArrangement']
+> = [
+  'two_and_one',
+  'one_and_two',
+  'in_pale',
+  'in_fess',
+  'in_bend',
+  'in_bend_sinister',
+  'in_chief',
+]
 export const chatAttitudeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ChatAttitude']
 > = ['loyal', 'distant', 'rebellious', 'afraid', 'grateful', 'mocking']
@@ -104303,6 +104733,139 @@ export const heraldicChargeValues: ReadonlyArray<
   'wave',
   'flame',
   'key',
+  'crossed_swords',
+  'axe',
+  'bow',
+  'spear',
+  'shield',
+  'target',
+  'fist',
+  'arm',
+  'flag',
+  'castle',
+  'column',
+  'laurel',
+  'fleur_de_lis',
+  'cross',
+  'cross_patty',
+  'crosslet',
+  'annulet',
+  'mascle',
+  'lozenge',
+  'hexagon',
+  'triangle',
+  'estoile',
+  'sparkles',
+  'moon_star',
+  'eclipse',
+  'sunrise',
+  'bell',
+  'infinity',
+  'orbit',
+  'atom',
+  'galaxy',
+  'rocket',
+  'hand_heart',
+  'helping_hand',
+  'heart',
+  'handshake',
+  'droplet',
+  'snowflake',
+  'flower',
+  'blossom',
+  'rose',
+  'feather',
+  'gem',
+  'shell',
+  'pine',
+  'grove',
+  'palm',
+  'shrub',
+  'sprout',
+  'leaf',
+  'clover',
+  'wheat',
+  'grapes',
+  'apple',
+  'cherries',
+  'house',
+  'hearth',
+  'egg',
+  'book',
+  'open_book',
+  'scroll',
+  'quill',
+  'telescope',
+  'dividers',
+  'compass',
+  'brain',
+  'hourglass',
+  'globe',
+  'coins',
+  'ship',
+  'sailboat',
+  'anchor',
+  'amphora',
+  'barrel',
+  'scales',
+  'gavel',
+  'temple',
+  'lock',
+  'mountain',
+  'peak',
+  'fish',
+  'rabbit',
+  'squirrel',
+  'snail',
+  'turtle',
+  'cat',
+  'dog',
+  'rat',
+  'prawn',
+  'worm',
+  'paw',
+  'wind',
+  'tornado',
+  'lightning',
+  'cloud',
+  'rainbow',
+  'skull',
+  'bone',
+  'ghost',
+  'die',
+  'wand',
+  'mask',
+  'masks',
+  'tent',
+  'king',
+  'queen',
+  'bishop',
+  'pawn',
+  'pyramid',
+  'medal',
+  'rosette',
+  'trophy',
+  'hammer',
+  'anvil',
+  'cog',
+  'pickaxe',
+  'shovel',
+  'shears',
+  'spool',
+  'wall',
+  'palette',
+  'music',
+  'brush',
+  'lute',
+  'drum',
+  'goblet',
+  'tankard',
+  'bridge',
+  'lighthouse',
+  'torch',
+  'wing',
+  'footprints',
+  'dna',
 ]
 export const heraldicDivisionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HeraldicDivision']
@@ -104311,9 +104874,37 @@ export const heraldicDivisionValues: ReadonlyArray<
   'per_pale',
   'per_fess',
   'per_bend',
+  'per_bend_sinister',
+  'per_chevron',
+  'per_chevron_inverted',
+  'per_saltire',
   'quarterly',
+  'gyronny',
+  'paly',
+  'barry',
+  'bendy',
+  'bendy_sinister',
+  'chequy',
+  'lozengy',
+  'pily',
+  'chevronny',
+  'chief',
+  'base',
+  'pale',
+  'fess',
+  'bars',
+  'bend',
+  'bend_sinister',
+  'cross',
+  'saltire',
+  'pall',
   'chevron',
+  'pile',
+  'canton',
+  'flaunches',
   'bordure',
+  'orle',
+  'inescutcheon',
 ]
 export const heraldryHolderKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HeraldryHolderKind']
@@ -105837,6 +106428,20 @@ export const partOfSpeechValues: ReadonlyArray<
   'number',
   'interjection',
 ]
+export const partitionLineValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PartitionLine']
+> = [
+  'straight',
+  'wavy',
+  'indented',
+  'dancetty',
+  'engrailed',
+  'invected',
+  'embattled',
+  'nebuly',
+  'raguly',
+  'dovetailed',
+]
 export const partyRoleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PartyRole']
 > = ['signatory', 'overlord', 'vassal', 'guarantor']
@@ -106717,6 +107322,19 @@ export const settlementTierValues: ReadonlyArray<
 export const sexValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Sex']
 > = ['female', 'male']
+export const shieldShapeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ShieldShape']
+> = [
+  'heater',
+  'french',
+  'iberian',
+  'swiss',
+  'kite',
+  'lozenge',
+  'oval',
+  'round',
+  'banner',
+]
 export const shieldTypeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ShieldType']
 > = ['none', 'small', 'large', 'tower']
@@ -107490,6 +108108,9 @@ export const summarySectionValues: ReadonlyArray<
 export const summonFormValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SummonForm']
 > = ['spirit', 'beast', 'undead']
+export const supporterPoseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SupporterPose']
+> = ['crossed', 'behind', 'flanking', 'corners']
 export const surveyLevelValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SurveyLevel']
 > = ['unknown', 'rumoured', 'detected', 'observed', 'surveyed', 'mapped']
@@ -107845,7 +108466,24 @@ export const threadStatusValues: ReadonlyArray<
 > = ['open', 'closed']
 export const tinctureValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Tincture']
-> = ['gold', 'silver', 'red', 'blue', 'green', 'black', 'purple', 'orange']
+> = [
+  'gold',
+  'silver',
+  'red',
+  'blue',
+  'green',
+  'black',
+  'purple',
+  'orange',
+  'celeste',
+  'murrey',
+  'rose',
+  'brown',
+  'grey',
+  'ermine',
+  'ermines',
+  'vair',
+]
 export const tissueKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TissueKind']
 > = [

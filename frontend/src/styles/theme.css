@@ -64,6 +64,11 @@
   --tincture-black: oklch(0.22 0.01 60);
   --tincture-purple: oklch(0.45 0.16 315);
   --tincture-orange: oklch(0.66 0.16 55);
+  --tincture-celeste: oklch(0.76 0.09 235);
+  --tincture-murrey: oklch(0.4 0.13 355);
+  --tincture-rose: oklch(0.76 0.1 5);
+  --tincture-brown: oklch(0.45 0.08 55);
+  --tincture-grey: oklch(0.64 0.01 250);
   --tincture-line: oklch(0.25 0.03 60);
   --sidebar: oklch(0.972 0.006 290);
   --sidebar-foreground: var(--foreground);
@@ -140,6 +145,11 @@
   --tincture-black: oklch(0.2 0.01 60);
   --tincture-purple: oklch(0.55 0.16 315);
   --tincture-orange: oklch(0.7 0.16 55);
+  --tincture-celeste: oklch(0.8 0.09 235);
+  --tincture-murrey: oklch(0.5 0.13 355);
+  --tincture-rose: oklch(0.8 0.1 5);
+  --tincture-brown: oklch(0.52 0.08 55);
+  --tincture-grey: oklch(0.7 0.01 250);
   --tincture-line: oklch(0.15 0.02 60);
   --sidebar: oklch(0.125 0.02 285);
   --sidebar-foreground: var(--foreground);
@@ -524,6 +534,11 @@
   --color-tincture-black: var(--tincture-black);
   --color-tincture-purple: var(--tincture-purple);
   --color-tincture-orange: var(--tincture-orange);
+  --color-tincture-celeste: var(--tincture-celeste);
+  --color-tincture-murrey: var(--tincture-murrey);
+  --color-tincture-rose: var(--tincture-rose);
+  --color-tincture-brown: var(--tincture-brown);
+  --color-tincture-grey: var(--tincture-grey);
   --color-tincture-line: var(--tincture-line);
 }
 
