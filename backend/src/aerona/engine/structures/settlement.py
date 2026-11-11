@@ -81,7 +81,10 @@ def civic_from(ctx: TickContext, entity: EntityRow, profile: SettlementProfileRo
     shift(
         profile,
         "public_order",
-        strength(kinds[K.COURT]) * table.court_order + strength(kinds[K.PRISON]) * table.prison_order + strength(kinds[K.CITADEL]) * table.citadel_order,
+        strength(kinds[K.COURT]) * table.court_order
+        + strength(kinds[K.PRISON]) * table.prison_order
+        + strength(kinds[K.CITADEL]) * table.citadel_order
+        + strength(kinds[K.TOWN_HALL]) * table.town_hall_order,
     )
     people = max(1, stat(entity, "population") or 0)
     cells = sum(item.profile.capacity * item.strength for item in kinds[K.PRISON])
@@ -91,20 +94,37 @@ def civic_from(ctx: TickContext, entity: EntityRow, profile: SettlementProfileRo
         "crime",
         -(strength(kinds[K.COURT]) * table.court_crime_cut + fullness * table.prison_crime_cut + strength(kinds[K.WATCHTOWER]) * table.watchtower_crime_cut),
     )
-    shift(profile, "unrest", -(strength(kinds[K.ARENA]) * table.arena_unrest_cut + strength(kinds[K.THEATRE]) * table.theatre_unrest_cut))
+    shift(
+        profile,
+        "unrest",
+        -(
+            strength(kinds[K.ARENA]) * table.arena_unrest_cut
+            + strength(kinds[K.THEATRE]) * table.theatre_unrest_cut
+            + strength(kinds[K.TAVERN]) * table.tavern_unrest_cut
+            + strength(kinds[K.ORPHANAGE]) * table.orphanage_unrest_cut
+            + strength(kinds[K.PLAZA]) * table.plaza_unrest_cut
+            + strength(kinds[K.TRAINING_GROUND]) * table.training_unrest_cut
+        ),
+    )
     shift(
         profile,
         "prestige",
         strength(kinds[K.MONUMENT]) * table.monument_prestige
         + strength(kinds[K.TOMB]) * table.tomb_prestige
         + strength(kinds[K.THEATRE]) * table.theatre_prestige
-        + strength(kinds[K.WONDER]) * table.wonder_prestige,
+        + strength(kinds[K.WONDER]) * table.wonder_prestige
+        + strength(kinds[K.MUSEUM]) * table.museum_prestige,
     )
-    garrison = sum(item.profile.capacity * item.strength for item in kinds[K.FORT] + kinds[K.CITADEL])
+    garrison = sum(item.profile.capacity * item.strength for item in kinds[K.FORT] + kinds[K.CITADEL] + kinds[K.BARRACKS])
+    drilled = sum(item.profile.level * item.strength for item in kinds[K.TRAINING_GROUND]) * table.training_militia
     if free(profile.locked, "militia"):
-        profile.militia += round_half_up(garrison * table.garrison_militia_pct / PERCENT)
+        profile.militia += round_half_up(garrison * table.garrison_militia_pct / PERCENT + drilled)
     if free(profile.locked, "investment_pool"):
-        profile.investment_pool += round_half_up(sum(item.profile.level * item.strength for item in kinds[K.BANK]) * table.bank_investment)
+        profile.investment_pool += round_half_up(
+            sum(item.profile.level * item.strength for item in kinds[K.BANK]) * table.bank_investment
+            + sum(item.profile.level * item.strength for item in kinds[K.GUILDHALL]) * table.guildhall_investment
+            + sum(item.profile.level * item.strength for item in kinds[K.MINT]) * table.mint_investment
+        )
     if free(profile.locked, "siege_supplies"):
         profile.siege_supplies += round_half_up(sum(item.profile.level * item.strength for item in kinds[K.GRANARY]) * table.granary_siege_days)
 

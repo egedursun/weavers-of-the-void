@@ -55,6 +55,13 @@ import {
   Wheat,
   Wind,
   Wrench,
+  Axe,
+  Beer,
+  Fish,
+  Grid2x2,
+  HeartHandshake,
+  Pill,
+  Tractor,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Spec } from './labels'
@@ -403,6 +410,102 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
     icon: Hammer,
     tone: 'warning',
     hint: 'Works livestock and makes the districts around it less desirable',
+  },
+  brewery: {
+    label: 'Brewery',
+    icon: Beer,
+    tone: 'warning',
+    hint: 'Houses the brewers’ work and lifts what they brew',
+  },
+  sawmill: {
+    label: 'Sawmill',
+    icon: Axe,
+    tone: 'warning',
+    hint: 'Houses the lumber camp’s work and makes the districts around it less desirable',
+  },
+  fishery: {
+    label: 'Fishery',
+    icon: Fish,
+    tone: 'info',
+    hint: 'Houses the fishers’ work at the water and makes the districts around it less desirable',
+  },
+  charcoal_kiln: {
+    label: 'Charcoal kiln',
+    icon: Flame,
+    tone: 'warning',
+    hint: 'Houses the charcoal burners’ work and makes the districts around it less desirable',
+  },
+  stables: {
+    label: 'Stables',
+    icon: Tractor,
+    tone: 'success',
+    hint: 'Houses the stable’s work: mounts and draught beasts for its town',
+  },
+  siege_workshop: {
+    label: 'Siege yard',
+    icon: Hammer,
+    tone: 'danger',
+    hint: 'Houses the siege yard’s work: engines for the town’s wars',
+  },
+  mint: {
+    label: 'Mint',
+    icon: Coins,
+    tone: 'gold',
+    hint: 'Houses the mint’s work and adds to the town’s investment each epoch',
+  },
+  tavern: {
+    label: 'Tavern',
+    icon: Beer,
+    tone: 'gold',
+    hint: 'Shelters travellers, calms unrest and makes the districts around it more desirable',
+  },
+  town_hall: {
+    label: 'Town hall',
+    icon: Landmark,
+    tone: 'gold',
+    hint: 'Seat of the town’s own council; keeps order',
+  },
+  guildhall: {
+    label: 'Guildhall',
+    icon: Store,
+    tone: 'gold',
+    hint: 'Meeting house of the crafts; adds to the town’s investment each epoch',
+  },
+  barracks: {
+    label: 'Barracks',
+    icon: Shield,
+    tone: 'danger',
+    hint: 'Houses a garrison that keeps watch and stands as militia',
+  },
+  orphanage: {
+    label: 'Orphanage',
+    icon: HeartHandshake,
+    tone: 'success',
+    hint: 'Takes in children without kin and calms unrest',
+  },
+  apothecary: {
+    label: 'Apothecary',
+    icon: Pill,
+    tone: 'success',
+    hint: 'Gives the districts around it healing where there is no hospital',
+  },
+  training_ground: {
+    label: 'Training ground',
+    icon: Swords,
+    tone: 'danger',
+    hint: 'Drills militia each epoch and calms unrest',
+  },
+  museum: {
+    label: 'Museum',
+    icon: Library,
+    tone: 'verdigris',
+    hint: 'Keeps the town’s treasures and adds to its prestige',
+  },
+  plaza: {
+    label: 'Plaza',
+    icon: Grid2x2,
+    tone: 'success',
+    hint: 'A public square that calms unrest and makes the districts around it more desirable',
   },
 }
 

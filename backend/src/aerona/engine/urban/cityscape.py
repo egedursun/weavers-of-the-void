@@ -11,8 +11,8 @@ from aerona.domain.enums.environment import RiverClass
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.urban import LandCover, LandGround, Morphology
 from aerona.engine.urban.coverage import home_of
-from aerona.engine.urban.layout import CENTRE, CityLayout, Hex, distance, layout_of, ring, seed_of
-from aerona.engine.urban.planning import seat_cell
+from aerona.engine.urban.layout import CENTRE, CityLayout, Hex, distance, layout_of, ring
+from aerona.engine.urban.planning import settle
 from aerona.rules.registry import Rules
 
 
@@ -50,13 +50,17 @@ WATERS = frozenset({CommodityKind.FISH})
 def provisional(rules: Rules, districts: list[DistrictRow], morphology: Morphology, walls: int, town_id: int) -> CityLayout:
     stand_ins = [
         DistrictRow(
-            id=district.id, settlement_entity_id=town_id, kind=district.kind, level=district.level, hex_q=district.hex_q, hex_r=district.hex_r, locked=[]
+            id=district.id,
+            settlement_entity_id=town_id,
+            kind=district.kind,
+            level=district.level,
+            hex_q=district.hex_q,
+            hex_r=district.hex_r,
+            locked=list(district.locked),
         )
         for district in sorted(districts, key=lambda item: item.id)
     ]
-    for stand_in in stand_ins:
-        if seed_of(stand_in) is None:
-            stand_in.hex_q, stand_in.hex_r = seat_cell(rules, stand_in, stand_ins, morphology, walls)
+    settle(rules, stand_ins, morphology, walls)
     return layout_of(rules, stand_ins, walls)
 
 

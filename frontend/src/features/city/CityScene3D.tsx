@@ -1,13 +1,14 @@
 import { type ReactNode, Suspense, useMemo, useState } from 'react'
 import { Html } from '@react-three/drei'
-import { cn } from '@/lib/utils'
 import { Text } from '@/components/typography'
 import { tokenHex } from '@/features/cosmography/visual/palette'
 import { DISTRICT_SPEC } from '@/features/entity/society/labels'
+import { InstancedModel } from './InstancedModel'
 import { Model } from './Model'
 import { SceneFrame } from './SceneFrame'
-import { ZoneDot } from './ZoneDot'
+import { type SceneLabel, SceneLabels } from './SceneLabels'
 import { type CityBuilding, type CityDistrict, type CityScene } from './api'
+import { roadSegments, wallPieces } from './cityWalls'
 import {
   type Cell,
   cellKey,
@@ -26,9 +27,7 @@ import {
   SHELTER,
   STAGE_LOOK,
   STRUCTURE_LOOK,
-  WALL,
-  WALL_GATE,
-  WALL_TOWER,
+  WALL_LOOK,
   WATER_TILE,
   stageOf,
 } from './models'
@@ -41,8 +40,6 @@ export type CityPick =
 
 export type Zone = CityDistrict['zone']
 
-const TOWER_EVERY = 4
-const GATES = 4
 const WATER_DEPTH = 4
 const COUNTRYSIDE = 3
 const HOUSE_SLOTS = 6
@@ -50,6 +47,12 @@ const SHARED_SCALE = 0.62
 const DAMAGED_DIM = 0.55
 const FADED = 0.3
 const SELECTED_LIFT = 0.12
+const ROAD_WIDTH = 0.3
+const FIELDS: ReadonlySet<CityDistrict['kind']> = new Set([
+  'farmland',
+  'necropolis',
+])
+const ROAD_WIDTH_STEP = 0.06
 
 type Hover = { x: number; z: number; text: string } | null
 
@@ -111,6 +114,23 @@ function around(center: Cell, radius: number): Cell[] {
   ).flat()
 }
 
+function placeAt(
+  cell: Cell,
+  part?: Part
+): { x: number; z: number; scale: number; turn: number } {
+  const [x, z] = hexToWorld(cell[0], cell[1])
+  const [dx, dz] = part?.offset ?? [0, 0]
+  const scale = part?.scale ?? 1
+  return { x: x + dx, z: z + dz, scale, turn: part?.turn ?? 0 }
+}
+
+function grouped<T extends { part: Part }>(items: T[]): [string, T[]][] {
+  const found = new Map<string, T[]>()
+  for (const item of items)
+    found.set(item.part.model, [...(found.get(item.part.model) ?? []), item])
+  return [...found.entries()]
+}
+
 export default function CityScene3D({
   scene,
   selected,
@@ -146,25 +166,53 @@ export default function CityScene3D({
     }))
   )
   const built = new Set(cells.map(({ cell }) => cellKey(cell)))
-  const ringCells = scene.walls_radius ? hexRing(scene.walls_radius) : []
-  const wallKeys = new Set(ringCells.map(cellKey))
+  const shore = Math.max(
+    scene.walls_radius ?? 0,
+    ...cells
+      .filter(({ district }) => !FIELDS.has(district.kind))
+      .map(({ cell }) => hexDistance(cell, [0, 0]))
+  )
   const water: Cell[] = []
   if (scene.water_side !== null) {
     const [dq, dr] = waterDirection(scene.water_side)
     for (const cell of around(center, radius + WATER_DEPTH))
       if (
         !built.has(cellKey(cell)) &&
-        (cell[0] - center[0]) * dq + (cell[1] - center[1]) * dr > radius * 0.55
+        hexDistance(cell, [0, 0]) > shore &&
+        cell[0] * dq + cell[1] * dr > 0
       )
         water.push(cell)
   }
   const wet = new Set(water.map(cellKey))
   const countryside = around(center, radius + COUNTRYSIDE).filter(
-    (cell) =>
-      !built.has(cellKey(cell)) &&
-      !wet.has(cellKey(cell)) &&
-      !wallKeys.has(cellKey(cell))
+    (cell) => !built.has(cellKey(cell)) && !wet.has(cellKey(cell))
   )
+  const walls = wallPieces(
+    scene.walls_radius ?? 0,
+    scene.walls_level,
+    scene.roads
+  )
+  const roads = roadSegments(
+    scene.walls_radius ?? radius,
+    scene.roads,
+    COUNTRYSIDE + Math.max(0, radius - (scene.walls_radius ?? radius))
+  ).filter((segment) => !wet.has(cellKey(segment.cell)))
+  const roadWidth = ROAD_WIDTH + scene.roads * ROAD_WIDTH_STEP
+  const roadColor = tokenHex('--cosmos-bone')
+  const names: SceneLabel[] = scene.districts
+    .filter((district) => visible(district.zone) && district.cells.length > 0)
+    .map((district) => {
+      const points = district.cells.map((cell) => hexToWorld(cell[0], cell[1]))
+      return {
+        id: String(district.id),
+        x: points.reduce((sum, point) => sum + point[0], 0) / points.length,
+        z: points.reduce((sum, point) => sum + point[1], 0) / points.length,
+        text: `${DISTRICT_SPEC[district.kind].label} ${district.level}`,
+        fill: ZONES[district.zone].fill,
+        rank: district.level * 10 + district.cells.length,
+        chosen: selected?.kind === 'district' && selected.id === district.id,
+      }
+    })
   const homes = scene.districts
     .filter((district) => visible(district.zone))
     .flatMap((district) => {
@@ -200,36 +248,37 @@ export default function CityScene3D({
       fallback={fallback}
     >
       <Suspense fallback={null}>
-        {countryside.map((cell) => {
-          const [x, z] = hexToWorld(cell[0], cell[1])
-          return (
-            <Model
-              key={`land-${cellKey(cell)}`}
-              part={{ model: GROUND_TILE }}
-              x={x}
-              z={z}
-              y={-0.06}
-              tint={countrysideTint}
-              dim={0.8}
-              onClick={
-                moving !== null
-                  ? () => onPick({ kind: 'cell', q: cell[0], r: cell[1] })
-                  : undefined
-              }
-            />
-          )
-        })}
-        {cells.map(({ district, cell }) => {
-          const [x, z] = hexToWorld(cell[0], cell[1])
+        <InstancedModel
+          model={GROUND_TILE}
+          items={countryside.map((cell) => ({
+            cell,
+            ...placeAt(cell),
+            y: -0.06,
+          }))}
+          tint={countrysideTint}
+          dim={0.8}
+          onPick={
+            moving !== null
+              ? (item) =>
+                  onPick({ kind: 'cell', q: item.cell[0], r: item.cell[1] })
+              : undefined
+          }
+        />
+        {scene.districts.map((district) => {
           const chosen =
             selected?.kind === 'district' && selected.id === district.id
           return (
-            <Model
-              key={`ground-${cellKey(cell)}`}
-              part={{ model: GROUND_TILE }}
-              x={x}
-              z={z}
-              y={chosen ? SELECTED_LIFT : 0}
+            <InstancedModel
+              key={`ground-${district.id}`}
+              model={GROUND_TILE}
+              items={district.cells.map((raw) => {
+                const cell: Cell = [raw[0], raw[1]]
+                return {
+                  cell,
+                  ...placeAt(cell),
+                  y: chosen ? SELECTED_LIFT : 0,
+                }
+              })}
               tint={tokenHex(ZONES[district.zone].token)}
               dim={
                 !visible(district.zone)
@@ -238,54 +287,52 @@ export default function CityScene3D({
                     ? DAMAGED_DIM + district.condition / 200
                     : 1
               }
-              onClick={() =>
+              onPick={(item) =>
                 moving !== null
-                  ? onPick({ kind: 'cell', q: cell[0], r: cell[1] })
+                  ? onPick({ kind: 'cell', q: item.cell[0], r: item.cell[1] })
                   : pickDistrict(district.id)
               }
-              onPointerOver={() =>
-                setHover({ x, z, text: describeDistrict(district) })
+              onHover={(item) =>
+                setHover(
+                  item
+                    ? { x: item.x, z: item.z, text: describeDistrict(district) }
+                    : null
+                )
               }
-              onPointerOut={() => setHover(null)}
             />
           )
         })}
-        {water.map((cell) => {
-          const [x, z] = hexToWorld(cell[0], cell[1])
-          return (
-            <Model
-              key={`water-${cellKey(cell)}`}
-              part={{ model: WATER_TILE }}
-              x={x}
-              z={z}
-            />
-          )
-        })}
-        {scene.districts
-          .filter((district) => visible(district.zone))
-          .flatMap((district) =>
-            (DISTRICT_DRESS[district.kind] ?? []).flatMap((part) =>
-              district.cells
-                .filter((cell) => !occupied.has(cellKey([cell[0], cell[1]])))
-                .map((cell) => {
-                  const [x, z] = hexToWorld(cell[0], cell[1])
-                  return (
-                    <Model
-                      key={`dress-${district.id}-${cellKey([cell[0], cell[1]])}-${part.model}`}
-                      part={part}
-                      x={x}
-                      z={z}
-                      onClick={() => pickDistrict(district.id)}
-                    />
-                  )
-                })
+        <InstancedModel
+          model={WATER_TILE}
+          items={water.map((cell) => placeAt(cell))}
+        />
+        {grouped(
+          scene.districts
+            .filter((district) => visible(district.zone))
+            .flatMap((district) =>
+              (DISTRICT_DRESS[district.kind] ?? []).flatMap((part) =>
+                district.cells
+                  .filter((cell) => !occupied.has(cellKey([cell[0], cell[1]])))
+                  .map((cell) => ({
+                    part,
+                    district: district.id,
+                    ...placeAt([cell[0], cell[1]], part),
+                  }))
+              )
             )
-          )}
+        ).map(([model, items]) => (
+          <InstancedModel
+            key={`dress-${model}`}
+            model={model}
+            items={items}
+            onPick={(item) => pickDistrict(item.district)}
+          />
+        ))}
         {scene.buildings
           .filter((building) =>
             visible(
-              (building.district_id !== null
-                ? zoneOf.get(building.district_id)
+              (building.home_district_id !== null
+                ? zoneOf.get(building.home_district_id)
                 : undefined) ?? building.zone
             )
           )
@@ -326,77 +373,71 @@ export default function CityScene3D({
               />
             ))
           })}
-        {homes.map(({ district, cell, slot }) => {
-          const [cx, cz] = hexToWorld(cell[0], cell[1])
-          const [ox, oz] = slotOffset(slot)
+        {grouped(
+          homes.map(({ district, cell, slot }) => {
+            const part = HOUSING_LOOK[district.housing]
+            const [ox, oz] = slotOffset(slot)
+            const [x, z] = hexToWorld(cell[0], cell[1])
+            return {
+              part,
+              district: district.id,
+              x: x + ox,
+              z: z + oz,
+              scale: part.scale ?? 1,
+            }
+          })
+        ).map(([model, items]) => (
+          <InstancedModel
+            key={`homes-${model}`}
+            model={model}
+            items={items}
+            onPick={(item) => pickDistrict(item.district)}
+          />
+        ))}
+        <InstancedModel
+          model={SHELTER.model}
+          items={shelters.map(({ cell, slot }) => {
+            const [x, z] = hexToWorld(cell[0], cell[1])
+            const [ox, oz] = slotOffset(slot)
+            return { x: x + ox, z: z + oz, scale: SHELTER.scale ?? 1 }
+          })}
+        />
+        {walls.map((piece) => {
+          const [x, z] = hexToWorld(piece.cell[0], piece.cell[1])
           return (
             <Model
-              key={`home-${district.id}-${cellKey(cell)}-${slot}`}
-              part={HOUSING_LOOK[district.housing]}
-              x={cx + ox}
-              z={cz + oz}
-              onClick={() => pickDistrict(district.id)}
-            />
-          )
-        })}
-        {shelters.map(({ cell, slot }, index) => {
-          const [cx, cz] = hexToWorld(cell[0], cell[1])
-          const [ox, oz] = slotOffset(slot)
-          return (
-            <Model
-              key={`shelter-${index}`}
-              part={SHELTER}
-              x={cx + ox}
-              z={cz + oz}
-            />
-          )
-        })}
-        {ringCells.map((cell, index) => {
-          const [x, z] = hexToWorld(cell[0], cell[1])
-          const gate =
-            index % Math.max(1, Math.floor(ringCells.length / GATES)) === 0
-          const tower = index % TOWER_EVERY === TOWER_EVERY - 1
-          return (
-            <Model
-              key={`wall-${cellKey(cell)}`}
+              key={piece.key}
               part={{
-                model: tower ? WALL_TOWER : gate ? WALL_GATE : WALL,
-                scale: tower ? 0.6 : 0.9,
-                turn: Math.atan2(x, z) + Math.PI / 2,
+                ...WALL_LOOK[piece.model](scene.walls_level),
+                turn: piece.turn,
               }}
               x={x}
               z={z}
             />
           )
         })}
-        {labels &&
-          scene.districts
-            .filter((district) => visible(district.zone))
-            .map((district) => {
-              const [x, z] = hexToWorld(district.q, district.r)
-              const chosen =
-                selected?.kind === 'district' && selected.id === district.id
-              return (
-                <Html
-                  key={`label-${district.id}`}
-                  position={[x, 1.4, z]}
-                  center
-                  zIndexRange={[10, 0]}
-                >
-                  <div
-                    className={cn(
-                      'pointer-events-none flex items-center gap-1.5 rounded-full border bg-popover/90 px-2 py-0.5 whitespace-nowrap text-popover-foreground shadow-sm backdrop-blur-sm',
-                      chosen && 'border-primary'
-                    )}
-                  >
-                    <ZoneDot spec={ZONES[district.zone]} />
-                    <Text as='span' variant='caption' tone='inherit'>
-                      {`${DISTRICT_SPEC[district.kind].label} ${district.level}`}
-                    </Text>
-                  </div>
-                </Html>
-              )
-            })}
+        {roads.map((segment) => {
+          const [fx, fz] = segment.from
+          const [tx, tz] = segment.to
+          return (
+            <mesh
+              key={segment.key}
+              receiveShadow
+              position={[(fx + tx) / 2, 0.01, (fz + tz) / 2]}
+              rotation={[0, -Math.atan2(tz - fz, tx - fx), 0]}
+            >
+              <boxGeometry
+                args={[
+                  Math.hypot(tx - fx, tz - fz) + roadWidth,
+                  0.02,
+                  roadWidth,
+                ]}
+              />
+              <meshStandardMaterial color={roadColor} roughness={1} />
+            </mesh>
+          )
+        })}
+        {labels && <SceneLabels labels={names} />}
         {hover && (
           <Html position={[hover.x, 2, hover.z]} center zIndexRange={[20, 0]}>
             <div className='pointer-events-none rounded-md border bg-popover px-2 py-1 whitespace-nowrap text-popover-foreground shadow-md'>

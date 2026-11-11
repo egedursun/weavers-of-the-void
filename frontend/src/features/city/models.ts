@@ -1,4 +1,5 @@
 import type { components } from '@/api/generated/schema'
+import { type WallModel } from './cityWalls'
 
 type Schema = components['schemas']
 type Colour = 'blue' | 'red' | 'yellow' | 'green'
@@ -77,7 +78,10 @@ export const STRUCTURE_LOOK: Record<Schema['StructureKind'], Look> = {
   tower: one(building('tower_A', 'red')),
   citadel: one(building('castle', 'red')),
   watchtower: one(building('tower_B', 'red')),
-  fort: one(building('barracks', 'red')),
+  fort: [
+    { model: building('barracks', 'blue') },
+    { model: neutral('fence_stone_straight'), scale: 0.6, offset: [0, 0.6] },
+  ],
   palace: [
     { model: building('castle', 'yellow') },
     { model: prop('flag_yellow'), scale: 0.8, offset: [0.6, 0.5] },
@@ -87,8 +91,9 @@ export const STRUCTURE_LOOK: Record<Schema['StructureKind'], Look> = {
     { model: prop('flag_yellow'), scale: 0.6, offset: [0.4, -0.3] },
   ],
   prison: [
-    { model: building('barracks', 'blue') },
-    { model: neutral('fence_stone_straight'), scale: 0.5, offset: [0, 0.6] },
+    { model: building('tower_base', 'blue') },
+    { model: neutral('fence_stone_straight'), scale: 0.6, offset: [0, 0.6] },
+    { model: neutral('fence_stone_straight'), scale: 0.6, offset: [0, -0.6] },
   ],
   market: one(building('market', 'yellow')),
   harbour: [
@@ -104,7 +109,10 @@ export const STRUCTURE_LOOK: Record<Schema['StructureKind'], Look> = {
     { model: building('market', 'green') },
     { model: prop('tent'), scale: 0.7, offset: [0.55, 0.4] },
   ],
-  bank: one(building('tavern', 'yellow')),
+  bank: [
+    { model: building('market', 'blue') },
+    { model: prop('crate_B_small'), scale: 0.7, offset: [0.5, 0.45] },
+  ],
   forge: one(building('blacksmith', 'red')),
   mill: one(building('windmill', 'yellow')),
   tannery: [
@@ -173,6 +181,76 @@ export const STRUCTURE_LOOK: Record<Schema['StructureKind'], Look> = {
     { model: building('home_A', 'green') },
     { model: prop('sack'), scale: 0.8, offset: [0.45, 0.4] },
   ],
+  brewery: [
+    { model: building('tavern', 'green') },
+    { model: prop('barrel'), scale: 0.8, offset: [0.5, 0.4] },
+    { model: prop('barrel'), scale: 0.8, offset: [0.65, 0.1] },
+  ],
+  sawmill: [
+    { model: building('lumbermill', 'green') },
+    { model: prop('resource_lumber'), scale: 0.8, offset: [0.5, 0.45] },
+  ],
+  fishery: [
+    { model: building('home_A', 'blue') },
+    { model: prop('crate_B_small'), scale: 0.7, offset: [0.5, 0.4] },
+    { model: prop('bucket_water'), scale: 0.8, offset: [-0.5, 0.45] },
+  ],
+  charcoal_kiln: [
+    { model: building('blacksmith', 'green') },
+    { model: prop('resource_lumber'), scale: 0.8, offset: [0.5, 0.45] },
+  ],
+  stables: [
+    { model: building('home_A', 'yellow') },
+    { model: neutral('fence_wood_straight'), scale: 0.7, offset: [0, 0.65] },
+    { model: prop('sack'), scale: 0.8, offset: [0.5, -0.4] },
+  ],
+  siege_workshop: [
+    { model: building('tower_catapult', 'red') },
+    { model: prop('crate_long_A'), scale: 0.7, offset: [0.55, 0.45] },
+  ],
+  mint: [
+    { model: building('tower_base', 'yellow') },
+    { model: prop('crate_A_small'), scale: 0.7, offset: [0.5, 0.45] },
+    { model: prop('flag_yellow'), scale: 0.6, offset: [-0.45, -0.3] },
+  ],
+  tavern: one(building('tavern', 'yellow')),
+  town_hall: [
+    { model: building('castle', 'blue'), scale: 0.85 },
+    { model: prop('flag_blue'), scale: 0.7, offset: [0.6, 0.5] },
+  ],
+  guildhall: [
+    { model: building('home_B', 'green') },
+    { model: prop('flag_green'), scale: 0.6, offset: [0.45, -0.3] },
+    { model: prop('crate_long_B'), scale: 0.6, offset: [-0.5, 0.45] },
+  ],
+  barracks: [
+    { model: building('barracks', 'red') },
+    { model: prop('weaponrack'), scale: 0.8, offset: [0.55, 0.45] },
+  ],
+  orphanage: [
+    { model: building('home_B', 'green') },
+    { model: spooky('bench'), scale: SPOOKY, offset: [0.5, 0.5] },
+  ],
+  apothecary: [
+    { model: building('home_A', 'green') },
+    { model: nature('waterplant_C'), scale: 0.8, offset: [0.5, 0.45] },
+    { model: prop('bucket_empty'), scale: 0.8, offset: [-0.5, 0.45] },
+  ],
+  training_ground: [
+    { model: building('archeryrange', 'blue') },
+    { model: prop('target'), scale: 0.8, offset: [0.55, 0.45] },
+    { model: prop('weaponrack'), scale: 0.8, offset: [-0.55, 0.45] },
+  ],
+  museum: [
+    { model: building('church', 'blue') },
+    { model: spooky('pillar'), scale: SPOOKY, offset: [0.55, 0.5] },
+    { model: spooky('pillar'), scale: SPOOKY, offset: [-0.55, 0.5] },
+  ],
+  plaza: [
+    { model: building('well', 'yellow'), scale: 0.8 },
+    { model: spooky('bench'), scale: SPOOKY, offset: [0.55, 0.45] },
+    { model: spooky('lantern_standing'), scale: SPOOKY, offset: [-0.55, 0.45] },
+  ],
   cosmic_archive: [
     { model: building('tower_A', 'green') },
     { model: spooky('arch'), scale: SPOOKY, offset: [0.5, 0.45] },
@@ -208,9 +286,21 @@ export const DISTRICT_DRESS: Partial<Record<Schema['DistrictKind'], Look>> = {
 export const GROUND_TILE = hex('tiles/base/hex_grass')
 export const WATER_TILE = hex('tiles/base/hex_water')
 export const RIVER_TILE = hex('tiles/rivers/hex_river_A')
-export const WALL = neutral('wall_straight')
-export const WALL_GATE = neutral('wall_straight_gate')
-export const WALL_TOWER = building('tower_A', 'red')
+export const WALL_LOOK: Record<WallModel, (level: number) => Part> = {
+  straight: () => ({ model: neutral('wall_straight') }),
+  gate: () => ({ model: neutral('wall_straight_gate') }),
+  corner_wide: () => ({ model: neutral('wall_corner_A_outside') }),
+  corner_sharp: () => ({ model: neutral('wall_corner_B_outside') }),
+  tower: () => ({ model: building('tower_A', 'red'), scale: 0.85 }),
+  fence: (level) => ({
+    model: neutral(level > 1 ? 'fence_stone_straight' : 'fence_wood_straight'),
+  }),
+  fence_gate: (level) => ({
+    model: neutral(
+      level > 1 ? 'fence_stone_straight_gate' : 'fence_wood_straight_gate'
+    ),
+  }),
+}
 
 export const STAGE_LOOK: Record<
   'planned' | 'early' | 'middle' | 'late' | 'ruined',
@@ -285,11 +375,44 @@ export function resourceLook(commodity: Schema['CommodityKind']): Part {
   return { model: prop('crate_A_small') }
 }
 
-export function placeLook(detail: string): Part {
-  if (detail.startsWith('ruin')) return { model: neutral('building_destroyed') }
-  if (detail.includes('·'))
-    return { model: spooky('shrine_candles'), scale: SPOOKY }
-  if (detail.includes('grave') || detail.includes('tomb'))
-    return { model: spooky('crypt'), scale: SPOOKY }
-  return { model: spooky('shrine'), scale: SPOOKY }
+const PLACE_LOOK: Record<Schema['PlaceKind'], Part> = {
+  mountain: { model: nature('mountain_A_grass'), scale: 0.45 },
+  peak: { model: nature('mountain_C'), scale: 0.45 },
+  cliff: { model: nature('rock_single_D'), scale: 1.2 },
+  volcano: { model: nature('mountain_B'), scale: 0.45 },
+  crater: { model: nature('rock_single_E'), scale: 1.1 },
+  pass: { model: nature('hill_single_A') },
+  valley: { model: nature('hill_single_C'), scale: 0.8 },
+  forest: { model: nature('trees_B_medium') },
+  grove: { model: nature('trees_B_small') },
+  river: { model: nature('waterlily_A') },
+  ford: { model: prop('bucket_water') },
+  lake: { model: nature('waterlily_B') },
+  spring: { model: building('well', 'blue'), scale: 0.6 },
+  well: { model: building('well', 'yellow'), scale: 0.6 },
+  swamp: { model: nature('waterplant_C') },
+  cave: { model: nature('rock_single_E'), scale: 1.2 },
+  cavern_system: { model: nature('rock_single_C'), scale: 1.3 },
+  lair: { model: spooky('ribcage'), scale: SPOOKY },
+  ruin: { model: neutral('building_destroyed'), scale: 0.8 },
+  battlefield: { model: prop('weaponrack'), scale: 0.8 },
+  burial_ground: { model: spooky('gravestone'), scale: SPOOKY },
+  island: { model: nature('hill_single_B'), scale: 0.8 },
+  nexus: { model: spooky('shrine_candles'), scale: SPOOKY },
+  shrine_site: { model: spooky('shrine'), scale: SPOOKY },
+  god_corpse: { model: spooky('bone_A'), scale: SPOOKY * 2 },
+  mine_site: { model: building('mine', 'red'), scale: 0.6 },
+  harbour_site: { model: neutral('building_bridge_A'), scale: 0.6 },
+  crossroads: { model: spooky('post_lantern'), scale: SPOOKY },
+}
+
+const SACRED: Part = { model: spooky('shrine_candles'), scale: SPOOKY }
+const UNKNOWN_PLACE: Part = { model: prop('flag_yellow'), scale: 0.6 }
+
+export function placeLook(
+  kind: Schema['PlaceKind'] | null,
+  sacred: boolean
+): Part {
+  if (sacred) return SACRED
+  return kind ? PLACE_LOOK[kind] : UNKNOWN_PLACE
 }

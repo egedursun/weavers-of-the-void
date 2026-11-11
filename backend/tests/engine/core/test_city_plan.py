@@ -1,8 +1,13 @@
+from collections import Counter, defaultdict
+from dataclasses import replace
+
 import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.zones import RING_OF_ZONE, ZONE_OF_DISTRICT
+from aerona.catalog.structures import WORKSHOP_STRUCTURES
+from aerona.catalog.urban import HOME_DISTRICT
+from aerona.catalog.zones import CIVIC_SERVICE_OF, RING_OF_ZONE, ZONE_OF_DISTRICT, ZONE_OF_STRUCTURE
 from aerona.core.errors import ConflictError
 from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
@@ -10,23 +15,28 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.urban import DistrictServiceRow
+from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import RiverClass
-from aerona.domain.enums.settlement import DistrictKind
+from aerona.domain.enums.settlement import DistrictKind, SizeTier
+from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.structure import ConstructionState, StructureKind
 from aerona.domain.enums.urban import LandCover, LandGround, Morphology, UrbanService
-from aerona.domain.models.entity_stats import StructureStats
+from aerona.domain.models.entity_stats import SettlementStats, StructureStats
 from aerona.engine.context import TickContext
 from aerona.engine.phases.environment import environment_survey
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.settlement.book import town_of
 from aerona.engine.settlement.life import quarter_wants
+from aerona.engine.structures.needs import SiteFacts, wanted
+from aerona.engine.structures.readers import Working
+from aerona.engine.structures.settlement import civic_from
 from aerona.engine.urban.cityscape import land_tiles, provisional, slots_of
 from aerona.engine.urban.coverage import CoverageTally, cover_town, place
 from aerona.engine.urban.housing import HousingTally, house_town
 from aerona.engine.urban.layout import HEX_KEY, distance, falloff, layout_of, plan_seed, seed_of
-from aerona.engine.urban.planning import move, plan_town
+from aerona.engine.urban.planning import move, plan_town, settle
 from tests.engine.core.factories import CoreWorld, entity, settlement, tuned_rules
 
 
@@ -214,3 +224,118 @@ def test_every_kind_of_district_finds_a_free_hex_in_every_growth_pattern() -> No
             assert cell not in layout.seeds.values()
             seated.append(DistrictRow(id=index + 1, settlement_entity_id=1, kind=kind, level=1, hex_q=cell[0], hex_r=cell[1]))
         assert len({seed_of(row) for row in seated}) == len(DistrictKind)
+
+
+def test_every_district_claims_its_whole_footprint_even_when_seats_crowd() -> None:
+    rules = tuned_rules()
+    crowded = [
+        DistrictRow(id=1, settlement_entity_id=1, kind=DistrictKind.MARKET, level=2, hex_q=1, hex_r=0),
+        DistrictRow(id=2, settlement_entity_id=1, kind=DistrictKind.PALACE, level=1, hex_q=0, hex_r=0),
+        DistrictRow(id=3, settlement_entity_id=1, kind=DistrictKind.SLUMS, level=1, hex_q=2, hex_r=-1),
+    ]
+    layout = layout_of(rules, crowded, 0)
+    for district in crowded:
+        cells = layout.footprints[district.id]
+        assert len(cells) == district.level * rules.city_plan.cells_per_level
+        assert seed_of(district) in cells
+    every = [cell for cells in layout.footprints.values() for cell in cells]
+    assert len(every) == len(set(every))
+
+
+def test_fields_and_graves_are_pushed_out_as_the_walls_grow_past_them() -> None:
+    rules = tuned_rules()
+    town = [
+        DistrictRow(id=1, settlement_entity_id=1, kind=DistrictKind.FARMLAND, level=1, hex_q=1, hex_r=0, locked=[]),
+        DistrictRow(id=2, settlement_entity_id=1, kind=DistrictKind.PALACE, level=3, hex_q=None, hex_r=None, locked=[]),
+        DistrictRow(id=3, settlement_entity_id=1, kind=DistrictKind.RESIDENTIAL, level=3, hex_q=None, hex_r=None, locked=[]),
+    ]
+    settle(rules, town, Morphology.ORGANIC, 3)
+    layout = layout_of(rules, town, 3)
+    assert layout.walls_radius is not None
+    farm = seed_of(town[0])
+    assert farm is not None and distance(farm, (0, 0)) > layout.walls_radius
+    held_farm = DistrictRow(id=4, settlement_entity_id=1, kind=DistrictKind.NECROPOLIS, level=1, hex_q=1, hex_r=-1, locked=[HEX_KEY])
+    settle(rules, [*town, held_farm], Morphology.ORGANIC, 3)
+    assert seed_of(held_farm) == (1, -1)
+
+
+def structure_at(kind: StructureKind, level: int = 2) -> Working:
+    return Working(
+        EntityRow(name=kind.value, entity_type=EntityType.STRUCTURE),
+        StructureProfileRow(kind=kind, level=level, effect_pct=100, capacity=100),
+    )
+
+
+async def test_the_new_works_keep_order_calm_unrest_drill_militia_and_add_to_investment(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session)
+    town_id, _ = await built_town(session, world, ctx)
+    town = await session.get(EntityRow, town_id)
+    profile = await session.get(SettlementProfileRow, town_id)
+    assert town is not None and profile is not None
+    profile.locked = []
+    profile.unrest, profile.public_order, profile.prestige, profile.militia, profile.investment_pool = 50, 20, 10, 0, 0
+    kinds: dict[StructureKind, list[Working]] = defaultdict(list)
+    for kind in (
+        StructureKind.TOWN_HALL,
+        StructureKind.TAVERN,
+        StructureKind.ORPHANAGE,
+        StructureKind.PLAZA,
+        StructureKind.TRAINING_GROUND,
+        StructureKind.MUSEUM,
+        StructureKind.GUILDHALL,
+        StructureKind.MINT,
+        StructureKind.BARRACKS,
+    ):
+        kinds[kind].append(structure_at(kind))
+    civic_from(ctx, town, profile, kinds)
+    table = ctx.rules.structure_functions
+    assert profile.public_order == 20 + table.town_hall_order
+    assert profile.unrest == 50 - (table.tavern_unrest_cut + table.orphanage_unrest_cut + table.plaza_unrest_cut + table.training_unrest_cut)
+    assert profile.prestige == 10 + table.museum_prestige
+    assert profile.militia == round(100 * table.garrison_militia_pct / 100 + 2 * table.training_militia)
+    assert profile.investment_pool == 2 * (table.guildhall_investment + table.mint_investment)
+
+
+def test_towns_call_for_the_new_works_when_their_life_needs_them(world: CoreWorld) -> None:
+    rules = tuned_rules()
+    town = SettlementProfileRow(size_tier=SizeTier.CITY, homeless=0, unrest=0, crime=0, sanitation=100, prestige=0)
+    base = SiteFacts(
+        site=EntityRow(name="Ashby", entity_type=EntityType.SETTLEMENT, stats=SettlementStats(population=60000, prosperity=50, defense=30, piety=50)),
+        town=town,
+        shares={SocialClass.ARTISAN: 50, SocialClass.WARRIOR: 50},
+        knowledge=KnowledgeMap({}),
+        at_war=True,
+        patron=False,
+        coastal=False,
+        river=False,
+        literacy=100,
+        capital=False,
+        outbreak=True,
+        present=Counter({StructureKind.MARKET: 1}),
+        workshops={StructureKind.BREWERY, StructureKind.MINT},
+        barred=set(),
+    )
+    asked = set(wanted(rules, base))
+    assert {
+        StructureKind.TAVERN,
+        StructureKind.TOWN_HALL,
+        StructureKind.GUILDHALL,
+        StructureKind.BARRACKS,
+        StructureKind.ORPHANAGE,
+        StructureKind.TRAINING_GROUND,
+        StructureKind.MUSEUM,
+        StructureKind.PLAZA,
+        StructureKind.BREWERY,
+        StructureKind.MINT,
+    } <= asked
+    peace = replace(base, capital=True, at_war=False, outbreak=False, present=Counter(), workshops=set())
+    assert not {StructureKind.TOWN_HALL, StructureKind.BARRACKS, StructureKind.ORPHANAGE, StructureKind.TAVERN, StructureKind.PLAZA} & set(wanted(rules, peace))
+
+
+def test_every_new_work_has_a_zone_a_district_to_stand_in_and_a_house_for_any_workshop() -> None:
+    for kind in StructureKind:
+        assert kind in ZONE_OF_STRUCTURE
+    for workshop in WorkshopKind:
+        assert workshop in WORKSHOP_STRUCTURES, workshop
+    for kind in (StructureKind.ORPHANAGE, StructureKind.APOTHECARY, StructureKind.TRAINING_GROUND, StructureKind.MUSEUM):
+        assert kind in CIVIC_SERVICE_OF and HOME_DISTRICT[kind] is DistrictKind.CIVIC_QUARTER

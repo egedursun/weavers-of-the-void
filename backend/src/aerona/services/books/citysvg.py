@@ -34,12 +34,12 @@ WATER = "#7fb4d8"
 WALL = "#6b5b45"
 ZONE_INK: dict[ZoneKind, str] = {
     ZoneKind.GOVERNANCE: "#c9a240",
-    ZoneKind.RESIDENTIAL: "#7fae6b",
+    ZoneKind.RESIDENTIAL: "#c9744f",
     ZoneKind.COMMERCIAL: "#5d8fc4",
-    ZoneKind.INDUSTRIAL: "#d08a3e",
-    ZoneKind.AGRICULTURAL: "#d9c46a",
-    ZoneKind.CIVIC: "#4f9a94",
-    ZoneKind.GREEN: "#5aa05a",
+    ZoneKind.INDUSTRIAL: "#8a74a8",
+    ZoneKind.AGRICULTURAL: "#b5b85a",
+    ZoneKind.CIVIC: "#4f9fa6",
+    ZoneKind.GREEN: "#4f9a5a",
 }
 GROUND_INK: dict[LandGround, str] = {
     LandGround.WATER: WATER,

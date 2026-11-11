@@ -142,6 +142,15 @@ NEEDS: tuple[Need, ...] = (
     (K.PARK, lambda rules, f: f.at_least(SizeTier.TOWN) and f.value("prosperity") >= rules.city_plan.gardens_prosperity),
     (K.SLAUGHTERHOUSE, lambda rules, f: f.at_least(SizeTier.TOWN) and f.has(K.MARKET)),
     (K.ALMSHOUSE, lambda rules, f: homeless_share(f) >= rules.city_plan.almshouse_need_pct),
+    (K.TAVERN, lambda rules, f: f.at_least(SizeTier.VILLAGE) and f.has(K.MARKET)),
+    (K.TOWN_HALL, lambda rules, f: f.at_least(SizeTier.TOWN) and not f.capital),
+    (K.GUILDHALL, lambda rules, f: f.at_least(SizeTier.TOWN) and share(f, SocialClass.ARTISAN, rules)),
+    (K.BARRACKS, lambda rules, f: f.at_war and f.at_least(SizeTier.VILLAGE)),
+    (K.ORPHANAGE, lambda rules, f: f.at_least(SizeTier.TOWN) and (f.outbreak or homeless_share(f) >= rules.city_plan.almshouse_need_pct)),
+    (K.APOTHECARY, lambda rules, f: f.knows(B.MEDICINE) and not f.has(K.HOSPITAL)),
+    (K.TRAINING_GROUND, lambda rules, f: f.at_least(SizeTier.TOWN) and share(f, SocialClass.WARRIOR, rules)),
+    (K.MUSEUM, lambda rules, f: f.at_least(SizeTier.CITY) and f.literacy >= rules.construction.need_literacy),
+    (K.PLAZA, lambda rules, f: f.at_least(SizeTier.TOWN) and f.has(K.MARKET)),
     *((kind, lambda rules, f, kind=kind: kind in f.workshops) for kind in sorted(set(WORKSHOP_STRUCTURES.values()), key=lambda item: item.value)),
 )
 TECHNIQUE_GATES = {K.AQUEDUCT: Technique.AQUEDUCT, K.SEWER: Technique.ARCH, K.CITADEL: Technique.FORTIFICATION, K.WONDER: Technique.DOME}

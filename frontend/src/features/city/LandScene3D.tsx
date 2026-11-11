@@ -153,7 +153,7 @@ export default function LandScene3D({
           return (
             <Model
               key={`place-${place.node.id}`}
-              part={placeLook(place.detail)}
+              part={placeLook(place.kind, place.sacred)}
               x={x}
               z={z}
               y={lifted('place', place.node.id)}

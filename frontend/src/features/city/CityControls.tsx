@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { postAction } from '@/api/actions'
 import { Button } from '@/components/ui/button'
+import { Text } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
 import {
   Facts,
@@ -236,7 +237,7 @@ export function BuildingPanel({
   onClose: () => void
 }) {
   const [target, setTarget] = useState<string>(
-    building.district_id ? String(building.district_id) : ''
+    building.home_district_id ? String(building.home_district_id) : ''
   )
   const [harm, setHarm] = useState('20')
   const finish = useGodAction({
@@ -284,6 +285,7 @@ export function BuildingPanel({
   )
   const spec = KIND_SPEC[building.kind]
   const zone = ZONES[building.zone]
+  const home = districts.find((item) => item.id === building.home_district_id)
   const unfinished =
     building.state === 'planned' || building.state === 'building'
   const whole = building.state === 'complete' && building.condition >= 100
@@ -312,6 +314,11 @@ export function BuildingPanel({
           ['Stands at', `hex ${building.q}, ${building.r}`],
         ]}
       />
+      <Text variant='caption' tone='muted'>
+        {home
+          ? `Stands in the ${DISTRICT_SPEC[home.kind].label.toLowerCase()}${building.district_id === null ? ', where the engine settles it next epoch' : ''}.`
+          : 'Stands in no district yet; the engine settles it when the town has one.'}
+      </Text>
       {unfinished && (
         <Meter label='Built' value={building.progress} tone='warning' />
       )}
@@ -386,11 +393,11 @@ export function BuildingPanel({
           size='sm'
           variant='outline'
           disabled={
-            busy !== null || target === String(building.district_id ?? '')
+            busy !== null || target === String(building.home_district_id ?? '')
           }
           disabledReason={
             busy ??
-            (target === String(building.district_id ?? '')
+            (target === String(building.home_district_id ?? '')
               ? 'Choose another district first'
               : undefined)
           }

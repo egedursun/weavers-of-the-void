@@ -38,7 +38,8 @@ async def test_the_god_moves_a_district_sets_its_homes_and_releases_it(api: ApiW
     district = next(row for row in scene["districts"] if row["kind"] == "gardens")
     moved = await api.http.post("/api/actions/district:move", json={"district_id": district["id"], "q": 11, "r": -5})
     assert moved.status_code == 200, moved.text
-    other = next(row for row in scene["districts"] if row["id"] != district["id"])
+    moved_scene = (await api.http.get(f"/api/city/{town_id}")).json()
+    other = next(row for row in moved_scene["districts"] if row["id"] != district["id"])
     clash = await api.http.post("/api/actions/district:move", json={"district_id": district["id"], "q": other["q"], "r": other["r"]})
     assert clash.status_code == 409, clash.text
     homes = await api.http.post("/api/actions/district_urban:edit", json={"district_id": district["id"], "values": {"housing": "manor"}, "release": []})

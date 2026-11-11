@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.zones import OUTSIDE_WALLS, RING_OF_ZONE, ZONE_OF_DISTRICT
 from aerona.core.errors import ConflictError, NotFoundError
 from aerona.core.random import SeededRandom
 from aerona.db.tables.settlement import DistrictRow, SettlementInfrastructureRow, SettlementProfileRow
@@ -7,7 +8,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.urban import Morphology
 from aerona.engine.context import TickContext
-from aerona.engine.urban.layout import HEX_KEY, CityLayout, Hex, layout_of, plan_seed, seed_of, water_side
+from aerona.engine.urban.layout import CENTRE, HEX_KEY, CityLayout, Hex, distance, layout_of, plan_seed, seed_of, water_side
 from aerona.rules.registry import Rules
 
 
@@ -28,6 +29,29 @@ def seat_cell(rules: Rules, district: DistrictRow, districts: list[DistrictRow],
     )
 
 
+def seat_order(districts: list[DistrictRow]) -> list[DistrictRow]:
+    return sorted(districts, key=lambda item: (item.kind in OUTSIDE_WALLS, RING_OF_ZONE[ZONE_OF_DISTRICT[item.kind]], item.id or 0))
+
+
+def movable(district: DistrictRow) -> bool:
+    return HEX_KEY not in district.locked
+
+
+def settle(rules: Rules, districts: list[DistrictRow], morphology: Morphology, walls_level: int) -> None:
+    for district in seat_order(districts):
+        if seed_of(district) is None and movable(district):
+            district.hex_q, district.hex_r = seat_cell(rules, district, districts, morphology, walls_level)
+    walls = layout_of(rules, districts, walls_level).walls_radius
+    if walls is None:
+        return
+    for district in seat_order(districts):
+        seed = seed_of(district)
+        if district.kind in OUTSIDE_WALLS and seed is not None and distance(seed, CENTRE) <= walls and movable(district):
+            district.hex_q = None
+            district.hex_r = None
+            district.hex_q, district.hex_r = seat_cell(rules, district, districts, morphology, walls_level)
+
+
 def seat(ctx: TickContext, district: DistrictRow, districts: list[DistrictRow], morphology: Morphology, walls_level: int) -> bool:
     if seed_of(district) is not None or HEX_KEY in district.locked:
         return False
@@ -42,8 +66,7 @@ async def plan_town(ctx: TickContext, settlement_id: int) -> CityLayout:
     morphology = profile.morphology if profile is not None else Morphology.ORGANIC
     walls = infrastructure.walls_level if infrastructure is not None else 0
     if not held(settlement_id):
-        for district in districts:
-            seat(ctx, district, districts, morphology, walls)
+        settle(ctx.rules, districts, morphology, walls)
     return layout_of(ctx.rules, districts, walls)
 
 

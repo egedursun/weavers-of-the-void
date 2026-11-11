@@ -74,7 +74,7 @@ function LandBody({
   }
   const [tab, setTab] = useState('deposits')
   const plan = (
-    <LandPlan2D scene={scene} selected={selected} onPick={setSelected} />
+    <LandPlan2D scene={scene} selected={selected} onPick={setSelected} fill />
   )
   const pickId = selected !== null && 'id' in selected ? selected.id : null
   const tile =
@@ -107,7 +107,7 @@ function LandBody({
         aria-label={`Land of ${scene.region.name}`}
         className='relative flex min-w-0 scroll-mt-16 flex-col border-b'
       >
-        <div className='relative h-scene min-w-0 bg-card lg:h-scene-lg'>
+        <div className='relative h-scene min-w-0 overflow-hidden bg-card lg:h-scene-lg'>
           {hasWebGL2() ? (
             <Suspense
               fallback={<Skeleton className='h-full w-full rounded-none' />}
@@ -120,9 +120,7 @@ function LandBody({
               />
             </Suspense>
           ) : (
-            <div className='flex h-full items-center justify-center p-6'>
-              <div className='h-full max-w-full'>{plan}</div>
-            </div>
+            <div className='h-full w-full p-6'>{plan}</div>
           )}
           <div className='pointer-events-none absolute top-3 bottom-3 left-3 flex w-full max-w-md min-w-0 flex-col gap-2 overflow-y-auto'>
             {[

@@ -44,7 +44,9 @@ export function SceneFrame({
       <Canvas
         aria-label={label}
         shadows
-        dpr={[1, 2]}
+        frameloop='demand'
+        dpr={[1, 1.5]}
+        performance={{ min: 0.6 }}
         camera={{
           fov: FOV,
           near: 0.1,
@@ -74,7 +76,7 @@ export function SceneFrame({
           position={[cx + span, span * 2.2, cz + span * 0.7]}
           intensity={1.6}
           color={tokenHex('--cosmos-bone')}
-          shadow-mapSize={[2048, 2048]}
+          shadow-mapSize={[1024, 1024]}
           shadow-camera-left={-span * 1.5}
           shadow-camera-right={span * 1.5}
           shadow-camera-top={span * 1.5}

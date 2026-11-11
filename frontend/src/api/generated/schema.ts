@@ -27680,6 +27680,7 @@ export interface components {
       civic: components['schemas']['CivicService'] | null
       service: components['schemas']['UrbanService'] | null
       district_id: number | null
+      home_district_id: number | null
       q: number
       r: number
       slot: number
@@ -35432,6 +35433,8 @@ export interface components {
       q: number
       r: number
       detail: string
+      kind: components['schemas']['PlaceKind'] | null
+      sacred: boolean
     }
     LandReleaseInput: {
       region_id: number
@@ -44887,6 +44890,22 @@ export interface components {
       | 'slaughterhouse'
       | 'almshouse'
       | 'cosmic_archive'
+      | 'brewery'
+      | 'sawmill'
+      | 'fishery'
+      | 'charcoal_kiln'
+      | 'stables'
+      | 'siege_workshop'
+      | 'mint'
+      | 'tavern'
+      | 'town_hall'
+      | 'guildhall'
+      | 'barracks'
+      | 'orphanage'
+      | 'apothecary'
+      | 'training_ground'
+      | 'museum'
+      | 'plaza'
     StructurePlaceInput: {
       structure_id: number
       district_id?: number | null
@@ -102433,6 +102452,22 @@ export const structureKindValues: ReadonlyArray<
   'slaughterhouse',
   'almshouse',
   'cosmic_archive',
+  'brewery',
+  'sawmill',
+  'fishery',
+  'charcoal_kiln',
+  'stables',
+  'siege_workshop',
+  'mint',
+  'tavern',
+  'town_hall',
+  'guildhall',
+  'barracks',
+  'orphanage',
+  'apothecary',
+  'training_ground',
+  'museum',
+  'plaza',
 ]
 export const structureStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StructureStats']['kind']

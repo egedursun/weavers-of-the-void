@@ -70,6 +70,22 @@ class StructureKind(StrEnum):
     SLAUGHTERHOUSE = "slaughterhouse"
     ALMSHOUSE = "almshouse"
     COSMIC_ARCHIVE = "cosmic_archive"
+    BREWERY = "brewery"
+    SAWMILL = "sawmill"
+    FISHERY = "fishery"
+    CHARCOAL_KILN = "charcoal_kiln"
+    STABLES = "stables"
+    SIEGE_WORKSHOP = "siege_workshop"
+    MINT = "mint"
+    TAVERN = "tavern"
+    TOWN_HALL = "town_hall"
+    GUILDHALL = "guildhall"
+    BARRACKS = "barracks"
+    ORPHANAGE = "orphanage"
+    APOTHECARY = "apothecary"
+    TRAINING_GROUND = "training_ground"
+    MUSEUM = "museum"
+    PLAZA = "plaza"
 
 
 class ConstructionState(StrEnum):

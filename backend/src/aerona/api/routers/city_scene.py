@@ -42,12 +42,17 @@ from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.urban import HousingLevel, LandCover, LandGround, Morphology, ZoneKind
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.urban.cityscape import DIGGINGS, HOUSE_SLOTS, homes_of, land_tiles, pick_tile, provisional, resource_prefer, slots_of
-from aerona.engine.urban.coverage import people_of_districts
+from aerona.engine.urban.coverage import home_of, people_of_districts
 from aerona.engine.urban.layout import CENTRE, Hex, water_side
 from aerona.engine.urban.planning import coastal
 
 router = APIRouter(tags=["city"])
 NodeId = Annotated[int, Path(ge=1)]
+
+
+def home_id(profile: StructureProfileRow, districts: list[DistrictRow]) -> int | None:
+    home = home_of(profile, districts)
+    return home.id if home is not None else None
 
 
 async def town_or_fail(session: AsyncSession, settlement_id: int) -> EntityRow:
@@ -137,6 +142,7 @@ async def city_scene(services: ServicesDep, settlement_id: NodeId) -> CitySceneV
                     civic=CIVIC_SERVICE_OF.get(row.kind),
                     service=SERVICE_OF.get(row.kind),
                     district_id=row.district_id,
+                    home_district_id=row.district_id if row.district_id is not None else home_id(row, districts),
                     q=slots[row.structure_entity_id][0][0],
                     r=slots[row.structure_entity_id][0][1],
                     slot=slots[row.structure_entity_id][1],
@@ -166,21 +172,27 @@ async def land_scene(services: ServicesDep, region_id: NodeId) -> LandSceneView:
         refs = await node_refs(session, [region.id, *(row.id for row in local)])
         taken: set[Hex] = set()
         towns = [
-            LandPlaceView(node=refs[row.id], q=cell[0], r=cell[1], detail=str(round(stat_or(row, "population", 0))))
+            LandPlaceView(node=refs[row.id], q=cell[0], r=cell[1], detail=str(round(stat_or(row, "population", 0))), kind=None, sacred=False)
             for row in local
             if row.entity_type is EntityType.SETTLEMENT and row.id in refs
             for cell in [pick_tile(tiles, taken, (LandCover.BUILT,), (LandGround.LOWLAND, LandGround.SHORE))]
         ]
         kinds = {
-            row.entity_id: row.kind.value
-            for row in await session.scalars(select(PlaceProfileRow).where(PlaceProfileRow.entity_id.in_([row.id for row in local])))
+            row.entity_id: row.kind for row in await session.scalars(select(PlaceProfileRow).where(PlaceProfileRow.entity_id.in_([row.id for row in local])))
         }
         sites = {
             row.place_entity_id: f"{row.kind.value} · {row.school.value}"
             for row in await session.scalars(select(MagicSiteRow).where(MagicSiteRow.place_entity_id.in_([row.id for row in local])))
         }
         places = [
-            LandPlaceView(node=refs[row.id], q=cell[0], r=cell[1], detail=sites.get(row.id) or kinds.get(row.id) or row.entity_type.value)
+            LandPlaceView(
+                node=refs[row.id],
+                q=cell[0],
+                r=cell[1],
+                detail=sites.get(row.id) or row.subtype or (kind.value.replace("_", " ") if (kind := kinds.get(row.id)) is not None else "place"),
+                kind=kinds.get(row.id),
+                sacred=row.id in sites,
+            )
             for row in local
             if row.entity_type is EntityType.PLACE and row.id in refs
             for cell in [pick_tile(tiles, taken, (LandCover.OPEN, LandCover.FOREST))]

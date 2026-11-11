@@ -2,6 +2,7 @@ from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBand, TerrainKind
+from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.settlement import DistrictKind, SizeTier, WaterSupply
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.structure import ConstructionState, StructureGroup, StructureKind
@@ -39,6 +40,7 @@ class CityBuildingView(ApiModel):
     civic: CivicService | None
     service: UrbanService | None
     district_id: int | None
+    home_district_id: int | None
     q: int
     r: int
     slot: int
@@ -87,6 +89,8 @@ class LandPlaceView(ApiModel):
     q: int
     r: int
     detail: str
+    kind: PlaceKind | None
+    sacred: bool
 
 
 class LandWorkView(ApiModel):

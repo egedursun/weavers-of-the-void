@@ -53,7 +53,9 @@ STRUCTURES: MappingProxyType[StructureKind, StructureSpec] = MappingProxyType(
         item.kind: item
         for item in (
             spec((K.TEMPLE, G.FAITH, "Temple"), (S.PRIEST, W.SOME), U.WORSHIPPERS, (B.MAJOR, C.INCENSE, T.VILLAGE), ley=True),
-            spec((K.SHRINE, G.FAITH, "Shrine"), (S.PRIEST, W.FEW), U.WORSHIPPERS, (B.MINOR, C.INCENSE, T.HAMLET), ley=True),
+            spec(
+                (K.SHRINE, G.FAITH, "Shrine"), (S.PRIEST, W.FEW), U.WORSHIPPERS, (B.MINOR, C.INCENSE, T.HAMLET), ley=True, workshop=WorkshopKind.SHRINE_WORKSHOP
+            ),
             spec((K.MONASTERY, G.FAITH, "Monastery"), (S.MONASTIC, W.MANY), U.VOLUMES, (B.MAJOR, C.GRAIN, T.VILLAGE), ley=True, branch=KnowledgeBranch.WRITING),
             spec((K.NECROPOLIS, G.FAITH, "Necropolis"), (S.PRIEST, W.FEW), U.WORSHIPPERS, (B.MAJOR, C.STONE, T.TOWN)),
             spec((K.LIBRARY, G.KNOWLEDGE, "Library"), (S.SCRIBE, W.SOME), U.VOLUMES, (B.MAJOR, C.CLOTH, T.VILLAGE), branch=KnowledgeBranch.WRITING),
@@ -118,6 +120,28 @@ STRUCTURES: MappingProxyType[StructureKind, StructureSpec] = MappingProxyType(
             spec((K.PARK, G.CIVIC, "Park"), (S.ARTISAN, W.FEW), U.NONE, (B.MINOR, C.TIMBER, T.VILLAGE)),
             spec((K.SLAUGHTERHOUSE, G.PRODUCTION, "Slaughterhouse"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.FUEL, T.VILLAGE)),
             spec((K.ALMSHOUSE, G.CIVIC, "Almshouse"), (S.PRIEST, W.FEW), U.SEATS, (B.MINOR, C.BREAD, T.VILLAGE)),
+            spec((K.BREWERY, G.PRODUCTION, "Brewery"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.GRAIN, T.HAMLET), workshop=WorkshopKind.BREWERY),
+            spec((K.SAWMILL, G.PRODUCTION, "Sawmill"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.TOOLS, T.HAMLET), workshop=WorkshopKind.LUMBER_CAMP),
+            spec((K.FISHERY, G.PRODUCTION, "Fishery"), (S.FARMER, W.SOME), U.HANDS, (B.MINOR, C.TIMBER, T.HAMLET), workshop=WorkshopKind.FISHERY),
+            spec(
+                (K.CHARCOAL_KILN, G.PRODUCTION, "Charcoal kiln"),
+                (S.SERF_OR_SLAVE, W.FEW),
+                U.HANDS,
+                (B.MINOR, C.TIMBER, T.HAMLET),
+                workshop=WorkshopKind.CHARCOAL_KILN,
+            ),
+            spec((K.STABLES, G.PRODUCTION, "Stables"), (S.FARMER, W.FEW), U.HANDS, (B.MINOR, C.FODDER, T.HAMLET), workshop=WorkshopKind.STABLE),
+            spec((K.SIEGE_WORKSHOP, G.DEFENCE, "Siege yard"), (S.ARTISAN, W.SOME), U.HANDS, (B.MAJOR, C.TIMBER, T.VILLAGE), workshop=WorkshopKind.SIEGE_YARD),
+            spec((K.MINT, G.COMMERCE, "Mint"), (S.ARTISAN, W.FEW), U.HANDS, (B.MAJOR, C.ORE, T.TOWN), workshop=WorkshopKind.MINT),
+            spec((K.TAVERN, G.COMMERCE, "Tavern"), (S.MERCHANT, W.FEW), U.TRAVELLERS, (B.MINOR, C.BREW_BASE, T.HAMLET)),
+            spec((K.TOWN_HALL, G.CIVIC, "Town hall"), (S.SCRIBE, W.FEW), U.SEATS, (B.MAJOR, C.CLOTH, T.TOWN)),
+            spec((K.GUILDHALL, G.COMMERCE, "Guildhall"), (S.ARTISAN, W.FEW), U.SEATS, (B.MAJOR, C.TOOLS, T.TOWN)),
+            spec((K.BARRACKS, G.DEFENCE, "Barracks"), (S.WARRIOR, W.MANY), U.GARRISON, (B.MAJOR, C.WEAPONS, T.VILLAGE)),
+            spec((K.ORPHANAGE, G.CIVIC, "Orphanage"), (S.PRIEST, W.FEW), U.BEDS, (B.MINOR, C.BREAD, T.TOWN)),
+            spec((K.APOTHECARY, G.KNOWLEDGE, "Apothecary"), (S.SCRIBE, W.FEW), U.BEDS, (B.MINOR, C.HERBS, T.HAMLET), branch=KnowledgeBranch.MEDICINE),
+            spec((K.TRAINING_GROUND, G.CIVIC, "Training ground"), (S.WARRIOR, W.FEW), U.GARRISON, (B.MINOR, C.TIMBER, T.TOWN)),
+            spec((K.MUSEUM, G.MEMORY, "Museum"), (S.SCRIBE, W.FEW), U.VOLUMES, (B.MAJOR, C.CLOTH, T.CITY)),
+            spec((K.PLAZA, G.CIVIC, "Plaza"), (None, W.NONE), U.NONE, (B.MINOR, C.STONE, T.TOWN)),
             spec((K.KONTOR, G.COMMERCE, "Trading post"), (S.MERCHANT, W.FEW), U.LOADS, (B.MINOR, C.TIMBER, T.VILLAGE)),
             spec(
                 (K.COVENANT, G.KNOWLEDGE, "Covenant"),

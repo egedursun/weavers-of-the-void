@@ -1,5 +1,12 @@
 :root,
 .light {
+  --zone-governance: oklch(0.72 0.15 85);
+  --zone-residential: oklch(0.64 0.14 40);
+  --zone-commercial: oklch(0.58 0.14 250);
+  --zone-industrial: oklch(0.55 0.11 300);
+  --zone-agricultural: oklch(0.72 0.13 110);
+  --zone-civic: oklch(0.6 0.11 200);
+  --zone-green: oklch(0.6 0.16 145);
   --radius: 0.625rem;
   --background: oklch(0.985 0.004 290);
   --foreground: oklch(0.22 0.09 292);
@@ -61,6 +68,13 @@
 }
 
 .dark {
+  --zone-governance: oklch(0.84 0.16 87);
+  --zone-residential: oklch(0.74 0.14 42);
+  --zone-commercial: oklch(0.72 0.14 248);
+  --zone-industrial: oklch(0.7 0.11 302);
+  --zone-agricultural: oklch(0.84 0.14 112);
+  --zone-civic: oklch(0.76 0.11 200);
+  --zone-green: oklch(0.74 0.17 145);
   --background: oklch(0.145 0.022 285);
   --foreground: oklch(0.94 0.012 290);
   --card: oklch(0.18 0.026 286);
@@ -466,6 +480,13 @@
   --color-rarity-epic: var(--rarity-epic);
   --color-rarity-legendary: var(--rarity-legendary);
   --color-rarity-mythic: var(--rarity-mythic);
+  --color-zone-governance: var(--zone-governance);
+  --color-zone-residential: var(--zone-residential);
+  --color-zone-commercial: var(--zone-commercial);
+  --color-zone-industrial: var(--zone-industrial);
+  --color-zone-agricultural: var(--zone-agricultural);
+  --color-zone-civic: var(--zone-civic);
+  --color-zone-green: var(--zone-green);
   --color-cosmos-void: var(--cosmos-void);
   --color-cosmos-label: var(--cosmos-label);
   --color-cosmos-label-muted: var(--cosmos-label-muted);

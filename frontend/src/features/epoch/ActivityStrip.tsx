@@ -3,14 +3,16 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Muted, Stat, Text } from '@/components/typography'
 import { useFeedDock } from '@/features/feed/useFeedDock'
+import { useSteadyPresence } from './steadyPresence'
 import { useProgressSummary } from './useProgressSummary'
 
 const PERCENT = 100
 
 export function ActivityStrip() {
-  const summary = useProgressSummary()
+  const live = useProgressSummary()
   const { setOpen } = useFeedDock()
-  if (!summary.visible) return null
+  const { shown, value: summary } = useSteadyPresence(live.visible, live)
+  if (!shown) return null
   const detail = [...summary.parts, summary.subtitle]
     .filter(Boolean)
     .join(' · ')

@@ -1,9 +1,9 @@
 import { useMemo } from 'react'
 import { useGLTF } from '@react-three/drei'
 import { type ThreeEvent } from '@react-three/fiber'
-import { Color, type Material, Mesh, MeshStandardMaterial } from 'three'
+import { Mesh } from 'three'
 import { onTap } from '@/lib/sceneTap'
-import { tokenHex } from '@/features/cosmography/visual/palette'
+import { shared } from './materials'
 import { type Part } from './models'
 
 type ModelProps = {
@@ -17,20 +17,6 @@ type ModelProps = {
   onClick?: (event: ThreeEvent<MouseEvent>) => void
   onPointerOver?: (event: ThreeEvent<PointerEvent>) => void
   onPointerOut?: (event: ThreeEvent<PointerEvent>) => void
-}
-
-function tinted(
-  material: Material,
-  tint: string | null,
-  dim: number
-): Material {
-  if (!(material instanceof MeshStandardMaterial) || (!tint && dim === 1))
-    return material
-  const copy = material.clone()
-  if (tint)
-    copy.color = new Color(tint).lerp(new Color(tokenHex('--cosmos-bone')), 0.2)
-  if (dim !== 1) copy.color.multiplyScalar(dim)
-  return copy
 }
 
 export function Model({
@@ -53,8 +39,8 @@ export function Model({
         child.castShadow = true
         child.receiveShadow = true
         child.material = Array.isArray(child.material)
-          ? child.material.map((item) => tinted(item, tint, dim))
-          : tinted(child.material, tint, dim)
+          ? child.material.map((item) => shared(item, tint, dim))
+          : shared(child.material, tint, dim)
       }
     })
     return copy

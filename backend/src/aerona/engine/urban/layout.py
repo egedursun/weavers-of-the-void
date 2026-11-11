@@ -51,9 +51,8 @@ def claim(seed: Hex, size: int, taken: dict[Hex, int]) -> list[Hex]:
     while frontier and len(found) < size:
         frontier.sort(key=lambda cell: (distance(cell, seed), distance(cell, CENTRE), cell))
         cell = frontier.pop(0)
-        if cell in taken:
-            continue
-        found.append(cell)
+        if cell not in taken:
+            found.append(cell)
         for near in neighbours(cell):
             if near not in seen:
                 seen.add(near)
@@ -78,12 +77,18 @@ class CityLayout:
 def layout_of(rules: Rules, districts: Sequence[DistrictRow], walls_level: int = 0) -> CityLayout:
     found = CityLayout()
     placed = sorted((district for district in districts if seed_of(district) is not None), key=lambda item: item.id)
+    reserved: dict[Hex, int] = {}
+    for district in placed:
+        seed = seed_of(district)
+        if seed is not None:
+            reserved.setdefault(seed, district.id)
     for district in placed:
         seed = seed_of(district)
         if seed is None:
             continue
         found.seeds[district.id] = seed
-        cells = claim(seed, size_of(rules, district), found.cells)
+        others = {cell: owner for cell, owner in reserved.items() if owner != district.id}
+        cells = claim(seed, size_of(rules, district), {**others, **found.cells})
         found.footprints[district.id] = cells
         for cell in cells:
             found.cells[cell] = district.id

@@ -18,10 +18,12 @@ export function LandPlan2D({
   scene,
   selected,
   onPick,
+  fill = false,
 }: {
   scene: LandScene
   selected: LandPick
   onPick: (pick: LandPick) => void
+  fill?: boolean
 }) {
   const points = scene.tiles.map((tile) => hexToWorld(tile.q, tile.r))
   const xs = points.map(([x]) => x)
@@ -71,7 +73,7 @@ export function LandPlan2D({
       viewBox={box.join(' ')}
       role='img'
       aria-label={`Land of ${scene.region.name}: ${scene.tiles.length} tiles, ${scene.settlements.length} settlements, ${scene.resources.length} deposits`}
-      className='block h-auto w-full'
+      className={fill ? 'block h-full w-full' : 'block h-auto w-full'}
     >
       {scene.tiles.map((tile) => {
         const [x, z] = hexToWorld(tile.q, tile.r)

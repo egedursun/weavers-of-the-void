@@ -160,7 +160,15 @@ function CityBody({
   const standing = scene.buildings.filter(
     (item) => item.state === 'complete'
   ).length
-  const plan = <CityPlan2D scene={scene} selected={selected} onPick={pick} />
+  const plan = (
+    <CityPlan2D
+      scene={scene}
+      selected={selected}
+      onPick={pick}
+      fill
+      labels={labels}
+    />
+  )
   const empty = scene.districts.length === 0 && scene.buildings.length === 0
   return (
     <>
@@ -169,7 +177,7 @@ function CityBody({
         aria-label={`City of ${scene.town.name}`}
         className='relative flex min-w-0 scroll-mt-16 flex-col border-b'
       >
-        <div className='relative h-scene min-w-0 bg-card lg:h-scene-lg'>
+        <div className='relative h-scene min-w-0 overflow-hidden bg-card lg:h-scene-lg'>
           {empty ? (
             <div className='flex h-full items-center justify-center p-6'>
               <EmptyState
@@ -179,9 +187,7 @@ function CityBody({
               />
             </div>
           ) : flat ? (
-            <div className='flex h-full items-center justify-center p-6'>
-              <div className='h-full max-w-full'>{plan}</div>
-            </div>
+            <div className='h-full w-full p-6'>{plan}</div>
           ) : (
             <Suspense
               fallback={<Skeleton className='h-full w-full rounded-none' />}
@@ -259,7 +265,20 @@ function CityBody({
             </Text>
           </div>
         </div>
-        <div className='flex min-w-0 flex-col gap-1 bg-card px-4 py-3 md:px-6'>
+        <div className='flex min-w-0 flex-col gap-3 bg-card px-4 py-3 md:px-6'>
+          {!empty && (
+            <div className='md:hidden'>
+              <ZoneFilter
+                scene={scene}
+                shown={shown}
+                onShown={setShown}
+                labels={labels}
+                onLabels={setLabels}
+                flat={flat}
+                onFlat={setFlat}
+              />
+            </div>
+          )}
           <CityLegend scene={scene} />
         </div>
       </section>
