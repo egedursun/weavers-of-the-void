@@ -152,14 +152,15 @@ function LayerControls({
   onOverlay,
 }: Pick<MapToolbarProps, 'mode' | 'onMode' | 'overlays' | 'onOverlay'>) {
   return (
-    <div className='flex min-w-0 flex-wrap items-center gap-2'>
+    <div className='flex min-w-0 flex-col gap-2'>
+      <Label variant='overline'>Map layer</Label>
       <ToggleGroup
         type='single'
         size='sm'
         variant='outline'
         value={mode}
         aria-label='Map layer'
-        className='flex-wrap'
+        className='flex-wrap justify-start'
         onValueChange={(value) => value && onMode(value as LayerMode)}
       >
         {LAYER_MODES.map((option) => {
@@ -176,7 +177,12 @@ function LayerControls({
           )
         })}
       </ToggleGroup>
-      <div className='flex min-w-0 flex-wrap items-center gap-1'>
+      <Label variant='overline'>Overlays</Label>
+      <div
+        role='group'
+        aria-label='Map overlays'
+        className='flex min-w-0 flex-wrap items-center gap-2'
+      >
         {OVERLAYS.map((overlay) => {
           const Icon = OVERLAY_ICON[overlay]
           return (
