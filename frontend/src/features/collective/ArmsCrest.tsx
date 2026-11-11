@@ -8,7 +8,7 @@ import {
 import { Label, Muted, Text } from '@/components/typography'
 import { Chip, Facts } from '@/features/cosmography/parts'
 import { Ref } from '@/features/gatherings/parts'
-import { ArmsFacts, Motto } from './ArmsPanels'
+import { Motto } from './ArmsPanels'
 import { ArmsShield } from './ArmsShield'
 import { useNodeArms } from './api'
 import { BEARERS } from './labels'
@@ -49,7 +49,6 @@ export function ArmsCrest({ nodeId, name }: { nodeId: number; name: string }) {
             </div>
           </div>
           <Motto motto={row.motto} />
-          <ArmsFacts row={row} />
           <Facts
             items={[
               [

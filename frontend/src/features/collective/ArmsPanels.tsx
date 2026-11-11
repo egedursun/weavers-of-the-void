@@ -173,7 +173,10 @@ export function ArmsFacts({ row }: { row: ArmsDesign }) {
         ['Field tincture', TINCTURES[row.field]],
         ['Division', DIVISIONS[row.division]],
         ['Line of the division', LINES[row.line]],
-        ['Second tincture', tinctureText(row.second)],
+        [
+          'Second tincture',
+          row.division === 'plain' ? 'a plain field' : tinctureText(row.second),
+        ],
       ],
     ],
     [
@@ -191,10 +194,20 @@ export function ArmsFacts({ row }: { row: ArmsDesign }) {
     [
       'Around the shield',
       [
-        ['Rim', `${RIMS[row.rim]}, ${tinctureText(row.rim_tincture)}`],
+        [
+          'Rim',
+          row.rim === 'line'
+            ? RIMS[row.rim]
+            : `${RIMS[row.rim]}, ${tinctureText(row.rim_tincture)}`,
+        ],
         ['Edge of the shield', LINES[row.rim_line]],
         ['Supporters', chargeText(row.supporter, row.supporter_tincture)],
-        ['Supporters’ pose', POSES[row.supporter_pose]],
+        [
+          'Supporters’ pose',
+          row.supporter === 'none'
+            ? 'no supporters'
+            : POSES[row.supporter_pose],
+        ],
         ['Crest', chargeText(row.crest, row.crest_tincture)],
       ],
     ],
