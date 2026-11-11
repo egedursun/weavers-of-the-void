@@ -48,7 +48,7 @@ async def mortal_tongue_lines(scope: Scope, me: EntityRow) -> list[str]:
     ):
         language = await session.get(EntityRow, language_id)
         if language is not None:
-            found.append(f"you know words of {language.name}, a sacred tongue; rites cast in its god's name grow stronger in your mouth")
+            found.append(f"you know words of {language.name}, a sacred tongue; rites you cast in its god's name are stronger")
     for work in await session.scalars(select(DecipherWorkRow).where(DecipherWorkRow.scholar_entity_id == me.id)):
         language = await session.get(EntityRow, work.language_entity_id)
         if language is not None:

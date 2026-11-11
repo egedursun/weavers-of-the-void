@@ -62,7 +62,14 @@ async def decipherment(ctx: TickContext) -> None:
 
 
 @reads(
-    "table.language_profiles", "table.trade_flows", "table.trade_route_profiles", "table.trade_route_regions", "table.trade_route_tolls", "trade_route.culture"
+    "table.captive_cohorts",
+    "table.language_profiles",
+    "table.mercenary_contracts",
+    "table.trade_flows",
+    "table.trade_route_profiles",
+    "table.trade_route_regions",
+    "table.trade_route_tolls",
+    "trade_route.culture",
 )
 async def pidgins(ctx: TickContext) -> None:
     tally = PidginTally()

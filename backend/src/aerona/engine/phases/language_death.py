@@ -1,10 +1,12 @@
 from sqlalchemy import select
 
 from aerona.db.tables.bonds import BondRow
-from aerona.db.tables.culture import LanguageStandingRow
+from aerona.db.tables.culture import LanguageStandingRow, SpeakerCohortRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.tongues import DivineTongueRow
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.culture import SpeakerKind
 from aerona.domain.enums.entity import EntityFlag, EntityType
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
@@ -18,11 +20,18 @@ from aerona.language.vitality import VitalityChange, assess_vitality, death_note
 
 
 async def living_speakers(ctx: TickContext, language_id: int) -> int:
-    count = 0
-    for bond in await active_bonds(ctx.session, [BondKind.SPEAKS], targets=[language_id]):
-        if await living_entity(ctx.session, bond.source_node_id) is not None:
-            count += 1
-    return count
+    native = [bond.source_node_id for bond in await active_bonds(ctx.session, [BondKind.SPEAKS], targets=[language_id])]
+    second = await ctx.session.scalars(
+        select(SpeakerCohortRow.community_entity_id).where(
+            SpeakerCohortRow.language_entity_id == language_id, SpeakerCohortRow.kind == SpeakerKind.SECOND, SpeakerCohortRow.share > 0
+        )
+    )
+    living = [holder for holder in sorted({*native, *second}) if await living_entity(ctx.session, holder) is not None]
+    return len(living)
+
+
+async def kept_by_god(ctx: TickContext, language_id: int) -> bool:
+    return await ctx.session.scalar(select(DivineTongueRow.god_node_id).where(DivineTongueRow.language_entity_id == language_id).limit(1)) is not None
 
 
 async def last_home_phrase(ctx: TickContext, language_id: int) -> str | None:
@@ -45,7 +54,16 @@ async def liturgical(ctx: TickContext, language_id: int) -> bool:
     return used is not None
 
 
-@reads("table.bonds", "table.entity_flags", "table.language_profiles", "table.language_standing", "table.language_standings", "table.people_culture")
+@reads(
+    "table.bonds",
+    "table.divine_tongues",
+    "table.entity_flags",
+    "table.language_profiles",
+    "table.language_standing",
+    "table.language_standings",
+    "table.people_culture",
+    "table.speaker_cohorts",
+)
 @writes(
     "language.spread",
     "table.chronicle",
@@ -59,6 +77,8 @@ async def language_death(ctx: TickContext) -> None:
     rules = ctx.rules
     notes_written = 0
     for language in await canon(ctx.session, [EntityType.LANGUAGE]):
+        if await kept_by_god(ctx, language.id):
+            continue
         dead = await has_flag(ctx.session, language.id, EntityFlag.DEAD_LANGUAGE)
         written = await has_script(ctx.session, language.id)
         assessment = assess_vitality(ctx.epoch - language.birth_epoch, await living_speakers(ctx, language.id), dead, written, rules)

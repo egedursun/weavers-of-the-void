@@ -171,7 +171,7 @@ async def acquire(ctx: TickContext, language: EntityRow, tally: SoundTally) -> S
         change, cause = await borrowed(ctx, rng.pick(sorted(contacts))), SoundChangeCause.CONTACT
     if change is None:
         change, cause = invent(ctx, language, profile.phonology), SoundChangeCause.MIGRATION if moved else SoundChangeCause.DRIFT
-    if change is None:
+    if change is None or change in {as_change(row) for row in await changes_of(ctx, language.id)}:
         return None
     row = await add_change(ctx, language.id, change, cause)
     tally.changes += 1

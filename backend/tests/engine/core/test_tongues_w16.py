@@ -5,6 +5,7 @@ from aerona.db.tables.culture import SpeakerCohortRow
 from aerona.db.tables.discovery import NameExonymRow, TheoryProfileRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.lore import LexemeRow
+from aerona.db.tables.military import CaptiveCohortRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.tongues import DecipherWorkRow, DivineTongueRow, LanguagePolicyRow, ScriptRow, SoundChangeRow
@@ -12,6 +13,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import WritingSystem
 from aerona.domain.enums.culture import SpeakerKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.military import CaptiveFate
 from aerona.domain.enums.mind import SkillKind, SkillSource
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import SonStatus
@@ -32,6 +34,7 @@ from aerona.domain.models.entity_stats import BeastStats, LanguageStats, PolityS
 from aerona.domain.models.phonology import Phonology
 from aerona.engine.context import TickContext
 from aerona.engine.lore.language import understood
+from aerona.engine.phases.language_death import language_death
 from aerona.engine.primitives.language_profile import language_profile
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import add_flag, has_flag
@@ -41,10 +44,10 @@ from aerona.engine.tongues.grammar import distance, grammar_of, misread_factor, 
 from aerona.engine.tongues.loans import adapt
 from aerona.engine.tongues.meaning import DriftTally, lift_names, shift_word
 from aerona.engine.tongues.modality import suited, telepathic, writable
-from aerona.engine.tongues.pidgins import PidginTally, creolise, make_pidgin
+from aerona.engine.tongues.pidgins import PidginTally, captive_pidgins, creolise, make_pidgin
 from aerona.engine.tongues.policy import PolicyTally, choose_official, keep_policies, set_policy
 from aerona.engine.tongues.scripts import ScriptTally, borrow, evolve, record_script
-from aerona.engine.tongues.sounds import Change, SoundTally, add_change, apply_change, derive, inherit, reconstruct, rederive
+from aerona.engine.tongues.sounds import Change, SoundTally, acquire, add_change, apply_change, derive, inherit, reconstruct, rederive
 from aerona.services.integrity.tongue_links import mend_tongue_links
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
 
@@ -279,3 +282,54 @@ async def test_tongue_links_to_vanished_holders_and_fallen_gods_are_mended(ctx: 
     assert await session.get(LanguagePolicyRow, (realm.id, world.language.id, LanguagePolicy.OFFICIAL)) is None
     assert await session.get(DivineTongueRow, world.son.id) is None
     assert await session.scalar(select(ScriptRow)) is None
+
+
+async def test_a_sacred_tongue_and_a_tongue_spoken_only_as_a_second_tongue_do_not_die(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "sacred")
+    row = await give_tongue(ctx, world.son)
+    assert row is not None
+    trade = await tongue(session, world, "Tradewords")
+    town = await settlement(session, "Quay", world, world.regions[0])
+    session.add(SpeakerCohortRow(community_entity_id=town.id, language_entity_id=trade.id, kind=SpeakerKind.SECOND, share=30, since_epoch=1, locked=[]))
+    for language_id in (row.language_entity_id, trade.id):
+        found = await session.get(EntityRow, language_id)
+        assert found is not None
+        found.birth_epoch = 0
+    world.cosmos.epoch = 40
+    await session.flush()
+    await language_death(await manual_context(session, "death"))
+    assert not await has_flag(session, row.language_entity_id, EntityFlag.DEAD_LANGUAGE)
+    assert not await has_flag(session, trade.id, EntityFlag.DEAD_LANGUAGE)
+
+
+async def test_a_tongue_does_not_take_the_same_change_twice(ctx: TickContext, session: AsyncSession, world: CoreWorld) -> None:
+    lender, borrower = await tongue(session, world, "Lender"), await tongue(session, world, "Borrower")
+    change = Change(SoundChangeKind.SHIFT, "k", "g", SoundEnvironment.ANYWHERE)
+    await add_change(ctx, lender.id, change, SoundChangeCause.DRIFT)
+    await add_change(ctx, borrower.id, change, SoundChangeCause.PRESTIGE)
+    ctx_sure = await tuned(session, sound_changes={"base_pct": 100, "prestige_gap": 0})
+    town = await settlement(session, "Twin", world, world.regions[0])
+    await bond(session, town.id, borrower.id, BondKind.SPEAKS)
+    session.add(SpeakerCohortRow(community_entity_id=town.id, language_entity_id=lender.id, kind=SpeakerKind.SECOND, share=30, since_epoch=1, locked=[]))
+    await session.flush()
+    await acquire(ctx_sure, borrower, SoundTally())
+    same = await session.scalars(select(SoundChangeRow).where(SoundChangeRow.language_entity_id == borrower.id, SoundChangeRow.source == "k"))
+    assert len(list(same)) == 1
+
+
+async def test_captors_and_the_captives_they_hold_make_a_pidgin(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await tuned(session, pidgins={"contact_pct": 100})
+    captor = await settlement(session, "Keep", world, world.regions[0])
+    own, theirs = await tongue(session, world, "Keepish"), await tongue(session, world, "Farish")
+    await bond(session, captor.id, own.id, BondKind.SPEAKS)
+    words(session, own, ("Kel", "gate"))
+    words(session, theirs, ("Fen", "field"))
+    session.add(CaptiveCohortRow(captor_entity_id=captor.id, language_entity_id=theirs.id, count=40, fate=CaptiveFate.ENSLAVED, since_epoch=1))
+    await session.flush()
+    tally = PidginTally()
+    await captive_pidgins(ctx, tally)
+    assert tally.born == 1
+    cohort = await session.scalar(
+        select(SpeakerCohortRow).where(SpeakerCohortRow.community_entity_id == captor.id, SpeakerCohortRow.kind == SpeakerKind.SECOND)
+    )
+    assert cohort is not None

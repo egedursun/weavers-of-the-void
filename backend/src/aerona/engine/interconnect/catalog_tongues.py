@@ -116,7 +116,7 @@ TONGUE_MECHANICS = (
     Mechanic(
         key="pidgins",
         spec_item="S8.1/RP3",
-        title="Pidgins: traders who share no tongue make a contact tongue, which becomes a creole when children grow up in it",
+        title="Pidgins: traders, captors and their captives, and hired companies with no shared tongue make one; children turn it into a creole",
         subsystem=S.LANGUAGE,
         phases=("pidgins",),
         surface=Surface(drawer=TONGUES_SECTION),
@@ -127,6 +127,9 @@ TONGUE_MECHANICS = (
         targets=("language", "settlement"),
         couplings=(
             Coupling(S.ECONOMY, "trade between communities with no shared tongue makes a pidgin", EdgeKind.TRIGGER, "pidgins.contact_pct"),
+            Coupling(
+                S.WAR, "captors and the captives they hold, and employers and their hired companies, make pidgins", EdgeKind.TRIGGER, "pidgins.contact_pct"
+            ),
             Coupling(S.DEMOGRAPHY, "children raised in a pidgin make it a creole", EdgeKind.TRIGGER, "pidgins.native_share"),
         ),
     ),

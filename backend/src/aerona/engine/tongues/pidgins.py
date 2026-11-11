@@ -5,11 +5,13 @@ from sqlalchemy import select
 from aerona.db.tables.culture import SpeakerCohortRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.lore import LexemeRow
+from aerona.db.tables.military import CaptiveCohortRow, MercenaryContractRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import SpeakerKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
+from aerona.domain.enums.military import CaptiveFate
 from aerona.domain.enums.tongues import LanguageStage
 from aerona.domain.models.entity_stats import LanguageStats
 from aerona.engine.context import TickContext
@@ -28,6 +30,7 @@ CREOLE_SUBTYPE = "creole"
 PIDGIN_POWER = 1
 PIDGIN_WORDS = 8
 PIDGIN_SHARE = 20
+BOUND = frozenset({CaptiveFate.HELD, CaptiveFate.ENSLAVED, CaptiveFate.LABOUR})
 
 
 @dataclass
@@ -57,16 +60,22 @@ async def make_pidgin(ctx: TickContext, first: EntityRow, second: EntityRow) -> 
     one, other = await spoken_language(ctx.session, first.id), await spoken_language(ctx.session, second.id)
     if one is None or other is None or one.id == other.id:
         return None
+    body = f"A contact tongue that {first.name} and {second.name} made from {one.name} and {other.name}; no one is raised in it yet."
+    return await form_pidgin(ctx, first, (one, other), [first, second], body)
+
+
+async def form_pidgin(ctx: TickContext, home: EntityRow, tongues: tuple[EntityRow, EntityRow], partners: list[EntityRow], body: str) -> EntityRow:
+    one, other = tongues
     pidgin = await open_record(
         ctx.session,
         ctx.epoch,
         RecordSpec(
             entity_type=EntityType.LANGUAGE,
-            name=f"{first.name} Pidgin",
-            body=f"A contact tongue that the traders of {first.name} and {second.name} made from {one.name} and {other.name}; no one is raised in it yet.",
+            name=f"{home.name} Pidgin",
+            body=body,
             stats=LanguageStats(spread=0, complexity=0, sacredness=0),
             power=PIDGIN_POWER,
-            world_id=first.world_id,
+            world_id=home.world_id,
             subtype=PIDGIN_SUBTYPE,
         ),
     )
@@ -75,17 +84,54 @@ async def make_pidgin(ctx: TickContext, first: EntityRow, second: EntityRow) -> 
     await simplify(ctx.session, ctx.rules, pidgin.id, ctx.epoch)
     for parent in (one, other):
         await connect(ctx.session, pidgin.id, parent.id, BondKind.DESCENDS_FROM, ctx.epoch, description=PIDGIN_SUBTYPE)
-        await store_words(ctx, pidgin, await words_from(ctx, parent, f"from {parent.name} (pidgin)"), first.id)
-    for community in (first, second):
+        await store_words(ctx, pidgin, await words_from(ctx, parent, f"from {parent.name} (pidgin)"), home.id)
+    for community in partners:
         await learn_second(ctx, community.id, pidgin.id, PIDGIN_SHARE)
     await note(
         ctx,
-        f"The traders of {first.name} and {second.name}, who shared no tongue, made one between them: {pidgin.name}.",
+        f"{pidgin.name} was born where {one.name} and {other.name} met without a shared tongue.",
         key="tongues.pidgin",
-        ids=[first.id, second.id, pidgin.id],
+        ids=[*(row.id for row in partners), pidgin.id],
         kind=ChronicleKind.LANGUAGE,
     )
     return pidgin
+
+
+async def captive_pidgins(ctx: TickContext, tally: PidginTally) -> None:
+    table = ctx.rules.pidgins
+    cohorts = await ctx.session.scalars(
+        select(CaptiveCohortRow)
+        .where(CaptiveCohortRow.fate.in_(sorted(BOUND)), CaptiveCohortRow.count > 0, CaptiveCohortRow.language_entity_id.is_not(None))
+        .order_by(CaptiveCohortRow.id)
+    )
+    for cohort in list(cohorts):
+        captor = await living_entity(ctx.session, cohort.captor_entity_id)
+        captive_tongue = await living_entity(ctx.session, cohort.language_entity_id) if cohort.language_entity_id is not None else None
+        own = await spoken_language(ctx.session, captor.id) if captor is not None else None
+        if captor is None or captive_tongue is None or own is None or held(captor.id) or own.id == captive_tongue.id:
+            continue
+        if captive_tongue.id in await tongues_of(ctx.session, captor.id):
+            continue
+        if ctx.rng(f"pidgin.captives.{cohort.id}.{ctx.epoch}").chance(table.contact_pct):
+            body = f"A contact tongue that {captor.name} and the captives it holds made from {own.name} and {captive_tongue.name}; no one is raised in it yet."
+            await form_pidgin(ctx, captor, (own, captive_tongue), [captor], body)
+            tally.born += 1
+
+
+async def soldier_pidgins(ctx: TickContext, tally: PidginTally) -> None:
+    table = ctx.rules.pidgins
+    contracts = await ctx.session.scalars(
+        select(MercenaryContractRow)
+        .where(MercenaryContractRow.seasons_left > 0, MercenaryContractRow.company_entity_id.is_not(None))
+        .order_by(MercenaryContractRow.id)
+    )
+    for contract in list(contracts):
+        employer = await living_entity(ctx.session, contract.employer_entity_id)
+        company = await living_entity(ctx.session, contract.company_entity_id) if contract.company_entity_id is not None else None
+        if employer is None or company is None or held(employer.id, company.id) or await already_talk(ctx, employer.id, company.id):
+            continue
+        if ctx.rng(f"pidgin.soldiers.{contract.id}.{ctx.epoch}").chance(table.contact_pct) and await make_pidgin(ctx, employer, company) is not None:
+            tally.born += 1
 
 
 async def creolise(ctx: TickContext, pidgin: EntityRow, profile: LanguageProfileRow, tally: PidginTally) -> bool:
@@ -125,6 +171,8 @@ async def pidgin_world(ctx: TickContext, tally: PidginTally) -> None:
             continue
         if ctx.rng(f"pidgin.{first.id}.{second.id}.{ctx.epoch}").chance(table.contact_pct) and await make_pidgin(ctx, first, second) is not None:
             tally.born += 1
+    await captive_pidgins(ctx, tally)
+    await soldier_pidgins(ctx, tally)
     for profile in list(await ctx.session.scalars(select(LanguageProfileRow).where(LanguageProfileRow.stage == LanguageStage.PIDGIN))):
         pidgin = await living_entity(ctx.session, profile.entity_id)
         if pidgin is not None and not held(pidgin.id):
