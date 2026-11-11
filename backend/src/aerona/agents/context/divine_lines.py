@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.agents.context.dominion_lines import dominion_lines
 from aerona.agents.context.mythic_lines import mythic_lines
 from aerona.agents.context.scope import Scope
+from aerona.agents.context.tongue_lines import son_tongue_lines
 from aerona.catalog.domain_effects import ACTIVITY_LABELS, DOMAIN_EFFECTS, HOOKS, SYNERGY_OF
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.constants.units import PERCENT
@@ -76,4 +77,5 @@ async def divine_lines(scope: Scope, son: SonRow) -> list[str]:
         lines.append(f"Council ruling in force: {MOTION_LABELS[ruling.motion].lower()}{f' ({target})' if target else ''}")
     lines.extend(await dominion_lines(scope, son))
     lines.extend(await mythic_lines(scope, son))
+    lines.extend(await son_tongue_lines(scope, son))
     return lines

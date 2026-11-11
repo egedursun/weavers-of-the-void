@@ -28,6 +28,7 @@ from aerona.domain.enums.chronicle import (
 from aerona.domain.enums.communication import DispatchContent, DispatchState, EnvoyFate, Medium
 from aerona.domain.enums.dominion import PrayerTone
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.tongues import WordRegister
 from aerona.domain.models.records import CouncilMinutes
 
 
@@ -172,6 +173,8 @@ class LexemeRow(CreatedAtMixin, Base):
     added_by_kind: Mapped[ActorKind] = mapped_column(enum_type(ActorKind, "added_by_kind"))
     added_by_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     epoch: Mapped[int]
+    proto_word: Mapped[str | None] = mapped_column(String(LEXEME_WORD_MAX_LENGTH))
+    register: Mapped[WordRegister] = mapped_column(enum_type(WordRegister, "register"), default=WordRegister.COMMON, server_default="common")
 
     @validates("word")
     def _sync_word_key(self, _key: str, value: str) -> str:

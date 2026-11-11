@@ -8,9 +8,9 @@ from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 
 GRAMMAR_FIELDS = ("technique", "form", "range", "duration", "target", "paradigm_entity_id", "myth_entity_id")
 LAB_TEXT_FIELDS = ("fidelity", "rite_entity_id", "author_entity_id", "epoch")
-WARPING_FIELDS = ("value", "stage", "updated_epoch")
-LONGEVITY_FIELDS = ("form", "dose", "dependence", "years_gained", "lapsed_epochs", "since_epoch")
-UPKEEP_FIELDS = ("caster_node_id", "source", "essence_upkeep", "vis_form", "vis_upkeep", "dispel_resistance", "unpaid_epochs", "since_epoch")
+WARPING_FIELDS = ("value", "stage")
+LONGEVITY_FIELDS = ("form", "dose", "dependence", "years_gained", "lapsed_epochs")
+UPKEEP_FIELDS = ("caster_node_id", "source", "essence_upkeep", "vis_form", "vis_upkeep", "dispel_resistance", "unpaid_epochs")
 
 
 class RiteGrammarRow(Base):

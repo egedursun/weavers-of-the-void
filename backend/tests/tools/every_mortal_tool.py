@@ -7,6 +7,7 @@ from tests.tools.every_setup import (
     claimable_title,
     council_office,
     created,
+    dead_script,
     dig_ready,
     foreign_crisis,
     herd_handler,
@@ -29,6 +30,7 @@ from tests.tools.every_setup import (
     rival_realm,
     ruin,
     ruler,
+    scribe,
     seafarers,
     second_mortal,
     second_species,
@@ -37,7 +39,7 @@ from tests.tools.every_setup import (
     well_housed,
     worships_dead_sibling,
 )
-from tests.tools.every_son_tool import faction, knowledge, mortal, people, plain, region, resource, route, settlement, species
+from tests.tools.every_son_tool import faction, knowledge, language, mortal, people, plain, region, resource, route, settlement, species
 from tests.tools.every_tool import TEXT, Case, Ids, Step, combined
 from tests.tools.factories import Realm
 
@@ -165,6 +167,9 @@ MORTAL_CASES: dict[str, Case] = {
     "undertake_heroquest": named(plain(), quester),
     "take_longevity": named(plain(form="body"), mortal_vis),
     "found_enchantment": named(plain(name="The Long Calm", effect="bounty", form="body", strength=30), mortal_vis),
+    "decipher_script": named(plain(language_id=created("dead_tongue")), dead_script),
+    "proclaim_tongue": named(plain(language_id=language, policy="official"), ruler),
+    "reform_script": named(plain(), scribe),
     "bargain_with_estate": named(plain(estate_id=created("estate"), privilege="council_seat", grant=True), realm_estate),
     "seize_title": named(plain(title_id=created("title")), claimable_title),
     "propose_law": named(plain(kind="quarantine"), ruler),

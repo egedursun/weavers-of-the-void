@@ -118,6 +118,20 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "strength": "Its strength, 1 to 100",
         },
     ),
+    T.DECIPHER_SCRIPT: ToolText(
+        "You work at the dead script of a tongue: progress grows with your languages skill, the texts that survive, any bilingual text and the "
+        "living tongues related to it. Partial readings can go wrong. 1 action.",
+        {"language_id": "The dead tongue"},
+    ),
+    T.PROCLAIM_TONGUE: ToolText(
+        "As ruler of a realm you set a policy on a tongue across it ({{ language_policies }}): an official tongue spreads among your subjects, a "
+        "suppressed one fades but its speakers lose cohesion and grow restless, a revived one is taught again. 1 action.",
+        {"language_id": "The tongue", "policy": "The policy"},
+    ),
+    T.REFORM_SCRIPT: ToolText(
+        "You reform the script of your people's tongue one step along its chain toward fewer signs. Needs some languages skill. 1 action.",
+        {},
+    ),
     T.SEARCH_MAGIC_SITES: ToolText(
         "With spellcraft of {{ rules.magic_sites.search_skill }} or more, you search the land around you for hidden magic sites. "
         "A site you find is held by your community and adds to its holiness; some yield reagents, some strengthen rites, some guard, some open a way to another world. 1 action.",

@@ -19,6 +19,7 @@ from aerona.domain.enums.chronicle import PartOfSpeech, WritingSystem
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.tongues import WordRegister
 from aerona.domain.models.phonology import LanguageSignature
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.language.alphabet import fold_word
@@ -50,6 +51,8 @@ class Lexeme(ApiModel):
     added_by_kind: ActorKind
     added_by: NodeRef | None
     epoch: int
+    proto_word: str | None
+    word_register: WordRegister
 
 
 class LanguageView(ApiModel):
@@ -157,6 +160,8 @@ async def list_languages(services: ServicesDep) -> list[LanguageView]:
                             added_by_kind=word.added_by_kind,
                             added_by=refs.get(word.added_by_node_id) if word.added_by_node_id else None,
                             epoch=word.epoch,
+                            proto_word=word.proto_word,
+                            word_register=word.register,
                         )
                         for word in words
                     ],

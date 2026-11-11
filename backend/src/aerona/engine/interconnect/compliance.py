@@ -244,6 +244,7 @@ from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, DiplomacyPro
 from aerona.db.tables.storyteller import StorytellerRow, TensionRecordRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow, StructureStaffRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleHolderRow, TitleProfileRow
+from aerona.db.tables.tongues import DecipherWorkRow, DivineTongueRow, LanguageGrammarRow, LanguagePolicyRow, MeaningShiftRow, ScriptRow, SoundChangeRow
 from aerona.db.tables.warfare import CasusBelliRow, SiegeRow, WarProductionRow, WarRow, WarSideRow
 
 
@@ -357,6 +358,51 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("resign_office",),
         ("mythic.office_conquered",),
         ("09d7dc547388",),
+    ),
+    ComplianceRow(
+        "S8.1/RP3",
+        (
+            SoundChangeRow.__tablename__,
+            LanguageGrammarRow.__tablename__,
+            MeaningShiftRow.__tablename__,
+            ScriptRow.__tablename__,
+            DecipherWorkRow.__tablename__,
+            LanguagePolicyRow.__tablename__,
+            DivineTongueRow.__tablename__,
+        ),
+        ("sound_changes", "grammar", "semantic_drift", "script_evolution", "decipherment", "pidgins", "language_policy", "divine_tongues"),
+        (
+            "sound_change:add",
+            "sound_change:edit",
+            "sound_change:delete",
+            "grammar:edit",
+            "grammar:reset",
+            "tongue:edit",
+            "word:register",
+            "word:veil",
+            "meaning_shift:edit",
+            "meaning_shift:delete",
+            "script:create",
+            "script:edit",
+            "script:delete",
+            "script:assign",
+            "decipherment:start",
+            "decipherment:edit",
+            "decipherment:delete",
+            "language_policy:set",
+            "language_policy:edit",
+            "language_policy:delete",
+            "divine_tongue:set",
+            "divine_tongue:edit",
+            "divine_tongue:delete",
+            "divine_tongue:teach",
+            "pidgin:make",
+        ),
+        ("TonguesSection", "section-tongues"),
+        ("mortal_context", "son_turn_system"),
+        ("reveal_tongue", "decree_sound", "veil_name", "decipher_script", "proclaim_tongue", "reform_script"),
+        ("tongues.",),
+        ("8e98c75f797c",),
     ),
     ComplianceRow(
         "F31",

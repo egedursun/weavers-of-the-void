@@ -495,12 +495,6 @@ function MantlingCard({
             kind: 'pick',
             table: BOOLEAN,
           },
-          {
-            key: 'since_epoch',
-            label: 'Walking since epoch',
-            kind: 'number',
-            min: 0,
-          },
         ]}
         locked={row?.locked ?? []}
         busy={busy}
@@ -598,12 +592,6 @@ function ServitorCard({
             label: 'Fallen to (god id)',
             kind: 'number',
             min: 1,
-          },
-          {
-            key: 'since_epoch',
-            label: 'Serving since epoch',
-            kind: 'number',
-            min: 0,
           },
         ]}
         locked={servitor.locked}

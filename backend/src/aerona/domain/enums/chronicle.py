@@ -148,6 +148,9 @@ class WritingSystem(StrEnum):
     PICTOGRAPHIC = "pictographic"
     KNOT = "knot"
     NOTCH = "notch"
+    LOGOGRAPHIC = "logographic"
+    MIXED = "mixed"
+    ABJAD = "abjad"
 
 
 class ChronicleAuditKind(StrEnum):

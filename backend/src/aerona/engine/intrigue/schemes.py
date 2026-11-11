@@ -32,6 +32,7 @@ from aerona.domain.enums.polity import ClaimBasis, OfficeKind
 from aerona.domain.enums.relations import RelationType
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.statecraft import CourtPosition
+from aerona.domain.enums.tongues import LanguageModality
 from aerona.domain.enums.war import CaptiveStatus, SiegeStatus
 from aerona.engine.communication.post import FORGER, send
 from aerona.engine.context import TickContext
@@ -55,12 +56,13 @@ from aerona.engine.polity.trials import frame_case, report_crime
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import connect, living_entity
+from aerona.engine.primitives.queries import connect, living_entity, spoken_language
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.records import death_path
 from aerona.engine.relations.book import ensure_relation, shift
 from aerona.engine.services.war import release_captive, take_captive
+from aerona.engine.tongues.modality import modality_of
 
 TEN = 10
 HIRE_SEEK = 12
@@ -263,6 +265,8 @@ async def discovered(ctx: TickContext, scheme: SchemeRow, target: EntityRow | No
     master = await spymaster_of(ctx, target.id)
     counter = 0.5 + (await skill(ctx, master) if master is not None else 0) / PERCENT
     chance = ctx.rules.intrigue.discovery_pct * counter * (PERCENT - scheme.secrecy) / PERCENT * witnesses
+    if await modality_of(ctx.session, (await spoken_language(ctx.session, target.id) or target).id) is LanguageModality.SCENT:
+        chance *= 1 + ctx.rules.modality.scent_trace_pct / PERCENT
     return ctx.rng(f"scheme.discover.{scheme.id}.{ctx.epoch}").chance(chance)
 
 

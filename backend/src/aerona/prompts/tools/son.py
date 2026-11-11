@@ -918,6 +918,27 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.END_ENCHANTMENT: ToolText("You end a global enchantment you keep. 1 action.", {"law_id": "The enchantment", "reason": "Why"}),
+    T.REVEAL_TONGUE: ToolText(
+        "You teach a mortal in your reach words of your sacred tongue, the language of your true name; rites it casts in your name grow stronger. 1 action.",
+        {"mortal_id": "The mortal", "reason": "Why you teach it"},
+    ),
+    T.DECREE_SOUND: ToolText(
+        "You change a sound of a tongue of your world, and every word of it follows the change ({{ sound_change_kinds }}; where: {{ sound_environments }}). "
+        "1 action.",
+        {
+            "language_id": "The tongue",
+            "kind": "How the sound changes",
+            "source": "The sound that changes",
+            "target": "The sound it becomes; empty when it is lost",
+            "environment": "Where in a word the change happens",
+            "reason": "Why",
+        },
+    ),
+    T.VEIL_NAME: ToolText(
+        "You make a name unspeakable in a tongue of your world: its speakers coin a euphemism from their own words and keep the old name for sacred speech. "
+        "1 action.",
+        {"language_id": "The tongue", "node_id": "Whose name (an id)", "reason": "Why"},
+    ),
     T.SHAPE_IMAGE: ToolText(
         "You choose how you meet the image your peoples hold of you: yield to it, resist it at "
         "{{ rules.god_images.resist_cost }} essence each epoch, or embrace it to win fame while it reshapes you faster. 1 action.",

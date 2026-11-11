@@ -20,7 +20,7 @@ from aerona.domain.enums.site import (
 
 ROOM_FIELDS = ("kind", "challenge", "difficulty", "cleared_epoch", "position")
 EXCAVATION_FIELDS = ("stage", "status", "progress", "leader_entity_id", "sponsor_node_id")
-STAGE_FIELDS = ("skill", "technique", "difficulty", "risk", "find", "resolved_epoch")
+STAGE_FIELDS = ("skill", "technique", "difficulty", "risk", "find")
 FEATURE_FIELDS = ("strength",)
 
 

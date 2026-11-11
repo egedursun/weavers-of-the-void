@@ -38,6 +38,7 @@ from aerona.engine.relations.book import ensure_relation, relation, shift
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.community_relations import relation as community_relation
 from aerona.engine.services.war import declare_war, take_captive
+from aerona.engine.tongues.grammar import misread_factor
 
 
 @dataclass
@@ -143,6 +144,7 @@ async def misread(ctx: TickContext, row: MessageRow) -> bool:
     clauses = max(1, len(row.payload.get(CLAUSES, [])) or 1)
     skill = await best_skill(ctx.session, row.recipient_node_id, [SkillKind.LANGUAGES])
     chance = table.misread_pct * clauses * max(0.0, 1 - skill / PERCENT * table.interpreter_pct / PERCENT)
+    chance *= await misread_factor(ctx.session, ctx.rules, {row.language_node_id}, {recipient_tongue.id})
     return ctx.rng(seed_of("dispatch.misread", row.id)).chance(chance)
 
 

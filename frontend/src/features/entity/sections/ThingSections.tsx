@@ -3,6 +3,7 @@ import { MythicSection } from '@/features/arcana/MythicSection'
 import { DominionSection } from '@/features/dominion/DominionSection'
 import { GatheringsSection } from '@/features/gatherings/GatheringsSection'
 import { HistoriesSection } from '@/features/gatherings/HistoriesSection'
+import { TonguesSection } from '@/features/tongues/TonguesSection'
 import { AffairsSection } from './AffairsSection'
 import { AspirationsSection } from './AspirationsSection'
 import { BondsSection } from './BondsSection'
@@ -65,6 +66,7 @@ export function ThingSections({
       <DominionSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <ArcanaSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <MythicSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <TonguesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <RecordRowsSection nodeId={nodeId} />
     </>
   )

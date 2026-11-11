@@ -19,7 +19,7 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.polity import TreatyStatus
 from aerona.engine.context import TickContext
-from aerona.engine.lore.language import register_barrier
+from aerona.engine.lore.language import register_barrier, register_tongues
 from aerona.engine.lore.research_depth import trade_partners
 from aerona.engine.notes import note
 from aerona.engine.polity.accords import parties_of
@@ -27,10 +27,14 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.services.community_relations import change_relation
+from aerona.engine.tongues.grammar import compounds, misread_factor
 from aerona.language.generator import NameKind
 
 TOKEN = re.compile(r"[^\W\d_]+", re.UNICODE)
 GLOSS_JOIN = "-"
+
+
+COMPOUND_LENGTH = 6
 
 
 async def tongue_of(session: AsyncSession, entity: EntityRow) -> EntityRow | None:
@@ -95,6 +99,14 @@ async def coin(ctx: TickContext, language: EntityRow, word: str, meaning: str) -
     return row
 
 
+async def coined(ctx: TickContext, language: EntityRow, token: str, entity: EntityRow, feature: str) -> list[LexemeRow]:
+    compound = await compounds(ctx.session, language.id) and len(token) >= COMPOUND_LENGTH
+    if compound and ctx.rng(f"name.compound.{entity.id}").chance(ctx.rules.grammar.compound_pct):
+        half = len(token) // 2
+        return [await coin(ctx, language, token[:half], feature), await coin(ctx, language, token[half:], entity.entity_type.value.replace("_", " "))]
+    return [await coin(ctx, language, token, feature)]
+
+
 async def give_meanings(ctx: TickContext) -> int:
     limit = ctx.rules.name_meanings.named_per_epoch
     named = select(NameMeaningRow.node_id)
@@ -114,7 +126,7 @@ async def give_meanings(ctx: TickContext) -> int:
             if not parts:
                 token = next(iter(TOKEN.findall(entity.name)), None)
                 if token is not None:
-                    parts = [await coin(ctx, language, token, await feature_of(ctx.session, entity, atlas))]
+                    parts = await coined(ctx, language, token, entity, await feature_of(ctx.session, entity, atlas))
             morphemes = [row.word for row in parts]
             glosses = [row.meaning for row in parts]
         ctx.session.add(
@@ -221,7 +233,9 @@ async def misreadings(ctx: TickContext) -> int:
             continue
         first, second = parties[0], parties[1]
         understood = await register_barrier(ctx.session, ctx.rules, first, second, ctx.epoch, ours=LanguageRegister.COURT, theirs=LanguageRegister.COURT)
-        if not ctx.rng(f"treaty.misread.{profile.treaty_entity_id}.{ctx.epoch}").chance(table.misread_pct * (1 - understood)):
+        tongues = (await register_tongues(ctx.session, first, LanguageRegister.COURT), await register_tongues(ctx.session, second, LanguageRegister.COURT))
+        gap = await misread_factor(ctx.session, ctx.rules, *tongues)
+        if not ctx.rng(f"treaty.misread.{profile.treaty_entity_id}.{ctx.epoch}").chance(table.misread_pct * (1 - understood) * gap):
             continue
         clause = await ctx.session.scalar(
             select(TreatyClauseRow.id).where(TreatyClauseRow.treaty_entity_id == profile.treaty_entity_id).order_by(TreatyClauseRow.id).limit(1)

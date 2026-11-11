@@ -406,6 +406,7 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.entity_flags",
     "table.entity_traits",
     "table.epoch_year_cursors",
+    "table.geasa",
     "table.genomes",
     "table.griefs",
     "table.holder_levels",

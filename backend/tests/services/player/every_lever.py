@@ -7,13 +7,14 @@ from typing import Any
 
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.random import SeededRandom
 from aerona.db.base import Base
 from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.tables.agency import CreationRewardRow
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import CreatorRow
@@ -59,7 +60,7 @@ from aerona.engine.cosmos.rifts import open_rift
 from aerona.engine.economy.route_control import route_of
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.primitives.manual import manual_context
-from aerona.engine.primitives.queries import connect
+from aerona.engine.primitives.queries import connect, spoken_language
 from aerona.engine.primitives.stats import set_stats
 from aerona.engine.services.war import sides_of
 from aerona.rules.registry import Rules
@@ -356,6 +357,13 @@ def given(**values: Any) -> Lever:
 REALM = EntityType.POLITY
 TOWN = EntityType.SETTLEMENT
 MORTAL = EntityType.MORTAL
+TONGUE = EntityType.LANGUAGE
+SOUND = ("sound_change:add", {"language_id": Pick(TONGUE), "kind": "shift", "source": "a", "target": "e"})
+VEIL = ("word:veil", {"language_id": Pick(TONGUE), "node_id": Pick(MORTAL)})
+SCRIPT = ("script:create", {"language_id": Pick(TONGUE), "system": "alphabet"})
+DECIPHER = ("decipherment:start", {"language_id": Pick(TONGUE), "scholar_id": Pick(MORTAL)})
+POLICY = ("language_policy:set", {"holder_id": Pick(REALM), "language_id": Pick(TONGUE), "policy": "official"})
+TONGUE_GIVEN = ("divine_tongue:set", {"god_id": Pick("son")})
 BEAST = ("beast:create", {"name": "Grimtooth"})
 CRISIS = ("crisis:open", {"demander_id": Pick(REALM), "target_id": Pick(REALM, 1), "demand": "pay"})
 IDEOLOGY = ("lore:create", {"entity_type": "ideology", "name": "The Open Hand", "world_id": Pick("world"), "values": {"tenets": ["legalism"]}})
@@ -499,6 +507,16 @@ async def bilingual(session: AsyncSession) -> None:
         language = await canon(session, EntityType.LANGUAGE, skip)
         assert language is not None
         await connect(session, town, language, BondKind.SPEAKS, 1)
+
+
+async def strangers(session: AsyncSession) -> None:
+    first, second = await canon(session, EntityType.SETTLEMENT, 0), await canon(session, EntityType.SETTLEMENT, 1)
+    assert first is not None and second is not None
+    own = await spoken_language(session, first)
+    others = [await canon(session, EntityType.LANGUAGE, skip) for skip in (0, 1, 2)]
+    other = next(item for item in others if item is not None and (own is None or item != own.id))
+    await session.execute(update(BondRow).where(BondRow.source_node_id == second, BondRow.kind == BondKind.SPEAKS).values(state=BondState.PAST))
+    await connect(session, second, other, BondKind.SPEAKS, 1)
 
 
 async def ruin(session: AsyncSession) -> None:
@@ -1663,6 +1681,25 @@ LEVERS: dict[str, Lever] = {
     "item_charge:edit": after(
         ("item:enchant", {"item_id": Pick(EntityType.ITEM), "effect": "ward", "strength": 30}), item_id=Pick(EntityType.ITEM), effect="ward"
     ),
+    "sound_change:add": given(language_id=Pick(TONGUE), kind="shift", source="a", target="e"),
+    **{name: after(SOUND, change_id=Newest("sound_change")) for name in ("sound_change:edit", "sound_change:delete")},
+    "grammar:edit": given(language_id=Pick(TONGUE)),
+    "grammar:reset": given(language_id=Pick(TONGUE)),
+    "tongue:edit": given(language_id=Pick(TONGUE)),
+    "word:register": given(lexeme_id=Pick("lexeme"), word_register="poetic"),
+    "word:veil": given(language_id=Pick(TONGUE), node_id=Pick(MORTAL)),
+    **{name: after(VEIL, shift_id=Newest("meaning_shift")) for name in ("meaning_shift:edit", "meaning_shift:delete")},
+    "script:create": given(language_id=Pick(TONGUE), system="alphabet"),
+    **{name: after(SCRIPT, script_id=Newest("script")) for name in ("script:edit", "script:delete")},
+    "script:assign": after(SCRIPT, language_id=Pick(TONGUE), script_id=Newest("script")),
+    "decipherment:start": given(language_id=Pick(TONGUE), scholar_id=Pick(MORTAL)),
+    **{name: after(DECIPHER, language_id=Pick(TONGUE)) for name in ("decipherment:edit", "decipherment:delete")},
+    "language_policy:set": given(holder_id=Pick(REALM), language_id=Pick(TONGUE), policy="official"),
+    **{name: after(POLICY, holder_id=Pick(REALM), language_id=Pick(TONGUE), policy="official") for name in ("language_policy:edit", "language_policy:delete")},
+    "divine_tongue:set": given(god_id=Pick("son")),
+    **{name: after(TONGUE_GIVEN, god_id=Pick("son")) for name in ("divine_tongue:edit", "divine_tongue:delete")},
+    "divine_tongue:teach": after(TONGUE_GIVEN, god_id=Pick("son"), mortal_id=Pick(MORTAL)),
+    "pidgin:make": Lever(values={"first_id": Pick(TOWN), "second_id": Pick(TOWN, 1)}, setup=strangers),
     "heroquest:begin": given(quester_id=Pick(MORTAL), legend_id=Pick(EntityType.LEGEND)),
     **{
         name: after(("heroquest:begin", {"quester_id": Pick(MORTAL), "legend_id": Pick(EntityType.LEGEND)}), quest_id=Newest("heroquest"))
@@ -1826,6 +1863,14 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "longevity:edit": {"dose": 2, "dependence": 30},
     "law_upkeep:edit": {"essence_upkeep": 3, "dispel_resistance": 70},
     "item_charge:edit": {"charges": 2, "capacity": 4},
+    "sound_change:edit": {"target": "o"},
+    "grammar:edit": {"cases": 3, "word_order": "svo"},
+    "tongue:edit": {"modality": "sign"},
+    "meaning_shift:edit": {"new_meaning": "a newer sense"},
+    "script:edit": {"signs": 30},
+    "decipherment:edit": {"progress": 40},
+    "language_policy:edit": {"strength": 70},
+    "divine_tongue:edit": {"language_entity_id": Pick(TONGUE, 1)},
     "heroquest:edit": {"steps": 4, "fidelity": 80},
     "mantling:edit": {"progress": 40, "deeds": 3},
     "servitor:edit": {"loyalty": 60, "role": "judge"},

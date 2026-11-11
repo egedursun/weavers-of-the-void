@@ -45,7 +45,7 @@ async def liturgical(ctx: TickContext, language_id: int) -> bool:
     return used is not None
 
 
-@reads("table.bonds", "table.entity_flags", "table.language_profiles", "table.language_standings", "table.people_culture")
+@reads("table.bonds", "table.entity_flags", "table.language_profiles", "table.language_standing", "table.language_standings", "table.people_culture")
 @writes(
     "language.spread",
     "table.chronicle",

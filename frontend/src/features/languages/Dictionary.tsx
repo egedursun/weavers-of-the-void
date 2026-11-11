@@ -23,10 +23,15 @@ import {
   Section,
 } from '@/components/domain'
 import { Label, Muted, SectionTitle, Text } from '@/components/typography'
+import { table } from '@/features/arcana/labels'
 import { Highlight } from '@/features/atlas/Highlight'
+import { why } from '@/features/dominion/model'
 import { humanize } from '@/features/entity/actions/schema'
 import { useWorldState } from '@/features/entity/api/queries'
 import { type LanguageView } from '@/features/entity/api/types'
+import { MindPicker } from '@/features/entity/mind/parts'
+import { useTongueAction } from '@/features/tongues/api'
+import { REGISTERS } from '@/features/tongues/labels'
 import { AddWordsForm } from './AddWordsForm'
 import {
   LanguageSeal,
@@ -304,8 +309,29 @@ function LanguageHero({
   )
 }
 
+function WordRegister({ word }: { word: Lexeme }) {
+  const move = useTongueAction(
+    'word:register',
+    (register: string) => ({
+      lexeme_id: word.id,
+      word_register: register as Lexeme['word_register'],
+    }),
+    'The word moves to another register'
+  )
+  return (
+    <MindPicker
+      label='Register'
+      value={word.word_register}
+      table={table(REGISTERS)}
+      blocked={why(null, move.isPending)}
+      onPick={(value) => move.mutate(value)}
+    />
+  )
+}
+
 function WordCard({ word, query }: { word: Lexeme; query: string }) {
   const Part = word.part_of_speech ? PART_ICON[word.part_of_speech] : null
+  const register = REGISTERS[word.word_register]
   return (
     <li className='flex min-w-0 flex-col gap-1.5 rounded-lg border bg-background p-3'>
       <div className='flex min-w-0 items-start gap-2'>
@@ -346,6 +372,18 @@ function WordCard({ word, query }: { word: Lexeme; query: string }) {
         </Muted>
         <Badge size='sm' variant='outline'>{`E${word.epoch}`}</Badge>
       </div>
+      <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+        <Badge size='sm' variant='outline'>
+          <register.icon />
+          {register.label}
+        </Badge>
+        {word.proto_word && word.proto_word !== word.word && (
+          <Muted as='span' variant='caption' italic truncate>
+            {`from older ${word.proto_word}`}
+          </Muted>
+        )}
+      </div>
+      <WordRegister word={word} />
     </li>
   )
 }

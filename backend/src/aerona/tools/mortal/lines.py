@@ -173,3 +173,6 @@ POLICY_LAID = Line("tools.mortal.policy_laid", "{me} laid down this {policy} on 
 HOARD_OPENED = Line("tools.mortal.hoard_opened", "{me} bought up {good} in {place} and held it back.")
 HEROQUEST = Line("tools.mortal.heroquest", "{me} set out on a heroquest.")
 ENCHANTMENT = Line("tools.mortal.enchantment", "{me} laid {name} as a global enchantment.")
+DECIPHER = Line("tools.mortal.decipher", "{me} worked at the dead script of {language}.")
+PROCLAIM = Line("tools.mortal.proclaim", "{me} declared {language} {policy} in the realm.")
+REFORM = Line("tools.mortal.reform", "{me} reformed the script of {language}.")

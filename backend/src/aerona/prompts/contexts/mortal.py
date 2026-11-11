@@ -185,6 +185,7 @@ class HomeLine(ContextItem):
     affairs: list[str] = Field(default_factory=list)
     dominion: list[str] = Field(default_factory=list)
     magic: list[str] = Field(default_factory=list)
+    speech: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

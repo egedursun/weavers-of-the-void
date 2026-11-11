@@ -35,10 +35,10 @@ HEROQUEST_FIELDS = (
     "start_epoch",
     "end_epoch",
 )
-MANTLING_FIELDS = ("god_node_id", "deeds", "worship", "progress", "state", "blocked", "notified", "since_epoch")
-SERVITOR_FIELDS = ("god_node_id", "rank", "origin", "role", "post_entity_id", "loyalty", "fallen_to_node_id", "since_epoch")
+MANTLING_FIELDS = ("god_node_id", "deeds", "worship", "progress", "state", "blocked", "notified")
+SERVITOR_FIELDS = ("god_node_id", "rank", "origin", "role", "post_entity_id", "loyalty", "fallen_to_node_id")
 GEAS_FIELDS = ("layer_node_id", "layer", "mode", "act", "state", "favour", "laid_epoch", "last_kept_epoch", "broken_epoch")
-OFFICE_FIELDS = ("holder_node_id", "chosen_by", "since_epoch", "neglect", "duty")
+OFFICE_FIELDS = ("holder_node_id", "chosen_by", "neglect", "duty")
 
 
 class HeroquestRow(Base):

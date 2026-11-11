@@ -115,6 +115,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import add_flag, connect, living_entity, remove_flag
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, set_stats, stat
+from aerona.engine.tongues.divine import rite_factor
 
 S = MagicSchool
 E = RiteEffectKind
@@ -1044,6 +1045,7 @@ async def cast(
         return None
     steadiness, strength = gift_factors(ctx.rules, await ctx.session.get(GenomeRow, caster.id), row.school)
     strength *= shaping.strength * await office_power(ctx, patron, shaping.grammar.form)
+    strength *= await rite_factor(ctx.session, ctx.rules.divine_tongues.rite_pct, caster.id, patron)
     strength *= await name_power(ctx, caster.id, target)
     strength *= await ctx.hook_factor(caster.id, DomainHook.BLOOD_RITE)
     strength *= await magic_factor(ctx, caster)

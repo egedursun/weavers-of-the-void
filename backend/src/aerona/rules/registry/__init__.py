@@ -331,6 +331,17 @@ from aerona.rules.registry.theories import ArtFormsRules, NameMeaningsRules, The
 from aerona.rules.registry.time import TimeRules
 from aerona.rules.registry.tissues import TissueRules
 from aerona.rules.registry.titles import TitleRules
+from aerona.rules.registry.tongues import (
+    DecipherRules,
+    DivineTongueRules,
+    GrammarRules,
+    LanguagePolicyRules,
+    ModalityRules,
+    PidginRules,
+    ScriptEvolutionRules,
+    SemanticDriftRules,
+    SoundChangeRules,
+)
 from aerona.rules.registry.trade import TradeRules
 from aerona.rules.registry.travel import TravelRules
 from aerona.rules.registry.travel_methods import TravelMethodsRules
@@ -467,6 +478,15 @@ class Rules:
     servitors: ServitorRules = field(default_factory=ServitorRules)
     geasa: GeasRules = field(default_factory=GeasRules)
     cosmic_offices: CosmicOfficeRules = field(default_factory=CosmicOfficeRules)
+    sound_changes: SoundChangeRules = field(default_factory=SoundChangeRules)
+    grammar: GrammarRules = field(default_factory=GrammarRules)
+    semantic_drift: SemanticDriftRules = field(default_factory=SemanticDriftRules)
+    script_evolution: ScriptEvolutionRules = field(default_factory=ScriptEvolutionRules)
+    decipherment: DecipherRules = field(default_factory=DecipherRules)
+    pidgins: PidginRules = field(default_factory=PidginRules)
+    language_policy: LanguagePolicyRules = field(default_factory=LanguagePolicyRules)
+    modality: ModalityRules = field(default_factory=ModalityRules)
+    divine_tongues: DivineTongueRules = field(default_factory=DivineTongueRules)
     collections: CollectionRules = field(default_factory=CollectionRules)
     storyteller: StorytellerRules = field(default_factory=StorytellerRules)
     sites: SiteRules = field(default_factory=SiteRules)

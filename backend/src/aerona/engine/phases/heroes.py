@@ -456,6 +456,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.incident_participants",
     "table.incidents",
     "table.injuries",
+    "table.language_profiles",
     "table.memories",
     "table.mind_facets",
     "table.mortal_profiles",

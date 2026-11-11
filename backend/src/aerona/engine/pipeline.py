@@ -114,6 +114,7 @@ from aerona.engine.phases import (
     statecraft,
     structures,
     titles,
+    tongues,
     trade,
     travel,
     tribute,
@@ -156,6 +157,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + dominion.PHASES
     + arcana.PHASES
     + mythic.PHASES
+    + tongues.PHASES
     + households.PHASES
     + intrigue.PHASES
     + communication.PHASES
@@ -398,6 +400,12 @@ SOCIETY_STAGE = stage(
     "language_death",
     "language_contact",
     "language_cycles",
+    "divine_tongues",
+    "grammar",
+    "sound_changes",
+    "semantic_drift",
+    "pidgins",
+    "language_policy",
     "price_of_magic",
     "architecture",
 )
@@ -442,6 +450,8 @@ SOCIETY_ENGINE_STAGE = stage(
     "warping",
     "life_seed",
     "writing_systems",
+    "script_evolution",
+    "decipherment",
     "knowledge_levels",
     "research_cycles",
     "calendars",

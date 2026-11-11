@@ -16,7 +16,7 @@ DESIGN_FIELDS = ("budget", "dominion_strength", "magic_aptitude", "manifestation
 IMAGE_FIELDS = ("believed_alignment", "believed_wrath", "believed_mercy", "believed_domain", "manifestation", "stance")
 MIRACLE_FIELDS = ("magnitude", "witnesses", "need", "novelty", "legibility", "belief", "credited_node_id")
 MAGIC_SITE_FIELDS = ("kind", "school", "strength", "found_epoch", "holder_node_id", "output", "target_world_id")
-THRONE_FIELDS = ("power", "holder_node_id", "since_epoch")
+THRONE_FIELDS = ("power", "holder_node_id")
 CREATURE_FIELDS = ("hunger", "neglect_epochs", "last_deed")
 
 

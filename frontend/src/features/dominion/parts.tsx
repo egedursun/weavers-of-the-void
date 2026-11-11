@@ -322,12 +322,6 @@ export function ThroneCard({
         note='Values you set are held against the engine until you release them.'
         fields={[
           { key: 'power', label: 'Power', kind: 'number', min: 0, max: 100 },
-          {
-            key: 'since_epoch',
-            label: 'Held since epoch',
-            kind: 'number',
-            min: 0,
-          },
         ]}
         locked={throne.locked}
         busy={busy}

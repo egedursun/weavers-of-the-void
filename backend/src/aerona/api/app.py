@@ -91,6 +91,7 @@ from aerona.api.routers import (
     statecraft,
     structures,
     titles,
+    tongues,
     wars,
     wilds,
 )
@@ -164,6 +165,7 @@ ROUTERS: tuple[ModuleType, ...] = (
     gatherings,
     dominion,
     arcana,
+    tongues,
     intrigue,
     lineage,
     sensed,

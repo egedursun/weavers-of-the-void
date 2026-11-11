@@ -14,6 +14,9 @@ WRITING_SYSTEM_PHRASES: dict[WritingSystem, str] = {
     WritingSystem.PICTOGRAPHIC: "a pictographic script",
     WritingSystem.KNOT: "a knot script",
     WritingSystem.NOTCH: "a notch script",
+    WritingSystem.LOGOGRAPHIC: "a logographic script",
+    WritingSystem.MIXED: "a mixed script of word signs and sound signs",
+    WritingSystem.ABJAD: "an abjad",
 }
 
 

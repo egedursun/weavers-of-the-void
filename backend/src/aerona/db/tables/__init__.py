@@ -327,6 +327,7 @@ from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, DiplomacyPro
 from aerona.db.tables.storyteller import StorytellerRow, TensionRecordRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow, StructureStaffRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleHolderRow, TitleProfileRow
+from aerona.db.tables.tongues import DecipherWorkRow, DivineTongueRow, LanguageGrammarRow, LanguagePolicyRow, MeaningShiftRow, ScriptRow, SoundChangeRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, CasusBelliRow, HeroQuestRow, SiegeRow, TributeRow, WarProductionRow, WarRow, WarSideRow
 
 __all__ = [
@@ -429,6 +430,7 @@ __all__ = [
     "CultureValueRow",
     "CurrencyRow",
     "DeJureLinkRow",
+    "DecipherWorkRow",
     "DeedClaimRow",
     "DeedRow",
     "DeferredStepRow",
@@ -442,6 +444,7 @@ __all__ = [
     "DistrictRow",
     "DivineCreatureRow",
     "DivineStandingRow",
+    "DivineTongueRow",
     "DivineWoundRow",
     "DomainActivityRow",
     "DominionRow",
@@ -539,7 +542,9 @@ __all__ = [
     "LabTextRow",
     "LabourReasonRow",
     "LabourRow",
+    "LanguageGrammarRow",
     "LanguageIntelligibilityRow",
+    "LanguagePolicyRow",
     "LanguageProfileRow",
     "LanguageStandingRow",
     "LawJurisdictionRow",
@@ -565,6 +570,7 @@ __all__ = [
     "MarketPriceHoldRow",
     "MarketPriceRow",
     "MarriageRow",
+    "MeaningShiftRow",
     "MemoryRow",
     "MercenaryContractRow",
     "MessageRow",
@@ -659,6 +665,7 @@ __all__ = [
     "ScenarioRow",
     "SchemeRow",
     "ScoreRow",
+    "ScriptRow",
     "SecretRow",
     "SentenceRow",
     "ServitorRow",
@@ -679,6 +686,7 @@ __all__ = [
     "SonRow",
     "SoulJudgementRow",
     "SoulRow",
+    "SoundChangeRow",
     "SpeakerCohortRow",
     "SpeciesCustomUseRow",
     "SpeciesHostRow",

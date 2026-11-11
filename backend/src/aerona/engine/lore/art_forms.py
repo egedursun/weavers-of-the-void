@@ -33,6 +33,7 @@ from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import set_stats, shift_stat
 from aerona.engine.services.community_relations import change_relation
+from aerona.engine.tongues.grammar import gap
 
 
 async def best_discipline(session: AsyncSession, mortal_id: int) -> tuple[ArtDiscipline, int] | None:
@@ -205,7 +206,9 @@ async def spread(ctx: TickContext) -> int:
             mastery = row.mastery // 2
             if profile.language_entity_id is not None:
                 understood = await barrier(ctx.session, ctx.rules, source.id, partner, ctx.epoch)
-                mastery = round_half_up(mastery * (1 - table.translation_pct / PERCENT * (1 - understood)))
+                partner_tongue = await spoken_language(ctx.session, partner)
+                strain = 1 + await gap(ctx.session, profile.language_entity_id, partner_tongue.id if partner_tongue is not None else None)
+                mastery = round_half_up(mastery * max(0.0, 1 - table.translation_pct / PERCENT * (1 - understood) * strain))
             await practise(ctx, profile.art_form_entity_id, partner, mastery)
             moved += 1
     return moved

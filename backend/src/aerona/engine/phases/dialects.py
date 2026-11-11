@@ -14,6 +14,7 @@ from aerona.engine.primitives.first_bonds import store_words
 from aerona.engine.primitives.language_profile import language_profile
 from aerona.engine.primitives.queries import BondIndex, active_bonds, canon, close, connect, living_entity, spoken_language
 from aerona.engine.primitives.records import RecordSpec, open_record
+from aerona.engine.tongues.sounds import inherit
 from aerona.language.dialect import dialect_should_split, plan_engine_dialect
 from aerona.language.lexicon import LexiconEntry
 
@@ -50,6 +51,7 @@ async def found_dialect(ctx: TickContext, settlement: EntityRow, parent: EntityR
         await close(ctx.session, bond, ctx.epoch, "dialect")
     await connect(ctx.session, settlement.id, dialect.id, BondKind.SPEAKS, ctx.epoch, description="dialect")
     await store_words(ctx, dialect, plan.inherited_words, settlement.id)
+    await inherit(ctx, parent.id, dialect.id)
     await note(ctx, plan.note, key="dialects.split", ids=[settlement.id, parent.id, dialect.id])
     return dialect
 

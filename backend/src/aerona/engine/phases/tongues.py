@@ -1,0 +1,98 @@
+from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.phase import Phase
+from aerona.engine.phases.dominion import count
+from aerona.engine.tongues.decipher import DecipherTally, decipher_world
+from aerona.engine.tongues.divine import TongueTally, give_tongues
+from aerona.engine.tongues.grammar import GrammarTally, describe_grammars
+from aerona.engine.tongues.meaning import DriftTally, drift_meanings
+from aerona.engine.tongues.modality import settle_modalities
+from aerona.engine.tongues.pidgins import PidginTally, pidgin_world
+from aerona.engine.tongues.policy import PolicyTally, keep_policies
+from aerona.engine.tongues.scripts import ScriptTally, evolve_scripts
+from aerona.engine.tongues.sounds import SoundTally, shift_sounds
+
+
+@reads("table.bonds", "table.entity_flags", "table.language_profiles", "table.language_standing", "table.lexemes", "table.sound_changes")
+@writes("table.sound_changes")
+async def sound_changes(ctx: TickContext) -> None:
+    tally = SoundTally()
+    await shift_sounds(ctx, tally)
+    count(ctx, "sound", tally)
+
+
+@reads("language.complexity", "table.bonds", "table.language_grammar", "table.language_profiles", "table.speaker_cohorts")
+@writes("table.language_grammar")
+async def grammar(ctx: TickContext) -> None:
+    tally = GrammarTally()
+    await describe_grammars(ctx, tally)
+    count(ctx, "grammar", tally)
+    ctx.count("modalities_settled", await settle_modalities(ctx))
+
+
+@reads("table.lexemes", "table.name_exonyms", "table.tradition_profiles")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.lexemes",
+    "table.meaning_shifts",
+    "table.name_exonyms",
+)
+async def semantic_drift(ctx: TickContext) -> None:
+    tally = DriftTally()
+    await drift_meanings(ctx, tally)
+    count(ctx, "drift", tally)
+
+
+@reads("table.bonds", "table.community_societies", "table.entity_flags", "table.language_profiles", "table.scripts")
+async def script_evolution(ctx: TickContext) -> None:
+    tally = ScriptTally()
+    await evolve_scripts(ctx, tally)
+    count(ctx, "script", tally)
+
+
+@reads("table.entity_flags")
+async def decipherment(ctx: TickContext) -> None:
+    tally = DecipherTally()
+    await decipher_world(ctx, tally)
+    count(ctx, "decipher", tally)
+
+
+@reads(
+    "table.language_profiles", "table.trade_flows", "table.trade_route_profiles", "table.trade_route_regions", "table.trade_route_tolls", "trade_route.culture"
+)
+async def pidgins(ctx: TickContext) -> None:
+    tally = PidginTally()
+    await pidgin_world(ctx, tally)
+    count(ctx, "pidgin", tally)
+
+
+@reads("table.language_policies", "table.polity_members")
+@writes("table.chronicle", "table.chronicle_entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents", "table.language_policies")
+async def language_policy(ctx: TickContext) -> None:
+    tally = PolicyTally()
+    await keep_policies(ctx, tally)
+    count(ctx, "policy", tally)
+
+
+@reads("table.divine_tongues", "table.language_profiles", "table.lexemes", "table.name_registry", "table.true_names")
+@writes("table.divine_tongues", "table.entities", "table.language_profiles", "table.lexemes", "table.name_registry")
+async def divine_tongues(ctx: TickContext) -> None:
+    tally = TongueTally()
+    await give_tongues(ctx, tally)
+    count(ctx, "tongue", tally)
+
+
+PHASES = (
+    Phase("sound_changes", sound_changes),
+    Phase("grammar", grammar),
+    Phase("semantic_drift", semantic_drift),
+    Phase("script_evolution", script_evolution),
+    Phase("decipherment", decipherment),
+    Phase("pidgins", pidgins),
+    Phase("language_policy", language_policy),
+    Phase("divine_tongues", divine_tongues),
+)

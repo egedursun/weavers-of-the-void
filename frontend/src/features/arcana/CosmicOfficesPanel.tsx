@@ -117,12 +117,6 @@ function OfficeCard({
             table: table(OFFICE_CHOICES),
           },
           {
-            key: 'since_epoch',
-            label: 'Held since epoch',
-            kind: 'number',
-            min: 0,
-          },
-          {
             key: 'neglect',
             label: 'Neglect',
             kind: 'number',

@@ -22,6 +22,7 @@ from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.primitives.stats import stat
+from aerona.engine.tongues.modality import telepathic, unwritten_factor
 from aerona.rules.registry import Rules
 
 SAME = 100
@@ -165,6 +166,8 @@ async def understood(session: AsyncSession, rules: Rules, pair: tuple[int, int],
     ours, theirs = tongues
     if not ours or not theirs or ours & theirs:
         return 1.0
+    if await telepathic(session, ours) and await telepathic(session, theirs):
+        return 1.0
     best = max([await intelligibility(session, rules, one, other, epoch) for one in ours for other in theirs] or [SAME])
     if best >= SAME:
         return 1.0
@@ -219,6 +222,9 @@ SCRIPT_KEYS = {
     WritingSystem.PICTOGRAPHIC: "logographic_pct",
     WritingSystem.KNOT: "knots_pct",
     WritingSystem.NOTCH: "knots_pct",
+    WritingSystem.LOGOGRAPHIC: "logographic_pct",
+    WritingSystem.MIXED: "logographic_pct",
+    WritingSystem.ABJAD: "syllabary_pct",
 }
 
 
@@ -228,6 +234,7 @@ async def script_factor(session: AsyncSession, rules: Rules, community_id: int) 
     if language is None:
         return 1.0
     standard = 1 + await standardisation_of(session, language.id) * rules.prestige.standard_literacy_pct / (PERCENT * PERCENT)
+    standard *= await unwritten_factor(session, rules, language.id)
     if profile is None or profile.writing_system is None:
         return standard
     return int(getattr(rules.script, SCRIPT_KEYS[profile.writing_system])) / PERCENT * standard

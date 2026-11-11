@@ -61,7 +61,7 @@ DEFIED_BY = {
     K.SCAR_RITE: LawKind.PENAL_CODE,
     K.HOSPITALITY_LAW: LawKind.FOREIGNER_RIGHTS,
 }
-HARD_SCRIPTS = frozenset({WritingSystem.PICTOGRAPHIC, WritingSystem.KNOT, WritingSystem.NOTCH})
+HARD_SCRIPTS = frozenset({WritingSystem.PICTOGRAPHIC, WritingSystem.LOGOGRAPHIC, WritingSystem.KNOT, WritingSystem.NOTCH})
 SCRIBE_FLOOR = 30
 
 
@@ -204,6 +204,7 @@ async def scribes(ctx: TickContext) -> tuple[int, int]:
 
 
 @reads(
+    "language.complexity",
     "language.sacredness",
     "table.artwork_profiles",
     "table.bonds",
@@ -211,6 +212,8 @@ async def scribes(ctx: TickContext) -> tuple[int, int]:
     "table.community_societies",
     "table.community_society",
     "table.entities",
+    "table.entity_flags",
+    "table.language_grammar",
     "table.language_intelligibility",
     "table.language_profiles",
     "table.language_registers",
@@ -241,6 +244,7 @@ async def scribes(ctx: TickContext) -> tuple[int, int]:
 @writes(
     "table.community_relations",
     "table.community_society",
+    "table.language_grammar",
     "table.language_intelligibility",
     "table.language_registers",
     "table.language_standing",

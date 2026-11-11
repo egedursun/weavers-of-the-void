@@ -80,6 +80,9 @@ export const SCRIPT_ICON: Record<WritingSystem, LucideIcon> = {
   pictographic: Shapes,
   knot: Cable,
   notch: Hash,
+  logographic: Landmark,
+  mixed: Puzzle,
+  abjad: Feather,
 }
 
 export const UNWRITTEN_ICON: LucideIcon = MessageCircle

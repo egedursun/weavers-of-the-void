@@ -548,12 +548,6 @@ function StageRow({
           },
           { key: 'risk', label: 'Risk', kind: 'pick', table: table(DIG_RISKS) },
           { key: 'find', label: 'Find', kind: 'pick', table: table(DIG_FINDS) },
-          {
-            key: 'resolved_epoch',
-            label: 'Passed in epoch',
-            kind: 'number',
-            min: 0,
-          },
         ]}
         locked={stage.locked}
         busy={busy}

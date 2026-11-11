@@ -17,6 +17,9 @@ export const WRITING_SYSTEMS: readonly WritingSystem[] = [
   'pictographic',
   'knot',
   'notch',
+  'logographic',
+  'mixed',
+  'abjad',
 ]
 
 export const SAMPLE_PREVIEW_COUNT = 9

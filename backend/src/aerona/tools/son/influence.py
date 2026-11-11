@@ -26,6 +26,7 @@ from aerona.engine.mind.dreams import DreamDraft, visit
 from aerona.engine.mythic.servitors import herald_bonus
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.tongues.divine import maybe_teach
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
 from aerona.tools.framework.call import SonCall
@@ -268,6 +269,7 @@ async def send_dream(call: SonCall, args: DreamInput) -> str:
     call.target(target.id)
     if target.entity_type is EntityType.MORTAL:
         await visit(call.tick, target, DreamDraft(DreamKind.VISITATION, PERCENT * 3 // 4, (call.son.id,), sender_id=call.son.id))
+        await maybe_teach(call.tick, call.son.id, target)
     roll = call.die(PERCENT, "dream")
     if roll <= chance:
         await BondRepository(call.session).connect(BondDraft(target.id, call.son.id, BondKind.WORSHIPS, call.epoch, lines.DREAM_BOND))

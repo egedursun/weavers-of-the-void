@@ -12,6 +12,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, PartOfSpeech
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.tongues import LanguageStage
 from aerona.domain.models.entity_stats import LanguageStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.routes import link_weight, trade_links
@@ -26,6 +27,8 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds, canon, close, connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.stats import headcount, set_stats, stat, stat_or
+from aerona.engine.tongues.grammar import loan_factor, simplify
+from aerona.engine.tongues.loans import adapted
 from aerona.language.lexicon import LexiconEntry
 from aerona.rules.registry import Rules
 
@@ -82,10 +85,12 @@ async def borrow(ctx: TickContext, tally: ContactTally, lender: EntityRow, borro
     rows = list(await ctx.session.scalars(select(LexemeRow).where(LexemeRow.language_entity_id == lender.id).order_by(LexemeRow.id)))
     candidates = [row for row in rows if row.word_key not in have]
     rng = ctx.rng(f"loan.{lender.id}.{borrower.id}")
+    count = max(1, round(count * await loan_factor(ctx.session, ctx.rules, borrower.id)))
     taken = 0
     while candidates and taken < count and tally.loans_left > 0:
         row = candidates.pop(rng.below(len(candidates)))
-        entry = entry_of(row, f"borrowed from the {lender.name} language")
+        form = await adapted(ctx.session, row.word, borrower.id)
+        entry = entry_of(row, f"borrowed from the {lender.name} language, where it is {row.word}").model_copy(update={"word": form})
         if await store_words(ctx, borrower, [entry], speaker_id):
             have.add(row.word_key)
             taken += 1
@@ -281,7 +286,9 @@ async def birth_creole(ctx: TickContext, community: EntityRow, first: EntityRow,
             subtype=CREOLE_SUBTYPE,
         ),
     )
-    await language_profile(ctx.session, creole, first.id)
+    profile = await language_profile(ctx.session, creole, first.id)
+    profile.stage = LanguageStage.CREOLE
+    await simplify(ctx.session, ctx.rules, creole.id, ctx.epoch)
     for parent in (first, second):
         await connect(ctx.session, creole.id, parent.id, BondKind.DESCENDS_FROM, ctx.epoch, description=CREOLE_SUBTYPE)
         rows = list(await ctx.session.scalars(select(LexemeRow).where(LexemeRow.language_entity_id == parent.id).order_by(LexemeRow.id)))

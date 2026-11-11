@@ -40,6 +40,7 @@ from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPat
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mythic import CosmicOffice, GeasMode, ServitorRank, ServitorRole
 from aerona.domain.enums.place import PlaceKind, SecretKind
+from aerona.domain.enums.tongues import LanguagePolicy, SoundChangeKind, SoundEnvironment
 from aerona.domain.enums.travel import VehicleKind
 from aerona.prompts.contexts.blocks import SummarySection
 from aerona.prompts.environment import normalize, string_template
@@ -128,6 +129,9 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "geas_modes": ", ".join(item.value for item in GeasMode),
         "geas_acts": "; ".join(f"{mode.value}: {', '.join(act.value for act in acts)}" for mode, acts in GEAS_ACTS.items()),
         "cosmic_offices": ", ".join(item.value for item in CosmicOffice),
+        "sound_change_kinds": ", ".join(item.value for item in SoundChangeKind),
+        "sound_environments": ", ".join(item.value for item in SoundEnvironment),
+        "language_policies": ", ".join(item.value for item in LanguagePolicy),
         "ideology_tenets": ", ".join(tenet.value for tenet in IdeologyTenet),
         "prophecy_predicates": ", ".join(item.value for item in ProphecyPredicate),
         "prophecy_consequences": ", ".join(item.value for item in ProphecyConsequence),

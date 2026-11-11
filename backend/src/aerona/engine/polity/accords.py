@@ -20,13 +20,14 @@ from aerona.domain.enums.polity import ClauseKind, OathKind, PartyRole, TreatyKi
 from aerona.domain.models.entity_stats import TreatyStats
 from aerona.engine.communication.post import offer_treaty
 from aerona.engine.context import TickContext
-from aerona.engine.lore.language import register_barrier
+from aerona.engine.lore.language import register_barrier, register_tongues
 from aerona.engine.mind.memories import remember
 from aerona.engine.polity.oaths import oath_god, swear
 from aerona.engine.polity.regard import on_kept, on_marriage
 from aerona.engine.primitives.queries import active_bonds, close, connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.tongues.grammar import misread_factor
 
 TREATY_WORDS = MappingProxyType(
     {
@@ -100,7 +101,9 @@ async def misread(ctx: TickContext, clause: Clause) -> Clause:
     court = LanguageRegister.COURT
     if await register_barrier(ctx.session, ctx.rules, clause.obligor, clause.beneficiary, ctx.epoch, ours=court, theirs=court) >= 1:
         return clause
-    if not ctx.rng(f"misread.{clause.kind.value}.{clause.obligor}.{clause.beneficiary}.{ctx.epoch}").chance(ctx.rules.interpreters.misread_chance):
+    tongues = (await register_tongues(ctx.session, clause.obligor, court), await register_tongues(ctx.session, clause.beneficiary, court))
+    chance = ctx.rules.interpreters.misread_chance * await misread_factor(ctx.session, ctx.rules, *tongues)
+    if not ctx.rng(f"misread.{clause.kind.value}.{clause.obligor}.{clause.beneficiary}.{ctx.epoch}").chance(chance):
         return clause
     params = {key: halved(value) for key, value in clause.params.items()}
     params["misread"] = True

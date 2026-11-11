@@ -19,6 +19,7 @@ from aerona.db.tables.estates import EstateProfileRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.flora import PlantProfileRow
 from aerona.db.tables.intrigue import HookRow, TrueNameRow
+from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.mythic import CosmicOfficeRow, GeasRow, ServitorRow
 from aerona.db.tables.physics import ImpactEventRow
@@ -33,6 +34,7 @@ from aerona.db.tables.warfare import ArmyRow, WarRow
 from aerona.domain.enums.arcana import LawSource, SpellForm
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.chronicle import WritingSystem
 from aerona.domain.enums.cosmography import BeingKind, BeingScale, DimensionKind, PhenomenonCause, PhenomenonKind, RiftCause, RiftState
 from aerona.domain.enums.culture import LegendArchetype, MagicSchool, Technique
 from aerona.domain.enums.divine import DivineWoundKind, WoundCause
@@ -45,6 +47,7 @@ from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.intrigue import HookSource, HookStrength
 from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource
 from aerona.domain.enums.mythic import CosmicOffice, GeasMode, OfficeChoice, ServitorRank, ServitorRole
+from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.physics import ImpactBody, ImpactOutcome
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
@@ -53,12 +56,14 @@ from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.statecraft import CrisisDemand
 from aerona.domain.enums.titles import TitleRank
+from aerona.domain.enums.tongues import WordRegister
 from aerona.domain.enums.world import StarType
 from aerona.domain.models.entity_stats import (
     BeastStats,
     CosmicBeingStats,
     FactionStats,
     HouseStats,
+    LanguageStats,
     LegendStats,
     MortalStats,
     NaturalLawStats,
@@ -75,9 +80,11 @@ from aerona.engine.economy.stocks import goods_of
 from aerona.engine.households.formation import found_household
 from aerona.engine.phases.environment import environment_survey
 from aerona.engine.phases.physics import settle_heavens
+from aerona.engine.primitives.language_profile import language_profile
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import set_stats
 from aerona.engine.services.war import take_captive
+from aerona.engine.tongues.modality import own_tongue
 from aerona.rules.registry import Rules
 from tests.tools.every_tool import Ids
 from tests.tools.factories import Realm, add_world, connect, make_entity
@@ -694,5 +701,37 @@ async def quester(session: AsyncSession, realm: Realm) -> Ids:
 async def mortal_vis(session: AsyncSession, realm: Realm) -> Ids:
     session.add(VisStockRow(holder_node_id=realm.mortal_id, form=SpellForm.BODY, amount=20, locked=[]))
     session.add(SkillRow(holder_node_id=realm.mortal_id, skill=SkillKind.SPELLCRAFT, level=90, peak=90, last_used_epoch=1, source=SkillSource.PRACTICE))
+    await session.flush()
+    return {}
+
+
+async def tongue_words(session: AsyncSession, realm: Realm) -> Ids:
+    for word, meaning in (("Alvo", "river"), ("Brena", "stone"), ("Corim", "field")):
+        session.add(
+            LexemeRow(language_entity_id=realm.language_id, word=word, meaning=meaning, added_by_kind=ActorKind.ENGINE, epoch=1, register=WordRegister.COMMON)
+        )
+    await session.flush()
+    return {}
+
+
+async def dead_script(session: AsyncSession, realm: Realm) -> Ids:
+    dead = await make_entity(session, "Old Speech", EntityType.LANGUAGE, world_id=realm.cosmos.world_id, stats=LanguageStats())
+    await EntityRepository(session).add_flag(dead.id, EntityFlag.DEAD_LANGUAGE)
+    await EntityRepository(session).add_flag(dead.id, EntityFlag.DECIPHERABLE)
+    session.add(SkillRow(holder_node_id=realm.mortal_id, skill=SkillKind.LANGUAGES, level=60, peak=60, last_used_epoch=1, source=SkillSource.PRACTICE))
+    await session.flush()
+    return {"dead_tongue": dead.id}
+
+
+async def scribe(session: AsyncSession, realm: Realm) -> Ids:
+    mortal = await session.get(EntityRow, realm.mortal_id)
+    assert mortal is not None
+    await connect(session, realm.settlement_id, realm.language_id, BondKind.SPEAKS)
+    tongue = await own_tongue(session, mortal)
+    language = await session.get(EntityRow, tongue.id if tongue is not None else realm.language_id)
+    assert language is not None
+    profile = await language_profile(session, language)
+    profile.writing_system = WritingSystem.PICTOGRAPHIC
+    session.add(SkillRow(holder_node_id=realm.mortal_id, skill=SkillKind.LANGUAGES, level=60, peak=60, last_used_epoch=1, source=SkillSource.PRACTICE))
     await session.flush()
     return {}

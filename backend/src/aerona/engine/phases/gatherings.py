@@ -42,6 +42,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.memories",
     "table.mind_facets",
     "table.minds",
+    "table.mortal_profiles",
     "table.nodes",
     "table.offices",
     "table.place_profiles",
@@ -154,7 +155,21 @@ async def site_rooms(ctx: TickContext) -> None:
     count(ctx, "site", tally)
 
 
-@reads("table.excavations", "table.skills")
+@reads(
+    "table.collection_members", "table.collection_places", "table.excavation_stages", "table.excavations", "table.nodes", "table.polity_members", "table.skills"
+)
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.collection_members",
+    "table.collection_places",
+    "table.epoch_year_cursors",
+    "table.excavation_stages",
+    "table.excavations",
+    "table.incident_collections",
+    "table.incident_participants",
+    "table.incidents",
+)
 async def excavations(ctx: TickContext) -> None:
     tally = DigTally()
     atlas = await RegionAtlas.load(ctx.session)

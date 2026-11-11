@@ -4799,6 +4799,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/tongues/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_tongues_api_tongues_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/tongues/scripts': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['all_scripts_api_tongues_scripts_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/intrigue/{node_id}': {
     parameters: {
       query?: never
@@ -14745,6 +14777,406 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_cosmic_office_vacate_api_actions_cosmic_office_vacate_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sound_change:add': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sound_change_add_api_actions_sound_change_add_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sound_change:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sound_change_edit_api_actions_sound_change_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/sound_change:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_sound_change_delete_api_actions_sound_change_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/grammar:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_grammar_edit_api_actions_grammar_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/grammar:reset': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_grammar_reset_api_actions_grammar_reset_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/tongue:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_tongue_edit_api_actions_tongue_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/word:register': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_word_register_api_actions_word_register_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/word:veil': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_word_veil_api_actions_word_veil_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/meaning_shift:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_meaning_shift_edit_api_actions_meaning_shift_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/meaning_shift:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_meaning_shift_delete_api_actions_meaning_shift_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/script:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_script_create_api_actions_script_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/script:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_script_edit_api_actions_script_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/script:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_script_delete_api_actions_script_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/script:assign': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_script_assign_api_actions_script_assign_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/decipherment:start': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_decipherment_start_api_actions_decipherment_start_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/decipherment:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_decipherment_edit_api_actions_decipherment_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/decipherment:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_decipherment_delete_api_actions_decipherment_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/language_policy:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_language_policy_set_api_actions_language_policy_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/language_policy:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_language_policy_edit_api_actions_language_policy_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/language_policy:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_language_policy_delete_api_actions_language_policy_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/divine_tongue:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_divine_tongue_set_api_actions_divine_tongue_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/divine_tongue:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_divine_tongue_edit_api_actions_divine_tongue_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/divine_tongue:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_divine_tongue_delete_api_actions_divine_tongue_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/divine_tongue:teach': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_divine_tongue_teach_api_actions_divine_tongue_teach_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/pidgin:make': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_pidgin_make_api_actions_pidgin_make_post']
     delete?: never
     options?: never
     head?: never
@@ -27089,6 +27521,30 @@ export interface components {
       currency_name?: string | null
       remedy?: components['schemas']['DebtRemedy'] | null
     }
+    DecipherView: {
+      progress: number
+      corpus: number
+      bilingual: boolean
+      errors: number
+      scholar: components['schemas']['NodeRef'] | null
+      started_epoch: number
+      updated_epoch: number
+      locked: string[]
+    }
+    DeciphermentDeleteInput: {
+      language_id: number
+    }
+    DeciphermentEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      language_id: number
+    }
+    DeciphermentStartInput: {
+      language_id: number
+      scholar_id?: number | null
+    }
     DecisionRule: 'autocratic' | 'council' | 'assembly' | 'divine'
     DecreeKind: 'war' | 'peace' | 'alliance' | 'marriage' | 'trade'
     DedicationView: {
@@ -27801,6 +28257,30 @@ export interface components {
       perceived: components['schemas']['PerceivedAlignment'] | null
       mode: components['schemas']['WorshipMode'] | null
       epoch: number
+      locked: string[]
+    }
+    DivineTongueDeleteInput: {
+      god_id: number
+    }
+    DivineTongueEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      god_id: number
+    }
+    DivineTongueSetInput: {
+      god_id: number
+      language_id?: number | null
+    }
+    DivineTongueTeachInput: {
+      god_id: number
+      mortal_id: number
+    }
+    DivineTongueView: {
+      god: components['schemas']['NodeRef'] | null
+      language: components['schemas']['NodeRef'] | null
+      since_epoch: number
       locked: string[]
     }
     DivineWoundEditInput: {
@@ -30853,6 +31333,16 @@ export interface components {
       | 'hive_council'
       | 'god_kingdom'
       | 'occupation'
+    GrammarEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      language_id: number
+    }
+    GrammarResetInput: {
+      language_id: number
+    }
     GrammarView: {
       technique: components['schemas']['SpellTechnique']
       form: components['schemas']['SpellForm']
@@ -32853,6 +33343,7 @@ export interface components {
       second_id: number
       value: number
     }
+    LanguageModality: 'vocal' | 'sign' | 'scent' | 'colour' | 'telepathic'
     LanguageNode: {
       language: components['schemas']['EntitySummary']
       writing_system: components['schemas']['WritingSystem'] | null
@@ -32863,6 +33354,27 @@ export interface components {
       signature: components['schemas']['LanguageSignature'] | null
       alphabet: string[]
       cognates: components['schemas']['Cognate'][]
+    }
+    LanguagePolicy: 'official' | 'liturgical' | 'suppressed' | 'revival'
+    LanguagePolicyDeleteInput: {
+      holder_id: number
+      language_id: number
+      policy: components['schemas']['LanguagePolicy']
+    }
+    LanguagePolicyEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      holder_id: number
+      language_id: number
+      policy: components['schemas']['LanguagePolicy']
+    }
+    LanguagePolicySetInput: {
+      holder_id: number
+      language_id: number
+      policy: components['schemas']['LanguagePolicy']
+      strength: number
     }
     LanguageRegister: 'court' | 'common' | 'liturgical' | 'trade'
     LanguageRegisterInput: {
@@ -32895,6 +33407,7 @@ export interface components {
       kind: components['schemas']['SpeakerKind']
       share: number
     }
+    LanguageStage: 'natural' | 'pidgin' | 'creole' | 'divine'
     LanguageStats: {
       kind: 'language'
       spread?: number | null
@@ -33238,6 +33751,8 @@ export interface components {
       added_by_kind: components['schemas']['ActorKind']
       added_by: components['schemas']['NodeRef'] | null
       epoch: number
+      proto_word: string | null
+      word_register: components['schemas']['WordRegister']
     }
     LeyDissolveInput: {
       line_id: number
@@ -34226,6 +34741,27 @@ export interface components {
       materials: components['schemas']['MaterialView'][]
       commodities: components['schemas']['CommodityView'][]
     }
+    MeaningShiftDeleteInput: {
+      shift_id: number
+    }
+    MeaningShiftEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      shift_id: number
+    }
+    MeaningShiftView: {
+      id: number
+      lexeme_id: number
+      word: string
+      shift: components['schemas']['SenseShift']
+      old_meaning: string
+      new_meaning: string
+      absorbed_word: string | null
+      cause: components['schemas']['NodeRef'] | null
+      epoch: number
+    }
     MechanicDetailView: {
       mechanic: components['schemas']['MechanicRecord']
       links: components['schemas']['MechanicLinkRecord'][]
@@ -34854,6 +35390,7 @@ export interface components {
     }
     MoraleState:
       'steady' | 'shaken' | 'wavering' | 'routing' | 'broken' | 'rallied'
+    MorphologyType: 'isolating' | 'agglutinative' | 'fusional' | 'polysynthetic'
     MortalAbilityInput: {
       mortal_id: number
       ability: components['schemas']['Ability']
@@ -35097,6 +35634,9 @@ export interface components {
       | 'undertake_heroquest'
       | 'take_longevity'
       | 'found_enchantment'
+      | 'decipher_script'
+      | 'proclaim_tongue'
+      | 'reform_script'
       | 'send_dispatch'
       | 'seize_title'
       | 'bargain_with_estate'
@@ -35483,6 +36023,13 @@ export interface components {
       kind: components['schemas']['NodeKind']
       name: string
     }
+    NodeTonguesView: {
+      node: components['schemas']['NodeRef']
+      language: components['schemas']['TongueMechanicsView'] | null
+      held_policies: components['schemas']['PolicyView'][]
+      divine_tongue: components['schemas']['DivineTongueView'] | null
+      known_divine: components['schemas']['NodeRef'][]
+    }
     NotableYearKind: 'hunger' | 'plenty' | 'weather' | 'pestilence'
     NotableYearView: {
       id: number
@@ -35566,6 +36113,7 @@ export interface components {
       job_id?: string | null
       entity_ids?: number[]
     }
+    NumberSystem: 'none' | 'singular_plural' | 'dual' | 'trial' | 'paucal'
     OathBreakInput: {
       oath_id: number
     }
@@ -36408,6 +36956,10 @@ export interface components {
       max_syllables: number
       sample_names: string[]
     }
+    PidginMakeInput: {
+      first_id: number
+      second_id: number
+    }
     PilgrimageClearInput: {
       entity_id: number
     }
@@ -36645,6 +37197,14 @@ export interface components {
       | 'learn_true_name'
       | 'forge_letter'
       | 'geas_trap'
+    PolicyView: {
+      holder: components['schemas']['NodeRef'] | null
+      language: components['schemas']['NodeRef'] | null
+      policy: components['schemas']['LanguagePolicy']
+      strength: number
+      since_epoch: number
+      locked: string[]
+    }
     PoliticalMovementView: {
       movement: components['schemas']['NodeRef']
       realm: components['schemas']['NodeRef'] | null
@@ -39173,6 +39733,38 @@ export interface components {
       | 'doomsday'
       | 'achievements'
       | 'scenarios'
+    ScriptAssignInput: {
+      language_id: number
+      script_id?: number | null
+    }
+    ScriptChangeCause: 'invention' | 'reform' | 'simplification' | 'borrowing'
+    ScriptCreateInput: {
+      language_id: number
+      system: components['schemas']['WritingSystem']
+      cause: components['schemas']['ScriptChangeCause']
+      parent_id?: number | null
+    }
+    ScriptDeleteInput: {
+      script_id: number
+    }
+    ScriptEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      script_id: number
+    }
+    ScriptView: {
+      id: number
+      name: string
+      system: components['schemas']['WritingSystem']
+      parent_script_id: number | null
+      origin_language: components['schemas']['NodeRef'] | null
+      signs: number
+      cause: components['schemas']['ScriptChangeCause']
+      epoch: number
+      locked: string[]
+    }
     SearchCategory:
       | 'son'
       | 'foreign_god'
@@ -39344,6 +39936,13 @@ export interface components {
       characters: number
       limit: number | null
     }
+    SenseShift:
+      | 'broadened'
+      | 'narrowed'
+      | 'pejorative'
+      | 'ameliorative'
+      | 'euphemism'
+      | 'restored'
     SensedStepView: {
       id: number
       intuition_id: number | null
@@ -40320,6 +40919,9 @@ export interface components {
       | 'resign_office'
       | 'lay_enchantment'
       | 'end_enchantment'
+      | 'reveal_tongue'
+      | 'decree_sound'
+      | 'veil_name'
       | 'shape_image'
       | 'forge_material'
       | 'hide_secret'
@@ -40567,6 +41169,38 @@ export interface components {
       sealed: boolean
       strength?: number | null
     }
+    SoundChangeAddInput: {
+      language_id: number
+      kind: components['schemas']['SoundChangeKind']
+      source: string
+      target: string
+      environment: components['schemas']['SoundEnvironment']
+    }
+    SoundChangeCause:
+      'contact' | 'prestige' | 'migration' | 'drift' | 'inherited' | 'decree'
+    SoundChangeDeleteInput: {
+      change_id: number
+    }
+    SoundChangeEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      change_id: number
+    }
+    SoundChangeKind: 'shift' | 'lenition' | 'vowel_shift' | 'merger' | 'loss'
+    SoundChangeView: {
+      id: number
+      kind: components['schemas']['SoundChangeKind']
+      source: string
+      target: string
+      environment: components['schemas']['SoundEnvironment']
+      cause: components['schemas']['SoundChangeCause']
+      position: number
+      epoch: number
+      locked: string[]
+    }
+    SoundEnvironment: 'anywhere' | 'initial' | 'final' | 'between_vowels'
     SownView: {
       region: components['schemas']['NodeRef'] | null
       share: number
@@ -42488,6 +43122,37 @@ export interface components {
       matrix: number[][]
       registers: components['schemas']['RegisterView'][]
     }
+    TongueEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      language_id: number
+    }
+    TongueGrammarView: {
+      word_order: components['schemas']['WordOrder']
+      morphology: components['schemas']['MorphologyType']
+      cases: number
+      noun_classes: number
+      evidentiality: boolean
+      honorific_levels: number
+      number_system: components['schemas']['NumberSystem']
+      updated_epoch: number
+      locked: string[]
+    }
+    TongueMechanicsView: {
+      modality: components['schemas']['LanguageModality']
+      stage: components['schemas']['LanguageStage']
+      writing_system: components['schemas']['WritingSystem'] | null
+      script: components['schemas']['ScriptView'] | null
+      lineage: components['schemas']['ScriptView'][]
+      grammar: components['schemas']['TongueGrammarView'] | null
+      changes: components['schemas']['SoundChangeView'][]
+      decipher: components['schemas']['DecipherView'] | null
+      policies: components['schemas']['PolicyView'][]
+      shifts: components['schemas']['MeaningShiftView'][]
+      sacred_to: components['schemas']['DivineTongueView'] | null
+    }
     TongueRank: {
       language: components['schemas']['NodeRef']
       prestige: number
@@ -43842,6 +44507,16 @@ export interface components {
       | 'proper_name'
       | 'number'
       | 'interjection'
+    WordOrder: 'sov' | 'svo' | 'vso' | 'vos' | 'ovs' | 'osv' | 'free'
+    WordRegister: 'common' | 'sacred' | 'poetic' | 'archaic'
+    WordRegisterInput: {
+      lexeme_id: number
+      word_register: components['schemas']['WordRegister']
+    }
+    WordVeilInput: {
+      language_id: number
+      node_id: number
+    }
     WorkFactor: {
       job: components['schemas']['Job']
       pct: number
@@ -44501,7 +45176,15 @@ export interface components {
       by: components['schemas']['NodeRef'] | null
       epoch: number
     }
-    WritingSystem: 'alphabet' | 'syllabary' | 'pictographic' | 'knot' | 'notch'
+    WritingSystem:
+      | 'alphabet'
+      | 'syllabary'
+      | 'pictographic'
+      | 'knot'
+      | 'notch'
+      | 'logographic'
+      | 'mixed'
+      | 'abjad'
     YearDeleteInput: {
       notable_id: number
     }
@@ -54255,6 +54938,62 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['CosmicOfficeView'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_tongues_api_tongues_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NodeTonguesView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  all_scripts_api_tongues_scripts_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ScriptView'][]
         }
       }
       default: {
@@ -73248,6 +73987,781 @@ export interface operations {
       }
     }
   }
+  action_sound_change_add_api_actions_sound_change_add_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SoundChangeAddInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sound_change_edit_api_actions_sound_change_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SoundChangeEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_sound_change_delete_api_actions_sound_change_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SoundChangeDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_grammar_edit_api_actions_grammar_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GrammarEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_grammar_reset_api_actions_grammar_reset_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GrammarResetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_tongue_edit_api_actions_tongue_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TongueEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_word_register_api_actions_word_register_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WordRegisterInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_word_veil_api_actions_word_veil_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WordVeilInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_meaning_shift_edit_api_actions_meaning_shift_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MeaningShiftEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_meaning_shift_delete_api_actions_meaning_shift_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MeaningShiftDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_script_create_api_actions_script_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ScriptCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_script_edit_api_actions_script_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ScriptEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_script_delete_api_actions_script_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ScriptDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_script_assign_api_actions_script_assign_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ScriptAssignInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_decipherment_start_api_actions_decipherment_start_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeciphermentStartInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_decipherment_edit_api_actions_decipherment_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeciphermentEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_decipherment_delete_api_actions_decipherment_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeciphermentDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_language_policy_set_api_actions_language_policy_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LanguagePolicySetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_language_policy_edit_api_actions_language_policy_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LanguagePolicyEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_language_policy_delete_api_actions_language_policy_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LanguagePolicyDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_divine_tongue_set_api_actions_divine_tongue_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DivineTongueSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_divine_tongue_edit_api_actions_divine_tongue_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DivineTongueEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_divine_tongue_delete_api_actions_divine_tongue_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DivineTongueDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_divine_tongue_teach_api_actions_divine_tongue_teach_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DivineTongueTeachInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_pidgin_make_api_actions_pidgin_make_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PidginMakeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   action_dominion_delete_api_actions_dominion_delete_post: {
     parameters: {
       query?: never
@@ -92096,9 +93610,18 @@ export const landKindValues: ReadonlyArray<
 export const landReleaseInputFieldValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LandReleaseInput']['field']
 > = ['desertification', 'desertified', 'volcanic', 'volcanic_pressure']
+export const languageModalityValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LanguageModality']
+> = ['vocal', 'sign', 'scent', 'colour', 'telepathic']
+export const languagePolicyValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LanguagePolicy']
+> = ['official', 'liturgical', 'suppressed', 'revival']
 export const languageRegisterValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LanguageRegister']
 > = ['court', 'common', 'liturgical', 'trade']
+export const languageStageValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LanguageStage']
+> = ['natural', 'pidgin', 'creole', 'divine']
 export const languageStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LanguageStats']['kind']
 > = ['language']
@@ -92637,6 +94160,9 @@ export const moodStateValues: ReadonlyArray<
 export const moraleStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MoraleState']
 > = ['steady', 'shaken', 'wavering', 'routing', 'broken', 'rallied']
+export const morphologyTypeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MorphologyType']
+> = ['isolating', 'agglutinative', 'fusional', 'polysynthetic']
 export const mortalRoleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MortalRole']
 > = [
@@ -92748,6 +94274,9 @@ export const mortalToolIdValues: ReadonlyArray<
   'undertake_heroquest',
   'take_longevity',
   'found_enchantment',
+  'decipher_script',
+  'proclaim_tongue',
+  'reform_script',
   'send_dispatch',
   'seize_title',
   'bargain_with_estate',
@@ -92909,6 +94438,9 @@ export const notificationCategoryValues: ReadonlyArray<
 export const notificationCreatedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NotificationCreatedEvent']['kind']
 > = ['notification.created']
+export const numberSystemValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['NumberSystem']
+> = ['none', 'singular_plural', 'dual', 'trial', 'paucal']
 export const oathKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OathKind']
 > = [
@@ -93793,6 +95325,9 @@ export const scoreComponentValues: ReadonlyArray<
   'achievements',
   'scenarios',
 ]
+export const scriptChangeCauseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ScriptChangeCause']
+> = ['invention', 'reform', 'simplification', 'borrowing']
 export const searchCategoryValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SearchCategory']
 > = [
@@ -93822,6 +95357,16 @@ export const secretKindValues: ReadonlyArray<
 export const secretOriginValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SecretOrigin']
 > = ['land', 'player', 'son']
+export const senseShiftValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SenseShift']
+> = [
+  'broadened',
+  'narrowed',
+  'pejorative',
+  'ameliorative',
+  'euphemism',
+  'restored',
+]
 export const servitorOriginValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ServitorOrigin']
 > = ['made', 'raised', 'summoned']
@@ -94119,6 +95664,9 @@ export const sonToolIdValues: ReadonlyArray<
   'resign_office',
   'lay_enchantment',
   'end_enchantment',
+  'reveal_tongue',
+  'decree_sound',
+  'veil_name',
   'shape_image',
   'forge_material',
   'hide_secret',
@@ -94222,6 +95770,15 @@ export const sonTurnQueuedEventKindValues: ReadonlyArray<
 export const sonTurnStartedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonTurnStartedEvent']['kind']
 > = ['son.turn_started']
+export const soundChangeCauseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SoundChangeCause']
+> = ['contact', 'prestige', 'migration', 'drift', 'inherited', 'decree']
+export const soundChangeKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SoundChangeKind']
+> = ['shift', 'lenition', 'vowel_shift', 'merger', 'loss']
+export const soundEnvironmentValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SoundEnvironment']
+> = ['anywhere', 'initial', 'final', 'between_vowels']
 export const speakerKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SpeakerKind']
 > = ['native', 'second', 'liturgical']
@@ -95421,6 +96978,12 @@ export const wordKindValues: ReadonlyArray<
   'number',
   'interjection',
 ]
+export const wordOrderValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['WordOrder']
+> = ['sov', 'svo', 'vso', 'vos', 'ovs', 'osv', 'free']
+export const wordRegisterValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['WordRegister']
+> = ['common', 'sacred', 'poetic', 'archaic']
 export const workshopKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WorkshopKind']
 > = [
@@ -95505,7 +97068,16 @@ export const woundCauseValues: ReadonlyArray<
 > = ['duel', 'god_war', 'creator', 'avatar_slain', 'outer_bargain']
 export const writingSystemValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WritingSystem']
-> = ['alphabet', 'syllabary', 'pictographic', 'knot', 'notch']
+> = [
+  'alphabet',
+  'syllabary',
+  'pictographic',
+  'knot',
+  'notch',
+  'logographic',
+  'mixed',
+  'abjad',
+]
 export const yieldProductValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['YieldProduct']
 > = [
