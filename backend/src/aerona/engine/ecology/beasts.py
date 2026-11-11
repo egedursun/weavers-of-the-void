@@ -29,6 +29,7 @@ from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
 from aerona.engine.ecology.anatomy import anatomy_of, harm_factor, plan_limbs, repelled
 from aerona.engine.ecology.beast_acts import bite_someone, breathe, carry_off, free_captives, gaze_strike, is_abductor, triggered, void_trophy
 from aerona.engine.ecology.foodweb import raid_herds
+from aerona.engine.ecology.lineages import pass_to_beast
 from aerona.engine.ecology.profiles import profile_of
 from aerona.engine.economy.materials import set_node_material
 from aerona.engine.economy.money import inject_hoard
@@ -144,6 +145,7 @@ async def profile_beast(ctx: TickContext, beast: EntityRow, species: EntityRow |
     )
     ctx.session.add(row)
     await ctx.session.flush()
+    await pass_to_beast(ctx, beast, row.species_entity_id)
     return row
 
 

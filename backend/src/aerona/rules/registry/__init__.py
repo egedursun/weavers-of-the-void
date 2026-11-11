@@ -137,6 +137,24 @@ from aerona.rules.registry.espionage import EspionageRules
 from aerona.rules.registry.essence import EssenceRules
 from aerona.rules.registry.estates import CompanyRules, EstateRules, GuildRules, MovementRules, OrderRules
 from aerona.rules.registry.events import EventsRules
+from aerona.rules.registry.evolution import (
+    BiomeSuccessionRules,
+    CarrierRules,
+    CureResearchRules,
+    CycleRules,
+    FeralRules,
+    KeystoneRules,
+    LandShapingRules,
+    LineageRules,
+    NicheRules,
+    PathogenRules,
+    PlagueResponseRules,
+    SpilloverRules,
+    TraitEvolutionRules,
+    TrophicRules,
+    VaccinationRules,
+    VectorRules,
+)
 from aerona.rules.registry.exploration import ExplorationRules
 from aerona.rules.registry.factions import BanditryRules, FactionsRules, IntrigueRules, MercenariesRules
 from aerona.rules.registry.faith import FaithRules
@@ -487,6 +505,22 @@ class Rules:
     language_policy: LanguagePolicyRules = field(default_factory=LanguagePolicyRules)
     modality: ModalityRules = field(default_factory=ModalityRules)
     divine_tongues: DivineTongueRules = field(default_factory=DivineTongueRules)
+    trait_evolution: TraitEvolutionRules = field(default_factory=TraitEvolutionRules)
+    niches: NicheRules = field(default_factory=NicheRules)
+    trophic: TrophicRules = field(default_factory=TrophicRules)
+    keystones: KeystoneRules = field(default_factory=KeystoneRules)
+    feral: FeralRules = field(default_factory=FeralRules)
+    lineages: LineageRules = field(default_factory=LineageRules)
+    pathogen_evolution: PathogenRules = field(default_factory=PathogenRules)
+    vectors: VectorRules = field(default_factory=VectorRules)
+    carriers: CarrierRules = field(default_factory=CarrierRules)
+    spillover: SpilloverRules = field(default_factory=SpilloverRules)
+    plague_responses: PlagueResponseRules = field(default_factory=PlagueResponseRules)
+    vaccination: VaccinationRules = field(default_factory=VaccinationRules)
+    cure_research: CureResearchRules = field(default_factory=CureResearchRules)
+    biome_succession: BiomeSuccessionRules = field(default_factory=BiomeSuccessionRules)
+    world_cycles: CycleRules = field(default_factory=CycleRules)
+    land_shaping: LandShapingRules = field(default_factory=LandShapingRules)
     collections: CollectionRules = field(default_factory=CollectionRules)
     storyteller: StorytellerRules = field(default_factory=StorytellerRules)
     sites: SiteRules = field(default_factory=SiteRules)

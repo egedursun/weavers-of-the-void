@@ -32,6 +32,9 @@ class DiseaseProfileRow(Base):
     climate_affinity: Mapped[ClimateAffinity] = mapped_column(enum_type(ClimateAffinity, "climate_affinity"))
     host_species_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     immunity_epochs: Mapped[int]
+    cold_tolerance: Mapped[int] = mapped_column(default=50, server_default="50")
+    heat_tolerance: Mapped[int] = mapped_column(default=50, server_default="50")
+    resistance: Mapped[int] = mapped_column(default=0, server_default="0")
     mutation_rate: Mapped[int]
     origin_incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
     origin_region_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))

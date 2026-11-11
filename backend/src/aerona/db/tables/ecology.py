@@ -19,6 +19,7 @@ from aerona.domain.enums.ecology import (
     SpeciesUse,
 )
 from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.evolution import KeystoneRole
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.material import MaterialKind
 
@@ -70,6 +71,8 @@ class SpeciesProfileRow(Base):
     sacred_to_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     stage_epoch: Mapped[int] = mapped_column(default=0)
     updated_epoch: Mapped[int] = mapped_column(default=0)
+    keystone: Mapped[KeystoneRole | None] = mapped_column(enum_type(KeystoneRole, "keystone"))
+    feral_epoch: Mapped[int | None]
     pinned_prey: Mapped[list[int]] = mapped_column(JSON, default=list)
     barred_prey: Mapped[list[int]] = mapped_column(JSON, default=list)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

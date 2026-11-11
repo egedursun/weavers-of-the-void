@@ -4,6 +4,7 @@ from aerona.agents.context.dominion_lines import mortal_dominion_lines
 from aerona.agents.context.economy import resource_yield, stores_for
 from aerona.agents.context.entity_detail import entity_detail
 from aerona.agents.context.entity_line import line_items
+from aerona.agents.context.evolution_lines import mortal_evolution_lines
 from aerona.agents.context.gatherings import gathering_lines, site_lines
 from aerona.agents.context.geography import environment_facts, region_records, weather_words
 from aerona.agents.context.intrigue import estate_lines, intrigue_lines, letter_lines, title_lines
@@ -182,6 +183,7 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "dominion": await mortal_dominion_lines(scope, me),
             "magic": await mortal_magic_lines(scope, me),
             "speech": await mortal_tongue_lines(scope, me),
+            "contagion": await mortal_evolution_lines(scope, me),
         }
     )
 

@@ -184,7 +184,7 @@ async def settle_heavens(session: AsyncSession, rules: Rules) -> int:
     return made + await survey_cycle(ctx, await Cosmography.load(session))
 
 
-@reads("table.cosmos", "table.region_environment", "table.world_physics")
+@reads("table.cosmos", "table.region_environment", "table.world_cycles", "table.world_physics")
 @writes("table.chronicle", "table.epoch_year_cursors", "table.incidents", "table.region_environment", "table.world_physics")
 async def planetary(ctx: TickContext) -> None:
     worlds = {row.id: row for row in await ctx.session.scalars(select(WorldRow).order_by(WorldRow.id))}

@@ -18,6 +18,7 @@ from aerona.domain.enums.environment import (
     WaterSource,
     WeatherKind,
 )
+from aerona.domain.enums.evolution import SuccessionStage
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 
 PERCENT_COLUMNS = (
@@ -97,6 +98,9 @@ class RegionEnvironmentRow(Base):
     sacredness: Mapped[int] = mapped_column(default=0)
     leak: Mapped[int] = mapped_column(default=0)
     current: Mapped[OceanCurrent] = mapped_column(enum_type(OceanCurrent, "current"), default=OceanCurrent.NONE)
+    succession: Mapped[SuccessionStage] = mapped_column(enum_type(SuccessionStage, "succession"), default=SuccessionStage.GRASSLAND, server_default="grassland")
+    succession_progress: Mapped[int] = mapped_column(default=0, server_default="0")
+    burned_epoch: Mapped[int | None]
     temperature_shift: Mapped[int] = mapped_column(default=0)
     rainfall_shift: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

@@ -29,6 +29,7 @@ from aerona.domain.models.entity_stats import SpeciesStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.ecology.biochemistry import can_live_on
+from aerona.engine.ecology.evolution import inherit_marks
 from aerona.engine.ecology.profiles import profile_of
 from aerona.engine.economy.stocks import DEFAULT_QUALITY, GoodsLedger, holding
 from aerona.engine.industry.chosen import method_of
@@ -160,6 +161,7 @@ async def offspring(ctx: TickContext, parent: EntityRow, keeper: EntityRow, *, s
     for trait in await traits_of(ctx.session, parent.id):
         if trait is not CreatureTrait.SACRED_ANIMAL and trait not in inherited:
             await EntityRepository(ctx.session).add_trait(child.id, trait)
+    await inherit_marks(ctx.session, parent.id, child.id, ctx.epoch)
     return child
 
 

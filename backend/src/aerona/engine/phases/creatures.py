@@ -33,6 +33,7 @@ from aerona.engine.cosmos.resources import set_mechanics, travel_resource
 from aerona.engine.cosmos.sanity import sanity_of, shift_sanity
 from aerona.engine.cosmos.worldlife import radiation_mutation
 from aerona.engine.ecology.biochemistry import can_live_on
+from aerona.engine.ecology.evolution import apart, inherit_traits, settle_size
 from aerona.engine.ecology.foodweb import derive_links
 from aerona.engine.ecology.profiles import assign_traits
 from aerona.engine.ecology.ranges import adapt_subspecies
@@ -584,7 +585,9 @@ async def drifting_range(ctx: TickContext, atlas: RegionAtlas, species: EntityRo
     for row in sorted(rows, key=lambda item: (item.since_epoch, item.region_entity_id)):
         if row is home or row.since_epoch > old or not isolated(atlas, row.region_entity_id, lands):
             continue
-        if unlike(ctx.rules, home_land, await ctx.session.get(RegionEnvironmentRow, row.region_entity_id)):
+        if unlike(ctx.rules, home_land, await ctx.session.get(RegionEnvironmentRow, row.region_entity_id)) or await apart(
+            ctx.session, ctx.rules, species.id, row.region_entity_id
+        ):
             return row
     return None
 
@@ -637,6 +640,9 @@ async def _branch_subspecies(ctx: TickContext, species: EntityRow, home: EntityR
     bonds = BondRepository(ctx.session)
     await bonds.connect(BondDraft(child.id, species.id, BondKind.DESCENDS_FROM, ctx.epoch, "evolution"))
     await adapt_subspecies(ctx, species, child, home.id)
+    await inherit_traits(ctx.session, species.id, child.id, home.id, ctx.epoch)
+    await ctx.session.flush()
+    await settle_size(ctx.session, child.id, home.id)
     for bond in await active_bonds(ctx.session, [BondKind.LIVES_IN], sources=[species.id], targets=[home.id]):
         await bonds.deactivate(bond, ctx.epoch, "speciation")
     await note(

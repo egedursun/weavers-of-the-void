@@ -129,6 +129,7 @@ def main() -> int:
     if changed:
         subprocess.run(["uv", "run", "ruff", "check", "--fix", "-q", *map(str, changed)], cwd=BACKEND, check=False)
         subprocess.run(["uv", "run", "ruff", "format", "-q", *map(str, changed)], cwd=BACKEND, check=False)
+        subprocess.run(["uv", "run", "python", str(ROOT / "scripts" / "interconnection_docs.py"), "write"], cwd=BACKEND, check=True)
     print(f"annotated {sum(len(items) for items in recorded.values())} reads and writes across {len(recorded)} phases in {len(changed)} files")
     return 0
 

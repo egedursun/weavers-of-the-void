@@ -618,6 +618,8 @@ async def carry(
     if left_quotes is None or right_quotes is None or route.profile.status is TradeRouteStatus.BLOCKADED:
         return 0
     capacity = stat(route.entity, "capacity") or 0
+    if book.closed & set(route.ends):
+        capacity = round_half_up(capacity * (PERCENT - ctx.rules.plague_responses.border_trade_pct) / PERCENT)
     season = season_factor(route)
     trust = await coin_trust(ctx, book, route.ends)
     moved = 0

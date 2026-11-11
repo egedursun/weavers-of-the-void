@@ -63,7 +63,7 @@ async def leak_by_region(ctx: TickContext) -> None:
     ctx.count("hot_regions", await regional_leak(ctx))
 
 
-@reads("table.region_environment", "table.world_maps")
+@reads("table.region_environment", "table.world_cycles", "table.world_maps")
 @writes("table.region_environment")
 async def climate_by_region(ctx: TickContext) -> None:
     ctx.count("climate_shifts", await regional_climate(ctx))

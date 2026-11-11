@@ -14,6 +14,7 @@ from aerona.domain.enums.cosmography import OceanCurrent, WorldAge
 from aerona.domain.enums.environment import CoastKind
 from aerona.domain.enums.world import ClimateEra
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.cycles import cycles_by_world, rain_swing
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
@@ -86,6 +87,7 @@ async def regional_climate(ctx: TickContext) -> int:
     atlas = await RegionAtlas.load(ctx.session)
     grounds = {row.entity_id: row for row in await ctx.session.scalars(select(RegionEnvironmentRow).order_by(RegionEnvironmentRow.entity_id))}
     worlds = {row.id: row for row in await ctx.session.scalars(select(WorldRow))}
+    cycles = await cycles_by_world(ctx.session)
     moved = 0
     for region_id, env in grounds.items():
         if held(region_id, env.world_id):
@@ -94,7 +96,7 @@ async def regional_climate(ctx: TickContext) -> int:
         era = world.climate_era if world is not None else None
         neighbours = [grounds[other] for other in atlas.neighbour_regions(region_id) if other in grounds]
         cleared = sum(other.cleared for other in neighbours) / len(neighbours) if neighbours else 0
-        rain_target = -round(cleared / 20 * table.deforestation_rain)
+        rain_target = -round(cleared / 20 * table.deforestation_rain) + rain_swing(ctx.rules, cycles.get(env.world_id))
         heat_target = era_target(ctx.rules, env, era)
         if "temperature_shift" not in env.locked:
             before = env.temperature_shift

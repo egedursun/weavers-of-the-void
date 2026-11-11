@@ -25,6 +25,7 @@ from aerona.domain.enums.environment import (
     WaterSource,
     WeatherKind,
 )
+from aerona.domain.enums.evolution import SuccessionStage
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.engine.environment.seasons import season_count_for
@@ -39,6 +40,7 @@ REGION_ENUMS: dict[str, type[StrEnum]] = {
     "river_class": RiverClass,
     "coast_kind": CoastKind,
     "current": OceanCurrent,
+    "succession": SuccessionStage,
 }
 REGION_NUMBERS = frozenset(
     {
@@ -70,6 +72,7 @@ REGION_NUMBERS = frozenset(
         "leak",
         "temperature_shift",
         "rainfall_shift",
+        "succession_progress",
     }
 )
 LOCKABLE = frozenset(
@@ -109,6 +112,7 @@ LOCKABLE = frozenset(
         "current",
         "temperature_shift",
         "rainfall_shift",
+        "succession",
     }
 )
 SCAR_PREFIX = "scar."

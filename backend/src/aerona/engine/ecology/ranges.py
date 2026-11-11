@@ -17,11 +17,13 @@ from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.ecology import GRAZERS, HUNTERS, SIZE_ORDER, Biochemistry, DomesticationStage, HerdTraining, RangeTrend, Sociality
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
+from aerona.domain.enums.evolution import EvolvedTrait
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.ecology.biochemistry import bearable, tolerated
+from aerona.engine.ecology.evolution import cold_reach, escape, evolved_traits, fecund, wary
 from aerona.engine.ecology.profiles import profile_of
 from aerona.engine.economy.stocks import GoodsLedger
 from aerona.engine.faith.book import FaithBook
@@ -53,6 +55,7 @@ class Wilds:
     life: dict[int, tuple[Biochemistry, ...]] = field(default_factory=dict)
     hunt_bonus: dict[int, float] = field(default_factory=dict)
     lift: dict[int, float] = field(default_factory=dict)
+    evolved: dict[tuple[int, int], dict[EvolvedTrait, int]] = field(default_factory=dict)
 
     def allowed(self, land: RegionEnvironmentRow | None) -> tuple[Biochemistry, ...] | None:
         return self.life.get(land.world_id) if land is not None and land.world_id is not None else None
@@ -86,6 +89,7 @@ async def load_wilds(ctx: TickContext, species: list[EntityRow], invasive: set[i
         trained[community_id] = trained.get(community_id, 0) + head
     table = ctx.rules.husbandry
     wilds.hunt_bonus = {key: 1 + table.hunt_pct / PERCENT * min(1.0, value / table.trained_full_head) for key, value in trained.items()}
+    wilds.evolved = await evolved_traits(ctx.session)
     await sacred_and_sick(ctx, wilds)
     return wilds
 
@@ -140,7 +144,13 @@ def terrain_fit(rules: Rules, profile: SpeciesProfileRow, land: RegionEnvironmen
 
 
 def fit_of(
-    rules: Rules, profile: SpeciesProfileRow, land: RegionEnvironmentRow | None, traits: set[CreatureTrait], allowed: tuple[Biochemistry, ...] | None = None
+    rules: Rules,
+    profile: SpeciesProfileRow,
+    land: RegionEnvironmentRow | None,
+    traits: set[CreatureTrait],
+    allowed: tuple[Biochemistry, ...] | None = None,
+    *,
+    cold: float = 0.0,
 ) -> float:
     if land is None:
         return rules.habitat.terrain_default / PERCENT
@@ -148,7 +158,9 @@ def fit_of(
         return 0.0
     table = rules.habitat
     fit = terrain_fit(rules, profile, land, traits)
-    beyond = max(0, profile.temperature_min - table.temperature_slack - land.temperature, land.temperature - profile.temperature_max - table.temperature_slack)
+    beyond = max(
+        0, profile.temperature_min - table.temperature_slack - cold - land.temperature, land.temperature - profile.temperature_max - table.temperature_slack
+    )
     fit *= max(0.0, 1 - beyond * table.cold_penalty_pct / PERCENT)
     if not profile.altitude_min <= land.elevation_mean <= profile.altitude_max:
         fit *= 1 - table.altitude_penalty_pct / PERCENT
@@ -274,7 +286,8 @@ def plan(
     profile = wilds.profiles[species.id]
     traits = wilds.traits.get(species.id, set())
     land = wilds.lands.get(region)
-    fit = fit_of(rules, profile, land, traits, wilds.allowed(land))
+    evolved = wilds.evolved.get((species.id, region), {})
+    fit = fit_of(rules, profile, land, traits, wilds.allowed(land), cold=cold_reach(rules, evolved))
     if "fit" not in row.locked:
         row.fit = clamp_int(round_half_up(fit * PERCENT), 0, PERCENT * 2)
     prey = [wilds.ranges[item][region].abundance for item in prey_of.get(species.id, []) if region in wilds.ranges.get(item, {})]
@@ -284,11 +297,11 @@ def plan(
     )
     if T.FLYING in traits and land is not None:
         capacity *= wilds.lift.get(land.world_id, 1.0)
-    delta = (capacity - row.abundance) * growth_rate(rules, profile, land, traits)
-    delta -= predation(rules, wilds, species.id, region, hunters_of)
+    delta = (capacity - row.abundance) * growth_rate(rules, profile, land, traits) * fecund(rules, evolved)
+    delta -= predation(rules, wilds, species.id, region, hunters_of) * escape(rules, evolved)
     if profile.diet in HUNTERS and prey and sum(prey) / len(prey) < rules.ecology.hunger_threshold:
         delta -= rules.ecology.hunger * profile.metabolism / rules.habitat.metabolism_mean
-    hunted = human_hunting(rules, wilds, species, region, protected=species.id in marks.protected, megafauna=megafauna)
+    hunted = human_hunting(rules, wilds, species, region, protected=species.id in marks.protected, megafauna=megafauna) * wary(rules, evolved)
     delta -= hunted
     if region in wilds.sick.get(species.id, set()):
         delta -= rules.habitat.disease_loss * (1 - rules.habitat.regeneration_pct / PERCENT if T.REGENERATING in traits else 1)

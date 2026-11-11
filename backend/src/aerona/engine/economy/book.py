@@ -27,6 +27,7 @@ from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.polity import ClauseKind, TreatyStatus
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
+from aerona.engine.disease.borders import closed_borders
 from aerona.engine.ecology.flora import CropBook
 from aerona.engine.economy.materials import MaterialBook
 from aerona.engine.environment.book import EnvironmentBook
@@ -54,6 +55,7 @@ class EconomyBook:
     labour: dict[int, dict[Job, LabourRow]] = field(default_factory=dict)
     waived: set[frozenset[int]] = field(default_factory=set)
     blockaded: set[int] = field(default_factory=set)
+    closed: set[int] = field(default_factory=set)
     techniques: dict[int, set[Technique]] = field(default_factory=dict)
     designs: dict[int, WorkshopDesignRow] = field(default_factory=dict)
     merchant_danger: dict[int, int] = field(default_factory=dict)
@@ -121,6 +123,7 @@ class EconomyBook:
         book.designs = {row.id: row for row in await session.scalars(select(WorkshopDesignRow).order_by(WorkshopDesignRow.id))}
         await book.load_industry(ctx)
         book.blockaded = set(await session.scalars(select(ArmyProfileRow.blockade_entity_id).where(ArmyProfileRow.blockade_entity_id.is_not(None))))
+        book.closed = await closed_borders(ctx.session, ctx.epoch)
         return book
 
     async def load_industry(self, ctx: TickContext) -> None:

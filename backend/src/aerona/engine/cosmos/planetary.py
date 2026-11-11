@@ -7,6 +7,7 @@ from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.evolution import WorldCycleRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -14,6 +15,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import CoastKind
 from aerona.domain.enums.intervention import Disaster
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.cycles import carbon_flux, cycles_by_world
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.notes import note
 from aerona.engine.phases.disasters import apply_disaster
@@ -49,18 +51,22 @@ def move_ice(rules: Rules, physics: WorldPhysicsRow) -> int:
     return step
 
 
-def move_carbon(ctx: TickContext, physics: WorldPhysicsRow, cleared: float) -> int:
+def move_carbon(ctx: TickContext, physics: WorldPhysicsRow, cleared: float, cycle: WorldCycleRow | None = None) -> int:
     if "carbon_dioxide" in physics.locked or physics.pressure <= 0:
         return 0
     table = ctx.rules.planetary_climate
     rng = ctx.rng(f"carbon.{physics.world_id}")
     change = 0
-    if rng.chance(physics.volcanism * table.volcanic_co2_pct / PERCENT):
-        change += 1
-    if rng.chance(cleared * table.burning_co2_pct / PERCENT):
-        change += 1
-    if physics.carbon_dioxide > table.weathering_floor and rng.chance(table.weathering_pct):
-        change -= 1
+    flux = carbon_flux(cycle)
+    if flux is not None:
+        change = flux if flux > 0 or physics.carbon_dioxide > table.weathering_floor else 0
+    else:
+        if rng.chance(physics.volcanism * table.volcanic_co2_pct / PERCENT):
+            change += 1
+        if rng.chance(cleared * table.burning_co2_pct / PERCENT):
+            change += 1
+        if physics.carbon_dioxide > table.weathering_floor and rng.chance(table.weathering_pct):
+            change -= 1
     if change:
         physics.carbon_dioxide = clamp_percent(physics.carbon_dioxide + change)
         if change > 0 and "nitrogen" not in physics.locked and physics.nitrogen > 0:
@@ -118,6 +124,7 @@ async def planetary_climate(ctx: TickContext, worlds: dict[int, WorldRow], physi
     for ground in await ctx.session.scalars(select(RegionEnvironmentRow).order_by(RegionEnvironmentRow.entity_id)):
         grounds[ground.world_id].append(ground)
     atlas = await RegionAtlas.load(ctx.session)
+    cycles = await cycles_by_world(ctx.session)
     changed = 0
     for world_id, row in sorted(physics.items()):
         world = worlds.get(world_id)
@@ -126,6 +133,6 @@ async def planetary_climate(ctx: TickContext, worlds: dict[int, WorldRow], physi
         land = grounds.get(world_id, [])
         cleared = sum(ground.cleared for ground in land) / len(land) if land else 0.0
         changed += abs(move_ice(ctx.rules, row))
-        changed += abs(move_carbon(ctx, row, cleared))
+        changed += abs(move_carbon(ctx, row, cleared, cycles.get(world_id)))
         changed += await move_coasts(ctx, world, row, land, atlas)
     return changed

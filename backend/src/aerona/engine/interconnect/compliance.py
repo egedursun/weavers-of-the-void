@@ -136,6 +136,16 @@ from aerona.db.tables.estates import (
     MovementProfileRow,
     MovementSupportRow,
 )
+from aerona.db.tables.evolution import (
+    CarrierRow,
+    CureResearchRow,
+    EcosystemServiceRow,
+    LineageMarkRow,
+    PlagueResponseRow,
+    SpeciesTraitRow,
+    TrophicLevelRow,
+    WorldCycleRow,
+)
 from aerona.db.tables.factions import FactionActionRow, FactionGoalRow, FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.faith import (
     AfterlifeStratumRow,
@@ -262,6 +272,73 @@ class ComplianceRow:
 
 
 CATALOGUE: tuple[ComplianceRow, ...] = (
+    ComplianceRow(
+        "S3.2/RP3",
+        (SpeciesTraitRow.__tablename__, LineageMarkRow.__tablename__, EcosystemServiceRow.__tablename__, TrophicLevelRow.__tablename__),
+        ("trait_evolution", "niches", "trophic_flow", "keystones", "feral_reversion", "lineages"),
+        (
+            "species_trait:set",
+            "species_trait:edit",
+            "species_trait:delete",
+            "lineage:mark",
+            "lineage:edit",
+            "lineage:delete",
+            "species_ecology:edit",
+            "ecosystem_service:set",
+            "ecosystem_service:edit",
+            "ecosystem_service:delete",
+            "herd:release",
+        ),
+        ("EvolutionSection", "section-evolution"),
+        ("son_turn_system",),
+        ("mark_lineage",),
+        ("ecology.",),
+        ("3ccb476b4bb5",),
+    ),
+    ComplianceRow(
+        "S3.4/RP3",
+        (CarrierRow.__tablename__, PlagueResponseRow.__tablename__, CureResearchRow.__tablename__),
+        ("pathogen_evolution", "carriers", "spillover", "plague_responses", "vaccination", "cure_research"),
+        (
+            "carrier:add",
+            "carrier:edit",
+            "carrier:delete",
+            "plague_response:set",
+            "plague_response:edit",
+            "plague_response:delete",
+            "cure_research:start",
+            "cure_research:edit",
+            "cure_research:delete",
+            "disease:edit",
+        ),
+        ("EvolutionSection", "section-evolution"),
+        ("mortal_context",),
+        ("move_plague_response", "answer_sickness", "seek_cure", "find_carrier"),
+        ("disease.",),
+        ("3ccb476b4bb5",),
+    ),
+    ComplianceRow(
+        "S6.1/RP3",
+        (),
+        ("biome_succession",),
+        ("land:reshape", "environment:set", "environment:unlock"),
+        ("EvolutionSection", "section-evolution"),
+        (),
+        ("reshape_land",),
+        ("land.",),
+        ("3ccb476b4bb5",),
+    ),
+    ComplianceRow(
+        "S10.9/RP3",
+        (WorldCycleRow.__tablename__,),
+        ("world_cycles",),
+        ("world_cycle:edit", "world_cycle:reset"),
+        ("EvolutionSection", "section-evolution"),
+        (),
+        (),
+        ("climate.",),
+        ("3ccb476b4bb5",),
+    ),
     ComplianceRow(
         "S8.6/RP3",
         (

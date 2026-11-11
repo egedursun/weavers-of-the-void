@@ -28,6 +28,9 @@ PROFILE_NUMBERS = {
     "mutation_rate": (0, PERCENT),
     "stigma": (0, PERCENT),
     "cure_level": (0, 20),
+    "cold_tolerance": (0, PERCENT),
+    "heat_tolerance": (0, PERCENT),
+    "resistance": (0, PERCENT),
 }
 PROFILE_CHOICES = {"vector": DiseaseVector, "climate_affinity": ClimateAffinity}
 PROFILE_LINKS = ("host_species_id", "origin_incident_id", "origin_region_id")

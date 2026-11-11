@@ -11,9 +11,8 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.environment import SoilKind
-from aerona.domain.enums.happening import LandAct, RiverShiftCause
-from aerona.engine.environment.geomorph import set_soil, shape_of, shift_river
+from aerona.domain.enums.happening import LandAct
+from aerona.engine.environment.shaping import LandOutcome, reshape_ground
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
 from aerona.tools.framework.call import SonCall
@@ -29,6 +28,13 @@ LAND_DOMAINS: dict[LandAct, frozenset[Domain]] = {
     LandAct.GREEN: frozenset({Domain.PLANTS, Domain.HARVEST, Domain.LIFE, Domain.SEA}),
     LandAct.SALT_SOIL: frozenset({Domain.SALT, Domain.SEA, Domain.DEATH}),
     LandAct.ENRICH_SOIL: frozenset({Domain.EARTH, Domain.FIRE, Domain.ASH, Domain.HARVEST, Domain.PLANTS, Domain.STONE}),
+    LandAct.RAISE_LAND: frozenset({Domain.EARTH, Domain.STONE}),
+    LandAct.LOWER_LAND: frozenset({Domain.EARTH, Domain.STONE, Domain.SEA}),
+    LandAct.CARVE_VALLEY: frozenset({Domain.EARTH, Domain.STONE, Domain.STORM, Domain.SEA}),
+    LandAct.FILL_VALLEY: frozenset({Domain.EARTH, Domain.STONE, Domain.ASH}),
+    LandAct.OPEN_SPRING: frozenset({Domain.SEA, Domain.LIFE, Domain.EARTH, Domain.PLANTS}),
+    LandAct.CALL_LAVA: frozenset({Domain.FIRE, Domain.EARTH, Domain.ASH, Domain.STONE}),
+    LandAct.SINK_COAST: frozenset({Domain.SEA, Domain.STORM, Domain.EARTH}),
 }
 FIERY = frozenset({Domain.FIRE, Domain.ASH, Domain.EARTH, Domain.STONE})
 ACT_WORDS = {
@@ -37,6 +43,13 @@ ACT_WORDS = {
     LandAct.GREEN: "brought the grass back",
     LandAct.SALT_SOIL: "sowed its soil with salt",
     LandAct.ENRICH_SOIL: "made its soil rich",
+    LandAct.RAISE_LAND: "raised the land",
+    LandAct.LOWER_LAND: "lowered the land",
+    LandAct.CARVE_VALLEY: "carved a valley",
+    LandAct.FILL_VALLEY: "filled its valleys",
+    LandAct.OPEN_SPRING: "opened a spring",
+    LandAct.CALL_LAVA: "called up lava",
+    LandAct.SINK_COAST: "sank its coast",
 }
 
 
@@ -59,21 +72,12 @@ async def reshape_land(call: SonCall, args: ReshapeLandInput) -> str:
     if call.world_id != region.world_id and not await call.reachable_world(region.world_id):
         fail(SonResult.SEASONS_OUT_OF_REACH, name=region.name)
     require_essence(call, tools.reshape_land_essence)
-    table = call.rules.geomorphology
-    if args.act is LandAct.SHIFT_RIVER:
-        if await shift_river(call.tick, region.id, args.target_region_id, RiverShiftCause.DIVINE) is None:
-            fail(SonResult.LAND_NO_RIVER, name=region.name)
-    elif args.act in (LandAct.PARCH, LandAct.GREEN):
-        shape = await shape_of(call.session, region.id, region.world_id)
-        shape.desertification = table.desertified_at if args.act is LandAct.PARCH else 0
-        shape.desertified = args.act is LandAct.PARCH
-        shape.desert_since_epoch = call.tick.epoch if shape.desertified else None
-        if args.act is LandAct.PARCH:
-            set_soil(call.rules, ground, SoilKind.SAND, base_drop=table.desert_soil_base_drop)
-    elif args.act is LandAct.SALT_SOIL:
-        if not set_soil(call.rules, ground, SoilKind.SALT):
-            fail(SonResult.LAND_UNCHANGED, name=region.name)
-    elif not set_soil(call.rules, ground, SoilKind.VOLCANIC if domains & FIERY else SoilKind.LOAM):
+    outcome = await reshape_ground(call.tick, region, ground, args.act, god_id=call.son.id, fiery=bool(domains & FIERY), target_region_id=args.target_region_id)
+    if outcome is LandOutcome.NO_RIVER:
+        fail(SonResult.LAND_NO_RIVER, name=region.name)
+    if outcome is LandOutcome.NO_COAST:
+        fail(SonResult.LAND_NO_COAST, name=region.name)
+    if outcome is LandOutcome.UNCHANGED:
         fail(SonResult.LAND_UNCHANGED, name=region.name)
     call.spend_essence(tools.reshape_land_essence)
     call.target(region.id)

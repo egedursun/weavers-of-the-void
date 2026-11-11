@@ -4831,6 +4831,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/evolution/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_evolution_api_evolution_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/intrigue/{node_id}': {
     parameters: {
       query?: never
@@ -15167,6 +15183,374 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/species_trait:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_species_trait_set_api_actions_species_trait_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/species_trait:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_species_trait_edit_api_actions_species_trait_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/species_trait:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_species_trait_delete_api_actions_species_trait_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/lineage:mark': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_lineage_mark_api_actions_lineage_mark_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/lineage:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_lineage_edit_api_actions_lineage_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/lineage:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_lineage_delete_api_actions_lineage_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/species_ecology:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_species_ecology_edit_api_actions_species_ecology_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/ecosystem_service:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_ecosystem_service_set_api_actions_ecosystem_service_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/ecosystem_service:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_ecosystem_service_edit_api_actions_ecosystem_service_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/ecosystem_service:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_ecosystem_service_delete_api_actions_ecosystem_service_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/herd:release': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_herd_release_api_actions_herd_release_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/carrier:add': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_carrier_add_api_actions_carrier_add_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/carrier:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_carrier_edit_api_actions_carrier_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/carrier:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_carrier_delete_api_actions_carrier_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/plague_response:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_plague_response_set_api_actions_plague_response_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/plague_response:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_plague_response_edit_api_actions_plague_response_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/plague_response:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_plague_response_delete_api_actions_plague_response_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cure_research:start': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cure_research_start_api_actions_cure_research_start_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cure_research:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cure_research_edit_api_actions_cure_research_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cure_research:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cure_research_delete_api_actions_cure_research_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/world_cycle:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_world_cycle_edit_api_actions_world_cycle_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/world_cycle:reset': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_world_cycle_reset_api_actions_world_cycle_reset_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/land:reshape': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_land_reshape_api_actions_land_reshape_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/pidgin:make': {
     parameters: {
       query?: never
@@ -25477,6 +25861,31 @@ export interface components {
       amount: number
       item_entity_id?: number | null
     }
+    CarrierAddInput: {
+      mortal_id: number
+      disease_id: number
+    }
+    CarrierDeleteInput: {
+      mortal_id: number
+      disease_id: number
+    }
+    CarrierEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      mortal_id: number
+      disease_id: number
+    }
+    CarrierView: {
+      mortal: components['schemas']['NodeRef'] | null
+      disease: components['schemas']['NodeRef'] | null
+      home_region: components['schemas']['NodeRef'] | null
+      identified: boolean
+      seeded: number
+      since_epoch: number
+      locked: string[]
+    }
     CaseDeleteInput: {
       case_id: number
     }
@@ -27321,6 +27730,32 @@ export interface components {
       locked: string[]
     }
     CureKind: 'rite' | 'technique' | 'medicine' | 'time' | 'quest'
+    CureResearchDeleteInput: {
+      institution_id: number
+      disease_id: number
+    }
+    CureResearchEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      institution_id: number
+      disease_id: number
+    }
+    CureResearchStartInput: {
+      institution_id: number
+      disease_id: number
+    }
+    CureResearchView: {
+      institution: components['schemas']['NodeRef'] | null
+      disease: components['schemas']['NodeRef'] | null
+      points: number
+      threshold: number
+      specimens: number
+      started_epoch: number
+      cured_epoch: number | null
+      locked: string[]
+    }
     CureSource: 'knowledge' | 'granted'
     CureView: {
       community_id: number
@@ -28676,6 +29111,24 @@ export interface components {
       built_epoch: number
       held: string[]
     }
+    EcosystemServiceDeleteInput: {
+      region_id: number
+      role: components['schemas']['KeystoneRole']
+    }
+    EcosystemServiceEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      region_id: number
+      role: components['schemas']['KeystoneRole']
+    }
+    EcosystemServiceSetInput: {
+      region_id: number
+      role: components['schemas']['KeystoneRole']
+      strength: number
+      species_id?: number | null
+    }
     EdgeKind: 'modifier' | 'rule_switch' | 'flow' | 'trigger'
     EffectView: {
       effect: components['schemas']['ShortfallEffect']
@@ -29834,6 +30287,16 @@ export interface components {
       seasons: components['schemas']['SeasonRef'][]
       kinds: components['schemas']['EngineKind'][]
     }
+    EvolvedTrait:
+      | 'size'
+      | 'speed'
+      | 'armour'
+      | 'venom'
+      | 'camouflage'
+      | 'cold_tolerance'
+      | 'intelligence'
+      | 'fecundity'
+      | 'wariness'
     ExcavationAdvanceInput: {
       dig_id: number
     }
@@ -31606,6 +32069,16 @@ export interface components {
       }
       release?: string[]
     }
+    HerdRef: {
+      community: components['schemas']['NodeRef'] | null
+      species: components['schemas']['NodeRef'] | null
+      head: number
+      stage: components['schemas']['DomesticationStage']
+    }
+    HerdReleaseInput: {
+      community_id: number
+      species_id: number
+    }
     HerdTraining: 'war' | 'hunting' | 'guard'
     HerdView: {
       community: components['schemas']['NodeRef'] | null
@@ -33014,6 +33487,7 @@ export interface components {
       last_celebrated_epoch: number | null
       held: boolean
     }
+    KeystoneRole: 'pollinator' | 'soil_maker' | 'dam_builder' | 'scavenger'
     Kin: {
       id: number
       name: string
@@ -33262,11 +33736,30 @@ export interface components {
       workers: number
       output_pct: number
     }
+    LandAct:
+      | 'shift_river'
+      | 'parch'
+      | 'green'
+      | 'salt_soil'
+      | 'enrich_soil'
+      | 'raise_land'
+      | 'lower_land'
+      | 'carve_valley'
+      | 'fill_valley'
+      | 'open_spring'
+      | 'call_lava'
+      | 'sink_coast'
     LandKind: 'region' | 'place'
     LandReleaseInput: {
       region_id: number
       field:
         'desertification' | 'desertified' | 'volcanic' | 'volcanic_pressure'
+    }
+    LandReshapeInput: {
+      region_id: number
+      act: components['schemas']['LandAct']
+      target_region_id?: number | null
+      fiery: boolean
     }
     LandRiverInput: {
       from_region_id: number
@@ -33879,6 +34372,31 @@ export interface components {
       name: string
       born_epoch: number
       rationale: string | null
+    }
+    LineageDeleteInput: {
+      species_id: number
+      package: components['schemas']['PackageKind']
+    }
+    LineageEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      species_id: number
+      package: components['schemas']['PackageKind']
+    }
+    LineageMarkInput: {
+      species_id: number
+      package: components['schemas']['PackageKind']
+      blessing: boolean
+      source_node_id?: number | null
+    }
+    LineageMarkView: {
+      package: components['schemas']['PackageKind']
+      blessing: boolean
+      source: components['schemas']['NodeRef'] | null
+      epoch: number
+      locked: string[]
     }
     LineageView: {
       node_id: number
@@ -35635,6 +36153,9 @@ export interface components {
       | 'take_longevity'
       | 'found_enchantment'
       | 'decipher_script'
+      | 'answer_sickness'
+      | 'seek_cure'
+      | 'find_carrier'
       | 'proclaim_tongue'
       | 'reform_script'
       | 'send_dispatch'
@@ -35958,6 +36479,21 @@ export interface components {
       charges: components['schemas']['ChargeView'][]
       upkeep: components['schemas']['UpkeepView'] | null
       kept: components['schemas']['UpkeepView'][]
+    }
+    NodeEvolutionView: {
+      node: components['schemas']['NodeRef']
+      species: components['schemas']['SpeciesEcologyView'] | null
+      traits: components['schemas']['StockTraitView'][]
+      marks: components['schemas']['LineageMarkView'][]
+      services: components['schemas']['ServiceView'][]
+      trophic: components['schemas']['TrophicView'][]
+      land: components['schemas']['SuccessionView'] | null
+      herds: components['schemas']['HerdRef'][]
+      pathogen: components['schemas']['PathogenView'] | null
+      carriers: components['schemas']['CarrierView'][]
+      responses: components['schemas']['PlagueResponseView'][]
+      research: components['schemas']['CureResearchView'][]
+      cycle: components['schemas']['WorldCycleView'] | null
     }
     NodeGatheringsView: {
       node_id: number
@@ -36670,6 +37206,12 @@ export interface components {
       forward: boolean
       description: string | null
     }
+    PathogenView: {
+      cold_tolerance: number
+      heat_tolerance: number
+      resistance: number
+      locked: string[]
+    }
     PeaceTermKind:
       | 'cession'
       | 'vassalage'
@@ -37139,6 +37681,42 @@ export interface components {
     }
     PlagueCosmicInput: {
       place_id: number
+    }
+    PlagueResponse:
+      | 'close_borders'
+      | 'quarantine'
+      | 'burn_dead'
+      | 'expel_sick'
+      | 'prayer'
+      | 'seek_cure'
+    PlagueResponseDeleteInput: {
+      community_id: number
+      disease_id: number
+      response: components['schemas']['PlagueResponse']
+    }
+    PlagueResponseEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      community_id: number
+      disease_id: number
+      response: components['schemas']['PlagueResponse']
+    }
+    PlagueResponseSetInput: {
+      community_id: number
+      disease_id: number
+      response: components['schemas']['PlagueResponse']
+      strength: number
+    }
+    PlagueResponseView: {
+      community: components['schemas']['NodeRef'] | null
+      disease: components['schemas']['NodeRef'] | null
+      response: components['schemas']['PlagueResponse']
+      strength: number
+      since_epoch: number
+      until_epoch: number | null
+      locked: string[]
     }
     PlantEditInput: {
       species_id: number
@@ -39989,6 +40567,14 @@ export interface components {
       penalty: string
       epoch: number
     }
+    ServiceView: {
+      region: components['schemas']['NodeRef'] | null
+      role: components['schemas']['KeystoneRole']
+      species: components['schemas']['NodeRef'] | null
+      strength: number
+      epoch: number
+      locked: string[]
+    }
     ServitorEditInput: {
       values?: {
         [key: string]: number | string | boolean | null
@@ -40920,6 +41506,8 @@ export interface components {
       | 'lay_enchantment'
       | 'end_enchantment'
       | 'reveal_tongue'
+      | 'mark_lineage'
+      | 'move_plague_response'
       | 'decree_sound'
       | 'veil_name'
       | 'shape_image'
@@ -41327,6 +41915,20 @@ export interface components {
       species_id: number
       region_id: number
     }
+    SpeciesEcologyEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      species_id: number
+    }
+    SpeciesEcologyView: {
+      keystone: components['schemas']['KeystoneRole'] | null
+      feral_epoch: number | null
+      trophic_level: components['schemas']['TrophicLevel'] | null
+      stage: components['schemas']['DomesticationStage']
+      locked: string[]
+    }
     SpeciesEditInput: {
       species_id: number
       values?: {
@@ -41420,6 +42022,27 @@ export interface components {
     }
     SpeciesTrailInput: {
       species_id: number
+    }
+    SpeciesTraitDeleteInput: {
+      species_id: number
+      region_id: number
+      trait?: components['schemas']['EvolvedTrait'] | null
+    }
+    SpeciesTraitEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      species_id: number
+      region_id: number
+      trait: components['schemas']['EvolvedTrait']
+    }
+    SpeciesTraitSetInput: {
+      species_id: number
+      region_id: number
+      trait: components['schemas']['EvolvedTrait']
+      mean: number
+      variance?: number | null
     }
     SpeciesUse:
       | 'food'
@@ -41897,6 +42520,15 @@ export interface components {
       preserved?: number | null
       hold?: boolean | null
     }
+    StockTraitView: {
+      species: components['schemas']['NodeRef'] | null
+      region: components['schemas']['NodeRef'] | null
+      trait: components['schemas']['EvolvedTrait']
+      mean: number
+      variance: number
+      updated_epoch: number
+      locked: string[]
+    }
     StorageView: {
       districts: number
       workshops: number
@@ -42247,6 +42879,21 @@ export interface components {
       mechanics: number
       outgoing: number
       incoming: number
+    }
+    SuccessionStage:
+      | 'bare'
+      | 'grassland'
+      | 'shrubland'
+      | 'young_forest'
+      | 'old_forest'
+      | 'marsh'
+      | 'swamp_forest'
+    SuccessionView: {
+      succession: components['schemas']['SuccessionStage']
+      succession_progress: number
+      burned_epoch: number | null
+      stage_cover: number
+      locked: string[]
     }
     SummarySection:
       | 'pantheon'
@@ -43750,6 +44397,13 @@ export interface components {
       label: string
       techniques: components['schemas']['Technique'][]
     }
+    TrophicLevel: 'producer' | 'herbivore' | 'carnivore' | 'apex'
+    TrophicView: {
+      level: components['schemas']['TrophicLevel']
+      biomass: number
+      cap: number
+      epoch: number
+    }
     TrueNameDeleteInput: {
       bearer_id: number
     }
@@ -44819,6 +45473,29 @@ export interface components {
       settlements: number
       living: number
       population: number
+    }
+    WorldCycleEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      world_id: number
+    }
+    WorldCycleResetInput: {
+      world_id: number
+    }
+    WorldCycleView: {
+      carbon: number
+      water: number
+      nutrients: number
+      carbon_in: number
+      carbon_out: number
+      water_in: number
+      water_out: number
+      nutrients_in: number
+      nutrients_out: number
+      updated_epoch: number
+      locked: string[]
     }
     WorldDateGoldenAgeInput: {
       world_id: number
@@ -54994,6 +55671,35 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ScriptView'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_evolution_api_evolution_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NodeEvolutionView']
         }
       }
       default: {
@@ -74731,6 +75437,719 @@ export interface operations {
       }
     }
   }
+  action_species_trait_set_api_actions_species_trait_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SpeciesTraitSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_species_trait_edit_api_actions_species_trait_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SpeciesTraitEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_species_trait_delete_api_actions_species_trait_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SpeciesTraitDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_lineage_mark_api_actions_lineage_mark_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LineageMarkInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_lineage_edit_api_actions_lineage_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LineageEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_lineage_delete_api_actions_lineage_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LineageDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_species_ecology_edit_api_actions_species_ecology_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SpeciesEcologyEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_ecosystem_service_set_api_actions_ecosystem_service_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EcosystemServiceSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_ecosystem_service_edit_api_actions_ecosystem_service_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EcosystemServiceEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_ecosystem_service_delete_api_actions_ecosystem_service_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EcosystemServiceDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_herd_release_api_actions_herd_release_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['HerdReleaseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_carrier_add_api_actions_carrier_add_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CarrierAddInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_carrier_edit_api_actions_carrier_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CarrierEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_carrier_delete_api_actions_carrier_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CarrierDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_plague_response_set_api_actions_plague_response_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PlagueResponseSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_plague_response_edit_api_actions_plague_response_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PlagueResponseEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_plague_response_delete_api_actions_plague_response_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PlagueResponseDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_cure_research_start_api_actions_cure_research_start_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CureResearchStartInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_cure_research_edit_api_actions_cure_research_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CureResearchEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_cure_research_delete_api_actions_cure_research_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CureResearchDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_world_cycle_edit_api_actions_world_cycle_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WorldCycleEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_world_cycle_reset_api_actions_world_cycle_reset_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WorldCycleResetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_land_reshape_api_actions_land_reshape_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LandReshapeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   action_pidgin_make_api_actions_pidgin_make_post: {
     parameters: {
       query?: never
@@ -92605,6 +94024,19 @@ export const eventReleaseInputFieldValues: ReadonlyArray<
 export const eventStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EventStats']['kind']
 > = ['event']
+export const evolvedTraitValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['EvolvedTrait']
+> = [
+  'size',
+  'speed',
+  'armour',
+  'venom',
+  'camouflage',
+  'cold_tolerance',
+  'intelligence',
+  'fecundity',
+  'wariness',
+]
 export const excavationFindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ExcavationFind']
 > = ['nothing', 'artifact', 'book', 'technique', 'regalia', 'route_map']
@@ -93554,6 +94986,9 @@ export const journeyStatusValues: ReadonlyArray<
 export const judgementDoctrineValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['JudgementDoctrine']
 > = ['deeds', 'faith', 'rite', 'favour', 'none']
+export const keystoneRoleValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['KeystoneRole']
+> = ['pollinator', 'soil_maker', 'dam_builder', 'scavenger']
 export const kinBondInputKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['KinBondInput']['kind']
 > = [
@@ -93603,6 +95038,22 @@ export const labourReasonValues: ReadonlyArray<
   'no_structure',
   'corvee',
   'held',
+]
+export const landActValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LandAct']
+> = [
+  'shift_river',
+  'parch',
+  'green',
+  'salt_soil',
+  'enrich_soil',
+  'raise_land',
+  'lower_land',
+  'carve_valley',
+  'fill_valley',
+  'open_spring',
+  'call_lava',
+  'sink_coast',
 ]
 export const landKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LandKind']
@@ -94275,6 +95726,9 @@ export const mortalToolIdValues: ReadonlyArray<
   'take_longevity',
   'found_enchantment',
   'decipher_script',
+  'answer_sickness',
+  'seek_cure',
+  'find_carrier',
   'proclaim_tongue',
   'reform_script',
   'send_dispatch',
@@ -94713,6 +96167,16 @@ export const placeReleaseInputFieldValues: ReadonlyArray<
 export const placeStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PlaceStats']['kind']
 > = ['place']
+export const plagueResponseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PlagueResponse']
+> = [
+  'close_borders',
+  'quarantine',
+  'burn_dead',
+  'expel_sick',
+  'prayer',
+  'seek_cure',
+]
 export const plantYieldValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PlantYield']
 > = [
@@ -95665,6 +97129,8 @@ export const sonToolIdValues: ReadonlyArray<
   'lay_enchantment',
   'end_enchantment',
   'reveal_tongue',
+  'mark_lineage',
+  'move_plague_response',
   'decree_sound',
   'veil_name',
   'shape_image',
@@ -96061,6 +97527,17 @@ export const subsystemValues: ReadonlyArray<
   'environment',
   'gods',
   'cosmos',
+]
+export const successionStageValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SuccessionStage']
+> = [
+  'bare',
+  'grassland',
+  'shrubland',
+  'young_forest',
+  'old_forest',
+  'marsh',
+  'swamp_forest',
 ]
 export const summarySectionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SummarySection']
@@ -96712,6 +98189,9 @@ export const trialKindValues: ReadonlyArray<
 export const tributeStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TributeStatus']
 > = ['active', 'ended', 'revolted']
+export const trophicLevelValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['TrophicLevel']
+> = ['producer', 'herbivore', 'carnivore', 'apex']
 export const turnCounterValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TurnCounter']
 > = [

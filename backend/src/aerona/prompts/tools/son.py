@@ -918,6 +918,18 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.END_ENCHANTMENT: ToolText("You end a global enchantment you keep. 1 action.", {"law_id": "The enchantment", "reason": "Why"}),
+    T.MARK_LINEAGE: ToolText(
+        "You mark the line of a species: a blessing passes to every young of that line, to the breeds herders make of it and to the great "
+        "beasts born of it; a taint does the same, and only gods of death, plague, madness, shadow, blood or hunger may lay one. 1 action.",
+        {"species_id": "The species", "taint": "True to taint the line, false to bless it", "reason": "Why you mark it"},
+    ),
+    T.MOVE_PLAGUE_RESPONSE: ToolText(
+        "You move a community to answer a sickness one way ({{ plague_responses }}): closed borders cost trade and calm, a quarantine "
+        "slows the spread but may set off riots, burning the dead slows it but grieves folk whose rites forbid it, driving out the sick "
+        "slows it at home and marks the sick, prayer comforts but crowds, and seeking a cure sets the learned of its hospitals, academies "
+        "and monasteries to work. 1 action.",
+        {"community_id": "The community", "disease_id": "The sickness", "response": "The answer", "reason": "Why you move them"},
+    ),
     T.REVEAL_TONGUE: ToolText(
         "You teach a mortal in your reach words of your sacred tongue, the language of your true name; rites it casts in your name grow stronger. 1 action.",
         {"mortal_id": "The mortal", "reason": "Why you teach it"},
@@ -992,14 +1004,20 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.RESHAPE_LAND: ToolText(
         "You lay a hand on a land and reshape it: move its river into a neighbouring land (shift_river), parch it into desert (parch), "
-        "bring the grass back to a desert (green), sow its soil with salt (salt_soil) or make its soil rich (enrich_soil). "
-        "Rivers bow to gods of sea, storm, earth or stone; deserts to gods of sun, fire, hunger, salt or ash; green to gods of plants, harvest, "
-        "life or sea; salt to gods of salt, sea or death; rich soil to gods of earth, fire, ash, harvest, plants or stone. Wells and fields follow "
-        "the river, deserts lose their rain and harvests, salt kills the soil. {{ rules.son_tools.reshape_land_essence }} essence, "
+        "bring the grass back to a desert (green), sow its soil with salt (salt_soil), make its soil rich (enrich_soil), raise or lower "
+        "the land (raise_land, lower_land), carve a valley or fill one (carve_valley, fill_valley), open a spring (open_spring), call up "
+        "lava (call_lava) or sink a coast under the sea (sink_coast). Rivers bow to gods of sea, storm, earth or stone; deserts to gods of "
+        "sun, fire, hunger, salt or ash; green to gods of plants, harvest, life or sea; salt to gods of salt, sea or death; rich soil to gods "
+        "of earth, fire, ash, harvest, plants or stone; raising to gods of earth or stone; lowering to gods of earth, stone or sea; valleys "
+        "to gods of earth, stone, storm or sea, and filling them to gods of earth, stone or ash; springs to gods of sea, life, earth or "
+        "plants; lava to gods of fire, earth, ash or stone; sinking a coast to gods of sea, storm or earth. Wells and fields follow the "
+        "river, deserts lose their rain and harvests, salt kills the soil, a raised or lowered land keeps the height you give it, lava "
+        "burns the woods and wakes the world's fire, a sunken coast floods. The folk of the land hold you in more awe when you water, "
+        "raise or enrich it and in less when you drown, burn, parch or salt it. {{ rules.son_tools.reshape_land_essence }} essence, "
         "{{ rules.son_tools.reshape_land_ap }} actions.",
         {
             "region_id": "The land's id",
-            "act": "shift_river, parch, green, salt_soil or enrich_soil",
+            "act": "shift_river, parch, green, salt_soil, enrich_soil, raise_land, lower_land, carve_valley, fill_valley, open_spring, call_lava or sink_coast",
             "target_region_id": "For shift_river: the neighbouring land the river should flow into (leave empty to let it find the lowest bed)",
             "reason": "Why you do it",
         },

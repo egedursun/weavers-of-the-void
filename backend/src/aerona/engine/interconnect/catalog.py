@@ -38,6 +38,7 @@ from aerona.engine.interconnect.catalog_divine import DIVINE_MECHANICS
 from aerona.engine.interconnect.catalog_dominion import DOMINION_MECHANICS
 from aerona.engine.interconnect.catalog_economy import ECONOMY_DEPTH_MECHANICS
 from aerona.engine.interconnect.catalog_estates import ESTATE_MECHANICS
+from aerona.engine.interconnect.catalog_evolution import EVOLUTION_MECHANICS
 from aerona.engine.interconnect.catalog_faith import BEHAVIOURS as FAITH_BEHAVIOURS
 from aerona.engine.interconnect.catalog_faith import FAITH_MECHANICS
 from aerona.engine.interconnect.catalog_foundations import FOUNDATION_MECHANICS
@@ -997,6 +998,7 @@ BUILT_IN = (
     *ARCANA_MECHANICS,
     *MYTHIC_MECHANICS,
     *TONGUE_MECHANICS,
+    *EVOLUTION_MECHANICS,
     *PLACE_BEHAVIOURS,
     *COUPLING_MECHANICS,
     *REGION_MECHANICS,
@@ -1021,6 +1023,7 @@ MODULE_SUBSYSTEMS: dict[str, Subsystem] = {
     "arcana": Subsystem.MAGIC,
     "mythic": Subsystem.GODS,
     "tongues": Subsystem.LANGUAGE,
+    "evolution": Subsystem.ECOLOGY,
     "mortals": Subsystem.DEMOGRAPHY,
     "life_cycles": Subsystem.DEMOGRAPHY,
     "heroes": Subsystem.DEMOGRAPHY,

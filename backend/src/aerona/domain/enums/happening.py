@@ -13,6 +13,13 @@ class LandAct(StrEnum):
     GREEN = "green"
     SALT_SOIL = "salt_soil"
     ENRICH_SOIL = "enrich_soil"
+    RAISE_LAND = "raise_land"
+    LOWER_LAND = "lower_land"
+    CARVE_VALLEY = "carve_valley"
+    FILL_VALLEY = "fill_valley"
+    OPEN_SPRING = "open_spring"
+    CALL_LAVA = "call_lava"
+    SINK_COAST = "sink_coast"
 
 
 class RiverShiftCause(StrEnum):

@@ -48,6 +48,7 @@ from aerona.engine.phases import (
     epidemics,
     espionage,
     estates,
+    evolution,
     exploration,
     factions,
     faith,
@@ -193,6 +194,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + divine.PHASES
     + doom.PHASES
     + espionage.PHASES
+    + evolution.PHASES
     + exploration.PHASES
     + factions.PHASES
     + goals.PHASES
@@ -314,6 +316,7 @@ SUB_ENGINE_STAGE = stage(
     "star_lives",
     "world_physics",
     "planetary_climate",
+    "world_cycles",
     "cosmic_features",
     "impacts",
     "terraforming",
@@ -329,6 +332,13 @@ SUB_ENGINE_STAGE = stage(
     "creatures",
     "ecology",
     "husbandry",
+    "trait_evolution",
+    "niches",
+    "trophic_flow",
+    "keystones",
+    "feral_reversion",
+    "lineages",
+    "biome_succession",
     "flora_cycles",
     "beast_cycles",
     "pet_cycles",
@@ -380,6 +390,12 @@ SOCIETY_STAGE = stage(
     "refugees",
     "disaster_casualties",
     "epidemics",
+    "pathogen_evolution",
+    "carriers",
+    "spillover",
+    "plague_responses",
+    "vaccination",
+    "cure_research",
     "uprisings",
     "spirits_rest",
     "hauntings",

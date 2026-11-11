@@ -118,6 +118,22 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "strength": "Its strength, 1 to 100",
         },
     ),
+    T.ANSWER_SICKNESS: ToolText(
+        "As ruler of a realm, or as a healer of your community, you set how it answers a sickness ({{ plague_responses }}): closed borders "
+        "cost trade and calm, a quarantine slows the spread but may set off riots, burning the dead slows it but grieves folk whose rites "
+        "forbid it, driving out the sick slows it at home and marks the sick, prayer comforts but crowds, seeking a cure sets the learned "
+        "to work. 1 action.",
+        {"disease_id": "The sickness", "response": "The answer"},
+    ),
+    T.SEEK_CURE: ToolText(
+        "You work at a cure for a sickness at the hospital, academy or monastery where you live; your medicine adds to the search, and the "
+        "cure, once found, belongs to your community and can be sold along its trade routes. 1 action.",
+        {"disease_id": "The sickness"},
+    ),
+    T.FIND_CARRIER: ToolText(
+        "With deep medicine you find that a mortal in your land carries a sickness without falling ill; once found, a carrier spreads it no further. 1 action.",
+        {"mortal_id": "The mortal you suspect", "disease_id": "The sickness"},
+    ),
     T.DECIPHER_SCRIPT: ToolText(
         "You work at the dead script of a tongue: progress grows with your languages skill, the texts that survive, any bilingual text and the "
         "living tongues related to it. Partial readings can go wrong. 1 action.",

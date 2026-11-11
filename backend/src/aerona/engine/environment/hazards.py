@@ -18,6 +18,7 @@ from aerona.domain.enums.region import HazardSeason, TerrainHazard
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook, add_scar
+from aerona.engine.environment.succession import burn_back
 from aerona.engine.environment.years import grant_sub_steps, sampled_years
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -166,6 +167,8 @@ async def strike(
             soldiers += loss
     if hazard is TerrainHazard.WILDFIRE and f"scar.{ScarKind.BURNED.value}" not in ground.locked:
         add_scar(ground, ScarKind.BURNED, rules.hazards.wildfire_scar)
+    if hazard is TerrainHazard.WILDFIRE:
+        burn_back(ground, ctx.epoch)
     season_name = season.name if season is not None else "a hard season"
     write = await ctx.chronicle(
         ChronicleKind.DISASTER,

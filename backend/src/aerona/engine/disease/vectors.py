@@ -8,7 +8,7 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.domain.enums.disease import DiseaseVector, SpreadPath
 from aerona.domain.enums.environment import RiverClass, ScarKind
 from aerona.engine.disease.book import DiseaseBook
-from aerona.engine.disease.emergence import COLD_BANDS, DRY, VOID_SCARS, WET
+from aerona.engine.disease.emergence import COLD_BANDS, DRY, VOID_SCARS, WARM_BANDS, WET
 from aerona.engine.primitives.stats import stat
 
 CONTACT_PATHS = frozenset({SpreadPath.ROUTE, SpreadPath.ARMY, SpreadPath.JOURNEY, SpreadPath.SIEGE})
@@ -45,12 +45,22 @@ def touch(book: DiseaseBook, path: SpreadPath) -> float:
     return pct(table.touch_contact_pct if path in CONTACT_PATHS else table.touch_still_pct)
 
 
-def bite(book: DiseaseBook, disease_id: int, region_id: int | None) -> float:
+def bite(book: DiseaseBook, disease_id: int, region_id: int | None, ground: RegionEnvironmentRow | None) -> float:
     table = book.rules.epidemiology
     abundance = book.host_abundance(disease_id, region_id)
-    if abundance <= 0:
-        return pct(table.bite_hostless_pct)
-    return blend(table.bite_hostless_pct, table.bite_host_pct, abundance)
+    factor = pct(table.bite_hostless_pct) if abundance <= 0 else blend(table.bite_hostless_pct, table.bite_host_pct, abundance)
+    return factor * climate_of_bites(book, ground)
+
+
+def climate_of_bites(book: DiseaseBook, ground: RegionEnvironmentRow | None) -> float:
+    table = book.rules.vectors
+    if ground is None:
+        return 1.0
+    if ground.temperature_band in WARM_BANDS:
+        return pct(table.warm_bite_pct)
+    if ground.temperature_band in COLD_BANDS:
+        return pct(table.cold_bite_pct)
+    return 1.0
 
 
 def spirit(book: DiseaseBook, target: EntityRow, ground: RegionEnvironmentRow | None, region_id: int | None) -> float:
@@ -90,7 +100,7 @@ def vector_factor(book: DiseaseBook, profile: DiseaseProfileRow, spot: Spot) -> 
         DiseaseVector.AIR: lambda: air(book, spot.ground),
         DiseaseVector.WATER: lambda: water(book, spot.ground),
         DiseaseVector.TOUCH: lambda: touch(book, spot.path),
-        DiseaseVector.BITE: lambda: bite(book, profile.disease_entity_id, spot.region_id),
+        DiseaseVector.BITE: lambda: bite(book, profile.disease_entity_id, spot.region_id, spot.ground),
         DiseaseVector.SPIRIT: lambda: spirit(book, spot.target, spot.ground, spot.region_id),
         DiseaseVector.VOID: lambda: void(book, spot.ground),
         DiseaseVector.CURSE: lambda: curse(book, book.diseases.get(profile.disease_entity_id)),

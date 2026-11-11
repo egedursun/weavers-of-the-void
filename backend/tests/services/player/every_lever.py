@@ -724,6 +724,14 @@ async def outer_being(session: AsyncSession) -> int:
 CUSTOM_KIND = ("kind:create", {"catalog": "technique", "base": "phalanx_drill", "name": "Shieldwall Drill"})
 SPEAKERS = ("language:speakers", {"community_id": Pick(TOWN), "language_id": Pick(EntityType.LANGUAGE, 2), "share": 30, "kind": "second"})
 TEMPLE = ("structure:commission", {"site_id": Pick(TOWN), "kind": "temple"})
+TRAIT = ("species_trait:set", {"species_id": Pick(EntityType.SPECIES), "region_id": Pick(EntityType.REGION), "trait": "speed", "mean": 60})
+LINE = ("lineage:mark", {"species_id": Pick(EntityType.SPECIES), "package": "divine_blessing", "blessing": True})
+SERVICE = ("ecosystem_service:set", {"region_id": Pick(EntityType.REGION), "role": "pollinator", "strength": 50})
+HERD = ("herd:edit", {"community_id": Pick(TOWN), "species_id": Pick(EntityType.SPECIES), "values": {"head": 10}})
+CARRIER = ("carrier:add", {"mortal_id": Pick(MORTAL), "disease_id": Newest(EntityType.DISEASE)})
+RESPONSE = ("plague_response:set", {"community_id": Pick(TOWN), "disease_id": Newest(EntityType.DISEASE), "response": "prayer"})
+HOSPITAL = ("structure:commission", {"site_id": Pick(TOWN), "kind": "hospital"})
+RESEARCH = ("cure_research:start", {"institution_id": Newest(EntityType.STRUCTURE), "disease_id": Newest(EntityType.DISEASE)})
 FINISHED = ("structure:finish", {"structure_id": Newest(EntityType.STRUCTURE)})
 RITE = ("rite:devise", {"inventor_id": Pick(MORTAL)})
 WAR = ("war:open", {"attacker_id": Pick(TOWN), "defender_id": Pick(TOWN, 1)})
@@ -1700,6 +1708,32 @@ LEVERS: dict[str, Lever] = {
     **{name: after(TONGUE_GIVEN, god_id=Pick("son")) for name in ("divine_tongue:edit", "divine_tongue:delete")},
     "divine_tongue:teach": after(TONGUE_GIVEN, god_id=Pick("son"), mortal_id=Pick(MORTAL)),
     "pidgin:make": Lever(values={"first_id": Pick(TOWN), "second_id": Pick(TOWN, 1)}, setup=strangers),
+    "species_trait:set": given(species_id=Pick(EntityType.SPECIES), region_id=Pick(EntityType.REGION), trait="speed", mean=60),
+    **{
+        name: after(TRAIT, species_id=Pick(EntityType.SPECIES), region_id=Pick(EntityType.REGION), trait="speed")
+        for name in ("species_trait:edit", "species_trait:delete")
+    },
+    "lineage:mark": given(species_id=Pick(EntityType.SPECIES), package="divine_blessing", blessing=True, source_node_id=Pick("son")),
+    **{name: after(LINE, species_id=Pick(EntityType.SPECIES), package="divine_blessing") for name in ("lineage:edit", "lineage:delete")},
+    "species_ecology:edit": given(species_id=Pick(EntityType.SPECIES)),
+    "ecosystem_service:set": given(region_id=Pick(EntityType.REGION), role="pollinator", strength=50, species_id=Pick(EntityType.SPECIES)),
+    **{name: after(SERVICE, region_id=Pick(EntityType.REGION), role="pollinator") for name in ("ecosystem_service:edit", "ecosystem_service:delete")},
+    "herd:release": after(HERD, community_id=Pick(TOWN), species_id=Pick(EntityType.SPECIES)),
+    "carrier:add": after(DISEASE, mortal_id=Pick(MORTAL), disease_id=Newest(EntityType.DISEASE)),
+    **{name: after(DISEASE, CARRIER, mortal_id=Pick(MORTAL), disease_id=Newest(EntityType.DISEASE)) for name in ("carrier:edit", "carrier:delete")},
+    "plague_response:set": after(DISEASE, community_id=Pick(TOWN), disease_id=Newest(EntityType.DISEASE), response="quarantine"),
+    **{
+        name: after(DISEASE, RESPONSE, community_id=Pick(TOWN), disease_id=Newest(EntityType.DISEASE), response="prayer")
+        for name in ("plague_response:edit", "plague_response:delete")
+    },
+    "cure_research:start": after(HOSPITAL, DISEASE, institution_id=Newest(EntityType.STRUCTURE), disease_id=Newest(EntityType.DISEASE)),
+    **{
+        name: after(HOSPITAL, DISEASE, RESEARCH, institution_id=Newest(EntityType.STRUCTURE), disease_id=Newest(EntityType.DISEASE))
+        for name in ("cure_research:edit", "cure_research:delete")
+    },
+    "world_cycle:edit": given(world_id=Pick("world")),
+    "world_cycle:reset": after(("world_cycle:edit", {"world_id": Pick("world"), "values": {"carbon": 60}}), world_id=Pick("world")),
+    "land:reshape": given(region_id=Pick(EntityType.REGION), act="raise_land"),
     "heroquest:begin": given(quester_id=Pick(MORTAL), legend_id=Pick(EntityType.LEGEND)),
     **{
         name: after(("heroquest:begin", {"quester_id": Pick(MORTAL), "legend_id": Pick(EntityType.LEGEND)}), quest_id=Newest("heroquest"))
@@ -1871,6 +1905,14 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "decipherment:edit": {"progress": 40},
     "language_policy:edit": {"strength": 70},
     "divine_tongue:edit": {"language_entity_id": Pick(TONGUE, 1)},
+    "species_trait:edit": {"mean": 70, "variance": 20},
+    "lineage:edit": {"blessing": False, "source_node_id": Pick("son")},
+    "species_ecology:edit": {"keystone": "pollinator", "feral_epoch": 2},
+    "ecosystem_service:edit": {"strength": 70, "species_entity_id": Pick(EntityType.SPECIES)},
+    "carrier:edit": {"identified": True, "seeded": 2},
+    "plague_response:edit": {"strength": 80, "until_epoch": 9},
+    "cure_research:edit": {"points": 40, "specimens": 3},
+    "world_cycle:edit": {"carbon": 60, "water": 40, "nutrients": 55},
     "heroquest:edit": {"steps": 4, "fidelity": 80},
     "mantling:edit": {"progress": 40, "deeds": 3},
     "servitor:edit": {"loyalty": 60, "role": "judge"},

@@ -9,6 +9,7 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmography import CosmicBeingProfileRow, DimensionRow, PhenomenonFootprintRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, LegendProfileRow, RiteProfileRow
+from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.divine import DivineWoundRow, NaturalLawProfileRow
 from aerona.db.tables.dominion import DivineCreatureRow, MagicSiteRow
 from aerona.db.tables.ecology import HerdRow, SpeciesProfileRow, SpeciesUseRow
@@ -16,6 +17,7 @@ from aerona.db.tables.economy import MarketPriceRow, TradeRouteProfileRow, Works
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import LeyLineRow, WorldSeasonRow
 from aerona.db.tables.estates import EstateProfileRow
+from aerona.db.tables.evolution import CarrierRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.flora import PlantProfileRow
 from aerona.db.tables.intrigue import HookRow, TrueNameRow
@@ -29,6 +31,7 @@ from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.renown import ReputationRow
 from aerona.db.tables.sons import SonRelationRow, SonRow
 from aerona.db.tables.statecraft import CrisisRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleProfileRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
 from aerona.domain.enums.arcana import LawSource, SpellForm
@@ -37,6 +40,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import WritingSystem
 from aerona.domain.enums.cosmography import BeingKind, BeingScale, DimensionKind, PhenomenonCause, PhenomenonKind, RiftCause, RiftState
 from aerona.domain.enums.culture import LegendArchetype, MagicSchool, Technique
+from aerona.domain.enums.disease import ClimateAffinity, DiseaseVector
 from aerona.domain.enums.divine import DivineWoundKind, WoundCause
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import MagicSiteKind
@@ -55,12 +59,14 @@ from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.statecraft import CrisisDemand
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.titles import TitleRank
 from aerona.domain.enums.tongues import WordRegister
 from aerona.domain.enums.world import StarType
 from aerona.domain.models.entity_stats import (
     BeastStats,
     CosmicBeingStats,
+    DiseaseStats,
     FactionStats,
     HouseStats,
     LanguageStats,
@@ -70,6 +76,7 @@ from aerona.domain.models.entity_stats import (
     PhenomenonStats,
     PolityStats,
     SpiritStats,
+    StructureStats,
     TitleStats,
 )
 from aerona.domain.models.profiles import TravelResource
@@ -735,3 +742,60 @@ async def scribe(session: AsyncSession, realm: Realm) -> Ids:
     session.add(SkillRow(holder_node_id=realm.mortal_id, skill=SkillKind.LANGUAGES, level=60, peak=60, last_used_epoch=1, source=SkillSource.PRACTICE))
     await session.flush()
     return {}
+
+
+async def sickness(session: AsyncSession, realm: Realm) -> Ids:
+    disease = await make_entity(
+        session,
+        "Grey Cough",
+        EntityType.DISEASE,
+        world_id=realm.cosmos.world_id,
+        stats=DiseaseStats(virulence=40, lethality=20),
+    )
+    session.add(
+        DiseaseProfileRow(
+            disease_entity_id=disease.id,
+            vector=next(iter(DiseaseVector)),
+            virulence=40,
+            lethality=20,
+            chronic_rate=0,
+            incubation=1,
+            target_functions=[],
+            climate_affinity=ClimateAffinity.ANY,
+            immunity_epochs=4,
+            mutation_rate=5,
+            stigma=10,
+            cure_level=5,
+            locked=[],
+        )
+    )
+    await session.flush()
+    return {"disease": disease.id}
+
+
+async def healer(session: AsyncSession, realm: Realm) -> Ids:
+    found = await sickness(session, realm)
+    session.add(SkillRow(holder_node_id=realm.mortal_id, skill=SkillKind.MEDICINE, level=80, peak=80, last_used_epoch=1, source=SkillSource.PRACTICE))
+    await session.flush()
+    return found
+
+
+async def carrying(session: AsyncSession, realm: Realm) -> Ids:
+    found = await healer(session, realm)
+    session.add(CarrierRow(mortal_entity_id=realm.mortal_id, disease_entity_id=found["disease"], identified=False, seeded=0, since_epoch=1, locked=[]))
+    await session.flush()
+    return found
+
+
+async def hospital(session: AsyncSession, realm: Realm) -> Ids:
+    found = await healer(session, realm)
+    seat = await make_entity(
+        session, "House of Healing", EntityType.STRUCTURE, world_id=realm.cosmos.world_id, location_id=realm.settlement_id, stats=StructureStats()
+    )
+    session.add(StructureProfileRow(structure_entity_id=seat.id, kind=StructureKind.HOSPITAL))
+    await session.flush()
+    return {**found, "hospital": seat.id}
+
+
+async def ruled_sickness(session: AsyncSession, realm: Realm) -> Ids:
+    return {**await ruler(session, realm), **await sickness(session, realm)}

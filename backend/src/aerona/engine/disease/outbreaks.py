@@ -12,6 +12,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.disease import ClimateAffinity, OutbreakStatus, SpreadPath
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.environment import TemperatureBand
+from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.mortal import HarshnessScale
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
@@ -26,9 +27,11 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.rules.registry import Rules
 
 STRIKING: ContextVar[DiseaseProfileRow | None] = ContextVar("striking_disease", default=None)
 FACTOR_FLOOR, FACTOR_CEILING = 0.05, 6.0
+HALF_FACTOR = 0.5
 SEVERITY_LOCK = "severity"
 STATUS_LOCK = "status"
 INFECTED_LOCK = "infected"
@@ -82,6 +85,34 @@ def climate_fit(rules_pct: tuple[int, int], profile: DiseaseProfileRow, ground: 
     return mismatch / PERCENT if opposed else 1.0
 
 
+def tolerance_fit(profile: DiseaseProfileRow, ground: RegionEnvironmentRow | None) -> float:
+    if ground is None:
+        return 1.0
+    if ground.temperature_band in COLD_BANDS:
+        return HALF_FACTOR + profile.cold_tolerance / PERCENT
+    if ground.temperature_band in WARM_BANDS:
+        return HALF_FACTOR + profile.heat_tolerance / PERCENT
+    return 1.0
+
+
+def resisted(rules: Rules, profile: DiseaseProfileRow, kept: float) -> float:
+    return kept + (1 - kept) * profile.resistance / PERCENT * rules.pathogen_evolution.resistance_pct / PERCENT
+
+
+def answered(rules: Rules, responses: set[PlagueResponse]) -> float:
+    table = rules.plague_responses
+    factor = 1.0
+    for response, share in (
+        (PlagueResponse.QUARANTINE, -table.quarantine_spread_pct),
+        (PlagueResponse.BURN_DEAD, -table.burn_spread_pct),
+        (PlagueResponse.EXPEL_SICK, -table.expel_spread_pct),
+        (PlagueResponse.PRAYER, table.prayer_spread_pct),
+    ):
+        if response in responses:
+            factor *= 1 + share / PERCENT
+    return max(0.0, factor)
+
+
 def virgin(book: DiseaseBook, community: EntityRow, disease_id: int) -> bool:
     if book.met_before(community.id, disease_id):
         return False
@@ -103,13 +134,13 @@ def lethality_factor(book: DiseaseBook, disease_id: int, communities: list[Entit
         if virgin(book, community, disease_id):
             factor *= table.virgin_soil_pct / PERCENT
         if book.cured(disease_id, community.id) or knowledge.level(community.id, KnowledgeBranch.MEDICINE) >= profile.cure_level:
-            factor *= table.cure_lethality_pct / PERCENT
+            factor *= resisted(book.rules, profile, table.cure_lethality_pct / PERCENT)
         ward = book.hospital_strength.get(book.atlas.top_region(community.id) or -1, 0.0)
-        factor *= 1 - ward * (1 - table.hospital_lethality_pct / PERCENT)
+        factor *= resisted(book.rules, profile, 1 - ward * (1 - table.hospital_lethality_pct / PERCENT))
         if community.id in book.medicine:
             factor *= 2 - truth_factor(book.rules, book.medicine[community.id])
         if community.id in book.tended:
-            factor *= 1 - book.rules.technique_effects.hospitals_pct / PERCENT
+            factor *= resisted(book.rules, profile, 1 - book.rules.technique_effects.hospitals_pct / PERCENT)
         weight += people * factor
         total += people
     blended = weight / total if total else 1.0
@@ -137,6 +168,10 @@ def spread_factor(
     region = book.atlas.top_region(target.id)
     factor = profile.virulence / table.neutral_virulence
     factor *= climate_fit((table.climate_match_pct, table.climate_mismatch_pct), profile, ground)
+    factor *= tolerance_fit(profile, ground)
+    factor *= answered(book.rules, book.responses.get((target.id, disease_id), set()))
+    if path in (SpreadPath.ROUTE, SpreadPath.JOURNEY) and PlagueResponse.CLOSE_BORDERS in book.responses.get((target.id, disease_id), set()):
+        factor *= 1 - book.rules.plague_responses.border_trade_pct / PERCENT
     factor *= 1 - immune * table.immunity_strength_pct / PERCENT
     load = ground.disease_load if ground is not None else 0
     factor *= 1 + load / PERCENT * table.load_spread_pct / PERCENT
