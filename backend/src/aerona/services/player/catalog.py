@@ -68,6 +68,7 @@ from aerona.services.player import (
     knowledge,
     language_contact,
     languages,
+    law_depth,
     levers,
     life_cycles,
     living_stats,
@@ -2086,6 +2087,80 @@ ECONOMY_ACTIONS = (
     ),
     _sync(Meta("market_play:edit", "Edit a market play", G.SOCIETY), urban_depth.edit_play, urban_depth.PlayEdit, free, ("S6.4/RP3",)),
     _sync(Meta("market_play:delete", "End a market play", G.SOCIETY), urban_depth.delete_play, urban_depth.PlayTarget, free, ("S6.4/RP3",)),
+    _sync(
+        Meta("legal_system:set", "Set the legal system of a realm, cult or town", G.SOCIETY),
+        law_depth.legal_system_set,
+        law_depth.SystemDraft,
+        free,
+        ("S4.5/RP3",),
+    ),
+    _sync(Meta("legal_system:edit", "Edit a legal system", G.SOCIETY), law_depth.legal_system_edit, law_depth.SystemEdit, free, ("S4.5/RP3",)),
+    _sync(
+        Meta("legal_system:delete", "Let a legal system be chosen anew", G.SOCIETY), law_depth.legal_system_delete, law_depth.SystemTarget, free, ("S4.5/RP3",)
+    ),
+    _sync(
+        Meta("precedent:add", "Set down a precedent in a realm's case law", G.SOCIETY), law_depth.precedent_add, law_depth.PrecedentDraft, free, ("S4.5/RP3",)
+    ),
+    _sync(Meta("precedent:edit", "Edit a precedent", G.SOCIETY), law_depth.precedent_edit, law_depth.PrecedentEdit, free, ("S4.5/RP3",)),
+    _sync(
+        Meta("precedent:delete", "Strike a precedent from the case law", G.SOCIETY), law_depth.precedent_delete, law_depth.PrecedentTarget, free, ("S4.5/RP3",)
+    ),
+    _sync(Meta("appeal:file", "Carry a conviction to a higher court", G.SOCIETY), law_depth.appeal_file, law_depth.AppealDraft, free, ("S4.5/RP3",)),
+    _sync(Meta("appeal:edit", "Edit an appeal", G.SOCIETY), law_depth.appeal_edit, law_depth.AppealEdit, free, ("S4.5/RP3",)),
+    _sync(Meta("appeal:hear", "Hear an appeal now", G.SOCIETY), law_depth.appeal_hear, law_depth.AppealTarget, free, ("S4.5/RP3",)),
+    _sync(Meta("appeal:delete", "Withdraw an appeal", G.SOCIETY), law_depth.appeal_delete, law_depth.AppealTarget, free, ("S4.5/RP3",)),
+    _sync(Meta("oracle:answer", "Answer an oracle trial, truly or falsely", G.SOCIETY), law_depth.oracle_answer, law_depth.OracleAnswer, free, ("S4.5/RP3",)),
+    _sync(Meta("registry:add", "Register a title or contract", G.SOCIETY), law_depth.registry_add, law_depth.RegistryDraft, free, ("S4.5/RP3",)),
+    _sync(Meta("registry:edit", "Edit a registered title or contract", G.SOCIETY), law_depth.registry_edit, law_depth.RegistryEdit, free, ("S4.5/RP3",)),
+    _sync(Meta("registry:delete", "Strike a deed from the registry", G.SOCIETY), law_depth.registry_delete, law_depth.RegistryTarget, free, ("S4.5/RP3",)),
+    _sync(
+        Meta("jurisdiction:set", "Give a church, guild or realm its own courts in a realm", G.SOCIETY),
+        law_depth.jurisdiction_set,
+        law_depth.ClaimDraft,
+        free,
+        ("S4.5/RP3",),
+    ),
+    _sync(Meta("jurisdiction:edit", "Edit a claim to courts", G.SOCIETY), law_depth.jurisdiction_edit, law_depth.ClaimEdit, free, ("S4.5/RP3",)),
+    _sync(Meta("jurisdiction:delete", "End a claim to courts", G.SOCIETY), law_depth.jurisdiction_delete, law_depth.ClaimTarget, free, ("S4.5/RP3",)),
+    _sync(Meta("pardon:grant", "Have a mortal pardon a prisoner or an outlaw", G.SOCIETY), law_depth.pardon_grant, law_depth.PardonDraft, free, ("S4.5/RP3",)),
+    _sync(Meta("amnesty:declare", "Have a realm's ruler declare an amnesty", G.SOCIETY), law_depth.amnesty_declare, law_depth.RealmTarget, free, ("S4.5/RP3",)),
+    _sync(Meta("pardon:delete", "Strike a pardon from the record", G.SOCIETY), law_depth.pardon_delete, law_depth.PardonTarget, free, ("S4.5/RP3",)),
+    _sync(Meta("outlaw:declare", "Declare a mortal an outlaw", G.SOCIETY), law_depth.outlaw_declare, law_depth.OutlawDraft, free, ("S4.5/RP3",)),
+    _sync(Meta("outlaw:edit", "Edit an outlaw's bounty and renown", G.SOCIETY), law_depth.outlaw_edit, law_depth.OutlawEdit, free, ("S4.5/RP3",)),
+    _sync(Meta("outlaw:delete", "Lift a mortal's outlawry", G.SOCIETY), law_depth.outlaw_delete, law_depth.MortalTarget, free, ("S4.5/RP3",)),
+    _sync(Meta("prison:set", "Set a prison's food, crowding, cruelty and gangs", G.SOCIETY), law_depth.prison_set, law_depth.PrisonDraft, free, ("S4.5/RP3",)),
+    _sync(Meta("prison:edit", "Edit a prison", G.SOCIETY), law_depth.prison_edit, law_depth.PrisonEdit, free, ("S4.5/RP3",)),
+    _sync(Meta("prison:delete", "Let a prison's conditions be drawn anew", G.SOCIETY), law_depth.prison_delete, law_depth.PrisonTarget, free, ("S4.5/RP3",)),
+    _sync(Meta("prisoner:jail", "Put a mortal in a prison", G.SOCIETY), law_depth.prisoner_jail, law_depth.JailDraft, free, ("S4.5/RP3",)),
+    _sync(Meta("prisoner:edit", "Edit a prisoner's term and rank", G.SOCIETY), law_depth.prisoner_edit, law_depth.PrisonerEdit, free, ("S4.5/RP3",)),
+    _sync(Meta("prisoner:free", "Free a prisoner", G.SOCIETY), law_depth.prisoner_free, law_depth.MortalTarget, free, ("S4.5/RP3",)),
+    _sync(Meta("spy_cell:add", "Form a spy cell in a network", G.WARFARE), law_depth.spy_cell_add, law_depth.CellDraft, free, ("S5.10/RP3",)),
+    _sync(Meta("spy_cell:edit", "Edit a spy cell", G.WARFARE), law_depth.spy_cell_edit, law_depth.CellEdit, free, ("S5.10/RP3",)),
+    _sync(Meta("spy_cell:delete", "Break up a spy cell", G.WARFARE), law_depth.spy_cell_delete, law_depth.CellTarget, free, ("S5.10/RP3",)),
+    _sync(
+        Meta("mole_hunt:order", "Have a realm's spymaster hunt for moles now", G.WARFARE),
+        law_depth.mole_hunt_order,
+        law_depth.RealmTarget,
+        free,
+        ("S5.10/RP3",),
+    ),
+    _sync(Meta("mole_hunt:delete", "Strike a mole hunt from the record", G.WARFARE), law_depth.mole_hunt_delete, law_depth.HuntTarget, free, ("S5.10/RP3",)),
+    _sync(
+        Meta("defection:make", "Have a mortal defect with what they know", G.WARFARE), law_depth.defection_make, law_depth.DefectionDraft, free, ("S5.10/RP3",)
+    ),
+    _sync(Meta("defection:edit", "Edit a defection", G.WARFARE), law_depth.defection_edit, law_depth.DefectionEdit, free, ("S5.10/RP3",)),
+    _sync(
+        Meta("defection:delete", "Strike a defection from the record", G.WARFARE), law_depth.defection_delete, law_depth.DefectionTarget, free, ("S5.10/RP3",)
+    ),
+    _sync(Meta("killing:add", "Record a killing and how it was done", G.WARFARE), law_depth.killing_add, law_depth.KillingDraft, free, ("S5.10/RP3",)),
+    _sync(
+        Meta("killing:edit", "Edit how a killing was done and whether it was seen", G.WARFARE),
+        law_depth.killing_edit,
+        law_depth.KillingEdit,
+        free,
+        ("S5.10/RP3",),
+    ),
+    _sync(Meta("killing:delete", "Strike a killing from the record", G.WARFARE), law_depth.killing_delete, law_depth.KillingTarget, free, ("S5.10/RP3",)),
     _sync(Meta("pidgin:make", "Make a pidgin between two communities", G.LANGUAGES), tongues.make_pidgin, tongues.PidginDraft, free, ("S8.1/RP3",)),
     _sync(Meta("dominion:delete", "Lift a god's dominion from a region", G.GOD_POWER), dominion.delete_dominion, dominion.DominionTarget, free, ("F31",)),
     _sync(

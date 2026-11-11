@@ -23,6 +23,7 @@ import {
   HeartPulse,
   Hourglass,
   Link2,
+  Lock,
   type LucideIcon,
   Mountain,
   Scale,
@@ -252,6 +253,7 @@ export const PUNISHMENTS: Record<
   eyes: { label: 'Blinding', icon: Eye, tone: 'danger' },
   death: { label: 'Death', icon: Skull, tone: 'danger' },
   public_shaming: { label: 'Public shaming', icon: Users, tone: 'warning' },
+  imprisonment: { label: 'Prison', icon: Lock, tone: 'warning' },
 }
 
 export const STANDING_FIELDS: Record<

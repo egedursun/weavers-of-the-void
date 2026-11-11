@@ -38,6 +38,7 @@ from aerona.domain.enums.economy import CommodityKind, MaterialFamily
 from aerona.domain.enums.entity import LIVING_CREATION_TYPES, EntityType, LegendCategory
 from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPath
+from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mythic import CosmicOffice, GeasMode, ServitorRank, ServitorRole
 from aerona.domain.enums.place import PlaceKind, SecretKind
@@ -134,6 +135,7 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "sound_environments": ", ".join(item.value for item in SoundEnvironment),
         "language_policies": ", ".join(item.value for item in LanguagePolicy),
         "plague_responses": ", ".join(item.value for item in PlagueResponse),
+        "registry_kinds": ", ".join(item.value for item in RegistryKind if item is not RegistryKind.LAND_TITLE),
         "ideology_tenets": ", ".join(tenet.value for tenet in IdeologyTenet),
         "prophecy_predicates": ", ".join(item.value for item in ProphecyPredicate),
         "prophecy_consequences": ", ".join(item.value for item in ProphecyConsequence),

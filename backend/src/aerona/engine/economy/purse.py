@@ -1,13 +1,17 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
-from aerona.engine.primitives.numbers import round_half_up
+from aerona.domain.enums.entity import EntityType
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.rules.registry import Rules
 
 TREASURY_LOCK = "treasury"
+WEALTH = "wealth"
 
 
 async def realm_purse(session: AsyncSession, payer: EntityRow) -> PolityProfileRow | None:
@@ -22,10 +26,35 @@ def wealth_points(rules: Rules, amount: int) -> int:
     return max(1, round_half_up(amount / max(1, rules.taxation.wealth_per_treasury))) if amount > 0 else 0
 
 
+async def purse_of(session: AsyncSession, holder: EntityRow) -> MortalProfileRow | None:
+    if holder.entity_type is not EntityType.MORTAL:
+        return None
+    return await session.get(MortalProfileRow, holder.id)
+
+
+async def points_of(session: AsyncSession, holder: EntityRow) -> int:
+    if holder.entity_type is EntityType.MORTAL:
+        profile = await purse_of(session, holder)
+        return profile.wealth if profile is not None else 0
+    return stat(holder, "wealth") or 0
+
+
+async def shift_points(session: AsyncSession, holder: EntityRow, points: int) -> None:
+    if holder.entity_type is not EntityType.MORTAL:
+        shift_stat(holder, "wealth", points, default=0)
+        return
+    profile = await purse_of(session, holder)
+    if profile is None:
+        profile = MortalProfileRow(entity_id=holder.id, locked=[])
+        session.add(profile)
+    if WEALTH not in (profile.locked or []):
+        profile.wealth = clamp_int((profile.wealth or 0) + points, 0, PERCENT)
+
+
 async def coin_of(session: AsyncSession, rules: Rules, payer: EntityRow) -> int:
     realm = await realm_purse(session, payer)
     treasury = realm.treasury if realm is not None and TREASURY_LOCK not in realm.locked else 0
-    return treasury + (stat(payer, "wealth") or 0) * max(1, rules.taxation.wealth_per_treasury)
+    return treasury + await points_of(session, payer) * max(1, rules.taxation.wealth_per_treasury)
 
 
 async def take_coin(session: AsyncSession, rules: Rules, payer: EntityRow, amount: int) -> bool:
@@ -36,15 +65,16 @@ async def take_coin(session: AsyncSession, rules: Rules, payer: EntityRow, amoun
         realm.treasury -= amount
         return True
     points = wealth_points(rules, amount)
-    if (stat(payer, "wealth") or 0) < points:
+    profile = await purse_of(session, payer)
+    if await points_of(session, payer) < points or (profile is not None and WEALTH in (profile.locked or [])):
         return False
-    shift_stat(payer, "wealth", -points)
+    await shift_points(session, payer, -points)
     return True
 
 
-def give_coin(rules: Rules, payee: EntityRow, amount: int) -> None:
-    if amount > 0 and stat(payee, "wealth") is not None:
-        shift_stat(payee, "wealth", wealth_points(rules, amount))
+async def give_coin(session: AsyncSession, rules: Rules, payee: EntityRow, amount: int) -> None:
+    if amount > 0:
+        await shift_points(session, payee, wealth_points(rules, amount))
 
 
 async def receive_coin(session: AsyncSession, rules: Rules, payee: EntityRow, amount: int) -> None:
@@ -54,4 +84,4 @@ async def receive_coin(session: AsyncSession, rules: Rules, payee: EntityRow, am
     if realm is not None and TREASURY_LOCK not in realm.locked:
         realm.treasury += amount
         return
-    give_coin(rules, payee, amount)
+    await give_coin(session, rules, payee, amount)

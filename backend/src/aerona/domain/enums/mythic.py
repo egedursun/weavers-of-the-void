@@ -62,6 +62,7 @@ class ServitorRole(StrEnum):
     GUARD = "guard"
     JUDGE = "judge"
     HOST = "host"
+    SPY = "spy"
 
 
 class GeasMode(StrEnum):

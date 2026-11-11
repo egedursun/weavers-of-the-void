@@ -148,6 +148,30 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "their rank or cast them out. 1 action.",
         {"accused_id": "The accused", "law": "The law they broke"},
     ),
+    T.REGISTER_DEED: ToolText(
+        "You register a contract with another party in your realm's registry ({{ registry_kinds }}); where the realm keeps a written code "
+        "its courts make the other party pay what is owed, and elsewhere it rests on who is stronger. 1 action.",
+        {"counterparty_id": "The other party", "kind": "The kind of contract", "amount": "What they owe you"},
+    ),
+    T.APPEAL_CONVICTION: ToolText(
+        "You carry your latest conviction to the next court above the one that judged you, paying its fee; it may overturn the conviction "
+        "and free you. 1 action.",
+        {},
+    ),
+    T.CLAIM_BOUNTY: ToolText(
+        "As the best hunter of the realm that outlawed someone, you hunt them down for the bounty; you bring them to prison or kill them. 1 action.",
+        {"outlaw_id": "The outlaw"},
+    ),
+    T.GRANT_PARDON: ToolText(
+        "As ruler you pardon someone held in prison or outlawed; pardoning one wrongly condemned earns renown, pardoning a friend is read as "
+        "corruption. 1 action.",
+        {"mortal_id": "Who you pardon"},
+    ),
+    T.HUNT_MOLES: ToolText(
+        "As spymaster you hunt for moles at your court; you may catch a foreign agent, clear an official, or wrongly accuse one, who may "
+        "then be purged or defect. 1 action.",
+        {},
+    ),
     T.ANSWER_SICKNESS: ToolText(
         "As ruler of a realm, or as a healer of your community, you set how it answers a sickness ({{ plague_responses }}): closed borders "
         "cost trade and calm, a quarantine slows the spread but may set off riots, burning the dead slows it but grieves folk whose rites "

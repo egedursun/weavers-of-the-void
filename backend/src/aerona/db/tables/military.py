@@ -6,6 +6,7 @@ from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.db.profile_guard import register_profile_table
 from aerona.domain.enums.demography import CohortCondition, MartialStyle
+from aerona.domain.enums.law_depth import RecruitMotive
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.military import (
     AgentStatus,
@@ -268,6 +269,9 @@ class SpyAgentRow(Base):
     cover: Mapped[SpyCover] = mapped_column(enum_type(SpyCover, "cover"), default=SpyCover.MERCHANT)
     skill: Mapped[int] = mapped_column(default=30)
     exposure: Mapped[int] = mapped_column(default=0)
+    motive: Mapped[RecruitMotive] = mapped_column(enum_type(RecruitMotive, "motive"), default=RecruitMotive.MONEY, server_default="money")
+    loyalty: Mapped[int] = mapped_column(default=50, server_default="50")
+    cell_id: Mapped[int | None] = mapped_column(ForeignKey("spy_cells.id", ondelete="SET NULL"))
     status: Mapped[AgentStatus] = mapped_column(enum_type(AgentStatus, "status"), default=AgentStatus.ACTIVE)
     since_epoch: Mapped[int] = mapped_column(default=0)
     ended_epoch: Mapped[int | None]

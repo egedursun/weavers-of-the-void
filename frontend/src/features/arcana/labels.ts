@@ -192,6 +192,7 @@ export const ROLES: Record<Schema['ServitorRole'], Named> = {
   guard: { label: 'Guard', icon: Shield, tone: 'gold' },
   judge: { label: 'Judge of souls', icon: Scale, tone: 'verdigris' },
   host: { label: 'Host', icon: Swords, tone: 'danger' },
+  spy: { label: 'Spy', icon: Eye, tone: 'muted' },
 }
 
 export const GEAS_MODES: Record<Schema['GeasMode'], Named> = {

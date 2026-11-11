@@ -10,6 +10,7 @@ from aerona.agents.context.geography import environment_facts, region_records, w
 from aerona.agents.context.intrigue import estate_lines, intrigue_lines, letter_lines, title_lines
 from aerona.agents.context.justice import case_lines, proposal_lines
 from aerona.agents.context.language_lines import language_lines
+from aerona.agents.context.law_lines import mortal_law_lines
 from aerona.agents.context.lineage import lineage_lines
 from aerona.agents.context.mythic_lines import mortal_magic_lines
 from aerona.agents.context.recent_chronicle import prompt_text, recent_rows
@@ -186,6 +187,7 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "speech": await mortal_tongue_lines(scope, me),
             "contagion": await mortal_evolution_lines(scope, me),
             "streets": await mortal_urban_lines(scope, me),
+            "courts": await mortal_law_lines(scope, me),
         }
     )
 

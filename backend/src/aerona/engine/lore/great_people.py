@@ -252,7 +252,7 @@ async def monopoly(ctx: TickContext, community: EntityRow) -> bool:
     if profile is not None and "treasury" not in profile.locked:
         profile.treasury += ctx.rules.discovery.great_wealth
         return True
-    give_coin(ctx.rules, community, ctx.rules.discovery.great_wealth)
+    await give_coin(ctx.session, ctx.rules, community, ctx.rules.discovery.great_wealth)
     return True
 
 

@@ -1,6 +1,7 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.justice import CaseStage, Deposition, ProposalEvent, ProposalStance, ProposalState, TrialKind, Verdict
+from aerona.domain.enums.law_depth import CourtLevel
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import LawKind, LegitimacyBasis
 
@@ -52,6 +53,9 @@ class CrimeCaseView(ApiModel):
     accused: NodeRef | None
     investigator: NodeRef | None
     judge: NodeRef | None
+    advocate: NodeRef | None
+    court: CourtLevel
+    oracle_answer: Verdict | None
     stage: CaseStage
     trial: TrialKind | None
     evidence: int

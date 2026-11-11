@@ -100,6 +100,7 @@ class PunishmentKind(StrEnum):
     EYES = "eyes"
     DEATH = "death"
     PUBLIC_SHAMING = "public_shaming"
+    IMPRISONMENT = "imprisonment"
 
 
 class EquipmentSlot(StrEnum):

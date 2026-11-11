@@ -188,6 +188,7 @@ class HomeLine(ContextItem):
     speech: list[str] = Field(default_factory=list)
     contagion: list[str] = Field(default_factory=list)
     streets: list[str] = Field(default_factory=list)
+    courts: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

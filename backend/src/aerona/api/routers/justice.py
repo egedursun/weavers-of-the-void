@@ -63,6 +63,9 @@ def case_view(row: CrimeCaseRow, witnesses: list[CaseWitnessRow], refs: Mapping[
         accused=ref(refs, row.accused_entity_id),
         investigator=ref(refs, row.investigator_entity_id),
         judge=ref(refs, row.judge_entity_id),
+        advocate=ref(refs, row.advocate_entity_id),
+        court=row.court,
+        oracle_answer=row.oracle_answer,
         stage=row.stage,
         trial=row.trial,
         evidence=row.evidence,
@@ -111,6 +114,7 @@ async def justice_view(services: ServicesDep, node_id: int = Path(ge=1)) -> Just
                         CrimeCaseRow.accused_entity_id == node_id,
                         CrimeCaseRow.investigator_entity_id == node_id,
                         CrimeCaseRow.judge_entity_id == node_id,
+                        CrimeCaseRow.advocate_entity_id == node_id,
                         CrimeCaseRow.id.in_(testified),
                     )
                 )
@@ -133,6 +137,7 @@ async def justice_view(services: ServicesDep, node_id: int = Path(ge=1)) -> Just
                     case.accused_entity_id,
                     case.investigator_entity_id,
                     case.judge_entity_id,
+                    case.advocate_entity_id,
                 )
                 if item is not None
             )

@@ -46,6 +46,7 @@ from aerona.engine.interconnect.catalog_gatherings import GATHERING_MECHANICS
 from aerona.engine.interconnect.catalog_industry import INDUSTRY_MECHANICS
 from aerona.engine.interconnect.catalog_intrigue import INTRIGUE_MECHANICS
 from aerona.engine.interconnect.catalog_justice import JUSTICE_MECHANICS
+from aerona.engine.interconnect.catalog_law_depth import LAW_MECHANICS
 from aerona.engine.interconnect.catalog_lineage import LINEAGE_MECHANICS
 from aerona.engine.interconnect.catalog_lore import BEHAVIOURS as LORE_BEHAVIOURS
 from aerona.engine.interconnect.catalog_lore import LORE_MECHANICS
@@ -1001,6 +1002,7 @@ BUILT_IN = (
     *TONGUE_MECHANICS,
     *EVOLUTION_MECHANICS,
     *URBAN_MECHANICS,
+    *LAW_MECHANICS,
     *PLACE_BEHAVIOURS,
     *COUPLING_MECHANICS,
     *REGION_MECHANICS,
@@ -1027,6 +1029,7 @@ MODULE_SUBSYSTEMS: dict[str, Subsystem] = {
     "tongues": Subsystem.LANGUAGE,
     "evolution": Subsystem.ECOLOGY,
     "urban_depth": Subsystem.SOCIAL,
+    "law_depth": Subsystem.LAW,
     "mortals": Subsystem.DEMOGRAPHY,
     "life_cycles": Subsystem.DEMOGRAPHY,
     "heroes": Subsystem.DEMOGRAPHY,

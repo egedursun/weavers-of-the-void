@@ -73,6 +73,7 @@ from aerona.engine.phases import (
     knowledge_levels,
     language_contact,
     language_death,
+    law_depth,
     life_cycles,
     life_seed,
     living_stats,
@@ -197,6 +198,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + espionage.PHASES
     + evolution.PHASES
     + urban_depth.PHASES
+    + law_depth.PHASES
     + exploration.PHASES
     + factions.PHASES
     + goals.PHASES
@@ -452,7 +454,14 @@ SOCIETY_ENGINE_STAGE = stage(
     "trading_posts",
     "magical_orders",
     "settlement_life",
+    "legal_systems",
     "trials",
+    "appeals",
+    "registries",
+    "jurisdictions",
+    "pardons",
+    "outlawry",
+    "prisons",
     "public_opinion",
     "households",
     "heroes",
@@ -470,6 +479,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "divine_creatures",
     "cosmic_offices",
     "servitors",
+    "divine_spies",
     "geasa",
     "mantling",
     "spell_grammar",
@@ -489,6 +499,8 @@ SOCIETY_ENGINE_STAGE = stage(
     "heroquests",
     "prophecy_cycles",
     "espionage",
+    "spy_cells",
+    "mole_hunts",
     "wonders",
     "dark_ages",
     "ruins",

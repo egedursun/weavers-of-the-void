@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.catalog.law_depth import METHOD_HARM, METHOD_SEEMING, METHOD_TEXT
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ConflictError, ValidationFailedError
 from aerona.db.repositories.bonds import BondRepository
@@ -11,7 +12,6 @@ from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.disease import SpreadPath
@@ -20,7 +20,7 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.military import SabotageKind, SpyCover, SpyOperation
 from aerona.domain.enums.mind import MemoryKind, SkillKind
-from aerona.domain.enums.mortal import DeathCause
+from aerona.domain.enums.mortal import CrimeKind, DeathCause
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import WarCause
@@ -29,6 +29,8 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.blueprints import steal_design
 from aerona.engine.lore.research import steal_technique
 from aerona.engine.military.feuds import house_feud
+from aerona.engine.military.forensics import choose_method, examine
+from aerona.engine.military.spy_depth import topology_pct
 from aerona.engine.military.spycraft import (
     agents_of,
     blackmail_office,
@@ -52,6 +54,7 @@ from aerona.engine.mind.opinion import mortal_rulers
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import strike_plague
 from aerona.engine.phases.society_support.knowledge import teach
+from aerona.engine.polity.trials import report_crime
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon, living_entity
 from aerona.engine.primitives.society import shift_stock
@@ -205,16 +208,28 @@ async def assassinate(ctx: TickContext, spymaster: EntityRow, target: EntityRow,
         text = f"An assassin of {spymaster.name} struck at {victim.name}, ruler of {target.name}, and left them wounded."
         await _note(ctx, text, "espionage.assassination_wounded", (spymaster.id, target.id, victim.id))
         return text
-    await death_path(
-        ctx, victim, f"murdered by the agents of {spymaster.name}", spymaster.id, "assassination", forced=True, harm=HarmCause.POISON, manner=DeathCause.MURDER
-    )
-    for agent in await agents_of(ctx, network):
-        if agent.mortal_entity_id is not None:
-            await house_feud(ctx, agent.mortal_entity_id, victim.id, f"the murder of {victim.name}")
-            break
-    text = f"Agents of {spymaster.name} reached {victim.name}, ruler of {target.name}, and killed them."
+    method = await choose_method(ctx, spymaster, network, victim)
+    killing = await examine(ctx, victim, spymaster.id, method)
+    manner = DeathCause.MURDER if killing.recognised else METHOD_SEEMING[method]
+    await death_path(ctx, victim, f"died {METHOD_TEXT[method]}", spymaster.id, "assassination", forced=True, harm=METHOD_HARM[method], manner=manner)
+    if not killing.recognised:
+        text = f"{victim.name}, ruler of {target.name}, died, and no one saw the hand of {spymaster.name} in it."
+        await _note(ctx, text, "espionage.assassination_hidden", (target.id, victim.id))
+        return text
+    await answer_murder(ctx, network, victim, target)
+    text = f"Agents of {spymaster.name} reached {victim.name}, ruler of {target.name}, and killed them {METHOD_TEXT[method]}."
     await _note(ctx, text, "espionage.assassination", (spymaster.id, target.id, victim.id))
     return text
+
+
+async def answer_murder(ctx: TickContext, network: SpyNetworkRow, victim: EntityRow, target: EntityRow) -> None:
+    killers = [agent.mortal_entity_id for agent in await agents_of(ctx, network) if agent.mortal_entity_id is not None]
+    if not killers:
+        return
+    await house_feud(ctx, killers[0], victim.id, f"the murder of {victim.name}")
+    town = victim.location_id if victim.location_id is not None else target.id
+    if ctx.rng(f"espionage.inquest.{victim.id}").chance(ctx.rules.forensics.investigate_pct):
+        await report_crime(ctx, town, killers[0], CrimeKind.MURDER)
 
 
 async def incite(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
@@ -351,7 +366,8 @@ async def deepen(ctx: TickContext, network: SpyNetworkRow) -> None:
     rules = ctx.rules.espionage
     skill = await skill_level(ctx.session, network.spymaster_entity_id, SkillKind.INTRIGUE) if network.spymaster_entity_id is not None else 0
     if "depth" not in network.locked:
-        network.depth = clamp_int(network.depth + cover_access(network, round_half_up(rules.depth_gain * (1 + skill / PERCENT))), 0, PERCENT)
+        gain = round_half_up(rules.depth_gain * (1 + skill / PERCENT) * await topology_pct(ctx, network) / PERCENT)
+        network.depth = clamp_int(network.depth + cover_access(network, gain), 0, PERCENT)
     ctx.count("agents_retired", await retire_agents(ctx, network))
     if "agents" not in network.locked and await recruit(ctx, network) is not None:
         network.agents += 1
@@ -421,6 +437,7 @@ async def run_networks(ctx: TickContext) -> None:
     "table.epoch_year_cursors",
     "table.feuds",
     "table.goods",
+    "table.hooks",
     "table.house_members",
     "table.house_profiles",
     "table.injuries",

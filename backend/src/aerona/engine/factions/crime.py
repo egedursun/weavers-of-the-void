@@ -92,7 +92,7 @@ async def buy_officials(ctx: TickContext, faction: EntityRow, profile: FactionPr
         if official_row is None or profile.treasury < row.bribe:
             continue
         profile.treasury -= row.bribe
-        give_coin(ctx.rules, official_row, row.bribe)
+        await give_coin(ctx.session, ctx.rules, official_row, row.bribe)
 
 
 async def punish_informers(ctx: TickContext, faction: EntityRow, tally: CrimeTally) -> None:

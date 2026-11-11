@@ -5,6 +5,7 @@ from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.justice import CaseStage, Deposition, ProposalEvent, ProposalStance, ProposalState, TrialKind, Verdict
+from aerona.domain.enums.law_depth import CourtLevel
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import LawKind, LegitimacyBasis
@@ -80,6 +81,9 @@ class CrimeCaseRow(Base):
     penalty: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
     opened_epoch: Mapped[int] = mapped_column(default=0)
     closed_epoch: Mapped[int | None]
+    advocate_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    court: Mapped[CourtLevel] = mapped_column(enum_type(CourtLevel, "court"), default=CourtLevel.LOCAL, server_default="local")
+    oracle_answer: Mapped[Verdict | None] = mapped_column(enum_type(Verdict, "oracle_answer"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

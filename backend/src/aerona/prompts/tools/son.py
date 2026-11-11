@@ -926,6 +926,16 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You scour a district of a town: every criminal organisation's hold on its streets weakens. 1 action.",
         {"district_id": "The district", "reason": "Why you scour it"},
     ),
+    T.ANSWER_ORACLE: ToolText(
+        "A realm whose legal system asks the gods for verdicts waits on a case; you give the oracle your answer, true or not, and the court "
+        "follows it. Left unanswered, the oracle names the truth only by chance. 1 action.",
+        {"case_id": "The case awaiting trial", "verdict": "guilty or acquitted", "reason": "Why you answer so"},
+    ),
+    T.READ_DREAMS: ToolText(
+        "You read the dreams of a mortal and learn some of the secrets they keep. Wards, a guardian servitor of another god or a stronger "
+        "god's presence where they are may turn you aside. 1 action.",
+        {"mortal_id": "The mortal", "reason": "Why you read them"},
+    ),
     T.MARK_LINEAGE: ToolText(
         "You mark the line of a species: a blessing passes to every young of that line, to the breeds herders make of it and to the great "
         "beasts born of it; a taint does the same, and only gods of death, plague, madness, shadow, blood or hunger may lay one. 1 action.",

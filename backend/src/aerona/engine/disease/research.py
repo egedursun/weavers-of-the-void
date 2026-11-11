@@ -137,7 +137,7 @@ async def spread_cures(ctx: TickContext, tally: ResearchTally) -> None:
             buyer = await ctx.session.get(EntityRow, partner_id)
             if buyer is None or not await take_coin(ctx.session, ctx.rules, buyer, table.price):
                 continue
-            give_coin(ctx.rules, holder, table.price)
+            await give_coin(ctx.session, ctx.rules, holder, table.price)
             ctx.session.add(
                 DiseaseCureRow(disease_entity_id=cure.disease_entity_id, community_entity_id=partner_id, source=CureSource.KNOWLEDGE, since_epoch=ctx.epoch)
             )

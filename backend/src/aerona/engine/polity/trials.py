@@ -28,6 +28,10 @@ from aerona.engine.context import TickContext
 from aerona.engine.intrigue.favours import hook_on, use_hook
 from aerona.engine.intrigue.identities import EXPOSURE
 from aerona.engine.intrigue.secrets import learn
+from aerona.engine.law.appeals import file_appeal
+from aerona.engine.law.jurisdictions import claimed_court
+from aerona.engine.law.outlawry import declare_outlaw, is_outlaw
+from aerona.engine.law.systems import by_system, plead
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.civics import holders_know
 from aerona.engine.mind.book import skill_level, traits_of, values_for
@@ -99,6 +103,8 @@ async def townsfolk(ctx: TickContext, town_id: int, *, besides: set[int]) -> lis
 
 async def testimony_of(ctx: TickContext, case: CrimeCaseRow, witness: EntityRow, culprit_id: int) -> tuple[Deposition, int]:
     table = ctx.rules.trials
+    if await is_outlaw(ctx, witness.id):
+        return Deposition.SILENT, 0
     hook = await hook_on(ctx, culprit_id, witness.id)
     if hook is not None and await use_hook(ctx, hook, HookDemand.SUPPORT):
         return Deposition.SHIELDS, table.witness_reliability // 2
@@ -431,7 +437,7 @@ async def convict(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow, laws
     cruelty = PENALTY_CRUELTY.get(punishment.value, 0)
     if judge is not None and punishment not in MUTILATIONS and cruelty >= CRUEL:
         await shift_infamy(ctx, judge.id, ctx.rules.legislation.penal_infamy * cruelty // PERCENT)
-    applied = await sentence(ctx, accused, case.crime, punishment, judge=judge)
+    applied = await sentence(ctx, accused, case.crime, punishment, judge=judge, case_id=case.id)
     case.penalty = punishment.value if applied else "immunity"
     if case.wrongful:
         await grieve(ctx, case, accused, punishment)
@@ -455,13 +461,18 @@ async def try_case(ctx: TickContext, case: CrimeCaseRow, laws: LawBook, tally: T
     if accused is None or accused.location_id != case.settlement_entity_id:
         close(ctx, case, Verdict.FLED)
         tally.fled += 1
+        if accused is not None:
+            await declare_outlaw(ctx, accused, case.polity_entity_id)
         return
     await tamper(ctx, case, accused)
+    await claimed_court(ctx, case, accused)
+    await plead(ctx, case, accused)
     trial = case.trial or TrialKind.JUDGE
-    guilty = await TRIALS[trial](ctx, case, accused)
+    guilty = await by_system(ctx, case, accused, await TRIALS[trial](ctx, case, accused))
     tally.tried += 1
     if guilty:
         await convict(ctx, case, accused, laws, tally)
+        await file_appeal(ctx, case, accused)
     else:
         close(ctx, case, Verdict.ACQUITTED)
         tally.acquitted += 1

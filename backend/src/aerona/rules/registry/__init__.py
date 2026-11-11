@@ -200,6 +200,21 @@ from aerona.rules.registry.justice import EnactmentRules, TrialRules
 from aerona.rules.registry.knowledge import KnowledgeRules
 from aerona.rules.registry.language import LanguageRules
 from aerona.rules.registry.language_contact import LanguageContactRules
+from aerona.rules.registry.law_depth import (
+    AppealRules,
+    DefectionRules,
+    DivineSpyRules,
+    ForensicsRules,
+    JurisdictionRules,
+    LegalSystemRules,
+    MoleHuntRules,
+    OutlawRules,
+    PardonRules,
+    PrecedentRules,
+    PrisonRules,
+    RegistryRules,
+    SpyDepthRules,
+)
 from aerona.rules.registry.ledger import LedgerRules
 from aerona.rules.registry.life_cycles import LifeCyclesRules
 from aerona.rules.registry.limits import LimitsRules
@@ -553,6 +568,19 @@ class Rules:
     cargo: CargoRules = field(default_factory=CargoRules)
     ports: PortRules = field(default_factory=PortRules)
     manipulation: ManipulationRules = field(default_factory=ManipulationRules)
+    legal_systems: LegalSystemRules = field(default_factory=LegalSystemRules)
+    precedents: PrecedentRules = field(default_factory=PrecedentRules)
+    appeals: AppealRules = field(default_factory=AppealRules)
+    registries: RegistryRules = field(default_factory=RegistryRules)
+    jurisdictions: JurisdictionRules = field(default_factory=JurisdictionRules)
+    pardons: PardonRules = field(default_factory=PardonRules)
+    outlaws: OutlawRules = field(default_factory=OutlawRules)
+    prisons: PrisonRules = field(default_factory=PrisonRules)
+    spy_depth: SpyDepthRules = field(default_factory=SpyDepthRules)
+    mole_hunts: MoleHuntRules = field(default_factory=MoleHuntRules)
+    defections: DefectionRules = field(default_factory=DefectionRules)
+    forensics: ForensicsRules = field(default_factory=ForensicsRules)
+    divine_spies: DivineSpyRules = field(default_factory=DivineSpyRules)
     collections: CollectionRules = field(default_factory=CollectionRules)
     storyteller: StorytellerRules = field(default_factory=StorytellerRules)
     sites: SiteRules = field(default_factory=SiteRules)

@@ -4863,6 +4863,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/law/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_law_api_law_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/intrigue/{node_id}': {
     parameters: {
       query?: never
@@ -16143,6 +16159,646 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/legal_system:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_legal_system_set_api_actions_legal_system_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/legal_system:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_legal_system_edit_api_actions_legal_system_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/legal_system:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_legal_system_delete_api_actions_legal_system_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/precedent:add': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_precedent_add_api_actions_precedent_add_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/precedent:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_precedent_edit_api_actions_precedent_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/precedent:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_precedent_delete_api_actions_precedent_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/appeal:file': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_appeal_file_api_actions_appeal_file_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/appeal:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_appeal_edit_api_actions_appeal_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/appeal:hear': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_appeal_hear_api_actions_appeal_hear_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/appeal:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_appeal_delete_api_actions_appeal_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/oracle:answer': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_oracle_answer_api_actions_oracle_answer_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/registry:add': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_registry_add_api_actions_registry_add_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/registry:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_registry_edit_api_actions_registry_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/registry:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_registry_delete_api_actions_registry_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/jurisdiction:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_jurisdiction_set_api_actions_jurisdiction_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/jurisdiction:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_jurisdiction_edit_api_actions_jurisdiction_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/jurisdiction:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_jurisdiction_delete_api_actions_jurisdiction_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/pardon:grant': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_pardon_grant_api_actions_pardon_grant_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/amnesty:declare': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_amnesty_declare_api_actions_amnesty_declare_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/pardon:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_pardon_delete_api_actions_pardon_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/outlaw:declare': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_outlaw_declare_api_actions_outlaw_declare_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/outlaw:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_outlaw_edit_api_actions_outlaw_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/outlaw:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_outlaw_delete_api_actions_outlaw_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/prison:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_prison_set_api_actions_prison_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/prison:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_prison_edit_api_actions_prison_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/prison:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_prison_delete_api_actions_prison_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/prisoner:jail': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_prisoner_jail_api_actions_prisoner_jail_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/prisoner:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_prisoner_edit_api_actions_prisoner_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/prisoner:free': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_prisoner_free_api_actions_prisoner_free_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/spy_cell:add': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_spy_cell_add_api_actions_spy_cell_add_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/spy_cell:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_spy_cell_edit_api_actions_spy_cell_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/spy_cell:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_spy_cell_delete_api_actions_spy_cell_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/mole_hunt:order': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_mole_hunt_order_api_actions_mole_hunt_order_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/mole_hunt:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_mole_hunt_delete_api_actions_mole_hunt_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/defection:make': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_defection_make_api_actions_defection_make_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/defection:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_defection_edit_api_actions_defection_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/defection:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_defection_delete_api_actions_defection_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/killing:add': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_killing_add_api_actions_killing_add_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/killing:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_killing_edit_api_actions_killing_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/killing:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_killing_delete_api_actions_killing_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/pidgin:make': {
     parameters: {
       query?: never
@@ -24718,6 +25374,14 @@ export interface components {
     AgeBand: 'child' | 'adult' | 'elder'
     AgeKind: 'normal' | 'golden' | 'dark' | 'heroic'
     AgentKind: 'son' | 'mortal'
+    AgentMotiveView: {
+      agent_id: number
+      mortal: components['schemas']['NodeRef'] | null
+      network_id: number
+      motive: components['schemas']['RecruitMotive']
+      loyalty: number
+      cell_id: number | null
+    }
     AgentRetryEvent: {
       id: number
       kind: 'agent.retry'
@@ -24835,6 +25499,9 @@ export interface components {
       first_id: number
       second_id: number
     }
+    AmnestyDeclareInput: {
+      polity_id: number
+    }
     AnatomyEditInput: {
       node_id: number
       values?: {
@@ -24903,7 +25570,37 @@ export interface components {
     ApocalypseVariantInput: {
       variant?: components['schemas']['ApocalypseVariant'] | null
     }
+    AppealDeleteInput: {
+      case_id: number
+    }
+    AppealEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      case_id: number
+    }
+    AppealFileInput: {
+      case_id: number
+      to_court: components['schemas']['CourtLevel']
+      fee: number
+    }
+    AppealHearInput: {
+      case_id: number
+    }
     AppealKind: 'belief' | 'self_interest' | 'authority' | 'evidence' | 'fear'
+    AppealView: {
+      case_id: number
+      accused: components['schemas']['NodeRef'] | null
+      crime: components['schemas']['CrimeKind']
+      from_court: components['schemas']['CourtLevel']
+      to_court: components['schemas']['CourtLevel']
+      fee: number
+      filed_epoch: number
+      decided_epoch: number | null
+      reversed: boolean
+      locked: string[]
+    }
     ApprovalRemoveInput: {
       polity_id: number
       social_class: components['schemas']['SocialClass']
@@ -26488,10 +27185,13 @@ export interface components {
       clear_culprit: boolean
       judge_id?: number | null
       investigator_id?: number | null
+      advocate_id?: number | null
+      clear_advocate: boolean
       trial?: components['schemas']['TrialKind'] | null
       evidence?: number | null
       stage?: components['schemas']['CaseStage'] | null
       crime?: components['schemas']['CrimeKind'] | null
+      court?: components['schemas']['CourtLevel'] | null
       hold: boolean
     }
     CaseHoldInput: {
@@ -26622,6 +27322,14 @@ export interface components {
       known: number[]
       polygon_offsets: number[]
       polygon_coordinates: number[]
+    }
+    CellView: {
+      id: number
+      network_id: number
+      handler: components['schemas']['NodeRef'] | null
+      safe_house: components['schemas']['NodeRef'] | null
+      dead_drops: number
+      locked: string[]
     }
     ChainStepView: {
       key: string
@@ -27929,6 +28637,7 @@ export interface components {
       courtiers?: number | null
       hold: boolean
     }
+    CourtLevel: 'local' | 'provincial' | 'high' | 'religious'
     CourtPosition:
       | 'steward'
       | 'champion'
@@ -28173,6 +28882,9 @@ export interface components {
       accused: components['schemas']['NodeRef'] | null
       investigator: components['schemas']['NodeRef'] | null
       judge: components['schemas']['NodeRef'] | null
+      advocate: components['schemas']['NodeRef'] | null
+      court: components['schemas']['CourtLevel']
+      oracle_answer: components['schemas']['Verdict'] | null
       stage: components['schemas']['CaseStage']
       trial: components['schemas']['TrialKind'] | null
       evidence: number
@@ -28718,6 +29430,32 @@ export interface components {
     DeedWeightView: {
       deed: components['schemas']['CreatureDeed']
       weight: number
+    }
+    DefectionDeleteInput: {
+      defection_id: number
+    }
+    DefectionEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      defection_id: number
+    }
+    DefectionMakeInput: {
+      mortal_id: number
+      from_id?: number | null
+      to_id: number
+      protected: boolean
+    }
+    DefectionView: {
+      id: number
+      defector: components['schemas']['NodeRef'] | null
+      from_side: components['schemas']['NodeRef'] | null
+      to_side: components['schemas']['NodeRef'] | null
+      secrets: number
+      protected: boolean
+      epoch: number
+      locked: string[]
     }
     DefenceView: {
       wall_pct: number
@@ -34207,6 +34945,35 @@ export interface components {
       rite: components['schemas']['FuneralRite']
       reason: string
     }
+    JurisdictionClaim: 'clergy' | 'guild' | 'foreign'
+    JurisdictionDeleteInput: {
+      holder_id: number
+      claimant_id: number
+      claim: components['schemas']['JurisdictionClaim']
+    }
+    JurisdictionEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      holder_id: number
+      claimant_id: number
+      claim: components['schemas']['JurisdictionClaim']
+    }
+    JurisdictionSetInput: {
+      holder_id: number
+      claimant_id: number
+      claim: components['schemas']['JurisdictionClaim']
+      strength: number
+    }
+    JurisdictionView: {
+      holder: components['schemas']['NodeRef'] | null
+      claimant: components['schemas']['NodeRef'] | null
+      claim: components['schemas']['JurisdictionClaim']
+      strength: number
+      since_epoch: number
+      locked: string[]
+    }
     JusticeView: {
       node_id: number
       is_realm: boolean
@@ -34224,6 +34991,33 @@ export interface components {
       held: boolean
     }
     KeystoneRole: 'pollinator' | 'soil_maker' | 'dam_builder' | 'scavenger'
+    KillMethod: 'blade' | 'poison' | 'accident' | 'disease' | 'curse'
+    KillingAddInput: {
+      victim_id: number
+      killer_id?: number | null
+      method: components['schemas']['KillMethod']
+      recognised: boolean
+    }
+    KillingDeleteInput: {
+      killing_id: number
+    }
+    KillingEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      killing_id: number
+    }
+    KillingView: {
+      id: number
+      victim: components['schemas']['NodeRef'] | null
+      killer: components['schemas']['NodeRef'] | null
+      method: components['schemas']['KillMethod']
+      recognised: boolean
+      examiner: components['schemas']['NodeRef'] | null
+      epoch: number
+      locked: string[]
+    }
     Kin: {
       id: number
       name: string
@@ -34879,6 +35673,27 @@ export interface components {
     LedgerView: {
       loans: components['schemas']['LoanView'][]
       debts: components['schemas']['DebtView'][]
+    }
+    LegalSystem:
+      'customary' | 'codified' | 'religious' | 'precedent' | 'oracle' | 'mixed'
+    LegalSystemDeleteInput: {
+      holder_id: number
+    }
+    LegalSystemEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      holder_id: number
+    }
+    LegalSystemSetInput: {
+      holder_id: number
+      system: components['schemas']['LegalSystem']
+    }
+    LegalSystemView: {
+      system: components['schemas']['LegalSystem']
+      since_epoch: number
+      locked: string[]
     }
     LegendArchetype:
       | 'hero_quest'
@@ -36662,6 +37477,22 @@ export interface components {
       | 'player'
       | 'suppression'
       | 'pin'
+    MoleHuntDeleteInput: {
+      hunt_id: number
+    }
+    MoleHuntOrderInput: {
+      polity_id: number
+    }
+    MoleHuntOutcome: 'caught' | 'cleared' | 'purged' | 'defected'
+    MoleHuntView: {
+      id: number
+      polity: components['schemas']['NodeRef'] | null
+      spymaster: components['schemas']['NodeRef'] | null
+      suspect: components['schemas']['NodeRef'] | null
+      mole: boolean
+      outcome: components['schemas']['MoleHuntOutcome']
+      epoch: number
+    }
     MoodInput: {
       epoch: number
       axis: components['schemas']['CreatorMoodAxis']
@@ -36938,6 +37769,11 @@ export interface components {
       | 'send_convoy'
       | 'corner_market'
       | 'call_tribunal'
+      | 'register_deed'
+      | 'appeal_conviction'
+      | 'claim_bounty'
+      | 'grant_pardon'
+      | 'hunt_moles'
       | 'seek_cure'
       | 'find_carrier'
       | 'proclaim_tongue'
@@ -37202,6 +38038,11 @@ export interface components {
       name: string
     }
     NerveDamage: 'none' | 'motor' | 'sensory'
+    NetworkChoice: {
+      id: number
+      owner: components['schemas']['NodeRef'] | null
+      target: components['schemas']['NodeRef'] | null
+    }
     NetworkHealth: {
       nodes: number
       edges: number
@@ -37294,6 +38135,26 @@ export interface components {
       | 'galaxy'
       | 'cluster'
       | 'dimension'
+    NodeLawView: {
+      node: components['schemas']['NodeRef']
+      system: components['schemas']['LegalSystemView'] | null
+      precedents: components['schemas']['PrecedentView'][]
+      appeals: components['schemas']['AppealView'][]
+      oracle_cases: components['schemas']['OracleCaseView'][]
+      registries: components['schemas']['RegistryView'][]
+      jurisdictions: components['schemas']['JurisdictionView'][]
+      pardons: components['schemas']['PardonView'][]
+      outlaws: components['schemas']['OutlawView'][]
+      prison: components['schemas']['PrisonView'] | null
+      prisons_here: components['schemas']['NodeRef'][]
+      prisoners: components['schemas']['PrisonerView'][]
+      agents: components['schemas']['AgentMotiveView'][]
+      cells: components['schemas']['CellView'][]
+      networks: components['schemas']['NetworkChoice'][]
+      hunts: components['schemas']['MoleHuntView'][]
+      defections: components['schemas']['DefectionView'][]
+      killings: components['schemas']['KillingView'][]
+    }
     NodeMaterialClearInput: {
       node_id: number
       slot: components['schemas']['MaterialSlot']
@@ -37619,6 +38480,16 @@ export interface components {
       subject_id: number
       lines: components['schemas']['OpportunityLineView'][]
     }
+    OracleAnswerInput: {
+      case_id: number
+      verdict?: components['schemas']['Verdict'] | null
+    }
+    OracleCaseView: {
+      case_id: number
+      accused: components['schemas']['NodeRef'] | null
+      crime: components['schemas']['CrimeKind']
+      oracle_answer: components['schemas']['Verdict'] | null
+    }
     OrbitRecord: {
       world_id: number
       name: string
@@ -37742,6 +38613,29 @@ export interface components {
       release?: string[]
       being_id: number
     }
+    OutlawDeclareInput: {
+      mortal_id: number
+      polity_id?: number | null
+      bounty: number
+    }
+    OutlawDeleteInput: {
+      mortal_id: number
+    }
+    OutlawEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      mortal_id: number
+    }
+    OutlawView: {
+      mortal: components['schemas']['NodeRef'] | null
+      polity: components['schemas']['NodeRef'] | null
+      bounty: number
+      renown: number
+      declared_epoch: number
+      locked: string[]
+    }
     PackageKind:
       | 'snake_venom'
       | 'drink_dependence'
@@ -37845,6 +38739,22 @@ export interface components {
       total: number
       offset: number
       limit: number
+    }
+    PardonDeleteInput: {
+      pardon_id: number
+    }
+    PardonGrantInput: {
+      granter_id: number
+      mortal_id: number
+    }
+    PardonView: {
+      id: number
+      granter: components['schemas']['NodeRef'] | null
+      pardoned: components['schemas']['NodeRef'] | null
+      case_id: number | null
+      amnesty: boolean
+      corrupt: boolean
+      epoch: number
     }
     PartOfSpeech:
       | 'noun'
@@ -39053,6 +39963,34 @@ export interface components {
       sender: components['schemas']['NodeRef'] | null
       sender_cover?: string | null
     }
+    PrecedentAddInput: {
+      holder_id: number
+      crime: components['schemas']['CrimeKind']
+      verdict: components['schemas']['Verdict']
+      court: components['schemas']['CourtLevel']
+      authority: number
+    }
+    PrecedentDeleteInput: {
+      precedent_id: number
+    }
+    PrecedentEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      precedent_id: number
+    }
+    PrecedentView: {
+      id: number
+      crime: components['schemas']['CrimeKind']
+      verdict: components['schemas']['Verdict']
+      court: components['schemas']['CourtLevel']
+      case_id: number | null
+      authority: number
+      overturned: boolean
+      epoch: number
+      locked: string[]
+    }
     PreferenceKind:
       | 'material'
       | 'food'
@@ -39127,6 +40065,54 @@ export interface components {
     PriceView: {
       commodity: components['schemas']['CommodityKind']
       price_pct: number
+    }
+    PrisonDeleteInput: {
+      structure_id: number
+    }
+    PrisonEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      structure_id: number
+    }
+    PrisonSetInput: {
+      structure_id: number
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+    }
+    PrisonView: {
+      structure: components['schemas']['NodeRef'] | null
+      food: number
+      crowding: number
+      cruelty: number
+      gang_strength: number
+      locked: string[]
+    }
+    PrisonerEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      mortal_id: number
+    }
+    PrisonerFreeInput: {
+      mortal_id: number
+    }
+    PrisonerJailInput: {
+      mortal_id: number
+      prison_id: number
+      term: number
+    }
+    PrisonerView: {
+      mortal: components['schemas']['NodeRef'] | null
+      prison: components['schemas']['NodeRef'] | null
+      case_id: number | null
+      term: number
+      gang_rank: number
+      since_epoch: number
+      locked: string[]
     }
     ProcessKind:
       | 'farming'
@@ -39483,6 +40469,7 @@ export interface components {
       | 'eyes'
       | 'death'
       | 'public_shaming'
+      | 'imprisonment'
     PutBeliefsBody: {
       people_id: number
       son_id?: number | null
@@ -39837,6 +40824,7 @@ export interface components {
       columns: components['schemas']['RecordColumnView'][]
       rows: components['schemas']['RecordRowView'][]
     }
+    RecruitMotive: 'money' | 'ideology' | 'compromise' | 'ego'
     RegardRemoveInput: {
       holder_id: number
       subject_id: number
@@ -40175,6 +41163,36 @@ export interface components {
       language: components['schemas']['NodeRef'] | null
       since_epoch: number
       held: boolean
+    }
+    RegistryAddInput: {
+      holder_id: number
+      kind: components['schemas']['RegistryKind']
+      owner_id?: number | null
+      counterparty_id?: number | null
+      subject_id?: number | null
+      amount: number
+    }
+    RegistryDeleteInput: {
+      registry_id: number
+    }
+    RegistryEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      registry_id: number
+    }
+    RegistryKind: 'land_title' | 'debt' | 'sale' | 'dowry' | 'indenture'
+    RegistryView: {
+      id: number
+      holder: components['schemas']['NodeRef'] | null
+      kind: components['schemas']['RegistryKind']
+      owner: components['schemas']['NodeRef'] | null
+      counterparty: components['schemas']['NodeRef'] | null
+      subject: components['schemas']['NodeRef'] | null
+      amount: number
+      registered_epoch: number
+      locked: string[]
     }
     ReincarnationGate: 'tenet' | 'natural_law' | 'rite' | 'god'
     RelationEntry: {
@@ -41486,7 +42504,7 @@ export interface components {
     ServitorReleaseInput: {
       spirit_id: number
     }
-    ServitorRole: 'messenger' | 'guard' | 'judge' | 'host'
+    ServitorRole: 'messenger' | 'guard' | 'judge' | 'host' | 'spy'
     ServitorView: {
       spirit: components['schemas']['NodeRef'] | null
       god: components['schemas']['NodeRef'] | null
@@ -42403,6 +43421,8 @@ export interface components {
       | 'mark_lineage'
       | 'shield_convoy'
       | 'scour_streets'
+      | 'answer_oracle'
+      | 'read_dreams'
       | 'move_plague_response'
       | 'decree_sound'
       | 'veil_name'
@@ -43047,6 +44067,22 @@ export interface components {
       'beast_awakening' | 'raid' | 'comet' | 'plague' | 'claimant'
     SpreadPath:
       'origin' | 'route' | 'army' | 'journey' | 'siege' | 'loosed' | 'mutation'
+    SpyCellAddInput: {
+      network_id: number
+      handler_id?: number | null
+      safe_house_id?: number | null
+      dead_drops: number
+    }
+    SpyCellDeleteInput: {
+      cell_id: number
+    }
+    SpyCellEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      cell_id: number
+    }
     SpyCover: 'merchant' | 'priest' | 'envoy' | 'beggar'
     SpyEditNetworkInput: {
       network_id: number
@@ -56722,6 +57758,35 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['NodeUrbanView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_law_api_law_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NodeLawView']
         }
       }
       default: {
@@ -78288,6 +79353,1246 @@ export interface operations {
       }
     }
   }
+  action_legal_system_set_api_actions_legal_system_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LegalSystemSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_legal_system_edit_api_actions_legal_system_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LegalSystemEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_legal_system_delete_api_actions_legal_system_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LegalSystemDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_precedent_add_api_actions_precedent_add_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrecedentAddInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_precedent_edit_api_actions_precedent_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrecedentEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_precedent_delete_api_actions_precedent_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrecedentDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_appeal_file_api_actions_appeal_file_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AppealFileInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_appeal_edit_api_actions_appeal_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AppealEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_appeal_hear_api_actions_appeal_hear_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AppealHearInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_appeal_delete_api_actions_appeal_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AppealDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_oracle_answer_api_actions_oracle_answer_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['OracleAnswerInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_registry_add_api_actions_registry_add_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegistryAddInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_registry_edit_api_actions_registry_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegistryEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_registry_delete_api_actions_registry_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegistryDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_jurisdiction_set_api_actions_jurisdiction_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['JurisdictionSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_jurisdiction_edit_api_actions_jurisdiction_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['JurisdictionEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_jurisdiction_delete_api_actions_jurisdiction_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['JurisdictionDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_pardon_grant_api_actions_pardon_grant_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PardonGrantInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_amnesty_declare_api_actions_amnesty_declare_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AmnestyDeclareInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_pardon_delete_api_actions_pardon_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PardonDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_outlaw_declare_api_actions_outlaw_declare_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['OutlawDeclareInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_outlaw_edit_api_actions_outlaw_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['OutlawEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_outlaw_delete_api_actions_outlaw_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['OutlawDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_prison_set_api_actions_prison_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrisonSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_prison_edit_api_actions_prison_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrisonEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_prison_delete_api_actions_prison_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrisonDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_prisoner_jail_api_actions_prisoner_jail_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrisonerJailInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_prisoner_edit_api_actions_prisoner_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrisonerEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_prisoner_free_api_actions_prisoner_free_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrisonerFreeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_spy_cell_add_api_actions_spy_cell_add_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SpyCellAddInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_spy_cell_edit_api_actions_spy_cell_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SpyCellEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_spy_cell_delete_api_actions_spy_cell_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SpyCellDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_mole_hunt_order_api_actions_mole_hunt_order_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MoleHuntOrderInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_mole_hunt_delete_api_actions_mole_hunt_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MoleHuntDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_defection_make_api_actions_defection_make_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DefectionMakeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_defection_edit_api_actions_defection_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DefectionEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_defection_delete_api_actions_defection_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DefectionDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_killing_add_api_actions_killing_add_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['KillingAddInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_killing_edit_api_actions_killing_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['KillingEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_killing_delete_api_actions_killing_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['KillingDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   action_pidgin_make_api_actions_pidgin_make_post: {
     parameters: {
       query?: never
@@ -95210,6 +97515,9 @@ export const councilTaskValues: ReadonlyArray<
 export const councilVoteValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CouncilVote']
 > = ['yes', 'no', 'abstain']
+export const courtLevelValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CourtLevel']
+> = ['local', 'provincial', 'high', 'religious']
 export const courtPositionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CourtPosition']
 > = [
@@ -97141,9 +99449,15 @@ export const journeyStatusValues: ReadonlyArray<
 export const judgementDoctrineValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['JudgementDoctrine']
 > = ['deeds', 'faith', 'rite', 'favour', 'none']
+export const jurisdictionClaimValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['JurisdictionClaim']
+> = ['clergy', 'guild', 'foreign']
 export const keystoneRoleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['KeystoneRole']
 > = ['pollinator', 'soil_maker', 'dam_builder', 'scavenger']
+export const killMethodValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['KillMethod']
+> = ['blade', 'poison', 'accident', 'disease', 'curse']
 export const kinBondInputKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['KinBondInput']['kind']
 > = [
@@ -97302,6 +99616,9 @@ export const lawStatsKindValues: ReadonlyArray<
 export const ledgerUndoneEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LedgerUndoneEvent']['kind']
 > = ['ledger.undone']
+export const legalSystemValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LegalSystem']
+> = ['customary', 'codified', 'religious', 'precedent', 'oracle', 'mixed']
 export const legendArchetypeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LegendArchetype']
 > = [
@@ -97771,6 +100088,9 @@ export const modifierSourceValues: ReadonlyArray<
   'suppression',
   'pin',
 ]
+export const moleHuntOutcomeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MoleHuntOutcome']
+> = ['caught', 'cleared', 'purged', 'defected']
 export const moodStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MoodState']
 > = ['elated', 'content', 'fine', 'uneasy', 'unhappy', 'miserable', 'broken']
@@ -97902,6 +100222,11 @@ export const mortalToolIdValues: ReadonlyArray<
   'send_convoy',
   'corner_market',
   'call_tribunal',
+  'register_deed',
+  'appeal_conviction',
+  'claim_bounty',
+  'grant_pardon',
+  'hunt_moles',
   'seek_cure',
   'find_carrier',
   'proclaim_tongue',
@@ -98687,6 +101012,7 @@ export const punishmentKindValues: ReadonlyArray<
   'eyes',
   'death',
   'public_shaming',
+  'imprisonment',
 ]
 export const qualityTierValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['QualityTier']
@@ -98727,6 +101053,9 @@ export const rechargeRuleValues: ReadonlyArray<
 export const recordEndValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RecordEnd']
 > = ['repeal', 'abandon', 'forget', 'disband', 'lose', 'assimilate']
+export const recruitMotiveValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RecruitMotive']
+> = ['money', 'ideology', 'compromise', 'ego']
 export const regionMemoryKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RegionMemoryKind']
 > = [
@@ -98746,6 +101075,9 @@ export const regionStatsKindValues: ReadonlyArray<
 export const regionalStandingValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RegionalStanding']
 > = ['hegemon', 'great_power', 'minor_power', 'client']
+export const registryKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RegistryKind']
+> = ['land_title', 'debt', 'sale', 'dowry', 'indenture']
 export const reincarnationGateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ReincarnationGate']
 > = ['tenet', 'natural_law', 'rite', 'god']
@@ -99030,7 +101362,7 @@ export const servitorRankValues: ReadonlyArray<
 > = ['herald', 'guardian', 'angel', 'fury', 'psychopomp', 'choir']
 export const servitorRoleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ServitorRole']
-> = ['messenger', 'guard', 'judge', 'host']
+> = ['messenger', 'guard', 'judge', 'host', 'spy']
 export const settlementStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SettlementStats']['kind']
 > = ['settlement']
@@ -99323,6 +101655,8 @@ export const sonToolIdValues: ReadonlyArray<
   'mark_lineage',
   'shield_convoy',
   'scour_streets',
+  'answer_oracle',
+  'read_dreams',
   'move_plague_response',
   'decree_sound',
   'veil_name',

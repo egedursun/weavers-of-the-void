@@ -12,6 +12,7 @@ import {
   StatBar,
 } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
+import { COURTS } from '@/features/lawDepth/labels'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -78,6 +79,7 @@ const ROLES: Record<string, string> = {
   culprit_id: 'True culprit',
   judge_id: 'Judge',
   investigator_id: 'Investigator',
+  advocate_id: 'Advocate',
 }
 type Terms = Record<string, string | number | boolean>
 type Ctx = {
@@ -783,6 +785,7 @@ function CaseEditor({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
   const [trial, setTrial] = useState<string>(row.trial ?? 'judge')
   const [stage, setStage] = useState<string>(row.stage)
   const [crime, setCrime] = useState<string>(row.crime)
+  const [court, setCourt] = useState<string>(row.court)
   const [role, setRole] = useState('')
   const [person, setPerson] = useState<number | null>(null)
   const edit = useGodAction({
@@ -792,6 +795,7 @@ function CaseEditor({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
           body: {
             case_id: row.id,
             clear_culprit: false,
+            clear_advocate: false,
             hold: ctx.hold,
             ...body,
           },
@@ -806,7 +810,8 @@ function CaseEditor({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
   const changed =
     trial !== (row.trial ?? 'judge') ||
     stage !== row.stage ||
-    crime !== row.crime
+    crime !== row.crime ||
+    court !== row.court
   const missing = !role
     ? 'Choose a role.'
     : person === null
@@ -837,6 +842,7 @@ function CaseEditor({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
               body: {
                 case_id: row.id,
                 clear_culprit: false,
+                clear_advocate: false,
                 evidence: value,
                 hold: ctx.hold,
               },
@@ -844,7 +850,7 @@ function CaseEditor({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
           )
         }
       />
-      <div className='grid min-w-0 grid-cols-1 items-end gap-3 sm:grid-cols-3'>
+      <div className='grid min-w-0 grid-cols-1 items-end gap-3 sm:grid-cols-4'>
         <MindPicker
           label='Trial'
           value={trial}
@@ -866,6 +872,13 @@ function CaseEditor({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
           blocked={busy}
           onPick={setCrime}
         />
+        <MindPicker
+          label='Court'
+          value={court}
+          table={labelTable(COURTS)}
+          blocked={busy}
+          onPick={setCourt}
+        />
       </div>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Button
@@ -873,13 +886,16 @@ function CaseEditor({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
           disabled={busy !== null || !changed}
           disabledReason={
             busy ??
-            (!changed ? 'Change the trial, stage or crime first.' : undefined)
+            (!changed
+              ? 'Change the trial, stage, crime or court first.'
+              : undefined)
           }
           onClick={() =>
             edit.mutate({
               trial: trial as TrialKind,
               stage: stage as CaseStage,
               crime: crime as CrimeKind,
+              court: court as CrimeCase['court'],
             })
           }
         >
@@ -896,6 +912,18 @@ function CaseEditor({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
           onClick={() => edit.mutate({ clear_culprit: true })}
         >
           Name no culprit
+        </Button>
+        <Button
+          size='sm'
+          variant='ghost'
+          disabled={busy !== null || !row.advocate}
+          disabledReason={
+            busy ??
+            (!row.advocate ? 'No advocate speaks for the accused.' : undefined)
+          }
+          onClick={() => edit.mutate({ clear_advocate: true })}
+        >
+          Dismiss the advocate
         </Button>
       </div>
       <AddBar
@@ -1002,6 +1030,8 @@ function CaseRow({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
           <Ref node={row.judge} />
           {', investigated by '}
           <Ref node={row.investigator} />
+          {', defended by '}
+          <Ref node={row.advocate} empty='no advocate' />
           {`, opened in epoch ${row.opened_epoch}`}
         </>
       }
@@ -1009,6 +1039,10 @@ function CaseRow({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
         <>
           <Tag spec={spec(STAGES, row.stage)} />
           {row.trial && <Tag spec={spec(TRIALS, row.trial)} />}
+          <Tag spec={COURTS[row.court]} />
+          {row.oracle_answer && (
+            <Badge variant='secondary'>{`The oracle will say ${spec(VERDICTS, row.oracle_answer).label.toLowerCase()}`}</Badge>
+          )}
           {row.verdict && <Tag spec={spec(VERDICTS, row.verdict)} />}
           {row.wrongful && <Badge variant='destructive'>Wrongful</Badge>}
           {row.tortured && (

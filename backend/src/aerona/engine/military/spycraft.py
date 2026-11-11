@@ -22,6 +22,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import TREASURY_LOCK, receive_coin
 from aerona.engine.environment.book import region_environment, scar_region
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.military.spy_depth import compromise, motivate
 from aerona.engine.mortal.profile import ensure_profile, is_held
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -111,6 +112,7 @@ async def recruit(ctx: TickContext, network: SpyNetworkRow) -> SpyAgentRow | Non
         since_epoch=ctx.epoch,
         locked=[],
     )
+    await motivate(ctx, network, agent, mortal)
     ctx.session.add(agent)
     await ctx.session.flush()
     network.agent_ids = sorted({*network.agent_ids, mortal.id})
@@ -123,6 +125,7 @@ async def catch_agent(ctx: TickContext, network: SpyNetworkRow, target: EntityRo
         return None
     agent = max(agents, key=lambda row: (row.exposure, row.id))
     agent.status, agent.ended_epoch = AgentStatus.CAUGHT, ctx.epoch
+    await compromise(ctx, network, agent)
     network.agent_ids = [item for item in network.agent_ids if item != agent.mortal_entity_id]
     network.agents = max(0, network.agents - 1)
     mortal = await living_entity(ctx.session, agent.mortal_entity_id)

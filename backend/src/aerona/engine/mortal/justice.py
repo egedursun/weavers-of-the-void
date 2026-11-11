@@ -14,6 +14,7 @@ from aerona.domain.enums.polity import LawKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.factions.estates import immune
+from aerona.engine.law.prisons import imprison
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.ethics import culture_of, honour_of
@@ -30,6 +31,7 @@ CODE_PUNISHMENTS: dict[str, PunishmentKind] = {
     "pillory": PunishmentKind.PUBLIC_SHAMING,
     "wergild": PunishmentKind.FINE,
     "flogging": PunishmentKind.FLOGGING,
+    "prison": PunishmentKind.IMPRISONMENT,
     "hand": PunishmentKind.HAND,
     "blinding": PunishmentKind.EYES,
     "tongue": PunishmentKind.TONGUE,
@@ -58,6 +60,7 @@ SENTENCE_TEXT = total(
         PunishmentKind.TONGUE: "had their tongue cut out by the law",
         PunishmentKind.EYES: "was blinded by the law",
         PunishmentKind.DEATH: "was put to death",
+        PunishmentKind.IMPRISONMENT: "was sent to prison",
     },
 )
 CRIME_TEXT = total(
@@ -103,7 +106,15 @@ async def shame_publicly(ctx: TickContext, culprit: EntityRow, judge: EntityRow 
     await think(ctx.session, ctx.rules, culprit.id, ThoughtKind.WAS_SHAMED, ctx.epoch, subject_id=judge.id if judge is not None else None, intensity=size)
 
 
-async def sentence(ctx: TickContext, culprit: EntityRow, crime: CrimeKind, punishment: PunishmentKind, *, judge: EntityRow | None = None) -> bool:
+async def jailed_or_fined(ctx: TickContext, culprit: EntityRow, punishment: PunishmentKind, case_id: int | None) -> PunishmentKind:
+    if punishment is PunishmentKind.IMPRISONMENT and await imprison(ctx, culprit, case_id=case_id) is None:
+        return PunishmentKind.FINE
+    return punishment
+
+
+async def sentence(
+    ctx: TickContext, culprit: EntityRow, crime: CrimeKind, punishment: PunishmentKind, *, judge: EntityRow | None = None, case_id: int | None = None
+) -> bool:
     table = ctx.rules.punishment
     reason = f"punished for {CRIME_TEXT[crime]}"
     if await immune(ctx, culprit):
@@ -113,6 +124,7 @@ async def sentence(ctx: TickContext, culprit: EntityRow, crime: CrimeKind, punis
         await judged(ctx, culprit.id, culprit.id, CRIME_ACTS[crime])
     if punishment is PunishmentKind.PUBLIC_SHAMING:
         await shame_publicly(ctx, culprit, judge)
+    punishment = await jailed_or_fined(ctx, culprit, punishment, case_id)
     if punishment is PunishmentKind.FINE:
         await add_wealth(ctx.session, culprit.id, -table.fine_wealth, ctx.epoch)
     elif punishment is PunishmentKind.FLOGGING:

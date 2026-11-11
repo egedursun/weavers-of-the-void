@@ -28,7 +28,7 @@ def pick(*values: str, default: str | None = None) -> Param:
 FRANCHISES = ("nobles", "landholders", "free", "all")
 CRIME_TERMS = ("theft", "murder", "treason", "blasphemy", "desertion")
 TORTURE_CRUELTY = 15
-PENALTIES = ("fine", "pillory", "flogging", "hand", "blinding", "tongue", "exile", "wergild", "death")
+PENALTIES = ("fine", "pillory", "flogging", "prison", "hand", "blinding", "tongue", "exile", "wergild", "death")
 LAW_PARAMS: MappingProxyType[LawKind, dict[str, Param]] = MappingProxyType(
     {
         LawKind.SUCCESSION_RULE: {
@@ -108,7 +108,7 @@ def law_terms_guide() -> str:
 
 
 PENALTY_CRUELTY = MappingProxyType(
-    {"fine": 0, "wergild": 5, "pillory": 15, "exile": 25, "flogging": 35, "hand": 60, "tongue": 65, "blinding": 80, "death": 100}
+    {"fine": 0, "wergild": 5, "pillory": 15, "exile": 25, "prison": 30, "flogging": 35, "hand": 60, "tongue": 65, "blinding": 80, "death": 100}
 )
 LAW_TITLES = MappingProxyType(
     {

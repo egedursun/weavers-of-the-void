@@ -4,6 +4,7 @@ import { DominionSection } from '@/features/dominion/DominionSection'
 import { EvolutionSection } from '@/features/evolution/EvolutionSection'
 import { GatheringsSection } from '@/features/gatherings/GatheringsSection'
 import { HistoriesSection } from '@/features/gatherings/HistoriesSection'
+import { LawDepthSection } from '@/features/lawDepth/LawDepthSection'
 import { TonguesSection } from '@/features/tongues/TonguesSection'
 import { UrbanSection } from '@/features/urban/UrbanSection'
 import { AffairsSection } from './AffairsSection'
@@ -71,6 +72,7 @@ export function ThingSections({
       <TonguesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <EvolutionSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <UrbanSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <LawDepthSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <RecordRowsSection nodeId={nodeId} />
     </>
   )

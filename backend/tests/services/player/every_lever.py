@@ -23,11 +23,15 @@ from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.epochs import DeferredStepRow, EpochRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.justice import CrimeCaseRow
+from aerona.db.tables.law_depth import MoleHuntRow
 from aerona.db.tables.lore import HistorianViewRow, MessageRow
 from aerona.db.tables.military import OccupationRow
+from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.routes import HorizonIntuitionRow, RouteRow
 from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind, BondState
@@ -46,10 +50,15 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.epoch import DeferredStepStatus
+from aerona.domain.enums.justice import CaseStage, Verdict
+from aerona.domain.enums.law_depth import MoleHuntOutcome
+from aerona.domain.enums.mortal import CrimeKind
+from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import SonStatus
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.world import WorldType
-from aerona.domain.models.entity_stats import CelestialStats, NaturalLawStats, OuterBeingStats
+from aerona.domain.models.entity_stats import CelestialStats, NaturalLawStats, OuterBeingStats, StructureStats
 from aerona.engine.cosmos import control
 from aerona.engine.cosmos.beings import create_being
 from aerona.engine.cosmos.control import dimensional_event, galactic_event
@@ -394,6 +403,77 @@ async def route_region(session: AsyncSession) -> int:
     assert route is not None
     found = await route_of(await manual_context(session, "lever", Rules()), route)
     return found.path[0]
+
+
+async def convicted_case(session: AsyncSession) -> int:
+    town = await canon(session, EntityType.SETTLEMENT, 0)
+    accused = await canon(session, EntityType.MORTAL, 0)
+    case = CrimeCaseRow(
+        settlement_entity_id=town, crime=CrimeKind.THEFT, accused_entity_id=accused, stage=CaseStage.CLOSED, verdict=Verdict.GUILTY, closed_epoch=0, locked=[]
+    )
+    session.add(case)
+    await session.flush()
+    return case.id
+
+
+async def town_prison(session: AsyncSession) -> int:
+    town = await canon(session, EntityType.SETTLEMENT, 0)
+    found = await session.scalar(
+        select(StructureProfileRow.structure_entity_id)
+        .where(StructureProfileRow.kind == StructureKind.PRISON, StructureProfileRow.host_entity_id == town)
+        .limit(1)
+    )
+    if found is not None:
+        return int(found)
+    town_row = await session.get(EntityRow, town)
+    assert town_row is not None
+    jail = await EntityRepository(session).create(
+        EntityDraft(
+            name="The Keep",
+            entity_type=EntityType.STRUCTURE,
+            description="A prison of the town.",
+            stats=StructureStats(),
+            power_level=1,
+            origin=EntityOrigin.ENGINE,
+            birth_epoch=1,
+            world_id=town_row.world_id,
+            location_id=town,
+        )
+    )
+    session.add(StructureProfileRow(structure_entity_id=jail.id, kind=StructureKind.PRISON, host_entity_id=town))
+    await session.flush()
+    return jail.id
+
+
+async def office_in_realm(session: AsyncSession, kind: OfficeKind) -> int:
+    realm = await canon(session, EntityType.POLITY, 0)
+    assert realm is not None
+    holder = await canon(session, EntityType.MORTAL, 1)
+    if (
+        await session.scalar(select(OfficeRow.id).where(OfficeRow.polity_entity_id == realm, OfficeRow.kind == kind, OfficeRow.holder_entity_id.is_not(None)))
+        is None
+    ):
+        session.add(OfficeRow(polity_entity_id=realm, kind=kind, holder_entity_id=holder))
+        await session.flush()
+    return realm
+
+
+async def spied_realm(session: AsyncSession) -> int:
+    return await office_in_realm(session, OfficeKind.SPYMASTER)
+
+
+async def ruled_realm(session: AsyncSession) -> int:
+    return await office_in_realm(session, OfficeKind.RULER)
+
+
+async def any_hunt(session: AsyncSession) -> int:
+    found = await session.scalar(select(MoleHuntRow.id).order_by(MoleHuntRow.id.desc()).limit(1))
+    if found is not None:
+        return int(found)
+    hunt = MoleHuntRow(outcome=next(iter(MoleHuntOutcome)), epoch=0)
+    session.add(hunt)
+    await session.flush()
+    return hunt.id
 
 
 async def town_district(session: AsyncSession) -> int:
@@ -746,6 +826,22 @@ POST = ("trading_post:open", {"owner_id": Newest(EntityType.FACTION), "host_id":
 SERVICE_SET = ("district_service:set", {"district_id": DISTRICT, "service": "watch", "coverage": 60})
 CONVOY = ("convoy:send", {"route_id": Pick(EntityType.TRADE_ROUTE)})
 FLEET = ("fleet:set", {"owner_id": Pick(TOWN), "kind": "wagons", "count": 12})
+CONVICTION = Computed(convicted_case)
+PRISON = Computed(town_prison)
+SYSTEM = ("legal_system:set", {"holder_id": Pick(REALM), "system": "precedent"})
+PRECEDENT = ("precedent:add", {"holder_id": Pick(REALM), "crime": "theft", "verdict": "guilty"})
+APPEAL = ("appeal:file", {"case_id": CONVICTION, "to_court": "provincial", "fee": 0})
+DEED = ("registry:add", {"holder_id": Pick(REALM), "kind": "debt", "owner_id": Pick(MORTAL), "counterparty_id": Pick(MORTAL, 1), "amount": 30})
+CLAIM = ("jurisdiction:set", {"holder_id": Pick(REALM), "claimant_id": Pick(EntityType.CULT), "claim": "clergy", "strength": 40})
+OUTLAW = ("outlaw:declare", {"mortal_id": Pick(MORTAL, 2), "polity_id": Pick(REALM), "bounty": 20})
+PARDON = ("pardon:grant", {"granter_id": Pick(MORTAL), "mortal_id": Pick(MORTAL, 2)})
+PRISON_SET = ("prison:set", {"structure_id": PRISON, "values": {"food": 60}})
+JAIL = ("prisoner:jail", {"mortal_id": Pick(MORTAL, 2), "prison_id": PRISON, "term": 3})
+SPY_NET = ("faction:spy", {"spymaster_id": Pick(REALM), "target_id": Pick(TOWN)})
+CELL = ("spy_cell:add", {"network_id": Newest("spy_network"), "dead_drops": 2})
+HUNT = ("mole_hunt:order", {"polity_id": Computed(spied_realm)})
+DEFECT = ("defection:make", {"mortal_id": Pick(MORTAL, 2), "to_id": Pick(REALM), "protected": True})
+KILLING = ("killing:add", {"victim_id": Pick(MORTAL, 2), "method": "poison", "recognised": True})
 PLAY = ("market_play:set", {"holder_id": Newest(EntityType.FACTION), "settlement_id": Pick(TOWN), "commodity": "grain", "play": "corner"})
 TRAIT = ("species_trait:set", {"species_id": Pick(EntityType.SPECIES), "region_id": Pick(EntityType.REGION), "trait": "speed", "mean": 60})
 LINE = ("lineage:mark", {"species_id": Pick(EntityType.SPECIES), "package": "divine_blessing", "blessing": True})
@@ -1763,6 +1859,34 @@ LEVERS: dict[str, Lever] = {
         name: after(HOUSE, PLAY, holder_id=Newest(EntityType.FACTION), settlement_id=Pick(TOWN), commodity="grain", play="corner")
         for name in ("market_play:edit", "market_play:delete")
     },
+    "legal_system:set": given(holder_id=Pick(REALM), system="precedent"),
+    **{name: after(SYSTEM, holder_id=Pick(REALM)) for name in ("legal_system:edit", "legal_system:delete")},
+    "precedent:add": given(holder_id=Pick(REALM), crime="theft", verdict="guilty"),
+    **{name: after(PRECEDENT, precedent_id=Newest("precedent")) for name in ("precedent:edit", "precedent:delete")},
+    "appeal:file": given(case_id=CONVICTION, to_court="provincial", fee=0),
+    **{name: after(APPEAL, case_id=Newest("case")) for name in ("appeal:edit", "appeal:hear", "appeal:delete")},
+    "oracle:answer": after(CASE, case_id=Newest("case"), verdict="acquitted"),
+    "registry:add": given(holder_id=Pick(REALM), kind="debt", owner_id=Pick(MORTAL), counterparty_id=Pick(MORTAL, 1), amount=30),
+    **{name: after(DEED, registry_id=Newest("registry")) for name in ("registry:edit", "registry:delete")},
+    "jurisdiction:set": given(holder_id=Pick(REALM), claimant_id=Pick(EntityType.CULT), claim="clergy", strength=40),
+    **{name: after(CLAIM, holder_id=Pick(REALM), claimant_id=Pick(EntityType.CULT), claim="clergy") for name in ("jurisdiction:edit", "jurisdiction:delete")},
+    "pardon:grant": after(OUTLAW, granter_id=Pick(MORTAL), mortal_id=Pick(MORTAL, 2)),
+    "amnesty:declare": given(polity_id=Computed(ruled_realm)),
+    "pardon:delete": after(OUTLAW, PARDON, pardon_id=Newest("pardon")),
+    "outlaw:declare": given(mortal_id=Pick(MORTAL, 2), polity_id=Pick(REALM), bounty=20),
+    **{name: after(OUTLAW, mortal_id=Pick(MORTAL, 2)) for name in ("outlaw:edit", "outlaw:delete")},
+    "prison:set": given(structure_id=PRISON, values={"food": 60}),
+    **{name: after(PRISON_SET, structure_id=PRISON) for name in ("prison:edit", "prison:delete")},
+    "prisoner:jail": given(mortal_id=Pick(MORTAL, 2), prison_id=PRISON, term=3),
+    **{name: after(JAIL, mortal_id=Pick(MORTAL, 2)) for name in ("prisoner:edit", "prisoner:free")},
+    "spy_cell:add": after(SPY_NET, network_id=Newest("spy_network"), dead_drops=2),
+    **{name: after(SPY_NET, CELL, cell_id=Newest("spy_cell")) for name in ("spy_cell:edit", "spy_cell:delete")},
+    "mole_hunt:order": given(polity_id=Computed(spied_realm)),
+    "mole_hunt:delete": after(DEFECT, HUNT, hunt_id=Computed(any_hunt)),
+    "defection:make": given(mortal_id=Pick(MORTAL, 2), to_id=Pick(REALM), protected=True),
+    **{name: after(DEFECT, defection_id=Newest("defection")) for name in ("defection:edit", "defection:delete")},
+    "killing:add": given(victim_id=Pick(MORTAL, 2), method="poison", recognised=True),
+    **{name: after(KILLING, killing_id=Newest("assassination")) for name in ("killing:edit", "killing:delete")},
     "species_trait:set": given(species_id=Pick(EntityType.SPECIES), region_id=Pick(EntityType.REGION), trait="speed", mean=60),
     **{
         name: after(TRAIT, species_id=Pick(EntityType.SPECIES), region_id=Pick(EntityType.REGION), trait="speed")
@@ -1980,6 +2104,17 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "convoy:edit": {"guards": 6, "status": "delayed", "capacity": 40},
     "fleet:edit": {"count": 20, "age": 3, "condition": 70},
     "market_play:edit": {"strength": 70, "until_epoch": 9},
+    "legal_system:edit": {"system": "codified"},
+    "precedent:edit": {"authority": 70, "verdict": "acquitted", "overturned": True},
+    "appeal:edit": {"to_court": "high", "fee": 40, "reversed": True},
+    "registry:edit": {"amount": 60},
+    "jurisdiction:edit": {"strength": 75},
+    "outlaw:edit": {"bounty": 50, "renown": 30},
+    "prison:edit": {"food": 40, "crowding": 50, "cruelty": 60, "gang_strength": 20},
+    "prisoner:edit": {"term": 5, "gang_rank": 40},
+    "spy_cell:edit": {"dead_drops": 4},
+    "defection:edit": {"secrets": 2, "protected": False},
+    "killing:edit": {"method": "accident", "recognised": False},
     "heroquest:edit": {"steps": 4, "fidelity": 80},
     "mantling:edit": {"progress": 40, "deeds": 3},
     "servitor:edit": {"loyalty": 60, "role": "judge"},

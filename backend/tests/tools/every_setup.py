@@ -3,6 +3,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.arcana import LawUpkeepRow, VisStockRow
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -11,7 +12,7 @@ from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, LegendProfileRow, RiteProfileRow
 from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.divine import DivineWoundRow, NaturalLawProfileRow
-from aerona.db.tables.dominion import DivineCreatureRow, MagicSiteRow
+from aerona.db.tables.dominion import DivineCreatureRow, DominionRow, MagicSiteRow
 from aerona.db.tables.ecology import HerdRow, SpeciesProfileRow, SpeciesUseRow
 from aerona.db.tables.economy import MarketPriceRow, TradeRouteProfileRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -20,13 +21,16 @@ from aerona.db.tables.estates import EstateProfileRow
 from aerona.db.tables.evolution import CarrierRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.flora import PlantProfileRow
-from aerona.db.tables.intrigue import HookRow, TrueNameRow
+from aerona.db.tables.intrigue import HookRow, SecretRow, TrueNameRow
+from aerona.db.tables.justice import CrimeCaseRow
+from aerona.db.tables.law_depth import LegalSystemRow, OutlawRow, PrisonerRow
 from aerona.db.tables.lore import LexemeRow
 from aerona.db.tables.mind import SkillRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.mythic import CosmicOfficeRow, GeasRow, ServitorRow
 from aerona.db.tables.physics import ImpactEventRow
 from aerona.db.tables.place import PlaceProfileRow
-from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow
+from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.renown import ReputationRow
 from aerona.db.tables.settlement import DistrictRow
@@ -50,8 +54,11 @@ from aerona.domain.enums.ecology import Diet, DomesticationStage, SpeciesClass, 
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeMode, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import CivilizationTier, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind, FactionRank
-from aerona.domain.enums.intrigue import HookSource, HookStrength
+from aerona.domain.enums.intrigue import HookSource, HookStrength, IntrigueSecret
+from aerona.domain.enums.justice import CaseStage, Verdict
+from aerona.domain.enums.law_depth import LegalSystem
 from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource
+from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.mythic import CosmicOffice, GeasMode, OfficeChoice, ServitorRank, ServitorRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.physics import ImpactBody, ImpactOutcome
@@ -889,3 +896,85 @@ async def order_master(session: AsyncSession, realm: Realm) -> Ids:
     session.add(FactionMembershipRow(faction_entity_id=faction, mortal_entity_id=other["mortal"], rank=FactionRank.MEMBER, locked=[]))
     await session.flush()
     return {"faction": faction, "mortal": other["mortal"]}
+
+
+async def ruled_realm(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruler(session, realm)
+    session.add(PolityMemberRow(polity_entity_id=found["polity"], member_entity_id=realm.settlement_id))
+    await session.flush()
+    return found
+
+
+async def oracle_case(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruled_realm(session, realm)
+    session.add(LegalSystemRow(holder_entity_id=found["polity"], system=LegalSystem.ORACLE, since_epoch=0, locked=[]))
+    case = CrimeCaseRow(
+        settlement_entity_id=realm.settlement_id,
+        polity_entity_id=found["polity"],
+        crime=CrimeKind.THEFT,
+        accused_entity_id=realm.mortal_id,
+        stage=CaseStage.TRIAL,
+        locked=[],
+    )
+    session.add(case)
+    await session.flush()
+    return {**found, "case": case.id}
+
+
+async def dreamer(session: AsyncSession, realm: Realm) -> Ids:
+    other = await second_mortal(session, realm)
+    session.add(SecretRow(holder_node_id=other["mortal"], kind=next(iter(IntrigueSecret)), severity=40, known_by=[], locked=[]))
+    session.add(DominionRow(god_node_id=realm.son_id, region_entity_id=realm.cosmos.region_id, strength=100, locked=[]))
+    await session.flush()
+    return other
+
+
+async def convicted(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruled_realm(session, realm)
+    other = await second_mortal(session, realm)
+    session.add(OfficeRow(polity_entity_id=found["polity"], kind=OfficeKind.GOVERNOR, holder_entity_id=other["mortal"]))
+    session.add(
+        CrimeCaseRow(
+            settlement_entity_id=realm.settlement_id,
+            polity_entity_id=found["polity"],
+            crime=CrimeKind.THEFT,
+            accused_entity_id=realm.mortal_id,
+            stage=CaseStage.CLOSED,
+            verdict=Verdict.GUILTY,
+            closed_epoch=0,
+            locked=[],
+        )
+    )
+    profile = await session.get(MortalProfileRow, realm.mortal_id)
+    if profile is None:
+        session.add(MortalProfileRow(entity_id=realm.mortal_id, wealth=PERCENT, locked=[]))
+    else:
+        profile.wealth = PERCENT
+    await session.flush()
+    return found
+
+
+async def outlaw_hunted(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruled_realm(session, realm)
+    other = await second_mortal(session, realm)
+    session.add(SkillRow(holder_node_id=realm.mortal_id, skill=SkillKind.TRACKING, level=80, xp=0, peak=80, last_used_epoch=0, source=SkillSource.PLAYER))
+    session.add(OutlawRow(mortal_entity_id=other["mortal"], polity_entity_id=found["polity"], bounty=10, renown=0, declared_epoch=0, locked=[]))
+    await session.flush()
+    return {**found, "outlaw": other["mortal"]}
+
+
+async def prisoner_held(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruled_realm(session, realm)
+    other = await second_mortal(session, realm)
+    jail = await make_entity(session, "The Keep", EntityType.STRUCTURE, world_id=realm.cosmos.world_id, location_id=realm.settlement_id)
+    session.add(StructureProfileRow(structure_entity_id=jail.id, kind=StructureKind.PRISON, host_entity_id=realm.settlement_id))
+    session.add(PrisonerRow(mortal_entity_id=other["mortal"], prison_entity_id=jail.id, term=3, gang_rank=0, since_epoch=0, locked=[]))
+    await session.flush()
+    return {**found, "prisoner": other["mortal"], "prison": jail.id}
+
+
+async def spymaster(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruled_realm(session, realm)
+    session.add(OfficeRow(polity_entity_id=found["polity"], kind=OfficeKind.SPYMASTER, holder_entity_id=realm.mortal_id))
+    await session.flush()
+    return found

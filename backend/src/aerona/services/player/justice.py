@@ -8,6 +8,7 @@ from aerona.db.tables.polity import LawProfileRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.justice import CaseStage, Deposition, ProposalStance, ProposalState, TrialKind
+from aerona.domain.enums.law_depth import CourtLevel
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import LawKind, LegitimacyBasis
 from aerona.engine.polity.enactment import law_title, pass_now
@@ -18,7 +19,7 @@ from aerona.services.player.scope import Command, Effect, PlayerScope, player_ac
 
 SPAN = 100
 PROPOSAL_FIELDS = ("params", "champion_node_id", "progress", "support", "opposition", "stalled_epochs", "state", "basis")
-CASE_FIELDS = ("accused", "culprit", "judge", "investigator", "trial", "evidence", "stage", "verdict")
+CASE_FIELDS = ("accused", "culprit", "judge", "investigator", "advocate", "trial", "evidence", "stage", "verdict", "court")
 TERMS = int | str | bool
 
 
@@ -89,10 +90,13 @@ class EditCase(Command):
     clear_culprit: bool = False
     judge_id: int | None = None
     investigator_id: int | None = None
+    advocate_id: int | None = None
+    clear_advocate: bool = False
     trial: TrialKind | None = None
     evidence: int | None = Field(default=None, ge=0, le=SPAN)
     stage: CaseStage | None = None
     crime: CrimeKind | None = None
+    court: CourtLevel | None = None
     hold: bool = True
 
 
@@ -290,6 +294,7 @@ async def edit_case(scope: PlayerScope, command: EditCase) -> Effect:
         ("culprit", "culprit_entity_id", command.culprit_id, "The culprit"),
         ("judge", "judge_entity_id", command.judge_id, "The judge"),
         ("investigator", "investigator_entity_id", command.investigator_id, "The investigator"),
+        ("advocate", "advocate_entity_id", command.advocate_id, "The advocate"),
     )
     for field, column, value, label in people:
         if value is not None:
@@ -298,7 +303,10 @@ async def edit_case(scope: PlayerScope, command: EditCase) -> Effect:
     if command.clear_culprit:
         row.culprit_entity_id = None
         touched.append("culprit")
-    for key in ("trial", "evidence", "stage", "crime"):
+    if command.clear_advocate:
+        row.advocate_entity_id = None
+        touched.append("advocate")
+    for key in ("trial", "evidence", "stage", "crime", "court"):
         value = getattr(command, key)
         if value is not None:
             setattr(row, key, value)

@@ -125,7 +125,7 @@ async def pay_contracts(ctx: TickContext) -> dict[str, int]:
         if await take_coin(ctx.session, ctx.rules, employer, pay):
             company = await living_entity(ctx.session, row.company_entity_id)
             if company is not None:
-                give_coin(ctx.rules, company, pay)
+                await give_coin(ctx.session, ctx.rules, company, pay)
             row.unpaid_seasons = 0
             row.status = ContractStatus.ACTIVE
             found["paid"] += 1

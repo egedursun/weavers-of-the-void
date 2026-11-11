@@ -552,10 +552,10 @@ async def lasting(ctx: TickContext, casting: CastingRow) -> bool:
     return casting.epoch >= ctx.epoch - max(1, window_of(await ctx.session.get(RiteGrammarRow, casting.rite_entity_id)))
 
 
-async def countered(ctx: TickContext, region_id: int, caster: EntityRow, power: int) -> EntityRow | None:
+async def countered(ctx: TickContext, region_id: int, caster_id: int | None, power: int) -> EntityRow | None:
     wards = select(RiteEffectRow.rite_entity_id).where(RiteEffectRow.effect == E.WARD)
     found = await ctx.session.scalars(
-        select(CastingRow).where(CastingRow.rite_entity_id.in_(wards), CastingRow.succeeded.is_(True), CastingRow.caster_entity_id != caster.id)
+        select(CastingRow).where(CastingRow.rite_entity_id.in_(wards), CastingRow.succeeded.is_(True), CastingRow.caster_entity_id != (caster_id or 0))
     )
     castings = [casting for casting in found if await lasting(ctx, casting)]
     atlas = await RegionAtlas.load(ctx.session)
@@ -575,7 +575,7 @@ async def do_weather(ctx: TickContext, work: Working) -> str | None:
     kind = SCHOOL_WEATHER.get(work.row.school, WeatherKind.RAIN)
     if region is None or region.entity_type is not EntityType.REGION:
         return None
-    warder = await countered(ctx, region.id, work.caster, work.row.power)
+    warder = await countered(ctx, region.id, work.caster.id, work.row.power)
     if warder is not None:
         return f"the wards of {warder.name} turned the weather aside"
     await force_weather(ctx.session, region, kind, from_epoch=ctx.epoch, epochs=1, season_position=None)
@@ -625,6 +625,10 @@ async def do_ward(ctx: TickContext, work: Working) -> str | None:
 async def do_scry(ctx: TickContext, work: Working) -> str | None:
     if work.target is None or work.caster.location_id is None:
         return None
+    region = (await RegionAtlas.load(ctx.session)).top_region(work.target.id)
+    warder = await countered(ctx, region, work.caster.id, work.row.power) if region is not None else None
+    if warder is not None:
+        return f"the wards of {warder.name} hid {work.target.name} from sight"
     await gain_intel(ctx, work.caster.location_id, work.target.id, work.magnitude * ctx.rules.rites.scry_intel)
     return f"scried the secrets of {work.target.name}"
 
