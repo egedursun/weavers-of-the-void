@@ -8,11 +8,16 @@ from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.law_depth import OutlawRow, PardonRow, PrisonerRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.structures import StructureProfileRow
+from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.enums.war import REVOLT_CAUSES
 from aerona.engine.context import TickContext
+from aerona.engine.mind.book import values_for
+from aerona.engine.mind.ethics import ethic_reading
 from aerona.engine.mortal.standing import add_renown
 from aerona.engine.notes import note
 from aerona.engine.polity.repute import shift_infamy
@@ -48,6 +53,33 @@ async def wrongful(ctx: TickContext, case_id: int | None) -> bool:
     return case is not None and case.wrongful
 
 
+async def read_mercy(ctx: TickContext, granter: EntityRow, polity_id: int | None) -> int:
+    table = ctx.rules.pardons
+    profile = await ctx.session.get(PolityProfileRow, polity_id) if polity_id is not None else None
+    judge = profile.capital_entity_id if profile is not None and profile.capital_entity_id is not None else granter.location_id or granter.id
+    reading = await ethic_reading(ctx.session, ctx.rules, judge, ActKind.MERCY_TO_ENEMY, await values_for(ctx.session, judge))
+    if reading > 0:
+        await add_renown(ctx.session, granter.id, table.mercy_renown, ctx.epoch, rules=ctx.rules)
+    elif reading < 0:
+        await shift_infamy(ctx, granter.id, table.tyranny_infamy)
+    return reading
+
+
+async def civil_war_ended(ctx: TickContext, polity_id: int, since: int) -> bool:
+    found = await ctx.session.scalar(
+        select(WarRow.id)
+        .join(WarSideRow, WarSideRow.war_id == WarRow.id)
+        .where(
+            WarSideRow.entity_id == polity_id,
+            WarRow.cause.in_(list(REVOLT_CAUSES)),
+            WarRow.ended_epoch >= ctx.epoch - ctx.rules.pardons.amnesty_epochs,
+            WarRow.ended_epoch > since,
+        )
+        .limit(1)
+    )
+    return found is not None
+
+
 async def grant_pardon(ctx: TickContext, granter: EntityRow, mortal: EntityRow, *, polity_id: int | None, case_id: int | None) -> PardonRow:
     table = ctx.rules.pardons
     view = await relation(ctx.session, granter.id, mortal.id)
@@ -65,6 +97,7 @@ async def grant_pardon(ctx: TickContext, granter: EntityRow, mortal: EntityRow, 
             profile.corruption = clamp_int(profile.corruption + table.corruption_infamy, 0, PERCENT)
     if unjust:
         await add_renown(ctx.session, granter.id, table.mercy_renown, ctx.epoch, rules=ctx.rules)
+    await read_mercy(ctx, granter, polity_id)
     await ctx.session.flush()
     await note(ctx, f"{granter.name} pardoned {mortal.name}.", key="law.pardon", ids=[granter.id, mortal.id], kind=ChronicleKind.CIVILIZATION)
     return pardon
@@ -103,10 +136,16 @@ async def declare_amnesty(ctx: TickContext, polity_id: int, ruler: EntityRow) ->
 
 
 async def amnesty_due(ctx: TickContext, office: OfficeRow) -> bool:
-    if office.holder_entity_id is None or ctx.epoch - office.since_epoch > ctx.rules.pardons.amnesty_epochs:
+    if office.holder_entity_id is None:
         return False
-    given = await ctx.session.scalar(select(PardonRow.id).where(PardonRow.granter_entity_id == office.holder_entity_id, PardonRow.amnesty.is_(True)).limit(1))
-    return given is None
+    last = await ctx.session.scalar(
+        select(PardonRow.epoch)
+        .where(PardonRow.granter_entity_id == office.holder_entity_id, PardonRow.amnesty.is_(True))
+        .order_by(PardonRow.epoch.desc())
+        .limit(1)
+    )
+    crowned = ctx.epoch - office.since_epoch <= ctx.rules.pardons.amnesty_epochs and last is None
+    return crowned or await civil_war_ended(ctx, office.polity_entity_id, last if last is not None else -1)
 
 
 async def grant_pardons(ctx: TickContext, tally: PardonTally) -> None:

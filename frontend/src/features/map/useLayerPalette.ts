@@ -83,6 +83,9 @@ const ALPHA: Record<LayerMode, number> = {
   soldiers: 0.45,
   wildlife: 0.45,
   species_range: 0.3,
+  desirability: 0.45,
+  coverage: 0.45,
+  niches: 0.45,
 }
 
 export const STOCK_BANDS = [
@@ -98,6 +101,12 @@ const BAND_LABEL: Record<string, string> = {
   sparse: 'Few wild herds',
   teeming: 'Many wild herds',
   wild: 'A land of beasts',
+  low: 'Low',
+  middling: 'Middling',
+  high: 'High',
+  few_ways: 'Few ways of life filled',
+  many_ways: 'Many ways of life filled',
+  crowded_ways: 'Crowded with ways of life',
 }
 
 export const RAIN_BANDS = [
@@ -144,6 +153,28 @@ export const WILD_BANDS = [
 export function wildBand(value: number): string | null {
   if (value <= 0) return null
   return WILD_BANDS.find((band) => value < band.below)?.key ?? null
+}
+
+export const SHARE_BANDS = [
+  { key: 'low', below: 34 },
+  { key: 'middling', below: 67 },
+  { key: 'high', below: Number.POSITIVE_INFINITY },
+] as const
+
+export function shareBand(value: number): string | null {
+  if (value <= 0) return null
+  return SHARE_BANDS.find((band) => value < band.below)?.key ?? null
+}
+
+export const NICHE_BANDS = [
+  { key: 'few_ways', below: 3 },
+  { key: 'many_ways', below: 6 },
+  { key: 'crowded_ways', below: Number.POSITIVE_INFINITY },
+] as const
+
+export function nicheBand(value: number): string | null {
+  if (value <= 0) return null
+  return NICHE_BANDS.find((band) => value < band.below)?.key ?? null
 }
 
 export function stockBand(value: number): string | null {
@@ -259,6 +290,17 @@ function regionKey(
       const band = stocks ? wildBand(stocks.wildlife ?? 0) : null
       return band ? { key: `wildlife:${band}`, alpha } : null
     }
+    case 'desirability':
+    case 'coverage': {
+      const stocks = view.stocks[String(regionId)] ?? view.stocks[String(topId)]
+      const band = stocks ? shareBand(stocks[mode] ?? 0) : null
+      return band ? { key: `${mode}:${band}`, alpha } : null
+    }
+    case 'niches': {
+      const stocks = view.stocks[String(regionId)] ?? view.stocks[String(topId)]
+      const band = stocks ? nicheBand(stocks.niches ?? 0) : null
+      return band ? { key: `niches:${band}`, alpha } : null
+    }
     case 'realms': {
       const held =
         view.realms?.[String(regionId)] ?? view.realms?.[String(topId)]
@@ -321,7 +363,10 @@ function labelFor(
     kind === 'population' ||
     kind === 'followers' ||
     kind === 'soldiers' ||
-    kind === 'wildlife'
+    kind === 'wildlife' ||
+    kind === 'desirability' ||
+    kind === 'coverage' ||
+    kind === 'niches'
   )
     return BAND_LABEL[raw] ?? words(raw)
   if (

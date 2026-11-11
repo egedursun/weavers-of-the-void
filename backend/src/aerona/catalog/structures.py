@@ -114,6 +114,9 @@ STRUCTURES: MappingProxyType[StructureKind, StructureSpec] = MappingProxyType(
             spec((K.COSMIC_ARCHIVE, G.COSMIC, "Cosmic archive"), (S.SCRIBE, W.SOME), U.VOLUMES, (B.GRAND, C.CLOTH, T.HAMLET), ley=True),
             spec((K.FIREHOUSE, G.CIVIC, "Firehouse"), (S.ARTISAN, W.FEW), U.GARRISON, (B.MINOR, C.TIMBER, T.VILLAGE)),
             spec((K.BATHHOUSE, G.CIVIC, "Bathhouse"), (S.ARTISAN, W.FEW), U.SEATS, (B.MINOR, C.FUEL, T.VILLAGE)),
+            spec((K.FOUNTAIN, G.CIVIC, "Fountain"), (None, W.NONE), U.NONE, (B.MINOR, C.STONE, T.VILLAGE)),
+            spec((K.PARK, G.CIVIC, "Park"), (S.ARTISAN, W.FEW), U.NONE, (B.MINOR, C.TIMBER, T.VILLAGE)),
+            spec((K.SLAUGHTERHOUSE, G.PRODUCTION, "Slaughterhouse"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.FUEL, T.VILLAGE)),
             spec((K.KONTOR, G.COMMERCE, "Trading post"), (S.MERCHANT, W.FEW), U.LOADS, (B.MINOR, C.TIMBER, T.VILLAGE)),
             spec(
                 (K.COVENANT, G.KNOWLEDGE, "Covenant"),

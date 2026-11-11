@@ -272,6 +272,7 @@ class MortalToolId(StrEnum):
     CLAIM_BOUNTY = "claim_bounty"
     GRANT_PARDON = "grant_pardon"
     HUNT_MOLES = "hunt_moles"
+    POST_BOUNTY = "post_bounty"
     SEEK_CURE = "seek_cure"
     FIND_CARRIER = "find_carrier"
     PROCLAIM_TONGUE = "proclaim_tongue"

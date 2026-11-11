@@ -38,6 +38,9 @@ import {
   Zap,
   type LucideIcon,
   PawPrint,
+  Building2,
+  Droplets,
+  Network,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -99,6 +102,9 @@ const LAYER_ICON: Record<LayerMode, LucideIcon> = {
   soldiers: Shield,
   wildlife: Leaf,
   species_range: PawPrint,
+  desirability: Building2,
+  coverage: Droplets,
+  niches: Network,
 }
 
 const OVERLAY_ICON: Record<Overlay, LucideIcon> = {

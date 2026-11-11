@@ -380,6 +380,24 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
     tone: 'verdigris',
     hint: 'A magical order’s house of study, fed by its sites',
   },
+  fountain: {
+    label: 'Fountain',
+    icon: Droplet,
+    tone: 'info',
+    hint: 'Gives water to the districts it reaches and makes them pleasant',
+  },
+  park: {
+    label: 'Park',
+    icon: Sprout,
+    tone: 'success',
+    hint: 'Open ground that makes the districts around it more desirable',
+  },
+  slaughterhouse: {
+    label: 'Slaughterhouse',
+    icon: Hammer,
+    tone: 'warning',
+    hint: 'Works livestock and makes the districts around it less desirable',
+  },
 }
 
 export const STATE_SPEC: Record<ConstructionState, Spec> = {

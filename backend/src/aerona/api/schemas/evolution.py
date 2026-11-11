@@ -114,8 +114,15 @@ class WorldCycleView(ApiModel):
     locked: list[str]
 
 
+class TraitPointView(ApiModel):
+    trait: str
+    epoch: int
+    value: int
+
+
 class NodeEvolutionView(ApiModel):
     node: NodeRef
+    history: list[TraitPointView]
     species: SpeciesEcologyView | None
     traits: list[StockTraitView]
     marks: list[LineageMarkView]

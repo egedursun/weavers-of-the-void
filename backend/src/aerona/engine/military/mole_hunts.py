@@ -13,11 +13,11 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.law_depth import MoleHuntOutcome
 from aerona.domain.enums.military import AgentStatus
-from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitKind
+from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitKind, TraitSource
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.context import TickContext
 from aerona.engine.military.spy_depth import compromise, defect
-from aerona.engine.mind.book import skill_level, traits_of
+from aerona.engine.mind.book import add_trait, skill_level, traits_of
 from aerona.engine.mind.memories import remember
 from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
@@ -114,6 +114,8 @@ async def purge(ctx: TickContext, polity_id: int, spymaster_id: int, office: Off
         if DILIGENCE not in (other.locked or []):
             other.diligence = clamp_int(other.diligence - ctx.rules.mole_hunts.purge_loyalty, 0, PERCENT)
     await record(ctx, polity_id, spymaster_id, accused.id, MoleHuntOutcome.PURGED, mole=False)
+    if ctx.rng(f"espionage.paranoia.{spymaster_id}.{ctx.epoch}").chance(ctx.rules.mole_hunts.paranoia_pct):
+        await add_trait(ctx.session, spymaster_id, TraitKind.PARANOID, TraitSource.EXPERIENCE, ctx.epoch)
 
 
 async def accuse_innocent(ctx: TickContext, polity_id: int, spymaster_id: int, tally: MoleTally) -> None:

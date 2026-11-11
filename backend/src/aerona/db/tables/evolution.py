@@ -1,6 +1,7 @@
-from sqlalchemy import JSON, Boolean, ForeignKey, Index
+from sqlalchemy import JSON, Boolean, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 
+from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.affliction import PackageKind
@@ -119,3 +120,13 @@ class WorldCycleRow(Base):
     nutrients_out: Mapped[int] = mapped_column(default=0)
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+
+class TraitHistoryRow(Base):
+    __tablename__ = "trait_history"
+    __table_args__ = (at_least("epoch", 0),)
+
+    holder_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    trait: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH), primary_key=True)
+    epoch: Mapped[int] = mapped_column(primary_key=True)
+    value: Mapped[int] = mapped_column(default=0)

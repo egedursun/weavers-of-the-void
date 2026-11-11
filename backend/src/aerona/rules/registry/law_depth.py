@@ -65,8 +65,9 @@ class PardonRules:
     friend_pct: int = rule(25, 0, 100, P, "Chance each epoch a ruler pardons a friend held for a crime (%)")
     friend_at: int = rule(40, 0, 100, P, "Friendship past which a ruler pardons")
     corruption_infamy: int = rule(8, 0, 100, P, "Infamy a ruler earns pardoning a friend")
-    mercy_renown: int = rule(5, 0, 100, P, "Renown a ruler earns pardoning one wrongly condemned")
-    amnesty_epochs: int = rule(1, 0, 100, P, "Epochs after a new ruler takes the throne in which an amnesty may be declared")
+    mercy_renown: int = rule(5, 0, 100, P, "Renown a ruler earns pardoning one wrongly condemned, or any pardon where mercy is honoured")
+    tyranny_infamy: int = rule(5, 0, 100, P, "Infamy a ruler earns pardoning where mercy is scorned")
+    amnesty_epochs: int = rule(1, 0, 100, P, "Epochs after a new ruler takes the throne, or a civil war ends, in which an amnesty may be declared")
     amnesty_pct: int = rule(40, 0, 100, P, "Chance a new ruler declares an amnesty (%)")
 
 
@@ -118,6 +119,7 @@ class MoleHuntRules:
     false_pct: int = rule(10, 0, 100, W, "Chance a hunt accuses an innocent official (%)")
     defect_pct: int = rule(30, 0, 100, W, "Chance a wrongly accused official defects rather than be purged (%)")
     purge_loyalty: int = rule(5, 0, 100, W, "Loyalty the realm's officials lose after a purge of the innocent")
+    paranoia_pct: int = rule(30, 0, 100, W, "Chance a spymaster who purged an innocent grows paranoid, and hunts and accuses more (%)")
 
 
 @dataclass(frozen=True)

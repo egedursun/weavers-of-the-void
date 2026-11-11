@@ -53,6 +53,13 @@ async def declare_outlaw(ctx: TickContext, mortal: EntityRow, polity_id: int | N
     return row
 
 
+async def post_bounty(ctx: TickContext, row: OutlawRow, poster: EntityRow, amount: int) -> bool:
+    if amount <= 0 or held(row.mortal_entity_id) or "private_bounty" in row.locked or not await take_coin(ctx.session, ctx.rules, poster, amount):
+        return False
+    row.private_bounty += amount
+    return True
+
+
 async def is_outlaw(ctx: TickContext, mortal_id: int) -> bool:
     return await ctx.session.get(OutlawRow, mortal_id) is not None
 
@@ -85,6 +92,7 @@ async def pay_bounty(ctx: TickContext, row: OutlawRow, hunter: EntityRow) -> Non
     realm = await ctx.session.get(EntityRow, row.polity_entity_id) if row.polity_entity_id is not None else None
     if realm is not None and await take_coin(ctx.session, ctx.rules, realm, row.bounty):
         await give_coin(ctx.session, ctx.rules, hunter, row.bounty)
+    await give_coin(ctx.session, ctx.rules, hunter, row.private_bounty)
 
 
 async def caught(ctx: TickContext, row: OutlawRow, outlaw: EntityRow, hunter: EntityRow, tally: OutlawTally) -> None:

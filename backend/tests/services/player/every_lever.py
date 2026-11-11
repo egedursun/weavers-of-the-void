@@ -2109,7 +2109,7 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "appeal:edit": {"to_court": "high", "fee": 40, "reversed": True},
     "registry:edit": {"amount": 60},
     "jurisdiction:edit": {"strength": 75},
-    "outlaw:edit": {"bounty": 50, "renown": 30},
+    "outlaw:edit": {"bounty": 50, "private_bounty": 20, "renown": 30},
     "prison:edit": {"food": 40, "crowding": 50, "cruelty": 60, "gang_strength": 20},
     "prisoner:edit": {"term": 5, "gang_rank": 40},
     "spy_cell:edit": {"dead_drops": 4},

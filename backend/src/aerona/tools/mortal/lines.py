@@ -184,6 +184,7 @@ APPEAL = Line("tools.mortal.appeal", "{me} appealed their conviction to a higher
 CLAIM_BOUNTY = Line("tools.mortal.claim_bounty", "{me} hunted down the outlaw {outlaw} for the bounty.")
 GRANT_PARDON = Line("tools.mortal.grant_pardon", "{me} pardoned {name}.")
 HUNT_MOLES = Line("tools.mortal.hunt_moles", "{me} hunted for moles at court.")
+POST_BOUNTY = Line("tools.mortal.post_bounty", "{me} put a bounty on the outlaw {outlaw}.")
 ANSWER_SICKNESS = Line("tools.mortal.answer_sickness", "{me} set the answer to {disease}: {response}.")
 SEEK_CURE = Line("tools.mortal.seek_cure", "{me} worked at a cure for {disease}.")
 FIND_CARRIER = Line("tools.mortal.find_carrier", "{me} found that {mortal} carries {disease} unseen.")

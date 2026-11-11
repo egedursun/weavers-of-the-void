@@ -13,7 +13,7 @@ PRECEDENT_FIELDS = ("verdict", "authority", "overturned")
 APPEAL_FIELDS = ("to_court", "fee", "reversed")
 REGISTRY_FIELDS = ("amount", "owner_entity_id", "counterparty_entity_id")
 JURISDICTION_FIELDS = ("strength",)
-OUTLAW_FIELDS = ("bounty", "renown")
+OUTLAW_FIELDS = ("bounty", "private_bounty", "renown")
 PRISON_FIELDS = ("food", "crowding", "cruelty", "gang_strength")
 PRISONER_FIELDS = ("term", "gang_rank")
 CELL_FIELDS = ("handler_entity_id", "safe_house_entity_id", "dead_drops")
@@ -103,11 +103,12 @@ class PardonRow(Base):
 
 class OutlawRow(Base):
     __tablename__ = "outlaws"
-    __table_args__ = (at_least("bounty", 0), between("renown", PERCENT_MIN, PERCENT_MAX), at_least("declared_epoch", 0))
+    __table_args__ = (at_least("bounty", 0), at_least("private_bounty", 0), between("renown", PERCENT_MIN, PERCENT_MAX), at_least("declared_epoch", 0))
 
     mortal_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     polity_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     bounty: Mapped[int] = mapped_column(default=0)
+    private_bounty: Mapped[int] = mapped_column(default=0, server_default="0")
     renown: Mapped[int] = mapped_column(default=0)
     declared_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

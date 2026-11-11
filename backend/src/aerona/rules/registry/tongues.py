@@ -16,6 +16,7 @@ class SoundChangeRules:
     per_epoch: int = rule(60, 0, 10000, L, "Languages that may take a new sound change each epoch at most")
     reconstruct_pct: int = rule(20, 0, 100, L, "Chance a scholar who knows two daughter tongues recovers a proto-word of their dead parent each epoch (%)")
     reconstruct_skill: int = rule(40, 0, 100, L, "Languages skill a scholar needs to reconstruct proto-words")
+    name_pct: int = rule(5, 0, 100, L, "Chance each place named in a tongue takes that tongue's newest sound change; names change slower than words (%)")
 
 
 @dataclass(frozen=True)

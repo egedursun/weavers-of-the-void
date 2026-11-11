@@ -143,6 +143,7 @@ from aerona.db.tables.evolution import (
     LineageMarkRow,
     PlagueResponseRow,
     SpeciesTraitRow,
+    TraitHistoryRow,
     TrophicLevelRow,
     WorldCycleRow,
 )
@@ -456,9 +457,18 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
     ),
     ComplianceRow(
         "S3.2/RP3",
-        (SpeciesTraitRow.__tablename__, LineageMarkRow.__tablename__, EcosystemServiceRow.__tablename__, TrophicLevelRow.__tablename__),
-        ("trait_evolution", "niches", "trophic_flow", "keystones", "feral_reversion", "lineages"),
         (
+            SpeciesTraitRow.__tablename__,
+            LineageMarkRow.__tablename__,
+            EcosystemServiceRow.__tablename__,
+            TrophicLevelRow.__tablename__,
+            TraitHistoryRow.__tablename__,
+        ),
+        ("trait_evolution", "niches", "trophic_flow", "keystones", "feral_reversion", "lineages", "pathogen_evolution"),
+        (
+            "record_row:create",
+            "record_row:edit",
+            "record_row:delete",
             "species_trait:set",
             "species_trait:edit",
             "species_trait:delete",

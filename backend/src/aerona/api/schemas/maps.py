@@ -10,6 +10,7 @@ from aerona.domain.enums.economy import TradeMode, TradeRouteStatus
 from aerona.domain.enums.faith import HoldingKind
 from aerona.domain.enums.military import Stance
 from aerona.domain.enums.node import NodeKind
+from aerona.domain.enums.urban import ConvoyStatus
 from aerona.domain.models.records import RegionControl
 from aerona.services.wiki import EventMarker, RegionDominance, RoadKind, SettlementInfo
 
@@ -85,6 +86,18 @@ class RegionStocks(ApiModel):
     followers: int
     soldiers: int
     wildlife: int = 0
+    desirability: int = 0
+    coverage: int = 0
+    niches: int = 0
+
+
+class MapConvoy(ApiModel):
+    convoy_id: int
+    route_id: int
+    owner: str
+    status: ConvoyStatus
+    guards: int
+    path: list[float]
 
 
 class MapTrade(ApiModel):
@@ -211,6 +224,7 @@ class MapView(ApiModel):
     ground: dict[int, RegionGround]
     stocks: dict[int, RegionStocks]
     trade: list[MapTrade]
+    convoys: list[MapConvoy] = Field(default_factory=list)
     outbreaks: list[MapOutbreak] = Field(default_factory=list)
     realms: dict[int, RegionRealm] = Field(default_factory=dict)
     de_jure: dict[int, RegionDeJure] = Field(default_factory=dict)

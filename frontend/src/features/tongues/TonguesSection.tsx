@@ -17,6 +17,9 @@ import {
   LoadingBlock,
   PagedList,
   Section,
+  Timeline,
+  TimelineItem,
+  type TimelineTone,
 } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
@@ -234,6 +237,48 @@ function GrammarCard({
         </>
       )}
     </RecordRow>
+  )
+}
+
+const TIMELINE_SHOWN = 8
+const CAUSE_TONE: Record<SoundChangeView['cause'], TimelineTone> = {
+  contact: 'primary',
+  prestige: 'success',
+  migration: 'warning',
+  drift: 'default',
+  decree: 'destructive',
+  inherited: 'default',
+}
+
+function SoundTimeline({ changes }: { changes: SoundChangeView[] }) {
+  if (changes.length === 0) return null
+  const shown = [...changes]
+    .sort((first, second) => first.position - second.position)
+    .slice(-TIMELINE_SHOWN)
+  return (
+    <div className='flex min-w-0 flex-col gap-2'>
+      <Timeline label='How its sounds changed'>
+        {shown.map((change, index) => (
+          <TimelineItem
+            key={change.id}
+            icon={CHANGE_KINDS[change.kind].icon}
+            title={`${change.source} → ${change.target || 'nothing'}`}
+            timestamp={`Epoch ${change.epoch}`}
+            tone={CAUSE_TONE[change.cause]}
+            last={index === shown.length - 1}
+          >
+            <Muted variant='caption'>
+              {`${CHANGE_KINDS[change.kind].label}, ${ENVIRONMENTS[change.environment].label.toLowerCase()}; ${CAUSES[change.cause].label.toLowerCase()}`}
+            </Muted>
+          </TimelineItem>
+        ))}
+      </Timeline>
+      {changes.length > shown.length && (
+        <Muted variant='caption'>
+          {`The latest ${shown.length} of ${changes.length} changes; every change is listed below.`}
+        </Muted>
+      )}
+    </div>
   )
 }
 
@@ -1164,6 +1209,7 @@ function LanguageBody({
         blocked={blocked}
       />
       <Label variant='overline'>{`Sound changes (${data.changes.length})`}</Label>
+      <SoundTimeline changes={data.changes} />
       {data.changes.length === 0 ? (
         <Muted variant='caption'>
           Its words still sound as they were first spoken.

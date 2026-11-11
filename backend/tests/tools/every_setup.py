@@ -978,3 +978,14 @@ async def spymaster(session: AsyncSession, realm: Realm) -> Ids:
     session.add(OfficeRow(polity_entity_id=found["polity"], kind=OfficeKind.SPYMASTER, holder_entity_id=realm.mortal_id))
     await session.flush()
     return found
+
+
+async def bounty_poster(session: AsyncSession, realm: Realm) -> Ids:
+    found = await outlaw_hunted(session, realm)
+    profile = await session.get(MortalProfileRow, realm.mortal_id)
+    if profile is None:
+        session.add(MortalProfileRow(entity_id=realm.mortal_id, wealth=PERCENT, locked=[]))
+    else:
+        profile.wealth = PERCENT
+    await session.flush()
+    return found

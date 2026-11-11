@@ -13,7 +13,7 @@ from aerona.domain.enums.justice import Verdict
 from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.law.appeals import file_appeal
-from aerona.engine.law.outlawry import OutlawTally, caught, hunter_for
+from aerona.engine.law.outlawry import OutlawTally, caught, hunter_for, post_bounty
 from aerona.engine.law.pardons import grant_pardon
 from aerona.engine.law.registries import register
 from aerona.engine.military.mole_hunts import MoleTally, hunt
@@ -37,6 +37,11 @@ class DeedInput(ToolInput):
 
 class OutlawInput(ToolInput):
     outlaw_id: int
+
+
+class BountyInput(ToolInput):
+    outlaw_id: int
+    amount: int = Field(ge=1, le=DEED_MAX)
 
 
 class PardonInput(ToolInput):
@@ -99,6 +104,18 @@ async def claim_bounty(call: MortalCall, args: OutlawInput) -> str:
     return result(MortalResult.BOUNTY_CLAIMED, name=outlaw.name, bounty=row.bounty)
 
 
+async def post_a_bounty(call: MortalCall, args: BountyInput) -> str:
+    row = await call.session.get(OutlawRow, args.outlaw_id)
+    outlaw = await living_entity(call.session, args.outlaw_id)
+    if row is None or outlaw is None or outlaw.id == call.me.id:
+        fail(MortalResult.BOUNTY_POST_REFUSED, why="that mortal is no outlaw")
+    if not await post_bounty(call.tick, row, call.me, args.amount):
+        fail(MortalResult.BOUNTY_POST_REFUSED, why="you cannot pay so much")
+    call.target(outlaw.id)
+    await call.chronicle(ChronicleKind.WORLD, lines.POST_BOUNTY, entity_ids=[call.me.id, outlaw.id], me=call.me.name, outlaw=outlaw.name)
+    return result(MortalResult.BOUNTY_POSTED, amount=args.amount, name=outlaw.name, total=row.bounty + row.private_bounty)
+
+
 async def grant_mercy(call: MortalCall, args: PardonInput) -> str:
     office = await office_in(call, OfficeKind.RULER)
     if office is None:
@@ -133,4 +150,5 @@ def specs() -> list[ToolSpec[MortalCall, Any]]:
         ToolSpec(MortalToolId.CLAIM_BOUNTY, mortal, OutlawInput, meta, claim_bounty),
         ToolSpec(MortalToolId.GRANT_PARDON, mortal, PardonInput, meta, grant_mercy),
         ToolSpec(MortalToolId.HUNT_MOLES, mortal, EmptyInput, meta, hunt_moles),
+        ToolSpec(MortalToolId.POST_BOUNTY, mortal, BountyInput, meta, post_a_bounty),
     ]

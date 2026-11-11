@@ -15,6 +15,7 @@ from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.faction import FactionRank
 from aerona.domain.enums.intrigue import HookSource
 from aerona.domain.enums.mind import ValueAxis
+from aerona.domain.enums.polity import OathKind
 from aerona.domain.enums.urban import CrimeStance
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -23,7 +24,9 @@ from aerona.engine.economy.purse import give_coin
 from aerona.engine.intrigue.secrets import grant_hook, learn
 from aerona.engine.lifecycle.wounds import slay
 from aerona.engine.notes import note
+from aerona.engine.polity.oaths import break_on, oaths_of, swear
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.renown.currencies import realm_of_community
 from aerona.engine.urban.turf import crime_orgs
 
@@ -36,6 +39,7 @@ class CrimeTally:
     income: int = 0
     bought: int = 0
     traitors: int = 0
+    sworn: int = 0
     stances: int = 0
 
 
@@ -95,6 +99,16 @@ async def buy_officials(ctx: TickContext, faction: EntityRow, profile: FactionPr
         await give_coin(ctx.session, ctx.rules, official_row, row.bribe)
 
 
+async def swear_silence(ctx: TickContext, faction: EntityRow, tally: CrimeTally) -> None:
+    members = await ctx.session.scalars(select(FactionMembershipRow.mortal_entity_id).where(FactionMembershipRow.faction_entity_id == faction.id))
+    for mortal_id in sorted(members):
+        mortal = await living_entity(ctx.session, mortal_id)
+        if mortal is None or held(mortal.id) or await oaths_of(ctx, mortal.id, OathKind.SILENCE):
+            continue
+        await swear(ctx, mortal, OathKind.SILENCE, recipient_id=faction.id, note_text=f"the code of {faction.name}")
+        tally.sworn += 1
+
+
 async def punish_informers(ctx: TickContext, faction: EntityRow, tally: CrimeTally) -> None:
     if not ctx.rng(f"informer.{faction.id}").chance(ctx.rules.crime_orgs.traitor_pct):
         return
@@ -108,6 +122,7 @@ async def punish_informers(ctx: TickContext, faction: EntityRow, tally: CrimeTal
     if mortal is None or held(mortal.id):
         return
     tally.traitors += 1
+    await break_on(ctx, [mortal.id], OathKind.SILENCE, f"talked about {faction.name}", recipient_id=faction.id)
     for stance in await ctx.session.scalars(select(CrimeStanceRow).where(CrimeStanceRow.faction_entity_id == faction.id)):
         if "strength" not in stance.locked:
             stance.strength = clamp_int(stance.strength + ctx.rules.crime_orgs.suppress_loss, 0, PERCENT)
@@ -174,6 +189,7 @@ async def run_underworld(ctx: TickContext, tally: CrimeTally) -> None:
     for faction, profile in await crime_orgs(ctx.session):
         await keep_rackets(ctx, faction, profile, tally)
         await buy_officials(ctx, faction, profile, tally)
+        await swear_silence(ctx, faction, tally)
         await punish_informers(ctx, faction, tally)
         await take_stance(ctx, faction, profile, tally)
     await ctx.session.flush()

@@ -14,6 +14,7 @@ D = DistrictKind
 SERVICE_OF: MappingProxyType[StructureKind, UrbanService] = MappingProxyType(
     {
         K.AQUEDUCT: V.WATER,
+        K.FOUNTAIN: V.WATER,
         K.TEMPLE: V.FAITH,
         K.SHRINE: V.FAITH,
         K.MONASTERY: V.FAITH,
@@ -31,8 +32,8 @@ SERVICE_OF: MappingProxyType[StructureKind, UrbanService] = MappingProxyType(
         K.FIREHOUSE: V.FIRE,
     }
 )
-AMENITIES = frozenset({K.TEMPLE, K.SHRINE, K.MARKET, K.BATHHOUSE, K.MONUMENT, K.THEATRE, K.ARENA, K.AQUEDUCT, K.LIBRARY, K.WONDER})
-NUISANCES = frozenset({K.TANNERY, K.PRISON, K.FORGE, K.MILL, K.MINE, K.QUARRY})
+AMENITIES = frozenset({K.TEMPLE, K.SHRINE, K.MARKET, K.BATHHOUSE, K.MONUMENT, K.THEATRE, K.ARENA, K.AQUEDUCT, K.LIBRARY, K.WONDER, K.FOUNTAIN, K.PARK})
+NUISANCES = frozenset({K.TANNERY, K.PRISON, K.FORGE, K.MILL, K.MINE, K.QUARRY, K.SLAUGHTERHOUSE})
 NUISANCE_DISTRICTS = frozenset({D.SLUMS, D.NECROPOLIS})
 HOME_DISTRICT: MappingProxyType[StructureKind, DistrictKind] = MappingProxyType(
     {
@@ -46,6 +47,7 @@ HOME_DISTRICT: MappingProxyType[StructureKind, DistrictKind] = MappingProxyType(
         K.WAREHOUSE: D.HARBOUR,
         K.FORGE: D.CRAFT_QUARTER,
         K.TANNERY: D.CRAFT_QUARTER,
+        K.SLAUGHTERHOUSE: D.CRAFT_QUARTER,
         K.WORKSHOP: D.CRAFT_QUARTER,
         K.CITADEL: D.CITADEL,
         K.PALACE: D.PALACE,

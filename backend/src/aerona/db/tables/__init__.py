@@ -183,6 +183,7 @@ from aerona.db.tables.evolution import (
     LineageMarkRow,
     PlagueResponseRow,
     SpeciesTraitRow,
+    TraitHistoryRow,
     TrophicLevelRow,
     WorldCycleRow,
 )
@@ -793,6 +794,7 @@ __all__ = [
     "TradingPostRow",
     "TraditionParticipationRow",
     "TraditionProfileRow",
+    "TraitHistoryRow",
     "TraitRow",
     "TreatyBreachRow",
     "TreatyClauseRow",

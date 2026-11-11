@@ -35,6 +35,9 @@ export const LAYER_MODES = [
   'soldiers',
   'wildlife',
   'species_range',
+  'desirability',
+  'coverage',
+  'niches',
 ] as const
 export type LayerMode = (typeof LAYER_MODES)[number]
 
@@ -62,6 +65,9 @@ export const LAYER_LABEL: Record<LayerMode, string> = {
   soldiers: 'Soldiers',
   wildlife: 'Wildlife',
   species_range: 'Species range',
+  desirability: 'Desirable districts',
+  coverage: 'Service coverage',
+  niches: 'Ways of life',
 }
 
 export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
@@ -82,6 +88,9 @@ export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
   soldiers: 'map-layer-soldiers',
   wildlife: 'map-layer-wildlife',
   species_range: 'map-layer-species-range',
+  desirability: 'map-layer-desirability',
+  coverage: 'map-layer-coverage',
+  niches: 'map-layer-niches',
 }
 
 export const OVERLAY_SURFACE: Partial<Record<Overlay, string>> = {

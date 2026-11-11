@@ -11,6 +11,7 @@ from aerona.domain.enums.entity import SOCIETY_TYPES
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.emergence import COLD_BANDS, WARM_BANDS, new_strain
+from aerona.engine.ecology.history import record_pathogen
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
@@ -89,6 +90,7 @@ async def evolve_pathogens(ctx: TickContext, tally: PathogenTally) -> None:
         warm = sum(1 for ground in grounds if ground.temperature_band in WARM_BANDS)
         if (cold > warm and nudge(profile, "cold_tolerance", table.climate_step)) or (warm > cold and nudge(profile, "heat_tolerance", table.climate_step)):
             tally.adapted += 1
+        await record_pathogen(ctx, profile)
         immune = [book.immune_share(community.id, disease_id) for community in hosts]
         share = round_half_up(sum(immune) / len(immune) * PERCENT) if immune else 0
         if share >= table.escape_immune_pct and ctx.rng(f"immune_escape.{disease_id}").chance(table.escape_pct):

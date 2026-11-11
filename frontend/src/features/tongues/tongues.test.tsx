@@ -132,6 +132,9 @@ describe('tongues', () => {
     })
     onApi('POST', '/api/actions/sound_change:delete', ACCEPTED_ACTION)
     const { screen } = await renderApp(<TonguesSection nodeId={30} />)
+    await expect
+      .element(screen.getByRole('list', { name: 'How its sounds changed' }))
+      .toBeVisible()
     await expect.element(screen.getByText('1. t → s')).toBeVisible()
     await expect.element(screen.getByText('Velari logographic')).toBeVisible()
     await expect.element(screen.getByText('A bilingual text')).toBeVisible()

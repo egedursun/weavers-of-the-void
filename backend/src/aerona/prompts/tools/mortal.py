@@ -167,6 +167,10 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "corruption. 1 action.",
         {"mortal_id": "Who you pardon"},
     ),
+    T.POST_BOUNTY: ToolText(
+        "You pay coin onto the bounty of an outlaw; whoever hunts them down is paid it with the realm's own bounty. 1 action.",
+        {"outlaw_id": "The outlaw", "amount": "The coin you put up"},
+    ),
     T.HUNT_MOLES: ToolText(
         "As spymaster you hunt for moles at your court; you may catch a foreign agent, clear an official, or wrongly accuse one, who may "
         "then be purged or defect. 1 action.",

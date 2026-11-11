@@ -78,6 +78,7 @@ describe('law depth', () => {
           mortal: MORTAL,
           polity: REALM,
           bounty: 30,
+          private_bounty: 5,
           renown: 12,
           declared_epoch: 4,
           locked: [],
@@ -159,6 +160,51 @@ describe('law depth', () => {
     expect(callsTo('POST', '/api/actions/prisoner:free')[0].body).toEqual({
       mortal_id: 40,
     })
+  })
+
+  it('draws a spy network with its cells and agents', async () => {
+    serveBase()
+    onApi('GET', '/api/law/of/30', {
+      ...EMPTY,
+      node: REALM,
+      networks: [{ id: 4, owner: REALM, target: MORTAL }],
+      cells: [
+        {
+          id: 9,
+          network_id: 4,
+          handler: MORTAL,
+          safe_house: null,
+          dead_drops: 2,
+          locked: [],
+        },
+      ],
+      agents: [
+        {
+          agent_id: 1,
+          mortal: MORTAL,
+          network_id: 4,
+          motive: 'ideology',
+          loyalty: 85,
+          cell_id: 9,
+        },
+        {
+          agent_id: 2,
+          mortal: SPYMASTER,
+          network_id: 4,
+          motive: 'money',
+          loyalty: 35,
+          cell_id: null,
+        },
+      ],
+    })
+    const { screen } = await renderApp(<LawDepthSection nodeId={30} />)
+    await expect
+      .element(
+        screen.getByRole('img', {
+          name: 'Varo spying on Ilse: 1 cells and 2 agents',
+        })
+      )
+      .toBeVisible()
   })
 
   it('says why the courts could not be read', async () => {

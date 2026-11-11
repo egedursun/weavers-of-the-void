@@ -6,6 +6,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow, SettlementTreasuryRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import SiegeRow, WarRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
 from aerona.domain.enums.discovery import BlueprintKind
@@ -14,6 +15,7 @@ from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.military import DefenderAction, SackChoice, SiegeAction, StarvationStage, UnitKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.settlement import BuildMaterial, DistrictHarm, TreasuryEntry
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
 from aerona.engine.economy.equipment import siege_engines
@@ -97,7 +99,7 @@ async def open_siege(ctx: TickContext, war: WarRow, besieged: EntityRow, besiege
         rounds=0,
         walls_level=walls.walls_level if walls is not None else 0,
         breaches=0,
-        supplies=town.siege_supplies if town is not None and town.siege_supplies > 0 else DEFAULT_SUPPLIES,
+        supplies=(town.siege_supplies if town is not None and town.siege_supplies > 0 else DEFAULT_SUPPLIES) + await warehoused(ctx, besieged.id),
         water=town.siege_water if town is not None and town.siege_water > 0 else water_days(walls),
         disease_inside=town.siege_disease if town is not None else 0,
         disease_outside=0,
@@ -110,6 +112,13 @@ async def open_siege(ctx: TickContext, war: WarRow, besieged: EntityRow, besiege
     ctx.session.add(row)
     await ctx.session.flush()
     return row
+
+
+async def warehoused(ctx: TickContext, town_id: int) -> int:
+    levels = await ctx.session.scalars(
+        select(StructureProfileRow.level).where(StructureProfileRow.kind == StructureKind.WAREHOUSE, StructureProfileRow.host_entity_id == town_id)
+    )
+    return int(sum(levels)) * ctx.rules.ports.warehouse_days
 
 
 async def starve(ctx: TickContext, siege: SiegeRow, besieged: EntityRow, rationing: bool) -> None:

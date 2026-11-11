@@ -26,8 +26,9 @@ from aerona.engine.phases.dominion import count
     "table.species_profiles",
     "table.species_ranges",
     "table.species_traits",
+    "table.trait_history",
 )
-@writes("table.species_traits")
+@writes("table.species_traits", "table.trait_history")
 async def trait_evolution(ctx: TickContext) -> None:
     tally = EvolutionTally()
     await evolve_traits(ctx, tally)

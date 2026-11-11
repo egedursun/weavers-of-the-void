@@ -133,6 +133,9 @@ class MagicalOrderRules:
     vis_per_site: int = rule(2, 0, 100, S, "Vis a covenant draws each epoch from each magic site its order holds")
     knowledge_gain: int = rule(2, 0, 100, S, "Magic a covenant's laboratory adds to its town each epoch")
     rivalry: int = rule(5, 0, 100, S, "Reputation an order loses with cults where magic is outlawed")
+    defiance_at: int = rule(20, 0, 100, S, "Reputation below which an order under a ban on magic is outlawed by its realm")
+    feud_pct: int = rule(10, 0, 100, S, "Chance each epoch two orders of one town turn on each other (%)")
+    feud_loss: int = rule(10, 0, 100, S, "Reputation and regard a feud between orders, or an order's defiance, costs")
 
 
 @dataclass(frozen=True)
@@ -146,6 +149,10 @@ class ConvoyRules:
     delay_pct: int = rule(10, 0, 100, M, "Chance a convoy is delayed by weather (%)")
     pilgrims: int = rule(10, 0, 10000, M, "Pilgrims, migrants and missionaries a convoy carries at most")
     conversion: int = rule(2, 0, 100, M, "Followers its missionaries win in the town it reaches")
+    war_raid_pct: int = rule(20, 0, 100, M, "Extra raid chance on a convoy travelling between realms at war (%)")
+    escort_relief: int = rule(10, 0, 100, M, "Raid chance a trade treaty's escort takes away (%)")
+    art_pct: int = rule(20, 0, 100, M, "Chance an arriving convoy brings one of its home's art forms (%)")
+    news_confidence: int = rule(50, 0, 100, M, "Confidence of the news of its home's wealth and defences a convoy brings")
 
 
 @dataclass(frozen=True)
@@ -171,6 +178,7 @@ class CargoRules:
 @dataclass(frozen=True)
 class PortRules:
     per_berth: int = rule(10, 0, 100000, M, "Goods each unit of harbour capacity moves each epoch")
+    warehouse_days: int = rule(30, 0, 1000, M, "Days of food each level of a warehouse adds to a besieged town's stores")
 
 
 @dataclass(frozen=True)

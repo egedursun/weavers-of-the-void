@@ -8,6 +8,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import SecretRow
 from aerona.db.tables.law_depth import DefectionRow, RegistryRow, SpyCellRow
 from aerona.db.tables.military import SpyAgentRow, SpyNetworkRow
+from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
@@ -54,6 +55,25 @@ async def in_debt(ctx: TickContext, mortal_id: int) -> bool:
     return owed is not None
 
 
+async def grieved_by_lord(ctx: TickContext, mortal_id: int) -> bool:
+    mortal = await ctx.session.get(EntityRow, mortal_id)
+    town = mortal.location_id if mortal is not None else None
+    realm = await ctx.session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == town).limit(1)) if town else None
+    if realm is None:
+        return False
+    lord = await ctx.session.scalar(
+        select(OfficeRow.holder_entity_id)
+        .where(OfficeRow.polity_entity_id == realm, OfficeRow.kind == OfficeKind.RULER, OfficeRow.holder_entity_id.is_not(None))
+        .limit(1)
+    )
+    if lord is None or lord == mortal_id:
+        return False
+    grudge = await ctx.session.scalar(
+        select(MemoryRow.id).where(MemoryRow.holder_node_id == mortal_id, MemoryRow.subject_node_id == lord, MemoryRow.magnitude < 0).limit(1)
+    )
+    return grudge is not None
+
+
 async def motive_for(ctx: TickContext, network: SpyNetworkRow, mortal: EntityRow) -> RecruitMotive:
     recruiter = network.spymaster_entity_id or network.owner_entity_id
     if await hook_on(ctx, recruiter, mortal.id) is not None:
@@ -63,7 +83,7 @@ async def motive_for(ctx: TickContext, network: SpyNetworkRow, mortal: EntityRow
     traits = await traits_of(ctx.session, mortal.id)
     if TraitKind.GREEDY in traits or await in_debt(ctx, mortal.id):
         return RecruitMotive.MONEY
-    if traits & VAIN:
+    if traits & VAIN or await grieved_by_lord(ctx, mortal.id):
         return RecruitMotive.EGO
     return RecruitMotive.MONEY
 

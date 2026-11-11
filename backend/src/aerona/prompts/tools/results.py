@@ -680,6 +680,8 @@ class MortalResult(StrEnum):
     PARDON_REFUSED = "You cannot pardon them: {{ why }}."
     HUNTED = "Your hunt caught {{ caught }} moles, cost {{ purged }} officials and cleared {{ cleared }}."
     HUNT_REFUSED = "You cannot hunt for moles: {{ why }}."
+    BOUNTY_POSTED = "You put {{ amount }} on the head of {{ name }}; the bounty on them is now {{ total }}."
+    BOUNTY_POST_REFUSED = "You cannot post that bounty: {{ why }}."
     TURF_REFUSED = "You cannot claim those streets: {{ why }}."
     BRIBED = "{{ name }} is on your payroll."
     BRIBE_REFUSED = "You cannot bribe that official: {{ why }}."

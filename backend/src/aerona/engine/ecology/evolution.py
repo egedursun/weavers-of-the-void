@@ -16,6 +16,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.evolution import EvolvedTrait
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
+from aerona.engine.ecology.history import record_species
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat_or
 from aerona.rules.registry import Rules
@@ -186,6 +187,7 @@ async def evolve_traits(ctx: TickContext, tally: EvolutionTally) -> None:
             spread_out(ctx.rules, item, leak)
             if pull(item, steps.get(trait, 0.0), (rng.random() * 2 - 1) * item.variance / 10, ctx.epoch):
                 tally.moved += 1
+    await record_species(ctx, [item for traits in stored.values() for item in traits.values()])
 
 
 def distance(first: Evolved, second: Evolved) -> int:

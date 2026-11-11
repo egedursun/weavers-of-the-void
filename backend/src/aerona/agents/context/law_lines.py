@@ -39,7 +39,9 @@ async def own_lines(scope: Scope, me: EntityRow) -> list[str]:
         found.append(f"imprisoned for {jailed.term} more epochs, rank {jailed.gang_rank} among its gangs{state}")
     outlaw = await session.get(OutlawRow, me.id)
     if outlaw is not None:
-        found.append(f"outlawed, with a bounty of {outlaw.bounty} on your head and renown {outlaw.renown} among the folk who shelter you")
+        found.append(
+            f"outlawed, with a bounty of {outlaw.bounty + outlaw.private_bounty} on your head and renown {outlaw.renown} among the folk who shelter you"
+        )
     for appeal in await session.scalars(
         select(AppealRow)
         .join(CrimeCaseRow, CrimeCaseRow.id == AppealRow.case_id)

@@ -16,6 +16,7 @@ import {
   PagedList,
   Section,
 } from '@/components/domain'
+import { LineChart } from '@/components/domain/LineChart'
 import { Label, Muted } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
 import { useEntityType } from '@/features/arcana/model'
@@ -1412,6 +1413,65 @@ function Listed<T>({
   )
 }
 
+const HISTORY_COLORS = [
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
+  'var(--color-info)',
+  'var(--color-warning)',
+  'var(--color-destructive)',
+] as const
+const PATHOGEN_TRAITS: Record<string, string> = {
+  virulence: 'Virulence',
+  lethality: 'Lethality',
+  cold_tolerance: 'Cold tolerance',
+  heat_tolerance: 'Heat tolerance',
+  resistance: 'Resistance to treatment',
+}
+
+function traitLabel(trait: string): string {
+  return (
+    TRAITS[trait as keyof typeof TRAITS]?.label ??
+    PATHOGEN_TRAITS[trait] ??
+    trait.replaceAll('_', ' ')
+  )
+}
+
+function TraitHistory({ history }: { history: NodeEvolutionView['history'] }) {
+  const traits = [...new Set(history.map((point) => point.trait))]
+  const epochs = new Set(history.map((point) => point.epoch))
+  if (traits.length === 0)
+    return (
+      <Muted variant='caption'>
+        Only species and sicknesses keep a record of how their traits changed.
+      </Muted>
+    )
+  if (epochs.size < 2)
+    return (
+      <Muted variant='caption'>
+        The record of its traits fills in as the epochs pass.
+      </Muted>
+    )
+  return (
+    <LineChart
+      title='Traits over the epochs'
+      label='Traits over the epochs'
+      height={180}
+      max={100}
+      series={traits.map((trait, index) => ({
+        key: trait,
+        label: traitLabel(trait),
+        color: HISTORY_COLORS[index % HISTORY_COLORS.length],
+        points: history
+          .filter((point) => point.trait === trait)
+          .map((point) => ({ x: point.epoch, y: point.value })),
+      }))}
+    />
+  )
+}
+
 function EvolutionBody({
   data,
   type,
@@ -1455,6 +1515,7 @@ function EvolutionBody({
           tone='success'
         />
       </div>
+      <TraitHistory history={data.history} />
       {data.species ? (
         <SpeciesCard speciesId={nodeId} data={data.species} blocked={blocked} />
       ) : (

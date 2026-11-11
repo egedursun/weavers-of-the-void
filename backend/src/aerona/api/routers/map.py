@@ -14,6 +14,7 @@ from aerona.api.schemas.entities import MapPositionRequest
 from aerona.api.schemas.maps import (
     GeographyPreview,
     MapArmy,
+    MapConvoy,
     MapFront,
     MapHoly,
     MapLair,
@@ -45,24 +46,30 @@ from aerona.db.tables.celestial import WorldMapRow, WorldRow
 from aerona.db.tables.culture import ArtworkProfileRow, CastingRow, HolderLevelRow, IdeologyAdherentRow, LanguageStandingRow, LegendProfileRow
 from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
 from aerona.db.tables.dominion import RegionDominionRow
-from aerona.db.tables.ecology import BeastProfileRow, SpeciesRangeRow
+from aerona.db.tables.ecology import BeastProfileRow, SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.economy import TradeFlowRow, TradeRouteProfileRow, TradeRouteRegionRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.evolution import SpeciesTraitRow
 from aerona.db.tables.faith import CultHoldingRow
 from aerona.db.tables.military import ArmyProfileRow, CampaignFrontRow, OccupationRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.polity import PolityTerritoryRow
+from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleProfileRow
+from aerona.db.tables.urban import ConvoyRow, DistrictServiceRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import LegendArchetype
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.evolution import EvolvedTrait
 from aerona.domain.enums.faith import HoldingKind
 from aerona.domain.enums.war import WarStatus
 from aerona.domain.models.records import GroundSnapshot
 from aerona.engine.cosmos.maps import MAPPED_STATUSES, map_is_stale, map_request, store_world_map, world_entities
+from aerona.engine.ecology.niches import NicheKey, niche_of
+from aerona.engine.economy.convoys import OPEN
 from aerona.engine.economy.routes import LIVE_STATUSES
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import canon
@@ -181,6 +188,7 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
             ground=await region_ground(session, world_id, past.ground if past is not None else None),
             stocks=await region_stocks(session, world_id),
             trade=await trade_lines(session, world_id, positions),
+            convoys=await convoy_marks(session, world_id, positions),
             outbreaks=await outbreak_lines(session, world_id, positions),
             realms=await region_realms(session, world_id),
             de_jure=await region_de_jure(session, world_id),
@@ -568,7 +576,86 @@ async def region_stocks(session: AsyncSession, world_id: int) -> dict[int, Regio
         .group_by(SpeciesRangeRow.region_entity_id)
     ):
         totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0})["wildlife"] = int(total or 0)
+    for region, values in (await urban_by_region(session, world_id, atlas)).items():
+        totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0}).update(values)
+    for region, count in (await niches_by_region(session, world_id)).items():
+        totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0})["niches"] = count
     return {region: RegionStocks(**values) for region, values in totals.items()}
+
+
+async def urban_by_region(session: AsyncSession, world_id: int, atlas: RegionAtlas) -> dict[int, dict[str, int]]:
+    towns = select(EntityRow.id).where(EntityRow.world_id == world_id, EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON)
+    wanted: dict[int, list[int]] = {}
+    covered: dict[int, list[int]] = {}
+    districts = list(await session.scalars(select(DistrictRow).where(DistrictRow.settlement_entity_id.in_(towns))))
+    service = {
+        district_id: coverage
+        for district_id, coverage in await session.execute(
+            select(DistrictServiceRow.district_id, func.avg(DistrictServiceRow.coverage))
+            .where(DistrictServiceRow.district_id.in_([row.id for row in districts]))
+            .group_by(DistrictServiceRow.district_id)
+        )
+    }
+    for district in districts:
+        region = atlas.top_region(district.settlement_entity_id)
+        if region is not None:
+            wanted.setdefault(region, []).append(district.desirability)
+            covered.setdefault(region, []).append(round(float(service.get(district.id) or 0)))
+    return {
+        region: {"desirability": round(sum(values) / len(values)), "coverage": round(sum(covered[region]) / len(covered[region]))}
+        for region, values in wanted.items()
+    }
+
+
+async def niches_by_region(session: AsyncSession, world_id: int) -> dict[int, int]:
+    regions = select(EntityRow.id).where(EntityRow.world_id == world_id, EntityRow.entity_type == EntityType.REGION)
+    profiles = {row.species_entity_id: row for row in await session.scalars(select(SpeciesProfileRow))}
+    sizes = {
+        (row.species_entity_id, row.region_entity_id): row
+        for row in await session.scalars(
+            select(SpeciesTraitRow).where(SpeciesTraitRow.trait == EvolvedTrait.SIZE, SpeciesTraitRow.region_entity_id.in_(regions))
+        )
+    }
+    found: dict[int, set[NicheKey]] = {}
+    for row in await session.scalars(select(SpeciesRangeRow).where(SpeciesRangeRow.region_entity_id.in_(regions), SpeciesRangeRow.abundance > 0)):
+        profile = profiles.get(row.species_entity_id)
+        if profile is not None:
+            found.setdefault(row.region_entity_id, set()).add(niche_of(profile, sizes.get((row.species_entity_id, row.region_entity_id))))
+    return {region: len(keys) for region, keys in found.items()}
+
+
+async def convoy_marks(session: AsyncSession, world_id: int, positions: dict[int, tuple[float, float]]) -> list[MapConvoy]:
+    routes = select(EntityRow.id).where(EntityRow.world_id == world_id, EntityRow.entity_type == EntityType.TRADE_ROUTE)
+    rows = await session.execute(
+        select(ConvoyRow, TradeRouteProfileRow)
+        .join(TradeRouteProfileRow, TradeRouteProfileRow.route_entity_id == ConvoyRow.route_entity_id)
+        .where(ConvoyRow.route_entity_id.in_(routes), ConvoyRow.status.in_(list(OPEN)))
+        .order_by(ConvoyRow.id)
+    )
+    pairs = list(rows)
+    owners = dict(
+        (
+            await session.execute(
+                select(EntityRow.id, EntityRow.name).where(EntityRow.id.in_([row.owner_entity_id for row, _ in pairs if row.owner_entity_id]))
+            )
+        ).all()
+    )
+    found: list[MapConvoy] = []
+    for row, profile in pairs:
+        first, second = positions.get(profile.first_market_id), positions.get(profile.second_market_id)
+        if first is None or second is None:
+            continue
+        found.append(
+            MapConvoy(
+                convoy_id=row.id,
+                route_id=row.route_entity_id,
+                owner=owners.get(row.owner_entity_id, "") if row.owner_entity_id is not None else "",
+                status=row.status,
+                guards=row.guards,
+                path=[*first, *second],
+            )
+        )
+    return found
 
 
 async def lair_marks(session: AsyncSession, world_id: int, positions: dict[int, tuple[float, float]], reach: int) -> list[MapLair]:

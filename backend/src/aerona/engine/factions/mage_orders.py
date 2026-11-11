@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from itertools import pairwise
 
 from sqlalchemy import select
 
@@ -13,6 +14,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind, FactionRank
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.urban import OrderLaw, TribunalVerdict
@@ -23,8 +25,9 @@ from aerona.engine.economy.purse import take_coin
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.stats import shift_bounded
+from aerona.engine.primitives.stats import shift_bounded, stat_or
 from aerona.engine.renown.currencies import realm_of_community
+from aerona.engine.services.community_relations import change_relation
 from aerona.engine.structures.construction import Commission, begin
 
 VERDICT_WORDS = {
@@ -41,6 +44,8 @@ class OrderTally:
     trials: int = 0
     covenants: int = 0
     vis: int = 0
+    defiant: int = 0
+    feuds: int = 0
 
 
 async def orders(ctx: TickContext) -> list[tuple[EntityRow, FactionProfileRow]]:
@@ -141,10 +146,37 @@ async def draw_vis(ctx: TickContext, order: EntityRow, covenant: EntityRow, tall
         shift_bounded(ctx.rules, people, "magic", table.knowledge_gain)
 
 
-async def contest_bans(ctx: TickContext, profile: FactionProfileRow, laws: LawBook) -> None:
+async def contest_bans(ctx: TickContext, order: EntityRow, profile: FactionProfileRow, laws: LawBook, tally: OrderTally) -> None:
+    table = ctx.rules.magical_orders
     realm = await realm_of_community(ctx.session, profile.home_entity_id) if profile.home_entity_id is not None else None
-    if realm is not None and laws.in_force(realm, LawKind.MAGIC_BAN) is not None and "reputation" not in profile.locked:
-        profile.reputation = clamp_int(profile.reputation - ctx.rules.magical_orders.rivalry, 0, PERCENT)
+    if realm is None or laws.in_force(realm, LawKind.MAGIC_BAN) is None:
+        return
+    if "reputation" not in profile.locked:
+        profile.reputation = clamp_int(profile.reputation - table.rivalry, 0, PERCENT)
+    if profile.outlawed or "outlawed" in profile.locked or profile.reputation > table.defiance_at or held(realm):
+        return
+    profile.outlawed = True
+    await change_relation(ctx, realm, order.id, -table.feud_loss, MemoryKind.BETRAYED_ME, note="defied the ban on magic")
+    tally.defiant += 1
+    await note(ctx, f"{order.name} defied the ban on magic and was outlawed by the realm.", key="order.outlawed", ids=[order.id, realm])
+
+
+async def rival_orders(ctx: TickContext, found: list[tuple[EntityRow, FactionProfileRow]], tally: OrderTally) -> None:
+    table = ctx.rules.magical_orders
+    by_home: dict[int, list[tuple[EntityRow, FactionProfileRow]]] = {}
+    for order, profile in found:
+        if profile.home_entity_id is not None and not held(order.id):
+            by_home.setdefault(profile.home_entity_id, []).append((order, profile))
+    for home, rivals in sorted(by_home.items()):
+        for (first, one), (second, other) in pairwise(rivals):
+            if not ctx.rng(f"order.feud.{first.id}.{second.id}.{ctx.epoch}").chance(table.feud_pct):
+                continue
+            loser = one if stat_or(first, "strength", 0) < stat_or(second, "strength", 0) else other
+            if "reputation" not in loser.locked:
+                loser.reputation = clamp_int(loser.reputation - table.feud_loss, 0, PERCENT)
+            await change_relation(ctx, first.id, second.id, -table.feud_loss, MemoryKind.BETRAYED_ME, note="a war among mages")
+            tally.feuds += 1
+            await note(ctx, f"{first.name} and {second.name} turned on each other.", key="order.feud", ids=[first.id, second.id, home])
 
 
 async def keep_orders(ctx: TickContext, tally: OrderTally) -> None:
@@ -158,5 +190,6 @@ async def keep_orders(ctx: TickContext, tally: OrderTally) -> None:
         covenant = await covenant_of(ctx, order, profile, tally)
         if covenant is not None:
             await draw_vis(ctx, order, covenant, tally)
-        await contest_bans(ctx, profile, statutes)
+        await contest_bans(ctx, order, profile, statutes, tally)
+    await rival_orders(ctx, await orders(ctx), tally)
     await ctx.session.flush()

@@ -1,28 +1,38 @@
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.tables.discovery import ArtFormPractitionerRow
 from aerona.db.tables.economy import TradeFlowRow, TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.polity import TreatyClauseRow, TreatyProfileRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow
 from aerona.db.tables.urban import ConvoyRow, FleetRow
+from aerona.db.tables.warfare import WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
 from aerona.domain.enums.economy import TradeMode, TradeRouteStatus
 from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.intrigue import BeliefSource
+from aerona.domain.enums.polity import ClauseKind, TreatyStatus
 from aerona.domain.enums.urban import ConvoyStatus, Preservation, TransportKind
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.outbreaks import open_outbreak
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.factions.privateers import privateers_against
+from aerona.engine.intrigue.beliefs import DEFENCE, believe
+from aerona.engine.lore.art_forms import practise
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import move_stat, shift_bounded, stat_or
+from aerona.engine.primitives.stats import move_stat, shift_bounded, stat, stat_or
+from aerona.engine.renown.currencies import realm_of_community
 from aerona.rules.registry import Rules
+
+WEALTH = "wealth"
 
 VEHICLE_OF = {TradeMode.SEA: TransportKind.SHIPS, TradeMode.RIVER: TransportKind.RIVER_BOATS, TradeMode.ROAD: TransportKind.WAGONS}
 ANIMAL_KINDS = frozenset({TransportKind.PACK_ANIMALS})
@@ -121,9 +131,11 @@ async def dispatch(ctx: TickContext, route: EntityRow, profile: TradeRouteProfil
     tally.sent += 1
 
 
-def fate_of(rules: Rules, convoy: ConvoyRow, profile: TradeRouteProfileRow, roll: float, *, privateers: bool = False) -> ConvoyStatus:
+def fate_of(
+    rules: Rules, convoy: ConvoyRow, profile: TradeRouteProfileRow, roll: float, *, privateers: bool = False, war: bool = False, escorted: bool = False
+) -> ConvoyStatus:
     table = rules.convoys
-    hunted = rules.crime_orgs.privateer_pct if privateers else 0
+    hunted = (rules.crime_orgs.privateer_pct if privateers else 0) + (table.war_raid_pct if war else 0) - (table.escort_relief if escorted else 0)
     raid = max(0.0, table.raid_pct * (profile.danger_bandits + profile.danger_beasts) / PERCENT + hunted - convoy.guards * table.guard_relief)
     storm = table.storm_pct * profile.danger_sea / PERCENT if profile.mode is TradeMode.SEA else 0.0
     delay = table.delay_pct * profile.danger_weather / PERCENT
@@ -136,6 +148,53 @@ def fate_of(rules: Rules, convoy: ConvoyRow, profile: TradeRouteProfileRow, roll
     return ConvoyStatus.ARRIVED
 
 
+async def sides_of(session: AsyncSession, convoy: ConvoyRow, profile: TradeRouteProfileRow) -> tuple[int | None, int | None]:
+    owner = convoy.owner_entity_id if convoy.owner_entity_id is not None else profile.first_market_id
+    return await realm_of_community(session, owner) or owner, await realm_of_community(session, profile.second_market_id) or profile.second_market_id
+
+
+async def opposed(session: AsyncSession, first: int, second: int) -> bool:
+    mine = {row.war_id: row.side for row in await session.scalars(select(WarSideRow).where(WarSideRow.entity_id == first, WarSideRow.left_epoch.is_(None)))}
+    theirs = await session.scalars(select(WarSideRow).where(WarSideRow.entity_id == second, WarSideRow.left_epoch.is_(None)))
+    return any(row.war_id in mine and mine[row.war_id] is not row.side for row in theirs)
+
+
+async def escorted_by_treaty(session: AsyncSession, first: int | None, second: int | None) -> bool:
+    if first is None or second is None or first == second:
+        return False
+    found = await session.scalar(
+        select(TreatyClauseRow.id)
+        .join(TreatyProfileRow, TreatyProfileRow.treaty_entity_id == TreatyClauseRow.treaty_entity_id)
+        .where(
+            TreatyProfileRow.status == TreatyStatus.IN_FORCE,
+            TreatyClauseRow.kind == ClauseKind.TRADE_RIGHTS,
+            or_(
+                (TreatyClauseRow.obligor_node_id == first) & (TreatyClauseRow.beneficiary_node_id == second),
+                (TreatyClauseRow.obligor_node_id == second) & (TreatyClauseRow.beneficiary_node_id == first),
+            ),
+        )
+        .limit(1)
+    )
+    return found is not None
+
+
+async def carry_culture(ctx: TickContext, origin: EntityRow, destination: EntityRow) -> None:
+    table = ctx.rules.convoys
+    rng = ctx.rng(f"convoy.culture.{origin.id}.{destination.id}.{ctx.epoch}")
+    forms = list(
+        await ctx.session.scalars(
+            select(ArtFormPractitionerRow).where(ArtFormPractitionerRow.practitioner_entity_id == origin.id).order_by(ArtFormPractitionerRow.art_form_entity_id)
+        )
+    )
+    for row in forms:
+        if await ctx.session.get(ArtFormPractitionerRow, (row.art_form_entity_id, destination.id)) is None and rng.chance(table.art_pct):
+            await practise(ctx, row.art_form_entity_id, destination.id, row.mastery // 2)
+            break
+    news = {WEALTH: stat_or(origin, WEALTH, stat(origin, "prosperity") or 0), DEFENCE: stat_or(origin, DEFENCE, 0)}
+    for key, truth in news.items():
+        await believe(ctx, destination.id, origin.id, key, truth, source=BeliefSource.MESSAGE, confidence=table.news_confidence)
+
+
 async def arrive(ctx: TickContext, convoy: ConvoyRow, profile: TradeRouteProfileRow, book: DiseaseBook, atlas: RegionAtlas) -> None:
     origin = await ctx.session.get(EntityRow, profile.first_market_id)
     destination = await ctx.session.get(EntityRow, profile.second_market_id)
@@ -144,6 +203,7 @@ async def arrive(ctx: TickContext, convoy: ConvoyRow, profile: TradeRouteProfile
     convoy.region_entity_id = atlas.top_region(destination.id)
     move_stat(origin, destination, "population", convoy.passengers.get(MIGRANTS, 0))
     shift_bounded(ctx.rules, destination, "piety", convoy.passengers.get(MISSIONARIES, 0) * ctx.rules.convoys.conversion / PERCENT)
+    await carry_culture(ctx, origin, destination)
     origin_region = atlas.top_region(origin.id)
     for outbreak in book.outbreaks:
         disease = book.diseases.get(outbreak.disease_entity_id)
@@ -162,7 +222,17 @@ async def resolve(ctx: TickContext, convoy: ConvoyRow, tally: ConvoyTally, book:
     if profile is None or "status" in convoy.locked:
         return
     privateers = await privateers_against(ctx.session, convoy.owner_entity_id)
-    status = fate_of(ctx.rules, convoy, profile, ctx.rng(f"convoy_fate.{convoy.id}").random() * PERCENT, privateers=privateers)
+    mine, theirs = await sides_of(ctx.session, convoy, profile)
+    war = mine is not None and theirs is not None and mine != theirs and await opposed(ctx.session, mine, theirs)
+    status = fate_of(
+        ctx.rules,
+        convoy,
+        profile,
+        ctx.rng(f"convoy_fate.{convoy.id}").random() * PERCENT,
+        privateers=privateers,
+        war=war,
+        escorted=await escorted_by_treaty(ctx.session, mine, theirs),
+    )
     convoy.status = status
     if status is ConvoyStatus.ARRIVED:
         convoy.arrived_epoch = ctx.epoch

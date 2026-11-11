@@ -36418,6 +36418,14 @@ export interface components {
       blockade_id: number | null
       path: number[]
     }
+    MapConvoy: {
+      convoy_id: number
+      route_id: number
+      owner: string
+      status: components['schemas']['ConvoyStatus']
+      guards: number
+      path: number[]
+    }
     MapFront: {
       war_id: number
       first_region_id: number
@@ -36557,6 +36565,7 @@ export interface components {
         [key: string]: components['schemas']['RegionStocks']
       }
       trade: components['schemas']['MapTrade'][]
+      convoys?: components['schemas']['MapConvoy'][]
       outbreaks?: components['schemas']['MapOutbreak'][]
       realms?: {
         [key: string]: components['schemas']['RegionRealm']
@@ -37774,6 +37783,7 @@ export interface components {
       | 'claim_bounty'
       | 'grant_pardon'
       | 'hunt_moles'
+      | 'post_bounty'
       | 'seek_cure'
       | 'find_carrier'
       | 'proclaim_tongue'
@@ -38107,6 +38117,7 @@ export interface components {
     }
     NodeEvolutionView: {
       node: components['schemas']['NodeRef']
+      history: components['schemas']['TraitPointView'][]
       species: components['schemas']['SpeciesEcologyView'] | null
       traits: components['schemas']['StockTraitView'][]
       marks: components['schemas']['LineageMarkView'][]
@@ -38632,6 +38643,7 @@ export interface components {
       mortal: components['schemas']['NodeRef'] | null
       polity: components['schemas']['NodeRef'] | null
       bounty: number
+      private_bounty: number
       renown: number
       declared_epoch: number
       locked: string[]
@@ -41112,6 +41124,9 @@ export interface components {
       followers: number
       soldiers: number
       wildlife: number
+      desirability: number
+      coverage: number
+      niches: number
     }
     RegionTerrainView: {
       region_id: number
@@ -44660,6 +44675,9 @@ export interface components {
       | 'bathhouse'
       | 'kontor'
       | 'covenant'
+      | 'fountain'
+      | 'park'
+      | 'slaughterhouse'
       | 'cosmic_archive'
     StructurePlaceInput: {
       structure_id: number
@@ -46101,6 +46119,11 @@ export interface components {
       | 'impressionable'
       | 'cunning_tactician'
       | 'reckless'
+    TraitPointView: {
+      trait: string
+      epoch: number
+      value: number
+    }
     TraitSource:
       | 'birth'
       | 'inherited'
@@ -100227,6 +100250,7 @@ export const mortalToolIdValues: ReadonlyArray<
   'claim_bounty',
   'grant_pardon',
   'hunt_moles',
+  'post_bounty',
   'seek_cure',
   'find_carrier',
   'proclaim_tongue',
@@ -102018,6 +102042,9 @@ export const structureKindValues: ReadonlyArray<
   'bathhouse',
   'kontor',
   'covenant',
+  'fountain',
+  'park',
+  'slaughterhouse',
   'cosmic_archive',
 ]
 export const structureStatsKindValues: ReadonlyArray<

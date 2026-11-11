@@ -18,6 +18,7 @@ from aerona.api.schemas.evolution import (
     SpeciesEcologyView,
     StockTraitView,
     SuccessionView,
+    TraitPointView,
     TrophicView,
     WorldCycleView,
 )
@@ -36,6 +37,7 @@ from aerona.db.tables.evolution import (
     LineageMarkRow,
     PlagueResponseRow,
     SpeciesTraitRow,
+    TraitHistoryRow,
     TrophicLevelRow,
     WorldCycleRow,
 )
@@ -223,6 +225,12 @@ async def node_evolution(services: ServicesDep, node_id: NodeId) -> NodeEvolutio
         entity = await session.get(EntityRow, node_id)
         return NodeEvolutionView(
             node=refs[node_id],
+            history=[
+                TraitPointView(trait=row.trait, epoch=row.epoch, value=row.value)
+                for row in await session.scalars(
+                    select(TraitHistoryRow).where(TraitHistoryRow.holder_entity_id == node_id).order_by(TraitHistoryRow.trait, TraitHistoryRow.epoch)
+                )
+            ],
             species=ecology_view(await session.get(SpeciesProfileRow, node_id)),
             traits=await trait_views(
                 session,

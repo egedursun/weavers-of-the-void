@@ -191,6 +191,7 @@ async def outlaw_views(session: AsyncSession, node_id: int) -> list[OutlawView]:
             mortal=at(refs, row.mortal_entity_id),
             polity=at(refs, row.polity_entity_id),
             bounty=row.bounty,
+            private_bounty=row.private_bounty,
             renown=row.renown,
             declared_epoch=row.declared_epoch,
             locked=list(row.locked),

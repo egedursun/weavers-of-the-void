@@ -20,6 +20,7 @@ const COUGH = { id: 50, kind: 'entity' as const, name: 'Grey Cough' }
 const ORA = { id: 41, kind: 'entity' as const, name: 'Ora' }
 
 const EMPTY = {
+  history: [],
   species: null,
   traits: [],
   marks: [],
@@ -62,6 +63,10 @@ describe('evolution', () => {
     onApi('GET', '/api/evolution/of/30', {
       ...EMPTY,
       node: DEER,
+      history: [
+        { trait: 'wariness', epoch: 4, value: 60 },
+        { trait: 'wariness', epoch: 5, value: 72 },
+      ],
       species: {
         keystone: 'pollinator',
         feral_epoch: 4,
@@ -115,6 +120,9 @@ describe('evolution', () => {
       .toBeVisible()
     await expect.element(screen.getByText('Wariness')).toBeVisible()
     await expect.element(screen.getByText('in epoch 4')).toBeVisible()
+    await expect
+      .element(screen.getByRole('img', { name: 'Traits over the epochs' }))
+      .toBeVisible()
     await screen.getByRole('button', { name: 'Draw anew' }).click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/species_trait:delete'))

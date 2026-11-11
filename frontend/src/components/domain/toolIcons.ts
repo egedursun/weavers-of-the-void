@@ -334,6 +334,7 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   claim_bounty: Footprints,
   grant_pardon: Handshake,
   hunt_moles: Search,
+  post_bounty: Coins,
   claim_turf: MapPinned,
   bribe_official: HandCoins,
   open_trading_post: Store,

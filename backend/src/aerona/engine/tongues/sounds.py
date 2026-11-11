@@ -3,8 +3,11 @@ from dataclasses import dataclass
 from sqlalchemy import delete, func, select
 
 from aerona.catalog.tongues import KIND_WEIGHTS, LENITION
+from aerona.db.repositories.entities import EntityRepository
+from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import LanguageStandingRow
+from aerona.db.tables.discovery import NameMeaningRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.lore import LexemeRow, lexeme_key
 from aerona.db.tables.mind import SkillRow
@@ -18,11 +21,15 @@ from aerona.domain.enums.tongues import SoundChangeCause, SoundChangeKind, Sound
 from aerona.domain.models.phonology import Phonology
 from aerona.engine.context import TickContext
 from aerona.engine.lore.language import speakers, tongues_of
+from aerona.engine.notes import note
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.queries import canon, has_flag
 
 FIXED_REGISTERS = frozenset({WordRegister.ARCHAIC, WordRegister.SACRED, WordRegister.POETIC})
 SHORTEST = 2
+PLACE_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.REGION, EntityType.PLACE})
+NAME = "name"
+GLOSS_MAX = 2000
 
 
 @dataclass
@@ -30,6 +37,7 @@ class SoundTally:
     changes: int = 0
     rederived: int = 0
     reconstructed: int = 0
+    renamed: int = 0
 
 
 @dataclass(frozen=True)
@@ -176,7 +184,38 @@ async def acquire(ctx: TickContext, language: EntityRow, tally: SoundTally) -> S
     row = await add_change(ctx, language.id, change, cause)
     tally.changes += 1
     tally.rederived += await rederive(ctx, language.id)
+    tally.renamed += await weather_names(ctx, language.id, change, vowels_of(profile.phonology))
     return row
+
+
+async def weather_names(ctx: TickContext, language_id: int, change: Change, vowels: frozenset[str]) -> int:
+    rows = await ctx.session.execute(
+        select(NameMeaningRow, EntityRow)
+        .join(EntityRow, EntityRow.id == NameMeaningRow.node_id)
+        .where(NameMeaningRow.language_entity_id == language_id, EntityRow.entity_type.in_(list(PLACE_TYPES)), EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.id)
+    )
+    names = NameRepository(ctx.session)
+    renamed = 0
+    for meaning, place in list(rows):
+        if held(place.id) or NAME in (meaning.locked or []):
+            continue
+        if not ctx.rng(f"sound.place_name.{place.id}.{ctx.epoch}").chance(ctx.rules.sound_changes.name_pct):
+            continue
+        form = apply_change(place.name, change, vowels)
+        if len(form) < SHORTEST or form == place.name or await names.is_taken(form, ignore_node_id=place.id):
+            continue
+        old = place.name
+        await EntityRepository(ctx.session).rename(place, form)
+        meaning.name = form
+        meaning.gloss = clipped_gloss(f"{meaning.gloss}; once called {old}".lstrip("; "))
+        renamed += 1
+        await note(ctx, f"In the mouths of its folk, {old} became {form}.", key="tongues.place_renamed", ids=[place.id, language_id])
+    return renamed
+
+
+def clipped_gloss(text: str) -> str:
+    return text[-GLOSS_MAX:] if len(text) > GLOSS_MAX else text
 
 
 async def add_change(ctx: TickContext, language_id: int, change: Change, cause: SoundChangeCause) -> SoundChangeRow:

@@ -36,6 +36,7 @@ import { MindPicker } from '@/features/entity/mind/parts'
 import { NumberField } from '@/features/entity/realm/parts'
 import { Ref } from '@/features/gatherings/parts'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { NetworkGraph } from './NetworkGraph'
 import {
   type AgentMotiveView,
   type AppealView,
@@ -1022,14 +1023,20 @@ function OutlawCard({
         <>
           {'Outlawed by '}
           <Ref node={row.polity} empty='no realm' />
-          {` in epoch ${row.declared_epoch}, a bounty of ${row.bounty}`}
+          {` in epoch ${row.declared_epoch}, a bounty of ${row.bounty} from the realm and ${row.private_bounty} put up by others`}
         </>
       }
       removeLabel='Lift the outlawry'
       editTitle='Set the outlaw'
       note='An outlaw has no standing in court; hunters chase the bounty, and those who escape grow in renown among the folk who shelter them.'
       fields={[
-        { key: 'bounty', label: 'Bounty', kind: 'number', min: 0 },
+        { key: 'bounty', label: 'Realm bounty', kind: 'number', min: 0 },
+        {
+          key: 'private_bounty',
+          label: 'Private bounty',
+          kind: 'number',
+          min: 0,
+        },
         { key: 'renown', label: 'Renown', kind: 'number', min: 0, max: SPAN },
       ]}
       locked={row.locked}
@@ -1906,6 +1913,7 @@ function LawBody({
         {(row) => <PrisonerCard row={row} blocked={blocked} />}
       </Listed>
       <PrisonForge data={data} type={type} blocked={blocked} />
+      <NetworkGraph data={data} />
       <Listed
         title='Agents and their motives'
         items={data.agents}

@@ -78,6 +78,7 @@ class OutlawView(ApiModel):
     mortal: NodeRef | None
     polity: NodeRef | None
     bounty: int
+    private_bounty: int
     renown: int
     declared_epoch: int
     locked: list[str]

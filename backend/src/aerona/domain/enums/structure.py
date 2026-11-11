@@ -65,6 +65,9 @@ class StructureKind(StrEnum):
     BATHHOUSE = "bathhouse"
     KONTOR = "kontor"
     COVENANT = "covenant"
+    FOUNTAIN = "fountain"
+    PARK = "park"
+    SLAUGHTERHOUSE = "slaughterhouse"
     COSMIC_ARCHIVE = "cosmic_archive"
 
 

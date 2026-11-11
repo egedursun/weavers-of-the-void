@@ -338,6 +338,8 @@ export function drawLines(
   if (options.lore) drawLore(context, view, tokens, transform.k, options.fade)
   if (options.beasts)
     drawLairs(context, view, tokens, transform.k, options.fade)
+  if (options.trade)
+    drawConvoys(context, view, tokens, transform.k, options.fade)
   const shapes = visibleShapes(
     view,
     options.roads,
@@ -393,6 +395,42 @@ export function drawLines(
   context.setLineDash([])
   context.lineDashOffset = 0
   context.globalAlpha = options.fade
+}
+
+const CONVOY_RADIUS = 3
+const CONVOY_GUARD_SCALE = 0.25
+const CONVOY_ALONG: Record<string, number> = {
+  loading: 0.1,
+  travelling: 0.5,
+  delayed: 0.35,
+}
+
+function drawConvoys(
+  context: CanvasRenderingContext2D,
+  view: MapView,
+  tokens: ThemeColors,
+  k: number,
+  fade: number
+): void {
+  for (const convoy of view.convoys ?? []) {
+    if (convoy.path.length < 4) continue
+    const share = CONVOY_ALONG[convoy.status] ?? 0.5
+    const x = convoy.path[0] + (convoy.path[2] - convoy.path[0]) * share
+    const y = convoy.path[1] + (convoy.path[3] - convoy.path[1]) * share
+    context.globalAlpha = fade
+    context.fillStyle =
+      convoy.status === 'delayed' ? tokens.warning : tokens['brand-gold']
+    context.beginPath()
+    context.arc(
+      x,
+      y,
+      (CONVOY_RADIUS + Math.sqrt(convoy.guards) * CONVOY_GUARD_SCALE) / k,
+      0,
+      Math.PI * 2
+    )
+    context.fill()
+  }
+  context.globalAlpha = fade
 }
 
 function drawSickLands(
