@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { ChevronsRight, Eye, EyeOff, Route, Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import { table } from '@/features/arcana/labels'
 import { Held, Listed } from '@/features/collective/parts'
 import { Chip, Facts, ForgeCard, Meter } from '@/features/cosmography/parts'
@@ -14,7 +12,7 @@ import { Ref } from '@/features/gatherings/parts'
 import { type PlanView, useCycleAction } from './api'
 import { PLAN_KINDS, PLAN_STATUSES } from './labels'
 import { clamp, MANY, SPAN, useRow, useStep } from './model'
-import { StepButton } from './parts'
+import { StepButton, TextField } from './parts'
 
 const TARGET_TYPES = [
   'region',
@@ -209,15 +207,12 @@ function PlanForge({
         </Button>
       }
     >
-      <div className='flex min-w-0 flex-col gap-1.5'>
-        <FieldLabel htmlFor={`plan-name-${holderId}`}>Called</FieldLabel>
-        <Input
-          id={`plan-name-${holderId}`}
-          value={name}
-          disabled={blocked !== null}
-          onChange={(event) => setName(event.target.value)}
-        />
-      </div>
+      <TextField
+        label='Called'
+        value={name}
+        blocked={blocked}
+        onChange={setName}
+      />
       <MindPicker
         label='Aim'
         value={kind}

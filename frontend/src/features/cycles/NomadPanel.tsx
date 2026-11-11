@@ -10,8 +10,6 @@ import {
   Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import { KpiTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
@@ -25,7 +23,7 @@ import { Ref } from '@/features/gatherings/parts'
 import { type ConfederationView, type CyclesView, useCycleAction } from './api'
 import { MOBILITY } from './labels'
 import { clamp, MANY, SPAN, useRow, useStep } from './model'
-import { NodeChips, NodeListPicker, StepButton } from './parts'
+import { NodeChips, NodeListPicker, StepButton, TextField } from './parts'
 
 type Camp = NonNullable<CyclesView['camp']>
 
@@ -357,15 +355,12 @@ function ConfederationForge({
         </Button>
       }
     >
-      <div className='flex min-w-0 flex-col gap-1.5'>
-        <FieldLabel htmlFor={`league-name-${townId}`}>Called</FieldLabel>
-        <Input
-          id={`league-name-${townId}`}
-          value={name}
-          disabled={blocked !== null}
-          onChange={(event) => setName(event.target.value)}
-        />
-      </div>
+      <TextField
+        label='Called'
+        value={name}
+        blocked={blocked}
+        onChange={setName}
+      />
       <NodePicker
         label='Leader'
         value={leader}

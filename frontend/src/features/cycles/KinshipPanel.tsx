@@ -8,8 +8,6 @@ import {
   Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import { KpiTile } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
@@ -34,6 +32,7 @@ import {
   YES_NO,
 } from './labels'
 import { clamp, LINE_TYPES, MANY, SPAN, useRow } from './model'
+import { TextField } from './parts'
 
 type Kinship = NonNullable<CyclesView['kinship']>
 type Reproduction = NonNullable<CyclesView['reproduction']>
@@ -674,15 +673,12 @@ function LegacyForge({
         blocked={isPeople ? blocked : NOT_PEOPLE}
         onPick={(value) => setKind(value as keyof typeof LEGACIES)}
       />
-      <div className='flex min-w-0 flex-col gap-1.5'>
-        <FieldLabel htmlFor={`legacy-key-${peopleId}`}>What is kept</FieldLabel>
-        <Input
-          id={`legacy-key-${peopleId}`}
-          value={key}
-          disabled={!isPeople || blocked !== null}
-          onChange={(event) => setKey(event.target.value)}
-        />
-      </div>
+      <TextField
+        label='What is kept'
+        value={key}
+        blocked={isPeople ? blocked : NOT_PEOPLE}
+        onChange={setKey}
+      />
       <NodePicker
         label='Kept from'
         value={from}

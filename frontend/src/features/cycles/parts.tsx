@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { type LucideIcon, Plus, X } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { PagedList } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { Chip } from '@/features/cosmography/parts'
@@ -127,6 +128,33 @@ export function NodeListPicker({
           Add
         </Button>
       </div>
+    </div>
+  )
+}
+
+export function TextField({
+  label,
+  value,
+  blocked,
+  onChange,
+}: {
+  label: string
+  value: string
+  blocked: string | null
+  onChange: (value: string) => void
+}) {
+  const id = useId()
+  return (
+    <div className='flex min-w-0 flex-col gap-1'>
+      <Label as='label' htmlFor={id} truncate>
+        {label}
+      </Label>
+      <Input
+        id={id}
+        value={value}
+        disabled={blocked !== null}
+        onChange={(event) => onChange(event.target.value)}
+      />
     </div>
   )
 }

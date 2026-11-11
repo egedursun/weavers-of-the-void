@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { Ban, Gift, HandHeart, Repeat, Route, Scale, Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label as FieldLabel } from '@/components/ui/label'
 import { KpiTile } from '@/components/domain'
 import { table } from '@/features/arcana/labels'
 import { Held, Listed } from '@/features/collective/parts'
@@ -30,7 +28,7 @@ import {
   useRow,
   useStep,
 } from './model'
-import { NodeChips, NodeListPicker, StepButton } from './parts'
+import { NodeChips, NodeListPicker, StepButton, TextField } from './parts'
 
 type Debt = CyclesView['debts'][number]
 
@@ -516,17 +514,12 @@ export function CircuitForge({
         </Button>
       }
     >
-      <div className='flex min-w-0 flex-col gap-1.5'>
-        <FieldLabel htmlFor={`circuit-name-${firstStop ?? 0}`}>
-          Called
-        </FieldLabel>
-        <Input
-          id={`circuit-name-${firstStop ?? 0}`}
-          value={name}
-          disabled={blocked !== null}
-          onChange={(event) => setName(event.target.value)}
-        />
-      </div>
+      <TextField
+        label='Called'
+        value={name}
+        blocked={blocked}
+        onChange={setName}
+      />
       <NodeListPicker
         label='Stops'
         value={stops}
