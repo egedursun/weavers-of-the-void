@@ -20,6 +20,8 @@ from aerona.domain.enums.cosmography import (
 from aerona.domain.models.records import CargoLine, PassengerLine
 from aerona.engine.cosmos import control
 from aerona.engine.cosmos.climate import ClimateTurn
+from aerona.engine.cosmos.ladder import NEW_CLUSTER_RADIUS, NEW_GALAXY_RADIUS
+from aerona.services.player import guards
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 Edit = dict[str, int | float | str | bool | None]
@@ -51,9 +53,9 @@ class ClusterDraft(Command):
     kind: ClusterKind
     dimension_id: int | None = None
     parent_cluster_id: int | None = None
-    x: float = 0.0
-    y: float = 0.0
-    radius: float = 1000.0
+    x: float | None = None
+    y: float | None = None
+    radius: float = NEW_CLUSTER_RADIUS
 
 
 class ClusterEdit(Edited):
@@ -69,9 +71,9 @@ class GalaxyDraft(Command):
     galaxy_type: GalaxyType
     cluster_id: int | None = None
     dimension_id: int | None = None
-    x: float = 0.0
-    y: float = 0.0
-    radius: float = 900.0
+    x: float | None = None
+    y: float | None = None
+    radius: float = NEW_GALAXY_RADIUS
 
 
 class GalaxyEdit(Edited):
@@ -226,6 +228,7 @@ class ClimateOrder(Command):
 
 @player_action("dimension:create", ActionKind.CREATE_ENTITY)
 async def create_dimension(scope: PlayerScope, command: DimensionDraft) -> Effect:
+    spent = guards.charge(await scope.creator(), scope.rules.cosmic_costs.create_dimension, "cosmic_costs.create_dimension")
     row = await control.new_dimension(
         await scope.context("dimension_create"),
         command.name,
@@ -234,7 +237,7 @@ async def create_dimension(scope: PlayerScope, command: DimensionDraft) -> Effec
         element=command.element,
         description=command.description,
     )
-    return Effect(f"{row.name} came into being.", row.id, created_ids=(row.id,))
+    return Effect(f"{row.name} came into being.", row.id, essence_spent=spent, created_ids=(row.id,))
 
 
 @player_action("dimension:edit", ActionKind.EDIT_RECORD)
@@ -285,6 +288,7 @@ async def sky_worship(scope: PlayerScope, command: SkyWorship) -> Effect:
 
 @player_action("cluster:create", ActionKind.CREATE_ENTITY)
 async def create_cluster(scope: PlayerScope, command: ClusterDraft) -> Effect:
+    spent = guards.charge(await scope.creator(), scope.rules.cosmic_costs.create_cluster, "cosmic_costs.create_cluster")
     row = await control.new_cluster(
         await scope.context("cluster_create"),
         command.name,
@@ -293,7 +297,7 @@ async def create_cluster(scope: PlayerScope, command: ClusterDraft) -> Effect:
         parent_id=command.parent_cluster_id,
         position=(command.x, command.y, command.radius),
     )
-    return Effect(f"{row.name} gathered.", row.id, created_ids=(row.id,))
+    return Effect(f"{row.name} gathered.", row.id, essence_spent=spent, created_ids=(row.id,))
 
 
 @player_action("cluster:edit", ActionKind.EDIT_RECORD)
@@ -310,6 +314,7 @@ async def delete_cluster(scope: PlayerScope, command: ClusterTarget) -> Effect:
 
 @player_action("galaxy:create", ActionKind.CREATE_ENTITY)
 async def create_galaxy(scope: PlayerScope, command: GalaxyDraft) -> Effect:
+    spent = guards.charge(await scope.creator(), scope.rules.cosmic_costs.create_galaxy, "cosmic_costs.create_galaxy")
     row = await control.new_galaxy(
         await scope.context("galaxy_create"),
         command.name,
@@ -318,7 +323,7 @@ async def create_galaxy(scope: PlayerScope, command: GalaxyDraft) -> Effect:
         dimension_id=command.dimension_id,
         position=(command.x, command.y, command.radius),
     )
-    return Effect(f"{row.name} was set among the galaxies.", row.id, created_ids=(row.id,))
+    return Effect(f"{row.name} was set among the galaxies.", row.id, essence_spent=spent, created_ids=(row.id,))
 
 
 @player_action("galaxy:edit", ActionKind.EDIT_RECORD)

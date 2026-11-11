@@ -10,14 +10,8 @@ from aerona.domain.enums.son import PowerEffect, SonStatus
 from aerona.domain.enums.travel import JourneyIntent, JourneyStatus, TravelMethod
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.stats import StatBlock
-from tests.api.conftest import ApiWorld, seeded
+from tests.api.conftest import ApiWorld, fund_creator, seeded
 from tests.engine.cosmos.factories import make_route, make_world
-
-
-async def fund_creator(api: ApiWorld) -> None:
-    async with api.services.database.write() as session:
-        seeded(api).core.creator.essence = 100000
-        await session.merge(seeded(api).core.creator)
 
 
 async def foreign_god(api: ApiWorld, power: int = 40) -> int:

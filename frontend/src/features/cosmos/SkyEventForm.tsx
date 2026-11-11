@@ -14,6 +14,7 @@ import {
 import { FormRow } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { CosmicActionButton } from './CosmicActionButton'
+import { StarOptions } from './StarOptions'
 import { type SkyEventKind } from './api'
 import { type CosmosIndex, routeState } from './model/cosmosModel'
 import {
@@ -39,6 +40,7 @@ export function SkyEventForm({ index, rules, worldId }: SkyEventFormProps) {
   const [kind, setKind] = useState<SkyEventKind>('eclipse')
   const [worldChoice, setWorld] = useState('')
   const [star, setStar] = useState(NO_STAR)
+  const [starOpen, setStarOpen] = useState(false)
   const [routeChoice, setRoute] = useState('')
   const [epochs, setEpochs] = useState(() => {
     const known = rules.get('stormEpochs')
@@ -165,7 +167,12 @@ export function SkyEventForm({ index, rules, worldId }: SkyEventFormProps) {
             description='Choosing a star makes the event happen in its whole system.'
           >
             {(id) => (
-              <Select value={star} onValueChange={setStar}>
+              <Select
+                value={star}
+                onValueChange={setStar}
+                open={starOpen}
+                onOpenChange={setStarOpen}
+              >
                 <SelectTrigger id={id} className='w-full'>
                   <SelectValue />
                 </SelectTrigger>
@@ -173,11 +180,13 @@ export function SkyEventForm({ index, rules, worldId }: SkyEventFormProps) {
                   <SelectItem value={NO_STAR}>
                     No star, the world above
                   </SelectItem>
-                  {index.data.stars.map((item) => (
-                    <SelectItem key={item.id} value={String(item.id)}>
-                      {item.name}
-                    </SelectItem>
-                  ))}
+                  <StarOptions
+                    stars={index.data.stars}
+                    selected={star}
+                    open={starOpen}
+                    valueOf={(item) => String(item.id)}
+                    label={(item) => item.name}
+                  />
                 </SelectContent>
               </Select>
             )}

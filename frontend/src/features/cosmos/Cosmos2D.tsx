@@ -1,4 +1,4 @@
-import { type KeyboardEvent, useMemo } from 'react'
+import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { mediaUrl } from '@/features/images/media'
 import {
   type CosmosIndex,
@@ -39,6 +39,9 @@ type Cosmos2DProps = {
   onDescend: (worldId: number) => void
 }
 
+const ZOOM_OUT = 1.2
+const DRAG_SLOP = 4
+
 function activate(event: KeyboardEvent, run: () => void) {
   if (event.key === 'Enter' || event.key === ' ') {
     event.preventDefault()
@@ -56,13 +59,92 @@ export function Cosmos2D({
 }: Cosmos2DProps) {
   const layout = useMemo(() => layoutCosmos2D(index.data), [index])
   const box = layout.viewBox
+  const [shown, setShown] = useState({ box, view: box })
+  if (shown.box !== box) setShown({ box, view: box })
+  const view = shown.view
+  const setView = (next: typeof box | ((current: typeof box) => typeof box)) =>
+    setShown((state) => ({
+      box: state.box,
+      view: typeof next === 'function' ? next(state.view) : next,
+    }))
+  const svgRef = useRef<SVGSVGElement>(null)
+  const drag = useRef<{
+    x: number
+    y: number
+    view: typeof box
+    moved: boolean
+  } | null>(null)
+  const dragged = useRef(false)
+  const unitsPerPixel = (current: typeof box) => {
+    const rect = svgRef.current?.getBoundingClientRect()
+    if (!rect || rect.width === 0 || rect.height === 0) return 1
+    return Math.max(current.width / rect.width, current.height / rect.height)
+  }
+  useEffect(() => {
+    const svg = svgRef.current
+    if (!svg) return
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault()
+      const rect = svg.getBoundingClientRect()
+      const factor = event.deltaY > 0 ? ZOOM_OUT : 1 / ZOOM_OUT
+      setView((current) => {
+        const scale = unitsPerPixel(current)
+        const px = (event.clientX - rect.left) * scale + current.x
+        const py = (event.clientY - rect.top) * scale + current.y
+        const width = current.width * factor
+        const height = current.height * factor
+        return {
+          x: px - (px - current.x) * factor,
+          y: py - (py - current.y) * factor,
+          width,
+          height,
+        }
+      })
+    }
+    svg.addEventListener('wheel', onWheel, { passive: false })
+    return () => svg.removeEventListener('wheel', onWheel)
+  })
   return (
     <svg
+      ref={svgRef}
       role='group'
       aria-label='Cosmos: stars, worlds and routes'
-      viewBox={`${box.x} ${box.y} ${box.width} ${box.height}`}
+      viewBox={`${view.x} ${view.y} ${view.width} ${view.height}`}
       preserveAspectRatio='xMidYMid meet'
-      className='h-full w-full select-none'
+      className='h-full w-full cursor-grab touch-none select-none active:cursor-grabbing'
+      onPointerDown={(event) => {
+        drag.current = {
+          x: event.clientX,
+          y: event.clientY,
+          view,
+          moved: false,
+        }
+      }}
+      onPointerMove={(event) => {
+        const start = drag.current
+        if (!start) return
+        const dx = event.clientX - start.x
+        const dy = event.clientY - start.y
+        if (!start.moved && Math.hypot(dx, dy) < DRAG_SLOP) return
+        if (!start.moved) event.currentTarget.setPointerCapture(event.pointerId)
+        start.moved = true
+        const scale = unitsPerPixel(start.view)
+        setView({
+          ...start.view,
+          x: start.view.x - dx * scale,
+          y: start.view.y - dy * scale,
+        })
+      }}
+      onPointerUp={() => {
+        dragged.current = drag.current?.moved === true
+        drag.current = null
+      }}
+      onClickCapture={(event) => {
+        if (!dragged.current) return
+        dragged.current = false
+        event.stopPropagation()
+        event.preventDefault()
+      }}
     >
       <rect
         x={box.x}

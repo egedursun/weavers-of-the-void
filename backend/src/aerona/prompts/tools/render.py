@@ -1,5 +1,6 @@
 from aerona.catalog.body_plans import PLANS
 from aerona.catalog.bonds import BOND_KINDS
+from aerona.catalog.cosmography import CLUSTER_KINDS, DIMENSION_KINDS, GALAXY_TYPES
 from aerona.catalog.creatures import CREATURE_TRAITS
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.effect_packages import PACKAGES
@@ -104,6 +105,9 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
             f"{kind} ({spec.label}: {spec.description})" for kind, spec in PACKAGES.items() if Transmission.CURSE in spec.transmissions
         ),
         "star_types": ", ".join(f"{kind} ({spec.label})" for kind, spec in STAR_TYPES.items()),
+        "galaxy_types": ", ".join(f"{kind} ({spec.label})" for kind, spec in GALAXY_TYPES.items()),
+        "cluster_kinds": ", ".join(f"{kind} ({spec.label})" for kind, spec in CLUSTER_KINDS.items()),
+        "dimension_kinds": ", ".join(f"{kind} ({spec.label})" for kind, spec in DIMENSION_KINDS.items()),
         "vessel_kinds": [kind.value for kind in VehicleKind],
         "legend_categories": [category.value for category in LegendCategory],
         "commodities": [commodity.value for commodity in CommodityKind],

@@ -25615,8 +25615,8 @@ export interface components {
       kind: components['schemas']['ClusterKind']
       dimension_id?: number | null
       parent_cluster_id?: number | null
-      x: number
-      y: number
+      x?: number | null
+      y?: number | null
       radius: number
     }
     ClusterDeleteInput: {
@@ -30337,8 +30337,8 @@ export interface components {
       galaxy_type: components['schemas']['GalaxyType']
       cluster_id?: number | null
       dimension_id?: number | null
-      x: number
-      y: number
+      x?: number | null
+      y?: number | null
       radius: number
     }
     GalaxyDeleteInput: {
@@ -40357,6 +40357,28 @@ export interface components {
       | 'contain_phenomenon'
       | 'turn_region_climate'
       | 'claim_galaxy'
+      | 'create_galaxy'
+      | 'create_cluster'
+      | 'create_dimension'
+      | 'shape_galactic_structure'
+      | 'stir_galaxy'
+      | 'stir_dimension'
+      | 'bind_law_across_dimension'
+      | 'set_cosmic_feature'
+      | 'gather_star_system'
+      | 'raise_phenomenon'
+      | 'open_breach'
+      | 'forge_ley_line'
+      | 'add_season'
+      | 'open_road'
+      | 'raise_throne'
+      | 'lay_magic_site'
+      | 'carry_species'
+      | 'seed_life'
+      | 'call_up_soul'
+      | 'crown_ruler'
+      | 'found_house'
+      | 'bless_host'
       | 'rule_dimension'
       | 'claim_star'
       | 'call_impact'
@@ -94103,6 +94125,28 @@ export const sonToolIdValues: ReadonlyArray<
   'contain_phenomenon',
   'turn_region_climate',
   'claim_galaxy',
+  'create_galaxy',
+  'create_cluster',
+  'create_dimension',
+  'shape_galactic_structure',
+  'stir_galaxy',
+  'stir_dimension',
+  'bind_law_across_dimension',
+  'set_cosmic_feature',
+  'gather_star_system',
+  'raise_phenomenon',
+  'open_breach',
+  'forge_ley_line',
+  'add_season',
+  'open_road',
+  'raise_throne',
+  'lay_magic_site',
+  'carry_species',
+  'seed_life',
+  'call_up_soul',
+  'crown_ruler',
+  'found_house',
+  'bless_host',
   'rule_dimension',
   'claim_star',
   'call_impact',

@@ -676,6 +676,11 @@ async def heavens(session: AsyncSession) -> None:
     await session.flush()
 
 
+async def rich_heavens(session: AsyncSession) -> None:
+    await heavens(session)
+    await rich_creator(session)
+
+
 async def outer_being(session: AsyncSession) -> int:
     found = await session.scalar(select(EntityRow.id).where(EntityRow.entity_type == EntityType.OUTER_BEING).order_by(EntityRow.id).limit(1))
     if found is not None:
@@ -1548,7 +1553,7 @@ LEVERS: dict[str, Lever] = {
         values={"species_id": Pick(EntityType.SPECIES)}, before=(("soul:raise", {"mortal_id": DEAD, "place_id": Computed(soul_range)}),), setup=soul_eating
     ),
     **{name: after(PROPHECY, prophecy_id=Newest(EntityType.PROPHECY)) for name in ("prophecy:forget", "prophecy:fulfil", "prophecy:resolve")},
-    "dimension:create": given(name="Shadow Deep", kind="shadow"),
+    "dimension:create": Lever(values={"name": "Shadow Deep", "kind": "shadow"}, setup=rich_creator),
     "dimension:bind_law": given(dimension_id=Computed(prime_dimension), law_id=Computed(natural_law)),
     "dimension:release_law": Lever(values={"law_id": Newest(EntityType.NATURAL_LAW)}, setup=bound_law),
     "heavens:worship": given(community_id=Pick(EntityType.PEOPLE), sky="dimension", worships=True, dimension_id=Computed(prime_dimension)),
@@ -1556,9 +1561,9 @@ LEVERS: dict[str, Lever] = {
         name: setup_then(heavens, dimension_id=Where("dimensions", "id", {"dimension_kind": DimensionKind.ASTRAL}))
         for name in ("dimension:edit", "dimension:delete")
     },
-    "cluster:create": Lever(values={"name": "Near Group", "kind": "poor_cluster", "dimension_id": Where("dimensions", "id")}, setup=heavens),
+    "cluster:create": Lever(values={"name": "Near Group", "kind": "poor_cluster", "dimension_id": Where("dimensions", "id")}, setup=rich_heavens),
     **{name: setup_then(heavens, cluster_id=Newest("galaxy_cluster")) for name in ("cluster:edit", "cluster:delete")},
-    "galaxy:create": Lever(values={"name": "Near Spiral", "galaxy_type": "ring", "cluster_id": Newest("galaxy_cluster")}, setup=heavens),
+    "galaxy:create": Lever(values={"name": "Near Spiral", "galaxy_type": "ring", "cluster_id": Newest("galaxy_cluster")}, setup=rich_heavens),
     **{name: setup_then(heavens, galaxy_id=Newest("galaxy")) for name in ("galaxy:edit", "galaxy:delete")},
     "galactic_structure:create": Lever(values={"galaxy_id": Newest("galaxy"), "kind": "dark_nebula", "name": "Dark Lane"}, setup=heavens),
     **{name: setup_then(heavens, structure_id=Newest("galactic_structure")) for name in ("galactic_structure:edit", "galactic_structure:delete")},

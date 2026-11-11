@@ -94,13 +94,15 @@ export function useCosmosViewSettings() {
     if (isQuality(stored)) return stored
     return rendersInSoftware() ? SOFTWARE_QUALITY : DEFAULT_QUALITY
   })
-  const [failure, setFailure] = useState<string | null>(() =>
-    hasWebGL2() ? null : 'WebGL 2 is not available in this browser'
-  )
+  const failure = hasWebGL2()
+    ? null
+    : 'WebGL 2 is not available in this browser'
+  const [sceneError, setSceneError] = useState<string | null>(null)
 
   const setView = useCallback((next: CosmosViewMode) => {
     write(VIEW_KEY, next)
     setViewState(next)
+    setSceneError(null)
   }, [])
 
   const setQuality = useCallback((next: CosmosQuality) => {
@@ -109,12 +111,13 @@ export function useCosmosViewSettings() {
   }, [])
 
   return {
-    view: failure === null ? view : '2d',
+    view: failure === null && sceneError === null ? view : '2d',
     preferredView: view,
     quality,
     failure,
+    sceneError,
     setView,
     setQuality,
-    reportFailure: setFailure,
+    reportFailure: setSceneError,
   }
 }

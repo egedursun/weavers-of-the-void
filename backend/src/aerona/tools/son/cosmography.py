@@ -2,30 +2,35 @@ from typing import Annotated, Any
 
 from pydantic import Field
 
-from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
+from aerona.catalog.gates import Gate
+from aerona.constants.tool_inputs import NAME_MAX, NAME_MIN, REASON_MAX, REASON_MIN, SHORT_DESCRIPTION_MAX, SHORT_DESCRIPTION_MIN
 from aerona.core.errors import AeronaError
+from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
-from aerona.db.tables.cosmography import CosmicBeingProfileRow, DimensionRow, GalaxyRow, PhenomenonProfileRow, RiftRow
+from aerona.db.tables.cosmography import ClusterRow, CosmicBeingProfileRow, DimensionRow, GalaxyRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.physics import ImpactEventRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, BeingKind, RiftCause
+from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, BeingKind, ClusterKind, DimensionElement, DimensionKind, GalaxyType, RiftCause
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.physics import ImpactOutcome, TerraformAim
 from aerona.engine.cosmos import control, physics_control
 from aerona.engine.cosmos.climate import ClimateTurn
+from aerona.engine.cosmos.ladder import NEW_CLUSTER_RADIUS, NEW_GALAXY_RADIUS
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
 from aerona.tools.framework.call import SonCall
 from aerona.tools.framework.inputs import ToolInput
-from aerona.tools.framework.spec import ToolMeta, ToolSpec, son_standard_action
+from aerona.tools.framework.spec import ToolMeta, ToolSpec, gate, son_standard_action
 from aerona.tools.framework.validation import fail, require_canon, require_type
 from aerona.tools.son import lines
 from aerona.tools.son.support import ensure_in_reach, require_essence
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
+Name = Annotated[str, Field(min_length=NAME_MIN, max_length=NAME_MAX)]
+Description = Annotated[str, Field(min_length=SHORT_DESCRIPTION_MIN, max_length=SHORT_DESCRIPTION_MAX)]
 
 
 class OpenRiftInput(ToolInput):
@@ -70,6 +75,30 @@ class GalaxyInput(ToolInput):
 class DimensionInput(ToolInput):
     dimension_id: int
     reason: Reason
+
+
+class CreateGalaxyInput(ToolInput):
+    name: Name
+    galaxy_type: GalaxyType
+    cluster_id: int | None = None
+    dimension_id: int | None = None
+    description: Description
+
+
+class CreateClusterInput(ToolInput):
+    name: Name
+    kind: ClusterKind
+    dimension_id: int | None = None
+    parent_cluster_id: int | None = None
+    description: Description
+
+
+class CreateDimensionInput(ToolInput):
+    name: Name
+    kind: DimensionKind
+    element: DimensionElement | None = None
+    parent_dimension_id: int | None = None
+    description: Description
 
 
 class CallImpactInput(ToolInput):
@@ -247,6 +276,77 @@ async def rule_dimension(call: SonCall, args: DimensionInput) -> str:
     return result(SonResult.DIMENSION_RULED, name=dimension.name)
 
 
+async def fresh_name(call: SonCall, name: str) -> str:
+    cleaned = " ".join(name.split())
+    if await NameRepository(call.session).is_taken(cleaned):
+        fail(SonResult.NAME_IN_USE)
+    return cleaned
+
+
+async def home_of(call: SonCall, cluster_id: int | None, dimension_id: int | None) -> DimensionRow | None:
+    if cluster_id is not None and dimension_id is not None:
+        fail(SonResult.ONE_HOME_ONLY)
+    cosmography = await Cosmography.load(call.session)
+    if cluster_id is not None:
+        cluster = await call.session.get(ClusterRow, cluster_id)
+        if cluster is None:
+            fail(SonResult.NO_SUCH_CLUSTER, id=cluster_id)
+        return cosmography.dimension_of_cluster(cluster)
+    if dimension_id is not None:
+        dimension = await call.session.get(DimensionRow, dimension_id)
+        if dimension is None:
+            fail(SonResult.NO_SUCH_DIMENSION, id=dimension_id)
+        return dimension
+    return cosmography.prime
+
+
+async def ensure_reaches(call: SonCall, dimension: DimensionRow | None) -> None:
+    if dimension is not None and not await reaches_dimension(call, dimension.id):
+        fail(SonResult.DIMENSION_OUT_OF_REACH, name=dimension.name)
+
+
+async def create_galaxy(call: SonCall, args: CreateGalaxyInput) -> str:
+    name = await fresh_name(call, args.name)
+    await ensure_reaches(call, await home_of(call, args.cluster_id, args.dimension_id))
+    cost = call.rules.galaxies.create_essence
+    require_essence(call, cost)
+    galaxy = await control.new_galaxy(
+        call.tick, name, args.galaxy_type, cluster_id=args.cluster_id, dimension_id=args.dimension_id, position=(None, None, NEW_GALAXY_RADIUS)
+    )
+    galaxy.description = args.description
+    galaxy.patron_son_id = call.son.id
+    call.spend_essence(cost)
+    await call.chronicle(ChronicleKind.COSMIC, lines.CREATE_GALAXY, son=call.son.name, galaxy=galaxy.name, description=args.description)
+    return result(SonResult.GALAXY_CREATED, id=galaxy.id, name=galaxy.name)
+
+
+async def create_cluster(call: SonCall, args: CreateClusterInput) -> str:
+    name = await fresh_name(call, args.name)
+    await ensure_reaches(call, await home_of(call, args.parent_cluster_id, args.dimension_id))
+    cost = call.rules.clusters.create_essence
+    require_essence(call, cost)
+    cluster = await control.new_cluster(
+        call.tick, name, args.kind, dimension_id=args.dimension_id, parent_id=args.parent_cluster_id, position=(None, None, NEW_CLUSTER_RADIUS)
+    )
+    cluster.description = args.description
+    call.spend_essence(cost)
+    await call.chronicle(ChronicleKind.COSMIC, lines.CREATE_CLUSTER, son=call.son.name, cluster=cluster.name, description=args.description)
+    return result(SonResult.CLUSTER_CREATED, id=cluster.id, name=cluster.name)
+
+
+async def create_dimension(call: SonCall, args: CreateDimensionInput) -> str:
+    name = await fresh_name(call, args.name)
+    if args.parent_dimension_id is not None:
+        await ensure_reaches(call, await home_of(call, None, args.parent_dimension_id))
+    cost = call.rules.dimensions.create_essence
+    require_essence(call, cost)
+    dimension = await control.new_dimension(call.tick, name, args.kind, parent_id=args.parent_dimension_id, element=args.element, description=args.description)
+    dimension.ruler_node_id = call.son.id
+    call.spend_essence(cost)
+    await call.chronicle(ChronicleKind.COSMIC, lines.CREATE_DIMENSION, son=call.son.name, dimension=dimension.name, description=args.description)
+    return result(SonResult.DIMENSION_CREATED, id=dimension.id, name=dimension.name)
+
+
 async def claim_star(call: SonCall, args: StarPatronInput) -> str:
     star = await call.session.get(StarRow, args.star_id)
     if star is None:
@@ -381,6 +481,42 @@ def specs() -> list[ToolSpec[SonCall, Any]]:
             GalaxyInput,
             ToolMeta(ActionKind.BLESS_EXISTENCE, standard, essence_cost=lambda rules: rules.galaxies.claim_essence),
             claim_galaxy,
+        ),
+        ToolSpec(
+            SonToolId.CREATE_GALAXY,
+            AgentKind.SON,
+            CreateGalaxyInput,
+            ToolMeta(
+                ActionKind.CREATE_ENTITY,
+                lambda rules: rules.son_tools.create_galaxy_ap,
+                essence_cost=lambda rules: rules.galaxies.create_essence,
+                rarity_gate=gate(Gate.GALAXY_CREATION),
+            ),
+            create_galaxy,
+        ),
+        ToolSpec(
+            SonToolId.CREATE_CLUSTER,
+            AgentKind.SON,
+            CreateClusterInput,
+            ToolMeta(
+                ActionKind.CREATE_ENTITY,
+                lambda rules: rules.son_tools.create_cluster_ap,
+                essence_cost=lambda rules: rules.clusters.create_essence,
+                rarity_gate=gate(Gate.CLUSTER_CREATION),
+            ),
+            create_cluster,
+        ),
+        ToolSpec(
+            SonToolId.CREATE_DIMENSION,
+            AgentKind.SON,
+            CreateDimensionInput,
+            ToolMeta(
+                ActionKind.CREATE_ENTITY,
+                lambda rules: rules.son_tools.create_dimension_ap,
+                essence_cost=lambda rules: rules.dimensions.create_essence,
+                rarity_gate=gate(Gate.DIMENSION_CREATION),
+            ),
+            create_dimension,
         ),
         ToolSpec(
             SonToolId.RULE_DIMENSION,

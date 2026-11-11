@@ -102,6 +102,13 @@ export function CosmosView() {
     },
     [selectWorld, settings.view, requestFocus]
   )
+  const chooseStar = useCallback(
+    (id: number) => {
+      selectStar(id)
+      if (settings.view === '3d') requestFocus({ kind: 'star', id })
+    },
+    [selectStar, settings.view, requestFocus]
+  )
   const descend = useCallback(
     (id: number) => {
       const go = () => void navigate({ href: `/map?world=${id}` })
@@ -211,7 +218,7 @@ export function CosmosView() {
                     onFailure={settings.reportFailure}
                     onWorld={selectWorld}
                     onWorldDouble={descend}
-                    onStar={selectStar}
+                    onStar={chooseStar}
                     onStarDouble={(id) => requestFocus({ kind: 'star', id })}
                     onRoute={pickRoute}
                     onVoyage={(journeyId) => {
@@ -236,16 +243,16 @@ export function CosmosView() {
                   selectedWorldId={worldId}
                   selectedStarId={selection.starId}
                   onSelectWorld={selectWorld}
-                  onSelectStar={selectStar}
+                  onSelectStar={chooseStar}
                   onDescend={descend}
                 />
               )}
             </div>
             <div className='flex min-w-0 flex-col gap-2 bg-cosmos-void px-4 py-3 text-cosmos-label md:px-6'>
               <CosmosLegend index={index} />
-              {settings.failure && (
+              {(settings.failure ?? settings.sceneError) && (
                 <Text variant='caption' tone='inherit' className='opacity-80'>
-                  {`This browser cannot draw the 3D sky (${settings.failure}); the cosmos is drawn in 2D.`}
+                  {`This browser cannot draw the 3D sky (${settings.failure ?? settings.sceneError}); the cosmos is drawn in 2D.`}
                 </Text>
               )}
             </div>
@@ -266,6 +273,7 @@ export function CosmosView() {
               resource={resource}
               highlightedRouteId={highlightedRouteId}
               onSelectWorld={chooseWorld}
+              onSelectStar={chooseStar}
               onOpenPanel={openPanel}
               onDescend={descend}
               galaxyId={galaxyId}

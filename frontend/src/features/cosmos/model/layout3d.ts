@@ -70,20 +70,37 @@ export type Layout3D = {
   signature: string
 }
 
-function outermostOrbit(data: CosmosData, starId: number): number {
-  let outer = 0
+function outermostOrbits(data: CosmosData): Map<number, number> {
+  const outer = new Map<number, number>()
   for (const item of data.worlds) {
-    if (item.world.star_id === starId && item.world.parent_world_id === null)
-      outer = Math.max(outer, item.world.orbit)
+    if (item.world.star_id === null || item.world.parent_world_id !== null)
+      continue
+    outer.set(
+      item.world.star_id,
+      Math.max(outer.get(item.world.star_id) ?? 0, item.world.orbit)
+    )
   }
   return outer
 }
 
+function depthsOf(data: CosmosData): Map<number, number> {
+  const byId = new Map(data.worlds.map((other) => [other.world.id, other]))
+  const depths = new Map<number, number>()
+  for (const item of data.worlds) {
+    let depth = 0
+    let parent = item.world.parent_world_id
+    while (parent !== null && depth < data.worlds.length) {
+      depth += 1
+      parent = byId.get(parent)?.world.parent_world_id ?? null
+    }
+    depths.set(item.world.id, depth)
+  }
+  return depths
+}
+
 export function orbitUnit(data: CosmosData): number {
   let orb = ORB_MAX
-  const outer = new Map(
-    data.stars.map((star) => [star.id, outermostOrbit(data, star.id)])
-  )
+  const outer = outermostOrbits(data)
   for (let i = 0; i < data.stars.length; i += 1) {
     for (let j = i + 1; j < data.stars.length; j += 1) {
       const a = data.stars[i]
@@ -109,23 +126,14 @@ export function bodyRadius(item: CosmosWorld, orb: number): number {
   return radius
 }
 
-function depthOf(data: CosmosData, item: CosmosWorld): number {
-  let depth = 0
-  let parent = item.world.parent_world_id
-  const byId = new Map(data.worlds.map((other) => [other.world.id, other]))
-  while (parent !== null && depth < data.worlds.length) {
-    depth += 1
-    parent = byId.get(parent)?.world.parent_world_id ?? null
-  }
-  return depth
-}
-
 export function layoutCosmos3D(data: CosmosData): Layout3D {
   const orb = orbitUnit(data)
+  const outerOrbits = outermostOrbits(data)
+  const depths = depthsOf(data)
   const stars = new Map<number, StarBody>()
   for (const star of data.stars) {
     const radius = orb * STAR_RADIUS_FACTOR * STAR_LOOK[star.star_type].size
-    const outer = outermostOrbit(data, star.id) * orb
+    const outer = (outerOrbits.get(star.id) ?? 0) * orb
     stars.set(star.id, {
       id: star.id,
       position: [
@@ -143,7 +151,9 @@ export function layoutCosmos3D(data: CosmosData): Layout3D {
   const worlds = new Map<number, WorldBody>()
   const order = [...data.worlds]
     .sort(
-      (a, b) => depthOf(data, a) - depthOf(data, b) || a.world.id - b.world.id
+      (a, b) =>
+        (depths.get(a.world.id) ?? 0) - (depths.get(b.world.id) ?? 0) ||
+        a.world.id - b.world.id
     )
     .map((item) => item.world.id)
   const byId = new Map(data.worlds.map((item) => [item.world.id, item]))

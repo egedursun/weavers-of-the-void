@@ -67,12 +67,8 @@ export function GalaxyCard({
   ladder: Ladder
   catalog: CosmographyCatalog
 }) {
-  const stars = ladder.data.stars.filter(
-    (row) => row.galaxy_id === galaxy.id
-  ).length
-  const worlds = ladder.data.placements.filter(
-    (row) => row.galaxy_id === galaxy.id
-  ).length
+  const stars = ladder.starsIn(galaxy.id).length
+  const worlds = ladder.placementsIn(galaxy.id).length
   const nucleus = NUCLEI[galaxy.nucleus]
   return (
     <li className='flex min-w-0 flex-col overflow-hidden rounded-xl border bg-card'>
@@ -200,9 +196,10 @@ export function ClusterView({ clusterId }: { clusterId: number }) {
     return <Missing icon={Workflow} title='No such cluster' />
   const galaxies = ladder.galaxiesIn(cluster.id)
   const children = ladder.childClusters(cluster.id)
-  const stars = ladder.data.stars.filter((row) =>
-    galaxies.some((galaxy) => galaxy.id === row.galaxy_id)
-  ).length
+  const stars = galaxies.reduce(
+    (sum, galaxy) => sum + ladder.starsIn(galaxy.id).length,
+    0
+  )
   const busy = edit.isPending ? 'Working' : null
   return (
     <div className='flex min-w-0 flex-col gap-6'>

@@ -18,6 +18,7 @@ import { ClockDriver } from '@/features/cosmography/visual/clock'
 import { type GalaxyShape } from '@/features/cosmography/visual/galaxyForm'
 import { type SonPublic } from '../api'
 import { type CosmosIndex, isMisty, isUnderway } from '../model/cosmosModel'
+import { STAR_LOOK } from '../model/looks'
 import { type CosmosQuality } from '../useCosmosViewSettings'
 import { CameraRig, type FocusRequest } from './CameraRig'
 import { LabelOverlay, LabelUpdater } from './Labels3D'
@@ -28,11 +29,12 @@ import { type SceneHandlers, ScenePointer } from './ScenePointer'
 import { SkyBackdrop } from './SkyBackdrop'
 import { SonAvatars3D } from './SonAvatars3D'
 import { Star3D } from './Star3D'
+import { StarCloud, type CloudStar } from './StarCloud'
 import { Voyage3D } from './Voyage3D'
 import { AsteroidBelt, World3D } from './World3D'
 import { createGeometries, disposeGeometries } from './geometries'
 import { QUALITY_PRESETS } from './quality'
-import { tokenString } from './sceneColors'
+import { tokenColor, tokenString } from './sceneColors'
 import {
   type FrameState,
   type Hover,
@@ -133,6 +135,11 @@ export default function CosmosScene3D({
   const visible = useSceneVisible(container)
   const preset = QUALITY_PRESETS[quality]
   const { layout, routeBend } = useCosmosLayout(index.data)
+  const detailStarId = useMemo(() => {
+    if (selectedStarId !== undefined) return selectedStarId
+    if (selectedWorldId === undefined) return undefined
+    return layout.worlds.get(selectedWorldId)?.starId ?? undefined
+  }, [layout, selectedStarId, selectedWorldId])
   const geometries = useMemo(() => createGeometries(preset), [preset])
   useEffect(() => () => disposeGeometries(geometries), [geometries])
   useEffect(() => {
@@ -140,17 +147,62 @@ export default function CosmosScene3D({
     frame.reduced = reducedMotion
     frame.selectedWorld = selectedWorldId
     frame.selectedStar = selectedStarId
+    frame.detailStar = detailStarId
     frame.highlightedRoute = highlightedRouteId
-  }, [reducedMotion, selectedWorldId, selectedStarId, highlightedRouteId])
+  }, [
+    reducedMotion,
+    selectedWorldId,
+    selectedStarId,
+    detailStarId,
+    highlightedRouteId,
+  ])
   const value = useMemo(
     () => ({ frameRef, layout, index, preset, routeBend, geometries, labels }),
     [layout, index, preset, routeBend, geometries, labels]
   )
-  const detailStarId = useMemo(() => {
-    if (selectedStarId !== undefined) return selectedStarId
-    if (selectedWorldId === undefined) return undefined
-    return layout.worlds.get(selectedWorldId)?.starId
-  }, [layout, selectedStarId, selectedWorldId])
+  const starField = useMemo<CloudStar[]>(
+    () =>
+      index.data.stars.flatMap((star) => {
+        const body = layout.stars.get(star.id)
+        if (!body) return []
+        if (detailStarId !== undefined && star.id !== detailStarId) return []
+        const color = tokenColor(STAR_LOOK[star.star_type].token)
+        return [
+          {
+            id: star.id,
+            position: body.position,
+            color: [color.r, color.g, color.b],
+          },
+        ]
+      }),
+    [index, layout, detailStarId]
+  )
+  const shownStars = useMemo(
+    () => index.data.stars.filter((star) => star.id === detailStarId),
+    [index, detailStarId]
+  )
+  const shownRoutes = useMemo(
+    () =>
+      index.data.routes.filter((route) => {
+        if (detailStarId === undefined) return true
+        return (
+          layout.worlds.get(route.world_a_id)?.starId === detailStarId ||
+          layout.worlds.get(route.world_b_id)?.starId === detailStarId
+        )
+      }),
+    [index, layout, detailStarId]
+  )
+  const shownWorlds = useMemo(
+    () =>
+      index.worlds.filter((item) => {
+        const body = layout.worlds.get(item.world.id)
+        return (
+          body !== undefined &&
+          (body.starId === detailStarId || item.world.id === selectedWorldId)
+        )
+      }),
+    [index, layout, detailStarId, selectedWorldId]
+  )
   const starPositions = useMemo(
     () =>
       new Map(
@@ -241,16 +293,20 @@ export default function CosmosScene3D({
                   <ClockDriver />
                 </group>
               )}
+              <StarCloud stars={starField} />
               {index.data.stars.map((star) => {
                 const body = layout.stars.get(star.id)
-                return body ? (
+                if (!body) return null
+                const hovered = hover?.kind === 'star' && hover.id === star.id
+                if (star.id !== detailStarId && !hovered) return null
+                return (
                   <Star3D
                     key={star.id}
                     star={star}
                     body={body}
-                    hovered={hover?.kind === 'star' && hover.id === star.id}
+                    hovered={hovered}
                   />
-                ) : null
+                )
               })}
               {index.worlds.map((item) => {
                 const body = layout.worlds.get(item.world.id)
@@ -294,7 +350,7 @@ export default function CosmosScene3D({
                   </group>
                 )
               })}
-              {index.data.routes.map((route) => (
+              {shownRoutes.map((route) => (
                 <Route3D
                   key={route.id}
                   route={route}
@@ -322,6 +378,8 @@ export default function CosmosScene3D({
         </ScenePointer>
         <LabelOverlay
           index={index}
+          shownWorlds={shownWorlds}
+          shownStars={shownStars}
           labels={labels}
           selectedWorld={selectedWorldId}
         />

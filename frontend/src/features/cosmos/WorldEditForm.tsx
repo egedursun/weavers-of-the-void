@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { FormRow } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { CosmicActionButton } from './CosmicActionButton'
+import { StarOptions } from './StarOptions'
 import {
   type Atmosphere,
   type CosmosWorld,
@@ -188,6 +189,7 @@ export function WorldEditForm({
 }: WorldEditFormProps) {
   const [draft, setDraft] = useState<Draft>(() => draftOf(item))
   const [orbit, setOrbit] = useState(KEEP)
+  const [orbitOpen, setOrbitOpen] = useState(false)
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((current) => ({ ...current, [key]: value }))
   const world = item.world
@@ -558,21 +560,27 @@ export function WorldEditForm({
       >
         {(id) => (
           <>
-            <Select value={orbit} onValueChange={setOrbit}>
+            <Select
+              value={orbit}
+              onValueChange={setOrbit}
+              open={orbitOpen}
+              onOpenChange={setOrbitOpen}
+            >
               <SelectTrigger id={id} className='w-full'>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={KEEP}>Do not move</SelectItem>
-                {index.data.stars.map((star) => (
-                  <SelectItem
-                    key={`star-${star.id}`}
-                    value={`star:${star.id}`}
-                    disabled={!parent && star.id === world.star_id}
-                  >
-                    {`Around ${star.name} · ${STAR_TYPE_LABEL[star.star_type]}`}
-                  </SelectItem>
-                ))}
+                <StarOptions
+                  stars={index.data.stars}
+                  selected={orbit}
+                  open={orbitOpen}
+                  valueOf={(star) => `star:${star.id}`}
+                  label={(star) =>
+                    `Around ${star.name} · ${STAR_TYPE_LABEL[star.star_type]}`
+                  }
+                  disabled={(star) => !parent && star.id === world.star_id}
+                />
                 {index.worlds
                   .filter(
                     (other) =>

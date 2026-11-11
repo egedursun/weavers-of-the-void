@@ -396,7 +396,7 @@ async def spirit_profile(ctx: TickContext, spirit_id: int) -> tuple[EntityRow, S
     return spirit, profile
 
 
-async def raise_soul(ctx: TickContext, mortal_id: int, *, alignment: SpiritAlignment, place_id: int | None) -> EntityRow:
+async def raise_soul(ctx: TickContext, mortal_id: int, *, alignment: SpiritAlignment, place_id: int | None, by: str) -> EntityRow:
     mortal = await ctx.session.get(EntityRow, mortal_id)
     if mortal is None or mortal.entity_type is not EntityType.MORTAL or mortal.status is not EntityStatus.DEAD:
         raise ValidationFailedError("Only a dead mortal leaves a soul.")
@@ -410,7 +410,7 @@ async def raise_soul(ctx: TickContext, mortal_id: int, *, alignment: SpiritAlign
         RecordSpec(
             entity_type=EntityType.SPIRIT,
             name=f"Spirit of {mortal.name}"[:200],
-            body=f"The Creator called up the soul of {mortal.name}.",
+            body=f"{by} called up the soul of {mortal.name}.",
             stats=SpiritStats(strength=PERCENT // 2, unrest=0),
             power=max(1, mortal.power_level),
             location_id=where.id if where is not None else None,

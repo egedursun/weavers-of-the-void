@@ -22,6 +22,14 @@ class Gate(StrEnum):
     OPEN_COSMIC_BED = "open_cosmic_bed"
     BIRTH_WORLD = "birth_world"
     HANG_EXTINGUISH_STAR = "hang_extinguish_star"
+    GALAXY_CREATION = "galaxy_creation"
+    CLUSTER_CREATION = "cluster_creation"
+    DIMENSION_CREATION = "dimension_creation"
+    GALACTIC_WORKS = "galactic_works"
+    DIMENSIONAL_WORKS = "dimensional_works"
+    COSMIC_WORKS = "cosmic_works"
+    POWER_SITES = "power_sites"
+    ROAD_OPENING = "road_opening"
 
 
 GATE_RULES: dict[Gate, Callable[[Rules], int]] = {
@@ -40,6 +48,14 @@ GATE_RULES: dict[Gate, Callable[[Rules], int]] = {
     Gate.OPEN_COSMIC_BED: lambda rules: rules.rarity_gates.open_cosmic_bed,
     Gate.BIRTH_WORLD: lambda rules: rules.rarity_gates.birth_world,
     Gate.HANG_EXTINGUISH_STAR: lambda rules: rules.rarity_gates.hang_extinguish_star,
+    Gate.GALAXY_CREATION: lambda rules: rules.rarity_gates.galaxy_creation,
+    Gate.CLUSTER_CREATION: lambda rules: rules.rarity_gates.cluster_creation,
+    Gate.DIMENSION_CREATION: lambda rules: rules.rarity_gates.dimension_creation,
+    Gate.GALACTIC_WORKS: lambda rules: rules.rarity_gates.galactic_works,
+    Gate.DIMENSIONAL_WORKS: lambda rules: rules.rarity_gates.dimensional_works,
+    Gate.COSMIC_WORKS: lambda rules: rules.rarity_gates.cosmic_works,
+    Gate.POWER_SITES: lambda rules: rules.rarity_gates.power_sites,
+    Gate.ROAD_OPENING: lambda rules: rules.rarity_gates.road_opening,
 }
 
 CREATION_GATE_RULES: dict[EntityType, Callable[[Rules], int]] = {

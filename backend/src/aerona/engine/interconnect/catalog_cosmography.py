@@ -59,7 +59,7 @@ COSMOGRAPHY_MECHANICS = (
         fields=("star_formation", "metallicity", "age_stage", "merge_progress"),
         tables=(GalacticEventRow.__tablename__,),
         exposure=Exposure.TOOL,
-        tools=("claim_galaxy",),
+        tools=("claim_galaxy", "create_galaxy", "shape_galactic_structure", "stir_galaxy"),
         targets=("galaxy",),
         couplings=(
             Coupling(S.ECOLOGY, "gamma-ray bursts strip the life of the worlds they reach", EdgeKind.FLOW, "galaxies.gamma_biosphere_loss"),
@@ -76,6 +76,8 @@ COSMOGRAPHY_MECHANICS = (
         surface=Surface(drawer="section-cluster"),
         backfill="computed: clusters act from the next epoch",
         fields=("medium_heat", "expansion"),
+        exposure=Exposure.TOOL,
+        tools=("create_cluster",),
         targets=("cluster",),
         couplings=(Coupling(S.ECONOMY, "drifting clusters lengthen intercluster routes", EdgeKind.FLOW, "clusters.expansion_cap"),),
     ),
@@ -122,7 +124,7 @@ COSMOGRAPHY_MECHANICS = (
         fields=("veil", "stability", "time_factor", "magic", "hostility", "sanity_drain", "leak", "ruler_node_id"),
         tables=(DimensionalEventRow.__tablename__,),
         exposure=Exposure.TOOL,
-        tools=("rule_dimension",),
+        tools=("rule_dimension", "create_dimension", "stir_dimension", "bind_law_across_dimension"),
         targets=("dimension", "world"),
         couplings=(
             Coupling(S.DEMOGRAPHY, "a dimension's time runs the aging of its worlds", EdgeKind.MODIFIER, "dimensions.leak_world_per"),

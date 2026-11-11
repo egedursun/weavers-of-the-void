@@ -389,6 +389,173 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "and your domains move how many stars it bears. {{ rules.galaxies.claim_essence }} essence, 1 action.",
         {"galaxy_id": "The id of the galaxy", "reason": "Why you claim it"},
     ),
+    T.CREATE_GALAXY: ToolText(
+        "You make a new galaxy inside a cluster, or loose in a dimension, that holds a world you reach; with neither it lies in the prime dimension. "
+        "You become its patron. It starts without stars and bears them in its nurseries over the epochs. A great work: "
+        "{{ rules.galaxies.create_essence }} essence, {{ rules.son_tools.create_galaxy_ap }} actions.",
+        {
+            "name": "The galaxy's name",
+            "galaxy_type": "Galaxy type: {{ galaxy_types }}",
+            "cluster_id": "The id of the cluster it joins",
+            "dimension_id": "The id of the dimension it lies in, outside any cluster",
+            "description": "What the galaxy is like",
+        },
+    ),
+    T.CREATE_CLUSTER: ToolText(
+        "You gather a new cluster in a dimension, or inside a larger cluster, that holds a world you reach; with neither it lies in the prime dimension. "
+        "Its kind sets the heat of the medium between its galaxies and how they are placed in it. A greater work than a galaxy: "
+        "{{ rules.clusters.create_essence }} essence, {{ rules.son_tools.create_cluster_ap }} actions.",
+        {
+            "name": "The cluster's name",
+            "kind": "Cluster kind: {{ cluster_kinds }}",
+            "dimension_id": "The id of the dimension it lies in",
+            "parent_cluster_id": "The id of the larger cluster it lies inside",
+            "description": "What the cluster is like",
+        },
+    ),
+    T.CREATE_DIMENSION: ToolText(
+        "You bring a new dimension into being, on its own or inside a dimension that holds a world you reach. You rule it. "
+        "Its kind sets its veil, stability, time, magic, hostility, sanity drain and leak. The greatest of works: "
+        "{{ rules.dimensions.create_essence }} essence, {{ rules.son_tools.create_dimension_ap }} actions.",
+        {
+            "name": "The dimension's name",
+            "kind": "Dimension kind: {{ dimension_kinds }}",
+            "element": "Its element, for an elemental dimension only",
+            "parent_dimension_id": "The id of the dimension it lies inside",
+            "description": "What the dimension is like",
+        },
+    ),
+    T.SHAPE_GALACTIC_STRUCTURE: ToolText(
+        "You shape a new structure of the kind you choose in a galaxy you are patron of or whose worlds you reach. "
+        "Stars inside it take what it gives. {{ rules.son_tools.shape_structure_essence }} essence, {{ rules.son_tools.shape_structure_ap }} actions.",
+        {"galaxy_id": "The id of the galaxy", "kind": "The kind of structure", "name": "The structure's name", "reason": "Why you shape it"},
+    ),
+    T.STIR_GALAXY: ToolText(
+        "You bring about an event in a galaxy you are patron of or whose worlds you reach; some events need a second galaxy or one of its stars. "
+        "{{ rules.son_tools.stir_galaxy_essence }} essence, {{ rules.son_tools.stir_galaxy_ap }} actions.",
+        {
+            "galaxy_id": "The id of the galaxy",
+            "kind": "The kind of galactic event",
+            "other_galaxy_id": "The id of a second galaxy, for an event between two galaxies",
+            "star_id": "The id of one of its stars, for an event of one star",
+            "reason": "Why you bring it about",
+        },
+    ),
+    T.STIR_DIMENSION: ToolText(
+        "You bring about an event in a dimension you rule or whose worlds you reach; some events need a second dimension or a world. "
+        "{{ rules.son_tools.stir_dimension_essence }} essence, {{ rules.son_tools.stir_dimension_ap }} actions.",
+        {
+            "dimension_id": "The id of the dimension",
+            "kind": "The kind of dimensional event",
+            "other_dimension_id": "The id of a second dimension, for an event between two dimensions",
+            "world_id": "The id of a world, for an event that touches one world",
+            "reason": "Why you bring it about",
+        },
+    ),
+    T.BIND_LAW_ACROSS_DIMENSION: ToolText(
+        "You make a natural law you reach hold on every world of a dimension you rule. "
+        "{{ rules.son_tools.dimension_law_essence }} essence, {{ rules.son_tools.dimension_law_ap }} actions.",
+        {"dimension_id": "The id of the dimension you rule", "law_id": "The id of the natural law", "reason": "Why it should hold there"},
+    ),
+    T.SET_COSMIC_FEATURE: ToolText(
+        "You set a feature of the kind you choose in the heavens. A wormhole joins two worlds, a rogue world needs its star or its galaxy, "
+        "and the other kinds belong to a star. Each star, galaxy and world you name must be within your reach. "
+        "{{ rules.son_tools.cosmic_feature_essence }} essence, {{ rules.son_tools.cosmic_feature_ap }} actions.",
+        {
+            "kind": "The kind of feature",
+            "name": "The feature's name",
+            "star_id": "The id of the star it belongs to",
+            "galaxy_id": "The id of the galaxy it drifts in",
+            "world_id": "The id of the first world, for a wormhole",
+            "world_b_id": "The id of the second world, for a wormhole",
+            "reason": "Why you set it",
+        },
+    ),
+    T.GATHER_STAR_SYSTEM: ToolText(
+        "You gather two or more stars within your reach into one system that moves together. "
+        "{{ rules.son_tools.star_system_essence }} essence, {{ rules.son_tools.star_system_ap }} actions.",
+        {"name": "The system's name", "star_ids": "The ids of the stars", "reason": "Why you gather them"},
+    ),
+    T.RAISE_PHENOMENON: ToolText(
+        "You raise a phenomenon in a region you reach; it grows and acts on the land around it until it fades or is held. "
+        "{{ rules.son_tools.phenomenon_essence }} essence, {{ rules.son_tools.phenomenon_ap }} actions.",
+        {"kind": "The kind of phenomenon", "region_id": "The id of the region", "reason": "Why you raise it"},
+    ),
+    T.OPEN_BREACH: ToolText(
+        "You open a breach in a region you reach through which an outer being can press into the world. "
+        "{{ rules.son_tools.breach_essence }} essence, {{ rules.son_tools.breach_ap }} actions.",
+        {"being_id": "The id of the outer being", "region_id": "The id of the region", "reason": "Why you open it"},
+    ),
+    T.FORGE_LEY_LINE: ToolText(
+        "You forge a ley line between two neighbouring regions you reach; it carries magic between them. {{ rules.son_tools.forge_ley_essence }} essence, 1 action.",
+        {"first_region_id": "The id of the first region", "second_region_id": "The id of the neighbouring region", "reason": "Why you forge it"},
+    ),
+    T.ADD_SEASON: ToolText(
+        "As a god of the sky, storm, time, sun, moon, harvest, ice or plants you add a season to the year of a world you reach, "
+        "with its warmth, rain, growth, travel and campaigning. {{ rules.son_tools.add_season_essence }} essence, {{ rules.son_tools.reorder_seasons_ap }} actions.",
+        {
+            "world_id": "The id of the world",
+            "name": "The season's name",
+            "temperature_shift": "How much warmer (positive) or colder (negative) it is, -100 to 100",
+            "rain_shift": "How much wetter (positive) or drier (negative) it is, -100 to 100",
+            "growth": "How well things grow in it, 0 to 100",
+            "travel": "How easy travel is in it, 0 to 100",
+            "campaign": "How easy war is in it, 0 to 100",
+        },
+    ),
+    T.OPEN_ROAD: ToolText(
+        "You open a road between two known worlds, one of which you reach, by a way of travel you choose. "
+        "{{ rules.son_tools.open_road_essence }} essence, {{ rules.son_tools.open_road_ap }} actions.",
+        {
+            "first_world_id": "The id of the first world",
+            "second_world_id": "The id of the second world",
+            "method": "The way of travel",
+            "reason": "Why you open it",
+        },
+    ),
+    T.RAISE_THRONE: ToolText(
+        "You raise a throne of power at a place you reach and hold it yourself; its holder draws power from it. "
+        "{{ rules.son_tools.throne_essence }} essence, {{ rules.son_tools.throne_ap }} actions.",
+        {"place_id": "The id of the place, region, settlement or structure", "reason": "Why you raise it"},
+    ),
+    T.LAY_MAGIC_SITE: ToolText(
+        "You lay a magic site of a school at a place you reach, hidden until someone finds it or revealed at once. {{ rules.son_tools.magic_site_essence }} essence, 1 action.",
+        {
+            "place_id": "The id of the place, region, settlement or structure",
+            "kind": "The kind of magic site",
+            "school": "The school of magic it holds",
+            "revealed": "Whether it is known at once",
+            "reason": "Why you lay it",
+        },
+    ),
+    T.CARRY_SPECIES: ToolText(
+        "You carry a kind of life to a new region you reach, where it can take hold if that world bears its kind of life. "
+        "{{ rules.son_tools.carry_species_essence }} essence, 1 action.",
+        {"species_id": "The id of the kind of life", "region_id": "The id of the region", "reason": "Why you carry it there"},
+    ),
+    T.SEED_LIFE: ToolText(
+        "You let native life take root on a world you reach: a new kind of life, or with people a new people of that world. "
+        "{{ rules.son_tools.seed_life_essence }} essence, {{ rules.son_tools.seed_life_ap }} actions.",
+        {"world_id": "The id of the world", "people": "Whether a people takes root rather than a kind of life", "reason": "Why you seed it"},
+    ),
+    T.CALL_UP_SOUL: ToolText(
+        "You call up the soul of a dead mortal you made, or any dead mortal if you are a god of death; it walks as a spirit under your patronage. "
+        "{{ rules.son_tools.call_up_soul_essence }} essence, 1 action.",
+        {"mortal_id": "The id of the dead mortal", "alignment": "What the spirit leans toward", "reason": "Why you call it up"},
+    ),
+    T.CROWN_RULER: ToolText(
+        "You crown a ruler over a people, settlement, faction or cult you reach that has none. {{ rules.son_tools.crown_ruler_essence }} essence, 1 action.",
+        {"community_id": "The id of the community", "reason": "Why it needs a ruler"},
+    ),
+    T.FOUND_HOUSE: ToolText(
+        "You found a noble house on a living mortal you reach; their children are born into it. {{ rules.son_tools.found_house_essence }} essence, 1 action.",
+        {"mortal_id": "The id of the mortal", "reason": "Why you found it"},
+    ),
+    T.BLESS_HOST: ToolText(
+        "You strengthen an army you reach: its morale, its equipment or its experience rises by {{ rules.son_tools.bless_host_amount }}. "
+        "{{ rules.son_tools.bless_host_essence }} essence, 1 action.",
+        {"army_id": "The id of the army", "aspect": "What you strengthen", "reason": "Why you strengthen it"},
+    ),
     T.RULE_DIMENSION: ToolText(
         "You take rule of a dimension one of whose worlds you reach. You gain essence from it each age, and your domains move its veil and its stability. "
         "{{ rules.dimensions.rule_essence }} essence, 1 action.",
@@ -864,9 +1031,15 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"spirit_id": "The free spirit's id", "target_id": "The item, vessel or monument"},
     ),
     T.HANG_STAR: ToolText(
-        "You hang a new star in the sky; new worlds may be born around it. {{ rules.cosmic_costs.ignite_star | share_of(rules.son_tools.cosmic_hang_star_pct) }} essence, "
+        "You hang a new star in the sky, in a galaxy or in the sky of a world you reach; new worlds may be born around it. {{ rules.cosmic_costs.ignite_star | share_of(rules.son_tools.cosmic_hang_star_pct) }} essence, "
         "{{ rules.son_tools.hang_star_ap }} actions.",
-        {"name": "The star's name", "type": "Star type: {{ star_types }}", "description": "What the star is like"},
+        {
+            "name": "The star's name",
+            "type": "Star type: {{ star_types }}",
+            "description": "What the star is like",
+            "galaxy_id": "The id of the galaxy it hangs in",
+            "world_id": "The id of a world whose sky it hangs in; a world without a star comes to circle it",
+        },
     ),
     T.EXTINGUISH_STAR: ToolText(
         "You extinguish a star: the worlds around it sink into darkness and cold, leakage rises, the apocalypse draws near. A terrible act; the whole cosmos remembers it. "

@@ -56,6 +56,7 @@ class GalaxyRules:
     severing_chance: int = rule(2, 0, 100, G, "Chance a shattered galaxy splits in an epoch (%)")
     event_epochs: int = rule(2, 1, 50, G, "Epochs a galactic event lasts")
     claim_essence: int = rule(80, 0, 10000, G, "Essence a son spends to become a galaxy's patron")
+    create_essence: int = rule(150, 0, 10000, G, "Essence a son spends to set a new galaxy among the others")
     patron_essence: int = rule(1, 0, 100, G, "Essence a galaxy's patron gains each epoch for each world in it that worships the patron")
     patron_formation: int = rule(10, 0, 100, G, "Star formation a galaxy's patron moves it up or down by domain")
     worship_piety: int = rule(2, 0, 50, G, "Piety a community that worships its galaxy gains in an epoch of high star formation")
@@ -71,6 +72,7 @@ class ClusterRules:
     worship_piety: int = rule(1, 0, 50, G, "Piety a community that worships its sky gains for each galaxy of its cluster that grows")
     central_pull_pct: int = rule(200, 100, 1000, G, "How much more readily the central galaxy of a cluster draws a near galaxy into a merger (%)")
     heat_danger_per: int = rule(20, 1, 100, G, "Heat of the medium between the galaxies of a cluster that adds one point of danger to routes there")
+    create_essence: int = rule(180, 0, 10000, G, "Essence a son spends to gather a new cluster of galaxies")
 
 
 @dataclass(frozen=True)
@@ -96,6 +98,7 @@ class DimensionRules:
     event_epochs: int = rule(2, 1, 50, D, "Epochs a dimensional event lasts")
     stability_drift: int = rule(1, 0, 50, D, "Stability a dimension moves toward its kind's value each epoch")
     rule_essence: int = rule(100, 0, 10000, D, "Essence a son spends to take rule of a dimension")
+    create_essence: int = rule(200, 0, 10000, D, "Essence a son spends to bring a new dimension into being")
     ruler_essence: int = rule(2, 0, 100, D, "Essence or power the ruler of a dimension gains from it each epoch")
     ruler_shift: int = rule(2, 0, 50, D, "Veil or stability the ruler of a dimension shifts each epoch by domain")
     rift_chance: int = rule(4, 0, 100, D, "Chance a dimension with no veil tears a rift into a world in an epoch (%)")

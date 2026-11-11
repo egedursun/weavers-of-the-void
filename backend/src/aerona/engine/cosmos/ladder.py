@@ -1,7 +1,7 @@
 import math
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.cosmography import BARRED_GALAXIES, SPIRAL_GALAXIES
@@ -15,6 +15,7 @@ from aerona.db.tables.cosmos import AppliedFixupRow, CosmosRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cosmography import ClusterKind, DimensionElement, DimensionKind, GalacticNucleus, GalacticStructureKind, GalacticZone, GalaxyType
 from aerona.domain.enums.world import Discovery
+from aerona.engine.cosmos.cluster_shape import slot, spread
 from aerona.engine.cosmos.kinds import CLUSTER_KIND_MECHANICS, DIMENSION_KIND_MECHANICS, GALAXY_TYPE_MECHANICS
 from aerona.engine.cosmos.placement import Cosmography, zone_at
 from aerona.engine.cosmos.strata import host_strata
@@ -36,6 +37,11 @@ ZONE_STRUCTURES: dict[GalacticZone, GalacticStructureKind] = {
     GalacticZone.HALO: GalacticStructureKind.HALO,
 }
 
+GALAXY_SLOT_SPACING = 4.0
+NEW_GALAXY_RADIUS = 900.0
+NEW_CLUSTER_RADIUS = 1000.0
+CLUSTER_SLOT_SPACING = 3.0
+
 
 @dataclass(frozen=True)
 class DimensionDraft:
@@ -54,8 +60,8 @@ class ClusterDraft:
     epoch: int
     dimension_id: int | None = None
     parent_cluster_id: int | None = None
-    x: float = 0.0
-    y: float = 0.0
+    x: float | None = None
+    y: float | None = None
     radius: float = 100.0
     description: str | None = None
 
@@ -67,8 +73,8 @@ class GalaxyDraft:
     epoch: int
     cluster_id: int | None = None
     dimension_id: int | None = None
-    x: float = 0.0
-    y: float = 0.0
+    x: float | None = None
+    y: float | None = None
     radius: float = 900.0
     description: str | None = None
 
@@ -100,16 +106,47 @@ async def create_dimension(session: AsyncSession, rules: Rules, draft: Dimension
     return row
 
 
+async def cluster_slot(session: AsyncSession, dimension_id: int | None, parent_cluster_id: int | None, spacing: float) -> tuple[float, float]:
+    if parent_cluster_id is None:
+        statement = select(func.count(ClusterRow.id)).where(ClusterRow.parent_cluster_id.is_(None), ClusterRow.dimension_id == dimension_id)
+        return spread(int(await session.scalar(statement) or 0), spacing)
+    count = await session.scalar(select(func.count(ClusterRow.id)).where(ClusterRow.parent_cluster_id == parent_cluster_id))
+    parent = await session.get(ClusterRow, parent_cluster_id)
+    return slot(parent.cluster_kind if parent is not None else ClusterKind.GALAXY_GROUP, int(count or 0), spacing)
+
+
+async def galaxy_slot(session: AsyncSession, cluster_id: int | None, dimension_id: int | None, radius: float) -> tuple[float, float]:
+    if cluster_id is not None:
+        cluster = await session.get(ClusterRow, cluster_id)
+        kind = cluster.cluster_kind if cluster is not None else ClusterKind.GALAXY_GROUP
+        count = await session.scalar(select(func.count(GalaxyRow.id)).where(GalaxyRow.cluster_id == cluster_id))
+    else:
+        kind = ClusterKind.GALAXY_GROUP
+        count = await session.scalar(select(func.count(GalaxyRow.id)).where(GalaxyRow.cluster_id.is_(None), GalaxyRow.dimension_id == dimension_id))
+    return slot(kind, int(count or 0), radius * GALAXY_SLOT_SPACING)
+
+
+async def hold_in_cluster(session: AsyncSession, cluster_id: int | None, x: float, y: float, radius: float) -> None:
+    cluster = await session.get(ClusterRow, cluster_id) if cluster_id is not None else None
+    if cluster is None or held(cluster.id):
+        return
+    cluster.radius = max(cluster.radius, math.hypot(x, y) + radius)
+
+
 async def create_cluster(session: AsyncSession, rules: Rules, draft: ClusterDraft) -> ClusterRow:
     names = NameRepository(session)
     name = await names.unique_name(draft.name)
+    x, y = draft.x, draft.y
+    if x is None or y is None:
+        slot_x, slot_y = await cluster_slot(session, draft.dimension_id, draft.parent_cluster_id, draft.radius * CLUSTER_SLOT_SPACING)
+        x, y = slot_x if x is None else x, slot_y if y is None else y
     row = ClusterRow(
         name=name,
         cluster_kind=draft.kind,
         dimension_id=draft.dimension_id if draft.parent_cluster_id is None else None,
         parent_cluster_id=draft.parent_cluster_id,
-        x=draft.x,
-        y=draft.y,
+        x=x,
+        y=y,
         radius=draft.radius,
         medium_heat=CLUSTER_KIND_MECHANICS[draft.kind].heat(rules),
         expansion=0,
@@ -151,13 +188,18 @@ async def create_galaxy(session: AsyncSession, rules: Rules, draft: GalaxyDraft)
     names = NameRepository(session)
     name = await names.unique_name(draft.name)
     form = SeededRandom.for_epoch(0, draft.epoch, f"galaxy_form.{name}")
+    x, y = draft.x, draft.y
+    if x is None or y is None:
+        slot_x, slot_y = await galaxy_slot(session, draft.cluster_id, draft.dimension_id, draft.radius)
+        x, y = slot_x if x is None else x, slot_y if y is None else y
+    await hold_in_cluster(session, draft.cluster_id, x, y, draft.radius)
     row = GalaxyRow(
         name=name,
         galaxy_type=draft.galaxy_type,
         cluster_id=draft.cluster_id,
         dimension_id=draft.dimension_id if draft.cluster_id is None else None,
-        x=draft.x,
-        y=draft.y,
+        x=x,
+        y=y,
         radius=draft.radius,
         arm_count=arms_of(rules, draft.galaxy_type, form),
         nucleus=nucleus_of(rules, draft.galaxy_type, form),

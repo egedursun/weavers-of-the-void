@@ -59,6 +59,26 @@ function rawExtent(
   return extent
 }
 
+function typicalRadius(
+  ladder: Ladder,
+  tops: readonly ClusterRecord[],
+  loose: readonly GalaxyRecord[]
+): number {
+  const radii = loose.map((row) => row.radius)
+  const walk = (cluster: ClusterRecord, seen: Set<number>) => {
+    if (seen.has(cluster.id)) return
+    seen.add(cluster.id)
+    for (const galaxy of ladder.galaxiesIn(cluster.id))
+      radii.push(galaxy.radius)
+    for (const child of ladder.childClusters(cluster.id)) walk(child, seen)
+  }
+  const seen = new Set<number>()
+  for (const cluster of tops) walk(cluster, seen)
+  if (radii.length === 0) return Infinity
+  const sorted = radii.sort((a, b) => a - b)
+  return Math.max(sorted[Math.floor(sorted.length / 2)] ?? 1, 1)
+}
+
 function dimensionOrder(ladder: Ladder): number[] {
   const rows = ladder.data.dimensions
   const depth = (id: number): number => {
@@ -95,7 +115,10 @@ export function universeLayout(
   order.forEach((dimensionId, index) => {
     const tops = ladder.clustersIn(dimensionId)
     const loose = ladder.looseGalaxies(dimensionId)
-    const scale = TARGET / rawExtent(tops, loose)
+    const scale = Math.max(
+      TARGET / rawExtent(tops, loose),
+      MIN_GALAXY / typicalRadius(ladder, tops, loose)
+    )
     const y = -index * PLANE_GAP
     const placeCluster = (
       cluster: ClusterRecord,

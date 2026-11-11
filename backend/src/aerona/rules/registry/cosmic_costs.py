@@ -15,3 +15,6 @@ class CosmicCostsRules:
     rekindle_dead_star: int = rule(60, 0, 500, RuleGroup.COSMIC_ACTIONS, "Rekindle a dead star")
     spirit_cloak: int = rule(15, 0, 500, RuleGroup.COSMIC_ACTIONS, "Cloak with spirit")
     legendary_expedition: int = rule(30, 0, 500, RuleGroup.COSMIC_ACTIONS, "Legendary expedition")
+    create_galaxy: int = rule(300, 0, 5000, RuleGroup.COSMIC_ACTIONS, "Set a new galaxy among the others")
+    create_cluster: int = rule(450, 0, 5000, RuleGroup.COSMIC_ACTIONS, "Gather a new cluster of galaxies")
+    create_dimension: int = rule(600, 0, 5000, RuleGroup.COSMIC_ACTIONS, "Bring a new dimension into being")

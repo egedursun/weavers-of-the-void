@@ -194,13 +194,18 @@ function projectAll(scene: SceneValue, camera: PerspectiveCamera) {
   for (const [id, position] of frame.worldPosition) {
     const body = layout.worlds.get(id)
     if (!body) continue
+    const point = screenPoint(frame.worldScreen, id)
+    if (body.starId !== frame.detailStar && frame.selectedWorld !== id) {
+      point.visible = false
+      continue
+    }
     project(
       position,
       camera,
       frame.width,
       frame.height,
       body.radius * (frame.worldScale.get(id) ?? 1),
-      screenPoint(frame.worldScreen, id)
+      point
     )
   }
   for (const star of layout.stars.values()) {

@@ -12,6 +12,7 @@ from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.cosmography import DimensionRow, GalaxyRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
+from aerona.db.write_guard import HELD_SCOPE, HeldScope
 from aerona.domain.enums.cosmography import (
     BeingKind,
     BeingPhase,
@@ -329,3 +330,31 @@ async def test_a_star_beyond_the_home_galaxy_grows_the_galaxy_to_hold_it(session
     galaxy = await session.get(GalaxyRow, star.galaxy_id)
     assert galaxy is not None
     assert galaxy.radius >= math.hypot(*far) * rules.galaxies.home_radius_margin_pct / 100
+
+
+async def test_a_galaxy_set_beyond_its_cluster_grows_the_cluster_to_hold_it(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
+    cluster = await create_cluster(session, rules, ClusterDraft("Narrow Group", ClusterKind.FILAMENT, 1, radius=100.0))
+    galaxies = [
+        await create_galaxy(session, rules, GalaxyDraft(f"Reach {index}", GalaxyType.SPIRAL, 1, cluster_id=cluster.id, radius=600.0)) for index in range(5)
+    ]
+    for galaxy in galaxies:
+        assert math.hypot(galaxy.x, galaxy.y) + galaxy.radius <= cluster.radius
+
+
+async def test_a_held_cluster_keeps_its_size_when_a_galaxy_lands_beyond_it(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
+    cluster = await create_cluster(session, rules, ClusterDraft("Held Group", ClusterKind.FILAMENT, 1, radius=100.0))
+    token = HELD_SCOPE.set(HeldScope(only=None, nodes=frozenset({cluster.id})))
+    try:
+        for index in range(3):
+            await create_galaxy(session, rules, GalaxyDraft(f"Held Reach {index}", GalaxyType.SPIRAL, 1, cluster_id=cluster.id, radius=600.0))
+    finally:
+        HELD_SCOPE.reset(token)
+    assert cluster.radius == 100.0
+
+
+async def test_a_galaxy_given_one_coordinate_keeps_it_and_takes_the_other_from_its_slot(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
+    cluster = await create_cluster(session, rules, ClusterDraft("Half Placed Group", ClusterKind.GALAXY_GROUP, 1))
+    slotted = await create_galaxy(session, rules, GalaxyDraft("Slotted Wheel", GalaxyType.SPIRAL, 1, cluster_id=cluster.id))
+    pinned = await create_galaxy(session, rules, GalaxyDraft("Pinned Wheel", GalaxyType.SPIRAL, 1, cluster_id=cluster.id, x=1234.0))
+    assert pinned.x == 1234.0
+    assert (pinned.x, pinned.y) != (slotted.x, slotted.y)

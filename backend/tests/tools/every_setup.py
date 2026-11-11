@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.arcana import LawUpkeepRow, VisStockRow
 from aerona.db.tables.celestial import StarRow, WorldRow
-from aerona.db.tables.cosmography import CosmicBeingProfileRow, PhenomenonFootprintRow, PhenomenonProfileRow, RiftRow
+from aerona.db.tables.cosmography import CosmicBeingProfileRow, DimensionRow, PhenomenonFootprintRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, LegendProfileRow, RiteProfileRow
 from aerona.db.tables.divine import DivineWoundRow, NaturalLawProfileRow
@@ -40,7 +40,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import MagicSiteKind
 from aerona.domain.enums.ecology import Diet, DomesticationStage, SpeciesClass, SpeciesUse
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
-from aerona.domain.enums.entity import CivilizationTier, EntityFlag, EntityType
+from aerona.domain.enums.entity import CivilizationTier, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.intrigue import HookSource, HookStrength
 from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource
@@ -468,6 +468,44 @@ async def heavens(session: AsyncSession, realm: Realm) -> Ids:
     placement = cosmography.place_world_id(realm.cosmos.world_id)
     assert placement.galaxy is not None and placement.dimension is not None
     return {"dimension": plane.id, "galaxy": placement.galaxy.id, "prime": placement.dimension.id}
+
+
+async def ruled_law(session: AsyncSession, realm: Realm) -> Ids:
+    ids = await heavens(session, realm)
+    dimension = await session.get(DimensionRow, ids["prime"])
+    assert dimension is not None
+    dimension.ruler_node_id = realm.son_id
+    law = await make_entity(
+        session, "The Long Summer", EntityType.NATURAL_LAW, world_id=realm.cosmos.world_id, stats=NaturalLawStats(), natural_law=NaturalLaw.BOUNTY
+    )
+    return {**ids, "law": law.id}
+
+
+async def two_stars(session: AsyncSession, realm: Realm) -> Ids:
+    stars = [
+        StarRow(name=name, star_type=StarType.YELLOW_DWARF, brightness=50, x=x, y=0.0, created_epoch=1, patron_son_id=realm.son_id)
+        for name, x in (("Twin Dawn", 10.0), ("Twin Dusk", 14.0))
+    ]
+    session.add_all(stars)
+    await session.flush()
+    return {"first_star": stars[0].id, "second_star": stars[1].id}
+
+
+async def dead_creation(session: AsyncSession, realm: Realm) -> Ids:
+    stats = MortalStats(hp=0, strength=30, agility=30, intellect=30, charisma=30, age=60, lifespan=70)
+    mortal = await make_entity(
+        session,
+        "Ansel Rook",
+        EntityType.MORTAL,
+        world_id=realm.cosmos.world_id,
+        location_id=realm.settlement_id,
+        stats=stats,
+        origin=EntityOrigin.SON,
+        creator_son_id=realm.son_id,
+    )
+    mortal.status = EntityStatus.DEAD
+    mortal.end_epoch = EPOCH - 1
+    return {"dead": mortal.id}
 
 
 async def rifted(session: AsyncSession, realm: Realm) -> Ids:

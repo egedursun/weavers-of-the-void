@@ -124,6 +124,7 @@ function Harness({
           setWorldId(id)
           setCurrent('world')
         }}
+        onSelectStar={() => undefined}
         onOpenPanel={(next, nextSection) => {
           setCurrent(next)
           setFocus(nextSection)

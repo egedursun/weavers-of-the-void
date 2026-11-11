@@ -81,3 +81,9 @@ async def api(settings: Settings) -> AsyncIterator[ApiWorld]:
 def seeded(api: ApiWorld) -> AgentWorld:
     assert api.world is not None
     return api.world
+
+
+async def fund_creator(api: ApiWorld) -> None:
+    async with api.services.database.write() as session:
+        seeded(api).core.creator.essence = 100000
+        await session.merge(seeded(api).core.creator)

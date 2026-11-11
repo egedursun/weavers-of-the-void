@@ -19,6 +19,7 @@ from aerona.constants.tool_inputs import (
 from aerona.db.repositories.names import NameRepository
 from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.cosmography import GalaxyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import LeyLineRow
 from aerona.db.tables.routes import RouteRow
@@ -49,6 +50,7 @@ from aerona.tools.framework.ports import BornWorld, WorldBirth, WorldBirthOrder
 from aerona.tools.framework.spec import LongJob, ToolMeta, ToolOutcome, ToolSpec, gate, no_cost, son_standard_action
 from aerona.tools.framework.validation import fail, state_reason
 from aerona.tools.son import lines
+from aerona.tools.son.cosmography import reaches_galaxy
 from aerona.tools.son.support import ensure_in_reach, grant, require_essence, share, shift_relation
 from aerona.tools.son.war import known_god
 
@@ -102,6 +104,8 @@ class HangStarInput(ToolInput):
     name: Annotated[str, Field(min_length=NAME_MIN, max_length=NAME_MAX)]
     type: StarType | None = None
     description: Annotated[str, Field(min_length=SHORT_DESCRIPTION_MIN, max_length=SHORT_DESCRIPTION_MAX)]
+    galaxy_id: int | None = None
+    world_id: int | None = None
 
 
 class ExtinguishInput(ToolInput):
@@ -308,13 +312,36 @@ async def bind_spirit(call: SonCall, args: BindSpiritInput) -> str:
     return result(SonResult.SPIRIT_BOUND, golem=golem)
 
 
+async def _hanging_place(call: SonCall, args: HangStarInput) -> None:
+    if args.world_id is not None:
+        world = await _world(call, args.world_id)
+        if not await call.reachable_world(world.id):
+            fail(SonResult.WORLD_OUT_OF_REACH, name=world.name)
+    if args.galaxy_id is not None:
+        galaxy = await call.session.get(GalaxyRow, args.galaxy_id)
+        if galaxy is None:
+            fail(SonResult.NO_SUCH_GALAXY, id=args.galaxy_id)
+        if galaxy.patron_son_id != call.son.id and not await reaches_galaxy(call, galaxy.id):
+            fail(SonResult.GALAXY_OUT_OF_REACH, name=galaxy.name)
+
+
 async def hang(call: SonCall, args: HangStarInput) -> str:
     cost = share(call.rules.cosmic_costs.ignite_star, call.rules.son_tools.cosmic_hang_star_pct)
     require_essence(call, cost)
     name = " ".join(args.name.split())
     if await NameRepository(call.session).is_taken(name):
         fail(SonResult.NAME_IN_USE)
-    star = await hang_star(call.tick, name, args.type or StarType.YELLOW_DWARF, call.son.name, args.description, maker_son_id=call.son.id)
+    await _hanging_place(call, args)
+    star = await hang_star(
+        call.tick,
+        name,
+        args.type or StarType.YELLOW_DWARF,
+        call.son.name,
+        args.description,
+        galaxy_id=args.galaxy_id,
+        world_id=args.world_id,
+        maker_son_id=call.son.id,
+    )
     call.spend_essence(cost)
     call.target(star.id)
     return result(SonResult.STAR_HUNG, id=star.id, name=star.name)

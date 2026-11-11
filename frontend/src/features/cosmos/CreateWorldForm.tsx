@@ -19,6 +19,7 @@ import { FormRow, JobProgress } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { CosmicActionButton } from './CosmicActionButton'
 import { PaletteStrip } from './Glyphs'
+import { StarOptions } from './StarOptions'
 import { type StarType, type WorldType, useJob } from './api'
 import { type CosmosIndex } from './model/cosmosModel'
 import { STAR_TYPES, STAR_TYPE_LABEL, WORLD_TYPES } from './model/labels'
@@ -53,6 +54,7 @@ export function CreateWorldForm({ index, rules }: CreateWorldFormProps) {
   const [inspiration, setInspiration] = useState('')
   const [placement, setPlacement] = useState<Placement>('fate')
   const [starId, setStarId] = useState('')
+  const [starOpen, setStarOpen] = useState(false)
   const [parentId, setParentId] = useState('')
   const [newStarType, setNewStarType] = useState<StarType | 'fate'>('fate')
   const topLevel = index.worlds.filter(
@@ -164,16 +166,25 @@ export function CreateWorldForm({ index, rules }: CreateWorldFormProps) {
       {placement === 'star' && (
         <FormRow label='Star'>
           {(id) => (
-            <Select value={star} onValueChange={setStarId}>
+            <Select
+              value={star}
+              onValueChange={setStarId}
+              open={starOpen}
+              onOpenChange={setStarOpen}
+            >
               <SelectTrigger id={id} className='w-full'>
                 <SelectValue placeholder='No star yet' />
               </SelectTrigger>
               <SelectContent>
-                {index.data.stars.map((item) => (
-                  <SelectItem key={item.id} value={String(item.id)}>
-                    {`${item.name} · ${STAR_TYPE_LABEL[item.star_type]} · ${index.planetsOf(item.id).length} planets`}
-                  </SelectItem>
-                ))}
+                <StarOptions
+                  stars={index.data.stars}
+                  selected={star}
+                  open={starOpen}
+                  valueOf={(item) => String(item.id)}
+                  label={(item) =>
+                    `${item.name} · ${STAR_TYPE_LABEL[item.star_type]} · ${index.planetsOf(item.id).length} planets`
+                  }
+                />
               </SelectContent>
             </Select>
           )}

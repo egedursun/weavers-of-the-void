@@ -1,43 +1,59 @@
-import { Component, type ReactNode, useEffect, useMemo, useRef } from 'react'
 import {
-  Billboard,
-  Line,
-  OrbitControls,
-  QuadraticBezierLine,
-} from '@react-three/drei'
+  Component,
+  type ReactNode,
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import { Billboard, Line, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { DoubleSide, Euler, NeutralToneMapping, Vector3 } from 'three'
+import {
+  BufferAttribute,
+  BufferGeometry,
+  DoubleSide,
+  NeutralToneMapping,
+  Vector3,
+} from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { unitHash } from '@/lib/hash'
+import { onTap } from '@/lib/sceneTap'
 import { plural } from '@/lib/units'
-import { type CosmosData } from '@/features/cosmos/api'
-import { METHOD_LOOK } from '@/features/cosmos/model/looks'
-import { EmbeddedWorlds3D } from '@/features/cosmos/scene3d/EmbeddedWorlds3D'
 import { PostEffects3D } from '@/features/cosmos/scene3d/PostEffects3D'
 import { shaderMaterial, uniform } from '@/features/cosmos/scene3d/materials'
+import {
+  DUST_FRAGMENT,
+  DUST_VERTEX,
+} from '@/features/cosmos/scene3d/shaders/sky'
 import {
   type CosmographyCatalog,
   type GalaxyRecord,
   type RouteRecord,
-  type StarRecord,
 } from '../api'
-import { type WorldMark, worldMarks, worldRadius } from '../galaxyWorlds'
 import { type Ladder } from '../ladder'
-import {
-  CoreGlow,
-  GalaxyParticles,
-  StarMark,
-  WorldMarker,
-} from './GalaxyScene3D'
+import { CoreGlow, GalaxyParticles } from './GalaxyScene3D'
 import { type SceneLabel, LabelLayer, LabelProjector } from './SceneLabels'
 import { StarField } from './StarField'
 import { ClockDriver, useTicking } from './clock'
+import {
+  CLUSTER_LOOK,
+  type ClusterCloud as ClusterCloudPoints,
+  clusterCloud,
+  clusterOutline,
+  clusterSkeleton,
+  veilSpan,
+} from './clusterForm'
 import { DIMENSION_TOKEN } from './galaxyForm'
 import { useLabelElements } from './labelElements'
 import { scenePalette, tokenHex } from './palette'
-import { CLOUD_FRAGMENT, PLANE_FRAGMENT, QUAD_VERTEX } from './shaders'
 import {
-  type PlacedGalaxy,
+  CLOUD_FRAGMENT,
+  PLANE_FRAGMENT,
+  QUAD_VERTEX,
+  SHELL_FRAGMENT,
+} from './shaders'
+import {
   type UniverseLayout,
   type Vec3,
   universeLayout,
@@ -52,51 +68,9 @@ type UniverseProps = {
   ladder: Ladder
   catalog: CosmographyCatalog
   routes: readonly RouteRecord[]
-  cosmos: CosmosData | undefined
   selected: ScalePick
   onPick: (pick: ScalePick) => void
-  onOpen: (kind: 'star' | 'world', id: number) => void
   fallback: ReactNode
-}
-
-type Held = { stars: StarRecord[]; worlds: WorldMark[] }
-
-const NAMED_INSIDE = 12
-
-function heldIn(
-  ladder: Ladder,
-  cosmos: CosmosData | undefined
-): Map<number, Held> {
-  return new Map(
-    ladder.data.galaxies.map((galaxy) => [
-      galaxy.id,
-      {
-        stars: ladder.data.stars.filter((row) => row.galaxy_id === galaxy.id),
-        worlds: worldMarks(cosmos, ladder.data, galaxy.id),
-      },
-    ])
-  )
-}
-
-function bodySize(galaxy: GalaxyRecord): number {
-  return Math.max(galaxy.radius * 0.06, 14)
-}
-
-function inSpace(
-  placed: PlacedGalaxy,
-  galaxy: GalaxyRecord,
-  x: number,
-  y: number
-): Vec3 {
-  const scale = placed.size / Math.max(galaxy.radius, 1)
-  const point = new Vector3(x, 0, y)
-    .applyEuler(new Euler(placed.tilt, placed.turn, 0))
-    .multiplyScalar(scale)
-  return [
-    placed.position[0] + point.x,
-    placed.position[1] + point.y,
-    placed.position[2] + point.z,
-  ]
 }
 
 const MINI_POINTS = 2600
@@ -119,7 +93,7 @@ class Boundary extends Component<
   }
 }
 
-function DimensionPlane({
+const DimensionPlane = memo(function DimensionPlane({
   ladder,
   layout,
   id,
@@ -164,18 +138,84 @@ function DimensionPlane({
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
         material={material}
-        onClick={(event) => {
-          event.stopPropagation()
-          onPick({ kind: 'dimension', id })
-        }}
+        onClick={onTap(() => onPick({ kind: 'dimension', id }))}
       >
         <planeGeometry args={[placed.radius * 2, placed.radius * 2]} />
       </mesh>
     </group>
   )
+})
+
+const CLUSTER_POINTS_PER_GALAXY = 220
+const CLUSTER_POINTS_MIN = 1200
+const CLUSTER_POINTS_MAX = 6000
+const CLUSTER_POINT_RATIO = 1.8
+const CLUSTER_SELECTED_GLOW = 1.3
+const CLUSTER_HAZE_STEP = 3
+const CLUSTER_HAZE_SIZE = 8
+const CLUSTER_HAZE_LIGHT = 0.05
+const CLUSTER_REACH = 10
+const CLUSTER_VEIL_BOOST = 1.8
+const SKELETON_GLOW_WIDTH = 7
+const SKELETON_GLOW_OPACITY = 0.18
+const SKELETON_CORE_WIDTH = 1.6
+const SKELETON_CORE_OPACITY = 0.38
+const RIM_WIDTH = 4
+const RIM_OPACITY = 0.12
+const CLUSTER_VEIL_DROP = 6
+const CLUSTER_HEAT_GLOW = 0.05
+const CLUSTER_HEAT_SPAN = 0.55
+const PERCENT = 100
+
+function cloudGeometry(cloud: ClusterCloudPoints): BufferGeometry {
+  const geometry = new BufferGeometry()
+  geometry.setAttribute(
+    'position',
+    new BufferAttribute(cloud.positions.subarray(0, cloud.count * 3), 3)
+  )
+  geometry.setAttribute(
+    'aColor',
+    new BufferAttribute(cloud.colors.subarray(0, cloud.count * 3), 3)
+  )
+  geometry.setAttribute(
+    'aSize',
+    new BufferAttribute(cloud.sizes.subarray(0, cloud.count), 1)
+  )
+  geometry.setAttribute(
+    'aSeed',
+    new BufferAttribute(cloud.seeds.subarray(0, cloud.count), 1)
+  )
+  return geometry
 }
 
-function ClusterCloud({
+function cloudHaze(cloud: ClusterCloudPoints): BufferGeometry {
+  const count = Math.floor(cloud.count / CLUSTER_HAZE_STEP)
+  const positions = new Float32Array(count * 3)
+  const colors = new Float32Array(count * 3)
+  const sizes = new Float32Array(count)
+  const seeds = new Float32Array(count)
+  for (let index = 0; index < count; index += 1) {
+    const from = index * CLUSTER_HAZE_STEP
+    positions.set(cloud.positions.subarray(from * 3, from * 3 + 3), index * 3)
+    colors.set(
+      Array.from(
+        cloud.colors.subarray(from * 3, from * 3 + 3),
+        (value) => value * CLUSTER_HAZE_LIGHT
+      ),
+      index * 3
+    )
+    sizes[index] = (cloud.sizes[from] ?? 1) * CLUSTER_HAZE_SIZE
+    seeds[index] = cloud.seeds[from] ?? 0
+  }
+  const geometry = new BufferGeometry()
+  geometry.setAttribute('position', new BufferAttribute(positions, 3))
+  geometry.setAttribute('aColor', new BufferAttribute(colors, 3))
+  geometry.setAttribute('aSize', new BufferAttribute(sizes, 1))
+  geometry.setAttribute('aSeed', new BufferAttribute(seeds, 1))
+  return geometry
+}
+
+const ClusterCloud = memo(function ClusterCloud({
   ladder,
   layout,
   id,
@@ -188,82 +228,216 @@ function ClusterCloud({
   selected: boolean
   onPick: (pick: ScalePick) => void
 }) {
-  const placed = layout.clusters.get(id)
-  const cluster = ladder.data.clusters.find((row) => row.id === id)
+  const shaped = useMemo(() => {
+    const placed = layout.clusters.get(id)
+    const cluster = ladder.data.clusters.find((row) => row.id === id)
+    if (!placed || !cluster) return null
+    const members = ladder.galaxiesIn(id).flatMap((galaxy) => {
+      const spot = layout.galaxies.get(galaxy.id)
+      return spot
+        ? [
+            {
+              x: spot.position[0] - placed.position[0],
+              y: spot.position[1] - placed.position[1],
+              z: spot.position[2] - placed.position[2],
+              size: spot.size,
+            },
+          ]
+        : []
+    })
+    const cloud = clusterCloud(
+      cluster.cluster_kind,
+      members,
+      placed.size,
+      id,
+      scenePalette,
+      Math.min(
+        Math.max(
+          members.length * CLUSTER_POINTS_PER_GALAXY,
+          CLUSTER_POINTS_MIN
+        ),
+        CLUSTER_POINTS_MAX
+      )
+    )
+    return {
+      placed,
+      heat: cluster.medium_heat,
+      look: CLUSTER_LOOK[cluster.cluster_kind],
+      cloud,
+      skeleton: clusterSkeleton(cluster.cluster_kind, members, cloud),
+      rim: clusterOutline(cloud, cluster.cluster_kind),
+    }
+  }, [ladder, layout, id])
+  const geometry = useMemo(
+    () => (shaped ? cloudGeometry(shaped.cloud) : null),
+    [shaped]
+  )
+  const haze = useMemo(
+    () => (shaped ? cloudHaze(shaped.cloud) : null),
+    [shaped]
+  )
+  const size = shaped?.placed.size ?? 1
+  const dpr = useThree((state) => state.viewport.dpr)
   const material = useMemo(
     () =>
       shaderMaterial({
-        vertex: QUAD_VERTEX,
-        fragment: CLOUD_FRAGMENT,
+        vertex: DUST_VERTEX,
+        fragment: DUST_FRAGMENT,
         uniforms: {
-          uColor: uniform(
-            scenePalette(selected ? '--cosmos-copper' : '--galaxy-halo')
+          uTime: uniform(0),
+          uRatio: uniform(
+            CLUSTER_POINT_RATIO * dpr * (selected ? CLUSTER_SELECTED_GLOW : 1)
           ),
-          uIntensity: uniform(selected ? 0.32 : 0.16),
+          uAttenuate: uniform(size * CLUSTER_REACH),
+        },
+        blend: 'additive',
+      }),
+    [selected, size, dpr]
+  )
+  const veil = shaped?.cloud.veil ?? 'cloud'
+  const body = shaped?.look.body ?? '--galaxy-halo'
+  const intensity =
+    (shaped?.look.haze ?? 0.12) *
+    CLUSTER_VEIL_BOOST *
+    (selected ? CLUSTER_SELECTED_GLOW : 1)
+  const veilMaterial = useMemo(
+    () =>
+      shaderMaterial({
+        vertex: QUAD_VERTEX,
+        fragment: veil === 'shell' ? SHELL_FRAGMENT : CLOUD_FRAGMENT,
+        uniforms: {
+          uColor: uniform(scenePalette(body)),
+          uIntensity: uniform(intensity),
           uSeed: uniform(unitHash(`cluster-${id}`) * 40),
           uTime: uniform(0),
         },
         blend: 'additive',
         side: DoubleSide,
       }),
-    [selected, id]
+    [veil, body, intensity, id]
   )
+  const heat =
+    ((shaped?.heat ?? 0) / PERCENT) *
+    CLUSTER_HEAT_GLOW *
+    (selected ? CLUSTER_SELECTED_GLOW : 1)
+  const heatMaterial = useMemo(
+    () =>
+      shaderMaterial({
+        vertex: QUAD_VERTEX,
+        fragment: CLOUD_FRAGMENT,
+        uniforms: {
+          uColor: uniform(scenePalette('--structure-emission')),
+          uIntensity: uniform(heat),
+          uSeed: uniform(unitHash(`cluster-heat-${id}`) * 40),
+          uTime: uniform(0),
+        },
+        blend: 'additive',
+        side: DoubleSide,
+      }),
+    [heat, id]
+  )
+  useEffect(() => () => geometry?.dispose(), [geometry])
+  useEffect(() => () => haze?.dispose(), [haze])
   useEffect(() => () => material.dispose(), [material])
+  useEffect(() => () => veilMaterial.dispose(), [veilMaterial])
+  useEffect(() => () => heatMaterial.dispose(), [heatMaterial])
   useTicking(material)
-  if (!placed || !cluster) return null
+  useTicking(veilMaterial)
+  useTicking(heatMaterial)
+  if (!shaped || !geometry || !haze) return null
+  const { placed, cloud, look, skeleton, rim } = shaped
+  const [width, depth] = veilSpan(cloud, cloud.veil)
   return (
     <group position={placed.position}>
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        material={material}
-        onClick={(event) => {
-          event.stopPropagation()
-          onPick({ kind: 'cluster', id })
-        }}
+      <group
+        position={[
+          cloud.centre[0],
+          cloud.centre[1] - CLUSTER_VEIL_DROP,
+          cloud.centre[2],
+        ]}
+        rotation={[0, -cloud.angle, 0]}
       >
-        <planeGeometry args={[placed.size * 2.2, placed.size * 2.2]} />
+        <mesh rotation={[-Math.PI / 2, 0, 0]} material={veilMaterial}>
+          <planeGeometry args={[width, depth]} />
+        </mesh>
+        {heat > 0 && (
+          <mesh rotation={[-Math.PI / 2, 0, 0]} material={heatMaterial}>
+            <planeGeometry
+              args={[width * CLUSTER_HEAT_SPAN, depth * CLUSTER_HEAT_SPAN]}
+            />
+          </mesh>
+        )}
+      </group>
+      <points geometry={haze} material={material} />
+      <points geometry={geometry} material={material} />
+      <mesh
+        visible={false}
+        onClick={onTap(() => onPick({ kind: 'cluster', id }))}
+      >
+        <sphereGeometry args={[placed.size, 16, 10]} />
       </mesh>
-      <Line
-        points={Array.from({ length: 97 }, (_, index) => {
-          const angle = (index / 96) * Math.PI * 2
-          return [
-            Math.cos(angle) * placed.size,
-            0,
-            Math.sin(angle) * placed.size,
-          ] as Vec3
-        })}
-        color={tokenHex(selected ? '--cosmos-copper' : '--galaxy-halo')}
-        lineWidth={selected ? 2 : 1.2}
-        dashed
-        dashSize={placed.size * 0.06}
-        gapSize={placed.size * 0.04}
-        transparent
-        opacity={selected ? 0.95 : 0.6}
-      />
+      {skeleton.length >= 2 && (
+        <>
+          <Line
+            points={skeleton}
+            segments
+            color={tokenHex(look.body)}
+            lineWidth={SKELETON_GLOW_WIDTH}
+            transparent
+            opacity={SKELETON_GLOW_OPACITY}
+            depthWrite={false}
+          />
+          <Line
+            points={skeleton}
+            segments
+            color={tokenHex(look.glow)}
+            lineWidth={SKELETON_CORE_WIDTH}
+            transparent
+            opacity={SKELETON_CORE_OPACITY}
+            depthWrite={false}
+          />
+        </>
+      )}
+      {!selected && (
+        <Line
+          points={rim}
+          color={tokenHex(look.body)}
+          lineWidth={RIM_WIDTH}
+          transparent
+          opacity={RIM_OPACITY}
+          depthWrite={false}
+        />
+      )}
+      {selected && (
+        <Line
+          points={rim}
+          color={tokenHex('--cosmos-copper')}
+          lineWidth={1.6}
+          dashed
+          dashSize={placed.size * 0.05}
+          gapSize={placed.size * 0.035}
+          transparent
+          opacity={0.9}
+        />
+      )}
     </group>
   )
-}
+})
 
-function MiniGalaxy({
+const MiniGalaxy = memo(function MiniGalaxy({
   ladder,
   catalog,
   layout,
   id,
-  held,
-  cosmos,
   selected,
   onPick,
-  onOpen,
 }: {
   ladder: Ladder
   catalog: CosmographyCatalog
   layout: UniverseLayout
   id: number
-  held: Held | undefined
-  cosmos: CosmosData | undefined
   selected: boolean
   onPick: (pick: ScalePick) => void
-  onOpen: (kind: 'star' | 'world', id: number) => void
 }) {
   const placed = layout.galaxies.get(id)
   const galaxy = ladder.data.galaxies.find((row) => row.id === id)
@@ -284,39 +458,10 @@ function MiniGalaxy({
           shape={catalog.shape}
           scale={selected ? 1.4 : 1}
         />
-        {held?.stars.map((star) => (
-          <StarMark
-            key={star.id}
-            star={star}
-            size={bodySize(galaxy)}
-            selected={false}
-            onPick={(pick) => pick && onOpen('star', pick.id)}
-          />
-        ))}
-        {cosmos && held && held.worlds.length > 0 && (
-          <EmbeddedWorlds3D
-            cosmos={cosmos}
-            worlds={held.worlds}
-            radius={() => worldRadius(bodySize(galaxy), false)}
-            selectedId={null}
-          />
-        )}
-        {held?.worlds.map((world) => (
-          <WorldMarker
-            key={world.id}
-            world={world}
-            size={bodySize(galaxy)}
-            selected={false}
-            onPick={(pick) => pick && onOpen('world', pick.id)}
-          />
-        ))}
       </group>
       <mesh
         visible={false}
-        onClick={(event) => {
-          event.stopPropagation()
-          onPick({ kind: 'galaxy', id })
-        }}
+        onClick={onTap(() => onPick({ kind: 'galaxy', id }))}
       >
         <sphereGeometry args={[placed.size, 16, 10]} />
       </mesh>
@@ -336,44 +481,7 @@ function MiniGalaxy({
       )}
     </group>
   )
-}
-
-function Links({ layout }: { layout: UniverseLayout }) {
-  return (
-    <group>
-      {layout.links.map((link) => {
-        const from = layout.galaxies.get(link.from)
-        const to = layout.galaxies.get(link.to)
-        if (!from || !to) return null
-        const middle: Vec3 = [
-          (from.position[0] + to.position[0]) / 2,
-          Math.max(from.position[1], to.position[1]) +
-            Math.hypot(
-              from.position[0] - to.position[0],
-              from.position[2] - to.position[2]
-            ) *
-              0.25 +
-            60,
-          (from.position[2] + to.position[2]) / 2,
-        ]
-        return (
-          <QuadraticBezierLine
-            key={link.key}
-            start={from.position}
-            end={to.position}
-            mid={middle}
-            color={tokenHex(METHOD_LOOK[link.method].token)}
-            lineWidth={1 + Math.min(link.count, 4) * 0.6}
-            dashed
-            dashScale={0.04}
-            transparent
-            opacity={0.85}
-          />
-        )
-      })}
-    </group>
-  )
-}
+})
 
 function Rifts({ ladder, layout }: { ladder: Ladder; layout: UniverseLayout }) {
   const galaxyOfWorld = new Map(
@@ -474,23 +582,50 @@ function Focus({ target }: { target: Vec3 | null }) {
   const controls = useThree(
     (state) => state.controls
   ) as OrbitControlsImpl | null
+  const invalidate = useThree((state) => state.invalidate)
   const goal = useRef(new Vector3())
   const moving = useRef(false)
   useEffect(() => {
     if (!target) return
     goal.current.set(...target)
     moving.current = true
-  }, [target])
+    invalidate()
+  }, [target, invalidate])
   useFrame(() => {
     if (!controls || !moving.current) return
     controls.target.lerp(goal.current, FOCUS_EASE)
     controls.update()
     if (controls.target.distanceTo(goal.current) < 1) moving.current = false
+    else invalidate()
   })
   return null
 }
 
+const IDLE_FRAME_MS = 1000 / 30
+
+function IdleTicker() {
+  const invalidate = useThree((state) => state.invalidate)
+  useEffect(() => {
+    const timer = window.setInterval(() => invalidate(), IDLE_FRAME_MS)
+    return () => window.clearInterval(timer)
+  }, [invalidate])
+  return null
+}
+
 const WORLDS_NAMED = 3
+const GALAXIES_PER_FRAME = 12
+
+function useProgressive(total: number, step: number): number {
+  const [shown, setShown] = useState(step)
+  useEffect(() => {
+    if (shown >= total) return
+    const frame = requestAnimationFrame(() =>
+      setShown((value) => Math.min(value + step, total))
+    )
+    return () => cancelAnimationFrame(frame)
+  }, [shown, total, step])
+  return Math.min(shown, total)
+}
 
 function galaxyDetail(
   ladder: Ladder,
@@ -504,9 +639,7 @@ function galaxyDetail(
     .filter((row) => row.galaxy_id === galaxy.id)
     .map((row) => ladder.data.world_names[String(row.world_id)])
     .filter((name): name is string => name !== undefined)
-  const stars = ladder.data.stars.filter(
-    (row) => row.galaxy_id === galaxy.id
-  ).length
+  const stars = ladder.starsIn(galaxy.id).length
   const held =
     worlds.length === 0
       ? 'no world'
@@ -520,7 +653,6 @@ function universeLabels(
   ladder: Ladder,
   catalog: CosmographyCatalog,
   layout: UniverseLayout,
-  held: Map<number, Held>,
   selected: ScalePick
 ): SceneLabel[] {
   const chosen = (kind: string, id: number) =>
@@ -567,31 +699,11 @@ function universeLabels(
         placed.position[2],
       ],
       text: galaxy.name,
-      detail: galaxyDetail(ladder, catalog, galaxy),
+      detail: chosen('galaxy', galaxy.id)
+        ? galaxyDetail(ladder, catalog, galaxy)
+        : undefined,
       strong: chosen('galaxy', galaxy.id),
     })
-    const inside = held.get(galaxy.id)
-    if (!inside) continue
-    const count = inside.stars.length + inside.worlds.length
-    if (count > NAMED_INSIDE && !chosen('galaxy', galaxy.id)) continue
-    const lift = bodySize(galaxy) * (placed.size / Math.max(galaxy.radius, 1))
-    for (const star of inside.stars)
-      labels.push({
-        key: `star-${star.id}`,
-        position: inSpace(placed, galaxy, star.x, star.y).map((value, axis) =>
-          axis === 1 ? value + lift : value
-        ) as Vec3,
-        text: star.name,
-      })
-    for (const world of inside.worlds)
-      labels.push({
-        key: `world-${world.id}`,
-        position: inSpace(placed, galaxy, world.x, world.y).map(
-          (value, axis) => (axis === 1 ? value - lift * 2.4 : value)
-        ) as Vec3,
-        text: world.name,
-        quiet: true,
-      })
   }
   for (const being of ladder.data.beings.filter(
     (row) => row.phase !== 'banished'
@@ -627,14 +739,15 @@ export default function UniverseScene3D({
   ladder,
   catalog,
   routes,
-  cosmos,
   selected,
   onPick,
-  onOpen,
   fallback,
 }: UniverseProps) {
   const layout = useMemo(() => universeLayout(ladder, routes), [ladder, routes])
-  const held = useMemo(() => heldIn(ladder, cosmos), [ladder, cosmos])
+  const revealed = useProgressive(
+    ladder.data.galaxies.length,
+    GALAXIES_PER_FRAME
+  )
   const target = useMemo<Vec3 | null>(() => {
     if (!selected) return null
     if (selected.kind === 'galaxy')
@@ -646,12 +759,13 @@ export default function UniverseScene3D({
   }, [selected, layout])
   const distance = layout.extent * 1.6
   const elements = useLabelElements()
-  const labels = universeLabels(ladder, catalog, layout, held, selected)
+  const labels = universeLabels(ladder, catalog, layout, selected)
   return (
     <Boundary fallback={fallback}>
       <div className='relative h-full w-full'>
         <Canvas
           aria-label='The heavens: dimensions, clusters and galaxies'
+          frameloop='demand'
           dpr={[1, 2]}
           gl={{
             antialias: false,
@@ -661,7 +775,7 @@ export default function UniverseScene3D({
           camera={{
             fov: FOV,
             near: 1,
-            far: 60000,
+            far: Math.max(60000, layout.extent * 24),
             position: [distance * 0.55, distance * 0.55, distance * 0.75],
           }}
           onCreated={({ gl }) => {
@@ -694,21 +808,23 @@ export default function UniverseScene3D({
               onPick={onPick}
             />
           ))}
-          {ladder.data.galaxies.map((row) => (
-            <MiniGalaxy
-              key={row.id}
-              ladder={ladder}
-              catalog={catalog}
-              layout={layout}
-              id={row.id}
-              held={held.get(row.id)}
-              cosmos={cosmos}
-              selected={selected?.kind === 'galaxy' && selected.id === row.id}
-              onPick={onPick}
-              onOpen={onOpen}
-            />
-          ))}
-          <Links layout={layout} />
+          {ladder.data.galaxies
+            .filter(
+              (row, index) =>
+                index < revealed ||
+                (selected?.kind === 'galaxy' && selected.id === row.id)
+            )
+            .map((row) => (
+              <MiniGalaxy
+                key={row.id}
+                ladder={ladder}
+                catalog={catalog}
+                layout={layout}
+                id={row.id}
+                selected={selected?.kind === 'galaxy' && selected.id === row.id}
+                onPick={onPick}
+              />
+            ))}
           <Rifts ladder={ladder} layout={layout} />
           <Beings ladder={ladder} layout={layout} />
           <OrbitControls
@@ -719,6 +835,7 @@ export default function UniverseScene3D({
           />
           <Focus target={target} />
           <ClockDriver />
+          <IdleTicker />
           <LabelProjector labels={labels} elements={elements} />
           <PostEffects3D samples={4} />
         </Canvas>

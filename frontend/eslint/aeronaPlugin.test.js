@@ -83,6 +83,20 @@ tester.run('disabled-needs-reason', rules['disabled-needs-reason'], {
   ],
 })
 
+tester.run('scene-tap', rules['scene-tap'], {
+  valid: [
+    '<mesh onClick={onTap(() => pick(1))} />',
+    '<points onClick={picking ? onTap(choose) : undefined} />',
+    '<Button onClick={() => go()}>Go</Button>',
+    '<div onClick={() => go()} />',
+  ],
+  invalid: [
+    { code: '<mesh onClick={() => pick(1)} />', errors: [{ messageId: 'dragClick' }] },
+    { code: '<points onClick={picking ? choose : undefined} />', errors: [{ messageId: 'dragClick' }] },
+    { code: '<group onDoubleClick={open} />', errors: [{ messageId: 'dragClick' }] },
+  ],
+})
+
 const typedTester = new RuleTester({
   languageOptions: { ecmaVersion: 'latest', sourceType: 'module', parser: tseslint.parser },
 })

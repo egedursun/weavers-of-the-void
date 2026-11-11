@@ -1,8 +1,9 @@
-from tests.api.conftest import ApiWorld, seeded
+from tests.api.conftest import ApiWorld, fund_creator, seeded
 
 
 async def test_the_heavens_are_read_shaped_and_held(api: ApiWorld) -> None:
     world = seeded(api).core.world
+    await fund_creator(api)
     catalog = (await api.http.get("/api/cosmography/catalog")).json()
     assert {"galaxy_types", "dimension_kinds", "being_kinds", "phenomenon_kinds", "method_reach"} <= set(catalog)
     made = await api.http.post("/api/actions/dimension:create", json={"name": "Astral Reach", "kind": "astral"})
@@ -21,3 +22,17 @@ async def test_the_heavens_are_read_shaped_and_held(api: ApiWorld) -> None:
     placement = next(row for row in view["placements"] if row["world_id"] == world.id)
     assert placement["pull"]["time"] > 0
     assert (await api.http.post("/api/actions/dimension:edit", json={"dimension_id": 999999, "values": {"veil": 1}})).status_code == 404
+
+
+async def test_a_galaxy_costs_the_creator_its_price(api: ApiWorld) -> None:
+    creator = seeded(api).core.creator
+    async with api.services.database.write() as session:
+        creator.essence = 0
+        await session.merge(creator)
+    refused = await api.http.post("/api/actions/galaxy:create", json={"name": "Unpaid Wheel", "galaxy_type": "spiral"})
+    assert refused.status_code != 200
+    await fund_creator(api)
+    made = await api.http.post("/api/actions/galaxy:create", json={"name": "Paid Wheel", "galaxy_type": "spiral"})
+    assert made.status_code == 200, made.text
+    state = (await api.http.get("/api/state")).json()
+    assert state["creator"]["essence"] == 100000 - api.services.rules.current.cosmic_costs.create_galaxy

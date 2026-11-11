@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { Portrait } from '@/components/domain'
 import { Text } from '@/components/typography'
 import { mediaUrl } from '@/features/images/media'
+import { type CosmosWorld, type StarRecord } from '../api'
 import { type CosmosIndex, isMisty } from '../model/cosmosModel'
 import { STAR_TYPE_LABEL } from '../model/labels'
 import { labelKey } from './labelKeys'
@@ -198,12 +199,16 @@ export function LabelUpdater() {
 
 type LabelOverlayProps = {
   index: CosmosIndex
+  shownWorlds: readonly CosmosWorld[]
+  shownStars: readonly StarRecord[]
   labels: Map<string, HTMLElement>
   selectedWorld: number | undefined
 }
 
 export function LabelOverlay({
   index,
+  shownWorlds,
+  shownStars,
   labels,
   selectedWorld,
 }: LabelOverlayProps) {
@@ -220,7 +225,7 @@ export function LabelOverlay({
       className='pointer-events-none absolute inset-0 overflow-hidden'
       style={{ color: 'var(--cosmos-label)' }}
     >
-      {index.data.stars.map((star) => (
+      {shownStars.map((star) => (
         <div
           key={`star-${star.id}`}
           ref={register(labelKey('star', star.id))}
@@ -247,7 +252,7 @@ export function LabelOverlay({
           </Text>
         </div>
       ))}
-      {index.worlds.map((item) => {
+      {shownWorlds.map((item) => {
         const misty = isMisty(item)
         const sub =
           item.world.discovery === 'unknown'

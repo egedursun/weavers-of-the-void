@@ -42,6 +42,7 @@ export type FrameState = {
   hover: Hover
   selectedWorld: number | undefined
   selectedStar: number | undefined
+  detailStar: number | undefined
   highlightedRoute: number | undefined
 }
 
@@ -60,6 +61,7 @@ export function createFrameState(): FrameState {
     voyagePosition: new Map(),
     voyageScreen: new Map(),
     hover: null,
+    detailStar: undefined,
     selectedWorld: undefined,
     selectedStar: undefined,
     highlightedRoute: undefined,

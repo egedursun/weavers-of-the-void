@@ -3,6 +3,7 @@ import { ExternalLink } from 'lucide-react'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Paged } from '@/components/domain'
 import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
 import { Muted, Text } from '@/components/typography'
 import {
@@ -18,6 +19,59 @@ import { ClusterThumb, DimensionSigil } from './visual/ScaleThumbs'
 import { sigilOf } from './visual/sigil'
 
 type Selection = { kind: ScaleKind; id: number } | null
+
+type Member =
+  | { kind: 'cluster'; row: ClusterRecord }
+  | { kind: 'galaxy'; row: GalaxyRecord }
+
+function Members({
+  clusters,
+  galaxies,
+  ladder,
+  catalog,
+  selection,
+  onSelect,
+}: {
+  clusters: ClusterRecord[]
+  galaxies: GalaxyRecord[]
+  ladder: Ladder
+  catalog: CosmographyCatalog
+  selection: Selection
+  onSelect: (kind: ScaleKind, id: number) => void
+}) {
+  const members: Member[] = [
+    ...clusters.map((row) => ({ kind: 'cluster' as const, row })),
+    ...galaxies.map((row) => ({ kind: 'galaxy' as const, row })),
+  ]
+  if (members.length === 0) return null
+  return (
+    <ul className='flex min-w-0 flex-col gap-1.5 border-l pl-4'>
+      <Paged items={members} as='li' noun={['member', 'members']}>
+        {(member) =>
+          member.kind === 'cluster' ? (
+            <ClusterRow
+              key={`cluster-${member.row.id}`}
+              cluster={member.row}
+              ladder={ladder}
+              catalog={catalog}
+              selection={selection}
+              onSelect={onSelect}
+            />
+          ) : (
+            <GalaxyRow
+              key={`galaxy-${member.row.id}`}
+              galaxy={member.row}
+              ladder={ladder}
+              catalog={catalog}
+              selection={selection}
+              onSelect={onSelect}
+            />
+          )
+        }
+      </Paged>
+    </ul>
+  )
+}
 
 function Row({
   kind,
@@ -77,9 +131,7 @@ function Row({
           <ExternalLink />
         </Button>
       </div>
-      {children && (
-        <div className='flex min-w-0 flex-col border-l pl-4'>{children}</div>
-      )}
+      {children}
     </li>
   )
 }
@@ -97,9 +149,7 @@ function GalaxyRow({
   selection: Selection
   onSelect: (kind: ScaleKind, id: number) => void
 }) {
-  const stars = ladder.data.stars.filter(
-    (row) => row.galaxy_id === galaxy.id
-  ).length
+  const stars = ladder.starsIn(galaxy.id).length
   return (
     <Row
       kind='galaxy'
@@ -157,30 +207,14 @@ function ClusterRow({
       selection={selection}
       onSelect={onSelect}
     >
-      {children.length + galaxies.length > 0 && (
-        <ul className='flex min-w-0 flex-col gap-1.5'>
-          {children.map((child) => (
-            <ClusterRow
-              key={child.id}
-              cluster={child}
-              ladder={ladder}
-              catalog={catalog}
-              selection={selection}
-              onSelect={onSelect}
-            />
-          ))}
-          {galaxies.map((galaxy) => (
-            <GalaxyRow
-              key={galaxy.id}
-              galaxy={galaxy}
-              ladder={ladder}
-              catalog={catalog}
-              selection={selection}
-              onSelect={onSelect}
-            />
-          ))}
-        </ul>
-      )}
+      <Members
+        clusters={children}
+        galaxies={galaxies}
+        ladder={ladder}
+        catalog={catalog}
+        selection={selection}
+        onSelect={onSelect}
+      />
     </Row>
   )
 }
@@ -202,8 +236,6 @@ export function ScaleNavigator({
       className='flex min-w-0 flex-col gap-1.5'
     >
       {ladder.data.dimensions.map((dimension) => {
-        const clusters = ladder.clustersIn(dimension.id)
-        const loose = ladder.looseGalaxies(dimension.id)
         return (
           <Row
             key={dimension.id}
@@ -221,30 +253,14 @@ export function ScaleNavigator({
             selection={selection}
             onSelect={onSelect}
           >
-            {clusters.length + loose.length > 0 && (
-              <ul className='flex min-w-0 flex-col gap-1.5'>
-                {clusters.map((cluster) => (
-                  <ClusterRow
-                    key={cluster.id}
-                    cluster={cluster}
-                    ladder={ladder}
-                    catalog={catalog}
-                    selection={selection}
-                    onSelect={onSelect}
-                  />
-                ))}
-                {loose.map((galaxy) => (
-                  <GalaxyRow
-                    key={galaxy.id}
-                    galaxy={galaxy}
-                    ladder={ladder}
-                    catalog={catalog}
-                    selection={selection}
-                    onSelect={onSelect}
-                  />
-                ))}
-              </ul>
-            )}
+            <Members
+              clusters={ladder.clustersIn(dimension.id)}
+              galaxies={ladder.looseGalaxies(dimension.id)}
+              ladder={ladder}
+              catalog={catalog}
+              selection={selection}
+              onSelect={onSelect}
+            />
           </Row>
         )
       })}

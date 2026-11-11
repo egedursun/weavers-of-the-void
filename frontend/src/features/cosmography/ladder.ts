@@ -14,7 +14,24 @@ export type Ladder = {
   childClusters: (clusterId: number) => ClusterRecord[]
   galaxiesIn: (clusterId: number) => GalaxyRecord[]
   looseGalaxies: (dimensionId: number) => GalaxyRecord[]
+  starsIn: (galaxyId: number) => Cosmography['stars']
+  placementsIn: (galaxyId: number) => Cosmography['placements']
   prime: DimensionRecord | null
+}
+
+function grouped<T, K>(
+  rows: readonly T[],
+  keyOf: (row: T) => K | null
+): Map<K, T[]> {
+  const groups = new Map<K, T[]>()
+  for (const row of rows) {
+    const key = keyOf(row)
+    if (key === null) continue
+    const group = groups.get(key)
+    if (group) group.push(row)
+    else groups.set(key, [row])
+  }
+  return groups
 }
 
 export function ladderOf(data: Cosmography): Ladder {
@@ -52,27 +69,29 @@ export function ladderOf(data: Cosmography): Ladder {
     }
     return galaxy.dimension_id ?? prime?.id ?? null
   }
+  const topClusters = grouped(data.clusters, (row) =>
+    row.parent_cluster_id === null
+      ? (row.dimension_id ?? prime?.id ?? null)
+      : null
+  )
+  const children = grouped(data.clusters, (row) => row.parent_cluster_id)
+  const members = grouped(data.galaxies, (row) => row.cluster_id)
+  const loose = grouped(data.galaxies, (row) =>
+    row.cluster_id === null ? (row.dimension_id ?? prime?.id ?? null) : null
+  )
+  const stars = grouped(data.stars, (row) => row.galaxy_id)
+  const placements = grouped(data.placements, (row) => row.galaxy_id)
   return {
     data,
     names,
     dimensionOfCluster,
     dimensionOfGalaxy,
-    clustersIn: (dimensionId) =>
-      data.clusters.filter(
-        (row) =>
-          row.parent_cluster_id === null &&
-          (row.dimension_id ?? prime?.id ?? null) === dimensionId
-      ),
-    childClusters: (clusterId) =>
-      data.clusters.filter((row) => row.parent_cluster_id === clusterId),
-    galaxiesIn: (clusterId) =>
-      data.galaxies.filter((row) => row.cluster_id === clusterId),
-    looseGalaxies: (dimensionId) =>
-      data.galaxies.filter(
-        (row) =>
-          row.cluster_id === null &&
-          (row.dimension_id ?? prime?.id ?? null) === dimensionId
-      ),
+    clustersIn: (dimensionId) => topClusters.get(dimensionId) ?? [],
+    childClusters: (clusterId) => children.get(clusterId) ?? [],
+    galaxiesIn: (clusterId) => members.get(clusterId) ?? [],
+    looseGalaxies: (dimensionId) => loose.get(dimensionId) ?? [],
+    starsIn: (galaxyId) => stars.get(galaxyId) ?? [],
+    placementsIn: (galaxyId) => placements.get(galaxyId) ?? [],
     prime,
   }
 }

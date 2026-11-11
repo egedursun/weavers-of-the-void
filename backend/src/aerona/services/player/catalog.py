@@ -968,7 +968,13 @@ PHYSICS_ACTIONS = (
 )
 
 COSMOGRAPHY_ACTIONS = (
-    _sync(Meta("dimension:create", "Bring a dimension into being", G.COSMOS), cosmography.create_dimension, cosmography.DimensionDraft, free, ("S10.13",)),
+    _sync(
+        Meta("dimension:create", "Bring a dimension into being", G.COSMOS),
+        cosmography.create_dimension,
+        cosmography.DimensionDraft,
+        lambda rules: essence(rules.cosmic_costs.create_dimension),
+        ("S10.13",),
+    ),
     _sync(Meta("dimension:edit", "Reshape, hold or rule a dimension", G.COSMOS), cosmography.edit_dimension, cosmography.DimensionEdit, free, ("S10.13",)),
     _sync(Meta("dimension:delete", "Unmake a dimension", G.COSMOS), cosmography.delete_dimension, cosmography.DimensionTarget, free, ("S10.13",)),
     _sync(
@@ -992,10 +998,22 @@ COSMOGRAPHY_ACTIONS = (
         free,
         ("S10.16",),
     ),
-    _sync(Meta("cluster:create", "Gather galaxies into a cluster", G.COSMOS), cosmography.create_cluster, cosmography.ClusterDraft, free, ("S10.11",)),
+    _sync(
+        Meta("cluster:create", "Gather galaxies into a cluster", G.COSMOS),
+        cosmography.create_cluster,
+        cosmography.ClusterDraft,
+        lambda rules: essence(rules.cosmic_costs.create_cluster),
+        ("S10.11",),
+    ),
     _sync(Meta("cluster:edit", "Reshape or hold a cluster", G.COSMOS), cosmography.edit_cluster, cosmography.ClusterEdit, free, ("S10.11",)),
     _sync(Meta("cluster:delete", "Scatter a cluster", G.COSMOS), cosmography.delete_cluster, cosmography.ClusterTarget, free, ("S10.11",)),
-    _sync(Meta("galaxy:create", "Set a new galaxy among the others", G.COSMOS), cosmography.create_galaxy, cosmography.GalaxyDraft, free, ("S10.10",)),
+    _sync(
+        Meta("galaxy:create", "Set a new galaxy among the others", G.COSMOS),
+        cosmography.create_galaxy,
+        cosmography.GalaxyDraft,
+        lambda rules: essence(rules.cosmic_costs.create_galaxy),
+        ("S10.10",),
+    ),
     _sync(Meta("galaxy:edit", "Reshape, hold or take patronage of a galaxy", G.COSMOS), cosmography.edit_galaxy, cosmography.GalaxyEdit, free, ("S10.10",)),
     _sync(Meta("galaxy:delete", "Unmake a galaxy", G.COSMOS), cosmography.delete_galaxy, cosmography.GalaxyTarget, free, ("S10.10",)),
     _sync(

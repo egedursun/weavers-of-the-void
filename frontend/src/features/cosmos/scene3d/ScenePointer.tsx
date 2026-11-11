@@ -1,5 +1,6 @@
 import { type ReactNode, type RefObject, useRef, useState } from 'react'
 import { formatCompact } from '@/lib/format'
+import { TAP_SLOP } from '@/lib/sceneTap'
 import { Text } from '@/components/typography'
 import { type CosmosIndex, isMisty, routeStateText } from '../model/cosmosModel'
 import {
@@ -13,7 +14,6 @@ import { pick, sameHover } from './picking'
 import { type FrameState, type Hover } from './sceneContext'
 
 const CLICK_MS = 600
-const CLICK_SLOP = 4
 const TIP_OFFSET = 14
 const TIP_EDGE = 280
 
@@ -229,7 +229,7 @@ export function ScenePointer({
         const point = locate(event)
         if (
           performance.now() - start.time > CLICK_MS ||
-          Math.hypot(point.x - start.x, point.y - start.y) > CLICK_SLOP
+          Math.hypot(point.x - start.x, point.y - start.y) > TAP_SLOP
         )
           return
         activate(pick(frameRef.current, point.x, point.y), false)

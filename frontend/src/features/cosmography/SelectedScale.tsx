@@ -89,12 +89,8 @@ export function SelectedScale({ ladder, catalog, kind, id, onClear }: Props) {
   if (kind === 'galaxy') {
     const galaxy = ladder.data.galaxies.find((row) => row.id === id)
     if (!galaxy) return null
-    const stars = ladder.data.stars.filter(
-      (row) => row.galaxy_id === galaxy.id
-    ).length
-    const worlds = ladder.data.placements.filter(
-      (row) => row.galaxy_id === galaxy.id
-    ).length
+    const stars = ladder.starsIn(galaxy.id).length
+    const worlds = ladder.placementsIn(galaxy.id).length
     const nucleus = NUCLEI[galaxy.nucleus]
     return (
       <Frame

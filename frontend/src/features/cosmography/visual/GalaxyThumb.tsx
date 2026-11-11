@@ -40,7 +40,13 @@ export function GalaxyThumb({
   useEffect(() => {
     const element = canvas.current
     if (!element) return
+    let visible = false
+    let painted = ''
     const render = () => {
+      if (!visible) return
+      const size = `${element.clientWidth}x${element.clientHeight}`
+      if (size === painted) return
+      painted = size
       const now = latest.current
       paintGalaxy(
         element,
@@ -51,10 +57,17 @@ export function GalaxyThumb({
         now.points
       )
     }
-    render()
-    const observer = new ResizeObserver(render)
-    observer.observe(element)
-    return () => observer.disconnect()
+    const sizes = new ResizeObserver(render)
+    const sight = new IntersectionObserver((entries) => {
+      visible = entries.some((entry) => entry.isIntersecting)
+      render()
+    })
+    sizes.observe(element)
+    sight.observe(element)
+    return () => {
+      sizes.disconnect()
+      sight.disconnect()
+    }
   }, [signature, latest])
   return (
     <canvas

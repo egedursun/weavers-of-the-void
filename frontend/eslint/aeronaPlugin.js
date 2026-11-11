@@ -239,6 +239,52 @@ const typedRequestBody = {
   },
 }
 
+const SCENE_ELEMENTS = new Set([
+  'mesh',
+  'points',
+  'group',
+  'sprite',
+  'instancedMesh',
+  'line',
+  'lineSegments',
+  'lineLoop',
+  'primitive',
+  'Billboard',
+  'Line',
+  'Points',
+  'Instances',
+  'Instance',
+])
+
+const SCENE_CLICKS = new Set(['onClick', 'onDoubleClick', 'onContextMenu'])
+
+const sceneTap = {
+  meta: {
+    type: 'problem',
+    messages: {
+      dragClick:
+        'A click on a scene object also fires at the end of a drag; wrap the handler in onTap from @/lib/sceneTap.',
+    },
+    schema: [],
+  },
+  create(context) {
+    return {
+      JSXAttribute(node) {
+        if (!SCENE_CLICKS.has(node.name.name)) return
+        if (!SCENE_ELEMENTS.has(jsxName(node.parent.name))) return
+        const value = node.value
+        if (value?.type !== 'JSXExpressionContainer') return
+        const tapped = (expression) =>
+          (expression.type === 'CallExpression' && calleeName(expression.callee) === 'onTap') ||
+          (expression.type === 'Identifier' && expression.name === 'undefined') ||
+          (expression.type === 'ConditionalExpression' && tapped(expression.consequent) && tapped(expression.alternate))
+        if (tapped(value.expression)) return
+        context.report({ node, messageId: 'dragClick' })
+      },
+    }
+  },
+}
+
 export const aeronaPlugin = {
   meta: { name: 'aerona' },
   rules: {
@@ -248,6 +294,7 @@ export const aeronaPlugin = {
     'no-raw-elements': noRawElements,
     'disabled-needs-reason': disabledNeedsReason,
     'typed-request-body': typedRequestBody,
+    'scene-tap': sceneTap,
   },
 }
 
@@ -258,6 +305,7 @@ export const FEATURE_RULES = {
   'aerona/no-raw-elements': 'error',
   'aerona/disabled-needs-reason': 'error',
   'aerona/typed-request-body': 'error',
+  'aerona/scene-tap': 'error',
 }
 
 export const GEOMETRY_FILES = [

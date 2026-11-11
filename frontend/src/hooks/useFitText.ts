@@ -13,8 +13,10 @@ export function useFitText<E extends HTMLElement>(content: unknown) {
         if (element.scrollWidth <= element.clientWidth) return
       }
     }
-    fit()
-    if (typeof ResizeObserver === 'undefined') return
+    if (typeof ResizeObserver === 'undefined') {
+      fit()
+      return
+    }
     const observer = new ResizeObserver(fit)
     observer.observe(element.parentElement ?? element)
     return () => observer.disconnect()

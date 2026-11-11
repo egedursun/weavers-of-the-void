@@ -9,17 +9,14 @@ import {
   NeutralToneMapping,
 } from 'three'
 import { unitHash } from '@/lib/hash'
-import { type CosmosData } from '@/features/cosmos/api'
-import { STAR_LOOK } from '@/features/cosmos/model/looks'
-import { EmbeddedWorlds3D } from '@/features/cosmos/scene3d/EmbeddedWorlds3D'
+import { onTap } from '@/lib/sceneTap'
 import { PostEffects3D } from '@/features/cosmos/scene3d/PostEffects3D'
 import { shaderMaterial, uniform } from '@/features/cosmos/scene3d/materials'
 import {
   DUST_FRAGMENT,
   DUST_VERTEX,
 } from '@/features/cosmos/scene3d/shaders/sky'
-import { type StarRecord, type StructureRecord } from '../api'
-import { type WorldMark, worldRadius } from '../galaxyWorlds'
+import { type StructureRecord } from '../api'
 import {
   type LabelElements,
   LabelLayer,
@@ -62,9 +59,6 @@ export type GalaxySceneProps = {
   galaxy: FormInput & { name: string }
   shape: GalaxyShape
   structures: readonly StructureRecord[]
-  stars: readonly StarRecord[]
-  worlds?: readonly WorldMark[]
-  cosmos?: CosmosData
   selected?: Pick
   placing?: boolean
   portrait?: boolean
@@ -142,6 +136,21 @@ function hazeOf(points: GalaxyPoints, light: number): BufferGeometry {
   return geometry
 }
 
+const DUST_ATTRIBUTES = ['position', 'aColor', 'aSize', 'aSeed'] as const
+
+function joined(first: BufferGeometry, second: BufferGeometry): BufferGeometry {
+  const geometry = new BufferGeometry()
+  for (const name of DUST_ATTRIBUTES) {
+    const head = first.getAttribute(name) as BufferAttribute
+    const tail = second.getAttribute(name) as BufferAttribute
+    const data = new Float32Array(head.array.length + tail.array.length)
+    data.set(head.array, 0)
+    data.set(tail.array, head.array.length)
+    geometry.setAttribute(name, new BufferAttribute(data, head.itemSize))
+  }
+  return geometry
+}
+
 function darkGeometryOf(points: GalaxyPoints): BufferGeometry {
   const geometry = new BufferGeometry()
   geometry.setAttribute(
@@ -171,8 +180,14 @@ export function GalaxyParticles({
     () => galaxyPoints(galaxy, shape, count, scenePalette),
     [galaxy, shape, count]
   )
-  const geometry = useMemo(() => geometryOf(points, light), [points, light])
-  const haze = useMemo(() => hazeOf(points, light), [points, light])
+  const dust = useMemo(() => {
+    const haze = hazeOf(points, light)
+    const main = geometryOf(points, light)
+    const combined = joined(haze, main)
+    haze.dispose()
+    main.dispose()
+    return combined
+  }, [points, light])
   const dark = useMemo(() => darkGeometryOf(points), [points])
   const material = useMemo(
     () =>
@@ -203,16 +218,14 @@ export function GalaxyParticles({
       }),
     [attenuate]
   )
-  useEffect(() => () => geometry.dispose(), [geometry])
-  useEffect(() => () => haze.dispose(), [haze])
+  useEffect(() => () => dust.dispose(), [dust])
   useEffect(() => () => dark.dispose(), [dark])
   useEffect(() => () => material.dispose(), [material])
   useEffect(() => () => darkMaterial.dispose(), [darkMaterial])
   useTicking(material)
   return (
     <group>
-      <points geometry={haze} material={material} />
-      <points geometry={geometry} material={material} />
+      <points geometry={dust} material={material} />
       {points.dark.count > 0 && (
         <points geometry={dark} material={darkMaterial} />
       )}
@@ -382,121 +395,10 @@ function StructureMark({
       )}
       <mesh
         visible={false}
-        onClick={(event) => {
-          event.stopPropagation()
-          onPick?.({ kind: 'structure', id: structure.id })
-        }}
+        onClick={onTap(() => onPick?.({ kind: 'structure', id: structure.id }))}
       >
         <sphereGeometry args={[Math.max(structure.radius, 18), 12, 8]} />
       </mesh>
-    </group>
-  )
-}
-
-export function WorldMarker({
-  world,
-  size,
-  selected,
-  onPick,
-}: {
-  world: WorldMark
-  size: number
-  selected: boolean
-  onPick?: (pick: Pick) => void
-}) {
-  const radius = worldRadius(size, selected)
-  return (
-    <group position={[world.x, 0, world.y]}>
-      <mesh
-        visible={false}
-        onClick={(event) => {
-          event.stopPropagation()
-          onPick?.({ kind: 'world', id: world.id })
-        }}
-      >
-        <sphereGeometry args={[radius, 16, 12]} />
-      </mesh>
-      {selected && (
-        <Line
-          points={Array.from({ length: RING_SEGMENTS + 1 }, (_, index) => {
-            const angle = (index / RING_SEGMENTS) * Math.PI * 2
-            return [
-              Math.cos(angle) * radius * 2,
-              0,
-              Math.sin(angle) * radius * 2,
-            ] as [number, number, number]
-          })}
-          color={tokenHex('--cosmos-copper')}
-          lineWidth={1.5}
-          transparent
-          opacity={0.9}
-        />
-      )}
-    </group>
-  )
-}
-
-export function StarMark({
-  star,
-  selected,
-  size,
-  onPick,
-}: {
-  star: StarRecord
-  selected: boolean
-  size: number
-  onPick?: (pick: Pick) => void
-}) {
-  const style = STAR_LOOK[star.star_type]
-  const material = useMemo(
-    () =>
-      shaderMaterial({
-        vertex: QUAD_VERTEX,
-        fragment: CORE_FRAGMENT,
-        uniforms: {
-          uColor: uniform(scenePalette(style.lightToken)),
-          uEdge: uniform(scenePalette(style.token)),
-          uStrength: uniform(
-            (0.6 + star.brightness / 120) * (selected ? 1.8 : 1)
-          ),
-          uTime: uniform(unitHash(`star-${star.id}`) * 10),
-        },
-        blend: 'additive',
-      }),
-    [style, star.brightness, star.id, selected]
-  )
-  useEffect(() => () => material.dispose(), [material])
-  useTicking(material)
-  const scale = size * (0.7 + style.size * 0.35) * (selected ? 1.5 : 1)
-  return (
-    <group position={[star.x, 0, star.y]}>
-      <Billboard>
-        <mesh
-          material={material}
-          onClick={(event) => {
-            event.stopPropagation()
-            onPick?.({ kind: 'star', id: star.id })
-          }}
-        >
-          <planeGeometry args={[scale, scale]} />
-        </mesh>
-      </Billboard>
-      {selected && (
-        <Line
-          points={Array.from({ length: RING_SEGMENTS + 1 }, (_, index) => {
-            const angle = (index / RING_SEGMENTS) * Math.PI * 2
-            return [
-              Math.cos(angle) * scale * 0.7,
-              0,
-              Math.sin(angle) * scale * 0.7,
-            ] as [number, number, number]
-          })}
-          color={tokenHex('--cosmos-copper')}
-          lineWidth={1.5}
-          transparent
-          opacity={0.9}
-        />
-      )}
     </group>
   )
 }
@@ -553,10 +455,9 @@ function Placer({
         rotation={[-Math.PI / 2, 0, 0]}
         onPointerMove={(event) => setCursor([event.point.x, event.point.z])}
         onPointerLeave={() => setCursor(null)}
-        onClick={(event) => {
-          event.stopPropagation()
+        onClick={onTap((event) =>
           onPlace(Math.round(event.point.x), Math.round(event.point.z))
-        }}
+        )}
       >
         <circleGeometry args={[radius, 64]} />
         <meshBasicMaterial
@@ -590,9 +491,6 @@ function Scene({
   galaxy,
   shape,
   structures,
-  stars,
-  worlds = [],
-  cosmos,
   selected = null,
   placing = false,
   portrait = false,
@@ -605,7 +503,6 @@ function Scene({
   elements: LabelElements
 }) {
   const halo = (galaxy.radius * shape.halo_reach_pct) / 100
-  const starSize = Math.max(galaxy.radius * 0.045, 14)
   return (
     <>
       <StarField radius={galaxy.radius * 14} />
@@ -624,38 +521,6 @@ function Scene({
           selected={
             selected?.kind === 'structure' && selected.id === structure.id
           }
-          onPick={onPick}
-        />
-      ))}
-      {stars.map((star) => (
-        <StarMark
-          key={star.id}
-          star={star}
-          size={starSize}
-          selected={selected?.kind === 'star' && selected.id === star.id}
-          onPick={onPick}
-        />
-      ))}
-      {cosmos && (
-        <EmbeddedWorlds3D
-          cosmos={cosmos}
-          worlds={worlds}
-          radius={(world) =>
-            worldRadius(
-              starSize,
-              selected?.kind === 'world' && selected.id === world.id
-            )
-          }
-          selectedId={selected?.kind === 'world' ? selected.id : null}
-          reduced={portrait}
-        />
-      )}
-      {worlds.map((world) => (
-        <WorldMarker
-          key={world.id}
-          world={world}
-          size={starSize}
-          selected={selected?.kind === 'world' && selected.id === world.id}
           onPick={onPick}
         />
       ))}
@@ -682,13 +547,10 @@ function sceneLabels({
   galaxy,
   shape,
   structures,
-  stars,
-  worlds = [],
   selected = null,
   portrait = false,
 }: GalaxySceneProps): SceneLabel[] {
   if (portrait) return []
-  const starSize = Math.max(galaxy.radius * 0.045, 14)
   const shaped = structures.filter(
     (row) => !LAYOUT_STRUCTURES.has(row.kind) && row.ended_epoch === null
   )
@@ -717,30 +579,6 @@ function sceneLabels({
           number,
         ],
         text: row.name,
-      })),
-    ...stars
-      .filter(
-        (row) =>
-          stars.length <= 24 ||
-          (selected?.kind === 'star' && selected.id === row.id)
-      )
-      .map((row) => ({
-        key: `star-${row.id}`,
-        position: [row.x, starSize * 0.6, row.y] as [number, number, number],
-        text: row.name,
-        strong: true,
-      })),
-    ...worlds
-      .filter(
-        (row) =>
-          worlds.length <= 24 ||
-          (selected?.kind === 'world' && selected.id === row.id)
-      )
-      .map((row) => ({
-        key: `world-${row.id}`,
-        position: [row.x, -starSize * 0.4, row.y] as [number, number, number],
-        text: row.name,
-        quiet: !(selected?.kind === 'world' && selected.id === row.id),
       })),
   ]
 }

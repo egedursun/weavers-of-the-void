@@ -20,7 +20,6 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmptyState, KpiTile, PagedList, PageHeader } from '@/components/domain'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
 import { Text } from '@/components/typography'
 import { useCosmos } from '@/features/cosmos/api'
 import { hasWebGL2 } from '@/features/cosmos/useCosmosViewSettings'
@@ -155,7 +154,6 @@ export function HeavensView({
   const view = useCosmography()
   const catalog = useCosmographyCatalog()
   const cosmos = useCosmos()
-  const drawers = useDrawerStack()
   const select = useCallback(
     (kind: ScaleKind | undefined, id: number | undefined) =>
       onSearch({ layer: kind, node: id }),
@@ -259,10 +257,8 @@ export function HeavensView({
                 ladder={ladder}
                 catalog={shape}
                 routes={cosmos.data?.routes ?? []}
-                cosmos={cosmos.data}
                 selected={selection}
                 onPick={pick}
-                onOpen={(kind, id) => drawers.open({ kind, id: String(id) })}
                 fallback={still}
               />
             </Suspense>

@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmptyState } from '@/components/domain'
 import { CommandPanel } from './CommandPanel'
 import { ForeignGodsPanel } from './ForeignGodsPanel'
+import { NodeChooser } from './NodeChooser'
 import { StarCard } from './StarCard'
 import { VoyagesPanel } from './VoyagesPanel'
 import { WorldCard } from './WorldCard'
@@ -36,6 +37,7 @@ type CosmosSidePanelProps = {
   resource: TravelResource | null | undefined
   highlightedRouteId?: number
   onSelectWorld: (worldId: number) => void
+  onSelectStar: (starId: number) => void
   onOpenPanel: (panel: CosmosPanel, section?: CommandSection) => void
   onDescend: (worldId: number) => void
   galaxyPanel?: ReactNode
@@ -55,6 +57,7 @@ export function CosmosSidePanel({
   resource,
   highlightedRouteId,
   onSelectWorld,
+  onSelectStar,
   onOpenPanel,
   onDescend,
   galaxyPanel,
@@ -107,6 +110,13 @@ export function CosmosSidePanel({
           )}
         </TabsList>
         <TabsContent value='world' className='flex min-w-0 flex-col gap-4'>
+          <NodeChooser
+            label='Choose a star'
+            nodes={index.data.stars}
+            selectedId={starId}
+            noun={['star', 'stars']}
+            onSelect={onSelectStar}
+          />
           <WorldChooser
             index={index}
             worldId={selected?.world.id}

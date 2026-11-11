@@ -4,6 +4,9 @@ import { type RuleValue, type TravelMethod, useCosmosRules } from '../api'
 export const RULE = {
   createWorld: 'balance.create_world',
   igniteStar: 'cosmic_costs.ignite_star',
+  createGalaxy: 'cosmic_costs.create_galaxy',
+  createCluster: 'cosmic_costs.create_cluster',
+  createDimension: 'cosmic_costs.create_dimension',
   sealGate: 'cosmic_costs.seal_gate',
   cleanseLeak: 'cosmic_costs.cleanse_leak',
   forgetWorld: 'cosmic_costs.forget_world',

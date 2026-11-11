@@ -177,3 +177,43 @@ class RarityGatesRules:
     take_life: int = rule(
         2, 0, 5, RuleGroup.RARITY_TIERS, "Taking a mortal's life (can_al): lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
     )
+    galaxy_creation: int = rule(
+        5, 0, 5, RuleGroup.RARITY_TIERS, "Setting a new galaxy: lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )
+    cluster_creation: int = rule(
+        5, 0, 5, RuleGroup.RARITY_TIERS, "Gathering a new cluster: lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )
+    dimension_creation: int = rule(
+        5, 0, 5, RuleGroup.RARITY_TIERS, "Bringing a new dimension into being: lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )
+    galactic_works: int = rule(
+        5,
+        0,
+        5,
+        RuleGroup.RARITY_TIERS,
+        "Shaping structures, events, systems and features in a galaxy: lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)",
+    )
+    dimensional_works: int = rule(
+        5,
+        0,
+        5,
+        RuleGroup.RARITY_TIERS,
+        "Stirring a dimension or binding a law across it: lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)",
+    )
+    cosmic_works: int = rule(
+        4,
+        0,
+        5,
+        RuleGroup.RARITY_TIERS,
+        "Raising phenomena and opening breaches for outer beings: lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)",
+    )
+    power_sites: int = rule(
+        3,
+        0,
+        5,
+        RuleGroup.RARITY_TIERS,
+        "Raising thrones of power and laying magic sites: lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)",
+    )
+    road_opening: int = rule(
+        3, 0, 5, RuleGroup.RARITY_TIERS, "Opening a road between two worlds: lowest son rarity (0 Common, 1 Uncommon, 2 Rare, 3 Epic, 4 Legendary, 5 Mythic)"
+    )

@@ -1,5 +1,6 @@
 import type { components } from '@/api/generated/schema'
 import { seededRandom } from '@/lib/hash'
+import { CLUSTER_LOOK } from './clusterForm'
 import { DIMENSION_MOTIF } from './dimensionMotifs'
 import { DIMENSION_TOKEN, type DimensionKind } from './galaxyForm'
 import { cssColor } from './palette'
@@ -202,28 +203,12 @@ const CLUSTER_ARRANGE: Record<ClusterKind, Arrange> = {
   },
 }
 
-const CLUSTER_TOKEN: Record<ClusterKind, string> = {
-  galaxy_group: '--galaxy-young',
-  local_group: '--galaxy-young',
-  poor_cluster: '--galaxy-disc',
-  rich_cluster: '--galaxy-old',
-  supercluster: '--galaxy-disc',
-  filament: '--galaxy-young',
-  wall: '--galaxy-disc',
-  void: '--galaxy-halo',
-  crown_cluster: '--galaxy-crowned',
-  drowned_cluster: '--structure-reflection',
-  forge_cluster: '--galaxy-forged',
-  dream_cluster: '--galaxy-dreaming',
-  mirror_cluster: '--galaxy-mirror',
-}
-
 export function paintCluster(canvas: HTMLCanvasElement, input: ClusterInput) {
   const prepared = prepare(canvas)
   if (!prepared) return
   const { context, width, height } = prepared
   const random = seededRandom(input.id * 977 + 3)
-  const token = CLUSTER_TOKEN[input.kind]
+  const token = CLUSTER_LOOK[input.kind].body
   const size = Math.min(width, height)
   const centreX = width / 2
   const centreY = height / 2

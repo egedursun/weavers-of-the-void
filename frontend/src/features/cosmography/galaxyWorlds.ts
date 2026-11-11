@@ -54,7 +54,3 @@ export function worldMarks(
     ]
   })
 }
-
-export function worldRadius(size: number, selected: boolean): number {
-  return size * (selected ? 0.32 : 0.2)
-}

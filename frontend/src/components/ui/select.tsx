@@ -11,10 +11,37 @@ import {
 } from './control-size'
 import { fieldSurface } from './input'
 
+type SelectState = { open: boolean; value: string | undefined }
+
+const SelectStateContext = React.createContext<SelectState>({
+  open: true,
+  value: undefined,
+})
+
 function Select({
+  open,
+  defaultOpen,
+  onOpenChange,
+  value,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Root>) {
-  return <SelectPrimitive.Root data-slot='select' {...props} />
+  const [ownOpen, setOwnOpen] = React.useState(defaultOpen ?? false)
+  const isOpen = open ?? ownOpen
+  const state = React.useMemo(() => ({ open: isOpen, value }), [isOpen, value])
+  return (
+    <SelectStateContext.Provider value={state}>
+      <SelectPrimitive.Root
+        data-slot='select'
+        open={isOpen}
+        onOpenChange={(next) => {
+          if (open === undefined) setOwnOpen(next)
+          onOpenChange?.(next)
+        }}
+        value={value}
+        {...props}
+      />
+    </SelectStateContext.Provider>
+  )
 }
 
 function SelectGroup({
@@ -126,6 +153,8 @@ function SelectItem({
   children,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Item>) {
+  const { open, value } = React.useContext(SelectStateContext)
+  if (!open && value !== undefined && props.value !== value) return null
   return (
     <SelectPrimitive.Item
       data-slot='select-item'

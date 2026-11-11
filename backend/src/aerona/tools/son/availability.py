@@ -125,6 +125,10 @@ CONDITIONS: dict[SonToolId, Condition] = {
     T.BANISH_COSMIC_BEING: lambda _rules, state: state.cosmic_being,
     T.CONTAIN_PHENOMENON: lambda _rules, state: state.phenomenon,
     T.RULE_DIMENSION: lambda _rules, state: state.dimensions >= 1,
+    T.STIR_DIMENSION: lambda _rules, state: state.dimensions >= 1,
+    T.BIND_LAW_ACROSS_DIMENSION: lambda _rules, state: state.dimensions >= 1,
+    T.OPEN_BREACH: lambda _rules, state: state.outer_being,
+    T.OPEN_ROAD: lambda _rules, state: state.world_count >= 2,
 }
 
 

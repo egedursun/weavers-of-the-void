@@ -229,7 +229,10 @@ async def remove_relic(scope: PlayerScope, command: RelicTarget) -> Effect:
 
 @player_action("soul:raise", ActionKind.CREATE_ENTITY)
 async def raise_soul(scope: PlayerScope, command: RaiseSoul) -> Effect:
-    spirit = await control.raise_soul(await scope.context("soul_raise"), command.mortal_id, alignment=command.alignment, place_id=command.place_id)
+    creator = await scope.creator()
+    spirit = await control.raise_soul(
+        await scope.context("soul_raise"), command.mortal_id, alignment=command.alignment, place_id=command.place_id, by=creator.name
+    )
     return Effect(f"{spirit.name} walks again.", spirit.id, created_ids=(spirit.id,))
 
 

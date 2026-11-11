@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Medallion, ShowMore, useShowMore } from '@/components/domain'
 import { type KpiTone } from '@/components/domain/KpiTile'
 import { Label, Muted, Text } from '@/components/typography'
+import { CosmicActionButton } from '@/features/cosmos/CosmicActionButton'
+import { useRuleBook } from '@/features/cosmos/model/rules'
 import { MindPicker } from '@/features/entity/mind/parts'
 import {
   type CosmographyCatalog,
@@ -248,6 +250,7 @@ export function CreateGalaxyStudio({
   const [dimension, setDimension] = useState(
     dimensionId !== undefined ? String(dimensionId) : ''
   )
+  const rules = useRuleBook()
   const create = useCosmographyAction(
     'galaxy:create',
     (_: void) => ({
@@ -332,17 +335,19 @@ export function CreateGalaxyStudio({
         </div>
       }
       action={
-        <Button
-          disabled={busy !== null || missing !== null}
-          disabledReason={busy ?? missing ?? undefined}
-          onClick={() => {
+        <CosmicActionButton
+          actionId='galaxy:create'
+          label='Set it turning'
+          icon={Orbit}
+          variant='default'
+          cost={rules.get('createGalaxy')}
+          pending={create.isPending}
+          blockedReason={busy ?? missing ?? undefined}
+          onRun={() => {
             create.mutate()
             setName('')
           }}
-        >
-          <Orbit />
-          Set it turning
-        </Button>
+        />
       }
     />
   )
@@ -367,6 +372,7 @@ export function CreateClusterStudio({
   const [parent, setParent] = useState(
     parentId !== undefined ? String(parentId) : ''
   )
+  const rules = useRuleBook()
   const create = useCosmographyAction(
     'cluster:create',
     (_: void) => ({
@@ -458,17 +464,19 @@ export function CreateClusterStudio({
         </div>
       }
       action={
-        <Button
-          disabled={busy !== null || missing !== null}
-          disabledReason={busy ?? missing ?? undefined}
-          onClick={() => {
+        <CosmicActionButton
+          actionId='cluster:create'
+          label='Gather it'
+          icon={Workflow}
+          variant='default'
+          cost={rules.get('createCluster')}
+          pending={create.isPending}
+          blockedReason={busy ?? missing ?? undefined}
+          onRun={() => {
             create.mutate()
             setName('')
           }}
-        >
-          <Workflow />
-          Gather it
-        </Button>
+        />
       }
     />
   )
@@ -485,6 +493,7 @@ export function CreateDimensionStudio({
   const [name, setName] = useState('')
   const [parent, setParent] = useState('')
   const [element, setElement] = useState('')
+  const rules = useRuleBook()
   const create = useCosmographyAction(
     'dimension:create',
     (_: void) => ({
@@ -586,17 +595,19 @@ export function CreateDimensionStudio({
         </div>
       }
       action={
-        <Button
-          disabled={busy !== null || missing !== null}
-          disabledReason={busy ?? missing ?? undefined}
-          onClick={() => {
+        <CosmicActionButton
+          actionId='dimension:create'
+          label='Bring it into being'
+          icon={Layers}
+          variant='default'
+          cost={rules.get('createDimension')}
+          pending={create.isPending}
+          blockedReason={busy ?? missing ?? undefined}
+          onRun={() => {
             create.mutate()
             setName('')
           }}
-        >
-          <Layers />
-          Bring it into being
-        </Button>
+        />
       }
     />
   )

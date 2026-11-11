@@ -64,6 +64,8 @@ from aerona.engine.primitives.queries import connect, living_entity
 Values = Mapping[str, Any]
 NAME = "name"
 
+Placement = tuple[float | None, float | None, float]
+
 
 async def found[Row](ctx: TickContext, kind: type[Row], key: object, label: str) -> Row:
     row = await ctx.session.get(kind, key)
@@ -141,9 +143,7 @@ async def remove_dimension(ctx: TickContext, dimension_id: int) -> None:
     await ctx.session.flush()
 
 
-async def new_cluster(
-    ctx: TickContext, name: str, kind: ClusterKind, *, dimension_id: int | None, parent_id: int | None, position: tuple[float, float, float]
-) -> ClusterRow:
+async def new_cluster(ctx: TickContext, name: str, kind: ClusterKind, *, dimension_id: int | None, parent_id: int | None, position: Placement) -> ClusterRow:
     if parent_id is not None:
         await found(ctx, ClusterRow, parent_id, "cluster")
     if dimension_id is not None:
@@ -183,7 +183,7 @@ async def remove_cluster(ctx: TickContext, cluster_id: int) -> None:
 
 
 async def new_galaxy(
-    ctx: TickContext, name: str, galaxy_type: GalaxyType, *, cluster_id: int | None, dimension_id: int | None, position: tuple[float, float, float]
+    ctx: TickContext, name: str, galaxy_type: GalaxyType, *, cluster_id: int | None, dimension_id: int | None, position: Placement
 ) -> GalaxyRow:
     if cluster_id is not None:
         await found(ctx, ClusterRow, cluster_id, "cluster")

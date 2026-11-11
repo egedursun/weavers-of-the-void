@@ -24,6 +24,7 @@ from aerona.tools.son import (
     flora,
     folk,
     gatherings,
+    heavens,
     influence,
     intervention,
     kin,
@@ -49,6 +50,7 @@ from aerona.tools.son import (
     urban,
     war,
     works,
+    world_works,
 )
 from aerona.tools.son.availability import SonWorldState, condition_holds, star_lines
 from aerona.tools.son.creation import creation_specs, example_cost
@@ -80,6 +82,8 @@ FAMILIES: tuple[Callable[[], list[SonSpec]], ...] = (
     death.specs,
     faith.specs,
     cosmos.specs,
+    heavens.specs,
+    world_works.specs,
     cosmography.specs,
     urban.specs,
     folk.specs,

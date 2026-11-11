@@ -168,10 +168,8 @@ function GalaxyHero({
 }
 
 function Glance({ galaxy, ladder }: { galaxy: GalaxyRecord; ladder: Ladder }) {
-  const stars = ladder.data.stars.filter((row) => row.galaxy_id === galaxy.id)
-  const worlds = ladder.data.placements.filter(
-    (row) => row.galaxy_id === galaxy.id
-  )
+  const stars = ladder.starsIn(galaxy.id)
+  const worlds = ladder.placementsIn(galaxy.id)
   const structures = ladder.data.structures.filter(
     (row) => row.galaxy_id === galaxy.id && row.ended_epoch === null
   )
@@ -542,7 +540,7 @@ function MapSection({
   const structures = ladder.data.structures.filter(
     (row) => row.galaxy_id === galaxy.id
   )
-  const stars = ladder.data.stars.filter((row) => row.galaxy_id === galaxy.id)
+  const stars = ladder.starsIn(galaxy.id)
   const shaped = structures.filter((row) => !LAYOUT_STRUCTURES.has(row.kind))
   const cosmos = useCosmos()
   const worlds = worldMarks(cosmos.data, ladder.data, galaxy.id)
@@ -560,9 +558,6 @@ function MapSection({
             galaxy={galaxy}
             shape={catalog.shape}
             structures={structures}
-            stars={stars}
-            worlds={worlds}
-            cosmos={cosmos.data}
             selected={pick}
             placing={placing}
             onPick={setPick}
@@ -661,10 +656,8 @@ function StarsSection({
   galaxy: GalaxyRecord
   ladder: Ladder
 }) {
-  const stars = ladder.data.stars.filter((row) => row.galaxy_id === galaxy.id)
-  const worlds = ladder.data.placements.filter(
-    (row) => row.galaxy_id === galaxy.id
-  )
+  const stars = ladder.starsIn(galaxy.id)
+  const worlds = ladder.placementsIn(galaxy.id)
   return (
     <Section
       title='Stars and worlds'
