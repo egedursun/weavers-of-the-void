@@ -25,6 +25,7 @@ from aerona.domain.enums.structure import STANDING_STATES, StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.mortal.kin import children_of, close_kin_of, parents_of, spouses_of
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.renown.currencies import ruler_of_realm
 
@@ -258,7 +259,9 @@ async def performances(ctx: TickContext) -> list[Occasion]:
     for occasion in found:
         artists = await ctx.session.scalars(
             select(EntityRow.id)
-            .where(EntityRow.location_id == occasion.host_id, EntityRow.status == EntityStatus.CANON, EntityRow.mortal_role.in_(list(PERFORMER_ROLES)))
+            .where(
+                await present_among(ctx.session, [occasion.host_id]), EntityRow.status == EntityStatus.CANON, EntityRow.mortal_role.in_(list(PERFORMER_ROLES))
+            )
             .order_by(EntityRow.id)
         )
         occasion.guests = [Guest(int(artist), GuestRole.PERFORMER, AttendanceReason.RENOWN) for artist in artists]

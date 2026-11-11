@@ -5,12 +5,14 @@ from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.effect_packages import PACKAGES
 from aerona.catalog.entity_types import ENTITY_TYPES, EntityTypeSpec
 from aerona.catalog.interventions import DISASTERS, MIRACLES
+from aerona.catalog.mythic import GEAS_ACTS
 from aerona.catalog.stars import STAR_TYPES
 from aerona.catalog.structures import STRUCTURES
 from aerona.catalog.tenets import TENET_EFFECTS
 from aerona.catalog.theories import DISCIPLINES
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.domain.enums.affliction import Transmission
+from aerona.domain.enums.arcana import SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.culture import ArtMedium, IdeologyTenet, MagicSchool, MagicSource, ProphecyConsequence, ProphecyPredicate, RiteEffectKind
 from aerona.domain.enums.discovery import ArtDiscipline, TheoryDomain
@@ -35,6 +37,7 @@ from aerona.domain.enums.economy import CommodityKind, MaterialFamily
 from aerona.domain.enums.entity import LIVING_CREATION_TYPES, EntityType, LegendCategory
 from aerona.domain.enums.faith import FuneralRite, JudgementDoctrine, RebirthPath
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.mythic import CosmicOffice, GeasMode, ServitorRank, ServitorRole
 from aerona.domain.enums.place import PlaceKind, SecretKind
 from aerona.domain.enums.travel import VehicleKind
 from aerona.prompts.contexts.blocks import SummarySection
@@ -111,6 +114,16 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "magic_schools": ", ".join(school.value for school in MagicSchool),
         "magic_sources": ", ".join(source.value for source in MagicSource),
         "rite_effects": ", ".join(effect.value for effect in RiteEffectKind),
+        "spell_techniques": ", ".join(item.value for item in SpellTechnique),
+        "spell_forms": ", ".join(item.value for item in SpellForm),
+        "spell_ranges": ", ".join(item.value for item in SpellRange),
+        "spell_durations": ", ".join(item.value for item in SpellDuration),
+        "spell_targets": ", ".join(item.value for item in SpellTarget),
+        "servitor_ranks": ", ".join(item.value for item in ServitorRank),
+        "servitor_roles": ", ".join(item.value for item in ServitorRole),
+        "geas_modes": ", ".join(item.value for item in GeasMode),
+        "geas_acts": "; ".join(f"{mode.value}: {', '.join(act.value for act in acts)}" for mode, acts in GEAS_ACTS.items()),
+        "cosmic_offices": ", ".join(item.value for item in CosmicOffice),
         "ideology_tenets": ", ".join(tenet.value for tenet in IdeologyTenet),
         "prophecy_predicates": ", ".join(item.value for item in ProphecyPredicate),
         "prophecy_consequences": ", ".join(item.value for item in ProphecyConsequence),

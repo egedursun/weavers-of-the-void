@@ -20,6 +20,7 @@ from aerona.engine.dominion.curses import curse_desecrator
 from aerona.engine.economy.loot import loot_temple
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.mind.hooks import desecrated
+from aerona.engine.mythic.servitors import turned_back
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
@@ -180,8 +181,11 @@ async def collapses(ctx: TickContext, history: PopulationHistory) -> int:
 
 
 async def raze(ctx: TickContext, structure: EntityRow, sentence: str, cause_id: int | None = None, destroyer_id: int | None = None) -> None:
-    await add_flag(ctx.session, structure.id, EntityFlag.RAZED, ctx.epoch)
     holy = await kind_of(ctx.session, structure.id) in HOLY_HOUSES
+    if holy and destroyer_id is not None and await turned_back(ctx, [structure.id, structure.location_id], f"raze.guard.{structure.id}.{ctx.epoch}"):
+        await note(ctx, f"A servitor turned back those who came to raze {structure.name}.", key="mythic.servitor_guarded", ids=[structure.id])
+        return
+    await add_flag(ctx.session, structure.id, EntityFlag.RAZED, ctx.epoch)
     await ruin_profile(ctx.session, structure.id)
     await retire_in(ctx, structure, sentence, EntityStatus.DESTROYED, close_bonds=True)
     bonds = BondRepository(ctx.session)

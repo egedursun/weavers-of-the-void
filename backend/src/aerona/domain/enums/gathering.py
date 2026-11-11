@@ -105,6 +105,7 @@ class CollectionKind(StrEnum):
     CONVERSION_WAVE = "conversion_wave"
     SCHISM = "schism"
     EXCAVATION = "excavation"
+    HEROQUEST = "heroquest"
 
 
 class CollectionRole(StrEnum):

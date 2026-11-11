@@ -10,6 +10,7 @@ from aerona.agents.context.intrigue import estate_lines, intrigue_lines, letter_
 from aerona.agents.context.justice import case_lines, proposal_lines
 from aerona.agents.context.language_lines import language_lines
 from aerona.agents.context.lineage import lineage_lines
+from aerona.agents.context.mythic_lines import mortal_magic_lines
 from aerona.agents.context.recent_chronicle import prompt_text, recent_rows
 from aerona.agents.context.research import research_for
 from aerona.agents.context.scope import Scope
@@ -178,6 +179,7 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "abroad": await statecraft_lines(scope.session, me),
             "affairs": await affairs_lines(scope.session, me),
             "dominion": await mortal_dominion_lines(scope, me),
+            "magic": await mortal_magic_lines(scope, me),
         }
     )
 

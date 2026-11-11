@@ -42,6 +42,7 @@ from aerona.engine.mind.space import value_distance
 from aerona.engine.mortal.kinship import add_parent
 from aerona.engine.mortal.life import adult, biology_of, fertility_window, inherited_abilities, refresh_life, sex_of_stats
 from aerona.engine.mortal.profile import ensure_profile
+from aerona.engine.mythic.geasa import birth_geas
 from aerona.engine.notes import note
 from aerona.engine.phase import Phase
 from aerona.engine.phases.settlements import resettle_ruin
@@ -823,6 +824,7 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
     patron = await living_patron(ctx.session, first) or await living_patron(ctx.session, second)
     if patron is not None:
         await connect(ctx.session, child.id, patron.id, BondKind.WORSHIPS, ctx.epoch)
+        await birth_geas(ctx, child, patron.id)
     await note(ctx, f"A child of {first.name} and {second.name} was born.", key="births.child", ids=[first.id, second.id, child.id])
     ctx.count("children")
     return child

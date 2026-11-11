@@ -181,6 +181,7 @@ export const COLLECTION_KINDS: Record<Schema['CollectionKind'], Named> = {
   },
   schism: { label: 'Schism', icon: Shuffle, tone: 'warning' },
   excavation: { label: 'Excavation', icon: Shovel, tone: 'verdigris' },
+  heroquest: { label: 'Heroquest', icon: Route, tone: 'gold' },
 }
 
 export const COLLECTION_ROLES: Record<Schema['CollectionRole'], Named> = {

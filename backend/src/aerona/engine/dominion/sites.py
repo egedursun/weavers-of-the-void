@@ -30,6 +30,7 @@ from aerona.engine.divine.standing import standing_row
 from aerona.engine.dominion.book import DominionBook
 from aerona.engine.faith.book import patron_node
 from aerona.engine.mind.book import skill_level
+from aerona.engine.mythic.servitors import turned_back
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -261,6 +262,9 @@ async def tend_thrones(ctx: TickContext, tally: SiteTally) -> None:
             continue
         holder = await claimant(ctx, atlas, book, throne)
         if holder is not None and held(holder):
+            holder = throne.holder_node_id
+        guarded = throne.holder_node_id is not None and holder != throne.holder_node_id
+        if guarded and await turned_back(ctx, [throne.place_entity_id], f"throne.guard.{throne.id}.{ctx.epoch}"):
             holder = throne.holder_node_id
         if holder != throne.holder_node_id and "holder_node_id" not in throne.locked:
             throne.holder_node_id, throne.since_epoch = holder, ctx.epoch

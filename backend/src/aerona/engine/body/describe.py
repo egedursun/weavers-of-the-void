@@ -49,6 +49,7 @@ CONDITION_TEXT: dict[ConditionKind, str] = {
     ConditionKind.CHOSEN_MARK: "the mark of the chosen",
     ConditionKind.DIVINE_BRAND: "a god's brand",
     ConditionKind.NIGHTMARES: "recurring nightmares",
+    ConditionKind.COMATOSE: "a sleep no one can wake them from",
 }
 
 NERVE_TEXT: dict[NerveDamage, str] = {NerveDamage.MOTOR: "limp", NerveDamage.SENSORY: "numb"}

@@ -1,4 +1,5 @@
 from aerona.constants.units import PERCENT
+from aerona.db.tables.culture import RiteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
@@ -12,7 +13,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.environment.ley import LeyWeb
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.lore.rites import cast, choose, spellcraft
+from aerona.engine.lore.rites import beyond_reach, cast, choose, spellcraft
 from aerona.engine.mind.skills import practise_any
 from aerona.engine.mortal.equipment import focus_pct
 from aerona.engine.notes import note
@@ -99,11 +100,26 @@ async def magic_storms(ctx: TickContext) -> None:
         )
 
 
-async def first_enemy(ctx: TickContext, entity_id: int) -> EntityRow | None:
+async def enemies_of(ctx: TickContext, entity_id: int) -> list[EntityRow]:
     bonds = await active_bonds(ctx.session, [BondKind.ENEMY], sources=[entity_id]) + await active_bonds(ctx.session, [BondKind.ENEMY], targets=[entity_id])
-    for bond in sorted(bonds, key=lambda item: item.id):
-        enemy = await living_entity(ctx.session, bond.other_end(entity_id))
-        if enemy is not None:
+    found = [await living_entity(ctx.session, bond.other_end(entity_id)) for bond in sorted(bonds, key=lambda item: item.id)]
+    return [enemy for enemy in found if enemy is not None]
+
+
+async def aim(ctx: TickContext, mortal: EntityRow, enemies: list[EntityRow], *, protective: bool) -> tuple[EntityRow, RiteProfileRow, EntityRow | None] | None:
+    chosen = await choose(ctx, mortal, hostile=bool(enemies), protective=protective)
+    if chosen is None:
+        return None
+    rite, row = chosen
+    if not enemies:
+        return rite, row, None
+    enemy = await enemy_in_reach(ctx, mortal, row, enemies)
+    return (rite, row, enemy) if enemy is not None else None
+
+
+async def enemy_in_reach(ctx: TickContext, mortal: EntityRow, row: RiteProfileRow, enemies: list[EntityRow]) -> EntityRow | None:
+    for enemy in enemies:
+        if await beyond_reach(ctx, mortal, row, enemy) is None:
             return enemy
     return None
 
@@ -192,14 +208,14 @@ async def wizards(ctx: TickContext) -> None:
         home = await living_entity(ctx.session, mortal.location_id)
         if home is None or worked >= rules.rites.cap:
             continue
-        enemy = await first_enemy(ctx, home.id)
-        hostile = enemy is not None and rng.chance(rules.world_engine.sorcerer_curse_chance)
+        enemies = await enemies_of(ctx, home.id)
+        hostile = bool(enemies) and rng.chance(rules.world_engine.sorcerer_curse_chance)
         if not hostile and home.entity_type not in WARDED_HOME_TYPES:
             continue
-        chosen = await choose(ctx, mortal, hostile=hostile, protective=rng.chance(rules.world_effects.sorcerer_protect_chance))
-        if chosen is None:
+        working = await aim(ctx, mortal, enemies if hostile else [], protective=rng.chance(rules.world_effects.sorcerer_protect_chance))
+        if working is None:
             continue
-        rite, row = chosen
+        rite, row, enemy = working
         casting = await cast(ctx, mortal, rite, row, target=enemy if hostile else None, realms=realms)
         if casting is None:
             continue

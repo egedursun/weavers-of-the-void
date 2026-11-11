@@ -5,6 +5,7 @@ from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.db.profile_guard import register_profile_table
+from aerona.domain.enums.arcana import RechargeRule
 from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.culture import (
     ArtMedium,
@@ -361,6 +362,10 @@ class ItemEnchantmentRow(Base):
     strength: Mapped[int] = mapped_column(default=10)
     rite_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     since_epoch: Mapped[int] = mapped_column(default=0)
+    charges: Mapped[int] = mapped_column(default=3, server_default="3")
+    capacity: Mapped[int] = mapped_column(default=3, server_default="3")
+    recharge: Mapped[RechargeRule] = mapped_column(enum_type(RechargeRule, "recharge"), default=RechargeRule.VIS, server_default="vis")
+    overuse: Mapped[int] = mapped_column(default=0, server_default="0")
 
 
 class BookContentRow(Base):

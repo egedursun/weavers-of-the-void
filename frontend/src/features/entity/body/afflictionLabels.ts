@@ -12,6 +12,9 @@ import {
   Syringe,
   Utensils,
   Wine,
+  Sparkles,
+  FlaskConical,
+  Skull,
 } from 'lucide-react'
 import { type Named } from '../environment/labels'
 
@@ -26,6 +29,14 @@ export const PACKAGE_LOOKS: Record<string, Named> = {
   possession: { label: 'Possession', icon: Ghost, tone: 'verdigris' },
   trauma: { label: 'Trauma', icon: Brain, tone: 'info' },
   hunger_curse: { label: 'Hunger curse', icon: Utensils, tone: 'danger' },
+  warping: { label: 'Warping', icon: Sparkles, tone: 'verdigris' },
+  vis_dependence: {
+    label: 'Vis dependence',
+    icon: FlaskConical,
+    tone: 'warning',
+  },
+  geas_doom: { label: 'Geas doom', icon: Skull, tone: 'danger' },
+  soul_trapped: { label: 'Soul trapped', icon: Ghost, tone: 'muted' },
 }
 
 export const TRANSMISSIONS: Record<string, string> = {

@@ -461,6 +461,8 @@ EFFECT_RULES = {
     RiteEffectKind.SEAL_SOUL: (S.FAITH, "necromancy.seal_per_power"),
     RiteEffectKind.UNSEAL_SOUL: (S.FAITH, "necromancy.seal_per_power"),
     RiteEffectKind.EXORCISE: (S.FAITH, "necromancy.exorcism_per_power"),
+    RiteEffectKind.DISPEL: (S.MAGIC, "spell_resistance.dispel_per_power"),
+    RiteEffectKind.LONGEVITY: (S.BODY, "longevity.years"),
 }
 SOURCE_RULES = {
     MagicSource.LEY: (S.ENVIRONMENT, None),

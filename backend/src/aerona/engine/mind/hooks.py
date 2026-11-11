@@ -23,6 +23,7 @@ from aerona.engine.mind.memories import kin_of, remember
 from aerona.engine.mind.skills import practise, practise_any
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mind.traits import gain_trait
+from aerona.engine.mythic.geas_acts import geas_acted
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.renown.currencies import on_act
 from aerona.engine.renown.deeds import deed_seen
@@ -222,6 +223,7 @@ async def horrified(ctx: TickContext, actor_id: int, victim_id: int) -> list[int
 
 
 async def judged(ctx: TickContext, actor_id: int, victim_id: int, act: ActKind, *, note: str | None = None) -> int:
+    await geas_acted(ctx, actor_id, act)
     await violated(ctx, actor_id, act)
     await taboo_broken(ctx, actor_id, act)
     base = ctx.rules.memory.witness_magnitude

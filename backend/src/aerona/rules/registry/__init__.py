@@ -3,6 +3,18 @@ from dataclasses import dataclass, field
 from aerona.rules.registry.affairs import AffairsRules
 from aerona.rules.registry.agents import AgentsRules
 from aerona.rules.registry.apocalypse import ApocalypseRules
+from aerona.rules.registry.arcana import (
+    EnchantedItemRules,
+    GlobalEnchantmentRules,
+    LongevityRules,
+    MythCouplingRules,
+    ParadigmRules,
+    SpellEnvironmentRules,
+    SpellGrammarRules,
+    SpellResistanceRules,
+    VisRules,
+    WarpingRules,
+)
 from aerona.rules.registry.archive import ArchiveRules
 from aerona.rules.registry.army_depth import ArmyDepthRules
 from aerona.rules.registry.ascension import AscensionRules
@@ -246,6 +258,13 @@ from aerona.rules.registry.mortal_agents import MortalAgentsRules
 from aerona.rules.registry.mortal_life import AgingRules, EducationRules, FertilityRules, KinshipRules
 from aerona.rules.registry.mortal_standing import EquipmentRules, PunishmentRules, StandingRules
 from aerona.rules.registry.mortal_tools import MortalToolsRules
+from aerona.rules.registry.mythic import (
+    CosmicOfficeRules,
+    GeasRules,
+    HeroquestRules,
+    MantlingRules,
+    ServitorRules,
+)
 from aerona.rules.registry.naming import NamingRules
 from aerona.rules.registry.narrative import NarrativeRules
 from aerona.rules.registry.native_faith import NativeFaithRules
@@ -433,6 +452,21 @@ class Rules:
     magic_sites: MagicSiteRules = field(default_factory=MagicSiteRules)
     divine_creatures: DivineCreatureRules = field(default_factory=DivineCreatureRules)
     god_design: GodDesignRules = field(default_factory=GodDesignRules)
+    spell_grammar: SpellGrammarRules = field(default_factory=SpellGrammarRules)
+    vis: VisRules = field(default_factory=VisRules)
+    spell_resistance: SpellResistanceRules = field(default_factory=SpellResistanceRules)
+    paradigms: ParadigmRules = field(default_factory=ParadigmRules)
+    myth_coupling: MythCouplingRules = field(default_factory=MythCouplingRules)
+    spell_environment: SpellEnvironmentRules = field(default_factory=SpellEnvironmentRules)
+    warping: WarpingRules = field(default_factory=WarpingRules)
+    enchanted_items: EnchantedItemRules = field(default_factory=EnchantedItemRules)
+    longevity: LongevityRules = field(default_factory=LongevityRules)
+    global_enchantments: GlobalEnchantmentRules = field(default_factory=GlobalEnchantmentRules)
+    heroquests: HeroquestRules = field(default_factory=HeroquestRules)
+    mantling: MantlingRules = field(default_factory=MantlingRules)
+    servitors: ServitorRules = field(default_factory=ServitorRules)
+    geasa: GeasRules = field(default_factory=GeasRules)
+    cosmic_offices: CosmicOfficeRules = field(default_factory=CosmicOfficeRules)
     collections: CollectionRules = field(default_factory=CollectionRules)
     storyteller: StorytellerRules = field(default_factory=StorytellerRules)
     sites: SiteRules = field(default_factory=SiteRules)

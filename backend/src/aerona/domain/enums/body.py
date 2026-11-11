@@ -139,6 +139,7 @@ class ConditionKind(StrEnum):
     CHOSEN_MARK = "chosen_mark"
     DIVINE_BRAND = "divine_brand"
     NIGHTMARES = "nightmares"
+    COMATOSE = "comatose"
 
 
 MADNESS_CONDITIONS = (ConditionKind.PARANOIA, ConditionKind.VISIONS, ConditionKind.RAGE, ConditionKind.MELANCHOLY)

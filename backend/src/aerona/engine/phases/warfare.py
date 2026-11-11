@@ -1589,6 +1589,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.feuds",
     "table.forced_weather",
     "table.foreign_gods",
+    "table.geasa",
     "table.genomes",
     "table.goods",
     "table.goods_flows",

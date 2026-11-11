@@ -264,6 +264,21 @@ class EnginePhasesRules:
     )
     god_images: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the image peoples hold of their gods and how it reshapes them")
     divine_creatures: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: divine creatures acting on what their gods taught them")
+    spell_grammar: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the grammar of every rite and the study of lab texts")
+    vis: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: magic resources gathered at sites, from beasts and phenomena, traded and used to recharge enchanted items",
+    )
+    warping: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: warping gathered from long exposure to magic and what it does to mortals")
+    longevity: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: longevity magic paid for in vis, and the borrowed years lost when it lapses")
+    heroquests: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: heroquests into the mythic realms and how they rewrite the myths")
+    mantling: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: mortals walking a god's path toward ascension or replacement")
+    servitors: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: divine servitors, their duties and their loyalty")
+    geasa: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: geasa laid on mortals, kept or broken")
+    cosmic_offices: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the cosmic offices of the gods, their duties and their neglect")
     site_rooms: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: rooms of towers, lairs, vaults and ruins, and who holds each site")
     excavations: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: digs at ruins and old sites, stage by stage, with their risks and finds")
     battlefields: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: mass graves and fields of salvage left where battles were fought")

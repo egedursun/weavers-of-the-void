@@ -188,6 +188,8 @@ class RiteEffectKind(StrEnum):
     SEAL_SOUL = "seal_soul"
     UNSEAL_SOUL = "unseal_soul"
     EXORCISE = "exorcise"
+    DISPEL = "dispel"
+    LONGEVITY = "longevity"
 
 
 class BacklashKind(StrEnum):

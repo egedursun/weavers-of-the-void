@@ -17,7 +17,14 @@ from aerona.engine.notes import note
 from aerona.engine.primitives.naming import seed_of
 
 VISIBLE_CONDITIONS = frozenset(
-    {ConditionKind.WITHERED_LIMB, ConditionKind.VOID_TAINT, ConditionKind.CHOSEN_MARK, ConditionKind.DIVINE_BRAND, ConditionKind.POSSESSION}
+    {
+        ConditionKind.WITHERED_LIMB,
+        ConditionKind.VOID_TAINT,
+        ConditionKind.CHOSEN_MARK,
+        ConditionKind.DIVINE_BRAND,
+        ConditionKind.POSSESSION,
+        ConditionKind.COMATOSE,
+    }
 )
 
 CONDITION_PHRASES: dict[ConditionKind, str] = {
@@ -36,6 +43,7 @@ CONDITION_PHRASES: dict[ConditionKind, str] = {
     ConditionKind.CHOSEN_MARK: "bore the mark of the chosen",
     ConditionKind.DIVINE_BRAND: "bore a god's brand",
     ConditionKind.NIGHTMARES: "began to dream the same nightmare night after night",
+    ConditionKind.COMATOSE: "fell into a sleep no one could wake them from",
 }
 
 END_PHRASES: dict[ConditionKind, str] = {
@@ -48,6 +56,7 @@ END_PHRASES: dict[ConditionKind, str] = {
     ConditionKind.POSSESSION: "was freed of the spirit that possessed them",
     ConditionKind.ENDLESS_HUNGER: "was freed of the endless hunger",
     ConditionKind.NIGHTMARES: "slept free of nightmares at last",
+    ConditionKind.COMATOSE: "woke at last",
 }
 
 

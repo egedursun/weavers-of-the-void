@@ -97,6 +97,7 @@ import {
   LockOpen,
   Shirt,
   Atom,
+  Eraser,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -361,6 +362,8 @@ export const EFFECTS: Record<Schemas['RiteEffectKind'], LoreNamed> = {
   seal_soul: { label: 'Seals a soul', icon: Lock, tone: 'warning' },
   unseal_soul: { label: 'Breaks a seal', icon: LockOpen, tone: 'info' },
   exorcise: { label: 'Exorcism', icon: Ban, tone: 'gold' },
+  dispel: { label: 'Dispelling', icon: Eraser, tone: 'info' },
+  longevity: { label: 'Longevity', icon: Hourglass, tone: 'verdigris' },
 }
 
 export const PREDICATES: Record<Schemas['ProphecyPredicate'], LoreNamed> = {

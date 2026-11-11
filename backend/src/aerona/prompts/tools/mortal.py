@@ -35,6 +35,13 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "workings.magnitude": "Its strength, 1 to 100",
             "workings.damage_type": "For destruction: fire, cold, void or another wound",
             "workings.summon_form": "For a summoning: spirit, beast or undead",
+            "technique": "How the rite works: {{ spell_techniques }}; leave it out to use its school's usual technique",
+            "form": "What the rite works on: {{ spell_forms }}; leave it out to use its school's usual form",
+            "range": "How far it reaches: {{ spell_ranges }}",
+            "duration": "How long it lasts: {{ spell_durations }}",
+            "target": "What it touches: {{ spell_targets }}",
+            "paradigm_id": "The theory of magic it is designed under (a theory id), if any; a truer theory makes it more reliable",
+            "myth_id": "A legend it re-enacts (a legend id), if any; a believed myth gives it strength",
             "holder_id": "Ignored: you devise it yourself",
         },
     ),
@@ -85,6 +92,26 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "You walk a site that has rooms, room by room. A room may hold a trap, a guardian, a puzzle or a hazard, and things, spirits or beasts within; "
         "you take what you win and stop at the first room you cannot pass. Reaching its heart wins renown. 1 action.",
         {"site_id": "The site you walk"},
+    ),
+    T.UNDERTAKE_HEROQUEST: ToolText(
+        "You set out on a heroquest: you enter a mythic realm and walk a legend of your people step by step. You need renown, a faithful people and a "
+        "legend to walk. Following the people's version helps; departing from it may win another boon and rewrites the legend. 1 action.",
+        {"legend_id": "The legend you walk (a legend id); leave it out to walk your people's own"},
+    ),
+    T.TAKE_LONGEVITY: ToolText(
+        "You take longevity magic: it adds years to your life each epoch it is paid in vis of the form you choose, and you come to need it; "
+        "when the vis runs out the borrowed years fall away. 1 action.",
+        {"form": "The vis it burns: {{ spell_forms }}"},
+    ),
+    T.FOUND_ENCHANTMENT: ToolText(
+        "You lay a global enchantment over your world: a natural law of your choosing ({{ natural_laws }}). It holds only while you, your order or your "
+        "people pay its upkeep in vis each epoch, and rival casters may dispel it. Needs spellcraft of {{ rules.global_enchantments.mage_skill }}. 1 action.",
+        {
+            "name": "Its name in your language",
+            "effect": "The law it makes",
+            "form": "The vis that keeps it: {{ spell_forms }}",
+            "strength": "Its strength, 1 to 100",
+        },
     ),
     T.SEARCH_MAGIC_SITES: ToolText(
         "With spellcraft of {{ rules.magic_sites.search_skill }} or more, you search the land around you for hidden magic sites. "

@@ -14,6 +14,8 @@ from aerona.engine.divine.standing import standing_row
 from aerona.engine.divine.wounds import name_exposure
 from aerona.engine.faith.book import patron_node
 from aerona.engine.military.battle import Side
+from aerona.engine.mythic.offices import conquer_offices
+from aerona.engine.mythic.servitors import host_of, shake_host
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.strength import has_power
@@ -34,7 +36,7 @@ def style_of(god: God) -> bool:
 async def might_of(ctx: TickContext, god: God) -> float:
     table = ctx.rules.divine_wounds
     base = (god.strength + god.will) / 2 + god.level if isinstance(god, SonRow) else float(god.power)
-    return base * await name_exposure(ctx.session, god.id, table.name_exposure_pct)
+    return (base + await host_of(ctx.session, ctx.rules, god.id)) * await name_exposure(ctx.session, god.id, table.name_exposure_pct)
 
 
 async def pay(ctx: TickContext, god: God) -> bool:
@@ -110,6 +112,8 @@ async def intervene(ctx: TickContext, war_id: int, sequence: int, first: Side, s
         loser.side.divine_spurned = ctx.rules.domains.battle_spurned_morale
         await awe(ctx, winner)
         await god_grudge(ctx, loser.god.id, winner.god.id, MemoryKind.HUMILIATED_ME, f"overcame it in the battle for {loser.side.entity.name}")
+        await conquer_offices(ctx, winner.god.id, loser.god.id, stream)
+        await shake_host(ctx, loser.god.id)
         await note(
             ctx,
             f"{winner.god.name} overcame {loser.god.name} in the battle between {first.entity.name} and {second.entity.name}; "

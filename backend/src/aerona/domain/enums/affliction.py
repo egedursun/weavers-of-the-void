@@ -12,6 +12,10 @@ class PackageKind(StrEnum):
     POSSESSION = "possession"
     TRAUMA = "trauma"
     HUNGER_CURSE = "hunger_curse"
+    WARPING = "warping"
+    VIS_DEPENDENCE = "vis_dependence"
+    GEAS_DOOM = "geas_doom"
+    SOUL_TRAPPED = "soul_trapped"
 
 
 class Transmission(StrEnum):

@@ -19,6 +19,7 @@ from aerona.engine.body.book import effective
 from aerona.engine.body.hits import Harm
 from aerona.engine.gods.god_death import god_death
 from aerona.engine.lifecycle.wounds import apply_hits, slay
+from aerona.engine.mythic.mantling import replace, replacement_for
 from aerona.engine.primitives.faith import has_unlocked_power
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.services.community_relations import change_relation
@@ -101,6 +102,7 @@ async def _slay(call: MortalCall, son: SonRow, args: DefyInput, mine: int, their
     tools = call.rules.mortal_tools
     set_stats(call.me, charisma=min(PERCENT, stat_or(call.me, "charisma", 0) + tools.godslayer_charisma))
     call.me.title = lines.GODSLAYER_TITLE
+    plan = await replacement_for(call.tick, call.me, son)
     await god_death(call.tick, son, lines.SLAIN_BY.format(me=call.me.name), SonDeathCause.OTHER)
     await BondRepository(call.session).connect(BondDraft(call.me.id, son.id, BondKind.KILLED, call.epoch, args.reason))
     await call.chronicle(
@@ -114,6 +116,8 @@ async def _slay(call: MortalCall, son: SonRow, args: DefyInput, mine: int, their
         theirs=theirs,
         reason=args.reason,
     )
+    if plan is not None and await replace(call.tick, call.me, plan) is not None:
+        return result(MortalResult.GOD_REPLACED, son=son.name)
     return result(MortalResult.GOD_SLAIN, title=lines.GODSLAYER_TITLE)
 
 

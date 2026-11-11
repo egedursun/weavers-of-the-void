@@ -49,6 +49,7 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.mind.split import attribute
 from aerona.engine.mortal.kinship import marry
 from aerona.engine.mortal.standing import add_infamy
+from aerona.engine.mythic.geasa import spring_trap
 from aerona.engine.notes import note
 from aerona.engine.polity.trials import frame_case, report_crime
 from aerona.engine.primitives.distance import RegionAtlas
@@ -484,6 +485,11 @@ async def forge_letter(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, ta
     return f"a forged declaration went out in the name of {target.name}"
 
 
+async def geas_trap(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
+    row = await spring_trap(ctx, target, f"scheme.geas.{scheme.id}")
+    return f"{target.name} was forced to break a geas" if row is not None else f"{target.name} slipped the trap"
+
+
 STRIKES: dict[PlotKind, Callable[[TickContext, SchemeRow, EntityRow, EntityRow], Awaitable[str]]] = {
     PlotKind.MURDER: murder,
     PlotKind.ABDUCT: abduct,
@@ -502,6 +508,7 @@ STRIKES: dict[PlotKind, Callable[[TickContext, SchemeRow, EntityRow, EntityRow],
     PlotKind.ECOSABOTAGE: ecosabotage,
     PlotKind.LEARN_TRUE_NAME: learn_true_name,
     PlotKind.FORGE_LETTER: forge_letter,
+    PlotKind.GEAS_TRAP: geas_trap,
 }
 
 

@@ -184,28 +184,30 @@ async def give_epithets(ctx: TickContext) -> int:
         if mortal is None or mortal.status is not EntityStatus.CANON or deed is None or held(mortal_id):
             continue
         meaning = (deed.act.value if deed.act is not None else deed.axis.value).replace("_", " ")
-        language = await tongue_of(ctx.session, mortal)
-        word = meaning
-        if language is not None:
-            known = await ctx.session.scalar(select(LexemeRow.word).where(LexemeRow.language_entity_id == language.id, LexemeRow.meaning == meaning).limit(1))
-            coined = known or await namer.from_language(language, seed_of("epithet", mortal.id, meaning), NameKind.GENERAL)
-            if coined:
-                word = (await coin(ctx, language, coined, meaning)).word
-        ctx.session.add(
-            EpithetRow(
-                mortal_entity_id=mortal.id,
-                epithet=word.capitalize(),
-                gloss=f"the one of {meaning}",
-                deed=meaning,
-                language_entity_id=language.id if language is not None else None,
-                epoch=ctx.epoch,
-                locked=[],
-            )
-        )
+        await entitle(ctx, mortal, meaning, namer)
         given += 1
-        await note(ctx, f"The world began to call {mortal.name} {word.capitalize()}.", key="names.epithet", ids=[mortal.id], kind=ChronicleKind.CULTURE)
     await ctx.session.flush()
     return given
+
+
+async def entitle(ctx: TickContext, mortal: EntityRow, meaning: str, namer: Namer | None = None) -> EpithetRow | None:
+    row = await ctx.session.get(EpithetRow, mortal.id)
+    if row is not None and "epithet" in row.locked:
+        return None
+    language = await tongue_of(ctx.session, mortal)
+    word = meaning
+    if language is not None:
+        known = await ctx.session.scalar(select(LexemeRow.word).where(LexemeRow.language_entity_id == language.id, LexemeRow.meaning == meaning).limit(1))
+        coined = known or await (namer or Namer(ctx.session, ctx.rules)).from_language(language, seed_of("epithet", mortal.id, meaning), NameKind.GENERAL)
+        if coined:
+            word = (await coin(ctx, language, coined, meaning)).word
+    if row is None:
+        row = EpithetRow(mortal_entity_id=mortal.id, locked=[])
+        ctx.session.add(row)
+    row.epithet, row.gloss, row.deed = word.capitalize(), f"the one of {meaning}", meaning
+    row.language_entity_id, row.epoch = language.id if language is not None else None, ctx.epoch
+    await note(ctx, f"The world began to call {mortal.name} {word.capitalize()}.", key="names.epithet", ids=[mortal.id], kind=ChronicleKind.CULTURE)
+    return row
 
 
 async def misreadings(ctx: TickContext) -> int:

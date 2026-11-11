@@ -13,6 +13,7 @@ from aerona.db.tables.affairs import (
     TaxPolicyRow,
 )
 from aerona.db.tables.anatomy import CreatureAnatomyRow
+from aerona.db.tables.arcana import LabTextRow, LawUpkeepRow, LongevityRow, RiteGrammarRow, VisStockRow, WarpingRow
 from aerona.db.tables.body import ConditionRow, InjuryRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.communication import CipherRow, PublicOpinionRow, SignalLinkRow
@@ -184,6 +185,7 @@ from aerona.db.tables.military import (
 )
 from aerona.db.tables.mind import CultureValueRow, MemoryRow, NeedRow, PersonalityValueRow, PressureRow, SkillRow
 from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
+from aerona.db.tables.mythic import CosmicOfficeRow, GeasRow, HeroquestMemberRow, HeroquestRow, MantlingRow, ServitorRow
 from aerona.db.tables.ownership import SiteProfitRow
 from aerona.db.tables.physics import (
     CosmicFeatureRow,
@@ -259,6 +261,103 @@ class ComplianceRow:
 
 
 CATALOGUE: tuple[ComplianceRow, ...] = (
+    ComplianceRow(
+        "S8.6/RP3",
+        (
+            RiteGrammarRow.__tablename__,
+            LabTextRow.__tablename__,
+            VisStockRow.__tablename__,
+            WarpingRow.__tablename__,
+            LongevityRow.__tablename__,
+        ),
+        ("spell_grammar", "vis", "warping", "longevity"),
+        (
+            "rite_grammar:edit",
+            "rite_grammar:delete",
+            "lab_text:write",
+            "lab_text:edit",
+            "lab_text:delete",
+            "vis:set",
+            "vis:delete",
+            "warping:edit",
+            "warping:delete",
+            "longevity:begin",
+            "longevity:edit",
+            "longevity:end",
+            "item_charge:edit",
+        ),
+        ("ArcanaSection", "section-arcana"),
+        ("mortal_context",),
+        ("design_rite", "take_longevity"),
+        (),
+        ("09d7dc547388",),
+    ),
+    ComplianceRow(
+        "S9.5/RP3",
+        (LawUpkeepRow.__tablename__,),
+        ("natural_laws",),
+        ("enchantment:lay", "law_upkeep:edit", "law_upkeep:delete", "enchantment:dispel"),
+        ("ArcanaSection",),
+        ("son_turn_system",),
+        ("lay_enchantment", "end_enchantment", "found_enchantment"),
+        ("arcana.enchantment_",),
+        ("09d7dc547388",),
+    ),
+    ComplianceRow(
+        "S8.2/RP3",
+        (HeroquestRow.__tablename__, HeroquestMemberRow.__tablename__),
+        ("heroquests",),
+        ("heroquest:begin", "heroquest:edit", "heroquest:advance", "heroquest:delete"),
+        ("MythicSection", "section-mythic"),
+        ("mortal_context", "son_turn_system"),
+        ("undertake_heroquest", "call_heroquest"),
+        ("mythic.heroquest_",),
+        ("09d7dc547388",),
+    ),
+    ComplianceRow(
+        "S3.1/RP3",
+        (MantlingRow.__tablename__,),
+        ("mantling",),
+        ("mantling:edit", "mantling:delete"),
+        ("MythicSection",),
+        ("mortal_context", "son_turn_system"),
+        ("challenge_god",),
+        ("mythic.mantled", "mythic.replaced"),
+        ("09d7dc547388",),
+    ),
+    ComplianceRow(
+        "S3.3/RP3",
+        (ServitorRow.__tablename__,),
+        ("servitors",),
+        ("servitor:make", "servitor:edit", "servitor:release"),
+        ("MythicSection",),
+        ("son_turn_system",),
+        ("make_servitor", "command_servitor", "release_servitor"),
+        ("mythic.servitor_",),
+        ("09d7dc547388",),
+    ),
+    ComplianceRow(
+        "S4.8/RP3",
+        (GeasRow.__tablename__,),
+        ("geasa",),
+        ("geas:lay", "geas:edit", "geas:break", "geas:delete"),
+        ("MythicSection",),
+        ("mortal_context", "son_turn_system"),
+        ("lay_geas", "lift_geas"),
+        ("mythic.geas_broken",),
+        ("09d7dc547388",),
+    ),
+    ComplianceRow(
+        "S9.4/RP3",
+        (CosmicOfficeRow.__tablename__,),
+        ("cosmic_offices",),
+        ("cosmic_office:appoint", "cosmic_office:edit", "cosmic_office:vacate"),
+        ("CosmicOfficesPanel", "MythicSection"),
+        ("son_turn_system",),
+        ("resign_office",),
+        ("mythic.office_conquered",),
+        ("09d7dc547388",),
+    ),
     ComplianceRow(
         "F31",
         (DominionRow.__tablename__, RegionDominionRow.__tablename__, GodScaleRow.__tablename__),

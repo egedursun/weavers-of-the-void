@@ -6,7 +6,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.body import ARMOUR_COLUMNS, BodyRow, InjuryRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import GenomeRow
-from aerona.domain.enums.body import BodyFunction, Capacity, InjuryKind
+from aerona.domain.enums.body import BodyFunction, Capacity, ConditionKind, Consciousness, InjuryKind
 from aerona.domain.enums.bond import BondKind
 from aerona.engine.body.book import (
     Bearer,
@@ -69,7 +69,10 @@ async def refresh(session: AsyncSession, rules: Rules, bearer: Bearer, epoch: in
     variants = await variants_by_id(session, (row.variant_id for row in conditions))
     scale = {variant_id: strength(variants, variant_id) for variant_id in variants}
     if "consciousness" not in locked:
-        body.consciousness = consciousness_of(rules, bearer, pain_of(rules.capacities, open_severity(injuries)), body.blood)
+        comatose = any(row.kind is ConditionKind.COMATOSE for row in conditions)
+        body.consciousness = (
+            Consciousness.UNCONSCIOUS if comatose else consciousness_of(rules, bearer, pain_of(rules.capacities, open_severity(injuries)), body.blood)
+        )
     for capacity, value in factors_of(
         rules, bearer, body, injuries=injuries, prostheses=prostheses, conditions=conditions, reading=reading, variant_scale=scale
     ).items():

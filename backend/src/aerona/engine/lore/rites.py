@@ -5,9 +5,12 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.arcana import SCHOOL_GRAMMAR
 from aerona.catalog.lore import DESPERATE_SCHOOLS, DOMAIN_SCHOOLS, RITE_TEMPLATES
+from aerona.catalog.mythic import GEAS_ACTS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.db.tables.arcana import RiteGrammarRow
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow, WorldRow
@@ -24,6 +27,7 @@ from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import BattleRow, WarSideRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.body import DamageType, HarmCause, InjuryState
 from aerona.domain.enums.bond import BondKind, BondState
@@ -50,11 +54,19 @@ from aerona.domain.enums.faith import AfterlifeState, BindingKind, SpiritAlignme
 from aerona.domain.enums.military import UnitKind
 from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource, ValueAxis
 from aerona.domain.enums.modifier import ModifierOp, ModifierSource
+from aerona.domain.enums.mythic import GeasLayer, GeasMode
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.world import SkyEventKind
 from aerona.domain.models.entity_stats import RiteStats, SpiritStats
+from aerona.engine.arcana.casting import corrupted_effect, shape_casting
+from aerona.engine.arcana.grammar import Shape, ensure_grammar, reaches, window_of, write_grammar
+from aerona.engine.arcana.grammar import cost_factor as grammar_cost
+from aerona.engine.arcana.labs import write_lab_text
+from aerona.engine.arcana.longevity import begin_longevity
+from aerona.engine.arcana.resistance import dispel_force
+from aerona.engine.arcana.warping import expose
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -89,6 +101,9 @@ from aerona.engine.military.control import add_stack
 from aerona.engine.mind.book import set_skill, values_for
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mortal.learning import practise_subject, school_level
+from aerona.engine.mythic.geasa import lay_geas
+from aerona.engine.mythic.offices import office_power
+from aerona.engine.mythic.servitors import bind_summoned
 from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.governance import spend
@@ -126,6 +141,7 @@ DARK_SCHOOLS = frozenset({S.BLOOD, S.VOID})
 DARK_SOURCES = frozenset({MagicSource.BLOOD, MagicSource.VOID})
 DEFAULT_SCHOOLS = (S.DIVINATION, S.EARTH, S.LIFE)
 ROW_FIXUP = "lore.rite_profiles"
+RITE_POWER_MAX = 10
 PHENOMENON_KEY = "region.danger"
 
 
@@ -455,7 +471,7 @@ async def dominion_price(ctx: TickContext, caster: EntityRow, row: RiteProfileRo
 
 
 async def pay(ctx: TickContext, caster: EntityRow, row: RiteProfileRow) -> bool:
-    factor = await dominion_price(ctx, caster, row)
+    factor = await dominion_price(ctx, caster, row) * grammar_cost(ctx.rules, await ensure_grammar(ctx.session, ctx.rules, row))
     for key, amount in cost_of(ctx, row, priced=await priced(ctx, caster)).items():
         if not await PAYMENTS[key](ctx, caster, max(1, round_half_up(amount * factor))):
             return False
@@ -531,13 +547,16 @@ async def do_heal(ctx: TickContext, work: Working) -> str | None:
     return f"mended {min(len(wounds), work.magnitude)} wounds" + (f" and made {regrown} lost limbs whole" if regrown else "")
 
 
+async def lasting(ctx: TickContext, casting: CastingRow) -> bool:
+    return casting.epoch >= ctx.epoch - max(1, window_of(await ctx.session.get(RiteGrammarRow, casting.rite_entity_id)))
+
+
 async def countered(ctx: TickContext, region_id: int, caster: EntityRow, power: int) -> EntityRow | None:
     wards = select(RiteEffectRow.rite_entity_id).where(RiteEffectRow.effect == E.WARD)
-    castings = await ctx.session.scalars(
-        select(CastingRow).where(
-            CastingRow.rite_entity_id.in_(wards), CastingRow.succeeded.is_(True), CastingRow.epoch >= ctx.epoch - 1, CastingRow.caster_entity_id != caster.id
-        )
+    found = await ctx.session.scalars(
+        select(CastingRow).where(CastingRow.rite_entity_id.in_(wards), CastingRow.succeeded.is_(True), CastingRow.caster_entity_id != caster.id)
     )
+    castings = [casting for casting in found if await lasting(ctx, casting)]
     atlas = await RegionAtlas.load(ctx.session)
     for casting in castings:
         warder = await living_entity(ctx.session, casting.caster_entity_id)
@@ -609,7 +628,22 @@ async def do_scry(ctx: TickContext, work: Working) -> str | None:
     return f"scried the secrets of {work.target.name}"
 
 
+async def bind_by_geas(ctx: TickContext, work: Working) -> str | None:
+    target = work.target
+    if target is None or target.id == work.caster.id or target.entity_type is not EntityType.MORTAL or held(target.id):
+        return None
+    rng = ctx.rng(f"rite.geas.{work.caster.id}.{target.id}.{ctx.epoch}")
+    if not rng.chance(ctx.rules.geasa.bind_pct):
+        return None
+    witness = await patron_of(ctx, work.caster)
+    await lay_geas(ctx, target, layer_node_id=witness, layer=GeasLayer.RITE, mode=GeasMode.TABOO, act=rng.pick(list(GEAS_ACTS[GeasMode.TABOO])))
+    return f"laid a geas on {target.name}"
+
+
 async def do_bind(ctx: TickContext, work: Working) -> str | None:
+    geas = await bind_by_geas(ctx, work)
+    if geas is not None:
+        return geas
     if work.row.power >= ctx.rules.cosmic_beings.rite_bind_power:
         region = (await RegionAtlas.load(ctx.session)).top_region(work.caster.id)
         bound = await bind_near(ctx, region, work.caster.id, work.caster.name)
@@ -669,6 +703,8 @@ async def do_summon(ctx: TickContext, work: Working) -> str | None:
         )
     )
     await connect(ctx.session, work.caster.id, servant.id, BondKind.COMMANDS, ctx.epoch, description="summoned")
+    if work.row.source is MagicSource.DIVINE:
+        await bind_summoned(ctx, servant.id, await patron_of(ctx, work.caster))
     return f"summoned {servant.name}"
 
 
@@ -780,6 +816,28 @@ async def possessed_near(ctx: TickContext, place_id: int | None) -> EntityRow | 
     return await ctx.session.scalar(statement.order_by(EntityRow.id).limit(1))
 
 
+async def do_dispel(ctx: TickContext, work: Working) -> str | None:
+    power = max(1, round_half_up(work.magnitude / PERCENT * work.row.power * RITE_POWER_MAX))
+    aim = work.target if work.target is not None else work.caster
+    ended = 0
+    found = await ctx.session.scalars(
+        select(CastingRow).where(CastingRow.target_entity_id == aim.id, CastingRow.succeeded.is_(True), CastingRow.caster_entity_id != work.caster.id)
+    )
+    for casting in list(found):
+        other = await ctx.session.get(RiteProfileRow, casting.rite_entity_id)
+        if other is not None and other.power < power and await lasting(ctx, casting) and await dispel(ctx, casting.rite_entity_id) is not None:
+            ended += 1
+    text = await dispel_force(ctx, work.caster, work.target, power)
+    return f"{text}; ended {ended} lasting rites" if ended else text
+
+
+async def do_longevity(ctx: TickContext, work: Working) -> str | None:
+    target = work.target if work.target is not None and work.target.entity_type is EntityType.MORTAL else work.caster
+    grammar = await ensure_grammar(ctx.session, ctx.rules, work.row)
+    row = await begin_longevity(ctx, target, grammar.form)
+    return f"slowed the ageing of {target.name}" if row is not None else None
+
+
 EFFECTS: dict[RiteEffectKind, Callable[[TickContext, Working], Awaitable[str | None]]] = {
     E.DAMAGE: do_damage,
     E.HEAL: do_heal,
@@ -796,7 +854,20 @@ EFFECTS: dict[RiteEffectKind, Callable[[TickContext, Working], Awaitable[str | N
     E.SEAL_SOUL: do_seal,
     E.UNSEAL_SOUL: do_unseal,
     E.EXORCISE: do_exorcise,
+    E.DISPEL: do_dispel,
+    E.LONGEVITY: do_longevity,
 }
+
+
+def replace_effect(effect: RiteEffectRow, kind: RiteEffectKind) -> RiteEffectRow:
+    return RiteEffectRow(
+        rite_entity_id=effect.rite_entity_id,
+        effect=kind,
+        magnitude=effect.magnitude,
+        detail=effect.detail,
+        damage_type=effect.damage_type,
+        summon_form=effect.summon_form,
+    )
 
 
 async def effects_of(ctx: TickContext, rite_id: int) -> list[RiteEffectRow]:
@@ -965,23 +1036,36 @@ async def cast(
         effect="",
     )
     mastery = await school_level(ctx.session, caster.id, rite.id)
+    effects = await effects_of(ctx, rite.id)
+    patron = await patron_of(ctx, caster)
+    shield = await warded(ctx, target.location_id or target.id) if target is not None else 1.0
+    shaping = await shape_casting(ctx, caster, target, row, effects=[item.effect for item in effects], mastery=mastery, caster_god=patron, warded=shield)
+    if not forced and not reaches(await RegionAtlas.load(ctx.session), shaping.grammar, caster, target):
+        return None
     steadiness, strength = gift_factors(ctx.rules, await ctx.session.get(GenomeRow, caster.id), row.school)
+    strength *= shaping.strength * await office_power(ctx, patron, shaping.grammar.form)
     strength *= await name_power(ctx, caster.id, target)
     strength *= await ctx.hook_factor(caster.id, DomainHook.BLOOD_RITE)
     strength *= await magic_factor(ctx, caster)
     strength *= await site_factor(ctx, caster, row)
-    strength *= await divine_power(ctx, await patron_of(ctx, caster), caster.id, ctx.rules.dominion.rite_power_pct)
+    strength *= await divine_power(ctx, patron, caster.id, ctx.rules.dominion.rite_power_pct)
     await practise_subject(ctx.session, ctx.rules, caster.id, SkillKind.SPELLCRAFT, subject_id=rite.id, xp=ctx.rules.skills.spellcraft_xp, epoch=ctx.epoch)
     understood = await theory_factor(ctx.session, ctx.rules, caster.location_id or caster.id, TheoryDomain.MAGIC)
-    if rng.chance(row.backlash_chance * steadiness * (1 - mastery / PERCENT * ctx.rules.skills.school_backlash_pct / PERCENT) / understood):
+    await expose(ctx, caster.id, round_half_up(ctx.rules.warping.per_cast * row.power / RITE_POWER_MAX))
+    if rng.chance(row.backlash_chance * shaping.backlash * steadiness * (1 - mastery / PERCENT * ctx.rules.skills.school_backlash_pct / PERCENT) / understood):
         casting.succeeded, casting.backlash = False, await backlash(ctx, caster, row)
         casting.effect = f"the rite turned on {caster.name} ({casting.backlash.value})"
     else:
         damp = await dampening(ctx, caster, row)
-        works = [await working(ctx, caster, target, effect, row) for effect in await effects_of(ctx, rite.id)]
+        works = [await working(ctx, caster, target, effect, row) for effect in effects]
+        if shaping.resisted:
+            works = [work for work in works if work.effect.effect not in HOSTILE]
+        if shaping.corrupted:
+            works = [replace(work, effect=replace_effect(work.effect, corrupted_effect(work.effect.effect))) for work in works]
         done = [await EFFECTS[work.effect.effect](ctx, replace(work, magnitude=round_half_up(work.magnitude * damp * strength))) for work in works]
         if damp < 1:
             done.append("the wet weather smothered its fire")
+        done.extend(shaping.notes)
         casting.effect = "; ".join(text for text in done if text)[:480] or "the rite was worked to no end"
         await infamy(ctx, caster, row, target)
     await judged(ctx, caster.id, target.id if target is not None else caster.id, SCHOOL_ACTS.get(row.school, ActKind.MAGIC_USE))
@@ -1001,6 +1085,9 @@ class Design:
     source: MagicSource | None
     power: int
     workings: tuple[tuple[RiteEffectKind, int, DamageType | None, SummonForm | None], ...]
+    shape: Shape | None = None
+    paradigm_id: int | None = None
+    myth_id: int | None = None
 
 
 async def design(ctx: TickContext, plan: Design, holder: EntityRow) -> tuple[EntityRow, RiteProfileRow]:
@@ -1037,7 +1124,19 @@ async def design(ctx: TickContext, plan: Design, holder: EntityRow) -> tuple[Ent
     ctx.session.add_all(workings.values())
     await connect(ctx.session, holder.id, rite.id, BondKind.OWNS, ctx.epoch, description="devised")
     await ctx.session.flush()
+    technique, spell_form = SCHOOL_GRAMMAR[plan.school]
+    await write_grammar(ctx.session, ctx.rules, row, plan.shape or Shape(technique, spell_form), paradigm_id=plan.paradigm_id, myth_id=plan.myth_id)
+    await write_lab_text(ctx, rite, holder)
     return rite, row
+
+
+async def beyond_reach(ctx: TickContext, caster: EntityRow, row: RiteProfileRow, target: EntityRow | None) -> str | None:
+    if target is None:
+        return None
+    grammar = await ensure_grammar(ctx.session, ctx.rules, row)
+    if reaches(await RegionAtlas.load(ctx.session), grammar, caster, target):
+        return None
+    return f"{target.name} lies beyond its range ({grammar.range.value})"
 
 
 async def cast_by_son(ctx: TickContext, son: SonRow, rite: EntityRow, row: RiteProfileRow, *, vessel: EntityRow, target: EntityRow | None) -> CastingRow:
@@ -1064,7 +1163,10 @@ async def enchant(ctx: TickContext, caster: EntityRow, rite: EntityRow, row: Rit
     effect = effects[0]
     found = await ctx.session.get(ItemEnchantmentRow, (owned.id, effect.effect))
     if found is None:
-        found = ItemEnchantmentRow(item_entity_id=owned.id, effect=effect.effect, strength=0, rite_entity_id=rite.id, since_epoch=ctx.epoch)
+        capacity = ctx.rules.enchanted_items.capacity
+        found = ItemEnchantmentRow(
+            item_entity_id=owned.id, effect=effect.effect, strength=0, rite_entity_id=rite.id, since_epoch=ctx.epoch, charges=capacity, capacity=capacity
+        )
         ctx.session.add(found)
     found.strength = clamp_int(found.strength + effect.magnitude * row.power, 0, PERCENT)
     set_stats(owned, might=clamp_int((stat(owned, "might") or 0) + effect.magnitude, 0, PERCENT))
@@ -1073,11 +1175,9 @@ async def enchant(ctx: TickContext, caster: EntityRow, rite: EntityRow, row: Rit
 
 async def warded(ctx: TickContext, settlement_id: int) -> float:
     rites = select(RiteEffectRow.rite_entity_id).where(RiteEffectRow.effect == E.WARD)
-    statement = select(CastingRow).where(
-        CastingRow.rite_entity_id.in_(rites), CastingRow.succeeded.is_(True), CastingRow.epoch >= ctx.epoch - 1, CastingRow.caster_entity_id.is_not(None)
-    )
+    statement = select(CastingRow).where(CastingRow.rite_entity_id.in_(rites), CastingRow.succeeded.is_(True), CastingRow.caster_entity_id.is_not(None))
     total = 0
-    for casting in await ctx.session.scalars(statement):
+    for casting in [found for found in await ctx.session.scalars(statement) if await lasting(ctx, found)]:
         caster = await ctx.session.get(EntityRow, casting.caster_entity_id)
         row = await ctx.session.get(RiteProfileRow, casting.rite_entity_id)
         if caster is not None and row is not None and caster.location_id == settlement_id:

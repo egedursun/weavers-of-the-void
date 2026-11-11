@@ -40,6 +40,7 @@ async def domain_economy(ctx: TickContext) -> None:
     "table.epoch_year_cursors",
     "table.foreign_gods",
     "table.house_members",
+    "table.mantlings",
     "table.personality_values",
     "table.polity_members",
     "table.relics",

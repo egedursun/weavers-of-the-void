@@ -374,6 +374,7 @@ async def house_cycles(ctx: TickContext) -> None:
     "table.deeds",
     "table.entity_flags",
     "table.foreign_gods",
+    "table.geasa",
     "table.goods_flows",
     "table.holder_levels",
     "table.incident_participants",

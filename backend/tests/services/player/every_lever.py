@@ -1635,6 +1635,51 @@ LEVERS: dict[str, Lever] = {
         name: after(("intervene", {"entity_id": Pick(TOWN), "action": "miracle", "miracle": "bounty"}), miracle_id=Newest("miracle_record"))
         for name in ("miracle_record:edit", "miracle_record:delete")
     },
+    **{name: after(RITE, rite_id=Newest(EntityType.RITE)) for name in ("rite_grammar:edit", "rite_grammar:delete")},
+    "lab_text:write": after(RITE, rite_id=Newest(EntityType.RITE), author_id=Pick(MORTAL)),
+    **{
+        name: after(RITE, ("lab_text:write", {"rite_id": Newest(EntityType.RITE), "author_id": Pick(MORTAL)}), book_id=Where("lab_texts", "book_entity_id"))
+        for name in ("lab_text:edit", "lab_text:delete")
+    },
+    "vis:set": given(holder_id=Pick(TOWN), form="fire", amount=5),
+    "vis:delete": after(("vis:set", {"holder_id": Pick(TOWN), "form": "fire", "amount": 5}), holder_id=Pick(TOWN), form="fire"),
+    "warping:edit": given(node_id=Pick(MORTAL)),
+    "warping:delete": after(("warping:edit", {"node_id": Pick(MORTAL), "values": {"value": 30}}), node_id=Pick(MORTAL)),
+    "longevity:begin": given(mortal_id=Pick(MORTAL), form="body"),
+    **{name: after(("longevity:begin", {"mortal_id": Pick(MORTAL), "form": "body"}), mortal_id=Pick(MORTAL)) for name in ("longevity:edit", "longevity:end")},
+    "enchantment:lay": given(caster_id=Pick("son"), effect="bounty", world_id=Pick("world"), strength=40),
+    **{
+        name: after(
+            ("enchantment:lay", {"caster_id": Pick("son"), "effect": "bounty", "world_id": Pick("world"), "strength": 40}),
+            law_id=Where("law_upkeep", "law_entity_id"),
+        )
+        for name in ("law_upkeep:edit", "law_upkeep:delete", "enchantment:dispel")
+    },
+    "item_charge:edit": after(
+        ("item:enchant", {"item_id": Pick(EntityType.ITEM), "effect": "ward", "strength": 30}), item_id=Pick(EntityType.ITEM), effect="ward"
+    ),
+    "heroquest:begin": given(quester_id=Pick(MORTAL), legend_id=Pick(EntityType.LEGEND)),
+    **{
+        name: after(("heroquest:begin", {"quester_id": Pick(MORTAL), "legend_id": Pick(EntityType.LEGEND)}), quest_id=Newest("heroquest"))
+        for name in ("heroquest:edit", "heroquest:advance", "heroquest:delete")
+    },
+    "mantling:edit": given(mortal_id=Pick(MORTAL)),
+    "mantling:delete": after(("mantling:edit", {"mortal_id": Pick(MORTAL), "values": {"progress": 30}}), mortal_id=Pick(MORTAL)),
+    "servitor:make": given(god_id=Pick("son"), name="Watcher", rank="guardian", role="guard"),
+    **{
+        name: after(
+            ("servitor:make", {"god_id": Pick("son"), "name": "Watcher", "rank": "guardian", "role": "guard"}), spirit_id=Where("servitors", "spirit_entity_id")
+        )
+        for name in ("servitor:edit", "servitor:release")
+    },
+    "geas:lay": given(bearer_id=Pick(MORTAL), mode="taboo", act="theft"),
+    **{
+        name: after(("geas:lay", {"bearer_id": Pick(MORTAL), "mode": "taboo", "act": "theft"}), geas_id=Where("geasa", "id"))
+        for name in ("geas:edit", "geas:break", "geas:delete")
+    },
+    "cosmic_office:appoint": given(office="dead", holder_id=Pick("son")),
+    "cosmic_office:edit": given(office="dead"),
+    "cosmic_office:vacate": after(("cosmic_office:appoint", {"office": "dead", "holder_id": Pick("son")}), office="dead"),
     "divine_creature:raise": given(god_id=Pick("son"), name="Grey Warden", description="A watcher of the hills", home_id=Pick(EntityType.REGION)),
     **{
         name: after(
@@ -1770,6 +1815,17 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "magic_site:edit": {"strength": 70, "output": 5},
     "throne:edit": {"power": 80},
     "divine_creature:edit": {"hunger": 20, "neglect_epochs": 1},
+    "rite_grammar:edit": {"technique": "ward", "range": "region"},
+    "lab_text:edit": {"fidelity": 60},
+    "warping:edit": {"value": 60},
+    "longevity:edit": {"dose": 2, "dependence": 30},
+    "law_upkeep:edit": {"essence_upkeep": 3, "dispel_resistance": 70},
+    "item_charge:edit": {"charges": 2, "capacity": 4},
+    "heroquest:edit": {"steps": 4, "fidelity": 80},
+    "mantling:edit": {"progress": 40, "deeds": 3},
+    "servitor:edit": {"loyalty": 60, "role": "judge"},
+    "geas:edit": {"favour": 10},
+    "cosmic_office:edit": {"neglect": 20, "duty": 40},
     "excavation_stage:edit": {"difficulty": 45, "risk": "collapse", "find": "book"},
     "battlefield_feature:edit": {"strength": 70},
     "cosmic_feature:edit": {"density": 40, "richness": 60},

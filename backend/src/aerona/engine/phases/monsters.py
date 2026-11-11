@@ -92,6 +92,7 @@ async def raid(ctx: TickContext, monster: EntityRow, settlement: EntityRow) -> N
     "table.entity_flags",
     "table.entity_traits",
     "table.epoch_year_cursors",
+    "table.geasa",
     "table.goods_flows",
     "table.herds",
     "table.holder_levels",

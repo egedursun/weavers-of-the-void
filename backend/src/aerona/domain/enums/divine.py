@@ -80,6 +80,8 @@ class GodGoalKind(StrEnum):
     RECONCILE = "reconcile"
     REBEL = "rebel"
     HOLD_THRONES = "hold_thrones"
+    PREVENT_MANTLING = "prevent_mantling"
+    SPONSOR_MANTLING = "sponsor_mantling"
 
 
 class GoalState(StrEnum):
@@ -124,6 +126,7 @@ class CouncilMotion(StrEnum):
     HOLY_WORLD = "holy_world"
     COSMIC_TRUCE = "cosmic_truce"
     PETITION_CREATOR = "petition_creator"
+    APPOINT_OFFICE = "appoint_office"
 
 
 class SonPunishment(StrEnum):

@@ -41,6 +41,7 @@ from aerona.engine.divine.wounds import name_exposure, strike
 from aerona.engine.dominion.curses import curse_desecrator
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.hooks import desecrated
+from aerona.engine.mythic.servitors import turned_back
 from aerona.engine.primitives.naming import Namer
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
@@ -222,6 +223,8 @@ def wake(god: ForeignGodRow) -> None:
 
 
 async def destroy_temple(ctx: TickContext, god: ForeignGodRow, temple: EntityRow) -> None:
+    if await turned_back(ctx, [temple.id, temple.location_id], f"temple.guard.{temple.id}.{ctx.epoch}"):
+        return
     await retire(ctx.session, temple, ctx.epoch, f"Epoch {ctx.epoch}: destroyed by {god.name}.", status=EntityStatus.DESTROYED)
     await BondRepository(ctx.session).connect(BondDraft(god.id, temple.id, BondKind.DESTROYED, ctx.epoch, "destroyed its temple"))
     keeper = await living_entity(ctx.session, temple.location_id)

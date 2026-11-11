@@ -201,6 +201,7 @@ class CapacityRules:
     brand_presence: int = rule(0, -100, 100, G, "Divine brand: presence gained before the culture reads it (%)")
     nightmares_command: int = rule(-8, -100, 100, G, "Recurring nightmares: command lost to sleepless nights (%)")
     nightmares_craft: int = rule(-6, -100, 100, G, "Recurring nightmares: craft lost to sleepless nights (%)")
+    comatose_lost: int = rule(100, 0, 100, G, "A body in a sleep no one can wake it from: every capacity but fertility lost (%)")
 
 
 @dataclass(frozen=True)

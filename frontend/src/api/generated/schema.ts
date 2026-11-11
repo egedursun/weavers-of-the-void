@@ -4751,6 +4751,54 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/arcana/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_arcana_api_arcana_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/mythic/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_mythic_api_mythic_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/mythic/offices': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['cosmic_offices_api_mythic_offices_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/intrigue/{node_id}': {
     parameters: {
       query?: never
@@ -14153,6 +14201,534 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_dominion_set_api_actions_dominion_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/rite_grammar:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_rite_grammar_edit_api_actions_rite_grammar_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/rite_grammar:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_rite_grammar_delete_api_actions_rite_grammar_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/lab_text:write': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_lab_text_write_api_actions_lab_text_write_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/lab_text:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_lab_text_edit_api_actions_lab_text_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/lab_text:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_lab_text_delete_api_actions_lab_text_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/vis:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_vis_set_api_actions_vis_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/vis:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_vis_delete_api_actions_vis_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/warping:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_warping_edit_api_actions_warping_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/warping:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_warping_delete_api_actions_warping_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/longevity:begin': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_longevity_begin_api_actions_longevity_begin_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/longevity:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_longevity_edit_api_actions_longevity_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/longevity:end': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_longevity_end_api_actions_longevity_end_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/enchantment:lay': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_enchantment_lay_api_actions_enchantment_lay_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/law_upkeep:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_law_upkeep_edit_api_actions_law_upkeep_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/law_upkeep:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_law_upkeep_delete_api_actions_law_upkeep_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/enchantment:dispel': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_enchantment_dispel_api_actions_enchantment_dispel_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/item_charge:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_item_charge_edit_api_actions_item_charge_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/heroquest:begin': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_heroquest_begin_api_actions_heroquest_begin_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/heroquest:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_heroquest_edit_api_actions_heroquest_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/heroquest:advance': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_heroquest_advance_api_actions_heroquest_advance_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/heroquest:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_heroquest_delete_api_actions_heroquest_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/mantling:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_mantling_edit_api_actions_mantling_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/mantling:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_mantling_delete_api_actions_mantling_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/servitor:make': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_servitor_make_api_actions_servitor_make_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/servitor:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_servitor_edit_api_actions_servitor_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/servitor:release': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_servitor_release_api_actions_servitor_release_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/geas:lay': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_geas_lay_api_actions_geas_lay_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/geas:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_geas_edit_api_actions_geas_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/geas:break': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_geas_break_api_actions_geas_break_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/geas:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_geas_delete_api_actions_geas_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cosmic_office:appoint': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmic_office_appoint_api_actions_cosmic_office_appoint_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cosmic_office:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmic_office_edit_api_actions_cosmic_office_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/cosmic_office:vacate': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_cosmic_office_vacate_api_actions_cosmic_office_vacate_post']
     delete?: never
     options?: never
     head?: never
@@ -24633,6 +25209,14 @@ export interface components {
       relations_changed: boolean
       foreign_god_ids: number[]
     }
+    ChargeView: {
+      effect: components['schemas']['RiteEffectKind']
+      strength: number
+      charges: number
+      capacity: number
+      recharge: components['schemas']['RechargeRule']
+      overuse: number
+    }
     ChatAttitude:
       'loyal' | 'distant' | 'rebellious' | 'afraid' | 'grateful' | 'mocking'
     ChatPayload: {
@@ -25165,6 +25749,7 @@ export interface components {
       | 'conversion_wave'
       | 'schism'
       | 'excavation'
+      | 'heroquest'
     CollectionMemberRemoveInput: {
       collection_id: number
       node_id: number
@@ -25389,6 +25974,7 @@ export interface components {
       | 'chosen_mark'
       | 'divine_brand'
       | 'nightmares'
+      | 'comatose'
     ConditionView: {
       id: number
       kind: components['schemas']['ConditionKind']
@@ -25627,6 +26213,30 @@ export interface components {
       | 'rogue_world'
       | 'gravity_well'
       | 'wandering_star'
+    CosmicOffice: 'dead' | 'gates' | 'stars' | 'oaths' | 'herald' | 'hunt'
+    CosmicOfficeAppointInput: {
+      office: components['schemas']['CosmicOffice']
+      holder_id: number
+    }
+    CosmicOfficeEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      office: components['schemas']['CosmicOffice']
+    }
+    CosmicOfficeVacateInput: {
+      office: components['schemas']['CosmicOffice']
+    }
+    CosmicOfficeView: {
+      office: components['schemas']['CosmicOffice']
+      holder: components['schemas']['NodeRef'] | null
+      chosen_by: components['schemas']['OfficeChoice']
+      since_epoch: number | null
+      neglect: number
+      duty: number
+      locked: string[]
+    }
     CosmographyCatalog: {
       galaxy_types: components['schemas']['KindRecord'][]
       cluster_kinds: components['schemas']['KindRecord'][]
@@ -25758,6 +26368,7 @@ export interface components {
       | 'holy_world'
       | 'cosmic_truce'
       | 'petition_creator'
+      | 'appoint_office'
     CouncilPayload: {
       epoch?: number | null
       id?: number | null
@@ -27640,6 +28251,18 @@ export interface components {
       epoch?: number | null
     } & {
       [key: string]: unknown
+    }
+    EnchantmentDispelInput: {
+      law_id: number
+    }
+    EnchantmentLayInput: {
+      caster_id: number
+      name: string
+      effect: components['schemas']['NaturalLaw']
+      world_id?: number | null
+      region_id?: number | null
+      strength: number
+      vis_form?: components['schemas']['SpellForm'] | null
     }
     EnchantmentView: {
       effect: components['schemas']['RiteEffectKind']
@@ -29879,6 +30502,43 @@ export interface components {
       guests: components['schemas']['GuestView'][]
     }
     GazeKind: 'terror' | 'petrify' | 'sleep' | 'madness'
+    GeasBreakInput: {
+      geas_id: number
+    }
+    GeasDeleteInput: {
+      geas_id: number
+    }
+    GeasEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      geas_id: number
+    }
+    GeasLayInput: {
+      bearer_id: number
+      layer_id?: number | null
+      layer: components['schemas']['GeasLayer']
+      mode: components['schemas']['GeasMode']
+      act: components['schemas']['ActKind']
+    }
+    GeasLayer: 'seer' | 'god' | 'rite'
+    GeasMode: 'taboo' | 'duty'
+    GeasState: 'kept' | 'broken'
+    GeasView: {
+      id: number
+      bearer: components['schemas']['NodeRef'] | null
+      layer_node: components['schemas']['NodeRef'] | null
+      layer: components['schemas']['GeasLayer']
+      mode: components['schemas']['GeasMode']
+      act: components['schemas']['ActKind']
+      state: components['schemas']['GeasState']
+      favour: number
+      laid_epoch: number
+      last_kept_epoch: number
+      broken_epoch: number | null
+      locked: string[]
+    }
     GeneView: {
       locus: components['schemas']['Locus']
       label: string
@@ -30094,6 +30754,8 @@ export interface components {
       | 'reconcile'
       | 'rebel'
       | 'hold_thrones'
+      | 'prevent_mantling'
+      | 'sponsor_mantling'
     GodGoalSetInput: {
       god_id: number
       kind: components['schemas']['GodGoalKind']
@@ -30175,6 +30837,17 @@ export interface components {
       | 'hive_council'
       | 'god_kingdom'
       | 'occupation'
+    GrammarView: {
+      technique: components['schemas']['SpellTechnique']
+      form: components['schemas']['SpellForm']
+      range: components['schemas']['SpellRange']
+      duration: components['schemas']['SpellDuration']
+      target: components['schemas']['SpellTarget']
+      difficulty: number
+      paradigm: components['schemas']['NodeRef'] | null
+      myth: components['schemas']['NodeRef'] | null
+      locked: string[]
+    }
     GraphLink: {
       source: number
       target: number
@@ -30476,6 +31149,54 @@ export interface components {
       role: components['schemas']['MortalRole'] | null
       entity_type: components['schemas']['EntityType']
       power: number | null
+    }
+    HeroquestAdvanceInput: {
+      quest_id: number
+    }
+    HeroquestBeginInput: {
+      quester_id: number
+      legend_id: number
+      members?: number[]
+    }
+    HeroquestBoon:
+      | 'blessing'
+      | 'item'
+      | 'rite'
+      | 'lifted_curse'
+      | 'renewed_land'
+      | 'favour'
+      | 'true_name'
+      | 'title'
+    HeroquestDeleteInput: {
+      quest_id: number
+    }
+    HeroquestEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      quest_id: number
+    }
+    HeroquestState: 'questing' | 'succeeded' | 'failed' | 'trapped' | 'broken'
+    HeroquestView: {
+      id: number
+      quester: components['schemas']['NodeRef'] | null
+      legend: components['schemas']['NodeRef'] | null
+      god: components['schemas']['NodeRef'] | null
+      realm: components['schemas']['MythicRealm']
+      place: components['schemas']['NodeRef'] | null
+      steps: number
+      step: number
+      fidelity: number
+      deviated: boolean
+      state: components['schemas']['HeroquestState']
+      boon: components['schemas']['HeroquestBoon'] | null
+      interference: number
+      next_trial: components['schemas']['QuestTrial'] | null
+      members: components['schemas']['NodeRef'][]
+      start_epoch: number
+      end_epoch: number | null
+      locked: string[]
     }
     HistorianViewItem: {
       id: number
@@ -31463,6 +32184,14 @@ export interface components {
       custom_class_id?: number | null
       book_contents: components['schemas']['BookPage'][]
     }
+    ItemChargeEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      item_id: number
+      effect: components['schemas']['RiteEffectKind']
+    }
     ItemClass:
       | 'blade'
       | 'longblade'
@@ -31957,6 +32686,28 @@ export interface components {
       bearer: components['schemas']['NodeRef']
       name: string
     }
+    LabTextDeleteInput: {
+      book_id: number
+    }
+    LabTextEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      book_id: number
+    }
+    LabTextView: {
+      book: components['schemas']['NodeRef'] | null
+      rite: components['schemas']['NodeRef'] | null
+      author: components['schemas']['NodeRef'] | null
+      fidelity: number
+      epoch: number
+      locked: string[]
+    }
+    LabTextWriteInput: {
+      rite_id: number
+      author_id: number
+    }
     LabelView: {
       key: string
       label: string
@@ -32268,10 +33019,21 @@ export interface components {
       law_id: number
     }
     LawScope: 'cosmos' | 'dimension' | 'world' | 'region'
+    LawSource: 'authored' | 'enchantment'
     LawStats: {
       kind: 'law'
       rigidity?: number | null
       justice?: number | null
+    }
+    LawUpkeepDeleteInput: {
+      law_id: number
+    }
+    LawUpkeepEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      law_id: number
     }
     LawView: {
       id: number
@@ -32740,6 +33502,29 @@ export interface components {
       at: string
       text: string
     }
+    LongevityBeginInput: {
+      mortal_id: number
+      form: components['schemas']['SpellForm']
+    }
+    LongevityEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      mortal_id: number
+    }
+    LongevityEndInput: {
+      mortal_id: number
+    }
+    LongevityView: {
+      form: components['schemas']['SpellForm']
+      dose: number
+      dependence: number
+      years_gained: number
+      lapsed_epochs: number
+      since_epoch: number
+      locked: string[]
+    }
     LoreCard: {
       entity_id: number
       language?: components['schemas']['LanguageCard'] | null
@@ -32988,6 +33773,29 @@ export interface components {
       locked: string[]
     }
     Manifestation: 'radiant' | 'serene' | 'stern' | 'dreadful'
+    MantlingDeleteInput: {
+      mortal_id: number
+    }
+    MantlingEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      mortal_id: number
+    }
+    MantlingState: 'walking' | 'ascended' | 'replaced' | 'blocked' | 'failed'
+    MantlingView: {
+      mortal: components['schemas']['NodeRef'] | null
+      god: components['schemas']['NodeRef'] | null
+      deeds: number
+      worship: number
+      progress: number
+      state: components['schemas']['MantlingState']
+      blocked: boolean
+      notified: boolean
+      since_epoch: number
+      locked: string[]
+    }
     MapArmy: {
       army_id: number
       name: string
@@ -34266,6 +35074,9 @@ export interface components {
       | 'delve_site'
       | 'dig_site'
       | 'search_magic_sites'
+      | 'undertake_heroquest'
+      | 'take_longevity'
+      | 'found_enchantment'
       | 'send_dispatch'
       | 'seize_title'
       | 'bargain_with_estate'
@@ -34381,6 +35192,7 @@ export interface components {
       attrition: number
       note: string | null
     }
+    MythicRealm: 'palace' | 'dead' | 'dream' | 'sacred_site'
     NameAcceptInput: {
       entity_id: number
       name: string
@@ -34576,6 +35388,17 @@ export interface components {
       origin: string
     }
     NobleWant: 'dwelling' | 'fine_goods' | 'office' | 'honour'
+    NodeArcanaView: {
+      node: components['schemas']['NodeRef']
+      grammar: components['schemas']['GrammarView'] | null
+      lab_texts: components['schemas']['LabTextView'][]
+      vis: components['schemas']['VisView'][]
+      warping: components['schemas']['WarpingView'] | null
+      longevity: components['schemas']['LongevityView'] | null
+      charges: components['schemas']['ChargeView'][]
+      upkeep: components['schemas']['UpkeepView'] | null
+      kept: components['schemas']['UpkeepView'][]
+    }
     NodeGatheringsView: {
       node_id: number
       hosted: components['schemas']['GatheringView'][]
@@ -34623,6 +35446,17 @@ export interface components {
       pins: components['schemas']['GuardRecord'][]
       suppressions: components['schemas']['GuardRecord'][]
       incidents: components['schemas']['IncidentRecord'][]
+    }
+    NodeMythicView: {
+      node: components['schemas']['NodeRef']
+      heroquests: components['schemas']['HeroquestView'][]
+      mantling: components['schemas']['MantlingView'] | null
+      walkers: components['schemas']['MantlingView'][]
+      servitor: components['schemas']['ServitorView'] | null
+      servitors: components['schemas']['ServitorView'][]
+      geasa: components['schemas']['GeasView'][]
+      laid: components['schemas']['GeasView'][]
+      offices: components['schemas']['CosmicOfficeView'][]
     }
     NodeRef: {
       id: number
@@ -34781,6 +35615,7 @@ export interface components {
     OfficeAbolishInput: {
       office_id: number
     }
+    OfficeChoice: 'council' | 'creator' | 'conquest' | 'mantling'
     OfficeCreateInput: {
       polity_id: number
       kind: components['schemas']['OfficeKind']
@@ -34987,6 +35822,10 @@ export interface components {
       | 'possession'
       | 'trauma'
       | 'hunger_curse'
+      | 'warping'
+      | 'vis_dependence'
+      | 'geas_doom'
+      | 'soul_trapped'
     PackageMeta: {
       name: string
       epoch: number | null
@@ -35785,6 +36624,7 @@ export interface components {
       | 'ecosabotage'
       | 'learn_true_name'
       | 'forge_letter'
+      | 'geas_trap'
     PoliticalMovementView: {
       movement: components['schemas']['NodeRef']
       realm: components['schemas']['NodeRef'] | null
@@ -36716,6 +37556,7 @@ export interface components {
     QuestAbandonInput: {
       thread_id: number
     }
+    QuestTrial: 'skill' | 'passion' | 'conviction' | 'faith'
     QueueItem: {
       kind: components['schemas']['TargetKind']
       id: number
@@ -36870,6 +37711,7 @@ export interface components {
       sentences: components['schemas']['SentenceView'][]
     }
     RebirthPath: 'people' | 'house' | 'merit'
+    RechargeRule: 'site' | 'vis' | 'moon' | 'none'
     RecordColumnView: {
       name: string
       kind: string
@@ -37837,6 +38679,8 @@ export interface components {
       | 'seal_soul'
       | 'unseal_soul'
       | 'exorcise'
+      | 'dispel'
+      | 'longevity'
     RiteEffectView: {
       effect: components['schemas']['RiteEffectKind']
       magnitude: number
@@ -37849,6 +38693,16 @@ export interface components {
       rite_id: number
       authority_id: number
       forbidden: boolean
+    }
+    RiteGrammarDeleteInput: {
+      rite_id: number
+    }
+    RiteGrammarEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      rite_id: number
     }
     RiteKind: 'prayer' | 'offering' | 'blood' | 'life' | 'rite'
     RiteRequirementsInput: {
@@ -38515,6 +39369,39 @@ export interface components {
       crime: string
       penalty: string
       epoch: number
+    }
+    ServitorEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      spirit_id: number
+    }
+    ServitorMakeInput: {
+      god_id: number
+      name: string
+      rank: components['schemas']['ServitorRank']
+      role: components['schemas']['ServitorRole']
+      post_id?: number | null
+    }
+    ServitorOrigin: 'made' | 'raised' | 'summoned'
+    ServitorRank:
+      'herald' | 'guardian' | 'angel' | 'fury' | 'psychopomp' | 'choir'
+    ServitorReleaseInput: {
+      spirit_id: number
+    }
+    ServitorRole: 'messenger' | 'guard' | 'judge' | 'host'
+    ServitorView: {
+      spirit: components['schemas']['NodeRef'] | null
+      god: components['schemas']['NodeRef'] | null
+      rank: components['schemas']['ServitorRank']
+      origin: components['schemas']['ServitorOrigin']
+      role: components['schemas']['ServitorRole']
+      post: components['schemas']['NodeRef'] | null
+      loyalty: number
+      fallen_to: components['schemas']['NodeRef'] | null
+      since_epoch: number
+      locked: string[]
     }
     SettlementAbandonInput: {
       settlement_id: number
@@ -39404,6 +40291,15 @@ export interface components {
       | 'raise_divine_creature'
       | 'teach_creature'
       | 'release_creature'
+      | 'make_servitor'
+      | 'command_servitor'
+      | 'release_servitor'
+      | 'lay_geas'
+      | 'lift_geas'
+      | 'call_heroquest'
+      | 'resign_office'
+      | 'lay_enchantment'
+      | 'end_enchantment'
       | 'shape_image'
       | 'forge_material'
       | 'hide_secret'
@@ -39891,6 +40787,33 @@ export interface components {
       speculation_id: number
     }
     SpeculationStatus: 'hoarding' | 'sold' | 'bust'
+    SpellDuration: 'instant' | 'season' | 'epoch' | 'permanent'
+    SpellForm:
+      | 'fire'
+      | 'water'
+      | 'air'
+      | 'earth'
+      | 'plant'
+      | 'animal'
+      | 'body'
+      | 'mind'
+      | 'image'
+      | 'spirit'
+      | 'time'
+      | 'void'
+      | 'death'
+      | 'light'
+    SpellRange: 'touch' | 'sight' | 'region' | 'world'
+    SpellTarget: 'one' | 'group' | 'structure' | 'region'
+    SpellTechnique:
+      | 'create'
+      | 'perceive'
+      | 'transform'
+      | 'destroy'
+      | 'control'
+      | 'bind'
+      | 'summon'
+      | 'ward'
     SphereRemoveInput: {
       power_id: number
       client_id: number
@@ -42248,6 +43171,18 @@ export interface components {
       shield: components['schemas']['ShieldType']
       terror: number
     }
+    UpkeepView: {
+      law: components['schemas']['NodeRef'] | null
+      caster: components['schemas']['NodeRef'] | null
+      source: components['schemas']['LawSource']
+      essence_upkeep: number
+      vis_form: components['schemas']['SpellForm'] | null
+      vis_upkeep: number
+      dispel_resistance: number
+      unpaid_epochs: number
+      since_epoch: number
+      locked: string[]
+    }
     UseKindCreateInput: {
       name: string
       base_use: components['schemas']['SpeciesUse']
@@ -42439,6 +43374,21 @@ export interface components {
       strangeness: number
       status: components['schemas']['VesselStatus']
       voyages: number
+      locked: string[]
+    }
+    VisDeleteInput: {
+      holder_id: number
+      form: components['schemas']['SpellForm']
+    }
+    VisSetInput: {
+      holder_id: number
+      form: components['schemas']['SpellForm']
+      amount: number
+      hold: boolean
+    }
+    VisView: {
+      form: components['schemas']['SpellForm']
+      amount: number
       locked: string[]
     }
     Visibility: 'obvious' | 'noticeable' | 'hidden'
@@ -42679,6 +43629,22 @@ export interface components {
       war_id: number
       side_id: number
       weariness: number
+    }
+    WarpingDeleteInput: {
+      node_id: number
+    }
+    WarpingEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      node_id: number
+    }
+    WarpingView: {
+      value: number
+      stage: number
+      updated_epoch: number
+      locked: string[]
     }
     WaterSource: 'none' | 'spring' | 'well' | 'river' | 'lake' | 'sea'
     WaterSupply: 'none' | 'well' | 'cistern' | 'aqueduct'
@@ -53162,6 +54128,91 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['WorldDominionView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_arcana_api_arcana_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NodeArcanaView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_mythic_api_mythic_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NodeMythicView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  cosmic_offices_api_mythic_offices_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CosmicOfficeView'][]
         }
       }
       default: {
@@ -71101,6 +72152,1029 @@ export interface operations {
       }
     }
   }
+  action_rite_grammar_edit_api_actions_rite_grammar_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RiteGrammarEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_rite_grammar_delete_api_actions_rite_grammar_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RiteGrammarDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_lab_text_write_api_actions_lab_text_write_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LabTextWriteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_lab_text_edit_api_actions_lab_text_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LabTextEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_lab_text_delete_api_actions_lab_text_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LabTextDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_vis_set_api_actions_vis_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VisSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_vis_delete_api_actions_vis_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VisDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_warping_edit_api_actions_warping_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WarpingEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_warping_delete_api_actions_warping_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WarpingDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_longevity_begin_api_actions_longevity_begin_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LongevityBeginInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_longevity_edit_api_actions_longevity_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LongevityEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_longevity_end_api_actions_longevity_end_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LongevityEndInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_enchantment_lay_api_actions_enchantment_lay_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EnchantmentLayInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_law_upkeep_edit_api_actions_law_upkeep_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LawUpkeepEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_law_upkeep_delete_api_actions_law_upkeep_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LawUpkeepDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_enchantment_dispel_api_actions_enchantment_dispel_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EnchantmentDispelInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_item_charge_edit_api_actions_item_charge_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ItemChargeEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_heroquest_begin_api_actions_heroquest_begin_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['HeroquestBeginInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_heroquest_edit_api_actions_heroquest_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['HeroquestEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_heroquest_advance_api_actions_heroquest_advance_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['HeroquestAdvanceInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_heroquest_delete_api_actions_heroquest_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['HeroquestDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_mantling_edit_api_actions_mantling_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MantlingEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_mantling_delete_api_actions_mantling_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MantlingDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_servitor_make_api_actions_servitor_make_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ServitorMakeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_servitor_edit_api_actions_servitor_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ServitorEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_servitor_release_api_actions_servitor_release_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ServitorReleaseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_geas_lay_api_actions_geas_lay_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GeasLayInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_geas_edit_api_actions_geas_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GeasEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_geas_break_api_actions_geas_break_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GeasBreakInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_geas_delete_api_actions_geas_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GeasDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_cosmic_office_appoint_api_actions_cosmic_office_appoint_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmicOfficeAppointInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_cosmic_office_edit_api_actions_cosmic_office_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmicOfficeEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_cosmic_office_vacate_api_actions_cosmic_office_vacate_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CosmicOfficeVacateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   action_dominion_delete_api_actions_dominion_delete_post: {
     parameters: {
       query?: never
@@ -87775,6 +89849,7 @@ export const collectionKindValues: ReadonlyArray<
   'conversion_wave',
   'schism',
   'excavation',
+  'heroquest',
 ]
 export const collectionRoleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CollectionRole']
@@ -87883,6 +89958,7 @@ export const conditionKindValues: ReadonlyArray<
   'chosen_mark',
   'divine_brand',
   'nightmares',
+  'comatose',
 ]
 export const consciousnessValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Consciousness']
@@ -87947,6 +90023,9 @@ export const cosmicFeatureKindValues: ReadonlyArray<
   'gravity_well',
   'wandering_star',
 ]
+export const cosmicOfficeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CosmicOffice']
+> = ['dead', 'gates', 'stars', 'oaths', 'herald', 'hunt']
 export const cosmosSizeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CosmosSize']
 > = ['single', 'small', 'large']
@@ -87969,6 +90048,7 @@ export const councilMotionValues: ReadonlyArray<
   'holy_world',
   'cosmic_truce',
   'petition_creator',
+  'appoint_office',
 ]
 export const councilTaskValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CouncilTask']
@@ -89344,6 +91424,15 @@ export const gatheringStatusValues: ReadonlyArray<
 export const gazeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GazeKind']
 > = ['terror', 'petrify', 'sleep', 'madness']
+export const geasLayerValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GeasLayer']
+> = ['seer', 'god', 'rite']
+export const geasModeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GeasMode']
+> = ['taboo', 'duty']
+export const geasStateValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['GeasState']
+> = ['kept', 'broken']
 export const genesisFinishedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GenesisFinishedEvent']['kind']
 > = ['genesis.finished']
@@ -89388,6 +91477,8 @@ export const godGoalKindValues: ReadonlyArray<
   'reconcile',
   'rebel',
   'hold_thrones',
+  'prevent_mantling',
+  'sponsor_mantling',
 ]
 export const godPunishmentKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GodPunishmentKind']
@@ -89480,6 +91571,21 @@ export const herdTrainingValues: ReadonlyArray<
 export const heroQuestKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HeroQuestKind']
 > = ['hunt', 'thread', 'relic', 'knowledge', 'vengeance']
+export const heroquestBoonValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['HeroquestBoon']
+> = [
+  'blessing',
+  'item',
+  'rite',
+  'lifted_curse',
+  'renewed_land',
+  'favour',
+  'true_name',
+  'title',
+]
+export const heroquestStateValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['HeroquestState']
+> = ['questing', 'succeeded', 'failed', 'trapped', 'broken']
 export const holdKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HoldKind']
 > = ['incited_by_son_id', 'golden_age', 'dedicated_son_id', 'anchor_entity_id']
@@ -89984,6 +92090,9 @@ export const lawKindValues: ReadonlyArray<
 export const lawScopeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LawScope']
 > = ['cosmos', 'dimension', 'world', 'region']
+export const lawSourceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LawSource']
+> = ['authored', 'enchantment']
 export const lawStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LawStats']['kind']
 > = ['law']
@@ -90193,6 +92302,9 @@ export const mandateStateValues: ReadonlyArray<
 export const manifestationValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Manifestation']
 > = ['radiant', 'serene', 'stern', 'dreadful']
+export const mantlingStateValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MantlingState']
+> = ['walking', 'ascended', 'replaced', 'blocked', 'failed']
 export const markerKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MarkerKind']
 > = ['battle', 'disaster', 'ruin', 'remnant', 'event']
@@ -90560,6 +92672,9 @@ export const mortalToolIdValues: ReadonlyArray<
   'delve_site',
   'dig_site',
   'search_magic_sites',
+  'undertake_heroquest',
+  'take_longevity',
+  'found_enchantment',
   'send_dispatch',
   'seize_title',
   'bargain_with_estate',
@@ -90594,6 +92709,9 @@ export const movementCauseValues: ReadonlyArray<
   'franchise',
   'peace',
 ]
+export const mythicRealmValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MythicRealm']
+> = ['palace', 'dead', 'dream', 'sacred_site']
 export const naturalLawValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NaturalLaw']
 > = [
@@ -90735,6 +92853,9 @@ export const oathStatusValues: ReadonlyArray<
 export const oceanCurrentValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OceanCurrent']
 > = ['none', 'warm', 'cold']
+export const officeChoiceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['OfficeChoice']
+> = ['council', 'creator', 'conquest', 'mantling']
 export const officeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OfficeKind']
 > = [
@@ -90797,6 +92918,10 @@ export const packageKindValues: ReadonlyArray<
   'possession',
   'trauma',
   'hunger_curse',
+  'warping',
+  'vis_dependence',
+  'geas_doom',
+  'soul_trapped',
 ]
 export const partOfSpeechValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PartOfSpeech']
@@ -91017,6 +93142,7 @@ export const plotKindValues: ReadonlyArray<
   'ecosabotage',
   'learn_true_name',
   'forge_letter',
+  'geas_trap',
 ]
 export const polityStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PolityStats']['kind']
@@ -91323,6 +93449,9 @@ export const qualityTierValues: ReadonlyArray<
   'masterwork',
   'artifact',
 ]
+export const questTrialValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['QuestTrial']
+> = ['skill', 'passion', 'conviction', 'faith']
 export const rangeTrendValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RangeTrend']
 > = ['rising', 'steady', 'falling']
@@ -91332,6 +93461,9 @@ export const rarityValues: ReadonlyArray<
 export const rebirthPathValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RebirthPath']
 > = ['people', 'house', 'merit']
+export const rechargeRuleValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RechargeRule']
+> = ['site', 'vis', 'moon', 'none']
 export const recordEndValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RecordEnd']
 > = ['repeal', 'abandon', 'forget', 'disband', 'lose', 'assimilate']
@@ -91465,6 +93597,8 @@ export const riteEffectKindValues: ReadonlyArray<
   'seal_soul',
   'unseal_soul',
   'exorcise',
+  'dispel',
+  'longevity',
 ]
 export const riteKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RiteKind']
@@ -91615,6 +93749,15 @@ export const secretKindValues: ReadonlyArray<
 export const secretOriginValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SecretOrigin']
 > = ['land', 'player', 'son']
+export const servitorOriginValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ServitorOrigin']
+> = ['made', 'raised', 'summoned']
+export const servitorRankValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ServitorRank']
+> = ['herald', 'guardian', 'angel', 'fury', 'psychopomp', 'choir']
+export const servitorRoleValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ServitorRole']
+> = ['messenger', 'guard', 'judge', 'host']
 export const settlementStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SettlementStats']['kind']
 > = ['settlement']
@@ -91894,6 +94037,15 @@ export const sonToolIdValues: ReadonlyArray<
   'raise_divine_creature',
   'teach_creature',
   'release_creature',
+  'make_servitor',
+  'command_servitor',
+  'release_servitor',
+  'lay_geas',
+  'lift_geas',
+  'call_heroquest',
+  'resign_office',
+  'lay_enchantment',
+  'end_enchantment',
   'shape_image',
   'forge_material',
   'hide_secret',
@@ -92000,6 +94152,45 @@ export const speciesUseValues: ReadonlyArray<
 export const speculationStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SpeculationStatus']
 > = ['hoarding', 'sold', 'bust']
+export const spellDurationValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SpellDuration']
+> = ['instant', 'season', 'epoch', 'permanent']
+export const spellFormValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SpellForm']
+> = [
+  'fire',
+  'water',
+  'air',
+  'earth',
+  'plant',
+  'animal',
+  'body',
+  'mind',
+  'image',
+  'spirit',
+  'time',
+  'void',
+  'death',
+  'light',
+]
+export const spellRangeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SpellRange']
+> = ['touch', 'sight', 'region', 'world']
+export const spellTargetValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SpellTarget']
+> = ['one', 'group', 'structure', 'region']
+export const spellTechniqueValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SpellTechnique']
+> = [
+  'create',
+  'perceive',
+  'transform',
+  'destroy',
+  'control',
+  'bind',
+  'summon',
+  'ward',
+]
 export const spiritAlignmentValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SpiritAlignment']
 > = ['guardian', 'neutral', 'vengeful']

@@ -266,6 +266,7 @@ export const CONDITIONS: Record<string, Named> = {
   chosen_mark: { label: 'Mark of the chosen', icon: Star, tone: 'gold' },
   divine_brand: { label: "A god's brand", icon: Sun, tone: 'gold' },
   nightmares: { label: 'Recurring nightmares', icon: Moon, tone: 'verdigris' },
+  comatose: { label: 'Comatose', icon: EyeOff, tone: 'muted' },
 }
 
 export const MEDICINE: Record<string, Named & { hint: string }> = {

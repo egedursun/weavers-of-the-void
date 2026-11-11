@@ -156,7 +156,9 @@ async def test_magic_storms_wizards_and_price(session: AsyncSession, world: Core
     await magic_storms(ctx)
     assert stat(relic, "might") == 10 + rules.world_effects.magic_storm_might_gain
     town = await settlement(session, "Brookhold", world, world.regions[0])
-    foe = await settlement(session, "Grimhold", world, world.regions[1])
+    far = await settlement(session, "Farhold", world, world.regions[2])
+    foe = await settlement(session, "Grimhold", world, world.regions[0])
+    await bond(session, town.id, far.id, BondKind.ENEMY)
     await bond(session, town.id, foe.id, BondKind.ENEMY)
     mage = await mortal(session, "Vesna", world, town.id, intellect=90)
     lore = await knowledge(session, world, "Ember Lore", KnowledgeBranch.MAGIC)
@@ -167,6 +169,7 @@ async def test_magic_storms_wizards_and_price(session: AsyncSession, world: Core
     await wizards(ctx)
     assert await has_flag(session, mage.id, EntityFlag.WIZARD)
     assert await has_flag(session, foe.id, EntityFlag.CURSED)
+    assert not await has_flag(session, far.id, EntityFlag.CURSED)
     await natural_law(session, world, "Toll of Sorcery", NaturalLaw.MAGIC_PRICE)
     mages = await entity(
         session, "Starborn", EntityType.PEOPLE, PeopleStats(population=1000, magic=90), world_id=world.world.id, location_id=world.regions[1].id

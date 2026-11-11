@@ -18,6 +18,10 @@ async def buildings(session, town):
     return await session.scalars(select(EntityRow).where(EntityRow.location_id == town.id, EntityRow.entity_type == EntityType.STRUCTURE))
 
 
+async def merchants(session, town):
+    return await session.scalars(select(EntityRow).where(EntityRow.location_id == town.id, EntityRow.mortal_role == MortalRole.MERCHANT))
+
+
 async def folk(session, town):
     return await session.scalars(select(EntityRow).where(await present_among(session, [town.id]), EntityRow.entity_type == EntityType.MORTAL))
 """
@@ -34,7 +38,7 @@ def checker() -> ModuleType:
 
 def test_mortals_found_by_a_raw_place_are_flagged() -> None:
     found = checker().raw_queries({Path("module.py"): RAW})
-    assert [item.line for item in found] == [3, 7]
+    assert [item.line for item in found] == [3, 7, 15]
 
 
 def test_the_backend_finds_mortals_of_a_place_only_through_the_folk_primitives() -> None:

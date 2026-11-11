@@ -23,6 +23,7 @@ from aerona.engine.body.afflictions import afflict, blood_curse
 from aerona.engine.body.hits import Harm
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.dreams import DreamDraft, visit
+from aerona.engine.mythic.servitors import herald_bonus
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.prompts import SonToolId
@@ -254,8 +255,13 @@ async def send_dream(call: SonCall, args: DreamInput) -> str:
     old = await call.session.get(SonRow, patron_id) if patron_id is not None else None
     whisper = tools.dream_whisper_bonus_pct if await call.has_power(PowerEffect.DREAM_WHISPER) else 0
     rival = old.charisma if old is not None else tools.dream_default_rival_charisma
+    heralds = await herald_bonus(call.session, call.rules, call.son.id)
     raw = (
-        tools.dream_base_pct + (call.son.charisma - rival) / tools.dream_charisma_divisor + whisper - (stat(target, "zeal") or 0) / tools.dream_zealotry_divisor
+        tools.dream_base_pct
+        + (call.son.charisma - rival) / tools.dream_charisma_divisor
+        + whisper
+        + heralds
+        - (stat(target, "zeal") or 0) / tools.dream_zealotry_divisor
     )
     chance = max(tools.dream_min_pct, min(tools.dream_max_pct, rounded(raw)))
     call.spend_essence(call.rules.costs.dream)

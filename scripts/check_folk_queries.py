@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "backend" / "src" / "aerona"
 HOME = SOURCE / "engine" / "primitives" / "folk.py"
+MORTAL_MARKS = ("EntityType.MORTAL", "EntityRow.mortal_role")
 BLOCKS = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.If, ast.For, ast.AsyncFor, ast.While, ast.With, ast.AsyncWith, ast.Try)
 
 
@@ -23,7 +24,7 @@ def located(node: ast.AST) -> bool:
 
 def raw_places(tree: ast.AST) -> Iterator[ast.AST]:
     for statement in ast.walk(tree):
-        if not isinstance(statement, ast.stmt) or isinstance(statement, BLOCKS) or "EntityType.MORTAL" not in ast.unparse(statement):
+        if not isinstance(statement, ast.stmt) or isinstance(statement, BLOCKS) or not any(mark in ast.unparse(statement) for mark in MORTAL_MARKS):
             continue
         for node in ast.walk(statement):
             if isinstance(node, ast.Compare) and len(node.ops) == 1 and isinstance(node.ops[0], ast.Eq) and located(node.left):

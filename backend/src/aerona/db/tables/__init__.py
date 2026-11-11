@@ -13,6 +13,7 @@ from aerona.db.tables.affairs import (
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.agency import ActionRecordRow, AgentTurnRow, CreationRewardRow, EpochAgentRow, TurnCounterRow
 from aerona.db.tables.anatomy import CreatureAnatomyRow
+from aerona.db.tables.arcana import LabTextRow, LawUpkeepRow, LongevityRow, RiteGrammarRow, VisStockRow, WarpingRow
 from aerona.db.tables.body import BodyCustomRow, BodyRow, ConditionRow, InjuryRow, MaimedCohortRow, ProsthesisRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldMapRow, WorldRow
@@ -253,6 +254,7 @@ from aerona.db.tables.mind import (
 )
 from aerona.db.tables.mortal import KindVariantRow, MarriageRow, MortalEquipmentRow, MortalProfileRow
 from aerona.db.tables.motifs import MotifOverrideRow
+from aerona.db.tables.mythic import CosmicOfficeRow, GeasRow, HeroquestMemberRow, HeroquestRow, MantlingRow, ServitorRow
 from aerona.db.tables.node import NameRegistryRow, NodeRow
 from aerona.db.tables.ownership import SiteProfitRow
 from aerona.db.tables.physics import (
@@ -400,6 +402,7 @@ __all__ = [
     "CorveeRow",
     "CosmicBeingProfileRow",
     "CosmicFeatureRow",
+    "CosmicOfficeRow",
     "CosmosRow",
     "CouncilRow",
     "CouncilRulingRow",
@@ -486,6 +489,7 @@ __all__ = [
     "GalaxyRow",
     "GatheringGuestRow",
     "GatheringRow",
+    "GeasRow",
     "GenomeRow",
     "GodConflictRow",
     "GodDesignRow",
@@ -501,6 +505,8 @@ __all__ = [
     "HerdRow",
     "HeresyRow",
     "HeroQuestRow",
+    "HeroquestMemberRow",
+    "HeroquestRow",
     "HistorianViewRow",
     "HolderLevelRow",
     "HolderTechniqueRow",
@@ -530,6 +536,7 @@ __all__ = [
     "JobRow",
     "JourneyRow",
     "KindVariantRow",
+    "LabTextRow",
     "LabourReasonRow",
     "LabourRow",
     "LanguageIntelligibilityRow",
@@ -538,6 +545,7 @@ __all__ = [
     "LawJurisdictionRow",
     "LawProfileRow",
     "LawProposalRow",
+    "LawUpkeepRow",
     "LearnedTacticRow",
     "LedgerChangeRow",
     "LedgerEntryRow",
@@ -546,10 +554,12 @@ __all__ = [
     "LexemeRow",
     "LeyLineRow",
     "LoanRow",
+    "LongevityRow",
     "LoreTradeRow",
     "MagicSiteRow",
     "MaimedCohortRow",
     "MandateRow",
+    "MantlingRow",
     "MapNoteRow",
     "MapSnapshotRow",
     "MarketPriceHoldRow",
@@ -639,6 +649,7 @@ __all__ = [
     "ReverenceRow",
     "RiftRow",
     "RiteEffectRow",
+    "RiteGrammarRow",
     "RiteProfileRow",
     "RiverShiftRow",
     "RoomContentRow",
@@ -650,6 +661,7 @@ __all__ = [
     "ScoreRow",
     "SecretRow",
     "SentenceRow",
+    "ServitorRow",
     "SettlementHistoryRow",
     "SettlementInfrastructureRow",
     "SettlementProfileRow",
@@ -718,10 +730,12 @@ __all__ = [
     "UnitDesignRow",
     "VassalageRow",
     "VesselProfileRow",
+    "VisStockRow",
     "WarAimRow",
     "WarProductionRow",
     "WarRow",
     "WarSideRow",
+    "WarpingRow",
     "WorkshopDesignRow",
     "WorkshopRow",
     "WorldAttentionRow",

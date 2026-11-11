@@ -19,6 +19,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.phases import (
     affairs,
     afterlife,
+    arcana,
     belief_memory,
     births,
     body,
@@ -83,6 +84,7 @@ from aerona.engine.phases import (
     monsters,
     mortal_life,
     mortals,
+    mythic,
     native_faith,
     pantheon,
     places,
@@ -152,6 +154,8 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + genetics.PHASES
     + gatherings.PHASES
     + dominion.PHASES
+    + arcana.PHASES
+    + mythic.PHASES
     + households.PHASES
     + intrigue.PHASES
     + communication.PHASES
@@ -428,6 +432,14 @@ SOCIETY_ENGINE_STAGE = stage(
     "dominion",
     "worship_views",
     "divine_creatures",
+    "cosmic_offices",
+    "servitors",
+    "geasa",
+    "mantling",
+    "spell_grammar",
+    "vis",
+    "longevity",
+    "warping",
     "life_seed",
     "writing_systems",
     "knowledge_levels",
@@ -436,6 +448,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "living_stats",
     "belief_and_memory",
     "legend_cycles",
+    "heroquests",
     "prophecy_cycles",
     "espionage",
     "wonders",

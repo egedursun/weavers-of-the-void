@@ -28,6 +28,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import MemoryKind, SkillKind, ThoughtKind
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
+from aerona.engine.arcana.items import use_charge
 from aerona.engine.body.conditions import end_condition
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -350,6 +351,7 @@ async def enchant_year(ctx: TickContext, atlas: RegionAtlas, item: EntityRow, sp
         return 0
     worked = 0
     for spell in spells:
+        await use_charge(ctx, item, spell, holder)
         size = spell.strength
         effect = spell.effect
         if effect in {E.HEAL, E.RAISE_DEAD} and holder.entity_type is EntityType.MORTAL:
@@ -373,7 +375,7 @@ async def enchant_year(ctx: TickContext, atlas: RegionAtlas, item: EntityRow, sp
             if foe is not None:
                 await gain_intel(ctx, home.id, foe, round_half_up(size * table.scry_pct / PERCENT))
                 worked += 1
-        elif effect in {E.DAMAGE, E.WARD, E.BIND, E.SUMMON}:
+        elif effect in {E.DAMAGE, E.WARD, E.BIND, E.SUMMON, E.DISPEL, E.LONGEVITY}:
             worked += 1
     return worked
 

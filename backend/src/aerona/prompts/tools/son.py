@@ -218,6 +218,13 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "workings.magnitude": "Its strength, 1 to 100",
             "workings.damage_type": "For destruction: fire, cold, void or another wound",
             "workings.summon_form": "For a summoning: spirit, beast or undead",
+            "technique": "How the rite works: {{ spell_techniques }}; leave it out to use its school's usual technique",
+            "form": "What the rite works on: {{ spell_forms }}; leave it out to use its school's usual form",
+            "range": "How far it reaches: {{ spell_ranges }}",
+            "duration": "How long it lasts: {{ spell_durations }}",
+            "target": "What it touches: {{ spell_targets }}",
+            "paradigm_id": "The theory of magic it is designed under (a theory id), if any; a truer theory makes it more reliable",
+            "myth_id": "A legend it re-enacts (a legend id), if any; a believed myth gives it strength",
             "holder_id": "The worshipping community or follower who will keep the rite",
         },
     ),
@@ -691,6 +698,52 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "count as yours. 1 action.",
         {"creature_id": "Your creature", "reason": "Why you set it free"},
     ),
+    T.MAKE_SERVITOR: ToolText(
+        "You make a servitor, a spirit in your service of the rank you choose. Messengers carry your dreams further, guards turn back those who "
+        "would raze your holy places and thrones, judges win you veneration among the dead and the host fights for you in divine battles. "
+        "Its loyalty follows how your peoples regard you; a disloyal servitor may fall to another master. {{ rules.servitors.make_cost }} essence, 1 action.",
+        {
+            "name": "Its name",
+            "rank": "Its rank: {{ servitor_ranks }}",
+            "role": "What it does: {{ servitor_roles }}",
+            "post_id": "The holy place, throne or place it guards (an id), if any",
+            "reason": "Why you make it",
+        },
+    ),
+    T.COMMAND_SERVITOR: ToolText(
+        "You give one of your servitors a new role or post; each new command costs it a little loyalty. 1 action.",
+        {"servitor_id": "Your servitor", "role": "Its new role: {{ servitor_roles }}", "post_id": "Where it serves (an id), if any", "reason": "Why"},
+    ),
+    T.RELEASE_SERVITOR: ToolText(
+        "You release a servitor from your service; the spirit stays in the world. 1 action.", {"servitor_id": "Your servitor", "reason": "Why"}
+    ),
+    T.LAY_GEAS: ToolText(
+        "You lay a geas on a mortal in your reach: a taboo it must never break or a duty it must keep doing ({{ geas_acts }}). "
+        "While it is kept you gain favour and dominion where the mortal lives; broken, its doom falls on the mortal. 1 action.",
+        {"bearer_id": "The mortal", "mode": "taboo or duty: {{ geas_modes }}", "act": "The act it forbids or asks", "reason": "Why you lay it"},
+    ),
+    T.LIFT_GEAS: ToolText("You lift a geas you laid. 1 action.", {"geas_id": "The geas", "reason": "Why"}),
+    T.CALL_HEROQUEST: ToolText(
+        "You call a mortal in your reach to a heroquest: it enters a mythic realm to walk a legend step by step. Success brings a boon and may rewrite "
+        "the legend; failure may trap its soul or break the myth. 1 action.",
+        {"quester_id": "The mortal", "legend_id": "The legend it walks", "reason": "Why you call it"},
+    ),
+    T.RESIGN_OFFICE: ToolText(
+        "You give up a cosmic office you hold ({{ cosmic_offices }}); it stands empty and neglected until the council or the Creator fills it. 1 action.",
+        {"office": "The office", "reason": "Why"},
+    ),
+    T.LAY_ENCHANTMENT: ToolText(
+        "You lay a global enchantment: a natural law of your choosing ({{ natural_laws }}) over your world or one region in your reach. "
+        "It holds only while you pay its upkeep in essence each epoch, and rival casters may dispel it. 1 action.",
+        {
+            "name": "Its name in the world's language",
+            "effect": "The law it makes",
+            "region_id": "One region it holds over, if not the whole world",
+            "strength": "Its strength, 1 to 100; stronger costs more upkeep",
+            "reason": "Why",
+        },
+    ),
+    T.END_ENCHANTMENT: ToolText("You end a global enchantment you keep. 1 action.", {"law_id": "The enchantment", "reason": "Why"}),
     T.SHAPE_IMAGE: ToolText(
         "You choose how you meet the image your peoples hold of you: yield to it, resist it at "
         "{{ rules.god_images.resist_cost }} essence each epoch, or embrace it to win fame while it reshapes you faster. 1 action.",

@@ -74,6 +74,7 @@ class PlotKind(StrEnum):
     ECOSABOTAGE = "ecosabotage"
     LEARN_TRUE_NAME = "learn_true_name"
     FORGE_LETTER = "forge_letter"
+    GEAS_TRAP = "geas_trap"
 
 
 class SchemePhase(StrEnum):

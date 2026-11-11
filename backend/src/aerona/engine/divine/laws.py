@@ -16,6 +16,7 @@ from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind
 from aerona.domain.enums.divine import LawException, LawScope
 from aerona.domain.enums.entity import HERO_ROLES, EntityOrigin, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.society import NaturalLaw
+from aerona.engine.arcana.enchantments import keep_law
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.cosmos.placement import cosmography_of
@@ -69,6 +70,9 @@ async def profile_for(ctx: TickContext, law: EntityRow) -> NaturalLawProfileRow 
 
 
 async def upkeep(ctx: TickContext, row: NaturalLawProfileRow) -> bool:
+    kept = await keep_law(ctx, row)
+    if kept is not None:
+        return kept
     table = ctx.rules.natural_laws
     cost = max(1, round(table.upkeep_essence * row.strength / PERCENT))
     author = await god_of(ctx.session, row.author_node_id)

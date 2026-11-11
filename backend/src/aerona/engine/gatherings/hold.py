@@ -48,7 +48,7 @@ from aerona.engine.mortal.standing import add_honour, add_infamy, add_renown, ad
 from aerona.engine.notes import note
 from aerona.engine.polity.treaties import sign_derived
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.folk import folk_among
+from aerona.engine.primitives.folk import folk_among, present_among
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.relations.book import ensure_relation, relation, relations_of, shift
@@ -418,7 +418,7 @@ async def festival(ctx: TickContext, holding: Holding) -> str:
 async def fair(ctx: TickContext, holding: Holding) -> str:
     merchants = await ctx.session.scalars(
         select(EntityRow.id).where(
-            EntityRow.location_id == holding.row.host_node_id, EntityRow.mortal_role == MortalRole.MERCHANT, EntityRow.status == EntityStatus.CANON
+            await present_among(ctx.session, [holding.row.host_node_id]), EntityRow.mortal_role == MortalRole.MERCHANT, EntityRow.status == EntityStatus.CANON
         )
     )
     for merchant in merchants:

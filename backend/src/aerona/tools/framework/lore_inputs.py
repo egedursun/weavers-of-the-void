@@ -4,6 +4,7 @@ from typing import Annotated
 from pydantic import Field
 
 from aerona.constants.tool_inputs import NAME_MAX, NAME_MIN
+from aerona.domain.enums.arcana import SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
 from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.culture import ArtMedium, IdeologyTenet, MagicSchool, MagicSource, RiteEffectKind, SummonForm
 from aerona.tools.framework.inputs import ToolInput
@@ -34,6 +35,13 @@ class DesignRiteInput(ToolInput):
     source: MagicSource | None = None
     power: Annotated[int, Field(ge=1, le=10)]
     workings: Annotated[list[WorkingInput], Field(min_length=1, max_length=MAX_EFFECTS)]
+    technique: SpellTechnique | None = None
+    form: SpellForm | None = None
+    range: SpellRange = SpellRange.SIGHT
+    duration: SpellDuration = SpellDuration.INSTANT
+    target: SpellTarget = SpellTarget.ONE
+    paradigm_id: int | None = None
+    myth_id: int | None = None
     holder_id: int | None = None
 
 

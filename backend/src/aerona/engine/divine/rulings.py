@@ -23,6 +23,7 @@ from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.divine import CouncilMotion, GoalState, SonPunishment
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.mythic import OfficeChoice
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.records import CouncilBallot, CouncilMinutes
 from aerona.engine.body.conditions import gain_condition
@@ -30,6 +31,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.worlds import declare_holy_world
 from aerona.engine.divine.decrees import active_rulings, assigned_world
 from aerona.engine.mind.book import stored_values
+from aerona.engine.mythic.offices import appoint, vacant_office
 from aerona.engine.notes import note
 from aerona.engine.primitives.doom import step_doom
 from aerona.engine.primitives.numbers import clamp_percent
@@ -51,6 +53,7 @@ MOTION_LABELS = {
     M.HOLY_WORLD: "Declare a holy world",
     M.COSMIC_TRUCE: "Set a cosmic truce",
     M.PETITION_CREATOR: "Petition the Creator",
+    M.APPOINT_OFFICE: "Appoint a holder to a cosmic office",
 }
 
 
@@ -155,6 +158,14 @@ async def enact_outlaw(ctx: TickContext, ruling: CouncilRulingRow, members: list
     return [f"{ruling.school.value.replace('_', ' ')} rites were outlawed among the gods"] if ruling.school is not None else []
 
 
+async def enact_appointment(ctx: TickContext, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    vacant = await vacant_office(ctx)
+    if vacant is None or ruling.target_node_id is None:
+        return []
+    await appoint(ctx, vacant, ruling.target_node_id, OfficeChoice.COUNCIL)
+    return [f"the office of {vacant.value} was given to a son"]
+
+
 Enactment = Callable[[TickContext, CouncilRulingRow, list[SonRow]], Awaitable[list[str]]]
 ENACTMENTS: dict[CouncilMotion, Enactment] = {
     M.DIVIDE_WORLDS: enact_divide,
@@ -165,6 +176,7 @@ ENACTMENTS: dict[CouncilMotion, Enactment] = {
     M.PETITION_CREATOR: enact_petition,
     M.COSMIC_TRUCE: enact_truce,
     M.OUTLAW_RITE: enact_outlaw,
+    M.APPOINT_OFFICE: enact_appointment,
 }
 
 
@@ -274,6 +286,9 @@ async def engine_motion(ctx: TickContext, members: list[SonRow]) -> Motion:
     )
     if int(duels or 0) >= council.truce_duels and not await active_rulings(ctx, M.COSMIC_TRUCE):
         return Motion(M.COSMIC_TRUCE)
+    if await vacant_office(ctx) is not None and members:
+        chosen = max(members, key=lambda son: (son.level, son.fame, -son.id))
+        return Motion(M.APPOINT_OFFICE, target_node_id=chosen.id)
     return Motion(M.PETITION_CREATOR)
 
 

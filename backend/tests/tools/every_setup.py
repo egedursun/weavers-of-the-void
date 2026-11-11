@@ -4,11 +4,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.arcana import LawUpkeepRow, VisStockRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmography import CosmicBeingProfileRow, PhenomenonFootprintRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.cosmos import CosmosRow
-from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, RiteProfileRow
-from aerona.db.tables.divine import DivineWoundRow
+from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, LegendProfileRow, RiteProfileRow
+from aerona.db.tables.divine import DivineWoundRow, NaturalLawProfileRow
 from aerona.db.tables.dominion import DivineCreatureRow, MagicSiteRow
 from aerona.db.tables.ecology import HerdRow, SpeciesProfileRow, SpeciesUseRow
 from aerona.db.tables.economy import MarketPriceRow, TradeRouteProfileRow, WorkshopRow
@@ -19,18 +20,21 @@ from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.flora import PlantProfileRow
 from aerona.db.tables.intrigue import HookRow, TrueNameRow
 from aerona.db.tables.mind import SkillRow
+from aerona.db.tables.mythic import CosmicOfficeRow, GeasRow, ServitorRow
 from aerona.db.tables.physics import ImpactEventRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow
 from aerona.db.tables.relations import RelationshipRow
+from aerona.db.tables.renown import ReputationRow
 from aerona.db.tables.sons import SonRelationRow, SonRow
 from aerona.db.tables.statecraft import CrisisRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleProfileRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
+from aerona.domain.enums.arcana import LawSource, SpellForm
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.cosmography import BeingKind, BeingScale, DimensionKind, PhenomenonCause, PhenomenonKind, RiftCause, RiftState
-from aerona.domain.enums.culture import MagicSchool, Technique
+from aerona.domain.enums.culture import LegendArchetype, MagicSchool, Technique
 from aerona.domain.enums.divine import DivineWoundKind, WoundCause
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import MagicSiteKind
@@ -39,16 +43,30 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import CivilizationTier, EntityFlag, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.intrigue import HookSource, HookStrength
-from aerona.domain.enums.mind import SkillKind, SkillSource
+from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource
+from aerona.domain.enums.mythic import CosmicOffice, GeasMode, OfficeChoice, ServitorRank, ServitorRole
 from aerona.domain.enums.physics import ImpactBody, ImpactOutcome
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
-from aerona.domain.enums.society import KnowledgeBranch, SocialClass
+from aerona.domain.enums.renown import ReputationAxis
+from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.statecraft import CrisisDemand
 from aerona.domain.enums.titles import TitleRank
 from aerona.domain.enums.world import StarType
-from aerona.domain.models.entity_stats import BeastStats, CosmicBeingStats, FactionStats, HouseStats, MortalStats, PhenomenonStats, PolityStats, TitleStats
+from aerona.domain.models.entity_stats import (
+    BeastStats,
+    CosmicBeingStats,
+    FactionStats,
+    HouseStats,
+    LegendStats,
+    MortalStats,
+    NaturalLawStats,
+    PhenomenonStats,
+    PolityStats,
+    SpiritStats,
+    TitleStats,
+)
 from aerona.domain.models.profiles import TravelResource
 from aerona.engine.cosmos.ladder import DimensionDraft, create_dimension, ensure_ladder
 from aerona.engine.cosmos.maps import refresh_world_maps
@@ -58,6 +76,7 @@ from aerona.engine.households.formation import found_household
 from aerona.engine.phases.environment import environment_survey
 from aerona.engine.phases.physics import settle_heavens
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.primitives.stats import set_stats
 from aerona.engine.services.war import take_captive
 from aerona.rules.registry import Rules
 from tests.tools.every_tool import Ids
@@ -572,5 +591,70 @@ async def hidden_magic(session: AsyncSession, realm: Realm) -> Ids:
                 source=SkillSource.PRACTICE,
             )
         )
+    await session.flush()
+    return {}
+
+
+async def son_servitor(session: AsyncSession, realm: Realm) -> Ids:
+    await rich_son(session, realm)
+    spirit = await make_entity(session, "Watcher", EntityType.SPIRIT, world_id=realm.cosmos.world_id, location_id=realm.cosmos.place_id, stats=SpiritStats())
+    session.add(ServitorRow(spirit_entity_id=spirit.id, god_node_id=realm.son_id, rank=ServitorRank.HERALD, role=ServitorRole.MESSENGER, loyalty=80, locked=[]))
+    await session.flush()
+    return {"servitor": spirit.id}
+
+
+async def son_geas(session: AsyncSession, realm: Realm) -> Ids:
+    row = GeasRow(bearer_entity_id=realm.mortal_id, layer_node_id=realm.son_id, mode=GeasMode.TABOO, act=ActKind.THEFT, locked=[])
+    session.add(row)
+    await session.flush()
+    return {"geas": row.id}
+
+
+async def son_legend(session: AsyncSession, realm: Realm) -> Ids:
+    legend = await make_entity(session, "The First Walk", EntityType.LEGEND, world_id=realm.cosmos.world_id, stats=LegendStats())
+    session.add(
+        LegendProfileRow(
+            legend_entity_id=legend.id,
+            archetype=LegendArchetype.HERO_QUEST,
+            credence=70,
+            subject_node_id=realm.son_id,
+            tellers=[realm.people_id, realm.settlement_id],
+            locked=[],
+        )
+    )
+    await session.flush()
+    return {"legend": legend.id}
+
+
+async def son_office(session: AsyncSession, realm: Realm) -> Ids:
+    session.add(CosmicOfficeRow(office=CosmicOffice.DEAD, holder_node_id=realm.son_id, chosen_by=OfficeChoice.CREATOR, neglect=0, duty=0, locked=[]))
+    await session.flush()
+    return {}
+
+
+async def son_enchantment(session: AsyncSession, realm: Realm) -> Ids:
+    law = await make_entity(session, "The Long Calm", EntityType.NATURAL_LAW, world_id=realm.cosmos.world_id, stats=NaturalLawStats())
+    session.add(NaturalLawProfileRow(law_entity_id=law.id, effect=NaturalLaw.BOUNTY, world_id=realm.cosmos.world_id, author_node_id=realm.son_id, locked=[]))
+    session.add(LawUpkeepRow(law_entity_id=law.id, caster_node_id=realm.son_id, source=LawSource.ENCHANTMENT, essence_upkeep=1, locked=[]))
+    await session.flush()
+    return {"law": law.id}
+
+
+async def quester(session: AsyncSession, realm: Realm) -> Ids:
+    found = await son_legend(session, realm)
+    for community_id in (realm.people_id, realm.settlement_id):
+        community = await session.get(EntityRow, community_id)
+        if community is not None:
+            set_stats(community, piety=90)
+    session.add(
+        ReputationRow(subject_node_id=realm.mortal_id, community_node_id=realm.settlement_id, axis=ReputationAxis.HEROISM, value=90, heard_epoch=1, locked=[])
+    )
+    await session.flush()
+    return found
+
+
+async def mortal_vis(session: AsyncSession, realm: Realm) -> Ids:
+    session.add(VisStockRow(holder_node_id=realm.mortal_id, form=SpellForm.BODY, amount=20, locked=[]))
+    session.add(SkillRow(holder_node_id=realm.mortal_id, skill=SkillKind.SPELLCRAFT, level=90, peak=90, last_used_epoch=1, source=SkillSource.PRACTICE))
     await session.flush()
     return {}

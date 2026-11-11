@@ -10,6 +10,7 @@ from aerona.db.tables.dominion import GodDesignRow, ThroneRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import RelicRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.mythic import MantlingRow
 from aerona.db.tables.polity import HouseMemberRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import WarRow
@@ -19,6 +20,7 @@ from aerona.domain.enums.divine import GoalSource, GoalState, GodGoalKind
 from aerona.domain.enums.entity import HERO_ROLES, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.mythic import MantlingState
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
@@ -46,6 +48,8 @@ GOAL_LABELS = {
     K.RECONCILE: "Reconcile with the Creator",
     K.REBEL: "Rebel against the Creator",
     K.HOLD_THRONES: "Hold the thrones of power and ascend",
+    K.PREVENT_MANTLING: "Keep a mortal from taking a god's place",
+    K.SPONSOR_MANTLING: "Raise a chosen mortal to godhood",
 }
 
 
@@ -166,6 +170,28 @@ async def thrones(ctx: TickContext, god: God, goal: GodGoalRow) -> Reading:
     return Reading(clamp_int(held_worlds * PERCENT / wanted, 0, PERCENT - 1))
 
 
+async def mantled(ctx: TickContext, goal: GodGoalRow) -> MantlingRow | None:
+    return await ctx.session.get(MantlingRow, goal.target_node_id) if goal.target_node_id is not None else None
+
+
+async def prevent(ctx: TickContext, god: God, goal: GodGoalRow) -> Reading:
+    row = await mantled(ctx, goal)
+    if row is None or row.state in {MantlingState.BLOCKED, MantlingState.FAILED}:
+        return Reading(PERCENT, GoalState.DONE)
+    if row.state in {MantlingState.ASCENDED, MantlingState.REPLACED}:
+        return Reading(0, GoalState.FAILED)
+    return Reading(clamp_int(PERCENT - row.progress, 0, PERCENT - 1))
+
+
+async def sponsor(ctx: TickContext, god: God, goal: GodGoalRow) -> Reading:
+    row = await mantled(ctx, goal)
+    if row is not None and row.state in {MantlingState.ASCENDED, MantlingState.REPLACED}:
+        return Reading(PERCENT, GoalState.DONE)
+    if row is None or row.state in {MantlingState.BLOCKED, MantlingState.FAILED}:
+        return Reading(0, GoalState.FAILED)
+    return Reading(clamp_int(row.progress, 0, PERCENT - 1))
+
+
 CHECKS: dict[GodGoalKind, Check] = {
     K.BE_WORSHIPPED: worshipped,
     K.FOUND_REALM: realm,
@@ -179,6 +205,8 @@ CHECKS: dict[GodGoalKind, Check] = {
     K.RECONCILE: reconcile,
     K.REBEL: rebel,
     K.HOLD_THRONES: thrones,
+    K.PREVENT_MANTLING: prevent,
+    K.SPONSOR_MANTLING: sponsor,
 }
 
 
@@ -261,6 +289,9 @@ async def ascension_options(ctx: TickContext, god: God, ambition: float) -> list
     design = await ctx.session.get(GodDesignRow, god.id)
     if isinstance(god, SonRow) and not god.rebel and design is not None and design.rank > 0:
         found.append((GodGoalRow(kind=K.REBEL), weight))
+    for row in await ctx.session.scalars(select(MantlingRow).where(MantlingRow.state == MantlingState.WALKING).order_by(MantlingRow.mortal_entity_id)):
+        kind = K.PREVENT_MANTLING if row.god_node_id == god.id else K.SPONSOR_MANTLING
+        found.append((GodGoalRow(kind=kind, target_node_id=row.mortal_entity_id), weight * row.progress / PERCENT))
     return found
 
 

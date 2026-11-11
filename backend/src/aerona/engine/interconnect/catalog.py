@@ -28,6 +28,7 @@ from aerona.db.tables.society import CommunityRelationRow
 from aerona.domain.enums.body import ConditionKind, InjuryKind
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.interconnect.catalog_affairs import AFFAIRS_MECHANICS
+from aerona.engine.interconnect.catalog_arcana import ARCANA_MECHANICS, MYTHIC_MECHANICS
 from aerona.engine.interconnect.catalog_army_depth import ARMY_DEPTH_MECHANICS
 from aerona.engine.interconnect.catalog_battle_depth import BATTLE_DEPTH_MECHANICS
 from aerona.engine.interconnect.catalog_communication import COMMUNICATION_MECHANICS
@@ -992,6 +993,8 @@ BUILT_IN = (
     *PLACE_MECHANICS,
     *GATHERING_MECHANICS,
     *DOMINION_MECHANICS,
+    *ARCANA_MECHANICS,
+    *MYTHIC_MECHANICS,
     *PLACE_BEHAVIOURS,
     *COUPLING_MECHANICS,
     *REGION_MECHANICS,
@@ -1013,6 +1016,8 @@ MODULE_SUBSYSTEMS: dict[str, Subsystem] = {
     "births": Subsystem.DEMOGRAPHY,
     "gatherings": Subsystem.SOCIAL,
     "dominion": Subsystem.GODS,
+    "arcana": Subsystem.MAGIC,
+    "mythic": Subsystem.GODS,
     "mortals": Subsystem.DEMOGRAPHY,
     "life_cycles": Subsystem.DEMOGRAPHY,
     "heroes": Subsystem.DEMOGRAPHY,

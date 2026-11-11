@@ -32,6 +32,8 @@ import {
   Users,
   Zap,
   type LucideIcon,
+  ShieldAlert,
+  Landmark,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import type { KpiTone } from '@/components/domain'
@@ -66,6 +68,16 @@ export const GOAL_KINDS: Record<Schema['GodGoalKind'], Named> = {
   rebel: { label: 'Rebel against the Creator', icon: Flame, tone: 'danger' },
   hold_thrones: {
     label: 'Hold the thrones of power',
+    icon: Crown,
+    tone: 'gold',
+  },
+  prevent_mantling: {
+    label: "Keep a mortal from taking a god's place",
+    icon: ShieldAlert,
+    tone: 'warning',
+  },
+  sponsor_mantling: {
+    label: 'Raise a chosen mortal to godhood',
     icon: Crown,
     tone: 'gold',
   },
@@ -133,6 +145,11 @@ export const MOTIONS: Record<Schema['CouncilMotion'], Named> = {
   holy_world: { label: 'Declare a holy world', icon: Globe, tone: 'gold' },
   cosmic_truce: { label: 'Set a cosmic truce', icon: Shield, tone: 'success' },
   petition_creator: { label: 'Petition the Creator', icon: Eye, tone: 'info' },
+  appoint_office: {
+    label: 'Appoint a holder to a cosmic office',
+    icon: Landmark,
+    tone: 'gold',
+  },
 }
 
 export const PUNISHMENTS: Record<Schema['SonPunishment'], string> = {

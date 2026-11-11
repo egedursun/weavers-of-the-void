@@ -185,6 +185,8 @@ const SECTION_LINKS = [
   { id: 'section-gatherings', label: 'Gatherings' },
   { id: 'section-histories', label: 'Histories' },
   { id: 'section-dominion', label: 'Dominion' },
+  { id: 'section-arcana', label: 'Magic' },
+  { id: 'section-mythic', label: 'Myth' },
   { id: 'section-body', label: 'Body' },
   { id: 'section-afflictions', label: 'Afflictions' },
   { id: 'section-body-customs', label: 'Wounds and bodies' },

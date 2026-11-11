@@ -68,7 +68,7 @@ async def test_every_god_lever_runs_to_success(lever_template: Path, tmp_path: P
         await database.dispose()
 
 
-CREATE_VERBS = frozenset({"create", "raise", "found", "add", "convene", "begin", "plant", "build", "summon", "forge"})
+CREATE_VERBS = frozenset({"create", "raise", "found", "add", "convene", "begin", "plant", "build", "summon", "forge", "lay", "make", "write", "appoint"})
 CREATE_LEVERS = [action_id for action_id in SYNC_ACTIONS if action_id.rsplit(":", 1)[-1] in CREATE_VERBS]
 
 
