@@ -80,6 +80,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.reputations",
     "table.secrets",
     "table.skills",
+    "table.social_norms",
     "table.thoughts",
     "table.tradition_profiles",
     "table.traits",

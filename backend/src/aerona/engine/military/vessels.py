@@ -20,6 +20,7 @@ from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.travel import TravelMethod, VehicleKind
 from aerona.domain.models.entity_stats import LegendStats
+from aerona.engine.collective.designs import DesignTally, design_power, fit_design, mend, wear_leg
 from aerona.engine.context import TickContext
 from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.military.rule_tables import hull_values
@@ -50,6 +51,10 @@ class SeaTally:
     fights: int = 0
     legends: int = 0
     routes: int = 0
+    designed: int = 0
+    worn: int = 0
+    failures: int = 0
+    mended: int = 0
 
 
 def hull_spec(hull: HullClass) -> HullSpec:
@@ -278,7 +283,7 @@ async def sea_fight(
     ctx: TickContext, first: tuple[EntityRow, VesselProfileRow], second: tuple[EntityRow, VesselProfileRow], weather: WeatherKind | None, tally: SeaTally
 ) -> EntityRow:
     rng = ctx.rng(f"vessel_fight.{first[0].id}.{second[0].id}.{ctx.epoch}")
-    powers = [vessel_power(ctx.rules, row, weather) * (0.8 + rng.below(40) / PERCENT) for _, row in (first, second)]
+    powers = [vessel_power(ctx.rules, row, weather) * await design_power(ctx.session, row) * (0.8 + rng.below(40) / PERCENT) for _, row in (first, second)]
     winner, loser = (first, second) if powers[0] >= powers[1] else (second, first)
     table = ctx.rules.seafaring
     if "condition" not in loser[1].locked:
@@ -300,6 +305,7 @@ async def sea_fight(
 
 async def seas(ctx: TickContext) -> SeaTally:
     tally = SeaTally()
+    designs = DesignTally()
     await backfill_vessels(ctx)
     ground = await EnvironmentBook.load(ctx.session, ctx.rules, ctx.epoch)
     atlas = await RegionAtlas.load(ctx.session)
@@ -313,8 +319,13 @@ async def seas(ctx: TickContext) -> SeaTally:
             row.seamanship = await seamanship_of(ctx, row, knowledge)
         owner = await owner_of(ctx, vessel.id)
         row.region_entity_id = row.region_entity_id or atlas.top_region(row.home_port_entity_id) or atlas.top_region(vessel.id)
+        if row.design_id is None:
+            await fit_design(ctx, vessel, row, owner.id if owner is not None else row.home_port_entity_id)
+            tally.designed += row.design_id is not None
         if row.status is VesselStatus.DOCKED and row.condition < PERCENT:
             await repair(ctx, row, tally)
+        if row.status is VesselStatus.DOCKED:
+            await mend(ctx, row, designs)
         sailing = row.status in AFLOAT or (owner is not None and row.crew > 0 and row.condition >= PERCENT // 2)
         if sailing and "status" not in row.locked:
             row.status = VesselStatus.AFLOAT if row.condition >= PERCENT // 2 else VesselStatus.DAMAGED
@@ -327,12 +338,15 @@ async def seas(ctx: TickContext) -> SeaTally:
         tally.voyages += 1
         await weather_leg(ctx, vessel, row, weather, tally)
         if row.status in AFLOAT:
+            await wear_leg(ctx, vessel, row, stormy=weather in STORMS, tally=designs)
+        if row.status in AFLOAT:
             row.renown += ctx.rules.seafaring.renown_per_voyage if "renown" not in row.locked else 0
             await strange_waters(ctx, vessel, row, tally)
             await legend_of(ctx, vessel, row, tally)
             afloat.append((vessel, row, owner))
         row.updated_epoch = ctx.epoch
     await skirmishes(ctx, afloat, tally)
+    tally.worn, tally.failures, tally.mended = designs.worn, designs.failures, designs.mended
     return tally
 
 

@@ -17,6 +17,7 @@ class IntrigueSecret(StrEnum):
     BROKEN_OATH = "broken_oath"
     ECOSABOTAGE = "ecosabotage"
     BROKEN_CIPHER = "broken_cipher"
+    TRUE_HISTORY = "true_history"
 
 
 class HookStrength(StrEnum):

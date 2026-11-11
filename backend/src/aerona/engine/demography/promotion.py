@@ -9,12 +9,13 @@ from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.domain.enums.body import BodyFunction, HarmCause, InjuryKind, MaimedKind
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
+from aerona.domain.enums.demography import AgeBand, CohortCondition
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.book import anatomy_for, ensure_body
 from aerona.engine.body.hits import Harm
+from aerona.engine.collective.roles import combat_sexes
 from aerona.engine.context import TickContext
 from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for
 from aerona.engine.demography.keys import DORMANT_KEY
@@ -168,9 +169,10 @@ async def sync_maimed(ctx: TickContext, community: EntityRow) -> int:
     if gap == 0:
         return 0
     source = CohortCondition.NONE if gap > 0 else CohortCondition.MAIMED
+    fighters = await combat_sexes(ctx.session, community)
     keys: list[CohortKey] = sorted(
         (key for key in rows if key[0] is not AgeBand.CHILD and key[3] is source and rows[key].count > 0),
-        key=lambda key: (key[0] is not AgeBand.ADULT, key[1] is not Sex.MALE, -rows[key].count, tuple(part.value for part in key)),
+        key=lambda key: (key[0] is not AgeBand.ADULT, key[1] not in fighters, -rows[key].count, tuple(part.value for part in key)),
     )
     moved = 0
     for key in keys:
@@ -193,8 +195,9 @@ async def sync_veterans(ctx: TickContext, community: EntityRow) -> int:
     gap = veterans - held
     if gap == 0:
         return 0
+    fighters = await combat_sexes(ctx.session, community)
     keys: list[CohortKey] = sorted(
-        (key for key in rows if key[0] is AgeBand.ADULT and key[1] is Sex.MALE and key[3] is (CohortCondition.NONE if gap > 0 else CohortCondition.VETERAN)),
+        (key for key in rows if key[0] is AgeBand.ADULT and key[1] in fighters and key[3] is (CohortCondition.NONE if gap > 0 else CohortCondition.VETERAN)),
         key=lambda key: -rows[key].count,
     )
     moved = 0

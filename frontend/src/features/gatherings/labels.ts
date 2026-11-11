@@ -62,6 +62,7 @@ import {
   Utensils,
   Wheat,
   Zap,
+  Wind,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -182,6 +183,10 @@ export const COLLECTION_KINDS: Record<Schema['CollectionKind'], Named> = {
   schism: { label: 'Schism', icon: Shuffle, tone: 'warning' },
   excavation: { label: 'Excavation', icon: Shovel, tone: 'verdigris' },
   heroquest: { label: 'Heroquest', icon: Route, tone: 'gold' },
+  riot: { label: 'Riot', icon: Flame, tone: 'danger' },
+  panic: { label: 'Panic', icon: Wind, tone: 'warning' },
+  movement: { label: 'Movement', icon: Flag, tone: 'gold' },
+  storylet: { label: 'Storylet', icon: Drama, tone: 'verdigris' },
 }
 
 export const COLLECTION_ROLES: Record<Schema['CollectionRole'], Named> = {

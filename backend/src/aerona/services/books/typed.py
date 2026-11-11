@@ -247,6 +247,10 @@ REFERENCE_LABELS: dict[str, Callable[[Any, dict[int, str]], str]] = {
     ),
     "resolutions": lambda row, names: f"the {words(str(row.kind.value)).lower()} resolution of epoch {row.proposed_epoch}",
     "crime_cases": lambda row, names: f"the {row.crime.value} case of epoch {row.opened_epoch} against {_named(names, row.accused_entity_id) or 'no one'}",
+    "accounts": lambda row, names: f"the {words(row.kind.value).lower()} of {_named(names, row.holder_entity_id) or 'someone'} from epoch {row.epoch}",
+    "designs": lambda row, names: f"{row.name} of {_named(names, row.owner_entity_id) or 'no one'}",
+    "cascades": lambda row, names: f"the {row.act.value} of epoch {row.epoch} at {_named(names, row.settlement_entity_id)}",
+    "storylet_runs": lambda row, names: f"the {words(row.storylet.value).lower()} storylet of epoch {row.opened_epoch}",
 }
 NAMED_TABLES = frozenset({"entities", "nodes", "sons", "worlds", "stars", "foreign_gods", "creator", "galaxies", "galaxy_clusters", "dimensions"})
 

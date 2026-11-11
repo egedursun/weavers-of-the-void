@@ -31,6 +31,7 @@ SECRETS: dict[IntrigueSecret, SecretSpec] = {
         SecretSpec(IntrigueSecret.BROKEN_OATH, "A broken oath", 50, ActKind.OATHBREAKING),
         SecretSpec(IntrigueSecret.ECOSABOTAGE, "A sabotage of the land", 70),
         SecretSpec(IntrigueSecret.BROKEN_CIPHER, "A broken cipher", 65),
+        SecretSpec(IntrigueSecret.TRUE_HISTORY, "The true history behind an official account", 55),
     )
 }
 

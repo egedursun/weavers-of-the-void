@@ -12,6 +12,7 @@ from aerona.domain.enums.economy import LoanStatus
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.war import WarStatus
+from aerona.engine.collective.roles import allowed_heirs
 from aerona.engine.context import TickContext
 from aerona.engine.demography.kinship import heirs_by_custom, inheritance_of
 from aerona.engine.notes import note
@@ -183,6 +184,7 @@ async def toll_rate(session: AsyncSession, master_id: int) -> int | None:
 
 
 async def bequest_order(session: AsyncSession, mortal: EntityRow, heirs: list[EntityRow]) -> list[EntityRow]:
+    heirs = await allowed_heirs(session, mortal, heirs)
     if len(heirs) < 2:
         return heirs
     split = await law_param(session, mortal.location_id, LawKind.INHERITANCE_SPLIT, "split") if mortal.location_id is not None else None

@@ -16,6 +16,7 @@ from aerona.db.repositories.entities import EntityDraft, EntityRepository
 from aerona.db.tables.agency import CreationRewardRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.collective import LearningEventRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.ecology import SpeciesRangeRow
@@ -23,18 +24,20 @@ from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.epochs import DeferredStepRow, EpochRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.gatherings import CollectionRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.law_depth import MoleHuntRow
 from aerona.db.tables.lore import HistorianViewRow, MessageRow
 from aerona.db.tables.military import OccupationRow
-from aerona.db.tables.polity import OfficeRow
+from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.routes import HorizonIntuitionRow, RouteRow
-from aerona.db.tables.settlement import DistrictRow
+from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.collective import SocialBias
 from aerona.domain.enums.cosmography import (
     BeingKind,
     ClusterKind,
@@ -50,15 +53,20 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.epoch import DeferredStepStatus
+from aerona.domain.enums.gathering import CollectionKind
 from aerona.domain.enums.justice import CaseStage, Verdict
 from aerona.domain.enums.law_depth import MoleHuntOutcome
+from aerona.domain.enums.military import HullClass
+from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.structure import StructureKind
+from aerona.domain.enums.travel import VehicleKind
 from aerona.domain.enums.world import WorldType
-from aerona.domain.models.entity_stats import CelestialStats, NaturalLawStats, OuterBeingStats, StructureStats
+from aerona.domain.models.entity_stats import CelestialStats, NaturalLawStats, OuterBeingStats, StructureStats, VesselStats
 from aerona.engine.cosmos import control
 from aerona.engine.cosmos.beings import create_being
 from aerona.engine.cosmos.control import dimensional_event, galactic_event
@@ -474,6 +482,71 @@ async def any_hunt(session: AsyncSession) -> int:
     session.add(hunt)
     await session.flush()
     return hunt.id
+
+
+async def profiled_town(session: AsyncSession) -> int:
+    town = await canon(session, EntityType.SETTLEMENT, 0)
+    assert town is not None
+    if await session.get(SettlementProfileRow, town) is None:
+        session.add(SettlementProfileRow(settlement_entity_id=town, size_tier=SizeTier.TOWN, locked=[], foreigners={}))
+        await session.flush()
+    return town
+
+
+async def any_collection(session: AsyncSession) -> int:
+    found = await session.scalar(select(CollectionRow.id).order_by(CollectionRow.id.desc()).limit(1))
+    if found is not None:
+        return int(found)
+    world = await session.scalar(select(WorldRow.id).order_by(WorldRow.id).limit(1))
+    event = CollectionRow(kind=CollectionKind.CORONATION, name="A crowning", world_id=world, start_epoch=0, locked=[])
+    session.add(event)
+    await session.flush()
+    return event.id
+
+
+async def any_vessel(session: AsyncSession) -> int:
+    found = await session.scalar(select(VesselProfileRow.entity_id).order_by(VesselProfileRow.entity_id).limit(1))
+    if found is not None:
+        return int(found)
+    town = await profiled_town(session)
+    town_row = await session.get(EntityRow, town)
+    assert town_row is not None
+    ship = await EntityRepository(session).create(
+        EntityDraft(
+            name="The Tern",
+            entity_type=EntityType.VESSEL,
+            description="A ship of the town.",
+            stats=VesselStats(),
+            power_level=1,
+            origin=EntityOrigin.ENGINE,
+            birth_epoch=1,
+            world_id=town_row.world_id,
+            location_id=town,
+        )
+    )
+    session.add(VesselProfileRow(entity_id=ship.id, kind=VehicleKind.SHIP, hull_class=HullClass.COG, home_port_entity_id=town, locked=[]))
+    await session.flush()
+    return ship.id
+
+
+async def heir_at_court(session: AsyncSession) -> None:
+    realm = await ruled_realm(session)
+    town = await profiled_town(session)
+    profile = await session.get(PolityProfileRow, realm)
+    assert profile is not None
+    profile.capital_entity_id = profile.capital_entity_id or town
+    stranger = await canon(session, EntityType.MORTAL, 3)
+    row = await session.get(EntityRow, stranger)
+    assert row is not None
+    row.location_id = profile.capital_entity_id
+    await session.flush()
+
+
+async def a_lesson(session: AsyncSession) -> None:
+    learner = await canon(session, EntityType.MORTAL, 0)
+    assert learner is not None
+    session.add(LearningEventRow(learner_entity_id=learner, bias=SocialBias.CONFORMITY, axis=ValueAxis.PIETY, shift=2, epoch=0))
+    await session.flush()
 
 
 async def town_district(session: AsyncSession) -> int:
@@ -1989,6 +2062,36 @@ LEVERS: dict[str, Lever] = {
 }
 
 EDITS: Mapping[str, Mapping[str, Any]] = {
+    "crowd_mood:edit": {"anger": 70, "anxiety": 20, "fervour": 10, "deterrence": 30, "agitation": 15},
+    "mob:edit": {"size": 200, "anger": 40, "target": "palace", "status": "rampaging"},
+    "popular_movement:edit": {"members": 300, "strength": 50},
+    "account:edit": {"fidelity": 40, "credence": 70, "defaced": True, "medium": "inscription"},
+    "memory_strike:edit": {"active": False},
+    "founding_myth:edit": {"credence": 50},
+    "commemoration:edit": {"strength": 40, "pride": False},
+    "lost_land:edit": {"strength": 30},
+    "storylet:edit": {"status": "expired", "due_epoch": 9},
+    "social_norm:edit": {"stance": "shameful"},
+    "learning_bias:edit": {"prestige_pct": 50, "conformity_pct": 30, "content_pct": 20},
+    "generation:edit": {"alive": 120},
+    "diaspora:edit": {"population": 300, "ties": 40, "remittance": 10},
+    "transition:edit": {"fertility_pct": 80, "elder_share": 20, "urban_share": 40, "literacy": 30},
+    "sex_ratio:edit": {"males_per_hundred": 90, "widows": 10},
+    "role_norm:edit": {"eligibility": "female_preferred", "min_age": 18, "stance": "frowned_upon"},
+    "dating_system:edit": {"kind": "regnal", "anchor_year": 12, "cycle_years": 30},
+    "arms:edit": {"field": "red", "division": "per_pale", "second": "silver", "charge": "tower", "charge_tincture": "gold", "motto": "Steady"},
+    "design:edit": {
+        "name": "The Swift",
+        "hull": "cog",
+        "speed": 40,
+        "range": 30,
+        "seaworthiness": 60,
+        "cargo": 80,
+        "armament": 20,
+        "crew": 30,
+        "obsolete": False,
+    },
+    "component_wear:edit": {"wear": 30},
     "trade_route:edit": {"danger_bandits": 30, "capacity": 50, "length": 3, "chokepoint": True},
     "structure:edit": {"condition": 80, "anchor": True, "splendor": 60},
     "structure_design:edit": {"cost_pct": 110},
@@ -2127,6 +2230,94 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "impact:edit": {"size": 30, "winter_epochs": 1},
     "terraform:edit": {"step": 5, "epochs_left": 3},
 }
+TOWN_MOOD = Computed(profiled_town)
+EVENT = Computed(any_collection)
+VESSEL = Computed(any_vessel)
+PEOPLE = EntityType.PEOPLE
+MOOD = ("crowd_mood:set", {"town_id": TOWN_MOOD, "anger": 60})
+SPARK = ("cascade:spark", {"town_id": TOWN_MOOD, "trigger": "famine"})
+MOB = ("mob:raise", {"town_id": TOWN_MOOD, "act": "riot", "target": "district", "size": 100, "anger": 60})
+MOVEMENT = ("popular_movement:found", {"town_id": TOWN_MOOD})
+ACCOUNT = ("account:write", {"holder_id": Pick(REALM), "subject_id": Pick(MORTAL)})
+REVISION = ("account:revise", {"account_id": Newest("account"), "ousted_ids": [Pick(MORTAL)]})
+STANCE = ("account_stance:set", {"account_id": Newest("account"), "node_id": Pick(MORTAL), "stance": "glorify"})
+STRIKE = ("memory_strike:set", {"by_id": Pick(REALM), "node_id": Pick(MORTAL)})
+MYTH = ("founding_myth:set", {"holder_id": Pick(REALM), "credence": 80})
+KEPT = ("commemoration:set", {"holder_id": Pick(REALM), "collection_id": EVENT})
+LOST = ("lost_land:set", {"claimant_id": Pick(REALM), "region_id": Pick(EntityType.REGION)})
+STORYLET = ("storylet:open", {"storylet": "lost_heir", "world_id": Pick("world")})
+NORM = ("social_norm:set", {"holder_id": Pick(PEOPLE), "situation": "feast", "behaviour": "jest", "stance": "admirable"})
+BIAS = ("learning_bias:set", {"holder_id": Pick(PEOPLE)})
+GENERATION = ("generation:set", {"community_id": Pick(TOWN), "generation_epoch": 0})
+DIASPORA = ("diaspora:set", {"people_id": Pick(PEOPLE), "host_id": Pick(TOWN)})
+TRANSITION = ("transition:set", {"community_id": Pick(TOWN)})
+RATIO = ("sex_ratio:set", {"community_id": Pick(TOWN)})
+ROLE = ("role_norm:set", {"holder_id": Pick(PEOPLE), "role": "office"})
+DATING = ("dating_system:set", {"holder_id": Pick(REALM), "kind": "founding", "anchor_year": 10})
+ARMS = ("arms:set", {"holder_id": Pick(REALM), "holder_kind": "polity", "field": "gold", "charge": "star", "charge_tincture": "black"})
+OTHER_ARMS = ("arms:set", {"holder_id": Pick(REALM, 1), "holder_kind": "polity", "field": "blue"})
+DESIGN = ("design:draw", {"owner_id": Pick(REALM), "kind": "vessel", "hull": "carrack"})
+WEAR = ("component_wear:set", {"vessel_id": VESSEL, "component": "hull", "wear": 20})
+LEVERS.update(
+    {
+        "crowd_mood:set": given(town_id=TOWN_MOOD, anger=60),
+        **{name: after(MOOD, town_id=TOWN_MOOD) for name in ("crowd_mood:edit", "crowd_mood:delete")},
+        "cascade:spark": given(town_id=TOWN_MOOD, trigger="famine"),
+        "cascade:delete": after(SPARK, cascade_id=Newest("cascade")),
+        "mob:raise": given(town_id=TOWN_MOOD, act="riot", target="district", size=100, anger=60),
+        **{name: after(MOB, mob_id=Newest("mob")) for name in ("mob:edit", "mob:disperse", "mob:delete")},
+        "popular_movement:found": given(town_id=TOWN_MOOD),
+        **{name: after(MOVEMENT, movement_id=Newest("movement")) for name in ("popular_movement:edit", "popular_movement:delete")},
+        "account:write": given(holder_id=Pick(REALM), subject_id=Pick(MORTAL)),
+        **{name: after(ACCOUNT, account_id=Newest("account")) for name in ("account:edit", "account:delete")},
+        "account:revise": after(ACCOUNT, account_id=Newest("account"), ousted_ids=[Pick(MORTAL)]),
+        "account:expose": after(ACCOUNT, REVISION, account_id=Newest("account")),
+        "account_stance:set": after(ACCOUNT, account_id=Newest("account"), node_id=Pick(MORTAL), stance="vilify"),
+        "account_stance:delete": after(ACCOUNT, STANCE, account_id=Newest("account"), node_id=Pick(MORTAL)),
+        "memory_strike:set": given(by_id=Pick(REALM), node_id=Pick(MORTAL)),
+        **{name: after(STRIKE, by_id=Pick(REALM), node_id=Pick(MORTAL)) for name in ("memory_strike:edit", "memory_strike:delete")},
+        "founding_myth:set": given(holder_id=Pick(REALM), credence=80),
+        **{name: after(MYTH, holder_id=Pick(REALM)) for name in ("founding_myth:edit", "founding_myth:debunk", "founding_myth:delete")},
+        "commemoration:set": given(holder_id=Pick(REALM), collection_id=EVENT),
+        **{name: after(KEPT, holder_id=Pick(REALM), collection_id=EVENT) for name in ("commemoration:edit", "commemoration:relive", "commemoration:delete")},
+        "lost_land:set": given(claimant_id=Pick(REALM), region_id=Pick(EntityType.REGION)),
+        **{name: after(LOST, claimant_id=Pick(REALM), region_id=Pick(EntityType.REGION)) for name in ("lost_land:edit", "lost_land:delete")},
+        "storylet:open": Lever(values={"storylet": "lost_heir", "world_id": Pick("world")}, setup=heir_at_court),
+        **{name: setup_then(heir_at_court, STORYLET, run_id=Newest("storylet_run")) for name in ("storylet:edit", "storylet:delete")},
+        "storylet:choose": setup_then(heir_at_court, STORYLET, run_id=Newest("storylet_run"), choice=0),
+        "social_norm:set": given(holder_id=Pick(PEOPLE), situation="feast", behaviour="jest", stance="admirable"),
+        **{name: after(NORM, holder_id=Pick(PEOPLE), situation="feast", behaviour="jest") for name in ("social_norm:edit", "social_norm:delete")},
+        "norm_change:delete": after(NORM, change_id=Newest("norm_change")),
+        "learning_bias:set": given(holder_id=Pick(PEOPLE)),
+        **{name: after(BIAS, holder_id=Pick(PEOPLE)) for name in ("learning_bias:edit", "learning_bias:delete")},
+        "learning_event:delete": Lever(values={"event_id": Newest("learning_event")}, setup=a_lesson),
+        "generation:set": given(community_id=Pick(TOWN), generation_epoch=0),
+        "generation:shape": given(community_id=Pick(TOWN), generation_epoch=0, formative=["plague"], axis="piety", shift=10),
+        **{name: after(GENERATION, community_id=Pick(TOWN), generation_epoch=0) for name in ("generation:edit", "generation:delete")},
+        "diaspora:set": given(people_id=Pick(PEOPLE), host_id=Pick(TOWN)),
+        **{name: after(DIASPORA, people_id=Pick(PEOPLE), host_id=Pick(TOWN)) for name in ("diaspora:edit", "diaspora:delete")},
+        "transition:set": given(community_id=Pick(TOWN)),
+        **{name: after(TRANSITION, community_id=Pick(TOWN)) for name in ("transition:edit", "transition:delete")},
+        "sex_ratio:set": given(community_id=Pick(TOWN)),
+        **{name: after(RATIO, community_id=Pick(TOWN)) for name in ("sex_ratio:edit", "sex_ratio:delete")},
+        "role_norm:set": given(holder_id=Pick(PEOPLE), role="office", classes=["noble"]),
+        **{name: after(ROLE, holder_id=Pick(PEOPLE), role="office") for name in ("role_norm:edit", "role_norm:delete")},
+        "dating_system:set": given(holder_id=Pick(REALM), kind="founding", anchor_year=10),
+        **{name: after(DATING, holder_id=Pick(REALM)) for name in ("dating_system:edit", "dating_system:delete")},
+        "arms:set": given(holder_id=Pick(REALM), holder_kind="polity", field="gold", charge="star", charge_tincture="black"),
+        **{name: after(ARMS, holder_id=Pick(REALM)) for name in ("arms:edit", "arms:delete")},
+        "arms:quarter": after(ARMS, OTHER_ARMS, holder_id=Pick(REALM), other_id=Pick(REALM, 1)),
+        "arms:difference": after(ARMS, holder_id=Pick(REALM, 1), parent_id=Pick(REALM)),
+        "design:draw": given(owner_id=Pick(REALM), kind="vessel", hull="carrack"),
+        **{name: after(DESIGN, design_id=Newest("design")) for name in ("design:edit", "design:refit", "design:delete")},
+        "design_component:set": after(DESIGN, design_id=Newest("design"), component="hull", size=5, quality=60),
+        "design_component:delete": after(DESIGN, design_id=Newest("design"), component="hull"),
+        "design:fit": after(DESIGN, vessel_id=VESSEL, design_id=Newest("design")),
+        "component_wear:set": given(vessel_id=VESSEL, component="hull", wear=20),
+        **{name: after(WEAR, vessel_id=VESSEL, component="hull") for name in ("component_wear:edit", "component_wear:delete")},
+    }
+)
+
 LEVERS.update({name: replace(LEVERS.get(name, Lever()), values={**LEVERS.get(name, Lever()).values, "values": values}) for name, values in EDITS.items()})
 
 

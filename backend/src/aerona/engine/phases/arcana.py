@@ -11,6 +11,7 @@ from aerona.engine.phases.dominion import count
 
 
 @reads("table.lab_texts", "table.rite_grammar", "table.rite_profiles")
+@writes("table.rite_grammar")
 async def spell_grammar(ctx: TickContext) -> None:
     ctx.count("grammar_shaped", await ensure_all(ctx))
     tally = StudyTally()

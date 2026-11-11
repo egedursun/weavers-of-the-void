@@ -18,7 +18,7 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.society_depth import CorveeRow, LabourReasonRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.demography import AgeBand, CohortCondition, Job
+from aerona.domain.enums.demography import AgeBand, CohortCondition, Job, Sex
 from aerona.domain.enums.disease import DiseaseTarget
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
 from aerona.domain.enums.entity import EntityType
@@ -28,6 +28,8 @@ from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import LabourReason
 from aerona.engine.body.customs import culture_of, people_of
+from aerona.engine.collective.demography import levy_factor
+from aerona.engine.collective.roles import combat_sexes
 from aerona.engine.context import TickContext
 from aerona.engine.demography.biology import job_factors, profiles_of
 from aerona.engine.demography.cohorts import cohorts_of, seed
@@ -349,15 +351,20 @@ async def mobilisation(session: AsyncSession, rules: Rules, community: EntityRow
     if drafted is not None:
         law *= 1 + int(drafted) / PERCENT * laws.weight(community.id, LawKind.CONSCRIPTION)
     law *= feudal_levy(laws, community.id, rules)
-    return max(0.1, martial * cohesion * season * law)
+    ageing = await levy_factor(session, rules, community.id)
+    return max(0.1, martial * cohesion * season * law * ageing)
 
 
 async def fighting_age(session: AsyncSession, community_id: int, rules: Rules | None = None) -> int | None:
     rows = await cohorts_of(session, community_id)
     if not rows:
         return None
+    community = await session.get(EntityRow, community_id)
+    fighters = await combat_sexes(session, community) if community is not None else set(Sex)
     adults = [
-        (condition, row.count) for (band, _sex, _social, condition), row in rows.items() if band is AgeBand.ADULT and condition is not CohortCondition.MAIMED
+        (condition, row.count)
+        for (band, sex, _social, condition), row in rows.items()
+        if band is AgeBand.ADULT and condition is not CohortCondition.MAIMED and sex in fighters
     ]
     fit = sum(count for condition, count in adults if condition is not CohortCondition.SICK)
     sick = sum(count for condition, count in adults if condition is CohortCondition.SICK)

@@ -26,6 +26,7 @@ from aerona.engine.phases import (
     casualties,
     civilization,
     climate,
+    collective,
     commerce,
     communication,
     cosmic_economy,
@@ -199,6 +200,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + evolution.PHASES
     + urban_depth.PHASES
     + law_depth.PHASES
+    + collective.PHASES
     + exploration.PHASES
     + factions.PHASES
     + goals.PHASES
@@ -454,6 +456,11 @@ SOCIETY_ENGINE_STAGE = stage(
     "trading_posts",
     "magical_orders",
     "settlement_life",
+    "crowds",
+    "mobs",
+    "popular_movements",
+    "demography_depth",
+    "role_norms",
     "legal_systems",
     "trials",
     "appeals",
@@ -493,6 +500,9 @@ SOCIETY_ENGINE_STAGE = stage(
     "knowledge_levels",
     "research_cycles",
     "calendars",
+    "dating_systems",
+    "heraldry",
+    "designs",
     "living_stats",
     "belief_and_memory",
     "legend_cycles",
@@ -513,6 +523,11 @@ SOCIETY_ENGINE_STAGE = stage(
     "tradition_cycles",
     "people_cycles",
     "remembrance",
+    "historiography",
+    "founding_myths",
+    "commemorations",
+    "lost_lands",
+    "generations",
     "event_phases",
     "item_cycles",
     "artwork_cycles",
@@ -534,6 +549,8 @@ MIND_STAGE = stage(
     "mind_preferences",
     "mind_ethics",
     "mind_aspirations",
+    "social_norms",
+    "social_learning",
     "relations_social",
     "gatherings",
     "relations_circles",
@@ -553,6 +570,7 @@ MIND_STAGE = stage(
     "battlefields",
     "event_collections",
     "storyteller",
+    "storylets",
     "incident_threads",
 )
 

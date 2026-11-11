@@ -191,3 +191,6 @@ CALL_IMPACT = Line("tools.son.call_impact", "{son} called a body down upon {plac
 DEFLECT_IMPACT = Line("tools.son.deflect_impact", "{son} turned a falling body aside from {world}: {reason}")
 TERRAFORM_WORLD = Line("tools.son.terraform_world", "{son} began to reshape {world}: {reason}")
 BREAK_MOON = Line("tools.son.break_moon", "{son} broke {moon} into a ring: {reason}")
+STIR_CROWD = Line("tools.son.stir_crowd", "{son} stirred the folk of {town}: {reason}")
+REVEAL_TRUE_HISTORY = Line("tools.son.reveal_true_history", "{son} brought an older account of {realm} to light: {reason}")
+SET_STORYLET = Line("tools.son.set_storylet", "{son} set {title} in motion: {reason}")

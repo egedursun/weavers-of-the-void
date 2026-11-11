@@ -41,6 +41,7 @@ class VesselProfileRow(Base):
     renown: Mapped[int] = mapped_column(default=0)
     status: Mapped[VesselStatus] = mapped_column(enum_type(VesselStatus, "status"), default=VesselStatus.DOCKED)
     voyages: Mapped[int] = mapped_column(default=0)
+    design_id: Mapped[int | None] = mapped_column(ForeignKey("designs.id", ondelete="SET NULL"))
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

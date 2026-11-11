@@ -57,6 +57,7 @@ from aerona.engine.military.records import battle_field
 from aerona.engine.primitives.knowledge import laws_of_dimension
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.rules.registry import Rules
+from aerona.services.books.armssvg import arms_plan
 from aerona.services.books.citysvg import Plan, city_plan, land_plan, type_tables
 from aerona.services.books.command import add_command_areas
 from aerona.services.books.heavensvg import cluster_figure, dimension_figure, galaxy_figure
@@ -164,6 +165,7 @@ class EntityArticle:
     ending: str | None = None
     typed: list[TypedSection] = field(default_factory=list)
     plan: Plan | None = None
+    arms: Plan | None = None
 
 
 @dataclass
@@ -502,6 +504,7 @@ class BookBuilder:
             ending=ending_line(entity.status.value, entity.end_epoch, entity.fate_note) if entity.status in ENDED else None,
             typed=self.typed.of(entity.id),
             plan=await self.plan_of(entity),
+            arms=await arms_plan(self.session, entity),
         )
 
     async def plan_of(self, entity: EntityRow) -> Plan | None:

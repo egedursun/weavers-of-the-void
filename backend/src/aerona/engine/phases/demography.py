@@ -91,6 +91,7 @@ async def region_of(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) 
     "table.people_culture",
     "table.prostheses",
     "table.region_environment",
+    "table.role_norms",
     "table.world_maps",
 )
 @writes(

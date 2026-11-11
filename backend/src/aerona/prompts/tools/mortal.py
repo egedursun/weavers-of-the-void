@@ -171,6 +171,31 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "You pay coin onto the bounty of an outlaw; whoever hunts them down is paid it with the realm's own bounty. 1 action.",
         {"outlaw_id": "The outlaw", "amount": "The coin you put up"},
     ),
+    T.CHOOSE_STORYLET: ToolText(
+        "You make the choice a storylet waits on you for, by its number among the choices your context lists; what follows is decided by "
+        "the choice, and some choices lead to more. Left too long, you choose by your nature without thinking. 1 action.",
+        {"run_id": "The storylet waiting for you", "choice": "The number of your choice"},
+    ),
+    T.ROUSE_CROWD: ToolText(
+        "You speak to the folk of your town about a grievance ({{ collective_triggers }}); your sway makes it easier for each to join once "
+        "others have, and the town may rise in a riot, a panic or a lasting movement. The watch and garrison hold them back. 1 action.",
+        {"grievance": "What you speak about"},
+    ),
+    T.COMMISSION_ACCOUNT: ToolText(
+        "As ruler you have your realm's scribes write its account of an event; you choose whom it praises and whom it blames, and the further "
+        "it strays from what happened the more a scholar may one day expose. 1 action.",
+        {"collection_id": "The event", "praise_ids": "Whom the account praises", "blame_ids": "Whom the account blames"},
+    ),
+    T.STRIKE_MEMORY: ToolText(
+        "As ruler you strike a figure from your realm's records: its accounts omit them, its inscriptions are defaced and works made of them "
+        "for the realm are destroyed. Their fame fades unless the folk or foreigners keep it. 1 action.",
+        {"figure_id": "Whom you strike from memory"},
+    ),
+    T.DRAW_DESIGN: ToolText(
+        "You draw a new design for your realm or town ({{ design_kinds }}), giving more weight to one part ({{ design_components }}); "
+        "its speed, reach, cargo, arms and crew follow from its parts and their materials, and new hulls and engines are built to it. 1 action.",
+        {"kind": "What you design", "hull": "The hull it is for, if a vessel", "emphasis": "The part you favour"},
+    ),
     T.HUNT_MOLES: ToolText(
         "As spymaster you hunt for moles at your court; you may catch a foreign agent, clear an official, or wrongly accuse one, who may "
         "then be purged or defect. 1 action.",

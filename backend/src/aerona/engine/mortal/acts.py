@@ -27,6 +27,8 @@ from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.book import perception_of
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.hits import Harm
+from aerona.engine.collective.roles import CAREER_ROLES as ROLE_OF_CAREER
+from aerona.engine.collective.roles import breach_cost, career_open
 from aerona.engine.context import TickContext
 from aerona.engine.dominion.book import DominionBook
 from aerona.engine.genetics.life import madness_factor
@@ -465,6 +467,8 @@ async def choose_path(ctx: TickContext, mortal: EntityRow, profile: MortalProfil
     needs = await needs_of(ctx.session, mortal.id)
     scores: dict[CareerPath, float] = {}
     for path in sorted(await openings(ctx, mortal, profile)):
+        if not await career_open(ctx.session, mortal, path):
+            continue
         if path is CareerPath.STAY:
             scores[path] = table.stay_score + needs.get(NeedKind.PURPOSE, FULL // 2) / 4
             continue
@@ -483,6 +487,9 @@ async def choose_path(ctx: TickContext, mortal: EntityRow, profile: MortalProfil
     if best is CareerPath.STAY or best is profile.career:
         return None
     profile.career = best
+    shame = await breach_cost(ctx.session, mortal, ROLE_OF_CAREER[best]) if best in ROLE_OF_CAREER else 0
+    if shame and "honour" not in profile.locked:
+        profile.honour = max(0, profile.honour - shame * ctx.rules.role_norms.breach_stance_cost)
     role = CAREER_ROLES[best]
     old = mortal.mortal_role
     mortal.mortal_role = role

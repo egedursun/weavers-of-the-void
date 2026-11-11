@@ -17,6 +17,7 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.settlement import BuildMaterial, DistrictHarm, TreasuryEntry
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.war import SiegeStatus
+from aerona.engine.collective.designs import siege_design_factor
 from aerona.engine.context import TickContext
 from aerona.engine.economy.equipment import siege_engines
 from aerona.engine.economy.purse import receive_coin
@@ -215,6 +216,7 @@ async def siege_season(ctx: TickContext, war: WarRow, besieged: EntityRow, march
     engines = await siege_engines(ctx, march.owner, march.army) * await design_factor(
         ctx.session, ctx.rules, march.owner.id, BlueprintKind.SIEGE_ENGINE, UnitKind.SIEGE_ENGINES.value
     )
+    engines *= await siege_design_factor(ctx.session, march.owner.id)
     defence = defender_choice(ctx, siege, garrison, stat(march.army, "size") or 0, walls)
     await starve(ctx, siege, besieged, defence is DefenderAction.RATION or siege.starvation is not StarvationStage.NONE)
     action = await action_for(ctx, siege, march, engines)

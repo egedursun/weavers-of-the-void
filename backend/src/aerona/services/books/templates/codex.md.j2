@@ -179,6 +179,14 @@
 {% endfor %}
 
 {% endif %}
+{% if article.arms %}![{{ article.arms.caption | cell }}]({{ links.heaven(article.anchor ~ "-arms", article.arms.figure) }})
+
+| Part of the arms | As borne |
+|---|---|
+{% for label, value in article.arms.facts %}| {{ label | cell }} | {{ value | cell }} |
+{% endfor %}
+
+{% endif %}
 {{ entity_depth(article.entity.depth) }}
 {{ typed(article.typed) }}
 {% if article.ending %}

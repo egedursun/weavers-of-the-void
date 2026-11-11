@@ -977,6 +977,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.epoch_year_cursors",
     "table.forced_weather",
     "table.galactic_structures",
+    "table.geasa",
     "table.holder_levels",
     "table.incident_participants",
     "table.item_profiles",

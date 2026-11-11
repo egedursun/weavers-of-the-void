@@ -17,6 +17,7 @@ from aerona.domain.enums.mind import MemoryKind, ValueAxis
 from aerona.domain.enums.polity import DebtRemedy, LawKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import culture_of, people_of
+from aerona.engine.collective.demography import diaspora_pull
 from aerona.engine.context import TickContext
 from aerona.engine.demography.bound import BOUND, bound_share, move_people, sync_bound_share
 from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for
@@ -143,6 +144,7 @@ async def bitter_emigration(ctx: TickContext, community: EntityRow, rows: dict[C
         if home is None or other is None or home.id == community.id or home.entity_type is not EntityType.SETTLEMENT:
             continue
         mood = sum(other.satisfaction(social_class) for social_class in bitter) / len(bitter)
+        mood *= await diaspora_pull(ctx.session, ctx.rules.diaspora.pull_pct, people.id, home.id)
         if mood > best_mood:
             best, best_mood = home, mood
     if best is None or best_mood < table.bitter_satisfaction:

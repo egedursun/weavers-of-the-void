@@ -106,6 +106,10 @@ class CollectionKind(StrEnum):
     SCHISM = "schism"
     EXCAVATION = "excavation"
     HEROQUEST = "heroquest"
+    RIOT = "riot"
+    PANIC = "panic"
+    MOVEMENT = "movement"
+    STORYLET = "storylet"
 
 
 class CollectionRole(StrEnum):

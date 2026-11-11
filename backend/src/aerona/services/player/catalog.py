@@ -21,6 +21,7 @@ from aerona.services.player import (
     celestial_depth,
     cheats,
     civilization,
+    collective,
     communication,
     cosmic,
     cosmic_orders,
@@ -2088,6 +2089,153 @@ ECONOMY_ACTIONS = (
     _sync(Meta("market_play:edit", "Edit a market play", G.SOCIETY), urban_depth.edit_play, urban_depth.PlayEdit, free, ("S6.4/RP3",)),
     _sync(Meta("market_play:delete", "End a market play", G.SOCIETY), urban_depth.delete_play, urban_depth.PlayTarget, free, ("S6.4/RP3",)),
     _sync(
+        Meta("crowd_mood:set", "Set a town's anger, fear, fervour, deterrence and sway", G.SOCIETY),
+        collective.crowd_mood_set,
+        collective.MoodDraft,
+        free,
+        ("F32",),
+    ),
+    _sync(Meta("crowd_mood:edit", "Edit a town's mood", G.SOCIETY), collective.crowd_mood_edit, collective.MoodEdit, free, ("F32",)),
+    _sync(Meta("crowd_mood:delete", "Let a town's mood be read anew", G.SOCIETY), collective.crowd_mood_delete, collective.TownTarget, free, ("F32",)),
+    _sync(Meta("cascade:spark", "Spark a cascade in a town now", G.SOCIETY), collective.cascade_spark, collective.SparkDraft, free, ("F32",)),
+    _sync(Meta("cascade:delete", "Strike a cascade from the record", G.SOCIETY), collective.cascade_delete, collective.CascadeTarget, free, ("F32",)),
+    _sync(Meta("mob:raise", "Raise a crowd in a town", G.SOCIETY), collective.mob_raise, collective.MobDraft, free, ("F32",)),
+    _sync(Meta("mob:edit", "Edit a crowd", G.SOCIETY), collective.mob_edit, collective.MobEdit, free, ("F32",)),
+    _sync(Meta("mob:disperse", "Disperse a crowd", G.SOCIETY), collective.mob_disperse, collective.MobDisperse, free, ("F32",)),
+    _sync(Meta("mob:delete", "Strike a crowd from the record", G.SOCIETY), collective.mob_delete, collective.MobTargetCommand, free, ("F32",)),
+    _sync(Meta("popular_movement:found", "Raise a movement in a town", G.SOCIETY), collective.movement_found, collective.MovementDraft, free, ("F32",)),
+    _sync(Meta("popular_movement:edit", "Edit a movement", G.SOCIETY), collective.movement_edit, collective.MovementEdit, free, ("F32",)),
+    _sync(
+        Meta("popular_movement:delete", "Strike a movement from the record", G.SOCIETY), collective.movement_delete, collective.MovementTarget, free, ("F32",)
+    ),
+    _sync(Meta("account:write", "Write an account of an event or a figure", G.SOCIETY), collective.account_write, collective.AccountDraft, free, ("F33",)),
+    _sync(Meta("account:edit", "Edit an account", G.SOCIETY), collective.account_edit, collective.AccountEdit, free, ("F33",)),
+    _sync(Meta("account:revise", "Rewrite an account for a new reign", G.SOCIETY), collective.account_revise, collective.AccountRevision, free, ("F33",)),
+    _sync(Meta("account:expose", "Bring the older account to light", G.SOCIETY), collective.account_expose, collective.AccountTarget, free, ("F33",)),
+    _sync(Meta("account:delete", "Lose an account", G.SOCIETY), collective.account_delete, collective.AccountTarget, free, ("F33",)),
+    _sync(Meta("account_stance:set", "Set how an account speaks of someone", G.SOCIETY), collective.account_stance_set, collective.StanceDraft, free, ("F33",)),
+    _sync(
+        Meta("account_stance:delete", "Take someone out of an account", G.SOCIETY), collective.account_stance_delete, collective.StanceTarget, free, ("F33",)
+    ),
+    _sync(Meta("memory_strike:set", "Strike a figure from a realm's records", G.SOCIETY), collective.memory_strike_set, collective.StrikeDraft, free, ("F33",)),
+    _sync(Meta("memory_strike:edit", "Edit a struck memory", G.SOCIETY), collective.memory_strike_edit, collective.StrikeEdit, free, ("F33",)),
+    _sync(Meta("memory_strike:delete", "Restore a struck memory", G.SOCIETY), collective.memory_strike_delete, collective.StrikeDraft, free, ("F33",)),
+    _sync(
+        Meta("founding_myth:set", "Set how firmly a founding story is believed", G.SOCIETY), collective.founding_myth_set, collective.MythDraft, free, ("F33",)
+    ),
+    _sync(Meta("founding_myth:edit", "Edit a founding myth", G.SOCIETY), collective.founding_myth_edit, collective.HolderEdit, free, ("F33",)),
+    _sync(Meta("founding_myth:debunk", "Show a founding story untrue", G.SOCIETY), collective.founding_myth_debunk, collective.HolderTarget, free, ("F33",)),
+    _sync(
+        Meta("founding_myth:delete", "Let a founding story be told anew", G.SOCIETY), collective.founding_myth_delete, collective.HolderTarget, free, ("F33",)
+    ),
+    _sync(
+        Meta("commemoration:set", "Keep the anniversary of an event", G.SOCIETY), collective.commemoration_set, collective.CommemorationDraft, free, ("F33",)
+    ),
+    _sync(Meta("commemoration:edit", "Edit an anniversary", G.SOCIETY), collective.commemoration_edit, collective.CommemorationEdit, free, ("F33",)),
+    _sync(Meta("commemoration:relive", "Keep an anniversary now", G.SOCIETY), collective.commemoration_relive, collective.CommemorationTarget, free, ("F33",)),
+    _sync(Meta("commemoration:delete", "Forget an anniversary", G.SOCIETY), collective.commemoration_delete, collective.CommemorationTarget, free, ("F33",)),
+    _sync(Meta("lost_land:set", "Make a realm remember a lost land", G.WARFARE), collective.lost_land_set, collective.LostLandDraft, free, ("F33",)),
+    _sync(Meta("lost_land:edit", "Edit the memory of a lost land", G.WARFARE), collective.lost_land_edit, collective.LostLandEdit, free, ("F33",)),
+    _sync(Meta("lost_land:delete", "Forget a lost land", G.WARFARE), collective.lost_land_delete, collective.LostLandTarget, free, ("F33",)),
+    _sync(Meta("storylet:open", "Set a storylet in motion in a world", G.GOD_POWER), collective.storylet_open, collective.StoryletDraft, free, ("F34",)),
+    _sync(Meta("storylet:edit", "Edit a storylet", G.GOD_POWER), collective.storylet_edit, collective.StoryletEdit, free, ("F34",)),
+    _sync(Meta("storylet:choose", "Make a storylet's choice", G.GOD_POWER), collective.storylet_choose, collective.StoryletChoice, free, ("F34",)),
+    _sync(Meta("storylet:delete", "Strike a storylet from the record", G.GOD_POWER), collective.storylet_delete, collective.StoryletTarget, free, ("F34",)),
+    _sync(Meta("social_norm:set", "Set a custom of a people or cult", G.SOCIETY), collective.social_norm_set, collective.NormDraft, free, ("F35",)),
+    _sync(Meta("social_norm:edit", "Edit a custom", G.SOCIETY), collective.social_norm_edit, collective.NormEdit, free, ("F35",)),
+    _sync(Meta("social_norm:delete", "Let a custom lapse", G.SOCIETY), collective.social_norm_delete, collective.NormTarget, free, ("F35",)),
+    _sync(
+        Meta("norm_change:delete", "Strike a change of custom from the record", G.SOCIETY),
+        collective.norm_change_delete,
+        collective.ChangeTarget,
+        free,
+        ("F35",),
+    ),
+    _sync(Meta("learning_bias:set", "Set how a people learns from others", G.SOCIETY), collective.learning_bias_set, collective.BiasDraft, free, ("F5/RP3",)),
+    _sync(Meta("learning_bias:edit", "Edit how a people learns", G.SOCIETY), collective.learning_bias_edit, collective.HolderEdit, free, ("F5/RP3",)),
+    _sync(
+        Meta("learning_bias:delete", "Let a people's learning be read anew", G.SOCIETY),
+        collective.learning_bias_delete,
+        collective.HolderTarget,
+        free,
+        ("F5/RP3",),
+    ),
+    _sync(
+        Meta("learning_event:delete", "Strike a lesson from the record", G.SOCIETY),
+        collective.learning_event_delete,
+        collective.LearningTarget,
+        free,
+        ("F5/RP3",),
+    ),
+    _sync(Meta("generation:set", "Record a generation of a town", G.SOCIETY), collective.generation_set, collective.GenerationDraft, free, ("F12/RP3",)),
+    _sync(
+        Meta("generation:shape", "Set what shaped a generation and how", G.SOCIETY), collective.generation_shape, collective.GenerationShape, free, ("F12/RP3",)
+    ),
+    _sync(Meta("generation:edit", "Edit a generation", G.SOCIETY), collective.generation_edit, collective.GenerationEdit, free, ("F12/RP3",)),
+    _sync(
+        Meta("generation:delete", "Strike a generation from the record", G.SOCIETY),
+        collective.generation_delete,
+        collective.GenerationDraft,
+        free,
+        ("F12/RP3",),
+    ),
+    _sync(Meta("diaspora:set", "Settle a diaspora in a town", G.SOCIETY), collective.diaspora_set, collective.DiasporaDraft, free, ("S4.1/RP3",)),
+    _sync(Meta("diaspora:edit", "Edit a diaspora", G.SOCIETY), collective.diaspora_edit, collective.DiasporaEdit, free, ("S4.1/RP3",)),
+    _sync(Meta("diaspora:delete", "Strike a diaspora from the record", G.SOCIETY), collective.diaspora_delete, collective.DiasporaTarget, free, ("S4.1/RP3",)),
+    _sync(
+        Meta("transition:set", "Set a community's fertility, ageing, towns and letters", G.SOCIETY),
+        collective.transition_set,
+        collective.TransitionDraft,
+        free,
+        ("S4.1/RP3",),
+    ),
+    _sync(Meta("transition:edit", "Edit a demographic transition", G.SOCIETY), collective.transition_edit, collective.CommunityEdit, free, ("S4.1/RP3",)),
+    _sync(Meta("transition:delete", "Let a transition be read anew", G.SOCIETY), collective.transition_delete, collective.CommunityTarget, free, ("S4.1/RP3",)),
+    _sync(Meta("sex_ratio:set", "Set a community's balance of the sexes", G.SOCIETY), collective.sex_ratio_set, collective.SexRatioDraft, free, ("S4.1/RP3",)),
+    _sync(Meta("sex_ratio:edit", "Edit a sex ratio", G.SOCIETY), collective.sex_ratio_edit, collective.CommunityEdit, free, ("S4.1/RP3",)),
+    _sync(Meta("sex_ratio:delete", "Let a sex ratio be counted anew", G.SOCIETY), collective.sex_ratio_delete, collective.CommunityTarget, free, ("S4.1/RP3",)),
+    _sync(Meta("role_norm:set", "Set who may hold a role among a people", G.SOCIETY), collective.role_norm_set, collective.RoleDraft, free, ("S4.1/RP3",)),
+    _sync(Meta("role_norm:edit", "Edit a role norm", G.SOCIETY), collective.role_norm_edit, collective.RoleEdit, free, ("S4.1/RP3",)),
+    _sync(Meta("role_norm:delete", "Open a role to all", G.SOCIETY), collective.role_norm_delete, collective.RoleTarget, free, ("S4.1/RP3",)),
+    _sync(
+        Meta("dating_system:set", "Set how a realm, cult or people counts its years", G.SOCIETY),
+        collective.dating_system_set,
+        collective.DatingDraft,
+        free,
+        ("F1/RP3",),
+    ),
+    _sync(Meta("dating_system:edit", "Edit a dating system", G.SOCIETY), collective.dating_system_edit, collective.HolderEdit, free, ("F1/RP3",)),
+    _sync(Meta("dating_system:delete", "Let an era be chosen anew", G.SOCIETY), collective.dating_system_delete, collective.HolderTarget, free, ("F1/RP3",)),
+    _sync(Meta("arms:set", "Grant arms", G.SOCIETY), collective.arms_set, collective.ArmsDraft, free, ("S4.7/RP3",)),
+    _sync(Meta("arms:edit", "Edit arms", G.SOCIETY), collective.arms_edit, collective.HolderEdit, free, ("S4.7/RP3",)),
+    _sync(Meta("arms:quarter", "Quarter arms with another's", G.SOCIETY), collective.arms_quarter, collective.ArmsQuarter, free, ("S4.7/RP3",)),
+    _sync(
+        Meta("arms:difference", "Difference cadet arms within a border", G.SOCIETY), collective.arms_difference, collective.ArmsDifference, free, ("S4.7/RP3",)
+    ),
+    _sync(Meta("arms:delete", "Let arms be granted anew", G.SOCIETY), collective.arms_delete, collective.HolderTarget, free, ("S4.7/RP3",)),
+    _sync(Meta("design:draw", "Draw a vessel or engine design", G.WARFARE), collective.design_draw, collective.DesignDraft, free, ("S5.1/RP3", "S7.3/RP3")),
+    _sync(Meta("design:edit", "Edit a design", G.WARFARE), collective.design_edit, collective.DesignEdit, free, ("S5.1/RP3", "S7.3/RP3")),
+    _sync(Meta("design:refit", "Refit a design into a new mark", G.WARFARE), collective.design_refit, collective.DesignTarget, free, ("S5.1/RP3", "S7.3/RP3")),
+    _sync(Meta("design:delete", "Strike a design", G.WARFARE), collective.design_delete, collective.DesignTarget, free, ("S5.1/RP3", "S7.3/RP3")),
+    _sync(
+        Meta("design_component:set", "Set a part of a design", G.WARFARE),
+        collective.design_component_set,
+        collective.ComponentDraft,
+        free,
+        ("S5.1/RP3", "S7.3/RP3"),
+    ),
+    _sync(
+        Meta("design_component:delete", "Take a part out of a design", G.WARFARE),
+        collective.design_component_delete,
+        collective.ComponentTarget,
+        free,
+        ("S5.1/RP3", "S7.3/RP3"),
+    ),
+    _sync(Meta("design:fit", "Refit a vessel to a design", G.WARFARE), collective.design_fit, collective.FitDraft, free, ("S5.1/RP3", "S7.3/RP3")),
+    _sync(Meta("component_wear:set", "Set the wear of a vessel's part", G.WARFARE), collective.component_wear_set, collective.WearDraft, free, ("S7.3/RP3",)),
+    _sync(Meta("component_wear:edit", "Edit a part's wear", G.WARFARE), collective.component_wear_edit, collective.WearEdit, free, ("S7.3/RP3",)),
+    _sync(Meta("component_wear:delete", "Make a part as good as new", G.WARFARE), collective.component_wear_delete, collective.WearTarget, free, ("S7.3/RP3",)),
+    _sync(
         Meta("legal_system:set", "Set the legal system of a realm, cult or town", G.SOCIETY),
         law_depth.legal_system_set,
         law_depth.SystemDraft,
@@ -3495,7 +3643,18 @@ ACTIONS: tuple[ActionSpec, ...] = (
     *COSMOGRAPHY_ACTIONS,
     *PHYSICS_ACTIONS,
 )
-ACTIONS_BY_ID: dict[str, ActionSpec] = {spec.id: spec for spec in ACTIONS}
+
+
+def indexed(specs: tuple[ActionSpec, ...]) -> dict[str, ActionSpec]:
+    found: dict[str, ActionSpec] = {}
+    for spec in specs:
+        if spec.id in found:
+            raise ValueError(f"The god lever {spec.id} is registered twice.")
+        found[spec.id] = spec
+    return found
+
+
+ACTIONS_BY_ID: dict[str, ActionSpec] = indexed(ACTIONS)
 
 
 def action(action_id: str) -> ActionSpec:

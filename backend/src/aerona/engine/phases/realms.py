@@ -76,6 +76,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.injuries",
     "table.item_profiles",
     "table.language_intelligibility",
+    "table.language_profiles",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.law_proposals",

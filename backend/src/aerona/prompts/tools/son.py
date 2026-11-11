@@ -931,6 +931,21 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "follows it. Left unanswered, the oracle names the truth only by chance. 1 action.",
         {"case_id": "The case awaiting trial", "verdict": "guilty or acquitted", "reason": "Why you answer so"},
     ),
+    T.STIR_CROWD: ToolText(
+        "You stir the folk of a town in your reach with a grievance ({{ collective_triggers }}); their anger, fear or fervour rises and the "
+        "town may rise in a riot, a panic, a mass conversion or a lasting movement. The watch and garrison hold them back. 1 action.",
+        {"town_id": "The town", "grievance": "The grievance you stir", "reason": "Why you stir them"},
+    ),
+    T.REVEAL_TRUE_HISTORY: ToolText(
+        "You bring to light an older account that contradicts one a realm in your reach rewrote; the rewritten account loses credence, the "
+        "older one gains it, the realm's legitimacy suffers and a scholar learns the truth as a secret. 1 action.",
+        {"account_id": "The rewritten account", "reason": "Why you reveal it"},
+    ),
+    T.SET_STORYLET: ToolText(
+        "You set a storylet ({{ storylet_ids }}) in motion in your world, if mortals fit its parts there; the one it falls to must choose "
+        "what follows. 1 action.",
+        {"storylet": "The storylet", "reason": "Why you set it in motion"},
+    ),
     T.READ_DREAMS: ToolText(
         "You read the dreams of a mortal and learn some of the secrets they keep. Wards, a guardian servitor of another god or a stronger "
         "god's presence where they are may turn you aside. 1 action.",

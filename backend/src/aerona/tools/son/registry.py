@@ -14,6 +14,7 @@ from aerona.tools.framework.ports import ToolPorts
 from aerona.tools.framework.spec import ToolSpec
 from aerona.tools.son import (
     bloodline,
+    collective,
     cosmography,
     cosmos,
     death,
@@ -82,6 +83,7 @@ FAMILIES: tuple[Callable[[], list[SonSpec]], ...] = (
     evolution.specs,
     urban_depth.specs,
     law_depth.specs,
+    collective.specs,
     gatherings.specs,
     war.specs,
     military.specs,

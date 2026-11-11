@@ -16,6 +16,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.military import PeaceTermKind, WarAimKind
 from aerona.domain.enums.polity import ClauseKind, GovernmentKind, PartyRole, TreatyKind
 from aerona.domain.enums.war import CaptiveStatus, WarCause, WarEnding
+from aerona.engine.collective.accounts import remember_loss
 from aerona.engine.context import TickContext
 from aerona.engine.economy.chokepoints import contested_route, route_term
 from aerona.engine.faith.book import patron_node
@@ -171,6 +172,7 @@ async def cede(ctx: TickContext, book: RealmBook, victor: EntityRow, loser: Enti
     if lost is not None:
         statement = delete(PolityTerritoryRow).where(PolityTerritoryRow.polity_entity_id == lost.entity.id, PolityTerritoryRow.region_entity_id == region_id)
         await ctx.session.execute(statement)
+        await remember_loss(ctx, lost.entity.id, region_id)
     if realm is not None and await ctx.session.get(PolityTerritoryRow, (realm.entity.id, region_id)) is None:
         ctx.session.add(PolityTerritoryRow(polity_entity_id=realm.entity.id, region_entity_id=region_id, control=control))
     if occupation is not None:

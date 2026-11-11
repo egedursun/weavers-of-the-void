@@ -45,6 +45,22 @@ from aerona.rules.registry.city_plan import CityPlanRules
 from aerona.rules.registry.civilization import CivilizationRules
 from aerona.rules.registry.climate_effects import ClimateEffectsRules
 from aerona.rules.registry.climate_world_type import ClimateWorldTypeRules
+from aerona.rules.registry.collective import (
+    CollectiveBehaviourRules,
+    DatingRules,
+    DemographicTransitionRules,
+    DesignRules,
+    DiasporaRules,
+    GenerationRules,
+    HeraldryRules,
+    HistoriographyRules,
+    NormRules,
+    RoleNormRules,
+    SexRatioRules,
+    SocialLearningRules,
+    StoryletRules,
+    VolitionRules,
+)
 from aerona.rules.registry.communication import CommunicationRules
 from aerona.rules.registry.content import ContentRules
 from aerona.rules.registry.context import ContextRules
@@ -578,6 +594,20 @@ class Rules:
     pardons: PardonRules = field(default_factory=PardonRules)
     outlaws: OutlawRules = field(default_factory=OutlawRules)
     prisons: PrisonRules = field(default_factory=PrisonRules)
+    collective_behaviour: CollectiveBehaviourRules = field(default_factory=CollectiveBehaviourRules)
+    historiography: HistoriographyRules = field(default_factory=HistoriographyRules)
+    storylets: StoryletRules = field(default_factory=StoryletRules)
+    norms: NormRules = field(default_factory=NormRules)
+    volition: VolitionRules = field(default_factory=VolitionRules)
+    social_learning: SocialLearningRules = field(default_factory=SocialLearningRules)
+    generations: GenerationRules = field(default_factory=GenerationRules)
+    diaspora: DiasporaRules = field(default_factory=DiasporaRules)
+    demographic_transition: DemographicTransitionRules = field(default_factory=DemographicTransitionRules)
+    sex_ratio: SexRatioRules = field(default_factory=SexRatioRules)
+    role_norms: RoleNormRules = field(default_factory=RoleNormRules)
+    dating: DatingRules = field(default_factory=DatingRules)
+    heraldry: HeraldryRules = field(default_factory=HeraldryRules)
+    designs: DesignRules = field(default_factory=DesignRules)
     spy_depth: SpyDepthRules = field(default_factory=SpyDepthRules)
     mole_hunts: MoleHuntRules = field(default_factory=MoleHuntRules)
     defections: DefectionRules = field(default_factory=DefectionRules)

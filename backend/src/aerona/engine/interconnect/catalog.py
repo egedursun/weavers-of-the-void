@@ -31,6 +31,7 @@ from aerona.engine.interconnect.catalog_affairs import AFFAIRS_MECHANICS
 from aerona.engine.interconnect.catalog_arcana import ARCANA_MECHANICS, MYTHIC_MECHANICS
 from aerona.engine.interconnect.catalog_army_depth import ARMY_DEPTH_MECHANICS
 from aerona.engine.interconnect.catalog_battle_depth import BATTLE_DEPTH_MECHANICS
+from aerona.engine.interconnect.catalog_collective import COLLECTIVE_MECHANICS
 from aerona.engine.interconnect.catalog_communication import COMMUNICATION_MECHANICS
 from aerona.engine.interconnect.catalog_cosmography import COSMOGRAPHY_MECHANICS
 from aerona.engine.interconnect.catalog_couplings import COUPLING_MECHANICS
@@ -1003,6 +1004,7 @@ BUILT_IN = (
     *EVOLUTION_MECHANICS,
     *URBAN_MECHANICS,
     *LAW_MECHANICS,
+    *COLLECTIVE_MECHANICS,
     *PLACE_BEHAVIOURS,
     *COUPLING_MECHANICS,
     *REGION_MECHANICS,
@@ -1030,6 +1032,7 @@ MODULE_SUBSYSTEMS: dict[str, Subsystem] = {
     "evolution": Subsystem.ECOLOGY,
     "urban_depth": Subsystem.SOCIAL,
     "law_depth": Subsystem.LAW,
+    "collective": Subsystem.SOCIAL,
     "mortals": Subsystem.DEMOGRAPHY,
     "life_cycles": Subsystem.DEMOGRAPHY,
     "heroes": Subsystem.DEMOGRAPHY,

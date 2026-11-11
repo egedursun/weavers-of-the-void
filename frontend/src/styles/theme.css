@@ -56,6 +56,15 @@
   --brand-azure: oklch(0.55 0.12 250);
   --brand-night: oklch(0.2 0.1 294);
   --brand-ink: oklch(0.22 0.09 292);
+  --tincture-gold: oklch(0.76 0.15 84);
+  --tincture-silver: oklch(0.93 0.008 85);
+  --tincture-red: oklch(0.52 0.19 25);
+  --tincture-blue: oklch(0.45 0.15 260);
+  --tincture-green: oklch(0.52 0.13 145);
+  --tincture-black: oklch(0.22 0.01 60);
+  --tincture-purple: oklch(0.45 0.16 315);
+  --tincture-orange: oklch(0.66 0.16 55);
+  --tincture-line: oklch(0.25 0.03 60);
   --sidebar: oklch(0.972 0.006 290);
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
@@ -123,6 +132,15 @@
   --brand-azure: oklch(0.7 0.13 245);
   --brand-night: oklch(0.2 0.1 294);
   --brand-ink: oklch(0.145 0.022 285);
+  --tincture-gold: oklch(0.8 0.15 86);
+  --tincture-silver: oklch(0.9 0.01 85);
+  --tincture-red: oklch(0.58 0.19 25);
+  --tincture-blue: oklch(0.55 0.15 258);
+  --tincture-green: oklch(0.6 0.13 145);
+  --tincture-black: oklch(0.2 0.01 60);
+  --tincture-purple: oklch(0.55 0.16 315);
+  --tincture-orange: oklch(0.7 0.16 55);
+  --tincture-line: oklch(0.15 0.02 60);
   --sidebar: oklch(0.125 0.02 285);
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
@@ -498,6 +516,15 @@
   --color-brand-gold-deep: var(--brand-gold-deep);
   --color-brand-verdigris: var(--brand-verdigris);
   --color-brand-ink: var(--brand-ink);
+  --color-tincture-gold: var(--tincture-gold);
+  --color-tincture-silver: var(--tincture-silver);
+  --color-tincture-red: var(--tincture-red);
+  --color-tincture-blue: var(--tincture-blue);
+  --color-tincture-green: var(--tincture-green);
+  --color-tincture-black: var(--tincture-black);
+  --color-tincture-purple: var(--tincture-purple);
+  --color-tincture-orange: var(--tincture-orange);
+  --color-tincture-line: var(--tincture-line);
 }
 
 html.text-size-large {

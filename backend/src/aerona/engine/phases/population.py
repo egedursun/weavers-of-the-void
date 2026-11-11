@@ -10,6 +10,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import PowerEffect
 from aerona.engine.body.customs import people_of
+from aerona.engine.collective.demography import fertility_factor
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.lifeforms import disease_load, habitability, habitable_growth
 from aerona.engine.demography.basket import fed_index
@@ -118,6 +119,7 @@ async def grow_community(
     ground = await ctx.session.get(RegionEnvironmentRow, region_id) if region_id is not None else None
     magic = model.knowledge.level(community.id, KnowledgeBranch.MAGIC)
     vigour *= await ctx.hook_factor(community.id, DomainHook.FERTILITY)
+    vigour *= await fertility_factor(ctx, community.id)
     pressures = Pressures(
         fertility=vigour,
         hunger=hunger_level(rules, biology, ground, await fed_index(ctx.session, community.id), magic),
@@ -154,17 +156,21 @@ async def grow_community(
     "table.community_cohorts",
     "table.community_needs",
     "table.community_societies",
+    "table.demographic_transitions",
     "table.divine_wounds",
     "table.endemic_diseases",
     "table.holder_levels",
+    "table.law_jurisdictions",
     "table.natural_law_profiles",
     "table.nodes",
     "table.outbreaks",
     "table.people_biology",
     "table.people_culture",
     "table.place_environment",
+    "table.polity_members",
     "table.region_environment",
     "table.settlement_profiles",
+    "table.sex_ratios",
     "table.son_powers",
     "table.war_sides",
     "table.wars",

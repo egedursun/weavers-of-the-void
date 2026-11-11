@@ -15,6 +15,7 @@ from aerona.catalog.worlds import WORLD_TYPES
 from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.arcana import SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
 from aerona.domain.enums.body import BodyPlan
+from aerona.domain.enums.collective import CollectiveTrigger, DesignComponentKind, DesignKind, StoryletId
 from aerona.domain.enums.culture import ArtMedium, IdeologyTenet, MagicSchool, MagicSource, ProphecyConsequence, ProphecyPredicate, RiteEffectKind
 from aerona.domain.enums.discovery import ArtDiscipline, TheoryDomain
 from aerona.domain.enums.ecology import (
@@ -135,6 +136,10 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "sound_environments": ", ".join(item.value for item in SoundEnvironment),
         "language_policies": ", ".join(item.value for item in LanguagePolicy),
         "plague_responses": ", ".join(item.value for item in PlagueResponse),
+        "collective_triggers": ", ".join(item.value for item in CollectiveTrigger),
+        "storylet_ids": ", ".join(item.value for item in StoryletId),
+        "design_kinds": ", ".join(item.value for item in DesignKind),
+        "design_components": ", ".join(item.value for item in DesignComponentKind),
         "registry_kinds": ", ".join(item.value for item in RegistryKind if item is not RegistryKind.LAND_TITLE),
         "ideology_tenets": ", ".join(tenet.value for tenet in IdeologyTenet),
         "prophecy_predicates": ", ".join(item.value for item in ProphecyPredicate),

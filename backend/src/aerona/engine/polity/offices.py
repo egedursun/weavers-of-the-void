@@ -21,6 +21,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.body import LASTING_INJURY_STATES
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.collective import RoleKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.mind import MemoryKind, SkillKind, TraitKind
@@ -30,6 +31,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.storyteller import SpontaneousKind
 from aerona.domain.enums.war import WarSide
 from aerona.domain.models.entity_stats import FactionStats
+from aerona.engine.collective.roles import role_rank
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.causes import succession_incident
 from aerona.engine.intrigue.favours import owe
@@ -299,6 +301,9 @@ async def living_mortal(ctx: TickContext, node_id: int) -> EntityRow | None:
     return found if found is not None and found.entity_type is EntityType.MORTAL else None
 
 
+RANK_SPAN = 10
+
+
 def gender_rank(rule: GenderRule, mortal: EntityRow) -> int | None:
     sex = sex_of(mortal)
     if rule is GenderRule.MALE_ONLY:
@@ -355,9 +360,10 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
     eligible = []
     for item in pool:
         rank = gender_rank(gender, item)
-        if rank is None or (wholeness and not await whole(ctx, item)):
+        custom = await role_rank(ctx.session, item, RoleKind.OFFICE)
+        if rank is None or custom is None or (wholeness and not await whole(ctx, item)):
             continue
-        eligible.append((rank, item))
+        eligible.append((rank * RANK_SPAN + custom, item))
     grown = [entry for entry in eligible if (stat(entry[1], "age") or 0) >= min_age]
     eligible = grown or eligible
     table = ctx.rules.succession

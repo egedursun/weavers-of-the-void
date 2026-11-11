@@ -7,6 +7,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.arcana import LawUpkeepRow, VisStockRow
 from aerona.db.tables.celestial import StarRow, WorldRow
+from aerona.db.tables.collective import AccountRow, StoryletRunRow
 from aerona.db.tables.cosmography import CosmicBeingProfileRow, DimensionRow, PhenomenonFootprintRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, LegendProfileRow, RiteProfileRow
@@ -21,6 +22,7 @@ from aerona.db.tables.estates import EstateProfileRow
 from aerona.db.tables.evolution import CarrierRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.flora import PlantProfileRow
+from aerona.db.tables.gatherings import CollectionRow
 from aerona.db.tables.intrigue import HookRow, SecretRow, TrueNameRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.law_depth import LegalSystemRow, OutlawRow, PrisonerRow
@@ -33,7 +35,8 @@ from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.renown import ReputationRow
-from aerona.db.tables.settlement import DistrictRow
+from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
+from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRelationRow, SonRow
 from aerona.db.tables.statecraft import CrisisRow
 from aerona.db.tables.structures import StructureProfileRow
@@ -44,6 +47,7 @@ from aerona.domain.enums.arcana import LawSource, SpellForm
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import WritingSystem
+from aerona.domain.enums.collective import AccountKind, StoryletId, StoryletStatus
 from aerona.domain.enums.cosmography import BeingKind, BeingScale, DimensionKind, PhenomenonCause, PhenomenonKind, RiftCause, RiftState
 from aerona.domain.enums.culture import LegendArchetype, MagicSchool, Technique
 from aerona.domain.enums.disease import ClimateAffinity, DiseaseVector
@@ -54,6 +58,7 @@ from aerona.domain.enums.ecology import Diet, DomesticationStage, SpeciesClass, 
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeMode, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import CivilizationTier, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind, FactionRank
+from aerona.domain.enums.gathering import CollectionKind
 from aerona.domain.enums.intrigue import HookSource, HookStrength, IntrigueSecret
 from aerona.domain.enums.justice import CaseStage, Verdict
 from aerona.domain.enums.law_depth import LegalSystem
@@ -65,7 +70,7 @@ from aerona.domain.enums.physics import ImpactBody, ImpactOutcome
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
 from aerona.domain.enums.renown import ReputationAxis
-from aerona.domain.enums.settlement import DistrictKind
+from aerona.domain.enums.settlement import DistrictKind, SizeTier
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.statecraft import CrisisDemand
@@ -987,5 +992,77 @@ async def bounty_poster(session: AsyncSession, realm: Realm) -> Ids:
         session.add(MortalProfileRow(entity_id=realm.mortal_id, wealth=PERCENT, locked=[]))
     else:
         profile.wealth = PERCENT
+    await session.flush()
+    return found
+
+
+async def town_profile(session: AsyncSession, realm: Realm) -> Ids:
+    if await session.get(SettlementProfileRow, realm.settlement_id) is None:
+        session.add(SettlementProfileRow(settlement_entity_id=realm.settlement_id, size_tier=SizeTier.TOWN, locked=[], foreigners={}))
+        await session.flush()
+    return {"town": realm.settlement_id}
+
+
+async def storylet_waiting(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruled_realm(session, realm)
+    run = StoryletRunRow(
+        storylet=StoryletId.HOARDED_STORE,
+        world_id=realm.cosmos.world_id,
+        cast={"town": realm.settlement_id, "ruler": realm.mortal_id, "realm": found["polity"]},
+        status=StoryletStatus.OPEN,
+        chooser_node_id=realm.mortal_id,
+        due_epoch=EPOCH + 5,
+        opened_epoch=0,
+        locked=[],
+    )
+    session.add(run)
+    await session.flush()
+    return {**found, **await town_profile(session, realm), "storylet_run": run.id}
+
+
+async def chronicled_event(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruled_realm(session, realm)
+    event = CollectionRow(kind=CollectionKind.CORONATION, name="The crowning at Brinewatch", world_id=realm.cosmos.world_id, start_epoch=0, locked=[])
+    session.add(event)
+    await session.flush()
+    return {**found, "collection": event.id}
+
+
+async def figure_to_strike(session: AsyncSession, realm: Realm) -> Ids:
+    return {**await ruled_realm(session, realm), **await second_mortal(session, realm)}
+
+
+async def rewritten_account(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruled_realm(session, realm)
+    original = AccountRow(holder_entity_id=found["polity"], kind=AccountKind.OFFICIAL_CHRONICLE, subject_node_id=realm.mortal_id, epoch=0, locked=[])
+    session.add(original)
+    await session.flush()
+    revision = AccountRow(
+        holder_entity_id=found["polity"], kind=AccountKind.OFFICIAL_CHRONICLE, subject_node_id=realm.mortal_id, revised_from_id=original.id, epoch=1, locked=[]
+    )
+    session.add(revision)
+    await session.flush()
+    return {**found, "revision": revision.id}
+
+
+async def hungry_town(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruled_realm(session, realm)
+    await town_profile(session, realm)
+    shares = {f"share_{item.value}": 0.1 for item in SocialClass}
+    satisfaction = {f"satisfaction_{item.value}": 50 for item in SocialClass}
+    if await session.get(CommunitySocietyRow, realm.settlement_id) is None:
+        session.add(
+            CommunitySocietyRow(
+                entity_id=realm.settlement_id,
+                **shares,
+                **satisfaction,
+                stock_food=0,
+                stock_ore=0,
+                stock_goods=0,
+                price_food=100,
+                price_ore=100,
+                price_goods=100,
+            )
+        )
     await session.flush()
     return found

@@ -2,30 +2,35 @@ from collections import defaultdict
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
+from aerona.catalog.norms import GATHERING_SITUATIONS, INTERACTION_BEHAVIOUR
 from aerona.catalog.relations import INTERACTIONS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow
+from aerona.db.tables.gatherings import CollectionPlaceRow, CollectionRow
 from aerona.db.tables.mind import GriefRow, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.relations import RelationshipRow, SocialCircleRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.body import HarmCause
+from aerona.domain.enums.collective import NormSituation
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.mind import ActKind, Facet, GriefStage, MemoryKind, NeedKind, SkillKind, ThoughtKind, ValueHolder, WantKind
+from aerona.domain.enums.mind import ActKind, EthicalStance, Facet, GriefStage, MemoryKind, NeedKind, SkillKind, ThoughtKind, ValueAxis, ValueHolder, WantKind
 from aerona.domain.enums.relations import AppealKind, InteractionKind, PersuasionAim, RelationType
 from aerona.domain.enums.renown import ReputationAxis
 from aerona.engine.body.hits import Harm
+from aerona.engine.collective.book import shift as shift_field
+from aerona.engine.collective.norms import Norms, breach, norms_of, stance_in, volition
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.talk import affair_secret, ask_back, confide_own, gift_earns, gossip_secret
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.aspirations import open_wants
 from aerona.engine.mind.book import Values, needs_of, stored_values
-from aerona.engine.mind.ethics import at_war, conscience
+from aerona.engine.mind.ethics import at_war, conscience, culture_of
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.skills import practise
 from aerona.engine.mind.split import facets_of
@@ -52,6 +57,8 @@ HUNGRY_BELOW = 30
 BRAWL_BELOW = -20
 CONFIDE_AT = 40
 FAVOUR_AT = 20
+SUPERIOR_GAP = 30
+CONFORMING = (Facet.COOPERATION, Facet.POLITENESS, Facet.SENSE_OF_DUTY)
 
 
 @dataclass
@@ -72,6 +79,8 @@ class Scene:
     grieving: set[int] = field(default_factory=set)
     war: bool = False
     met: set[tuple[int, int]] = field(default_factory=set)
+    norms: dict[int, Norms] = field(default_factory=dict)
+    gathering: NormSituation | None = None
 
 
 @dataclass
@@ -84,6 +93,7 @@ class SocialTally:
     gifts: int = 0
     lessons: int = 0
     persuaded: int = 0
+    breaches: int = 0
     by_kind: dict[str, int] = field(default_factory=lambda: defaultdict(int))
 
 
@@ -119,6 +129,19 @@ async def load_scene(ctx: TickContext, place_id: int, mortals: list[EntityRow]) 
     ):
         scene.circles.setdefault(mortal_id, set()).add(faction_id)
     scene.war = await at_war(ctx.session, [place_id])
+    held_norms: dict[int, Norms] = {}
+    for mortal_id in ids:
+        culture = await culture_of(ctx.session, mortal_id)
+        if culture is not None and culture.id not in held_norms:
+            held_norms[culture.id] = await norms_of(ctx.session, culture.id)
+        scene.norms[mortal_id] = held_norms[culture.id] if culture is not None else {}
+    kinds = await ctx.session.scalars(
+        select(CollectionRow.kind)
+        .join(CollectionPlaceRow, CollectionPlaceRow.collection_id == CollectionRow.id)
+        .where(CollectionPlaceRow.place_entity_id == place_id, or_(CollectionRow.end_epoch.is_(None), CollectionRow.end_epoch >= ctx.epoch))
+        .order_by(CollectionRow.start_epoch.desc(), CollectionRow.id.desc())
+    )
+    scene.gathering = next((GATHERING_SITUATIONS[kind] for kind in kinds if kind in GATHERING_SITUATIONS), None)
     return scene
 
 
@@ -227,14 +250,63 @@ def weight(scene: Scene, actor: int, target: int, kind: InteractionKind, row: Re
     return result
 
 
+def situation_of(scene: Scene, actor: int, target: int) -> NormSituation:
+    if actor in scene.grieving or target in scene.grieving:
+        return NormSituation.MOURNING
+    mine, theirs = scene.profiles.get(actor), scene.profiles.get(target)
+    if mine is not None and theirs is not None and theirs.renown - mine.renown >= SUPERIOR_GAP:
+        return NormSituation.SUPERIOR
+    if scene.gathering is not None:
+        return scene.gathering
+    if scene.tongues.get(actor) != scene.tongues.get(target):
+        return NormSituation.STRANGER
+    return NormSituation.MARKET
+
+
+def conformity(scene: Scene, mortal_id: int) -> float:
+    facets = scene.facets.get(mortal_id, {})
+    return max(-1.0, min(1.0, sum(facets.get(facet, 0) for facet in CONFORMING) / (len(CONFORMING) * FACET_SPAN)))
+
+
+def rebellion(scene: Scene, mortal_id: int) -> float:
+    return max(0.0, -scene.values.get(mortal_id, {}).get(ValueAxis.TRADITION, 0) / VALUE_SPAN)
+
+
+def norm_for(scene: Scene, actor: int, target: int, kind: InteractionKind) -> EthicalStance:
+    behaviour = INTERACTION_BEHAVIOUR.get(kind)
+    if behaviour is None:
+        return EthicalStance.ACCEPTABLE
+    return stance_in(scene.norms.get(actor, {}), situation_of(scene, actor, target), behaviour)
+
+
+def score(scene: Scene, actor: int, target: int, kind: InteractionKind, row: RelationshipRow | None) -> float:
+    stance = norm_for(scene, actor, target, kind)
+    rule = volition(scene.ctx.rules, stance, conformity=conformity(scene, actor), rebel=rebellion(scene, actor))
+    return weight(scene, actor, target, kind, row) * max(LIGHT_WEIGHT, rule)
+
+
 async def choose(scene: Scene, actor: int, target: int, rng: SeededRandom) -> InteractionKind | None:
     row = await relation(scene.ctx.session, actor, target)
     back = await relation(scene.ctx.session, target, actor)
     options = [kind for kind in InteractionKind if allowed(scene, actor, target, kind, row=row, back=back)]
     if not options:
         return None
-    weights = [weight(scene, actor, target, kind, row) for kind in options]
-    return rng.weighted(options, weights) if sum(weights) > 0 else None
+    scores = [score(scene, actor, target, kind, row) for kind in options]
+    if sum(scores) <= 0:
+        return None
+    if rng.chance(scene.ctx.rules.volition.whim_pct):
+        return rng.weighted(options, scores)
+    return max(zip(scores, options, strict=True), key=lambda pair: pair[0])[1]
+
+
+async def shamed(scene: Scene, actor: int, target: int, kind: InteractionKind, tally: SocialTally) -> None:
+    if not breach(norm_for(scene, actor, target, kind)) or len(scene.mortals) < 3 or write_blocked(actor, RELATIONS_KEY):
+        return
+    profile = scene.profiles.get(actor)
+    if profile is not None:
+        shift_field(profile, "honour", -scene.ctx.rules.volition.breach_shame)
+    tally.breaches += 1
+    await think(scene.ctx.session, scene.ctx.rules, actor, ThoughtKind.WAS_SHAMED, scene.ctx.epoch, subject_id=target)
 
 
 async def gossip(scene: Scene, actor: int, target: int) -> None:
@@ -400,6 +472,7 @@ async def interact(scene: Scene, actor: int, target: int, kind: InteractionKind,
         shift(ctx.rules, heard, ctx.epoch, friendship=-abs(spec.friendship) / 2, familiarity=1)
     if spec.skill is not None:
         await practise(ctx.session, ctx.rules, actor, spec.skill, ctx.rules.skills.spar_xp, epoch=ctx.epoch)
+    await shamed(scene, actor, target, kind, tally)
     tally.interactions += 1
     tally.by_kind[kind.value] += 1
     tally.proposals += kind is K.PROPOSE and success

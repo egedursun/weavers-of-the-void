@@ -148,6 +148,7 @@ async def _hold_piety(session: AsyncSession, rules: Rules, entity_id: int, floor
     "table.place_environment",
     "table.place_secrets",
     "table.region_environment",
+    "table.rite_profiles",
     "table.world_materials",
 )
 @writes(
