@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.evolution import STAGE_COVER, climax_stage, keystone_of, next_stage, trophic_level
-from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, QuarantineRow
+from aerona.db.tables.disease import DiseaseCureRow, DiseaseProfileRow, OutbreakRow, QuarantineRow
 from aerona.db.tables.ecology import HerdRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -11,34 +11,40 @@ from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.affliction import PackageKind
 from aerona.domain.enums.body import BodyPlan
-from aerona.domain.enums.disease import ClimateAffinity, DiseaseVector
+from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.disease import ClimateAffinity, DiseaseTarget, DiseaseVector, SpreadPath
 from aerona.domain.enums.ecology import Diet, DomesticationStage, SizeClass
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, TemperatureBand
 from aerona.domain.enums.evolution import EvolvedTrait, KeystoneRole, PlagueResponse, SuccessionStage, TrophicLevel
 from aerona.domain.enums.happening import LandAct
+from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.models.entity_stats import DiseaseStats, SpeciesStats, StructureStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.cycles import CycleTally, carbon_flux, turn_cycles
 from aerona.engine.cosmos.planetary import move_carbon
+from aerona.engine.disease.book import DiseaseBook
+from aerona.engine.disease.evolution import take_symptom
 from aerona.engine.disease.outbreaks import answered, resisted, tolerance_fit
 from aerona.engine.disease.research import ResearchTally, found_cure
-from aerona.engine.disease.responses import take_up
+from aerona.engine.disease.responses import leaning, resentment, take_up
+from aerona.engine.disease.stigma import expel_sick
 from aerona.engine.ecology.evolution import EvolutionTally, apart, cold_reach, escape, evolve_traits, fecund, inherit_traits, wary
 from aerona.engine.ecology.evolution_control import set_trait, shape_land
-from aerona.engine.ecology.feral import FeralTally, run_wild
+from aerona.engine.ecology.feral import FeralTally, release_herd, run_wild
 from aerona.engine.ecology.keystones import KeystoneTally, keep_services, pollination
-from aerona.engine.ecology.lineages import mark
+from aerona.engine.ecology.lineages import LineageTally, mark, mark_lineages
 from aerona.engine.ecology.niches import NicheTally, compete
 from aerona.engine.ecology.profiles import profile_of
 from aerona.engine.ecology.trophic import TrophicTally, balance_food_chain
 from aerona.engine.environment.succession import SuccessionTally, burn_back, grow_lands
 from aerona.engine.phases.environment import environment_survey
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.primitives.queries import has_flag
 from aerona.services.integrity.evolution_links import mend_evolution_links
-from tests.engine.core.factories import CoreWorld, entity, settlement, tuned_rules
+from tests.engine.core.factories import CoreWorld, bond, entity, settlement, tuned_rules
 
 
 async def surveyed(session: AsyncSession, **namespaces: dict[str, int]) -> TickContext:
@@ -300,3 +306,59 @@ async def test_set_traits_are_held_and_repairs_drop_carriers_of_the_vanished(ses
     assert row.mean == 90 and "mean" in row.locked
     assert len(list(await session.scalars(select(SpeciesTraitRow).where(SpeciesTraitRow.species_entity_id == deer.id)))) == len(EvolvedTrait)
     assert await mend_evolution_links(session, ctx.epoch) == 0
+
+
+def test_answers_follow_a_communitys_values_and_mercy_resents_a_quarantine() -> None:
+    lawful = {ValueAxis.LAW: 80}
+    tender = {ValueAxis.KINSHIP: 80, ValueAxis.MERCY: 80}
+    assert leaning(lawful, PlagueResponse.QUARANTINE) > leaning(lawful, PlagueResponse.PRAYER)
+    assert resentment(tender) > resentment({}) > resentment(lawful)
+
+
+async def test_crowds_take_up_a_spreading_symptom(session: AsyncSession, world: CoreWorld) -> None:
+    disease = await sickness(session, world)
+    profile = await session.get(DiseaseProfileRow, disease.id)
+    assert profile is not None
+    assert take_symptom(profile, True)
+    assert DiseaseTarget.BREATH.value in profile.target_functions
+    assert not take_symptom(profile, True)
+
+
+async def test_a_cursed_kind_carries_the_curse_down_its_line(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session, lineages={"taint_pct": 0})
+    wolf = await beast_kind(session, world, "Ash Wolf", world.regions[0].id)
+    await profile_of(ctx, wolf)
+    await bond(session, world.son.id, wolf.id, BondKind.CURSED)
+    await mark_lineages(ctx, LineageTally())
+    row = await session.get(LineageMarkRow, (wolf.id, PackageKind.VOID_TAINT))
+    assert row is not None and not row.blessing and row.source_node_id == world.son.id
+
+
+async def test_a_town_that_drives_out_its_sick_sends_them_to_a_colony_and_a_loosed_breed_turns_invasive(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session, epidemiology={"colony_min": 1, "expel_pct": 50})
+    disease = await sickness(session, world)
+    town = await settlement(session, "Ashby", world, world.regions[0], population=2000)
+    session.add(
+        OutbreakRow(
+            disease_entity_id=disease.id,
+            region_entity_id=world.regions[0].id,
+            path=SpreadPath.ORIGIN,
+            severity=40,
+            infected=1000,
+            dead=0,
+            started_epoch=0,
+            locked=[],
+        )
+    )
+    await session.flush()
+    await take_up(ctx, town, disease.id, PlagueResponse.EXPEL_SICK)
+    book = await DiseaseBook.load(session, ctx.rules, ctx.epoch)
+    assert await expel_sick(ctx, book) > 0
+    goat = await beast_kind(session, world, "Hill Goat", world.regions[1].id)
+    profile = await profile_of(ctx, goat)
+    profile.stage = DomesticationStage.DOMESTICATED
+    herd = HerdRow(community_entity_id=town.id, species_entity_id=goat.id, head=30, stage=DomesticationStage.DOMESTICATED, locked=[])
+    session.add(herd)
+    await session.flush()
+    await release_herd(ctx, herd)
+    assert await has_flag(session, goat.id, EntityFlag.INVASIVE)

@@ -12,6 +12,7 @@ from aerona.domain.enums.disease import SpreadPath
 from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.carriers import folk_by_region
+from aerona.engine.disease.emergence import new_strain
 from aerona.engine.disease.outbreaks import open_outbreak
 from aerona.engine.notes import note
 from aerona.rules.registry import Rules
@@ -69,14 +70,15 @@ async def spill(ctx: TickContext, tally: SpilloverTally) -> None:
             chance = jump_chance(ctx.rules, land, row.hunted, bool(herded.get(region_id))) * row.abundance / PERCENT
             if not ctx.rng(f"spillover.{disease_id}.{species_id}.{region_id}").chance(chance):
                 continue
-            await open_outbreak(ctx, book, disease, region_id, path=SpreadPath.ORIGIN, severity=table.severity)
+            land_row = await ctx.session.get(EntityRow, region_id)
+            jumped = await new_strain(ctx, book, disease, land_row) if land_row is not None else None
+            await open_outbreak(ctx, book, jumped or disease, region_id, path=SpreadPath.ORIGIN, severity=table.severity)
             tally.jumped += 1
             species = await ctx.session.get(EntityRow, species_id)
-            land_row = await ctx.session.get(EntityRow, region_id)
             if species is not None and land_row is not None:
                 await note(
                     ctx,
-                    f"{disease.name} passed from {species.name} to the folk of {land_row.name}.",
+                    f"{(jumped or disease).name} passed from {species.name} to the folk of {land_row.name}.",
                     key="disease.spillover",
-                    ids=[disease.id, species.id, land_row.id],
+                    ids=[(jumped or disease).id, species.id, land_row.id],
                 )

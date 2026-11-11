@@ -7,11 +7,12 @@ from aerona.db.tables.ecology import HerdRow, SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.ecology import STAGE_ORDER, DomesticationStage
-from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.entity import EntityFlag, EntityStatus
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.queries import add_flag
 
 
 @dataclass
@@ -33,6 +34,8 @@ async def release_herd(ctx: TickContext, herd: HerdRow, atlas: RegionAtlas | Non
     if row is None:
         row = SpeciesRangeRow(species_entity_id=species.id, region_entity_id=region_id, abundance=0, since_epoch=ctx.epoch, locked=[])
         ctx.session.add(row)
+        if profile is not None and profile.stage is not DomesticationStage.WILD:
+            await add_flag(ctx.session, species.id, EntityFlag.INVASIVE, ctx.epoch)
     if "abundance" not in row.locked:
         row.abundance = clamp_int((row.abundance or 0) + ctx.rules.feral.release_abundance, 0, PERCENT)
     row.updated_epoch = ctx.epoch

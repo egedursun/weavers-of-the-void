@@ -9,11 +9,12 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.evolution import LineageMarkRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import PackageKind, Transmission
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
-from aerona.engine.primitives.queries import canon
+from aerona.engine.primitives.queries import active_bonds, canon
 
 BLESSING = PackageKind.DIVINE_BLESSING
 TAINT = PackageKind.VOID_TAINT
@@ -62,7 +63,12 @@ async def mark_lineages(ctx: TickContext, tally: LineageTally) -> None:
             await mark(ctx, species, BLESSING, blessing=True, source_node_id=profile.sacred_to_node_id)
             tally.blessed += 1
             await note(ctx, f"The line of {species.name} carries a blessing now, from parent to young.", key="ecology.lineage_blessed", ids=[species.id])
-        if species.id in tainted and await ctx.session.get(LineageMarkRow, (species.id, TAINT)) is None and rng.chance(table.taint_pct):
+        curse = await active_bonds(ctx.session, [BondKind.CURSED], targets=[species.id])
+        if curse and await ctx.session.get(LineageMarkRow, (species.id, TAINT)) is None:
+            await mark(ctx, species, TAINT, blessing=False, source_node_id=curse[-1].source_node_id)
+            tally.tainted += 1
+            await note(ctx, f"The curse on {species.name} passes from parent to young.", key="ecology.lineage_cursed", ids=[species.id])
+        elif species.id in tainted and await ctx.session.get(LineageMarkRow, (species.id, TAINT)) is None and rng.chance(table.taint_pct):
             await mark(ctx, species, TAINT, blessing=False, source_node_id=None)
             tally.tainted += 1
             await note(

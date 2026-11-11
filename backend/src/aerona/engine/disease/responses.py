@@ -14,9 +14,11 @@ from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import SOCIETY_TYPES
 from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.faith import FuneralRite
+from aerona.domain.enums.mind import ValueAxis
 from aerona.engine.context import TickContext
 from aerona.engine.disease.control import quarantine
 from aerona.engine.disease.research import institutions
+from aerona.engine.disease.stigma import values_for
 from aerona.engine.faith.judgement import funeral_custom
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
@@ -27,6 +29,14 @@ from aerona.engine.primitives.stats import shift_bounded
 R = PlagueResponse
 STABILITY = "stability"
 UNBURNED = frozenset({FuneralRite.BURIAL, FuneralRite.EXPOSURE, FuneralRite.NAMELESS})
+LEANINGS: dict[PlagueResponse, tuple[ValueAxis, ...]] = {
+    R.CLOSE_BORDERS: (ValueAxis.TRADITION, ValueAxis.LOYALTY),
+    R.QUARANTINE: (ValueAxis.LAW, ValueAxis.KNOWLEDGE),
+    R.BURN_DEAD: (ValueAxis.PURITY,),
+    R.EXPEL_SICK: (ValueAxis.PURITY, ValueAxis.HIERARCHY),
+    R.PRAYER: (ValueAxis.PIETY, ValueAxis.SUPERSTITION),
+    R.SEEK_CURE: (ValueAxis.KNOWLEDGE, ValueAxis.MERCY),
+}
 RESPONSE_WORDS = {
     R.CLOSE_BORDERS: "closed its borders",
     R.QUARANTINE: "shut its sick away",
@@ -42,6 +52,15 @@ class ResponseTally:
     taken: int = 0
     lifted: int = 0
     riots: int = 0
+
+
+def leaning(values: dict[ValueAxis, int], response: PlagueResponse) -> float:
+    held_values = LEANINGS.get(response, ())
+    return 1 + sum(values.get(axis, 0) for axis in held_values) / PERCENT
+
+
+def resentment(values: dict[ValueAxis, int]) -> float:
+    return max(0.0, 1 + (values.get(ValueAxis.KINSHIP, 0) + values.get(ValueAxis.MERCY, 0) - 2 * values.get(ValueAxis.LAW, 0)) / (2 * PERCENT))
 
 
 async def institutions_in(session: AsyncSession, community_id: int) -> list[int]:
@@ -98,7 +117,9 @@ async def bear(ctx: TickContext, row: PlagueResponseRow, community: EntityRow, t
     weight = row.strength / PERCENT
     if row.response is R.CLOSE_BORDERS:
         shift_bounded(ctx.rules, community, STABILITY, -table.border_unrest * weight)
-    elif row.response is R.QUARANTINE and ctx.rng(f"plague_riot.{community.id}.{row.disease_entity_id}").chance(table.riot_pct * weight):
+    elif row.response is R.QUARANTINE and ctx.rng(f"plague_riot.{community.id}.{row.disease_entity_id}").chance(
+        table.riot_pct * weight * resentment(await values_for(ctx, community))
+    ):
         shift_bounded(ctx.rules, community, STABILITY, -table.riot_unrest)
         tally.riots += 1
         await note(ctx, f"The folk of {community.name} rose against the quarantine.", key="disease.quarantine_riot", ids=[community.id])
@@ -144,7 +165,9 @@ async def respond(ctx: TickContext, tally: ResponseTally) -> None:
         rng = ctx.rng(f"plague_response.{community.id}.{disease_id}")
         if taken or not rng.chance(table.choose_pct):
             continue
-        response = rng.pick(await options_for(ctx, community))
+        options = await options_for(ctx, community)
+        values = await values_for(ctx, community)
+        response = rng.weighted(options, [leaning(values, option) for option in options])
         await take_up(ctx, community, disease_id, response)
         tally.taken += 1
         disease = await ctx.session.get(EntityRow, disease_id)

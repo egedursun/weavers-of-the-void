@@ -73,6 +73,7 @@ class PathogenRules:
     escape_immune_pct: int = rule(60, 0, 100, D, "Immune share of its hosts past which a disease is driven to escape immunity")
     escape_pct: int = rule(25, 0, 100, D, "Chance each epoch such a disease throws off a new strain (%)")
     climate_step: int = rule(2, 0, 100, D, "How far a disease's cold or heat tolerance moves toward the lands it spreads in each epoch")
+    symptom_pct: int = rule(20, 0, 100, D, "Chance each epoch a crowded disease takes up a symptom that spreads it by its own way (%)")
     incubation_step: int = rule(1, 0, 20, D, "Epochs of incubation a disease gains among sparse peoples, spreading before it is seen")
 
 

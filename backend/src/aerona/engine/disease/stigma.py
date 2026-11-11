@@ -6,6 +6,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.evolution import PlagueResponse
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.structure import StructureKind
@@ -70,12 +71,14 @@ async def expel_sick(ctx: TickContext, book: DiseaseBook) -> int:
         disease = book.diseases.get(outbreak.disease_entity_id)
         profile = book.profiles.get(outbreak.disease_entity_id)
         region = await ctx.session.get(EntityRow, outbreak.region_entity_id)
-        if disease is None or profile is None or region is None or profile.stigma < STIGMATISED:
+        if disease is None or profile is None or region is None:
             continue
         for community in await region_communities(ctx, book, region.id):
             if community.subtype == COLONY or community.entity_type is not EntityType.SETTLEMENT or held(community.id):
                 continue
-            if (await values_for(ctx, community)).get(ValueAxis.PURITY, 0) < table.stigma_purity:
+            chosen = PlagueResponse.EXPEL_SICK in book.responses.get((community.id, disease.id), set())
+            pure = profile.stigma >= STIGMATISED and (await values_for(ctx, community)).get(ValueAxis.PURITY, 0) >= table.stigma_purity
+            if not chosen and not pure:
                 continue
             population = stat(community, "population") or 0
             reach = min(1.0, outbreak.infected / max(1, population))
