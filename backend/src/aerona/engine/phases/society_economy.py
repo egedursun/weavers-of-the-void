@@ -28,6 +28,7 @@ from aerona.domain.models.entity_stats import FactionStats, ItemStats
 from aerona.engine.body.cohorts import labour_factor
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_types import ore_yield_pct
+from aerona.engine.cycles.indenture import bondage_weight
 from aerona.engine.demography.backfill import society_depth_backfill
 from aerona.engine.demography.basket import (
     Basket,
@@ -261,7 +262,9 @@ def satisfaction_targets(
     inputs: EconomyInputs,
     stocks: Mapping[Commodity, int],
     needs: Mapping[SocialClass, ClassNeed] | None = None,
+    *,
     corvee_pct: int = 0,
+    bondage_pct: int = 0,
 ) -> dict[SocialClass, int]:
     settings = rules.society
     prosperity = inputs.prosperity
@@ -299,6 +302,8 @@ def satisfaction_targets(
         targets[social_class] -= class_need_penalty(rules, social_class, need)
     for social_class in (SocialClass.FARMER, SocialClass.SERF_OR_SLAVE):
         targets[social_class] -= rules.labour.corvee_satisfaction * corvee_pct / PERCENT
+    for social_class in (SocialClass.FARMER, SocialClass.OUTCAST):
+        targets[social_class] -= rules.labour_regimes.misery * bondage_pct / PERCENT
     return {social_class: clamp_int(value + shared, 0, PERCENT) for social_class, value in targets.items()}
 
 
@@ -541,7 +546,14 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
         society.stocks = {commodity: row.stock(commodity) for commodity in Commodity}
         await settle_wealth(ctx, entity, row, society.shares, await local_prices(ctx.session, rules, entity.id, stat_or(entity, "population", 0)))
     corvee = await ctx.session.get(CorveeRow, entity.id)
-    targets = satisfaction_targets(rules, inputs, society.stocks, basket.classes, corvee.share_pct if corvee is not None else 0)
+    targets = satisfaction_targets(
+        rules,
+        inputs,
+        society.stocks,
+        basket.classes,
+        corvee_pct=corvee.share_pct if corvee is not None else 0,
+        bondage_pct=await bondage_weight(ctx.session, entity),
+    )
     society.satisfaction = drift_satisfaction(rules, society.satisfaction, targets)
     apply_class_effects(rules, entity, society)
     hungry = society.stocks[Commodity.FOOD] <= settings.famine_food or meal.fed_pct < settings.famine_fed_pct
@@ -632,6 +644,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.incident_participants",
     "table.incidents",
     "table.incubating_ideas",
+    "table.indentures",
     "table.injuries",
     "table.item_profiles",
     "table.maimed_cohorts",

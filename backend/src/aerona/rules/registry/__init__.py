@@ -96,6 +96,26 @@ from aerona.rules.registry.creator import CreatorRules
 from aerona.rules.registry.creature_traits import CreatureTraitsRules
 from aerona.rules.registry.creatures import CreaturesRules
 from aerona.rules.registry.culture import CultureRules
+from aerona.rules.registry.cycles import (
+    AsabiyyaRules,
+    ChallengeResponseRules,
+    CircuitRules,
+    CorveeRules,
+    IndentureRules,
+    KinshipSystemRules,
+    LabourRegimeRules,
+    LegacyTraitRules,
+    LongPlanRules,
+    ManumissionRules,
+    MarriageAllianceRules,
+    NomadismRules,
+    PotlatchRules,
+    ReciprocityRules,
+    ReproductionSystemRules,
+    SacrificeRules,
+    SlaveMarketRules,
+    StructuralDemographyRules,
+)
 from aerona.rules.registry.death import DeathRules
 from aerona.rules.registry.deep_life import DeepLifeRules
 from aerona.rules.registry.deep_world import DeepWorldRules
@@ -618,6 +638,24 @@ class Rules:
     sites: SiteRules = field(default_factory=SiteRules)
     excavations: ExcavationRules = field(default_factory=ExcavationRules)
     war_conduct: WarConductRules = field(default_factory=WarConductRules)
+    structural_demography: StructuralDemographyRules = field(default_factory=StructuralDemographyRules)
+    asabiyya: AsabiyyaRules = field(default_factory=AsabiyyaRules)
+    challenge_response: ChallengeResponseRules = field(default_factory=ChallengeResponseRules)
+    long_plans: LongPlanRules = field(default_factory=LongPlanRules)
+    reciprocity: ReciprocityRules = field(default_factory=ReciprocityRules)
+    potlatch: PotlatchRules = field(default_factory=PotlatchRules)
+    ceremonial_circuits: CircuitRules = field(default_factory=CircuitRules)
+    sacrifice_exchange: SacrificeRules = field(default_factory=SacrificeRules)
+    kinship_systems: KinshipSystemRules = field(default_factory=KinshipSystemRules)
+    marriage_alliance: MarriageAllianceRules = field(default_factory=MarriageAllianceRules)
+    reproduction_systems: ReproductionSystemRules = field(default_factory=ReproductionSystemRules)
+    nomadism: NomadismRules = field(default_factory=NomadismRules)
+    legacy_traits: LegacyTraitRules = field(default_factory=LegacyTraitRules)
+    labour_regimes: LabourRegimeRules = field(default_factory=LabourRegimeRules)
+    corvee: CorveeRules = field(default_factory=CorveeRules)
+    indenture: IndentureRules = field(default_factory=IndentureRules)
+    slave_markets: SlaveMarketRules = field(default_factory=SlaveMarketRules)
+    manumission: ManumissionRules = field(default_factory=ManumissionRules)
     research_depth: ResearchDepthRules = field(default_factory=ResearchDepthRules)
     discovery: DiscoveryRules = field(default_factory=DiscoveryRules)
     theories: TheoriesRules = field(default_factory=TheoriesRules)

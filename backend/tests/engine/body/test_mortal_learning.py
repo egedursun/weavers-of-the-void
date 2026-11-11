@@ -8,6 +8,7 @@ from aerona.db.tables.mortal import KindVariantRow, MortalProfileRow
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import LegendArchetype
+from aerona.domain.enums.cycles import ReproductiveSystem
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.mind import KindFamily, MemoryKind, Profession, SkillKind, SkillSource, TraitEffect, TraitKind, TraitSource
 from aerona.domain.enums.mortal import MortalSex
@@ -15,13 +16,13 @@ from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import ItemStats, KnowledgeStats, LanguageStats, LegendStats, MortalStats, StructureStats
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.state import refresh
+from aerona.engine.cycles.breeding import born_sex
 from aerona.engine.lore.legends import LEGEND_NOTE, remember_legend
 from aerona.engine.mind.book import effect_of, set_skill
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.course import seed_mortal
 from aerona.engine.mortal.learning import attend_lectures, best_profession, read_books, speak_tongues, tongue_level, watch_masters
 from aerona.engine.mortal.profile import ensure_profile
-from aerona.engine.phases.births import child_sex
 from aerona.engine.primitives.queries import connect
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, context, make, mortal, settlement, tuned
@@ -160,8 +161,9 @@ async def test_other_sex_is_never_seeded_unless_the_world_allows_it(realm: Realm
     assert sexes <= {MortalSex.FEMALE.value, MortalSex.MALE.value}
     assert len(sexes) == 2
     rng = SeededRandom.for_epoch(1, 1, "sex")
-    assert {child_sex(RULES, rng) for _ in range(200)} <= {MortalSex.FEMALE, MortalSex.MALE}
+    assert {born_sex(RULES, ReproductiveSystem.TWO_SEX, rng) for _ in range(200)} <= {MortalSex.FEMALE, MortalSex.MALE}
     open_world = tuned(fertility={"other_sex_pct": 100.0})
-    assert child_sex(open_world, rng) is MortalSex.OTHER
+    assert born_sex(open_world, ReproductiveSystem.TWO_SEX, rng) is MortalSex.OTHER
+    assert born_sex(RULES, ReproductiveSystem.AMBISEXUAL, rng) is MortalSex.OTHER
     profiles = list(await realm.session.scalars(select(MortalProfileRow)))
     assert len(profiles) == len(mortals)

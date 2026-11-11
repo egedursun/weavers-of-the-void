@@ -635,7 +635,8 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.GIVE_GIFT: ToolText(
         "You give a gift to a sibling: a share of your essence and/or you try to transfer a community that worships you to them (the community may not accept). A gift "
-        "strengthens the relationship. An essence gift does not spend an action; a worshipper transfer costs 1 action. {{ rules.son_tools.gift_per_epoch }} per age.",
+        "strengthens the relationship and is written in the gift ledger: the sibling owes you a gift in return in time, and a gift you give a sibling answers what they gave you. "
+        "An essence gift does not spend an action; a worshipper transfer costs 1 action. {{ rules.son_tools.gift_per_epoch }} per age.",
         {
             "son_id": "The sibling's id",
             "essence": "Essence to give (at most " + ESSENCE_GIFT_CAP + ")",
@@ -1366,5 +1367,54 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You plant a network of spies for one community inside another under a cover you choose; it gathers intel, steals secrets and stirs trouble. "
         "{{ rules.son_military.spies_cost }} essence, 1 action.",
         {"owner_id": "The community the spies serve", "target_id": "The community they watch", "cover": "merchant, priest, envoy or beggar"},
+    ),
+    T.ANSWER_OFFERINGS: ToolText(
+        "A community that worships you keeps a ledger of what it has offered you and what you have given back; you answer its offerings "
+        "now. Gods who leave offerings unanswered lose love and gain neglect; gods who give back more than they were given gain love. 1 action.",
+        {"community_id": "The community whose offerings you answer", "generous": "True to give back more than they offered", "reason": "Why you answer"},
+    ),
+    T.BEGIN_LONG_PLAN: ToolText(
+        "You set in motion a long plan that outlives any one epoch ({{ long_plan_kinds }}): it advances step by step, may come to light "
+        "the less secret it is, and is fulfilled when its last step is taken. 1 action.",
+        {
+            "kind": "What the plan aims at",
+            "name": "What the plan is called",
+            "target_id": "The land, world, house, people or town it aims at",
+            "steps": "Steps it needs, 1 to 100",
+            "secrecy": "How secret it is kept, 0 to 100",
+            "reason": "Why you begin it",
+        },
+    ),
+    T.FURTHER_PLAN: ToolText(
+        "You take one of your long plans forward by a step. {{ rules.long_plans.steps_per_epoch }} steps an epoch is its own pace. 1 action.",
+        {"plan_id": "Your long plan", "reason": "Why you further it"},
+    ),
+    T.SHAPE_KINSHIP: ToolText(
+        "You change how a people in your reach reckons kin: descent ({{ kinship_descents }}), where couples live ({{ residence_rules }}), "
+        "whom they prefer to marry ({{ marriage_preferences }}) and what passes at a marriage ({{ marriage_payments }}). Inheritance, "
+        "matches, alliances between lines and marriage gifts follow. 1 action.",
+        {
+            "people_id": "The people",
+            "descent": "How descent is reckoned",
+            "residence": "Where a couple lives",
+            "preference": "Whom they prefer to marry",
+            "payment": "What passes at a marriage",
+            "reason": "Why you reshape it",
+        },
+    ),
+    T.SHAPE_REPRODUCTION: ToolText(
+        "You change how a people in your reach bears its young ({{ reproductive_systems }}); births, the sexes of the newborn, castes, "
+        "marriage and growth follow. 1 action.",
+        {"people_id": "The people", "system": "How they bear their young", "reason": "Why you change it"},
+    ),
+    T.TRY_REALM: ToolText(
+        "You try a realm in your reach with a challenge ({{ challenge_kinds }}) of a severity you choose; a challenge it can bear spurs "
+        "new ways and solidarity, too slight a one leaves it idle, too heavy a one breaks it. 1 action.",
+        {"polity_id": "The realm", "kind": "What tries it", "severity": "How heavy the trial is, 0 to 100", "reason": "Why you try it"},
+    ),
+    T.SET_CIRCUIT: ToolText(
+        "You set a ceremonial circuit turning among communities in your reach: a treasure passes from each stop to the next every epoch, "
+        "lending standing to whoever holds it and binding the stops in regard. 1 action.",
+        {"name": "What the circuit is called", "stop_ids": "The communities it passes through, in order, at least two", "reason": "Why you set it"},
     ),
 }

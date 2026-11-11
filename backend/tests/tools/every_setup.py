@@ -11,6 +11,8 @@ from aerona.db.tables.collective import AccountRow, StoryletRunRow
 from aerona.db.tables.cosmography import CosmicBeingProfileRow, DimensionRow, PhenomenonFootprintRow, PhenomenonProfileRow, RiftRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.culture import HolderLevelRow, HolderTechniqueRow, LegendProfileRow, RiteProfileRow
+from aerona.db.tables.cycles import DivineDebtRow, GiftRow, LongPlanRow
+from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.divine import DivineWoundRow, NaturalLawProfileRow
 from aerona.db.tables.dominion import DivineCreatureRow, DominionRow, MagicSiteRow
@@ -39,7 +41,7 @@ from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRelationRow, SonRow
 from aerona.db.tables.statecraft import CrisisRow
-from aerona.db.tables.structures import StructureProfileRow
+from aerona.db.tables.structures import ConstructionRow, StructureProfileRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleProfileRow
 from aerona.db.tables.urban import ConvoyRow, OrderLawRow, TurfRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
@@ -50,6 +52,8 @@ from aerona.domain.enums.chronicle import WritingSystem
 from aerona.domain.enums.collective import AccountKind, StoryletId, StoryletStatus
 from aerona.domain.enums.cosmography import BeingKind, BeingScale, DimensionKind, PhenomenonCause, PhenomenonKind, RiftCause, RiftState
 from aerona.domain.enums.culture import LegendArchetype, MagicSchool, Technique
+from aerona.domain.enums.cycles import GiftState, LongPlanKind
+from aerona.domain.enums.demography import AgeBand, CohortCondition, Sex
 from aerona.domain.enums.disease import ClimateAffinity, DiseaseVector
 from aerona.domain.enums.divine import DivineWoundKind, WoundCause
 from aerona.domain.enums.domain import Domain
@@ -74,7 +78,7 @@ from aerona.domain.enums.settlement import DistrictKind, SizeTier
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.statecraft import CrisisDemand
-from aerona.domain.enums.structure import StructureKind
+from aerona.domain.enums.structure import ConstructionStatus, StructureKind
 from aerona.domain.enums.titles import TitleRank
 from aerona.domain.enums.tongues import WordRegister
 from aerona.domain.enums.urban import ConvoyStatus, OrderLaw
@@ -1066,3 +1070,76 @@ async def hungry_town(session: AsyncSession, realm: Realm) -> Ids:
         )
     await session.flush()
     return found
+
+
+async def offered_town(session: AsyncSession, realm: Realm) -> Ids:
+    session.add(DivineDebtRow(god_node_id=realm.son_id, community_entity_id=realm.settlement_id, offered=60, answered=0, locked=[]))
+    await session.flush()
+    return {}
+
+
+async def son_plan(session: AsyncSession, realm: Realm) -> Ids:
+    plan = LongPlanRow(holder_node_id=realm.son_id, kind=LongPlanKind.WONDER, name="The Long Work", steps=10, progress=0, step_cost=0, secrecy=50, locked=[])
+    session.add(plan)
+    await session.flush()
+    return {"plan": plan.id}
+
+
+async def wealthy(session: AsyncSession, realm: Realm) -> Ids:
+    profile = await session.get(MortalProfileRow, realm.mortal_id)
+    if profile is None:
+        profile = MortalProfileRow(entity_id=realm.mortal_id, locked=[])
+        session.add(profile)
+    profile.wealth = PERCENT
+    await session.flush()
+    return {}
+
+
+async def owed_gift(session: AsyncSession, realm: Realm) -> Ids:
+    await wealthy(session, realm)
+    gift = GiftRow(giver_node_id=realm.son_id, receiver_node_id=realm.mortal_id, value=10, state=GiftState.OPEN, due_epoch=5, epoch=1, locked=[])
+    session.add(gift)
+    await session.flush()
+    return {"gift": gift.id}
+
+
+async def devout(session: AsyncSession, realm: Realm) -> Ids:
+    await wealthy(session, realm)
+    await connect(session, realm.mortal_id, realm.son_id, BondKind.WORSHIPS)
+    return {}
+
+
+async def bound_town(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruled_realm(session, realm)
+    session.add(
+        CohortRow(
+            community_entity_id=realm.settlement_id,
+            age_band=AgeBand.ADULT,
+            sex=Sex.FEMALE,
+            social_class=SocialClass.SERF_OR_SLAVE,
+            condition=CohortCondition.ENSLAVED,
+            count=20,
+        )
+    )
+    await session.flush()
+    return found
+
+
+async def raising_work(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruled_realm(session, realm)
+    work = await make_entity(
+        session, "Long Wall", EntityType.STRUCTURE, world_id=realm.cosmos.world_id, location_id=realm.settlement_id, stats=StructureStats()
+    )
+    session.add(
+        ConstructionRow(
+            structure_entity_id=work.id,
+            site_entity_id=realm.settlement_id,
+            kind=StructureKind.WALL,
+            status=ConstructionStatus.ACTIVE,
+            cost=100,
+            started_epoch=1,
+            locked=[],
+        )
+    )
+    await session.flush()
+    return {**found, "work": work.id}

@@ -136,6 +136,8 @@ class CorveeRow(Base):
     community_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     share_pct: Mapped[int] = mapped_column(default=0)
     polity_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    work_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    laboured_epochs: Mapped[int] = mapped_column(default=0, server_default="0")
     since_epoch: Mapped[int] = mapped_column(default=0)
     by_hand: Mapped[bool] = mapped_column(default=True)
 

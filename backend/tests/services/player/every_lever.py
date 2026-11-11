@@ -19,6 +19,7 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.collective import LearningEventRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import CreatorRow
+from aerona.db.tables.cycles import ManumissionRow
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -49,6 +50,7 @@ from aerona.domain.enums.cosmography import (
     PhenomenonKind,
     RiftCause,
 )
+from aerona.domain.enums.cycles import ManumissionPath
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
@@ -2389,6 +2391,137 @@ LEVERS.update(
         "design:fit": after(DESIGN, vessel_id=VESSEL, design_id=Newest("design")),
         "component_wear:set": given(vessel_id=VESSEL, component="hull", wear=20),
         **{name: after(WEAR, vessel_id=VESSEL, component="hull") for name in ("component_wear:edit", "component_wear:delete")},
+    }
+)
+
+
+async def full_treasuries(session: AsyncSession) -> None:
+    await session.execute(update(PolityProfileRow).values(treasury=10_000))
+    await session.flush()
+
+
+async def freed_row(session: AsyncSession) -> None:
+    town = await canon(session, TOWN, 0)
+    assert town is not None
+    session.add(ManumissionRow(community_entity_id=town, count=5, path=ManumissionPath.LAW, epoch=0))
+    await session.flush()
+
+
+STRESS = ("stress:set", {"polity_id": Pick(REALM)})
+READING = ("stress_reading:set", {"polity_id": Pick(REALM), "epoch": 0})
+SOLIDARITY = ("asabiyya:set", {"holder_id": Pick(PEOPLE)})
+CHALLENGE = ("challenge:strike", {"polity_id": Pick(REALM)})
+PLAN = ("plan:create", {"holder_id": Pick(REALM), "kind": "wonder", "name": "The Long Work", "target_id": Pick(TOWN)})
+GIFT = ("gift:give", {"giver_id": Pick(REALM), "receiver_id": Pick(REALM, 1), "value": 10})
+CIRCUIT = ("circuit:create", {"name": "The First Round", "stops": [Pick(TOWN), Pick(TOWN, 1)]})
+DEBT = ("debt:set", {"god_id": Pick("son"), "community_id": Pick(TOWN)})
+KIN = ("kinship:set", {"people_id": Pick(PEOPLE)})
+ALLIANCE = ("alliance:set", {"giver_id": Pick(EntityType.HOUSE), "taker_id": Pick(EntityType.HOUSE, 1)})
+BIRTHS = ("reproduction:set", {"people_id": Pick(PEOPLE)})
+CASTE = ("caste:set", {"mortal_id": Pick(MORTAL), "caste": "soldier"})
+CAMP = ("camp:set", {"town_id": Pick(TOWN)})
+OTHER_CAMP = ("camp:set", {"town_id": Pick(TOWN, 1)})
+LEAGUE = ("confederation:create", {"name": "The Joined Camps", "leader_id": Pick(MORTAL), "members": [Pick(TOWN), Pick(TOWN, 1)]})
+LEGACY = ("legacy:set", {"people_id": Pick(PEOPLE), "kind": "martial_style", "key": "phalanx", "predecessor_id": Pick(PEOPLE, 1)})
+BOND = ("indenture:create", {"community_id": Pick(TOWN)})
+MARKET = ("slave_market:set", {"town_id": Pick(TOWN)})
+GIFT_ID = Newest("gift")
+LEGACY_KEY = {"people_id": Pick(PEOPLE), "kind": "martial_style", "key": "phalanx"}
+CYCLE_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "stress:edit": {
+        "pressure": 40,
+        "immiseration": 30,
+        "elite_overproduction": 50,
+        "fiscal_distress": 20,
+        "aspirants": 100,
+        "positions": 80,
+        "challenge": 10,
+        "phase": "stagflation",
+    },
+    "stress_reading:edit": {"pressure": 30, "immiseration": 20, "elite_overproduction": 40, "fiscal_distress": 10, "psi": 25, "phase": "crisis"},
+    "asabiyya:edit": {"value": 70, "frontier": 2, "luxury_generations": 1, "conflict": 30},
+    "challenge:edit": {"kind": "plague", "severity": 40, "response": "collapse", "source_node_id": Pick(TOWN)},
+    "plan:edit": {
+        "name": "The Second Work",
+        "kind": "conversion",
+        "target_node_id": Pick(TOWN),
+        "carrier_node_id": Pick(MORTAL),
+        "steps": 20,
+        "progress": 3,
+        "step_cost": 5,
+        "secrecy": 70,
+        "exposed": True,
+        "status": "active",
+    },
+    "gift:edit": {"value": 25, "occasion": "feast", "item_entity_id": Pick(EntityType.ITEM), "state": "returned", "due_epoch": 5},
+    "circuit:edit": {"name": "The Second Round", "item_entity_id": Pick(EntityType.ITEM), "position": 1, "passes": 3},
+    "debt:edit": {"offered": 50, "answered": 20},
+    "kinship:edit": {
+        "descent": "matrilineal",
+        "residence": "matrilocal",
+        "descent_group": "clan",
+        "cousin_terms": "parallel_as_siblings",
+        "preference": "clan_exogamy",
+        "payment": "bride_service",
+        "payment_value": 20,
+        "levirate": True,
+        "sororate": True,
+    },
+    "alliance:edit": {"marriages": 4},
+    "reproduction:edit": {"system": "caste", "change_age": 25, "breeder_pct": 15, "soldier_pct": 25, "worker_pct": 60},
+    "caste:edit": {"caste": "breeder"},
+    "camp:edit": {"mode": "transhumant", "season_index": 0, "herd": 300, "grazing": 60, "water": 40},
+    "confederation:edit": {"name": "The Bound Camps", "leader_entity_id": Pick(MORTAL, 1), "dissolved_epoch": 1},
+    "legacy:edit": {"predecessor_entity_id": Pick(PEOPLE, 1)},
+    "indenture:edit": {"employer_node_id": Pick(TOWN, 1), "regime": "peonage", "count": 20, "term_epochs": 4, "debt": 80, "exploitation": 60},
+    "slave_market:edit": {"price": 35, "stock": 10, "sold": 2, "open": False},
+    "manumission:edit": {"count": 7, "path": "purchase"},
+}
+EDITS = {**EDITS, **CYCLE_EDITS}
+LEVERS.update(
+    {
+        "stress:set": given(polity_id=Pick(REALM)),
+        **{name: after(STRESS, polity_id=Pick(REALM)) for name in ("stress:edit", "stress:delete")},
+        "stress_reading:set": given(polity_id=Pick(REALM), epoch=0),
+        **{name: after(READING, polity_id=Pick(REALM), epoch=0) for name in ("stress_reading:edit", "stress_reading:delete")},
+        "asabiyya:set": given(holder_id=Pick(PEOPLE)),
+        **{name: after(SOLIDARITY, holder_id=Pick(PEOPLE)) for name in ("asabiyya:edit", "asabiyya:delete")},
+        "challenge:strike": given(polity_id=Pick(REALM)),
+        **{name: after(CHALLENGE, challenge_id=Newest("challenge")) for name in ("challenge:edit", "challenge:delete")},
+        "plan:create": given(holder_id=Pick(REALM), kind="wonder", name="The Long Work", target_id=Pick(TOWN)),
+        **{name: after(PLAN, plan_id=Newest("plan")) for name in ("plan:edit", "plan:advance", "plan:expose", "plan:delete")},
+        "gift:give": setup_then(full_treasuries, giver_id=Pick(REALM), receiver_id=Pick(REALM, 1), value=10),
+        **{name: setup_then(full_treasuries, GIFT, gift_id=GIFT_ID) for name in ("gift:return", "gift:refuse", "gift:edit", "gift:delete")},
+        "circuit:create": given(name="The First Round", stops=[Pick(TOWN), Pick(TOWN, 1)]),
+        "circuit:route": after(CIRCUIT, circuit_id=Newest("circuit"), stops=[Pick(TOWN, 1), Pick(TOWN, 2)]),
+        **{name: after(CIRCUIT, circuit_id=Newest("circuit")) for name in ("circuit:edit", "circuit:pass", "circuit:delete")},
+        "debt:set": given(god_id=Pick("son"), community_id=Pick(TOWN)),
+        **{name: after(DEBT, god_id=Pick("son"), community_id=Pick(TOWN)) for name in ("debt:edit", "debt:delete")},
+        "kinship:set": given(people_id=Pick(PEOPLE)),
+        **{name: after(KIN, people_id=Pick(PEOPLE)) for name in ("kinship:edit", "kinship:delete")},
+        "alliance:set": given(giver_id=Pick(EntityType.HOUSE), taker_id=Pick(EntityType.HOUSE, 1)),
+        **{name: after(ALLIANCE, giver_id=Pick(EntityType.HOUSE), taker_id=Pick(EntityType.HOUSE, 1)) for name in ("alliance:edit", "alliance:delete")},
+        "reproduction:set": given(people_id=Pick(PEOPLE)),
+        **{name: after(BIRTHS, people_id=Pick(PEOPLE)) for name in ("reproduction:edit", "reproduction:delete")},
+        "caste:set": given(mortal_id=Pick(MORTAL), caste="soldier"),
+        **{name: after(CASTE, mortal_id=Pick(MORTAL)) for name in ("caste:edit", "caste:delete")},
+        "camp:set": given(town_id=Pick(TOWN)),
+        "camp:route": after(CAMP, town_id=Pick(TOWN), regions=[Pick(EntityType.REGION)]),
+        **{name: after(CAMP, town_id=Pick(TOWN)) for name in ("camp:edit", "camp:move", "camp:delete")},
+        "confederation:create": after(CAMP, OTHER_CAMP, name="The Joined Camps", leader_id=Pick(MORTAL), members=[Pick(TOWN), Pick(TOWN, 1)]),
+        "confederation:members": after(CAMP, OTHER_CAMP, LEAGUE, confederation_id=Newest("confederation"), members=[Pick(TOWN, 1), Pick(TOWN)]),
+        **{
+            name: after(CAMP, OTHER_CAMP, LEAGUE, confederation_id=Newest("confederation"))
+            for name in ("confederation:edit", "confederation:dissolve", "confederation:delete")
+        },
+        "legacy:set": given(people_id=Pick(PEOPLE), kind="martial_style", key="phalanx", predecessor_id=Pick(PEOPLE, 1)),
+        **{name: after(LEGACY, **LEGACY_KEY) for name in ("legacy:edit", "legacy:delete")},
+        "indenture:create": given(community_id=Pick(TOWN)),
+        **{name: after(BOND, indenture_id=Newest("indenture")) for name in ("indenture:edit", "indenture:release", "indenture:delete")},
+        "slave_market:set": given(town_id=Pick(TOWN)),
+        **{name: after(MARKET, town_id=Pick(TOWN)) for name in ("slave_market:edit", "slave_market:delete")},
+        "manumission:free": given(community_id=Pick(TOWN), share_pct=50, path="law"),
+        **{name: Lever(values={"manumission_id": Newest("manumission")}, setup=freed_row) for name in ("manumission:edit", "manumission:delete")},
     }
 )
 

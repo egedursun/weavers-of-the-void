@@ -182,6 +182,8 @@ describe('society depth sections', () => {
     expect(callsTo('POST', '/api/actions/labour:corvee')[0].body).toEqual({
       community_id: 30,
       share_pct: 20,
+      polity_id: null,
+      work_id: null,
     })
   })
 

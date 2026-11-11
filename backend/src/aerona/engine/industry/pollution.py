@@ -87,7 +87,7 @@ async def foul_from_runs(ctx: TickContext, book: EconomyBook, tally: PollutionTa
     runs = await ctx.session.scalars(select(ProductionRunRow).where(ProductionRunRow.epoch == ctx.epoch, ProductionRunRow.method.is_not(None)))
     for run in runs:
         region_id = region_id_of(book, run.community_entity_id)
-        if region_id is None or run.method is None or run.quantity <= 0:
+        if region_id is None or run.method is None or run.quantity <= 0 or held(region_id):
             continue
         spec = METHODS[run.method]
         row = pollution_row(ctx, book, region_id)
@@ -105,7 +105,7 @@ async def foul_from_crowds(ctx: TickContext, book: EconomyBook, tally: Pollution
     for community in book.communities:
         region_id = region_id_of(book, community.id)
         people = headcount(community)
-        if region_id is None or people <= 0:
+        if region_id is None or people <= 0 or held(region_id):
             continue
         settlement = await ctx.session.get(SettlementProfileRow, community.id)
         clean = (settlement.sanitation if settlement is not None else 0) * table.sanitation_pct / PERCENT / PERCENT

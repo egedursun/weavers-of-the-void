@@ -36,6 +36,7 @@ from aerona.engine.phases import (
     creatures,
     culture_exchange,
     curses,
+    cycles,
     dark_ages,
     demography,
     dialects,
@@ -201,6 +202,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + urban_depth.PHASES
     + law_depth.PHASES
     + collective.PHASES
+    + cycles.PHASES
     + exploration.PHASES
     + factions.PHASES
     + goals.PHASES
@@ -432,6 +434,7 @@ SOCIETY_STAGE = stage(
     "architecture",
 )
 SOCIETY_ENGINE_STAGE = stage(
+    "people_customs",
     "society_economy",
     "refining",
     "market_manipulation",
@@ -447,6 +450,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "credit_ratings",
     "banking",
     "society_mobility",
+    "labour_regimes",
     "structure_upkeep",
     "district_coverage",
     "desirability",
@@ -456,6 +460,8 @@ SOCIETY_ENGINE_STAGE = stage(
     "trading_posts",
     "magical_orders",
     "settlement_life",
+    "structural_demography",
+    "asabiyya",
     "crowds",
     "mobs",
     "popular_movements",
@@ -512,9 +518,11 @@ SOCIETY_ENGINE_STAGE = stage(
     "spy_cells",
     "mole_hunts",
     "wonders",
+    "long_plans",
     "dark_ages",
     "ruins",
     "settlement_cycles",
+    "nomadism",
     "land_use",
     "geomorphology",
     "material_decay",
@@ -522,6 +530,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "culture_cycles",
     "tradition_cycles",
     "people_cycles",
+    "legacy_traits",
     "remembrance",
     "historiography",
     "founding_myths",
@@ -534,7 +543,15 @@ SOCIETY_ENGINE_STAGE = stage(
     "rumour_cycles",
 )
 AGING_STAGE = stage(
-    "body_healing", "mortal_wounds", "body_afflictions", "body_conditions", "body_society", "mortal_life_course", "mortal_aging", "dead_bonds_closing"
+    "body_healing",
+    "mortal_wounds",
+    "body_afflictions",
+    "body_conditions",
+    "body_society",
+    "mortal_life_course",
+    "mortal_aging",
+    "reproduction_systems",
+    "dead_bonds_closing",
 )
 MIND_STAGE = stage(
     "mind_values",
@@ -553,6 +570,7 @@ MIND_STAGE = stage(
     "social_learning",
     "relations_social",
     "gatherings",
+    "reciprocity",
     "relations_circles",
     "relations_passions",
     "relations_pecking",
@@ -562,6 +580,7 @@ MIND_STAGE = stage(
     "ruler_currencies",
     "lore_market",
     "mortal_kin",
+    "kinship_systems",
     "mortal_standing",
     "mortal_minds",
     "famine_aid",
@@ -569,6 +588,7 @@ MIND_STAGE = stage(
     "ethnic_relations",
     "battlefields",
     "event_collections",
+    "challenge_response",
     "storyteller",
     "storylets",
     "incident_threads",

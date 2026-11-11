@@ -184,6 +184,13 @@ class SonToolId(StrEnum):
     COMMISSION_VESSEL = "commission_vessel"
     DESIGN_UNIT = "design_unit"
     PLANT_SPIES = "plant_spies"
+    ANSWER_OFFERINGS = "answer_offerings"
+    BEGIN_LONG_PLAN = "begin_long_plan"
+    FURTHER_PLAN = "further_plan"
+    SHAPE_KINSHIP = "shape_kinship"
+    SHAPE_REPRODUCTION = "shape_reproduction"
+    TRY_REALM = "try_realm"
+    SET_CIRCUIT = "set_circuit"
 
 
 class MortalToolId(StrEnum):
@@ -296,6 +303,13 @@ class MortalToolId(StrEnum):
     ASSIGN_TASK = "assign_task"
     LAY_TRADE_POLICY = "lay_trade_policy"
     SPECULATE = "speculate"
+    BESTOW_GIFT = "bestow_gift"
+    ANSWER_GIFT = "answer_gift"
+    REFUSE_GIFT = "refuse_gift"
+    MAKE_OFFERING = "make_offering"
+    FREE_BOUND = "free_bound"
+    LAY_CORVEE = "lay_corvee"
+    BEGIN_REALM_PLAN = "begin_realm_plan"
 
 
 ToolId = SonToolId | MortalToolId

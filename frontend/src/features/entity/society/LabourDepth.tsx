@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/tooltip'
 import { IconStat, Medallion, MiniStat, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { NodePicker } from '@/features/dominion/parts'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { COMMODITY, WORKSHOP, type CommodityKind } from '../economy/labels'
@@ -141,11 +142,17 @@ function LabourControls({
         })
       ),
   })
+  const [work, setWork] = useState<number | null>(view.corvee?.work_id ?? null)
   const corvee = useGodAction({
     run: (pct: number) =>
       unwrap(
         api.POST('/api/actions/labour:corvee', {
-          body: { community_id: view.entity_id, share_pct: pct },
+          body: {
+            community_id: view.entity_id,
+            share_pct: pct,
+            polity_id: view.corvee?.polity_id ?? null,
+            work_id: pct > 0 ? work : null,
+          },
         })
       ),
   })
@@ -232,6 +239,18 @@ function LabourControls({
             </Button>
           )}
         </div>
+        <NodePicker
+          label='Great work they labour on'
+          value={work}
+          onChange={setWork}
+          blocked={busy}
+          types={['structure']}
+        />
+        <Muted variant='caption'>
+          {view.corvee?.work_name
+            ? `Labouring on ${view.corvee.work_name} for ${view.corvee.laboured_epochs} epochs; the town will remember it.`
+            : 'No great work is named; the farmhands labour on whatever the town raises.'}
+        </Muted>
       </EditorGroup>
     </>
   )

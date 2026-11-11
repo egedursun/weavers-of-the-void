@@ -6,7 +6,6 @@ from aerona.catalog.society import SOCIAL_CLASSES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import an
-from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.demography import PeopleCultureRow
@@ -28,6 +27,8 @@ from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.body.healing import HealingWorld, tier_index
 from aerona.engine.body.hits import weighted
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.breeding import assign_caste, bearer_among, born_sex
+from aerona.engine.cycles.lineage import breeds, system_of
 from aerona.engine.demography.urban import founding_factor
 from aerona.engine.genetics.life import express, fertility_factor, found_genome, raise_child, upbringing_pct
 from aerona.engine.gods.queries import community_of
@@ -756,12 +757,6 @@ def inherited(rules: Rules, first: EntityRow, second: EntityRow, key: str) -> in
     return (stat_or(first, key, default)) + (stat_or(second, key, default))
 
 
-def child_sex(rules: Rules, rng: SeededRandom) -> MortalSex:
-    if rng.chance(rules.fertility.other_sex_pct):
-        return MortalSex.OTHER
-    return MortalSex.FEMALE if rng.chance(PERCENT // 2) else MortalSex.MALE
-
-
 def child_class(first: EntityRow, second: EntityRow) -> SocialClass | None:
     classes = [mortal.social_class for mortal in (first, second) if mortal.social_class is not None]
     if not classes:
@@ -799,7 +794,7 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
                 charisma=averaged("charisma"),
                 age=0,
                 lifespan=clamp_int(lifespans / 2 + rng.integer(-deviation, deviation), effects.child_min_lifespan, ctx.rules.deep_life.lifespan_cap),
-                sex=child_sex(ctx.rules, rng).value,
+                sex=born_sex(ctx.rules, await system_of(ctx.session, first), rng).value,
                 **abilities,
             ),
             power=max(1, round_half_up((first.power_level + second.power_level) / 2) - 1),
@@ -811,6 +806,7 @@ async def bear_child(ctx: TickContext, first: EntityRow, second: EntityRow, name
         ),
     )
     child.social_class = child_class(first, second)
+    await assign_caste(ctx.session, child, first, rng, ctx.epoch)
     for parent in (first, second):
         await add_parent(ctx.session, parent.id, child.id, ctx.epoch)
     profile, _ = await ensure_profile(ctx.session, child.id, ctx.epoch)
@@ -868,7 +864,7 @@ async def couple_chance(ctx: TickContext, first: EntityRow, second: EntityRow, k
         chance *= fertility_factor(rules, await ctx.session.get(GenomeRow, parent.id))
     culture = await culture_of(ctx.session, first.location_id) if first.location_id is not None else {}
     chance *= max(0.0, 1 + culture.get(ValueAxis.KINSHIP, 0) * table.kinship_pct / PERCENT / PERCENT)
-    return chance
+    return chance if await breeds(ctx.session, first, second) else 0.0
 
 
 async def concubinage_allowed(ctx: TickContext, mortal: EntityRow) -> bool:
@@ -908,7 +904,7 @@ async def hunger_of(ctx: TickContext, mortal: EntityRow) -> int:
 async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: Namer) -> list[EntityRow]:
     table = ctx.rules.fertility
     rng = ctx.rng(seed_of("delivery", first.id, second.id, ctx.epoch))
-    bearer = bearer_of(first, second)
+    bearer = await bearer_among(ctx.session, first, second, rng, bearer_of(first, second))
     stillborn = table.stillbirth_pct * (table.hunger_stillbirth_pct / PERCENT if await hunger_of(ctx, bearer) >= table.hunger_from else 1.0)
     born: list[EntityRow] = []
     if rng.chance(stillborn):
@@ -979,6 +975,7 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
     "table.nodes",
     "table.people_biology",
     "table.people_culture",
+    "table.people_reproduction",
     "table.pressures",
     "table.traits",
 )

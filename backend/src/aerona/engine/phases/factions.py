@@ -21,6 +21,7 @@ from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.book import stress_factor
 from aerona.engine.demography.recruitment import founding_factor, recruit
 from aerona.engine.factions.agenda import dues, influence_from_members, monopolies, plan_goals, pursue, schisms
 from aerona.engine.factions.book import ENGINE_OF_KIND, FactionBook, backfill_profiles, new_profile
@@ -207,7 +208,8 @@ async def found_factions(ctx: TickContext) -> int:
             continue
         kinds = await eligible_kinds(ctx, community)
         discontent = await founding_factor(ctx.session, ctx.rules, community.id, kinds[0]) if kinds else 1.0
-        if not rng.chance(rules.faction_chance * await faction_drive(ctx.session, ctx.rules, community.id) * discontent):
+        stress = await stress_factor(ctx.session, community.id, ctx.rules.structural_demography.faction_lift)
+        if not rng.chance(rules.faction_chance * await faction_drive(ctx.session, ctx.rules, community.id) * discontent * stress):
             continue
         if kinds:
             await found_faction(ctx, community, kinds[0])

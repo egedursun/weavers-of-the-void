@@ -11,6 +11,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.demography import InheritanceCustom, MarriageCustom
 from aerona.domain.enums.polity import SuccessionRule
 from aerona.engine.body.customs import people_of
+from aerona.engine.cycles.lineage import breeds_or_weds, descent_custom, kin_bars
 from aerona.engine.polity.book import sex_of
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import stat
@@ -71,7 +72,9 @@ def may_wed_terms(rules: Rules, first: tuple[Terms, str, int], second: tuple[Ter
 async def may_wed(session: AsyncSession, rules: Rules, first: EntityRow, second: EntityRow) -> bool:
     one = (await terms_of(session, first), sex_of(first), await spouses_of(session, first.id))
     two = (await terms_of(session, second), sex_of(second), await spouses_of(session, second.id))
-    return may_wed_terms(rules, one, two)
+    if not may_wed_terms(rules, one, two) or await kin_bars(session, first, second):
+        return False
+    return await breeds_or_weds(session, first, second)
 
 
 async def has_room(session: AsyncSession, rules: Rules, mortal: EntityRow) -> bool:
@@ -128,4 +131,4 @@ def heirs_by_custom(custom: InheritanceCustom, children: list[EntityRow]) -> lis
 async def inheritance_of(session: AsyncSession, mortal: EntityRow) -> InheritanceCustom:
     people = await people_of(session, mortal)
     culture = await session.get(PeopleCultureRow, people.id) if people is not None else None
-    return culture.inheritance if culture is not None else InheritanceCustom.PRIMOGENITURE
+    return await descent_custom(session, mortal, culture.inheritance if culture is not None else InheritanceCustom.PRIMOGENITURE)

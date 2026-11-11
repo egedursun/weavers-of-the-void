@@ -53,6 +53,8 @@ TABLE_BACKFILLS: dict[tuple[str, str], str] = {
     ("ciphers_and_signals", "signal_links"): "none: signal links are raised from the next epoch",
     ("titles", "title_holders"): "titles: every new title records its first holder",
     ("titles", "de_jure_links"): "titles: every new title takes its realm's lands by right",
+    ("kinship_systems", "marriage_alliances"): "kinship_systems: alliances between lines are counted from the marriages of the first epoch after the upgrade",
+    ("reproduction_systems", "mortal_castes"): "reproduction_systems: every mortal of a caste people takes its caste on the first epoch after the upgrade",
 }
 
 

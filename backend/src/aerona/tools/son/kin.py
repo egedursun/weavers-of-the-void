@@ -15,6 +15,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.son import SonStatus, Stat
 from aerona.engine.cosmos.duels import son_duel
+from aerona.engine.cycles.gifts import divine_gift
 from aerona.engine.primitives.stats import stat
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
@@ -184,6 +185,7 @@ async def give_gift(call: SonCall, args: GiftInput) -> str:
         sibling.essence = max(sibling.essence, min(max_essence(call.rules, sibling.might), sibling.essence + args.essence))
         call.note(result(SonResult.GIFT_ESSENCE_NOTE, amount=args.essence))
     accepted = await _transfer(call, sibling, args.worshipper_id) if args.worshipper_id is not None else False
+    await divine_gift(call.tick, call.son.id, sibling.id, args.essence)
     call.waive_actions()
     await call.bump(TurnCounter.GIFTS)
     delta = tools.gift_relation_base + rounded(args.essence / tools.gift_relation_essence_divisor) + (tools.gift_worshipper_relation if accepted else 0)

@@ -50,6 +50,9 @@ class PriceView(ApiModel):
 class CorveeView(ApiModel):
     share_pct: int
     polity_id: int | None
+    work_id: int | None
+    work_name: str | None
+    laboured_epochs: int
     since_epoch: int
     by_hand: bool
 

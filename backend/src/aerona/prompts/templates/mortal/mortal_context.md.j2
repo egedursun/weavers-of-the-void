@@ -75,6 +75,7 @@ YOUR WORK: {{ stores.job }}{% endif %}{% endif %}
 {% endif %}{% if home and home.streets %}YOUR TOWN'S STREETS: {{ home.streets | join('; ') }}
 {% endif %}{% if home and home.courts %}LAW AND COURTS: {{ home.courts | join('; ') }}
 {% endif %}{% if home and home.crowds %}CROWDS, CUSTOMS AND CHOICES: {{ home.crowds | join('; ') }}
+{% endif %}{% if home and home.obligations %}GIFTS, KIN, LABOUR AND LONG PLANS: {{ home.obligations | join('; ') }}
 {% endif %}{% if home and (home.needs or home.wealth or home.loyalty or home.labour) %}YOUR LOT{% if home.needs %}: your class goes short of {{ home.needs | join(', ') }}{% endif %}{% if home.wealth %}; {{ home.wealth }}{% endif %}{% if home.loyalty %}; {{ home.loyalty }}{% endif %}{% if home.labour %}; the work of your home: {{ home.labour | join(', ') }}{% endif %}{% endif %}
 
 {% endset %}

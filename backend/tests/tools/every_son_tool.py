@@ -24,6 +24,7 @@ from tests.tools.every_setup import (
     ley_line,
     named_spirit,
     near_moon,
+    offered_town,
     on_the_road,
     oracle_case,
     outsider,
@@ -34,6 +35,7 @@ from tests.tools.every_setup import (
     rich_son,
     rifted,
     ruled_law,
+    ruled_realm,
     seasons,
     second_mortal,
     second_region,
@@ -45,6 +47,7 @@ from tests.tools.every_setup import (
     son_geas,
     son_legend,
     son_office,
+    son_plan,
     son_servitor,
     spirit,
     surveyed,
@@ -359,4 +362,13 @@ SON_CASES: dict[str, Case] = {
     "break_moon": Case(plain(moon_id=created("moon"), reason=REASON), near_moon),
     "shape_blood": Case(plain(mortal_id=mortal, locus="height", allele="tall", reason=REASON)),
     "reveal_true_name": Case(plain(bearer_id=created("spirit"), learner_id=mortal, reason=REASON), named_spirit),
+    "answer_offerings": Case(plain(community_id=settlement, generous=True, reason=REASON), offered_town),
+    "begin_long_plan": Case(plain(kind="wonder", name="The Long Work", target_id=settlement, steps=5, secrecy=60, reason=REASON)),
+    "further_plan": Case(plain(plan_id=created("plan"), reason=REASON), son_plan),
+    "shape_kinship": Case(
+        plain(people_id=people, descent="matrilineal", residence="matrilocal", preference="cross_cousin", payment="bride_price", reason=REASON)
+    ),
+    "shape_reproduction": Case(plain(people_id=people, system="sequential", reason=REASON)),
+    "try_realm": Case(plain(polity_id=created("polity"), kind="famine", severity=30, reason=REASON), ruled_realm),
+    "set_circuit": Case(plain(name="The First Round", stop_ids=lambda realm, ids: [realm.settlement_id, ids["settlement"]], reason=REASON), second_settlement),
 }

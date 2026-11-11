@@ -103,6 +103,11 @@ class RegionAtlas:
         placement = self._placements.get(entity_id)
         return placement.world_id if placement is not None else None
 
+    def neighbours(self, region_id: int) -> list[int]:
+        world = self.world_of(region_id)
+        graph = self._graphs.get(world) if world is not None else None
+        return graph.neighbours(region_id) if graph is not None and region_id in graph else []
+
     def same_region(self, first: int, second: int) -> bool:
         region = self.top_region(first)
         return region is not None and region == self.top_region(second)

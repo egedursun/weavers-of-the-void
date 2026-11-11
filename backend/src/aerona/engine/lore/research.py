@@ -56,8 +56,8 @@ def gate_open(gate: Gate, levels: dict[KnowledgeBranch, int]) -> bool:
 
 
 async def techniques_of(session: AsyncSession, holder_id: int) -> set[Technique]:
-    held = set(await session.scalars(select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == holder_id)))
-    return held | await custom_bases(session, holder_id)
+    known = set(await session.scalars(select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == holder_id)))
+    return known | await custom_bases(session, holder_id)
 
 
 async def has_technique(session: AsyncSession, holder_id: int | None, technique: Technique) -> bool:
@@ -388,5 +388,5 @@ async def fill_books(ctx: TickContext) -> int:
 async def lacks(session: AsyncSession, holder_id: int | None, technique: Technique) -> bool:
     if holder_id is None:
         return False
-    held = await techniques_of(session, holder_id)
-    return bool(held) and technique not in held
+    known = await techniques_of(session, holder_id)
+    return bool(known) and technique not in known

@@ -22,6 +22,8 @@ from aerona.domain.enums.settlement import DistrictKind, SizeTier
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.book import population_of, shift
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.book import asabiyya_factor
+from aerona.engine.cycles.breeding import breeding_factor, fixed_sexes_at
 from aerona.engine.mind.book import stored_values
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
@@ -123,7 +125,8 @@ async def fertility_factor(ctx: TickContext, community_id: int) -> float:
     table = ctx.rules.sex_ratio
     transition = await ctx.session.get(DemographicTransitionRow, community_id)
     factor = (transition.fertility_pct if transition is not None else PERCENT) / PERCENT
-    ratio = await ctx.session.get(SexRatioRow, community_id)
+    factor *= await breeding_factor(ctx.session, ctx.rules, community_id)
+    ratio = await ctx.session.get(SexRatioRow, community_id) if await fixed_sexes_at(ctx.session, community_id) else None
     if ratio is not None and ratio.males_per_hundred < table.skew_at:
         several = await law_param(ctx.session, community_id, LawKind.MARRIAGE_LAW, "custom") == MarriageCustom.POLYGYNY.value
         lack = (table.skew_at - ratio.males_per_hundred) / PERCENT
@@ -182,7 +185,7 @@ async def tend_diasporas(ctx: TickContext, tally: DemographyTally) -> None:
             shift(row, "ties", table.chain_ties if grew else -table.ties_decay)
             await remit(ctx, row, profile, tally)
             await raise_quarter(ctx, row, town, tally)
-            if row.ties < table.assimilate_at:
+            if row.ties < table.assimilate_at / max(0.1, await asabiyya_factor(ctx.session, [people_id], ctx.rules.asabiyya.assimilation_weight)):
                 await assimilate(ctx, row, town, tally)
     for row in list(await ctx.session.scalars(select(DiasporaRow).order_by(DiasporaRow.people_entity_id, DiasporaRow.host_entity_id))):
         if (row.people_entity_id, row.host_entity_id) not in seen and not row.locked and not held(row.host_entity_id):

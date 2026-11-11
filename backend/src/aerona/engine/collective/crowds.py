@@ -27,6 +27,8 @@ from aerona.domain.enums.world import SkyEventKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.collective.book import population_of, realm_of_town, shift, soldiers_of, towns
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.book import psi_of
+from aerona.engine.cycles.indenture import indentured_share
 from aerona.engine.history.collections import open_collection
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.split import facets_of
@@ -191,10 +193,12 @@ async def deterrence_of(ctx: TickContext, town: EntityRow, profile: SettlementPr
     return clamp_int(per_hundred * PERCENT / ctx.rules.collective_behaviour.deterrence_full, 0, PERCENT)
 
 
-def crowd_for(ctx: TickContext, mood: CrowdMoodRow, act: CollectiveActKind, conformity: float) -> Crowd:
+def crowd_for(ctx: TickContext, mood: CrowdMoodRow, act: CollectiveActKind, conformity: float, *, stress: int = 0, bound: int = 0) -> Crowd:
     table = ctx.rules.collective_behaviour
     spec_mood = TRIGGER_MOOD[act]
     cut = {"anger": table.anger_cut, "anxiety": table.anxiety_cut, "fervour": table.fervour_cut}[spec_mood] * mood_value(mood, spec_mood) / PERCENT
+    cut += ctx.rules.structural_demography.threshold_cut * stress / PERCENT
+    cut += ctx.rules.labour_regimes.crowd_cut * bound / PERCENT
     return Crowd(
         base=table.base_threshold,
         cut=cut,
@@ -358,7 +362,8 @@ async def spark(ctx: TickContext, town: EntityRow, trigger: CollectiveTrigger, t
     rng = ctx.rng(f"cascade.{town.id}.{trigger.value}.{ctx.epoch}")
     act = TRIGGERS[trigger].act
     district, district_people = await choose_district(ctx, town, rng)
-    share = cascade(ctx, crowd_for(ctx, mood, act, await conformity_of(ctx, town)), rng)
+    bound = await indentured_share(ctx.session, town.id)
+    share = cascade(ctx, crowd_for(ctx, mood, act, await conformity_of(ctx, town), stress=await psi_of(ctx.session, town.id), bound=bound), rng)
     outcome = outcome_of(ctx, act, share)
     participants = round_half_up(district_people * share / PERCENT)
     row = CascadeRow(

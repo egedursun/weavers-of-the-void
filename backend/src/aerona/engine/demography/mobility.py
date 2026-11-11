@@ -19,6 +19,8 @@ from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.collective.demography import diaspora_pull
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.book import at_war
+from aerona.engine.cycles.indenture import freed_class, indentured_in, manumission_path, record_manumission
 from aerona.engine.demography.bound import BOUND, bound_share, move_people, sync_bound_share
 from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for
 from aerona.engine.demography.events import ennobled, enslaved, freed, ruined
@@ -74,7 +76,10 @@ async def manumit(ctx: TickContext, community: EntityRow, rows: dict[CohortKey, 
     if lawful and not ctx.rng(f"manumission.{community.id}").chance(table.manumission_chance):
         return 0
     share = table.manumission_pct / PERCENT if lawful else 1.0
-    return await move_people(ctx, community, rows, source=BOUND, target=SocialClass.FARMER, share=share)
+    path = await manumission_path(ctx, community, lawful, await at_war(ctx, {community.id}))
+    loosed = await move_people(ctx, community, rows, source=BOUND, target=freed_class(path), share=share)
+    await record_manumission(ctx, community, loosed, path)
+    return loosed
 
 
 async def slavery_costs(ctx: TickContext, community: EntityRow, rows: dict[CohortKey, CohortRow], culture: PeopleCultureRow | None) -> None:
@@ -155,7 +160,7 @@ async def bitter_emigration(ctx: TickContext, community: EntityRow, rows: dict[C
         if key[2] in bitter and key[0] is AgeBand.ADULT and key[3] is CohortCondition.NONE
     )
     population = stat(community, "population") or 0
-    leaving = min(leaving, population // 10)
+    leaving = min(max(0, leaving - await indentured_in(ctx.session, community.id)), population // 10)
     if leaving <= 0:
         return 0
     with flowing(FlowCategory.MIGRATION):

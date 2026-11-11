@@ -29,6 +29,7 @@ from aerona.domain.enums.war import HeroQuestKind, WarEnding
 from aerona.domain.models.entity_stats import HouseStats
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.lineage import preference_bonus, sexes_fixed, system_of
 from aerona.engine.demography.kinship import has_room, match_bonus, may_wed, terms_of
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.genetics.genome import consanguinity
@@ -293,12 +294,12 @@ async def inherit_claims(ctx: TickContext, child: EntityRow, parent_id: int) -> 
 async def marriage_claims(ctx: TickContext, mortal: EntityRow, spouse: EntityRow) -> None:
     table = ctx.rules.houses
     for claim in await ctx.session.scalars(select(ClaimRow).where(ClaimRow.claimant_entity_id == spouse.id, ClaimRow.ended_epoch.is_(None))):
-        held = await ctx.session.scalar(
+        rival = await ctx.session.scalar(
             select(ClaimRow.id).where(
                 ClaimRow.claimant_entity_id == mortal.id, ClaimRow.polity_entity_id == claim.polity_entity_id, ClaimRow.ended_epoch.is_(None)
             )
         )
-        if held is None:
+        if rival is None:
             ctx.session.add(
                 ClaimRow(
                     claimant_entity_id=mortal.id,
@@ -437,26 +438,26 @@ async def gain_traits(ctx: TickContext, book: HouseBook, profile: HouseProfileRo
     if "traits" in profile.locked:
         return
     table = ctx.rules.houses
-    held = {HouseTrait(trait) for trait in profile.traits}
+    owned = {HouseTrait(trait) for trait in profile.traits}
     found: list[HouseTrait] = []
-    if HouseTrait.SEER_GIFT not in held and any(mortal.mortal_role is MortalRole.SEER for mortal in alive):
+    if HouseTrait.SEER_GIFT not in owned and any(mortal.mortal_role is MortalRole.SEER for mortal in alive):
         found.append(HouseTrait.SEER_GIFT)
-    if HouseTrait.GIANT_BLOODED not in held and sum(1 for mortal in alive if (stat(mortal, "strength") or 0) >= table.giant_strength) >= table.trait_members:
+    if HouseTrait.GIANT_BLOODED not in owned and sum(1 for mortal in alive if (stat(mortal, "strength") or 0) >= table.giant_strength) >= table.trait_members:
         found.append(HouseTrait.GIANT_BLOODED)
     elders = [mortal for mortal in alive if (stat(mortal, "lifespan") or 0) and (stat(mortal, "age") or 0) > (stat(mortal, "lifespan") or 0)]
-    if HouseTrait.LONG_LIVED not in held and len(elders) >= table.trait_members:
+    if HouseTrait.LONG_LIVED not in owned and len(elders) >= table.trait_members:
         found.append(HouseTrait.LONG_LIVED)
     young = [mortal for mortal in alive if (stat(mortal, "age") or 0) < ctx.rules.succession.regency_age]
-    if HouseTrait.FERTILE not in held and len(young) >= table.fertile_children:
+    if HouseTrait.FERTILE not in owned and len(young) >= table.fertile_children:
         found.append(HouseTrait.FERTILE)
     cursed = [mortal for mortal in alive if await has_flag(ctx.session, mortal.id, EntityFlag.CURSED)]
-    if HouseTrait.CURSED not in held and len(cursed) >= table.trait_members:
+    if HouseTrait.CURSED not in owned and len(cursed) >= table.trait_members:
         found.append(HouseTrait.CURSED)
-    if HouseTrait.GOD_BLOODED not in held and any(mortal.creator_son_id is not None for mortal in alive):
+    if HouseTrait.GOD_BLOODED not in owned and any(mortal.creator_son_id is not None for mortal in alive):
         found.append(HouseTrait.GOD_BLOODED)
         if profile.divine_son_id is None:
             profile.divine_son_id = next(mortal.creator_son_id for mortal in alive if mortal.creator_son_id is not None)
-    found.extend(trait for trait in await blood_traits(ctx, alive, held | set(found)) if trait not in found)
+    found.extend(trait for trait in await blood_traits(ctx, alive, owned | set(found)) if trait not in found)
     for trait in found:
         if not ctx.rng(f"house_trait.{profile.house_entity_id}.{trait.value}.{ctx.epoch}").chance(table.trait_chance):
             continue
@@ -682,17 +683,17 @@ async def relic_quest(ctx: TickContext, item: EntityRow, house: EntityRow) -> No
 
 async def keep_heirlooms(ctx: TickContext, house_id: int, alive: list[EntityRow]) -> None:
     owners = [mortal.id for mortal in alive]
-    held = set(await ctx.session.scalars(select(HeirloomRow.item_entity_id)))
+    kept = set(await ctx.session.scalars(select(HeirloomRow.item_entity_id)))
     items = await ctx.session.scalars(
         select(BondRow.target_node_id).where(BondRow.kind == BondKind.OWNS, BondRow.state == BondState.ACTIVE, BondRow.source_node_id.in_(owners))
     )
     for item_id in items:
         item = await ctx.session.get(EntityRow, item_id)
-        if item is None or item.entity_type is not EntityType.ITEM or item.id in held or item.power_level < HEIRLOOM_POWER:
+        if item is None or item.entity_type is not EntityType.ITEM or item.id in kept or item.power_level < HEIRLOOM_POWER:
             continue
         if ctx.epoch - item.birth_epoch >= 1:
             ctx.session.add(HeirloomRow(item_entity_id=item.id, house_entity_id=house_id, since_epoch=ctx.epoch))
-            held.add(item.id)
+            kept.add(item.id)
 
 
 async def eligible(ctx: TickContext, mortal: EntityRow) -> bool:
@@ -742,6 +743,7 @@ async def arrange_marriages(ctx: TickContext, book: HouseBook, realms: RealmBook
                 - distance / 2
                 + (TWENTY if realms.member_of.get(other.location_id or -1) != realms.member_of.get(mortal.location_id or -1) else 0)
                 + match_bonus(ctx.rules, await terms_of(ctx.session, mortal), await terms_of(ctx.session, other))
+                + await preference_bonus(ctx.session, ctx.rules, mortal, other)
                 + await claim_weight(ctx, other) * table.claim_weight_pct / PERCENT
             )
             if best is None or gain > best[0]:
@@ -769,7 +771,8 @@ async def suitable(
 ) -> bool:
     house_id, mortal = mine
     other_house, other = theirs
-    if other.world_id != mortal.world_id or (custom is not MarriageCustom.GROUP and sex_of(other) == sex_of(mortal)):
+    fixed = sexes_fixed(await system_of(ctx.session, mortal))
+    if other.world_id != mortal.world_id or (custom is not MarriageCustom.GROUP and fixed and sex_of(other) == sex_of(mortal)):
         return False
     if people is not None and (await people_of(ctx.session, other)) != people:
         return False
@@ -860,12 +863,12 @@ async def conquest_claims(ctx: TickContext, realms: RealmBook) -> int:
         victor, loser = realms.realm_of(war.victor_entity_id), realms.realm_of(war.loser_entity_id)
         if victor is None or loser is None or victor.entity.id == loser.entity.id or victor.ruler_id is None:
             continue
-        held = await ctx.session.scalar(
+        rival = await ctx.session.scalar(
             select(ClaimRow.id).where(
                 ClaimRow.claimant_entity_id == victor.ruler_id, ClaimRow.polity_entity_id == loser.entity.id, ClaimRow.ended_epoch.is_(None)
             )
         )
-        if held is not None:
+        if rival is not None:
             continue
         ctx.session.add(
             ClaimRow(

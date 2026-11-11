@@ -82,6 +82,28 @@ def fixed_article(tokens: list[tokenize.TokenInfo], index: int) -> bool:
     return following.type == tokenize.OP and following.string == "{" and FIXED_ARTICLE.search(token.string + "{") is not None
 
 
+GUARD_MODULE = "aerona.db.write_guard"
+GUARD_NAMES = frozenset({"held", "unheld"})
+
+
+def guard_imports(tree: ast.Module) -> frozenset[str]:
+    names = {alias.asname or alias.name for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.module == GUARD_MODULE for alias in node.names}
+    return frozenset(names & GUARD_NAMES)
+
+
+def shadowed_guards(tree: ast.Module, guards: frozenset[str]) -> list[tuple[int, str]]:
+    found: set[tuple[int, str]] = set()
+    for scope in ast.walk(tree):
+        if not isinstance(scope, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+            continue
+        for node in ast.walk(scope):
+            if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store) and node.id in guards:
+                found.add((node.lineno, node.id))
+            if isinstance(node, ast.arg) and node.arg in guards:
+                found.add((node.lineno, node.arg))
+    return sorted(found)
+
+
 def python_violations(path: Path, text: str) -> list[Violation]:
     found: list[Violation] = []
     relative = path.relative_to(ROOT)
@@ -95,6 +117,8 @@ def python_violations(path: Path, text: str) -> list[Violation]:
         if relative.is_relative_to(ARTICLE_HOME) and fixed_article(tokens, index):
             found.append(Violation(relative, token.start[0], "fixed article before a placeholder; use an(), {name:an} or | an"))
     tree = ast.parse(text)
+    for line, name in shadowed_guards(tree, guard_imports(tree)):
+        found.append(Violation(relative, line, f"{name} is bound here and hides the hold guard of the same name; give it a name of its own"))
     for node in ast.walk(tree):
         if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
             body = node.body

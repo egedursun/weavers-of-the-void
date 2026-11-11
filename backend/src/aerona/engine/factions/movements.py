@@ -24,6 +24,8 @@ from aerona.domain.enums.war import WarCause, WarStatus
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.book import stress_factor
+from aerona.engine.cycles.indenture import indentured_share, revolts_in
 from aerona.engine.mind.book import values_for
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
@@ -79,7 +81,17 @@ async def abolition(ctx: TickContext, ground: Ground) -> float:
     slavery = ground.laws.in_force(ground.realm.entity.id, LawKind.SLAVERY)
     if slavery is None or slavery.params.get("status") != "allowed":
         return 0.0
-    return max(0.0, ground.values.get(ValueAxis.MERCY, 0) / 2 + ground.shares.get(SocialClass.SERF_OR_SLAVE, 0.0))
+    table = ctx.rules.manumission
+    towns = sorted({*ground.realm.members, ground.realm.entity.id})
+    risen = await revolts_in(ctx.session, towns, ctx.epoch - table.revolt_memory_epochs)
+    return max(
+        0.0,
+        ground.values.get(ValueAxis.MERCY, 0) / 2
+        - ground.values.get(ValueAxis.HIERARCHY, 0) * table.egalitarian_pct / PERCENT
+        + ground.shares.get(SocialClass.SERF_OR_SLAVE, 0.0)
+        + min(PERCENT, risen) * table.revolt_pressure / PERCENT
+        + await indentured_share(ctx.session, ground.community.id) * table.indenture_pressure / PERCENT,
+    )
 
 
 async def independence(ctx: TickContext, ground: Ground) -> float:
@@ -304,7 +316,8 @@ async def tend_realm(ctx: TickContext, realm: Realm, laws: LawBook, book: RealmB
             tally.parties += 1
         elif realm.profile.decision_rule not in ASSEMBLIES and row.support >= table.revolt_at and members:
             strongest = max(members, key=lambda member: (shares[member.id], -member.id))
-            if ctx.rng(seed_of("movement.rise", row.faction_entity_id, ctx.epoch)).chance(table.revolt_pct):
+            lift = await stress_factor(ctx.session, realm.entity.id, ctx.rules.structural_demography.revolt_lift)
+            if ctx.rng(seed_of("movement.rise", row.faction_entity_id, ctx.epoch)).chance(table.revolt_pct * lift):
                 await rise(ctx, realm, row, strongest, tally=tally, book=book)
 
 

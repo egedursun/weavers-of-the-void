@@ -362,8 +362,8 @@ async def pay_tribute(ctx: TickContext, profile: TreatyProfileRow, clause: Treat
     receiver_society = await ctx.session.get(CommunitySocietyRow, receiver.id)
     if payer_society is not None and receiver_society is not None and commodity in {item.value for item in Commodity}:
         kind = Commodity(commodity)
-        held = getattr(payer_society, f"stock_{kind.value}", 0) or 0
-        goods = round_half_up(held * min(PERCENT, ctx.rules.campaigns.tribute_goods_pct * greed) / PERCENT)
+        stock = getattr(payer_society, f"stock_{kind.value}", 0) or 0
+        goods = round_half_up(stock * min(PERCENT, ctx.rules.campaigns.tribute_goods_pct * greed) / PERCENT)
         if goods > 0:
             await move_stock(ctx.session, ctx.rules, payer.id, receiver.id, kind, index=goods, epoch=ctx.epoch, flow=GoodsFlow.TRIBUTE)
             paid = True

@@ -319,14 +319,17 @@ async def shape(ctx: TickContext, book: RealmBook, realm: Realm) -> None:
 
 
 async def map_territory(ctx: TickContext, book: RealmBook, realm: Realm, members: list[EntityRow]) -> None:
-    held: dict[int, int] = defaultdict(int)
+    if held(realm.entity.id):
+        return
+    weights: dict[int, int] = defaultdict(int)
     for member in members:
         region = book.atlas.top_region(member.id)
-        if region is not None:
-            held[region] += stat(member, "population") or 0
-    for region_id in sorted(set(realm.territory) - set(held)):
-        await ctx.session.delete(realm.territory.pop(region_id))
-    for region_id, people in held.items():
+        if region is not None and not held(region):
+            weights[region] += stat(member, "population") or 0
+    for region_id in sorted(set(realm.territory) - set(weights)):
+        if not held(region_id):
+            await ctx.session.delete(realm.territory.pop(region_id))
+    for region_id, people in weights.items():
         everyone = sum(stat(item, "population") or 0 for item_id in book.atlas.communities_in(region_id) if (item := book.entities.get(item_id)) is not None)
         control = clamp_int(people * PERCENT / max(1, people, everyone), 0, PERCENT)
         row = realm.territory.get(region_id)

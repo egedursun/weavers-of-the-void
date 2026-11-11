@@ -48,8 +48,11 @@ class ArmedTally:
     "table.districts",
     "table.faction_profiles",
     "table.incidents",
+    "table.indentures",
     "table.mind_facets",
     "table.outbreaks",
+    "table.polity_members",
+    "table.polity_profiles",
     "table.settlement_profiles",
     "table.sky_events",
 )

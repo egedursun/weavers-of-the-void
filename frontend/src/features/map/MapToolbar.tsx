@@ -105,6 +105,7 @@ const LAYER_ICON: Record<LayerMode, LucideIcon> = {
   desirability: Building2,
   coverage: Droplets,
   niches: Network,
+  solidarity: Shield,
 }
 
 const OVERLAY_ICON: Record<Overlay, LucideIcon> = {

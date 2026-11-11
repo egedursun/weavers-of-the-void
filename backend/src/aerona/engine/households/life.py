@@ -21,6 +21,7 @@ from aerona.domain.enums.mortal import DeathCause, LifeStage, MarriageKind
 from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.lineage import preference_bonus
 from aerona.engine.demography.kinship import has_room, may_wed
 from aerona.engine.factions.guilds import enrol_apprentice
 from aerona.engine.genetics.genome import body_marks
@@ -358,6 +359,7 @@ async def match(ctx: TickContext, household: HouseholdRow, members: list[Member]
     others = await ctx.session.scalars(
         select(HouseholdRow).where(HouseholdRow.settlement_node_id == household.settlement_node_id, HouseholdRow.id != household.id).order_by(HouseholdRow.id)
     )
+    best: tuple[int, HouseholdRow, Member] | None = None
     for other in others:
         if MEMBERS in (other.locked or []) or other.social_class is not household.social_class:
             continue
@@ -371,19 +373,24 @@ async def match(ctx: TickContext, household: HouseholdRow, members: list[Member]
                 or not await may_wed(ctx.session, ctx.rules, single.mortal, candidate.mortal)
             ):
                 continue
-            await marry(ctx.session, single.mortal, candidate.mortal, ctx.epoch, kind=MarriageKind.MONOGAMOUS, description="matched by their households")
-            transfer(other, household, round_half_up(other.wealth * ctx.rules.households.dowry_pct / PERCENT))
-            if not candidate.row.locked:
-                await join_household(ctx, household, candidate.mortal, HouseholdRole.SPOUSE)
-            return await decided(
-                ctx,
-                household,
-                HouseholdDecision.MARRY,
-                f"{household.name} matched {single.mortal.name} with {candidate.mortal.name} of {other.name}.",
-                [single.mortal.id, candidate.mortal.id],
-                tally=tally,
-            )
-    return False
+            bonus = await preference_bonus(ctx.session, ctx.rules, single.mortal, candidate.mortal)
+            if best is None or bonus > best[0]:
+                best = (bonus, other, candidate)
+    if best is None:
+        return False
+    _, other, candidate = best
+    await marry(ctx.session, single.mortal, candidate.mortal, ctx.epoch, kind=MarriageKind.MONOGAMOUS, description="matched by their households")
+    transfer(other, household, round_half_up(other.wealth * ctx.rules.households.dowry_pct / PERCENT))
+    if not candidate.row.locked:
+        await join_household(ctx, household, candidate.mortal, HouseholdRole.SPOUSE)
+    return await decided(
+        ctx,
+        household,
+        HouseholdDecision.MARRY,
+        f"{household.name} matched {single.mortal.name} with {candidate.mortal.name} of {other.name}.",
+        [single.mortal.id, candidate.mortal.id],
+        tally=tally,
+    )
 
 
 async def apprentice(ctx: TickContext, household: HouseholdRow, members: list[Member], tally: HouseholdTally) -> bool:

@@ -465,11 +465,11 @@ async def earn_traits(ctx: TickContext, result: BattleResult, ground: Field, com
             continue
         commander = await ctx.session.get(EntityRow, commander_id)
         charisma = (stat(commander, "charisma") or 0) if commander is not None else 0
-        held = await traits_of(ctx, commander_id)
+        owned = await traits_of(ctx, commander_id)
         for trait in wanted_traits(side, won=won, result=result, ground=ground, charisma=charisma):
-            if trait not in held and rng.chance(ctx.rules.morale.trait_chance_pct):
+            if trait not in owned and rng.chance(ctx.rules.morale.trait_chance_pct):
                 ctx.session.add(CommanderTraitRow(mortal_entity_id=commander_id, trait=trait, since_epoch=ctx.epoch))
-                held.add(trait)
+                owned.add(trait)
                 earned += 1
         if not won:
             await cowardice(ctx, commander_id, side.entity.id)

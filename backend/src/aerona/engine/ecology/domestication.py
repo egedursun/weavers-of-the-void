@@ -250,9 +250,9 @@ async def produce(ctx: TickContext, herd: HerdRow) -> int:
         ((SpeciesUse.MAGIC,), CommodityKind.MAGICAL_REAGENTS, table.reagents_per_head),
     )
     for wanted, commodity, rate in outputs:
-        held = [use for use in wanted if use in kinds]
-        if held:
-            scale = max(boost.get(use, PERCENT) for use in held) / PERCENT
+        present = [use for use in wanted if use in kinds]
+        if present:
+            scale = max(boost.get(use, PERCENT) for use in present) / PERCENT
             made += await ledger.add(herd.community_entity_id, commodity, round_half_up(tens * rate * scale), GoodsFlow.PRODUCTION)
     if SpeciesUse.COMPANION in kinds:
         town = await ctx.session.get(SettlementProfileRow, herd.community_entity_id)

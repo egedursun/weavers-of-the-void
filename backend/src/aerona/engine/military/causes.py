@@ -8,6 +8,8 @@ from aerona.domain.enums.military import WarAimKind
 from aerona.domain.enums.mind import ActKind, ValueAxis
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.book import solidarity
+from aerona.engine.cycles.indenture import captive_price
 from aerona.engine.intrigue.beliefs import BeliefView
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.hooks import judged
@@ -68,7 +70,11 @@ async def raiders(ctx: TickContext) -> int:
     )
     raids = 0
     for raider in communities:
-        if raider.id in at_war or not ctx.rng(f"raid_war.{raider.id}.{ctx.epoch}").chance(table.raid_war_chance):
+        if raider.id in at_war or not ctx.rng(f"raid_war.{raider.id}.{ctx.epoch}").chance(
+            table.raid_war_chance
+            * await captive_price(ctx.session, ctx.rules, raider.id)
+            * await solidarity(ctx.session, raider, ctx.rules.asabiyya.conquest_weight)
+        ):
             continue
         martial = (await values_for(ctx.session, raider.id)).get(ValueAxis.MARTIAL, 0)
         if martial < table.raid_martial:

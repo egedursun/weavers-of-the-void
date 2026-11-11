@@ -244,7 +244,17 @@ async def uprisings(ctx: TickContext) -> None:
     ctx.count("uprisings", raised)
 
 
-@reads("mortal.age", "table.bonds", "table.epoch_year_cursors", "table.nodes", "table.people_biology", "table.people_culture")
+@reads(
+    "mortal.age",
+    "table.bonds",
+    "table.epoch_year_cursors",
+    "table.house_members",
+    "table.kinship_systems",
+    "table.nodes",
+    "table.people_biology",
+    "table.people_culture",
+    "table.people_reproduction",
+)
 @writes(
     "table.bonds", "table.chronicle", "table.chronicle_entities", "table.entities", "table.epoch_year_cursors", "table.incident_participants", "table.incidents"
 )

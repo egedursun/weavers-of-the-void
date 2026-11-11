@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CosmosRow
+from aerona.db.tables.cycles import PolityStressRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow
@@ -89,7 +90,17 @@ async def drama(ctx: TickContext, world_id: int) -> int:
 async def turmoil(ctx: TickContext, world_id: int) -> int:
     book = await DominionBook.load(ctx.session)
     steps = sum(max(0, -book.scale_at(ctx.rules, ruler.region_entity_id, DivineScale.ORDER)) for ruler in book.rulers.values() if ruler.world_id == world_id)
-    return steps * ctx.rules.dominion.tension_per_step
+    return steps * ctx.rules.dominion.tension_per_step + await stress_tension(ctx, world_id)
+
+
+async def stress_tension(ctx: TickContext, world_id: int) -> int:
+    table = ctx.rules.structural_demography
+    stresses = await ctx.session.scalars(
+        select(PolityStressRow.psi)
+        .join(EntityRow, EntityRow.id == PolityStressRow.polity_entity_id)
+        .where(EntityRow.world_id == world_id, PolityStressRow.psi > table.crisis_at)
+    )
+    return sum(psi - table.crisis_at for psi in stresses) * table.crisis_weight // PERCENT
 
 
 async def struck_counts(ctx: TickContext, world_id: int) -> Counter[str]:

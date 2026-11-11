@@ -118,6 +118,7 @@ async def society_depth(services: ServicesDep, entity_id: int = Path(ge=1)) -> S
         standing = await standing_of(session, entity.id)
         needs = await needs_of(session, entity.id)
         corvee = await session.get(CorveeRow, entity.id)
+        work = await session.get(EntityRow, corvee.work_entity_id) if corvee is not None and corvee.work_entity_id is not None else None
         prices = await local_prices(session, rules, entity.id, stat(entity, "population") or 0) if society is not None else {}
         shares = {social_class: society.share(social_class) for social_class in SocialClass} if society is not None else {}
         return SocietyDepthView(
@@ -160,7 +161,15 @@ async def society_depth(services: ServicesDep, entity_id: int = Path(ge=1)) -> S
             ],
             held_jobs=[row.job for row in await session.scalars(select(LabourRow).where(LabourRow.community_entity_id == entity.id, LabourRow.held))],
             prices=[PriceView(commodity=kind, price_pct=value) for kind, value in sorted(prices.items(), key=lambda item: item[0].value)],
-            corvee=CorveeView(share_pct=corvee.share_pct, polity_id=corvee.polity_entity_id, since_epoch=corvee.since_epoch, by_hand=corvee.by_hand)
+            corvee=CorveeView(
+                share_pct=corvee.share_pct,
+                polity_id=corvee.polity_entity_id,
+                work_id=corvee.work_entity_id,
+                work_name=work.name if work is not None else None,
+                laboured_epochs=corvee.laboured_epochs,
+                since_epoch=corvee.since_epoch,
+                by_hand=corvee.by_hand,
+            )
             if corvee is not None
             else None,
             drift_causes=[

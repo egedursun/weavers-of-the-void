@@ -1119,11 +1119,11 @@ async def design(ctx: TickContext, plan: Design, holder: EntityRow) -> tuple[Ent
     await ctx.session.execute(delete(RiteEffectRow).where(RiteEffectRow.rite_entity_id == rite.id))
     workings: dict[RiteEffectKind, RiteEffectRow] = {}
     for effect, magnitude, damage, form in plan.workings:
-        held = workings.get(effect)
-        if held is not None:
-            held.magnitude = clamp_int(held.magnitude + magnitude, 1, PERCENT)
-            held.damage_type = held.damage_type or damage
-            held.summon_form = held.summon_form or form
+        working = workings.get(effect)
+        if working is not None:
+            working.magnitude = clamp_int(working.magnitude + magnitude, 1, PERCENT)
+            working.damage_type = working.damage_type or damage
+            working.summon_form = working.summon_form or form
             continue
         strength = clamp_int(magnitude, 1, PERCENT)
         workings[effect] = RiteEffectRow(rite_entity_id=rite.id, effect=effect, magnitude=strength, damage_type=damage, summon_form=form)

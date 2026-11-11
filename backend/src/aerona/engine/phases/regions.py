@@ -169,6 +169,7 @@ async def danger_harm(ctx: TickContext) -> None:
     "table.world_seasons",
 )
 @writes(
+    "army.morale",
     "army.size",
     "mortal.hp",
     "people.population",

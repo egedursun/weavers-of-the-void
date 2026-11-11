@@ -190,6 +190,7 @@ class HomeLine(ContextItem):
     streets: list[str] = Field(default_factory=list)
     courts: list[str] = Field(default_factory=list)
     crowds: list[str] = Field(default_factory=list)
+    obligations: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

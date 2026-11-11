@@ -54,6 +54,7 @@ import {
   SKY_EVENT_LABEL,
   TRAVEL_METHOD_LABEL,
 } from '@/features/cosmos/model/labels'
+import { CosmosCyclesSection } from '@/features/cycles/CosmosCyclesSection'
 import { WorldDivinityPanel } from '@/features/divine/WorldDivinityPanel'
 import { WorldEraSection } from '@/features/entity/lore/EraSection'
 import { ThingSections } from '@/features/entity/sections/ThingSections'
@@ -451,6 +452,7 @@ export function WorldWikiView({ worldId }: { worldId: number }) {
       <WorldSurveySection worldId={data.world.id} />
       <RiftsForWorld worldId={data.world.id} />
       <StorytellerSection worldId={data.world.id} />
+      <CosmosCyclesSection />
       <CelestialDepthSection
         kind='world'
         id={data.world.id}

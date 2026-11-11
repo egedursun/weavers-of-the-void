@@ -756,4 +756,42 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "{{ " + M + ".adopt_per_epoch }} per age, {{ " + M + ".adopt_ap }} action.",
         {"child_id": "The named mortal you adopt", "reason": "Why and how you adopt"},
     ),
+    T.BESTOW_GIFT: ToolText(
+        "You give someone a gift from your purse, or from your realm's if you rule one. It raises your standing and their regard; it binds "
+        "them to answer it in time, and an unanswered gift costs them face. One who hates you may refuse it as an insult. 1 action.",
+        {"receiver_id": "Who receives it", "value": "Coin it is worth", "item_id": "A thing of yours to give with it, or empty"},
+    ),
+    T.ANSWER_GIFT: ToolText(
+        "You answer a gift someone gave you, so you owe them nothing; answer a rank-claiming gift with more or lose face. 1 action.",
+        {"gift_id": "The gift you owe", "value": "Coin your answer is worth, or empty to match what custom asks"},
+    ),
+    T.REFUSE_GIFT: ToolText(
+        "You refuse a gift someone gave you; you owe them nothing, but the giver takes it as an insult. 1 action.",
+        {"gift_id": "The gift you refuse"},
+    ),
+    T.MAKE_OFFERING: ToolText(
+        "You make an offering to your god from your purse; your people's ledger of offerings grows, and the god is bound to answer it. 1 action.",
+        {"value": "Coin the offering is worth"},
+    ),
+    T.FREE_BOUND: ToolText(
+        "As ruler you free a share of the bound of a town of your realm ({{ manumission_paths }}); those freed by purchase or service "
+        "rise as craftsfolk, the rest work the land. 1 action.",
+        {"town_id": "The town", "share": "Share of its bound you free, 1 to 100", "path": "By what way they go free"},
+    ),
+    T.LAY_CORVEE: ToolText(
+        "As ruler you summon a share of the farmhands of a town of your realm to forced labour on a great work being raised; the work "
+        "goes faster, the harvest suffers, unrest rises and the town remembers the labour. 1 action.",
+        {"town_id": "The town", "work_id": "The work being raised", "share": "Share of its farmhands, 0 to 100; 0 lifts the labour"},
+    ),
+    T.BEGIN_REALM_PLAN: ToolText(
+        "As ruler you set your realm on a long plan ({{ long_plan_kinds }}) paid from its treasury each epoch; it outlives you and passes "
+        "to whoever rules after. 1 action.",
+        {
+            "kind": "What the plan aims at",
+            "name": "What the plan is called",
+            "target_id": "The land, world, house, people or town it aims at",
+            "steps": "Steps it needs, 1 to 100",
+            "secrecy": "How secret it is kept, 0 to 100",
+        },
+    ),
 }

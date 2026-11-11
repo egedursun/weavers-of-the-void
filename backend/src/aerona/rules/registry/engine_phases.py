@@ -427,3 +427,26 @@ class EnginePhasesRules:
     dating_systems: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: how each realm, cult and people counts its years")
     heraldry: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: arms granted, differenced and quartered")
     designs: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: vessel and engine designs refitted into new marks")
+    people_customs: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: each new people's kinship and reproductive system read from its customs")
+    structural_demography: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: population pressure, immiseration, elite overproduction, fiscal distress and the stress index"
+    )
+    asabiyya: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: solidarity rising at frontiers and decaying in luxury")
+    challenge_response: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: challenges met with innovation, stagnation or collapse")
+    long_plans: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: long plans advanced, carried on, exposed and fulfilled")
+    reciprocity: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: gifts returned or lapsed, rank-claiming feasts, ceremonial circuits, offerings and marriage payments",
+    )
+    kinship_systems: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: residence after marriage, levirate and sororate, and alliances between lines"
+    )
+    reproduction_systems: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: sex changes, castes and budding")
+    nomadism: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: camps following their pastures, herds, tribute, raids and confederations")
+    legacy_traits: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: successor peoples keeping the ways of their predecessors")
+    labour_regimes: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: forced labour on great works, bondage, markets in bound folk and freedom"
+    )

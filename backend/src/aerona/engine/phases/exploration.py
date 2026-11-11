@@ -529,9 +529,9 @@ async def held_intuitions(session: AsyncSession) -> set[int]:
 
 
 async def pending_intuitions(session: AsyncSession) -> list[HorizonIntuitionRow]:
-    held = await held_intuitions(session)
+    kept = await held_intuitions(session)
     rows = await session.scalars(select(HorizonIntuitionRow).where(HorizonIntuitionRow.status == HorizonStatus.PENDING).order_by(HorizonIntuitionRow.id))
-    return [row for row in rows if row.id not in held]
+    return [row for row in rows if row.id not in kept]
 
 
 async def begin_intuition(session: AsyncSession, intuition: HorizonIntuitionRow) -> EntityRow | None:

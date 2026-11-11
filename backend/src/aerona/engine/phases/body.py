@@ -339,14 +339,14 @@ async def _senses(ctx: TickContext, mortal: EntityRow) -> None:
 async def _madness(ctx: TickContext, mortal: EntityRow) -> None:
     table = ctx.rules.conditions
     sanity = sanity_of(ctx.rules, mortal)
-    held = [kind for kind in MADNESS_CONDITIONS if await condition_of(ctx, mortal.id, kind) is not None]
+    madness = [kind for kind in MADNESS_CONDITIONS if await condition_of(ctx, mortal.id, kind) is not None]
     if sanity >= table.madness_recover_sanity:
         rng = ctx.rng(seed_of("sane", mortal.id))
-        for kind in held:
+        for kind in madness:
             if rng.chance(table.madness_recover_chance):
                 await end_condition(ctx, mortal, kind)
         return
-    if sanity >= table.madness_sanity or held:
+    if sanity >= table.madness_sanity or madness:
         return
     rng = ctx.rng(seed_of("mad", mortal.id))
     if not rng.chance(table.madness_chance):
@@ -361,17 +361,19 @@ async def _addiction(ctx: TickContext, mortal: EntityRow, addicted: dict[int, Ad
     table = ctx.rules.conditions
     community = await community_of(ctx.session, mortal)
     row = addicted.get(community.id) if community is not None else None
-    held = await condition_of(ctx, mortal.id, ConditionKind.ADDICTION)
+    addiction = await condition_of(ctx, mortal.id, ConditionKind.ADDICTION)
     dependence = next((item for item in await active(ctx.session, mortal.id) if item.package is PackageKind.DRUG_DEPENDENCE), None)
     if row is None or row.addicted_since_epoch is None:
         if dependence is not None and ctx.rng(seed_of("clean", mortal.id)).chance(table.addiction_recover_chance):
             await cure(ctx, mortal, dependence, CureKind.TIME)
-        elif held is not None and dependence is None and ctx.rng(seed_of("clean", mortal.id)).chance(table.addiction_recover_chance):
+        elif addiction is not None and dependence is None and ctx.rng(seed_of("clean", mortal.id)).chance(table.addiction_recover_chance):
             await end_condition(ctx, mortal, ConditionKind.ADDICTION)
         return
-    if dependence is not None or held is not None:
-        if held is not None and row.withdrawal_since_epoch is not None and table.withdrawal_severity:
-            await gain_condition(ctx, mortal, ConditionKind.ADDICTION, HarmCause.POISON, severity=held.severity + table.withdrawal_severity, announce=False)
+    if dependence is not None or addiction is not None:
+        if addiction is not None and row.withdrawal_since_epoch is not None and table.withdrawal_severity:
+            await gain_condition(
+                ctx, mortal, ConditionKind.ADDICTION, HarmCause.POISON, severity=addiction.severity + table.withdrawal_severity, announce=False
+            )
         return
     if ctx.rng(seed_of("condition", mortal.id, ConditionKind.ADDICTION.value)).chance(table.addiction_chance):
         await afflict(ctx, mortal, PackageKind.DRUG_DEPENDENCE, Transmission.INGESTION, source_node_id=row.resource_entity_id)

@@ -31,6 +31,8 @@ from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.collective.demography import levy_factor
 from aerona.engine.collective.roles import combat_sexes
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.book import solidarity
+from aerona.engine.cycles.breeding import soldier_factor
 from aerona.engine.demography.biology import job_factors, profiles_of
 from aerona.engine.demography.cohorts import cohorts_of, seed
 from aerona.engine.demography.prices import cheapest, dearest, local_prices
@@ -352,7 +354,8 @@ async def mobilisation(session: AsyncSession, rules: Rules, community: EntityRow
         law *= 1 + int(drafted) / PERCENT * laws.weight(community.id, LawKind.CONSCRIPTION)
     law *= feudal_levy(laws, community.id, rules)
     ageing = await levy_factor(session, rules, community.id)
-    return max(0.1, martial * cohesion * season * law * ageing)
+    bond = await solidarity(session, community, rules.asabiyya.levy_weight) * await soldier_factor(session, rules, community)
+    return max(0.1, martial * cohesion * season * law * ageing * bond)
 
 
 async def fighting_age(session: AsyncSession, community_id: int, rules: Rules | None = None) -> int | None:

@@ -66,8 +66,8 @@ async def feed(ctx: TickContext, community_id: int, spec: MethodSpec, units: int
         return 1.0
     ledger = goods_of(ctx.session, ctx.epoch)
     wanted = {commodity: -(-units * per // TENTH) for commodity, per, _ in spec.inputs}
-    held = {commodity: await holding(ctx.session, community_id, commodity, material) for commodity, _, material in spec.inputs}
-    share = min(1.0, *(held[commodity] / need for commodity, need in wanted.items() if need > 0))
+    stocked = {commodity: await holding(ctx.session, community_id, commodity, material) for commodity, _, material in spec.inputs}
+    share = min(1.0, *(stocked[commodity] / need for commodity, need in wanted.items() if need > 0))
     for commodity, _, material in spec.inputs:
         take = round_half_up(wanted[commodity] * share)
         if take > 0:

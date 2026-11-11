@@ -13,6 +13,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.collective.demography import fertility_factor
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.lifeforms import disease_load, habitability, habitable_growth
+from aerona.engine.cycles.book import strain_of
 from aerona.engine.demography.basket import fed_index
 from aerona.engine.demography.biology import footprint, hunger_level
 from aerona.engine.demography.cohorts import cohorts_of, reconcile
@@ -120,6 +121,9 @@ async def grow_community(
     magic = model.knowledge.level(community.id, KnowledgeBranch.MAGIC)
     vigour *= await ctx.hook_factor(community.id, DomainHook.FERTILITY)
     vigour *= await fertility_factor(ctx, community.id)
+    misery = await strain_of(ctx.session, community.id) / PERCENT
+    vigour *= max(0.0, 1 - misery * rules.structural_demography.misery_growth_cut / PERCENT)
+    mortality *= 1 + misery * rules.structural_demography.misery_death_pct / PERCENT
     pressures = Pressures(
         fertility=vigour,
         hunger=hunger_level(rules, biology, ground, await fed_index(ctx.session, community.id), magic),
@@ -166,8 +170,11 @@ async def grow_community(
     "table.outbreaks",
     "table.people_biology",
     "table.people_culture",
+    "table.people_reproduction",
     "table.place_environment",
     "table.polity_members",
+    "table.polity_profiles",
+    "table.polity_stress",
     "table.region_environment",
     "table.settlement_profiles",
     "table.sex_ratios",

@@ -86,6 +86,7 @@ const ALPHA: Record<LayerMode, number> = {
   desirability: 0.45,
   coverage: 0.45,
   niches: 0.45,
+  solidarity: 0.45,
 }
 
 export const STOCK_BANDS = [
@@ -107,6 +108,12 @@ const BAND_LABEL: Record<string, string> = {
   few_ways: 'Few ways of life filled',
   many_ways: 'Many ways of life filled',
   crowded_ways: 'Crowded with ways of life',
+  soft: 'Gone soft',
+  steady: 'Holding together',
+  forged: 'Forged as one',
+  frontier_soft: 'A frontier gone soft',
+  frontier_steady: 'A frontier holding together',
+  frontier_forged: 'A frontier forged as one',
 }
 
 export const RAIN_BANDS = [
@@ -175,6 +182,18 @@ export const NICHE_BANDS = [
 export function nicheBand(value: number): string | null {
   if (value <= 0) return null
   return NICHE_BANDS.find((band) => value < band.below)?.key ?? null
+}
+
+export const SOLIDARITY_BANDS = [
+  { key: 'soft', below: 34 },
+  { key: 'steady', below: 67 },
+  { key: 'forged', below: Number.POSITIVE_INFINITY },
+] as const
+
+export function solidarityBand(value: number, frontier: number): string | null {
+  if (value <= 0) return null
+  const band = SOLIDARITY_BANDS.find((item) => value < item.below)?.key ?? null
+  return band && frontier > 0 ? `frontier_${band}` : band
 }
 
 export function stockBand(value: number): string | null {
@@ -301,6 +320,13 @@ function regionKey(
       const band = stocks ? nicheBand(stocks.niches ?? 0) : null
       return band ? { key: `niches:${band}`, alpha } : null
     }
+    case 'solidarity': {
+      const stocks = view.stocks[String(regionId)] ?? view.stocks[String(topId)]
+      const band = stocks
+        ? solidarityBand(stocks.solidarity ?? 0, stocks.frontier ?? 0)
+        : null
+      return band ? { key: `solidarity:${band}`, alpha } : null
+    }
     case 'realms': {
       const held =
         view.realms?.[String(regionId)] ?? view.realms?.[String(topId)]
@@ -366,7 +392,8 @@ function labelFor(
     kind === 'wildlife' ||
     kind === 'desirability' ||
     kind === 'coverage' ||
-    kind === 'niches'
+    kind === 'niches' ||
+    kind === 'solidarity'
   )
     return BAND_LABEL[raw] ?? words(raw)
   if (

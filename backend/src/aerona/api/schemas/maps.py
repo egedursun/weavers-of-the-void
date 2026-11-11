@@ -89,6 +89,8 @@ class RegionStocks(ApiModel):
     desirability: int = 0
     coverage: int = 0
     niches: int = 0
+    solidarity: int = 0
+    frontier: int = 0
 
 
 class MapConvoy(ApiModel):

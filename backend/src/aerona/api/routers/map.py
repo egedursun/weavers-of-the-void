@@ -44,6 +44,7 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldMapRow, WorldRow
 from aerona.db.tables.culture import ArtworkProfileRow, CastingRow, HolderLevelRow, IdeologyAdherentRow, LanguageStandingRow, LegendProfileRow
+from aerona.db.tables.cycles import AsabiyyaRow
 from aerona.db.tables.disease import EndemicDiseaseRow, OutbreakRow
 from aerona.db.tables.dominion import RegionDominionRow
 from aerona.db.tables.ecology import BeastProfileRow, SpeciesProfileRow, SpeciesRangeRow
@@ -72,6 +73,7 @@ from aerona.engine.ecology.niches import NicheKey, niche_of
 from aerona.engine.economy.convoys import OPEN
 from aerona.engine.economy.routes import LIVE_STATUSES
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import homes_of
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import stat
 from aerona.services.container import Services
@@ -580,6 +582,8 @@ async def region_stocks(session: AsyncSession, world_id: int) -> dict[int, Regio
         totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0}).update(values)
     for region, count in (await niches_by_region(session, world_id)).items():
         totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0})["niches"] = count
+    for region, values in (await solidarity_by_region(session, world_id, atlas)).items():
+        totals.setdefault(region, {"population": 0, "followers": 0, "soldiers": 0}).update(values)
     return {region: RegionStocks(**values) for region, values in totals.items()}
 
 
@@ -605,6 +609,21 @@ async def urban_by_region(session: AsyncSession, world_id: int, atlas: RegionAtl
         region: {"desirability": round(sum(values) / len(values)), "coverage": round(sum(covered[region]) / len(covered[region]))}
         for region, values in wanted.items()
     }
+
+
+async def solidarity_by_region(session: AsyncSession, world_id: int, atlas: RegionAtlas) -> dict[int, dict[str, int]]:
+    found: dict[int, dict[str, int]] = {}
+    for row, holder in await session.execute(
+        select(AsabiyyaRow, EntityRow).join(EntityRow, EntityRow.id == AsabiyyaRow.holder_entity_id).where(EntityRow.world_id == world_id)
+    ):
+        for home in await homes_of(session, holder):
+            region = atlas.top_region(home)
+            if region is None:
+                continue
+            bucket = found.setdefault(region, {"solidarity": 0, "frontier": 0})
+            bucket["solidarity"] = max(bucket["solidarity"], row.value)
+            bucket["frontier"] = max(bucket["frontier"], row.frontier)
+    return found
 
 
 async def niches_by_region(session: AsyncSession, world_id: int) -> dict[int, int]:

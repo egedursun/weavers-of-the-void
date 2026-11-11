@@ -22,6 +22,7 @@ from aerona.domain.enums.military import ArmourType, MoraleState, ShieldType, St
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.book import solidarity
 from aerona.engine.demography.biology import kin_army, profiles_of
 from aerona.engine.ecology.domestication import herd_uses, trained_effect, trained_heads
 from aerona.engine.economy.materials import node_material
@@ -296,7 +297,7 @@ async def muster(ctx: TickContext, army: EntityRow, owner: EntityRow | None, kno
     metallurgy = knowledge.level(owner.id, KnowledgeBranch.METALLURGY)
     equipment = stat(army, "equipment") or 0
     experience = stat(army, "experience") or 0
-    morale = stat_or(army, "morale", ctx.rules.morale.base)
+    morale = clamp_int(stat_or(army, "morale", ctx.rules.morale.base) * await solidarity(ctx.session, owner, ctx.rules.asabiyya.morale_weight), 0, PERCENT)
     issued = await node_material(ctx.session, army.id, MaterialSlot.WEAPONS)
     material = issued.material.value if issued is not None and issued.material is not None else None
     condition = clamp_int(PERCENT // 2 + equipment // 2, 0, PERCENT)

@@ -38,6 +38,7 @@ export const LAYER_MODES = [
   'desirability',
   'coverage',
   'niches',
+  'solidarity',
 ] as const
 export type LayerMode = (typeof LAYER_MODES)[number]
 
@@ -68,6 +69,7 @@ export const LAYER_LABEL: Record<LayerMode, string> = {
   desirability: 'Desirable districts',
   coverage: 'Service coverage',
   niches: 'Ways of life',
+  solidarity: 'Solidarity and frontiers',
 }
 
 export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
@@ -91,6 +93,7 @@ export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
   desirability: 'map-layer-desirability',
   coverage: 'map-layer-coverage',
   niches: 'map-layer-niches',
+  solidarity: 'cycles-frontier-map',
 }
 
 export const OVERLAY_SURFACE: Partial<Record<Overlay, string>> = {

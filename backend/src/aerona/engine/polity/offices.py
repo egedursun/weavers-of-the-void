@@ -33,6 +33,7 @@ from aerona.domain.enums.war import WarSide
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.collective.roles import role_rank
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.book import stress_factor
 from aerona.engine.interconnect.causes import succession_incident
 from aerona.engine.intrigue.favours import owe
 from aerona.engine.lore.civics import realm_allows
@@ -226,7 +227,7 @@ def wanted_offices(
     return wanted
 
 
-async def staff(ctx: TickContext, book: RealmBook, realm: Realm, held: set[int]) -> int:
+async def staff(ctx: TickContext, book: RealmBook, realm: Realm, occupied: set[int]) -> int:
     people = [mortal for mortal in await subjects(ctx, realm) if adult(ctx, mortal) and mortal.id != realm.ruler_id]
     filled = 0
     embassies = await embassy_targets(ctx, book, realm)
@@ -253,17 +254,17 @@ async def staff(ctx: TickContext, book: RealmBook, realm: Realm, held: set[int])
             await ctx.session.flush()
         holder = await living_entity(ctx.session, office.holder_entity_id) if office.holder_entity_id is not None else None
         if holder is not None and holder.status is EntityStatus.CANON:
-            held.add(holder.id)
+            occupied.add(holder.id)
             continue
         if "offices" in realm.profile.locked or "holder" in office.locked:
             continue
-        candidates = [mortal for mortal in people if mortal.id not in held]
+        candidates = [mortal for mortal in people if mortal.id not in occupied]
         if not candidates:
             continue
         scores = {mortal.id: await skill_score(ctx, mortal, kind) for mortal in candidates}
         best = max(candidates, key=lambda mortal: (scores[mortal.id], -mortal.id))
         await appoint(ctx, realm, office, best, by_id=realm.ruler_id, reason="the seat was empty")
-        held.add(best.id)
+        occupied.add(best.id)
         filled += 1
     return filled
 
@@ -436,7 +437,7 @@ async def name_heir(ctx: TickContext, realm: Realm, line: list[EntityRow]) -> En
     return heir
 
 
-async def ensure_regent(ctx: TickContext, realm: Realm, ruler: EntityRow, held: set[int]) -> tuple[OfficeRow, EntityRow | None, bool]:
+async def ensure_regent(ctx: TickContext, realm: Realm, ruler: EntityRow, occupied: set[int]) -> tuple[OfficeRow, EntityRow | None, bool]:
     office = next((row for row in realm.offices if row.kind is OfficeKind.REGENT), None)
     if office is None:
         office = OfficeRow(polity_entity_id=realm.entity.id, kind=OfficeKind.REGENT, since_epoch=ctx.epoch, powers=["rule"])
@@ -452,11 +453,11 @@ async def ensure_regent(ctx: TickContext, realm: Realm, ruler: EntityRow, held: 
     scores = {mortal.id: await skill_score(ctx, mortal, OfficeKind.REGENT) for mortal in people}
     regent = max(people, key=lambda mortal: (scores[mortal.id], -mortal.id))
     await appoint(ctx, realm, office, regent, by_id=None, reason="the heir is a child")
-    held.add(regent.id)
+    occupied.add(regent.id)
     return office, regent, True
 
 
-async def regency(ctx: TickContext, realm: Realm, held: set[int]) -> str | None:
+async def regency(ctx: TickContext, realm: Realm, occupied: set[int]) -> str | None:
     ruler = await living_entity(ctx.session, realm.ruler_id) if realm.ruler_id is not None else None
     if ruler is None:
         return None
@@ -466,7 +467,7 @@ async def regency(ctx: TickContext, realm: Realm, held: set[int]) -> str | None:
             return None
         await appoint(ctx, realm, office, None, by_id=ruler.id, reason="the ruler came of age")
         return "ended"
-    office, regent, fresh = await ensure_regent(ctx, realm, ruler, held)
+    office, regent, fresh = await ensure_regent(ctx, realm, ruler, occupied)
     if regent is None or fresh:
         return "appointed" if fresh else None
     ambitious = TraitKind.AMBITIOUS in await traits_of(ctx.session, regent.id)
@@ -723,6 +724,8 @@ async def coups(ctx: TickContext, realm: Realm) -> int:
     holder = await living_entity(ctx.session, marshal.holder_entity_id) if marshal is not None and marshal.holder_entity_id is not None else None
     if holder is None or TraitKind.AMBITIOUS not in await traits_of(ctx.session, holder.id):
         return 0
-    if not ctx.rng(f"coup.{realm.entity.id}.{ctx.epoch}").chance(table.coup_chance):
+    if not ctx.rng(f"coup.{realm.entity.id}.{ctx.epoch}").chance(
+        table.coup_chance * await stress_factor(ctx.session, realm.entity.id, ctx.rules.structural_demography.coup_lift)
+    ):
         return 0
     return 1 if await seize_throne(ctx, realm, holder, "the marshal turned the army on the throne") else 0

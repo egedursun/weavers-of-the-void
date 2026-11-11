@@ -17,6 +17,16 @@ from aerona.domain.enums.arcana import SpellDuration, SpellForm, SpellRange, Spe
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.collective import CollectiveTrigger, DesignComponentKind, DesignKind, StoryletId
 from aerona.domain.enums.culture import ArtMedium, IdeologyTenet, MagicSchool, MagicSource, ProphecyConsequence, ProphecyPredicate, RiteEffectKind
+from aerona.domain.enums.cycles import (
+    ChallengeKind,
+    KinshipDescent,
+    LongPlanKind,
+    ManumissionPath,
+    MarriagePayment,
+    MarriagePreference,
+    ReproductiveSystem,
+    ResidenceRule,
+)
 from aerona.domain.enums.discovery import ArtDiscipline, TheoryDomain
 from aerona.domain.enums.ecology import (
     AwakeningTrigger,
@@ -138,6 +148,14 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "plague_responses": ", ".join(item.value for item in PlagueResponse),
         "collective_triggers": ", ".join(item.value for item in CollectiveTrigger),
         "storylet_ids": ", ".join(item.value for item in StoryletId),
+        "long_plan_kinds": ", ".join(item.value for item in LongPlanKind),
+        "kinship_descents": ", ".join(item.value for item in KinshipDescent),
+        "residence_rules": ", ".join(item.value for item in ResidenceRule),
+        "marriage_preferences": ", ".join(item.value for item in MarriagePreference),
+        "marriage_payments": ", ".join(item.value for item in MarriagePayment),
+        "reproductive_systems": ", ".join(item.value for item in ReproductiveSystem),
+        "challenge_kinds": ", ".join(item.value for item in ChallengeKind),
+        "manumission_paths": ", ".join(item.value for item in ManumissionPath),
         "design_kinds": ", ".join(item.value for item in DesignKind),
         "design_components": ", ".join(item.value for item in DesignComponentKind),
         "registry_kinds": ", ".join(item.value for item in RegistryKind if item is not RegistryKind.LAND_TITLE),

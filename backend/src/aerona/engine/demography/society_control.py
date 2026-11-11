@@ -89,7 +89,7 @@ async def set_labour(ctx: TickContext, community_id: int, job: Job, workers: int
     return row
 
 
-async def set_corvee(ctx: TickContext, community_id: int, share_pct: int, polity_id: int | None) -> CorveeRow | None:
+async def set_corvee(ctx: TickContext, community_id: int, share_pct: int, polity_id: int | None, work_id: int | None = None) -> CorveeRow | None:
     entity = await community(ctx, community_id)
     row = await ctx.session.get(CorveeRow, entity.id)
     if share_pct <= 0:
@@ -103,6 +103,11 @@ async def set_corvee(ctx: TickContext, community_id: int, share_pct: int, polity
         ctx.session.add(row)
     row.share_pct = checked("corvee share", share_pct, (0, PERCENT))
     row.polity_entity_id = polity_id
+    if work_id is not None:
+        work = await ctx.session.get(EntityRow, work_id)
+        if work is None or work.entity_type is not EntityType.STRUCTURE:
+            raise ValidationFailedError("Forced labour can only be set to a structure.")
+    row.work_entity_id = work_id
     await ctx.session.flush()
     await note(
         ctx, f"A corvee was laid on {entity.name}: {row.share_pct}% of its farmhands must labour on the great works.", key="labour.corvee", ids=[entity.id]

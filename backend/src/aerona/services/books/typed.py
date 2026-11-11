@@ -81,6 +81,9 @@ ID_LISTS = frozenset(
         "forbidden_by",
         "regalia",
         "content",
+        "stops",
+        "circuit",
+        "members",
     }
 )
 PERCENT_LISTS = frozenset({"milestones"})
@@ -252,6 +255,10 @@ REFERENCE_LABELS: dict[str, Callable[[Any, dict[int, str]], str]] = {
     "designs": lambda row, names: f"{row.name} of {_named(names, row.owner_entity_id) or 'no one'}",
     "cascades": lambda row, names: f"the {row.act.value} of epoch {row.epoch} at {_named(names, row.settlement_entity_id)}",
     "storylet_runs": lambda row, names: f"the {words(row.storylet.value).lower()} storylet of epoch {row.opened_epoch}",
+    "gifts": lambda row, names: (
+        f"the {words(row.occasion.value).lower()} gift of {_named(names, row.giver_node_id) or 'someone'} to {_named(names, row.receiver_node_id) or 'someone'}"
+        f" in epoch {row.epoch}"
+    ),
 }
 NAMED_TABLES = frozenset({"entities", "nodes", "sons", "worlds", "stars", "foreign_gods", "creator", "galaxies", "galaxy_clusters", "dimensions"})
 
