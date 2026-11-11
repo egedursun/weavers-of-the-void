@@ -33,6 +33,7 @@ from aerona.api.schemas.cycles import (
 )
 from aerona.api.schemas.records import NodeRef
 from aerona.api.views.common import node_refs
+from aerona.catalog.techniques import TECHNIQUES
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.cycles import (
     AsabiyyaRow,
@@ -55,6 +56,7 @@ from aerona.db.tables.cycles import (
     StressReadingRow,
 )
 from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.cycles import LegacyKind, StressComponent
 from aerona.domain.enums.mind import ValueAxis
 from aerona.engine.cycles.gifts import balance
@@ -62,6 +64,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import homes_of
 
 router = APIRouter(tags=["cycles"])
+NAMED_LEGACIES = frozenset({LegacyKind.BELIEF, LegacyKind.ART_FORM})
 NodeId = Annotated[int, Path(ge=1)]
 PARTS = {
     StressComponent.POPULATION_PRESSURE: "pressure",
@@ -171,7 +174,9 @@ def confederation_view(row: ConfederationRow, refs: dict[int, NodeRef]) -> Confe
 
 
 def legacy_label(row: LegacyTraitRow, refs: dict[int, NodeRef]) -> str:
-    if row.kind is LegacyKind.BELIEF and row.key.isdigit():
+    if row.kind is LegacyKind.INNOVATION and row.key in Technique._value2member_map_:
+        return TECHNIQUES[Technique(row.key)].label
+    if row.kind in NAMED_LEGACIES and row.key.isdigit():
         found = refs.get(int(row.key))
         return found.name if found is not None else row.key
     if row.kind is LegacyKind.VALUE and row.key in ValueAxis._value2member_map_:
@@ -260,8 +265,9 @@ async def node_cycles(services: ServicesDep, node_id: NodeId) -> CyclesView:
                 *(camp.circuit if camp is not None else []),
                 *(ref for row in confederations for ref in (row.leader_entity_id, *row.members)),
                 *(row.predecessor_entity_id for row in legacies),
-                *(int(row.key) for row in legacies if row.kind is LegacyKind.BELIEF and row.key.isdigit()),
-                *(row.employer_node_id for row in indentures),
+                *(int(row.key) for row in legacies if row.kind in NAMED_LEGACIES and row.key.isdigit()),
+                *(ref for row in indentures for ref in (row.employer_node_id, row.origin_entity_id)),
+                *(row.origin_entity_id for row in manumissions),
             ],
         )
         return CyclesView(
@@ -368,6 +374,7 @@ async def node_cycles(services: ServicesDep, node_id: NodeId) -> CyclesView:
                     term_epochs=row.term_epochs,
                     debt=row.debt,
                     exploitation=row.exploitation,
+                    origin=at(refs, row.origin_entity_id),
                     since_epoch=row.since_epoch,
                     locked=list(row.locked),
                 )
@@ -378,7 +385,18 @@ async def node_cycles(services: ServicesDep, node_id: NodeId) -> CyclesView:
             )
             if market is not None
             else None,
-            manumissions=[ManumissionView(id=row.id, count=row.count, path=row.path, epoch=row.epoch) for row in manumissions],
+            manumissions=[
+                ManumissionView(
+                    id=row.id,
+                    count=row.count,
+                    path=row.path,
+                    standing=row.standing,
+                    origin=at(refs, row.origin_entity_id),
+                    epoch=row.epoch,
+                    locked=list(row.locked),
+                )
+                for row in manumissions
+            ],
         )
 
 

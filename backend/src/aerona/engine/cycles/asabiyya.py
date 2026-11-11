@@ -13,7 +13,7 @@ from aerona.domain.enums.mind import ValueHolder
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.collective.book import shift
 from aerona.engine.context import TickContext
-from aerona.engine.cycles.book import at_war, polities, put, realm_towns
+from aerona.engine.cycles.book import at_war, polities, psi_of, put, realm_towns
 from aerona.engine.mind.book import Values, stored_values
 from aerona.engine.notes import note
 from aerona.engine.polity.regard import value_distance
@@ -114,6 +114,10 @@ async def tend(
         )
 
 
+async def homeland_psi(ctx: TickContext, homes: set[int]) -> int:
+    return max([await psi_of(ctx.session, home) for home in sorted(homes)], default=0)
+
+
 async def keep_asabiyya(ctx: TickContext, tally: AsabiyyaTally) -> None:
     table = ctx.rules.asabiyya
     atlas = await RegionAtlas.load(ctx.session)
@@ -136,7 +140,14 @@ async def keep_asabiyya(ctx: TickContext, tally: AsabiyyaTally) -> None:
         frontier = frontiers.count(regions_of[people.id], {people.id})
         row = await asabiyya_row(ctx, people.id)
         await tend(
-            ctx, people, row, frontier=frontier, war=await at_war(ctx, homes[people.id]), comfort_level=await comfort(ctx, homes[people.id]), psi=0, tally=tally
+            ctx,
+            people,
+            row,
+            frontier=frontier,
+            war=await at_war(ctx, homes[people.id]),
+            comfort_level=await comfort(ctx, homes[people.id]),
+            psi=await homeland_psi(ctx, homes[people.id]),
+            tally=tally,
         )
         culture = await ctx.session.get(PeopleCultureRow, people.id)
         if culture is not None:

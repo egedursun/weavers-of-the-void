@@ -5,6 +5,7 @@ from sqlalchemy import select
 from aerona.db.tables.cycles import LongPlanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.genetics import AllelePoolRow
 from aerona.db.tables.polity import HouseProfileRow, PolityProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
@@ -17,6 +18,7 @@ from aerona.engine.collective.book import ruler_id, shift
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import divine_of
 from aerona.engine.economy.purse import take_coin
+from aerona.engine.genetics.pools import shifted_gift
 from aerona.engine.notes import note
 from aerona.engine.polity.seats import faction_leader
 from aerona.engine.primitives.faith import living_patron
@@ -169,6 +171,14 @@ async def transform_land(ctx: TickContext, plan: LongPlanRow) -> int:
     return len(regions)
 
 
+async def breed_people(ctx: TickContext, plan: LongPlanRow) -> bool:
+    pool = await ctx.session.get(AllelePoolRow, plan.target_node_id) if plan.target_node_id is not None else None
+    if pool is None or "frequencies" in pool.locked or held(pool.people_node_id):
+        return False
+    pool.frequencies = shifted_gift(pool.frequencies, ctx.rules.long_plans.bloodline_gift_pct)
+    return True
+
+
 async def breed(ctx: TickContext, plan: LongPlanRow) -> HouseTrait | None:
     house = await ctx.session.get(HouseProfileRow, plan.target_node_id) if plan.target_node_id is not None else None
     if house is None or "traits" in house.locked or held(house.house_entity_id):
@@ -214,7 +224,7 @@ async def complete(ctx: TickContext, plan: LongPlanRow, holder: EntityRow | None
         await note(ctx, f"{plan.name} was fulfilled: {changed} lands were remade.", key="plans.completed", ids=ids)
     elif plan.kind is LongPlanKind.BLOODLINE:
         trait = await breed(ctx, plan)
-        found = trait.value.replace("_", " ") if trait is not None else "nothing new"
+        found = trait.value.replace("_", " ") if trait is not None else "richer in the gift" if await breed_people(ctx, plan) else "nothing new"
         await note(ctx, f"{plan.name} was fulfilled: the line was bred to be {found}.", key="plans.completed", ids=ids)
     elif plan.kind is LongPlanKind.CONVERSION:
         converted = await convert(ctx, plan, holder)

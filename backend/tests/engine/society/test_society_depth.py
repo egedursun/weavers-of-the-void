@@ -141,6 +141,8 @@ def test_staple_shortfall_and_luxury_plenty_move_satisfaction() -> None:
         satisfaction_targets(RULES, INPUTS, STOCKS, content)[SocialClass.MERCHANT] > satisfaction_targets(RULES, INPUTS, STOCKS, hungry)[SocialClass.MERCHANT]
     )
     assert satisfaction_targets(RULES, INPUTS, STOCKS, corvee_pct=100)[SocialClass.FARMER] < satisfaction_targets(RULES, INPUTS, STOCKS)[SocialClass.FARMER]
+    scorned = satisfaction_targets(RULES, INPUTS, STOCKS, freed_pct=100)
+    assert scorned[SocialClass.ARTISAN] < satisfaction_targets(RULES, INPUTS, STOCKS)[SocialClass.ARTISAN]
 
 
 def test_gini_over_class_wealth() -> None:

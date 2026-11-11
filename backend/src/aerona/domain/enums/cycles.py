@@ -128,6 +128,8 @@ class LegacyKind(StrEnum):
     FUNERAL_RITE = "funeral_rite"
     BELIEF = "belief"
     VALUE = "value"
+    INNOVATION = "innovation"
+    ART_FORM = "art_form"
 
 
 class LabourRegime(StrEnum):

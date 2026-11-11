@@ -74,6 +74,7 @@ ACT_LABELS: MappingProxyType[ActKind, str] = MappingProxyType(
         A.USURY: "Lending at interest",
         A.INFANTICIDE: "Killing an infant",
         A.ABANDONING_ELDERS: "Leaving the old to fend alone",
+        A.FORCED_LABOUR: "Forcing folk to labour unpaid",
     }
 )
 

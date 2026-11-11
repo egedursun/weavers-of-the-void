@@ -11,6 +11,7 @@ from aerona.db.tables.cycles import (
     KinshipSystemRow,
     LegacyTraitRow,
     LongPlanRow,
+    ManumissionRow,
     MortalCasteRow,
     PeopleReproductionRow,
     PolityStressRow,
@@ -20,7 +21,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.sons import SonRow
-from aerona.domain.enums.cycles import LongPlanStatus, ReproductiveSystem
+from aerona.domain.enums.cycles import CyclePhase, LongPlanStatus, ReproductiveSystem
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.cycles.gifts import OBLIGING
@@ -28,6 +29,8 @@ from aerona.engine.cycles.gifts import OBLIGING
 GIFT_LINES = 4
 DEBT_LINES = 6
 PLAN_LINES = 3
+TROUBLED = (CyclePhase.CRISIS, CyclePhase.DEPRESSION, CyclePhase.STAGFLATION)
+FULL_STANDING = 100
 
 
 def words(value: str) -> str:
@@ -96,7 +99,16 @@ async def town_lines(scope: Scope, me: EntityRow) -> list[str]:
     if camp is not None:
         found.append(f"your settlement is {an(words(camp.mode.value))} camp with a herd of {camp.herd}, grazing {camp.grazing}, water {camp.water}")
     for bond in await session.scalars(select(IndentureRow).where(IndentureRow.community_entity_id == me.location_id).limit(GIFT_LINES)):
-        found.append(f"{bond.count} here are bound in {words(bond.regime.value)}, debt {bond.debt}, exploited at {bond.exploitation}")
+        newcomers = f", newcomers of {await named(scope, bond.origin_entity_id)}" if bond.origin_entity_id is not None else ""
+        found.append(f"{bond.count} here are bound in {words(bond.regime.value)}{newcomers}, debt {bond.debt}, exploited at {bond.exploitation}")
+    for freed in await session.scalars(
+        select(ManumissionRow)
+        .where(ManumissionRow.community_entity_id == me.location_id, ManumissionRow.standing < FULL_STANDING)
+        .order_by(ManumissionRow.id)
+        .limit(GIFT_LINES)
+    ):
+        origin = f", folk of {await named(scope, freed.origin_entity_id)}" if freed.origin_entity_id is not None else ""
+        found.append(f"{freed.count} freed by {words(freed.path.value)} here{origin} stand at {freed.standing} of {FULL_STANDING} among the freeborn")
     market = await session.get(SlaveMarketRow, me.location_id)
     if market is not None and market.open:
         found.append(f"a market in bound folk sells at {market.price} each, {market.stock} offered")
@@ -141,4 +153,22 @@ async def son_cycle_lines(scope: Scope, son: SonRow) -> list[str]:
         select(LongPlanRow).where(LongPlanRow.holder_node_id == son.id, LongPlanRow.status == LongPlanStatus.ACTIVE).limit(PLAN_LINES)
     ):
         found.append(f"your plan {plan.id}, {plan.name}: {plan.progress} of {plan.steps} steps{', exposed' if plan.exposed else ''}")
+    return [*found, *await realm_lines(scope, son)]
+
+
+async def realm_lines(scope: Scope, son: SonRow) -> list[str]:
+    if son.current_world_id is None:
+        return []
+    found: list[str] = []
+    for stress, realm in await scope.session.execute(
+        select(PolityStressRow, EntityRow)
+        .join(EntityRow, EntityRow.id == PolityStressRow.polity_entity_id)
+        .where(EntityRow.world_id == son.current_world_id, PolityStressRow.phase.in_(list(TROUBLED)))
+        .order_by(PolityStressRow.psi.desc(), PolityStressRow.polity_entity_id)
+        .limit(PLAN_LINES)
+    ):
+        found.append(
+            f"realm {realm.name} (polity {realm.id}) is in {words(stress.phase.value)}: stress {stress.psi}, "
+            f"{stress.aspirants} aspirants for {stress.positions} posts, fiscal strain {stress.fiscal_distress}"
+        )
     return found

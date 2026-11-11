@@ -2473,9 +2473,17 @@ CYCLE_EDITS: Mapping[str, Mapping[str, Any]] = {
     "camp:edit": {"mode": "transhumant", "season_index": 0, "herd": 300, "grazing": 60, "water": 40},
     "confederation:edit": {"name": "The Bound Camps", "leader_entity_id": Pick(MORTAL, 1), "dissolved_epoch": 1},
     "legacy:edit": {"predecessor_entity_id": Pick(PEOPLE, 1)},
-    "indenture:edit": {"employer_node_id": Pick(TOWN, 1), "regime": "peonage", "count": 20, "term_epochs": 4, "debt": 80, "exploitation": 60},
+    "indenture:edit": {
+        "employer_node_id": Pick(TOWN, 1),
+        "regime": "peonage",
+        "count": 20,
+        "term_epochs": 4,
+        "debt": 80,
+        "exploitation": 60,
+        "origin_entity_id": Pick(PEOPLE),
+    },
     "slave_market:edit": {"price": 35, "stock": 10, "sold": 2, "open": False},
-    "manumission:edit": {"count": 7, "path": "purchase"},
+    "manumission:edit": {"count": 7, "path": "purchase", "standing": 65, "origin_entity_id": Pick(PEOPLE)},
 }
 EDITS = {**EDITS, **CYCLE_EDITS}
 LEVERS.update(
@@ -2516,7 +2524,7 @@ LEVERS.update(
         },
         "legacy:set": given(people_id=Pick(PEOPLE), kind="martial_style", key="phalanx", predecessor_id=Pick(PEOPLE, 1)),
         **{name: after(LEGACY, **LEGACY_KEY) for name in ("legacy:edit", "legacy:delete")},
-        "indenture:create": given(community_id=Pick(TOWN)),
+        "indenture:create": given(community_id=Pick(TOWN), origin_id=Pick(PEOPLE)),
         **{name: after(BOND, indenture_id=Newest("indenture")) for name in ("indenture:edit", "indenture:release", "indenture:delete")},
         "slave_market:set": given(town_id=Pick(TOWN)),
         **{name: after(MARKET, town_id=Pick(TOWN)) for name in ("slave_market:edit", "slave_market:delete")},

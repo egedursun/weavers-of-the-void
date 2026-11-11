@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
-from aerona.db.tables.cycles import IndentureRow, SlaveMarketRow
+from aerona.db.tables.collective import DiasporaRow
+from aerona.db.tables.cycles import IndentureRow, ManumissionRow, SlaveMarketRow
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
@@ -17,7 +18,7 @@ from aerona.domain.enums.cycles import LabourRegime, ManumissionPath
 from aerona.domain.enums.demography import AgeBand, Job
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
-from aerona.domain.enums.mind import ValueAxis, ValueHolder
+from aerona.domain.enums.mind import ActKind, ValueAxis, ValueHolder
 from aerona.domain.enums.polity import DebtRemedy, LawKind
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import SocialClass
@@ -35,6 +36,8 @@ from aerona.engine.demography.events import captive_origins
 from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.mind.book import stored_values
+from aerona.engine.mind.ethics import ethic_reading
+from aerona.engine.mind.hooks import judged
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
 from aerona.engine.polity.regard import value_distance
@@ -61,6 +64,9 @@ class BondageTally:
     markets: int = 0
     sold: int = 0
     revolts: int = 0
+    refused: int = 0
+    contracted: int = 0
+    equal: int = 0
 
 
 async def active_work(ctx: TickContext, work_id: int) -> ConstructionRow | None:
@@ -84,6 +90,14 @@ async def remember_suffering(ctx: TickContext, town: EntityRow, row: CorveeRow, 
     )
 
 
+async def forced_labour_reading(ctx: TickContext, polity: EntityRow, seat: EntityRow) -> int:
+    people = await people_of(ctx.session, seat)
+    if people is None:
+        return await ethic_reading(ctx.session, ctx.rules, polity.id, ActKind.FORCED_LABOUR, {})
+    values = await stored_values(ctx.session, ValueHolder.CULTURE, people.id)
+    return await ethic_reading(ctx.session, ctx.rules, people.id, ActKind.FORCED_LABOUR, values)
+
+
 async def lay_corvees(ctx: TickContext, tally: BondageTally) -> None:
     table = ctx.rules.corvee
     for polity, _ in await polities(ctx.session):
@@ -102,7 +116,18 @@ async def lay_corvees(ctx: TickContext, tally: BondageTally) -> None:
                 break
         if great is None:
             continue
+        work = await ctx.session.get(EntityRow, great.structure_entity_id)
+        if await forced_labour_reading(ctx, polity, towns[0]) < table.unthinkable_at:
+            tally.refused += 1
+            await note(
+                ctx,
+                f"{polity.name} would not force its folk to labour on {work.name if work else 'a great work'}; its people hold forced labour unthinkable.",
+                key="corvee.refused",
+                ids=[polity.id],
+            )
+            continue
         laid = 0
+        summoned: list[int] = []
         for town in towns:
             if held(town.id) or await ctx.session.get(CorveeRow, town.id) is not None:
                 continue
@@ -118,12 +143,13 @@ async def lay_corvees(ctx: TickContext, tally: BondageTally) -> None:
                 )
             )
             laid += 1
+            summoned.append(town.id)
         if laid:
             tally.corvee_laid += laid
-            work = await ctx.session.get(EntityRow, great.structure_entity_id)
             await note(
                 ctx, f"{polity.name} summoned {laid} towns to forced labour on {work.name if work else 'a great work'}.", key="corvee.laid", ids=[polity.id]
             )
+            await judged(ctx, polity.id, summoned[0], ActKind.FORCED_LABOUR, note=f"forced labour on {work.name if work else 'a great work'}")
 
 
 async def work_corvees(ctx: TickContext, tally: BondageTally) -> None:
@@ -212,6 +238,54 @@ async def bind_debtors(ctx: TickContext, tally: BondageTally) -> None:
         tally.indentured += count
         word = "debt peonage" if regime is LabourRegime.PEONAGE else "indenture"
         await note(ctx, f"{count} of the poor of {town.name} were bound into {word}.", key="indenture.bound", ids=[town.id])
+
+
+async def contract_exploitation(ctx: TickContext, town: EntityRow, newcomers: EntityRow) -> int:
+    table = ctx.rules.indenture
+    hosts = await people_of(ctx.session, town)
+    mine = await stored_values(ctx.session, ValueHolder.CULTURE, hosts.id) if hosts is not None else {}
+    theirs = await stored_values(ctx.session, ValueHolder.CULTURE, newcomers.id)
+    greed = mine.get(ValueAxis.WEALTH, 0) * table.greed_weight / PERCENT
+    return clamp_int(table.exploitation_base + greed + value_distance(mine, theirs) * table.foreign_weight / PERCENT, 0, PERCENT)
+
+
+async def bind_migrants(ctx: TickContext, tally: BondageTally) -> None:
+    table = ctx.rules.indenture
+    statement = select(DiasporaRow).where(DiasporaRow.population > 0).order_by(DiasporaRow.host_entity_id, DiasporaRow.people_entity_id)
+    for row in list(await ctx.session.scalars(statement)):
+        town = await living_entity(ctx.session, row.host_entity_id)
+        newcomers = await living_entity(ctx.session, row.people_entity_id)
+        if town is None or newcomers is None or town.entity_type is not EntityType.SETTLEMENT or held(town.id, newcomers.id):
+            continue
+        bound = await ctx.session.scalar(
+            select(IndentureRow.id).where(IndentureRow.community_entity_id == town.id, IndentureRow.origin_entity_id == newcomers.id).limit(1)
+        )
+        if bound is not None or not ctx.rng(f"indenture.migrants.{town.id}.{newcomers.id}.{ctx.epoch}").chance(table.migrant_pct):
+            continue
+        count = round_half_up(row.population * table.migrant_share_pct / PERCENT)
+        if count <= 0:
+            continue
+        ctx.session.add(
+            IndentureRow(
+                community_entity_id=town.id,
+                employer_node_id=await employer_in(ctx, town),
+                regime=LabourRegime.INDENTURE,
+                count=count,
+                term_epochs=table.term_epochs,
+                debt=count * table.debt_per_head,
+                exploitation=await contract_exploitation(ctx, town, newcomers),
+                origin_entity_id=newcomers.id,
+                since_epoch=ctx.epoch,
+                locked=[],
+            )
+        )
+        tally.contracted += count
+        await note(
+            ctx,
+            f"{count} newcomers of {newcomers.name} in {town.name} signed contracts of labour for their keep.",
+            key="indenture.contracted",
+            ids=[town.id, newcomers.id],
+        )
 
 
 async def serve_terms(ctx: TickContext, tally: BondageTally) -> None:
@@ -399,11 +473,29 @@ async def slave_risings(ctx: TickContext, tally: BondageTally) -> None:
         await note(ctx, f"The rising of {faction.name} broke the chains of {freed} in {town.name}.", key="manumission.revolt", ids=[faction.id, town.id])
 
 
+async def raise_freed(ctx: TickContext, tally: BondageTally) -> None:
+    table = ctx.rules.manumission
+    for row in list(await ctx.session.scalars(select(ManumissionRow).where(ManumissionRow.standing < PERCENT).order_by(ManumissionRow.id))):
+        town = await living_entity(ctx.session, row.community_entity_id)
+        if town is None or held(town.id) or "standing" in row.locked:
+            continue
+        people = await people_of(ctx.session, town)
+        values = await stored_values(ctx.session, ValueHolder.CULTURE, people.id) if people is not None else {}
+        drag = max(0, values.get(ValueAxis.HIERARCHY, 0)) * table.hierarchy_drag / PERCENT
+        row.standing = min(PERCENT, row.standing + max(1, round_half_up(table.standing_rise * (PERCENT - drag) / PERCENT)))
+        if row.standing < PERCENT:
+            continue
+        tally.equal += row.count
+        await note(ctx, f"The {row.count} freed of {town.name} now stand as equals among the freeborn.", key="manumission.equal", ids=[town.id])
+
+
 async def keep_bondage(ctx: TickContext, tally: BondageTally) -> None:
     await lay_corvees(ctx, tally)
     await work_corvees(ctx, tally)
     await bind_debtors(ctx, tally)
+    await bind_migrants(ctx, tally)
     await serve_terms(ctx, tally)
     await keep_markets(ctx, tally)
     await slave_risings(ctx, tally)
+    await raise_freed(ctx, tally)
     await ctx.session.flush()

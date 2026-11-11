@@ -467,7 +467,7 @@ async def choose_path(ctx: TickContext, mortal: EntityRow, profile: MortalProfil
     needs = await needs_of(ctx.session, mortal.id)
     scores: dict[CareerPath, float] = {}
     for path in sorted(await openings(ctx, mortal, profile)):
-        if not await career_open(ctx.session, mortal, path):
+        if not await career_open(ctx.session, ctx.rules, mortal, path):
             continue
         if path is CareerPath.STAY:
             scores[path] = table.stay_score + needs.get(NeedKind.PURPOSE, FULL // 2) / 4

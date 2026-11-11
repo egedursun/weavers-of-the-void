@@ -15,6 +15,7 @@ import {
   Home,
   Landmark,
   Link,
+  Pickaxe,
   Snowflake,
   Store,
   Swords,
@@ -155,6 +156,11 @@ export const ACTS: Record<ActKind, LoreNamed> = {
   abandoning_elders: {
     label: 'Leaving the old to fend alone',
     icon: DoorOpen,
+    tone: 'danger',
+  },
+  forced_labour: {
+    label: 'Forcing folk to labour unpaid',
+    icon: Pickaxe,
     tone: 'danger',
   },
 }

@@ -40,6 +40,8 @@ class NomadTally:
     settled: int = 0
     tributes: int = 0
     raids: int = 0
+    trades: int = 0
+    rerouted: int = 0
     confederations: int = 0
     fragmented: int = 0
 
@@ -63,8 +65,9 @@ def water_of(region: RegionEnvironmentRow | None) -> int:
     return clamp_int((region.moisture + region.rainfall) / 2, 0, PERCENT)
 
 
-async def circuit_for(ctx: TickContext, atlas: RegionAtlas, region_id: int, mode: MobilityMode) -> list[int]:
-    length = ctx.rules.nomadism.circuit_stops if mode is MobilityMode.NOMADIC else TRANSHUMANT_STOPS
+async def circuit_for(ctx: TickContext, atlas: RegionAtlas, region_id: int, mode: MobilityMode, herd: int = 0) -> list[int]:
+    table = ctx.rules.nomadism
+    length = table.circuit_stops + min(table.circuit_stops, herd // max(1, table.herd_scale)) if mode is MobilityMode.NOMADIC else TRANSHUMANT_STOPS
     scored = []
     for near in atlas.neighbours(region_id):
         scored.append((pasture(await ctx.session.get(RegionEnvironmentRow, near)) + water_of(await ctx.session.get(RegionEnvironmentRow, near)), near))
@@ -93,7 +96,7 @@ async def found_camps(ctx: TickContext, atlas: RegionAtlas, tally: NomadTally) -
             CampRow(
                 settlement_entity_id=town.id,
                 mode=mode,
-                circuit=await circuit_for(ctx, atlas, region, mode),
+                circuit=await circuit_for(ctx, atlas, region, mode, round_half_up(population_of(town) * table.herd_per_dweller / PERCENT)),
                 season_index=0,
                 herd=round_half_up(population_of(town) * table.herd_per_dweller / PERCENT),
                 grazing=pasture(ground),
@@ -117,6 +120,19 @@ async def graze(ctx: TickContext, camp: CampRow, region: RegionEnvironmentRow | 
         camp.herd = clamp_int(camp.herd * (1 + growth / PERCENT), 0, 10**9)
     if region is not None and not held(region.entity_id):
         shift(region, "grazed", camp.herd * table.graze_pressure / max(1, table.herd_scale))
+
+
+async def reroute(ctx: TickContext, atlas: RegionAtlas, town: EntityRow, camp: CampRow, tally: NomadTally) -> None:
+    if camp.grazing >= ctx.rules.nomadism.reroute_at or "circuit" in camp.locked or not camp.circuit:
+        return
+    here = camp.circuit[camp.season_index % len(camp.circuit)]
+    fresh = await circuit_for(ctx, atlas, here, camp.mode, camp.herd)
+    if fresh == camp.circuit:
+        return
+    camp.circuit = fresh
+    camp.season_index = 0
+    tally.rerouted += 1
+    await note(ctx, f"With its pastures grazed bare, {town.name} set out on a new round of {len(fresh)} pastures.", key="nomads.rerouted", ids=[town.id])
 
 
 async def move(ctx: TickContext, town: EntityRow, camp: CampRow, tally: NomadTally) -> None:
@@ -207,6 +223,20 @@ async def press(ctx: TickContext, atlas: RegionAtlas, town: EntityRow, camp: Cam
             await change_relation(ctx, other.id, town.id, -table.raid_relation, MemoryKind.HARMED_ME, note="raided by riders")
             tally.raids += 1
             await note(ctx, f"Riders of {town.name} raided {other.name} and rode off with {taken} in plunder.", key="nomads.raid", ids=[town.id, other.id])
+            continue
+        if ctx.rng(f"nomads.trade.{town.id}.{other.id}.{ctx.epoch}").chance(table.trade_pct):
+            await trade(ctx, town, camp, other, tally)
+
+
+async def trade(ctx: TickContext, town: EntityRow, camp: CampRow, other: EntityRow, tally: NomadTally) -> None:
+    table = ctx.rules.nomadism
+    worth = min(await coin_of(ctx.session, ctx.rules, other), round_half_up(camp.herd * table.trade_per_herd / PERCENT))
+    if worth <= 0 or not await take_coin(ctx.session, ctx.rules, other, worth):
+        return
+    await receive_coin(ctx.session, ctx.rules, town, worth)
+    await change_relation(ctx, other.id, town.id, table.trade_regard, MemoryKind.TRADED_WITH, note="trade with the riders")
+    tally.trades += 1
+    await note(ctx, f"The camp of {town.name} traded the yield of its herds with {other.name} for {worth}.", key="nomads.trade", ids=[town.id, other.id])
 
 
 async def charismatic(ctx: TickContext, town: EntityRow) -> EntityRow | None:
@@ -273,6 +303,7 @@ async def keep_nomads(ctx: TickContext, tally: NomadTally) -> None:
         await settle_or_roam(ctx, town, camp, tally)
         if camp.mode not in MOVING:
             continue
+        await reroute(ctx, atlas, town, camp, tally)
         await move(ctx, town, camp, tally)
         region = camp.circuit[camp.season_index % len(camp.circuit)] if camp.circuit else atlas.top_region(town.id)
         await graze(ctx, camp, await ctx.session.get(RegionEnvironmentRow, region) if region is not None else None)

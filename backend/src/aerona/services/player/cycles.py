@@ -295,6 +295,7 @@ class IndentureDraft(Command):
     debt: int = Field(default=50, ge=0, le=MANY)
     exploitation: int = Field(default=30, ge=0, le=SPAN)
     employer_id: int | None = None
+    origin_id: int | None = None
 
 
 class IndentureTarget(Command):
@@ -703,6 +704,7 @@ async def indenture_create(scope: PlayerScope, command: IndentureDraft) -> Effec
         debt=command.debt,
         exploitation=command.exploitation,
         employer_id=command.employer_id,
+        origin_id=command.origin_id,
     )
     return Effect(f"{row.count} are bound in labour.", command.community_id, values={"indenture_id": row.id})
 

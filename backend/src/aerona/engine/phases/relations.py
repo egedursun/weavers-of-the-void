@@ -31,6 +31,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
 
 
 @reads(
+    "item.protection",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
@@ -56,6 +57,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.deeds",
     "table.divine_wounds",
     "table.entity_flags",
+    "table.entity_tags",
     "table.faction_memberships",
     "table.favours",
     "table.genomes",

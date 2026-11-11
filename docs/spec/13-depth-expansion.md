@@ -2168,7 +2168,7 @@ Every named mortal **dreams** in aggregate per sampled year (`dreams`: dreamer, 
 
 `culture_ethics` table: culture or cult, act kind, stance.
 
-- **ActKinds** (about 40): killing_kin, killing_outsider, killing_in_war, killing_captive, theft, oath_breaking, lying, slavery, torture, mutilation_punishment, human_sacrifice, animal_sacrifice, cannibalism, eating_sapients, adultery, incest_degree, polygamy, usury, desecration, necromancy, blood_magic, void_magic, magic_use, suicide, infanticide, abandoning_elders, ancestor_neglect, trade_with_infidels, conversion_by_force, iconoclasm, duel_to_death, revenge_killing, mercy_to_enemy, cowardice, hoarding_in_famine, abduction, bribery, treason, regicide, kin_strife.
+- **ActKinds** (about 40): killing_kin, killing_outsider, killing_in_war, killing_captive, theft, oath_breaking, lying, slavery, torture, mutilation_punishment, human_sacrifice, animal_sacrifice, cannibalism, eating_sapients, adultery, incest_degree, polygamy, usury, desecration, necromancy, blood_magic, void_magic, magic_use, suicide, infanticide, abandoning_elders, ancestor_neglect, trade_with_infidels, conversion_by_force, iconoclasm, duel_to_death, revenge_killing, mercy_to_enemy, cowardice, hoarding_in_famine, abduction, bribery, treason, regicide, kin_strife, forced_labour (read when a realm summons its towns to a corvée, 4.9 RP4).
 - **Stance ladder:** required → admirable → acceptable → frowned_upon → shameful → unthinkable. Each step maps to typed effects:
   - opinion deltas toward the actor;
   - renown or infamy, local (F19);

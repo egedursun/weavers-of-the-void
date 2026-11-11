@@ -363,6 +363,7 @@ class ActKind(StrEnum):
     USURY = "usury"
     INFANTICIDE = "infanticide"
     ABANDONING_ELDERS = "abandoning_elders"
+    FORCED_LABOUR = "forced_labour"
 
 
 class NeedKind(StrEnum):

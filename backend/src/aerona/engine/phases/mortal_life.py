@@ -310,6 +310,7 @@ async def mortal_standing(ctx: TickContext) -> None:
     "table.injuries",
     "table.item_profiles",
     "table.law_jurisdictions",
+    "table.manumissions",
     "table.memories",
     "table.mind_attributes",
     "table.mind_facets",

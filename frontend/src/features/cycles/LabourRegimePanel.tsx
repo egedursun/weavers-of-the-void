@@ -6,6 +6,7 @@ import {
   ScrollText,
   ShoppingBag,
   Unlock,
+  UserRoundCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { KpiTile } from '@/components/domain'
@@ -26,6 +27,10 @@ import { StepButton } from './parts'
 type Indenture = CyclesView['indentures'][number]
 type Market = NonNullable<CyclesView['market']>
 type Freeing = CyclesView['manumissions'][number]
+
+function standingLabel(standing: number): string {
+  return standing >= SPAN ? 'equals of the freeborn' : `standing ${standing}`
+}
 
 const NOT_COMMUNITY = 'Bonds and freedoms are kept by a town or a people'
 const NOT_TOWN = 'Only a settlement holds a market'
@@ -62,7 +67,7 @@ function IndentureCard({
       }
       removeLabel='Strike the bond'
       editTitle='Set the bond'
-      note='The bound work off their debt, slower the more they are exploited; a greedy employer can make the debt unpayable. Bondage makes the poor miserable, keeps them from leaving and readies them to rise.'
+      note='The bound work off their debt, slower the more they are exploited; a greedy employer can make the debt unpayable. Newcomers sign contracts for their keep, and the further their ways from their hosts the harder the terms. Bondage makes the poor miserable, keeps them from leaving and readies them to rise.'
       fields={[
         {
           key: 'employer_node_id',
@@ -80,6 +85,12 @@ function IndentureCard({
           kind: 'number',
           min: 0,
           max: SPAN,
+        },
+        {
+          key: 'origin_entity_id',
+          label: 'Newcomers of',
+          kind: 'node',
+          types: ['people'],
         },
       ]}
       locked={row.locked}
@@ -101,6 +112,14 @@ function IndentureCard({
             <Ref key='employer' node={row.employer} empty='the town itself' />,
           ],
           ['Debt', row.debt],
+          [
+            'Bound by',
+            row.origin ? (
+              <Ref key='origin' node={row.origin} empty='debt' />
+            ) : (
+              'debt'
+            ),
+          ],
         ]}
       />
       <StepButton
@@ -127,6 +146,7 @@ function IndentureForge({
   const [debt, setDebt] = useState('100')
   const [exploitation, setExploitation] = useState('30')
   const [employer, setEmployer] = useState<number | null>(null)
+  const [origin, setOrigin] = useState<number | null>(null)
   const binding = useCycleAction(
     'indenture:create',
     (_: void) => ({
@@ -136,6 +156,7 @@ function IndentureForge({
       debt: clamp(debt, MANY),
       exploitation: clamp(exploitation),
       employer_id: employer,
+      origin_id: origin,
     }),
     'They are bound'
   )
@@ -145,7 +166,7 @@ function IndentureForge({
       icon={ScrollText}
       tone='warning'
       title='Bind labourers'
-      note='For a term, or until a debt is paid.'
+      note='For a term, or until a debt is paid; name a people to bind its newcomers by contract.'
       columns={4}
       action={
         <Button
@@ -194,6 +215,13 @@ function IndentureForge({
         onChange={setEmployer}
         blocked={busy}
         types={['faction', 'settlement', 'mortal', 'house', 'polity']}
+      />
+      <NodePicker
+        label='Newcomers of'
+        value={origin}
+        onChange={setOrigin}
+        blocked={busy}
+        types={['people']}
       />
     </ForgeCard>
   )
@@ -326,10 +354,10 @@ function FreeingRow({
       icon={path.icon}
       tone={path.tone}
       title={`${row.count} freed, ${path.label.toLowerCase()}`}
-      caption={`Epoch ${row.epoch}`}
+      caption={`Epoch ${row.epoch} · ${standingLabel(row.standing)}`}
       removeLabel='Strike from the record'
       editTitle='Set the freeing'
-      note='Those freed by purchase or service rise as craftsfolk; risings feed the abolition movement.'
+      note='Those freed by purchase or service rise as craftsfolk. The freed start below the freeborn: their low standing sours their satisfaction and keeps them from office and the priesthood until it rises, slower where hierarchy is prized. Freed captives stay a community of their own origin in the town. Risings feed the abolition movement.'
       fields={[
         { key: 'count', label: 'Freed', kind: 'number', min: 0 },
         {
@@ -338,12 +366,38 @@ function FreeingRow({
           kind: 'pick',
           table: table(PATHS),
         },
+        {
+          key: 'standing',
+          label: 'Standing among the free',
+          kind: 'number',
+          min: 0,
+          max: SPAN,
+        },
+        {
+          key: 'origin_entity_id',
+          label: 'Folk of',
+          kind: 'node',
+          types: ['people'],
+        },
       ]}
-      locked={[]}
+      locked={row.locked}
       blocked={action.busy}
       onEdit={action.onEdit}
       onRemove={action.onRemove}
-    />
+    >
+      <Meter
+        label='Standing among the free'
+        value={row.standing}
+        max={SPAN}
+        tone='success'
+        icon={UserRoundCheck}
+      />
+      <Facts
+        items={[
+          ['Folk of', <Ref key='origin' node={row.origin} empty='this town' />],
+        ]}
+      />
+    </Held>
   )
 }
 

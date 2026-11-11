@@ -22,6 +22,7 @@ from aerona.domain.enums.environment import ScarKind, SoilKind, TerrainKind
 from aerona.domain.enums.region import DangerHarm, DangerOrigin, DangerSource
 from aerona.engine.cosmos.kinds import PHENOMENON_MECHANICS
 from aerona.engine.cosmos.placement import cosmography_of
+from aerona.engine.cycles.hospitality import circuit_stops
 from aerona.engine.ecology.ranges import wildness
 from aerona.engine.environment.memory import darkness
 from aerona.engine.primitives.distance import RegionAtlas
@@ -223,6 +224,11 @@ async def _bandits(session: AsyncSession, rules: Rules, scene: DangerScene, epoc
         region = scene.atlas.top_region(community_id)
         if region is not None:
             welcomed[region] += 1
+    circuits: dict[int, int] = defaultdict(int)
+    for stop in await circuit_stops(session):
+        region = scene.atlas.top_region(stop)
+        if region is not None:
+            circuits[region] += 1
     for region_id, ground in scene.grounds.items():
         slot = scene.slot(region_id, DangerSource.BANDITS)
         if slot is None:
@@ -230,7 +236,8 @@ async def _bandits(session: AsyncSession, rules: Rules, scene: DangerScene, epoc
         if scene.atlas.communities_in(region_id):
             slot.add((PERCENT - control[region_id]) * table.bandits_lawless_pct / PERCENT)
         slot.add(ground.scars.get(ScarKind.BATTLEFIELD.value, 0) * table.bandits_battlefield_pct / PERCENT)
-        slot.strength = max(0.0, slot.strength - welcomed[region_id] * rules.traditions.hospitality_danger)
+        welcome = welcomed[region_id] * rules.traditions.hospitality_danger + circuits[region_id] * rules.ceremonial_circuits.hospitality_danger
+        slot.strength = max(0.0, slot.strength - welcome)
 
 
 def _ground(rules: Rules, scene: DangerScene) -> None:

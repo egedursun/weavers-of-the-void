@@ -64,6 +64,15 @@ async def scholars_of(ctx: TickContext, holder_id: int) -> list[EntityRow]:
     return found[: ctx.rules.discovery.incident_victims]
 
 
+async def plague_site(ctx: TickContext, holder: EntityRow) -> EntityRow | None:
+    if holder.entity_type in COMMUNITY_TYPES:
+        return holder
+    place = await ctx.session.get(EntityRow, holder.location_id) if holder.location_id is not None else None
+    if place is None or place.status is not EntityStatus.CANON or held(place.id):
+        return None
+    return place if place.entity_type in {EntityType.REGION, *COMMUNITY_TYPES} else None
+
+
 async def strike(
     ctx: TickContext, holder: EntityRow, kind: ResearchIncident, *, technique: Technique | None = None, branch: KnowledgeBranch | None = None
 ) -> ResearchIncidentRow:
@@ -102,8 +111,9 @@ async def strike(
         if species is not None and kind is ResearchIncident.RELEASED_BEAST:
             await spawn_beast(ctx, species)
         shift_stat(region, "danger", round_half_up(table.incident_danger * severity / PERCENT))
-    if kind is ResearchIncident.PLAGUE:
-        await loose(ctx, holder.id, disease_id=None, severity=severity, son_id=None)
+    site = await plague_site(ctx, holder) if kind is ResearchIncident.PLAGUE else None
+    if site is not None:
+        await loose(ctx, site.id, disease_id=None, severity=severity, son_id=None)
     if kind is ResearchIncident.BACKLASH and region is not None:
         await phenomenon(ctx, region)
     subject = TECHNIQUES[technique].label.lower() if technique is not None else (branch.value.replace("_", " ") if branch is not None else "their work")

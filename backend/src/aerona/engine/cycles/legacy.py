@@ -5,17 +5,22 @@ from sqlalchemy import select
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.db.tables.collective import AccountStanceRow, FoundingMythRow
+from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.cycles import LegacyTraitRow
 from aerona.db.tables.demography import PeopleCultureRow
+from aerona.db.tables.discovery import ArtFormProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.collective import AccountStance
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.cycles import LegacyKind
 from aerona.domain.enums.demography import Aesthetic, FuneralCustom, MartialStyle
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.engine.context import TickContext
+from aerona.engine.divine.gods import divine_of
+from aerona.engine.lore.art_forms import practise
 from aerona.engine.mind.book import stored_values, write_values
 from aerona.engine.notes import note
 from aerona.engine.primitives.faith import living_patron
@@ -31,12 +36,17 @@ class LegacyTally:
     myths: int = 0
 
 
-async def predecessors(ctx: TickContext, people: EntityRow) -> list[EntityRow]:
-    found = []
+async def predecessors(ctx: TickContext, people: EntityRow) -> list[tuple[EntityRow, int]]:
+    table = ctx.rules.legacy_traits
+    found: list[tuple[EntityRow, int]] = []
     for bond in await active_bonds(ctx.session, [BondKind.DESCENDS_FROM], sources=[people.id]):
         other = await ctx.session.get(EntityRow, bond.target_node_id)
         if other is not None and other.entity_type is EntityType.PEOPLE and other.id != people.id:
-            found.append(other)
+            found.append((other, table.keep_pct))
+    for bond in await active_bonds(ctx.session, [BondKind.PART_OF], targets=[people.id]):
+        other = await ctx.session.get(EntityRow, bond.source_node_id)
+        if other is not None and other.entity_type is EntityType.PEOPLE and other.id != people.id:
+            found.append((other, table.absorbed_keep_pct))
     return found
 
 
@@ -60,19 +70,48 @@ async def legacy_key(ctx: TickContext, kind: LegacyKind, people: EntityRow, pred
     if kind is LegacyKind.BELIEF:
         patron = await living_patron(ctx.session, predecessor)
         return str(patron.id) if patron is not None else None
+    if kind is LegacyKind.INNOVATION:
+        mine = set(await ctx.session.scalars(select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == people.id)))
+        theirs = await ctx.session.scalars(
+            select(HolderTechniqueRow.technique).where(HolderTechniqueRow.holder_entity_id == predecessor.id).order_by(HolderTechniqueRow.technique)
+        )
+        return next((technique.value for technique in theirs if technique not in mine), None)
+    if kind is LegacyKind.ART_FORM:
+        form = await ctx.session.scalar(
+            select(ArtFormProfileRow.art_form_entity_id)
+            .where(ArtFormProfileRow.origin_culture_id == predecessor.id)
+            .order_by(ArtFormProfileRow.art_form_entity_id)
+            .limit(1)
+        )
+        return str(form) if form is not None else None
     axis = strongest(await stored_values(ctx.session, ValueHolder.CULTURE, predecessor.id))
     return axis.value if axis is not None else None
 
 
 async def apply_legacy(ctx: TickContext, kind: LegacyKind, people: EntityRow, predecessor: EntityRow, key: str) -> None:
     if kind in CULTURE_FIELDS:
+        custom = CULTURE_ENUMS[kind](key)
         culture = await ctx.session.get(PeopleCultureRow, people.id)
         field = CULTURE_FIELDS[kind]
         if culture is not None and field not in culture.locked:
-            setattr(culture, field, CULTURE_ENUMS[kind](key))
+            setattr(culture, field, custom)
         return
     if kind is LegacyKind.BELIEF:
-        await connect(ctx.session, people.id, int(key), BondKind.WORSHIPS, ctx.epoch, description=f"kept from {predecessor.name}")
+        god = await divine_of(ctx.session, int(key))
+        if god is None:
+            raise KeyError(key)
+        await connect(ctx.session, people.id, god.id, BondKind.WORSHIPS, ctx.epoch, description=f"kept from {predecessor.name}")
+        return
+    if kind is LegacyKind.INNOVATION:
+        technique = Technique(key)
+        if await ctx.session.get(HolderTechniqueRow, (people.id, technique)) is None:
+            ctx.session.add(HolderTechniqueRow(holder_entity_id=people.id, technique=technique, since_epoch=ctx.epoch, secret=False))
+        return
+    if kind is LegacyKind.ART_FORM:
+        form = await ctx.session.get(ArtFormProfileRow, int(key))
+        if form is None:
+            raise KeyError(key)
+        await practise(ctx, form.art_form_entity_id, people.id, ctx.rules.legacy_traits.art_mastery)
         return
     axis = ValueAxis(key)
     theirs = await stored_values(ctx.session, ValueHolder.CULTURE, predecessor.id)
@@ -92,12 +131,11 @@ async def remember_in_myth(ctx: TickContext, people: EntityRow, predecessor: Ent
     tally.myths += 1
 
 
-async def inherit(ctx: TickContext, people: EntityRow, predecessor: EntityRow, tally: LegacyTally) -> None:
-    table = ctx.rules.legacy_traits
+async def inherit(ctx: TickContext, people: EntityRow, predecessor: EntityRow, keep_pct: int, tally: LegacyTally) -> None:
     done = await kept(ctx, people.id, predecessor.id)
     carried: list[str] = []
     for kind in LegacyKind:
-        if kind in done or not SeededRandom.for_epoch(people.id, predecessor.id, f"legacy.{kind.value}").chance(table.keep_pct):
+        if kind in done or not SeededRandom.for_epoch(people.id, predecessor.id, f"legacy.{kind.value}").chance(keep_pct):
             continue
         key = await legacy_key(ctx, kind, people, predecessor)
         if key is None or await ctx.session.get(LegacyTraitRow, (people.id, kind, key)) is not None:
@@ -118,6 +156,6 @@ async def keep_legacies(ctx: TickContext, tally: LegacyTally) -> None:
     for people in list(peoples):
         if held(people.id):
             continue
-        for predecessor in await predecessors(ctx, people):
-            await inherit(ctx, people, predecessor, tally)
+        for predecessor, keep_pct in await predecessors(ctx, people):
+            await inherit(ctx, people, predecessor, keep_pct, tally)
     await ctx.session.flush()

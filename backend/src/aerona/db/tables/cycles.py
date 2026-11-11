@@ -49,12 +49,12 @@ REPRODUCTION_FIELDS = ("system", "change_age", "breeder_pct", "soldier_pct", "wo
 CASTE_FIELDS = ("caste",)
 CAMP_FIELDS = ("mode", "season_index", "herd", "grazing", "water")
 CONFEDERATION_FIELDS = ("name", "leader_entity_id", "dissolved_epoch")
-INDENTURE_FIELDS = ("employer_node_id", "regime", "count", "term_epochs", "debt", "exploitation")
+INDENTURE_FIELDS = ("employer_node_id", "regime", "count", "term_epochs", "debt", "exploitation", "origin_entity_id")
 MARKET_FIELDS = ("price", "stock", "sold", "open")
 READING_FIELDS = ("pressure", "immiseration", "elite_overproduction", "fiscal_distress", "psi", "phase")
 CHALLENGE_FIELDS = ("kind", "severity", "response", "source_node_id")
 LEGACY_FIELDS = ("predecessor_entity_id",)
-MANUMISSION_FIELDS = ("count", "path")
+MANUMISSION_FIELDS = ("count", "path", "standing", "origin_entity_id")
 
 
 class PolityStressRow(Base):
@@ -346,6 +346,7 @@ class IndentureRow(Base):
     term_epochs: Mapped[int] = mapped_column(default=3)
     debt: Mapped[int] = mapped_column(default=0)
     exploitation: Mapped[int] = mapped_column(default=30)
+    origin_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     since_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
@@ -365,10 +366,18 @@ class SlaveMarketRow(Base):
 
 class ManumissionRow(Base):
     __tablename__ = "manumissions"
-    __table_args__ = (at_least("count", 0), at_least("epoch", 0), Index("ix_manumissions_community", "community_entity_id"))
+    __table_args__ = (
+        at_least("count", 0),
+        between("standing", PERCENT_MIN, PERCENT_MAX),
+        at_least("epoch", 0),
+        Index("ix_manumissions_community", "community_entity_id"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     community_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
     count: Mapped[int] = mapped_column(default=0)
     path: Mapped[ManumissionPath] = mapped_column(enum_type(ManumissionPath, "path"))
+    standing: Mapped[int] = mapped_column(default=40)
+    origin_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     epoch: Mapped[int] = mapped_column(default=0)
+    locked: Mapped[list[str]] = mapped_column(JSON, default=list)

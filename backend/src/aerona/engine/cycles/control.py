@@ -358,11 +358,22 @@ async def set_legacy(ctx: TickContext, people_id: int, kind: LegacyKind, key: st
 
 
 async def new_indenture(
-    ctx: TickContext, community_id: int, regime: LabourRegime, *, count: int, term_epochs: int, debt: int, exploitation: int, employer_id: int | None
+    ctx: TickContext,
+    community_id: int,
+    regime: LabourRegime,
+    *,
+    count: int,
+    term_epochs: int,
+    debt: int,
+    exploitation: int,
+    employer_id: int | None,
+    origin_id: int | None = None,
 ) -> IndentureRow:
     await of_type(ctx, community_id, COMMUNITIES, "a town or people")
     if employer_id is not None:
         await node_exists(ctx, employer_id, "employer")
+    if origin_id is not None:
+        await of_type(ctx, origin_id, PEOPLES, "a people")
     row = IndentureRow(
         community_entity_id=community_id,
         employer_node_id=employer_id,
@@ -371,6 +382,7 @@ async def new_indenture(
         term_epochs=max(0, term_epochs),
         debt=max(0, debt),
         exploitation=max(0, min(PERCENT, exploitation)),
+        origin_entity_id=origin_id,
         since_epoch=ctx.epoch,
         locked=[],
     )

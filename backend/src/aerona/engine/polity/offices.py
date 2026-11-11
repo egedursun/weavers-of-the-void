@@ -31,7 +31,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.storyteller import SpontaneousKind
 from aerona.domain.enums.war import WarSide
 from aerona.domain.models.entity_stats import FactionStats
-from aerona.engine.collective.roles import role_rank
+from aerona.engine.collective.roles import freed_rank, role_rank
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import stress_factor
 from aerona.engine.interconnect.causes import succession_incident
@@ -361,7 +361,7 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
     eligible = []
     for item in pool:
         rank = gender_rank(gender, item)
-        custom = await role_rank(ctx.session, item, RoleKind.OFFICE)
+        custom = await freed_rank(ctx.session, ctx.rules, item, RoleKind.OFFICE, await role_rank(ctx.session, item, RoleKind.OFFICE))
         if rank is None or custom is None or (wholeness and not await whole(ctx, item)):
             continue
         eligible.append((rank * RANK_SPAN + custom, item))

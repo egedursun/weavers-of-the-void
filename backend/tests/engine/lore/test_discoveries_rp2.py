@@ -320,3 +320,18 @@ async def test_a_technique_of_an_era_the_world_has_entered_comes_faster(session:
     await discovery_control.set_world_era(ctx, realm.world.id, 2, hold=True)
     assert await research_depth.era_known(ctx, home.id, Technique.IRON) == 1 + ctx.rules.research_depth.era_known_pct / 100
     assert await research_depth.era_known(ctx, home.id, Technique.STEEL) == 1.0
+
+
+async def test_every_incident_strikes_every_kind_of_holder_of_a_technique(session: AsyncSession, realm: Realm) -> None:
+    ctx = make_ctx(session, RULES)
+    home = await town(session, realm, "Holder Town")
+    sage = await scholar(session, home, "Ora Venn", SkillKind.LORE, 60)
+    kind_of_life = await make(session, "Deep Kin", EntityType.SPECIES, realm.world.id)
+    holders = [home, sage, kind_of_life]
+    for holder in holders:
+        for kind in ResearchIncident:
+            row = await dangers.strike(ctx, holder, kind, technique=Technique.ALCHEMY)
+            assert row.kind is kind
+    await session.flush()
+    struck = await session.scalar(select(func.count()).select_from(ResearchIncidentRow))
+    assert struck == len(holders) * len(ResearchIncident)

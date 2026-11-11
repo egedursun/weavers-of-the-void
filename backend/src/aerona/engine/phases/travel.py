@@ -982,6 +982,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.incident_participants",
     "table.item_profiles",
     "table.journeys",
+    "table.language_grammar",
     "table.language_intelligibility",
     "table.language_profiles",
     "table.language_registers",

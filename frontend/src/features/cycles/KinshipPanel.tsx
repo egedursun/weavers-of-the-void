@@ -595,7 +595,7 @@ function LegacyCard({
       caption={`Kept since epoch ${row.since_epoch}`}
       removeLabel='Strike the legacy'
       editTitle='Set the legacy'
-      note='A successor people keeps the ways of the people it came from, and names it in its founding myth.'
+      note='A successor people keeps the ways, gods, techniques and arts of the people it came from, and of the peoples it took in, and names them in its founding myth.'
       fields={[
         {
           key: 'predecessor_entity_id',
@@ -652,7 +652,7 @@ function LegacyForge({
       icon={ScrollText}
       tone='gold'
       title='Have them keep a legacy'
-      note='Name a way of war, an aesthetic or a rite by its key, a god by its id, or a value.'
+      note='Name a way of war, an aesthetic or a rite by its key, a god or an art form by its id, a technique by its key, or a value.'
       columns={3}
       action={
         <Button

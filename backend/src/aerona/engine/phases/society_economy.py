@@ -28,7 +28,7 @@ from aerona.domain.models.entity_stats import FactionStats, ItemStats
 from aerona.engine.body.cohorts import labour_factor
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_types import ore_yield_pct
-from aerona.engine.cycles.indenture import bondage_weight
+from aerona.engine.cycles.indenture import bondage_weight, freed_stigma
 from aerona.engine.demography.backfill import society_depth_backfill
 from aerona.engine.demography.basket import (
     Basket,
@@ -265,6 +265,7 @@ def satisfaction_targets(
     *,
     corvee_pct: int = 0,
     bondage_pct: int = 0,
+    freed_pct: int = 0,
 ) -> dict[SocialClass, int]:
     settings = rules.society
     prosperity = inputs.prosperity
@@ -304,6 +305,8 @@ def satisfaction_targets(
         targets[social_class] -= rules.labour.corvee_satisfaction * corvee_pct / PERCENT
     for social_class in (SocialClass.FARMER, SocialClass.OUTCAST):
         targets[social_class] -= rules.labour_regimes.misery * bondage_pct / PERCENT
+    for social_class in (SocialClass.FARMER, SocialClass.ARTISAN):
+        targets[social_class] -= rules.manumission.stigma * freed_pct / PERCENT
     return {social_class: clamp_int(value + shared, 0, PERCENT) for social_class, value in targets.items()}
 
 
@@ -553,6 +556,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
         basket.classes,
         corvee_pct=corvee.share_pct if corvee is not None else 0,
         bondage_pct=await bondage_weight(ctx.session, entity),
+        freed_pct=await freed_stigma(ctx.session, entity),
     )
     society.satisfaction = drift_satisfaction(rules, society.satisfaction, targets)
     apply_class_effects(rules, entity, society)
@@ -648,6 +652,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.injuries",
     "table.item_profiles",
     "table.maimed_cohorts",
+    "table.manumissions",
     "table.market_prices",
     "table.mind_attributes",
     "table.mobility_events",

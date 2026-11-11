@@ -9,6 +9,7 @@ from aerona.domain.enums.culture import TraditionKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.hospitality import circuit_partners
 from aerona.engine.mind.memories import remember
 from aerona.engine.notes import note
 
@@ -96,14 +97,18 @@ async def violated(ctx: TickContext, actor_id: int, act: ActKind) -> int:
     return shamed
 
 
-async def guest_of(session: AsyncSession, victim: EntityRow) -> bool:
-    if victim.entity_type is not EntityType.MORTAL or victim.location_id is None:
-        return False
-    homes = set(
+async def homes_of_guest(session: AsyncSession, victim: EntityRow) -> set[int]:
+    return set(
         await session.scalars(
             select(BondRow.target_node_id).where(BondRow.source_node_id == victim.id, BondRow.kind == BondKind.LIVES_IN, BondRow.state == BondState.ACTIVE)
         )
     )
+
+
+async def guest_of(session: AsyncSession, victim: EntityRow) -> bool:
+    if victim.entity_type is not EntityType.MORTAL or victim.location_id is None:
+        return False
+    homes = await homes_of_guest(session, victim)
     travelling = await session.scalar(
         select(BondRow.id).where(BondRow.source_node_id == victim.id, BondRow.kind == BondKind.PASSENGER_OF, BondRow.state == BondState.ACTIVE).limit(1)
     )
@@ -116,7 +121,7 @@ async def guest_killed(ctx: TickContext, killer_id: int | None, victim: EntityRo
     host = victim.location_id
     laws = await kept(ctx.session, host, TraditionKind.HOSPITALITY_LAW)
     if not laws:
-        return 0
+        return await circuit_guest_killed(ctx, killer_id, victim)
     keepers = sorted({keeper for law in laws for keeper in await keepers_of(ctx.session, law)} | ({host} if host is not None else set()))
     shamed = await shame(ctx, killer_id, keepers, ctx.rules.traditions.guest_killing_infamy, f"killed {victim.name}, a guest under the law of hospitality")
     killer = await ctx.session.get(EntityRow, killer_id)
@@ -124,6 +129,24 @@ async def guest_killed(ctx: TickContext, killer_id: int | None, victim: EntityRo
         ctx,
         f"{killer.name if killer else 'A host'} slew {victim.name}, a guest under the law of hospitality: a grave infamy that will not be forgotten.",
         key="lore.guest_killing",
+        ids=[killer_id, victim.id, *keepers],
+    )
+    ctx.count("guests_killed")
+    return shamed
+
+
+async def circuit_guest_killed(ctx: TickContext, killer_id: int, victim: EntityRow) -> int:
+    host = victim.location_id
+    partners = await circuit_partners(ctx.session, host)
+    if host is None or not partners & await homes_of_guest(ctx.session, victim):
+        return 0
+    keepers = sorted({host, *partners})
+    shamed = await shame(ctx, killer_id, keepers, ctx.rules.traditions.guest_killing_infamy, f"killed {victim.name}, a guest under the duty of the circuit")
+    killer = await ctx.session.get(EntityRow, killer_id)
+    await note(
+        ctx,
+        f"{killer.name if killer else 'A host'} slew {victim.name}, a guest come along the ceremonial circuit: the stops of the circuit named it infamy.",
+        key="circuits.guest_killing",
         ids=[killer_id, victim.id, *keepers],
     )
     ctx.count("guests_killed")

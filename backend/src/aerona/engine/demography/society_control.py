@@ -6,6 +6,7 @@ from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.society_depth import ClassStandingRow, CommunityNeedRow, CorveeRow, DriftImpositionRow, PolityLoyaltyRow
+from aerona.domain.enums.cycles import ManumissionPath
 from aerona.domain.enums.demography import Job
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityStatus, EntityType
@@ -13,6 +14,7 @@ from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import DriftCause
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.indenture import record_manumission
 from aerona.engine.demography.control import move_cohort
 from aerona.engine.demography.events import ennobled, enslaved, freed, ruined
 from aerona.engine.demography.wealth import WEALTH_LOCK
@@ -210,4 +212,5 @@ async def manumit(ctx: TickContext, community_id: int, count: int, target: Socia
         raise ValidationFailedError("Choose the class the freed join.")
     moved = await move_cohort(ctx, entity.id, count=count, source=SocialClass.SERF_OR_SLAVE, target=target, band=None, condition=None)
     await freed(ctx, entity, moved, by_hand=True)
+    await record_manumission(ctx, entity, moved, ManumissionPath.WILL)
     return moved

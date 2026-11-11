@@ -1,11 +1,15 @@
+import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.cycle_lines import mortal_cycle_lines, son_cycle_lines
 from aerona.agents.context.scope import load_scope
+from aerona.catalog.genetics import GIFT_LOCI_ORDER
+from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
-from aerona.db.tables.collective import AccountRow, FoundingMythRow
+from aerona.db.tables.collective import AccountRow, DiasporaRow, FoundingMythRow, RoleNormRow
 from aerona.db.tables.cosmos import CosmosRow
+from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.cycles import (
     AsabiyyaRow,
     CampRow,
@@ -27,10 +31,13 @@ from aerona.db.tables.cycles import (
     StressReadingRow,
 )
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleCultureRow
+from aerona.db.tables.discovery import ArtFormPractitionerRow, ArtFormProfileRow
 from aerona.db.tables.divine import DivineStandingRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow
-from aerona.db.tables.mind import CultureValueRow
+from aerona.db.tables.genetics import AllelePoolRow
+from aerona.db.tables.military import CaptiveCohortRow
+from aerona.db.tables.mind import CultureEthicRow, CultureValueRow
 from aerona.db.tables.mortal import MarriageRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow, OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -39,7 +46,8 @@ from aerona.db.tables.society_depth import CorveeRow, LabourReasonRow
 from aerona.db.tables.structures import ConstructionRow, StructureProfileRow
 from aerona.db.tables.warfare import TributeRow
 from aerona.domain.enums.bond import BondKind, BondRole
-from aerona.domain.enums.collective import AccountKind
+from aerona.domain.enums.collective import AccountKind, RoleEligibility, RoleKind
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.cycles import (
     ChallengeKind,
     ChallengeResponse,
@@ -59,23 +67,27 @@ from aerona.domain.enums.cycles import (
     ResidenceRule,
 )
 from aerona.domain.enums.demography import Aesthetic, AgeBand, CohortCondition, InheritanceCustom, Job, MarriageCustom, MartialStyle, Sex
+from aerona.domain.enums.discovery import ArtDiscipline
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionRank
-from aerona.domain.enums.mind import ValueAxis
-from aerona.domain.enums.mortal import MarriageEnd, MarriageKind, MortalSex
+from aerona.domain.enums.mind import ActKind, EthicalStance, ValueAxis
+from aerona.domain.enums.mortal import CareerPath, MarriageEnd, MarriageKind, MortalSex
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
 from aerona.domain.enums.settlement import SizeTier
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import LabourReason
 from aerona.domain.enums.structure import ConstructionStatus, StructureKind
-from aerona.domain.models.entity_stats import HouseStats, MortalStats, PeopleStats, PolityStats, StructureStats
+from aerona.domain.models.entity_stats import ArtFormStats, HouseStats, MortalStats, PeopleStats, PolityStats, StructureStats
+from aerona.engine.collective.roles import career_open, combat_sexes, role_rank
 from aerona.engine.context import TickContext
-from aerona.engine.cycles.asabiyya import AsabiyyaTally, keep_asabiyya
-from aerona.engine.cycles.bondage import BondageTally, keep_markets, serve_terms, work_corvees
+from aerona.engine.cycles.asabiyya import AsabiyyaTally, homeland_psi, keep_asabiyya
+from aerona.engine.cycles.bondage import BondageTally, bind_migrants, keep_markets, lay_corvees, raise_freed, serve_terms, work_corvees
 from aerona.engine.cycles.breeding import born_sex, caste_for
 from aerona.engine.cycles.challenge import ChallengeTally, meet_challenges
-from aerona.engine.cycles.control import free_bound, new_plan, set_kinship
+from aerona.engine.cycles.control import free_bound, new_plan, set_kinship, set_legacy
 from aerona.engine.cycles.gifts import GiftTally, balance, give, keep_offerings, return_gift, settle_due
+from aerona.engine.cycles.hospitality import circuit_partners, circuit_stops
+from aerona.engine.cycles.indenture import freed_stigma
 from aerona.engine.cycles.kinship import KinshipTally, keep_kinship
 from aerona.engine.cycles.legacy import LegacyTally, keep_legacies
 from aerona.engine.cycles.lineage import breeds, descent_heirs, kin_bars
@@ -85,8 +97,10 @@ from aerona.engine.cycles.reproduction import ReproductionTally, keep_reproducti
 from aerona.engine.cycles.seeding import SeedTally, seed_peoples
 from aerona.engine.cycles.stress import StressTally, psi, read_stress, realm_capacity
 from aerona.engine.demography.kinship import inheritance_of, may_wed
+from aerona.engine.economy.purse import coin_of
 from aerona.engine.interconnect.flows import FlowCategory
 from aerona.engine.interconnect.guards import HEADCOUNT_KEY
+from aerona.engine.lore.taboos import guest_killed
 from aerona.engine.mortal.kinship import add_parent, marry
 from aerona.engine.phases.cycles import structural_demography
 from aerona.engine.primitives.capacity import CapacityModel
@@ -646,12 +660,24 @@ async def test_a_mortal_knows_its_gifts_kin_and_bonds(session: AsyncSession, wor
         )
     )
     session.add(
-        IndentureRow(community_entity_id=town.id, regime=LabourRegime.INDENTURE, count=12, term_epochs=2, debt=40, exploitation=20, since_epoch=0, locked=[])
+        IndentureRow(
+            community_entity_id=town.id,
+            regime=LabourRegime.INDENTURE,
+            count=12,
+            term_epochs=2,
+            debt=40,
+            exploitation=20,
+            origin_entity_id=world.people.id,
+            since_epoch=0,
+            locked=[],
+        )
     )
+    session.add(ManumissionRow(community_entity_id=town.id, count=9, path=ManumissionPath.WILL, standing=40, epoch=1, locked=[]))
     await session.flush()
     lines = await mortal_cycle_lines(await load_scope(session, ctx.rules), me)
     text = " ".join(lines)
-    assert "you owe" in text and "bride price" in text and "bound in indenture" in text
+    assert "you owe" in text and "bride price" in text and "bound in indenture, newcomers of" in text
+    assert "9 freed by will here stand at 40 of 100 among the freeborn" in text
 
 
 async def test_integrity_lets_gone_stops_and_holders_go(session: AsyncSession, world: CoreWorld) -> None:
@@ -682,3 +708,237 @@ async def test_peoples_of_different_values_read_different_ways_of_kin(session: A
     await seed_peoples(await context(session), SeedTally())
     systems = {(row.descent, row.descent_group, row.cousin_terms) for row in await session.scalars(select(KinshipSystemRow))}
     assert len(systems) >= 4
+
+
+async def great_work(session: AsyncSession, world: CoreWorld, town: EntityRow) -> ConstructionRow:
+    work = await entity(session, "Sky Stair", EntityType.STRUCTURE, StructureStats(), world_id=world.world.id, location_id=town.id)
+    construction = ConstructionRow(
+        structure_entity_id=work.id, site_entity_id=town.id, kind=StructureKind.WONDER, status=ConstructionStatus.ACTIVE, cost=500, started_epoch=1, locked=[]
+    )
+    session.add(construction)
+    session.add(StructureProfileRow(structure_entity_id=work.id, kind=StructureKind.WONDER, host_entity_id=town.id, locked=[]))
+    await session.flush()
+    return construction
+
+
+async def test_a_realm_whose_people_hold_forced_labour_unthinkable_will_not_summon_it(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world, "Ashby")
+    await realm_of(session, world, town)
+    await great_work(session, world, town)
+    ethic = CultureEthicRow(holder_entity_id=world.people.id, act=ActKind.FORCED_LABOUR, stance=EthicalStance.UNTHINKABLE, since_epoch=0, locked=[])
+    session.add(ethic)
+    await session.flush()
+    ctx = await context(session, corvee={"lay_pct": 100})
+    tally = BondageTally()
+    await lay_corvees(ctx, tally)
+    assert tally.refused == 1 and await session.get(CorveeRow, town.id) is None
+    ethic.stance = EthicalStance.ACCEPTABLE
+    await session.flush()
+    tally = BondageTally()
+    await lay_corvees(ctx, tally)
+    assert tally.corvee_laid == 1 and await session.get(CorveeRow, town.id) is not None
+
+
+async def test_newcomers_sign_contracts_harder_the_further_their_ways(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world, "Ashby")
+    near = await entity(session, "Neighbours", EntityType.PEOPLE, PeopleStats(population=1000), world_id=world.world.id, location_id=world.regions[1].id)
+    far = await entity(session, "Strangers", EntityType.PEOPLE, PeopleStats(population=1000), world_id=world.world.id, location_id=world.regions[2].id)
+    for people, value in ((world.people, 60), (near, 60), (far, -60)):
+        session.add(CultureValueRow(entity_id=people.id, axis=ValueAxis.MERCY, value=value))
+    session.add(DiasporaRow(people_entity_id=near.id, host_entity_id=town.id, population=100, ties=60, since_epoch=0, locked=[]))
+    session.add(DiasporaRow(people_entity_id=far.id, host_entity_id=town.id, population=100, ties=60, since_epoch=0, locked=[]))
+    await session.flush()
+    ctx = await context(session, indenture={"migrant_pct": 100, "migrant_share_pct": 20, "exploitation_spread": 0})
+    tally = BondageTally()
+    await bind_migrants(ctx, tally)
+    bonds = {row.origin_entity_id: row for row in await session.scalars(select(IndentureRow).where(IndentureRow.community_entity_id == town.id))}
+    assert set(bonds) == {near.id, far.id} and tally.contracted == 40
+    assert bonds[far.id].exploitation > bonds[near.id].exploitation and bonds[far.id].regime is LabourRegime.INDENTURE
+    again = BondageTally()
+    await bind_migrants(ctx, again)
+    assert again.contracted == 0
+
+
+async def test_the_freed_start_low_are_kept_from_office_and_rise_to_equals(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world, "Ashby")
+    origin = await entity(session, "Taken", EntityType.PEOPLE, PeopleStats(population=1000), world_id=world.world.id, location_id=world.regions[1].id)
+    session.add(CaptiveCohortRow(captor_entity_id=town.id, origin_entity_id=origin.id, count=0, since_epoch=0, locked=[]))
+    session.add(
+        CohortRow(
+            community_entity_id=town.id,
+            age_band=AgeBand.ADULT,
+            sex=Sex.FEMALE,
+            social_class=SocialClass.SERF_OR_SLAVE,
+            condition=CohortCondition.ENSLAVED,
+            count=200,
+        )
+    )
+    bound = await mortal(session, "Unchained", world, town.id)
+    bound.social_class = SocialClass.SERF_OR_SLAVE
+    freeborn = await mortal(session, "Freeborn", world, town.id)
+    await session.flush()
+    ctx = await context(session, manumission={"freed_standing": 40, "standing_rise": 30, "office_at": 70, "hierarchy_drag": 0})
+    row = await free_bound(ctx, town.id, 100, ManumissionPath.PURCHASE)
+    assert row is not None and row.standing == 40 and row.origin_entity_id == origin.id
+    assert bound.social_class is SocialClass.ARTISAN
+    profile = await session.get(SettlementProfileRow, town.id)
+    assert profile is not None and profile.foreigners.get(str(origin.id), 0) > 0
+    assert not await career_open(session, ctx.rules, bound, CareerPath.OFFICE)
+    assert await career_open(session, ctx.rules, freeborn, CareerPath.OFFICE)
+    assert await freed_stigma(session, town) > 0
+    tally = BondageTally()
+    await raise_freed(ctx, tally)
+    await raise_freed(ctx, tally)
+    assert row.standing == 100 and tally.equal == row.count
+    assert await career_open(session, ctx.rules, bound, CareerPath.OFFICE) and await freed_stigma(session, town) == 0
+
+
+async def test_a_guest_come_along_the_circuit_is_under_its_duty_of_hospitality(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world, "Ashby")
+    other = await town_of(session, world, "Farside", region=1)
+    stranger = await town_of(session, world, "Elsewhere", region=2)
+    session.add(CircuitRow(name="The Round", stops=[town.id, other.id], position=0, passes=0, started_epoch=0, locked=[]))
+    guest = await mortal(session, "Guest", world, town.id)
+    wanderer = await mortal(session, "Wanderer", world, town.id)
+    killer = await mortal(session, "Host", world, town.id)
+    await BondRepository(session).connect(BondDraft(guest.id, other.id, BondKind.LIVES_IN, 0))
+    await BondRepository(session).connect(BondDraft(wanderer.id, stranger.id, BondKind.LIVES_IN, 0))
+    await session.flush()
+    assert await circuit_partners(session, town.id) == {other.id} and set(await circuit_stops(session)) == {town.id, other.id}
+    ctx = await context(session)
+    assert await guest_killed(ctx, killer.id, guest) == 2
+    assert await guest_killed(ctx, killer.id, wanderer) == 0
+
+
+async def test_a_son_hears_of_the_troubled_realms_of_its_world(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world, "Ashby")
+    realm = await realm_of(session, world, town)
+    world.son.current_world_id = world.world.id
+    session.add(
+        PolityStressRow(
+            polity_entity_id=realm.id,
+            pressure=80,
+            immiseration=70,
+            elite_overproduction=90,
+            fiscal_distress=60,
+            psi=75,
+            aspirants=300,
+            positions=100,
+            challenge=20,
+            phase=CyclePhase.CRISIS,
+            updated_epoch=1,
+            locked=[],
+        )
+    )
+    await session.flush()
+    ctx = await context(session)
+    lines = await son_cycle_lines(await load_scope(session, ctx.rules), world.son)
+    assert any(f"(polity {realm.id}) is in crisis" in line for line in lines)
+
+
+async def test_sexless_peoples_open_every_role_and_castes_prefer_their_own(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world, "Ashby")
+    session.add(PeopleReproductionRow(people_entity_id=world.people.id, system=ReproductiveSystem.CASTE, locked=[]))
+    session.add(RoleNormRow(holder_entity_id=world.people.id, role=RoleKind.COMBAT, eligibility=RoleEligibility.MALE_ONLY, min_age=0, classes=[], locked=[]))
+    soldier = await mortal(session, "Soldier", world, town.id)
+    worker = await mortal(session, "Worker", world, town.id)
+    session.add(MortalCasteRow(mortal_entity_id=soldier.id, caste=ReproductiveCaste.SOLDIER, locked=[]))
+    session.add(MortalCasteRow(mortal_entity_id=worker.id, caste=ReproductiveCaste.WORKER, locked=[]))
+    await session.flush()
+    assert await combat_sexes(session, town) == set(Sex)
+    soldier_rank = await role_rank(session, soldier, RoleKind.COMBAT)
+    worker_rank = await role_rank(session, worker, RoleKind.COMBAT)
+    assert soldier_rank is not None and worker_rank is not None and soldier_rank < worker_rank
+
+
+async def test_a_people_loses_solidarity_while_its_homeland_realm_is_in_crisis(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world, "Ashby")
+    realm = await realm_of(session, world, town)
+    session.add(
+        PolityStressRow(
+            polity_entity_id=realm.id,
+            pressure=90,
+            immiseration=90,
+            elite_overproduction=90,
+            fiscal_distress=90,
+            psi=90,
+            aspirants=0,
+            positions=0,
+            challenge=0,
+            phase=CyclePhase.CRISIS,
+            updated_epoch=1,
+            locked=[],
+        )
+    )
+    await session.flush()
+    ctx = await context(session)
+    assert await homeland_psi(ctx, {town.id}) == 90
+    await keep_asabiyya(ctx, AsabiyyaTally())
+    row = await session.get(AsabiyyaRow, world.people.id)
+    assert row is not None and row.value < 50
+
+
+async def test_a_bloodline_plan_on_a_people_raises_its_gift(session: AsyncSession, world: CoreWorld) -> None:
+    locus = GIFT_LOCI_ORDER[0].value
+    pool = AllelePoolRow(people_node_id=world.people.id, frequencies={locus: {"dormant": 70, "gifted": 20, "wild": 10}}, gifted_share=10, locked=[])
+    plan = LongPlanRow(
+        holder_node_id=world.son.id,
+        target_node_id=world.people.id,
+        kind=LongPlanKind.BLOODLINE,
+        name="The Long Breeding",
+        steps=1,
+        progress=0,
+        step_cost=0,
+        secrecy=50,
+        locked=[],
+    )
+    session.add_all([pool, plan])
+    await session.flush()
+    ctx = await context(session, long_plans={"bloodline_gift_pct": 50, "expose_pct": 0})
+    await advance_plans(ctx, PlanTally())
+    assert plan.status is LongPlanStatus.COMPLETED and pool.frequencies[locus]["gifted"] > 20
+
+
+async def test_a_camp_on_bare_pasture_sets_out_anew_and_trades_with_its_neighbours(session: AsyncSession, world: CoreWorld) -> None:
+    camp_town = await town_of(session, world, "Tents", region=0, population=3000, tier=SizeTier.VILLAGE)
+    farm = await town_of(session, world, "Fields", region=1, population=500)
+    await realm_of(session, world, farm, treasury=1000)
+    session.add(LabourRow(community_entity_id=camp_town.id, job=Job.HERDING, workers=900, output_pct=100, epoch=0, held=False))
+    camp = CampRow(settlement_entity_id=camp_town.id, mode=MobilityMode.NOMADIC, circuit=[world.regions[2].id], herd=500, grazing=0, water=50, locked=[])
+    session.add(camp)
+    farm_profile = await session.get(SettlementProfileRow, farm.id)
+    assert farm_profile is not None
+    farm_profile.militia = 100_000
+    await session.flush()
+    ctx = await context(session, nomadism={"reroute_at": 25, "raid_pct": 0, "trade_pct": 100, "trade_per_herd": 10})
+    tally = NomadTally()
+    await keep_nomads(ctx, tally)
+    assert tally.rerouted == 1 and camp.circuit != [world.regions[2].id]
+    assert tally.trades >= 1 and await coin_of(session, ctx.rules, camp_town) > 0
+
+
+async def test_a_people_keeps_the_techniques_and_arts_of_those_it_came_from_and_took_in(session: AsyncSession, world: CoreWorld) -> None:
+    successor = await entity(session, "Heirs", EntityType.PEOPLE, PeopleStats(population=2000), world_id=world.world.id, location_id=world.regions[1].id)
+    absorbed = await entity(session, "Taken In", EntityType.PEOPLE, PeopleStats(population=500), world_id=world.world.id, location_id=world.regions[2].id)
+    technique = next(iter(Technique))
+    session.add(HolderTechniqueRow(holder_entity_id=world.people.id, technique=technique, since_epoch=0, secret=False))
+    form = await entity(session, "Night Song", EntityType.ART_FORM, ArtFormStats(), world_id=world.world.id)
+    session.add(ArtFormProfileRow(art_form_entity_id=form.id, discipline=ArtDiscipline.MUSIC, origin_culture_id=absorbed.id, locked=[]))
+    await BondRepository(session).connect(BondDraft(successor.id, world.people.id, BondKind.DESCENDS_FROM, 1))
+    await BondRepository(session).connect(BondDraft(absorbed.id, successor.id, BondKind.PART_OF, 1))
+    await session.flush()
+    ctx = await context(session, legacy_traits={"keep_pct": 100, "absorbed_keep_pct": 100})
+    await keep_legacies(ctx, LegacyTally())
+    kept = {
+        (row.kind, row.predecessor_entity_id) for row in await session.scalars(select(LegacyTraitRow).where(LegacyTraitRow.people_entity_id == successor.id))
+    }
+    assert (LegacyKind.INNOVATION, world.people.id) in kept and (LegacyKind.ART_FORM, absorbed.id) in kept
+    assert await session.get(HolderTechniqueRow, (successor.id, technique)) is not None
+    assert await session.get(ArtFormPractitionerRow, (form.id, successor.id)) is not None
+
+
+async def test_every_kind_of_legacy_refuses_a_key_that_names_nothing(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session)
+    for kind in LegacyKind:
+        with pytest.raises(ValidationFailedError):
+            await set_legacy(ctx, world.people.id, kind, "999999", None)

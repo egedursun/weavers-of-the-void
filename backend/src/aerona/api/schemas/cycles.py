@@ -199,6 +199,7 @@ class IndentureView(ApiModel):
     term_epochs: int
     debt: int
     exploitation: int
+    origin: NodeRef | None
     since_epoch: int
     locked: list[str]
 
@@ -216,7 +217,10 @@ class ManumissionView(ApiModel):
     id: int
     count: int
     path: ManumissionPath
+    standing: int
+    origin: NodeRef | None
     epoch: int
+    locked: list[str]
 
 
 class CyclesView(ApiModel):

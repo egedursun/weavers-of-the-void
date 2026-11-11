@@ -27473,6 +27473,7 @@ export interface components {
       | 'usury'
       | 'infanticide'
       | 'abandoning_elders'
+      | 'forced_labour'
     ActingMechanic: {
       key: string
       title: string
@@ -37998,6 +37999,7 @@ export interface components {
       debt: number
       exploitation: number
       employer_id?: number | null
+      origin_id?: number | null
     }
     IndentureDeleteInput: {
       indenture_id: number
@@ -38020,6 +38022,7 @@ export interface components {
       term_epochs: number
       debt: number
       exploitation: number
+      origin: components['schemas']['NodeRef'] | null
       since_epoch: number
       locked: string[]
     }
@@ -39425,7 +39428,13 @@ export interface components {
       key: string
     }
     LegacyKind:
-      'martial_style' | 'aesthetic' | 'funeral_rite' | 'belief' | 'value'
+      | 'martial_style'
+      | 'aesthetic'
+      | 'funeral_rite'
+      | 'belief'
+      | 'value'
+      | 'innovation'
+      | 'art_form'
     LegacySetInput: {
       people_id: number
       kind: components['schemas']['LegacyKind']
@@ -40243,7 +40252,10 @@ export interface components {
       id: number
       count: number
       path: components['schemas']['ManumissionPath']
+      standing: number
+      origin: components['schemas']['NodeRef'] | null
       epoch: number
+      locked: string[]
     }
     MapArmy: {
       army_id: number
@@ -105593,6 +105605,7 @@ export const actKindValues: ReadonlyArray<
   'usury',
   'infanticide',
   'abandoning_elders',
+  'forced_labour',
 ]
 export const actionGroupValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ActionGroup']
@@ -109320,7 +109333,15 @@ export const ledgerUndoneEventKindValues: ReadonlyArray<
 > = ['ledger.undone']
 export const legacyKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LegacyKind']
-> = ['martial_style', 'aesthetic', 'funeral_rite', 'belief', 'value']
+> = [
+  'martial_style',
+  'aesthetic',
+  'funeral_rite',
+  'belief',
+  'value',
+  'innovation',
+  'art_form',
+]
 export const legalSystemValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LegalSystem']
 > = ['customary', 'codified', 'religious', 'precedent', 'oracle', 'mixed']

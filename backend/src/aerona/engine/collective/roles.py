@@ -8,20 +8,25 @@ from aerona.catalog.ethics import STANCE_ORDER
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.collective import RoleNormRow, SexRatioRow
+from aerona.db.tables.cycles import ManumissionRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.mind import MemoryRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.collective import RoleEligibility, RoleKind
+from aerona.domain.enums.cycles import ReproductiveCaste, ReproductiveSystem
 from aerona.domain.enums.demography import Sex
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.mind import EthicalStance, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import EthicalStance, MemoryKind, ValueAxis, ValueHolder
 from aerona.domain.enums.mortal import CareerPath
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.cycles.lineage import caste_of, sexes_fixed, system_of
 from aerona.engine.mind.book import stored_values
 from aerona.engine.notes import note
 from aerona.engine.polity.book import sex_of
 from aerona.engine.primitives.stats import stat_or
+from aerona.rules.registry import Rules
 
 FEMALE = "female"
 MALE = "male"
@@ -60,10 +65,14 @@ class RoleTally:
     narrowed: int = 0
 
 
+def barred(row: RoleNormRow | None, age: int) -> bool:
+    return row is not None and (age < row.min_age or row.stance in {EthicalStance.SHAMEFUL, EthicalStance.UNTHINKABLE})
+
+
 def rank_for(row: RoleNormRow | None, sex: str, age: int) -> int | None:
     if row is None:
         return RANK_OPEN
-    if age < row.min_age or row.stance in {EthicalStance.SHAMEFUL, EthicalStance.UNTHINKABLE}:
+    if barred(row, age):
         return None
     rule = row.eligibility
     if rule is RoleEligibility.ANY:
@@ -81,16 +90,56 @@ async def role_norm(session: AsyncSession, mortal: EntityRow, role: RoleKind) ->
     return await session.get(RoleNormRow, (people.id, role)) if people is not None else None
 
 
+FREED_HELD_BACK = frozenset({RoleKind.OFFICE, RoleKind.PRIESTHOOD})
+CASTE_ROLES: dict[RoleKind, ReproductiveCaste] = {RoleKind.COMBAT: ReproductiveCaste.SOLDIER, RoleKind.INHERITANCE: ReproductiveCaste.BREEDER}
+
+
+async def caste_rank(session: AsyncSession, mortal: EntityRow, role: RoleKind, rank: int | None) -> int | None:
+    wanted = CASTE_ROLES.get(role)
+    if rank is None or wanted is None:
+        return rank
+    return RANK_PREFERRED if await caste_of(session, mortal.id) is wanted else RANK_TOLERATED
+
+
+async def freed_below(session: AsyncSession, mortal: EntityRow, standing: int) -> bool:
+    lowly = await session.scalar(
+        select(ManumissionRow.id)
+        .join(MemoryRow, MemoryRow.subject_node_id == ManumissionRow.community_entity_id)
+        .where(MemoryRow.holder_node_id == mortal.id, MemoryRow.kind == MemoryKind.FREED_US, ManumissionRow.standing < standing)
+        .limit(1)
+    )
+    return lowly is not None
+
+
+async def freed_rank(session: AsyncSession, rules: Rules, mortal: EntityRow, role: RoleKind, rank: int | None) -> int | None:
+    if rank is None or role not in FREED_HELD_BACK:
+        return rank
+    return max(rank, RANK_TOLERATED) if await freed_below(session, mortal, rules.manumission.office_at) else rank
+
+
+async def sexed_rank(session: AsyncSession, mortal: EntityRow, role: RoleKind, row: RoleNormRow | None) -> int | None:
+    system = await system_of(session, mortal)
+    if sexes_fixed(system):
+        return rank_for(row, sex_of(mortal), stat_or(mortal, "age", 0))
+    if barred(row, stat_or(mortal, "age", 0)):
+        return None
+    return await caste_rank(session, mortal, role, RANK_OPEN) if system is ReproductiveSystem.CASTE else RANK_OPEN
+
+
 async def role_rank(session: AsyncSession, mortal: EntityRow, role: RoleKind, social_class: SocialClass | None = None) -> int | None:
     row = await role_norm(session, mortal, role)
     if row is not None and row.classes and social_class is not None and social_class not in row.classes:
         return None
-    return rank_for(row, sex_of(mortal), stat_or(mortal, "age", 0))
+    return await sexed_rank(session, mortal, role, row)
 
 
-async def career_open(session: AsyncSession, mortal: EntityRow, path: CareerPath) -> bool:
+async def career_open(session: AsyncSession, rules: Rules, mortal: EntityRow, path: CareerPath) -> bool:
     role = CAREER_ROLES.get(path)
-    return role is None or await role_rank(session, mortal, role) is not None
+    if role is None:
+        return True
+    if role in FREED_HELD_BACK and await freed_below(session, mortal, rules.manumission.office_at):
+        return False
+    return await role_rank(session, mortal, role) is not None
 
 
 async def allowed_heirs(session: AsyncSession, dead: EntityRow, heirs: list[EntityRow]) -> list[EntityRow]:
@@ -104,6 +153,8 @@ async def allowed_heirs(session: AsyncSession, dead: EntityRow, heirs: list[Enti
 async def combat_sexes(session: AsyncSession, community: EntityRow) -> set[Sex]:
     people = await people_of(session, community)
     row = await session.get(RoleNormRow, (people.id, RoleKind.COMBAT)) if people is not None else None
+    if people is not None and not sexes_fixed(await system_of(session, people)):
+        return set() if barred(row, PERCENT) else set(Sex)
     return {sex for sex in Sex if rank_for(row, sex.value, PERCENT) is not None}
 
 

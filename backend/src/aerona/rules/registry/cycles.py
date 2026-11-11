@@ -100,6 +100,7 @@ class LongPlanRules:
     disrupt_steps: int = rule(2, 0, 100, P, "Steps rivals take from an exposed plan they set back")
     eco_moisture: int = rule(25, -100, 100, P, "Moisture a fulfilled ecological transformation gives each land it remakes")
     eco_fertility: int = rule(20, -100, 100, P, "Soil fertility a fulfilled ecological transformation gives each land it remakes")
+    bloodline_gift_pct: int = rule(20, 0, 100, P, "How far a fulfilled bloodline plan aimed at a people moves its pool toward the gifted allele (%)")
     wonder_funds_pct: int = rule(50, 0, 100, P, "Share of a wonder plan's savings that fund the wonder it raises (%)")
 
 
@@ -132,6 +133,7 @@ class CircuitRules:
     pass_value: int = rule(20, 0, 100000, M, "Worth of the treasure each pass of a ceremonial circuit hands on")
     holder_prestige: int = rule(3, 0, 100, M, "Standing a stop gains while it holds the circuit's treasure")
     bond_regard: int = rule(4, 0, 100, M, "Regard each pass of a circuit builds between the two stops")
+    hospitality_danger: int = rule(2, 0, 100, M, "Danger from outlaws each stop of a ceremonial circuit takes from its land, by its duty of hospitality")
 
 
 @dataclass(frozen=True)
@@ -212,7 +214,11 @@ class NomadismRules:
     pastoral_pct: int = rule(40, 0, 100, E, "Share of its workers in herding from which a small settlement takes to the move (%)")
     nomadic_pct: int = rule(60, 0, 100, E, "Share of its workers in herding from which a camp roams rather than moving between two pastures (%)")
     settle_pct: int = rule(25, 0, 100, E, "Share of its workers in herding below which a camp settles (%)")
-    circuit_stops: int = rule(4, 2, 20, E, "Pastures a roaming camp's circuit holds")
+    circuit_stops: int = rule(4, 2, 20, E, "Pastures a roaming camp's circuit holds before its herd grows")
+    reroute_at: int = rule(25, 0, 100, E, "Grazing below which a camp lays a new circuit through fresher pastures")
+    trade_pct: int = rule(40, 0, 100, E, "Chance each epoch riders who neither raid nor take tribute trade with a settled neighbour (%)")
+    trade_per_herd: int = rule(2, 0, 1000, E, "Coin each hundred herd beasts bring in trade")
+    trade_regard: int = rule(4, 0, 100, E, "Regard a trade builds between a camp and its settled neighbour")
     herd_per_dweller: int = rule(200, 0, 10000, E, "Herd beasts per hundred dwellers when a camp first takes to the move")
     herd_growth_pct: int = rule(10, 0, 100, E, "Growth of a herd on full grazing and water each epoch (%)")
     herd_loss_pct: int = rule(4, 0, 100, E, "Herd lost each epoch to age and loss (%)")
@@ -232,6 +238,8 @@ class NomadismRules:
 @dataclass(frozen=True)
 class LegacyTraitRules:
     keep_pct: int = rule(60, 0, 100, M, "Chance a successor people keeps each kind of legacy from its predecessor (%)")
+    absorbed_keep_pct: int = rule(25, 0, 100, M, "Chance a people keeps each kind of legacy from a people that joined it (%)")
+    art_mastery: int = rule(30, 0, 100, M, "Mastery of an art form a people keeps from the one it came from")
     value_pull: int = rule(50, 0, 100, M, "How far a kept value moves toward the predecessor's (%)")
 
 
@@ -246,6 +254,7 @@ class CorveeRules:
     lay_pct: int = rule(15, 0, 100, P, "Chance each epoch a realm raising a great work summons its towns to forced labour (%)")
     share_pct: int = rule(15, 0, 100, P, "Share of farmhands a realm summons to forced labour (%)")
     work_output: int = rule(100, 0, 1000, P, "Work each hundred forced labourers add to the great work each epoch (%)")
+    unthinkable_at: int = rule(-70, -100, 0, P, "Ethics reading of forced labour below which a realm will not summon its towns to it")
 
 
 @dataclass(frozen=True)
@@ -261,6 +270,9 @@ class IndentureRules:
     greed_weight: int = rule(30, 0, 200, S, "How much the value of wealth raises an employer's exploitation (%)")
     inflate_share: int = rule(50, 0, 200, S, "How much exploitation turns into the chance an employer inflates a debt (%)")
     inflate_pct: int = rule(20, 0, 200, S, "How much an inflated debt grows (%)")
+    migrant_pct: int = rule(15, 0, 100, S, "Chance each epoch newcomers living among a town's hosts sign contracts of labour (%)")
+    migrant_share_pct: int = rule(20, 0, 100, S, "Share of the newcomers who sign a contract of labour (%)")
+    foreign_weight: int = rule(30, 0, 200, S, "How much the distance between the values of hosts and newcomers raises the exploitation of their contract (%)")
 
 
 @dataclass(frozen=True)
@@ -287,3 +299,9 @@ class ManumissionRules:
     revolt_pressure: int = rule(30, 0, 200, S, "Abolition pressure each hundred freed by risings adds (%)")
     indenture_pressure: int = rule(30, 0, 200, S, "Abolition pressure a full share of bound labourers adds (%)")
     egalitarian_pct: int = rule(25, 0, 100, S, "How much a disregard for hierarchy feeds the abolition movement (%)")
+    freed_standing: int = rule(40, 0, 100, S, "Standing among the free that the newly freed start with")
+    standing_rise: int = rule(10, 0, 100, S, "Standing the freed gain each epoch before the respect for hierarchy slows it")
+    hierarchy_drag: int = rule(50, 0, 100, S, "How much a culture's respect for hierarchy slows the rise of the freed (%)")
+    office_at: int = rule(70, 0, 100, S, "Standing from which the freed take office and the priesthood beside the freeborn")
+    stigma: int = rule(20, 0, 100, S, "Satisfaction the freed lose where all of a town's people are freed folk of the lowest standing")
+    origin_share_pct: int = rule(50, 0, 100, S, "Share of freed captives who stay a community of their own origin in the town (%)")

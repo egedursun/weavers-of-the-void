@@ -231,6 +231,61 @@ describe('cycles, gifts, kin and bound labour', () => {
     })
   })
 
+  it('shows the bonds of newcomers and the standing of the freed', async () => {
+    serveBase()
+    onApi('GET', '/api/cycles/of/20', {
+      ...EMPTY,
+      node: TOWN,
+      indentures: [
+        {
+          id: 4,
+          employer: null,
+          regime: 'indenture',
+          count: 20,
+          term_epochs: 3,
+          debt: 100,
+          exploitation: 45,
+          origin: KIN,
+          since_epoch: 5,
+          locked: [],
+        },
+      ],
+      manumissions: [
+        {
+          id: 8,
+          count: 30,
+          path: 'purchase',
+          standing: 40,
+          origin: KIN,
+          epoch: 5,
+          locked: [],
+        },
+      ],
+    })
+    onApi('POST', '/api/actions/manumission:free', ACCEPTED_ACTION)
+    const { screen } = await renderApp(<CyclesSection nodeId={20} />)
+    await screen.getByRole('tab', { name: /Bound labour/ }).click()
+    await expect
+      .element(screen.getByText('30 freed, bought their freedom'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('Epoch 5 · standing 40'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('Standing among the free').first())
+      .toBeVisible()
+    await expect.element(screen.getByText('Kethrani').first()).toBeVisible()
+    await screen.getByRole('button', { name: 'Free them' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/manumission:free'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/manumission:free')[0].body).toEqual({
+      community_id: 20,
+      share_pct: 50,
+      path: 'law',
+    })
+  })
+
   it('reads the cycles of every realm', async () => {
     serveBase()
     onApi('GET', '/api/cycles/cosmos', {

@@ -26,12 +26,14 @@ import {
   HeartHandshake,
   Hourglass,
   Landmark,
+  Lightbulb,
   Link,
   type LucideIcon,
   Mountain,
   Network,
   Orbit,
   PackageOpen,
+  Palette,
   Recycle,
   Repeat,
   Route,
@@ -270,6 +272,8 @@ export const LEGACIES: Record<Schema['LegacyKind'], Named> = {
   funeral_rite: { label: 'Funeral rite', icon: Bird, tone: 'muted' },
   belief: { label: 'Belief', icon: BookHeart, tone: 'info' },
   value: { label: 'Value', icon: Scale, tone: 'verdigris' },
+  innovation: { label: 'Innovation', icon: Lightbulb, tone: 'info' },
+  art_form: { label: 'Art form', icon: Palette, tone: 'gold' },
 }
 
 export const REGIMES: Record<Schema['LabourRegime'], Named> = {

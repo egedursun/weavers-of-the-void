@@ -123,7 +123,17 @@ async def structural_demography(ctx: TickContext) -> None:
     count(ctx, "stress", tally)
 
 
-@reads("table.asabiyya", "table.bonds", "table.community_societies", "table.culture_values", "table.polity_stress", "table.war_sides", "table.wars")
+@reads(
+    "table.asabiyya",
+    "table.bonds",
+    "table.community_societies",
+    "table.culture_values",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.polity_stress",
+    "table.war_sides",
+    "table.wars",
+)
 @writes("table.asabiyya", "table.people_culture")
 async def asabiyya(ctx: TickContext) -> None:
     tally = AsabiyyaTally()
@@ -186,10 +196,12 @@ async def long_plans(ctx: TickContext) -> None:
     "table.gatherings",
     "table.geasa",
     "table.gifts",
+    "table.house_members",
     "table.kinship_systems",
     "table.marriages",
     "table.memories",
     "table.messages",
+    "table.minds",
     "table.polity_members",
     "table.polity_profiles",
     "table.relationships",
@@ -210,6 +222,7 @@ async def long_plans(ctx: TickContext) -> None:
     "table.gifts",
     "table.house_profiles",
     "table.memories",
+    "table.mortal_profiles",
     "table.polity_profiles",
 )
 async def reciprocity(ctx: TickContext) -> None:
@@ -304,10 +317,12 @@ async def legacy_traits(ctx: TickContext) -> None:
     "table.cohorts",
     "table.constructions",
     "table.corvee_levies",
+    "table.diasporas",
     "table.indentures",
     "table.labour",
     "table.labour_reasons",
     "table.law_jurisdictions",
+    "table.manumissions",
     "table.people_culture",
     "table.polity_members",
     "table.slave_markets",
