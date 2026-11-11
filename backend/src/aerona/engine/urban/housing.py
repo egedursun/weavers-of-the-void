@@ -120,7 +120,7 @@ async def house_town(ctx: TickContext, settlement: EntityRow, knowledge: Knowled
     for district in town.districts:
         await evolve_district(ctx, town, district, goods, tally)
     population = stat_or(settlement, "population", 0)
-    people = people_of_districts(population, town.districts)
+    people = people_of_districts(ctx.rules, population, town.districts)
     almshouses = await almshouse_levels(ctx, settlement.id)
     sheltered = almshouses * ctx.rules.city_plan.almshouse_shelter
     unhoused = max(0, population - housing_of(ctx.rules, town)) + priced_out(ctx, town, people)
@@ -149,7 +149,7 @@ async def clear_slums(ctx: TickContext, town: Town) -> int:
     slums = [district for district in town.districts if district.kind is DistrictKind.SLUMS]
     if not slums:
         return 0
-    people = people_of_districts(stat_or(town.entity, "population", 0), town.districts)
+    people = people_of_districts(ctx.rules, stat_or(town.entity, "population", 0), town.districts)
     displaced = round_half_up(sum(people[district.id] for district in slums))
     for district in slums:
         await ctx.session.delete(district)

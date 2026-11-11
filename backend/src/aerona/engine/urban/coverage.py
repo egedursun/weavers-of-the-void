@@ -19,6 +19,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.settlement.districts import density_pct
 from aerona.engine.urban.layout import falloff
 from aerona.engine.urban.morphology import grow_rings
 from aerona.engine.urban.planning import plan_town
@@ -81,9 +82,12 @@ def place(profile: StructureProfileRow, districts: list[DistrictRow]) -> bool:
     return True
 
 
-def people_of_districts(population: int, districts: list[DistrictRow]) -> dict[int, float]:
-    total = sum(district.level for district in districts)
-    return {district.id: population * district.level / max(1, total) for district in districts}
+def people_of_districts(rules: Rules, population: float, districts: list[DistrictRow]) -> dict[int, float]:
+    weights = {district.id: district.level * density_pct(rules, district.kind) for district in districts}
+    if not any(weights.values()):
+        weights = {district.id: district.level for district in districts}
+    total = sum(weights.values())
+    return {district.id: population * weights[district.id] / max(1, total) for district in districts}
 
 
 def served(rules: Rules, profile: StructureProfileRow) -> float:
@@ -109,7 +113,7 @@ async def cover_town(ctx: TickContext, settlement: EntityRow, tally: CoverageTal
             stretch = min(1.0, reach * ctx.rules.city_plan.civic_reach_pct / PERCENT) if structure.district_id in civic else reach
             apart = layout.apart(structure.district_id, district.id) if structure.district_id is not None else 1
             supply[service][district.id] += served(ctx.rules, structure) * falloff(stretch, apart)
-    people = people_of_districts(stat_or(settlement, "population", 0), districts)
+    people = people_of_districts(ctx.rules, stat_or(settlement, "population", 0), districts)
     stored = {
         (row.district_id, row.service): row
         for row in await ctx.session.scalars(select(DistrictServiceRow).where(DistrictServiceRow.district_id.in_([d.id for d in districts])))
@@ -140,11 +144,13 @@ async def cover_towns(ctx: TickContext, tally: CoverageTally) -> None:
         await cover_town(ctx, settlement, tally)
 
 
-async def urban_state(session: AsyncSession, settlement_id: int, profile: SettlementProfileRow, districts: list[DistrictRow], population: int) -> UrbanState:
+async def urban_state(
+    session: AsyncSession, rules: Rules, settlement_id: int, profile: SettlementProfileRow, districts: list[DistrictRow], *, population: int
+) -> UrbanState:
     state = UrbanState(morphology=profile.morphology, homeless_share=min(1.0, profile.homeless / max(1, population)))
     if not districts:
         return state
-    weights = people_of_districts(population, districts)
+    weights = people_of_districts(rules, population, districts)
     total = max(1.0, sum(weights.values()))
     sums: dict[UrbanService, float] = defaultdict(float)
     for row in await session.scalars(select(DistrictServiceRow).where(DistrictServiceRow.district_id.in_(list(weights)))):

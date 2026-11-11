@@ -24,6 +24,7 @@ from aerona.engine.settlement.book import TIER_ORDER, town_of
 from aerona.engine.settlement.districts import (
     admin_parts,
     damage_districts,
+    density_pct,
     effects_of,
     material_factor,
     office_tier,
@@ -70,7 +71,20 @@ def test_base_parameters_give_every_district_kind_its_effect() -> None:
     assert effects.policing == RULES.crime.citadel_policing
     assert effects.food_store == 2 * RULES.urban.granary_per_level
     assert effects.goods_store == 2 * table.warehouse_per_level
-    assert effects.housing == 13 * RULES.urban.housing_per_level
+    levels = {
+        DistrictKind.PALACE: 1,
+        DistrictKind.NECROPOLIS: 2,
+        DistrictKind.FOREIGN_QUARTER: 1,
+        DistrictKind.HARBOUR: 3,
+        DistrictKind.TEMPLE_QUARTER: 1,
+        DistrictKind.SLUMS: 1,
+        DistrictKind.CITADEL: 1,
+        DistrictKind.MARKET: 1,
+        DistrictKind.CRAFT_QUARTER: 1,
+        DistrictKind.FARMLAND: 1,
+    }
+    assert effects.housing == sum(RULES.urban.housing_per_level * density_pct(RULES, kind) // 100 * level for kind, level in levels.items())
+    assert density_pct(RULES, DistrictKind.NECROPOLIS) == 0 < density_pct(RULES, DistrictKind.MARKET) < density_pct(RULES, DistrictKind.RESIDENTIAL)
 
 
 def test_a_design_overrides_only_the_parameters_it_names() -> None:

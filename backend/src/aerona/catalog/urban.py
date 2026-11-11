@@ -1,5 +1,6 @@
 from types import MappingProxyType
 
+from aerona.core.total import total
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.settlement import DistrictKind
@@ -113,6 +114,24 @@ FINE_HOMES = frozenset({HousingLevel.TOWNHOUSE, HousingLevel.MANOR})
 REACH_RULE = {Morphology.PLANNED: "planned_reach", Morphology.CONCENTRIC: "concentric_reach", Morphology.ORGANIC: "organic_reach"}
 FIRE_RULE = {Morphology.PLANNED: "planned_fire_pct", Morphology.ORGANIC: "organic_fire_pct"}
 HAULING_RULE = {Morphology.PLANNED: "planned_hauling_pct", Morphology.ORGANIC: "organic_hauling_pct"}
+DENSITY_RULE = total(
+    DistrictKind,
+    {
+        D.FARMLAND: "farmland_housing_pct",
+        D.MARKET: "market_housing_pct",
+        D.CRAFT_QUARTER: "craft_quarter_housing_pct",
+        D.TEMPLE_QUARTER: "temple_quarter_housing_pct",
+        D.HARBOUR: "harbour_housing_pct",
+        D.CITADEL: "citadel_housing_pct",
+        D.SLUMS: "slums_housing_pct",
+        D.PALACE: "palace_housing_pct",
+        D.FOREIGN_QUARTER: "foreign_quarter_housing_pct",
+        D.NECROPOLIS: "necropolis_housing_pct",
+        D.RESIDENTIAL: "residential_housing_pct",
+        D.CIVIC_QUARTER: "civic_quarter_housing_pct",
+        D.GARDENS: "gardens_housing_pct",
+    },
+)
 HOUSING_RULE = {HousingLevel.HUT: "hut_pct", HousingLevel.COTTAGE: "cottage_pct", HousingLevel.TOWNHOUSE: "townhouse_pct", HousingLevel.MANOR: "manor_pct"}
 
 PERISHABLES = frozenset({C.FISH, C.BREAD, C.MEAT, C.MILK, C.CHEESE, C.FRUIT, C.EGGS, C.HERBS})

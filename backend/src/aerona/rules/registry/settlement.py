@@ -15,7 +15,7 @@ class UrbanRules:
     district_slots_per_tier: int = rule(2, 0, 20, G, "District slots a settlement gains per size tier above hamlet")
     district_cost: int = rule(400, 0, 100000000, G, "Treasury and investment a district level costs")
     district_labour: int = rule(200, 0, 10000000, G, "Builders' work a district level needs")
-    housing_per_level: int = rule(1500, 0, 10000000, G, "People housed per district level")
+    housing_per_level: int = rule(1800, 0, 10000000, G, "People housed per district level of a district that is only homes")
     housing_base: int = rule(500, 0, 10000000, G, "People housed by a hamlet's own huts per size tier")
     district_wear: int = rule(3, 0, 100, G, "Condition a district loses per epoch without repair")
     repair_cost: int = rule(40, 0, 1000000, G, "Treasury to restore a district to good condition")

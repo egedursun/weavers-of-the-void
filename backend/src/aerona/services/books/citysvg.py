@@ -132,7 +132,7 @@ async def city_plan(session: AsyncSession, rules: Rules, town: EntityRow) -> Pla
     morphology = profile.morphology if profile is not None else Morphology.ORGANIC
     layout = provisional(rules, districts, morphology, walls, town.id)
     slots = slots_of(layout, buildings, districts)
-    people = people_of_districts(round(stat_or(town, "population", 0)), districts)
+    people = people_of_districts(rules, round(stat_or(town, "population", 0)), districts)
     body: list[str] = []
     cells: list[Hex] = []
     for district in districts:
@@ -281,7 +281,7 @@ async def type_tables(session: AsyncSession, rules: Rules) -> list[RecordTable]:
         town = towns.get(town_id)
         if town is None:
             continue
-        people = people_of_districts(round(stat_or(town, "population", 0)), quarters)
+        people = people_of_districts(rules, round(stat_or(town, "population", 0)), quarters)
         for district in quarters:
             key = (town.world_id, district.housing)
             tally[key][0] += 1

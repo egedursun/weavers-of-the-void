@@ -32,8 +32,8 @@ from aerona.engine.settlement.life import quarter_wants
 from aerona.engine.structures.needs import SiteFacts, wanted
 from aerona.engine.structures.readers import Working
 from aerona.engine.structures.settlement import civic_from
-from aerona.engine.urban.cityscape import land_tiles, provisional, slots_of
-from aerona.engine.urban.coverage import CoverageTally, cover_town, place
+from aerona.engine.urban.cityscape import land_tiles, pick_tile, provisional, slots_of
+from aerona.engine.urban.coverage import CoverageTally, cover_town, people_of_districts, place
 from aerona.engine.urban.housing import HousingTally, house_town
 from aerona.engine.urban.layout import HEX_KEY, distance, falloff, layout_of, plan_seed, seed_of
 from aerona.engine.urban.planning import move, plan_town, settle
@@ -206,9 +206,14 @@ async def test_the_land_tiles_follow_the_land_shares_and_its_river(session: Asyn
     land.river_class = RiverClass.RIVER
     tiles = land_tiles(land, region.id)
     assert tiles == land_tiles(land, region.id)
-    dry = [tile for tile in tiles if tile.ground not in (LandGround.WATER, LandGround.SHORE)]
+    dry = [tile for tile in tiles if tile.ground not in (LandGround.WATER, LandGround.SHORE) and not tile.river]
     assert dry and all(tile.cover is LandCover.FOREST for tile in dry)
     assert any(tile.river for tile in tiles)
+    assert all(tile.cover is LandCover.OPEN for tile in tiles if tile.river)
+    taken: set[tuple[int, int]] = set()
+    towns = [pick_tile(tiles, taken, (LandCover.BUILT,), (LandGround.LOWLAND, LandGround.SHORE)) for _ in range(6)]
+    wet = {(tile.q, tile.r) for tile in tiles if tile.river or tile.ground is LandGround.WATER}
+    assert not wet & set(towns)
     land.river_class = RiverClass.NONE
     land.forest_cover = 0
     assert not any(tile.river or tile.cover is LandCover.FOREST for tile in land_tiles(land, region.id))
@@ -339,3 +344,42 @@ def test_every_new_work_has_a_zone_a_district_to_stand_in_and_a_house_for_any_wo
         assert workshop in WORKSHOP_STRUCTURES, workshop
     for kind in (StructureKind.ORPHANAGE, StructureKind.APOTHECARY, StructureKind.TRAINING_GROUND, StructureKind.MUSEUM):
         assert kind in CIVIC_SERVICE_OF and HOME_DISTRICT[kind] is DistrictKind.CIVIC_QUARTER
+
+
+def test_outer_districts_never_lie_on_or_inside_the_walls_and_footprints_stay_whole() -> None:
+    rules = tuned_rules()
+    town = [
+        DistrictRow(id=1, settlement_entity_id=1, kind=DistrictKind.FARMLAND, level=2, hex_q=None, hex_r=None, locked=[]),
+        DistrictRow(id=2, settlement_entity_id=1, kind=DistrictKind.MARKET, level=2, hex_q=None, hex_r=None, locked=[]),
+        DistrictRow(id=3, settlement_entity_id=1, kind=DistrictKind.PALACE, level=1, hex_q=None, hex_r=None, locked=[]),
+        DistrictRow(id=4, settlement_entity_id=1, kind=DistrictKind.RESIDENTIAL, level=3, hex_q=None, hex_r=None, locked=[]),
+        DistrictRow(id=5, settlement_entity_id=1, kind=DistrictKind.HARBOUR, level=1, hex_q=None, hex_r=None, locked=[]),
+    ]
+    settle(rules, town, Morphology.ORGANIC, 3)
+    layout = layout_of(rules, town, 3)
+    assert layout.walls_radius is not None
+    for district in town:
+        cells = layout.footprints[district.id]
+        if district.kind in (DistrictKind.FARMLAND, DistrictKind.HARBOUR):
+            assert all(distance(cell, (0, 0)) > layout.walls_radius for cell in cells)
+        else:
+            assert all(distance(cell, (0, 0)) < layout.walls_radius for cell in cells)
+        joined = {cells[0]}
+        for _ in cells:
+            joined |= {cell for cell in cells if any(distance(cell, other) == 1 for other in joined)}
+        assert joined == set(cells)
+
+
+def test_people_live_where_a_district_has_homes_for_them() -> None:
+    rules = tuned_rules()
+    town = [
+        DistrictRow(id=1, settlement_entity_id=1, kind=DistrictKind.RESIDENTIAL, level=2),
+        DistrictRow(id=2, settlement_entity_id=1, kind=DistrictKind.MARKET, level=2),
+        DistrictRow(id=3, settlement_entity_id=1, kind=DistrictKind.NECROPOLIS, level=2),
+        DistrictRow(id=4, settlement_entity_id=1, kind=DistrictKind.PALACE, level=2),
+    ]
+    people = people_of_districts(rules, 10000, town)
+    assert people[1] > people[2] > people[4] > people[3] == 0
+    assert round(sum(people.values())) == 10000
+    plan = rules.city_plan
+    assert people[1] / people[2] == plan.residential_housing_pct / plan.market_housing_pct

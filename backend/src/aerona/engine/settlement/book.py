@@ -117,7 +117,7 @@ async def town_of(ctx: TickContext, settlement: EntityRow, knowledge: KnowledgeM
         )
         session.add(profile)
         await session.flush()
-    urban = await urban_state(session, settlement.id, profile, districts, stat(settlement, "population") or 0)
+    urban = await urban_state(session, ctx.rules, settlement.id, profile, districts, population=stat(settlement, "population") or 0)
     return Town(settlement, profile, infrastructure, districts, designs=await designs_for(session, districts), urban=urban)
 
 

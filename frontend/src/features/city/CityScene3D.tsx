@@ -56,21 +56,22 @@ const ROAD_WIDTH_STEP = 0.06
 
 type Hover = { x: number; z: number; text: string } | null
 
-function houseSlots(
-  district: CityDistrict,
+function freeSlots(
+  cells: readonly Cell[],
   used: Map<string, number>
 ): [Cell, number][] {
-  const found: [Cell, number][] = []
-  for (const raw of district.cells) {
-    const cell: Cell = [raw[0], raw[1]]
-    for (
-      let slot = used.get(cellKey(cell)) ?? 0;
-      slot <= HOUSE_SLOTS;
-      slot += 1
+  return cells
+    .filter((cell) => !used.has(cellKey(cell)))
+    .flatMap((cell) =>
+      Array.from(
+        { length: HOUSE_SLOTS },
+        (_, index) => [cell, index + 1] as [Cell, number]
+      )
     )
-      found.push([cell, slot])
-  }
-  return found
+}
+
+function cellsOf(district: CityDistrict): Cell[] {
+  return district.cells.map((raw) => [raw[0], raw[1]] as Cell)
 }
 
 function buildingParts(building: CityBuilding): Part[] {
@@ -196,7 +197,10 @@ export default function CityScene3D({
     scene.walls_radius ?? radius,
     scene.roads,
     COUNTRYSIDE + Math.max(0, radius - (scene.walls_radius ?? radius))
-  ).filter((segment) => !wet.has(cellKey(segment.cell)))
+  ).filter(
+    (segment) =>
+      !wet.has(cellKey(segment.cell)) && !built.has(cellKey(segment.cell))
+  )
   const roadWidth = ROAD_WIDTH + scene.roads * ROAD_WIDTH_STEP
   const roadColor = tokenHex('--cosmos-bone')
   const names: SceneLabel[] = scene.districts
@@ -213,29 +217,35 @@ export default function CityScene3D({
         chosen: selected?.kind === 'district' && selected.id === district.id,
       }
     })
+  const homeSlots = new Map(
+    scene.districts.map((district) => [
+      district.id,
+      freeSlots(cellsOf(district), occupied),
+    ])
+  )
   const homes = scene.districts
     .filter((district) => visible(district.zone))
-    .flatMap((district) => {
-      const shownHomes = Math.ceil(district.dwellings / scene.scale)
-      return houseSlots(district, occupied)
-        .slice(0, shownHomes)
+    .flatMap((district) =>
+      (homeSlots.get(district.id) ?? [])
+        .slice(0, Math.ceil(district.dwellings / scene.scale))
         .map(([cell, slot]) => ({ district, cell, slot }))
-    })
-  const slumCells = scene.districts
+    )
+  const slumSlots = scene.districts
     .filter((district) => district.kind === 'slums')
-    .flatMap((district) => district.cells)
-  const shelterCells: Cell[] = (
-    slumCells.length ? slumCells : hexRing((scene.walls_radius ?? radius) + 1)
-  ).map((cell) => [cell[0], cell[1]])
-  const shelters = Array.from(
-    { length: Math.ceil(scene.shelters / scene.scale) },
-    (_, index) => ({
-      cell: shelterCells[index % Math.max(1, shelterCells.length)],
-      slot:
-        Math.floor(index / Math.max(1, shelterCells.length)) %
-        (HOUSE_SLOTS + 1),
-    })
+    .flatMap((district) =>
+      (homeSlots.get(district.id) ?? []).slice(
+        Math.ceil(district.dwellings / scene.scale)
+      )
+    )
+  const camp = freeSlots(
+    hexRing((scene.walls_radius ?? radius) + 1).filter(
+      (cell) => !built.has(cellKey(cell)) && !wet.has(cellKey(cell))
+    ),
+    occupied
   )
+  const shelters = [...slumSlots, ...camp]
+    .slice(0, Math.ceil(scene.shelters / scene.scale))
+    .map(([cell, slot]) => ({ cell, slot }))
   const zoneOf = new Map(scene.districts.map((row) => [row.id, row.zone]))
   const pickDistrict = (id: number) => onPick({ kind: 'district', id })
   const [focusX, focusZ] = hexToWorld(center[0], center[1])

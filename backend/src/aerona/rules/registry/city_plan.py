@@ -12,6 +12,18 @@ class CityPlanRules:
     ring_spacing: int = rule(1, 1, 6, S, "Hexes between the rings of the city plan's zones, from the seat of government outward")
     household: int = rule(5, 1, 50, S, "People living in one dwelling of a district")
     residential_housing_pct: int = rule(160, 0, 400, S, "Homes a residential quarter holds against another district of its level (%)")
+    farmland_housing_pct: int = rule(80, 0, 400, S, "Homes farmland holds against a district of its level that is only homes (%)")
+    market_housing_pct: int = rule(80, 0, 400, S, "Homes a market quarter holds against a district of its level that is only homes (%)")
+    craft_quarter_housing_pct: int = rule(90, 0, 400, S, "Homes a craft quarter holds against a district of its level that is only homes (%)")
+    temple_quarter_housing_pct: int = rule(70, 0, 400, S, "Homes a temple quarter holds against a district of its level that is only homes (%)")
+    harbour_housing_pct: int = rule(70, 0, 400, S, "Homes a harbour quarter holds against a district of its level that is only homes (%)")
+    citadel_housing_pct: int = rule(50, 0, 400, S, "Homes a citadel holds against a district of its level that is only homes (%)")
+    slums_housing_pct: int = rule(150, 0, 400, S, "Homes the slums hold against a district of its level that is only homes (%)")
+    palace_housing_pct: int = rule(40, 0, 400, S, "Homes a palace quarter holds against a district of its level that is only homes (%)")
+    foreign_quarter_housing_pct: int = rule(110, 0, 400, S, "Homes a foreign quarter holds against a district of its level that is only homes (%)")
+    necropolis_housing_pct: int = rule(0, 0, 400, S, "Homes a necropolis holds against a district of its level that is only homes (%)")
+    civic_quarter_housing_pct: int = rule(50, 0, 400, S, "Homes a civic quarter holds against a district of its level that is only homes (%)")
+    gardens_housing_pct: int = rule(30, 0, 400, S, "Homes gardens hold against a district of its level that is only homes (%)")
     civic_quarter_at: int = rule(
         3, 1, 20, S, "Schools, healers, arenas, theatres, libraries and almshouses a town needs before it gathers them into a civic quarter"
     )

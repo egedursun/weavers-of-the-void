@@ -9,6 +9,7 @@ export type Part = {
   scale?: number
   offset?: readonly [number, number]
   turn?: number
+  token?: string
 }
 export type Look = readonly Part[]
 
@@ -268,18 +269,11 @@ export const HOUSING_LOOK: Record<Schema['HousingLevel'], Part> = {
 export const SHELTER: Part = { model: prop('tent'), scale: 0.35 }
 
 export const DISTRICT_DRESS: Partial<Record<Schema['DistrictKind'], Look>> = {
-  farmland: [
-    { model: neutral('building_grain'), scale: 0.9, offset: [0, 0] },
-    { model: neutral('fence_wood_straight'), scale: 0.6, offset: [0, 0.75] },
-  ],
-  gardens: [
-    { model: nature('trees_A_medium'), offset: [0, 0] },
-    { model: spooky('bench'), scale: SPOOKY, offset: [0.5, 0.5] },
-  ],
+  farmland: [{ model: neutral('building_grain'), scale: 0.7 }],
+  gardens: [{ model: nature('trees_A_medium'), scale: 0.8 }],
   necropolis: [
-    { model: spooky('grave_A'), scale: SPOOKY, offset: [0.3, 0.3] },
-    { model: spooky('gravestone'), scale: SPOOKY, offset: [-0.3, 0.3] },
-    { model: spooky('grave_B'), scale: SPOOKY, offset: [0, -0.35] },
+    { model: spooky('grave_A'), scale: SPOOKY, offset: [0.15, 0.15] },
+    { model: spooky('gravestone'), scale: SPOOKY, offset: [-0.15, -0.1] },
   ],
 }
 
@@ -325,34 +319,90 @@ export function stageOf(
   return 'late'
 }
 
-export const GROUND_LOOK: Record<Schema['LandGround'], Look> = {
-  water: [{ model: WATER_TILE }],
-  shore: [{ model: hex('tiles/coast/hex_coast_A') }],
-  lowland: [{ model: GROUND_TILE }],
-  wetland: [
-    { model: GROUND_TILE },
-    { model: nature('waterplant_B'), scale: 0.8, offset: [0.5, -0.4] },
-  ],
-  hills: [{ model: GROUND_TILE }, { model: nature('hills_A') }],
-  mountains: [{ model: GROUND_TILE }, { model: nature('mountain_A_grass') }],
-  peaks: [{ model: GROUND_TILE }, { model: nature('mountain_C') }],
+const SIXTH = Math.PI / 3
+
+function pick<T>(items: readonly T[], q: number, r: number): T {
+  return items[Math.abs(q * 7 + r * 13) % items.length]
 }
 
-export const COVER_LOOK: Record<Schema['LandCover'], Look> = {
-  open: [],
-  forest: [{ model: nature('trees_A_large') }],
-  fields: [{ model: neutral('building_grain') }],
-  pasture: [
-    { model: neutral('fence_wood_straight'), scale: 0.8, offset: [0, 0.6] },
-    { model: nature('tree_single_A'), scale: 0.6, offset: [0.5, -0.4] },
-  ],
-  marsh: [
-    { model: nature('waterplant_A') },
-    { model: nature('waterlily_A'), offset: [0.4, 0.4] },
-  ],
-  cleared: [{ model: nature('trees_A_cut') }],
-  built: [{ model: neutral('building_dirt'), scale: 0.8 }],
-  mined: [{ model: nature('rock_single_C') }],
+function turned(part: Part, q: number, r: number): Part {
+  return { ...part, turn: (Math.abs(q * 5 + r * 3) % 6) * SIXTH }
+}
+
+const HILLS: readonly Part[] = [
+  { model: nature('hills_A') },
+  { model: nature('hills_B') },
+  { model: nature('hills_C') },
+]
+const MOUNTAINS: readonly Part[] = [
+  { model: nature('mountain_A_grass') },
+  { model: nature('mountain_B_grass') },
+  { model: nature('mountain_C_grass') },
+]
+const PEAKS: readonly Part[] = [
+  { model: nature('mountain_A') },
+  { model: nature('mountain_B') },
+  { model: nature('mountain_C') },
+]
+const FORESTS: readonly Part[] = [
+  { model: nature('trees_A_large') },
+  { model: nature('trees_B_large') },
+  { model: nature('trees_A_medium') },
+  { model: nature('trees_B_medium') },
+]
+
+export function groundLook(
+  ground: Schema['LandGround'],
+  q: number,
+  r: number,
+  shoreline: number | null = null
+): Look {
+  const base = { model: GROUND_TILE }
+  if (ground === 'water') return [{ model: WATER_TILE }]
+  if (ground === 'shore')
+    return shoreline === null
+      ? [{ model: GROUND_TILE, token: '--brand-gold-light' }]
+      : [{ model: hex('tiles/coast/hex_coast_A'), turn: shoreline }]
+  if (ground === 'wetland')
+    return [
+      base,
+      turned(
+        { model: nature('waterplant_B'), scale: 0.8, offset: [0.4, -0.3] },
+        q,
+        r
+      ),
+    ]
+  if (ground === 'hills') return [base, turned(pick(HILLS, q, r), q, r)]
+  if (ground === 'mountains') return [base, turned(pick(MOUNTAINS, q, r), q, r)]
+  if (ground === 'peaks') return [base, turned(pick(PEAKS, q, r), q, r)]
+  return [base]
+}
+
+export function coverLook(
+  cover: Schema['LandCover'],
+  q: number,
+  r: number
+): Look {
+  if (cover === 'forest') return [turned(pick(FORESTS, q, r), q, r)]
+  if (cover === 'fields')
+    return [turned({ model: neutral('building_grain') }, q, r)]
+  if (cover === 'pasture')
+    return [
+      turned({ model: neutral('fence_wood_straight'), scale: 0.8 }, q, r),
+      { model: nature('tree_single_A'), scale: 0.6, offset: [0.4, -0.3] },
+    ]
+  if (cover === 'marsh')
+    return [
+      { model: nature('waterplant_A') },
+      { model: nature('waterlily_A'), offset: [0.35, 0.3] },
+    ]
+  if (cover === 'cleared')
+    return [turned({ model: nature('trees_A_cut') }, q, r)]
+  if (cover === 'built')
+    return [{ model: neutral('building_dirt'), scale: 0.8 }]
+  if (cover === 'mined')
+    return [turned({ model: nature('rock_single_C') }, q, r)]
+  return []
 }
 
 export const SETTLEMENT_LOOK: Look = [

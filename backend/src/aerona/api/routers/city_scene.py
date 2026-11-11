@@ -37,17 +37,27 @@ from aerona.db.tables.settlement import DistrictRow, SettlementInfrastructureRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.urban import DistrictServiceRow, TurfRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.settlement import SizeTier, WaterSupply
+from aerona.domain.enums.settlement import DistrictKind, SizeTier, WaterSupply
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.urban import HousingLevel, LandCover, LandGround, Morphology, ZoneKind
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.urban.cityscape import DIGGINGS, HOUSE_SLOTS, homes_of, land_tiles, pick_tile, provisional, resource_prefer, slots_of
 from aerona.engine.urban.coverage import home_of, people_of_districts
-from aerona.engine.urban.layout import CENTRE, Hex, water_side
+from aerona.engine.urban.layout import CENTRE, CityLayout, Hex, water_side
 from aerona.engine.urban.planning import coastal
 
 router = APIRouter(tags=["city"])
 NodeId = Annotated[int, Path(ge=1)]
+
+
+def home_scale(layout: CityLayout, slots: dict[int, tuple[Hex, int]], districts: list[DistrictRow], dwellings: dict[int, int], shelters: int) -> int:
+    built = {cell for cell, _ in slots.values()}
+    room = {district.id: sum(1 for cell in layout.footprints.get(district.id, []) if cell not in built) * HOUSE_SLOTS for district in districts}
+    slums = sum(room[district.id] for district in districts if district.kind is DistrictKind.SLUMS)
+    needs = [math.ceil(dwellings[district.id] / room[district.id]) for district in districts if room[district.id] > 0 and dwellings[district.id] > 0]
+    if shelters and slums:
+        needs.append(math.ceil((shelters + sum(dwellings[district.id] for district in districts if district.kind is DistrictKind.SLUMS)) / slums))
+    return max(1, *needs) if needs else 1
 
 
 def home_id(profile: StructureProfileRow, districts: list[DistrictRow]) -> int | None:
@@ -74,7 +84,7 @@ async def city_scene(services: ServicesDep, settlement_id: NodeId) -> CitySceneV
         districts = list(await session.scalars(select(DistrictRow).where(DistrictRow.settlement_entity_id == town.id).order_by(DistrictRow.id)))
         layout = provisional(rules, districts, morphology, walls, town.id)
         population = round(stat_or(town, "population", 0))
-        people = people_of_districts(population, districts)
+        people = people_of_districts(rules, population, districts)
         coverage: dict[int, list[ServiceShare]] = defaultdict(list)
         for row in await session.scalars(
             select(DistrictServiceRow).where(DistrictServiceRow.district_id.in_([d.id for d in districts])).order_by(DistrictServiceRow.service)
@@ -91,8 +101,7 @@ async def city_scene(services: ServicesDep, settlement_id: NodeId) -> CitySceneV
         dwellings = {district.id: homes_of(people.get(district.id, 0), household) for district in districts}
         homeless = profile.homeless if profile is not None else 0
         shelters = math.ceil(homeless / household)
-        room = max(1, sum(len(layout.footprints.get(district.id, [])) for district in districts) * HOUSE_SLOTS)
-        scale = max(1, math.ceil((sum(dwellings.values()) + shelters) / room))
+        scale = home_scale(layout, slots, districts, dwellings, shelters)
         zones: dict[ZoneKind, ZoneShare] = {zone: ZoneShare(zone=zone, districts=0, cells=0, buildings=0) for zone in ZoneKind}
         for district in districts:
             share = zones[ZONE_OF_DISTRICT[district.kind]]
@@ -318,7 +327,7 @@ async def structure_types(services: ServicesDep, world_id: NodeId) -> StructureT
         for district in districts:
             by_town[district.settlement_entity_id].append(district)
         for town_id, items in by_town.items():
-            people = people_of_districts(population.get(town_id, 0), items)
+            people = people_of_districts(rules, population.get(town_id, 0), items)
             for district in items:
                 homes[district.housing.value].append(homes_of(people.get(district.id, 0), rules.city_plan.household))
                 towns_of[district.housing.value].add(town_id)

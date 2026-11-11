@@ -96,7 +96,9 @@ def land_tiles(land: RegionEnvironmentRow, region_id: int) -> list[Tile]:
     heights = {cell: rng.random() + distance(cell, CENTRE) * (0.3 if land.coast_kind.value != "none" else 0.0) * (1 if cell[0] >= 0 else -1) for cell in cells}
     by_height = sorted(cells, key=lambda cell: (heights[cell], cell))
     grounds = dict(zip(by_height, ground_counts(land.biome_mix, len(cells)), strict=True))
-    dry = [cell for cell in by_height if grounds[cell] not in (LandGround.WATER, LandGround.SHORE)]
+    flowing = land.river_class is not RiverClass.NONE
+    river = {cell for cell in cells if flowing and cell[1] == 0 and grounds[cell] is not LandGround.WATER}
+    dry = [cell for cell in by_height if grounds[cell] not in (LandGround.WATER, LandGround.SHORE) and cell not in river]
     covers: dict[Hex, LandCover] = {}
     plan = (
         (LandCover.BUILT, land.built, (LandGround.LOWLAND, LandGround.HILLS)),
@@ -114,24 +116,25 @@ def land_tiles(land: RegionEnvironmentRow, region_id: int) -> list[Tile]:
             :wanted
         ]
         covers.update(dict.fromkeys(chosen, cover))
-    flowing = land.river_class is not RiverClass.NONE
     return [
         Tile(
             q=cell[0],
             r=cell[1],
             ground=grounds[cell],
             cover=covers.get(cell, LandCover.OPEN),
-            river=flowing and cell[1] == 0 and grounds[cell] is not LandGround.WATER,
+            river=cell in river,
         )
         for cell in cells
     ]
 
 
 def pick_tile(tiles: list[Tile], taken: set[Hex], prefer: tuple[LandCover, ...], grounds: tuple[LandGround, ...] = ()) -> Hex:
+    wet = LandGround.WATER in grounds
     ranked = sorted(
         tiles,
         key=lambda tile: (
             (tile.q, tile.r) in taken,
+            (tile.river or tile.ground is LandGround.WATER) is not wet,
             tile.cover not in prefer,
             bool(grounds) and tile.ground not in grounds,
             distance((tile.q, tile.r), CENTRE),

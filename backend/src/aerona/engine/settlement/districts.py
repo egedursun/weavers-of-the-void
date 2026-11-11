@@ -5,7 +5,7 @@ from types import MappingProxyType
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.urban import HOUSING_RULE
+from aerona.catalog.urban import DENSITY_RULE, HOUSING_RULE
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -96,11 +96,15 @@ class DistrictEffects:
     tension_relief_pct: int = 0
 
 
+def density_pct(rules: Rules, kind: DistrictKind) -> int:
+    return int(getattr(rules.city_plan, DENSITY_RULE[kind]))
+
+
 def base_parameters(rules: Rules, kind: DistrictKind) -> dict[str, int]:
     urban = rules.urban
     table = rules.districts
     found = dict.fromkeys(DESIGN_PARAMETERS, 0)
-    found["housing"] = urban.housing_per_level * (rules.city_plan.residential_housing_pct if kind is DistrictKind.RESIDENTIAL else PERCENT) // PERCENT
+    found["housing"] = urban.housing_per_level * density_pct(rules, kind) // PERCENT
     if kind in (DistrictKind.FARMLAND, DistrictKind.MARKET):
         found["food_store"] = urban.granary_per_level
     if kind in (DistrictKind.MARKET, DistrictKind.CRAFT_QUARTER):

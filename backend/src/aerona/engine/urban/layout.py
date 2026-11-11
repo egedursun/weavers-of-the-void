@@ -1,4 +1,4 @@
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 
 from aerona.catalog.zones import OUTSIDE_WALLS, RING_OF_ZONE, WATERSIDE, ZONE_OF_DISTRICT
@@ -44,20 +44,31 @@ def size_of(rules: Rules, district: DistrictRow) -> int:
     return max(1, district.level * rules.city_plan.cells_per_level)
 
 
-def claim(seed: Hex, size: int, taken: dict[Hex, int]) -> list[Hex]:
+def spread(seed: Hex, size: int, taken: dict[Hex, int], fits: Callable[[Hex], bool], *, through: bool) -> list[Hex]:
     found: list[Hex] = []
     frontier = [seed]
     seen = {seed}
     while frontier and len(found) < size:
         frontier.sort(key=lambda cell: (distance(cell, seed), distance(cell, CENTRE), cell))
         cell = frontier.pop(0)
-        if cell not in taken:
+        free = cell not in taken and (cell == seed or fits(cell))
+        if free:
             found.append(cell)
+        if not free and not through:
+            continue
         for near in neighbours(cell):
             if near not in seen:
                 seen.add(near)
                 frontier.append(near)
     return found
+
+
+def claim(seed: Hex, size: int, taken: dict[Hex, int], fits: Callable[[Hex], bool] = lambda cell: True) -> list[Hex]:
+    near = spread(seed, size, taken, fits, through=False)
+    if len(near) >= size:
+        return near
+    far = spread(seed, size, {**taken, **dict.fromkeys(near, -1)}, fits, through=True)
+    return near + far[: size - len(near)]
 
 
 @dataclass
@@ -76,19 +87,28 @@ class CityLayout:
 
 def layout_of(rules: Rules, districts: Sequence[DistrictRow], walls_level: int = 0) -> CityLayout:
     found = CityLayout()
-    placed = sorted((district for district in districts if seed_of(district) is not None), key=lambda item: item.id)
+    placed = sorted(
+        (district for district in districts if seed_of(district) is not None),
+        key=lambda item: (item.kind in OUTSIDE_WALLS, RING_OF_ZONE[ZONE_OF_DISTRICT[item.kind]], item.id),
+    )
     reserved: dict[Hex, int] = {}
     for district in placed:
         seed = seed_of(district)
         if seed is not None:
             reserved.setdefault(seed, district.id)
+    walls: int | None = None
     for district in placed:
         seed = seed_of(district)
         if seed is None:
             continue
+        outer = district.kind in OUTSIDE_WALLS
+        if outer and walls is None and walls_level > 0 and found.cells:
+            walls = max(distance(cell, CENTRE) for cell in found.cells) + 1
         found.seeds[district.id] = seed
         others = {cell: owner for cell, owner in reserved.items() if owner != district.id}
-        cells = claim(seed, size_of(rules, district), {**others, **found.cells})
+        beyond = walls
+        fits = (lambda cell, edge=beyond: distance(cell, CENTRE) > edge) if outer and beyond is not None else (lambda cell: True)
+        cells = claim(seed, size_of(rules, district), {**others, **found.cells}, fits)
         found.footprints[district.id] = cells
         for cell in cells:
             found.cells[cell] = district.id

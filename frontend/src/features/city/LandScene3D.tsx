@@ -4,16 +4,16 @@ import { tokenHex } from '@/features/cosmography/visual/palette'
 import { Model } from './Model'
 import { SceneFrame } from './SceneFrame'
 import { type LandScene } from './api'
-import { cellKey, hexToWorld } from './hex'
+import { cellKey, hexDistance, hexRing, hexToWorld } from './hex'
 import { COVERS, GROUNDS, STATES } from './labels'
 import {
-  COVER_LOOK,
   GROUND_TILE,
-  GROUND_LOOK,
   RIVER_TILE,
   SETTLEMENT_LOOK,
   STAGE_LOOK,
   STRUCTURE_LOOK,
+  coverLook,
+  groundLook,
   placeLook,
   resourceLook,
   stageOf,
@@ -28,6 +28,7 @@ const RIVER_SCALE = { none: 0, stream: 0.7, river: 1, great_river: 1.15 }
 const RESOURCE_MIN = 0.45
 const SPENT_DIM = 0.5
 const SELECTED_LIFT = 0.25
+const COAST_TURN = Math.PI / 3
 
 type Hover = { x: number; z: number; text: string } | null
 
@@ -70,6 +71,24 @@ export default function LandScene3D({
     ].map((item) => cellKey([item.q, item.r]))
   )
   const grass = tokenHex('--success')
+  const wetCells = new Set(
+    scene.tiles
+      .filter((tile) => tile.ground === 'water')
+      .map((tile) => cellKey([tile.q, tile.r]))
+  )
+  const shorelineOf = (tile: LandScene['tiles'][number]): number | null => {
+    const water = hexRing(1).find((step) =>
+      wetCells.has(cellKey([tile.q + step[0], tile.r + step[1]]))
+    )
+    if (water) {
+      const [x, z] = hexToWorld(water[0], water[1])
+      return COAST_TURN - Math.atan2(z, x)
+    }
+    if (scene.coast === 'none' || hexDistance([tile.q, tile.r], [0, 0]) < reach)
+      return null
+    const [x, z] = hexToWorld(tile.q, tile.r)
+    return COAST_TURN - Math.atan2(z, x)
+  }
   const lifted = (kind: NonNullable<LandPick>['kind'], id: number) =>
     selected !== null &&
     selected.kind === kind &&
@@ -98,10 +117,10 @@ export default function LandScene3D({
                   turn: 0,
                 },
               ]
-            : GROUND_LOOK[tile.ground]
+            : groundLook(tile.ground, tile.q, tile.r, shorelineOf(tile))
           const cover = busy.has(cellKey([tile.q, tile.r]))
             ? []
-            : COVER_LOOK[tile.cover]
+            : coverLook(tile.cover, tile.q, tile.r)
           const pick = () => onPick({ kind: 'tile', q: tile.q, r: tile.r })
           const text = `${GROUNDS[tile.ground]} · ${COVERS[tile.cover]}${tile.river ? ' · river' : ''}`
           return [...ground, ...cover].map((part, index) => (
@@ -114,9 +133,11 @@ export default function LandScene3D({
               tint={
                 chosen && index === 0
                   ? tokenHex('--brand-gold')
-                  : part.model === GROUND_TILE
-                    ? grass
-                    : null
+                  : part.token
+                    ? tokenHex(part.token)
+                    : part.model === GROUND_TILE
+                      ? grass
+                      : null
               }
               dim={part.model === GROUND_TILE ? 0.8 : 1}
               onClick={pick}
