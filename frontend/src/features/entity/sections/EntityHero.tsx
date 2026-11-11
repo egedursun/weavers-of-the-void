@@ -8,6 +8,7 @@ import { EntityLink, Paged } from '@/components/domain'
 import { DomainIcon } from '@/components/domain/DomainIcon'
 import { RecordNavLink } from '@/components/domain/RecordNavLink'
 import { Label, Muted, PageTitle } from '@/components/typography'
+import { ArmsCrest } from '@/features/collective/ArmsCrest'
 import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverlay'
 import { humanize } from '../actions/schema'
 import { useLoreMutation } from '../api/mutations'
@@ -78,6 +79,7 @@ export function EntityHero({
         onOpen={onOpenImages}
         readOnlyReason={readOnlyReason}
       />
+      <ArmsCrest nodeId={entity.id} name={entity.name} />
       <div className='flex min-w-0 flex-1 flex-col gap-2'>
         <nav
           aria-label='Location'

@@ -7,6 +7,7 @@ import {
   resetApi,
 } from '@/test-utils/fakeApi'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ArmsCrest } from './ArmsCrest'
 import { CollectiveSection } from './CollectiveSection'
 
 vi.mock('@/api/client', async () => {
@@ -311,5 +312,48 @@ describe('crowds, memory, customs and craft', () => {
     await expect
       .element(screen.getByText('This could not be read'))
       .toBeVisible()
+  })
+
+  it('shows a record’s arms beside its portrait and opens them', async () => {
+    serveBase()
+    onApi('GET', '/api/collective/arms/30', {
+      holder_kind: 'polity',
+      field: 'red',
+      division: 'chevron',
+      second: 'gold',
+      charge: 'sword',
+      charge_tincture: 'silver',
+      motto: 'First into the breach',
+      parent: null,
+      quartered: null,
+      blazon: 'Chevron gules and or, a sword argent',
+      since_epoch: 3,
+      locked: [],
+    })
+    const { screen } = await renderApp(<ArmsCrest nodeId={30} name='Varo' />)
+    await screen
+      .getByRole('button', {
+        name: 'Arms of Varo: Chevron gules and or, a sword argent',
+      })
+      .click()
+    await expect
+      .element(screen.getByText('First into the breach'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByRole('img', { name: 'Arms of Varo, drawn large' }))
+      .toBeVisible()
+  })
+
+  it('draws no crest for a record without arms', async () => {
+    serveBase()
+    onApi('GET', '/api/collective/arms/40', null)
+    const { screen } = await renderApp(
+      <div>
+        <ArmsCrest nodeId={40} name='Aldric' />
+        <span>hero</span>
+      </div>
+    )
+    await expect.element(screen.getByText('hero')).toBeVisible()
+    expect(screen.getByRole('img').elements()).toHaveLength(0)
   })
 })

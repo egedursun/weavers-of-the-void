@@ -18,6 +18,8 @@ export const collectiveKeys = {
   of: (nodeId: number) =>
     [...queryKeys.world.all, 'collective-of', nodeId] as const,
   storylets: () => [...queryKeys.world.all, 'storylet-catalog'] as const,
+  arms: (nodeId: number) =>
+    [...queryKeys.world.all, 'arms-of', nodeId] as const,
 }
 
 export function useNodeCollective(nodeId: number) {
@@ -26,6 +28,18 @@ export function useNodeCollective(nodeId: number) {
     queryFn: () =>
       unwrap(
         api.GET('/api/collective/of/{node_id}', {
+          params: { path: { node_id: nodeId } },
+        })
+      ),
+  })
+}
+
+export function useNodeArms(nodeId: number) {
+  return useQuery({
+    queryKey: collectiveKeys.arms(nodeId),
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/collective/arms/{node_id}', {
           params: { path: { node_id: nodeId } },
         })
       ),

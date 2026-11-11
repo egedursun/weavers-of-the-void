@@ -4879,6 +4879,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/collective/arms/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_arms_api_collective_arms__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/collective/storylets': {
     parameters: {
       query?: never
@@ -60270,6 +60286,35 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['CollectiveView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_arms_api_collective_arms__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ArmsView'] | null
         }
       }
       default: {

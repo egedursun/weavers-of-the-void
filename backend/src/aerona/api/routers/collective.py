@@ -593,6 +593,12 @@ async def node_collective(services: ServicesDep, node_id: NodeId) -> CollectiveV
         )
 
 
+@router.get("/collective/arms/{node_id}", response_model=ArmsView | None)
+async def node_arms(services: ServicesDep, node_id: NodeId) -> ArmsView | None:
+    async with reader(services) as session:
+        return await arms_view(session, node_id)
+
+
 @router.get("/collective/storylets", response_model=list[StoryletSpecView])
 async def storylet_catalog() -> list[StoryletSpecView]:
     return [
