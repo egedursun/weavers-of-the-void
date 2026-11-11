@@ -27,12 +27,19 @@ DARING_MAX = 1.5
 
 BELIEF_INDEX = "aerona.belief_index"
 BELIEF_INDEX_WHOLE = "aerona.belief_index.whole"
+BELIEF_PENDING = "aerona.belief_index.pending"
 BELIEF_KEYS = ("holder_node_id", "subject_node_id", "attribute")
 
 
+def note_pending(sync: Session, instance: object) -> None:
+    if isinstance(instance, BeliefRow):
+        sync.info.setdefault(BELIEF_PENDING, []).append(instance)
+
+
 def foreign_beliefs(sync: Session, index: dict[int, dict[tuple[int, str], BeliefRow]]) -> bool:
-    for item in sync.new:
-        if isinstance(item, BeliefRow) and index.get(item.holder_node_id, {}).get((item.subject_node_id, item.attribute)) is not item:
+    pending: list[BeliefRow] = sync.info.pop(BELIEF_PENDING, [])
+    for item in pending:
+        if index.get(item.holder_node_id, {}).get((item.subject_node_id, item.attribute)) is not item:
             return True
     return any(isinstance(item, BeliefRow) for item in sync.deleted)
 
@@ -81,6 +88,7 @@ def follow_beliefs(sync: Session, *_: object) -> None:
 def drop_beliefs(sync: Session, *_: object) -> None:
     sync.info.pop(BELIEF_INDEX, None)
     sync.info.pop(BELIEF_INDEX_WHOLE, None)
+    sync.info.pop(BELIEF_PENDING, None)
 
 
 def drop_beliefs_on_write(state: ORMExecuteState) -> None:
@@ -89,9 +97,11 @@ def drop_beliefs_on_write(state: ORMExecuteState) -> None:
 
 
 event.listen(Session, "after_flush", follow_beliefs)
+event.listen(Session, "transient_to_pending", note_pending)
 event.listen(Session, "after_soft_rollback", drop_beliefs)
 event.listen(Session, "do_orm_execute", drop_beliefs_on_write)
 register_index(BELIEF_INDEX)
+register_index(BELIEF_PENDING)
 
 
 async def believe(

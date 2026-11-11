@@ -26,7 +26,7 @@ def column_keys(mapper: Mapper[Any]) -> tuple[str, ...]:
 
 class FastSession(AsyncSession):
     async def delete(self, instance: object) -> None:
-        if instance in self.sync_session.new:
+        if instance_state(instance).pending:
             self.sync_session.expunge(instance)
             return
         await super().delete(instance)
