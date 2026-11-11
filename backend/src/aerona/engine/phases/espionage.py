@@ -227,6 +227,8 @@ async def answer_murder(ctx: TickContext, network: SpyNetworkRow, victim: Entity
     if not killers:
         return
     await house_feud(ctx, killers[0], victim.id, f"the murder of {victim.name}")
+    if ctx.rng(f"espionage.revenge.{victim.id}").chance(ctx.rules.espionage.spy_war_chance) and network.owner_entity_id != target.id:
+        await declare_war(ctx, target.id, network.owner_entity_id, "a ruler's murder", cause=WarCause.ESPIONAGE)
     town = victim.location_id if victim.location_id is not None else target.id
     if ctx.rng(f"espionage.inquest.{victim.id}").chance(ctx.rules.forensics.investigate_pct):
         await report_crime(ctx, town, killers[0], CrimeKind.MURDER)
@@ -453,6 +455,7 @@ async def run_networks(ctx: TickContext) -> None:
     "table.personality_values",
     "table.polity_members",
     "table.polity_profiles",
+    "table.registries",
     "table.relationships",
     "table.reputations",
     "table.routes",

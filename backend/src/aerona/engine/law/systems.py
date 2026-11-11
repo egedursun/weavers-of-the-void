@@ -42,8 +42,27 @@ async def system_of(session: AsyncSession, holder_id: int | None) -> LegalSystem
     return row.system if row is not None else None
 
 
-def court_of_case(case: CrimeCaseRow) -> int | None:
+async def state_church(session: AsyncSession, polity_id: int | None) -> int | None:
+    profile = await session.get(PolityProfileRow, polity_id) if polity_id is not None else None
+    return profile.state_religion_id if profile is not None else None
+
+
+async def court_of_case(session: AsyncSession, case: CrimeCaseRow) -> int | None:
+    church = await state_church(session, case.polity_entity_id) if case.court is CourtLevel.RELIGIOUS else None
+    if church is not None:
+        return church
+    for holder in (case.settlement_entity_id, case.polity_entity_id):
+        if holder is not None and await session.get(LegalSystemRow, holder) is not None:
+            return holder
     return case.polity_entity_id if case.polity_entity_id is not None else case.settlement_entity_id
+
+
+async def system_for_case(session: AsyncSession, case: CrimeCaseRow) -> LegalSystem | None:
+    holder = await court_of_case(session, case)
+    found = await system_of(session, holder)
+    if found is None and case.court is CourtLevel.RELIGIOUS:
+        return LegalSystem.RELIGIOUS
+    return found
 
 
 async def courts_of(session: AsyncSession, polity_id: int | None) -> list[CourtLevel]:
@@ -75,8 +94,18 @@ async def favoured(session: AsyncSession, polity: EntityRow) -> LegalSystem:
     return LegalSystem.CUSTOMARY
 
 
+async def adopt_church_systems(ctx: TickContext, tally: SystemTally) -> None:
+    churches = await ctx.session.scalars(select(PolityProfileRow.state_religion_id).where(PolityProfileRow.state_religion_id.is_not(None)).distinct())
+    for church in sorted(item for item in churches if item is not None):
+        if held(church) or await ctx.session.get(LegalSystemRow, church) is not None:
+            continue
+        ctx.session.add(LegalSystemRow(holder_entity_id=church, system=LegalSystem.RELIGIOUS, since_epoch=ctx.epoch, locked=[]))
+        tally.adopted += 1
+
+
 async def adopt_systems(ctx: TickContext, tally: SystemTally) -> None:
     table = ctx.rules.legal_systems
+    await adopt_church_systems(ctx, tally)
     realms = await ctx.session.scalars(
         select(EntityRow).where(EntityRow.entity_type == EntityType.POLITY, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
     )
@@ -148,7 +177,7 @@ async def leading_precedent(session: AsyncSession, holder_id: int | None, crime:
 
 
 async def by_precedent(ctx: TickContext, case: CrimeCaseRow, guilty: bool) -> tuple[bool, bool]:
-    leading = await leading_precedent(ctx.session, court_of_case(case), case.crime)
+    leading = await leading_precedent(ctx.session, await court_of_case(ctx.session, case), case.crime)
     if leading is None or not ctx.rng(f"law.follow.{case.id}").chance(ctx.rules.legal_systems.follow_pct * leading.authority / PERCENT):
         return guilty, False
     if "authority" not in leading.locked and not held(leading.holder_entity_id):
@@ -164,7 +193,7 @@ def by_oracle(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow) -> bool:
 
 
 async def record_precedent(ctx: TickContext, case: CrimeCaseRow, verdict: Verdict) -> PrecedentRow | None:
-    holder = court_of_case(case)
+    holder = await court_of_case(ctx.session, case)
     if holder is None or held(holder):
         return None
     chain = await courts_of(ctx.session, case.polity_entity_id)
@@ -186,7 +215,7 @@ async def record_precedent(ctx: TickContext, case: CrimeCaseRow, verdict: Verdic
 
 
 async def by_system(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow, guilty: bool) -> bool:
-    system = await system_of(ctx.session, court_of_case(case))
+    system = await system_for_case(ctx.session, case)
     trial = case.trial or TrialKind.JUDGE
     if system is LegalSystem.ORACLE:
         return by_oracle(ctx, case, accused)
@@ -226,7 +255,7 @@ async def hire_advocate(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow
         )
         best: tuple[int, EntityRow] | None = None
         for mortal in list(folk):
-            skill = await best_skill(ctx.session, mortal.id, (SkillKind.LAW,))
+            skill = await advocacy(ctx.session, mortal.id, PERCENT)
             if skill > 0 and not held(mortal.id) and (best is None or skill > best[0]):
                 best = (skill, mortal)
         if best is None or not await take_coin(ctx.session, ctx.rules, accused, table.advocate_fee):

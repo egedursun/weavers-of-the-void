@@ -3,7 +3,6 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
-from aerona.catalog.laws import PENALTY_CRUELTY
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import an
 from aerona.db.tables.entities import EntityRow
@@ -38,7 +37,7 @@ from aerona.engine.mind.book import skill_level, traits_of, values_for
 from aerona.engine.mind.ethics import culture_of, ethic_reading, honour_of
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember
-from aerona.engine.mortal.justice import CRIME_TEXT, MUTILATIONS, code_punishment, community_ruler, sentence
+from aerona.engine.mortal.justice import CRIME_TEXT, MUTILATIONS, code_punishment, community_ruler, cruelty_of, sentence
 from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.mortal.standing import add_renown
 from aerona.engine.notes import note
@@ -434,7 +433,7 @@ async def convict(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow, laws
     town = await ctx.session.get(EntityRow, case.settlement_entity_id) if case.settlement_entity_id is not None else None
     if punishment is PunishmentKind.FINE and town is not None:
         await credit(ctx, town, TreasuryEntry.TAX, ctx.rules.legislation.fine_amount, f"{case.crime.value} fine")
-    cruelty = PENALTY_CRUELTY.get(punishment.value, 0)
+    cruelty = cruelty_of(punishment)
     if judge is not None and punishment not in MUTILATIONS and cruelty >= CRUEL:
         await shift_infamy(ctx, judge.id, ctx.rules.legislation.penal_infamy * cruelty // PERCENT)
     applied = await sentence(ctx, accused, case.crime, punishment, judge=judge, case_id=case.id)

@@ -136,7 +136,7 @@ async def accuse_innocent(ctx: TickContext, polity_id: int, spymaster_id: int, t
     rival = await rival_of(ctx, polity_id)
     if rival is not None and ctx.rng(f"espionage.flee.{accused.id}.{ctx.epoch}").chance(table.defect_pct):
         office.holder_entity_id = None
-        await defect(ctx, accused, polity_id, rival, protected=False)
+        await defect(ctx, accused, polity_id, rival)
         await record(ctx, polity_id, spymaster_id, accused.id, MoleHuntOutcome.DEFECTED, mole=False)
         tally.defected += 1
         return

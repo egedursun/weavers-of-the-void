@@ -23,6 +23,7 @@ from aerona.engine.demography.cohorts import CohortKey, cohorts_of, row_for
 from aerona.engine.demography.events import ennobled, enslaved, freed, ruined
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.interconnect.flows import FlowCategory, flowing
+from aerona.engine.law.prisons import imprison
 from aerona.engine.military.units import resize
 from aerona.engine.notes import note
 from aerona.engine.polity.laws import law_param
@@ -179,6 +180,11 @@ async def ennoble_heroes(ctx: TickContext) -> int:
     return raised
 
 
+async def debtors_prison(ctx: TickContext, lender: EntityRow, member: EntityRow) -> None:
+    if await imprison(ctx, member) is None:
+        await take_captive(ctx, lender, member, None, description="held in debtors' prison", home_id=member.location_id)
+
+
 async def ruin_merchants(ctx: TickContext) -> int:
     table = ctx.rules.mobility
     fallen = 0
@@ -202,7 +208,7 @@ async def ruin_merchants(ctx: TickContext) -> int:
             member.social_class = SocialClass.SERF_OR_SLAVE if remedy == DebtRemedy.BONDAGE.value else SocialClass.OUTCAST
             lender = await living_entity(ctx.session, loan.lender_entity_id)
             if remedy == DebtRemedy.PRISON.value and lender is not None and await held_captive(ctx.session, member.id) is None:
-                await take_captive(ctx, lender, member, None, description="held in debtors' prison", home_id=member.location_id)
+                await debtors_prison(ctx, lender, member)
             fallen += 1
             await ruined(ctx, member, borrower)
     return fallen

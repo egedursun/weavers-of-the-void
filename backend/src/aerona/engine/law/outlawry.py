@@ -93,7 +93,7 @@ async def caught(ctx: TickContext, row: OutlawRow, outlaw: EntityRow, hunter: En
     await ctx.session.flush()
     jailed = await imprison(ctx, outlaw)
     if jailed is None:
-        await death_path(ctx, outlaw, f"hunted down for the bounty by {hunter.name}", hunter.id, "bounty", forced=True, manner=DeathCause.MURDER)
+        await death_path(ctx, outlaw, f"hunted down for the bounty by {hunter.name}", None, "bounty", forced=True, manner=DeathCause.EXECUTION)
     tally.caught += 1
     fate = "brought in" if jailed is not None else "killed"
     await note(ctx, f"{hunter.name} {fate} the outlaw {outlaw.name} and claimed the bounty.", key="law.bounty_claimed", ids=[hunter.id, outlaw.id])

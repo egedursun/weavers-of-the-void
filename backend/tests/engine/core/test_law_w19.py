@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.laws import PENALTY_CRUELTY
 from aerona.db.tables.dominion import DominionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import SecretRow
@@ -19,35 +20,37 @@ from aerona.db.tables.law_depth import (
     SpyCellRow,
 )
 from aerona.db.tables.military import SpyAgentRow, SpyNetworkRow
+from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.mythic import ServitorRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.structures import StructureProfileRow
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.intrigue import IntrigueSecret
 from aerona.domain.enums.justice import CaseStage, TrialKind, Verdict
 from aerona.domain.enums.law_depth import CourtLevel, JurisdictionClaim, KillMethod, LegalSystem, MoleHuntOutcome, RecruitMotive, RegistryKind
 from aerona.domain.enums.military import AgentStatus, SpyCover, SpyOwnerKind
-from aerona.domain.enums.mind import SkillKind, SkillSource, TraitKind, TraitSource
+from aerona.domain.enums.mind import MemoryKind, SkillKind, SkillSource, TraitKind, TraitSource
 from aerona.domain.enums.mortal import CrimeKind, PunishmentKind
 from aerona.domain.enums.mythic import ServitorRole
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.models.entity_stats import CultStats, PolityStats, SpiritStats, StructureStats
 from aerona.engine.context import TickContext
+from aerona.engine.demography.mobility import debtors_prison
 from aerona.engine.law.appeals import AppealTally, file_appeal, hear_appeals
 from aerona.engine.law.jurisdictions import claimed_court
 from aerona.engine.law.outlawry import OutlawTally, hunt_outlaws
 from aerona.engine.law.pardons import PardonTally, declare_amnesty, grant_pardon
 from aerona.engine.law.prisons import PrisonTally, keep_prisons
 from aerona.engine.law.registries import RegistryTally, enforce
-from aerona.engine.law.systems import SystemTally, adopt_systems, by_system
+from aerona.engine.law.systems import SystemTally, adopt_systems, by_system, system_for_case
 from aerona.engine.military.forensics import examine
 from aerona.engine.military.mole_hunts import MoleTally, hunt
-from aerona.engine.military.spy_depth import CellTally, compromise, loyalty_for, motive_for, organise
+from aerona.engine.military.spy_depth import CellTally, compromise, defect, loyalty_for, motive_for, organise
 from aerona.engine.mind.book import add_trait, set_skill, skill_level
-from aerona.engine.mortal.justice import sentence
+from aerona.engine.mortal.justice import CODE_PUNISHMENTS, cruelty_of, sentence
 from aerona.engine.mythic.divine_spies import DivineSpyTally, spy_for_gods
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.trials import TrialTally, try_case
@@ -445,3 +448,97 @@ async def test_a_realm_with_no_system_yet_keeps_the_verdict_of_its_trial(session
     await session.flush()
     assert await by_system(ctx, case, accused, True)
     assert not await by_system(ctx, case, accused, False)
+
+
+async def test_a_town_judges_by_its_own_system_and_faith_courts_by_the_church(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session)
+    town = await settlement(session, "Ashby", world, world.regions[0])
+    church = await entity(session, "The Church", EntityType.CULT, CultStats(), world_id=world.world.id)
+    polity = await realm_of(session, world, town, religion=church.id)
+    accused = await mortal(session, "Ilse", world, town.id)
+    session.add_all(
+        [
+            LegalSystemRow(holder_entity_id=polity.id, system=LegalSystem.CODIFIED, since_epoch=0, locked=[]),
+            LegalSystemRow(holder_entity_id=town.id, system=LegalSystem.ORACLE, since_epoch=0, locked=[]),
+        ]
+    )
+    case = case_for(town, polity, accused)
+    session.add(case)
+    await session.flush()
+    assert await system_for_case(session, case) is LegalSystem.ORACLE
+    case.court = CourtLevel.RELIGIOUS
+    assert await system_for_case(session, case) is LegalSystem.RELIGIOUS
+    await adopt_systems(ctx, SystemTally())
+    assert (await session.get(LegalSystemRow, church.id)).system is LegalSystem.RELIGIOUS
+
+
+async def test_a_prisoner_who_leaves_the_town_of_the_prison_has_escaped(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session, prisons={"escape_pct": 0})
+    town = await settlement(session, "Ashby", world, world.regions[0])
+    away = await settlement(session, "Brook", world, world.regions[0])
+    await realm_of(session, world, town)
+    jail = await prison_in(session, world, town)
+    convict = await mortal(session, "Ilse", world, away.id)
+    session.add(PrisonerRow(mortal_entity_id=convict.id, prison_entity_id=jail.id, term=5, gang_rank=0, since_epoch=0, locked=[]))
+    await session.flush()
+    tally = PrisonTally()
+    await keep_prisons(ctx, tally)
+    assert tally.escaped == 1 and await session.get(OutlawRow, convict.id) is not None
+
+
+async def test_a_defector_is_protected_only_by_a_side_with_a_spymaster(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session)
+    town = await settlement(session, "Ashby", world, world.regions[0])
+    home = await realm_of(session, world, town)
+    guarded = await realm_of(session, world, await settlement(session, "Brook", world, world.regions[0]))
+    open_side = await realm_of(session, world, await settlement(session, "Dale", world, world.regions[0]))
+    keeper = await mortal(session, "Pell", world, town.id)
+    session.add(OfficeRow(polity_entity_id=guarded.id, kind=OfficeKind.SPYMASTER, holder_entity_id=keeper.id))
+    await session.flush()
+    first = await defect(ctx, await mortal(session, "Ilse", world, town.id), home.id, guarded.id)
+    second = await defect(ctx, await mortal(session, "Oren", world, town.id), home.id, open_side.id)
+    assert first is not None and first.protected and second is not None and not second.protected
+
+
+async def test_one_in_registered_debt_is_recruited_for_money(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session)
+    town = await settlement(session, "Ashby", world, world.regions[0])
+    polity = await realm_of(session, world, town)
+    network = await network_on(session, polity, town)
+    debtor = await mortal(session, "Ilse", world, town.id)
+    await add_trait(session, debtor.id, TraitKind.PROUD, TraitSource.BIRTH, 0)
+    session.add(RegistryRow(holder_entity_id=polity.id, kind=RegistryKind.DEBT, counterparty_entity_id=debtor.id, amount=10, registered_epoch=0, locked=[]))
+    await session.flush()
+    assert await motive_for(ctx, network, debtor) is RecruitMotive.MONEY
+
+
+async def test_killing_an_outlaw_for_the_bounty_is_no_murder(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session, outlaws={"hunt_pct": 100, "hunter_skill": 1})
+    town = await settlement(session, "Ashby", world, world.regions[0])
+    polity = await realm_of(session, world, town)
+    outlaw = await mortal(session, "Ilse", world, town.id)
+    hunter = await mortal(session, "Oren", world, town.id)
+    await set_skill(session, hunter.id, SkillKind.TRACKING, 80, epoch=0, source=SkillSource.PLAYER)
+    session.add(OutlawRow(mortal_entity_id=outlaw.id, polity_entity_id=polity.id, bounty=0, renown=0, declared_epoch=0, locked=[]))
+    await session.flush()
+    await hunt_outlaws(ctx, OutlawTally())
+    assert outlaw.status is not EntityStatus.CANON
+    blamed = await session.scalar(select(MemoryRow.id).where(MemoryRow.kind == MemoryKind.KILLED_KIN, MemoryRow.subject_node_id == hunter.id))
+    assert blamed is None
+
+
+async def test_a_debtor_goes_to_the_town_prison_when_one_stands(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session)
+    town = await settlement(session, "Ashby", world, world.regions[0])
+    await prison_in(session, world, town)
+    lender = await mortal(session, "Ilse", world, town.id)
+    debtor = await mortal(session, "Oren", world, town.id)
+    await debtors_prison(ctx, lender, debtor)
+    assert await session.get(PrisonerRow, debtor.id) is not None
+
+
+def test_every_punishment_a_code_can_choose_has_its_cruelty() -> None:
+    assert {kind: cruelty_of(kind) for kind in CODE_PUNISHMENTS.values()} == {
+        kind: PENALTY_CRUELTY[name] for name, kind in reversed(list(CODE_PUNISHMENTS.items()))
+    } | {PunishmentKind.FINE: PENALTY_CRUELTY["fine"]}
+    assert cruelty_of(PunishmentKind.EYES) == PENALTY_CRUELTY["blinding"] and cruelty_of(PunishmentKind.PUBLIC_SHAMING) == PENALTY_CRUELTY["pillory"]

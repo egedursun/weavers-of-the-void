@@ -11,7 +11,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.justice import CaseStage, Verdict
 from aerona.domain.enums.law_depth import LegalSystem
-from aerona.engine.law.systems import court_of_case, system_of
+from aerona.engine.law.systems import system_for_case
 from aerona.engine.mythic.divine_spies import read_dreams as dream_secrets
 from aerona.engine.primitives.queries import living_entity
 from aerona.prompts import SonToolId
@@ -42,7 +42,7 @@ async def answer_oracle(call: SonCall, args: AnswerOracleInput) -> str:
     town = await call.session.get(EntityRow, case.settlement_entity_id) if case is not None and case.settlement_entity_id is not None else None
     if case is None or town is None or case.stage is not CaseStage.TRIAL:
         fail(SonResult.ORACLE_REFUSED, why="no such case waits for judgement")
-    if await system_of(call.session, court_of_case(case)) is not LegalSystem.ORACLE:
+    if await system_for_case(call.session, case) is not LegalSystem.ORACLE:
         fail(SonResult.ORACLE_REFUSED, why="that realm does not ask the gods for its verdicts")
     if args.verdict not in (Verdict.GUILTY, Verdict.ACQUITTED):
         fail(SonResult.ORACLE_REFUSED, why="an oracle can only name the accused guilty or innocent")

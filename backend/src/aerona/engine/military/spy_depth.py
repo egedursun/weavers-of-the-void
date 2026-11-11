@@ -6,16 +6,17 @@ from aerona.catalog.law_depth import MOTIVE_LOYALTY
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import SecretRow
-from aerona.db.tables.law_depth import DefectionRow, SpyCellRow
+from aerona.db.tables.law_depth import DefectionRow, RegistryRow, SpyCellRow
 from aerona.db.tables.military import SpyAgentRow, SpyNetworkRow
-from aerona.db.tables.polity import PolityMemberRow
+from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.law_depth import RecruitMotive
+from aerona.domain.enums.law_depth import RecruitMotive, RegistryKind
 from aerona.domain.enums.military import AgentStatus
 from aerona.domain.enums.mind import TraitKind
 from aerona.domain.enums.mortal import DeathCause
+from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.favours import hook_on
 from aerona.engine.intrigue.secrets import learn
@@ -46,6 +47,13 @@ async def values_close(ctx: TickContext, first: int, second: int) -> bool:
     return gap <= ctx.rules.spy_depth.belief_fit
 
 
+async def in_debt(ctx: TickContext, mortal_id: int) -> bool:
+    owed = await ctx.session.scalar(
+        select(RegistryRow.id).where(RegistryRow.counterparty_entity_id == mortal_id, RegistryRow.kind == RegistryKind.DEBT, RegistryRow.amount > 0).limit(1)
+    )
+    return owed is not None
+
+
 async def motive_for(ctx: TickContext, network: SpyNetworkRow, mortal: EntityRow) -> RecruitMotive:
     recruiter = network.spymaster_entity_id or network.owner_entity_id
     if await hook_on(ctx, recruiter, mortal.id) is not None:
@@ -53,7 +61,7 @@ async def motive_for(ctx: TickContext, network: SpyNetworkRow, mortal: EntityRow
     if await values_close(ctx, network.owner_entity_id, mortal.id):
         return RecruitMotive.IDEOLOGY
     traits = await traits_of(ctx.session, mortal.id)
-    if TraitKind.GREEDY in traits:
+    if TraitKind.GREEDY in traits or await in_debt(ctx, mortal.id):
         return RecruitMotive.MONEY
     if traits & VAIN:
         return RecruitMotive.EGO
@@ -148,10 +156,21 @@ async def realm_secrets(ctx: TickContext, realm_id: int) -> list[SecretRow]:
     )
 
 
-async def defect(ctx: TickContext, defector: EntityRow, from_id: int | None, to_id: int | None, *, protected: bool) -> DefectionRow | None:
+async def shelters(ctx: TickContext, side_id: int) -> bool:
+    keeper = await ctx.session.scalar(
+        select(OfficeRow.holder_entity_id)
+        .where(OfficeRow.polity_entity_id == side_id, OfficeRow.kind == OfficeKind.SPYMASTER, OfficeRow.holder_entity_id.is_not(None))
+        .limit(1)
+    )
+    return keeper is not None
+
+
+async def defect(ctx: TickContext, defector: EntityRow, from_id: int | None, to_id: int | None, *, protected: bool | None = None) -> DefectionRow | None:
     table = ctx.rules.defections
     if held(defector.id) or to_id is None:
         return None
+    if protected is None:
+        protected = await shelters(ctx, to_id)
     carried = 0
     for secret in (await realm_secrets(ctx, from_id))[: table.secrets] if from_id is not None else []:
         if await learn(ctx, secret, to_id):
@@ -189,7 +208,7 @@ async def cross_sides(ctx: TickContext, network: SpyNetworkRow, tally: CellTally
         agent.status, agent.ended_epoch = AgentStatus.TURNED, ctx.epoch
         if "exposure" not in network.locked:
             network.exposure = clamp_int(network.exposure + table.cell_exposure, 0, PERCENT)
-        await defect(ctx, mortal, network.owner_entity_id, network.target_entity_id, protected=True)
+        await defect(ctx, mortal, network.owner_entity_id, network.target_entity_id)
         tally.crossed += 1
 
 

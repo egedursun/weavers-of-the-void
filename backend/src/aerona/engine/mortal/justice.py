@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.ethics import CRIME_ACTS, HONOUR_MODELS
+from aerona.catalog.laws import PENALTY_CRUELTY
 from aerona.catalog.thoughts import THOUGHTS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
@@ -73,6 +74,11 @@ CRIME_TEXT = total(
         CrimeKind.DESERTION: "desertion",
     },
 )
+
+
+def cruelty_of(punishment: PunishmentKind) -> int:
+    name = next((name for name, kind in CODE_PUNISHMENTS.items() if kind is punishment), None)
+    return PENALTY_CRUELTY.get(name, 0) if name is not None else 0
 
 
 async def community_ruler(session: AsyncSession, community_id: int | None) -> EntityRow | None:

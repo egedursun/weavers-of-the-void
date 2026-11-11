@@ -175,6 +175,9 @@ async def keep_prison(ctx: TickContext, structure: StructureProfileRow, tally: P
         if held(mortal.id) or row.since_epoch == ctx.epoch:
             ranks.append(row.gang_rank)
             continue
+        if mortal.location_id != structure.host_entity_id:
+            await escape(ctx, row, mortal, structure, tally)
+            continue
         await suffer(ctx, prison, mortal, tally)
         await rise_in_gangs(ctx, row, mortal)
         ranks.append(row.gang_rank)
