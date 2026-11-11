@@ -868,7 +868,8 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.MAKE_SERVITOR: ToolText(
         "You make a servitor, a spirit in your service of the rank you choose. Messengers carry your dreams further, guards turn back those who "
         "would raze your holy places and thrones, judges win you veneration among the dead and the host fights for you in divine battles. "
-        "Its loyalty follows how your peoples regard you; a disloyal servitor may fall to another master. {{ rules.servitors.make_cost }} essence, 1 action.",
+        "Its loyalty follows how your peoples regard you and how you treat it: each new command and each defeat of its host wears on it, and a disloyal "
+        "servitor may fall to another master. {{ rules.servitors.make_cost }} essence, 1 action.",
         {
             "name": "Its name",
             "rank": "Its rank: {{ servitor_ranks }}",
@@ -891,9 +892,15 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.LIFT_GEAS: ToolText("You lift a geas you laid. 1 action.", {"geas_id": "The geas", "reason": "Why"}),
     T.CALL_HEROQUEST: ToolText(
-        "You call a mortal in your reach to a heroquest: it enters a mythic realm to walk a legend step by step. Success brings a boon and may rewrite "
-        "the legend; failure may trap its soul or break the myth. 1 action.",
-        {"quester_id": "The mortal", "legend_id": "The legend it walks", "reason": "Why you call it"},
+        "You call a mortal in your reach to a heroquest: it enters a mythic realm to walk a legend step by step, each step a trial of skill, passion, "
+        "conviction or faith. Success brings a boon and may rewrite the legend; a fall may hurt, madden or kill it, hold its soul in the myth while its "
+        "body sleeps, or break the myth. Companions share the trials and the outcome. 1 action.",
+        {
+            "quester_id": "The mortal",
+            "legend_id": "The legend it walks",
+            "companion_ids": "Mortals where the quester is who walk beside it (ids), if any",
+            "reason": "Why you call it",
+        },
     ),
     T.RESIGN_OFFICE: ToolText(
         "You give up a cosmic office you hold ({{ cosmic_offices }}); it stands empty and neglected until the council or the Creator fills it. 1 action.",

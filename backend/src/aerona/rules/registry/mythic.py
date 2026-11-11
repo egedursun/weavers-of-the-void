@@ -30,7 +30,7 @@ class HeroquestRules:
     death_pct: int = rule(10, 0, 100, H, "Chance a quester who falls and is neither trapped, nor breaks the myth, nor goes mad dies of it (%)")
     madness_pct: int = rule(30, 0, 100, H, "Chance a quester who falls and is neither trapped nor breaks the myth returns mad instead of injured (%)")
     party_pct: int = rule(30, 0, 100, H, "Chance a heroquest the engine begins is undertaken by a party (%)")
-    party_max: int = rule(3, 0, 20, H, "Companions a party heroquest takes at most")
+    party_max: int = rule(3, 0, 12, H, "Companions a party heroquest takes at most")
     rewrite_distortion: int = rule(20, 0, 100, H, "Distortion a returning quester's departure writes into the myth")
     boon_standing: int = rule(10, 0, 100, H, "Awe the quester's community gains for the god of the myth when the quest succeeds")
     boon_dominion: int = rule(10, 0, 100, H, "Dominion the god of the myth gains in the quester's land when the land is renewed")

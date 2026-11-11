@@ -94,9 +94,14 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"site_id": "The site you walk"},
     ),
     T.UNDERTAKE_HEROQUEST: ToolText(
-        "You set out on a heroquest: you enter a mythic realm and walk a legend of your people step by step. You need renown, a faithful people and a "
-        "legend to walk. Following the people's version helps; departing from it may win another boon and rewrites the legend. 1 action.",
-        {"legend_id": "The legend you walk (a legend id); leave it out to walk your people's own"},
+        "You set out on a heroquest: you enter a mythic realm and walk a legend of your people step by step, each step a trial of skill, passion, "
+        "conviction or faith. You need renown, a faithful people and a legend to walk. Following the people's version helps; departing from it may "
+        "win another boon and rewrites the legend. A fall may hurt, madden or kill you, hold your soul in the myth while your body sleeps, or break "
+        "the myth. Companions share the trials and the outcome. 1 action.",
+        {
+            "legend_id": "The legend you walk (a legend id); leave it out to walk your people's own",
+            "companion_ids": "Mortals where you are who walk beside you (ids), if any",
+        },
     ),
     T.TAKE_LONGEVITY: ToolText(
         "You take longevity magic: it adds years to your life each epoch it is paid in vis of the form you choose, and you come to need it; "

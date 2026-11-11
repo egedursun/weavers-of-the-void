@@ -154,7 +154,7 @@ describe('myth', () => {
           boon: null,
           interference: 15,
           next_trial: 'passion',
-          members: [],
+          members: [{ id: 41, kind: 'entity' as const, name: 'Cade' }],
           start_epoch: 5,
           end_epoch: null,
           locked: [],
@@ -190,6 +190,7 @@ describe('myth', () => {
       ],
     })
     onApi('POST', '/api/actions/geas:break', ACCEPTED_ACTION)
+    onApi('POST', '/api/actions/heroquest:party', ACCEPTED_ACTION)
     const { screen } = await renderApp(<MythicSection nodeId={40} />)
     await expect.element(screen.getByText('Taboo: Theft')).toBeVisible()
     await expect
@@ -200,6 +201,14 @@ describe('myth', () => {
         screen.getByText("Walking a god's path · since epoch 4 · you were told")
       )
       .toBeVisible()
+    await screen.getByRole('button', { name: 'Send Cade home' }).click()
+    await expect
+      .poll(() => callsTo('POST', '/api/actions/heroquest:party'))
+      .toHaveLength(1)
+    expect(callsTo('POST', '/api/actions/heroquest:party')[0].body).toEqual({
+      quest_id: 5,
+      members: [],
+    })
     await screen.getByRole('button', { name: 'Break it' }).click()
     await expect
       .poll(() => callsTo('POST', '/api/actions/geas:break'))

@@ -52,6 +52,8 @@ GEAS_ACTS = total(
     },
 )
 
+QUEST_PARTY_MAX = 12
+
 A = LegendArchetype
 Q = QuestTrial
 
@@ -109,6 +111,16 @@ ARCHETYPE_SKILLS = total(
         A.CURSED_LINE: frozenset({SkillKind.RITUAL, SkillKind.SPIRIT_SPEAKING, SkillKind.MEDICINE}),
         A.RETURN_OF_THE_KING: frozenset({SkillKind.LEADERSHIP, SkillKind.STRATEGY, SkillKind.ORATORY}),
         A.HAUNTED_PLACE: frozenset({SkillKind.SPIRIT_SPEAKING, SkillKind.RITUAL, SkillKind.TRACKING}),
+    },
+)
+
+REALM_PHRASES = total(
+    MythicRealm,
+    {
+        MythicRealm.PALACE: "the palace of its god",
+        MythicRealm.DEAD: "the realm of the dead",
+        MythicRealm.DREAM: "a dream world",
+        MythicRealm.SACRED_SITE: "the place where its myth happened",
     },
 )
 

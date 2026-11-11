@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.catalog.mythic import QUEST_PARTY_MAX
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.mind import ActKind
@@ -8,13 +9,11 @@ from aerona.engine.mythic import control
 from aerona.services.player.cosmography import Edited
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
-MEMBERS_MAX = 12
-
 
 class QuestDraft(Command):
     quester_id: int
     legend_id: int
-    members: list[int] = Field(default_factory=list, max_length=MEMBERS_MAX)
+    members: list[int] = Field(default_factory=list, max_length=QUEST_PARTY_MAX)
 
 
 class QuestEdit(Edited):
@@ -23,6 +22,11 @@ class QuestEdit(Edited):
 
 class QuestTarget(Command):
     quest_id: int
+
+
+class QuestParty(Command):
+    quest_id: int
+    members: list[int] = Field(default_factory=list, max_length=QUEST_PARTY_MAX)
 
 
 class MortalEdit(Edited):
@@ -94,6 +98,12 @@ async def edit_quest(scope: PlayerScope, command: QuestEdit) -> Effect:
 async def advance_quest(scope: PlayerScope, command: QuestTarget) -> Effect:
     row = await control.step_quest(await scope.context("heroquest_advance"), command.quest_id)
     return Effect(f"The heroquest stands at step {row.step} of {row.steps}: {row.state.value}.", row.quester_entity_id)
+
+
+@player_action("heroquest:party", ActionKind.EDIT_RECORD)
+async def set_party(scope: PlayerScope, command: QuestParty) -> Effect:
+    row = await control.set_party(await scope.context("heroquest_party"), command.quest_id, command.members)
+    return Effect(f"The heroquest goes on with {len(command.members)} companions.", row.quester_entity_id)
 
 
 @player_action("heroquest:delete", ActionKind.EDIT_RECORD)

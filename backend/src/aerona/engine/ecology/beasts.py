@@ -22,6 +22,7 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind, TreatyStatus
 from aerona.domain.enums.renown import ReputationAxis
 from aerona.domain.models.entity_stats import BeastStats, ItemStats, LegendStats, PlaceStats
+from aerona.engine.arcana.vis import harvest_vis
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
@@ -581,6 +582,7 @@ async def fall(ctx: TickContext, beast: EntityRow, row: BeastProfileRow) -> str:
         await corpse(ctx, beast, row, slayer)
         await loot(ctx, row, slayer)
         await void_trophy(ctx, beast, slayer)
+        await harvest_vis(ctx, beast, slayer)
         await acclaim_deed(ctx, slayer.id, ReputationAxis.HEROISM, ctx.rules.local_renown.act_magnitude * 2, place_id=slayer.location_id, token=True)
     treasures = await owned_items(ctx, [beast.id])
     if any(value > 0 for value in row.hoard.values()) or treasures:

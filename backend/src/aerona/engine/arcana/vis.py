@@ -2,10 +2,11 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.arcana import SCHOOL_GRAMMAR, TRAIT_FORMS
+from aerona.catalog.arcana import PHENOMENON_FORMS, SCHOOL_GRAMMAR, TRAIT_FORMS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.arcana import VisStockRow
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.cosmography import PhenomenonProfileRow
 from aerona.db.tables.dominion import MagicSiteRow
 from aerona.db.tables.entities import EntityRow, EntityTraitRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -138,18 +139,37 @@ async def from_beasts(ctx: TickContext, atlas: RegionAtlas, tally: VisTally) -> 
             by_beast.setdefault(int(beast_id), []).append(form)
     for beast_id, forms in sorted(by_beast.items()):
         region = atlas.top_region(beast_id)
-        folk = [community for community in atlas.communities_in(region)] if region is not None else []
-        if not folk or not ctx.rng(f"vis.beast.{beast_id}.{ctx.epoch}").chance(table.beast_pct):
+        folk = sorted(atlas.communities_in(region)) if region is not None else []
+        rng = ctx.rng(f"vis.beast.{beast_id}.{ctx.epoch}")
+        if not folk or not rng.chance(table.beast_pct):
             continue
-        tally.gathered += await give_vis(ctx, folk[0], forms[0], table.beast_yield)
+        tally.gathered += await give_vis(ctx, rng.pick(folk), rng.pick(forms), table.beast_yield)
+
+
+async def affinities_of(ctx: TickContext, beast_id: int) -> list[SpellForm]:
+    traits = await ctx.session.scalars(select(EntityTraitRow.trait).where(EntityTraitRow.entity_id == beast_id))
+    return sorted({TRAIT_FORMS[trait] for trait in traits if trait in TRAIT_FORMS})
+
+
+async def harvest_vis(ctx: TickContext, beast: EntityRow, slayer: EntityRow) -> int:
+    holder = (await purse_of(ctx, slayer))[-1]
+    if held(holder):
+        return 0
+    given = 0
+    for form in await affinities_of(ctx, beast.id):
+        given += await give_vis(ctx, holder, form, ctx.rules.vis.corpse_yield)
+    return given
 
 
 async def from_phenomena(ctx: TickContext, atlas: RegionAtlas, tally: VisTally) -> None:
     for phenomenon in await canon(ctx.session, [EntityType.PHENOMENON]):
+        profile = await ctx.session.get(PhenomenonProfileRow, phenomenon.id)
         region = atlas.top_region(phenomenon.id)
-        folk = list(atlas.communities_in(region)) if region is not None else []
-        if folk:
-            tally.gathered += await give_vis(ctx, folk[0], SpellForm.VOID, ctx.rules.vis.phenomenon_yield)
+        folk = sorted(atlas.communities_in(region)) if region is not None else []
+        amount = round_half_up(ctx.rules.vis.phenomenon_yield * profile.intensity / PERCENT) if profile is not None else 0
+        if folk and amount > 0 and profile is not None:
+            chosen = ctx.rng(f"vis.phenomenon.{phenomenon.id}.{ctx.epoch}").pick(folk)
+            tally.gathered += await give_vis(ctx, chosen, PHENOMENON_FORMS[profile.kind], amount)
 
 
 async def banned(ctx: TickContext, community_id: int) -> bool:

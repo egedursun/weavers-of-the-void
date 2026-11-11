@@ -2,6 +2,7 @@ from typing import Annotated, Any
 
 from pydantic import Field
 
+from aerona.catalog.mythic import QUEST_PARTY_MAX
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.constants.tool_inputs import REASON_MAX, REASON_MIN
 from aerona.db.tables.arcana import LawUpkeepRow
@@ -17,7 +18,7 @@ from aerona.domain.enums.mythic import CosmicOffice, GeasLayer, GeasMode, Servit
 from aerona.domain.enums.society import NaturalLaw
 from aerona.engine.arcana.enchantments import lay_enchantment as lay_law
 from aerona.engine.mythic.geasa import lay_geas as lay
-from aerona.engine.mythic.heroquests import begin_quest
+from aerona.engine.mythic.heroquests import begin_quest, fellows
 from aerona.engine.mythic.servitors import make_servitor as make
 from aerona.engine.mythic.servitors import wear
 from aerona.prompts import SonToolId
@@ -68,6 +69,7 @@ class GeasInput(ToolInput):
 class CallHeroquestInput(ToolInput):
     quester_id: int
     legend_id: int
+    companion_ids: list[int] = Field(default_factory=list, max_length=QUEST_PARTY_MAX)
     reason: Reason
 
 
@@ -159,7 +161,10 @@ async def call_heroquest(call: SonCall, args: CallHeroquestInput) -> str:
     legend = await call.session.get(LegendProfileRow, args.legend_id)
     if legend is None:
         fail(SonResult.QUEST_REFUSED, why="there is no such legend")
-    row = await begin_quest(call.tick, quester, legend, [])
+    party = await fellows(call.tick, quester, args.companion_ids)
+    if isinstance(party, str):
+        fail(SonResult.QUEST_REFUSED, why=party)
+    row = await begin_quest(call.tick, quester, legend, party)
     call.target(quester.id)
     await call.chronicle(ChronicleKind.WORLD, lines.CALL_HEROQUEST, entity_ids=[quester.id], son=call.son.name, quester=quester.name, reason=args.reason)
     return result(SonResult.QUEST_CALLED, id=row.id, name=quester.name)

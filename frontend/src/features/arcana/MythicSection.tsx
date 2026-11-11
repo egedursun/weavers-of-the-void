@@ -7,6 +7,8 @@ import {
   ScrollText,
   Trash2,
   Unlink,
+  UserCheck,
+  UserMinus,
   UserPlus,
 } from 'lucide-react'
 import { actKindValues } from '@/api/generated/schema'
@@ -65,6 +67,86 @@ import { useEntityType } from './model'
 type Values = Record<string, number | string | boolean | null>
 type Edit = { values: Values; release: string[] }
 const BOOLEAN = { true: 'Yes', false: 'No' }
+
+function PartyEditor({
+  quest,
+  blocked,
+}: {
+  quest: HeroquestView
+  blocked: string | null
+}) {
+  const [member, setMember] = useState<number | null>(null)
+  const party = useArcanaAction(
+    'heroquest:party',
+    (members: number[]) => ({ quest_id: quest.id, members }),
+    'The party is set'
+  )
+  const busy = why(blocked, party.isPending)
+  const ids = quest.members.map((item) => item.id)
+  const quester = quest.quester?.id ?? null
+  const refused =
+    member === null
+      ? 'Choose a companion first'
+      : ids.includes(member)
+        ? 'Already walking beside the quester'
+        : member === quester
+          ? 'The quester cannot be its own companion'
+          : null
+  return (
+    <div className='flex min-w-0 flex-col gap-2'>
+      <Label variant='overline'>{`Party (${quest.members.length})`}</Label>
+      {quest.members.length === 0 ? (
+        <Muted variant='caption'>The quester walks alone.</Muted>
+      ) : (
+        <PagedList
+          items={quest.members}
+          initial={6}
+          noun={['companion', 'companions']}
+          className='flex min-w-0 flex-wrap gap-1.5'
+          itemKey={(item) => item.id}
+        >
+          {(item) => (
+            <li className='flex items-center gap-1'>
+              <Chip icon={UserCheck}>{item.name}</Chip>
+              <Button
+                size='icon-sm'
+                variant='ghost'
+                aria-label={`Send ${item.name} home`}
+                disabled={busy !== null}
+                disabledReason={busy ?? undefined}
+                onClick={() => party.mutate(ids.filter((id) => id !== item.id))}
+              >
+                <UserMinus />
+              </Button>
+            </li>
+          )}
+        </PagedList>
+      )}
+      <div className='grid min-w-0 grid-cols-1 items-end gap-2 sm:grid-cols-2'>
+        <NodePicker
+          label='Companion to add'
+          value={member}
+          onChange={setMember}
+          blocked={busy}
+          types={['mortal']}
+        />
+        <Button
+          size='sm'
+          variant='outline'
+          disabled={busy !== null || refused !== null}
+          disabledReason={busy ?? refused ?? undefined}
+          onClick={() => {
+            if (member !== null) party.mutate([...ids, member])
+            setMember(null)
+          }}
+        >
+          <UserPlus />
+          Add to the party
+        </Button>
+      </div>
+    </div>
+  )
+}
 
 function QuestCard({
   quest,
@@ -169,14 +251,9 @@ function QuestCard({
             'Place',
             <Ref key='place' node={quest.place} empty='a mythic realm' />,
           ],
-          [
-            'Companions',
-            quest.members.length
-              ? quest.members.map((member) => member.name).join(', ')
-              : 'none',
-          ],
         ]}
       />
+      <PartyEditor quest={quest} blocked={blocked} />
       <RecordEditor
         title='Reshape the heroquest'
         note='Values you set are held against the engine until you release them.'
@@ -211,6 +288,31 @@ function QuestCard({
             kind: 'pick',
             table: BOOLEAN,
           },
+          {
+            key: 'legend_entity_id',
+            label: 'Legend it walks (id)',
+            kind: 'number',
+            min: 1,
+          },
+          {
+            key: 'god_node_id',
+            label: 'God of the myth (id)',
+            kind: 'number',
+            min: 1,
+          },
+          {
+            key: 'place_entity_id',
+            label: 'Place of the myth (id)',
+            kind: 'number',
+            min: 1,
+          },
+          {
+            key: 'start_epoch',
+            label: 'Set out in epoch',
+            kind: 'number',
+            min: 0,
+          },
+          { key: 'end_epoch', label: 'Ended in epoch', kind: 'number', min: 0 },
         ]}
         locked={quest.locked}
         busy={busy}
@@ -387,6 +489,18 @@ function MantlingCard({
             table: table(MANTLING_STATES),
           },
           { key: 'blocked', label: 'Blocked', kind: 'pick', table: BOOLEAN },
+          {
+            key: 'notified',
+            label: 'You were told',
+            kind: 'pick',
+            table: BOOLEAN,
+          },
+          {
+            key: 'since_epoch',
+            label: 'Walking since epoch',
+            kind: 'number',
+            min: 0,
+          },
         ]}
         locked={row?.locked ?? []}
         busy={busy}
@@ -478,6 +592,18 @@ function ServitorCard({
             kind: 'number',
             min: 0,
             max: 100,
+          },
+          {
+            key: 'fallen_to_node_id',
+            label: 'Fallen to (god id)',
+            kind: 'number',
+            min: 1,
+          },
+          {
+            key: 'since_epoch',
+            label: 'Serving since epoch',
+            kind: 'number',
+            min: 0,
           },
         ]}
         locked={servitor.locked}
@@ -680,6 +806,13 @@ function GeasCard({
           {
             key: 'last_kept_epoch',
             label: 'Last kept in epoch',
+            kind: 'number',
+            min: 0,
+          },
+          { key: 'laid_epoch', label: 'Laid in epoch', kind: 'number', min: 0 },
+          {
+            key: 'broken_epoch',
+            label: 'Broken in epoch',
             kind: 'number',
             min: 0,
           },

@@ -307,7 +307,7 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         "S8.2/RP3",
         (HeroquestRow.__tablename__, HeroquestMemberRow.__tablename__),
         ("heroquests",),
-        ("heroquest:begin", "heroquest:edit", "heroquest:advance", "heroquest:delete"),
+        ("heroquest:begin", "heroquest:edit", "heroquest:party", "heroquest:advance", "heroquest:delete"),
         ("MythicSection", "section-mythic"),
         ("mortal_context", "son_turn_system"),
         ("undertake_heroquest", "call_heroquest"),

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
-from aerona.catalog.mythic import ARCHETYPE_REALMS, ARCHETYPE_SKILLS, REALM_STEPS, trial_at
+from aerona.catalog.mythic import ARCHETYPE_REALMS, ARCHETYPE_SKILLS, REALM_PHRASES, REALM_STEPS, trial_at
 from aerona.constants.units import PERCENT
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.culture import LegendProfileRow, RiteProfileRow
@@ -128,7 +128,7 @@ async def begin_quest(ctx: TickContext, quester: EntityRow, legend: LegendProfil
     ctx.session.add(row)
     await ctx.session.flush()
     ctx.session.add_all(HeroquestMemberRow(heroquest_id=row.id, entity_id=member) for member in members if member != quester.id)
-    await note(ctx, f"{quester.name} set out on a heroquest into the {realm.value.replace('_', ' ')}.", key="mythic.heroquest_begun", ids=[quester.id])
+    await note(ctx, f"{quester.name} set out on a heroquest into {REALM_PHRASES[realm]}.", key="mythic.heroquest_begun", ids=[quester.id, *members])
     return row
 
 
@@ -315,13 +315,16 @@ async def fail(ctx: TickContext, row: HeroquestRow, quester: EntityRow, tally: Q
     if rng.chance(table.trap_pct):
         row.state = HeroquestState.TRAPPED
         await settle_souls(ctx)
+        outcome = "the soul is held in the myth while the body sleeps"
     elif rng.chance(table.break_pct):
         row.state = HeroquestState.BROKEN
         await break_myth(ctx, row, quester)
+        outcome = "the myth itself broke"
     elif rng.chance(table.madness_pct):
         row.state = HeroquestState.FAILED
         for hero in party:
             await afflict(ctx, hero, PackageKind.TRAUMA, Transmission.EXPERIENCE, source_node_id=row.god_node_id)
+        outcome = "the questers came back mad"
     else:
         row.state = HeroquestState.FAILED
         doomed = rng.chance(table.death_pct)
@@ -331,8 +334,9 @@ async def fail(ctx: TickContext, row: HeroquestRow, quester: EntityRow, tally: Q
                 await slay(ctx, hero, harm)
             else:
                 await apply_hits(ctx, hero, harm, lethal=False)
+        outcome = "the questers did not come back" if doomed else "the questers came back hurt"
     tally.failed += 1
-    await note(ctx, f"{quester.name} fell on a heroquest: {row.state.value}.", key="mythic.heroquest_lost", ids=[quester.id], kind=ChronicleKind.WORLD)
+    await note(ctx, f"{quester.name} fell on a heroquest: {outcome}.", key="mythic.heroquest_lost", ids=[hero.id for hero in party], kind=ChronicleKind.WORLD)
 
 
 async def advance(ctx: TickContext, row: HeroquestRow, tally: QuestTally) -> None:
@@ -356,6 +360,18 @@ async def advance(ctx: TickContext, row: HeroquestRow, tally: QuestTally) -> Non
         return
     if row.step >= row.steps:
         await succeed(ctx, row, quester, tally)
+
+
+async def fellows(ctx: TickContext, quester: EntityRow, ids: list[int]) -> list[int] | str:
+    party: list[int] = []
+    for mate_id in dict.fromkeys(ids):
+        mate = await ctx.session.get(EntityRow, mate_id)
+        if mate is None or mate.status is not EntityStatus.CANON or mate.entity_type is not EntityType.MORTAL or mate.id == quester.id:
+            return f"#{mate_id} cannot walk beside {quester.name}"
+        if mate.location_id != quester.location_id:
+            return f"{mate.name} is not where {quester.name} is"
+        party.append(mate.id)
+    return party
 
 
 async def eligible(ctx: TickContext, mortal: EntityRow) -> tuple[LegendProfileRow, EntityRow | None] | None:

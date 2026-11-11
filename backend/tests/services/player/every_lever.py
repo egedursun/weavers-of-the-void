@@ -1666,7 +1666,7 @@ LEVERS: dict[str, Lever] = {
     "heroquest:begin": given(quester_id=Pick(MORTAL), legend_id=Pick(EntityType.LEGEND)),
     **{
         name: after(("heroquest:begin", {"quester_id": Pick(MORTAL), "legend_id": Pick(EntityType.LEGEND)}), quest_id=Newest("heroquest"))
-        for name in ("heroquest:edit", "heroquest:advance", "heroquest:delete")
+        for name in ("heroquest:edit", "heroquest:party", "heroquest:advance", "heroquest:delete")
     },
     "mantling:edit": given(mortal_id=Pick(MORTAL)),
     "mantling:delete": after(("mantling:edit", {"mortal_id": Pick(MORTAL), "values": {"progress": 30}}), mortal_id=Pick(MORTAL)),

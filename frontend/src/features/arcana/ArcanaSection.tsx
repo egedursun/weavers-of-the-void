@@ -239,6 +239,13 @@ function LabTextCard({
             kind: 'number',
             min: 1,
           },
+          {
+            key: 'author_entity_id',
+            label: 'Author (mortal id)',
+            kind: 'number',
+            min: 1,
+          },
+          { key: 'epoch', label: 'Written in epoch', kind: 'number', min: 0 },
         ]}
         locked={text.locked}
         busy={busy}
@@ -452,6 +459,12 @@ function WarpingCard({
         fields={[
           { key: 'value', label: 'Warping', kind: 'number', min: 0, max: 100 },
           { key: 'stage', label: 'Stage', kind: 'number', min: 0, max: 3 },
+          {
+            key: 'updated_epoch',
+            label: 'Last changed in epoch',
+            kind: 'number',
+            min: 0,
+          },
         ]}
         locked={warping?.locked ?? []}
         busy={busy}
@@ -576,6 +589,12 @@ function LongevityCard({
           {
             key: 'lapsed_epochs',
             label: 'Epochs lapsed',
+            kind: 'number',
+            min: 0,
+          },
+          {
+            key: 'since_epoch',
+            label: 'Begun in epoch',
             kind: 'number',
             min: 0,
           },
@@ -772,6 +791,12 @@ function UpkeepCard({
           {
             key: 'unpaid_epochs',
             label: 'Unpaid epochs',
+            kind: 'number',
+            min: 0,
+          },
+          {
+            key: 'since_epoch',
+            label: 'Kept since epoch',
             kind: 'number',
             min: 0,
           },

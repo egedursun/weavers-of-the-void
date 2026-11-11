@@ -1,9 +1,11 @@
+import pytest
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mythic import SKILL_DOMAINS
+from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.afflictions import AfflictionRow
-from aerona.db.tables.arcana import RiteGrammarRow
+from aerona.db.tables.arcana import RiteGrammarRow, VisStockRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import LegendProfileRow, RiteEffectRow
 from aerona.db.tables.discovery import EpithetRow
@@ -14,7 +16,7 @@ from aerona.db.tables.faith import AfterlifeStratumRow, SpiritProfileRow
 from aerona.db.tables.mythic import CosmicOfficeRow, GeasRow, HeroquestRow, MantlingRow, ServitorRow
 from aerona.db.tables.renown import ReputationRow
 from aerona.domain.enums.affliction import PackageKind
-from aerona.domain.enums.arcana import SpellRange
+from aerona.domain.enums.arcana import SpellForm, SpellRange
 from aerona.domain.enums.body import Consciousness
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import LegendArchetype, MagicSchool, RiteEffectKind
@@ -38,20 +40,23 @@ from aerona.domain.enums.mythic import (
     ServitorRole,
 )
 from aerona.domain.enums.renown import ReputationAxis
+from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.entity_stats import LegendStats, OuterBeingStats, SpiritStats
 from aerona.engine.arcana.grammar import ensure_grammar, reaches
 from aerona.engine.body.state import refresh
 from aerona.engine.context import TickContext
 from aerona.engine.lore.rites import Working, beyond_reach, bind_by_geas, devise
+from aerona.engine.mythic.control import set_party
 from aerona.engine.mythic.geas_acts import geas_acted
 from aerona.engine.mythic.geasa import GeasTally, birth_geas, lay_geas, tend_geasa
-from aerona.engine.mythic.heroquests import QuestTally, advance, begin_quest, realm_of, trial_of
+from aerona.engine.mythic.heroquests import QuestTally, advance, begin_quest, fellows, realm_of, trial_of
 from aerona.engine.mythic.mantling import MantleTally, gather_cult, replace, replacement_for, weigh
 from aerona.engine.mythic.offices import OfficeTally, appoint, conquer_offices, tend_offices, vacant_office
 from aerona.engine.mythic.servitors import ServitorTally, fall, host_of, make_servitor, raise_saints, shake_host, turned_back, wear
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.manual import manual_context
 from aerona.rules.registry import Rules
+from aerona.services.integrity.mythic_links import mend_mythic_links
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
 
 
@@ -431,3 +436,48 @@ async def test_only_a_saint_in_a_rewarding_stratum_rises_to_serve_the_stratums_g
     risen = await session.get(ServitorRow, shade.id)
     assert risen is not None
     assert risen.god_node_id == world.son.id
+
+
+async def test_the_god_chooses_a_quests_party_and_a_companion_sent_home_from_a_trapped_quest_wakes(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await tuned(session, heroquests={"step_pass": 200, "deviation_pct": 0, "trap_pct": 100})
+    quester, legend, tally = await quest(ctx, session, world)
+    friend = await mortal(session, "Cade", world, quester.location_id or world.regions[0].id)
+    row = await begin_quest(ctx, quester, legend, [])
+    await set_party(ctx, row.id, [friend.id])
+    await advance(ctx, row, tally)
+    assert row.state is HeroquestState.TRAPPED
+    assert await soul_trapped(session, friend.id)
+    await set_party(ctx, row.id, [])
+    assert not await soul_trapped(session, friend.id)
+    assert await soul_trapped(session, quester.id)
+    with pytest.raises(ValidationFailedError):
+        await set_party(ctx, row.id, [world.regions[0].id])
+
+
+async def test_mythic_links_to_fallen_gods_and_vanished_mortals_are_mended(ctx: TickContext, session: AsyncSession, world: CoreWorld) -> None:
+    servitor = await make_servitor(ctx, world.son.id, name="Warden", rank=ServitorRank.ANGEL, role=ServitorRole.GUARD, post_id=None, world_id=world.world.id)
+    await appoint(ctx, CosmicOffice.DEAD, world.son.id, OfficeChoice.CREATOR)
+    quester, legend, _ = await quest(ctx, session, world)
+    row = await begin_quest(ctx, quester, legend, [])
+    elder = await mortal(session, "Orla", world, world.regions[0].id)
+    session.add(VisStockRow(holder_node_id=elder.id, form=SpellForm.BODY, amount=3, locked=[]))
+    world.son.status, world.son.death_epoch = SonStatus.DEAD, ctx.epoch
+    for gone in (quester, elder):
+        gone.status, gone.end_epoch = EntityStatus.DEAD, ctx.epoch
+    await session.flush()
+    assert await mend_mythic_links(session) >= 4
+    assert await session.get(ServitorRow, servitor.spirit_entity_id) is None
+    office = await session.get(CosmicOfficeRow, CosmicOffice.DEAD)
+    assert office is not None
+    assert office.holder_node_id is None
+    assert row.state is HeroquestState.FAILED
+    assert await session.get(VisStockRow, (elder.id, SpellForm.BODY)) is None
+
+
+async def test_only_mortals_standing_with_the_quester_may_walk_beside_it(ctx: TickContext, session: AsyncSession, world: CoreWorld) -> None:
+    quester, _, _ = await quest(ctx, session, world)
+    near = await mortal(session, "Cade", world, quester.location_id or world.regions[0].id)
+    far = await mortal(session, "Dov", world, world.regions[2].id)
+    assert await fellows(ctx, quester, [near.id, near.id]) == [near.id]
+    assert isinstance(await fellows(ctx, quester, [far.id]), str)
+    assert isinstance(await fellows(ctx, quester, [quester.id]), str)

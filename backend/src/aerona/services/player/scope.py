@@ -4,9 +4,11 @@ from functools import wraps
 
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.schema import LEDGER_SUMMARY_MAX_LENGTH
+from aerona.core.errors import ValidationFailedError
 from aerona.db.ledger_capture import LedgerDraft
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.agency import ActionRecordRow
@@ -73,43 +75,57 @@ async def _last_action_id(session: AsyncSession) -> int:
     return int(await session.scalar(select(func.max(ActionRecordRow.id))) or 0)
 
 
+def refusal(error: IntegrityError) -> str:
+    reason = str(error.orig)
+    if "FOREIGN KEY" in reason:
+        return "That change points at something that does not exist."
+    if "UNIQUE" in reason:
+        return "That change would make a second copy of something that can exist only once."
+    if "NOT NULL" in reason:
+        return "That change leaves a value empty that cannot be empty."
+    return "That change takes a value outside what the record allows."
+
+
 async def perform(scope: PlayerScope, action: str, kind: ActionKind, command: BaseModel, body: Callable[[], Awaitable[Effect]]) -> ActionOutcome:
     session = scope.session
-    async with session.begin_nested(), scope.ledger.capture(session) as capture:
-        marker = await _last_action_id(session)
-        essence_before = (await scope.creator()).essence
-        effect = await body()
-        creator = await scope.creator()
-        delta = creator.essence - essence_before
-        spent = effect.essence_spent or max(0, -delta)
-        gained = effect.essence_gained or max(0, delta + spent)
-        epoch = await scope.epoch()
-        recorded_kind = effect.kind or kind
-        if await _last_action_id(session) == marker:
-            session.add(
-                ActionRecordRow(
-                    epoch=epoch,
-                    actor_kind=ActorKind.CREATOR,
-                    actor_node_id=creator.id,
-                    kind=recorded_kind,
-                    target_node_id=effect.target_node_id,
-                    essence_spent=spent,
-                    summary=effect.message[:LEDGER_SUMMARY_MAX_LENGTH] or None,
+    try:
+        async with session.begin_nested(), scope.ledger.capture(session) as capture:
+            marker = await _last_action_id(session)
+            essence_before = (await scope.creator()).essence
+            effect = await body()
+            creator = await scope.creator()
+            delta = creator.essence - essence_before
+            spent = effect.essence_spent or max(0, -delta)
+            gained = effect.essence_gained or max(0, delta + spent)
+            epoch = await scope.epoch()
+            recorded_kind = effect.kind or kind
+            if await _last_action_id(session) == marker:
+                session.add(
+                    ActionRecordRow(
+                        epoch=epoch,
+                        actor_kind=ActorKind.CREATOR,
+                        actor_node_id=creator.id,
+                        kind=recorded_kind,
+                        target_node_id=effect.target_node_id,
+                        essence_spent=spent,
+                        summary=effect.message[:LEDGER_SUMMARY_MAX_LENGTH] or None,
+                    )
                 )
+                await session.flush()
+            draft = LedgerDraft(
+                epoch=epoch,
+                actor_kind=ActorKind.CREATOR,
+                actor_node_id=creator.id,
+                actor_name=creator.name,
+                tool=effect.tool or action,
+                action_kind=recorded_kind,
+                input_summary=summarize_inputs(command.model_dump(mode="json")) or effect.message[:LEDGER_SUMMARY_MAX_LENGTH],
             )
-            await session.flush()
-        draft = LedgerDraft(
-            epoch=epoch,
-            actor_kind=ActorKind.CREATOR,
-            actor_node_id=creator.id,
-            actor_name=creator.name,
-            tool=effect.tool or action,
-            action_kind=recorded_kind,
-            input_summary=summarize_inputs(command.model_dump(mode="json")) or effect.message[:LEDGER_SUMMARY_MAX_LENGTH],
-        )
-        entry_id = await capture.seal(draft)
-        if entry_id is not None:
-            await compact_entry(session, entry_id)
+            entry_id = await capture.seal(draft)
+            if entry_id is not None:
+                await compact_entry(session, entry_id)
+    except IntegrityError as error:
+        raise ValidationFailedError(refusal(error)) from error
     outcome = ActionOutcome(
         action=action,
         message=effect.message,

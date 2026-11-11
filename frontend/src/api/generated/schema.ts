@@ -14479,6 +14479,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/heroquest:party': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_heroquest_party_api_actions_heroquest_party_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/heroquest:begin': {
     parameters: {
       query?: never
@@ -31176,6 +31192,10 @@ export interface components {
       }
       release?: string[]
       quest_id: number
+    }
+    HeroquestPartyInput: {
+      quest_id: number
+      members?: number[]
     }
     HeroquestState: 'questing' | 'succeeded' | 'failed' | 'trapped' | 'broken'
     HeroquestView: {
@@ -72680,6 +72700,37 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['ItemChargeEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_heroquest_party_api_actions_heroquest_party_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['HeroquestPartyInput']
       }
     }
     responses: {

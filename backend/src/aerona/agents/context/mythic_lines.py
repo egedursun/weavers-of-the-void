@@ -4,7 +4,7 @@ from sqlalchemy import select
 
 from aerona.agents.context.dominion_lines import god_called, place_name, spoken
 from aerona.agents.context.scope import Scope
-from aerona.catalog.mythic import trial_at
+from aerona.catalog.mythic import REALM_PHRASES, trial_at
 from aerona.db.tables.arcana import LawUpkeepRow, LongevityRow, VisStockRow, WarpingRow
 from aerona.db.tables.culture import LegendProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -91,7 +91,7 @@ async def mortal_magic_lines(scope: Scope, me: EntityRow) -> list[str]:
     if quest is not None:
         legend = await session.get(LegendProfileRow, quest.legend_entity_id) if quest.legend_entity_id is not None else None
         trial = trial_at(legend.archetype if legend is not None else None, quest.step)
-        found.append(f"your heroquest in the {spoken(quest.realm.value)} stands at step {quest.step} of {quest.steps}; next comes a trial of {trial.value}")
+        found.append(f"your heroquest into {REALM_PHRASES[quest.realm]} stands at step {quest.step} of {quest.steps}; next comes a trial of {trial.value}")
     path = await session.get(MantlingRow, me.id)
     if path is not None and path.state is MantlingState.WALKING and path.god_node_id is not None:
         found.append(f"you walk the path of {await god_called(scope, path.god_node_id)} toward godhood ({path.progress}%)")

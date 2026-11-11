@@ -83,6 +83,7 @@ export type ArcanaAction =
   | 'item_charge:edit'
   | 'heroquest:begin'
   | 'heroquest:edit'
+  | 'heroquest:party'
   | 'heroquest:advance'
   | 'heroquest:delete'
   | 'mantling:edit'

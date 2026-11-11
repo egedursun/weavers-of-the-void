@@ -1,3 +1,5 @@
+from sqlalchemy import delete
+
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.culture import LegendProfileRow
 from aerona.db.tables.mythic import (
@@ -8,6 +10,7 @@ from aerona.db.tables.mythic import (
     SERVITOR_FIELDS,
     CosmicOfficeRow,
     GeasRow,
+    HeroquestMemberRow,
     HeroquestRow,
     MantlingRow,
     ServitorRow,
@@ -19,7 +22,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.divine.control import apply
 from aerona.engine.gatherings.control import Values, allowed, entity, found, node
 from aerona.engine.mythic.geasa import doom, lay_geas
-from aerona.engine.mythic.heroquests import QuestTally, advance, begin_quest
+from aerona.engine.mythic.heroquests import QuestTally, advance, begin_quest, settle_souls
 from aerona.engine.mythic.offices import appoint, offices
 from aerona.engine.mythic.servitors import make_servitor
 
@@ -29,9 +32,27 @@ async def start_quest(ctx: TickContext, quester_id: int, legend_id: int, members
     if quester.entity_type is not EntityType.MORTAL:
         raise ValidationFailedError("Only a mortal can undertake a heroquest.")
     legend = await found(ctx, LegendProfileRow, legend_id, "legend")
-    for member in members:
-        await entity(ctx, member, "companion")
+    await companions(ctx, quester.id, members)
     return await begin_quest(ctx, quester, legend, members)
+
+
+async def companions(ctx: TickContext, quester_id: int, members: list[int]) -> None:
+    for member in members:
+        companion = await entity(ctx, member, "companion")
+        if companion.entity_type is not EntityType.MORTAL or companion.id == quester_id:
+            raise ValidationFailedError(f"{companion.name} cannot walk beside this quester.")
+
+
+async def set_party(ctx: TickContext, quest_id: int, members: list[int]) -> HeroquestRow:
+    row = await found(ctx, HeroquestRow, quest_id, "heroquest")
+    chosen = list(dict.fromkeys(members))
+    await companions(ctx, row.quester_entity_id, chosen)
+    await ctx.session.execute(delete(HeroquestMemberRow).where(HeroquestMemberRow.heroquest_id == row.id))
+    ctx.session.add_all(HeroquestMemberRow(heroquest_id=row.id, entity_id=member) for member in chosen)
+    await ctx.session.flush()
+    await settle_souls(ctx)
+    await ctx.session.flush()
+    return row
 
 
 async def edit_quest(ctx: TickContext, quest_id: int, values: Values, release: list[str]) -> HeroquestRow:

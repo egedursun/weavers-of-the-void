@@ -2,6 +2,7 @@ from typing import Annotated, Any
 
 from pydantic import Field
 
+from aerona.catalog.mythic import QUEST_PARTY_MAX
 from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.db.tables.culture import LegendProfileRow
 from aerona.domain.enums.action import ActionKind
@@ -15,7 +16,7 @@ from aerona.engine.arcana.longevity import begin_longevity
 from aerona.engine.arcana.vis import vis_of
 from aerona.engine.gods.queries import community_of
 from aerona.engine.mind.book import skill_level
-from aerona.engine.mythic.heroquests import begin_quest, eligible
+from aerona.engine.mythic.heroquests import begin_quest, eligible, fellows
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
 from aerona.tools.framework.call import MortalCall
@@ -29,6 +30,7 @@ STRENGTH_MAX = 100
 
 class QuestInput(ToolInput):
     legend_id: int | None = None
+    companion_ids: list[int] = Field(default_factory=list, max_length=QUEST_PARTY_MAX)
 
 
 class LongevityInput(ToolInput):
@@ -49,7 +51,10 @@ async def undertake_heroquest(call: MortalCall, args: QuestInput) -> str:
     legend = await call.session.get(LegendProfileRow, args.legend_id) if args.legend_id is not None else found[0]
     if legend is None:
         fail(MortalResult.QUEST_REFUSED, why="there is no such legend")
-    row = await begin_quest(call.tick, call.me, legend, [])
+    party = await fellows(call.tick, call.me, args.companion_ids)
+    if isinstance(party, str):
+        fail(MortalResult.QUEST_REFUSED, why=party)
+    row = await begin_quest(call.tick, call.me, legend, party)
     await call.chronicle(ChronicleKind.WORLD, lines.HEROQUEST, entity_ids=[call.me.id], me=call.me.name)
     return result(MortalResult.QUEST_BEGUN, id=row.id, steps=row.steps)
 

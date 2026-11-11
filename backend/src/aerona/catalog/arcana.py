@@ -2,6 +2,7 @@ from types import MappingProxyType
 
 from aerona.core.total import total
 from aerona.domain.enums.arcana import SpellDuration, SpellForm, SpellRange, SpellTarget, SpellTechnique
+from aerona.domain.enums.cosmography import PhenomenonKind
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.society import CreatureTrait
 
@@ -63,6 +64,28 @@ DRY_SPREAD = frozenset({F.FIRE})
 IRON_DISRUPTED = frozenset({F.SPIRIT})
 LEAK_EMPOWERED = frozenset({F.VOID})
 
+
+K = PhenomenonKind
+
+PHENOMENON_FORMS = total(
+    PhenomenonKind,
+    {
+        K.ETERNAL_STORM: F.AIR,
+        K.TIME_SLIP: F.TIME,
+        K.LEAK_WOUND: F.VOID,
+        K.LEY_NEXUS_FLARE: F.SPIRIT,
+        K.GOD_CORPSE_AURA: F.DEATH,
+        K.LIVING_FOG: F.WATER,
+        K.CRYSTAL_BLOOM: F.EARTH,
+        K.DEAD_ZONE: F.DEATH,
+        K.MIRROR_LAKE: F.IMAGE,
+        K.GRAVITY_WELL: F.VOID,
+        K.SINGING_STONES: F.EARTH,
+        K.AURORA_PERMANENT: F.LIGHT,
+        K.GHOST_ROAD: F.SPIRIT,
+        K.BLIGHT: F.PLANT,
+    },
+)
 
 TRAIT_FORMS = MappingProxyType(
     {
