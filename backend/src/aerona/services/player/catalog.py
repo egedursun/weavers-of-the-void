@@ -2644,6 +2644,7 @@ ECONOMY_ACTIONS = (
     _sync(Meta("settlement:edit", "Edit a settlement's order, treasury and works", G.SOCIETY), urban.edit_settlement, urban.EditSettlement, free, ("S4.2",)),
     _sync(Meta("district:build", "Build or enlarge a district", G.SOCIETY), urban.build_district, urban.BuildDistrict, free, ("S4.2",)),
     _sync(Meta("district:edit", "Edit a district", G.SOCIETY), urban.edit_district, urban.EditDistrict, free, ("S4.2",)),
+    _sync(Meta("district:move", "Move a district to another hex of its town", G.SOCIETY), urban.move_district, urban.MoveDistrict, free, ("S4.2",)),
     _sync(Meta("district:raze", "Raze a district", G.SOCIETY), urban.raze_district, urban.DistrictTarget, free, ("S4.2",)),
     _sync(Meta("settlement:tax", "Set a settlement's tax", G.SOCIETY), urban.set_tax, urban.SetTax, free, ("S4.2",)),
     _sync(Meta("settlement:free_city", "Declare a free city or bind it again", G.SOCIETY), urban.free_city, urban.FreeCity, free, ("S4.2",)),

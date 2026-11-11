@@ -7,6 +7,8 @@ import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
 import { Label, Muted, PageTitle } from '@/components/typography'
 import { StarWikiView } from '@/features/celestial/StarWikiPage'
 import { WorldWikiView } from '@/features/celestial/WorldWikiPage'
+import { TypePage } from '@/features/city/TypePages'
+import { parseTypeKey } from '@/features/city/typeKeys'
 import { ClusterView } from '@/features/cosmography/wiki/ClusterWiki'
 import { DimensionView } from '@/features/cosmography/wiki/DimensionWiki'
 import { GalaxyView } from '@/features/cosmography/wiki/GalaxyWiki'
@@ -57,7 +59,9 @@ export function AtlasDetail({
   const state = useWorldState()
   const cosmos = useCosmos()
   const parsed = parseSelection(selection)
+  const typed = parseTypeKey(selection)
   if (group) return <AtlasGroup node={group} onSelect={onSelect} />
+  if (typed) return <TypePage selection={typed} />
   if (!parsed)
     return <AtlasHome records={records} kinds={kinds} onSelect={onSelect} />
   if (parsed.kind === 'entity') return <EntityView id={parsed.id} />

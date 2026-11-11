@@ -4879,6 +4879,54 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/city/{settlement_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['city_scene_api_city__settlement_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/land/{region_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['land_scene_api_land__region_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/structure-types/{world_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['structure_types_api_structure_types__world_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/intrigue/{node_id}': {
     parameters: {
       query?: never
@@ -19759,6 +19807,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/district:move': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_district_move_api_actions_district_move_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/district:raze': {
     parameters: {
       query?: never
@@ -27609,6 +27673,58 @@ export interface components {
       leader: components['schemas']['NodeRef'] | null
       held: string[]
     }
+    CityBuildingView: {
+      node: components['schemas']['NodeRef']
+      kind: components['schemas']['StructureKind']
+      zone: components['schemas']['ZoneKind']
+      civic: components['schemas']['CivicService'] | null
+      service: components['schemas']['UrbanService'] | null
+      district_id: number | null
+      q: number
+      r: number
+      slot: number
+      level: number
+      condition: number
+      state: components['schemas']['ConstructionState']
+      progress: number
+      staff_pct: number
+    }
+    CityDistrictView: {
+      id: number
+      kind: components['schemas']['DistrictKind']
+      zone: components['schemas']['ZoneKind']
+      level: number
+      housing: components['schemas']['HousingLevel']
+      condition: number
+      desirability: number
+      land_value: number
+      q: number
+      r: number
+      cells: number[][]
+      residents: number
+      dwellings: number
+      services: components['schemas']['ServiceShare'][]
+      turf: number
+      locked: string[]
+    }
+    CitySceneView: {
+      town: components['schemas']['NodeRef']
+      morphology: components['schemas']['Morphology']
+      tier: components['schemas']['SizeTier']
+      population: number
+      homeless: number
+      shelters: number
+      walls_level: number
+      walls_radius: number | null
+      roads: number
+      water: components['schemas']['WaterSupply']
+      water_side: number | null
+      scale: number
+      districts: components['schemas']['CityDistrictView'][]
+      buildings: components['schemas']['CityBuildingView'][]
+      zones: components['schemas']['ZoneShare'][]
+    }
+    CivicService: 'education' | 'health' | 'sports' | 'culture' | 'social'
     CivilizationAdoptionInput: {
       adopter_id: number
       child_id: number
@@ -30017,6 +30133,14 @@ export interface components {
       | 'palace'
       | 'foreign_quarter'
       | 'necropolis'
+      | 'residential'
+      | 'civic_quarter'
+      | 'gardens'
+    DistrictMoveInput: {
+      district_id: number
+      q: number
+      r: number
+    }
     DistrictRazeInput: {
       district_id: number
     }
@@ -30536,6 +30660,12 @@ export interface components {
       district_id?: number | null
       clear_district: boolean
       hold: boolean
+    }
+    DwellingTypeView: {
+      housing: components['schemas']['HousingLevel']
+      districts: number
+      dwellings: number
+      towns: components['schemas']['NodeRef'][]
     }
     DwellingView: {
       kind: components['schemas']['DwellingKind']
@@ -35279,7 +35409,30 @@ export interface components {
       | 'open_spring'
       | 'call_lava'
       | 'sink_coast'
+    LandCover:
+      | 'open'
+      | 'forest'
+      | 'fields'
+      | 'pasture'
+      | 'marsh'
+      | 'cleared'
+      | 'built'
+      | 'mined'
+    LandGround:
+      | 'water'
+      | 'shore'
+      | 'lowland'
+      | 'wetland'
+      | 'hills'
+      | 'mountains'
+      | 'peaks'
     LandKind: 'region' | 'place'
+    LandPlaceView: {
+      node: components['schemas']['NodeRef']
+      q: number
+      r: number
+      detail: string
+    }
     LandReleaseInput: {
       region_id: number
       field:
@@ -35291,9 +35444,42 @@ export interface components {
       target_region_id?: number | null
       fiery: boolean
     }
+    LandResourceView: {
+      node: components['schemas']['NodeRef']
+      commodity: components['schemas']['CommodityKind']
+      richness: number
+      reserve: number
+      initial_reserve: number
+      q: number
+      r: number
+    }
     LandRiverInput: {
       from_region_id: number
       to_region_id?: number | null
+    }
+    LandSceneView: {
+      region: components['schemas']['NodeRef']
+      terrain: components['schemas']['TerrainKind']
+      elevation: number
+      roughness: number
+      moisture: number
+      forest_cover: number
+      farmed: number
+      grazed: number
+      wetland: number
+      cleared: number
+      mined: number
+      built: number
+      soil_fertility: number
+      magic_density: number
+      river: components['schemas']['RiverClass']
+      coast: components['schemas']['CoastKind']
+      temperature: components['schemas']['TemperatureBand']
+      tiles: components['schemas']['LandTileView'][]
+      settlements: components['schemas']['LandPlaceView'][]
+      places: components['schemas']['LandPlaceView'][]
+      works: components['schemas']['LandWorkView'][]
+      resources: components['schemas']['LandResourceView'][]
     }
     LandShapeInput: {
       region_id: number
@@ -35332,6 +35518,23 @@ export interface components {
       region_id: number
       disaster: components['schemas']['Disaster']
       severity?: number | null
+    }
+    LandTileView: {
+      q: number
+      r: number
+      ground: components['schemas']['LandGround']
+      cover: components['schemas']['LandCover']
+      river: boolean
+    }
+    LandWorkView: {
+      node: components['schemas']['NodeRef']
+      kind: components['schemas']['StructureKind']
+      state: components['schemas']['ConstructionState']
+      level: number
+      condition: number
+      progress: number
+      q: number
+      r: number
     }
     LanguageCard: {
       prestige: number
@@ -42491,6 +42694,10 @@ export interface components {
       penalty: string
       epoch: number
     }
+    ServiceShare: {
+      service: components['schemas']['UrbanService']
+      coverage: number
+    }
     ServiceView: {
       region: components['schemas']['NodeRef'] | null
       role: components['schemas']['KeystoneRole']
@@ -44678,6 +44885,7 @@ export interface components {
       | 'fountain'
       | 'park'
       | 'slaughterhouse'
+      | 'almshouse'
       | 'cosmic_archive'
     StructurePlaceInput: {
       structure_id: number
@@ -44713,6 +44921,25 @@ export interface components {
       splendor?: number | null
       durability?: number | null
       function?: number | null
+    }
+    StructureTypeView: {
+      kind: components['schemas']['StructureKind']
+      label: string
+      zone: components['schemas']['ZoneKind']
+      group: components['schemas']['StructureGroup'] | null
+      civic: components['schemas']['CivicService'] | null
+      service: components['schemas']['UrbanService'] | null
+      amenity: boolean
+      nuisance: boolean
+      staff: components['schemas']['SocialClass'] | null
+      tier: components['schemas']['SizeTier'] | null
+      upkeep: components['schemas']['CommodityKind'] | null
+      instances: components['schemas']['TypeInstanceView'][]
+    }
+    StructureTypesView: {
+      world_id: number
+      structures: components['schemas']['StructureTypeView'][]
+      dwellings: components['schemas']['DwellingTypeView'][]
     }
     StructureUndedicateInput: {
       structure_id: number
@@ -46512,6 +46739,12 @@ export interface components {
       name: string
       ini: number
     }
+    TypeInstanceView: {
+      node: components['schemas']['NodeRef']
+      town: components['schemas']['NodeRef'] | null
+      state: components['schemas']['ConstructionState']
+      level: number
+    }
     UndoResult: {
       entry_id: number
       applied?: string[]
@@ -47953,6 +48186,20 @@ export interface components {
       world_material_id: number | null
       world_material: string | null
       rate: number
+    }
+    ZoneKind:
+      | 'governance'
+      | 'residential'
+      | 'commercial'
+      | 'industrial'
+      | 'agricultural'
+      | 'civic'
+      | 'green'
+    ZoneShare: {
+      zone: components['schemas']['ZoneKind']
+      districts: number
+      cells: number
+      buildings: number
     }
   }
   responses: never
@@ -57810,6 +58057,93 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['NodeLawView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  city_scene_api_city__settlement_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        settlement_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CitySceneView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  land_scene_api_land__region_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        region_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LandSceneView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  structure_types_api_structure_types__world_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        world_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['StructureTypesView']
         }
       }
       default: {
@@ -86351,6 +86685,37 @@ export interface operations {
       }
     }
   }
+  action_district_move_api_actions_district_move_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DistrictMoveInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   action_district_raze_api_actions_district_raze_post: {
     parameters: {
       query?: never
@@ -97214,6 +97579,9 @@ export const circleKindValues: ReadonlyArray<
   'music_circle',
   'craft_circle',
 ]
+export const civicServiceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CivicService']
+> = ['education', 'health', 'sports', 'culture', 'social']
 export const claimBasisValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ClaimBasis']
 > = ['inheritance', 'marriage', 'conquest', 'divine', 'fabricated', 'de_jure']
@@ -97875,6 +98243,9 @@ export const districtKindValues: ReadonlyArray<
   'palace',
   'foreign_quarter',
   'necropolis',
+  'residential',
+  'civic_quarter',
+  'gardens',
 ]
 export const divineScaleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DivineScale']
@@ -99547,6 +99918,21 @@ export const landActValues: ReadonlyArray<
   'call_lava',
   'sink_coast',
 ]
+export const landCoverValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LandCover']
+> = [
+  'open',
+  'forest',
+  'fields',
+  'pasture',
+  'marsh',
+  'cleared',
+  'built',
+  'mined',
+]
+export const landGroundValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LandGround']
+> = ['water', 'shore', 'lowland', 'wetland', 'hills', 'mountains', 'peaks']
 export const landKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LandKind']
 > = ['region', 'place']
@@ -102045,6 +102431,7 @@ export const structureKindValues: ReadonlyArray<
   'fountain',
   'park',
   'slaughterhouse',
+  'almshouse',
   'cosmic_archive',
 ]
 export const structureStatsKindValues: ReadonlyArray<
@@ -103141,4 +103528,15 @@ export const yieldProductValues: ReadonlyArray<
   'magic_reagents',
   'dragonbone',
   'eggs',
+]
+export const zoneKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ZoneKind']
+> = [
+  'governance',
+  'residential',
+  'commercial',
+  'industrial',
+  'agricultural',
+  'civic',
+  'green',
 ]

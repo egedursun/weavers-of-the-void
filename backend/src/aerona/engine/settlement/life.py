@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.catalog.materials import BUILD_MATERIALS, MATERIALS
+from aerona.catalog.zones import CIVIC_SERVICE_OF
 from aerona.constants.units import PERCENT
 from aerona.db.tables.communication import PublicOpinionRow
 from aerona.db.tables.demography import CohortRow, LabourRow, PeopleCultureRow
@@ -20,6 +21,7 @@ from aerona.db.tables.settlement import (
     SettlementTreasuryRow,
 )
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import ArmyRow, SiegeRow
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory
@@ -34,6 +36,7 @@ from aerona.domain.enums.environment import RiverClass, WeatherEffect
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.settlement import TIER_ORDER, WATER_ORDER, BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
+from aerona.domain.enums.structure import ConstructionState, StructureKind
 from aerona.domain.enums.urban import UrbanService
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.body.customs import culture_of, people_of
@@ -68,6 +71,7 @@ from aerona.engine.settlement.book import Town, ledger, tier_for
 from aerona.engine.settlement.districts import AdminParts, admin_parts, designs_for, unify_market, wound_district
 from aerona.engine.settlement.storage import design_for, settlement_store, storage_index, store_kind
 from aerona.engine.urban.morphology import hauling_of, replan, spread_of
+from aerona.engine.urban.planning import seat
 from aerona.rules.registry import Rules
 
 FOOD_INDEX = 100
@@ -274,7 +278,26 @@ def wanted_works(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_wa
         needs.append(DistrictKind.NECROPOLIS)
     wants.extend(f"district:{kind.value}" for kind in needs)
     if people > housing_of(ctx.rules, town):
-        wants.append("district:market" if DistrictKind.MARKET in kinds else "district:craft_quarter")
+        wants.append("district:residential")
+    return wants
+
+
+async def quarter_wants(ctx: TickContext, town: Town) -> list[str]:
+    table = ctx.rules.city_plan
+    kinds = {district.kind for district in town.districts}
+    built = list(
+        await ctx.session.scalars(
+            select(StructureProfileRow.kind).where(
+                StructureProfileRow.host_entity_id == town.entity.id, StructureProfileRow.construction_state == ConstructionState.COMPLETE
+            )
+        )
+    )
+    wants: list[str] = []
+    if DistrictKind.CIVIC_QUARTER not in kinds and sum(1 for kind in built if kind in CIVIC_SERVICE_OF) >= table.civic_quarter_at:
+        wants.append("district:civic_quarter")
+    greens = {StructureKind.PARK, StructureKind.FOUNTAIN}
+    if DistrictKind.GARDENS not in kinds and greens & set(built) and (stat(town.entity, "prosperity") or 0) >= table.gardens_prosperity:
+        wants.append("district:gardens")
     return wants
 
 
@@ -334,6 +357,7 @@ async def add_district(
         design_id=design_id,
         locked=[],
     )
+    seat(ctx, district, [*town.districts, district], town.profile.morphology, town.infrastructure.walls_level)
     ctx.session.add(district)
     town.districts.append(district)
     if design_id is not None and design_id not in town.designs:
@@ -380,7 +404,8 @@ async def build(ctx: TickContext, town: Town, knowledge: KnowledgeMap, *, at_war
     material = BuildMaterial.STONE if architecture >= ctx.rules.fire.stone_level else BuildMaterial.TIMBER
     built = 0
     waterside = await waterside_of(ctx, town, knowledge, ground)
-    for want in await permitted(ctx, town, wanted_works(ctx, town, knowledge, at_war=at_war, foreign=foreign, waterside=waterside)):
+    works = wanted_works(ctx, town, knowledge, at_war=at_war, foreign=foreign, waterside=waterside) + await quarter_wants(ctx, town)
+    for want in await permitted(ctx, town, works):
         kind, _, detail = want.partition(":")
         if kind == "repair":
             district = next((item for item in town.districts if str(item.id) == detail), None)

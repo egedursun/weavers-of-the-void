@@ -1,0 +1,115 @@
+from types import MappingProxyType
+
+from aerona.core.total import total
+from aerona.domain.enums.settlement import DistrictKind
+from aerona.domain.enums.structure import StructureKind
+from aerona.domain.enums.urban import CivicService, ZoneKind
+
+D = DistrictKind
+K = StructureKind
+Z = ZoneKind
+C = CivicService
+
+ZONE_OF_DISTRICT = total(
+    DistrictKind,
+    {
+        D.PALACE: Z.GOVERNANCE,
+        D.CITADEL: Z.GOVERNANCE,
+        D.MARKET: Z.COMMERCIAL,
+        D.HARBOUR: Z.COMMERCIAL,
+        D.FOREIGN_QUARTER: Z.COMMERCIAL,
+        D.CRAFT_QUARTER: Z.INDUSTRIAL,
+        D.FARMLAND: Z.AGRICULTURAL,
+        D.SLUMS: Z.RESIDENTIAL,
+        D.RESIDENTIAL: Z.RESIDENTIAL,
+        D.TEMPLE_QUARTER: Z.CIVIC,
+        D.CIVIC_QUARTER: Z.CIVIC,
+        D.NECROPOLIS: Z.CIVIC,
+        D.GARDENS: Z.GREEN,
+    },
+)
+ZONE_OF_STRUCTURE = total(
+    StructureKind,
+    {
+        K.TEMPLE: Z.CIVIC,
+        K.SHRINE: Z.CIVIC,
+        K.MONASTERY: Z.CIVIC,
+        K.NECROPOLIS: Z.CIVIC,
+        K.TOMB: Z.CIVIC,
+        K.LIBRARY: Z.CIVIC,
+        K.SCHOOL: Z.CIVIC,
+        K.OBSERVATORY: Z.CIVIC,
+        K.ACADEMY: Z.CIVIC,
+        K.HOSPITAL: Z.CIVIC,
+        K.BATHHOUSE: Z.CIVIC,
+        K.FIREHOUSE: Z.CIVIC,
+        K.ALMSHOUSE: Z.CIVIC,
+        K.ARENA: Z.CIVIC,
+        K.THEATRE: Z.CIVIC,
+        K.MONUMENT: Z.CIVIC,
+        K.WONDER: Z.CIVIC,
+        K.COVENANT: Z.CIVIC,
+        K.COSMIC_GATE: Z.CIVIC,
+        K.COSMIC_ARCHIVE: Z.CIVIC,
+        K.WALL: Z.GOVERNANCE,
+        K.GATE: Z.GOVERNANCE,
+        K.TOWER: Z.GOVERNANCE,
+        K.WATCHTOWER: Z.GOVERNANCE,
+        K.FORT: Z.GOVERNANCE,
+        K.CITADEL: Z.GOVERNANCE,
+        K.PALACE: Z.GOVERNANCE,
+        K.COURT: Z.GOVERNANCE,
+        K.PRISON: Z.GOVERNANCE,
+        K.ROAD: Z.GOVERNANCE,
+        K.BRIDGE: Z.GOVERNANCE,
+        K.AQUEDUCT: Z.GOVERNANCE,
+        K.SEWER: Z.GOVERNANCE,
+        K.CANAL: Z.GOVERNANCE,
+        K.MARKET: Z.COMMERCIAL,
+        K.HARBOUR: Z.COMMERCIAL,
+        K.WAREHOUSE: Z.COMMERCIAL,
+        K.CARAVANSERAI: Z.COMMERCIAL,
+        K.BANK: Z.COMMERCIAL,
+        K.KONTOR: Z.COMMERCIAL,
+        K.FORGE: Z.INDUSTRIAL,
+        K.TANNERY: Z.INDUSTRIAL,
+        K.MINE: Z.INDUSTRIAL,
+        K.QUARRY: Z.INDUSTRIAL,
+        K.SHIPYARD: Z.INDUSTRIAL,
+        K.WORKSHOP: Z.INDUSTRIAL,
+        K.ALCHEMIST_LAB: Z.INDUSTRIAL,
+        K.SLAUGHTERHOUSE: Z.INDUSTRIAL,
+        K.GRANARY: Z.AGRICULTURAL,
+        K.MILL: Z.AGRICULTURAL,
+        K.IRRIGATION: Z.AGRICULTURAL,
+        K.DAM: Z.AGRICULTURAL,
+        K.FOUNTAIN: Z.GREEN,
+        K.PARK: Z.GREEN,
+    },
+)
+CIVIC_SERVICE_OF: MappingProxyType[StructureKind, CivicService] = MappingProxyType(
+    {
+        K.SCHOOL: C.EDUCATION,
+        K.ACADEMY: C.EDUCATION,
+        K.LIBRARY: C.EDUCATION,
+        K.OBSERVATORY: C.EDUCATION,
+        K.COVENANT: C.EDUCATION,
+        K.HOSPITAL: C.HEALTH,
+        K.BATHHOUSE: C.HEALTH,
+        K.ARENA: C.SPORTS,
+        K.THEATRE: C.CULTURE,
+        K.MONUMENT: C.CULTURE,
+        K.WONDER: C.CULTURE,
+        K.TEMPLE: C.CULTURE,
+        K.SHRINE: C.CULTURE,
+        K.MONASTERY: C.CULTURE,
+        K.ALMSHOUSE: C.SOCIAL,
+        K.FIREHOUSE: C.SOCIAL,
+    }
+)
+RING_OF_ZONE = total(
+    ZoneKind,
+    {Z.GOVERNANCE: 0, Z.CIVIC: 1, Z.COMMERCIAL: 1, Z.GREEN: 2, Z.RESIDENTIAL: 2, Z.INDUSTRIAL: 3, Z.AGRICULTURAL: 4},
+)
+OUTSIDE_WALLS = frozenset({D.FARMLAND, D.NECROPOLIS})
+WATERSIDE = frozenset({D.HARBOUR})

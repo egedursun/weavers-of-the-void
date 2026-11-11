@@ -10,12 +10,15 @@ from aerona.db.tables.industry import RegionPollutionRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.settlement import DistrictKind
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.urban.coverage import reach_of, services_in
+from aerona.engine.urban.layout import falloff
+from aerona.engine.urban.planning import plan_town
 
 NEUTRAL = PERCENT // 2
 
@@ -61,6 +64,7 @@ async def assess_town(ctx: TickContext, settlement: EntityRow, tally: Desirabili
     if profile is None or not districts:
         return
     reach = reach_of(ctx.rules, profile.morphology)
+    layout = await plan_town(ctx, settlement.id)
     structures = await services_in(ctx.session, settlement.id)
     spirits = await restless(ctx, settlement.id)
     common = (
@@ -73,14 +77,16 @@ async def assess_town(ctx: TickContext, settlement: EntityRow, tally: Desirabili
     for district in districts:
         score = NEUTRAL + common
         for _, structure in structures:
-            weight = 1.0 if structure.district_id == district.id else reach
+            weight = falloff(reach, layout.apart(structure.district_id, district.id)) if structure.district_id is not None else reach
             if structure.kind in AMENITIES:
                 score += table.amenity * weight
             elif structure.kind in NUISANCES:
                 score -= table.nuisance * weight
         for other in districts:
             if other.kind in NUISANCE_DISTRICTS:
-                score -= table.nuisance * (1.0 if other.id == district.id else reach)
+                score -= table.nuisance * falloff(reach, layout.apart(other.id, district.id))
+            if other.kind is DistrictKind.GARDENS:
+                score += ctx.rules.city_plan.garden_amenity * other.level * falloff(reach, layout.apart(other.id, district.id))
         if "desirability" not in district.locked:
             district.desirability = clamp_int(round_half_up(score), 0, PERCENT)
         if "land_value" not in district.locked:

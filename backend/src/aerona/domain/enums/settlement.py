@@ -23,6 +23,9 @@ class DistrictKind(StrEnum):
     PALACE = "palace"
     FOREIGN_QUARTER = "foreign_quarter"
     NECROPOLIS = "necropolis"
+    RESIDENTIAL = "residential"
+    CIVIC_QUARTER = "civic_quarter"
+    GARDENS = "gardens"
 
 
 class DistrictHarm(StrEnum):

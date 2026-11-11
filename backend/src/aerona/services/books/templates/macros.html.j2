@@ -112,6 +112,8 @@
 <p class="meta small">{{ article.meta | join(" · ") }}</p>
 {{ article.description | paragraphs }}
 {{ stats(article.stats) }}
+{% if article.plan %}<figure class="plan"><div class="ground">{{ article.plan.figure }}</div><figcaption>{{ article.plan.caption }}</figcaption></figure>
+<dl class="facts">{% for label, value in article.plan.facts %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>{% endif %}
 {{ entity_depth(article.entity.depth) }}
 {{ typed(article.typed) }}
 {% if article.ending %}<div class="box"><span class="label">Ending</span>{{ article.ending }}</div>{% elif article.entity.fate_note %}<div class="box"><span class="label">Fate's judgement</span>{{ article.entity.fate_note }}</div>{% endif %}

@@ -140,7 +140,7 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
     },
     EntityType.PROPHECY: {
         "predicate": "What exactly must happen for it to come true, checked by the world itself: " + PREDICATES,
-        "subject_id": "The one the foretelling names: who dies (dies), what falls (falls), the house (born_in), the realm (ruler_of), the first side (war_between)",
+        "subject_id": "The one the foretelling names: who dies (dies), what falls (falls), the house (born_in), the realm (ruler_of), the first side (war_between); a sky event (sky_event) and a span of ages (within_epochs) name no one",
         "second_id": "For war_between: the second side",
         "archetype": "For ruler_of: the kind of legend the coming ruler must fit (" + ARCHETYPES + ")",
         "sky_kind": "For sky_event: the sign in the sky (" + SKY_KINDS + ")",
@@ -158,10 +158,10 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
     },
     EntityType.FACTION: {
         **WORSHIPPED_SON_FIELD,
-        "faction_kind": "What it is: merchant_guild, craft_guild, priesthood, warrior_order, noble_council, peasant_league, rebels, bandits, pirates, assassins, scholars_academy, secret_society, mercenary_company, interworld_federation, wandering_market or void_pirates; its kind decides what it strives for and how it acts",
+        "faction_kind": "What it is: merchant_guild, craft_guild, priesthood, warrior_order, noble_council, peasant_league, rebels, bandits, pirates, assassins, scholars_academy, secret_society, mercenary_company, interworld_federation, wandering_market, void_pirates, social_circle, crime_family, thieves_guild, smuggling_ring or pirate_confederacy; its kind decides what it strives for and how it acts",
     },
     EntityType.LAW: {
-        "law_kind": "What the law rules: succession_rule, inheritance_split, land_tenure, slavery, serfdom, tax_rate, tithe, tolls, debt_law, penal_code, levy_law, conscription, standing_army, veteran_pension, ransom_custom, marriage_law, sumptuary, guild_charter, foreigner_rights, religious_tolerance, worship_ban, blood_feud, quarantine, burial_law, sanitation, magic_ban, licensed_magic, rite_restrictions or custom",
+        "law_kind": "What the law rules: succession_rule, inheritance_split, land_tenure, slavery, serfdom, tax_rate, tithe, tolls, debt_law, penal_code, levy_law, conscription, standing_army, veteran_pension, ransom_custom, marriage_law, sumptuary, guild_charter, foreigner_rights, religious_tolerance, worship_ban, blood_feud, quarantine, burial_law, sanitation, magic_ban, licensed_magic, rite_restrictions, censorship, fair_market, franchise, constitution or custom",
         "law_params": "The law's terms by name, only those its kind has; leave out a term to keep its default. Terms of each kind: " + law_terms_guide(),
     },
     EntityType.RESOURCE: {
@@ -597,7 +597,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.SPREAD_WORD: ToolText(
         "You spread word of someone in a community: their name grows or darkens there for one kind of reputation "
-        "(heroism, honour, cruelty, piety, generosity, wisdom, trickery, renown for a skill, troublemaking). "
+        "(heroism, honour, cruelty, piety, generosity, wisdom, trickery, skill_renown or troublemaker). "
         "Costs {{ rules.costs.influence }} essence and one action.",
         {
             "subject_id": "Whose name you spread",
@@ -656,7 +656,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.PRAY_TO_CREATOR: ToolText(
         "You pray to the Creator who made you. You may have a request; the answer appears among words in coming ages. Does not spend an action, "
         "{{ rules.son_tools.prayer_per_epoch }} per age.",
-        {"message": "Your prayer", "request": "essence, blessing, permission, vengeance, forgiveness or none"},
+        {"message": "Your prayer", "request": "essence, blessing, permission, vengeance, forgiveness, wish or none"},
     ),
     T.MAKE_BOND: ToolText(
         "You declare a narrative bond between two existing things ({{ weavable_bonds | join(', ') }}). It adds a connection to the world. Worship, enmity, knowledge, ownership, "
@@ -1046,7 +1046,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"region_id": "The region's id", "sacredness": "How holy, 0-100 (leave out for the usual sanctification)", "reason": "Why you hallow it"},
     ),
     T.CURSE_REGION: ToolText(
-        "You loose a danger upon a region: beasts, bandits, monsters, phenomena, disease, avalanches, quicksand or volcanic fire. It harms settlers, herds, "
+        "You loose a danger upon a region: beasts, bandits, monsters, phenomena, disease, avalanche, quicksand or volcanic (fire from the ground). It harms settlers, herds, "
         "travellers, armies and merchants there, and fades over the ages unless the land breeds it. {{ rules.terrain.curse_essence }} essence, 1 action, "
         "strength at most {{ rules.terrain.curse_strength_max }}.",
         {"region_id": "The region's id", "danger": "Which danger", "strength": "How strong, 1-100", "reason": "Why you curse it"},
@@ -1119,9 +1119,9 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You bind two or more parties (realms, communities, houses, cults, beasts) by a typed treaty sealed in your name: its kind decides how it behaves "
         "and its clauses run every age (tribute, hostages, tolls waived, freedom of faith, call to arms...). Costs essence.",
         {
-            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage, tribute, marriage_pact, trade_pact, condotta, guarantee or interworld",
+            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage, tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition or divine_pact",
             "parties": "Each party's id and role (signatory, overlord, vassal, guarantor)",
-            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression), who owes it, who gains, and its terms (amount, commodity, epochs, region_id, mortal_id...)",
+            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression, route_control, resource_demand, research_agreement), who owes it, who gains, and its terms (amount, commodity, epochs, region_id, mortal_id...)",
             "epochs": "How many ages it holds; empty for ever",
             "parties.party_id": "The party's id",
             "parties.role": "Its role: signatory, overlord, vassal or guarantor",
@@ -1212,12 +1212,16 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.RAISE_DISTRICT: ToolText(
-        "You raise or enlarge a district of a settlement: farmland, market, craft quarter, temple quarter, harbour, citadel, palace, foreign quarter, "
-        "necropolis or one of the world's district designs. Each kind changes the city: storage, housing, order, sanitation, piety, administration, "
+        "You raise or enlarge a district of a settlement: farmland, market, craft quarter, temple quarter, harbour, citadel, slums, palace, foreign quarter, "
+        "necropolis, residential, civic quarter, gardens or one of the world's district designs. Each kind changes the city: storage, housing, order, "
+        "sanitation, piety, administration, "
         "policing, trade and harbour capacity. {{ rules.son_tools.raise_district_essence }} essence, {{ rules.son_tools.raise_district_ap }} actions.",
         {
             "settlement_id": "The settlement's id",
-            "kind": "The district kind (farmland, market, craft_quarter, temple_quarter, harbour, citadel, slums, palace, foreign_quarter, necropolis)",
+            "kind": (
+                "The district kind (farmland, market, craft_quarter, temple_quarter, harbour, citadel, slums, palace, foreign_quarter, necropolis, "
+                "residential, civic_quarter, gardens)"
+            ),
             "design_id": "Or the id of one of the world's district designs",
             "material": "timber or stone (stone resists fire, flood and storm but falls in earthquakes)",
             "reason": "Why you raise it",
@@ -1319,7 +1323,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {
             "owner_id": "The community or mortal that owns the ship",
             "name": "The ship's proper name",
-            "hull": "raft, boat, galley, longship, cog, carrack, warship, light_sailer and the more unusual hulls",
+            "hull": "raft, boat, galley, longship, cog, carrack, warship, light_sailer, bone_hull, generation_ship, skyship or living_ship",
             "armament": "What it carries to fight: rams, missiles, siege_engines, rites",
             "captain_id": "A living mortal to captain it, if any",
         },

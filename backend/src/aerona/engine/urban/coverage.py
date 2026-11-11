@@ -12,14 +12,16 @@ from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.urban import DistrictServiceRow, TurfRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.settlement import WaterSupply
+from aerona.domain.enums.settlement import DistrictKind, WaterSupply
 from aerona.domain.enums.structure import STANDING_STATES
 from aerona.domain.enums.urban import Morphology, UrbanService
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.urban.layout import falloff
 from aerona.engine.urban.morphology import grow_rings
+from aerona.engine.urban.planning import plan_town
 from aerona.rules.registry import Rules
 
 WATER_OF = {WaterSupply.NONE: 0, WaterSupply.WELL: 50, WaterSupply.CISTERN: 70, WaterSupply.AQUEDUCT: PERCENT}
@@ -61,12 +63,20 @@ async def services_in(session: AsyncSession, settlement_id: int) -> list[tuple[E
     return [(entity, profile) for entity, profile in rows.all()]
 
 
-def place(profile: StructureProfileRow, districts: list[DistrictRow]) -> bool:
-    if profile.district_id is not None or not districts or "district_id" in profile.locked:
-        return False
+def home_of(profile: StructureProfileRow, districts: list[DistrictRow]) -> DistrictRow | None:
+    if not districts:
+        return None
     wanted = HOME_DISTRICT.get(profile.kind)
     by_value = sorted(districts, key=lambda district: (district.land_value, district.id), reverse=profile.kind not in NUISANCES)
-    home = next((district for district in districts if district.kind is wanted), by_value[0])
+    return next((district for district in districts if district.kind is wanted), by_value[0])
+
+
+def place(profile: StructureProfileRow, districts: list[DistrictRow]) -> bool:
+    if profile.district_id is not None or "district_id" in profile.locked:
+        return False
+    home = home_of(profile, districts)
+    if home is None:
+        return False
     profile.district_id = home.id
     return True
 
@@ -87,6 +97,8 @@ async def cover_town(ctx: TickContext, settlement: EntityRow, tally: CoverageTal
     if profile is None or not districts:
         return
     reach = reach_of(ctx.rules, profile.morphology)
+    layout = await plan_town(ctx, settlement.id)
+    civic = {district.id for district in districts if district.kind is DistrictKind.CIVIC_QUARTER}
     supply: dict[UrbanService, dict[int, float]] = defaultdict(lambda: defaultdict(float))
     for _, structure in await services_in(ctx.session, settlement.id):
         tally.placed += int(place(structure, districts))
@@ -94,7 +106,9 @@ async def cover_town(ctx: TickContext, settlement: EntityRow, tally: CoverageTal
         if service is None:
             continue
         for district in districts:
-            supply[service][district.id] += served(ctx.rules, structure) * (1.0 if district.id == structure.district_id else reach)
+            stretch = min(1.0, reach * ctx.rules.city_plan.civic_reach_pct / PERCENT) if structure.district_id in civic else reach
+            apart = layout.apart(structure.district_id, district.id) if structure.district_id is not None else 1
+            supply[service][district.id] += served(ctx.rules, structure) * falloff(stretch, apart)
     people = people_of_districts(stat_or(settlement, "population", 0), districts)
     stored = {
         (row.district_id, row.service): row

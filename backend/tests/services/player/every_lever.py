@@ -1828,6 +1828,7 @@ LEVERS: dict[str, Lever] = {
     "divine_tongue:teach": after(TONGUE_GIVEN, god_id=Pick("son"), mortal_id=Pick(MORTAL)),
     "pidgin:make": Lever(values={"first_id": Pick(TOWN), "second_id": Pick(TOWN, 1)}, setup=strangers),
     "district_urban:edit": given(district_id=DISTRICT),
+    "district:move": given(district_id=DISTRICT, q=40, r=-40),
     "town_urban:edit": given(settlement_id=Pick(TOWN)),
     "structure:place": after(TEMPLE, structure_id=Newest(EntityType.STRUCTURE), district_id=DISTRICT),
     "slums:clear": given(settlement_id=Pick(TOWN)),

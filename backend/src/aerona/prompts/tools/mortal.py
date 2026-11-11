@@ -265,7 +265,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "As ruler or regent you issue a mandate: a production order, a ban on exporting a good, an order to build a quarter, relief from the state "
         "granaries for a hungry land, or a curfew. Unmet mandates cost you legitimacy, and harsh ones weigh on your people. 1 action.",
         {
-            "kind": "produce, export_ban, build, famine_relief or curfew",
+            "kind": "produce, export_ban, build, famine_relief, curfew or slum_clearance",
             "settlement_id": "The settlement it is laid on, if any",
             "commodity": "The good to produce, ban or send",
             "district": "The quarter to build",
@@ -654,7 +654,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "In a realm that decides by council, assembly or divine will, the law goes before them as a proposal instead of passing at once. "
         "1 action, {{ " + M + ".enact_law_per_epoch }} per age.",
         {
-            "kind": "What the law rules: succession_rule, inheritance_split, land_tenure, slavery, serfdom, tax_rate, tithe, tolls, debt_law, penal_code, levy_law, conscription, standing_army, veteran_pension, ransom_custom, marriage_law, sumptuary, guild_charter, foreigner_rights, religious_tolerance, worship_ban, blood_feud, quarantine, burial_law, sanitation, magic_ban, licensed_magic or rite_restrictions",
+            "kind": "What the law rules: succession_rule, inheritance_split, land_tenure, slavery, serfdom, tax_rate, tithe, tolls, debt_law, penal_code, levy_law, conscription, standing_army, veteran_pension, ransom_custom, marriage_law, sumptuary, guild_charter, foreigner_rights, religious_tolerance, worship_ban, blood_feud, quarantine, burial_law, sanitation, magic_ban, licensed_magic, rite_restrictions, censorship, fair_market, franchise, constitution or custom",
             "params": "The law's terms by name, only those its kind has; leave out a term to keep its default. Terms of each kind: " + law_terms_guide(),
             "name": "The law's name, if it should have one of its own",
         },
@@ -663,7 +663,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "You offer a typed treaty to another community or realm; it takes force when they accept. 1 action, {{ " + M + ".propose_treaty_per_epoch }} per age.",
         {
             "target_id": "The community or realm you offer it to",
-            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage (you become the vassal), tribute, marriage_pact, trade_pact, guarantee or interworld",
+            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage (you become the vassal), tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition or divine_pact",
             "clauses": "Typed clauses with who owes, who gains and their terms (amount, commodity, epochs, region_id, mortal_id...)",
             "epochs": "How many ages it should hold",
             "clauses.kind": "The clause's kind",

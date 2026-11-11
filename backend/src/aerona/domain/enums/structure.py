@@ -68,6 +68,7 @@ class StructureKind(StrEnum):
     FOUNTAIN = "fountain"
     PARK = "park"
     SLAUGHTERHOUSE = "slaughterhouse"
+    ALMSHOUSE = "almshouse"
     COSMIC_ARCHIVE = "cosmic_archive"
 
 

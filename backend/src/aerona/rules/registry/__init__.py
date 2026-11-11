@@ -41,6 +41,7 @@ from aerona.rules.registry.cartography import CartographyRules
 from aerona.rules.registry.casualties import CasualtiesRules
 from aerona.rules.registry.chronicle_audit import ChronicleAuditRules
 from aerona.rules.registry.chronicle_repeat import ChronicleRepeatRules
+from aerona.rules.registry.city_plan import CityPlanRules
 from aerona.rules.registry.civilization import CivilizationRules
 from aerona.rules.registry.climate_effects import ClimateEffectsRules
 from aerona.rules.registry.climate_world_type import ClimateWorldTypeRules
@@ -554,6 +555,7 @@ class Rules:
     world_cycles: CycleRules = field(default_factory=CycleRules)
     land_shaping: LandShapingRules = field(default_factory=LandShapingRules)
     desirability: DesirabilityRules = field(default_factory=DesirabilityRules)
+    city_plan: CityPlanRules = field(default_factory=CityPlanRules)
     coverage: CoverageRules = field(default_factory=CoverageRules)
     housing_evolution: HousingEvolutionRules = field(default_factory=HousingEvolutionRules)
     homelessness: HomelessRules = field(default_factory=HomelessRules)

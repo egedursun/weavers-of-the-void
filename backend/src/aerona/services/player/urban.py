@@ -3,9 +3,11 @@ from pydantic import Field
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind
 from aerona.engine.settlement import control
+from aerona.engine.urban.planning import move
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
 NAME_MAX = 80
+HEX_SPAN = 60
 DESCRIPTION_MAX = 2000
 
 
@@ -31,6 +33,12 @@ class EditDistrict(Command):
     design_id: int | None = None
     clear_design: bool = False
     release: list[str] = Field(default_factory=list)
+
+
+class MoveDistrict(Command):
+    district_id: int
+    q: int = Field(ge=-HEX_SPAN, le=HEX_SPAN)
+    r: int = Field(ge=-HEX_SPAN, le=HEX_SPAN)
 
 
 class SetForeigners(Command):
@@ -104,6 +112,12 @@ async def edit_district(scope: PlayerScope, command: EditDistrict) -> Effect:
     )
     district = await control.edit_district(await scope.context("district_edit"), command.district_id, change)
     return Effect(f"The district is now level {district.level} at condition {district.condition}.", district.settlement_entity_id)
+
+
+@player_action("district:move", ActionKind.EDIT_RECORD)
+async def move_district(scope: PlayerScope, command: MoveDistrict) -> Effect:
+    district = await move(await scope.context("district_move"), command.district_id, (command.q, command.r))
+    return Effect(f"The district now stands at hex {district.hex_q}, {district.hex_r} of its town.", district.settlement_entity_id)
 
 
 @player_action("settlement:foreigners", ActionKind.EDIT_RECORD)

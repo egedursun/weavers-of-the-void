@@ -3,6 +3,7 @@ from typing import Any
 from aerona.domain.enums.culture import Technique
 from tests.tools.every_setup import (
     advanced,
+    bounty_poster,
     captive_of_outlaws,
     carrying,
     claimable_title,
@@ -29,7 +30,6 @@ from tests.tools.every_setup import (
     merchant_house,
     mortal_vis,
     order_master,
-    bounty_poster,
     outlaw_hunted,
     owns_resource,
     pet_herd,

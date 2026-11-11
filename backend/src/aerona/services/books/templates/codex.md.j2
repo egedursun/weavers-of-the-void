@@ -171,6 +171,14 @@
 {{ inline_stats(article.stats) }}
 
 {% endif %}
+{% if article.plan %}![{{ article.plan.caption | cell }}]({{ links.heaven(article.anchor ~ "-plan", article.plan.figure) }})
+
+| Part of the plan | What stands there |
+|---|---|
+{% for label, value in article.plan.facts %}| {{ label | cell }} | {{ value | cell }} |
+{% endfor %}
+
+{% endif %}
 {{ entity_depth(article.entity.depth) }}
 {{ typed(article.typed) }}
 {% if article.ending %}

@@ -84,6 +84,7 @@ import {
   Wind,
   Zap,
   type LucideIcon,
+  Trees,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -213,6 +214,13 @@ export const DISTRICT_SPEC: Record<DistrictKind, Spec> = {
   palace: { label: 'Palace', icon: Crown, tone: 'gold' },
   foreign_quarter: { label: 'Foreign quarter', icon: Globe, tone: 'info' },
   necropolis: { label: 'Necropolis', icon: Skull, tone: 'muted' },
+  residential: { label: 'Residential quarter', icon: House, tone: 'success' },
+  civic_quarter: {
+    label: 'Civic quarter',
+    icon: Landmark,
+    tone: 'info',
+  },
+  gardens: { label: 'Gardens', icon: Trees, tone: 'success' },
 }
 export const DISTRICT_MAX_LEVEL = 5
 

@@ -57,6 +57,7 @@ from aerona.engine.military.records import battle_field
 from aerona.engine.primitives.knowledge import laws_of_dimension
 from aerona.engine.primitives.queries import canon, flags_by_entity
 from aerona.rules.registry import Rules
+from aerona.services.books.citysvg import Plan, city_plan, land_plan, type_tables
 from aerona.services.books.command import add_command_areas
 from aerona.services.books.heavensvg import cluster_figure, dimension_figure, galaxy_figure
 from aerona.services.books.history import HandEpoch, creator_hand, ending_line, god_fate, son_fate
@@ -162,6 +163,7 @@ class EntityArticle:
     children: list["EntityArticle"] = field(default_factory=list)
     ending: str | None = None
     typed: list[TypedSection] = field(default_factory=list)
+    plan: Plan | None = None
 
 
 @dataclass
@@ -499,7 +501,15 @@ class BookBuilder:
             depth_level=depth_level,
             ending=ending_line(entity.status.value, entity.end_epoch, entity.fate_note) if entity.status in ENDED else None,
             typed=self.typed.of(entity.id),
+            plan=await self.plan_of(entity),
         )
+
+    async def plan_of(self, entity: EntityRow) -> Plan | None:
+        if entity.entity_type is EntityType.SETTLEMENT:
+            return await city_plan(self.session, self.rules, entity)
+        if entity.entity_type is EntityType.REGION:
+            return await land_plan(self.session, entity)
+        return None
 
     async def son_article(self, son: SonRow, relations: list[SonRelationRow]) -> SonArticle:
         powers = list(await self.session.scalars(select(SonPowerRow).where(SonPowerRow.son_id == son.id).order_by(SonPowerRow.slot)))
@@ -1092,7 +1102,7 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
         creator_hand=await creator_hand(session),
         wars=await builder.wars(),
         creator_typed=builder.typed.of(creator.id) if creator is not None else [],
-        records=builder.typed.records,
+        records=[*builder.typed.records, *await type_tables(session, rules)],
         ledger_changes=builder.typed.ledger_changes(await session.scalars(select(LedgerChangeRow).order_by(LedgerChangeRow.entry_id, LedgerChangeRow.id))),
     )
 

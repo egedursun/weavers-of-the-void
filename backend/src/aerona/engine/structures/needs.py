@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.structures import WORKSHOP_STRUCTURES
+from aerona.constants.units import PERCENT
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.economy import WorkshopRow
@@ -75,6 +76,12 @@ class SiteFacts:
 Need = tuple[StructureKind, Callable[[Rules, SiteFacts], bool]]
 
 
+def homeless_share(facts: SiteFacts) -> float:
+    if facts.town is None:
+        return 0.0
+    return facts.town.homeless * PERCENT / max(1, facts.value("population"))
+
+
 def share(facts: SiteFacts, social_class: SocialClass, rules: Rules) -> bool:
     return facts.shares.get(social_class, 0) >= rules.construction.need_class_pct
 
@@ -129,6 +136,12 @@ NEEDS: tuple[Need, ...] = (
     (K.MONUMENT, lambda rules, f: f.value("prosperity") >= rules.construction.need_prosperity_monument),
     (K.TOMB, lambda rules, f: f.patron and f.value("piety") >= rules.deep_life.temple_min_piety),
     (K.WONDER, lambda rules, f: f.at_least(SizeTier.CITY) and f.value("prosperity") >= rules.construction.need_prosperity_wonder),
+    (K.FIREHOUSE, lambda rules, f: f.at_least(SizeTier.TOWN) and f.knows(B.ARCHITECTURE)),
+    (K.BATHHOUSE, lambda rules, f: f.at_least(SizeTier.TOWN) and f.civic("sanitation") < rules.construction.need_sanitation),
+    (K.FOUNTAIN, lambda rules, f: f.has(K.AQUEDUCT) or f.value("prosperity") >= rules.city_plan.gardens_prosperity),
+    (K.PARK, lambda rules, f: f.at_least(SizeTier.TOWN) and f.value("prosperity") >= rules.city_plan.gardens_prosperity),
+    (K.SLAUGHTERHOUSE, lambda rules, f: f.at_least(SizeTier.TOWN) and f.has(K.MARKET)),
+    (K.ALMSHOUSE, lambda rules, f: homeless_share(f) >= rules.city_plan.almshouse_need_pct),
     *((kind, lambda rules, f, kind=kind: kind in f.workshops) for kind in sorted(set(WORKSHOP_STRUCTURES.values()), key=lambda item: item.value)),
 )
 TECHNIQUE_GATES = {K.AQUEDUCT: Technique.AQUEDUCT, K.SEWER: Technique.ARCH, K.CITADEL: Technique.FORTIFICATION, K.WONDER: Technique.DOME}

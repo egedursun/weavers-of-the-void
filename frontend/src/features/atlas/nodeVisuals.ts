@@ -1,5 +1,7 @@
 import {
   BookOpen,
+  Building2,
+  Home,
   Crown,
   Folder,
   Ghost,
@@ -25,9 +27,12 @@ export const KIND_TONE: Record<AtlasNodeKind, string> = {
   dimension: 'text-info',
   cluster: 'text-brand-verdigris',
   galaxy: 'text-primary',
+  'building-type': 'text-primary',
+  'dwelling-type': 'text-success',
 }
 
 export function nodeIcon(node: AtlasNode): LucideIcon {
+  if (node.icon) return node.icon
   const typeKey = node.entity?.entity_type ?? node.typeKey
   if (typeKey && typeKey in ENTITY_TYPE_ICON)
     return ENTITY_TYPE_ICON[typeKey as keyof typeof ENTITY_TYPE_ICON]
@@ -45,4 +50,6 @@ const KIND_ICON: Record<AtlasNodeKind, LucideIcon> = {
   dimension: Layers,
   cluster: Workflow,
   galaxy: Orbit,
+  'building-type': Building2,
+  'dwelling-type': Home,
 }

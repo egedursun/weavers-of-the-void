@@ -117,6 +117,7 @@ STRUCTURES: MappingProxyType[StructureKind, StructureSpec] = MappingProxyType(
             spec((K.FOUNTAIN, G.CIVIC, "Fountain"), (None, W.NONE), U.NONE, (B.MINOR, C.STONE, T.VILLAGE)),
             spec((K.PARK, G.CIVIC, "Park"), (S.ARTISAN, W.FEW), U.NONE, (B.MINOR, C.TIMBER, T.VILLAGE)),
             spec((K.SLAUGHTERHOUSE, G.PRODUCTION, "Slaughterhouse"), (S.ARTISAN, W.FEW), U.HANDS, (B.MINOR, C.FUEL, T.VILLAGE)),
+            spec((K.ALMSHOUSE, G.CIVIC, "Almshouse"), (S.PRIEST, W.FEW), U.SEATS, (B.MINOR, C.BREAD, T.VILLAGE)),
             spec((K.KONTOR, G.COMMERCE, "Trading post"), (S.MERCHANT, W.FEW), U.LOADS, (B.MINOR, C.TIMBER, T.VILLAGE)),
             spec(
                 (K.COVENANT, G.KNOWLEDGE, "Covenant"),

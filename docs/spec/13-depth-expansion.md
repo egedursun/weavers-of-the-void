@@ -7615,6 +7615,7 @@ The second pass multiplies per-tick computation, while decision K.8 keeps the CP
 | W17 | Trait evolution, niches, radiation, trophic flow, coevolution, keystones, feral reversion, biome succession, biogeochemical cycles; pathogen evolution, vectors, carriers, spillover, responses, vaccination, cure race | W10+, W12+ |
 | W18 | Desirability, coverage, housing evolution, homelessness, prevention, morphology, turf; caravans, fleets, cargo transport, ports, manipulation; crime organisations, trading posts, magical orders | W5+, W4+ |
 | W19 | Legal typology, precedent, courts and appeals, registries, jurisdiction conflicts, pardons, outlawry, prisons; recruitment motives, network topology, mole hunts, defectors, assassination forensics, ciphers, signal networks | W6+ |
+| W19+ | City and land visualisation: zones, persistent district hexes, distance-bound coverage and desirability, residential, civic and garden quarters, almshouses, a city scene and a land scene drawn from the engine's own values, building and dwelling types in the Atlas, the god's city plane | W18, W19 |
 | W20 | F32 collective behaviour, F33 historiography, F34 storylets, F35 social norms and volition; passions, conviction, persuasion, status hierarchies; social learning; generations; diaspora; demographic transition; sex ratios; role norms; dating systems; world materials; heraldry; component designs | W13, W3+ |
 
 **Enums added:** ScaleAxis, Technique, Form (magic), RangeKind, DurationKind, MagicResourceKind, ParadigmKind, ServitorRank, CosmicOfficeKind, GeasKind, SoundChangeKind, WordOrder, MorphologyType, ScriptType, LanguageModality, NicheKey, TrophicLevel, ServiceKind, HousingLevel, Morphology, CaravanStatus, CargoClass, LegalSystem, CourtLevel, RecruitmentMotive, AssassinationMethod, CipherStrength, CollectiveActKind, AccountKind, AccountStance, StoryletId, NormSituation, PassionKind, DatingSystemKind, HeraldicCharge, DesignComponentKind.
@@ -7662,6 +7663,20 @@ The second pass multiplies per-tick computation, while decision K.8 keeps the CP
 - **Espionage:** a spy network graph and a cipher status board.
 - **Society:** riot cascade replays.
 - **Memory and narrative:** an accounts versus truth viewer; the storylet queue; a generations panel.
+
+#### City and land visualisation (W19+)
+
+Cities and lands are drawn, and every drawn thing is a value of the engine; nothing is decoration.
+
+- **Zones.** Every district kind and structure kind belongs to one zone: governance, residential, commercial, industrial, agricultural, civic (education, health, sports, culture, social services) or green. New district kinds: residential quarter, civic quarter and gardens. A town short of homes builds a residential quarter before it falls into slums; a town with enough civic works gathers them into a civic quarter; a prosperous town with parks or fountains lays out gardens.
+- **The city is a hex plan.** Each district holds a seed hex, set by the planner when it is built: governance at the centre, civic and commercial around it, residential beyond, industry and fields outside; green quarters between them, the harbour on the water side, the necropolis and the fields outside the walls. A planned town fills its rings in rows, a ringed town in rings, a town grown at random by a seeded walk. A district covers more hexes as it rises in level. The god can move a district to another hex.
+- **Distance binds the plan.** A service reaches other districts by the hex distance between them (its reach to the power of the distance), amenities and nuisances weigh on districts by the same distance, and walls enclose the hexes of the inner rings. What the scene shows is what the engine counts.
+- **Buildings.** Each structure stands on its district's hexes; under construction it shows its stage, damaged or ruined it shows its wreck. Dwellings are not records: a district's homes are its share of the town's people over the household size, drawn at the district's housing level, and the homeless are drawn as shelters in the slums.
+- **Builders.** Towns, realms, factions, cults, patrons and gods build as before; a rich mortal can commission a work; an almshouse (social services) shelters the homeless and calms unrest.
+- **The god's plane.** From the city scene the god founds, enlarges, rezones, moves and razes districts, and commissions, funds, finishes, repairs, damages, places and razes structures, holding any value against the engine.
+- **The land scene.** A region is drawn as hexes in the shares of its forest, fields, pasture, wetland, mountains, hills and water; its rivers, coast, roads and settlements; its resources and veins by richness; its mines, quarries, mills and other works; its ruins, holy ground, magic sites and lairs.
+- **Atlas by type.** Buildings and dwellings appear in the Atlas by type, each type with its instances, its zone, what it serves and what it costs; individual structures are reached from their type and their town.
+- **Assets.** The scenes use the KayKit medieval hexagon and Halloween bits packs (CC0), tinted by zone.
 
 ### J.13 Fourth-pass integration addendum
 

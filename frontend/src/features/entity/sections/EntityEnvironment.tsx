@@ -47,6 +47,7 @@ import {
   StatBar,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { LandSection } from '@/features/city/LandSection'
 import { RegionClimateControl } from '@/features/cosmography/RegionClimateControl'
 import { CURRENTS } from '@/features/cosmography/labels'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
@@ -964,6 +965,7 @@ export function EntityEnvironment({
       <>
         <RegionEnvironmentSection regionId={entityId} />
         <RegionTerrainSection regionId={entityId} />
+        <LandSection regionId={entityId} />
       </>
     )
   if (entityType === 'place')

@@ -6,6 +6,7 @@ import { EmptyState, PagedList, Section } from '@/components/domain'
 import { MentionText } from '@/components/domain/MentionText'
 import { Text } from '@/components/typography'
 import { targetsOfRefs } from '@/features/chronicle/linkTargets'
+import { CitySection } from '@/features/city/CitySection'
 import { CosmicBeingSection } from '@/features/cosmography/BeingsPanel'
 import { PhenomenonSection } from '@/features/cosmography/PhenomenaPanel'
 import { CelestialReadingsSection } from '@/features/cosmography/ReadingsSection'
@@ -531,6 +532,9 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
             mortal={entity.entity_type === 'mortal'}
             readOnlyReason={readOnly}
           />
+        )}
+        {entity.entity_type === 'settlement' && (
+          <CitySection settlementId={entity.id} readOnlyReason={readOnly} />
         )}
         {entity.entity_type === 'settlement' && (
           <SettlementPlanSection

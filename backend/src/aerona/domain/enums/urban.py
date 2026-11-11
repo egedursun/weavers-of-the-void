@@ -87,3 +87,42 @@ class MarketPlay(StrEnum):
 class CrimeStance(StrEnum):
     SUPPRESS = "suppress"
     CO_OPT = "co_opt"
+
+
+class ZoneKind(StrEnum):
+    GOVERNANCE = "governance"
+    RESIDENTIAL = "residential"
+    COMMERCIAL = "commercial"
+    INDUSTRIAL = "industrial"
+    AGRICULTURAL = "agricultural"
+    CIVIC = "civic"
+    GREEN = "green"
+
+
+class CivicService(StrEnum):
+    EDUCATION = "education"
+    HEALTH = "health"
+    SPORTS = "sports"
+    CULTURE = "culture"
+    SOCIAL = "social"
+
+
+class LandGround(StrEnum):
+    WATER = "water"
+    SHORE = "shore"
+    LOWLAND = "lowland"
+    WETLAND = "wetland"
+    HILLS = "hills"
+    MOUNTAINS = "mountains"
+    PEAKS = "peaks"
+
+
+class LandCover(StrEnum):
+    OPEN = "open"
+    FOREST = "forest"
+    FIELDS = "fields"
+    PASTURE = "pasture"
+    MARSH = "marsh"
+    CLEARED = "cleared"
+    BUILT = "built"
+    MINED = "mined"

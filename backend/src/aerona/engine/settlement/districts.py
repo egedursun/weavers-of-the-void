@@ -100,7 +100,7 @@ def base_parameters(rules: Rules, kind: DistrictKind) -> dict[str, int]:
     urban = rules.urban
     table = rules.districts
     found = dict.fromkeys(DESIGN_PARAMETERS, 0)
-    found["housing"] = urban.housing_per_level
+    found["housing"] = urban.housing_per_level * (rules.city_plan.residential_housing_pct if kind is DistrictKind.RESIDENTIAL else PERCENT) // PERCENT
     if kind in (DistrictKind.FARMLAND, DistrictKind.MARKET):
         found["food_store"] = urban.granary_per_level
     if kind in (DistrictKind.MARKET, DistrictKind.CRAFT_QUARTER):

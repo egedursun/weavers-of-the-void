@@ -8,6 +8,7 @@ import { EmptyState, PageHeader } from '@/components/domain'
 import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
 import { useGlobalWorld } from '@/components/layout/worldFilter'
 import { Text } from '@/components/typography'
+import { useWorldsStructureTypes } from '@/features/city/api'
 import { useCosmography } from '@/features/cosmography/api'
 import {
   useAllEntities,
@@ -26,6 +27,7 @@ import { TypeChips } from './TypeChips'
 import {
   type AtlasFilters as Filters,
   type AtlasNode,
+  INSTANCE_TYPES,
   VISIBLE_STATUS,
   allKeys,
   buildAtlasTree,
@@ -81,10 +83,24 @@ export function AtlasScreen() {
     ]
   )
   const types = useMemo(
-    () => catalogue.data?.entity_types ?? [],
+    () =>
+      (catalogue.data?.entity_types ?? []).filter(
+        (type) => !INSTANCE_TYPES.has(type.key)
+      ),
     [catalogue.data]
   )
-  const all = useMemo(() => entities.data ?? [], [entities.data])
+  const all = useMemo(
+    () =>
+      (entities.data ?? []).filter(
+        (entity) => !INSTANCE_TYPES.has(entity.entity_type)
+      ),
+    [entities.data]
+  )
+  const worldIds = useMemo(
+    () => (cosmos.data?.worlds ?? []).map((item) => item.world.id),
+    [cosmos.data]
+  )
+  const buildings = useWorldsStructureTypes(worldIds)
   const matching = useMemo(
     () => all.filter((entity) => matchesEntity(entity, filters)),
     [all, filters]
@@ -107,8 +123,9 @@ export function AtlasScreen() {
         cosmos: cosmos.data,
         heavens: heavens.data,
         types,
+        buildings,
       }),
-    [all, state.data, cosmos.data, heavens.data, types]
+    [all, state.data, cosmos.data, heavens.data, types, buildings]
   )
   const filtering = isFiltering(filters)
   const matchIds = useMemo(

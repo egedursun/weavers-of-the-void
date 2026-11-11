@@ -1,3 +1,10 @@
+import { type LucideIcon } from 'lucide-react'
+import { type StructureTypes } from '@/features/city/api'
+import {
+  DWELLING_ICON,
+  buildingTypeKey,
+  dwellingTypeKey,
+} from '@/features/city/typeKeys'
 import { type Cosmography } from '@/features/cosmography/api'
 import {
   type CosmosView,
@@ -5,6 +12,8 @@ import {
   type EntityTypeInfo,
   type WorldState,
 } from '@/features/entity/api/types'
+import { KIND_SPEC } from '@/features/entity/society/structureLabels'
+import { HOUSING } from '@/features/urban/labels'
 import { type AtlasSort } from './atlasSearch'
 
 export type AtlasNodeKind =
@@ -18,6 +27,8 @@ export type AtlasNodeKind =
   | 'dimension'
   | 'cluster'
   | 'galaxy'
+  | 'building-type'
+  | 'dwelling-type'
 
 export type AtlasNode = {
   key: string
@@ -27,6 +38,7 @@ export type AtlasNode = {
   hint?: string
   entity?: EntitySummary
   typeKey?: string
+  icon?: LucideIcon
   children: AtlasNode[]
 }
 
@@ -110,6 +122,58 @@ type TreeInput = {
   cosmos: CosmosView | undefined
   heavens?: Cosmography | undefined
   types: EntityTypeInfo[]
+  buildings?: ReadonlyMap<number, StructureTypes>
+}
+
+export const INSTANCE_TYPES: ReadonlySet<string> = new Set(['structure'])
+
+function buildingTypes(
+  worldId: number,
+  found: StructureTypes | undefined
+): AtlasNode[] {
+  if (!found) return []
+  const structures = found.structures
+    .filter((row) => row.instances.length > 0)
+    .map((row) => ({
+      key: buildingTypeKey(worldId, row.kind),
+      label: row.label,
+      kind: 'building-type' as const,
+      hint: `${row.instances.length} built`,
+      icon: KIND_SPEC[row.kind].icon,
+      children: [],
+    }))
+  const dwellings = found.dwellings
+    .filter((row) => row.dwellings > 0)
+    .map((row) => ({
+      key: dwellingTypeKey(worldId, row.housing),
+      label: HOUSING[row.housing].label,
+      kind: 'dwelling-type' as const,
+      hint: `${row.dwellings} homes`,
+      icon: DWELLING_ICON,
+      children: [],
+    }))
+  return [
+    ...(structures.length
+      ? [
+          {
+            key: `group:${worldId}:building-types`,
+            label: 'Buildings by type',
+            kind: 'group' as const,
+            children: structures,
+          },
+        ]
+      : []),
+    ...(dwellings.length
+      ? [
+          {
+            key: `group:${worldId}:dwelling-types`,
+            label: 'Homes by type',
+            kind: 'group' as const,
+            children: dwellings,
+          },
+        ]
+      : []),
+  ]
 }
 
 function humanizeKind(value: string): string {
@@ -232,11 +296,13 @@ export function buildAtlasTree({
   cosmos,
   heavens,
   types,
+  buildings,
 }: TreeInput): AtlasNode[] {
   const byId = new Map(entities.map((entity) => [entity.id, entity]))
   const childrenOf = new Map<number, EntitySummary[]>()
   const rootsOf = new Map<number, EntitySummary[]>()
   for (const entity of entities) {
+    if (INSTANCE_TYPES.has(entity.entity_type)) continue
     if (entity.location_id !== null && byId.has(entity.location_id)) {
       childrenOf.set(entity.location_id, [
         ...(childrenOf.get(entity.location_id) ?? []),
@@ -304,6 +370,7 @@ export function buildAtlasTree({
             typeKey: type,
             children: locationTree(items, childrenOf, seen),
           })),
+        ...buildingTypes(worldId, buildings?.get(worldId)),
         ...(gods.length
           ? [
               {

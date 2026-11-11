@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { parseTypeKey } from '@/features/city/typeKeys'
 import {
   type CosmosView,
   type EntitySummary,
@@ -74,6 +75,62 @@ const STATE = {
   ],
   worlds: [{ id: 1, name: 'Aerona' }],
 } as unknown as WorldState
+
+describe('atlas building types', () => {
+  it('files buildings under their type and homes under their kind, never one entry per building', () => {
+    const buildings = new Map([
+      [
+        1,
+        {
+          world_id: 1,
+          structures: [
+            {
+              kind: 'school',
+              label: 'School',
+              instances: [{ node: { id: 30 } }, { node: { id: 31 } }],
+            },
+            { kind: 'temple', label: 'Temple', instances: [] },
+          ],
+          dwellings: [
+            { housing: 'cottage', districts: 2, dwellings: 40, towns: [] },
+            { housing: 'manor', districts: 0, dwellings: 0, towns: [] },
+          ],
+        },
+      ],
+    ]) as unknown as Parameters<typeof buildAtlasTree>[0]['buildings']
+    const tree = buildAtlasTree({
+      entities: [
+        ...ENTITIES,
+        entity(30, 'North School', 'structure', 2),
+        entity(31, 'South School', 'structure', 2),
+      ],
+      state: STATE,
+      cosmos: COSMOS,
+      types: [],
+      buildings,
+    })
+    const keys = flattenVisible(tree, new Set(allKeys(tree))).map(
+      (row) => row.node.key
+    )
+    expect(keys).toContain('building-type:1:school')
+    expect(keys).toContain('dwelling-type:1:cottage')
+    expect(keys).not.toContain('building-type:1:temple')
+    expect(keys).not.toContain('dwelling-type:1:manor')
+    expect(keys).not.toContain('entity:30')
+    expect(keys).not.toContain('entity:31')
+    expect(parseTypeKey('building-type:1:school')).toEqual({
+      kind: 'building',
+      worldId: 1,
+      type: 'school',
+    })
+    expect(parseTypeKey('dwelling-type:1:cottage')).toEqual({
+      kind: 'dwelling',
+      worldId: 1,
+      type: 'cottage',
+    })
+    expect(parseTypeKey('entity:3')).toBeNull()
+  })
+})
 
 describe('atlas tree', () => {
   const tree = buildAtlasTree({

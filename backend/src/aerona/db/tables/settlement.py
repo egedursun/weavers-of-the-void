@@ -114,6 +114,8 @@ class DistrictRow(Base):
     housing: Mapped[HousingLevel] = mapped_column(enum_type(HousingLevel, "housing"), default=HousingLevel.HOUSE, server_default="house")
     desirability: Mapped[int] = mapped_column(default=50, server_default="50")
     land_value: Mapped[int] = mapped_column(default=50, server_default="50")
+    hex_q: Mapped[int | None]
+    hex_r: Mapped[int | None]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
     design_id: Mapped[int | None] = mapped_column(ForeignKey("district_designs.id", ondelete="SET NULL"))
 

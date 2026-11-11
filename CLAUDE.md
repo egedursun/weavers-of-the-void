@@ -95,7 +95,7 @@ These rules are enforced mechanically, and they bind Claude as much as anyone.
     - `tests/api/test_frontend_types.py`: the generated frontend types hold every schema, field and enum value the API serves, so `npm run typegen` is never forgotten.
     - `tests/unit/test_derived_world_fields.py`: only the heavens and levers that hold the value write a world value the heavens derive, and every value of the heavens' enums is produced or read by the engine.
     - `tests/tools/test_catalogue.py`: every tool field the model sees is described.
-    - The whole-source guards: every near-total enum table read by subscript is total or declares what it leaves out (`tests/unit/test_total_tables.py`), names are found by whole words (`tests/unit/test_word_matching.py`), and the mechanic, schema, produced-kind and rule registry checks.
+    - The whole-source guards: every near-total enum table read by subscript is total or declares what it leaves out (`tests/unit/test_total_tables.py`), names are found by whole words (`tests/unit/test_word_matching.py`), a tool text that lists an enum lists every value of it (`tests/unit/test_tool_enum_lists.py`), and the mechanic, schema, produced-kind and rule registry checks.
     - A full epoch with a scripted model, and an engine-only epoch.
     - Every test file that imports a changed function, class or constant, or a changed test helper. `scripts/covering_tests.py` lists them from the staged diff.
   - ruff, mypy (with deprecated calls as errors) and import layers for backend changes.

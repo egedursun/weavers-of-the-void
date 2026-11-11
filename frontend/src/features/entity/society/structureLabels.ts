@@ -392,6 +392,12 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
     tone: 'success',
     hint: 'Open ground that makes the districts around it more desirable',
   },
+  almshouse: {
+    label: 'Almshouse',
+    icon: Users,
+    tone: 'success',
+    hint: 'Shelters the homeless of its town and calms its unrest',
+  },
   slaughterhouse: {
     label: 'Slaughterhouse',
     icon: Hammer,

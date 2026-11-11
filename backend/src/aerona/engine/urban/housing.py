@@ -7,11 +7,13 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.society import CommunitySocietyRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.urban import DistrictServiceRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind
 from aerona.domain.enums.society import Commodity
+from aerona.domain.enums.structure import ConstructionState, StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.notes import note
 from aerona.engine.primitives.knowledge import KnowledgeMap
@@ -32,6 +34,7 @@ class HousingTally:
     fallen: int = 0
     slums: int = 0
     mobs: int = 0
+    sheltered: int = 0
 
 
 async def needs_met(ctx: TickContext, district: DistrictRow) -> float:
@@ -97,6 +100,17 @@ async def cramped_rich(ctx: TickContext, town: Town) -> bool:
     return fine * PERCENT < rich * table.fine_homes
 
 
+async def almshouse_levels(ctx: TickContext, settlement_id: int) -> int:
+    levels = await ctx.session.scalars(
+        select(StructureProfileRow.level).where(
+            StructureProfileRow.kind == StructureKind.ALMSHOUSE,
+            StructureProfileRow.host_entity_id == settlement_id,
+            StructureProfileRow.construction_state == ConstructionState.COMPLETE,
+        )
+    )
+    return int(sum(levels))
+
+
 async def house_town(ctx: TickContext, settlement: EntityRow, knowledge: KnowledgeMap, tally: HousingTally) -> None:
     table = ctx.rules.homelessness
     town = await town_of(ctx, settlement, knowledge)
@@ -107,14 +121,19 @@ async def house_town(ctx: TickContext, settlement: EntityRow, knowledge: Knowled
         await evolve_district(ctx, town, district, goods, tally)
     population = stat_or(settlement, "population", 0)
     people = people_of_districts(population, town.districts)
-    homeless = max(0, population - housing_of(ctx.rules, town)) + priced_out(ctx, town, people)
+    almshouses = await almshouse_levels(ctx, settlement.id)
+    sheltered = almshouses * ctx.rules.city_plan.almshouse_shelter
+    unhoused = max(0, population - housing_of(ctx.rules, town)) + priced_out(ctx, town, people)
+    homeless = max(0, unhoused - sheltered)
+    tally.sheltered += min(sheltered, unhoused)
     profile = town.profile
     if "homeless" not in profile.locked:
         profile.homeless = min(population, homeless)
     share = profile.homeless / max(1, population)
     if "unrest" not in profile.locked:
         cramped = ctx.rules.housing_evolution.cramped_unrest if await cramped_rich(ctx, town) else 0
-        profile.unrest = clamp_int(round_half_up(profile.unrest + share * table.unrest + cramped), 0, PERCENT)
+        calm = almshouses * ctx.rules.city_plan.almshouse_calm
+        profile.unrest = clamp_int(round_half_up(profile.unrest + share * table.unrest + cramped - calm), 0, PERCENT)
     await grow_slums(ctx, town, share, tally)
     await ctx.session.flush()
 
