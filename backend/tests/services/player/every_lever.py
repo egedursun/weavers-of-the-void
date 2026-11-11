@@ -26,6 +26,7 @@ from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lore import HistorianViewRow, MessageRow
 from aerona.db.tables.military import OccupationRow
 from aerona.db.tables.routes import HorizonIntuitionRow, RouteRow
+from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.domain.enums.agent import MessageIntent
@@ -395,6 +396,13 @@ async def route_region(session: AsyncSession) -> int:
     return found.path[0]
 
 
+async def town_district(session: AsyncSession) -> int:
+    town = await canon(session, EntityType.SETTLEMENT, 0)
+    found = await session.scalar(select(DistrictRow.id).where(DistrictRow.settlement_entity_id == town).order_by(DistrictRow.id).limit(1))
+    assert found is not None
+    return int(found)
+
+
 async def first_son(session: AsyncSession) -> SonRow:
     son = await session.scalar(select(SonRow).order_by(SonRow.id).limit(1))
     assert son is not None
@@ -724,6 +732,21 @@ async def outer_being(session: AsyncSession) -> int:
 CUSTOM_KIND = ("kind:create", {"catalog": "technique", "base": "phalanx_drill", "name": "Shieldwall Drill"})
 SPEAKERS = ("language:speakers", {"community_id": Pick(TOWN), "language_id": Pick(EntityType.LANGUAGE, 2), "share": 30, "kind": "second"})
 TEMPLE = ("structure:commission", {"site_id": Pick(TOWN), "kind": "temple"})
+CRIME = ("faction:found", {"community_id": Pick(TOWN), "kind": "crime_family"})
+HOUSE = ("faction:found", {"community_id": Pick(TOWN, 2), "kind": "merchant_guild"})
+ORDER = ("faction:edit", {"faction_id": Newest(EntityType.FACTION), "values": {"kind": "mage_order"}})
+DISTRICT = Computed(town_district)
+TURF = ("turf:set", {"district_id": DISTRICT, "faction_id": Newest(EntityType.FACTION), "strength": 40})
+RACKET = ("racket:set", {"faction_id": Newest(EntityType.FACTION), "settlement_id": Pick(TOWN), "racket": "gambling"})
+PAYROLL = ("payroll:add", {"faction_id": Newest(EntityType.FACTION), "official_id": Pick(MORTAL)})
+STANCE = ("crime_stance:set", {"polity_id": Pick(REALM), "faction_id": Newest(EntityType.FACTION), "stance": "suppress"})
+LAW = ("order_law:set", {"faction_id": Newest(EntityType.FACTION), "law": "share_discoveries", "strength": 40})
+TRIAL = ("tribunal:convene", {"faction_id": Newest(EntityType.FACTION), "law": "share_discoveries", "accused_id": Pick(MORTAL)})
+POST = ("trading_post:open", {"owner_id": Newest(EntityType.FACTION), "host_id": Pick(TOWN)})
+SERVICE_SET = ("district_service:set", {"district_id": DISTRICT, "service": "watch", "coverage": 60})
+CONVOY = ("convoy:send", {"route_id": Pick(EntityType.TRADE_ROUTE)})
+FLEET = ("fleet:set", {"owner_id": Pick(TOWN), "kind": "wagons", "count": 12})
+PLAY = ("market_play:set", {"holder_id": Newest(EntityType.FACTION), "settlement_id": Pick(TOWN), "commodity": "grain", "play": "corner"})
 TRAIT = ("species_trait:set", {"species_id": Pick(EntityType.SPECIES), "region_id": Pick(EntityType.REGION), "trait": "speed", "mean": 60})
 LINE = ("lineage:mark", {"species_id": Pick(EntityType.SPECIES), "package": "divine_blessing", "blessing": True})
 SERVICE = ("ecosystem_service:set", {"region_id": Pick(EntityType.REGION), "role": "pollinator", "strength": 50})
@@ -1708,6 +1731,38 @@ LEVERS: dict[str, Lever] = {
     **{name: after(TONGUE_GIVEN, god_id=Pick("son")) for name in ("divine_tongue:edit", "divine_tongue:delete")},
     "divine_tongue:teach": after(TONGUE_GIVEN, god_id=Pick("son"), mortal_id=Pick(MORTAL)),
     "pidgin:make": Lever(values={"first_id": Pick(TOWN), "second_id": Pick(TOWN, 1)}, setup=strangers),
+    "district_urban:edit": given(district_id=DISTRICT),
+    "town_urban:edit": given(settlement_id=Pick(TOWN)),
+    "structure:place": after(TEMPLE, structure_id=Newest(EntityType.STRUCTURE), district_id=DISTRICT),
+    "slums:clear": given(settlement_id=Pick(TOWN)),
+    "district_service:set": given(district_id=DISTRICT, service="watch", coverage=60),
+    **{name: after(SERVICE_SET, district_id=DISTRICT, service="watch") for name in ("district_service:edit", "district_service:delete")},
+    "turf:set": after(CRIME, district_id=DISTRICT, faction_id=Newest(EntityType.FACTION), strength=40),
+    **{name: after(CRIME, TURF, district_id=DISTRICT, faction_id=Newest(EntityType.FACTION)) for name in ("turf:edit", "turf:delete")},
+    "racket:set": after(CRIME, faction_id=Newest(EntityType.FACTION), settlement_id=Pick(TOWN), racket="gambling"),
+    **{
+        name: after(CRIME, RACKET, faction_id=Newest(EntityType.FACTION), settlement_id=Pick(TOWN), racket="gambling")
+        for name in ("racket:edit", "racket:delete")
+    },
+    "payroll:add": after(CRIME, faction_id=Newest(EntityType.FACTION), official_id=Pick(MORTAL)),
+    **{name: after(CRIME, PAYROLL, faction_id=Newest(EntityType.FACTION), official_id=Pick(MORTAL)) for name in ("payroll:edit", "payroll:delete")},
+    "crime_stance:set": after(CRIME, polity_id=Pick(REALM), faction_id=Newest(EntityType.FACTION), stance="suppress"),
+    **{name: after(CRIME, STANCE, polity_id=Pick(REALM), faction_id=Newest(EntityType.FACTION)) for name in ("crime_stance:edit", "crime_stance:delete")},
+    "order_law:set": after(HOUSE, ORDER, faction_id=Newest(EntityType.FACTION), law="share_discoveries"),
+    **{name: after(HOUSE, ORDER, LAW, faction_id=Newest(EntityType.FACTION), law="share_discoveries") for name in ("order_law:edit", "order_law:delete")},
+    "tribunal:convene": after(HOUSE, ORDER, LAW, faction_id=Newest(EntityType.FACTION), law="share_discoveries", accused_id=Pick(MORTAL)),
+    "tribunal:strike": after(HOUSE, ORDER, LAW, TRIAL, trial_id=Newest("order_tribunal")),
+    "trading_post:open": after(HOUSE, owner_id=Newest(EntityType.FACTION), host_id=Pick(TOWN)),
+    **{name: after(HOUSE, POST, structure_id=Newest(EntityType.STRUCTURE)) for name in ("trading_post:edit", "trading_post:close")},
+    "convoy:send": given(route_id=Pick(EntityType.TRADE_ROUTE)),
+    **{name: after(CONVOY, convoy_id=Newest("convoy")) for name in ("convoy:edit", "convoy:delete")},
+    "fleet:set": given(owner_id=Pick(TOWN), kind="wagons", count=12),
+    **{name: after(FLEET, owner_id=Pick(TOWN), kind="wagons") for name in ("fleet:edit", "fleet:delete")},
+    "market_play:set": after(HOUSE, holder_id=Newest(EntityType.FACTION), settlement_id=Pick(TOWN), commodity="grain", play="corner"),
+    **{
+        name: after(HOUSE, PLAY, holder_id=Newest(EntityType.FACTION), settlement_id=Pick(TOWN), commodity="grain", play="corner")
+        for name in ("market_play:edit", "market_play:delete")
+    },
     "species_trait:set": given(species_id=Pick(EntityType.SPECIES), region_id=Pick(EntityType.REGION), trait="speed", mean=60),
     **{
         name: after(TRAIT, species_id=Pick(EntityType.SPECIES), region_id=Pick(EntityType.REGION), trait="speed")
@@ -1913,6 +1968,18 @@ EDITS: Mapping[str, Mapping[str, Any]] = {
     "plague_response:edit": {"strength": 80, "until_epoch": 9},
     "cure_research:edit": {"points": 40, "specimens": 3},
     "world_cycle:edit": {"carbon": 60, "water": 40, "nutrients": 55},
+    "district_urban:edit": {"housing": "townhouse", "desirability": 70, "land_value": 60},
+    "town_urban:edit": {"morphology": "planned", "homeless": 40},
+    "district_service:edit": {"coverage": 80},
+    "turf:edit": {"strength": 70},
+    "racket:edit": {"income": 25},
+    "payroll:edit": {"bribe": 15},
+    "crime_stance:edit": {"strength": 80, "stance": "co_opt"},
+    "order_law:edit": {"strength": 90},
+    "trading_post:edit": {"informants": 3, "goods": 50},
+    "convoy:edit": {"guards": 6, "status": "delayed", "capacity": 40},
+    "fleet:edit": {"count": 20, "age": 3, "condition": 70},
+    "market_play:edit": {"strength": 70, "until_epoch": 9},
     "heroquest:edit": {"steps": 4, "fidelity": 80},
     "mantling:edit": {"progress": 40, "deeds": 3},
     "servitor:edit": {"loyalty": 60, "role": "judge"},

@@ -4847,6 +4847,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/urban/of/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['node_urban_api_urban_of__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/intrigue/{node_id}': {
     parameters: {
       query?: never
@@ -15545,6 +15561,582 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_land_reshape_api_actions_land_reshape_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/district_urban:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_district_urban_edit_api_actions_district_urban_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/town_urban:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_town_urban_edit_api_actions_town_urban_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/structure:place': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_structure_place_api_actions_structure_place_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/slums:clear': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_slums_clear_api_actions_slums_clear_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/district_service:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_district_service_set_api_actions_district_service_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/district_service:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_district_service_edit_api_actions_district_service_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/district_service:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_district_service_delete_api_actions_district_service_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/turf:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_turf_set_api_actions_turf_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/turf:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_turf_edit_api_actions_turf_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/turf:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_turf_delete_api_actions_turf_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/racket:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_racket_set_api_actions_racket_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/racket:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_racket_edit_api_actions_racket_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/racket:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_racket_delete_api_actions_racket_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/payroll:add': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_payroll_add_api_actions_payroll_add_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/payroll:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_payroll_edit_api_actions_payroll_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/payroll:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_payroll_delete_api_actions_payroll_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/crime_stance:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_crime_stance_set_api_actions_crime_stance_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/crime_stance:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_crime_stance_edit_api_actions_crime_stance_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/crime_stance:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_crime_stance_delete_api_actions_crime_stance_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/order_law:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_order_law_set_api_actions_order_law_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/order_law:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_order_law_edit_api_actions_order_law_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/order_law:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_order_law_delete_api_actions_order_law_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/tribunal:convene': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_tribunal_convene_api_actions_tribunal_convene_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/tribunal:strike': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_tribunal_strike_api_actions_tribunal_strike_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/trading_post:open': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_trading_post_open_api_actions_trading_post_open_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/trading_post:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_trading_post_edit_api_actions_trading_post_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/trading_post:close': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_trading_post_close_api_actions_trading_post_close_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/convoy:send': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_convoy_send_api_actions_convoy_send_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/convoy:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_convoy_edit_api_actions_convoy_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/convoy:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_convoy_delete_api_actions_convoy_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/fleet:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_fleet_set_api_actions_fleet_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/fleet:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_fleet_edit_api_actions_fleet_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/fleet:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_fleet_delete_api_actions_fleet_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/market_play:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_market_play_set_api_actions_market_play_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/market_play:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_market_play_edit_api_actions_market_play_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/market_play:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_market_play_delete_api_actions_market_play_delete_post']
     delete?: never
     options?: never
     head?: never
@@ -26959,6 +27551,43 @@ export interface components {
       | 'sky-calendar'
       | 'mortal'
       | 'chronicler'
+    ConvoyDeleteInput: {
+      convoy_id: number
+    }
+    ConvoyEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      convoy_id: number
+    }
+    ConvoySendInput: {
+      route_id: number
+    }
+    ConvoyStatus:
+      'loading' | 'travelling' | 'delayed' | 'arrived' | 'raided' | 'lost'
+    ConvoyView: {
+      id: number
+      owner: components['schemas']['NodeRef'] | null
+      route: components['schemas']['NodeRef'] | null
+      cargo: {
+        [key: string]: number
+      }
+      preservation: components['schemas']['Preservation']
+      animals: number
+      vehicles: number
+      guards: number
+      passengers: {
+        [key: string]: number
+      }
+      season: number
+      status: components['schemas']['ConvoyStatus']
+      region: components['schemas']['NodeRef'] | null
+      capacity: number
+      departed_epoch: number
+      arrived_epoch: number | null
+      locked: string[]
+    }
     CorrespondenceView: {
       node_id: number
       sent: components['schemas']['DispatchView'][]
@@ -27320,6 +27949,12 @@ export interface components {
       son_b_id: number
       description: string | null
     }
+    CoverageView: {
+      service: components['schemas']['UrbanService']
+      coverage: number
+      epoch: number
+      locked: string[]
+    }
     CravingImmunityView: {
       community: components['schemas']['NodeRef']
       resource: components['schemas']['NodeRef']
@@ -27553,6 +28188,33 @@ export interface components {
       witnesses: components['schemas']['WitnessView'][]
     }
     CrimeKind: 'theft' | 'blasphemy' | 'treason' | 'murder' | 'desertion'
+    CrimeStance: 'suppress' | 'co_opt'
+    CrimeStanceDeleteInput: {
+      polity_id: number
+      faction_id: number
+    }
+    CrimeStanceEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      polity_id: number
+      faction_id: number
+    }
+    CrimeStanceSetInput: {
+      polity_id: number
+      faction_id: number
+      stance: components['schemas']['CrimeStance']
+      strength: number
+    }
+    CrimeStanceView: {
+      polity: components['schemas']['NodeRef'] | null
+      faction: components['schemas']['NodeRef'] | null
+      stance: components['schemas']['CrimeStance']
+      strength: number
+      since_epoch: number
+      locked: string[]
+    }
     CrisisDeleteInput: {
       crisis_id: number
     }
@@ -28544,6 +29206,11 @@ export interface components {
       material: components['schemas']['BuildMaterial']
       design_id?: number | null
     }
+    DistrictChoice: {
+      id: number
+      kind: components['schemas']['DistrictKind']
+      level: number
+    }
     DistrictDesignDeleteInput: {
       design_id: number
     }
@@ -28614,6 +29281,41 @@ export interface components {
       | 'necropolis'
     DistrictRazeInput: {
       district_id: number
+    }
+    DistrictServiceDeleteInput: {
+      district_id: number
+      service: components['schemas']['UrbanService']
+    }
+    DistrictServiceEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      district_id: number
+      service: components['schemas']['UrbanService']
+    }
+    DistrictServiceSetInput: {
+      district_id: number
+      service: components['schemas']['UrbanService']
+      coverage: number
+    }
+    DistrictUrbanEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      district_id: number
+    }
+    DistrictUrbanView: {
+      id: number
+      kind: components['schemas']['DistrictKind']
+      level: number
+      housing: components['schemas']['HousingLevel']
+      desirability: number
+      land_value: number
+      services: components['schemas']['CoverageView'][]
+      turf: components['schemas']['TurfView'][]
+      locked: string[]
     }
     DistrictView: {
       id: number
@@ -30534,6 +31236,10 @@ export interface components {
       | 'movement'
       | 'chartered_company'
       | 'holy_order'
+      | 'crime_family'
+      | 'thieves_guild'
+      | 'smuggling_ring'
+      | 'pirate_confederacy'
     FactionMemberInput: {
       faction_id: number
       mortal_id: number
@@ -30928,6 +31634,31 @@ export interface components {
       people: components['schemas']['NodeRef']
       fit: number
     }
+    FleetDeleteInput: {
+      owner_id: number
+      kind: components['schemas']['TransportKind']
+    }
+    FleetEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      owner_id: number
+      kind: components['schemas']['TransportKind']
+    }
+    FleetSetInput: {
+      owner_id: number
+      kind: components['schemas']['TransportKind']
+      count: number
+    }
+    FleetView: {
+      owner: components['schemas']['NodeRef'] | null
+      kind: components['schemas']['TransportKind']
+      count: number
+      age: number
+      condition: number
+      locked: string[]
+    }
     FlowView: {
       commodity: components['schemas']['CommodityKind']
       flow: string
@@ -31145,6 +31876,10 @@ export interface components {
       | 'wandering_market'
       | 'void_pirates'
       | 'social_circle'
+      | 'crime_family'
+      | 'thieves_guild'
+      | 'smuggling_ring'
+      | 'pirate_confederacy'
     FoundationHoldInput: {
       kind: components['schemas']['HoldKind']
       node_id: number
@@ -32524,6 +33259,7 @@ export interface components {
       dwelling: components['schemas']['DwellingView'] | null
       held: string[]
     }
+    HousingLevel: 'hut' | 'cottage' | 'house' | 'townhouse' | 'manor'
     HullClass:
       | 'raft'
       | 'boat'
@@ -33986,6 +34722,7 @@ export interface components {
       | 'quarantine'
       | 'burial_law'
       | 'sanitation'
+      | 'fair_market'
       | 'magic_ban'
       | 'licensed_magic'
       | 'rite_restrictions'
@@ -34809,7 +35546,13 @@ export interface components {
       district?: components['schemas']['DistrictKind'] | null
       amount: number
     }
-    MandateKind: 'produce' | 'export_ban' | 'build' | 'famine_relief' | 'curfew'
+    MandateKind:
+      | 'produce'
+      | 'export_ban'
+      | 'build'
+      | 'famine_relief'
+      | 'curfew'
+      | 'slum_clearance'
     MandateState: 'active' | 'met' | 'failed'
     MandateView: {
       id: number
@@ -35063,6 +35806,40 @@ export interface components {
     MarketHoldsView: {
       market_id: number
       premiums: components['schemas']['PremiumView'][]
+    }
+    MarketPlay: 'corner' | 'dump'
+    MarketPlayDeleteInput: {
+      holder_id: number
+      settlement_id: number
+      commodity: components['schemas']['CommodityKind']
+      play: components['schemas']['MarketPlay']
+    }
+    MarketPlayEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      holder_id: number
+      settlement_id: number
+      commodity: components['schemas']['CommodityKind']
+      play: components['schemas']['MarketPlay']
+    }
+    MarketPlaySetInput: {
+      holder_id: number
+      settlement_id: number
+      commodity: components['schemas']['CommodityKind']
+      play: components['schemas']['MarketPlay']
+      strength: number
+    }
+    MarketPlayView: {
+      holder: components['schemas']['NodeRef'] | null
+      settlement: components['schemas']['NodeRef'] | null
+      commodity: components['schemas']['CommodityKind']
+      play: components['schemas']['MarketPlay']
+      strength: number
+      since_epoch: number
+      until_epoch: number | null
+      locked: string[]
     }
     MarketReleasePriceInput: {
       market_id: number
@@ -35908,6 +36685,7 @@ export interface components {
     }
     MoraleState:
       'steady' | 'shaken' | 'wavering' | 'routing' | 'broken' | 'rallied'
+    Morphology: 'organic' | 'planned' | 'concentric'
     MorphologyType: 'isolating' | 'agglutinative' | 'fusional' | 'polysynthetic'
     MortalAbilityInput: {
       mortal_id: number
@@ -36154,6 +36932,12 @@ export interface components {
       | 'found_enchantment'
       | 'decipher_script'
       | 'answer_sickness'
+      | 'claim_turf'
+      | 'bribe_official'
+      | 'open_trading_post'
+      | 'send_convoy'
+      | 'corner_market'
+      | 'call_tribunal'
       | 'seek_cure'
       | 'find_carrier'
       | 'proclaim_tongue'
@@ -36566,6 +37350,22 @@ export interface components {
       divine_tongue: components['schemas']['DivineTongueView'] | null
       known_divine: components['schemas']['NodeRef'][]
     }
+    NodeUrbanView: {
+      node: components['schemas']['NodeRef']
+      town: components['schemas']['TownUrbanView'] | null
+      districts: components['schemas']['DistrictUrbanView'][]
+      placement: components['schemas']['PlacementView'] | null
+      turf: components['schemas']['TurfView'][]
+      rackets: components['schemas']['RacketView'][]
+      payroll: components['schemas']['PayrollView'][]
+      stances: components['schemas']['CrimeStanceView'][]
+      laws: components['schemas']['OrderLawView'][]
+      tribunals: components['schemas']['TribunalView'][]
+      posts: components['schemas']['TradingPostView'][]
+      convoys: components['schemas']['ConvoyView'][]
+      fleets: components['schemas']['FleetView'][]
+      plays: components['schemas']['MarketPlayView'][]
+    }
     NotableYearKind: 'hunger' | 'plenty' | 'weather' | 'pestilence'
     NotableYearView: {
       id: number
@@ -36836,6 +37636,33 @@ export interface components {
       type_label: string
       cover: string | null
       population: number
+    }
+    OrderLaw:
+      | 'spare_members'
+      | 'no_outer_dealings'
+      | 'share_discoveries'
+      | 'keep_secrecy'
+    OrderLawDeleteInput: {
+      faction_id: number
+      law: components['schemas']['OrderLaw']
+    }
+    OrderLawEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      faction_id: number
+      law: components['schemas']['OrderLaw']
+    }
+    OrderLawSetInput: {
+      faction_id: number
+      law: components['schemas']['OrderLaw']
+      strength: number
+    }
+    OrderLawView: {
+      law: components['schemas']['OrderLaw']
+      strength: number
+      locked: string[]
     }
     OutbreakEditInput: {
       outbreak_id: number
@@ -37210,6 +38037,30 @@ export interface components {
       cold_tolerance: number
       heat_tolerance: number
       resistance: number
+      locked: string[]
+    }
+    PayrollAddInput: {
+      faction_id: number
+      official_id: number
+      bribe: number
+    }
+    PayrollDeleteInput: {
+      faction_id: number
+      official_id: number
+    }
+    PayrollEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      faction_id: number
+      official_id: number
+    }
+    PayrollView: {
+      faction: components['schemas']['NodeRef'] | null
+      official: components['schemas']['NodeRef'] | null
+      bribe: number
+      since_epoch: number
       locked: string[]
     }
     PeaceTermKind:
@@ -37678,6 +38529,10 @@ export interface components {
       star_id: number | null
       zone: components['schemas']['GalacticZone']
       pull: components['schemas']['PullRecord']
+    }
+    PlacementView: {
+      district_id: number | null
+      choices: components['schemas']['DistrictChoice'][]
     }
     PlagueCosmicInput: {
       place_id: number
@@ -38247,6 +39102,7 @@ export interface components {
       held_price: number | null
       held_supply: number | null
     }
+    Preservation: 'none' | 'salted' | 'iced' | 'magic'
     PressureKind:
       | 'hunger'
       | 'insecurity'
@@ -38744,6 +39600,41 @@ export interface components {
       imported: number
       exported: number
       swing: number
+    }
+    RacketDeleteInput: {
+      faction_id: number
+      settlement_id: number
+      racket: components['schemas']['RacketKind']
+    }
+    RacketEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      faction_id: number
+      settlement_id: number
+      racket: components['schemas']['RacketKind']
+    }
+    RacketKind:
+      | 'protection'
+      | 'smuggling'
+      | 'gambling'
+      | 'fencing'
+      | 'kidnapping'
+      | 'counterfeiting'
+    RacketSetInput: {
+      faction_id: number
+      settlement_id: number
+      racket: components['schemas']['RacketKind']
+      income: number
+    }
+    RacketView: {
+      faction: components['schemas']['NodeRef'] | null
+      settlement: components['schemas']['NodeRef'] | null
+      racket: components['schemas']['RacketKind']
+      income: number
+      since_epoch: number
+      locked: string[]
     }
     RangeCell: {
       region: components['schemas']['NodeRef']
@@ -41045,6 +41936,9 @@ export interface components {
       item: components['schemas']['NodeRef'] | null
       held: boolean
     }
+    SlumsClearInput: {
+      settlement_id: number
+    }
     SocialClass:
       | 'farmer'
       | 'artisan'
@@ -41507,6 +42401,8 @@ export interface components {
       | 'end_enchantment'
       | 'reveal_tongue'
       | 'mark_lineage'
+      | 'shield_convoy'
+      | 'scour_streets'
       | 'move_plague_response'
       | 'decree_sound'
       | 'veil_name'
@@ -42724,7 +43620,15 @@ export interface components {
       | 'theatre'
       | 'wonder'
       | 'cosmic_gate'
+      | 'firehouse'
+      | 'bathhouse'
+      | 'kontor'
+      | 'covenant'
       | 'cosmic_archive'
+    StructurePlaceInput: {
+      structure_id: number
+      district_id?: number | null
+    }
     StructureRazeInput: {
       structure_id: number
       reason: string
@@ -43848,6 +44752,18 @@ export interface components {
       species: components['schemas']['NodeRef'] | null
       tradition: components['schemas']['NodeRef'] | null
     }
+    TownUrbanEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      settlement_id: number
+    }
+    TownUrbanView: {
+      morphology: components['schemas']['Morphology']
+      homeless: number
+      locked: string[]
+    }
     TradeLoss: 'bandits' | 'sea' | 'beasts' | 'weather'
     TradeMode: 'road' | 'river' | 'sea' | 'caravan' | 'sky'
     TradePolicyKind: 'tariff' | 'subsidy' | 'embargo'
@@ -43981,6 +44897,29 @@ export interface components {
       region_names: {
         [key: string]: string
       }
+    }
+    TradingPostCloseInput: {
+      structure_id: number
+    }
+    TradingPostEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      structure_id: number
+    }
+    TradingPostOpenInput: {
+      owner_id: number
+      host_id: number
+    }
+    TradingPostView: {
+      structure: components['schemas']['NodeRef'] | null
+      owner: components['schemas']['NodeRef'] | null
+      host: components['schemas']['NodeRef'] | null
+      informants: number
+      goods: number
+      since_epoch: number
+      locked: string[]
     }
     TraditionCard: {
       kind: components['schemas']['TraditionKind']
@@ -44179,6 +45118,7 @@ export interface components {
       | 'rite'
       | 'gaze'
       | 'experience'
+    TransportKind: 'pack_animals' | 'wagons' | 'river_boats' | 'ships'
     TravelMethod:
       | 'ancient_gate'
       | 'space_fold'
@@ -44375,6 +45315,24 @@ export interface components {
       generation: number
     }
     TrialKind: 'judge' | 'jury' | 'combat' | 'ordeal'
+    TribunalConveneInput: {
+      faction_id: number
+      law: components['schemas']['OrderLaw']
+      accused_id: number
+    }
+    TribunalStrikeInput: {
+      trial_id: number
+    }
+    TribunalVerdict: 'acquitted' | 'fined' | 'expelled' | 'stripped'
+    TribunalView: {
+      id: number
+      order: components['schemas']['NodeRef'] | null
+      accused: components['schemas']['NodeRef'] | null
+      law: components['schemas']['OrderLaw']
+      verdict: components['schemas']['TribunalVerdict']
+      fine: number
+      epoch: number
+    }
     TributeForgiveInput: {
       bond_id: number
     }
@@ -44424,6 +45382,32 @@ export interface components {
       known_by: components['schemas']['NodeRef'][]
       since_epoch: number
       held: string[]
+    }
+    TurfDeleteInput: {
+      district_id: number
+      faction_id: number
+    }
+    TurfEditInput: {
+      values?: {
+        [key: string]: number | string | boolean | null
+      }
+      release?: string[]
+      district_id: number
+      faction_id: number
+    }
+    TurfSetInput: {
+      district_id: number
+      faction_id: number
+      strength: number
+    }
+    TurfView: {
+      district_id: number
+      district_kind: components['schemas']['DistrictKind'] | null
+      town: components['schemas']['NodeRef'] | null
+      faction: components['schemas']['NodeRef'] | null
+      strength: number
+      since_epoch: number
+      locked: string[]
     }
     TurnCounter:
       | 'season_order'
@@ -44544,6 +45528,15 @@ export interface components {
       since_epoch: number
       locked: string[]
     }
+    UrbanService:
+      | 'water'
+      | 'faith'
+      | 'watch'
+      | 'healing'
+      | 'market'
+      | 'school'
+      | 'bath'
+      | 'fire'
     UseKindCreateInput: {
       name: string
       base_use: components['schemas']['SpeciesUse']
@@ -55700,6 +56693,35 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['NodeEvolutionView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  node_urban_api_urban_of__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NodeUrbanView']
         }
       }
       default: {
@@ -76150,6 +77172,1122 @@ export interface operations {
       }
     }
   }
+  action_district_urban_edit_api_actions_district_urban_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DistrictUrbanEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_town_urban_edit_api_actions_town_urban_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TownUrbanEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_structure_place_api_actions_structure_place_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StructurePlaceInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_slums_clear_api_actions_slums_clear_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SlumsClearInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_district_service_set_api_actions_district_service_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DistrictServiceSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_district_service_edit_api_actions_district_service_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DistrictServiceEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_district_service_delete_api_actions_district_service_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DistrictServiceDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_turf_set_api_actions_turf_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TurfSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_turf_edit_api_actions_turf_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TurfEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_turf_delete_api_actions_turf_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TurfDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_racket_set_api_actions_racket_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RacketSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_racket_edit_api_actions_racket_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RacketEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_racket_delete_api_actions_racket_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RacketDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_payroll_add_api_actions_payroll_add_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PayrollAddInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_payroll_edit_api_actions_payroll_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PayrollEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_payroll_delete_api_actions_payroll_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PayrollDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_crime_stance_set_api_actions_crime_stance_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CrimeStanceSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_crime_stance_edit_api_actions_crime_stance_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CrimeStanceEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_crime_stance_delete_api_actions_crime_stance_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CrimeStanceDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_order_law_set_api_actions_order_law_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['OrderLawSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_order_law_edit_api_actions_order_law_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['OrderLawEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_order_law_delete_api_actions_order_law_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['OrderLawDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_tribunal_convene_api_actions_tribunal_convene_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TribunalConveneInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_tribunal_strike_api_actions_tribunal_strike_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TribunalStrikeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_trading_post_open_api_actions_trading_post_open_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TradingPostOpenInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_trading_post_edit_api_actions_trading_post_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TradingPostEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_trading_post_close_api_actions_trading_post_close_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TradingPostCloseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_convoy_send_api_actions_convoy_send_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ConvoySendInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_convoy_edit_api_actions_convoy_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ConvoyEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_convoy_delete_api_actions_convoy_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ConvoyDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_fleet_set_api_actions_fleet_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FleetSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_fleet_edit_api_actions_fleet_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FleetEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_fleet_delete_api_actions_fleet_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FleetDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_market_play_set_api_actions_market_play_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MarketPlaySetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_market_play_edit_api_actions_market_play_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MarketPlayEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_market_play_delete_api_actions_market_play_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MarketPlayDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   action_pidgin_make_api_actions_pidgin_make_post: {
     parameters: {
       query?: never
@@ -93016,6 +95154,9 @@ export const contextBlockKindValues: ReadonlyArray<
   'mortal',
   'chronicler',
 ]
+export const convoyStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ConvoyStatus']
+> = ['loading', 'travelling', 'delayed', 'arrived', 'raided', 'lost']
 export const cosmicBeingStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CosmicBeingStats']['kind']
 > = ['cosmic_being']
@@ -93172,6 +95313,9 @@ export const creditStateValues: ReadonlyArray<
 export const crimeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CrimeKind']
 > = ['theft', 'blasphemy', 'treason', 'murder', 'desertion']
+export const crimeStanceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CrimeStance']
+> = ['suppress', 'co_opt']
 export const crisisDemandValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CrisisDemand']
 > = ['cede_region', 'release_vassal', 'convert', 'pay']
@@ -94159,6 +96303,10 @@ export const factionKindValues: ReadonlyArray<
   'movement',
   'chartered_company',
   'holy_order',
+  'crime_family',
+  'thieves_guild',
+  'smuggling_ring',
+  'pirate_confederacy',
 ]
 export const factionRankValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FactionRank']
@@ -94300,6 +96448,10 @@ export const foundableFactionValues: ReadonlyArray<
   'wandering_market',
   'void_pirates',
   'social_circle',
+  'crime_family',
+  'thieves_guild',
+  'smuggling_ring',
+  'pirate_confederacy',
 ]
 export const funeralCustomValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FuneralCustom']
@@ -94665,6 +96817,9 @@ export const householdRoleValues: ReadonlyArray<
   'ward',
   'lodger',
 ]
+export const housingLevelValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['HousingLevel']
+> = ['hut', 'cottage', 'house', 'townhouse', 'manor']
 export const hullClassValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HullClass']
 > = [
@@ -95127,6 +97282,7 @@ export const lawKindValues: ReadonlyArray<
   'quarantine',
   'burial_law',
   'sanitation',
+  'fair_market',
   'magic_ban',
   'licensed_magic',
   'rite_restrictions',
@@ -95342,7 +97498,14 @@ export const maintenanceTaskValues: ReadonlyArray<
 ]
 export const mandateKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MandateKind']
-> = ['produce', 'export_ban', 'build', 'famine_relief', 'curfew']
+> = [
+  'produce',
+  'export_ban',
+  'build',
+  'famine_relief',
+  'curfew',
+  'slum_clearance',
+]
 export const mandateStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MandateState']
 > = ['active', 'met', 'failed']
@@ -95355,6 +97518,9 @@ export const mantlingStateValues: ReadonlyArray<
 export const markerKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MarkerKind']
 > = ['battle', 'disaster', 'ruin', 'remnant', 'event']
+export const marketPlayValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MarketPlay']
+> = ['corner', 'dump']
 export const marriageCustomValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MarriageCustom']
 > = ['monogamy', 'polygyny', 'polyandry', 'group']
@@ -95611,6 +97777,9 @@ export const moodStateValues: ReadonlyArray<
 export const moraleStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MoraleState']
 > = ['steady', 'shaken', 'wavering', 'routing', 'broken', 'rallied']
+export const morphologyValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['Morphology']
+> = ['organic', 'planned', 'concentric']
 export const morphologyTypeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MorphologyType']
 > = ['isolating', 'agglutinative', 'fusional', 'polysynthetic']
@@ -95727,6 +97896,12 @@ export const mortalToolIdValues: ReadonlyArray<
   'found_enchantment',
   'decipher_script',
   'answer_sickness',
+  'claim_turf',
+  'bribe_official',
+  'open_trading_post',
+  'send_convoy',
+  'corner_market',
+  'call_tribunal',
   'seek_cure',
   'find_carrier',
   'proclaim_tongue',
@@ -95941,6 +98116,9 @@ export const opinionComponentValues: ReadonlyArray<
 export const opinionSubjectValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OpinionSubject']
 > = ['ruler', 'law', 'war', 'god', 'ideology']
+export const orderLawValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['OrderLaw']
+> = ['spare_members', 'no_outer_dealings', 'share_discoveries', 'keep_secrecy']
 export const outbreakStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OutbreakStatus']
 > = ['active', 'waning', 'ended']
@@ -96267,6 +98445,9 @@ export const preferenceKindValues: ReadonlyArray<
   'deity_aspect',
   'looks',
 ]
+export const preservationValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['Preservation']
+> = ['none', 'salted', 'iced', 'magic']
 export const pressureKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PressureKind']
 > = [
@@ -96521,6 +98702,16 @@ export const qualityTierValues: ReadonlyArray<
 export const questTrialValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['QuestTrial']
 > = ['skill', 'passion', 'conviction', 'faith']
+export const racketKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RacketKind']
+> = [
+  'protection',
+  'smuggling',
+  'gambling',
+  'fencing',
+  'kidnapping',
+  'counterfeiting',
+]
 export const rangeTrendValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RangeTrend']
 > = ['rising', 'steady', 'falling']
@@ -97130,6 +99321,8 @@ export const sonToolIdValues: ReadonlyArray<
   'end_enchantment',
   'reveal_tongue',
   'mark_lineage',
+  'shield_convoy',
+  'scour_streets',
   'move_plague_response',
   'decree_sound',
   'veil_name',
@@ -97487,6 +99680,10 @@ export const structureKindValues: ReadonlyArray<
   'theatre',
   'wonder',
   'cosmic_gate',
+  'firehouse',
+  'bathhouse',
+  'kontor',
+  'covenant',
   'cosmic_archive',
 ]
 export const structureStatsKindValues: ReadonlyArray<
@@ -98109,6 +100306,9 @@ export const transmissionValues: ReadonlyArray<
   'gaze',
   'experience',
 ]
+export const transportKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['TransportKind']
+> = ['pack_animals', 'wagons', 'river_boats', 'ships']
 export const travelMethodValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TravelMethod']
 > = [
@@ -98186,6 +100386,9 @@ export const treatyStatusValues: ReadonlyArray<
 export const trialKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TrialKind']
 > = ['judge', 'jury', 'combat', 'ordeal']
+export const tribunalVerdictValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['TribunalVerdict']
+> = ['acquitted', 'fined', 'expelled', 'stripped']
 export const tributeStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TributeStatus']
 > = ['active', 'ended', 'revolted']
@@ -98279,6 +100482,9 @@ export const unitKindValues: ReadonlyArray<
   'void_spawn',
   'ghost_host',
 ]
+export const urbanServiceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['UrbanService']
+> = ['water', 'faith', 'watch', 'healing', 'market', 'school', 'bath', 'fire']
 export const valueAxisValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ValueAxis']
 > = [

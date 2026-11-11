@@ -68,6 +68,10 @@ BLUEPRINTS = (
     FactionBlueprint(K.WANDERING_MARKET, "wandering market", "Caravan", "traders"),
     FactionBlueprint(K.VOID_PIRATES, "void pirates", "Void Raiders", "void-robbers"),
     FactionBlueprint(K.SOCIAL_CIRCLE, "social circle", "Circle", "companions"),
+    FactionBlueprint(K.CRIME_FAMILY, "crime family", "Family", "members"),
+    FactionBlueprint(K.THIEVES_GUILD, "thieves' guild", "Thieves' Guild", "thieves"),
+    FactionBlueprint(K.SMUGGLING_RING, "smuggling ring", "Ring", "smugglers"),
+    FactionBlueprint(K.PIRATE_CONFEDERACY, "pirate confederacy", "Confederacy", "pirates"),
 )
 
 

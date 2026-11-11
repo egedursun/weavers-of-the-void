@@ -25,6 +25,10 @@ class FactionKind(StrEnum):
     MOVEMENT = "movement"
     CHARTERED_COMPANY = "chartered_company"
     HOLY_ORDER = "holy_order"
+    CRIME_FAMILY = "crime_family"
+    THIEVES_GUILD = "thieves_guild"
+    SMUGGLING_RING = "smuggling_ring"
+    PIRATE_CONFEDERACY = "pirate_confederacy"
 
 
 class FoundableFaction(StrEnum):
@@ -45,6 +49,10 @@ class FoundableFaction(StrEnum):
     WANDERING_MARKET = "wandering_market"
     VOID_PIRATES = "void_pirates"
     SOCIAL_CIRCLE = "social_circle"
+    CRIME_FAMILY = "crime_family"
+    THIEVES_GUILD = "thieves_guild"
+    SMUGGLING_RING = "smuggling_ring"
+    PIRATE_CONFEDERACY = "pirate_confederacy"
 
 
 class FactionScale(StrEnum):
@@ -93,13 +101,23 @@ class FactionRank(StrEnum):
     NOVICE = "novice"
 
 
-OUTLAW_KINDS = frozenset({FactionKind.REBELS, FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.VOID_PIRATES, FactionKind.ASSASSINS})
-ROBBER_KINDS = frozenset({FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.VOID_PIRATES, FactionKind.REBELS})
+CRIME_KINDS = frozenset({FactionKind.CRIME_FAMILY, FactionKind.THIEVES_GUILD, FactionKind.SMUGGLING_RING, FactionKind.PIRATE_CONFEDERACY})
+OUTLAW_KINDS = frozenset({FactionKind.REBELS, FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.VOID_PIRATES, FactionKind.ASSASSINS, *CRIME_KINDS})
+ROBBER_KINDS = frozenset({FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.VOID_PIRATES, FactionKind.REBELS, FactionKind.PIRATE_CONFEDERACY})
 GUILD_KINDS = frozenset({FactionKind.MERCHANT_GUILD, FactionKind.CRAFT_GUILD, FactionKind.WANDERING_MARKET})
 ARMED_KINDS = frozenset(
-    {FactionKind.WARRIOR_ORDER, FactionKind.REBELS, FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.VOID_PIRATES, FactionKind.MERCENARY_COMPANY}
+    {
+        FactionKind.WARRIOR_ORDER,
+        FactionKind.REBELS,
+        FactionKind.BANDITS,
+        FactionKind.PIRATES,
+        FactionKind.VOID_PIRATES,
+        FactionKind.MERCENARY_COMPANY,
+        FactionKind.CRIME_FAMILY,
+        FactionKind.PIRATE_CONFEDERACY,
+    }
 )
-SECRET_KINDS = frozenset({FactionKind.ASSASSINS, FactionKind.SECRET_SOCIETY})
+SECRET_KINDS = frozenset({FactionKind.ASSASSINS, FactionKind.SECRET_SOCIETY, FactionKind.THIEVES_GUILD, FactionKind.SMUGGLING_RING})
 
 
 class EstatePrivilege(StrEnum):

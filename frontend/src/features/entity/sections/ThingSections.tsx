@@ -5,6 +5,7 @@ import { EvolutionSection } from '@/features/evolution/EvolutionSection'
 import { GatheringsSection } from '@/features/gatherings/GatheringsSection'
 import { HistoriesSection } from '@/features/gatherings/HistoriesSection'
 import { TonguesSection } from '@/features/tongues/TonguesSection'
+import { UrbanSection } from '@/features/urban/UrbanSection'
 import { AffairsSection } from './AffairsSection'
 import { AspirationsSection } from './AspirationsSection'
 import { BondsSection } from './BondsSection'
@@ -69,6 +70,7 @@ export function ThingSections({
       <MythicSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <TonguesSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <EvolutionSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
+      <UrbanSection nodeId={nodeId} readOnlyReason={readOnlyReason} />
       <RecordRowsSection nodeId={nodeId} />
     </>
   )

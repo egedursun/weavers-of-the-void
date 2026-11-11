@@ -18,6 +18,7 @@ from aerona.db.tables.economy import (
 )
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityProfileRow
+from aerona.db.tables.urban import ConvoyRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -31,12 +32,15 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.polity import ClauseKind
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
+from aerona.domain.enums.urban import Preservation
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import LegendStats, TradeRouteStats
 from aerona.engine.context import TickContext
 from aerona.engine.demography.tongues import trade_barrier
 from aerona.engine.economy.book import EconomyBook
+from aerona.engine.economy.cargo import carriage_factor, spoilage
 from aerona.engine.economy.chokepoints import press_route_aims, weigh_chokepoint
+from aerona.engine.economy.convoys import OPEN, harbour_limit, route_capacity
 from aerona.engine.economy.credit import sell_on_credit
 from aerona.engine.economy.markets import Quote
 from aerona.engine.economy.route_dangers import CARAVAN_TERRAIN, DANGER_KEYS, Dangers, Lairs, dangers_of, feed_beast, season_pct_of, split, spoil
@@ -469,7 +473,11 @@ def lane_for(
     if terms.blocked:
         return None
     danger = stat(route.entity, "danger") or 0
-    carriage = 1 + table.transport_cost_pct_per_hop * route.profile.length / PERCENT + table.danger_cost_pct * danger / PERCENT / PERCENT
+    carriage = (
+        1
+        + table.transport_cost_pct_per_hop * route.profile.length / PERCENT * carriage_factor(ctx.rules, left.commodity, route.profile.mode)
+        + table.danger_cost_pct * danger / PERCENT / PERCENT
+    )
     landed = cheap.price * carriage * (1 + toll_total(route) / PERCENT) * (1 + terms.tariff_pct / PERCENT) * (1 - terms.subsidy_pct / PERCENT)
     if dear.price * PERCENT < landed * flow.flow_price_gap_pct:
         return None
@@ -482,6 +490,20 @@ def lane_for(
     return Lane(left.commodity, seller_id, buyer_id, landed, volume, famine, terms) if volume > 0 else None
 
 
+async def carried_capacity(ctx: TickContext, route: Route, fallback: int) -> int:
+    carried = await route_capacity(ctx.session, route.entity.id)
+    capacity = fallback if carried is None else carried
+    harbour = await harbour_limit(ctx.session, ctx.rules, route.profile)
+    return capacity if harbour is None else min(capacity, harbour)
+
+
+async def kept_by(ctx: TickContext, route: Route) -> Preservation:
+    found = await ctx.session.scalar(
+        select(ConvoyRow.preservation).where(ConvoyRow.route_entity_id == route.entity.id, ConvoyRow.status.in_(OPEN)).order_by(ConvoyRow.id.desc()).limit(1)
+    )
+    return found if found is not None else Preservation.NONE
+
+
 async def haul(ctx: TickContext, route: Route, lane: Lane, *, insured: bool = False) -> Haul:
     ledger = goods_of(ctx.session, ctx.epoch)
     danger = (stat(route.entity, "danger") or 0) * ((PERCENT - ctx.rules.technique_effects.insurance_pct) / PERCENT if insured else 1)
@@ -489,7 +511,8 @@ async def haul(ctx: TickContext, route: Route, lane: Lane, *, insured: bool = Fa
         lane.seller_id, lane.commodity, lane.volume, GoodsFlow.TRADE, exclude=lane.terms.banned.kinds, exclude_worlds=lane.terms.banned.worlds
     )
     sent = sum(lot.quantity for lot in taken)
-    keep = sent - min(sent, round_half_up(lane.volume * ctx.rules.trade_routes.danger_loss_pct / PERCENT * danger / PERCENT))
+    spoiled = spoilage(ctx.rules, lane.commodity, route.profile.mode, await kept_by(ctx, route))
+    keep = sent - min(sent, round_half_up(lane.volume * ctx.rules.trade_routes.danger_loss_pct / PERCENT * danger / PERCENT + sent * spoiled))
     delivered = 0
     for lot in taken:
         part = min(lot.quantity, keep - delivered)
@@ -617,7 +640,7 @@ async def carry(
     left_quotes, right_quotes = quotes.get(first), quotes.get(second)
     if left_quotes is None or right_quotes is None or route.profile.status is TradeRouteStatus.BLOCKADED:
         return 0
-    capacity = stat(route.entity, "capacity") or 0
+    capacity = await carried_capacity(ctx, route, stat(route.entity, "capacity") or 0)
     if book.closed & set(route.ends):
         capacity = round_half_up(capacity * (PERCENT - ctx.rules.plague_responses.border_trade_pct) / PERCENT)
     season = season_factor(route)

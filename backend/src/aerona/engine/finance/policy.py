@@ -16,7 +16,7 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
-from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.faction import CRIME_KINDS, FactionKind
 from aerona.domain.enums.finance import TradePolicyKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import PressureKind
@@ -33,7 +33,7 @@ from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.services.war import ongoing_wars
 
-OUTLAW_KINDS = (FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.VOID_PIRATES)
+OUTLAW_KINDS = (FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.VOID_PIRATES, *sorted(CRIME_KINDS))
 MERCHANT_GUILDS = (FactionKind.MERCHANT_GUILD, FactionKind.WANDERING_MARKET)
 NOTE_CAP = 4
 ALLIANCES = (TreatyKind.ALLIANCE_DEFENSIVE, TreatyKind.ALLIANCE_OFFENSIVE)

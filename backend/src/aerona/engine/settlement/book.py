@@ -11,6 +11,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.stats import stat
 from aerona.engine.settlement.districts import DistrictEffects, designs_for, effects_of
+from aerona.engine.urban.coverage import UrbanState, urban_state
 from aerona.rules.registry import Rules
 
 
@@ -22,6 +23,7 @@ class Town:
     districts: list[DistrictRow]
     work_used: int = 0
     designs: dict[int, DistrictDesignRow] = field(default_factory=dict)
+    urban: UrbanState = field(default_factory=UrbanState)
 
     def effects(self, rules: Rules) -> DistrictEffects:
         return effects_of(rules, self.districts, self.designs)
@@ -115,7 +117,8 @@ async def town_of(ctx: TickContext, settlement: EntityRow, knowledge: KnowledgeM
         )
         session.add(profile)
         await session.flush()
-    return Town(settlement, profile, infrastructure, districts, designs=await designs_for(session, districts))
+    urban = await urban_state(session, settlement.id, profile, districts, stat(settlement, "population") or 0)
+    return Town(settlement, profile, infrastructure, districts, designs=await designs_for(session, districts), urban=urban)
 
 
 def ledger(ctx: TickContext, town: Town, entry: TreasuryEntry, amount: int, note: str | None = None) -> int:

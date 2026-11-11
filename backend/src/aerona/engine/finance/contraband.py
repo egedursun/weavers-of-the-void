@@ -13,7 +13,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.faction import CRIME_KINDS, FactionKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import ActKind
 from aerona.domain.enums.polity import LawKind
@@ -24,7 +24,7 @@ from aerona.engine.notes import note
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 
-OUTLAWS = (FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.VOID_PIRATES)
+OUTLAWS = (FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.VOID_PIRATES, *sorted(CRIME_KINDS))
 BOOKS = (ItemClass.BOOK, ItemClass.SCROLL, ItemClass.PRAYER_BOOK)
 FORBIDDEN_LORE = (KnowledgeBranch.FORBIDDEN, KnowledgeBranch.MAGIC)
 VOID_KINDS = frozenset({MaterialKind.VOID_GLASS})

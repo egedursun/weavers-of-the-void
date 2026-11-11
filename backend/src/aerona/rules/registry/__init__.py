@@ -364,6 +364,23 @@ from aerona.rules.registry.trade import TradeRules
 from aerona.rules.registry.travel import TravelRules
 from aerona.rules.registry.travel_methods import TravelMethodsRules
 from aerona.rules.registry.ui import UiRules
+from aerona.rules.registry.urban_depth import (
+    CargoRules,
+    ConvoyRules,
+    CoverageRules,
+    CrimeOrgRules,
+    DesirabilityRules,
+    FleetRules,
+    HomelessRules,
+    HousingEvolutionRules,
+    MagicalOrderRules,
+    ManipulationRules,
+    MorphologyRules,
+    PortRules,
+    PreventionRules,
+    TradingPostRules,
+    TurfRules,
+)
 from aerona.rules.registry.war_conduct import WarConductRules
 from aerona.rules.registry.war_depth import (
     BattleMagicRules,
@@ -521,6 +538,21 @@ class Rules:
     biome_succession: BiomeSuccessionRules = field(default_factory=BiomeSuccessionRules)
     world_cycles: CycleRules = field(default_factory=CycleRules)
     land_shaping: LandShapingRules = field(default_factory=LandShapingRules)
+    desirability: DesirabilityRules = field(default_factory=DesirabilityRules)
+    coverage: CoverageRules = field(default_factory=CoverageRules)
+    housing_evolution: HousingEvolutionRules = field(default_factory=HousingEvolutionRules)
+    homelessness: HomelessRules = field(default_factory=HomelessRules)
+    prevention: PreventionRules = field(default_factory=PreventionRules)
+    morphology: MorphologyRules = field(default_factory=MorphologyRules)
+    turf: TurfRules = field(default_factory=TurfRules)
+    crime_orgs: CrimeOrgRules = field(default_factory=CrimeOrgRules)
+    trading_posts: TradingPostRules = field(default_factory=TradingPostRules)
+    magical_orders: MagicalOrderRules = field(default_factory=MagicalOrderRules)
+    convoys: ConvoyRules = field(default_factory=ConvoyRules)
+    fleets: FleetRules = field(default_factory=FleetRules)
+    cargo: CargoRules = field(default_factory=CargoRules)
+    ports: PortRules = field(default_factory=PortRules)
+    manipulation: ManipulationRules = field(default_factory=ManipulationRules)
     collections: CollectionRules = field(default_factory=CollectionRules)
     storyteller: StorytellerRules = field(default_factory=StorytellerRules)
     sites: SiteRules = field(default_factory=SiteRules)

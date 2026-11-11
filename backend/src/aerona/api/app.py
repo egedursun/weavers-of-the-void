@@ -93,6 +93,7 @@ from aerona.api.routers import (
     structures,
     titles,
     tongues,
+    urban_depth,
     wars,
     wilds,
 )
@@ -168,6 +169,7 @@ ROUTERS: tuple[ModuleType, ...] = (
     arcana,
     tongues,
     evolution,
+    urban_depth,
     intrigue,
     lineage,
     sensed,

@@ -178,6 +178,7 @@ export const LAW_KINDS: Record<string, string> = {
   quarantine: 'Quarantine',
   burial_law: 'Burial',
   sanitation: 'Sanitation',
+  fair_market: 'Fair market',
   magic_ban: 'Ban on magic',
   licensed_magic: 'Licensed magic',
   rite_restrictions: 'Restricted rites',

@@ -70,6 +70,7 @@ from aerona.engine.interconnect.catalog_statecraft import STATECRAFT_MECHANICS
 from aerona.engine.interconnect.catalog_structures import STRUCTURE_MECHANICS
 from aerona.engine.interconnect.catalog_titles import TITLE_MECHANICS
 from aerona.engine.interconnect.catalog_tongues import TONGUE_MECHANICS
+from aerona.engine.interconnect.catalog_urban_depth import URBAN_MECHANICS
 from aerona.engine.interconnect.catalog_war_conduct import WAR_CONDUCT_MECHANICS
 from aerona.engine.interconnect.catalog_wilds import BEHAVIOURS as WILDS_BEHAVIOURS
 from aerona.engine.interconnect.catalog_wilds import WILDS_MECHANICS
@@ -999,6 +1000,7 @@ BUILT_IN = (
     *MYTHIC_MECHANICS,
     *TONGUE_MECHANICS,
     *EVOLUTION_MECHANICS,
+    *URBAN_MECHANICS,
     *PLACE_BEHAVIOURS,
     *COUPLING_MECHANICS,
     *REGION_MECHANICS,
@@ -1024,6 +1026,7 @@ MODULE_SUBSYSTEMS: dict[str, Subsystem] = {
     "mythic": Subsystem.GODS,
     "tongues": Subsystem.LANGUAGE,
     "evolution": Subsystem.ECOLOGY,
+    "urban_depth": Subsystem.SOCIAL,
     "mortals": Subsystem.DEMOGRAPHY,
     "life_cycles": Subsystem.DEMOGRAPHY,
     "heroes": Subsystem.DEMOGRAPHY,

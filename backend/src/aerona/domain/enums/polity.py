@@ -125,6 +125,7 @@ class LawKind(StrEnum):
     QUARANTINE = "quarantine"
     BURIAL_LAW = "burial_law"
     SANITATION = "sanitation"
+    FAIR_MARKET = "fair_market"
     MAGIC_BAN = "magic_ban"
     LICENSED_MAGIC = "licensed_magic"
     RITE_RESTRICTIONS = "rite_restrictions"
@@ -265,6 +266,7 @@ LAW_AREAS: dict[LawKind, LawArea] = {
     LawKind.QUARANTINE: LawArea.PUBLIC_HEALTH,
     LawKind.BURIAL_LAW: LawArea.PUBLIC_HEALTH,
     LawKind.SANITATION: LawArea.PUBLIC_HEALTH,
+    LawKind.FAIR_MARKET: LawArea.FISCAL,
     LawKind.MAGIC_BAN: LawArea.MAGIC,
     LawKind.LICENSED_MAGIC: LawArea.MAGIC,
     LawKind.RITE_RESTRICTIONS: LawArea.MAGIC,

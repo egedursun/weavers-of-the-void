@@ -72,6 +72,7 @@ class StructureProfileRow(Base):
     progress: Mapped[int] = mapped_column(default=100)
     fire_resistance: Mapped[int] = mapped_column(default=50)
     host_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    district_id: Mapped[int | None] = mapped_column(ForeignKey("districts.id", ondelete="SET NULL"))
     builder_entity_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     builder_kind: Mapped[BuilderKind | None] = mapped_column(enum_type(BuilderKind, "builder_kind"))
     architect_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))

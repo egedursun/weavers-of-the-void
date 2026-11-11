@@ -118,6 +118,36 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "strength": "Its strength, 1 to 100",
         },
     ),
+    T.CLAIM_TURF: ToolText(
+        "As leader of a criminal organisation you claim a district of your town: your organisation collects there, and rivals on the same "
+        "streets may fight you for them. 1 action.",
+        {"district_id": "The district of your town"},
+    ),
+    T.BRIBE_OFFICIAL: ToolText(
+        "As leader of a criminal organisation you put an official on your payroll: you pay a bribe each epoch and the realm's pressure on "
+        "you is turned aside. 1 action.",
+        {"official_id": "The official"},
+    ),
+    T.OPEN_TRADING_POST: ToolText(
+        "As leader of a merchant house you open a trading post in a foreign town: it stores goods, gathers informants who learn its secrets "
+        "and settles your folk there. 1 action.",
+        {"host_id": "The foreign town"},
+    ),
+    T.SEND_CONVOY: ToolText(
+        "As leader of a merchant house you send a convoy along a route from your town; it may be raided, lost at sea or delayed, and "
+        "brings goods, migrants and missionaries when it arrives. 1 action.",
+        {"route_id": "The trade route"},
+    ),
+    T.CORNER_MARKET: ToolText(
+        "As leader of a merchant house you buy up a good in your home market to raise its price; a fair-market law or a guild holding the "
+        "good's monopoly undoes part of it. 1 action.",
+        {"commodity": "The good"},
+    ),
+    T.CALL_TRIBUNAL: ToolText(
+        "As leader of a magical order you call its tribunal against a mortal for breaking one of the order's laws; it may fine them, strip "
+        "their rank or cast them out. 1 action.",
+        {"accused_id": "The accused", "law": "The law they broke"},
+    ),
     T.ANSWER_SICKNESS: ToolText(
         "As ruler of a realm, or as a healer of your community, you set how it answers a sickness ({{ plague_responses }}): closed borders "
         "cost trade and calm, a quarantine slows the spread but may set off riots, burning the dead slows it but grieves folk whose rites "

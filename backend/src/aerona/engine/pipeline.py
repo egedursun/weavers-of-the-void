@@ -119,6 +119,7 @@ from aerona.engine.phases import (
     trade,
     travel,
     tribute,
+    urban_depth,
     vendettas,
     warfare,
     wilds,
@@ -195,6 +196,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + doom.PHASES
     + espionage.PHASES
     + evolution.PHASES
+    + urban_depth.PHASES
     + exploration.PHASES
     + factions.PHASES
     + goals.PHASES
@@ -428,8 +430,11 @@ SOCIETY_STAGE = stage(
 SOCIETY_ENGINE_STAGE = stage(
     "society_economy",
     "refining",
+    "market_manipulation",
     "markets",
     "trade_policy",
+    "convoys",
+    "transport_fleets",
     "trade_flow",
     "speculation",
     "industry_aftermath",
@@ -439,6 +444,13 @@ SOCIETY_ENGINE_STAGE = stage(
     "banking",
     "society_mobility",
     "structure_upkeep",
+    "district_coverage",
+    "desirability",
+    "housing_evolution",
+    "turf",
+    "crime_orgs",
+    "trading_posts",
+    "magical_orders",
     "settlement_life",
     "trials",
     "public_opinion",

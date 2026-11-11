@@ -18,6 +18,7 @@ import {
   Droplet,
   Droplets,
   Eye,
+  Flame,
   Fence,
   FlaskConical,
   Gavel,
@@ -354,6 +355,30 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
     icon: Archive,
     tone: 'verdigris',
     hint: 'Knowledge of all worlds',
+  },
+  firehouse: {
+    label: 'Firehouse',
+    icon: Flame,
+    tone: 'danger',
+    hint: 'Puts out fires in the districts it reaches',
+  },
+  bathhouse: {
+    label: 'Bathhouse',
+    icon: Droplets,
+    tone: 'info',
+    hint: 'Keeps the districts it reaches clean and well',
+  },
+  kontor: {
+    label: 'Trading post',
+    icon: Store,
+    tone: 'gold',
+    hint: 'A merchant house abroad: goods, informants and settlers',
+  },
+  covenant: {
+    label: 'Covenant',
+    icon: FlaskConical,
+    tone: 'verdigris',
+    hint: 'A magical order’s house of study, fed by its sites',
   },
 }
 

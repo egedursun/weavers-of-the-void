@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
+  Anchor,
+  PackageOpen,
+  KeyRound,
   Church,
   Building2,
   Landmark,
@@ -119,6 +122,18 @@ const FACTION_KINDS: Record<string, Named> = {
     tone: 'gold',
   },
   holy_order: { label: 'Holy order', icon: Church, tone: 'verdigris' },
+  crime_family: { label: 'Crime family', icon: HandCoins, tone: 'danger' },
+  thieves_guild: { label: "Thieves' guild", icon: KeyRound, tone: 'warning' },
+  smuggling_ring: {
+    label: 'Smuggling ring',
+    icon: PackageOpen,
+    tone: 'warning',
+  },
+  pirate_confederacy: {
+    label: 'Pirate confederacy',
+    icon: Anchor,
+    tone: 'danger',
+  },
 }
 const FACTION_SCALES: Record<string, Named> = {
   band: { label: 'Band', icon: Users, tone: 'muted' },

@@ -18,6 +18,7 @@ from aerona.agents.context.scope import Scope
 from aerona.agents.context.society import home_for
 from aerona.agents.context.statecraft import affairs_lines, statecraft_lines
 from aerona.agents.context.tongue_lines import mortal_tongue_lines
+from aerona.agents.context.urban_lines import mortal_urban_lines
 from aerona.agents.context.world_header import world_header
 from aerona.agents.context.world_line import world_line
 from aerona.agents.context.world_summary import route_lines
@@ -184,6 +185,7 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "magic": await mortal_magic_lines(scope, me),
             "speech": await mortal_tongue_lines(scope, me),
             "contagion": await mortal_evolution_lines(scope, me),
+            "streets": await mortal_urban_lines(scope, me),
         }
     )
 

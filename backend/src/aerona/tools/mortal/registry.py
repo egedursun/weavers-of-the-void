@@ -49,6 +49,7 @@ from aerona.tools.mortal import (
     tongues,
     trade,
     treaties,
+    urban_depth,
     war,
     works,
 )
@@ -202,6 +203,7 @@ FAMILIES: tuple[Callable[[], list[MortalSpec]], ...] = (
     mythic.specs,
     tongues.specs,
     evolution.specs,
+    urban_depth.specs,
     gatherings.specs,
     letters.specs,
     titles.specs,

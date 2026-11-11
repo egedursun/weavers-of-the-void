@@ -166,6 +166,8 @@ async def write_text(ctx: TickContext, creed: EntityRow, profile: IdeologyProfil
     founder = await living_entity(ctx.session, profile.founder_entity_id)
     if founder is None or founder.entity_type is not EntityType.MORTAL or (stat(founder, "intellect") or 0) < FOUNDER_INTELLECT:
         return None
+    if held(creed.id, founder.id, founder.location_id):
+        return None
     if not ctx.rng(f"creed_text.{creed.id}.{ctx.epoch}").chance(ctx.rules.ideologies.text_chance):
         return None
     book = await create_record(

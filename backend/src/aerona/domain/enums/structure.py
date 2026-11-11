@@ -61,6 +61,10 @@ class StructureKind(StrEnum):
     THEATRE = "theatre"
     WONDER = "wonder"
     COSMIC_GATE = "cosmic_gate"
+    FIREHOUSE = "firehouse"
+    BATHHOUSE = "bathhouse"
+    KONTOR = "kontor"
+    COVENANT = "covenant"
     COSMIC_ARCHIVE = "cosmic_archive"
 
 

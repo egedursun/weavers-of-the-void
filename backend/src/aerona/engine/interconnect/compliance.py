@@ -255,6 +255,19 @@ from aerona.db.tables.storyteller import StorytellerRow, TensionRecordRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow, StructureStaffRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleHolderRow, TitleProfileRow
 from aerona.db.tables.tongues import DecipherWorkRow, DivineTongueRow, LanguageGrammarRow, LanguagePolicyRow, MeaningShiftRow, ScriptRow, SoundChangeRow
+from aerona.db.tables.urban import (
+    ConvoyRow,
+    CrimeStanceRow,
+    DistrictServiceRow,
+    FleetRow,
+    MarketPlayRow,
+    OrderLawRow,
+    PayrollRow,
+    RacketRow,
+    TradingPostRow,
+    TribunalRow,
+    TurfRow,
+)
 from aerona.db.tables.warfare import CasusBelliRow, SiegeRow, WarProductionRow, WarRow, WarSideRow
 
 
@@ -272,6 +285,85 @@ class ComplianceRow:
 
 
 CATALOGUE: tuple[ComplianceRow, ...] = (
+    ComplianceRow(
+        "S4.2/RP3",
+        (DistrictServiceRow.__tablename__, TurfRow.__tablename__),
+        ("district_coverage", "desirability", "housing_evolution", "turf"),
+        (
+            "district_urban:edit",
+            "town_urban:edit",
+            "structure:place",
+            "slums:clear",
+            "district_service:set",
+            "district_service:edit",
+            "district_service:delete",
+            "turf:set",
+            "turf:edit",
+            "turf:delete",
+        ),
+        ("UrbanSection", "section-urban"),
+        ("mortal_context",),
+        ("claim_turf", "scour_streets"),
+        ("crime.", "settlement.homeless"),
+        ("fe8a761cd391",),
+    ),
+    ComplianceRow(
+        "S4.3/RP3",
+        (
+            RacketRow.__tablename__,
+            PayrollRow.__tablename__,
+            CrimeStanceRow.__tablename__,
+            OrderLawRow.__tablename__,
+            TribunalRow.__tablename__,
+            TradingPostRow.__tablename__,
+        ),
+        ("crime_orgs", "trading_posts", "magical_orders"),
+        (
+            "racket:set",
+            "racket:edit",
+            "racket:delete",
+            "payroll:add",
+            "payroll:edit",
+            "payroll:delete",
+            "crime_stance:set",
+            "crime_stance:edit",
+            "crime_stance:delete",
+            "order_law:set",
+            "order_law:edit",
+            "order_law:delete",
+            "tribunal:convene",
+            "tribunal:strike",
+            "trading_post:open",
+            "trading_post:edit",
+            "trading_post:close",
+        ),
+        ("UrbanSection", "section-urban"),
+        ("mortal_context",),
+        ("bribe_official", "open_trading_post", "call_tribunal"),
+        ("order.", "trade.trading_post"),
+        ("fe8a761cd391",),
+    ),
+    ComplianceRow(
+        "S6.4/RP3",
+        (ConvoyRow.__tablename__, FleetRow.__tablename__, MarketPlayRow.__tablename__),
+        ("convoys", "transport_fleets", "market_manipulation"),
+        (
+            "convoy:send",
+            "convoy:edit",
+            "convoy:delete",
+            "fleet:set",
+            "fleet:edit",
+            "fleet:delete",
+            "market_play:set",
+            "market_play:edit",
+            "market_play:delete",
+        ),
+        ("UrbanSection", "section-urban"),
+        ("mortal_context",),
+        ("send_convoy", "shield_convoy", "corner_market"),
+        ("trade.convoy", "trade.market_play"),
+        ("fe8a761cd391",),
+    ),
     ComplianceRow(
         "S3.2/RP3",
         (SpeciesTraitRow.__tablename__, LineageMarkRow.__tablename__, EcosystemServiceRow.__tablename__, TrophicLevelRow.__tablename__),

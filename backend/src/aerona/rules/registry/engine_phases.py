@@ -301,6 +301,18 @@ class EnginePhasesRules:
     cure_research: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: institutions racing for a cure")
     biome_succession: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: lands moving from bare ground to old forest, and fire")
     world_cycles: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the carbon, water and nutrient cycles of each world")
+    district_coverage: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: which districts each service structure reaches")
+    desirability: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: how desirable each district is and what its land is worth")
+    housing_evolution: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: homes rising and falling, the homeless, slums and the priced-out poor"
+    )
+    turf: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: districts held by criminal organisations and their turf wars")
+    crime_orgs: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: rackets, payrolls, informers and the realms that suppress or use them")
+    trading_posts: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: merchant houses' trading posts in foreign towns")
+    magical_orders: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: the laws, tribunals and covenants of magical orders")
+    convoys: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: convoys on the trade routes, their raids, storms and arrivals")
+    transport_fleets: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: wagons, boats and animals ageing and being replaced")
+    market_manipulation: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: merchant houses cornering and dumping markets")
     site_rooms: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: rooms of towers, lairs, vaults and ruins, and who holds each site")
     excavations: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: digs at ruins and old sites, stage by stage, with their risks and finds")
     battlefields: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: mass graves and fields of salvage left where battles were fought")

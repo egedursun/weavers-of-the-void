@@ -242,11 +242,11 @@ async def siege_season(ctx: TickContext, war: WarRow, besieged: EntityRow, march
     return found
 
 
-def wall_defence(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastructureRow | None = None) -> float:
+def wall_defence(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastructureRow | None = None, rings: int = 0) -> float:
     table = ctx.rules.districts
     material = (table.stone_wall_pct if walls.walls_material is BuildMaterial.STONE else table.timber_wall_pct) / PERCENT if walls is not None else 1.0
     towers = walls.towers * table.tower_defence_pct / PERCENT if walls is not None else 0.0
-    return 1 + (siege.walls_level * ctx.rules.siegecraft.wall_defence_pct / PERCENT * material + towers) / max(1, siege.breaches + 1)
+    return 1 + (siege.walls_level * ctx.rules.siegecraft.wall_defence_pct / PERCENT * material + towers + rings / PERCENT) / max(1, siege.breaches + 1)
 
 
 def breach_bonus(ctx: TickContext, siege: SiegeRow) -> float:

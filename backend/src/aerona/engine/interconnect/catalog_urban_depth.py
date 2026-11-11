@@ -1,0 +1,223 @@
+from aerona.db.tables.urban import (
+    ConvoyRow,
+    CrimeStanceRow,
+    DistrictServiceRow,
+    FleetRow,
+    MarketPlayRow,
+    OrderLawRow,
+    PayrollRow,
+    RacketRow,
+    TradingPostRow,
+    TribunalRow,
+    TurfRow,
+)
+from aerona.engine.interconnect.registry import Coupling, EdgeKind, Exposure, Mechanic, Subsystem, Surface
+
+S = Subsystem
+MIGRATION = "migration fe8a761cd391"
+URBAN_SECTION = "section-urban"
+
+URBAN_MECHANICS = (
+    Mechanic(
+        key="district_coverage",
+        spec_item="S4.2/RP3",
+        title="Service coverage: wells, temples, watch posts, healers, markets, schools, bathhouses and firehouses reach the districts of their town",
+        subsystem=S.SOCIAL,
+        phases=("district_coverage", "settlement_life"),
+        surface=Surface(drawer=URBAN_SECTION),
+        backfill=f"{MIGRATION}: every service structure is placed in a district on the first epoch after the upgrade",
+        tables=(DistrictServiceRow.__tablename__,),
+        targets=("settlement", "structure"),
+        couplings=(
+            Coupling(S.SOCIAL, "an unwatched town breeds crime", EdgeKind.MODIFIER, "coverage.crime"),
+            Coupling(S.BODY, "a town without water, healers or baths sickens", EdgeKind.MODIFIER, "coverage.thirst"),
+            Coupling(S.SOCIAL, "a ringed or planned town carries its services further", EdgeKind.MODIFIER, "coverage.planned_reach"),
+        ),
+    ),
+    Mechanic(
+        key="desirability",
+        spec_item="S4.2/RP3",
+        title="Desirability and land value: amenities raise a district and nuisances, crime and the restless dead lower it, and land value follows",
+        subsystem=S.SOCIAL,
+        phases=("desirability",),
+        surface=Surface(drawer=URBAN_SECTION),
+        backfill=f"{MIGRATION}: every district starts at a middling desirability and land value",
+        fields=("desirability", "land_value"),
+        targets=("settlement",),
+        couplings=(
+            Coupling(S.SOCIAL, "temples, markets and monuments raise the districts they reach", EdgeKind.MODIFIER, "desirability.amenity"),
+            Coupling(S.ECONOMY, "tanneries, prisons and slums lower them", EdgeKind.MODIFIER, "desirability.nuisance"),
+            Coupling(S.SOCIAL, "rising land value prices the poor out", EdgeKind.TRIGGER, "desirability.gentrify_at"),
+        ),
+    ),
+    Mechanic(
+        key="housing_evolution",
+        spec_item="S4.2/RP3",
+        title=(
+            "Housing evolution and homelessness: homes rise from hut to manor when served and fall when not; "
+            "the homeless breed crime, sickness, unrest, slums and mobs"
+        ),
+        subsystem=S.SOCIAL,
+        phases=("housing_evolution", "settlement_life", "affairs"),
+        surface=Surface(drawer=URBAN_SECTION),
+        backfill=f"{MIGRATION}: every district starts with houses",
+        fields=("housing", "homeless"),
+        targets=("settlement", "polity"),
+        couplings=(
+            Coupling(S.SOCIAL, "the homeless raise crime and unrest", EdgeKind.MODIFIER, "homelessness.crime"),
+            Coupling(S.BODY, "the homeless sicken the town", EdgeKind.MODIFIER, "homelessness.disease"),
+            Coupling(S.POLITY, "a realm clears its slums, leaving their folk homeless", EdgeKind.TRIGGER, "homelessness.clearance_unrest"),
+            Coupling(S.ECONOMY, "the rich grow restless without fine homes", EdgeKind.MODIFIER, "housing_evolution.cramped_unrest"),
+        ),
+    ),
+    Mechanic(
+        key="urban_morphology",
+        spec_item="S4.2/RP3",
+        title="Urban morphology: towns grow at random, by plan or in rings, which sets how fire spreads, how far services reach, siege defence and hauling",
+        subsystem=S.SOCIAL,
+        phases=("district_coverage", "settlement_life", "campaigns"),
+        surface=Surface(drawer=URBAN_SECTION),
+        backfill=f"{MIGRATION}: every town starts grown at random and rings itself once its walls rise",
+        fields=("morphology",),
+        targets=("settlement",),
+        couplings=(
+            Coupling(
+                S.SOCIAL, "fire spreads faster through crooked lanes and a burned town is rebuilt on a plan", EdgeKind.MODIFIER, "morphology.organic_fire_pct"
+            ),
+            Coupling(S.WAR, "the inner rings of a ringed town defend it in a siege", EdgeKind.MODIFIER, "morphology.concentric_siege"),
+            Coupling(S.ECONOMY, "straight streets haul more", EdgeKind.MODIFIER, "morphology.planned_hauling_pct"),
+            Coupling(S.SOCIAL, "firehouses and watch posts lower fire and crime by their reach", EdgeKind.MODIFIER, "prevention.brigade_pct"),
+        ),
+    ),
+    Mechanic(
+        key="turf",
+        spec_item="S4.2/RP3",
+        title="Turf: criminal organisations hold districts, grow under weak watch and fight turf wars that kill and disorder the town",
+        subsystem=S.INTRIGUE,
+        phases=("turf",),
+        surface=Surface(drawer=URBAN_SECTION),
+        backfill=f"{MIGRATION}: organisations claim turf from the first epoch after the upgrade",
+        tables=(TurfRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("claim_turf", "scour_streets"),
+        targets=("settlement", "faction", "mortal", "son"),
+        couplings=(
+            Coupling(S.SOCIAL, "turf adds crime to its town", EdgeKind.MODIFIER, "turf.crime_per_turf"),
+            Coupling(S.POLITY, "a turf war costs the town its order", EdgeKind.MODIFIER, "turf.war_order"),
+            Coupling(S.SOCIAL, "the watch takes turf back", EdgeKind.MODIFIER, "turf.watch_loss"),
+        ),
+    ),
+    Mechanic(
+        key="crime_orgs",
+        spec_item="S4.3/RP3",
+        title=(
+            "Criminal organisations: rackets bring income, officials on the payroll turn suppression aside, "
+            "informers are killed by the code, and realms suppress or co-opt them"
+        ),
+        subsystem=S.INTRIGUE,
+        phases=("crime_orgs",),
+        surface=Surface(drawer=URBAN_SECTION),
+        backfill=f"{MIGRATION}: organisations open rackets from the first epoch after the upgrade",
+        tables=(RacketRow.__tablename__, PayrollRow.__tablename__, CrimeStanceRow.__tablename__),
+        exposure=Exposure.TOOL,
+        tools=("bribe_official",),
+        targets=("faction", "polity", "mortal"),
+        couplings=(
+            Coupling(S.ECONOMY, "rackets turn turf into coin", EdgeKind.FLOW, "crime_orgs.income_per_turf"),
+            Coupling(S.POLITY, "officials on the payroll shield their organisation", EdgeKind.MODIFIER, "crime_orgs.payroll_shield_pct"),
+            Coupling(S.POLITY, "a suppressing realm takes turf, a co-opting one lowers crime", EdgeKind.MODIFIER, "crime_orgs.suppress_loss"),
+            Coupling(S.SOCIAL, "the code kills informers", EdgeKind.TRIGGER, "crime_orgs.traitor_pct"),
+        ),
+    ),
+    Mechanic(
+        key="trading_posts",
+        spec_item="S4.3/RP3",
+        title="Trading posts: merchant houses open posts in foreign trading partners that store goods, gather informants and settle their folk",
+        subsystem=S.ECONOMY,
+        phases=("trading_posts",),
+        surface=Surface(drawer=URBAN_SECTION),
+        backfill=f"{MIGRATION}: merchant houses open posts from the first epoch after the upgrade",
+        tables=(TradingPostRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("open_trading_post",),
+        targets=("faction", "settlement", "structure", "mortal"),
+        couplings=(
+            Coupling(S.INTRIGUE, "informants learn the secrets of the host town", EdgeKind.FLOW, "trading_posts.secret_pct"),
+            Coupling(S.DEMOGRAPHY, "a post settles the owner's folk in its host", EdgeKind.FLOW, "trading_posts.diaspora"),
+            Coupling(S.ECONOMY, "stored goods let the house play markets", EdgeKind.FLOW, "trading_posts.stock_gain"),
+        ),
+    ),
+    Mechanic(
+        key="magical_orders",
+        spec_item="S4.3/RP3",
+        title="Magical orders: laws among mages, tribunals that judge breaches, and covenants that draw vis from held sites and teach magic to their town",
+        subsystem=S.MAGIC,
+        phases=("magical_orders",),
+        surface=Surface(drawer=URBAN_SECTION),
+        backfill=f"{MIGRATION}: every order takes its founding laws on the first epoch after the upgrade",
+        tables=(OrderLawRow.__tablename__, TribunalRow.__tablename__),
+        exposure=Exposure.TOOL,
+        tools=("call_tribunal",),
+        targets=("faction", "mortal", "structure"),
+        couplings=(
+            Coupling(S.LAW, "a tribunal fines, strips or casts out a member who breaks a law", EdgeKind.TRIGGER, "magical_orders.violation_pct"),
+            Coupling(S.MAGIC, "a covenant draws vis from its order's sites", EdgeKind.FLOW, "magical_orders.vis_per_site"),
+            Coupling(S.FAITH, "an order loses standing where magic is outlawed", EdgeKind.MODIFIER, "magical_orders.rivalry"),
+        ),
+    ),
+    Mechanic(
+        key="convoys",
+        spec_item="S6.4/RP3",
+        title=(
+            "Convoys: routes carry their goods in convoys with guards, migrants and missionaries, raided "
+            "by bandits and beasts, lost at sea or delayed by weather"
+        ),
+        subsystem=S.ECONOMY,
+        phases=("convoys", "trade_flow"),
+        surface=Surface(drawer=URBAN_SECTION),
+        backfill=f"{MIGRATION}: convoys set out from the first epoch after the upgrade",
+        tables=(ConvoyRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("send_convoy", "shield_convoy"),
+        targets=("trade_route", "settlement", "faction", "mortal", "son"),
+        couplings=(
+            Coupling(S.ECONOMY, "a route carries what its convoys can hold, and a port what its berths allow", EdgeKind.MODIFIER, "ports.per_berth"),
+            Coupling(S.WAR, "raiders take convoys on dangerous roads", EdgeKind.TRIGGER, "convoys.raid_pct"),
+            Coupling(S.BODY, "convoys bring sickness from their origin", EdgeKind.FLOW, "convoys.pilgrims"),
+            Coupling(S.FAITH, "missionaries win followers where they arrive", EdgeKind.FLOW, "convoys.conversion"),
+            Coupling(S.ECONOMY, "bulk goes cheap by water and perishables spoil on slow roads", EdgeKind.MODIFIER, "cargo.water_bulk_pct"),
+        ),
+    ),
+    Mechanic(
+        key="transport_fleets",
+        spec_item="S6.4/RP3",
+        title="Transport fleets: wagons, boats and pack animals age and wear, cost their owners upkeep and are replaced when worn",
+        subsystem=S.ECONOMY,
+        phases=("transport_fleets",),
+        surface=Surface(drawer=URBAN_SECTION),
+        backfill=f"{MIGRATION}: owners take a fleet sized to their route when their first convoy sets out",
+        tables=(FleetRow.__tablename__,),
+        targets=("faction", "settlement"),
+        couplings=(
+            Coupling(S.ECONOMY, "a worn fleet carries less", EdgeKind.MODIFIER, "fleets.worn_pct"),
+            Coupling(S.ECONOMY, "fleets cost their owners coin", EdgeKind.FLOW, "fleets.upkeep"),
+        ),
+    ),
+    Mechanic(
+        key="market_manipulation",
+        spec_item="S6.4/RP3",
+        title="Market manipulation: rich merchant houses corner or flood markets, undone in part by fair-market laws and guild monopolies",
+        subsystem=S.ECONOMY,
+        phases=("market_manipulation", "markets"),
+        surface=Surface(drawer=URBAN_SECTION),
+        backfill=f"{MIGRATION}: houses play markets from the first epoch after the upgrade",
+        tables=(MarketPlayRow.__tablename__,),
+        exposure=Exposure.TOOL,
+        tools=("corner_market",),
+        targets=("faction", "settlement", "mortal"),
+        couplings=(
+            Coupling(S.ECONOMY, "a corner raises the good's price", EdgeKind.MODIFIER, "manipulation.corner_pct"),
+            Coupling(S.POLITY, "a fair-market law undoes part of a play", EdgeKind.MODIFIER, "manipulation.law_counter_pct"),
+        ),
+    ),
+)

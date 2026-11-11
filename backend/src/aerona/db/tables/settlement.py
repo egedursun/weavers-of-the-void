@@ -6,6 +6,7 @@ from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
+from aerona.domain.enums.urban import HousingLevel, Morphology
 
 ADMIN_MAX = 300
 
@@ -52,6 +53,8 @@ class SettlementProfileRow(Base):
     hauling_capacity: Mapped[int] = mapped_column(default=0)
     rationing: Mapped[bool] = mapped_column(default=False)
     admin_capacity: Mapped[int] = mapped_column(default=50)
+    morphology: Mapped[Morphology] = mapped_column(enum_type(Morphology, "morphology"), default=Morphology.ORGANIC, server_default="organic")
+    homeless: Mapped[int] = mapped_column(default=0, server_default="0")
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
@@ -108,6 +111,9 @@ class DistrictRow(Base):
     built_epoch: Mapped[int]
     built_by_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     built_by_son_id: Mapped[int | None] = mapped_column(ForeignKey("sons.id", ondelete="SET NULL"))
+    housing: Mapped[HousingLevel] = mapped_column(enum_type(HousingLevel, "housing"), default=HousingLevel.HOUSE, server_default="house")
+    desirability: Mapped[int] = mapped_column(default=50, server_default="50")
+    land_value: Mapped[int] = mapped_column(default=50, server_default="50")
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
     design_id: Mapped[int | None] = mapped_column(ForeignKey("district_designs.id", ondelete="SET NULL"))
 

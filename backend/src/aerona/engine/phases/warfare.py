@@ -145,6 +145,7 @@ from aerona.engine.services.war import (
 )
 from aerona.engine.services.war_geography import Neighbourhood
 from aerona.engine.services.war_resolution import ENDING_LABELS, WarSettlement, close_stale_wars, end_war, settle_peace
+from aerona.engine.urban.morphology import siege_of
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
 
@@ -1052,7 +1053,9 @@ async def _powers(
     defender_power = await battle_power(ctx, theatre, defender, *armies[defender.id]) * defend_factor(ctx.rules, ground)
     if besieged is not None:
         walls = await ctx.session.get(SettlementInfrastructureRow, besieged.id)
-        defender_power *= wall_defence(ctx, await open_siege(ctx, war, besieged, attacker), walls) * await warded(ctx, besieged.id)
+        town = await ctx.session.get(SettlementProfileRow, besieged.id)
+        rings = siege_of(ctx.rules, town.morphology) if town is not None else 0
+        defender_power *= wall_defence(ctx, await open_siege(ctx, war, besieged, attacker), walls, rings) * await warded(ctx, besieged.id)
     return attacker_power, defender_power
 
 

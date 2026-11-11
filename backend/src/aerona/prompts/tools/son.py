@@ -918,6 +918,14 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.END_ENCHANTMENT: ToolText("You end a global enchantment you keep. 1 action.", {"law_id": "The enchantment", "reason": "Why"}),
+    T.SHIELD_CONVOY: ToolText(
+        "You guard a convoy on the road: it gains guards against raiders and sets out again if weather held it. 1 action.",
+        {"convoy_id": "The convoy", "reason": "Why you guard it"},
+    ),
+    T.SCOUR_STREETS: ToolText(
+        "You scour a district of a town: every criminal organisation's hold on its streets weakens. 1 action.",
+        {"district_id": "The district", "reason": "Why you scour it"},
+    ),
     T.MARK_LINEAGE: ToolText(
         "You mark the line of a species: a blessing passes to every young of that line, to the breeds herders make of it and to the great "
         "beasts born of it; a taint does the same, and only gods of death, plague, madness, shadow, blood or hunger may lay one. 1 action.",

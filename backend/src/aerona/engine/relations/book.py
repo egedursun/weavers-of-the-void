@@ -27,7 +27,16 @@ from aerona.rules.registry import Rules
 R = RelationType
 RELATIONS_KEY = "relations"
 FRIENDLY = frozenset({R.FRIEND, R.CLOSE_FRIEND, R.BEST_FRIEND, R.CONFIDANT})
-WARLIKE = frozenset({FactionKind.WARRIOR_ORDER, FactionKind.MERCENARY_COMPANY, FactionKind.BANDITS, FactionKind.PIRATES, FactionKind.VOID_PIRATES})
+WARLIKE = frozenset(
+    {
+        FactionKind.WARRIOR_ORDER,
+        FactionKind.MERCENARY_COMPANY,
+        FactionKind.BANDITS,
+        FactionKind.PIRATES,
+        FactionKind.VOID_PIRATES,
+        FactionKind.PIRATE_CONFEDERACY,
+    }
+)
 MOODS = {
     MoodState.ELATED: 2,
     MoodState.CONTENT: 1,

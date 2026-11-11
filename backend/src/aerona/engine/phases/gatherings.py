@@ -37,6 +37,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.culture_ethics",
     "table.gathering_guests",
     "table.gatherings",
+    "table.hooks",
     "table.incident_collections",
     "table.incidents",
     "table.memories",
@@ -67,6 +68,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.gathering_guests",
     "table.gatherings",
     "table.goods_flows",
+    "table.hooks",
     "table.incident_collections",
     "table.incident_participants",
     "table.incidents",
@@ -74,6 +76,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
     "table.mortal_profiles",
     "table.polity_profiles",
     "table.relationships",
+    "table.secrets",
     "table.thoughts",
 )
 async def gatherings(ctx: TickContext) -> None:

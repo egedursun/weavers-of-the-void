@@ -28,9 +28,12 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.services.war import ongoing_wars
+from aerona.engine.settlement.book import town_of
+from aerona.engine.urban.housing import clear_slums
 
 GRAIN = CommodityKind.GRAIN
 WANTS = tuple(NobleWant)
@@ -111,6 +114,10 @@ async def begin(ctx: TickContext, realm: Realm, row: MandateRow) -> None:
         if moved > 0:
             await stocks.add(row.settlement_entity_id, GRAIN, moved, GoodsFlow.AID)
         row.state = MandateState.MET if moved > 0 else MandateState.FAILED
+    elif row.kind is MandateKind.SLUM_CLEARANCE and row.settlement_entity_id is not None:
+        settlement = await ctx.session.get(EntityRow, row.settlement_entity_id)
+        if settlement is not None and not held(settlement.id):
+            await clear_slums(ctx, await town_of(ctx, settlement, await KnowledgeMap.load(ctx.session)))
     await ctx.session.flush()
 
 
@@ -128,6 +135,8 @@ async def plan(ctx: TickContext, book: RealmBook, realm: Realm, tally: MandateTa
             issued = await issue(ctx, realm, MandateKind.CURFEW, settlement_id=member.id)
         elif fighting and town is not None:
             issued = await issue(ctx, realm, MandateKind.PRODUCE, settlement_id=member.id, commodity=CommodityKind.WEAPONS, amount=table.produce_amount)
+        elif town is not None and town.crime >= PERCENT // 2 and await has_district(ctx, member.id, DistrictKind.SLUMS):
+            issued = await issue(ctx, realm, MandateKind.SLUM_CLEARANCE, settlement_id=member.id)
         elif town is not None and town.crime >= PERCENT // 2 and not await has_district(ctx, member.id, DistrictKind.CITADEL):
             issued = await issue(ctx, realm, MandateKind.BUILD, settlement_id=member.id, district=DistrictKind.CITADEL)
         tally.issued += issued is not None
@@ -157,6 +166,8 @@ async def met(ctx: TickContext, row: MandateRow) -> bool:
         return await units_of(ctx, row.settlement_entity_id, row.commodity) >= row.amount
     if row.kind is MandateKind.BUILD and row.settlement_entity_id is not None and row.district is not None:
         return await has_district(ctx, row.settlement_entity_id, row.district)
+    if row.kind is MandateKind.SLUM_CLEARANCE and row.settlement_entity_id is not None:
+        return not await has_district(ctx, row.settlement_entity_id, DistrictKind.SLUMS)
     return True
 
 

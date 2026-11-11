@@ -17,6 +17,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.demography.basket import staples_of
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.household import diet_demand
+from aerona.engine.economy.manipulation import plays_at
 from aerona.engine.economy.materials import price_premium
 from aerona.engine.economy.stocks import epoch_need, goods_of, holding, lots_of
 from aerona.engine.environment.years import world_years
@@ -163,6 +164,7 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
     held = await price_holds(ctx, market.id)
     growth = year_growth(ctx, book, market)
     tastes = await market_fit(ctx.session, market.id)
+    plays = await plays_at(ctx.session, ctx.rules, market.id, ctx.epoch)
     for commodity in COMMODITIES:
         hold = held.get(commodity)
         supply = await holding(ctx.session, market.id, commodity)
@@ -181,7 +183,7 @@ async def quote_market(ctx: TickContext, book: EconomyBook, market: EntityRow) -
         price = (
             hold.price
             if hold is not None and hold.price is not None
-            else price_of(ctx, commodity, supply, demand, factor * swing.factor * monopoly, premium=premium)
+            else price_of(ctx, commodity, supply, demand, factor * swing.factor * monopoly * plays.get(commodity, 1.0), premium=premium)
         )
         quotes[commodity] = Quote(commodity, price, supply, demand, swing.spread)
     ctx.count("taboo_resentment", await resent_taboo(ctx, market.id))

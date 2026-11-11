@@ -84,6 +84,10 @@ GOAL_PLANS: dict[FactionKind, tuple[FactionGoalKind, ...]] = {
     FactionKind.MERCENARY_COMPANY: (G.LOOT, G.WAR_ON),
     FactionKind.INTERWORLD_FEDERATION: (G.PEACE_WITH, G.LOWER_TAXES),
     FactionKind.WANDERING_MARKET: (G.LOWER_TAXES, G.MONOPOLY_ON),
+    FactionKind.CRIME_FAMILY: (G.LOOT, G.MONOPOLY_ON),
+    FactionKind.THIEVES_GUILD: (G.LOOT,),
+    FactionKind.SMUGGLING_RING: (G.LOOT, G.LOWER_TAXES),
+    FactionKind.PIRATE_CONFEDERACY: (G.LOOT,),
 }
 LAW_WISHES: dict[FactionKind, tuple[LawKind, dict[str, int | str | bool]]] = {
     FactionKind.PRIESTHOOD: (LawKind.TITHE, {"rate": 10, "enforced": True}),

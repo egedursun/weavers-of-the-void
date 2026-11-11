@@ -18,7 +18,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import LeyLineRow, WorldSeasonRow
 from aerona.db.tables.estates import EstateProfileRow
 from aerona.db.tables.evolution import CarrierRow
-from aerona.db.tables.factions import FactionProfileRow
+from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.flora import PlantProfileRow
 from aerona.db.tables.intrigue import HookRow, TrueNameRow
 from aerona.db.tables.lore import LexemeRow
@@ -29,10 +29,12 @@ from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.renown import ReputationRow
+from aerona.db.tables.settlement import DistrictRow
 from aerona.db.tables.sons import SonRelationRow, SonRow
 from aerona.db.tables.statecraft import CrisisRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.titles import DeJureLinkRow, TitleProfileRow
+from aerona.db.tables.urban import ConvoyRow, OrderLawRow, TurfRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
 from aerona.domain.enums.arcana import LawSource, SpellForm
 from aerona.domain.enums.body import BodyPlan
@@ -45,9 +47,9 @@ from aerona.domain.enums.divine import DivineWoundKind, WoundCause
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import MagicSiteKind
 from aerona.domain.enums.ecology import Diet, DomesticationStage, SpeciesClass, SpeciesUse
-from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeMode, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import CivilizationTier, EntityFlag, EntityOrigin, EntityStatus, EntityType
-from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.faction import FactionKind, FactionRank
 from aerona.domain.enums.intrigue import HookSource, HookStrength
 from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource
 from aerona.domain.enums.mythic import CosmicOffice, GeasMode, OfficeChoice, ServitorRank, ServitorRole
@@ -56,12 +58,14 @@ from aerona.domain.enums.physics import ImpactBody, ImpactOutcome
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
 from aerona.domain.enums.renown import ReputationAxis
+from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw, SocialClass
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.statecraft import CrisisDemand
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.titles import TitleRank
 from aerona.domain.enums.tongues import WordRegister
+from aerona.domain.enums.urban import ConvoyStatus, OrderLaw
 from aerona.domain.enums.world import StarType
 from aerona.domain.models.entity_stats import (
     BeastStats,
@@ -78,6 +82,7 @@ from aerona.domain.models.entity_stats import (
     SpiritStats,
     StructureStats,
     TitleStats,
+    TradeRouteStats,
 )
 from aerona.domain.models.profiles import TravelResource
 from aerona.engine.cosmos.ladder import DimensionDraft, create_dimension, ensure_ladder
@@ -799,3 +804,88 @@ async def hospital(session: AsyncSession, realm: Realm) -> Ids:
 
 async def ruled_sickness(session: AsyncSession, realm: Realm) -> Ids:
     return {**await ruler(session, realm), **await sickness(session, realm)}
+
+
+async def road(session: AsyncSession, realm: Realm) -> Ids:
+    town = (await second_settlement(session, realm))["settlement"]
+    route = await make_entity(session, "Long Road", EntityType.TRADE_ROUTE, world_id=realm.cosmos.world_id, stats=TradeRouteStats(capacity=40))
+    session.add(
+        TradeRouteProfileRow(
+            route_entity_id=route.id,
+            first_market_id=realm.settlement_id,
+            second_market_id=town,
+            mode=TradeMode.ROAD,
+            status=TradeRouteStatus.OPEN,
+            length=2,
+            founded_epoch=1,
+            locked=[],
+        )
+    )
+    await session.flush()
+    return {"trade_route": route.id, "settlement": town}
+
+
+async def led_faction(session: AsyncSession, realm: Realm, kind: FactionKind, name: str) -> int:
+    faction = await make_entity(session, name, EntityType.FACTION, world_id=realm.cosmos.world_id, location_id=realm.settlement_id)
+    session.add(
+        FactionProfileRow(
+            faction_entity_id=faction.id, kind=kind, home_entity_id=realm.settlement_id, leader_entity_id=realm.mortal_id, influence_over={}, locked=[]
+        )
+    )
+    session.add(FactionMembershipRow(faction_entity_id=faction.id, mortal_entity_id=realm.mortal_id, rank=FactionRank.LEADER, locked=[]))
+    await session.flush()
+    return faction.id
+
+
+async def first_district(session: AsyncSession, realm: Realm) -> int:
+    found = await session.scalar(select(DistrictRow.id).where(DistrictRow.settlement_entity_id == realm.settlement_id).limit(1))
+    if found is not None:
+        return int(found)
+    district = DistrictRow(settlement_entity_id=realm.settlement_id, kind=DistrictKind.MARKET, level=1, condition=100, built_epoch=1, locked=[])
+    session.add(district)
+    await session.flush()
+    return district.id
+
+
+async def crime_boss(session: AsyncSession, realm: Realm) -> Ids:
+    faction = await led_faction(session, realm, FactionKind.CRIME_FAMILY, "The Lantern Family")
+    district = await first_district(session, realm)
+    other = await second_mortal(session, realm)
+    return {"faction": faction, "district": district, "official": other["mortal"]}
+
+
+async def turf_held(session: AsyncSession, realm: Realm) -> Ids:
+    found = await crime_boss(session, realm)
+    session.add(TurfRow(district_id=found["district"], faction_entity_id=found["faction"], strength=50, since_epoch=1, locked=[]))
+    await session.flush()
+    return found
+
+
+async def merchant_house(session: AsyncSession, realm: Realm) -> Ids:
+    faction = await led_faction(session, realm, FactionKind.MERCHANT_GUILD, "House Varro")
+    return {"faction": faction, **await road(session, realm)}
+
+
+async def on_the_road(session: AsyncSession, realm: Realm) -> Ids:
+    found = await road(session, realm)
+    convoy = ConvoyRow(
+        owner_entity_id=realm.settlement_id,
+        route_entity_id=found["trade_route"],
+        cargo={},
+        capacity=20,
+        status=ConvoyStatus.TRAVELLING,
+        departed_epoch=1,
+        locked=[],
+    )
+    session.add(convoy)
+    await session.flush()
+    return {**found, "convoy": convoy.id}
+
+
+async def order_master(session: AsyncSession, realm: Realm) -> Ids:
+    faction = await led_faction(session, realm, FactionKind.MAGE_ORDER, "The Quiet Order")
+    session.add(OrderLawRow(faction_entity_id=faction, law=OrderLaw.SHARE_DISCOVERIES, strength=40, locked=[]))
+    other = await second_mortal(session, realm)
+    session.add(FactionMembershipRow(faction_entity_id=faction, mortal_entity_id=other["mortal"], rank=FactionRank.MEMBER, locked=[]))
+    await session.flush()
+    return {"faction": faction, "mortal": other["mortal"]}

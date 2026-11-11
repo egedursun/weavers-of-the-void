@@ -34,6 +34,7 @@ from aerona.domain.enums.environment import RiverClass, WeatherEffect
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.settlement import TIER_ORDER, WATER_ORDER, BuildMaterial, DistrictKind, SizeTier, TreasuryEntry, WaterSupply
 from aerona.domain.enums.society import Commodity, KnowledgeBranch, SocialClass
+from aerona.domain.enums.urban import UrbanService
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.context import TickContext
@@ -66,6 +67,7 @@ from aerona.engine.renown.currencies import realm_of_community, ruler_of_realm
 from aerona.engine.settlement.book import Town, ledger, tier_for
 from aerona.engine.settlement.districts import AdminParts, admin_parts, designs_for, unify_market, wound_district
 from aerona.engine.settlement.storage import design_for, settlement_store, storage_index, store_kind
+from aerona.engine.urban.morphology import hauling_of, replan, spread_of
 from aerona.rules.registry import Rules
 
 FOOD_INDEX = 100
@@ -108,7 +110,12 @@ async def capacities(ctx: TickContext, town: Town, knowledge: KnowledgeMap) -> N
     keep(
         town.profile, "construction_capacity", round_half_up(builders * table.builder_capacity * (1 + architecture * table.engineering_capacity_pct / PERCENT))
     )
-    keep(town.profile, "hauling_capacity", round_half_up(haulers * table.hauler_capacity * (1 + town.infrastructure.roads * table.road_hauling_pct / PERCENT)))
+    streets = hauling_of(ctx.rules, town.profile.morphology)
+    keep(
+        town.profile,
+        "hauling_capacity",
+        round_half_up(haulers * table.hauler_capacity * (1 + town.infrastructure.roads * table.road_hauling_pct / PERCENT) * streets),
+    )
     town.work_used = 0
 
 
@@ -453,7 +460,8 @@ async def keep_order(ctx: TickContext, town: Town, *, justice: float, bands: lis
     garrison = await living_entity(ctx.session, profile.garrison_entity_id) if profile.garrison_entity_id is not None else None
     soldiers = profile.militia + ((stat(garrison, "size") or 0) if garrison is not None else 0)
     effects = town.effects(ctx.rules)
-    policing = soldiers / PERCENT * table.policing_per_100 + effects.policing
+    urban = town.urban
+    policing = soldiers / PERCENT * table.policing_per_100 + effects.policing + urban.covered(UrbanService.WATCH) * ctx.rules.prevention.watch_policing
     wealth = stat_or(town.entity, "wealth", stat(town.entity, "prosperity") or 0)
     rule = await scale_here(ctx, town.entity.id, DivineScale.ORDER)
     if "public_order" not in profile.locked:
@@ -470,6 +478,9 @@ async def keep_order(ctx: TickContext, town: Town, *, justice: float, bands: lis
             - policing
             - justice * table.justice_pct
             - rule * ctx.rules.dominion.crime_per_step
+            + (1 - urban.covered(UrbanService.WATCH)) * ctx.rules.coverage.crime
+            + urban.homeless_share * ctx.rules.homelessness.crime
+            + urban.turf * ctx.rules.turf.crime_per_turf
         )
         profile.crime = clamp_int(crime, 0, PERCENT)
     shift_stat(town.entity, "prosperity", -profile.crime * table.prosperity_loss / PERCENT, ctx.rules.society.default_stat)
@@ -478,6 +489,9 @@ async def keep_order(ctx: TickContext, town: Town, *, justice: float, bands: lis
 
 
 def hallow(ctx: TickContext, town: Town) -> None:
+    table = ctx.rules.coverage
+    shift_stat(town.entity, "piety", -(1 - town.urban.covered(UrbanService.FAITH)) * table.impiety, ctx.rules.society.default_stat)
+    shift_stat(town.entity, "prosperity", -(1 - town.urban.covered(UrbanService.MARKET)) * table.prices, ctx.rules.society.default_stat)
     floor = clamp_int(town.effects(ctx.rules).piety_floor, 0, PERCENT)
     piety = stat(town.entity, "piety")
     if floor > 0 and piety is not None and piety < floor:
@@ -601,7 +615,8 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
     table = ctx.rules.fire
     people = stat(town.entity, "population") or 0
     crowd = min(1.0, people / max(1, housing_of(ctx.rules, town)))
-    town.profile.fire_risk = clamp_int(flammable_share(town) * table.timber_risk + crowd * table.crowding_risk, 0, PERCENT)
+    brigade = 1 - town.urban.covered(UrbanService.FIRE) * ctx.rules.prevention.brigade_pct / PERCENT
+    town.profile.fire_risk = clamp_int((flammable_share(town) * table.timber_risk + crowd * table.crowding_risk) * brigade, 0, PERCENT)
     igniting = self_igniting(ctx.rules, town, ground)
     dry = 1.0 if igniting or ground is None or ground.rainfall < table.dry_rainfall else DRY_OFF_PCT / PERCENT
     dry *= 1 + table.ambient_ignition_pct / PERCENT if igniting else 1.0
@@ -615,7 +630,7 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
         timber = [district for district in town.districts if district.material is BuildMaterial.TIMBER] or town.districts
         if not timber:
             continue
-        gale = 1 + year.wind / PERCENT * table.wind_spread_pct / PERCENT
+        gale = (1 + year.wind / PERCENT * table.wind_spread_pct / PERCENT) * spread_of(ctx.rules, town.profile.morphology)
         district = max(timber, key=lambda item: (item.level, -item.id))
         level = district.level
         gone = wound_district(district, round_half_up(table.district_loss * gale))
@@ -624,6 +639,7 @@ async def fires(ctx: TickContext, town: Town, ground: RegionEnvironmentRow | Non
         if gone:
             await ctx.session.delete(district)
             town.districts.remove(district)
+        replan(town.profile)
         floor, _ = headcount_bounds(ctx.rules, town.entity)
         before = stat(town.entity, "population") or 0
         dead = min(max(0, before - floor), round_half_up(before * table.death_pct * gale / PERCENT))
@@ -661,6 +677,9 @@ def sanitation(ctx: TickContext, town: Town, knowledge: KnowledgeMap) -> None:
         + knowledge.level(town.entity.id, KnowledgeBranch.MEDICINE) * table.medicine_step
         + town.effects(ctx.rules).sanitation
         - min(1.0, crowd) * table.crowding_loss
+        - (1 - town.urban.covered(UrbanService.WATER)) * ctx.rules.coverage.thirst
+        - (1 - max(town.urban.covered(UrbanService.HEALING), town.urban.covered(UrbanService.BATH))) * ctx.rules.coverage.disease
+        - town.urban.homeless_share * ctx.rules.homelessness.disease
     )
     town.profile.sanitation = clamp_int(value, 0, PERCENT)
 
@@ -810,4 +829,6 @@ def remember(ctx: TickContext, town: Town) -> None:
 async def literacy_of(ctx: TickContext, town: Town) -> int:
     people = await people_of(ctx.session, town.entity)
     culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
-    return culture.literacy if culture is not None else 0
+    literacy = culture.literacy if culture is not None else 0
+    unschooled = (1 - town.urban.covered(UrbanService.SCHOOL)) * ctx.rules.coverage.illiteracy
+    return clamp_int(round_half_up(literacy - unschooled), 0, PERCENT)

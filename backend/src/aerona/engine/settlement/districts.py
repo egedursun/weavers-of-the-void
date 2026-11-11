@@ -5,6 +5,7 @@ from types import MappingProxyType
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.urban import HOUSING_RULE
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
@@ -135,12 +136,18 @@ def parameters_of(rules: Rules, kind: DistrictKind, design: DistrictDesignRow | 
     return found
 
 
+def home_factor(rules: Rules, district: DistrictRow) -> float:
+    key = HOUSING_RULE.get(district.housing)
+    return 1.0 if key is None else int(getattr(rules.housing_evolution, key)) / PERCENT
+
+
 def effects_of(rules: Rules, districts: Sequence[DistrictRow], designs: Mapping[int, DistrictDesignRow]) -> DistrictEffects:
     effects = DistrictEffects()
     for district in districts:
         design = designs.get(district.design_id) if district.design_id is not None else None
         for key, value in parameters_of(rules, district.kind, design).items():
-            setattr(effects, key, getattr(effects, key) + value * district.level)
+            factor = home_factor(rules, district) if key == "housing" else 1.0
+            setattr(effects, key, getattr(effects, key) + round(value * district.level * factor))
     return effects
 
 
