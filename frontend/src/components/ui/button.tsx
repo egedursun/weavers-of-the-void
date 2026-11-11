@@ -52,6 +52,9 @@ const buttonVariants = cva(
           controlIcon.default,
           'h-auto min-h-control-lg w-full justify-start gap-2.5 rounded-lg p-2.5 text-start font-normal whitespace-normal',
         ],
+        figure: [
+          'h-auto flex-col items-center gap-1 rounded-xl p-2 font-normal',
+        ],
         card: [
           controlIcon.default,
           'h-full min-h-control-lg w-full flex-col items-stretch justify-start gap-2 rounded-lg p-3 text-start font-normal whitespace-normal',
@@ -75,6 +78,7 @@ const CONTROL_SIZE_OF: Record<ButtonSize, ControlSize> = {
   icon: 'default',
   'icon-lg': 'lg',
   tile: 'lg',
+  figure: 'lg',
   card: 'lg',
 }
 

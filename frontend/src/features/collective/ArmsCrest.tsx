@@ -23,9 +23,9 @@ export function ArmsCrest({ nodeId, name }: { nodeId: number; name: string }) {
         <PopoverTrigger asChild>
           <Button
             variant='ghost'
-            size='card'
+            size='figure'
             aria-label={`Arms of ${name}: ${row.blazon}`}
-            className='items-center transition-transform motion-safe:hover:scale-105'
+            className='transition-transform motion-safe:hover:scale-105'
           >
             <ArmsShield
               field={row.field}
