@@ -25,6 +25,9 @@ class DesirabilityRules:
     prestige_pct: int = rule(30, 0, 200, S, "Share of the town's prestige added to every district's desirability (%)")
     drift: int = rule(10, 1, 100, S, "Land value a district moves toward its desirability each epoch")
     gentrify_at: int = rule(75, 0, 100, S, "Land value past which a district's poor are priced out")
+    rent: int = rule(10, 0, 1000, S, "Coin a household pays each epoch at full land value in its town")
+    pollution_pct: int = rule(20, 0, 200, S, "Share of its land's air and water pollution taken from every district's desirability (%)")
+    artwork: int = rule(4, 0, 100, S, "Desirability each artwork kept in a town gives its districts")
     gentrify_homeless: int = rule(4, 0, 100, S, "Share of a priced-out district's people left without a home each epoch (%)")
 
 
@@ -105,6 +108,8 @@ class CrimeOrgRules:
     suppress_loss: int = rule(10, 0, 100, P, "Turf a full suppression takes from an organisation each epoch")
     co_opt_crime: int = rule(5, 0, 100, P, "Crime a co-opted organisation takes off its town each epoch")
     traitor_pct: int = rule(5, 0, 100, P, "Chance each epoch a member of an organisation turns informer (%)")
+    privateer_pct: int = rule(20, 0, 100, P, "Extra raid chance a co-opted pirate confederacy brings on the convoys of its realm's enemies (%)")
+    informant_pct: int = rule(20, 0, 100, P, "Chance each epoch a co-opted organisation gives its realm a secret of its town (%)")
     stance_pct: int = rule(25, 0, 100, P, "Chance each epoch a realm troubled by an organisation takes a stance against it (%)")
 
 
@@ -175,5 +180,5 @@ class ManipulationRules:
     dump_pct: int = rule(30, 0, 100, M, "Price fall a full dumping causes (%)")
     play_pct: int = rule(10, 0, 100, M, "Chance each epoch a rich merchant house plays a market (%)")
     length: int = rule(3, 1, 100, M, "Epochs a corner or dumping lasts")
-    law_counter_pct: int = rule(60, 0, 100, M, "Share of a play a fair-market law undoes (%)")
+    law_counter_pct: int = rule(60, 0, 100, M, "Share of a play a fair-market law, or a realm's mandate on the good, undoes (%)")
     guild_counter_pct: int = rule(40, 0, 100, M, "Share of a play a guild holding the good's monopoly undoes (%)")

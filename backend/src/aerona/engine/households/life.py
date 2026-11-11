@@ -40,6 +40,7 @@ from aerona.engine.primitives.queries import active_bonds, connect
 from aerona.engine.primitives.stats import stat, stat_or
 from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.records import death_path
+from aerona.engine.urban.desirability import land_value_of
 
 MEMBERS = "members"
 WEALTH = "wealth"
@@ -190,7 +191,8 @@ async def keep_purse(ctx: TickContext, household: HouseholdRow, members: list[Me
     place = household.settlement_node_id
     tithe = round_half_up(income * law_rate(laws, place, LawKind.TITHE, table.tithe_pct) / PERCENT) if faithful else 0
     tax = round_half_up(income * law_rate(laws, place, LawKind.TAX_RATE, table.tax_pct) / PERCENT)
-    expenses = len(members) * table.food_cost + upkeep + tithe + tax + household.servants * table.servant_wage
+    rent = round_half_up(await land_value_of(ctx.session, place) * ctx.rules.desirability.rent / PERCENT) if place is not None else 0
+    expenses = len(members) * table.food_cost + upkeep + tithe + tax + household.servants * table.servant_wage + rent
     if "income" not in locked:
         household.income = income
     if "expenses" not in locked:

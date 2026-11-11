@@ -58,6 +58,7 @@ def count(ctx: TickContext, prefix: str, tally: object) -> None:
 )
 @writes(
     "cult.zeal",
+    "settlement.wealth",
     "table.chronicle",
     "table.chronicle_entities",
     "table.collection_members",

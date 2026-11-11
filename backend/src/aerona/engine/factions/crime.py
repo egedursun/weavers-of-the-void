@@ -6,18 +6,21 @@ from aerona.catalog.urban import RACKETS_OF
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
+from aerona.db.tables.intrigue import SecretRow
 from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.urban import CrimeStanceRow, PayrollRow, RacketRow, TurfRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.faction import FactionRank
+from aerona.domain.enums.intrigue import HookSource
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.urban import CrimeStance
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.disease.stigma import values_for
 from aerona.engine.economy.purse import give_coin
+from aerona.engine.intrigue.secrets import grant_hook, learn
 from aerona.engine.lifecycle.wounds import slay
 from aerona.engine.notes import note
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -81,6 +84,7 @@ async def buy_officials(ctx: TickContext, faction: EntityRow, profile: FactionPr
         )
         if official is not None and not held(official):
             ctx.session.add(PayrollRow(faction_entity_id=faction.id, official_entity_id=official, bribe=table.bribe, since_epoch=ctx.epoch, locked=[]))
+            await grant_hook(ctx, faction.id, official, HookSource.FAVOUR, strong=False)
             tally.bought += 1
             await ctx.session.flush()
     for row in await ctx.session.scalars(select(PayrollRow).where(PayrollRow.faction_entity_id == faction.id)):
@@ -129,6 +133,19 @@ async def take_stance(ctx: TickContext, faction: EntityRow, profile: FactionProf
     tally.stances += 1
 
 
+async def inform(ctx: TickContext, stance: CrimeStanceRow, town_id: int) -> bool:
+    if not ctx.rng(f"crime_informant.{stance.faction_entity_id}").chance(ctx.rules.crime_orgs.informant_pct * stance.strength / PERCENT):
+        return False
+    secret = await ctx.session.scalar(
+        select(SecretRow)
+        .join(EntityRow, EntityRow.id == SecretRow.holder_node_id)
+        .where(EntityRow.location_id == town_id, SecretRow.exposed_epoch.is_(None))
+        .order_by(SecretRow.id)
+        .limit(1)
+    )
+    return secret is not None and await learn(ctx, secret, stance.polity_entity_id)
+
+
 async def bear_stances(ctx: TickContext) -> None:
     table = ctx.rules.crime_orgs
     for stance in list(await ctx.session.scalars(select(CrimeStanceRow).order_by(CrimeStanceRow.polity_entity_id, CrimeStanceRow.faction_entity_id))):
@@ -150,6 +167,7 @@ async def bear_stances(ctx: TickContext) -> None:
             town = await ctx.session.get(SettlementProfileRow, profile.home_entity_id)
             if town is not None and "crime" not in town.locked:
                 town.crime = clamp_int(round_half_up(town.crime - table.co_opt_crime * weight), 0, PERCENT)
+            await inform(ctx, stance, profile.home_entity_id)
 
 
 async def run_underworld(ctx: TickContext, tally: CrimeTally) -> None:

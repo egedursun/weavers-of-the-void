@@ -1,14 +1,17 @@
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.urban import AMENITIES, NUISANCE_DISTRICTS, NUISANCES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.industry import RegionPollutionRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.engine.context import TickContext
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import stat_or
@@ -20,6 +23,26 @@ NEUTRAL = PERCENT // 2
 @dataclass
 class DesirabilityTally:
     assessed: int = 0
+
+
+async def land_value_of(session: AsyncSession, settlement_id: int) -> int:
+    values = list(await session.scalars(select(DistrictRow.land_value).where(DistrictRow.settlement_entity_id == settlement_id)))
+    return round_half_up(sum(values) / len(values)) if values else 0
+
+
+async def fouled(ctx: TickContext, settlement: EntityRow) -> int:
+    region = (await RegionAtlas.load(ctx.session)).top_region(settlement.id)
+    row = await ctx.session.get(RegionPollutionRow, region) if region is not None else None
+    return (row.air + row.water) // 2 if row is not None else 0
+
+
+async def artworks(ctx: TickContext, settlement_id: int) -> int:
+    found = await ctx.session.scalar(
+        select(func.count())
+        .select_from(EntityRow)
+        .where(EntityRow.entity_type == EntityType.ARTWORK, EntityRow.status == EntityStatus.CANON, EntityRow.location_id == settlement_id)
+    )
+    return int(found or 0)
 
 
 async def restless(ctx: TickContext, settlement_id: int) -> int:
@@ -40,7 +63,13 @@ async def assess_town(ctx: TickContext, settlement: EntityRow, tally: Desirabili
     reach = reach_of(ctx.rules, profile.morphology)
     structures = await services_in(ctx.session, settlement.id)
     spirits = await restless(ctx, settlement.id)
-    common = profile.prestige * table.prestige_pct / PERCENT - profile.crime * table.crime_pct / PERCENT - spirits * table.haunting
+    common = (
+        profile.prestige * table.prestige_pct / PERCENT
+        - profile.crime * table.crime_pct / PERCENT
+        - spirits * table.haunting
+        - await fouled(ctx, settlement) * table.pollution_pct / PERCENT
+        + await artworks(ctx, settlement.id) * table.artwork
+    )
     for district in districts:
         score = NEUTRAL + common
         for _, structure in structures:

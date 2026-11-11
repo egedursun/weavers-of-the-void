@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.urban import HOME_DISTRICT, REACH_RULE, SERVICE_OF
+from aerona.catalog.urban import HOME_DISTRICT, NUISANCES, REACH_RULE, SERVICE_OF
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import DistrictRow, SettlementInfrastructureRow, SettlementProfileRow
@@ -65,7 +65,8 @@ def place(profile: StructureProfileRow, districts: list[DistrictRow]) -> bool:
     if profile.district_id is not None or not districts or "district_id" in profile.locked:
         return False
     wanted = HOME_DISTRICT.get(profile.kind)
-    home = next((district for district in districts if district.kind is wanted), districts[0])
+    by_value = sorted(districts, key=lambda district: (district.land_value, district.id), reverse=profile.kind not in NUISANCES)
+    home = next((district for district in districts if district.kind is wanted), by_value[0])
     profile.district_id = home.id
     return True
 

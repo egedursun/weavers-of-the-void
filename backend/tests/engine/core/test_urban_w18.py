@@ -49,8 +49,8 @@ from aerona.engine.primitives.manual import manual_context
 from aerona.engine.settlement.book import town_of
 from aerona.engine.settlement.districts import home_factor
 from aerona.engine.urban.control import set_turf
-from aerona.engine.urban.coverage import CoverageTally, cover_town, reach_of
-from aerona.engine.urban.desirability import DesirabilityTally, assess_town
+from aerona.engine.urban.coverage import CoverageTally, cover_town, place, reach_of
+from aerona.engine.urban.desirability import DesirabilityTally, assess_town, land_value_of
 from aerona.engine.urban.housing import HousingTally, clear_slums, house_town, step_home
 from aerona.engine.urban.morphology import grow_rings, replan, siege_of, spread_of
 from aerona.engine.urban.turf import TurfTally, hold_turf
@@ -233,3 +233,35 @@ async def test_repairs_drop_the_turf_of_vanished_organisations(session: AsyncSes
     await session.flush()
     assert await mend_urban_links(session) >= 2
     assert await session.get(TurfRow, (district.id, family.id)) is None
+
+
+async def test_land_value_sets_rent_and_places_amenities_on_dear_ground(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session)
+    town = await town_with_districts(session, world, ctx)
+    districts = list(await session.scalars(select(DistrictRow).where(DistrictRow.settlement_entity_id == town.id).order_by(DistrictRow.id)))
+    districts[-1].land_value = 90
+    await session.flush()
+    assert await land_value_of(session, town.id) > 0
+    theatre = StructureProfileRow(structure_entity_id=town.id, kind=StructureKind.THEATRE)
+    assert place(theatre, districts) and theatre.district_id == max(districts, key=lambda row: row.land_value).id
+    tannery = StructureProfileRow(structure_entity_id=town.id, kind=StructureKind.TANNERY)
+    assert place(tannery, districts) and tannery.district_id == min(districts, key=lambda row: (row.land_value, row.id)).id
+
+
+async def test_cleared_slums_are_rebuilt_and_bribed_officials_are_hooked(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session, crime_orgs={"payroll_pct": 100})
+    town = await town_with_districts(session, world, ctx)
+    session.add(DistrictRow(settlement_entity_id=town.id, kind=DistrictKind.SLUMS, level=1, condition=100, built_epoch=0, locked=[]))
+    await session.flush()
+    await clear_slums(ctx, await town_of(ctx, town, await KnowledgeMap.load(session)))
+    kinds = {row.kind for row in await session.scalars(select(DistrictRow).where(DistrictRow.settlement_entity_id == town.id))}
+    assert DistrictKind.SLUMS not in kinds and DistrictKind.CRAFT_QUARTER in kinds
+
+
+def test_privateers_raise_the_raid_on_enemy_convoys() -> None:
+    rules = tuned_rules()
+    convoy = ConvoyRow(guards=0, status=ConvoyStatus.TRAVELLING)
+    profile = TradeRouteProfileRow(danger_bandits=0, danger_beasts=0, danger_sea=0, danger_weather=0, mode=TradeMode.ROAD)
+    roll = rules.crime_orgs.privateer_pct / 2
+    assert fate_of(rules, convoy, profile, roll) is ConvoyStatus.ARRIVED
+    assert fate_of(rules, convoy, profile, roll, privateers=True) is ConvoyStatus.RAIDED

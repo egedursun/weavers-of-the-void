@@ -17,6 +17,7 @@ from aerona.engine.intrigue.secrets import learn
 from aerona.engine.lore.research_depth import trade_partners
 from aerona.engine.notes import note
 from aerona.engine.renown.currencies import realm_of_community
+from aerona.engine.services.war import ongoing_wars
 from aerona.engine.structures.construction import Commission, begin
 
 
@@ -54,9 +55,11 @@ async def found_posts(ctx: TickContext, tally: PostTally) -> None:
         if home is None:
             continue
         realm = await realm_of_community(ctx.session, home)
+        foes = {side for war in await ongoing_wars(ctx.session, realm) for side in war.sides if side != realm} if realm is not None else set()
         held_hosts = set(await ctx.session.scalars(select(TradingPostRow.host_settlement_id).where(TradingPostRow.owner_entity_id == house.id)))
         for partner_id in sorted(await trade_partners(ctx.session, home)):
-            if partner_id in held_hosts or held(partner_id) or await realm_of_community(ctx.session, partner_id) == realm:
+            host_realm = await realm_of_community(ctx.session, partner_id)
+            if partner_id in held_hosts or held(partner_id) or host_realm == realm or host_realm in foes:
                 continue
             if not ctx.rng(f"trading_post.{house.id}.{partner_id}").chance(table.open_pct):
                 continue

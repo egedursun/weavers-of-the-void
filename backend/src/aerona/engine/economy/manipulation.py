@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.urban import MERCHANT_HOUSES
 from aerona.constants.units import PERCENT
+from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.urban import MarketPlayRow, TradingPostRow
@@ -12,6 +13,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.statecraft import MandateState
 from aerona.domain.enums.urban import MarketPlay
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import holdings
@@ -36,11 +38,22 @@ def swing(rules: Rules, play: MarketPlay, strength: int) -> float:
     return 1 + table.corner_pct / PERCENT * share if play is MarketPlay.CORNER else 1 - table.dump_pct / PERCENT * share
 
 
+async def mandated(session: AsyncSession, realm_id: int, commodity: CommodityKind) -> bool:
+    found = await session.scalar(
+        select(MandateRow.id)
+        .where(MandateRow.polity_entity_id == realm_id, MandateRow.commodity == commodity, MandateRow.state == MandateState.ACTIVE)
+        .limit(1)
+    )
+    return found is not None
+
+
 async def countered(session: AsyncSession, rules: Rules, laws: LawBook, market_id: int, commodity: CommodityKind) -> float:
     table = rules.manipulation
     kept = 1.0
     realm = await realm_of_community(session, market_id)
     if realm is not None and laws.in_force(realm, LawKind.FAIR_MARKET) is not None:
+        kept *= 1 - table.law_counter_pct / PERCENT
+    if realm is not None and await mandated(session, realm, commodity):
         kept *= 1 - table.law_counter_pct / PERCENT
     if commodity.value in await monopolies_at(session, market_id):
         kept *= 1 - table.guild_counter_pct / PERCENT

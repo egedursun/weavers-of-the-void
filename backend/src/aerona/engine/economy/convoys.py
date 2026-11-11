@@ -17,6 +17,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.disease.outbreaks import open_outbreak
 from aerona.engine.economy.purse import take_coin
+from aerona.engine.factions.privateers import privateers_against
 from aerona.engine.notes import note
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -120,9 +121,10 @@ async def dispatch(ctx: TickContext, route: EntityRow, profile: TradeRouteProfil
     tally.sent += 1
 
 
-def fate_of(rules: Rules, convoy: ConvoyRow, profile: TradeRouteProfileRow, roll: float) -> ConvoyStatus:
+def fate_of(rules: Rules, convoy: ConvoyRow, profile: TradeRouteProfileRow, roll: float, *, privateers: bool = False) -> ConvoyStatus:
     table = rules.convoys
-    raid = max(0.0, table.raid_pct * (profile.danger_bandits + profile.danger_beasts) / PERCENT - convoy.guards * table.guard_relief)
+    hunted = rules.crime_orgs.privateer_pct if privateers else 0
+    raid = max(0.0, table.raid_pct * (profile.danger_bandits + profile.danger_beasts) / PERCENT + hunted - convoy.guards * table.guard_relief)
     storm = table.storm_pct * profile.danger_sea / PERCENT if profile.mode is TradeMode.SEA else 0.0
     delay = table.delay_pct * profile.danger_weather / PERCENT
     if roll < raid:
@@ -159,7 +161,8 @@ async def resolve(ctx: TickContext, convoy: ConvoyRow, tally: ConvoyTally, book:
     profile = await ctx.session.get(TradeRouteProfileRow, convoy.route_entity_id)
     if profile is None or "status" in convoy.locked:
         return
-    status = fate_of(ctx.rules, convoy, profile, ctx.rng(f"convoy_fate.{convoy.id}").random() * PERCENT)
+    privateers = await privateers_against(ctx.session, convoy.owner_entity_id)
+    status = fate_of(ctx.rules, convoy, profile, ctx.rng(f"convoy_fate.{convoy.id}").random() * PERCENT, privateers=privateers)
     convoy.status = status
     if status is ConvoyStatus.ARRIVED:
         convoy.arrived_epoch = ctx.epoch

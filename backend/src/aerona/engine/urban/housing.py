@@ -135,6 +135,7 @@ async def clear_slums(ctx: TickContext, town: Town) -> int:
     for district in slums:
         await ctx.session.delete(district)
         town.districts.remove(district)
+    await add_district(ctx, town, DistrictKind.CRAFT_QUARTER, material=BuildMaterial.STONE)
     if "homeless" not in town.profile.locked:
         town.profile.homeless += displaced
     if "unrest" not in town.profile.locked:
