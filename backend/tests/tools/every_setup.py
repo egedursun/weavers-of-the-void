@@ -35,6 +35,7 @@ from aerona.db.tables.mythic import CosmicOfficeRow, GeasRow, ServitorRow
 from aerona.db.tables.physics import ImpactEventRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow
+from aerona.db.tables.regime import CoalitionMemberRow, ExaminationRow, SchoolLineageRow, SchoolMemberRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.renown import ReputationRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
@@ -1143,3 +1144,54 @@ async def raising_work(session: AsyncSession, realm: Realm) -> Ids:
     )
     await session.flush()
     return {**found, "work": work.id}
+
+
+async def learning_house(session: AsyncSession, realm: Realm) -> Ids:
+    house = await make_entity(session, "Hall of Records", EntityType.STRUCTURE, world_id=realm.cosmos.world_id, location_id=realm.settlement_id)
+    session.add(StructureProfileRow(structure_entity_id=house.id, kind=StructureKind.ACADEMY, host_entity_id=realm.settlement_id))
+    await session.flush()
+    return {"structure": house.id}
+
+
+async def seat_for_sale(session: AsyncSession, realm: Realm) -> Ids:
+    await wealthy(session, realm)
+    polity = await make_entity(session, "Vale Council", EntityType.POLITY, world_id=realm.cosmos.world_id, stats=PolityStats())
+    session.add(PolityProfileRow(polity_entity_id=polity.id, government=next(iter(GovernmentKind)), decision_rule=next(iter(DecisionRule))))
+    session.add(PolityMemberRow(polity_entity_id=polity.id, member_entity_id=realm.settlement_id))
+    office = OfficeRow(polity_entity_id=polity.id, kind=OfficeKind.CHANCELLOR, holder_entity_id=None)
+    session.add(office)
+    await session.flush()
+    return {"office": office.id, "polity": polity.id}
+
+
+async def examined_realm(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruled_realm(session, realm)
+    session.add(ExaminationRow(polity_entity_id=found["polity"], locked=[]))
+    session.add(SkillRow(holder_node_id=realm.mortal_id, skill=SkillKind.LAW, level=60, peak=60, last_used_epoch=1, source=SkillSource.PRACTICE))
+    await session.flush()
+    return found
+
+
+async def open_school(session: AsyncSession, realm: Realm) -> Ids:
+    master = await second_mortal(session, realm)
+    school = SchoolLineageRow(name="The First School", founder_entity_id=master["mortal"], locked=[])
+    session.add(school)
+    await session.flush()
+    session.add(SchoolMemberRow(school_id=school.id, mortal_entity_id=master["mortal"], generation=0, locked=[]))
+    await session.flush()
+    return {"school": school.id}
+
+
+async def ruling_circle(session: AsyncSession, realm: Realm) -> Ids:
+    found = await ruled_realm(session, realm)
+    member = await second_mortal(session, realm)
+    session.add(CoalitionMemberRow(polity_entity_id=found["polity"], mortal_entity_id=member["mortal"], locked=[]))
+    await session.flush()
+    return {**found, **member}
+
+
+async def house_head(session: AsyncSession, realm: Realm) -> Ids:
+    house = await make_entity(session, "House Vale", EntityType.HOUSE, world_id=realm.cosmos.world_id, stats=HouseStats())
+    session.add(HouseProfileRow(house_entity_id=house.id, founder_entity_id=realm.mortal_id, head_entity_id=realm.mortal_id))
+    await session.flush()
+    return {"house": house.id}

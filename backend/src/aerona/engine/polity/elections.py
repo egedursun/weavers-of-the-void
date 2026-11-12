@@ -21,6 +21,7 @@ from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat
+from aerona.engine.regime.book import patron_pull
 
 ALL = frozenset(SocialClass)
 VOTERS: dict[str, frozenset[SocialClass]] = {
@@ -115,6 +116,8 @@ async def sway(ctx: TickContext, book: RealmBook, realm: Realm, votes: dict[int,
             hook = await hook_on(ctx, leader, lord.id) if leader is not None and lord is not None else None
             if hook is not None and await use_hook(ctx, hook, HookDemand.VOTE):
                 votes[candidate] += weight * allowed * table.hook_votes_pct / PERCENT
+            pull = await patron_pull(ctx.session, ctx.rules, realm.entity.id, leader, lord.id if lord is not None else None)
+            votes[candidate] += weight * allowed * pull * ctx.rules.clientelism.client_votes_pct / PERCENT
 
 
 def apportion(votes: dict[int, float], seats: int) -> dict[int, int]:

@@ -7,7 +7,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.polity import DecisionRule, GovernmentKind
 from aerona.domain.models.entity_stats import PolityStats
 from aerona.engine.polity.book import RealmBook
-from aerona.engine.polity.formation import map_territory
+from aerona.engine.polity.formation import map_territory, sync_members
 from aerona.engine.primitives.manual import manual_context
 from tests.engine.core.factories import CoreWorld, entity, settlement
 
@@ -45,3 +45,33 @@ async def test_a_held_realm_keeps_its_lands_as_they_are(session: AsyncSession, w
     await map_territory(ctx, book, realm, book.members(realm))
     await session.flush()
     assert [row.region_entity_id for row in await territory_of(session, polity.id)] == [world.regions[0].id]
+
+
+async def test_a_held_town_neither_joins_nor_leaves_a_realm(session: AsyncSession, world: CoreWorld) -> None:
+    kept = await settlement(session, "Kept", world, world.regions[0])
+    held_out = await settlement(session, "Held Out", world, world.regions[0])
+    polity = await entity(session, "Crown of Kept", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    session.add(
+        PolityProfileRow(
+            polity_entity_id=polity.id,
+            government=next(iter(GovernmentKind)),
+            decision_rule=next(iter(DecisionRule)),
+            core_entity_id=kept.id,
+            emblem={},
+            legitimacy_parts={},
+            locked=[],
+        )
+    )
+    session.add(PolityMemberRow(polity_entity_id=polity.id, member_entity_id=kept.id))
+    await session.flush()
+    ctx = await manual_context(session, "hold")
+    book = await RealmBook.load(session)
+    realm = book.realms[polity.id]
+    token = HELD_SCOPE.set(HeldScope(None, frozenset({kept.id, held_out.id})))
+    try:
+        assert await sync_members(ctx, book, realm, {held_out.id}) == (0, 0)
+    finally:
+        HELD_SCOPE.reset(token)
+    await session.flush()
+    members = set(await session.scalars(select(PolityMemberRow.member_entity_id).where(PolityMemberRow.polity_entity_id == polity.id)))
+    assert members == {kept.id}

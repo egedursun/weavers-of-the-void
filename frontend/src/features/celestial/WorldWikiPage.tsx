@@ -71,6 +71,7 @@ import {
   WorldImpactsSection,
   WorldTerraformSection,
 } from '@/features/physics/WorldShapingSection'
+import { CosmosRegimeSection } from '@/features/regime/CosmosRegimeSection'
 import { CelestialDepthSection } from './CelestialDepthSection'
 import { WorldSeasonsSection } from './WorldSeasonsSection'
 import { type WorldWiki, useWorldWiki } from './api'
@@ -453,6 +454,7 @@ export function WorldWikiView({ worldId }: { worldId: number }) {
       <RiftsForWorld worldId={data.world.id} />
       <StorytellerSection worldId={data.world.id} />
       <CosmosCyclesSection />
+      <CosmosRegimeSection />
       <CelestialDepthSection
         kind='world'
         id={data.world.id}

@@ -63,6 +63,7 @@ import {
   Wheat,
   Zap,
   Wind,
+  BookOpenCheck,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -89,6 +90,7 @@ export const GATHERING_KINDS: Record<Schema['GatheringKind'], Named> = {
   procession: { label: 'Procession', icon: Megaphone, tone: 'info' },
   milestone: { label: 'Milestone', icon: Star, tone: 'success' },
   wake: { label: 'Wake', icon: Hourglass, tone: 'muted' },
+  examination: { label: 'Examination', icon: BookOpenCheck, tone: 'info' },
 }
 
 export const GATHERING_STATUSES: Record<Schema['GatheringStatus'], Named> = {

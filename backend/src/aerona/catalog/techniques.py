@@ -120,6 +120,9 @@ TECHNIQUES = MappingProxyType(
             TechniqueSpec(T.INSURANCE, B.CIVICS, 4, "Insurance", "Losses at sea and on the road are shared.", Gate(all_of=((B.TRADE, 3),))),
             TechniqueSpec(T.GUILDS, B.CIVICS, 1, "Guilds", "Crafts bind themselves into sworn bodies."),
             TechniqueSpec(T.UNIVERSITIES, B.CIVICS, 3, "Universities", "Scholars gather to teach.", Gate(all_of=((B.WRITING, 2),)), institution=True),
+            TechniqueSpec(
+                T.EXAMINATIONS, B.CIVICS, 3, "Examinations", "Officials are chosen by tests of learning.", Gate(all_of=((B.WRITING, 2),)), institution=True
+            ),
             TechniqueSpec(T.HOSPITALS, B.CIVICS, 3, "Hospitals", "The sick are tended in houses built for them.", Gate(all_of=((B.MEDICINE, 1),))),
             TechniqueSpec(T.PRINTING_PRESS, B.CIVICS, 4, "Printing houses", "Presses turn out books.", Gate(all_of=((B.WRITING, 4),)), institution=True),
             TechniqueSpec(T.ORGANISED_CLERGY, B.CIVICS, 1, "Organised clergy", "Priests are ranked and ordained."),

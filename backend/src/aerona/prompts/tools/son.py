@@ -1417,4 +1417,29 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "lending standing to whoever holds it and binding the stops in regard. 1 action.",
         {"name": "What the circuit is called", "stop_ids": "The communities it passes through, in order, at least two", "reason": "Why you set it"},
     ),
+    T.SHAPE_RULE: ToolText(
+        "You reshape who chooses the rulers of a realm in your reach ({{ selectorates }}) and how much of its spending goes to public goods; "
+        "small circles of choosers buy loyalty with private gifts, wide ones with roads, granaries and courts. 1 action.",
+        {
+            "polity_id": "The realm",
+            "selectorate": "Who has a say in choosing its ruler",
+            "public_share": "Share of its spending on public goods, 0 to 100",
+            "reason": "Why you reshape it",
+        },
+    ),
+    T.ANOINT_FOUNDER: ToolText(
+        "You mark the ruler of a realm in your reach as its charismatic founder; their charisma rises, and at their death the realm must "
+        "turn that charisma into a dynasty or into rules, or split. 1 action.",
+        {"polity_id": "The realm", "reason": "Why you mark its ruler"},
+    ),
+    T.FREE_LEARNING: ToolText(
+        "You set how free a house of learning in your reach is; freedom quickens research and keeps scholars, while suppression slows "
+        "both and drives scholars to freer houses. 1 action.",
+        {"structure_id": "The house of learning", "level": "How free it is, 0 to 100", "reason": "Why you set it"},
+    ),
+    T.INSPIRE_SCHOOL: ToolText(
+        "You move a mortal in your reach to found a school of thought; masters teach disciples, schools keep knowledge through hard times "
+        "and quicken research where they gather. 1 action.",
+        {"founder_id": "The mortal who founds it", "name": "What the school is called", "reason": "Why you inspire it"},
+    ),
 }

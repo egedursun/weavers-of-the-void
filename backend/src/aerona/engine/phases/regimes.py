@@ -1,0 +1,124 @@
+from aerona.engine.context import TickContext
+from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.phase import Phase
+from aerona.engine.phases.dominion import count
+from aerona.engine.regime.learning import LearningTally, keep_learning
+from aerona.engine.regime.lineages import LineageTally, keep_lineages
+from aerona.engine.regime.patronage import PatronageTally, keep_patronage
+from aerona.engine.regime.rule import RegimeTally, keep_regimes
+
+
+@reads(
+    "mortal.age",
+    "mortal.charisma",
+    "mortal.hp",
+    "mortal.lifespan",
+    "people.population",
+    "settlement.population",
+    "table.coalition_members",
+    "table.designated_heirs",
+    "table.gifts",
+    "table.holder_techniques",
+    "table.offices",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.polity_stress",
+    "table.polity_territories",
+    "table.power_bases",
+    "table.regimes",
+    "table.vassalages",
+    "table.wars",
+)
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.coalition_members",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.office_history",
+    "table.offices",
+    "table.polity_profiles",
+    "table.polity_treasury",
+    "table.regimes",
+)
+async def regimes(ctx: TickContext) -> None:
+    tally = RegimeTally()
+    await keep_regimes(ctx, tally)
+    count(ctx, "regimes", tally)
+
+
+@reads(
+    "army.size",
+    "mortal.age",
+    "table.armies",
+    "table.coalition_members",
+    "table.house_profiles",
+    "table.mortal_profiles",
+    "table.oaths",
+    "table.offices",
+    "table.patronage_ties",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.polity_territories",
+    "table.power_bases",
+    "table.regimes",
+    "table.traits",
+    "table.vassalages",
+    "table.venal_offices",
+)
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.coalition_members",
+    "table.epoch_year_cursors",
+    "table.incident_participants",
+    "table.incidents",
+    "table.mortal_profiles",
+    "table.oaths",
+    "table.office_history",
+    "table.offices",
+    "table.patronage_ties",
+    "table.polity_profiles",
+    "table.polity_treasury",
+    "table.power_bases",
+    "table.regimes",
+    "table.venal_offices",
+)
+async def patronage(ctx: TickContext) -> None:
+    tally = PatronageTally()
+    await keep_patronage(ctx, tally)
+    count(ctx, "patronage", tally)
+
+
+@reads("table.feuds", "table.house_profiles", "table.lineage_segments")
+@writes("table.lineage_segments")
+async def kin_politics(ctx: TickContext) -> None:
+    tally = LineageTally()
+    await keep_lineages(ctx, tally)
+    count(ctx, "kin_politics", tally)
+
+
+@reads(
+    "table.examinations",
+    "table.holder_techniques",
+    "table.offices",
+    "table.polity_members",
+    "table.polity_profiles",
+    "table.polity_territories",
+    "table.school_lineages",
+    "table.school_members",
+    "table.vassalages",
+)
+async def learning_institutions(ctx: TickContext) -> None:
+    tally = LearningTally()
+    await keep_learning(ctx, tally)
+    count(ctx, "learning_institutions", tally)
+
+
+PHASES = (
+    Phase("regimes", regimes),
+    Phase("patronage", patronage),
+    Phase("kin_politics", kin_politics),
+    Phase("learning_institutions", learning_institutions),
+)

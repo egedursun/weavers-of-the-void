@@ -30,6 +30,7 @@ from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.law_depth import MoleHuntRow
 from aerona.db.tables.lore import HistorianViewRow, MessageRow
 from aerona.db.tables.military import OccupationRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.routes import HorizonIntuitionRow, RouteRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
@@ -2530,6 +2531,128 @@ LEVERS.update(
         **{name: after(MARKET, town_id=Pick(TOWN)) for name in ("slave_market:edit", "slave_market:delete")},
         "manumission:free": given(community_id=Pick(TOWN), share_pct=50, path="law"),
         **{name: Lever(values={"manumission_id": Newest("manumission")}, setup=freed_row) for name in ("manumission:edit", "manumission:delete")},
+    }
+)
+
+
+async def empty_seat(session: AsyncSession) -> int:
+    realm = await canon(session, EntityType.POLITY, 0)
+    assert realm is not None
+    seat = await session.scalar(
+        select(OfficeRow.id).where(OfficeRow.polity_entity_id == realm, OfficeRow.kind == OfficeKind.CHANCELLOR, OfficeRow.holder_entity_id.is_(None)).limit(1)
+    )
+    if seat is None:
+        office = OfficeRow(polity_entity_id=realm, kind=OfficeKind.CHANCELLOR, holder_entity_id=None, powers=[], locked=[])
+        session.add(office)
+        await session.flush()
+        seat = office.id
+    buyer = await canon(session, EntityType.MORTAL, 0)
+    assert buyer is not None
+    profile = await session.get(MortalProfileRow, buyer)
+    if profile is None:
+        session.add(MortalProfileRow(entity_id=buyer, wealth=100, locked=[]))
+    else:
+        profile.wealth = 100
+    await session.flush()
+    return int(seat)
+
+
+async def seat_ready(session: AsyncSession) -> None:
+    await empty_seat(session)
+
+
+SEAT = Computed(empty_seat)
+BOUGHT = Where("venal_offices", "office_id")
+RULE = ("regime:set", {"polity_id": Pick(REALM)})
+CIRCLE = ("coalition:enrol", {"polity_id": Pick(REALM), "mortal_id": Pick(MORTAL)})
+TIE = ("patronage:bind", {"patron_id": Pick(MORTAL, 1), "client_id": Pick(MORTAL)})
+SALE = ("venal_office:sell", {"office_id": SEAT, "buyer_id": Pick(MORTAL), "price": 10})
+POWER = ("power_base:set", {"mortal_id": Pick(MORTAL), "polity_id": Pick(REALM), "threat": 40})
+SEGMENT = ("kin_segment:set", {"house_id": Pick(EntityType.HOUSE), "level": "clan", "tribe_id": Pick(PEOPLE)})
+DESIGN = (
+    "breeding:create",
+    {"holder_id": Pick(EntityType.HOUSE), "house_id": Pick(EntityType.HOUSE), "name": "The Long Match", "claim_polity_id": Pick(REALM)},
+)
+EXAMS = ("examination:set", {"polity_id": Pick(REALM)})
+SITTING = ("examination:sit", {"polity_id": Pick(REALM)})
+DEGREE = ("credential:grant", {"mortal_id": Pick(MORTAL), "kind": "master", "granter_id": Pick(REALM), "skill": "lore"})
+FREEDOM = ("academic_freedom:set", {"structure_id": Pick(EntityType.STRUCTURE), "level": 40})
+SCHOOL = ("school:found", {"founder_id": Pick(MORTAL), "name": "The First School"})
+DISCIPLE = ("disciple:admit", {"school_id": Newest("school_lineage"), "mortal_id": Pick(MORTAL, 1), "master_id": Pick(MORTAL)})
+REGIME_EDITS: Mapping[str, Mapping[str, Any]] = {
+    "regime:edit": {
+        "selectorate": "council",
+        "selectorate_size": 100,
+        "coalition_size": 20,
+        "coalition_loyalty": 60,
+        "public_share": 60,
+        "traditional": 50,
+        "charismatic": 30,
+        "rational": 20,
+        "founder_entity_id": Pick(MORTAL),
+        "routinisation": "dynasty",
+        "horizon": 70,
+        "extraction": 90,
+        "institutions": 40,
+        "leadership": "ascribed",
+        "rotation": True,
+        "parallel_guard": True,
+        "loyalty_promotion": True,
+        "hostages": True,
+    },
+    "coalition:edit": {"reward": 30, "loyalty": 70},
+    "patronage:edit": {"role": "official", "strength": 55},
+    "venal_office:edit": {"price": 50, "buyer_entity_id": Pick(MORTAL), "sinecure": True, "recouped": 10},
+    "power_base:edit": {"holdings": 2, "troops": 3, "offices": 1, "wealth": 20, "popularity": 30, "threat": 45, "stance": "defiant"},
+    "kin_segment:edit": {"level": "tribe", "tribe_entity_id": Pick(PEOPLE), "backs_entity_id": Pick(EntityType.HOUSE, 1)},
+    "breeding:edit": {
+        "locus": "height",
+        "allele": "tall",
+        "target_share": 50,
+        "claim_polity_id": Pick(REALM),
+        "matches": 1,
+        "love_matches": 1,
+        "barren": 1,
+        "concealed": 1,
+    },
+    "examination:edit": {"interval": 3, "quota": 30, "pass_mark": 60, "demand": 20, "last_epoch": 0},
+    "exam_sitting:edit": {"candidates": 40, "passed": 10, "mark": 55},
+    "credential:edit": {"kind": "doctor", "granter_node_id": Pick(REALM), "skill": "law"},
+    "academic_freedom:edit": {"level": 30, "orthodoxy_node_id": Pick(REALM), "suppressed": True},
+    "school:edit": {"name": "The Second School", "founder_entity_id": Pick(MORTAL), "persecuted": True},
+    "disciple:edit": {"master_entity_id": Pick(MORTAL), "generation": 2},
+}
+EDITS = {**EDITS, **REGIME_EDITS}
+LEVERS.update(
+    {
+        "regime:set": given(polity_id=Pick(REALM)),
+        **{name: after(RULE, polity_id=Pick(REALM)) for name in ("regime:edit", "regime:delete")},
+        "coalition:enrol": given(polity_id=Pick(REALM), mortal_id=Pick(MORTAL)),
+        **{name: after(CIRCLE, polity_id=Pick(REALM), mortal_id=Pick(MORTAL)) for name in ("coalition:edit", "coalition:purge", "coalition:delete")},
+        "patronage:bind": given(patron_id=Pick(MORTAL, 1), client_id=Pick(MORTAL)),
+        **{name: after(TIE, tie_id=Newest("patronage_tie")) for name in ("patronage:edit", "patronage:delete")},
+        "venal_office:sell": Lever(values={"office_id": SEAT, "buyer_id": Pick(MORTAL), "price": 10}, setup=seat_ready),
+        "venal_office:sinecure": Lever(values={"office_id": SEAT, "holder_id": Pick(MORTAL)}, setup=seat_ready),
+        **{name: setup_then(seat_ready, SALE, office_id=BOUGHT) for name in ("venal_office:edit", "venal_office:delete")},
+        "power_base:measure": given(polity_id=Pick(REALM)),
+        "power_base:set": given(mortal_id=Pick(MORTAL), polity_id=Pick(REALM), threat=40),
+        **{name: after(POWER, mortal_id=Pick(MORTAL)) for name in ("power_base:edit", "power_base:delete")},
+        "kin_segment:set": given(house_id=Pick(EntityType.HOUSE), level="clan", tribe_id=Pick(PEOPLE)),
+        **{name: after(SEGMENT, house_id=Pick(EntityType.HOUSE)) for name in ("kin_segment:edit", "kin_segment:delete")},
+        "breeding:create": given(holder_id=Pick(EntityType.HOUSE), house_id=Pick(EntityType.HOUSE), name="The Long Match", claim_polity_id=Pick(REALM)),
+        **{name: after(DESIGN, plan_id=Where("breeding_plans", "plan_id")) for name in ("breeding:edit", "breeding:delete")},
+        "examination:set": given(polity_id=Pick(REALM)),
+        "examination:sit": given(polity_id=Pick(REALM)),
+        **{name: after(EXAMS, polity_id=Pick(REALM)) for name in ("examination:edit", "examination:delete")},
+        **{name: after(SITTING, sitting_id=Newest("exam_sitting")) for name in ("exam_sitting:edit", "exam_sitting:delete")},
+        "credential:grant": given(mortal_id=Pick(MORTAL), kind="master", granter_id=Pick(REALM), skill="lore"),
+        **{name: after(DEGREE, credential_id=Newest("credential")) for name in ("credential:edit", "credential:delete")},
+        "academic_freedom:set": given(structure_id=Pick(EntityType.STRUCTURE), level=40),
+        **{name: after(FREEDOM, structure_id=Pick(EntityType.STRUCTURE)) for name in ("academic_freedom:edit", "academic_freedom:delete")},
+        "school:found": given(founder_id=Pick(MORTAL), name="The First School"),
+        **{name: after(SCHOOL, school_id=Newest("school_lineage")) for name in ("school:edit", "school:delete")},
+        "disciple:admit": after(SCHOOL, school_id=Newest("school_lineage"), mortal_id=Pick(MORTAL, 1), master_id=Pick(MORTAL)),
+        **{name: after(SCHOOL, DISCIPLE, school_id=Newest("school_lineage"), mortal_id=Pick(MORTAL, 1)) for name in ("disciple:edit", "disciple:delete")},
     }
 )
 

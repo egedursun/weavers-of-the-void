@@ -7,6 +7,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.genetics import AllelePoolRow
 from aerona.db.tables.polity import HouseProfileRow, PolityProfileRow
+from aerona.db.tables.regime import BreedingPlanRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.cycles import LongPlanKind, LongPlanStatus
@@ -250,7 +251,7 @@ async def advance_plans(ctx: TickContext, tally: PlanTally) -> None:
         await expose(ctx, plan, holder, tally)
         if await disrupt(ctx, plan, tally):
             continue
-        if "progress" in plan.locked or not await holder_pays(ctx, plan, holder):
+        if "progress" in plan.locked or await ctx.session.get(BreedingPlanRow, plan.id) is not None or not await holder_pays(ctx, plan, holder):
             continue
         plan.progress = min(plan.steps, plan.progress + max(1, round_half_up(table.steps_per_epoch)))
         tally.advanced += 1

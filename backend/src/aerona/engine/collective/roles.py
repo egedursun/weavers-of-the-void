@@ -26,6 +26,7 @@ from aerona.engine.mind.book import stored_values
 from aerona.engine.notes import note
 from aerona.engine.polity.book import sex_of
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.regime.book import credentialed, examined
 from aerona.rules.registry import Rules
 
 FEMALE = "female"
@@ -138,6 +139,8 @@ async def career_open(session: AsyncSession, rules: Rules, mortal: EntityRow, pa
     if role is None:
         return True
     if role in FREED_HELD_BACK and await freed_below(session, mortal, rules.manumission.office_at):
+        return False
+    if role is RoleKind.OFFICE and await examined(session, mortal) and not await credentialed(session, mortal.id):
         return False
     return await role_rank(session, mortal, role) is not None
 

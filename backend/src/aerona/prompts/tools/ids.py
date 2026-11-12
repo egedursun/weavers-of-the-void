@@ -191,6 +191,10 @@ class SonToolId(StrEnum):
     SHAPE_REPRODUCTION = "shape_reproduction"
     TRY_REALM = "try_realm"
     SET_CIRCUIT = "set_circuit"
+    SHAPE_RULE = "shape_rule"
+    ANOINT_FOUNDER = "anoint_founder"
+    FREE_LEARNING = "free_learning"
+    INSPIRE_SCHOOL = "inspire_school"
 
 
 class MortalToolId(StrEnum):
@@ -310,6 +314,13 @@ class MortalToolId(StrEnum):
     FREE_BOUND = "free_bound"
     LAY_CORVEE = "lay_corvee"
     BEGIN_REALM_PLAN = "begin_realm_plan"
+    SEEK_PATRON = "seek_patron"
+    BUY_OFFICE = "buy_office"
+    SIT_EXAMINATION = "sit_examination"
+    JOIN_SCHOOL = "join_school"
+    PURGE_CIRCLE = "purge_circle"
+    GUARD_THRONE = "guard_throne"
+    STEER_MARRIAGES = "steer_marriages"
 
 
 ToolId = SonToolId | MortalToolId

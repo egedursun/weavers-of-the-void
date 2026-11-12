@@ -191,6 +191,7 @@ class HomeLine(ContextItem):
     courts: list[str] = Field(default_factory=list)
     crowds: list[str] = Field(default_factory=list)
     obligations: list[str] = Field(default_factory=list)
+    rule: list[str] = Field(default_factory=list)
 
 
 class ExpeditionLine(ContextItem):

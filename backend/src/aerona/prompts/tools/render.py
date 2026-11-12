@@ -53,6 +53,7 @@ from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mythic import CosmicOffice, GeasMode, ServitorRank, ServitorRole
 from aerona.domain.enums.place import PlaceKind, SecretKind
+from aerona.domain.enums.regime import SelectorateKind
 from aerona.domain.enums.tongues import LanguagePolicy, SoundChangeKind, SoundEnvironment
 from aerona.domain.enums.travel import VehicleKind
 from aerona.prompts.contexts.blocks import SummarySection
@@ -156,6 +157,7 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "reproductive_systems": ", ".join(item.value for item in ReproductiveSystem),
         "challenge_kinds": ", ".join(item.value for item in ChallengeKind),
         "manumission_paths": ", ".join(item.value for item in ManumissionPath),
+        "selectorates": ", ".join(item.value for item in SelectorateKind),
         "design_kinds": ", ".join(item.value for item in DesignKind),
         "design_components": ", ".join(item.value for item in DesignComponentKind),
         "registry_kinds": ", ".join(item.value for item in RegistryKind if item is not RegistryKind.LAND_TITLE),

@@ -21,6 +21,7 @@ from tests.tools.every_setup import (
     last_treaty,
     last_war,
     leaking_world,
+    learning_house,
     ley_line,
     named_spirit,
     near_moon,
@@ -371,4 +372,8 @@ SON_CASES: dict[str, Case] = {
     "shape_reproduction": Case(plain(people_id=people, system="sequential", reason=REASON)),
     "try_realm": Case(plain(polity_id=created("polity"), kind="famine", severity=30, reason=REASON), ruled_realm),
     "set_circuit": Case(plain(name="The First Round", stop_ids=lambda realm, ids: [realm.settlement_id, ids["settlement"]], reason=REASON), second_settlement),
+    "shape_rule": Case(plain(polity_id=created("polity"), selectorate="council", public_share=60, reason=REASON), ruled_realm),
+    "anoint_founder": Case(plain(polity_id=created("polity"), reason=REASON), ruled_realm),
+    "free_learning": Case(plain(structure_id=created("structure"), level=70, reason=REASON), learning_house),
+    "inspire_school": Case(plain(founder_id=mortal, name="The First School", reason=REASON)),
 }

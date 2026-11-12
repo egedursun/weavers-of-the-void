@@ -31,6 +31,7 @@ from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.knowledge import raw_level
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import headcount, set_stats, stat
+from aerona.engine.regime.book import freedom_factor, school_factor, schooled
 from aerona.engine.structures.readers import working
 from aerona.rules.registry import Rules
 
@@ -144,6 +145,8 @@ async def research_factor(ctx: TickContext, community: EntityRow, branch: Knowle
         * await thought_factor(ctx, community.id, branch)
         * await era_factor(ctx.session, ctx.rules, community.id)
         * await branch_factor(ctx.session, ctx.rules, community.id, branch)
+        * await freedom_factor(ctx.session, ctx.rules, community.id)
+        * await school_factor(ctx.session, ctx.rules, community.id)
     )
 
 
@@ -219,6 +222,8 @@ async def practise(ctx: TickContext) -> dict[str, int]:
             continue
         knowledge = knowledge_by.get((row.holder_entity_id, row.branch))
         if (knowledge is not None and knowledge in await books_of(ctx.session, holder.id)) or await masters(ctx.session, ctx.rules, holder.id, row.branch):
+            continue
+        if await schooled(ctx.session, holder.id):
             continue
         if not ctx.rng(f"loss.{holder.id}.{row.branch.value}.{ctx.epoch}").chance(table.loss_chance):
             continue

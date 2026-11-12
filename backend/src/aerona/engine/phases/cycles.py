@@ -81,6 +81,7 @@ async def thin_elites(ctx: TickContext, polity: EntityRow) -> int:
     "table.cohorts",
     "table.community_cohorts",
     "table.community_societies",
+    "table.exam_sittings",
     "table.holder_levels",
     "table.offices",
     "table.place_environment",

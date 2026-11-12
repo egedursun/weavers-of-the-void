@@ -20,6 +20,7 @@ class GatheringKind(StrEnum):
     PROCESSION = "procession"
     MILESTONE = "milestone"
     WAKE = "wake"
+    EXAMINATION = "examination"
 
 
 class GatheringStatus(StrEnum):

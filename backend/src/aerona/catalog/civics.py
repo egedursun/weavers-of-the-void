@@ -56,6 +56,7 @@ SOCIAL_CHANGE: MappingProxyType[Technique, SocialShift] = MappingProxyType(
         T.GUILDS: SocialShift({ValueAxis.CRAFTSMANSHIP: 6}, {SocialClass.ARTISAN: 1.0}),
         T.PLOUGH: SocialShift({}, {SocialClass.FARMER: -1.0, SocialClass.ARTISAN: 0.5}),
         T.UNIVERSITIES: SocialShift({ValueAxis.KNOWLEDGE: 6}, {SocialClass.SCRIBE: 1.0}),
+        T.EXAMINATIONS: SocialShift({ValueAxis.KNOWLEDGE: 4, ValueAxis.HIERARCHY: -2}, {SocialClass.SCRIBE: 1.5}),
     }
 )
 

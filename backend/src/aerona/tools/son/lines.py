@@ -201,3 +201,7 @@ SHAPE_KINSHIP = Line("tools.son.shape_kinship", "{son} reshaped the ways of kin 
 SHAPE_REPRODUCTION = Line("tools.son.shape_reproduction", "{son} changed how {people} bear their young: {reason}")
 TRY_REALM = Line("tools.son.try_realm", "{son} tried {realm} with {kind}: {reason}")
 SET_CIRCUIT = Line("tools.son.set_circuit", "{son} set {circuit} turning: {reason}")
+SHAPE_RULE = Line("tools.son.shape_rule", "{son} reshaped who chooses the rulers of {realm}: {reason}")
+ANOINT_FOUNDER = Line("tools.son.anoint_founder", "{son} marked {ruler} as the founder of {realm}: {reason}")
+FREE_LEARNING = Line("tools.son.free_learning", "{son} set the freedom of learning at {house}: {reason}")
+INSPIRE_SCHOOL = Line("tools.son.inspire_school", "{son} moved {founder} to found the {school}: {reason}")

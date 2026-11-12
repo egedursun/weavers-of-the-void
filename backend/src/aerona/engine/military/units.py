@@ -34,6 +34,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import set_base_stats, set_stats, stat, stat_or
+from aerona.engine.regime.book import morale_factor
 from aerona.rules.registry import Rules
 
 ARMOUR_BY_METAL = (ArmourType.HIDE, ArmourType.PADDED, ArmourType.MAIL, ArmourType.SCALE, ArmourType.PLATE)
@@ -297,7 +298,13 @@ async def muster(ctx: TickContext, army: EntityRow, owner: EntityRow | None, kno
     metallurgy = knowledge.level(owner.id, KnowledgeBranch.METALLURGY)
     equipment = stat(army, "equipment") or 0
     experience = stat(army, "experience") or 0
-    morale = clamp_int(stat_or(army, "morale", ctx.rules.morale.base) * await solidarity(ctx.session, owner, ctx.rules.asabiyya.morale_weight), 0, PERCENT)
+    morale = clamp_int(
+        stat_or(army, "morale", ctx.rules.morale.base)
+        * await solidarity(ctx.session, owner, ctx.rules.asabiyya.morale_weight)
+        * await morale_factor(ctx.session, ctx.rules, owner.id),
+        0,
+        PERCENT,
+    )
     issued = await node_material(ctx.session, army.id, MaterialSlot.WEAPONS)
     material = issued.material.value if issued is not None and issued.material is not None else None
     condition = clamp_int(PERCENT // 2 + equipment // 2, 0, PERCENT)

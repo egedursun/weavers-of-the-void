@@ -94,6 +94,7 @@ from aerona.services.player import (
     profiles,
     realms,
     record_rows,
+    regime,
     regions,
     relations,
     renown,
@@ -3686,8 +3687,84 @@ CYCLE_ACTIONS = (
     _sync(Meta("manumission:delete", "Strike a freeing from the record", G.SOCIETY), cycles.manumission_delete, cycles.ManumissionTarget, free, ("S4.9/RP4",)),
 )
 
+REGIME_ACTIONS = (
+    _sync(Meta("regime:set", "Set how a realm is ruled", G.SOCIETY), regime.regime_set, regime.RegimeDraft, free, ("S4.6/RP4",)),
+    _sync(Meta("regime:edit", "Edit how a realm is ruled", G.SOCIETY), regime.regime_edit, regime.RegimeEdit, free, ("S4.6/RP4",)),
+    _sync(Meta("regime:delete", "Let a realm's rule be read anew", G.SOCIETY), regime.regime_delete, regime.PolityTarget, free, ("S4.6/RP4",)),
+    _sync(Meta("coalition:enrol", "Bring someone into a ruling circle", G.SOCIETY), regime.coalition_enrol, regime.MemberDraft, free, ("S4.6/RP4",)),
+    _sync(Meta("coalition:edit", "Edit a member of a ruling circle", G.SOCIETY), regime.coalition_edit, regime.MemberEdit, free, ("S4.6/RP4",)),
+    _sync(
+        Meta("coalition:purge", "Purge someone from a ruling circle and their seats", G.SOCIETY),
+        regime.coalition_purge,
+        regime.MemberTarget,
+        free,
+        ("S4.6/RP4",),
+    ),
+    _sync(Meta("coalition:delete", "Strike someone from a ruling circle", G.SOCIETY), regime.coalition_delete, regime.MemberTarget, free, ("S4.6/RP4",)),
+    _sync(Meta("patronage:bind", "Make one the client of a patron", G.SOCIETY), regime.patronage_bind, regime.TieDraft, free, ("S4.6/RP4",)),
+    _sync(Meta("patronage:edit", "Edit a tie of patronage", G.SOCIETY), regime.patronage_edit, regime.TieEdit, free, ("S4.6/RP4",)),
+    _sync(Meta("patronage:delete", "Cut a tie of patronage", G.SOCIETY), regime.patronage_delete, regime.TieTarget, free, ("S4.6/RP4",)),
+    _sync(Meta("venal_office:sell", "Sell a seat of a realm", G.SOCIETY), regime.venal_office_sell, regime.SaleDraft, free, ("S4.6/RP4",)),
+    _sync(Meta("venal_office:sinecure", "Make a seat a sinecure", G.SOCIETY), regime.venal_office_sinecure, regime.SinecureDraft, free, ("S4.6/RP4",)),
+    _sync(Meta("venal_office:edit", "Edit a bought seat", G.SOCIETY), regime.venal_office_edit, regime.OfficeEdit, free, ("S4.6/RP4",)),
+    _sync(Meta("venal_office:delete", "Free a seat from its purchase", G.SOCIETY), regime.venal_office_delete, regime.OfficeTarget, free, ("S4.6/RP4",)),
+    _sync(Meta("power_base:measure", "Weigh the power bases of a realm", G.SOCIETY), regime.power_base_measure, regime.PolityTarget, free, ("S4.6/RP4",)),
+    _sync(Meta("power_base:set", "Set someone's power base", G.SOCIETY), regime.power_base_set, regime.BaseDraft, free, ("S4.6/RP4",)),
+    _sync(Meta("power_base:edit", "Edit a power base", G.SOCIETY), regime.power_base_edit, regime.MortalEdit, free, ("S4.6/RP4",)),
+    _sync(Meta("power_base:delete", "Let a power base be weighed anew", G.SOCIETY), regime.power_base_delete, regime.MortalTarget, free, ("S4.6/RP4",)),
+    _sync(Meta("kin_segment:set", "Place a house among the lines of its tribe", G.SOCIETY), regime.kin_segment_set, regime.LineageDraft, free, ("S4.7/RP4",)),
+    _sync(
+        Meta("kin_segment:edit", "Edit a house's place among the lines of its tribe", G.SOCIETY), regime.kin_segment_edit, regime.HouseEdit, free, ("S4.7/RP4",)
+    ),
+    _sync(
+        Meta("kin_segment:delete", "Let a house's place among its tribe be read anew", G.SOCIETY),
+        regime.kin_segment_delete,
+        regime.HouseTarget,
+        free,
+        ("S4.7/RP4",),
+    ),
+    _sync(
+        Meta("breeding:create", "Begin a plan that steers a house's marriages", G.SOCIETY), regime.breeding_create, regime.BreedingDraft, free, ("S4.7/RP4",)
+    ),
+    _sync(Meta("breeding:edit", "Edit a breeding plan", G.SOCIETY), regime.breeding_edit, regime.PlanEdit, free, ("S4.7/RP4",)),
+    _sync(Meta("breeding:delete", "End a breeding plan", G.SOCIETY), regime.breeding_delete, regime.PlanTarget, free, ("S4.7/RP4",)),
+    _sync(Meta("examination:set", "Make a realm choose officials by examination", G.SOCIETY), regime.examination_set, regime.ExamDraft, free, ("S8.4/RP4",)),
+    _sync(Meta("examination:sit", "Hold a realm's examinations now", G.SOCIETY), regime.examination_sit, regime.PolityTarget, free, ("S8.4/RP4",)),
+    _sync(Meta("examination:edit", "Edit a realm's examinations", G.SOCIETY), regime.examination_edit, regime.RegimeEdit, free, ("S8.4/RP4",)),
+    _sync(Meta("examination:delete", "End a realm's examinations", G.SOCIETY), regime.examination_delete, regime.PolityTarget, free, ("S8.4/RP4",)),
+    _sync(Meta("exam_sitting:edit", "Edit a sitting of examinations", G.SOCIETY), regime.exam_sitting_edit, regime.SittingEdit, free, ("S8.4/RP4",)),
+    _sync(Meta("exam_sitting:delete", "Strike a sitting of examinations", G.SOCIETY), regime.exam_sitting_delete, regime.SittingTarget, free, ("S8.4/RP4",)),
+    _sync(Meta("credential:grant", "Grant a credential", G.SOCIETY), regime.credential_grant, regime.CredentialDraft, free, ("S8.4/RP4",)),
+    _sync(Meta("credential:edit", "Edit a credential", G.SOCIETY), regime.credential_edit, regime.CredentialEdit, free, ("S8.4/RP4",)),
+    _sync(Meta("credential:delete", "Revoke a credential", G.SOCIETY), regime.credential_delete, regime.CredentialTarget, free, ("S8.4/RP4",)),
+    _sync(
+        Meta("academic_freedom:set", "Set the freedom of a house of learning", G.SOCIETY), regime.academic_freedom_set, regime.FreedomDraft, free, ("S8.4/RP4",)
+    ),
+    _sync(
+        Meta("academic_freedom:edit", "Edit the freedom of a house of learning", G.SOCIETY),
+        regime.academic_freedom_edit,
+        regime.StructureEdit,
+        free,
+        ("S8.4/RP4",),
+    ),
+    _sync(
+        Meta("academic_freedom:delete", "Let the freedom of learning be read anew", G.SOCIETY),
+        regime.academic_freedom_delete,
+        regime.StructureTarget,
+        free,
+        ("S8.4/RP4",),
+    ),
+    _sync(Meta("school:found", "Found a school of thought", G.SOCIETY), regime.school_found, regime.SchoolDraft, free, ("S8.4/RP4",)),
+    _sync(Meta("school:edit", "Edit a school of thought", G.SOCIETY), regime.school_edit, regime.SchoolEdit, free, ("S8.4/RP4",)),
+    _sync(Meta("school:delete", "Dissolve a school of thought", G.SOCIETY), regime.school_delete, regime.SchoolTarget, free, ("S8.4/RP4",)),
+    _sync(Meta("disciple:admit", "Admit a disciple to a school", G.SOCIETY), regime.disciple_admit, regime.DiscipleDraft, free, ("S8.4/RP4",)),
+    _sync(Meta("disciple:edit", "Edit a disciple", G.SOCIETY), regime.disciple_edit, regime.DiscipleEdit, free, ("S8.4/RP4",)),
+    _sync(Meta("disciple:delete", "Remove a disciple from a school", G.SOCIETY), regime.disciple_delete, regime.DiscipleTarget, free, ("S8.4/RP4",)),
+)
+
 ACTIONS: tuple[ActionSpec, ...] = (
     *CYCLE_ACTIONS,
+    *REGIME_ACTIONS,
     *ROUTE_ACTIONS,
     *STRUCTURE_ACTIONS,
     *FOUNDATION_ACTIONS,

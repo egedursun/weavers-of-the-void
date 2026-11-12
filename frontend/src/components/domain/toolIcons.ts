@@ -140,6 +140,10 @@ import {
   Eraser,
   Hourglass,
   Workflow,
+  BookOpenCheck,
+  Library,
+  School,
+  UserMinus,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 
@@ -362,6 +366,17 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   free_bound: Unlock,
   lay_corvee: HardHat,
   begin_realm_plan: Route,
+  shape_rule: Crown,
+  anoint_founder: Sparkles,
+  free_learning: Library,
+  inspire_school: School,
+  seek_patron: Handshake,
+  buy_office: Coins,
+  sit_examination: BookOpenCheck,
+  join_school: GraduationCap,
+  purge_circle: UserMinus,
+  guard_throne: Shield,
+  steer_marriages: Dna,
   reveal_true_history: BookOpen,
   set_storylet: Drama,
   claim_turf: MapPinned,

@@ -26,6 +26,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import shift_stat, stat, stat_or
+from aerona.engine.regime.book import corruption_pull, extraction_of
 
 C = SocialClass
 BURDENS: dict[TaxKind, frozenset[SocialClass]] = {
@@ -90,6 +91,7 @@ async def breed_corruption(ctx: TickContext, laws: LawBook, realm: Realm, polici
         + await officers_greed(ctx, realm)
         + sum(table.farm_corruption for row in policies.values() if row.farmed and row.rate > 0)
         - (table.creed_corruption if tenets & CLEAN_CREEDS else 0)
+        + await corruption_pull(ctx.session, ctx.rules, realm.entity.id)
     )
     if await realm_allows(ctx.session, realm, Technique.BUREAUCRACY):
         aim = aim * (PERCENT - ctx.rules.technique_effects.corruption_cut_pct) / PERCENT
@@ -153,7 +155,7 @@ async def levy(ctx: TickContext, book: RealmBook, realm: Realm, row: TaxPolicyRo
         mean_order = sum(order) / len(order) if order else PERCENT / 2
         row.efficiency = clamp_int((min(PERCENT, realm.profile.administration) + mean_order + PERCENT - realm.profile.corruption) / 3, 0, PERCENT)
     rate = row.rate if "rate" in row.locked or await realm_allows(ctx.session, realm, TAX_GATES.get(row.kind)) else 0
-    take = await base_of(ctx, book, realm, row.kind) * rate / RATE_UNIT * row.efficiency / PERCENT
+    take = await base_of(ctx, book, realm, row.kind) * rate / RATE_UNIT * row.efficiency / PERCENT * await extraction_of(ctx.session, realm.entity.id)
     if row.farmed:
         take *= 1 + table.farm_take_pct / PERCENT
         tally.farmed += 1

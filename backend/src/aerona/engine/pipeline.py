@@ -98,6 +98,7 @@ from aerona.engine.phases import (
     prosperity,
     realms,
     refugees,
+    regimes,
     regions,
     relations,
     religion_spread,
@@ -203,6 +204,7 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + law_depth.PHASES
     + collective.PHASES
     + cycles.PHASES
+    + regimes.PHASES
     + exploration.PHASES
     + factions.PHASES
     + goals.PHASES
@@ -360,6 +362,8 @@ SUB_ENGINE_STAGE = stage(
     "civilization",
     "world_balance",
     "polity_cycles",
+    "regimes",
+    "patronage",
     "legislature",
     "titles",
     "statecraft",
@@ -505,6 +509,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "decipherment",
     "knowledge_levels",
     "research_cycles",
+    "learning_institutions",
     "calendars",
     "dating_systems",
     "heraldry",
@@ -518,6 +523,7 @@ SOCIETY_ENGINE_STAGE = stage(
     "spy_cells",
     "mole_hunts",
     "wonders",
+    "kin_politics",
     "long_plans",
     "dark_ages",
     "ruins",

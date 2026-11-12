@@ -402,6 +402,7 @@ export const TREASURY_ENTRIES: Record<string, Named> = {
   grant: { label: 'Grant', icon: Gift, tone: 'gold' },
   loan: { label: 'Loan', icon: Coins, tone: 'info' },
   upkeep: { label: 'Upkeep', icon: Hammer, tone: 'muted' },
+  office_sale: { label: 'Office sold', icon: Coins, tone: 'gold' },
 }
 
 export const MEMBER_TYPES: Record<string, Named> = {

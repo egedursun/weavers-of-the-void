@@ -36,6 +36,7 @@ GATHERING_COLLECTIONS = total(
         G.PROCESSION: C.PROCESSION,
         G.MILESTONE: C.CEREMONY,
         G.WAKE: C.FUNERAL,
+        G.EXAMINATION: C.COMPETITION,
     },
 )
 
@@ -60,6 +61,7 @@ GATHERING_THOUGHTS = total(
         G.PROCESSION: ThoughtKind.FOUND_FAITH,
         G.MILESTONE: ThoughtKind.AMONG_KIN,
         G.WAKE: ThoughtKind.MADE_PEACE_WITH_LOSS,
+        G.EXAMINATION: ThoughtKind.FELT_PURPOSE,
     },
 )
 

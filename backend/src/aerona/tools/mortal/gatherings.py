@@ -28,7 +28,7 @@ from aerona.tools.framework.validation import fail, require_canon
 
 GUESTS_MAX = 12
 RULER_KINDS = frozenset({GatheringKind.COUNCIL, GatheringKind.SUMMIT, GatheringKind.TOURNAMENT})
-ENGINE_KINDS = frozenset({GatheringKind.CORONATION, GatheringKind.TRIAL, GatheringKind.EXECUTION})
+ENGINE_KINDS = frozenset({GatheringKind.CORONATION, GatheringKind.TRIAL, GatheringKind.EXECUTION, GatheringKind.EXAMINATION})
 
 
 class HoldGatheringInput(ToolInput):

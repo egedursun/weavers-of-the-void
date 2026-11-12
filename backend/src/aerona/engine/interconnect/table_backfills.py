@@ -1,6 +1,16 @@
 from aerona.engine.interconnect.registry import Mechanic
 
 TABLE_BACKFILLS: dict[tuple[str, str], str] = {
+    (
+        "examinations",
+        "examinations",
+    ): "none: realms open examinations once they know the technique, from the next epoch",
+    ("examinations", "exam_sittings"): "none: sittings are recorded as realms hold their examinations from the next epoch",
+    ("examinations", "credentials"): "none: credentials are granted by examinations, academies and temples from the next epoch",
+    (
+        "academic_freedom",
+        "academic_freedom",
+    ): "none: every working house of learning reads its freedom from laws, faith and ruler from the next epoch",
     ("flora_crops", "plant_profiles"): "existing mechanic: flora_cycles gives every plant and fungus its growth the first epoch after the wave",
     ("crop_pests", "crop_pests"): "none: pests take to the crops sown in their land from the next epoch",
     ("name_meanings", "name_exonyms"): "none: foreign names arise as names gain their meanings from the next epoch",

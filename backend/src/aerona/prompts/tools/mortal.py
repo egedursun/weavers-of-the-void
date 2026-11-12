@@ -794,4 +794,46 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "secrecy": "How secret it is kept, 0 to 100",
         },
     ),
+    T.SEEK_PATRON: ToolText(
+        "You become the client of a patron; where institutions are weak, patrons place their clients in office and sway votes for them. 1 action.",
+        {"patron_id": "The patron you seek"},
+    ),
+    T.BUY_OFFICE: ToolText(
+        "You buy an empty seat of your realm at the price of offices; the seat repays its buyer over the years and feeds corruption. 1 action.",
+        {"office_id": "The seat you buy"},
+    ),
+    T.SIT_EXAMINATION: ToolText(
+        "You sit the examinations of your realm; with enough learning in law, letters or lore you earn a credential that opens offices. 1 action.",
+        {},
+    ),
+    T.JOIN_SCHOOL: ToolText(
+        "You join a school of thought as a disciple of its master; masters teach and the school keeps its learning. 1 action.", {"school_id": "The school"}
+    ),
+    T.PURGE_CIRCLE: ToolText(
+        "As ruler you cast a member of your ruling circle out of the circle and of every seat they hold. 1 action.",
+        {"mortal_id": "The member you purge"},
+    ),
+    T.GUARD_THRONE: ToolText(
+        "As ruler you choose how you guard the throne against your own army: rotating commanders lowers their power and the army's morale, "
+        "a parallel guard costs upkeep, promotion by loyalty favours your clients, hostages hold the ambitious back. Each measure lowers "
+        "the chance of a coup. 1 action.",
+        {
+            "rotation": "Rotate commanders and governors",
+            "parallel_guard": "Keep a guard of your own beside the army",
+            "loyalty_promotion": "Promote by loyalty over merit",
+            "hostages": "Keep hostages from the powerful",
+        },
+    ),
+    T.STEER_MARRIAGES: ToolText(
+        "As head of a house you set its marriages to follow a long design across generations, toward a gift of the blood or a union "
+        "with a claim on a realm; love matches, childless couples and exposure stand in its way. 1 action.",
+        {
+            "name": "What the design is called",
+            "locus": "The trait of the blood the design breeds for",
+            "allele": "The form of that trait it wants",
+            "claim_polity_id": "The realm whose claimants the house should marry",
+            "target_share": "Share of the house that should carry it, 1 to 100",
+            "steps": "Steps the design needs, 1 to 100",
+        },
+    ),
 }

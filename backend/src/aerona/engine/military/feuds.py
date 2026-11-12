@@ -18,6 +18,7 @@ from aerona.engine.mind.book import values_for
 from aerona.engine.primitives.folk import folk_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.regime.book import feud_swell
 from aerona.engine.services.community_relations import open_feud
 
 PEACE_TENETS = frozenset({TenetKind.PACIFISM})
@@ -97,7 +98,7 @@ async def temper(ctx: TickContext, row: FeudRow, first: EntityRow, second: Entit
     )
     if "grievance" not in row.locked:
         row.grievance = clamp_int(max(grief, row.grievance - table.fade_per_epoch), 0, PERCENT)
-    target = row.grievance * (1 + max(0, honour) / PERCENT * table.honour_pct / PERCENT)
+    target = row.grievance * (1 + max(0, honour) / PERCENT * table.honour_pct / PERCENT) * await feud_swell(ctx.session, ctx.rules, row)
     if await intermarried(ctx.session, first, second):
         target *= 1 - table.marriage_brake_pct / PERCENT
     if await common_enemy(ctx.session, first, second):

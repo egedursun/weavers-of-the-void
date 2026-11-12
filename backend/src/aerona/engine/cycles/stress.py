@@ -23,6 +23,7 @@ from aerona.engine.primitives.capacity import CapacityModel
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.regime.book import graduates
 from aerona.rules.registry import Rules
 
 LOWER = (SocialClass.FARMER, SocialClass.ARTISAN, SocialClass.SERF_OR_SLAVE, SocialClass.OUTCAST)
@@ -114,6 +115,7 @@ async def read_realm(ctx: TickContext, model: CapacityModel, polity: EntityRow, 
             + share(society, SocialClass.MERCHANT) * table.merchant_elite_pct / PERCENT
             + share(society, SocialClass.SCRIBE) * table.scribe_elite_pct / PERCENT
         )
+    aspirants += await graduates(ctx.session, ctx.rules, polity.id, ctx.epoch)
     misery = misery_total / lower_people if lower_people else 0.0
     youth = await youth_share(ctx, [town.id for town in towns])
     youth_factor = 1 + (youth - table.youth_norm_pct) * table.youth_weight / PERCENT / PERCENT

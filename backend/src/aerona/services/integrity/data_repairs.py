@@ -37,6 +37,7 @@ from aerona.services.integrity.law_links import mend_law_links
 from aerona.services.integrity.location_bonds import add_missing_inside_bonds, close_stale_inside_bonds
 from aerona.services.integrity.mythic_links import mend_mythic_links
 from aerona.services.integrity.network import RepairLog
+from aerona.services.integrity.regime_links import mend_regime_links
 from aerona.services.integrity.single_ruler import homeland_to_lives_in, single_rule
 from aerona.services.integrity.tongue_links import mend_tongue_links
 from aerona.services.integrity.urban_links import mend_urban_links
@@ -117,6 +118,7 @@ class DataRepairs:
             ("law_links", lambda session, rules, epoch: mend_law_links(session)),
             ("collective_links", lambda session, rules, epoch: mend_collective_links(session, epoch)),
             ("cycle_links", lambda session, rules, epoch: mend_cycle_links(session, epoch)),
+            ("regime_links", lambda session, rules, epoch: mend_regime_links(session)),
             ("missing_inside", lambda session, rules, epoch: add_missing_inside_bonds(session, epoch)),
             ("epoch_years", lambda session, rules, epoch: align_epoch_years(session, rules)),
             ("belief_names", lambda session, rules, epoch: repair_belief_names(session, rules)),

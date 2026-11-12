@@ -371,6 +371,23 @@ from aerona.rules.registry.production import ExtractionRules, MiningHazardsRules
 from aerona.rules.registry.rarities import RaritiesRules
 from aerona.rules.registry.rarity_gates import RarityGatesRules
 from aerona.rules.registry.record_schema import RecordSchemaRules
+from aerona.rules.registry.regime import (
+    AcademicFreedomRules,
+    BreedingPlanRules,
+    ClientelismRules,
+    CoupProofingRules,
+    CredentialRules,
+    ExaminationRules,
+    LeadershipModeRules,
+    LegitimacyTypeRules,
+    PowerBaseRules,
+    RoutinisationRules,
+    SchoolLineageRules,
+    SegmentaryRules,
+    SelectorateRules,
+    TimeHorizonRules,
+    VenalityRules,
+)
 from aerona.rules.registry.region import HazardsRules, RegionalDangerRules, TerrainRules
 from aerona.rules.registry.relations import CircleRules, ContestRules, PassionRules, PeckingRules, PersuasionRules, SocialRules
 from aerona.rules.registry.religion import ReligionRules
@@ -656,6 +673,21 @@ class Rules:
     indenture: IndentureRules = field(default_factory=IndentureRules)
     slave_markets: SlaveMarketRules = field(default_factory=SlaveMarketRules)
     manumission: ManumissionRules = field(default_factory=ManumissionRules)
+    selectorate: SelectorateRules = field(default_factory=SelectorateRules)
+    legitimacy_types: LegitimacyTypeRules = field(default_factory=LegitimacyTypeRules)
+    charisma_routinisation: RoutinisationRules = field(default_factory=RoutinisationRules)
+    time_horizon: TimeHorizonRules = field(default_factory=TimeHorizonRules)
+    clientelism: ClientelismRules = field(default_factory=ClientelismRules)
+    venality: VenalityRules = field(default_factory=VenalityRules)
+    power_bases: PowerBaseRules = field(default_factory=PowerBaseRules)
+    coup_proofing: CoupProofingRules = field(default_factory=CoupProofingRules)
+    leadership_modes: LeadershipModeRules = field(default_factory=LeadershipModeRules)
+    segmentary_lineages: SegmentaryRules = field(default_factory=SegmentaryRules)
+    breeding_plans: BreedingPlanRules = field(default_factory=BreedingPlanRules)
+    examinations: ExaminationRules = field(default_factory=ExaminationRules)
+    credentials: CredentialRules = field(default_factory=CredentialRules)
+    academic_freedom: AcademicFreedomRules = field(default_factory=AcademicFreedomRules)
+    school_lineages: SchoolLineageRules = field(default_factory=SchoolLineageRules)
     research_depth: ResearchDepthRules = field(default_factory=ResearchDepthRules)
     discovery: DiscoveryRules = field(default_factory=DiscoveryRules)
     theories: TheoriesRules = field(default_factory=TheoriesRules)

@@ -16,6 +16,7 @@ from aerona.agents.context.law_lines import mortal_law_lines
 from aerona.agents.context.lineage import lineage_lines
 from aerona.agents.context.mythic_lines import mortal_magic_lines
 from aerona.agents.context.recent_chronicle import prompt_text, recent_rows
+from aerona.agents.context.regime_lines import mortal_regime_lines
 from aerona.agents.context.research import research_for
 from aerona.agents.context.scope import Scope
 from aerona.agents.context.society import home_for
@@ -192,6 +193,7 @@ async def hearth_for(scope: Scope, me: EntityRow) -> HomeLine | None:
             "courts": await mortal_law_lines(scope, me),
             "crowds": await mortal_collective_lines(scope, me),
             "obligations": await mortal_cycle_lines(scope, me),
+            "rule": await mortal_regime_lines(scope, me),
         }
     )
 

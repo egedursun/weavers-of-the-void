@@ -1646,6 +1646,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.polity_territories",
     "table.polity_treasury",
     "table.prostheses",
+    "table.regimes",
     "table.region_dangers",
     "table.region_environment",
     "table.relationships",

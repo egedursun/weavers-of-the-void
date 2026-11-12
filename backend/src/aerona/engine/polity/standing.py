@@ -45,6 +45,7 @@ from aerona.engine.primitives.modifiers import combine, live_contributions
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import bond_exists, connect, has_flag
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.regime.book import legitimacy_kinds
 from aerona.engine.services.war import declare_war
 from aerona.engine.structures.readers import palace_legitimacy
 from aerona.rules.registry import Rules
@@ -104,6 +105,7 @@ async def legitimacy(ctx: TickContext, book: RealmBook, realm: Realm, laws: LawB
         parts["a pacifist faith at war"] = -ctx.rules.doctrine.pacifist_legitimacy
     parts.update(await fortunes(ctx, book, realm, ruler))
     parts.update(await bearing(ctx, realm, ruler))
+    parts.update(await legitimacy_kinds(ctx.session, ctx.rules, realm.entity.id))
     voice = round_half_up(await mean_approval(ctx, list(realm.members), ruler.id) * ctx.rules.communication.legitimacy_pct / PERCENT)
     if voice:
         parts["the people's approval" if voice > 0 else "the people's disapproval"] = voice
@@ -117,7 +119,7 @@ async def claim_to_rule(ctx: TickContext, realm: Realm, ruler: EntityRow) -> dic
         realm.profile.legitimacy_parts = {key: value for key, value in realm.profile.legitimacy_parts.items() if key != "usurper"}
         await note(
             ctx,
-            f"Men stopped calling {ruler.name} a usurper; the throne of {realm.entity.name} was theirs by right of years.",
+            f"Folk stopped calling {ruler.name} a usurper; the throne of {realm.entity.name} was theirs by right of years.",
             key="polity.usurper_accepted",
             ids=[ruler.id, realm.entity.id],
             kind=ChronicleKind.CIVILIZATION,

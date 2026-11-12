@@ -52,6 +52,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, bond_exists, close, connect, has_flag, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.regime.book import appointment_weights, coup_factor, plotter
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import war_event
 from aerona.engine.settlement.book import towns
@@ -261,7 +262,8 @@ async def staff(ctx: TickContext, book: RealmBook, realm: Realm, occupied: set[i
         candidates = [mortal for mortal in people if mortal.id not in occupied]
         if not candidates:
             continue
-        scores = {mortal.id: await skill_score(ctx, mortal, kind) for mortal in candidates}
+        weights = await appointment_weights(ctx.session, ctx.rules, realm.entity.id, realm.ruler_id, [mortal.id for mortal in candidates])
+        scores = {mortal.id: await skill_score(ctx, mortal, kind) + weights[mortal.id] for mortal in candidates}
         best = max(candidates, key=lambda mortal: (scores[mortal.id], -mortal.id))
         await appoint(ctx, realm, office, best, by_id=realm.ruler_id, reason="the seat was empty")
         occupied.add(best.id)
@@ -720,12 +722,22 @@ async def coups(ctx: TickContext, realm: Realm) -> int:
     table = ctx.rules.government
     if realm.ruler_id is None or realm.profile.legitimacy >= table.coup_legitimacy or "ruler" in realm.profile.locked:
         return 0
+    holder, reason = await usurper_for(ctx, realm)
+    if holder is None:
+        return 0
+    chance = table.coup_chance * await stress_factor(ctx.session, realm.entity.id, ctx.rules.structural_demography.coup_lift)
+    if not ctx.rng(f"coup.{realm.entity.id}.{ctx.epoch}").chance(chance * await coup_factor(ctx.session, ctx.rules, realm.entity.id)):
+        return 0
+    return 1 if await seize_throne(ctx, realm, holder, reason) else 0
+
+
+async def usurper_for(ctx: TickContext, realm: Realm) -> tuple[EntityRow | None, str]:
+    plotting = await plotter(ctx.session, realm.entity.id)
+    schemer = await living_entity(ctx.session, plotting) if plotting is not None else None
+    if schemer is not None:
+        return schemer, "a subject with a power base of their own turned it on the throne"
     marshal = next((office for office in realm.offices if OfficePower.COMMAND in powers_of(office) and office.holder_entity_id is not None), None)
     holder = await living_entity(ctx.session, marshal.holder_entity_id) if marshal is not None and marshal.holder_entity_id is not None else None
     if holder is None or TraitKind.AMBITIOUS not in await traits_of(ctx.session, holder.id):
-        return 0
-    if not ctx.rng(f"coup.{realm.entity.id}.{ctx.epoch}").chance(
-        table.coup_chance * await stress_factor(ctx.session, realm.entity.id, ctx.rules.structural_demography.coup_lift)
-    ):
-        return 0
-    return 1 if await seize_throne(ctx, realm, holder, "the marshal turned the army on the throne") else 0
+        return None, ""
+    return holder, "the marshal turned the army on the throne"

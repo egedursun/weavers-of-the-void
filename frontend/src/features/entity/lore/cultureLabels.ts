@@ -163,6 +163,11 @@ export const ACTS: Record<ActKind, LoreNamed> = {
     icon: Pickaxe,
     tone: 'danger',
   },
+  selling_offices: {
+    label: 'Selling the offices of the realm',
+    icon: Landmark,
+    tone: 'warning',
+  },
 }
 
 export function effectLabel(effect: TraditionEffect): string {

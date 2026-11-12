@@ -450,3 +450,15 @@ class EnginePhasesRules:
     labour_regimes: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: forced labour on great works, bondage, markets in bound folk and freedom"
     )
+    regimes: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: selectorates and coalitions, kinds of legitimacy, the time horizon of rulers, coup-proofing and big-men",
+    )
+    patronage: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: patrons and clients, offices bought and sold, and personal power bases")
+    kin_politics: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: nested lineages taking sides in feuds, and plans that steer marriages")
+    learning_institutions: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: examinations, credentials, the freedom of learning and schools of thought"
+    )

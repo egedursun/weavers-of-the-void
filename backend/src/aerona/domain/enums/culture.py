@@ -107,6 +107,7 @@ class Technique(StrEnum):
     NATURAL_PHILOSOPHY = "natural_philosophy"
     EMPIRICISM = "empiricism"
     HUMANIST_IDEALS = "humanist_ideals"
+    EXAMINATIONS = "examinations"
 
 
 class ResearchChooser(StrEnum):
