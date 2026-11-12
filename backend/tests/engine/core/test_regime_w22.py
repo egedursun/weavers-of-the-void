@@ -593,3 +593,18 @@ async def test_a_school_named_with_an_article_is_never_doubled(session: AsyncSes
     school = await found_school(ctx, founder.id, "The Old Count", None)
     text = " ".join(await mortal_regime_lines(await load_scope(session, ctx.rules), founder))
     assert school.name == "The Old Count" and "you belong to The Old Count" in text and "the The" not in text
+
+
+async def test_a_realm_without_its_choosing_class_is_chosen_by_its_other_elites(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world, "Ashby")
+    society = await session.get(CommunitySocietyRow, town.id)
+    assert society is not None
+    society.share_noble = 0.0
+    society.share_farmer = 70.0
+    priest = await mortal(session, "Priest", world, town.id)
+    priest.social_class = SocialClass.PRIEST
+    realm = await realm_of(session, world, [town], None)
+    await keep_regimes(await context(session), RegimeTally())
+    row = await session.get(RegimeRow, realm.id)
+    assert row is not None and row.selectorate is SelectorateKind.NOBLES and row.selectorate_size > 0 and row.coalition_size > 0
+    assert await session.get(CoalitionMemberRow, (realm.id, priest.id)) is not None

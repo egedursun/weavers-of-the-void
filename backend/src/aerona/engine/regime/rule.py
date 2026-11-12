@@ -66,6 +66,7 @@ COALITION_RULES = total(
     },
 )
 TRIBAL = frozenset({GovernmentKind.CHIEFDOM, GovernmentKind.TRIBAL_CONFEDERATION})
+ELITES = (SocialClass.NOBLE, SocialClass.PRIEST, SocialClass.WARRIOR, SocialClass.SCRIBE, SocialClass.MERCHANT)
 LAW_TECHNIQUES = (Technique.WRITTEN_LAW, Technique.CODIFIED_LAW)
 
 
@@ -108,6 +109,13 @@ async def regime_row(ctx: TickContext, realm: Realm, tally: RegimeTally | None =
 
 
 async def selectorate_size(ctx: TickContext, book: RealmBook, realm: Realm, kind: SelectorateKind) -> int:
+    found = await choosers(ctx, book, realm, kind, SELECTING_CLASSES[kind])
+    if found <= 0 and SELECTING_CLASSES[kind]:
+        found = await choosers(ctx, book, realm, kind, ELITES)
+    return round_half_up(found)
+
+
+async def choosers(ctx: TickContext, book: RealmBook, realm: Realm, kind: SelectorateKind, classes: tuple[SocialClass, ...]) -> float:
     table = ctx.rules.selectorate
     found = 0.0
     for member in book.members(realm):
@@ -119,9 +127,9 @@ async def selectorate_size(ctx: TickContext, book: RealmBook, realm: Realm, kind
             found += people * table.citizen_pct / PERCENT
             continue
         shares = await class_shares(ctx.session, ctx.rules, member.id)
-        share = sum(shares.get(social_class, 0.0) for social_class in SELECTING_CLASSES[kind]) / PERCENT
+        share = sum(shares.get(social_class, 0.0) for social_class in classes) / PERCENT
         found += people * share * (table.council_pct / PERCENT if kind is SelectorateKind.COUNCIL else 1)
-    return round_half_up(found)
+    return found
 
 
 async def size_coalition(ctx: TickContext, book: RealmBook, realm: Realm, row: RegimeRow) -> None:
@@ -150,9 +158,12 @@ async def members_of(ctx: TickContext, polity_id: int) -> list[CoalitionMemberRo
 async def keep_members(ctx: TickContext, realm: Realm, row: RegimeRow) -> list[CoalitionMemberRow]:
     table = ctx.rules.selectorate
     classes = SELECTING_CLASSES[row.selectorate]
+    subjects_of = await subjects(ctx, realm)
+    if classes and not any(mortal.social_class in classes for mortal in subjects_of):
+        classes = ELITES
     pool = [
         mortal
-        for mortal in await subjects(ctx, realm)
+        for mortal in subjects_of
         if mortal.id != realm.ruler_id and mortal.status is EntityStatus.CANON and (not classes or mortal.social_class in classes)
     ]
     chosen = {mortal.id for mortal in sorted(pool, key=lambda mortal: (-(mortal.importance or 0), mortal.id))[: table.coalition_seats]}
