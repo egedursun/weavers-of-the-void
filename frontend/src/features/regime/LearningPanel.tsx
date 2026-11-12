@@ -25,7 +25,7 @@ import { MindPicker } from '@/features/entity/mind/parts'
 import { NumberField } from '@/features/entity/realm/parts'
 import { Ref } from '@/features/gatherings/parts'
 import { type RegimeNodeView, type SchoolView, useRegimeAction } from './api'
-import { CREDENTIALS } from './labels'
+import { CREDENTIALS, theNamed } from './labels'
 import { DOCTRINE_TYPES, useRegimeRow, useRegimeStep } from './model'
 
 type Examination = NonNullable<RegimeNodeView['examination']>
@@ -602,7 +602,7 @@ function SchoolCard({
         <>
           {row.persecuted && <Chip icon={Lock}>Persecuted</Chip>}
           {row.rival && (
-            <Chip icon={Swords}>{`Rival of the ${row.rival.name}`}</Chip>
+            <Chip icon={Swords}>{`Rival of ${theNamed(row.rival.name)}`}</Chip>
           )}
         </>
       }

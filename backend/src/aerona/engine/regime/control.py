@@ -43,6 +43,7 @@ from aerona.engine.divine.control import apply
 from aerona.engine.gatherings.control import Values, allowed, found
 from aerona.engine.notes import note
 from aerona.engine.polity.book import Realm, RealmBook
+from aerona.engine.primitives.records import definite
 from aerona.engine.regime.learning import LearningTally, grant, hold_sitting
 from aerona.engine.regime.patronage import PatronageTally, make_sinecure, measure_bases, sell_seat
 from aerona.engine.regime.rule import RegimeTally, purge_member, regime_row
@@ -234,7 +235,7 @@ async def found_school(ctx: TickContext, founder_id: int, name: str, doctrine_id
         await of_type(ctx, doctrine_id, DOCTRINES, "a theory or ideology")
     school = await saved(ctx, SchoolLineageRow(name=name, doctrine_entity_id=doctrine_id, founder_entity_id=founder.id, since_epoch=ctx.epoch, locked=[]))
     await saved(ctx, SchoolMemberRow(school_id=school.id, mortal_entity_id=founder.id, generation=0, since_epoch=ctx.epoch, locked=[]))
-    await note(ctx, f"{founder.name} founded the {name}.", key="schools.founded", ids=[founder.id])
+    await note(ctx, f"{founder.name} founded {definite(name)}.", key="schools.founded", ids=[founder.id])
     return school
 
 

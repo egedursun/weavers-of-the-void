@@ -18,6 +18,7 @@ from aerona.db.tables.regime import (
 )
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.regime import Routinisation
+from aerona.engine.primitives.records import definite
 from aerona.engine.regime.book import dominant, realm_seat
 from aerona.engine.regime.patronage import SEATS_KEPT
 
@@ -57,7 +58,7 @@ async def standing_lines(scope: Scope, me: EntityRow) -> list[str]:
         school = await session.get(SchoolLineageRow, membership.school_id)
         if school is not None:
             master = f", taught by {await named(scope, membership.master_entity_id)}" if membership.master_entity_id is not None else ""
-            found.append(f"you belong to the {school.name} (school {school.id}){master}")
+            found.append(f"you belong to {definite(school.name)} (school {school.id}){master}")
     return found
 
 

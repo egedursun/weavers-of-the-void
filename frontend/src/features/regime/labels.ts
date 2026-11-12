@@ -132,3 +132,7 @@ export const TAB_ICONS = {
   lineages: GitBranch,
   learning: GraduationCap,
 } as const
+
+export function theNamed(name: string) {
+  return /^the /i.test(name) ? name : `the ${name}`
+}

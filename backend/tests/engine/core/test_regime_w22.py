@@ -69,6 +69,7 @@ from aerona.engine.regime.book import (
     patron_pull,
     schooled,
 )
+from aerona.engine.regime.control import found_school
 from aerona.engine.regime.learning import LearningTally, keep_learning
 from aerona.engine.regime.lineages import LineageTally, keep_lineages
 from aerona.engine.regime.patronage import PatronageTally, keep_patronage
@@ -583,3 +584,12 @@ async def test_wealth_and_renown_alone_never_extort_the_throne(session: AsyncSes
     base = await session.get(PowerBaseRow, magnate.id)
     assert base is not None and base.holdings == 0 and base.troops == 0
     assert base.stance in {PowerStance.LOYAL, PowerStance.DEFIANT}
+
+
+async def test_a_school_named_with_an_article_is_never_doubled(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world, "Ashby")
+    founder = await mortal(session, "Founder", world, town.id)
+    ctx = await context(session)
+    school = await found_school(ctx, founder.id, "The Old Count", None)
+    text = " ".join(await mortal_regime_lines(await load_scope(session, ctx.rules), founder))
+    assert school.name == "The Old Count" and "you belong to The Old Count" in text and "the The" not in text

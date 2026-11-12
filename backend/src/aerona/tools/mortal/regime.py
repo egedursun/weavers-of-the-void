@@ -14,6 +14,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.regime import ClientRole, CredentialKind
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.records import definite
 from aerona.engine.regime import control
 from aerona.engine.regime.book import realm_seat
 from aerona.engine.regime.learning import EXAMINED, best_skill, holds
@@ -129,8 +130,8 @@ async def join_school(call: MortalCall, args: JoinSchoolInput) -> str:
     if master is not None and await call.session.get(SchoolMemberRow, (school.id, master)) is None:
         master = None
     await control.admit(call.tick, school.id, call.me.id, master)
-    await call.chronicle(ChronicleKind.WORLD, lines.JOIN_SCHOOL, entity_ids=[call.me.id], me=call.me.name, school=school.name)
-    return result(MortalResult.SCHOOL_JOINED, name=school.name)
+    await call.chronicle(ChronicleKind.WORLD, lines.JOIN_SCHOOL, entity_ids=[call.me.id], me=call.me.name, school=definite(school.name))
+    return result(MortalResult.SCHOOL_JOINED, name=definite(school.name))
 
 
 async def purge_circle(call: MortalCall, args: PurgeCircleInput) -> str:

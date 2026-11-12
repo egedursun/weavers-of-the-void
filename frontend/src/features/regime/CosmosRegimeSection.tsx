@@ -18,6 +18,7 @@ import {
   ROUTINISATION,
   SELECTORATES,
   STANCES,
+  theNamed,
 } from './labels'
 
 const SHOWN = 6
@@ -203,7 +204,7 @@ export function CosmosRegimeSection() {
                     icon={GraduationCap}
                     tone={item.persecuted ? 'danger' : 'gold'}
                     title={item.name}
-                    caption={`${item.disciples.length} in the line${item.founder ? `, founded by ${item.founder.name}` : ''}${item.rival ? `, rival of the ${item.rival.name}` : ''}`}
+                    caption={`${item.disciples.length} in the line${item.founder ? `, founded by ${item.founder.name}` : ''}${item.rival ? `, rival of ${theNamed(item.rival.name)}` : ''}`}
                   />
                 )}
               </PagedList>

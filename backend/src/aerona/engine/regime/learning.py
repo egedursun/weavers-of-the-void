@@ -44,6 +44,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.records import definite
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.services.community_relations import change_relation
@@ -305,7 +306,7 @@ async def found_school(ctx: TickContext, host_id: int, members: set[int], tally:
         members.add(disciple.id)
     members.add(master.id)
     tally.schools += 1
-    await note(ctx, f"{master.name} gathered disciples into the {school.name}.", key="schools.founded", ids=[master.id, host_id])
+    await note(ctx, f"{master.name} gathered disciples into {definite(school.name)}.", key="schools.founded", ids=[master.id, host_id])
     await ctx.session.flush()
     return school
 

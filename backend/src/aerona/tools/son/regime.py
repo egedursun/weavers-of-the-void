@@ -15,6 +15,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.regime import SelectorateKind
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.records import definite
 from aerona.engine.regime import control
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
@@ -102,9 +103,15 @@ async def inspire_school(call: SonCall, args: InspireSchoolInput) -> str:
     school = await control.found_school(call.tick, founder.id, args.name, None)
     call.target(founder.id)
     await call.chronicle(
-        ChronicleKind.WORLD, lines.INSPIRE_SCHOOL, entity_ids=[founder.id], son=call.son.name, founder=founder.name, school=school.name, reason=args.reason
+        ChronicleKind.WORLD,
+        lines.INSPIRE_SCHOOL,
+        entity_ids=[founder.id],
+        son=call.son.name,
+        founder=founder.name,
+        school=definite(school.name),
+        reason=args.reason,
     )
-    return result(SonResult.SCHOOL_INSPIRED, name=school.name, founder=founder.name, id=school.id)
+    return result(SonResult.SCHOOL_INSPIRED, name=definite(school.name), founder=founder.name, id=school.id)
 
 
 def specs() -> list[ToolSpec[SonCall, Any]]:

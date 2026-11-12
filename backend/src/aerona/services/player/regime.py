@@ -3,6 +3,7 @@ from pydantic import Field
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.regime import ClientRole, CredentialKind, LeadershipMode, SegmentLevel, SelectorateKind
+from aerona.engine.primitives.records import definite, sentence_case
 from aerona.engine.regime import control
 from aerona.services.player.cosmography import Edited
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
@@ -441,7 +442,7 @@ async def academic_freedom_delete(scope: PlayerScope, command: StructureTarget) 
 @player_action("school:found", ActionKind.EDIT_RECORD)
 async def school_found(scope: PlayerScope, command: SchoolDraft) -> Effect:
     row = await control.found_school(await scope.context("school_found"), command.founder_id, command.name, command.doctrine_id)
-    return Effect(f"The {row.name} is founded.", command.founder_id, values={"school_id": row.id})
+    return Effect(f"{sentence_case(definite(row.name))} is founded.", command.founder_id, values={"school_id": row.id})
 
 
 @player_action("school:edit", ActionKind.EDIT_RECORD)

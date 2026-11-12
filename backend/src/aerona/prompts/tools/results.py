@@ -457,7 +457,7 @@ class SonResult(StrEnum):
     FOUNDER_REFUSED = "You cannot anoint a founder there: {{ why }}."
     LEARNING_FREED = "The freedom of learning at {{ name }} is now {{ level }}."
     LEARNING_REFUSED = "You cannot set that freedom: {{ why }}."
-    SCHOOL_INSPIRED = "{{ founder }} founded the {{ name }} (school {{ id }})."
+    SCHOOL_INSPIRED = "{{ founder }} founded {{ name }} (school {{ id }})."
     SCHOOL_REFUSED = "You cannot inspire that school: {{ why }}."
 
 
@@ -482,7 +482,7 @@ class MortalResult(StrEnum):
     OFFICE_REFUSED = "You cannot buy that seat: {{ why }}."
     EXAM_PASSED = "You passed the examination on your {{ skill }}."
     EXAM_REFUSED = "You cannot pass the examination: {{ why }}."
-    SCHOOL_JOINED = "You joined the {{ name }}."
+    SCHOOL_JOINED = "You joined {{ name }}."
     SCHOOL_JOIN_REFUSED = "You cannot join that school: {{ why }}."
     CIRCLE_PURGED = "{{ name }} is cast out of your ruling circle and their seats."
     PURGE_REFUSED = "You cannot purge them: {{ why }}."
