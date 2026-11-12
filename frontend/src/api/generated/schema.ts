@@ -42080,6 +42080,8 @@ export interface components {
       | 'famine_relief'
       | 'curfew'
       | 'slum_clearance'
+      | 'prepare'
+      | 'enclosure'
     MandateState: 'active' | 'met' | 'failed'
     MandateView: {
       id: number
@@ -114581,6 +114583,8 @@ export const mandateKindValues: ReadonlyArray<
   'famine_relief',
   'curfew',
   'slum_clearance',
+  'prepare',
+  'enclosure',
 ]
 export const mandateStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MandateState']

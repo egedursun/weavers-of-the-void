@@ -4,11 +4,13 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.agrarian import CommonsRow, GameReserveRow, IntensificationRow, PerennialRow
 from aerona.db.tables.ecology import SpeciesRangeRow, SpeciesYieldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.flora import PlantProfileRow, RegionCropRow
+from aerona.db.tables.households import HouseholdRow
 from aerona.db.tables.polity import HouseProfileRow
 from aerona.db.tables.regime import RegimeRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -19,7 +21,11 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.mind import ActKind, MemoryKind
+from aerona.domain.enums.mortal import CrimeKind
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.settlement import SizeTier
+from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.statecraft import MandateKind, MandateState
 from aerona.engine.agrarian.rings import put
 from aerona.engine.collective.book import shift
 from aerona.engine.context import TickContext
@@ -29,7 +35,11 @@ from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.mind.hooks import judged
 from aerona.engine.notes import note
 from aerona.engine.polity.book import RealmBook
+from aerona.engine.polity.laws import law_param
+from aerona.engine.polity.mandates import issue
+from aerona.engine.polity.trials import report_crime
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat, stat_or
 
@@ -41,6 +51,9 @@ YIELD_KINDS: tuple[tuple[CommodityKind, PerennialKind], ...] = (
     (CommodityKind.FRUIT, PerennialKind.ORCHARD),
 )
 HALF = 50
+FREEHOLD = "freehold"
+COMMUNAL = "communal"
+COTTAGERS = frozenset({SocialClass.FARMER, SocialClass.SERF_OR_SLAVE})
 STRICT = 50
 
 
@@ -153,7 +166,11 @@ async def grow(ctx: TickContext, lands: Holdings, tally: LandsTally) -> None:
             continue
         if row.condition > 0:
             shift(row, "maturity", PERCENT / max(1, row.mature_epochs))
-        shift(row, "condition", table.recover)
+        old = row.maturity >= PERCENT and ctx.epoch - row.planted_epoch > row.mature_epochs * (PERCENT + table.life_pct) / PERCENT
+        shift(row, "condition", -table.ageing if old else table.recover)
+        if old and row.condition <= 0:
+            await replant(ctx, row)
+            continue
         if row.maturity < PERCENT:
             continue
         bearing[row.region_entity_id] += 1
@@ -165,6 +182,22 @@ async def grow(ctx: TickContext, lands: Holdings, tally: LandsTally) -> None:
         for town in lands.towns.get(region_id, []):
             if not held(town.id):
                 shift_stat(town, "prosperity", min(table.prosperity_cap, count))
+
+
+async def replant(ctx: TickContext, row: PerennialRow) -> None:
+    if "maturity" in row.locked:
+        return
+    row.maturity = 0
+    row.planted_epoch = ctx.epoch
+    if "condition" not in row.locked:
+        row.condition = PERCENT
+    region = await ctx.session.get(EntityRow, row.region_entity_id)
+    await note(
+        ctx,
+        f"The old {row.kind.value} of {region.name if region else 'the land'} was worn out and planted anew; it will bear again in {row.mature_epochs} epochs.",
+        key="perennials.replanted",
+        ids=[row.region_entity_id],
+    )
 
 
 def commons_kinds(ctx: TickContext, land: RegionEnvironmentRow) -> list[CommonsKind]:
@@ -241,6 +274,11 @@ async def enclose(ctx: TickContext, lands: Holdings, row: CommonsRow, encloser: 
         profile = lands.profiles.get(town.id)
         if profile is not None:
             shift(profile, "unrest", table.unrest_gain)
+        for household in await ctx.session.scalars(
+            select(HouseholdRow).where(HouseholdRow.settlement_node_id == town.id, HouseholdRow.social_class.in_(list(COTTAGERS)))
+        ):
+            if "wealth" not in household.locked:
+                household.wealth = max(0, household.wealth - household.wealth * table.household_loss // PERCENT)
         await judged(ctx, encloser.id, town.id, ActKind.ENCLOSING, note=f"enclosed the common {row.kind.value} of {town.name}")
     put(row, "dispossessed", row.dispossessed + driven)
     region = await ctx.session.get(EntityRow, row.region_entity_id)
@@ -264,6 +302,7 @@ async def keep_commons(ctx: TickContext, lands: Holdings, tally: LandsTally) -> 
     await seed_commons(ctx, lands, rows)
     pressure = {row.region_entity_id: row.pressure for row in await ctx.session.scalars(select(IntensificationRow))}
     book = await RealmBook.load(ctx.session)
+    orders = await enclosure_orders(ctx)
     for row in rows:
         if held(row.region_entity_id):
             continue
@@ -295,14 +334,15 @@ async def keep_commons(ctx: TickContext, lands: Holdings, tally: LandsTally) -> 
                     key="commons.council",
                     ids=[steward_town.id],
                 )
-        await maybe_enclose(ctx, lands, row, rows=rows, book=book, tally=tally)
+        await maybe_enclose(ctx, row, rows=rows, book=book, orders=orders)
+        await obey_orders(ctx, lands, row, orders, book=book, tally=tally)
         if row.rule is CommonsRule.ENCLOSED and row.encloser_node_id is not None:
             owner = await ctx.session.get(EntityRow, row.encloser_node_id)
             if owner is not None and not held(owner.id):
                 await give_coin(ctx.session, ctx.rules, owner, round_half_up(table.enclosed_coin * row.condition / PERCENT))
 
 
-async def maybe_enclose(ctx: TickContext, lands: Holdings, row: CommonsRow, *, rows: list[CommonsRow], book: RealmBook, tally: LandsTally) -> None:
+async def maybe_enclose(ctx: TickContext, row: CommonsRow, *, rows: list[CommonsRow], book: RealmBook, orders: dict[int, int]) -> None:
     table = ctx.rules.commons
     if row.rule is CommonsRule.ENCLOSED or "rule" in row.locked or row.steward_entity_id is None:
         return
@@ -313,13 +353,32 @@ async def maybe_enclose(ctx: TickContext, lands: Holdings, row: CommonsRow, *, r
     regime = await ctx.session.get(RegimeRow, realm.entity.id)
     eager = 2 if regime is not None and regime.horizon < table.horizon_mark else 1
     profit = 1 + realm_dispossessed(rows, book, realm.entity.id) / table.labour_span
-    if not ctx.rng(f"commons.enclose.{row.id}.{ctx.epoch}").chance(table.enclose_pct * eager * profit):
+    tenure = await law_param(ctx.session, row.steward_entity_id, LawKind.LAND_TENURE, "tenure")
+    law = {FREEHOLD: table.freehold_pct, COMMUNAL: table.communal_pct}.get(str(tenure), PERCENT) / PERCENT
+    if ctx.rng(f"commons.enclose.{row.id}.{ctx.epoch}").chance(table.enclose_pct * eager * profit * law):
+        order = await issue(ctx, realm, MandateKind.ENCLOSURE, settlement_id=row.steward_entity_id)
+        if order is not None and order.issuer_node_id is not None:
+            orders[row.steward_entity_id] = order.issuer_node_id
+
+
+async def enclosure_orders(ctx: TickContext) -> dict[int, int]:
+    rows = await ctx.session.execute(
+        select(MandateRow.settlement_entity_id, MandateRow.issuer_node_id).where(
+            MandateRow.kind == MandateKind.ENCLOSURE, MandateRow.state == MandateState.ACTIVE, MandateRow.settlement_entity_id.is_not(None)
+        )
+    )
+    return {town: issuer for town, issuer in rows.all() if town is not None and issuer is not None}
+
+
+async def obey_orders(ctx: TickContext, lands: Holdings, row: CommonsRow, orders: dict[int, int], *, book: RealmBook, tally: LandsTally) -> None:
+    issuer_id = orders.get(row.steward_entity_id) if row.steward_entity_id is not None else None
+    if issuer_id is None or row.rule is CommonsRule.ENCLOSED or "rule" in row.locked:
         return
-    ruler = await ctx.session.get(EntityRow, realm.ruler_id)
-    if ruler is None:
+    encloser = await ctx.session.get(EntityRow, issuer_id)
+    if encloser is None or held(encloser.id):
         return
     tally.enclosed += 1
-    tally.dispossessed += await enclose(ctx, lands, row, ruler, book)
+    tally.dispossessed += await enclose(ctx, lands, row, encloser, book)
 
 
 async def reserve_land(ctx: TickContext, lands: Holdings, rows: list[GameReserveRow], tally: LandsTally) -> None:
@@ -359,6 +418,24 @@ async def reserve_land(ctx: TickContext, lands: Holdings, rows: list[GameReserve
         )
 
 
+async def charge_poacher(ctx: TickContext, towns: list[EntityRow], row: GameReserveRow) -> None:
+    for town in towns:
+        poacher = await ctx.session.scalar(
+            select(EntityRow)
+            .where(
+                EntityRow.entity_type == EntityType.MORTAL,
+                EntityRow.status == EntityStatus.CANON,
+                await present_in(ctx.session, town),
+                EntityRow.id != (row.holder_node_id or 0),
+            )
+            .order_by(EntityRow.id)
+            .limit(1)
+        )
+        if poacher is not None and not held(poacher.id):
+            await report_crime(ctx, town.id, poacher.id, CrimeKind.THEFT)
+            return
+
+
 async def keep_reserves(ctx: TickContext, lands: Holdings, tally: LandsTally) -> None:
     table = ctx.rules.game_laws
     rows = list(await ctx.session.scalars(select(GameReserveRow).order_by(GameReserveRow.id)))
@@ -388,6 +465,7 @@ async def keep_reserves(ctx: TickContext, lands: Holdings, tally: LandsTally) ->
                 profile = lands.profiles.get(town.id)
                 if profile is not None:
                     shift(profile, "unrest", table.unrest_gain)
+            await charge_poacher(ctx, towns, row)
             region = await ctx.session.get(EntityRow, row.region_entity_id)
             await note(
                 ctx,

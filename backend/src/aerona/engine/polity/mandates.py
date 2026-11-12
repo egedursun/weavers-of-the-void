@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.affairs import MandateRow, NobleDemandRow
+from aerona.db.tables.agrarian import CommonsRow, PreparednessRow
 from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.finance import TradePolicyRow
@@ -13,6 +14,7 @@ from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.agrarian import CommonsRule
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -21,6 +23,7 @@ from aerona.domain.enums.mind import MemoryKind, PressureKind
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.statecraft import MandateKind, MandateState, NobleWant
+from aerona.engine.agrarian.book import unready
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.mind.book import pressures_of
@@ -139,6 +142,8 @@ async def plan(ctx: TickContext, book: RealmBook, realm: Realm, tally: MandateTa
             issued = await issue(ctx, realm, MandateKind.SLUM_CLEARANCE, settlement_id=member.id)
         elif town is not None and town.crime >= PERCENT // 2 and not await has_district(ctx, member.id, DistrictKind.CITADEL):
             issued = await issue(ctx, realm, MandateKind.BUILD, settlement_id=member.id, district=DistrictKind.CITADEL)
+        elif town is not None and await unready(ctx.session, ctx.rules, book.atlas, member.id, ctx.epoch):
+            issued = await issue(ctx, realm, MandateKind.PREPARE, settlement_id=member.id)
         tally.issued += issued is not None
     if capital is not None and await units_of(ctx, capital, GRAIN) < table.ban_below:
         tally.issued += await issue(ctx, realm, MandateKind.EXPORT_BAN, settlement_id=None, commodity=GRAIN) is not None
@@ -168,6 +173,14 @@ async def met(ctx: TickContext, row: MandateRow) -> bool:
         return await has_district(ctx, row.settlement_entity_id, row.district)
     if row.kind is MandateKind.SLUM_CLEARANCE and row.settlement_entity_id is not None:
         return not await has_district(ctx, row.settlement_entity_id, DistrictKind.SLUMS)
+    if row.kind is MandateKind.PREPARE and row.settlement_entity_id is not None:
+        raised = select(PreparednessRow.kind).where(
+            PreparednessRow.settlement_entity_id == row.settlement_entity_id, PreparednessRow.built_epoch >= row.issued_epoch
+        )
+        return await ctx.session.scalar(raised.limit(1)) is not None
+    if row.kind is MandateKind.ENCLOSURE and row.settlement_entity_id is not None:
+        closed = select(CommonsRow.id).where(CommonsRow.steward_entity_id == row.settlement_entity_id, CommonsRow.rule == CommonsRule.ENCLOSED)
+        return await ctx.session.scalar(closed.limit(1)) is not None
     return True
 
 

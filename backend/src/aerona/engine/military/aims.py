@@ -16,6 +16,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.military import PeaceTermKind, WarAimKind
 from aerona.domain.enums.polity import ClauseKind, GovernmentKind, PartyRole, TreatyKind
 from aerona.domain.enums.war import CaptiveStatus, WarCause, WarEnding
+from aerona.engine.agrarian.book import keystone_source
 from aerona.engine.collective.accounts import remember_loss
 from aerona.engine.context import TickContext
 from aerona.engine.economy.chokepoints import contested_route, route_term
@@ -110,6 +111,8 @@ async def set_aims(ctx: TickContext, war: WarRow, attacker: EntityRow, defender:
     for side, enemy, kinds in ((attacker, defender, await wanted(ctx, war, attacker, defender)), (defender, attacker, list(DEFENDER_AIMS))):
         for kind in kinds[:count]:
             target = region if kind in REGION_AIMS and side is attacker else enemy.id
+            if kind is A.SEIZE_RESOURCE and side is attacker:
+                target = await keystone_source(ctx.session, enemy.id) or target
             if kind is A.SEIZE_ROUTE:
                 target = await contested_route(ctx.session, side.id, enemy.id)
             params = await aim_params(ctx, kind, side, enemy, target)

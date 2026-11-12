@@ -90,12 +90,14 @@ async def candidates(ctx: TickContext) -> list[Candidate]:
 async def designate(ctx: TickContext, atlas: RegionAtlas, faith: FaithBook, book: RealmBook, tally: StaplesTally) -> None:
     table = ctx.rules.keystone_resource
     claimed = set(await ctx.session.scalars(select(KeystoneResourceRow.world_id)))
-    open_worlds = [world for world in await ctx.session.scalars(select(WorldRow.id).order_by(WorldRow.id)) if world not in claimed]
+    open_worlds = [world for world in await ctx.session.scalars(select(WorldRow).order_by(WorldRow.id)) if world.id not in claimed]
     if not open_worlds:
         return
     options = await candidates(ctx)
-    for world_id in open_worlds:
-        if not options or not ctx.rng(f"keystone.designate.{world_id}.{ctx.epoch}").chance(table.designate_pct):
+    for world in open_worlds:
+        world_id = world.id
+        young = ctx.epoch - (world.created_epoch or 0) <= table.genesis_epochs
+        if not options or not ctx.rng(f"keystone.designate.{world_id}.{ctx.epoch}").chance(PERCENT if young else table.designate_pct):
             continue
         for option in options:
             species = await ctx.session.get(EntityRow, option.species_id)
@@ -139,11 +141,14 @@ async def designate(ctx: TickContext, atlas: RegionAtlas, faith: FaithBook, book
 
 async def harvest(ctx: TickContext, row: KeystoneResourceRow) -> None:
     table = ctx.rules.keystone_resource
-    if row.producer_entity_id is None or row.source_region_entity_id is None:
-        return
-    found = await ctx.session.get(SpeciesRangeRow, (row.producer_entity_id, row.source_region_entity_id))
-    if found is None:
-        put(row, "supply", 0)
+    found = (
+        await ctx.session.get(SpeciesRangeRow, (row.producer_entity_id, row.source_region_entity_id))
+        if row.producer_entity_id is not None and row.source_region_entity_id is not None
+        else None
+    )
+    if found is None or row.producer_entity_id is None:
+        drawn = row.harvest * table.harm_pct / PERCENT
+        put(row, "supply", clamp_int(row.supply + table.renewal - drawn * row.supply / PERCENT, 0, PERCENT))
         return
     if not held(row.producer_entity_id) and "abundance" not in found.locked:
         found.abundance = max(0, round_half_up(found.abundance - row.harvest * table.harm_pct / PERCENT / PERCENT * found.abundance))
@@ -266,6 +271,13 @@ async def price_of(ctx: TickContext, community_id: int, commodity: CommodityKind
     return max(1, price or 1)
 
 
+async def lift_market(ctx: TickContext, community_id: int, commodity: CommodityKind, lift: float) -> None:
+    row = await ctx.session.get(MarketPriceRow, (community_id, commodity, ctx.epoch))
+    if row is not None and lift > 0:
+        row.price = round_half_up(row.price * (1 + lift))
+        row.demand = round_half_up(row.demand * (1 + lift))
+
+
 async def keep_brands(ctx: TickContext, tally: StaplesTally) -> None:
     table = ctx.rules.brands
     made = await outputs(ctx)
@@ -310,6 +322,8 @@ async def keep_brands(ctx: TickContext, tally: StaplesTally) -> None:
         if run is not None and owner is not None and not held(owner.id):
             premium = run.quantity * await price_of(ctx, community.id, run.commodity) * brand.reputation / PERCENT * table.premium_pct / PERCENT
             await give_coin(ctx.session, ctx.rules, owner, min(table.coin_cap, round_half_up(premium)))
+        if run is not None:
+            await lift_market(ctx, community.id, run.commodity, brand.reputation * table.premium_pct / PERCENT / PERCENT)
         shift_stat(community, "prosperity", min(table.prosperity_cap, brand.reputation // HALF))
 
 

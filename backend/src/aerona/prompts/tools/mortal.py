@@ -288,9 +288,10 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.ISSUE_MANDATE: ToolText(
         "As ruler or regent you issue a mandate: a production order, a ban on exporting a good, an order to build a quarter, relief from the state "
-        "granaries for a hungry land, or a curfew. Unmet mandates cost you legitimacy, and harsh ones weigh on your people. 1 action.",
+        "granaries for a hungry land, a curfew, slum clearance, works against disaster, or the enclosure of a town's commons. Unmet mandates "
+        "cost you legitimacy, and harsh ones weigh on your people. 1 action.",
         {
-            "kind": "produce, export_ban, build, famine_relief, curfew or slum_clearance",
+            "kind": "produce, export_ban, build, famine_relief, curfew, slum_clearance, prepare or enclosure",
             "settlement_id": "The settlement it is laid on, if any",
             "commodity": "The good to produce, ban or send",
             "district": "The quarter to build",

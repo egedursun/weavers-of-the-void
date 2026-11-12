@@ -21,6 +21,7 @@ from aerona.domain.enums.mortal import DeathCause, HarshnessScale, LifeStage, Mo
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.storyteller import RecoveryKind
 from aerona.domain.models.entity_stats import MortalStats, PeopleStats, SettlementStats
+from aerona.engine.agrarian.book import gap_site
 from aerona.engine.body.afflictions import afflict, inherit
 from aerona.engine.body.cohorts import healer_demand
 from aerona.engine.body.customs import culture_of, people_of
@@ -542,7 +543,9 @@ async def villages(ctx: TickContext, atlas: RegionAtlas, namer: Namer) -> None:
         migrants = village_migrants(rules, population)
         if migrants < world_rules.village_min_population:
             continue
-        await found_settlement(ctx, atlas, people, region, migrants=migrants, existing=existing, namer=namer)
+        site = await gap_site(ctx.session, rules, atlas, region.id) if existing else None
+        land = await living_entity(ctx.session, site) if site is not None else None
+        await found_settlement(ctx, atlas, people, land or region, migrants=migrants, existing=existing, namer=namer)
         founded += 1
 
 

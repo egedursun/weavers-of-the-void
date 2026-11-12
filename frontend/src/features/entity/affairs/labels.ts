@@ -1,4 +1,6 @@
 import {
+  Fence,
+  ShieldCheck,
   Shovel,
   Ban,
   Globe2,
@@ -79,6 +81,8 @@ export const MANDATE_KINDS: Record<string, Named> = {
   famine_relief: { label: 'Famine relief', icon: Wheat, tone: 'success' },
   curfew: { label: 'Curfew', icon: Moon, tone: 'danger' },
   slum_clearance: { label: 'Slum clearance', icon: Shovel, tone: 'warning' },
+  prepare: { label: 'Works against disaster', icon: ShieldCheck, tone: 'info' },
+  enclosure: { label: 'Enclosure of the commons', icon: Fence, tone: 'danger' },
 }
 
 export const MANDATE_STATES: Record<string, Named> = {

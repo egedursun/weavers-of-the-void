@@ -55,7 +55,7 @@ function WorkCard({ row, blocked }: { row: Work; blocked: string | null }) {
       caption={`Raised in epoch ${row.built_epoch} · held ${row.averted} times`}
       removeLabel='Tear it down'
       editTitle='Set the work'
-      note='Each level of a fitting work lowers the losses of its disaster: levees and seawalls against floods, seawalls against storms, drills against quakes and eruptions, stockpiles against drought and failed harvests, firebreaks against great fires; watchtowers help a little against all. Works wear down and must be raised again.'
+      note='Each level of a fitting work lowers the losses of its disaster: levees and seawalls against floods, seawalls against storms, drills against quakes and eruptions, stockpiles against drought and failed harvests, firebreaks against great fires; watchtowers help a little against all. Works wear down and must be raised again; towns pay from their investment, and a realm can order a town to prepare by mandate.'
       fields={[
         {
           key: 'level',
@@ -117,7 +117,7 @@ function AidCard({ row, blocked }: { row: Aid; blocked: string | null }) {
       caption={`${row.refused ? 'Turned away' : 'Received'} in epoch ${row.epoch}`}
       removeLabel='Strike out the record'
       editTitle='Set the aid'
-      note='Aid after a disaster restores prosperity, heals the land or speeds rebuilding. The stricken owe the giver a favour and a gift in return, and love the giver’s god more. A rival’s aid may be turned away, at a cost to the ruler’s face.'
+      note='Aid after a disaster brings grain from the giver’s capital and restores prosperity, heals the land or speeds rebuilding. The stricken owe the giver a favour and a gift in return, and love the giver’s god more. A rival’s aid may be turned away, at a cost to the ruler’s face.'
       fields={[
         {
           key: 'kind',

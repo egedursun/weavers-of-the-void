@@ -5,14 +5,19 @@ from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.agrarian import FamineLoreRow, IntensificationRow, SoilNutrientRow
+from aerona.db.tables.collective import GenerationRow
 from aerona.db.tables.culture import HolderTechniqueRow
+from aerona.db.tables.ecology import SpeciesYieldRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import NotableYearRow, RegionEnvironmentRow
+from aerona.db.tables.flora import RegionCropRow
 from aerona.db.tables.industry import CommunityMethodRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.agrarian import NutrientKind
+from aerona.domain.enums.collective import FormativeKind
 from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import NotableYearKind, RiverClass
 from aerona.domain.enums.industry import MethodKind, ProcessKind
@@ -45,6 +50,24 @@ class FieldWork:
     terraced: set[int]
     irrigated: dict[int, int]
     drained: set[int]
+    fodder: dict[int, float]
+    roots: dict[int, float]
+
+
+async def sown_shares(ctx: TickContext) -> tuple[dict[int, float], dict[int, float]]:
+    yields: dict[int, set[CommodityKind]] = defaultdict(set)
+    for species_id, commodity in await ctx.session.execute(select(SpeciesYieldRow.species_entity_id, SpeciesYieldRow.commodity)):
+        if commodity is not None:
+            yields[species_id].add(commodity)
+    fodder: dict[int, float] = defaultdict(float)
+    roots: dict[int, float] = defaultdict(float)
+    for row in await ctx.session.scalars(select(RegionCropRow)):
+        kinds = yields.get(row.plant_entity_id, set())
+        if CommodityKind.FODDER in kinds:
+            fodder[row.region_entity_id] = min(1.0, fodder[row.region_entity_id] + row.share / PERCENT)
+        if CommodityKind.TUBERS in kinds:
+            roots[row.region_entity_id] = min(1.0, roots[row.region_entity_id] + row.share / PERCENT)
+    return dict(fodder), dict(roots)
 
 
 async def region_name(ctx: TickContext, region_id: int) -> str:
@@ -113,7 +136,8 @@ async def field_work(ctx: TickContext, atlas: RegionAtlas) -> FieldWork:
         region = atlas.top_region(holder_id)
         if region is not None:
             drained.add(region)
-    return FieldWork(rotating, terraced, dict(irrigated), drained)
+    fodder, roots = await sown_shares(ctx)
+    return FieldWork(rotating, terraced, dict(irrigated), drained, fodder, roots)
 
 
 def nutrient_change(ctx: TickContext, land: RegionEnvironmentRow, nutrient: NutrientKind, stock: int, work: FieldWork) -> float:
@@ -129,9 +153,14 @@ def nutrient_change(ctx: TickContext, land: RegionEnvironmentRow, nutrient: Nutr
             + (table.rotation_fix if region in work.rotating else 0)
             + fallow * table.fallow_pct
             + grazed * table.manure_pct / 2
+            + farmed * work.fodder.get(region, 0.0) * table.fodder_fix
         )
     if nutrient is N.MINERAL:
-        return natural - farmed * table.mineral_draw + (table.river_silt if land.river_class is not RiverClass.NONE else 0)
+        return (
+            natural
+            - farmed * (table.mineral_draw + work.roots.get(region, 0.0) * table.root_mineral)
+            + (table.river_silt if land.river_class is not RiverClass.NONE else 0)
+        )
     if nutrient is N.ORGANIC:
         return (
             natural
@@ -201,24 +230,44 @@ async def hungry_years(ctx: TickContext) -> dict[int, int]:
     return {region: int(count) for region, count in rows.all() if region is not None}
 
 
-async def people_regions(ctx: TickContext, atlas: RegionAtlas) -> dict[int, set[int]]:
-    found: dict[int, set[int]] = defaultdict(set)
+@dataclass
+class Homes:
+    regions: dict[int, set[int]]
+    communities: dict[int, set[int]]
+
+
+async def people_homes(ctx: TickContext, atlas: RegionAtlas) -> Homes:
+    homes = Homes(defaultdict(set), defaultdict(set))
     for entity in await canon(ctx.session, [EntityType.PEOPLE, EntityType.SETTLEMENT]):
         people = await people_of(ctx.session, entity)
         region = atlas.top_region(entity.id)
-        if people is not None and region is not None and people.status is EntityStatus.CANON:
-            found[people.id].add(region)
+        if people is None or people.status is not EntityStatus.CANON:
+            continue
+        homes.communities[people.id].add(entity.id)
+        if region is not None:
+            homes.regions[people.id].add(region)
+    return homes
+
+
+async def famine_generations(ctx: TickContext) -> dict[int, int]:
+    found: dict[int, int] = defaultdict(int)
+    for row in await ctx.session.scalars(select(GenerationRow).where(GenerationRow.passed_epoch.is_(None))):
+        if FormativeKind.FAMINE.value in row.formative:
+            found[row.community_entity_id] += 1
     return found
 
 
 async def remember_famines(ctx: TickContext, atlas: RegionAtlas, tally: SoilTally) -> None:
     table = ctx.rules.famine_foods
     years = await hungry_years(ctx)
+    generations = await famine_generations(ctx)
+    homes = await people_homes(ctx, atlas)
     lore = {row.people_entity_id: row for row in await ctx.session.scalars(select(FamineLoreRow))}
-    for people_id, regions in sorted((await people_regions(ctx, atlas)).items()):
+    for people_id, regions in sorted(homes.regions.items()):
         if held(people_id):
             continue
-        target = clamp_int(sum(years.get(region, 0) for region in regions) * table.per_famine, 0, PERCENT)
+        formed = sum(generations.get(community, 0) for community in homes.communities.get(people_id, set()))
+        target = clamp_int(sum(years.get(region, 0) for region in regions) * table.per_famine + formed * table.per_generation, 0, PERCENT)
         row = lore.get(people_id)
         if row is None:
             if target <= 0:

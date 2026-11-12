@@ -68,7 +68,7 @@ function PlantingCard({
       caption={`Planted in epoch ${row.planted_epoch}${row.felled_epoch !== null ? ` · cut down in epoch ${row.felled_epoch}` : ''}`}
       removeLabel='Remove the planting'
       editTitle='Set the planting'
-      note='Long-lived plantings bear only after epochs, then pay their owner each epoch and lift the prosperity of their land. Armies that lay a land waste cut them down, and they take generations to grow again.'
+      note='Long-lived plantings bear only after epochs, then pay their owner each epoch and lift the prosperity of their land; in old age they wear out and are planted anew. Armies that plunder a land cut some of them down, and those that lay it waste cut half, and they take generations to grow again.'
       fields={[
         {
           key: 'kind',
@@ -188,7 +188,7 @@ function CommonCard({
       caption={`${rule.label} · since epoch ${row.since_epoch}`}
       removeLabel='Remove the common'
       editTitle='Set the common'
-      note='Folk use their commons by custom. Use beyond what a common bears wears it down unless a council rules it. Enclosure by a ruler pays the encloser but takes the living of cottagers, who drift to the cities and grow restless.'
+      note='Folk use their commons by custom. Use beyond what a common bears wears it down unless a council rules it. A ruler orders enclosure by mandate, sooner under a law of freehold and seldom under communal tenure; it pays the encloser but takes the living and wealth of cottager households, who drift to the cities and grow restless.'
       fields={[
         {
           key: 'kind',
@@ -310,7 +310,7 @@ function ReserveCard({
       caption={`Since epoch ${row.since_epoch}`}
       removeLabel='Lift the game laws'
       editTitle='Set the reserve'
-      note='A reserve keeps the hunting for its holder and shields its beasts from the folk. Hunger and poverty breed poaching, which raises crime; a strict holder punishes poachers and the folk resent it.'
+      note='A reserve keeps the hunting for its holder and shields its beasts from the folk. Hunger and poverty breed poaching, which raises crime; a strict holder brings poachers to trial and the folk resent it.'
       fields={[
         {
           key: 'holder_node_id',
@@ -392,7 +392,7 @@ function LoreCard({ row, blocked }: { row: Lore; blocked: string | null }) {
       caption={`Read in epoch ${row.updated_epoch}`}
       removeLabel='Read their memory anew'
       editTitle='Set the famine lore'
-      note='A people that remembers hungry years learns what the land gives in a failed year and stores food against the next. Famine foods and stores make good part of a failed harvest, but living on famine foods sickens the land.'
+      note='A people that remembers hungry years, and whose living generations were formed by famine, learns what the land gives in a failed year and stores food against the next. Famine foods and stores make good part of a failed harvest, but living on famine foods sickens the land.'
       fields={[
         {
           key: 'memory',

@@ -54,6 +54,8 @@ class MandateKind(StrEnum):
     FAMINE_RELIEF = "famine_relief"
     CURFEW = "curfew"
     SLUM_CLEARANCE = "slum_clearance"
+    PREPARE = "prepare"
+    ENCLOSURE = "enclosure"
 
 
 class MandateState(StrEnum):

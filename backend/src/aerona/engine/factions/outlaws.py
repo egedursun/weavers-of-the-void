@@ -30,7 +30,7 @@ async def suppress(ctx: TickContext, factions: FactionBook, realms: RealmBook) -
     table = ctx.rules.banditry
     broken = 0
     for faction_id, profile in list(factions.profiles.items()):
-        if profile.kind not in ROBBER_KINDS or profile.chartered_by_entity_id is not None:
+        if profile.kind not in ROBBER_KINDS or profile.chartered_by_entity_id is not None or held(faction_id):
             continue
         realm = realms.realm_of(profile.home_entity_id)
         if realm is None or not (profile.outlawed or profile.kind in {FactionKind.BANDITS, FactionKind.PIRATES}):
@@ -62,12 +62,12 @@ async def privateers(ctx: TickContext, factions: FactionBook, realms: RealmBook)
             continue
         lord = realms.realms.get(profile.chartered_by_entity_id)
         core = lord.profile.core_entity_id if lord is not None else None
-        if core is None:
+        if core is None or held(faction_id):
             continue
         for item in await ongoing_wars(ctx.session, core):
             enemy_id = item.defender_id if item.attacker_id == core else item.attacker_id
             enemy = await living_entity(ctx.session, enemy_id)
-            if enemy is None:
+            if enemy is None or held(enemy.id):
                 continue
             shift_stat(enemy, "prosperity", -ctx.rules.banditry.raid_prosperity, ctx.rules.society.default_stat)
             await change_relation(
@@ -82,10 +82,14 @@ async def privateers(ctx: TickContext, factions: FactionBook, realms: RealmBook)
 async def hire(ctx: TickContext, factions: FactionBook, realms: RealmBook) -> int:
     table = ctx.rules.mercenaries
     hired = 0
-    idle = [profile for profile in factions.profiles.values() if profile.kind is FactionKind.MERCENARY_COMPANY and profile.employer_entity_id is None]
+    idle = [
+        profile
+        for profile in factions.profiles.values()
+        if profile.kind is FactionKind.MERCENARY_COMPANY and profile.employer_entity_id is None and not held(profile.faction_entity_id)
+    ]
     for realm in realms.realms.values():
         core = realm.profile.core_entity_id
-        if not idle or core is None or not await ongoing_wars(ctx.session, core) or realm.profile.treasury < table.pay:
+        if not idle or core is None or held(realm.entity.id, core) or not await ongoing_wars(ctx.session, core) or realm.profile.treasury < table.pay:
             continue
         if not ctx.rng(f"hire.{realm.entity.id}.{ctx.epoch}").chance(table.hire_chance):
             continue

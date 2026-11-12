@@ -200,7 +200,7 @@ function NutrientCard({
       caption={`${trend} last epoch · read in epoch ${row.updated_epoch}`}
       removeLabel='Reset to the natural soil'
       editTitle='Set the stock'
-      note='Crops draw the stocks; rotations return the fixed element, fallow and manure restore it, rivers, floods and ash bring minerals, and forest feeds organic matter. Irrigation without drainage leaves salt. The soil’s fertility follows these stocks.'
+      note='Crops draw the stocks by their kind, root crops taking more minerals and fodder crops returning the fixed element; rotations return it too, fallow and manure restore it, rivers, floods and ash bring minerals, and forest feeds organic matter. Irrigation without drainage leaves salt. The soil’s fertility follows these stocks.'
       fields={[
         { key: 'stock', label: 'Stock', kind: 'number', min: 0, max: SPAN },
         {

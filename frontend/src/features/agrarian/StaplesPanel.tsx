@@ -59,7 +59,7 @@ function KeystoneCard({
       caption={`Needed for ${use.label.toLowerCase()} · since epoch ${row.designated_epoch}`}
       removeLabel='Free the world from it'
       editTitle='Set the keystone'
-      note='One producer’s yield that an institution needs and a cult holds sacred. Harvesting it thins its producers, whoever controls its source holds a monopoly, those who depend on it suffer when it runs short, the cult turns on a careless controller, and envious realms go to war for the source.'
+      note='One producer’s yield that an institution needs and a cult holds sacred. Harvesting it thins its producers, whoever controls its source holds a monopoly, those who depend on it suffer when it runs short, the cult turns on a careless controller, and envious realms go to war with the source as their aim. A young world comes to depend on such a yield as soon as one exists.'
       fields={[
         { key: 'name', label: 'Name of the resource', kind: 'text' },
         {
@@ -175,7 +175,7 @@ function BrandCard({ row, blocked }: { row: Brand; blocked: string | null }) {
       caption={`${shop.label} of ${row.community.name} · since epoch ${row.since_epoch}`}
       removeLabel='Forget the brand'
       editTitle='Set the brand'
-      note='Workshops earn a name from the quality of their work and the renowned works of their town. A famous brand earns its owner a premium and lifts its town; crime breeds counterfeits that wear the name down. The brand passes with the workshop to its heirs or buyers.'
+      note='Workshops earn a name from the quality of their work and the renowned works of their town. A famous brand raises the price of and the demand for its goods in its town, earns its owner a premium and lifts its town; crime breeds counterfeits that wear the name down. The brand passes with the workshop to its heirs or buyers.'
       fields={[
         { key: 'name', label: 'Name of the brand', kind: 'text' },
         {

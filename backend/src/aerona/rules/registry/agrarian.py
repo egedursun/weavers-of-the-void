@@ -42,6 +42,7 @@ class CentralPlaceRules:
     gap_from: int = rule(200, 0, 100000, C, "Carrying cost to the nearest market beyond which a land counts as a gap between markets")
     gap_span: int = rule(300, 1, 100000, C, "Carrying cost over the gap mark at which the gap is full")
     gap_pull_pct: int = rule(60, 0, 300, C, "How much a full gap between markets draws migrants to found a settlement there (%)")
+    settle_gap: int = rule(50, 0, 100, C, "Gap between markets a neighbouring land needs before a people founds its next village there")
 
 
 @dataclass(frozen=True)
@@ -64,6 +65,8 @@ class NutrientRules:
     fallow_pct: int = rule(6, 0, 100, E, "Fixed element fully fallow land regains each epoch")
     manure_pct: int = rule(6, 0, 100, E, "Organic matter and fixed element fully grazed land regains from manure each epoch")
     litter_pct: int = rule(3, 0, 100, E, "Organic matter full forest cover returns to the soil each epoch")
+    fodder_fix: int = rule(6, 0, 100, E, "Fixed element a land sown wholly with fodder crops regains each epoch")
+    root_mineral: int = rule(3, 0, 100, E, "Extra mineral a land sown wholly with root crops loses each epoch")
     erosion_pct: int = rule(10, 0, 100, E, "Organic matter full erosion washes away each epoch")
     river_silt: int = rule(2, 0, 100, E, "Mineral a river leaves on its lands each epoch")
     flood_mineral: int = rule(10, 0, 100, E, "Mineral a flood leaves on the land it covers")
@@ -87,6 +90,9 @@ class PerennialRules:
     prosperity_cap: int = rule(2, 0, 100, E, "Most prosperity the plantings of a land add to its settlements in an epoch")
     recover: int = rule(10, 0, 100, E, "Condition a damaged planting regains each epoch")
     felling_pct: int = rule(50, 0, 100, E, "Share of the growth of a land's plantings an army cuts down when it lays the land waste (%)")
+    raid_felling_pct: int = rule(15, 0, 100, E, "Share of the growth of a land's plantings raiders and invaders cut down as they plunder (%)")
+    life_pct: int = rule(600, 100, 10000, E, "Epochs a grown planting bears before it ages, against the epochs it took to grow (%)")
+    ageing: int = rule(10, 0, 100, E, "Condition an old planting loses each epoch until it is replanted")
 
 
 @dataclass(frozen=True)
@@ -102,13 +108,16 @@ class CommonsRules:
     council_at: int = rule(45, 0, 100, E, "Condition under which the folk of a common may form a council to rule it")
     council_chance: int = rule(30, 0, 100, E, "Chance each epoch a worn common gets a council where the town keeps order (%)")
     council_order: int = rule(50, 0, 100, E, "Public order a steward town needs to form a council")
-    enclose_pct: int = rule(2, 0, 100, P, "Chance each epoch a ruler encloses a common of its realm (%)")
+    enclose_pct: int = rule(1, 0, 100, P, "Chance each epoch a ruler orders the commons of a town of its realm enclosed, for each common it holds (%)")
     horizon_mark: int = rule(40, 0, 100, P, "Time horizon under which a ruler is twice as eager to enclose")
     labour_span: int = rule(2000, 1, 10000000, P, "Dispossessed folk already in a realm that double the profit a ruler sees in enclosure")
     dispossess_pct: int = rule(8, 0, 100, P, "Share of the people of a land driven off when its common is enclosed (%)")
     sol_loss: int = rule(6, 0, 100, P, "Prosperity the settlements of a land lose when its common is enclosed")
     unrest_gain: int = rule(10, 0, 100, P, "Unrest the settlements of a land gain when its common is enclosed")
     enclosed_coin: int = rule(30, 0, 100000, P, "Coin an enclosed common in full condition yields its owner each epoch")
+    freehold_pct: int = rule(300, 0, 1000, P, "How much a law of freehold tenure multiplies the chance of enclosure (%)")
+    communal_pct: int = rule(25, 0, 1000, P, "How much a law of communal tenure multiplies the chance of enclosure (%)")
+    household_loss: int = rule(20, 0, 100, P, "Share of their wealth the households of farmers and the bound lose when their common is enclosed (%)")
 
 
 @dataclass(frozen=True)
@@ -132,6 +141,7 @@ class GameLawRules:
 class FamineFoodRules:
     per_famine: int = rule(25, 0, 100, E, "Famine memory each remembered hungry year adds to a people")
     memory_epochs: int = rule(6, 1, 1000, E, "Epochs a people counts its hungry years")
+    per_generation: int = rule(20, 0, 100, E, "Famine memory each living generation formed by a famine adds to its people")
     fade_pct: int = rule(10, 0, 100, E, "Share of its famine memory a people forgets each epoch as generations pass (%)")
     foods_at: int = rule(40, 0, 100, E, "Famine memory at which a people learns its famine foods")
     storage_pct: int = rule(80, 0, 200, E, "Share of its famine memory a people's tradition of storing food grows toward (%)")
@@ -162,6 +172,7 @@ class ReliefRules:
     share_pct: int = rule(5, 0, 100, P, "Share of its treasury a realm sends as aid (%)")
     cap: int = rule(800, 0, 10000000, P, "Most coin one gift of aid carries")
     coin_per_prosperity: int = rule(100, 1, 1000000, P, "Coin of goods that restores one point of a town's prosperity")
+    grain: int = rule(40, 0, 1000000, P, "Grain a gift of goods carries from the giver's capital to the stricken town")
     prosperity_cap: int = rule(8, 0, 100, P, "Most prosperity aid restores to a town in an epoch")
     healer_disease: int = rule(10, 0, 100, P, "Sickness healers sent as aid take from a stricken land")
     labour_progress: int = rule(15, 0, 100, P, "Progress labour sent as aid adds to a town's rebuilding")
@@ -193,6 +204,8 @@ class KeystoneResourceRules:
     unique_ranges: int = rule(2, 1, 100, M, "Most lands a producer may live in for its yield to be a world's keystone")
     harm_pct: int = rule(20, 0, 300, M, "Producers lost each epoch for each point of harvest (%)")
     full_abundance: int = rule(60, 1, 100000, M, "Producers in the source land at which the supply is full")
+    genesis_epochs: int = rule(2, 0, 1000, M, "Epochs after a world is made in which it comes to depend on a rare sacred yield whenever one exists")
+    renewal: int = rule(10, 0, 100, M, "Supply a keystone with a producer that is not a living species regains each epoch")
     designate_abundance: int = rule(30, 0, 100000, M, "Producers a rare yield needs in its land before a world comes to depend on it")
     price_swing: int = rule(150, 0, 1000, M, "How much the price rises for each point the supply falls under half (%)")
     coin_per_point: int = rule(8, 0, 100000, M, "Coin the controller of the source earns each epoch for each point of harvest at full supply")

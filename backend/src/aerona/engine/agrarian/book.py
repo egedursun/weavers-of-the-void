@@ -10,6 +10,7 @@ from aerona.db.tables.agrarian import (
     FamineLoreRow,
     GameReserveRow,
     IntensificationRow,
+    KeystoneResourceRow,
     LandRingRow,
     PerennialRow,
     PreparednessRow,
@@ -18,7 +19,7 @@ from aerona.db.tables.agrarian import (
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.agrarian import LandUseRing, NutrientKind, PreparednessKind
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.intervention import Disaster
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
@@ -177,6 +178,39 @@ def shield_cut(rules: Rules, rows: list[PreparednessRow], kinds: frozenset[Prepa
     return min(table.cap_pct, cut) / PERCENT
 
 
+STRIKES = frozenset({EngineKind.EARTHQUAKE, EngineKind.FLOOD, EngineKind.DROUGHT, EngineKind.STORM, EngineKind.ERUPTION, EngineKind.FIRE, EngineKind.FAMINE})
+
+
+async def unready(session: AsyncSession, rules: Rules, atlas: RegionAtlas, town_id: int, epoch: int) -> bool:
+    if await session.scalar(select(PreparednessRow.kind).where(PreparednessRow.settlement_entity_id == town_id).limit(1)) is not None:
+        return False
+    region = atlas.top_region(town_id)
+    since = epoch - rules.resilience.memory_epochs
+    events = await session.scalars(
+        select(EntityRow.id).where(EntityRow.entity_type == EntityType.EVENT, EntityRow.engine_kind.in_(list(STRIKES)), EntityRow.birth_epoch >= since)
+    )
+    return region is not None and any(atlas.top_region(event_id) == region for event_id in events)
+
+
+async def keystone_source(session: AsyncSession, controller_id: int) -> int | None:
+    found: int | None = await session.scalar(
+        select(KeystoneResourceRow.source_region_entity_id)
+        .where(KeystoneResourceRow.controller_entity_id == controller_id, KeystoneResourceRow.source_region_entity_id.is_not(None))
+        .order_by(KeystoneResourceRow.id)
+        .limit(1)
+    )
+    return found
+
+
+async def gap_site(session: AsyncSession, rules: Rules, atlas: RegionAtlas, home: int) -> int | None:
+    rings = {
+        row.region_entity_id: row.gap
+        for row in await session.scalars(select(LandRingRow).where(LandRingRow.region_entity_id.in_(atlas.neighbour_regions(home))))
+    }
+    open_lands = [(gap, -region) for region, gap in rings.items() if gap >= rules.central_places.settle_gap and not atlas.is_water(region)]
+    return -max(open_lands)[1] if open_lands else None
+
+
 async def works_of(session: AsyncSession, settlement_id: int) -> list[PreparednessRow]:
     return list(await session.scalars(select(PreparednessRow).where(PreparednessRow.settlement_entity_id == settlement_id).order_by(PreparednessRow.kind)))
 
@@ -219,5 +253,6 @@ async def fell_plantings(ctx: TickContext, region: EntityRow, share_pct: int) ->
         row.felled_epoch = ctx.epoch
         felled += 1
     if felled:
-        await note(ctx, f"The plantings of {region.name} were cut down; it will take generations to grow them again.", key="perennials.felled", ids=[region.id])
+        how = "cut down; it will take generations to grow them again" if share_pct * 2 >= PERCENT else "partly cut down"
+        await note(ctx, f"The plantings of {region.name} were {how}.", key="perennials.felled", ids=[region.id])
     return felled

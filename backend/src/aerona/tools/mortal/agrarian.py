@@ -14,10 +14,12 @@ from aerona.domain.enums.agrarian import AidKind, CommonsRule, PerennialKind, Pr
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.mortal import CrimeKind
 from aerona.engine.agrarian import control
 from aerona.engine.collective.book import shift
 from aerona.engine.economy.purse import give_coin, take_coin
 from aerona.engine.mind.hooks import judged
+from aerona.engine.polity.trials import report_crime
 from aerona.engine.primitives.queries import living_entity, top_region
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -33,6 +35,7 @@ CATCH_COIN = 15
 CATCH_POACHING = 10
 DEFAULT_STRICTNESS = 60
 MOST_LEVEL = 5
+STRICT_RESERVE = 50
 
 
 class EncloseCommonsInput(ToolInput):
@@ -137,6 +140,9 @@ async def poach_game(call: MortalCall, args: PoachGameInput) -> str:
     await give_coin(call.session, call.tick.rules, call.me, CATCH_COIN)
     if row.holder_node_id is not None:
         await judged(call.tick, call.me.id, row.holder_node_id, ActKind.POACHING, note=f"poached the game of {land.name}")
+    town = await home_town(call)
+    if town is not None and row.strictness >= STRICT_RESERVE:
+        await report_crime(call.tick, town.id, call.me.id, CrimeKind.THEFT)
     call.target(land.id)
     await call.chronicle(ChronicleKind.WORLD, lines.POACH_GAME, entity_ids=[call.me.id, land.id], me=call.me.name, land=land.name)
     return result(MortalResult.GAME_POACHED, land=land.name, coin=CATCH_COIN)

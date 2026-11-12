@@ -20,6 +20,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.environment import MovementMode, ScarKind, WeatherKind
 from aerona.domain.enums.military import CommandArea, MoraleState, MutinyOutcome, Stance
 from aerona.domain.enums.society import NaturalLaw
+from aerona.engine.agrarian.book import fell_plantings
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of, holding
 from aerona.engine.environment.book import EnvironmentBook, add_scar
@@ -78,6 +79,7 @@ class Season:
     mutiny: MutinyOutcome | None = None
     rejoined: int = 0
     eaten_out: bool = False
+    plundered: bool = False
     works: str | None = None
 
 
@@ -224,6 +226,7 @@ def feed(
         log.foraged = True
         if profile.stance in {Stance.FORAGE, Stance.RAID} or march.attacking:
             plunder(ctx.rules, region)
+            log.plundered = True
     if size <= fed:
         return 0
     log.eaten_out = True
@@ -461,6 +464,10 @@ async def campaign_season(
     )
     if log.eaten_out:
         await eat_out(ctx, atlas, march, region)
+    if log.plundered and region is not None:
+        land = await ctx.session.get(EntityRow, region.entity_id)
+        if land is not None:
+            await fell_plantings(ctx, land, ctx.rules.perennials.raid_felling_pct)
     dead += wandering.dead + peril.dead
     log.unfed_mounts = not feed_mounts(ctx.rules, profile, rows, log.foraged)
     await rearm(ctx, march.army, march.owner, rows)

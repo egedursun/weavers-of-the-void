@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.agents.context.agrarian_lines import mortal_agrarian_lines, son_agrarian_lines
 from aerona.agents.context.scope import load_scope
 from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.agrarian import (
     BrandRow,
     CentralPlaceRow,
@@ -18,15 +19,19 @@ from aerona.db.tables.agrarian import (
     ReliefAidRow,
     SoilNutrientRow,
 )
+from aerona.db.tables.collective import GenerationRow
 from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.cycles import GiftRow
-from aerona.db.tables.ecology import SpeciesRangeRow
-from aerona.db.tables.economy import ProductionRunRow, WorkshopRow
+from aerona.db.tables.ecology import SpeciesRangeRow, SpeciesYieldRow
+from aerona.db.tables.economy import MarketPriceRow, ProductionRunRow, WorkshopRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import NotableYearRow, RegionEnvironmentRow
+from aerona.db.tables.flora import RegionCropRow
+from aerona.db.tables.households import HouseholdRow
 from aerona.db.tables.intrigue import FavourRow
+from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.mortal import MortalProfileRow
-from aerona.db.tables.polity import HouseProfileRow, OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow
+from aerona.db.tables.polity import HouseProfileRow, LawJurisdictionRow, LawProfileRow, OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow
 from aerona.db.tables.regime import RegimeRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.domain.enums.agrarian import (
@@ -42,19 +47,23 @@ from aerona.domain.enums.agrarian import (
     RebuildCause,
     RebuildPlan,
 )
-from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.bond import BondKind, BondRole
+from aerona.domain.enums.collective import FormativeKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.cycles import GiftOccasion
-from aerona.domain.enums.economy import CommodityKind, WorkshopKind
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.environment import NotableYearKind, RiverClass
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.mind import MemoryKind
-from aerona.domain.enums.polity import DecisionRule, GovernmentKind, OfficeKind
+from aerona.domain.enums.mortal import CrimeKind
+from aerona.domain.enums.polity import DecisionRule, GovernmentKind, Jurisdiction, LawArea, LawKind, OfficeKind
 from aerona.domain.enums.settlement import SizeTier
+from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.statecraft import MandateKind
 from aerona.domain.enums.urban import Morphology
-from aerona.domain.models.entity_stats import EventStats, HouseStats, PolityStats
+from aerona.domain.models.entity_stats import CultStats, EventStats, HouseStats, LawStats, PolityStats, SpeciesStats
 from aerona.engine.agrarian.book import (
     Cushion,
     counted_people,
@@ -63,6 +72,8 @@ from aerona.engine.agrarian.book import (
     farming_boost,
     fell_plantings,
     gap_of,
+    gap_site,
+    keystone_source,
     method_lift,
     nutrient_shift,
     readout,
@@ -70,18 +81,32 @@ from aerona.engine.agrarian.book import (
     reserve_marks,
     ring_shares,
     shield_of,
+    unready,
 )
 from aerona.engine.agrarian.control import designate_keystone, edit_record
 from aerona.engine.agrarian.lands import Holdings, LandsTally, enclose, grow, holdings, keep_commons, keep_lands, keep_reserves, realm_dispossessed
-from aerona.engine.agrarian.resilience import ResilienceTally, prepare, rebuild, relieve
+from aerona.engine.agrarian.resilience import ResilienceTally, aid_from, prepare, rebuild, relieve
 from aerona.engine.agrarian.rings import SpatialTally, keep_spatial
 from aerona.engine.agrarian.ruin import mark_ruin
-from aerona.engine.agrarian.soil import SoilTally, feed_soils, keep_soil, press_land, remember_famines
-from aerona.engine.agrarian.staples import StaplesTally, keep_brands, keep_keystones
+from aerona.engine.agrarian.soil import (
+    FieldWork,
+    SoilTally,
+    famine_generations,
+    feed_soils,
+    field_work,
+    keep_soil,
+    nutrient_change,
+    people_homes,
+    press_land,
+    remember_famines,
+)
+from aerona.engine.agrarian.staples import StaplesTally, designate, keep_brands, keep_keystones
 from aerona.engine.context import TickContext
+from aerona.engine.economy.stocks import goods_of
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.phases.environment import environment_survey
 from aerona.engine.polity.book import RealmBook
+from aerona.engine.polity.mandates import issue, met, units_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import stat_or
@@ -426,8 +451,12 @@ async def test_a_workshop_of_fine_work_earns_a_brand_that_passes_with_it(session
         )
     )
     await session.flush()
+    session.add(MarketPriceRow(market_entity_id=hollin.id, commodity=CommodityKind.TOOLS, epoch=ctx.epoch, price=100, supply=50, demand=50))
+    await session.flush()
     tally = StaplesTally()
     await keep_brands(ctx, tally)
+    market = await session.get(MarketPriceRow, (hollin.id, CommodityKind.TOOLS, ctx.epoch))
+    assert market is not None and market.price > 100 and market.demand > 50
     brand = await session.scalar(select(BrandRow).where(BrandRow.workshop_id == shop.id))
     assert brand is not None and tally.earned == 1 and brand.owner_node_id == smith.id and brand.reputation > 10
     shop.owner_node_id = heir.id
@@ -507,3 +536,184 @@ async def test_enclosure_can_be_ordered_by_a_god(session: AsyncSession, world: C
     lands: Holdings = await holdings(ctx)
     driven = await enclose(ctx, lands, common, lord, await RealmBook.load(session))
     assert driven > 0 and common.rule is CommonsRule.ENCLOSED and common.encloser_node_id == lord.id
+
+
+async def tenure(session: AsyncSession, world: CoreWorld, place: EntityRow, value: str) -> None:
+    law = await entity(session, f"Law of {value} land", EntityType.LAW, LawStats(), world_id=world.world.id)
+    session.add(LawProfileRow(law_entity_id=law.id, kind=LawKind.LAND_TENURE, area=LawArea.PROPERTY, params={"tenure": value}, enforcement=80))
+    session.add(LawJurisdictionRow(law_entity_id=law.id, node_entity_id=place.id, jurisdiction=Jurisdiction.POLITY))
+    await session.flush()
+
+
+async def test_a_freehold_law_hastens_enclosure_by_mandate_and_cottagers_lose_their_wealth(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session, commons={"enclose_pct": 34, "council_chance": 0})
+    village = await town(session, world, "Brack", 1, BIG, tier=SizeTier.VILLAGE)
+    city = await town(session, world, "Hollin", 3, BIG, tier=SizeTier.CITY)
+    ruler = await mortal(session, "Ruler", world, city.id)
+    await realm(session, world, [city, village], ruler)
+    await tenure(session, world, village, "freehold")
+    household = HouseholdRow(name="The Cottars", settlement_node_id=village.id, social_class=SocialClass.FARMER, wealth=100, locked=[])
+    session.add(household)
+    common = CommonsRow(region_entity_id=world.regions[1].id, kind=CommonsKind.PASTURE, steward_entity_id=village.id, locked=[])
+    session.add(common)
+    await session.flush()
+    await keep_commons(ctx, await holdings(ctx), LandsTally())
+    order = await session.scalar(select(MandateRow).where(MandateRow.kind == MandateKind.ENCLOSURE, MandateRow.settlement_entity_id == village.id))
+    assert order is not None and order.issuer_node_id == ruler.id
+    assert common.rule is CommonsRule.ENCLOSED and common.encloser_node_id == ruler.id
+    assert household.wealth <= 100 - ctx.rules.commons.household_loss
+    assert await met(ctx, order)
+
+
+async def test_a_communal_tenure_law_holds_enclosure_back(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session, commons={"enclose_pct": 100, "communal_pct": 0, "council_chance": 0})
+    village = await town(session, world, "Brack", 1, BIG, tier=SizeTier.VILLAGE)
+    ruler = await mortal(session, "Ruler", world, village.id)
+    await realm(session, world, [village], ruler)
+    await tenure(session, world, village, "communal")
+    common = CommonsRow(region_entity_id=world.regions[1].id, kind=CommonsKind.PASTURE, steward_entity_id=village.id, locked=[])
+    session.add(common)
+    await session.flush()
+    await keep_commons(ctx, await holdings(ctx), LandsTally())
+    assert common.rule is not CommonsRule.ENCLOSED
+
+
+async def test_an_unready_town_struck_by_disaster_is_ordered_to_prepare_and_pays_from_its_treasury(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session)
+    hollin = await town(session, world, "Hollin", 0, BIG)
+    ruler = await mortal(session, "Ruler", world, hollin.id)
+    await realm(session, world, [hollin], ruler)
+    (await land(session, world, 0)).river_class = RiverClass.RIVER
+    flood = await entity(session, "The Flood", EntityType.EVENT, EventStats(severity=60), world_id=world.world.id, location_id=hollin.id)
+    flood.engine_kind = EngineKind.FLOOD
+    flood.birth_epoch = ctx.epoch
+    profile = await session.get(SettlementProfileRow, hollin.id)
+    assert profile is not None
+    profile.investment_pool = 0
+    await session.flush()
+    atlas = await RegionAtlas.load(session)
+    assert await unready(session, ctx.rules, atlas, hollin.id, ctx.epoch)
+    book = await RealmBook.load(session)
+    order = await issue(ctx, next(iter(book.realms.values())), MandateKind.PREPARE, settlement_id=hollin.id)
+    assert order is not None
+    treasury = profile.treasury
+    await prepare(ctx, atlas, ResilienceTally())
+    assert await session.get(PreparednessRow, (hollin.id, PreparednessKind.LEVEE)) is not None
+    assert profile.treasury == treasury - ctx.rules.resilience.cost
+    assert await met(ctx, order) and not await unready(session, ctx.rules, atlas, hollin.id, ctx.epoch)
+
+
+async def test_goods_sent_as_aid_carry_grain_from_the_capital(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session)
+    stricken = await town(session, world, "Brack", 1, BIG)
+    capital = await town(session, world, "Hollin", 3, BIG)
+    giver = await realm(session, world, [capital], None)
+    await goods_of(session, ctx.epoch).add(capital.id, CommodityKind.GRAIN, 100, GoodsFlow.HARVEST)
+    await session.flush()
+    book = await RealmBook.load(session)
+    await aid_from(ctx, giver, book.realms[giver.id], event=None, town=stricken, receiver=None, tally=ResilienceTally(), kind=AidKind.GOODS, amount=100)
+    assert await units_of(ctx, stricken.id, CommodityKind.GRAIN) == ctx.rules.relief.grain
+    assert await units_of(ctx, capital.id, CommodityKind.GRAIN) == 100 - ctx.rules.relief.grain
+
+
+async def test_fodder_crops_return_the_fixed_element_and_root_crops_draw_minerals(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session)
+    ground = await land(session, world, 0)
+    ground.farmed = 60
+    for name, commodity in (("Vetch", CommodityKind.FODDER), ("Tuber", CommodityKind.TUBERS)):
+        crop = await entity(session, name, EntityType.SPECIES, SpeciesStats(), world_id=world.world.id, location_id=ground.entity_id)
+        session.add(SpeciesYieldRow(species_entity_id=crop.id, product=name.lower(), commodity=commodity))
+        session.add(RegionCropRow(region_entity_id=ground.entity_id, plant_entity_id=crop.id, share=100, locked=[]))
+    await session.flush()
+    atlas = await RegionAtlas.load(session)
+    work = await field_work(ctx, atlas)
+    plain = FieldWork(set(), set(), {}, set(), {}, {})
+    assert nutrient_change(ctx, ground, NutrientKind.FIXED, 50, work) > nutrient_change(ctx, ground, NutrientKind.FIXED, 50, plain)
+    assert nutrient_change(ctx, ground, NutrientKind.MINERAL, 50, work) < nutrient_change(ctx, ground, NutrientKind.MINERAL, 50, plain)
+
+
+async def test_a_generation_formed_by_famine_keeps_its_peoples_memory_of_hunger(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session)
+    hollin = await town(session, world, "Hollin", 0, BIG)
+    await BondRepository(session).connect(BondDraft(world.people.id, hollin.id, BondKind.LIVES_IN, 0, role=BondRole.HOMELAND))
+    session.add(GenerationRow(community_entity_id=hollin.id, generation_epoch=1, formative=[FormativeKind.FAMINE.value], alive=40, locked=[]))
+    await session.flush()
+    assert hollin.id in (await people_homes(ctx, await RegionAtlas.load(session))).communities[world.people.id]
+    assert (await famine_generations(ctx))[hollin.id] == 1
+    await remember_famines(ctx, await RegionAtlas.load(session), SoilTally())
+    lore = await session.get(FamineLoreRow, world.people.id)
+    assert lore is not None and lore.memory >= ctx.rules.famine_foods.per_generation
+
+
+async def test_an_old_planting_wears_out_and_is_planted_anew(session: AsyncSession, world: CoreWorld) -> None:
+    world.cosmos.epoch = 30
+    await session.flush()
+    ctx = await surveyed(session)
+    row = PerennialRow(
+        region_entity_id=world.regions[0].id, kind=PerennialKind.GROVE, area=5, maturity=100, mature_epochs=1, condition=5, planted_epoch=0, locked=[]
+    )
+    session.add(row)
+    await session.flush()
+    await grow(ctx, await holdings(ctx), LandsTally())
+    assert row.maturity == 0 and row.condition == 100 and row.planted_epoch == ctx.epoch
+
+
+async def test_strictly_kept_game_brings_a_poacher_to_trial(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session, game_laws={"drift_pct": 100, "punish_at": 10})
+    hollin = await town(session, world, "Hollin", 0, BIG)
+    lord = await mortal(session, "Lord", world, hollin.id)
+    poacher = await mortal(session, "Poacher", world, hollin.id)
+    session.add(GameReserveRow(region_entity_id=world.regions[0].id, holder_node_id=lord.id, strictness=80, locked=[]))
+    (await land(session, world, 0)).harvest_pct = 10
+    await session.flush()
+    await keep_reserves(ctx, await holdings(ctx), LandsTally())
+    case = await session.scalar(select(CrimeCaseRow).where(CrimeCaseRow.settlement_entity_id == hollin.id))
+    assert case is not None and case.crime is CrimeKind.THEFT and case.culprit_entity_id in {poacher.id, lord.id} - {lord.id}
+
+
+async def test_a_keystone_that_no_species_yields_renews_instead_of_running_dry(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session)
+    row = await designate_keystone(ctx, world.world.id, "The First Yield", use=KeystoneUse.RITE, source_id=world.regions[0].id)
+    row.locked = []
+    row.supply = 50
+    await session.flush()
+    await keep_keystones(ctx, await RegionAtlas.load(session), *(await faith_and_book(session)), StaplesTally())
+    assert row.supply > 0 and row.supply >= 50 + ctx.rules.keystone_resource.renewal - row.harvest * ctx.rules.keystone_resource.harm_pct // 100
+
+
+async def test_a_young_world_depends_on_its_rare_sacred_yield_at_once(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session, keystone_resource={"designate_pct": 0})
+    world.world.created_epoch = ctx.epoch
+    source = world.regions[0]
+    session.add(SpeciesRangeRow(species_entity_id=world.species.id, region_entity_id=source.id, abundance=50, fit=100, since_epoch=0, locked=[]))
+    session.add(SpeciesYieldRow(species_entity_id=world.species.id, product="first_yield", commodity=CommodityKind.HERBS))
+    hollin = await town(session, world, "Hollin", 0, BIG)
+    cult = await entity(session, "The Keepers", EntityType.CULT, CultStats(), world_id=world.world.id, location_id=hollin.id)
+    await BondRepository(session).connect(BondDraft(cult.id, world.son.id, BondKind.WORSHIPS, 0))
+    await BondRepository(session).connect(BondDraft(hollin.id, world.son.id, BondKind.WORSHIPS, 0))
+    await session.flush()
+    await designate(ctx, await RegionAtlas.load(session), *(await faith_and_book(session)), StaplesTally())
+    row = await session.scalar(select(KeystoneResourceRow).where(KeystoneResourceRow.world_id == world.world.id))
+    assert row is not None and row.cult_entity_id == cult.id and row.source_region_entity_id == source.id
+
+
+async def test_a_people_founds_its_next_village_in_the_gap_between_markets(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session)
+    session.add(LandRingRow(region_entity_id=world.regions[1].id, gap=90, locked=[]))
+    session.add(LandRingRow(region_entity_id=world.regions[0].id, gap=0, locked=[]))
+    await session.flush()
+    atlas = await RegionAtlas.load(session)
+    assert await gap_site(session, ctx.rules, atlas, world.regions[0].id) == world.regions[1].id
+    assert await gap_site(session, ctx.rules, atlas, world.regions[1].id) is None
+
+
+async def test_a_war_for_a_keystone_aims_at_its_source(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session)
+    hollin = await town(session, world, "Hollin", 2, BIG)
+    holder = await realm(session, world, [hollin], None)
+    session.add(PolityTerritoryRow(polity_entity_id=holder.id, region_entity_id=world.regions[0].id, control=80, locked=[]))
+    await session.flush()
+    row = await designate_keystone(ctx, world.world.id, "The First Yield", use=KeystoneUse.RITE, source_id=world.regions[0].id)
+    row.controller_entity_id = holder.id
+    await session.flush()
+    assert await keystone_source(session, holder.id) == world.regions[0].id

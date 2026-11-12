@@ -4,22 +4,25 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.agrarian import PreparednessRow, ReconstructionRow, ReliefAidRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.polity import HouseProfileRow
-from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
+from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow, SettlementTreasuryRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.agrarian import AidKind, PreparednessKind, RebuildCause, RebuildPlan
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.cycles import GiftOccasion, GiftState
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.mind import HonourModel, MemoryKind
 from aerona.domain.enums.settlement import BuildMaterial, SizeTier, TreasuryEntry
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.statecraft import MandateKind, MandateState
 from aerona.domain.enums.urban import Morphology
 from aerona.engine.agrarian.rings import put
 from aerona.engine.body.customs import people_of
@@ -29,6 +32,7 @@ from aerona.engine.cycles.gifts import give
 from aerona.engine.cycles.standing import regard
 from aerona.engine.divine.standing import standing_row
 from aerona.engine.economy.purse import give_coin
+from aerona.engine.economy.stocks import goods_of
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.intrigue.favours import owe
 from aerona.engine.mind.ethics import honour_of
@@ -109,11 +113,18 @@ async def prepare(ctx: TickContext, atlas: RegionAtlas, tally: ResilienceTally) 
         .where(EntityRow.status == EntityStatus.CANON)
         .order_by(EntityRow.id)
     )
+    ordered = set(
+        await ctx.session.scalars(
+            select(MandateRow.settlement_entity_id).where(MandateRow.kind == MandateKind.PREPARE, MandateRow.state == MandateState.ACTIVE)
+        )
+    )
     for town, profile in rows.all():
         region = atlas.top_region(town.id)
         if region is None or held(town.id) or "investment_pool" in profile.locked:
             continue
         wanted = wishes(harms.get(region, Counter()), lands.get(region), profile.fire_risk, table.fire_risk_at)
+        if town.id in ordered and not +wanted:
+            wanted[K.WATCHTOWER] = 1
         own = works[town.id]
         options = [(count, kind) for kind, count in wanted.items() if count > 0 and (own.get(kind) is None or own[kind].level < MOST_LEVEL)]
         if not options:
@@ -122,9 +133,24 @@ async def prepare(ctx: TickContext, atlas: RegionAtlas, tally: ResilienceTally) 
         work = own.get(kind)
         level = (work.level if work is not None else 0) + 1
         cost = table.cost * level
-        if profile.investment_pool < cost or (work is not None and "level" in work.locked):
+        if work is not None and "level" in work.locked:
             continue
-        profile.investment_pool -= cost
+        if profile.investment_pool >= cost:
+            profile.investment_pool -= cost
+        elif town.id in ordered and profile.treasury >= cost and "treasury" not in profile.locked:
+            profile.treasury -= cost
+            ctx.session.add(
+                SettlementTreasuryRow(
+                    settlement_entity_id=town.id,
+                    epoch=ctx.epoch,
+                    entry=TreasuryEntry.BUILDING,
+                    amount=-cost,
+                    balance=profile.treasury,
+                    note="works against disaster",
+                )
+            )
+        else:
+            continue
         if work is None:
             work = PreparednessRow(settlement_entity_id=town.id, kind=kind, level=0, built_epoch=ctx.epoch, locked=[])
             ctx.session.add(work)
@@ -182,10 +208,15 @@ async def refuse_aid(ctx: TickContext, giver: EntityRow, town: EntityRow, receiv
     await note(ctx, f"{town.name} turned away the aid of {giver.name}, a rival it would not owe.", key="relief.refused", ids=[town.id, giver.id])
 
 
-async def apply_aid(ctx: TickContext, town: EntityRow, kind: AidKind, amount: int, rebuild: ReconstructionRow | None) -> None:
+async def apply_aid(ctx: TickContext, town: EntityRow, kind: AidKind, amount: int, *, rebuild: ReconstructionRow | None, capital: int | None) -> None:
     table = ctx.rules.relief
     if kind is AidKind.GOODS:
         shift_stat(town, "prosperity", min(table.prosperity_cap, amount / table.coin_per_prosperity))
+        if capital is not None and capital != town.id:
+            stocks = goods_of(ctx.session, ctx.epoch)
+            moved = sum(lot.quantity for lot in await stocks.take(capital, CommodityKind.GRAIN, table.grain, GoodsFlow.AID))
+            if moved > 0:
+                await stocks.add(town.id, CommodityKind.GRAIN, moved, GoodsFlow.AID)
     elif kind is AidKind.HEALERS:
         region = await top_region(ctx.session, town)
         land = await ctx.session.get(RegionEnvironmentRow, region.id) if region is not None and not held(region.id) else None
@@ -238,7 +269,7 @@ async def aid_from(
         return row
     if realm is not None and amount > 0:
         spend(ctx, realm, -amount, TreasuryEntry.RELIEF, f"aid to {town.name}")
-    await apply_aid(ctx, town, kind, amount, rebuild)
+    await apply_aid(ctx, town, kind, amount, rebuild=rebuild, capital=realm.profile.capital_entity_id if realm is not None else None)
     debtor = receiver.ruler_id if receiver is not None and receiver.ruler_id is not None else town.id
     await owe(ctx, debtor, giver.id, FavourOrigin.RELIEF, table.favour)
     if god is not None:
